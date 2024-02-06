@@ -1,11 +1,29 @@
-# Recommendation Rudders
+# Llm Mediators
 
-This is a github project holding [PAIR](http://pair.withgoogle.com)'s explorations with using natural language as the boundary object between recommenders and people.
+## Development server
 
-Our papers on this topic: 
+Run `npm run start` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
 
-*   [Large Language Models are Competitive Near Cold-start Recommenders for Language- and Item-based Preferences](https://arxiv.org/abs/2307.14225) RecSys 2023 -- Scott Sanner, Krisztian Balog, Filip Radlinski, Ben Wedin, Lucas Dixon
-*   [Large Language Models for User Interest Journeys](https://arxiv.org/abs/2305.15498) arxiv 2023 -- Konstantina Christakopoulou, Alberto Lalama, Cj Adams, Iris Qu, Yifat Amir, Samer Chucri, Pierce Vollucci, Fabio Soldo, Dina Bseiso, Sarah Scodel, Lucas Dixon, Ed H. Chi, Minmin Chen
-*   [KNNs of Semantic Encodings for Rating Prediction](https://arxiv.org/abs/2302.00412) arxiv 2023 -- Léo Laugier, Raghuram Vadapalli, Thomas Bonald, Lucas Dixon. See the See the https://github.com/PAIR-code/recommendation-rudders/tree/master/multi-sentence-rep-rs subdirectory for associated code. 
-*   [On Natural Language User Profiles for Transparent and Scrutable Recommendation](https://arxiv.org/abs/2205.09403) ACM SIGIR 2022 -- Filip Radlinski, Krisztian Balog, Fernando Diaz, Lucas Dixon, Ben Wedin
-*   [Augmenting the User-Item Graph with Textual Similarity Models](https://arxiv.org/abs/2109.09358) arxiv 2021 -- Federico López, Martin Scholz, Jessica Yung, Marie Pellat, Michael Strube, Lucas Dixon. See the https://github.com/PAIR-code/recommendation-rudders/tree/master/hyperbolic-rs subdirectory for associated code. 
+## Recommended editor setup
+
+This code is being developed using [Visual Studio Code](https://code.visualstudio.com/). Make sure to install the angular extension.
+
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+
+## Build
+
+Run `npm run build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Running unit tests
+
+Run `npm run test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Running end-to-end tests
+
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page. This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.2.7; it was then updated to Angular 17.
