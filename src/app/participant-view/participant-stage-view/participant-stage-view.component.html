@@ -38,11 +38,9 @@
     }
   </div>
 
-  @if (this.participant.userData().futureStageNames.length !== 0) {
-    <button color="primary" mat-button (click)="nextStep()">
-      <!-- [disabled]="!this.dataService.stageComplete()"  -->
-      <!-- <mat-icon>redo</mat-icon> -->
+
+    <button color="primary" [disabled]="!this.shouldShowNextStep()" mat-button (click)="nextStep()">
       <span>Next step</span>
     </button>
-  }
+  
 </div>

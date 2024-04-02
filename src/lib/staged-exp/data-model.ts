@@ -105,7 +105,8 @@ export const fakeEmptyMessage: UserMessage = {
 export interface DiscussItemsMessage {
   messageType: 'discussItemsMessage';
   timestamp: number;
-  itemRatingToDiscuss: ItemRating;
+  // itemRatingToDiscuss: ItemRating;
+  itemPair: ItemPair;
   text: string;
 }
 
@@ -126,12 +127,19 @@ export type Message = UserMessage | DiscussItemsMessage | MediatorMessage;
 export interface ChatAboutItems {
   ratingsToDiscuss: ItemPair[];
   messages: Message[];
+  items: Item[];
+  readyToEndChat: boolean;
+  // TODO(cjqian): This needs to be a per-participant value.
+  isSilent: boolean;
 }
 
 export const getDefaultChatAboutItemsConfig = (): ChatAboutItems => {
   return {
     ratingsToDiscuss: [],
     messages: [],
+    items: [],
+    readyToEndChat: false,
+    isSilent: true,
   };
 };
 
@@ -145,6 +153,9 @@ export const fakeChat: ExpStageChatAboutItems = {
   config: {
     ratingsToDiscuss: [],
     messages: [],
+    items: [],
+    readyToEndChat: false,
+    isSilent: true,
   },
 };
 
@@ -347,6 +358,7 @@ export interface UserData {
   // Their appearance.
   profile: UserProfile;
   stageMap: { [stageName: string]: ExpStage };
+  allowedStageProgressionMap: { [stageName: string]: boolean };
   completedStageNames: string[]; // current stage is the very last one.
   workingOnStageName: string;
   futureStageNames: string[];

@@ -49,7 +49,13 @@ export class ParticipantStageViewComponent {
     this.participant = appState.particpant;
   }
 
+  shouldShowNextStep() {
+    const userData = this.participant.userData();
+    return userData.allowedStageProgressionMap[userData.workingOnStageName];
+  }
+
   nextStep() {
     this.participant.nextStep();
   }
 }
+

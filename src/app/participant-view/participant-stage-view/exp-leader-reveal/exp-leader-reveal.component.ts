@@ -29,7 +29,14 @@ export class ExpLeaderRevealComponent {
 
     this.everyoneReachedTheEnd = computed(() => {
       const users = Object.values(this.participant.experiment().participants);
-      return users.map((userData) => userData.futureStageNames.length).every((n) => n === 1);
+      const isReady = users.map((userData) => userData.futureStageNames.length).every((n) => n === 1);
+      // Allow "Next" to be pushed.
+      if (isReady) {
+        for (const user of users) {
+            user.allowedStageProgressionMap[user.workingOnStageName] = true;
+        }
+      }
+      return isReady;
     });
 
     this.finalLeader = computed(() => {

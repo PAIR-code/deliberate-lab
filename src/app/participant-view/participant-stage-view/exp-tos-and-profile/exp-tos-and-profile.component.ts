@@ -14,7 +14,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatRadioChange, MatRadioModule } from '@angular/material/radio';
 
-import { StageKinds, TosAndUserProfile } from '../../../../lib/staged-exp/data-model';
+import { StageKinds, TosAndUserProfile, UserData } from '../../../../lib/staged-exp/data-model';
 import { AppStateService } from '../../../services/app-state.service';
 import { Participant } from 'src/lib/staged-exp/participant';
 
@@ -51,6 +51,11 @@ export class ExpTosAndProfileComponent {
     );
     this.stageData = stageData;
     this.participant = participant;
+  }
+
+  canProceedToNextStep(user: UserData) {
+    // TODO(cjqian): Make sure TOS is accepted as well.
+    return (user.profile.avatarUrl !== '') && (user.profile.name !== '') && (user.profile.pronouns !== '');
   }
 
   isOtherPronoun(s: string) {
@@ -96,6 +101,7 @@ export class ExpTosAndProfileComponent {
       user.profile.avatarUrl = this.stageData().avatarUrl;
       user.profile.name = this.stageData().name;
       user.profile.pronouns = this.stageData().pronouns;
+      user.allowedStageProgressionMap[user.workingOnStageName] = this.canProceedToNextStep(user);
     });
   }
 }

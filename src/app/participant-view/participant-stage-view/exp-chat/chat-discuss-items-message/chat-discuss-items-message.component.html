@@ -1,1 +1,21 @@
-<p>chat-discuss-items-message works!</p>
+
+<div class="flex-container">
+    <div class="date">{{ dateStrOfTimestamp(discussItemsMessage.timestamp) }}</div>
+    <div class="title">{{ discussItemsMessage.text }}</div>
+    <div class="item-pair-displays">
+        <div class="item-pair-item">
+            <img
+                src="{{ discussItemsMessage.itemPair.item1.imageUrl }}" 
+                alt="{{ discussItemsMessage.itemPair.item1.name }}" 
+            />
+            <span class="item-pair-item-name">{{ discussItemsMessage.itemPair.item1.name }}</span>
+        </div>
+        <div class="item-pair-item">
+            <img   
+                src="{{ discussItemsMessage.itemPair.item2.imageUrl }}" 
+                alt="{{ discussItemsMessage.itemPair.item2.name }}"
+            />
+            <span class="item-pair-item-name">{{ discussItemsMessage.itemPair.item2.name }}</span>
+        </div>
+    </div>
+</div>

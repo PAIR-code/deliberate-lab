@@ -14,9 +14,11 @@ import { Participant } from './participant';
 import { Session } from '../session';
 import {
   ChatAboutItems,
+  DiscussItemsMessage,
   ExpDataKinds,
   ExpStage,
   Experiment,
+  ItemPair,
   MediatorMessage,
   UserData,
 } from './data-model';
@@ -157,6 +159,15 @@ export function addExperiment(name: string, stages: ExpStage[], appData: SavedAp
   appData.experiments[experiment.name] = experiment;
 }
 
+export function deleteExperiment(name: string, appData: SavedAppData) {
+  if (name in appData.experiments) {
+    delete appData.experiments[name];
+  } else {
+    console.log(
+      "Experiment " + name + " is not found: " + appData.experiments);
+  }
+}
+
 // export function initialAppData(): SavedAppData {
 //   const experiment = initialExperimentSetup(3);
 //   const experiments: { [name: string]: Experiment } = {};
@@ -281,6 +292,38 @@ export function sendMediatorGroupMessage(
           timestamp: new Date().valueOf(),
         };
         stageData.messages.push(mediatorMessage);
+      },
+      { skipSetting: true },
+    );
+  }
+  if (options && options.withoutSetting) {
+    return;
+  }
+  appData.set({ ...appData() });
+}
+
+export function sendMediatorGroupRatingToDiscuss(
+  appData: WritableSignal<SavedAppData>,
+  experimentName: string,
+  to: { stageName: string; itemPair: ItemPair; message: string},
+  options?: { withoutSetting: boolean },
+): void {
+  const experiment = appData().experiments[experimentName];
+
+  for (const u of Object.values(experiment.participants)) {
+    editParticipantStage<ChatAboutItems>(
+      appData,
+      { experiment: experimentName, id: u.userId },
+      to.stageName,
+      (stageData) => {
+        stageData.ratingsToDiscuss.push(to.itemPair);
+        const discussItemsMessage: DiscussItemsMessage = {
+          messageType: 'discussItemsMessage',
+          itemPair: to.itemPair,
+          text: to.message,
+          timestamp: new Date().valueOf(),
+        };
+        stageData.messages.push(discussItemsMessage);
       },
       { skipSetting: true },
     );

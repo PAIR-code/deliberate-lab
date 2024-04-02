@@ -1,7 +1,10 @@
 import { Component, Input, Signal, WritableSignal, computed, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterModule } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterModule } from '@angular/router';
 import { AppStateService } from 'src/app/services/app-state.service';
+import { deleteExperiment } from 'src/lib/staged-exp/app';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
 import { StageKinds, UserData, UserProfile } from 'src/lib/staged-exp/data-model';
 import { MediatorChatComponent } from '../mediator-chat/mediator-chat.component';
@@ -18,7 +21,7 @@ export interface StageState {
 @Component({
   selector: 'app-experiment-monitor',
   standalone: true,
-  imports: [RouterModule, RouterLink, RouterLinkActive, MediatorChatComponent, MatExpansionModule],
+  imports: [RouterModule, RouterLink, RouterLinkActive, MediatorChatComponent, MatButtonModule, MatExpansionModule, MatIconModule],
   templateUrl: './experiment-monitor.component.html',
   styleUrl: './experiment-monitor.component.scss',
 })
@@ -37,7 +40,7 @@ export class ExperimentMonitorComponent {
   isOfKind = isOfKind;
   readonly StageKinds = StageKinds;
 
-  constructor(public stateService: AppStateService) {
+  constructor(public stateService: AppStateService, public router: Router) {
     this.participants = computed(() => {
       console.log('experimentName:', this.experimentName());
       if (!(this.experimentName() in this.stateService.data().experiments)) {
@@ -73,5 +76,16 @@ export class ExperimentMonitorComponent {
       });
       return stageStates;
     });
+  }
+
+  deleteExperiment() {
+    if (confirm("⚠️ This will delete the experiment! Are you sure?")) {
+      this.stateService.editData((data) =>
+        deleteExperiment(this.experimentName(), data),
+      );
+      
+      // Redirect to settings page.
+      this.router.navigate(['/experimenter', 'settings']);
+    }
   }
 }

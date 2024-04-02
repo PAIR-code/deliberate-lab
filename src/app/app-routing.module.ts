@@ -21,6 +21,7 @@ import { ExperimentSettingsComponent } from './experimenter-view/experiment-sett
 import { experimenterAuthGuard } from './experimenter-auth.guard';
 import { validParticipantGuard } from './valid-participant.guard';
 import { CreateExperimentComponent } from './experimenter-view/create-experiment/create-experiment.component';
+import { LlmApiConfigComponent } from './experimenter-view/llm-api-config/llm-api-config.component';
 
 const routes: Routes = [
   {
@@ -53,6 +54,10 @@ const routes: Routes = [
         path: 'settings',
         component: AppSettingsComponent,
         pathMatch: 'full',
+      },
+      { path: 'llm-settings',
+      component: LlmApiConfigComponent,
+      pathMatch: 'full',
       },
     ],
   },

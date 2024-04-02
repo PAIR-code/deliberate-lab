@@ -25,6 +25,7 @@ import { ExpTosAndProfileComponent } from './participant-view/participant-stage-
 import { ExpTosComponent } from './participant-view/participant-stage-view/exp-tos/exp-tos.component';
 import { GoogleAuthService } from './services/google-auth.service';
 import { GoogleSheetsService } from './services/google-sheets.service';
+import { LlmApiConfigComponent } from './experimenter-view/llm-api-config/llm-api-config.component';
 import { LmApiService } from './services/lm-api.service';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
@@ -77,6 +78,7 @@ import { ExperimenterViewComponent } from './experimenter-view/experimenter-view
     CodemirrorConfigEditorModule,
     AppHomeComponent,
     AppSettingsComponent,
+    LlmApiConfigComponent,
     ExpSurveyComponent,
     ExpLeaderVoteComponent,
     ExpProfileComponent,

@@ -115,6 +115,9 @@ function groupChat(): ExpStageChatAboutItems {
     config: {
       ratingsToDiscuss: [],
       messages: [],
+      items: [items.compas, items.blanket, items.lighter],
+      readyToEndChat: false,
+      isSilent: true,
     },
   };
 }
@@ -223,8 +226,17 @@ function finalSatisfactionSurvey(): ExpStageSurvey {
 // Example data to bootstrap us...
 export function initUserData(stages: ExpStage[]): UserData {
   const stageMap: { [stageName: string]: ExpStage } = {};
+  const allowedStageProgressionMap: { [stageName: string]: boolean } = {};
+  const autoProgressStages = [StageKinds.takeSurvey.toString(), StageKinds.voteForLeader.toString()];
   stages.forEach((s) => {
     stageMap[s.name] = s;
+
+    // TODO(cjqian): Temporary measure.
+    if (autoProgressStages.includes(s.kind)) {
+      allowedStageProgressionMap[s.name] = true;
+    } else {
+      allowedStageProgressionMap[s.name] = false;
+    }
   });
   const futureStageNames = stages.map((s) => s.name);
   const currentStageName = futureStageNames.shift();
@@ -244,6 +256,7 @@ export function initUserData(stages: ExpStage[]): UserData {
       avatarUrl: '',
     },
     stageMap,
+    allowedStageProgressionMap,
     workingOnStageName,
     completedStageNames: [] as string[],
     futureStageNames,

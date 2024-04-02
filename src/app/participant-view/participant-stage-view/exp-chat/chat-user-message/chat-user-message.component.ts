@@ -22,7 +22,7 @@ export class ChatUserMessageComponent {
   dateStrOfTimestamp(timestamp: number): string {
     const date = new Date(timestamp);
     return (
-      `${date.getFullYear()} - ${date.getMonth() - date.getDate()}:` +
+      `${date.getFullYear()} - ${date.getMonth()} - ${date.getDate()}:` +
       ` ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
     );
   }
