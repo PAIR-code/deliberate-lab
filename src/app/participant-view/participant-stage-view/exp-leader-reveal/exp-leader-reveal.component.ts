@@ -1,10 +1,10 @@
 import { reverse, sortBy } from 'lodash';
-import { VoteReveal, Votes, StageKinds } from 'src/lib/staged-exp/data-model';
+import { StageKinds, VoteReveal, Votes } from 'src/lib/staged-exp/data-model';
 
 import { Component, computed, Signal } from '@angular/core';
 
-import { AppStateService } from '../../../services/app-state.service';
 import { Participant } from 'src/lib/staged-exp/participant';
+import { AppStateService } from '../../../services/app-state.service';
 
 @Component({
   selector: 'app-exp-leader-reveal',
@@ -29,11 +29,13 @@ export class ExpLeaderRevealComponent {
 
     this.everyoneReachedTheEnd = computed(() => {
       const users = Object.values(this.participant.experiment().participants);
-      const isReady = users.map((userData) => userData.futureStageNames.length).every((n) => n === 1);
+      const isReady = users
+        .map((userData) => userData.futureStageNames.length)
+        .every((n) => n === 1);
       // Allow "Next" to be pushed.
       if (isReady) {
         for (const user of users) {
-            user.allowedStageProgressionMap[user.workingOnStageName] = true;
+          user.allowedStageProgressionMap[user.workingOnStageName] = true;
         }
       }
       return isReady;

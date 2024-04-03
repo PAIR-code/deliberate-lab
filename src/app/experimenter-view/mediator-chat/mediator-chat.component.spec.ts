@@ -8,10 +8,9 @@ describe('MediatorChatComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MediatorChatComponent]
-    })
-    .compileComponents();
-    
+      imports: [MediatorChatComponent],
+    }).compileComponents();
+
     fixture = TestBed.createComponent(MediatorChatComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

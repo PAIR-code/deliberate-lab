@@ -21,65 +21,57 @@ npx ts-node --esm ./run_vertexapi_palm2_predict_rec_test.ts \
 Assumes that you have run:
   gcloud config set project ${YOUR_GOOGLE_CLOUD_PROJECT_ID}
 */
-import { VertexPalm2LLM } from '../llm_vertexapi_palm2';
-import { FewShotTemplate } from '../fewshot_template';
 import { expInterpTempl } from '../../recommender-prompts/item-interpreter';
-
+import { VertexPalm2LLM } from '../llm_vertexapi_palm2';
 
 import * as yargs from 'yargs';
-import { nv, template } from '../template';
 import { fillTemplate } from '../llm';
 
 interface Params {
-  accessToken: string,
-  project: string,
-  experience: string,
+  accessToken: string;
+  project: string;
+  experience: string;
 }
 
-
-
-
 async function run(args: Params): Promise<void> {
-
-  const llm = new VertexPalm2LLM(
-    args.project,
-    args.accessToken,
-  );
+  const llm = new VertexPalm2LLM(args.project, args.accessToken);
   const templateToFill = expInterpTempl.substs({ experience: args.experience });
   console.log('template: \n\n', templateToFill.escaped);
   console.log('\n\n');
   const responses = await fillTemplate(llm, templateToFill);
-  const badlyFormedResponsesCount = responses.filter(r => !r.substs).length;
+  const badlyFormedResponsesCount = responses.filter((r) => !r.substs).length;
   console.log(`badlyFormedResponses count: ${badlyFormedResponsesCount}`);
   console.log(`responses: ${JSON.stringify(responses, null, 2)} `);
 
-  responses.filter(r => r.substs).forEach(
-    (r, i) => console.log(i, JSON.stringify(r.substs, null, 2)));
+  responses
+    .filter((r) => r.substs)
+    .forEach((r, i) => console.log(i, JSON.stringify(r.substs, null, 2)));
 }
 
 // ----------------------------------------------------------------------------
 const args = yargs
   .option('accessToken', {
-    describe: 'Google Cloud Auth Token ' +
-      'e.g. echo $(gcloud auth print-access-token)',
+    describe: 'Google Cloud Auth Token ' + 'e.g. echo $(gcloud auth print-access-token)',
     demandOption: true,
     type: 'string',
-  }).option('project', {
-    describe: 'The Google Cloud Project to use (it must have the VertexAI ' +
-      'API enabled).',
+  })
+  .option('project', {
+    describe: 'The Google Cloud Project to use (it must have the VertexAI ' + 'API enabled).',
     demandOption: true,
     type: 'string',
-  }).option('experience', {
+  })
+  .option('experience', {
     describe: 'Short text of an experience.',
     demandOption: true,
     type: 'string',
-  }).help().argv;
+  })
+  .help().argv;
 
 run(args as Params)
   .then(() => {
     console.log('Success!');
   })
-  .catch(e => {
+  .catch((e) => {
     console.error('Failed: ', e);
     throw Error('Failed');
   });

@@ -58,12 +58,13 @@ $toolbar-height: 60px;
     background-color: #ddd;
   }
 
-  .working-on-stage {
-    .menu-item-inner {}
-  }
+  // .working-on-stage {
+  //   .menu-item-inner {
+  //   }
+  // }
 
   .active {
-    color: #D00;
+    color: #d00;
   }
 
   .menu-item-inner {
@@ -157,9 +158,10 @@ $toolbar-height: 60px;
 
 .error {
   color: #f00;
-  background-color: #fEE;
+  background-color: #fee;
   border-radius: 5px;
-  border: 1px solid #AAA;
+  border: 1px solid #aaa;
 }
 
-.content {}
+// .content {
+// }

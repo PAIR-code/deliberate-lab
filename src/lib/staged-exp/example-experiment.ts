@@ -5,30 +5,30 @@
  * Use of this source code is governed by an Apache2 license that can be
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
-import { v4 as uuidv4 } from 'uuid';
 import {
-  uniqueNamesGenerator,
   Config as UniqueNamesGenConfig,
   starWars,
+  uniqueNamesGenerator,
 } from 'unique-names-generator';
+import { v4 as uuidv4 } from 'uuid';
 import {
-  Experiment,
   ExpStage,
-  ExpStageSurvey,
-  ExpStageVotes,
   ExpStageChatAboutItems,
-  //ExpStageItemRatings,
-  UserData,
+  ExpStageSurvey,
   ExpStageTosAndUserProfile,
   ExpStageVoteReveal,
+  ExpStageVotes,
+  Experiment,
   RatingQuestion,
   ScaleQuestion,
-  SurveyQuestionKind,
   StageKinds,
+  SurveyQuestionKind,
+  //ExpStageItemRatings,
+  UserData,
 } from './data-model';
 
-import * as items from './items';
 import { uniqueId } from 'underscore';
+import * as items from './items';
 
 const fakeNameGenConfig: UniqueNamesGenConfig = {
   dictionaries: [starWars],
@@ -227,7 +227,10 @@ function finalSatisfactionSurvey(): ExpStageSurvey {
 export function initUserData(stages: ExpStage[]): UserData {
   const stageMap: { [stageName: string]: ExpStage } = {};
   const allowedStageProgressionMap: { [stageName: string]: boolean } = {};
-  const autoProgressStages = [StageKinds.takeSurvey.toString(), StageKinds.voteForLeader.toString()];
+  const autoProgressStages = [
+    StageKinds.takeSurvey.toString(),
+    StageKinds.voteForLeader.toString(),
+  ];
   stages.forEach((s) => {
     stageMap[s.name] = s;
 

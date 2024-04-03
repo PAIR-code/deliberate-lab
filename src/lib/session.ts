@@ -7,7 +7,7 @@
 ==============================================================================*/
 import * as _ from 'underscore';
 
-import { computed, effect, Signal, signal, untracked, WritableSignal } from '@angular/core';
+import { effect, Signal, signal, untracked, WritableSignal } from '@angular/core';
 
 export class Session<T> {
   public toUrlParams: WritableSignal<Partial<T>>;

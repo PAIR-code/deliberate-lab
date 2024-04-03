@@ -71,8 +71,8 @@ export class GoogleDriveAppdataService {
   async saveData(
     jsonData: string,
     name: string,
-    description: string,
-    accessToken?: google.accounts.oauth2.TokenResponse | null,
+    _description: string,
+    _accessToken?: google.accounts.oauth2.TokenResponse | null,
   ) {
     await this.onceReady;
 

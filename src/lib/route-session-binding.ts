@@ -6,10 +6,10 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 import { computed, effect, EffectRef, signal } from '@angular/core';
-import * as _ from 'underscore';
+import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { Session } from 'src/lib/session';
-import { ActivatedRoute, Params, Router } from '@angular/router';
+import * as _ from 'underscore';
 
 // Idea to handle different state kinds of classes...
 //

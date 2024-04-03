@@ -13,5 +13,6 @@ export const lighter: Item = {
 
 export const blanket: Item = {
   name: 'blanket',
-  imageUrl: 'https://m.media-amazon.com/images/W/MEDIAX_792452-T1/images/I/81-x+F2EsHL._AC_UF894,1000_QL80_.jpg',
+  imageUrl:
+    'https://m.media-amazon.com/images/W/MEDIAX_792452-T1/images/I/81-x+F2EsHL._AC_UF894,1000_QL80_.jpg',
 };

@@ -7,11 +7,9 @@
 ==============================================================================*/
 
 import { computed, effect, Injectable, Signal, signal, WritableSignal } from '@angular/core';
-import { LmApiService } from './lm-api.service';
-import { ExpStage, GenericExpStage } from '../../lib/staged-exp/data-model';
-import { initialExperimentSetup } from '../../lib/staged-exp/example-experiment';
 import { ActivatedRoute, Router } from '@angular/router';
-import * as _ from 'underscore';
+import { assertCast } from 'src/lib/algebraic-data';
+import { editSignalFn } from 'src/lib/signal-tricks';
 import {
   AppSettings,
   AppState,
@@ -21,8 +19,10 @@ import {
   SavedAppData,
 } from 'src/lib/staged-exp/app';
 import { Participant } from 'src/lib/staged-exp/participant';
-import { editSignalFn } from 'src/lib/signal-tricks';
-import { assertCast } from 'src/lib/albebraic-data';
+import * as _ from 'underscore';
+import { ExpStage, GenericExpStage } from '../../lib/staged-exp/data-model';
+import { initialExperimentSetup } from '../../lib/staged-exp/example-experiment';
+import { LmApiService } from './lm-api.service';
 
 // -------------------------------------------------------------------------------------
 //  The App State Service...

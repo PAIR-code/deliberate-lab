@@ -5,10 +5,10 @@
  * Use of this source code is governed by an Apache2 license that can be
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
-import { computed, effect, Signal, signal, untracked, WritableSignal } from '@angular/core';
-import { Experiment, ExpStage, UserData, ExpDataKinds, UserProfile } from './data-model';
+import { computed, Signal, WritableSignal } from '@angular/core';
 import { Session } from '../session';
-import { SavedAppData, ParticipantSession, editParticipant, sendParticipantMessage } from './app';
+import { editParticipant, ParticipantSession, SavedAppData, sendParticipantMessage } from './app';
+import { ExpDataKinds, Experiment, ExpStage, UserData, UserProfile } from './data-model';
 
 // TODO:
 // Make this cleverly parameterised over the "viewingStage" ExpStage type,

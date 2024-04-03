@@ -6,7 +6,7 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Injectable, NgZone, Signal, WritableSignal, computed, signal } from '@angular/core';
+import { Injectable, NgZone, Signal, computed, signal } from '@angular/core';
 import * as jose from 'jose';
 import { environment } from 'src/environments/environment';
 
@@ -64,7 +64,7 @@ export class GoogleAuthService {
     document.head.appendChild(script);
 
     this.googleGciClientLoaded = new Promise<void>(
-      (resolve, reject) =>
+      (resolve) =>
         (script.onload = () => {
           resolve();
         }),
@@ -92,7 +92,7 @@ export class GoogleAuthService {
   }
 
   async authorize(scope: string): Promise<google.accounts.oauth2.TokenResponse> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: environment.oauthClientId,
         scope,

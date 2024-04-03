@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
-import { ChatMediatorProfileComponent } from '../chat-mediator-profile/chat-mediator-profile.component';
 import { MediatorMessage } from 'src/lib/staged-exp/data-model';
+import { ChatMediatorProfileComponent } from '../chat-mediator-profile/chat-mediator-profile.component';
 
 @Component({
   selector: 'app-chat-mediator-message',
