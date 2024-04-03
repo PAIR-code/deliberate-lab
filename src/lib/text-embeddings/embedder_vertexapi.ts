@@ -45,7 +45,7 @@ export interface VertexEmbedError {
   };
 }
 
-export function prepareEmbedRequest(text: string, options?: EmbedRequestParams): EmbedRequest {
+export function prepareEmbedRequest(text: string, _options?: EmbedRequestParams): EmbedRequest {
   return {
     instances: [{ content: text }],
   };
