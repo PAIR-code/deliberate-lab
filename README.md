@@ -1,5 +1,31 @@
 # Llm Mediators
 
+## Firebase
+
+This project uses Firebase as its backend. The configuration can be found in the [`.firebaserc`](./.firebaserc) and [`firebase.json`](./firebase.json) files.
+
+Install the firebase cli tools with the following commands:
+
+```bash
+npm install -g firebase-tools
+firebase login  # Login to the Google account destined to manage the Firebase project
+```
+
+### Emulators
+
+In order to run offline and for development purposes, we use Java Firebase emulators.
+
+```bash
+export JAVA_TOOL_OPTIONS="-Xmx4g"  # Set your desired max RAM (here: 4GB)
+firebase emulators:start  # Start the emulators
+```
+
+You will then be able to access the following UIs:
+
+- Emulator UI: `http://localhost:4000`
+- Firestore UI: `http://localhost:4000/firestore`
+- Cloud Functions UI: `http://localhost:4000/functions`
+
 ## Development server
 
 Run `npm run start` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
@@ -27,3 +53,6 @@ Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To u
 ## Further help
 
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page. This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.2.7; it was then updated to Angular 17.
+
+TODO: réorganiser ça. Mettre ce que je mets de base (+ des liens ?)
+Parler de la config Firebase, comment installer et lancer ça.
