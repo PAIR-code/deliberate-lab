@@ -11,6 +11,15 @@ npm install -g firebase-tools
 firebase login  # Login to the Google account destined to manage the Firebase project
 ```
 
+### Cloud Functions
+
+We use Firebase Cloud Functions to run server-side code. The functions are located in the [`functions`](./functions) directory.
+
+```bash
+cd functions
+npm install  # Install the dependencies
+```
+
 ### Emulators
 
 In order to run offline and for development purposes, we use Java Firebase emulators.
