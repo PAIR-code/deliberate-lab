@@ -14,34 +14,22 @@ limitations under the License.
 ==============================================================================*/
 
 import {
-  Component,
-  OnInit,
-  Input,
-  Output,
-  EventEmitter,
-  AfterViewInit,
   AfterContentInit,
-  ViewChild,
+  Component,
   ElementRef,
+  EventEmitter,
+  Input,
   NgZone,
+  OnInit,
+  Output,
+  ViewChild,
 } from '@angular/core';
-import * as json5 from 'json5';
-import * as codemirror from 'codemirror';
-import { EditorState, Compartment } from '@codemirror/state';
-import { EditorView, keymap } from '@codemirror/view';
 import { json as jsonlang } from '@codemirror/lang-json';
-import {
-  firstValueFrom,
-  Observable,
-  tap,
-  of,
-  EMPTY,
-  OperatorFunction,
-  combineLatest,
-  BehaviorSubject,
-  ReplaySubject,
-  Subscription,
-} from 'rxjs';
+import { Compartment, EditorState } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
+import * as codemirror from 'codemirror';
+import * as json5 from 'json5';
+import { BehaviorSubject } from 'rxjs';
 
 export interface ConfigUpdate<T> {
   json?: string;
@@ -59,7 +47,7 @@ export class CodemirrorConfigEditorComponent implements OnInit, AfterContentInit
   @Input() whatIsBeingEditedName: string = '';
   @Input() defaultConfig: string = '';
   @Input() closable: boolean = true;
-  @Output() update = new EventEmitter<ConfigUpdate<any>>();
+  @Output() update = new EventEmitter<ConfigUpdate<object>>();
   @Input()
   set config(value: string) {
     if (this.codeMirror) {
@@ -77,7 +65,7 @@ export class CodemirrorConfigEditorComponent implements OnInit, AfterContentInit
 
   @ViewChild('codemirror')
   codemirrorElementRef: ElementRef | undefined;
-  codemirrorOptions: {};
+  codemirrorOptions: object;
 
   codeMirror: EditorView | undefined;
   editorState?: EditorState;
@@ -216,7 +204,7 @@ export class CodemirrorConfigEditorComponent implements OnInit, AfterContentInit
     // this.changed = false;
   }
 
-  makeConfigUpdate(): ConfigUpdate<{}> {
+  makeConfigUpdate(): ConfigUpdate<object> {
     if (!this.codeMirror) {
       console.warn('Missing codeMirror object.');
       return {
@@ -225,7 +213,7 @@ export class CodemirrorConfigEditorComponent implements OnInit, AfterContentInit
       };
     }
 
-    let parsedConfig: {};
+    let parsedConfig: object;
     const configString = this.getCodeMirrorValue();
     try {
       parsedConfig = json5.parse(configString);

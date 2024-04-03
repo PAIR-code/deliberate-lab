@@ -36,7 +36,7 @@ export interface Palm2ApiRequest {
 }
 export type Palm2RequestOptions = Omit<Partial<Palm2ApiRequest>, 'prompt'>;
 
-export interface Palm2Response { }
+export interface Palm2Response {}
 
 export function preparePalm2Request(text: string, options?: Palm2RequestOptions): Palm2ApiRequest {
   return {
@@ -79,11 +79,11 @@ async function postDataToLLM(url = '', data: Palm2ApiRequest) {
 export async function sendPalm2Request(
   apiKey: string, // e.g. as copied from UI in makerSuite.google.com
   req: Palm2ApiRequest,
-  modelId = 'text-bison-001',  // e.g. 'models/text-bison-001';
+  modelId = 'text-bison-001', // e.g. 'models/text-bison-001';
 ): Promise<Palm2Response> {
   return postDataToLLM(
     `https://generativelanguage.googleapis.com/v1beta2/models/${modelId}:generateText?key=${apiKey}`,
-    req
+    req,
   );
   // .then((data) => {
   //   console.log(data); // JSON data parsed by `data.json()` call

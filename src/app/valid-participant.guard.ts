@@ -1,6 +1,6 @@
+import { inject } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivateFn, RouterStateSnapshot } from '@angular/router';
 import { AppStateService } from './services/app-state.service';
-import { inject } from '@angular/core';
 
 export const validParticipantGuard: CanActivateFn = (
   route: ActivatedRouteSnapshot,

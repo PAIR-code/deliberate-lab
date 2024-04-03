@@ -6,19 +6,8 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import {
-  AfterViewInit,
-  Component,
-  ElementRef,
-  Signal,
-  ViewChild,
-  computed,
-  effect,
-} from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, effect } from '@angular/core';
 import { AppStateService } from './services/app-state.service';
-import { GoogleAuthService } from './services/google-auth.service';
-import { Experiment } from 'src/lib/staged-exp/data-model';
 
 @Component({
   selector: 'app-root',

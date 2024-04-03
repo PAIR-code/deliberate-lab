@@ -9,8 +9,7 @@
 import { RegExpVar } from './variable';
 
 describe('named variables', () => {
-  beforeEach(() => {
-  });
+  beforeEach(() => {});
 
   it('occurs', () => {
     // You can prompts quite vaturally, you define your variables, and then
@@ -38,4 +37,3 @@ describe('named variables', () => {
   //   expect(thingVar == thingVar2).toBeTruthy();
   // });
 });
-

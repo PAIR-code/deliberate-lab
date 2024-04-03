@@ -8,10 +8,9 @@ describe('LlmApiConfigComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [LlmApiConfigComponent]
-    })
-    .compileComponents();
-    
+      imports: [LlmApiConfigComponent],
+    }).compileComponents();
+
     fixture = TestBed.createComponent(LlmApiConfigComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

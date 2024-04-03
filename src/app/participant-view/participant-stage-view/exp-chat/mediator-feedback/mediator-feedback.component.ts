@@ -5,8 +5,6 @@ import { Component } from '@angular/core';
   standalone: true,
   imports: [],
   templateUrl: './mediator-feedback.component.html',
-  styleUrl: './mediator-feedback.component.scss'
+  styleUrl: './mediator-feedback.component.scss',
 })
-export class MediatorFeedbackComponent {
-
-}
+export class MediatorFeedbackComponent {}

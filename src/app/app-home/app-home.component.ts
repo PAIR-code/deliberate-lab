@@ -22,17 +22,17 @@ import { ExpLeaderRevealComponent } from '../participant-view/participant-stage-
 import { ExpLeaderVoteComponent } from '../participant-view/participant-stage-view/exp-leader-vote/exp-leader-vote.component';
 import { ExpProfileComponent } from '../participant-view/participant-stage-view/exp-profile/exp-profile.component';
 //import { ExpRatingComponent } from '../exp-rating/exp-rating.component';
+import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Experiment } from 'src/lib/staged-exp/data-model';
+import { ExperimenterViewComponent } from '../experimenter-view/experimenter-view.component';
 import { ExpSurveyComponent } from '../participant-view/participant-stage-view/exp-survey/exp-survey.component';
 import { ExpTosAndProfileComponent } from '../participant-view/participant-stage-view/exp-tos-and-profile/exp-tos-and-profile.component';
 import { ExpTosComponent } from '../participant-view/participant-stage-view/exp-tos/exp-tos.component';
 import { AppStateService } from '../services/app-state.service';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { GoogleAuthService } from '../services/google-auth.service';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { Experiment } from 'src/lib/staged-exp/data-model';
-import { ExperimenterViewComponent } from '../experimenter-view/experimenter-view.component';
-import { FormsModule } from '@angular/forms';
-import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'app-home',

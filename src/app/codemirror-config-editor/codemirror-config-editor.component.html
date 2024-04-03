@@ -10,7 +10,7 @@
       save
     </button>
     <button
-      *ngIf="closable && !(changed$ | async)"
+      *ngIf="closable && (changed$ | async) === false"
       color="primary"
       mat-raised-button
       (click)="justClose()"
@@ -35,7 +35,7 @@
       <mat-icon>settings_backup_restore</mat-icon>
       <span>Reset to default</span>
     </button>
-    <button mat-menu-item (click)="undoChanges()" [disabled]="!(changed$ | async)">
+    <button mat-menu-item (click)="undoChanges()" [disabled]="(changed$ | async) === false">
       <mat-icon>restore</mat-icon>
       <span>Restore last saved</span>
     </button>

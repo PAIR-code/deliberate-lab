@@ -21,7 +21,7 @@ https://makersuite.google.com/app/apikey
 Note: this will only work from IP addresses in supported countries.
 
 */
-import { sendPalm2Request, preparePalm2Request } from '../llm_devapi_palm2';
+import { preparePalm2Request, sendPalm2Request } from '../llm_devapi_palm2';
 
 import * as yargs from 'yargs';
 
@@ -30,7 +30,6 @@ interface Params {
 }
 
 async function run(args: Params): Promise<void> {
-
   const prompt = `
 The following are short movie summaries. They are specific, not generic (no movie is  just "a classic"), and they don't contain plot synopsis. They just describe my experience of the movie.
 
@@ -53,17 +52,17 @@ summary: ['
 // ----------------------------------------------------------------------------
 const args = yargs
   .option('apiKey', {
-    describe: 'The API Key from MakerSuite UI. See: '
-      + 'https://makersuite.google.com/app/apikey',
+    describe: 'The API Key from MakerSuite UI. See: ' + 'https://makersuite.google.com/app/apikey',
     demandOption: true,
     type: 'string',
-  }).help().argv;
+  })
+  .help().argv;
 
 run(args as Params)
   .then(() => {
     console.log('Success!');
   })
-  .catch(e => {
+  .catch((e) => {
     console.error('Failed: ', e);
     throw Error('Failed');
   });

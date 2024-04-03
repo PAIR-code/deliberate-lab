@@ -7,11 +7,13 @@
 ==============================================================================*/
 
 import { Component, computed, Signal } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSliderModule } from '@angular/material/slider';
 
+import { Participant } from 'src/lib/staged-exp/participant';
+import { Question } from 'src/lib/staged-exp/question';
 import {
   QuestionData,
   StageKinds,
@@ -19,12 +21,10 @@ import {
   SurveyQuestionKind,
 } from '../../../../lib/staged-exp/data-model';
 import { AppStateService } from '../../../services/app-state.service';
-import { Participant } from 'src/lib/staged-exp/participant';
 import { SurveyCheckQuestionComponent } from './survey-check-question/survey-check-question.component';
 import { SurveyRatingQuestionComponent } from './survey-rating-question/survey-rating-question.component';
 import { SurveyScaleQuestionComponent } from './survey-scale-question/survey-scale-question.component';
 import { SurveyTextQuestionComponent } from './survey-text-question/survey-text-question.component';
-import { Question } from 'src/lib/staged-exp/question';
 
 @Component({
   selector: 'app-exp-survey',

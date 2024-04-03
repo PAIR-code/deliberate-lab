@@ -6,7 +6,7 @@ import { DiscussItemsMessage } from 'src/lib/staged-exp/data-model';
   standalone: true,
   imports: [],
   templateUrl: './chat-discuss-items-message.component.html',
-  styleUrl: './chat-discuss-items-message.component.scss'
+  styleUrl: './chat-discuss-items-message.component.scss',
 })
 export class ChatDiscussItemsMessageComponent {
   @Input() discussItemsMessage!: DiscussItemsMessage;

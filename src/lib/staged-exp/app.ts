@@ -9,9 +9,9 @@
 // -------------------------------------------------------------------------------------
 //  Session management: stored in the URL
 
-import { ActivatedRoute, ActivatedRouteSnapshot, Params, Router } from '@angular/router';
-import { Participant } from './participant';
-import { Session } from '../session';
+import { WritableSignal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { RouteSessionBinding } from '../route-session-binding';
 import {
   ChatAboutItems,
   DiscussItemsMessage,
@@ -23,11 +23,7 @@ import {
   UserData,
 } from './data-model';
 import { initialExperimentSetup, makeStages } from './example-experiment';
-import { EffectRef, Signal, WritableSignal, computed, effect, signal } from '@angular/core';
-import * as _ from 'underscore';
-import { Subscription } from 'rxjs';
-import { option } from 'yargs';
-import { RouteSessionBinding } from '../route-session-binding';
+import { Participant } from './participant';
 
 // function getPathArray(route: ActivatedRouteSnapshot) {
 //   let array = [];
@@ -163,8 +159,7 @@ export function deleteExperiment(name: string, appData: SavedAppData) {
   if (name in appData.experiments) {
     delete appData.experiments[name];
   } else {
-    console.log(
-      "Experiment " + name + " is not found: " + appData.experiments);
+    console.log('Experiment ' + name + ' is not found: ' + appData.experiments);
   }
 }
 
@@ -305,7 +300,7 @@ export function sendMediatorGroupMessage(
 export function sendMediatorGroupRatingToDiscuss(
   appData: WritableSignal<SavedAppData>,
   experimentName: string,
-  to: { stageName: string; itemPair: ItemPair; message: string},
+  to: { stageName: string; itemPair: ItemPair; message: string },
   options?: { withoutSetting: boolean },
 ): void {
   const experiment = appData().experiments[experimentName];

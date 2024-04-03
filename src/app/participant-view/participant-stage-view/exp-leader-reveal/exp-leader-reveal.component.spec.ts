@@ -8,10 +8,9 @@ describe('ExpLeaderRevealComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ExpLeaderRevealComponent]
-    })
-    .compileComponents();
-    
+      imports: [ExpLeaderRevealComponent],
+    }).compileComponents();
+
     fixture = TestBed.createComponent(ExpLeaderRevealComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

@@ -6,17 +6,16 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 import { Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
-import { AppStateService } from '../services/app-state.service';
+import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatListModule } from '@angular/material/list';
-import { RouterModule } from '@angular/router';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AppStateEnum, makeRouteLinkedParticipant } from 'src/lib/staged-exp/app';
 import { Participant } from 'src/lib/staged-exp/participant';
+import { AppStateService } from '../services/app-state.service';
 import { ParticipantStageViewComponent } from './participant-stage-view/participant-stage-view.component';
-import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-participant-view',

@@ -1,18 +1,18 @@
 import { isEqual } from 'lodash';
 import {
   ExpStage,
-  getDefaultChatAboutItemsConfig,
-  getDefaultLeaderRevealConfig,
-  getDefaultSurveyConfig,
-  getDefaultVotesConfig,
-  getDefaultTosAndUserProfileConfig,
-  StageKinds,
-  ExpStageTosAndUserProfile,
-  getDefaultItemRatingsQuestion,
-  QuestionData,
-  getDefaultScaleQuestion,
   ExpStageSurvey,
+  ExpStageTosAndUserProfile,
+  QuestionData,
+  StageKinds,
   SurveyQuestionKind,
+  getDefaultChatAboutItemsConfig,
+  getDefaultItemRatingsQuestion,
+  getDefaultLeaderRevealConfig,
+  getDefaultScaleQuestion,
+  getDefaultSurveyConfig,
+  getDefaultTosAndUserProfileConfig,
+  getDefaultVotesConfig,
 } from 'src/lib/staged-exp/data-model';
 
 import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
@@ -26,12 +26,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { LocalService } from 'src/app/services/local.service';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AppStateService } from 'src/app/services/app-state.service';
+import { LocalService } from 'src/app/services/local.service';
+import { tryCast } from 'src/lib/algebraic-data';
 import { addExperiment } from 'src/lib/staged-exp/app';
 import { makeStages } from 'src/lib/staged-exp/example-experiment';
-import { tryCast } from 'src/lib/albebraic-data';
 
 const EXISTING_STAGES_KEY = 'existing-stages';
 
@@ -229,7 +229,7 @@ export class CreateExperimentComponent {
     this.currentEditingStageIndex = idx;
   }
 
-  onChange(event: any, type?: string) {
+  onChange(event: unknown, type?: string) {
     if (type === 'stage-kind') {
       console.log('Switched to:', this.currentEditingStage.kind);
       let newConfig = {};

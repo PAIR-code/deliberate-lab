@@ -7,16 +7,16 @@
 ==============================================================================*/
 
 import { Component, Signal } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxChange, MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatRadioChange, MatRadioModule } from '@angular/material/radio';
 
+import { Participant } from 'src/lib/staged-exp/participant';
 import { StageKinds, TosAndUserProfile, UserData } from '../../../../lib/staged-exp/data-model';
 import { AppStateService } from '../../../services/app-state.service';
-import { Participant } from 'src/lib/staged-exp/participant';
 
 enum Pronouns {
   HeHim = 'He/Him',
@@ -55,7 +55,9 @@ export class ExpTosAndProfileComponent {
 
   canProceedToNextStep(user: UserData) {
     // TODO(cjqian): Make sure TOS is accepted as well.
-    return (user.profile.avatarUrl !== '') && (user.profile.name !== '') && (user.profile.pronouns !== '');
+    return (
+      user.profile.avatarUrl !== '' && user.profile.name !== '' && user.profile.pronouns !== ''
+    );
   }
 
   isOtherPronoun(s: string) {

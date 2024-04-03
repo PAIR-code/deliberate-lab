@@ -1,28 +1,20 @@
 import { Component, Input, Signal, WritableSignal, computed, signal } from '@angular/core';
-import {
-  ChatAboutItems,
-  ExpStageChatAboutItems,
-  Item,
-  ItemPair,
-  Message,
-  UserData,
-  fakeChat,
-} from 'src/lib/staged-exp/data-model';
-import { AppStateService } from '../../services/app-state.service';
-import { ChatUserMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-user-message/chat-user-message.component';
-import { ChatDiscussItemsMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-discuss-items-message/chat-discuss-items-message.component';
-import { ChatMediatorMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-mediator-message/chat-mediator-message.component';
-import { MediatorFeedbackComponent } from '../../participant-view/participant-stage-view/exp-chat/mediator-feedback/mediator-feedback.component';
-import { MatFormField, MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { sendMediatorGroupMessage, sendMediatorGroupRatingToDiscuss } from 'src/lib/staged-exp/app';
 import { MatSelectChange, MatSelectModule } from '@angular/material/select';
-import { preparePalm2Request, sendPalm2Request } from 'src/lib/text-templates/llm_vertexapi_palm2';
 import { VertexApiService } from 'src/app/services/vertex-api.service';
+import { sendMediatorGroupMessage, sendMediatorGroupRatingToDiscuss } from 'src/lib/staged-exp/app';
+import { ChatAboutItems, Item, ItemPair, Message, UserData } from 'src/lib/staged-exp/data-model';
 import { FewShotTemplate } from 'src/lib/text-templates/fewshot_template';
+import { preparePalm2Request, sendPalm2Request } from 'src/lib/text-templates/llm_vertexapi_palm2';
 import { nv, template } from 'src/lib/text-templates/template';
+import { ChatDiscussItemsMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-discuss-items-message/chat-discuss-items-message.component';
+import { ChatMediatorMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-mediator-message/chat-mediator-message.component';
+import { ChatUserMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-user-message/chat-user-message.component';
+import { MediatorFeedbackComponent } from '../../participant-view/participant-stage-view/exp-chat/mediator-feedback/mediator-feedback.component';
+import { AppStateService } from '../../services/app-state.service';
 
 @Component({
   selector: 'app-mediator-chat',
@@ -59,13 +51,17 @@ export class MediatorChatComponent {
   public itemPair: Signal<ItemPair>;
   public instructions: string = '';
 
-  public defaultPrefix: string = 'You are a mediator assistant guiding a conversation whose goal is to discuss and decide the best item to survive a sinking yacht lost in the South Pacific.'
-  public defaultSuffix: string = 'What is the best message to send to the chat participants at this stage of the discussion to keep it constructive, unbiased, and civil? Just write the message without the username. Do not use quotes.';
+  public defaultPrefix: string =
+    'You are a mediator assistant guiding a conversation whose goal is to discuss and decide the best item to survive a sinking yacht lost in the South Pacific.';
+  public defaultSuffix: string =
+    'What is the best message to send to the chat participants at this stage of the discussion to keep it constructive, unbiased, and civil? Just write the message without the username. Do not use quotes.';
   public prefix: string = this.defaultPrefix;
   public suffix: string = this.defaultSuffix;
 
-
-  constructor(private appStateService: AppStateService, private llmService: VertexApiService) {
+  constructor(
+    private appStateService: AppStateService,
+    private llmService: VertexApiService,
+  ) {
     this.messages = computed(() => {
       if (this.roomName() === '' || !this.experiment || !this.participants) {
         return [];
@@ -87,9 +83,8 @@ export class MediatorChatComponent {
     });
 
     this.itemPair = computed(() => {
-      return {item1: this.items()[0], item2: this.items()[1]};
+      return { item1: this.items()[0], item2: this.items()[1] };
     });
-
   }
 
   sendMessage() {
@@ -108,8 +103,7 @@ export class MediatorChatComponent {
       this.itemPair().item1 = updatedValue.value;
     } else if (i === 2) {
       this.itemPair().item2 = updatedValue.value;
-    }
-    else {
+    } else {
       throw new Error('Only two items in one pair of item');
     }
   }
@@ -128,36 +122,35 @@ export class MediatorChatComponent {
   async sendLLMMessage() {
     //const prompt = `Hello word`;
     // TODO Add messages to the prompt
-    const nPropertyValuePerLineTempl = new FewShotTemplate(template
-      `${nv('property')}: "${nv('value')}"`,
-      '\n');
+    const nPropertyValuePerLineTempl = new FewShotTemplate(
+      template`${nv('property')}: "${nv('value')}"`,
+      '\n',
+    );
     const userAndMessageList = [
-      { 
+      {
         property: 'Username',
         value: nv('username'),
       },
-      { 
+      {
         property: 'Message',
         value: nv('message'),
-      }
+      },
     ];
     const userMessageTempl = nPropertyValuePerLineTempl.apply(userAndMessageList);
     // expect(userMessageTempl.escaped).toEqual(
     //   `Username: "{{username}}"
     //    Message: "{{message}}"`);
 
-    const nMediationExamplesTempl = new FewShotTemplate(
-      userMessageTempl, '\n\n');
+    const nMediationExamplesTempl = new FewShotTemplate(userMessageTempl, '\n\n');
 
-    const mediationTempl = template
-      `${this.prefix}
-      
+    const mediationTempl = template`${this.prefix}
+
 ${nv('conversation')}
-      
+
 ${this.suffix}`;
 
     // Create empty list in conversation
-    const conversation: { username: string; message: string; }[] = [];
+    const conversation: { username: string; message: string }[] = [];
     // Add messages from this.messages() to the conversation
     this.messages().forEach((m) => {
       if (m.messageType === 'userMessage') {
@@ -165,14 +158,12 @@ ${this.suffix}`;
           username: m.fromProfile.name,
           message: m.text,
         });
-      }
-      else if (m.messageType === 'discussItemsMessage') {
+      } else if (m.messageType === 'discussItemsMessage') {
         conversation.push({
           username: 'Mediator',
           message: m.text,
         });
-      }
-      else if (m.messageType === 'mediatorMessage') {
+      } else if (m.messageType === 'mediatorMessage') {
         conversation.push({
           username: 'Mediator',
           message: m.text,
@@ -181,7 +172,7 @@ ${this.suffix}`;
     });
 
     const mediationWithMessages = mediationTempl.substs({
-      conversation: nMediationExamplesTempl.apply(conversation).escaped
+      conversation: nMediationExamplesTempl.apply(conversation).escaped,
     });
 
     const prompt = mediationWithMessages.escaped;
@@ -189,12 +180,14 @@ ${this.suffix}`;
     console.log(prompt);
     const request = preparePalm2Request(prompt);
     const response = await sendPalm2Request(
-      this.llmService.projectId, this.llmService.accessToken, request);
+      this.llmService.projectId,
+      this.llmService.accessToken,
+      request,
+    );
     // console.log(JSON.stringify(response));
     // console.log(response.predictions[0].content);
     // Send message to chat
     this.message = response.predictions[0].content;
     this.sendMessage();
-  };
-
+  }
 }

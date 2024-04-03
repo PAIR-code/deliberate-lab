@@ -60,7 +60,7 @@ async function tryGetReponse<T>(f: () => gapi.client.Request<T>): Promise<T | Er
     // API assumption: When status == 200, result is always defined.
     return response.result;
   } catch (err: unknown) {
-    const sheetResponseError = err as gapi.client.Response<{}>;
+    const sheetResponseError = err as gapi.client.Response<object>;
     console.warn(err);
     if (sheetResponseError.status === 404) {
       return { error: 'No such spreadsheet exists. Maybe the ID or URL is mistyped? (404)' };
@@ -79,7 +79,9 @@ function prepareInfoRequest(
   steetIdOrUrl: string,
   accessToken?: google.accounts.oauth2.TokenResponse | null,
 ): SheetInfoRequest | ErrorObj {
-  const match = steetIdOrUrl.match(/^(https\:\/\/docs\.google\.com\/spreadsheets\/d\/)?([a-zA-Z0-9_\-]{5,})\/?/);
+  const match = steetIdOrUrl.match(
+    /^(https\:\/\/docs\.google\.com\/spreadsheets\/d\/)?([a-zA-Z0-9_\-]{5,})\/?/,
+  );
   if (!match) {
     return { error: 'No sheet URL or ID entered.' };
   }
@@ -137,7 +139,9 @@ export class GoogleSheetsService {
     if (isSheetsError(request)) {
       return request;
     }
-    const spreadsheetResponse = await tryGetReponse(() => gapi.client.sheets.spreadsheets.get(request));
+    const spreadsheetResponse = await tryGetReponse(() =>
+      gapi.client.sheets.spreadsheets.get(request),
+    );
     if (isSheetsError(spreadsheetResponse)) {
       return spreadsheetResponse;
     }
@@ -154,7 +158,9 @@ export class GoogleSheetsService {
     if (isSheetsError(request)) {
       return request;
     }
-    const spreadsheetResponse = await tryGetReponse(() => gapi.client.sheets.spreadsheets.values.get(request));
+    const spreadsheetResponse = await tryGetReponse(() =>
+      gapi.client.sheets.spreadsheets.values.get(request),
+    );
     if (isSheetsError(spreadsheetResponse)) {
       return spreadsheetResponse;
     }

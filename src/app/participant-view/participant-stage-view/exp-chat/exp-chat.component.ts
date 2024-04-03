@@ -7,19 +7,25 @@
 ==============================================================================*/
 
 import { Component, Signal, computed, effect } from '@angular/core';
-import { ChatAboutItems, ExpStageChatAboutItems, Item, ItemPair, Message, StageKinds, UserData } from 'src/lib/staged-exp/data-model';
-import { AppStateService } from '../../../services/app-state.service';
-import { ChatUserMessageComponent } from './chat-user-message/chat-user-message.component';
-import { ChatDiscussItemsMessageComponent } from './chat-discuss-items-message/chat-discuss-items-message.component';
-import { ChatMediatorMessageComponent } from './chat-mediator-message/chat-mediator-message.component';
-import { MediatorFeedbackComponent } from './mediator-feedback/mediator-feedback.component';
-import { MatSlideToggleChange, MatSlideToggleModule} from '@angular/material/slide-toggle';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
+import {
+  ChatAboutItems,
+  ItemPair,
+  Message,
+  StageKinds,
+  UserData,
+} from 'src/lib/staged-exp/data-model';
 import { Participant } from 'src/lib/staged-exp/participant';
+import { AppStateService } from '../../../services/app-state.service';
+import { ChatDiscussItemsMessageComponent } from './chat-discuss-items-message/chat-discuss-items-message.component';
+import { ChatMediatorMessageComponent } from './chat-mediator-message/chat-mediator-message.component';
+import { ChatUserMessageComponent } from './chat-user-message/chat-user-message.component';
 import { ChatUserProfileComponent } from './chat-user-profile/chat-user-profile.component';
+import { MediatorFeedbackComponent } from './mediator-feedback/mediator-feedback.component';
 @Component({
   selector: 'app-exp-chat',
   standalone: true,
@@ -67,42 +73,48 @@ export class ExpChatComponent {
 
     this.everyoneReachedTheChat = computed(() => {
       const users = Object.values(this.participant.experiment().participants);
-      return users.map((userData) => userData.workingOnStageName).every((n) => n === this.participant.userData().workingOnStageName);
+      return users
+        .map((userData) => userData.workingOnStageName)
+        .every((n) => n === this.participant.userData().workingOnStageName);
     });
 
     this.everyoneFinishedTheChat = computed(() => {
       // const users = Object.values(this.participant.experiment().participants);
       // return users.every((userData) => {
       //   const otherUserChatStage = userData.stageMap[this.stageData.name] as ExpStageChatAboutItems;
-      //   return otherUserChatStage.config.readyToEndChat;        
+      //   return otherUserChatStage.config.readyToEndChat;
       // });
       const participantsReady: UserData[] = [];
       if (this.stageData().readyToEndChat) {
         participantsReady.push(this.participant.userData());
       }
       this.otherParticipants().forEach((p) => {
-        const stage = p.stageMap[this.participant.userData().workingOnStageName].config as ChatAboutItems;
+        const stage = p.stageMap[this.participant.userData().workingOnStageName]
+          .config as ChatAboutItems;
         if (stage.readyToEndChat) {
           participantsReady.push(p);
         }
       });
-      const isReady = participantsReady.length === (this.otherParticipants().length + 1);
+      const isReady = participantsReady.length === this.otherParticipants().length + 1;
 
       // Allow "Next" to be pushed.
       if (isReady) {
         const allUsers = Object.values(this.participant.experiment().participants);
         for (const user of allUsers) {
-            user.allowedStageProgressionMap[user.workingOnStageName] = true;
+          user.allowedStageProgressionMap[user.workingOnStageName] = true;
         }
       }
       return isReady;
     });
 
-    effect(() => {
-      if(this.everyoneFinishedTheChat()) {
-        this.participant.nextStep();
-      }
-    }, { allowSignalWrites: true });
+    effect(
+      () => {
+        if (this.everyoneFinishedTheChat()) {
+          this.participant.nextStep();
+        }
+      },
+      { allowSignalWrites: true },
+    );
 
     this.ratingsToDiscuss = computed(() => {
       return this.stageData().ratingsToDiscuss;
@@ -112,11 +124,10 @@ export class ExpChatComponent {
       // last item in the array
       return this.ratingsToDiscuss()[this.ratingsToDiscuss().length - 1];
     });
-
   }
 
   isSilent() {
-    return (this.stageData().isSilent !== false);
+    return this.stageData().isSilent !== false;
   }
 
   sendMessage() {
