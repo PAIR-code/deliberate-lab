@@ -18,6 +18,7 @@ We use Firebase Cloud Functions to run server-side code. The functions are locat
 ```bash
 cd functions
 npm install  # Install the dependencies
+npm run build  # You have to regularly build the functions
 ```
 
 ### Emulators
