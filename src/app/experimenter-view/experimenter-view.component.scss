@@ -1,21 +1,24 @@
 $toolbar-height: 60px;
 
 .toolbar {
-  // position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: $toolbar-height;
   display: flex;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.87);
+  background-color: rgb(33, 33, 33);
   color: white;
   font-weight: 600;
   flex: 0 0 $toolbar-height;
-}
 
-.toolbar img {
-  margin: 0 16px;
+  /* Fixed top toolbar */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: $toolbar-height;
+  z-index: 1000; /* Ensure the toolbar is above other content */
+
+  img {
+    margin: 0 16px;
+  }
 }
 
 .small-logo {
@@ -42,16 +45,18 @@ $toolbar-height: 60px;
 }
 
 .content {
+  position: relative;
+  top: $toolbar-height;
+
+  // Content display
   display: flex;
-  margin: 0;
-  // margin-top: $toolbar-height;
-  // padding: 10px 16px;
-  // max-width: 960px;
+  flex: 1 1 auto;
   flex-wrap: wrap;
   flex-direction: row;
   justify-content: flex-start;
   align-items: flex-start;
-  flex: 1 1 auto;
+
+  margin: 0;
   overflow: auto;
 
   .highlighted {
@@ -101,6 +106,11 @@ $toolbar-height: 60px;
 }
 
 .menu-buttons {
+  // Fixed to the top toolbar
+  // BUG: it need to stick to the top, but the rest must be aware of it
+  position: static;
+  top: $toolbar-height;
+
   display: flex;
   // flex-wrap: wrap;
   flex-direction: column;
@@ -162,6 +172,3 @@ $toolbar-height: 60px;
   border-radius: 5px;
   border: 1px solid #aaa;
 }
-
-// .content {
-// }
