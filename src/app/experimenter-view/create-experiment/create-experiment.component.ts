@@ -33,7 +33,7 @@ import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { LocalService } from 'src/app/services/local.service';
 import { tryCast } from 'src/lib/algebraic-data';
-import { createExperimentMutation } from 'src/lib/api/mutations';
+import { createExperimentMutation, createTemplateMutation } from 'src/lib/api/mutations';
 import { makeStages } from 'src/lib/staged-exp/example-experiment';
 import { generateAllowedStageProgressionMap } from 'src/lib/types/stages.types';
 import { lookupTable } from 'src/lib/utils/object.utils';
@@ -75,6 +75,10 @@ export class CreateExperimentComponent {
   createExp = createExperimentMutation(this.http, this.client, ({ uid }) => {
     localStorage.removeItem(LOCAL_STORAGE_KEY); // Clear local storage
     this.router.navigate([`/experimenter/experiment/${uid}`]);
+  });
+
+  createTemplate = createTemplateMutation(this.http, this.client, () => {
+    this.resetExistingStages(); // Reset after setting as template
   });
 
   public existingStages: Partial<ExpStage>[] = [];
@@ -195,6 +199,7 @@ export class CreateExperimentComponent {
     if (this.newExperimentName.trim().length === 0) {
       return true;
     }
+    console.log('called !');
     return this.existingStages.some((stage) => this.stageSetupIncomplete(stage));
   }
 
@@ -279,6 +284,16 @@ export class CreateExperimentComponent {
     this.createExp.mutate({
       name: this.newExperimentName,
       numberOfParticipants: 3, // TODO: provide a way to parametrize this ?
+      allowedStageProgressionMap: generateAllowedStageProgressionMap(stages),
+      stageMap: lookupTable(stages, 'name'),
+    });
+  }
+
+  addTemplate() {
+    const stages = this.existingStages as ExpStage[];
+
+    this.createTemplate.mutate({
+      name: this.newExperimentName,
       allowedStageProgressionMap: generateAllowedStageProgressionMap(stages),
       stageMap: lookupTable(stages, 'name'),
     });

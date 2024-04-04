@@ -21,3 +21,10 @@ export interface ExperimentCreationData {
   numberOfParticipants: number;
   allowedStageProgressionMap: Record<string, boolean>;
 }
+
+/** Data to be sent to the backend in order to generate a template */
+export interface TemplateCreationData {
+  name: string;
+  stageMap: Record<string, ExpStage>;
+  allowedStageProgressionMap: Record<string, boolean>;
+}

@@ -15,14 +15,33 @@
         required="true"
       />
     </mat-form-field>
-    <button
-      mat-raised-button
-      color="primary"
-      (click)="addExperiment()"
-      [disabled]="experimentSetupIncomplete() || createExp.isPending()"
-    >
-      Add new experiment
-    </button>
+    <div>
+      <button
+        mat-raised-button
+        color="secondary"
+        (click)="addTemplate()"
+        [disabled]="
+          this.experimentSetupIncomplete() ||
+          this.createTemplate.isPending() ||
+          this.createExp.isPending()
+        "
+        style="margin-right: 5px"
+      >
+        Save as template
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="addExperiment()"
+        [disabled]="
+          this.experimentSetupIncomplete() ||
+          this.createTemplate.isPending() ||
+          this.createExp.isPending()
+        "
+      >
+        Add new experiment
+      </button>
+    </div>
   </div>
 
   <div class="container">
