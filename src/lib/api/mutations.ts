@@ -5,7 +5,8 @@ import { HttpClient } from '@angular/common/http';
 import { QueryClient, injectMutation } from '@tanstack/angular-query-experimental';
 import { lastValueFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { SimpleResponse } from '../types/api.types';
+import { CreationResponse, SimpleResponse } from '../types/api.types';
+import { ExperimentCreationData } from '../types/experiments.types';
 
 export const deleteExperimentMutation = (http: HttpClient, client: QueryClient) =>
   injectMutation(() => ({
@@ -19,3 +20,20 @@ export const deleteExperimentMutation = (http: HttpClient, client: QueryClient) 
       client.refetchQueries({ queryKey: ['experiments'] });
     },
   }));
+
+export const createExperimentMutation = (
+  http: HttpClient,
+  client: QueryClient,
+  onSuccess?: (data: CreationResponse) => Promise<void> | void,
+) => {
+  return injectMutation(() => ({
+    mutationFn: (data: ExperimentCreationData) =>
+      lastValueFrom(
+        http.post<CreationResponse>(`${environment.cloudFunctionsUrl}/createExperiment`, data),
+      ),
+    onSuccess: (data) => {
+      client.refetchQueries({ queryKey: ['experiments'] });
+      onSuccess?.(data);
+    },
+  }));
+};

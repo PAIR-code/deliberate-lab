@@ -7,4 +7,8 @@ export interface SimpleResponse<T> {
   data: T;
 }
 
+export interface CreationResponse {
+  uid: string;
+}
+
 export type QueryType<T> = CreateQueryResult<T, Error>;

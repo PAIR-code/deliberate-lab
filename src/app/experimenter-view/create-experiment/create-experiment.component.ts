@@ -16,7 +16,7 @@ import {
 } from 'src/lib/staged-exp/data-model';
 
 import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -26,14 +26,24 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
+import { HttpClient } from '@angular/common/http';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { Router } from '@angular/router';
+import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { LocalService } from 'src/app/services/local.service';
 import { tryCast } from 'src/lib/algebraic-data';
-import { addExperiment } from 'src/lib/staged-exp/app';
+import { createExperimentMutation } from 'src/lib/api/mutations';
 import { makeStages } from 'src/lib/staged-exp/example-experiment';
+import { generateAllowedStageProgressionMap } from 'src/lib/types/stages.types';
+import { lookupTable } from 'src/lib/utils/object.utils';
 
-const EXISTING_STAGES_KEY = 'existing-stages';
+// TODO: clear local storage, navigate to the experiment page.
+// aussi faire pour la sauvegarde de templates.
+
+// TODO: normalement ça devrait être bon. Vérif quand même pour le stockage local et la navigation, puis faire la nav dans les templates
+// TODO: give a more explicit name...
+const LOCAL_STORAGE_KEY = 'ongoing-experiment-creation';
 
 const getInitStageData = (): Partial<ExpStage> => {
   return { name: '' };
@@ -59,16 +69,22 @@ const getInitStageData = (): Partial<ExpStage> => {
   styleUrl: './create-experiment.component.scss',
 })
 export class CreateExperimentComponent {
-  // new stuff
+  http = inject(HttpClient);
+  client = injectQueryClient();
+
+  createExp = createExperimentMutation(this.http, this.client, ({ uid }) => {
+    localStorage.removeItem(LOCAL_STORAGE_KEY); // Clear local storage
+    this.router.navigate([`/experimenter/experiment/${uid}`]);
+  });
+
   public existingStages: Partial<ExpStage>[] = [];
   public currentEditingStageIndex = -1;
   public newExperimentName = '';
 
+  // Make these fields available in the template
   readonly StageKinds = StageKinds;
   readonly SurveyQuestionKind = SurveyQuestionKind;
-
   readonly tryCast = tryCast;
-
   readonly availableStageKinds = [
     StageKinds.acceptTosAndSetProfile,
     StageKinds.takeSurvey,
@@ -79,10 +95,10 @@ export class CreateExperimentComponent {
 
   constructor(
     private appStateService: AppStateService,
+    private router: Router,
     private localStore: LocalService,
   ) {
-    // new stuff
-    const existingStages = this.localStore.getData(EXISTING_STAGES_KEY) as ExpStage[];
+    const existingStages = this.localStore.getData(LOCAL_STORAGE_KEY) as ExpStage[];
     if (existingStages) {
       this.existingStages = existingStages;
     } else {
@@ -96,7 +112,7 @@ export class CreateExperimentComponent {
   }
 
   get hasUnsavedData() {
-    const existingStages = this.localStore.getData(EXISTING_STAGES_KEY) as ExpStage[];
+    const existingStages = this.localStore.getData(LOCAL_STORAGE_KEY) as ExpStage[];
     return !isEqual(existingStages, this.existingStages);
   }
 
@@ -183,7 +199,7 @@ export class CreateExperimentComponent {
   }
 
   persistExistingStages() {
-    this.localStore.saveData(EXISTING_STAGES_KEY, this.existingStages);
+    this.localStore.saveData(LOCAL_STORAGE_KEY, this.existingStages);
   }
 
   dropStage(event: CdkDragDrop<string[]>) {
@@ -217,7 +233,7 @@ export class CreateExperimentComponent {
   }
 
   resetExistingStages() {
-    this.localStore.removeData(EXISTING_STAGES_KEY);
+    this.localStore.removeData(LOCAL_STORAGE_KEY);
 
     this.existingStages = makeStages();
     this.persistExistingStages();
@@ -256,12 +272,15 @@ export class CreateExperimentComponent {
     this.persistExistingStages();
   }
 
+  /** Create the experiment and send it to be stored in the database */
   addExperiment() {
-    this.appStateService.editData((data) =>
-      addExperiment(this.newExperimentName, this.existingStages as ExpStage[], data),
-    );
-    // console.log(this.localStore.getData(EXISTING_STAGES_KEY));
-    // this.appStateService.addExperiment()
-    // this.appStateService.reset(this.localStore.getData(EXISTING_STAGES_KEY) as ExpStage[]);
+    const stages = this.existingStages as ExpStage[];
+
+    this.createExp.mutate({
+      name: this.newExperimentName,
+      numberOfParticipants: 3, // TODO: provide a way to parametrize this ?
+      allowedStageProgressionMap: generateAllowedStageProgressionMap(stages),
+      stageMap: lookupTable(stages, 'name'),
+    });
   }
 }

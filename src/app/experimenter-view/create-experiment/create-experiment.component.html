@@ -19,7 +19,7 @@
       mat-raised-button
       color="primary"
       (click)="addExperiment()"
-      [disabled]="experimentSetupIncomplete()"
+      [disabled]="experimentSetupIncomplete() || createExp.isPending()"
     >
       Add new experiment
     </button>

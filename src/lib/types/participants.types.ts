@@ -14,7 +14,7 @@ export interface ParticipantProfile {
 }
 
 export interface ParticipantExtended extends ParticipantProfile {
-  stageMap: Record<string, ExpStage>; // TODO: refactor ExpStage
+  stageMap: Record<string, ExpStage>;
   allowedStageProgressionMap: Record<string, boolean>;
   futureStageNames: string[];
   completedStageNames: string[];
