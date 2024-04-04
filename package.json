@@ -8,7 +8,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
-    "watch-functions": "nodemon --watch functions --ignore functions/lib/**/* --exec 'cd functions && npm run build'"
+    "watch-functions": "cd functions && npm run build:watch"
   },
   "private": true,
   "dependencies": {
@@ -67,7 +67,6 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
-    "nodemon": "^3.1.0",
     "prettier": "^3.2.4",
     "prettier-eslint": "^16.2.0",
     "ts-node": "^10.9.1",
