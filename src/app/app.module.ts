@@ -57,7 +57,7 @@ import { VertexApiService } from './services/vertex-api.service';
     GoogleAuthService,
     GoogleSheetsService,
     provideHttpClient(),
-    provideAngularQuery(new QueryClient())
+    provideAngularQuery(new QueryClient()),
   ],
   bootstrap: [AppComponent],
   imports: [

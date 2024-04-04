@@ -4,11 +4,12 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterLink, RouterLinkActive, RouterModule } from '@angular/router';
 import { AppStateService } from 'src/app/services/app-state.service';
-import { deleteExperiment } from 'src/lib/staged-exp/app';
 
 import { HttpClient } from '@angular/common/http';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { isOfKind } from 'src/lib/algebraic-data';
+import { deleteExperimentMutation } from 'src/lib/api/mutations';
 import { experimentQuery } from 'src/lib/api/queries';
 import { StageKinds } from 'src/lib/staged-exp/data-model';
 import { QueryType } from 'src/lib/types/api.types';
@@ -42,6 +43,11 @@ export interface StageState {
 })
 export class ExperimentMonitorComponent {
   http = inject(HttpClient);
+  queryClient = injectQueryClient();
+
+  // Experiment deletion mutation
+  rmExperiment = deleteExperimentMutation(this.http, this.queryClient);
+
   public experimentUid: WritableSignal<string | null> = signal(null);
   public _experiment: QueryType<ExperimentExtended | null>;
   public participants: Signal<ParticipantExtended[]>;
@@ -105,8 +111,7 @@ export class ExperimentMonitorComponent {
   deleteExperiment() {
     const experimentUid = this.experimentUid();
     if (experimentUid !== null && confirm('⚠️ This will delete the experiment! Are you sure?')) {
-      // TODO: mutation
-      this.stateService.editData((data) => deleteExperiment(experimentUid, data));
+      this.rmExperiment.mutate(experimentUid);
 
       // Redirect to settings page.
       this.router.navigate(['/experimenter', 'settings']);

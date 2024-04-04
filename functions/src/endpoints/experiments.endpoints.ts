@@ -47,3 +47,33 @@ export const experiment = onRequest(async (request, response) => {
 
   response.send(data);
 });
+
+export const deleteExperiment = onRequest(async (request, response) => {
+  const experimentId = request.params[0];
+
+  if (!experimentId) {
+    response.status(400).send('Missing experiment UID');
+    return;
+  }
+
+  const experiment = await app.firestore().collection('experiments').doc(experimentId).get();
+
+  if (!experiment.exists) {
+    response.status(404).send('Experiment not found');
+    return;
+  }
+
+  // Delete all participants associated with the experiment
+  const participants = await app
+    .firestore()
+    .collection('participants')
+    .where('experimentId', '==', experimentId)
+    .get();
+
+  const batch = app.firestore().batch();
+  batch.delete(experiment.ref);
+  participants.docs.forEach((doc) => batch.delete(doc.ref));
+  await batch.commit();
+
+  response.send({ data: `Experiment of ID ${experimentId} was successfully deleted` });
+});
