@@ -44,8 +44,8 @@ export class ExpLeaderRevealComponent {
     this.finalLeader = computed(() => {
       const users = Object.values(this.participant.experiment().participants);
       const votes: { [userId: string]: number } = {};
-      users.forEach(({ userId }) => {
-        votes[userId] = 0;
+      users.forEach(({ uid }) => {
+        votes[uid] = 0;
       });
 
       for (const user of users) {

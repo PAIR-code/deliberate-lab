@@ -7,15 +7,17 @@
 ==============================================================================*/
 import { computed, Signal, WritableSignal } from '@angular/core';
 import { Session } from '../session';
+import { ExperimentExtended } from '../types/experiments.types';
+import { ParticipantExtended, ParticipantProfile } from '../types/participants.types';
 import { editParticipant, ParticipantSession, SavedAppData, sendParticipantMessage } from './app';
-import { ExpDataKinds, Experiment, ExpStage, UserData, UserProfile } from './data-model';
+import { ExpDataKinds, ExpStage } from './data-model';
 
 // TODO:
 // Make this cleverly parameterised over the "viewingStage" ExpStage type,
 // so that editStageData can make sure it never edits the wrong data kind.
 export class Participant {
-  public userData: Signal<UserData>;
-  public experiment: Signal<Experiment>;
+  public userData: Signal<ParticipantExtended>;
+  public experiment: Signal<ExperimentExtended>;
   public viewingStage: Signal<ExpStage>;
   public workingOnStage: Signal<ExpStage>;
 
@@ -57,7 +59,7 @@ export class Participant {
     );
   }
 
-  public edit(f: (user: UserData) => UserData | void): void {
+  public edit(f: (user: ParticipantExtended) => ParticipantExtended | void): void {
     editParticipant(
       this.appData,
       { experiment: this.session.state().experiment, id: this.session.state().user },
@@ -92,16 +94,17 @@ export class Participant {
     });
   }
 
-  setProfile(newUserProfile: UserProfile) {
-    this.edit((user) => {
-      user.profile = newUserProfile;
+  setProfile(_newUserProfile: ParticipantProfile) {
+    this.edit((_user) => {
+      // TODO: use a backend mutation instead
+      // user = newUserProfile;
     });
   }
 
   sendMessage(message: string) {
     sendParticipantMessage(
       this.appData,
-      { experiment: this.experiment().name, id: this.userData().userId },
+      { experiment: this.experiment().name, id: this.userData().uid },
       { stageName: this.workingOnStage().name, message },
     );
   }

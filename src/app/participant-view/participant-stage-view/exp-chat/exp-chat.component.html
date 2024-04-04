@@ -1,14 +1,14 @@
 <div class="chat-members">
   <b>Other chat members </b>
   <div class="container">
-    @for (user of this.otherParticipants(); track user.userId) {
+    @for (user of this.otherParticipants(); track user.uid) {
       @if (user.workingOnStageName === this.participant.userData().workingOnStageName) {
         <div class="profile">
-          <img class="avatar" src="{{ user.profile.avatarUrl }}" alt="avatar" />
+          <img class="avatar" src="{{ user.avatarUrl }}" alt="avatar" />
           <div class="name">
-            {{ user.profile.name }}
+            {{ user.name }}
           </div>
-          <div class="pronoun">({{ user.profile.pronouns }})</div>
+          <div class="pronoun">({{ user.pronouns }})</div>
         </div>
       }
     }
@@ -40,7 +40,7 @@
     </div>
 
     <div class="message-form">
-      <app-chat-user-profile [profile]="participant.userData().profile"></app-chat-user-profile>
+      <app-chat-user-profile [profile]="participant.userData()"></app-chat-user-profile>
       <mat-form-field class="full-width">
         <mat-label>Message to send</mat-label>
         <input

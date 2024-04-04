@@ -12,14 +12,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
-import {
-  ChatAboutItems,
-  ItemPair,
-  Message,
-  StageKinds,
-  UserData,
-} from 'src/lib/staged-exp/data-model';
+import { ChatAboutItems, ItemPair, Message, StageKinds } from 'src/lib/staged-exp/data-model';
 import { Participant } from 'src/lib/staged-exp/participant';
+import { ParticipantExtended } from 'src/lib/types/participants.types';
 import { AppStateService } from '../../../services/app-state.service';
 import { ChatDiscussItemsMessageComponent } from './chat-discuss-items-message/chat-discuss-items-message.component';
 import { ChatMediatorMessageComponent } from './chat-mediator-message/chat-mediator-message.component';
@@ -50,7 +45,7 @@ export class ExpChatComponent {
   public message: string = '';
 
   public participant: Participant;
-  public otherParticipants: Signal<UserData[]>;
+  public otherParticipants: Signal<ParticipantExtended[]>;
   public everyoneReachedTheChat: Signal<boolean>;
   public everyoneFinishedTheChat: Signal<boolean>;
   public ratingsToDiscuss: Signal<ItemPair[]>;
@@ -66,9 +61,9 @@ export class ExpChatComponent {
     });
 
     this.otherParticipants = computed(() => {
-      const thisUserId = this.participant.userData().userId;
+      const thisUserId = this.participant.userData().uid;
       const allUsers = Object.values(this.participant.experiment().participants);
-      return allUsers.filter((u) => u.userId !== thisUserId);
+      return allUsers.filter((u) => u.uid !== thisUserId);
     });
 
     this.everyoneReachedTheChat = computed(() => {
@@ -84,7 +79,7 @@ export class ExpChatComponent {
       //   const otherUserChatStage = userData.stageMap[this.stageData.name] as ExpStageChatAboutItems;
       //   return otherUserChatStage.config.readyToEndChat;
       // });
-      const participantsReady: UserData[] = [];
+      const participantsReady: ParticipantExtended[] = [];
       if (this.stageData().readyToEndChat) {
         participantsReady.push(this.participant.userData());
       }

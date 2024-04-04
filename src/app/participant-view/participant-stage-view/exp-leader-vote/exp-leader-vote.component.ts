@@ -11,7 +11,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatRadioModule } from '@angular/material/radio';
 
 import { Participant } from 'src/lib/staged-exp/participant';
-import { LeaderVote, StageKinds, UserData, Votes } from '../../../../lib/staged-exp/data-model';
+import { ParticipantExtended } from 'src/lib/types/participants.types';
+import { LeaderVote, StageKinds, Votes } from '../../../../lib/staged-exp/data-model';
 import { AppStateService } from '../../../services/app-state.service';
 
 @Component({
@@ -22,7 +23,7 @@ import { AppStateService } from '../../../services/app-state.service';
   imports: [MatRadioModule, MatButtonModule],
 })
 export class ExpLeaderVoteComponent {
-  public otherParticipants: Signal<UserData[]>;
+  public otherParticipants: Signal<ParticipantExtended[]>;
 
   readonly LeaderVote = LeaderVote;
 
@@ -37,18 +38,18 @@ export class ExpLeaderVoteComponent {
     this.participant = participant;
 
     this.otherParticipants = computed(() => {
-      const thisUserId = this.participant.userData().userId;
+      const thisUserId = this.participant.userData().uid;
       const allUsers = Object.values(this.participant.experiment().participants);
-      return allUsers.filter((u) => u.userId !== thisUserId);
+      return allUsers.filter((u) => u.uid !== thisUserId);
     });
 
     // Make sure that votes has all other participants, and only them... if things
     // are configured fully in an experiment definition this is not needed.
-    const otherParticipantsMap: { [userId: string]: UserData } = {};
+    const otherParticipantsMap: { [userId: string]: ParticipantExtended } = {};
     for (const p of this.otherParticipants()) {
-      otherParticipantsMap[p.userId] = p;
-      if (!(p.userId in this.votes)) {
-        this.votes[p.userId] = LeaderVote.NOT_RATED;
+      otherParticipantsMap[p.uid] = p;
+      if (!(p.uid in this.votes)) {
+        this.votes[p.uid] = LeaderVote.NOT_RATED;
       }
     }
     Object.keys(this.votes).forEach((uid) => {
@@ -62,7 +63,7 @@ export class ExpLeaderVoteComponent {
   isComplete() {
     let completed = true;
     this.otherParticipants().forEach((u) => {
-      if (!(u.userId in this.votes) || this.votes[u.userId] === LeaderVote.NOT_RATED) {
+      if (!(u.uid in this.votes) || this.votes[u.uid] === LeaderVote.NOT_RATED) {
         completed = false;
       }
     });

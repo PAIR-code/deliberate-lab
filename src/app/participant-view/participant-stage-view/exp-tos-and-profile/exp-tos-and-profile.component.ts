@@ -15,7 +15,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatRadioChange, MatRadioModule } from '@angular/material/radio';
 
 import { Participant } from 'src/lib/staged-exp/participant';
-import { StageKinds, TosAndUserProfile, UserData } from '../../../../lib/staged-exp/data-model';
+import { ParticipantExtended } from 'src/lib/types/participants.types';
+import { StageKinds, TosAndUserProfile } from '../../../../lib/staged-exp/data-model';
 import { AppStateService } from '../../../services/app-state.service';
 
 enum Pronouns {
@@ -53,11 +54,9 @@ export class ExpTosAndProfileComponent {
     this.participant = participant;
   }
 
-  canProceedToNextStep(user: UserData) {
+  canProceedToNextStep(user: ParticipantExtended) {
     // TODO(cjqian): Make sure TOS is accepted as well.
-    return (
-      user.profile.avatarUrl !== '' && user.profile.name !== '' && user.profile.pronouns !== ''
-    );
+    return user.avatarUrl !== '' && user.name !== '' && user.pronouns !== '';
   }
 
   isOtherPronoun(s: string) {
@@ -100,9 +99,9 @@ export class ExpTosAndProfileComponent {
 
   updateUserProfile() {
     this.participant.edit((user) => {
-      user.profile.avatarUrl = this.stageData().avatarUrl;
-      user.profile.name = this.stageData().name;
-      user.profile.pronouns = this.stageData().pronouns;
+      user.avatarUrl = this.stageData().avatarUrl;
+      user.name = this.stageData().name;
+      user.pronouns = this.stageData().pronouns;
       user.allowedStageProgressionMap[user.workingOnStageName] = this.canProceedToNextStep(user);
     });
   }

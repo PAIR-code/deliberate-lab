@@ -6,10 +6,11 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectChange, MatSelectModule } from '@angular/material/select';
 import { VertexApiService } from 'src/app/services/vertex-api.service';
 import { sendMediatorGroupMessage, sendMediatorGroupRatingToDiscuss } from 'src/lib/staged-exp/app';
-import { ChatAboutItems, Item, ItemPair, Message, UserData } from 'src/lib/staged-exp/data-model';
+import { ChatAboutItems, Item, ItemPair, Message } from 'src/lib/staged-exp/data-model';
 import { FewShotTemplate } from 'src/lib/text-templates/fewshot_template';
 import { preparePalm2Request, sendPalm2Request } from 'src/lib/text-templates/llm_vertexapi_palm2';
 import { nv, template } from 'src/lib/text-templates/template';
+import { ParticipantExtended } from 'src/lib/types/participants.types';
 import { ChatDiscussItemsMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-discuss-items-message/chat-discuss-items-message.component';
 import { ChatMediatorMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-mediator-message/chat-mediator-message.component';
 import { ChatUserMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-user-message/chat-user-message.component';
@@ -36,8 +37,8 @@ import { AppStateService } from '../../services/app-state.service';
 export class MediatorChatComponent {
   roomName: WritableSignal<string> = signal('');
 
-  @Input() experiment?: Signal<string>;
-  @Input() participants?: Signal<UserData[]>;
+  @Input() experiment?: Signal<string | null>;
+  @Input() participants?: Signal<ParticipantExtended[]>;
 
   @Input()
   set chatRoomName(name: string) {
@@ -88,10 +89,11 @@ export class MediatorChatComponent {
   }
 
   sendMessage() {
-    if (!this.experiment) {
+    const experiment = this.experiment?.();
+    if (!experiment) {
       throw new Error('Tried to send a message without knowing the experiment');
     }
-    sendMediatorGroupMessage(this.appStateService.data, this.experiment(), {
+    sendMediatorGroupMessage(this.appStateService.data, experiment, {
       stageName: this.roomName(),
       message: this.message,
     });
@@ -109,10 +111,11 @@ export class MediatorChatComponent {
   }
 
   sendRatingToDiscuss() {
-    if (!this.experiment) {
+    const experiment = this.experiment?.();
+    if (!experiment) {
       throw new Error('Tried to send a RatingToDiscuss without knowing the experiment');
     }
-    sendMediatorGroupRatingToDiscuss(this.appStateService.data, this.experiment(), {
+    sendMediatorGroupRatingToDiscuss(this.appStateService.data, experiment, {
       stageName: this.roomName(),
       itemPair: this.itemPair(),
       message: this.instructions,

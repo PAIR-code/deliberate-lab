@@ -12,15 +12,15 @@
 import { WritableSignal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RouteSessionBinding } from '../route-session-binding';
+import { ExperimentExtended } from '../types/experiments.types';
+import { ParticipantExtended } from '../types/participants.types';
 import {
   ChatAboutItems,
   DiscussItemsMessage,
   ExpDataKinds,
   ExpStage,
-  Experiment,
   ItemPair,
   MediatorMessage,
-  UserData,
 } from './data-model';
 import { initialExperimentSetup, makeStages } from './example-experiment';
 import { Participant } from './participant';
@@ -134,7 +134,7 @@ export interface AppSettings {
 }
 export interface SavedAppData {
   settings: AppSettings;
-  experiments: { [name: string]: Experiment };
+  experiments: { [name: string]: ExperimentExtended };
 }
 
 export function initialAppData(): SavedAppData {
@@ -181,7 +181,7 @@ export function deleteExperiment(name: string, appData: SavedAppData) {
 export function editParticipant(
   appData: WritableSignal<SavedAppData>,
   participant: { experiment: string; id: string },
-  f: (user: UserData) => UserData | void,
+  f: (user: ParticipantExtended) => ParticipantExtended | void,
   options?: { skipSetting: boolean },
 ): void {
   const data = appData();
@@ -189,21 +189,19 @@ export function editParticipant(
   const userData = experiment.participants[participant.id];
   // We have to force update the user object also, because change tracking for
   // the user Signal is based on reference.
-  let user: UserData = { ...userData };
+  let user: ParticipantExtended = { ...userData };
   const maybeNewUser = f(user);
   if (maybeNewUser) {
     user = { ...maybeNewUser };
   }
-  if (user.userId !== participant.id) {
+  if (user.uid !== participant.id) {
     // TODO: we could consider allowing this with an option to the call...
-    throw new Error(
-      `Editing a user should not their id: new: ${user.userId}, old: ${participant.id}`,
-    );
+    throw new Error(`Editing a user should not their id: new: ${user.uid}, old: ${participant.id}`);
   }
   // TODO...
   // Editing experiment like this means we assume no async changes to the experiment...
   // If we had signals linked to the experiment, tracked by reference, they will not know...
-  experiment.participants[user.userId] = user;
+  experiment.participants[user.uid] = user;
   if (options && options.skipSetting) {
     return;
   }
@@ -241,12 +239,12 @@ export function sendParticipantMessage(
 ): void {
   const experiment = appData().experiments[fromParticipant.experiment];
   const fromProfile =
-    appData().experiments[fromParticipant.experiment].participants[fromParticipant.id].profile;
+    appData().experiments[fromParticipant.experiment].participants[fromParticipant.id];
 
   for (const u of Object.values(experiment.participants)) {
     editParticipantStage<ChatAboutItems>(
       appData,
-      { experiment: experiment.name, id: u.userId },
+      { experiment: experiment.name, id: u.uid },
       to.stageName,
       (config) => {
         // console.log(u.userId, config);
@@ -278,7 +276,7 @@ export function sendMediatorGroupMessage(
   for (const u of Object.values(experiment.participants)) {
     editParticipantStage<ChatAboutItems>(
       appData,
-      { experiment: experimentName, id: u.userId },
+      { experiment: experimentName, id: u.uid },
       to.stageName,
       (stageData) => {
         const mediatorMessage: MediatorMessage = {
@@ -308,7 +306,7 @@ export function sendMediatorGroupRatingToDiscuss(
   for (const u of Object.values(experiment.participants)) {
     editParticipantStage<ChatAboutItems>(
       appData,
-      { experiment: experimentName, id: u.userId },
+      { experiment: experimentName, id: u.uid },
       to.stageName,
       (stageData) => {
         stageData.ratingsToDiscuss.push(to.itemPair);

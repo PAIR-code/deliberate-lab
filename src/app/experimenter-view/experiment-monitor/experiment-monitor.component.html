@@ -1,60 +1,64 @@
 <h2>Experimenter View</h2>
 
-<div>
-  <p>Number of participants ({{ participants().length }})</p>
-  @for (p of participants(); track p.userId) {
-    <a
-      [routerLink]="['/participant', this.experimentName(), p.userId]"
-      [queryParams]="{ stage: p.workingOnStageName }"
-      >{{ p.userId }}</a
-    >
-    <ul>
-      <li>Name: {{ p.profile.name }}</li>
-      <li>Preffered pronouns: {{ p.profile.pronouns }}</li>
-      <li>
-        Avatar:
-        @if (p.profile.avatarUrl) {
-          <img [src]="p.profile.avatarUrl" alt="avatar" />
-        } @else {
-          no avatar set
-        }
-      </li>
-      <li>Working on stage: {{ p.workingOnStageName }}</li>
-      <li>
-        Access Code: <span class="code">{{ this.experimentName() }}/{{ p.userId }}</span>
-      </li>
-    </ul>
-  }
-</div>
-
-<h2>Experiment stages:</h2>
-
-@for (stageState of stageStates(); track stageState.name) {
+@if (_experiment.data()) {
   <div>
-    {{ stageState.name }}: {{ stageState.participants.length }}
-
-    @if (isOfKind(stageState, StageKinds.groupChat)) {
-      <mat-accordion>
-        <mat-expansion-panel>
-          <mat-expansion-panel-header>
-            <mat-panel-title> Current state of the Chat Discussion </mat-panel-title>
-            <mat-panel-description>
-              You can interact directly with the chat here.
-            </mat-panel-description>
-          </mat-expansion-panel-header>
-          <app-mediator-chat
-            [experiment]="experimentName"
-            [participants]="this.participants"
-            [chatRoomName]="stageState.name"
-          ></app-mediator-chat>
-        </mat-expansion-panel>
-      </mat-accordion>
+    <p>Number of participants ({{ participants().length }})</p>
+    @for (p of participants(); track p.uid) {
+      <a
+        [routerLink]="['/participant', this.experimentUid(), p.uid]"
+        [queryParams]="{ stage: p.workingOnStageName }"
+        >{{ p.uid }}</a
+      >
+      <ul>
+        <li>Name: {{ p.name }}</li>
+        <li>Preffered pronouns: {{ p.pronouns }}</li>
+        <li>
+          Avatar:
+          @if (p.avatarUrl) {
+            <img [src]="p.avatarUrl" alt="avatar" />
+          } @else {
+            no avatar set
+          }
+        </li>
+        <li>Working on stage: {{ p.workingOnStageName }}</li>
+        <li>
+          Access Code: <span class="code">{{ this.experimentUid() }}/{{ p.uid }}</span>
+        </li>
+      </ul>
     }
   </div>
+
+  <h2>Experiment stages:</h2>
+
+  @for (stageState of stageStates(); track stageState.name) {
+    <div>
+      {{ stageState.name }}: {{ stageState.participants.length }}
+
+      @if (isOfKind(stageState, StageKinds.groupChat)) {
+        <mat-accordion>
+          <mat-expansion-panel>
+            <mat-expansion-panel-header>
+              <mat-panel-title> Current state of the Chat Discussion </mat-panel-title>
+              <mat-panel-description>
+                You can interact directly with the chat here.
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+            <app-mediator-chat
+              [experiment]="experimentUid"
+              [participants]="this.participants"
+              [chatRoomName]="stageState.name"
+            ></app-mediator-chat>
+          </mat-expansion-panel>
+        </mat-accordion>
+      }
+    </div>
+  }
+
+  <h2>Experiment settings:</h2>
+
+  <button mat-raised-button color="warn" aria-label="Delete" (click)="deleteExperiment()">
+    <mat-icon>delete</mat-icon> Delete this experiment
+  </button>
+} @else {
+  <mat-spinner />
 }
-
-<h2>Experiment settings:</h2>
-
-<button mat-raised-button color="warn" aria-label="Delete" (click)="deleteExperiment()">
-  <mat-icon>delete</mat-icon> Delete this experiment
-</button>
