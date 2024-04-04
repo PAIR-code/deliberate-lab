@@ -16,7 +16,7 @@ import {
 } from 'src/lib/staged-exp/data-model';
 
 import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
-import { Component, inject } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -34,15 +34,11 @@ import { AppStateService } from 'src/app/services/app-state.service';
 import { LocalService } from 'src/app/services/local.service';
 import { tryCast } from 'src/lib/algebraic-data';
 import { createExperimentMutation, createTemplateMutation } from 'src/lib/api/mutations';
-import { makeStages } from 'src/lib/staged-exp/example-experiment';
+import { templatesQuery } from 'src/lib/api/queries';
+import { Template } from 'src/lib/types/experiments.types';
 import { generateAllowedStageProgressionMap } from 'src/lib/types/stages.types';
 import { lookupTable } from 'src/lib/utils/object.utils';
 
-// TODO: clear local storage, navigate to the experiment page.
-// aussi faire pour la sauvegarde de templates.
-
-// TODO: normalement ça devrait être bon. Vérif quand même pour le stockage local et la navigation, puis faire la nav dans les templates
-// TODO: give a more explicit name...
 const LOCAL_STORAGE_KEY = 'ongoing-experiment-creation';
 
 const getInitStageData = (): Partial<ExpStage> => {
@@ -81,9 +77,12 @@ export class CreateExperimentComponent {
     this.resetExistingStages(); // Reset after setting as template
   });
 
+  templates = templatesQuery(this.http);
+
   public existingStages: Partial<ExpStage>[] = [];
   public currentEditingStageIndex = -1;
   public newExperimentName = '';
+  public currentTemplate: Template | null = null;
 
   // Make these fields available in the template
   readonly StageKinds = StageKinds;
@@ -102,17 +101,30 @@ export class CreateExperimentComponent {
     private router: Router,
     private localStore: LocalService,
   ) {
+    // Set the current experiment template to the first fetched template
+    effect(() => {
+      const data = this.templates.data()?.data;
+
+      if (data && this.existingStages.length === 0) {
+        // Set the current stages to this template's stages
+        this.currentTemplate = data[0];
+        this.existingStages = Object.values(this.currentTemplate.stageMap);
+        this.persistExistingStages();
+      }
+    });
+
     const existingStages = this.localStore.getData(LOCAL_STORAGE_KEY) as ExpStage[];
     if (existingStages) {
       this.existingStages = existingStages;
-    } else {
-      this.existingStages = makeStages();
     }
+
     this.currentEditingStageIndex = 0;
   }
 
   get currentEditingStage() {
-    return this.existingStages[this.currentEditingStageIndex] as ExpStage;
+    const stage = this.existingStages[this.currentEditingStageIndex];
+
+    return stage === undefined ? undefined : (stage as ExpStage);
   }
 
   get hasUnsavedData() {
@@ -181,6 +193,7 @@ export class CreateExperimentComponent {
 
   stageSetupIncomplete(stageData?: Partial<ExpStage>) {
     const _stageData = stageData || this.currentEditingStage;
+    if (!_stageData) return true;
 
     if (!_stageData.kind) return true;
     if (!_stageData.name || _stageData.name.trim().length === 0) return true;
@@ -240,7 +253,13 @@ export class CreateExperimentComponent {
   resetExistingStages() {
     this.localStore.removeData(LOCAL_STORAGE_KEY);
 
-    this.existingStages = makeStages();
+    if (this.currentTemplate !== null) {
+      this.existingStages = Object.values(this.currentTemplate.stageMap);
+    } else {
+      // We assume that the user cannot click on reset when the page has not fully loaded
+      this.existingStages = Object.values(this.templates.data()!.data[0].stageMap);
+    }
+
     this.persistExistingStages();
 
     this.currentEditingStageIndex = 0;
@@ -251,6 +270,8 @@ export class CreateExperimentComponent {
   }
 
   onChange(event: unknown, type?: string) {
+    if (!this.currentEditingStage) return;
+
     if (type === 'stage-kind') {
       console.log('Switched to:', this.currentEditingStage.kind);
       let newConfig = {};
@@ -275,6 +296,16 @@ export class CreateExperimentComponent {
     }
 
     this.persistExistingStages();
+  }
+
+  /** When selecting a template, reset everything */
+  resetToTemplate(template: Template) {
+    this.existingStages = Object.values(template.stageMap);
+    this.persistExistingStages();
+  }
+
+  compareTemplates(a: Template, b: Template) {
+    return a.uid === b.uid;
   }
 
   /** Create the experiment and send it to be stored in the database */

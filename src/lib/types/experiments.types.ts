@@ -22,6 +22,14 @@ export interface ExperimentCreationData {
   allowedStageProgressionMap: Record<string, boolean>;
 }
 
+/** An experiment template */
+export interface Template {
+  uid: string;
+  name: string;
+  stageMap: Record<string, ExpStage>;
+  allowedStageProgressionMap: Record<string, boolean>;
+}
+
 /** Data to be sent to the backend in order to generate a template */
 export interface TemplateCreationData {
   name: string;

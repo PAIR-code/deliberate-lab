@@ -3,6 +3,13 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import { app } from '../app';
 
+/** Fetch all templates (not paginated) */
+export const templates = onRequest(async (request, response) => {
+  const templates = await app.firestore().collection('templates').get();
+  const data = templates.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  response.send({ data });
+});
+
 /** Create an experiment template */
 export const createTemplate = onRequest(async (request, response) => {
   // Extract data from the body
