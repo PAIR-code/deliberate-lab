@@ -29,7 +29,7 @@ import {
   UserData,
 } from './data-model';
 
-import { uniqueId } from 'underscore';
+import { uniqueId } from 'lodash';
 import { ExperimentExtended } from '../types/experiments.types';
 import { ParticipantExtended } from '../types/participants.types';
 import * as items from './items';

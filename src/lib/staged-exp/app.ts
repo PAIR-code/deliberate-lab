@@ -93,7 +93,7 @@ export function makeRouteLinkedParticipant(
   );
 
   const participant = new Participant(appData, routeSessionBinding.session, () =>
-    routeSessionBinding!.destroy(),
+    routeSessionBinding.destroy(),
   );
 
   return participant;

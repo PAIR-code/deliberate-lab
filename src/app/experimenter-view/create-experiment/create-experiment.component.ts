@@ -257,7 +257,7 @@ export class CreateExperimentComponent {
       this.existingStages = Object.values(this.currentTemplate.stageMap);
     } else {
       // We assume that the user cannot click on reset when the page has not fully loaded
-      this.existingStages = Object.values(this.templates.data()!.data[0].stageMap);
+      this.existingStages = Object.values(this.templates.data()!.data[0]?.stageMap ?? {});
     }
 
     this.persistExistingStages();
