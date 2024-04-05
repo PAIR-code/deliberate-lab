@@ -1,22 +1,18 @@
+import { HttpClient } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivateFn, RouterStateSnapshot } from '@angular/router';
-import { AppStateService } from './services/app-state.service';
+import { participantQuery } from 'src/lib/api/queries';
 
+/** Check that a participant exists */
 export const validParticipantGuard: CanActivateFn = (
   route: ActivatedRouteSnapshot,
   _state: RouterStateSnapshot,
 ) => {
-  const stateService = inject(AppStateService);
-  // console.log('validParticipantGuard,', route.params);
-  // console.log('validParticipantGuard,', route.params['experiment']);
-  // this.participant = makeRouteLinkedParticipant(router, route, stateService.data);
-  // if (this.participant) {
-  //   stateService.state.set({ kind: APPSTATE_PARTICIPANT, particpant: this.participant });
-  // }
+  const http = inject(HttpClient);
 
-  return stateService.validParticipant(
-    route.params['experiment'],
-    route.params['user'],
-    // route.queryParams['stage'],
-  );
+  const { participantId } = route.params;
+
+  const participant = participantQuery(http, participantId);
+
+  return !!participant.data(); // If the data exists, the participant is valid
 };
