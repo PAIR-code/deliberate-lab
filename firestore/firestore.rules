@@ -1,6 +1,20 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Rules for the messages collection
+    match /messages/{messageId} {
+
+      // Allow read access if the authenticated user's ID matches a participantId or experimenterId
+      // in the message document that corresponds to an existing document in the participants or experimenters collections
+      // We could use stricter rules !
+      allow read: if (
+        exists(/databases/$(database)/documents/participants/$(request.resource.data.participantId)) ||
+        exists(/databases/$(database)/documents/experimenters/$(request.resource.data.experimenterId))
+      )
+    }
+
+    // Else: disallow everything (access via cloud functions only)
     match /{document=**} {
       allow read, write: if false;
     }
