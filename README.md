@@ -53,6 +53,10 @@ You will then be able to access the following UIs:
 - Firestore UI: `http://localhost:4000/firestore`
 - Cloud Functions UI: `http://localhost:4000/functions`
 
+### Quickstart
+
+If you have everything installed, you can use the `restore terminals` extension in order to run all necessary commands at once (`ctrl + shift + P` > `Restore Terminals`).
+
 ## Development server
 
 Run `npm run start` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
