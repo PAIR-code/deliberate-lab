@@ -5,6 +5,9 @@
  * Use of this source code is governed by an Apache2 license that can be
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
+
+// TODO: remove this file, seeding is done using the cloud functions.
+
 import {
   Config as UniqueNamesGenConfig,
   starWars,
@@ -18,7 +21,6 @@ import {
   ExpStageTosAndUserProfile,
   ExpStageVoteReveal,
   ExpStageVotes,
-  Experiment,
   RatingQuestion,
   ScaleQuestion,
   StageKinds,
@@ -28,6 +30,8 @@ import {
 } from './data-model';
 
 import { uniqueId } from 'underscore';
+import { ExperimentExtended } from '../types/experiments.types';
+import { ParticipantExtended } from '../types/participants.types';
 import * as items from './items';
 
 const fakeNameGenConfig: UniqueNamesGenConfig = {
@@ -295,12 +299,13 @@ export function initParticipants(
 
 export function initialExperimentSetup(
   name: string,
-  participantCount: number,
-  stages: ExpStage[],
-): Experiment {
-  const participants = initParticipants(participantCount, stages);
+  _participantCount: number,
+  _stages: ExpStage[],
+): ExperimentExtended {
+  const participants: Record<string, ParticipantExtended> = {}; // initParticipants(participantCount, stages);
 
-  const experiment: Experiment = {
+  const experiment: ExperimentExtended = {
+    uid: 'dummy uid',
     name,
     date: new Date(),
     numberOfParticipants: Object.keys(participants).length,

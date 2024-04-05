@@ -16,6 +16,7 @@ import { AppSettingsComponent } from './app-settings/app-settings.component';
 import { AppComponent } from './app.component';
 import { CodemirrorConfigEditorModule } from './codemirror-config-editor/codemirror-config-editor.module';
 //import { ExpRatingComponent } from './exp-rating/exp-rating.component';
+import { provideHttpClient } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
@@ -30,6 +31,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { RouterModule } from '@angular/router';
+import { QueryClient, provideAngularQuery } from '@tanstack/angular-query-experimental';
 import { ExperimenterViewComponent } from './experimenter-view/experimenter-view.component';
 import { LlmApiConfigComponent } from './experimenter-view/llm-api-config/llm-api-config.component';
 import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
@@ -54,6 +56,8 @@ import { VertexApiService } from './services/vertex-api.service';
     LmApiService,
     GoogleAuthService,
     GoogleSheetsService,
+    provideHttpClient(),
+    provideAngularQuery(new QueryClient()),
   ],
   bootstrap: [AppComponent],
   imports: [

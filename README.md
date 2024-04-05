@@ -1,5 +1,58 @@
 # Llm Mediators
 
+## Firebase
+
+This project uses Firebase as its backend. The configuration can be found in the [`.firebaserc`](./.firebaserc) and [`firebase.json`](./firebase.json) files.
+
+Install the firebase cli tools with the following commands:
+
+```bash
+npm install -g firebase-tools
+firebase login  # Login to the Google account destined to manage the Firebase project
+```
+
+### Firestore
+
+We use Firestore as our database. The rules are located in the [`firestore.rules`](./firestore.rules) file.
+Basically, the database cannot be externally accessed, and must be interacted with through cloud functions.
+
+A database prototype schema can be found [here on dbdiagrams.io](https://dbdiagram.io/d/Firebase-LLM-Mediation-660d473a03593b6b61123f24) (readonly, change it with your own if you take-on the project).
+
+You can seed the database with the default data by running the following command:
+
+```bash
+curl http://127.0.0.1:5001/llm-mediator-political/us-central1/seedDatabase
+```
+
+This calls a cloud functions that adds to the database the default data. You may want to clear it first.
+
+### Cloud Functions
+
+We use Firebase Cloud Functions to run server-side code. The functions are located in the [`functions`](./functions) directory.
+
+```bash
+cd functions
+npm install  # Install the dependencies
+npm run watch-functions  # Build the functions and watch for file changes for rebuilding
+```
+
+Upon running `npm run build`, if the emulator is running, it will automatically reload the functions.
+
+### Emulators
+
+In order to run offline and for development purposes, we use Java Firebase emulators.
+
+```bash
+export JAVA_TOOL_OPTIONS="-Xmx4g"  # Set your desired max RAM (here: 4GB)
+firebase emulators:start  # Start the emulators
+```
+
+You will then be able to access the following UIs:
+
+- Emulator UI: `http://localhost:4000`
+- Firestore UI: `http://localhost:4000/firestore`
+- Cloud Functions UI: `http://localhost:4000/functions`
+
 ## Development server
 
 Run `npm run start` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.

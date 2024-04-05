@@ -358,21 +358,9 @@ export interface UserData {
   // Their appearance.
   profile: UserProfile;
   stageMap: { [stageName: string]: ExpStage };
+
   allowedStageProgressionMap: { [stageName: string]: boolean };
   completedStageNames: string[]; // current stage is the very last one.
   workingOnStageName: string;
   futureStageNames: string[];
-}
-
-// Note: it should be that:
-//   type ShouldBeTrue = ExpStage extends GenericExpStage<ExpDataKinds> ? true : false;
-
-// -------------------------------------------------------------------------------------
-// Admin editable, some parts of this are written to by certain
-// user actions, by a trusted cloud function.
-export interface Experiment {
-  name: string;
-  date: Date;
-  numberOfParticipants: number;
-  participants: { [userId: string]: UserData };
 }

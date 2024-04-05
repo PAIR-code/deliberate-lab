@@ -26,7 +26,7 @@ import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Experiment } from 'src/lib/staged-exp/data-model';
+import { ExperimentExtended } from 'src/lib/types/experiments.types';
 import { ExperimenterViewComponent } from '../experimenter-view/experimenter-view.component';
 import { ExpSurveyComponent } from '../participant-view/participant-stage-view/exp-survey/exp-survey.component';
 import { ExpTosAndProfileComponent } from '../participant-view/participant-stage-view/exp-tos-and-profile/exp-tos-and-profile.component';
@@ -61,7 +61,7 @@ export class AppHomeComponent implements AfterViewInit {
 
   public error: string = '';
 
-  public experiments: Signal<Experiment[]>;
+  public experiments: Signal<ExperimentExtended[]>;
 
   constructor(
     private route: ActivatedRoute,

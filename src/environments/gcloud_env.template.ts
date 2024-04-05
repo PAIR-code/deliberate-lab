@@ -10,3 +10,4 @@
 export const oauthClientId = 'enter you oauth client id here';
 export const sheetsApiKey = 'enter api key for sheets api here';
 export const driveApiKey = 'enter api key for drive api here';
+export const cloudFunctionsUrl = 'enter your firebase cloud functions url here';

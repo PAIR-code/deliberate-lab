@@ -7,7 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "watch-functions": "cd functions && npm run build:watch"
   },
   "private": true,
   "dependencies": {
@@ -21,6 +22,7 @@
     "@angular/platform-browser": "^17.0.6",
     "@angular/platform-browser-dynamic": "^17.0.6",
     "@angular/router": "^17.0.6",
+    "@tanstack/angular-query-experimental": "5.28.13",
     "lodash": "^4.17.21",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",

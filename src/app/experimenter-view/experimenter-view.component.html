@@ -3,7 +3,7 @@
   <span class="title">Experiment Management</span>
   <div class="spacer"></div>
   <a class="small-logo" aria-label="PAIR" href="https://pair.withgoogle.com/" title="Home">
-    <img src="/recommendation-rudders/assets/pair-logo.svg" alt="PAIR logo" />
+    <img src="/assets/pair-logo.svg" alt="PAIR logo" />
   </a>
 </div>
 
@@ -11,19 +11,24 @@
   <mat-sidenav-container>
     <mat-sidenav #sidenav mode="side" opened="true">
       <mat-nav-list class="menu-buttons">
-        @for (experiment of experiments(); track experiment.name) {
-          <mat-list-item
-            matListItemTitle
-            [routerLink]="['experiment', experiment.name]"
-            ariaCurrentWhenActive="page"
-            class="menu-item"
-          >
-            <div class="menu-item-inner">
-              {{ experiment.name }}
-              <!-- <mat-icon class="icon completed" fontIcon="check"></mat-icon> -->
-            </div>
-          </mat-list-item>
+        @if (experiments.data(); as response) {
+          @for (experiment of response.data; track experiment.name) {
+            <mat-list-item
+              matListItemTitle
+              [routerLink]="['experiment', experiment.uid]"
+              ariaCurrentWhenActive="page"
+              class="menu-item"
+            >
+              <div class="menu-item-inner">
+                {{ experiment.name }}
+                <!-- <mat-icon class="icon completed" fontIcon="check"></mat-icon> -->
+              </div>
+            </mat-list-item>
+          }
+        } @else {
+          <mat-spinner />
         }
+
         <mat-list-item
           matListItemTitle
           [routerLink]="['create-experiment']"

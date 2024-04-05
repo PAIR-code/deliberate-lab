@@ -14,6 +14,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatRadioChange, MatRadioModule } from '@angular/material/radio';
 
 import { Participant } from 'src/lib/staged-exp/participant';
+import { ParticipantProfile } from 'src/lib/types/participants.types';
 import { StageKinds, UserProfile } from '../../../../lib/staged-exp/data-model';
 import { AppStateService } from '../../../services/app-state.service';
 
@@ -57,7 +58,7 @@ export class ExpProfileComponent {
 
   updateName(updatedValue: string) {
     console.log('updateName', updatedValue);
-    this.participant.editStageData<UserProfile>((p) => {
+    this.participant.editStageData<ParticipantProfile>((p) => {
       p.name = updatedValue;
       this.participant.setProfile(p);
     });
@@ -65,8 +66,8 @@ export class ExpProfileComponent {
 
   updatePronouns(updatedValue: MatRadioChange) {
     console.log('updatePronouns', updatedValue);
-    if (updatedValue.value !== this.participant.userData().profile.pronouns) {
-      this.participant.editStageData<UserProfile>((p) => {
+    if (updatedValue.value !== this.participant.userData().pronouns) {
+      this.participant.editStageData<ParticipantProfile>((p) => {
         p.pronouns = updatedValue.value;
         this.participant.setProfile(p);
       });
@@ -75,7 +76,7 @@ export class ExpProfileComponent {
 
   updateAvatarUrl(updatedValue: MatRadioChange) {
     console.log('updateAvatarUrl', updatedValue);
-    this.participant.editStageData<UserProfile>((p) => {
+    this.participant.editStageData<ParticipantProfile>((p) => {
       p.avatarUrl = updatedValue.value;
       this.participant.setProfile(p);
     });

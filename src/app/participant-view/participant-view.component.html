@@ -2,9 +2,9 @@
   <button mat-icon-button (click)="sidenav.toggle()"><mat-icon>menu</mat-icon></button>
   <span class="title">Participant: {{ participant.experiment().name }}</span>
   <div class="spacer"></div>
-  <div class="current-user">Current user: {{ participant.userData().userId }}</div>
+  <div class="current-user">Current user: {{ participant.userData().uid }}</div>
   <a class="small-logo" aria-label="PAIR" href="https://pair.withgoogle.com/" title="Home">
-    <img src="/recommendation-rudders/assets/pair-logo.svg" alt="PAIR logo" />
+    <img src="/assets/pair-logo.svg" alt="PAIR logo" />
   </a>
 </div>
 

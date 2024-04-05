@@ -11,4 +11,7 @@ export const environment = {
   oauthClientId,
   sheetsApiKey,
   driveApiKey,
+
+  // Development local addresses
+  cloudFunctionsUrl: 'http://127.0.0.1:5001/llm-mediator-political/us-central1',
 };
