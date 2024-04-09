@@ -1,7 +1,7 @@
 <div class="main">
-  <h2>{{ this.participant.viewingStage().name }} ({{ this.participant.viewingStage().kind }})</h2>
+  <h2>{{ this.participant.viewingStage()?.name }} ({{ this.participant.viewingStage()?.kind }})</h2>
   <div class="exp-stage-content">
-    @switch (this.participant.viewingStage().kind) {
+    @switch (this.participant.viewingStage()?.kind) {
       @case (StageKinds.acceptTos) {
         <app-exp-tos></app-exp-tos>
       }
@@ -26,19 +26,15 @@
       @default {
         <div class="error">
           Oh no! It looks like something went wrong, there is no component for
-          <span>{{ this.participant.viewingStage().kind }}</span>
+          <span>{{ this.participant.viewingStage()?.kind }}</span>
         </div>
       }
     }
 
-    @if (this.participant.viewingStage().name !== this.participant.workingOnStage().name) {
+    @if (this.participant.viewingStage()?.name !== this.participant.workingOnStage()?.name) {
       <div class="mask">
         <!-- TODO: should probably disable editing in individual stage components as well -->
       </div>
     }
   </div>
-
-  <button color="primary" [disabled]="!this.shouldShowNextStep()" mat-button (click)="nextStep()">
-    <span>Next step</span>
-  </button>
 </div>

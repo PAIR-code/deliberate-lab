@@ -2,8 +2,8 @@ import { TestBed } from '@angular/core/testing';
 
 import { ProviderService } from './provider.service';
 
-describe('ProviderService', () => {
-  let service: ProviderService;
+describe('ProviderService', <T>() => {
+  let service: ProviderService<T>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});

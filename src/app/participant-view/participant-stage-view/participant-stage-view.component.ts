@@ -16,10 +16,8 @@ import { ExpLeaderRevealComponent } from './exp-leader-reveal/exp-leader-reveal.
 import { ExpLeaderVoteComponent } from './exp-leader-vote/exp-leader-vote.component';
 import { ExpProfileComponent } from './exp-profile/exp-profile.component';
 //import { ExpRatingComponent } from '../exp-rating/exp-rating.component';
-import { assertCast } from 'src/lib/algebraic-data';
-import { AppStateEnum } from 'src/lib/staged-exp/app';
-import { Participant } from 'src/lib/staged-exp/participant';
-import { AppStateService } from '../../services/app-state.service';
+import { ProviderService } from 'src/app/services/provider.service';
+import { Participant } from 'src/lib/participant';
 import { ExpSurveyComponent } from './exp-survey/exp-survey.component';
 import { ExpTosAndProfileComponent } from './exp-tos-and-profile/exp-tos-and-profile.component';
 import { ExpTosComponent } from './exp-tos/exp-tos.component';
@@ -44,17 +42,18 @@ export class ParticipantStageViewComponent {
   public participant: Participant;
   readonly StageKinds = StageKinds;
 
-  constructor(stateService: AppStateService) {
-    const appState = assertCast(stateService.state(), AppStateEnum.Participant);
-    this.participant = appState.particpant;
+  constructor(participantProvider: ProviderService<Participant>) {
+    this.participant = participantProvider.get();
   }
 
   shouldShowNextStep() {
     const userData = this.participant.userData();
-    return userData.allowedStageProgressionMap[userData.workingOnStageName];
-  }
+    const workingOnStage = this.participant.workingOnStage();
 
-  nextStep() {
-    this.participant.nextStep();
+    if (!userData || !workingOnStage) {
+      return false;
+    }
+
+    return userData.allowedStageProgressionMap[workingOnStage.name];
   }
 }

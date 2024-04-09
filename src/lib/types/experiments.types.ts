@@ -36,3 +36,7 @@ export interface TemplateCreationData {
   stageMap: Record<string, ExpStage>;
   allowedStageProgressionMap: Record<string, boolean>;
 }
+
+export interface ProfileTOSData {
+  // TODO
+}

@@ -9,10 +9,6 @@
 import { Component } from '@angular/core';
 import { MatCheckboxChange, MatCheckboxModule } from '@angular/material/checkbox';
 
-import { Participant } from 'src/lib/staged-exp/participant';
-import { StageKinds, TosAcceptance } from '../../../../lib/staged-exp/data-model';
-import { AppStateService } from '../../../services/app-state.service';
-
 @Component({
   selector: 'app-exp-tos',
   standalone: true,
@@ -21,22 +17,16 @@ import { AppStateService } from '../../../services/app-state.service';
   styleUrl: './exp-tos.component.scss',
 })
 export class ExpTosComponent {
-  public participant: Participant;
-  public stageData: TosAcceptance;
+  constructor() {}
 
-  constructor(stateService: AppStateService) {
-    const { participant, stageData } = stateService.getParticipantAndStage(StageKinds.acceptTos);
-    this.stageData = stageData();
-    this.participant = participant;
-  }
-
-  updateCheckboxValue(updatedValue: MatCheckboxChange) {
-    const checked = updatedValue.checked;
-    if (checked) {
-      this.stageData.acceptedTosTimestamp = new Date();
-    } else {
-      this.stageData.acceptedTosTimestamp = null;
-    }
-    this.participant.editStageData(() => this.stageData);
+  updateCheckboxValue(_updatedValue: MatCheckboxChange) {
+    // TODO: mutation with the new backend
+    // const checked = updatedValue.checked;
+    // if (checked) {
+    //   this.stageData.acceptedTosTimestamp = new Date();
+    // } else {
+    //   this.stageData.acceptedTosTimestamp = null;
+    // }
+    // this.participant.editStageData(() => this.stageData);
   }
 }

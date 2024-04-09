@@ -6,18 +6,22 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, Signal } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { Component, inject } from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxChange, MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatRadioChange, MatRadioModule } from '@angular/material/radio';
+import { MatRadioModule } from '@angular/material/radio';
+import { injectQueryClient } from '@tanstack/angular-query-experimental';
 
-import { Participant } from 'src/lib/staged-exp/participant';
-import { ParticipantExtended } from 'src/lib/types/participants.types';
-import { StageKinds, TosAndUserProfile } from '../../../../lib/staged-exp/data-model';
-import { AppStateService } from '../../../services/app-state.service';
+import { ProviderService } from 'src/app/services/provider.service';
+import { updateProfileAndTOSMutation } from 'src/lib/api/mutations';
+import { Participant } from 'src/lib/participant';
+import { StageKinds } from 'src/lib/staged-exp/data-model';
+import { MutationType } from 'src/lib/types/api.types';
+import { ProfileTOSData } from 'src/lib/types/experiments.types';
 
 enum Pronouns {
   HeHim = 'He/Him',
@@ -34,75 +38,74 @@ enum Pronouns {
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
-    FormsModule,
     ReactiveFormsModule,
+    MatButtonModule,
   ],
   templateUrl: './exp-tos-and-profile.component.html',
   styleUrl: './exp-tos-and-profile.component.scss',
 })
 export class ExpTosAndProfileComponent {
   public participant: Participant;
-  public stageData: Signal<TosAndUserProfile>;
+  public tosLines: string[] | undefined;
 
   readonly Pronouns = Pronouns;
 
-  constructor(stateService: AppStateService) {
-    const { participant, stageData } = stateService.getParticipantAndStage(
-      StageKinds.acceptTosAndSetProfile,
-    );
-    this.stageData = stageData;
-    this.participant = participant;
-  }
+  profileFormControl = new FormGroup({
+    name: new FormControl('', Validators.required),
+    pronouns: new FormControl('', Validators.required),
+    avatarUrl: new FormControl('', Validators.required),
+    acceptTosTimestamp: new FormControl<string | null>(null, Validators.required),
+  });
 
-  canProceedToNextStep(user: ParticipantExtended) {
-    // TODO(cjqian): Make sure TOS is accepted as well.
-    return user.avatarUrl !== '' && user.name !== '' && user.pronouns !== '';
+  http = inject(HttpClient);
+  queryClient = injectQueryClient();
+
+  profileMutation: MutationType<ProfileTOSData>;
+
+  constructor(participantProvider: ProviderService<Participant>) {
+    this.participant = participantProvider.get();
+    this.profileMutation = updateProfileAndTOSMutation(
+      this.http,
+      this.queryClient,
+      this.participant.navigateToNextStage,
+    );
+
+    // TODO: prefill the form in an async way ? Test this by directly logging into the first stage from a URL / the login form
+    const data = this.participant.userData();
+    if (data) {
+      this.profileFormControl.setValue({
+        name: data.name,
+        pronouns: data.pronouns,
+        avatarUrl: data.avatarUrl,
+        acceptTosTimestamp: null,
+      });
+    }
+
+    // Extract the TOS lines and make them available for the template
+    const tosLines = this.participant.assertViewingStageCast(StageKinds.acceptTosAndSetProfile);
+    this.tosLines = tosLines?.config.tosLines;
   }
 
   isOtherPronoun(s: string) {
     return s !== Pronouns.HeHim && s !== Pronouns.SheHer && s !== Pronouns.TheyThem;
   }
 
+  updateOtherPronounsValue(event: Event) {
+    const pronouns = (event.target as HTMLInputElement).value;
+
+    this.profileFormControl.patchValue({
+      pronouns,
+    });
+  }
+
   updateCheckboxValue(updatedValue: MatCheckboxChange) {
-    this.participant.editStageData<TosAndUserProfile>((d) => {
-      d.acceptedTosTimestamp = updatedValue.checked ? new Date() : null;
+    this.profileFormControl.patchValue({
+      acceptTosTimestamp: updatedValue.checked ? new Date().toISOString() : null,
     });
   }
 
-  updateName(name: string) {
-    this.participant.editStageData<TosAndUserProfile>((d) => {
-      d.name = name;
-    });
-    this.updateUserProfile();
-  }
-
-  updatePronouns(updatedValue: MatRadioChange) {
-    this.participant.editStageData<TosAndUserProfile>((d) => {
-      d.pronouns = updatedValue.value;
-    });
-    this.updateUserProfile();
-  }
-
-  updateOtherPronoun(pronoun: string) {
-    this.participant.editStageData<TosAndUserProfile>((d) => {
-      d.pronouns = pronoun;
-    });
-    this.updateUserProfile();
-  }
-
-  updateAvatarUrl(updatedValue: MatRadioChange) {
-    this.participant.editStageData<TosAndUserProfile>((d) => {
-      d.avatarUrl = updatedValue.value;
-    });
-    this.updateUserProfile();
-  }
-
-  updateUserProfile() {
-    this.participant.edit((user) => {
-      user.avatarUrl = this.stageData().avatarUrl;
-      user.name = this.stageData().name;
-      user.pronouns = this.stageData().pronouns;
-      user.allowedStageProgressionMap[user.workingOnStageName] = this.canProceedToNextStep(user);
-    });
+  nextStep() {
+    // TODO: mutate and send the correct data
+    // this.profileMutation.mutate(this.profileFormControl.value);
   }
 }

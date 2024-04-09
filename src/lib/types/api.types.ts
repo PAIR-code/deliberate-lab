@@ -1,6 +1,6 @@
 /** Types wrappers for the API */
 
-import { CreateQueryResult } from '@tanstack/angular-query-experimental';
+import { CreateMutationResult, CreateQueryResult } from '@tanstack/angular-query-experimental';
 
 /** Simple response with data */
 export interface SimpleResponse<T> {
@@ -12,3 +12,8 @@ export interface CreationResponse {
 }
 
 export type QueryType<T> = CreateQueryResult<T, Error>;
+
+export type MutationType<T> = CreateMutationResult<unknown, Error, T, unknown>;
+
+/** Type for a onSuccess function callback */
+export type OnSuccess<T> = (data: T) => Promise<void> | void;

@@ -5,15 +5,14 @@ import { Injectable } from '@angular/core';
  */
 @Injectable()
 export class ProviderService<T> {
-  private state: T;
+  private state: T | undefined;
 
   constructor() {
-    this.state = null as T; // NOTE: upon injecting this provider, you must call the set method to set the initial state.
-    // This is a placeholder for convenience, but it may lead to bugs if improperly instanciated.
+    this.state = undefined;
   }
 
   public get(): T {
-    if (this.state === null) {
+    if (this.state === undefined) {
       throw new Error(
         'Provider service not initialized. Call the set() method to set the initial state.',
       );

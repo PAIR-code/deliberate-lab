@@ -5,8 +5,12 @@ import { HttpClient } from '@angular/common/http';
 import { QueryClient, injectMutation } from '@tanstack/angular-query-experimental';
 import { lastValueFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { CreationResponse, SimpleResponse } from '../types/api.types';
-import { ExperimentCreationData, TemplateCreationData } from '../types/experiments.types';
+import { CreationResponse, OnSuccess, SimpleResponse } from '../types/api.types';
+import {
+  ExperimentCreationData,
+  ProfileTOSData,
+  TemplateCreationData,
+} from '../types/experiments.types';
 
 export const deleteExperimentMutation = (http: HttpClient, client: QueryClient) =>
   injectMutation(() => ({
@@ -24,7 +28,7 @@ export const deleteExperimentMutation = (http: HttpClient, client: QueryClient) 
 export const createExperimentMutation = (
   http: HttpClient,
   client: QueryClient,
-  onSuccess?: (data: CreationResponse) => Promise<void> | void,
+  onSuccess?: OnSuccess<CreationResponse>,
 ) => {
   return injectMutation(() => ({
     mutationFn: (data: ExperimentCreationData) =>
@@ -41,7 +45,7 @@ export const createExperimentMutation = (
 export const createTemplateMutation = (
   http: HttpClient,
   client: QueryClient,
-  onSuccess?: (data: CreationResponse) => Promise<void> | void,
+  onSuccess?: OnSuccess<CreationResponse>,
 ) => {
   return injectMutation(() => ({
     mutationFn: (data: TemplateCreationData) =>
@@ -50,6 +54,24 @@ export const createTemplateMutation = (
       ),
     onSuccess: (data) => {
       client.refetchQueries({ queryKey: ['templates'] });
+      onSuccess?.(data);
+    },
+  }));
+};
+
+export const updateProfileAndTOSMutation = (
+  http: HttpClient,
+  client: QueryClient,
+  onSuccess?: OnSuccess<unknown>,
+) => {
+  return injectMutation(() => ({
+    mutationFn: (data: ProfileTOSData) =>
+      lastValueFrom(
+        // TODO: update with the correct endpoint
+        http.post<unknown>(`${environment.cloudFunctionsUrl}/updateProfileAndTOS`, data),
+      ),
+    onSuccess: (data) => {
+      client.refetchQueries({ queryKey: ['participant'] }); // TODO: only specifically refetch the user that was updated (include its ID in the query key)
       onSuccess?.(data);
     },
   }));

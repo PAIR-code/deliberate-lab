@@ -26,13 +26,12 @@ export const experimentQuery = (http: HttpClient, experimentId: Signal<string | 
   injectQuery(() => ({
     queryKey: ['experiment', experimentId()],
     queryFn: () =>
-      experimentId() === null
-        ? null
-        : lastValueFrom(
-            http.get<ExperimentExtended>(
-              `${environment.cloudFunctionsUrl}/experiment/${experimentId()}`,
-            ),
-          ),
+      lastValueFrom(
+        http.get<ExperimentExtended>(
+          `${environment.cloudFunctionsUrl}/experiment/${experimentId()}`,
+        ),
+      ),
+    disabled: experimentId() === null,
   }));
 
 /** Fetch all templates */
@@ -46,7 +45,7 @@ export const templatesQuery = (http: HttpClient) =>
   }));
 
 /** Fetch a specific participant. Can be used to verify that a participant ID is valid */
-export const participantQuery = (http: HttpClient, participantId: string) =>
+export const participantQuery = (http: HttpClient, participantId?: string) =>
   injectQuery(() => ({
     queryKey: ['participant', participantId],
     queryFn: () =>
@@ -56,4 +55,5 @@ export const participantQuery = (http: HttpClient, participantId: string) =>
         ),
       ),
     retry: 0, // Avoid background refetches when the participant ID is invalid
+    disabled: participantId === undefined,
   }));
