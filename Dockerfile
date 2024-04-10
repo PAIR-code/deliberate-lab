@@ -1,3 +1,4 @@
+#This below works if you run the docker on Kubernetes Modemos but not on  PC36
 # Stage 0, "build-stage", based on Node.js, to build and compile the frontend
 FROM node:alpine as build-stage
 WORKDIR /app
@@ -16,9 +17,12 @@ COPY --from=build-stage /app/dist/out/ /usr/share/nginx/html
 COPY ./nginx-custom.conf /etc/nginx/conf.d/default.conf
 
 
+#################  /!\  #################
+# /!\The main difference is in --base-href /palabrate/
+#################  /!\  #################
 
 
-#This below works on PC36 but not on Kubernetes Modemos
+#This below works if you run the docker on PC36 but not on Kubernetes Modemos
 # FROM node:alpine
 
 # WORKDIR /usr/src/app
