@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Signal, WritableSignal, computed, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { assertCast } from './algebraic-data';
 import { participantQuery } from './api/queries';
 import { ExpStage, StageKinds } from './staged-exp/data-model';
-import { QueryType, SimpleResponse } from './types/api.types';
+import { Progression, QueryType, SimpleResponse } from './types/api.types';
 import { ParticipantExtended } from './types/participants.types';
 import { lazyInitWritable } from './utils/angular.utils';
 
@@ -14,9 +15,9 @@ export class Participant {
   // Frontend-only signals to help navigation
   public viewingStage: Signal<ExpStage | undefined>; // Current stage the participant is viewing
   public workingOnStage: WritableSignal<ExpStage | undefined>; // Current active stage for the participant
-  public canViewNextStage: Signal<boolean>; // Whether the participant can view the next stage (has finished it, or can skip it)
 
   private http = inject(HttpClient);
+  private router = inject(Router);
 
   /**
    *
@@ -56,29 +57,47 @@ export class Participant {
       // Follow the workingOnStage signal by default
       this.viewingStage = computed(this.workingOnStage);
     }
-
-    this.canViewNextStage = computed(() => {
-      const viewing = this.viewingStage();
-      if (!viewing) return false;
-
-      const data = this.userData();
-
-      // Check if the participant has completed the stage
-      // TODO: find a different way to synchronize how users can all advance to the next stage
-      // (similar to chat message synchronization)
-      return (
-        data?.completedStageNames.includes(viewing.name) ||
-        data?.allowedStageProgressionMap[viewing.name] === true
-      );
-    });
   }
 
   nextStep() {
     // TODO: remove this once all old occurrences have been removed
   }
 
+  /** Returns a non empty progression data object if going to the next stage would
+   * need to update the backend stage progression state as well.
+   */
+  getStageProgression(): Progression {
+    const stageName = this.workingOnStage()?.name;
+    const completedStages = this.userData()?.completedStageNames;
+
+    if (!stageName || !completedStages) {
+      return {};
+    }
+
+    if (!completedStages.includes(stageName)) {
+      return { justFinishedStageName: stageName };
+    }
+
+    return {};
+  }
+
   navigateToNextStage() {
-    // TODO: navigate to the next stage, and handle marking old stages as done
+    const current = this.viewingStage();
+    const userData = this.userData(); // bug : ça "s'arrête" ici ??? est-ce que c'est parce qu'on ne peut pas utiliser de signaux ici ?
+    if (!current || !userData) {
+      return;
+    }
+
+    // Get the next stage in the sequence
+    const stageNames = Object.keys(userData.stageMap);
+    const currentIndex = stageNames.indexOf(current.name);
+    const stage = stageNames[currentIndex + 1];
+
+    if (!stage) {
+      return; // No more stages to navigate to
+    }
+
+    this.router.navigate(['/participant', this.userData()?.uid], { queryParams: { stage } });
   }
 
   /** Returns the current viewing stage and asserts its kind. Throws an error if the cast is incorrect. */

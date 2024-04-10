@@ -62,7 +62,7 @@ export const createTemplateMutation = (
 export const updateProfileAndTOSMutation = (
   http: HttpClient,
   client: QueryClient,
-  onSuccess?: OnSuccess<unknown>,
+  onSuccess?: OnSuccess<ProfileTOSData>,
 ) => {
   return injectMutation(() => ({
     mutationFn: ({ uid, ...data }: ProfileTOSData) =>

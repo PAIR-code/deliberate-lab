@@ -10,11 +10,18 @@ export type KeyOfType<Obj, Type> = {
 export type Indexable<Obj> = KeyOfType<Obj, Index>;
 
 /** Create a lookup table for an object list, indexed by the given key */
-export const lookupTable = <T extends object>(list: T[], key: Indexable<T>): Record<Index, T> => {
-  const table: Record<Index, T> = {};
+export const lookupTable = <
+  Type extends object,
+  KeyName extends Indexable<Type>,
+  KeyType extends Type[KeyName] & Index,
+>(
+  list: Type[],
+  key: KeyName,
+): Record<KeyType, Type> => {
+  const table: Record<KeyType, Type> = {} as Record<KeyType, Type>;
 
   list.forEach((item) => {
-    table[item[key] as Index] = item;
+    table[item[key] as KeyType] = item;
   });
   return table;
 };

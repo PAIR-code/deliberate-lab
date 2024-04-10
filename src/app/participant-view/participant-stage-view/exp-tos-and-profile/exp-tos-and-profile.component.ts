@@ -65,10 +65,8 @@ export class ExpTosAndProfileComponent {
 
   constructor(participantProvider: ProviderService<Participant>) {
     this.participant = participantProvider.get();
-    this.profileMutation = updateProfileAndTOSMutation(
-      this.http,
-      this.queryClient,
-      this.participant.navigateToNextStage,
+    this.profileMutation = updateProfileAndTOSMutation(this.http, this.queryClient, () =>
+      this.participant.navigateToNextStage(),
     );
 
     // This WILL already have been fetched by the backend at this point,
@@ -113,6 +111,7 @@ export class ExpTosAndProfileComponent {
   nextStep() {
     this.profileMutation.mutate({
       ...this.profileFormControl.value,
+      ...this.participant.getStageProgression(),
       uid: this.participant.userData()?.uid,
     } as ProfileTOSData);
   }

@@ -8,3 +8,9 @@ export const ProfileAndTOS = Type.Object({
 });
 
 export type ProfileAndTOS = Static<typeof ProfileAndTOS>;
+
+export const Progression = Type.Object({
+  justFinishedStageName: Type.String(),
+});
+
+export type Progression = Static<typeof Progression>;

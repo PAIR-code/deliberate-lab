@@ -1,4 +1,5 @@
 import { ExpStage } from '../staged-exp/data-model';
+import { Progression } from './api.types';
 import { ParticipantExtended } from './participants.types';
 
 /** Experiment metadata */
@@ -37,7 +38,7 @@ export interface TemplateCreationData {
   allowedStageProgressionMap: Record<string, boolean>;
 }
 
-export interface ProfileTOSData {
+export interface ProfileTOSData extends Progression {
   uid: string;
   name: string;
   pronouns: string;

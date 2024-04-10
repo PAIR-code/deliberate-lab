@@ -3,6 +3,7 @@
 import { Value } from '@sinclair/typebox/value';
 import { onRequest } from 'firebase-functions/v2/https';
 import { app } from '../app';
+import { checkStageProgression } from '../utils/check-stage-progression';
 import { ProfileAndTOS } from '../validation/participants.validation';
 
 /** Fetch a specific participant */
@@ -46,7 +47,7 @@ export const updateProfileAndTOS = onRequest(async (request, response) => {
   const { body } = request;
   if (Value.Check(ProfileAndTOS, body)) {
     // Patch the data
-    await participant.ref.update(body);
+    await participant.ref.update(checkStageProgression(participant, body));
     response.send({ data: { uid: participant.id, ...body } }); // Send back the data
   } else {
     response.status(400).send('Invalid data');
