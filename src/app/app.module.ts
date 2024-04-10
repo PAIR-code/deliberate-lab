@@ -41,7 +41,6 @@ import { ExpLeaderVoteComponent } from './participant-view/participant-stage-vie
 import { ExpProfileComponent } from './participant-view/participant-stage-view/exp-profile/exp-profile.component';
 import { ExpSurveyComponent } from './participant-view/participant-stage-view/exp-survey/exp-survey.component';
 import { ExpTosAndProfileComponent } from './participant-view/participant-stage-view/exp-tos-and-profile/exp-tos-and-profile.component';
-import { ExpTosComponent } from './participant-view/participant-stage-view/exp-tos/exp-tos.component';
 import { AppStateService } from './services/app-state.service';
 import { GoogleAuthService } from './services/google-auth.service';
 import { GoogleSheetsService } from './services/google-sheets.service';
@@ -88,7 +87,6 @@ import { VertexApiService } from './services/vertex-api.service';
     ExpProfileComponent,
     //ExpRatingComponent,
     ExpChatComponent,
-    ExpTosComponent,
     ExpTosAndProfileComponent,
     ExpLeaderRevealComponent,
     ExperimenterViewComponent,

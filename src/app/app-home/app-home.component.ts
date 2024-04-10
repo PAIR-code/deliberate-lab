@@ -30,7 +30,6 @@ import { ExperimentExtended } from 'src/lib/types/experiments.types';
 import { ExperimenterViewComponent } from '../experimenter-view/experimenter-view.component';
 import { ExpSurveyComponent } from '../participant-view/participant-stage-view/exp-survey/exp-survey.component';
 import { ExpTosAndProfileComponent } from '../participant-view/participant-stage-view/exp-tos-and-profile/exp-tos-and-profile.component';
-import { ExpTosComponent } from '../participant-view/participant-stage-view/exp-tos/exp-tos.component';
 import { AppStateService } from '../services/app-state.service';
 import { GoogleAuthService } from '../services/google-auth.service';
 
@@ -46,7 +45,6 @@ import { GoogleAuthService } from '../services/google-auth.service';
     ExpSurveyComponent,
     ExpTosAndProfileComponent,
     ExpLeaderRevealComponent,
-    ExpTosComponent,
     MatButtonModule,
     ExperimenterViewComponent,
     FormsModule,

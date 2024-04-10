@@ -2,9 +2,6 @@
   <h2>{{ this.participant.viewingStage()?.name }} ({{ this.participant.viewingStage()?.kind }})</h2>
   <div class="exp-stage-content">
     @switch (this.participant.viewingStage()?.kind) {
-      @case (StageKinds.acceptTos) {
-        <app-exp-tos></app-exp-tos>
-      }
       @case (StageKinds.setProfile) {
         <app-exp-profile></app-exp-profile>
       }

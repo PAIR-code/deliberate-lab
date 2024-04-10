@@ -11,6 +11,7 @@ export interface ParticipantProfile {
   pronouns: string;
   avatarUrl: string;
   name: string;
+  acceptTosTimestamp: string;
 }
 
 export interface ParticipantExtended extends ParticipantProfile {

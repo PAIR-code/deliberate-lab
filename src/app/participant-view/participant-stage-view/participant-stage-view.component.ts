@@ -20,7 +20,6 @@ import { ProviderService } from 'src/app/services/provider.service';
 import { Participant } from 'src/lib/participant';
 import { ExpSurveyComponent } from './exp-survey/exp-survey.component';
 import { ExpTosAndProfileComponent } from './exp-tos-and-profile/exp-tos-and-profile.component';
-import { ExpTosComponent } from './exp-tos/exp-tos.component';
 
 @Component({
   selector: 'app-participant-stage-view',
@@ -32,7 +31,6 @@ import { ExpTosComponent } from './exp-tos/exp-tos.component';
     ExpSurveyComponent,
     ExpTosAndProfileComponent,
     ExpLeaderRevealComponent,
-    ExpTosComponent,
     MatButtonModule,
   ],
   templateUrl: './participant-stage-view.component.html',
