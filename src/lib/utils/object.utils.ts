@@ -25,3 +25,8 @@ export const lookupTable = <
   });
   return table;
 };
+
+/** Exclude all fields of type U from type T */
+export type ExcludeProps<T, U> = {
+  [P in Exclude<keyof T, keyof U>]: T[P];
+};

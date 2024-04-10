@@ -17,7 +17,6 @@ export enum StageKind {
 export type ExpConfig =
   | TosAndUserProfile
   | Survey
-  | TosAndUserProfile
   | Votes
   | ChatAboutItems
   //| ItemRatings

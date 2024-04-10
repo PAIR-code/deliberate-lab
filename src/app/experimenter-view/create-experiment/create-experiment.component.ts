@@ -1,19 +1,4 @@
 import { isEqual } from 'lodash';
-import {
-  ExpStage,
-  ExpStageSurvey,
-  ExpStageTosAndUserProfile,
-  QuestionData,
-  StageKinds,
-  SurveyQuestionKind,
-  getDefaultChatAboutItemsConfig,
-  getDefaultItemRatingsQuestion,
-  getDefaultLeaderRevealConfig,
-  getDefaultScaleQuestion,
-  getDefaultSurveyConfig,
-  getDefaultTosAndUserProfileConfig,
-  getDefaultVotesConfig,
-} from 'src/lib/staged-exp/data-model';
 
 import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Component, effect, inject } from '@angular/core';
@@ -35,8 +20,24 @@ import { LocalService } from 'src/app/services/local.service';
 import { tryCast } from 'src/lib/algebraic-data';
 import { createExperimentMutation, createTemplateMutation } from 'src/lib/api/mutations';
 import { templatesQuery } from 'src/lib/api/queries';
+import { getDefaultChatAboutItemsConfig } from 'src/lib/types/chats.types';
 import { Template } from 'src/lib/types/experiments.types';
-import { generateAllowedStageProgressionMap } from 'src/lib/types/stages.types';
+import {
+  Question,
+  SurveyQuestionKind,
+  getDefaultItemRatingsQuestion,
+  getDefaultScaleQuestion,
+  getDefaultSurveyConfig,
+  getDefaultTosAndUserProfileConfig,
+} from 'src/lib/types/questions.types';
+import {
+  ExpStage,
+  ExpStageSurvey,
+  ExpStageTosAndUserProfile,
+  StageKind,
+  generateAllowedStageProgressionMap,
+} from 'src/lib/types/stages.types';
+import { getDefaultLeaderRevealConfig, getDefaultVotesConfig } from 'src/lib/types/votes.types';
 import { lookupTable } from 'src/lib/utils/object.utils';
 
 const LOCAL_STORAGE_KEY = 'ongoing-experiment-creation';
@@ -85,15 +86,15 @@ export class CreateExperimentComponent {
   public currentTemplate: Template | null = null;
 
   // Make these fields available in the template
-  readonly StageKinds = StageKinds;
+  readonly StageKind = StageKind;
   readonly SurveyQuestionKind = SurveyQuestionKind;
   readonly tryCast = tryCast;
-  readonly availableStageKinds = [
-    StageKinds.acceptTosAndSetProfile,
-    StageKinds.takeSurvey,
-    StageKinds.voteForLeader,
-    StageKinds.groupChat,
-    StageKinds.revealVoted,
+  readonly availableStageKind = [
+    StageKind.AcceptTosAndSetProfile,
+    StageKind.TakeSurvey,
+    StageKind.VoteForLeader,
+    StageKind.GroupChat,
+    StageKind.RevealVoted,
   ];
 
   constructor(
@@ -151,13 +152,13 @@ export class CreateExperimentComponent {
 
   // survey questions
   addNewSurveyQuestion(event: Event, type: 'rating' | 'scale') {
-    let question: QuestionData | null = null;
+    let question: Question | null = null;
     if (type === 'rating') {
       question = getDefaultItemRatingsQuestion();
     } else if (type === 'scale') {
       question = getDefaultScaleQuestion();
     }
-    (this.currentEditingStage as ExpStageSurvey).config.questions.push(question as QuestionData);
+    (this.currentEditingStage as ExpStageSurvey).config.questions.push(question as Question);
     this.persistExistingStages();
   }
 
@@ -198,10 +199,10 @@ export class CreateExperimentComponent {
     if (!_stageData.kind) return true;
     if (!_stageData.name || _stageData.name.trim().length === 0) return true;
 
-    if (_stageData.kind === StageKinds.acceptTosAndSetProfile) {
+    if (_stageData.kind === StageKind.AcceptTosAndSetProfile) {
       return false;
       // if (_stageData.config?.tosLines.length === 0) return true;
-    } else if (_stageData.kind === StageKinds.takeSurvey) {
+    } else if (_stageData.kind === StageKind.TakeSurvey) {
       if (_stageData.config?.questions.length === 0) return true;
     }
 
@@ -276,19 +277,19 @@ export class CreateExperimentComponent {
       console.log('Switched to:', this.currentEditingStage.kind);
       let newConfig = {};
       switch (this.currentEditingStage.kind) {
-        case StageKinds.acceptTosAndSetProfile:
+        case StageKind.AcceptTosAndSetProfile:
           newConfig = getDefaultTosAndUserProfileConfig();
           break;
-        case StageKinds.takeSurvey:
+        case StageKind.TakeSurvey:
           newConfig = getDefaultSurveyConfig();
           break;
-        case StageKinds.voteForLeader:
+        case StageKind.VoteForLeader:
           newConfig = getDefaultVotesConfig();
           break;
-        case StageKinds.groupChat:
+        case StageKind.GroupChat:
           newConfig = getDefaultChatAboutItemsConfig();
           break;
-        case StageKinds.revealVoted:
+        case StageKind.RevealVoted:
           newConfig = getDefaultLeaderRevealConfig();
           break;
       }

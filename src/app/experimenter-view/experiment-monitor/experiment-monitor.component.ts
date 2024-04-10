@@ -11,10 +11,10 @@ import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { isOfKind } from 'src/lib/algebraic-data';
 import { deleteExperimentMutation } from 'src/lib/api/mutations';
 import { experimentQuery } from 'src/lib/api/queries';
-import { StageKinds } from 'src/lib/staged-exp/data-model';
 import { QueryType } from 'src/lib/types/api.types';
 import { ExperimentExtended } from 'src/lib/types/experiments.types';
 import { ParticipantExtended, ParticipantProfile } from 'src/lib/types/participants.types';
+import { StageKind } from 'src/lib/types/stages.types';
 import { lookupTable } from 'src/lib/utils/object.utils';
 import { MediatorChatComponent } from '../mediator-chat/mediator-chat.component';
 
@@ -22,7 +22,7 @@ import { MediatorChatComponent } from '../mediator-chat/mediator-chat.component'
 // where participants are at w.r.t. this stage.
 export interface StageState {
   name: string;
-  kind: StageKinds;
+  kind: StageKind;
   participants: ParticipantProfile[];
 }
 
@@ -62,7 +62,7 @@ export class ExperimentMonitorComponent {
   public stageStates: Signal<StageState[]>;
 
   isOfKind = isOfKind;
-  readonly StageKinds = StageKinds;
+  readonly StageKind = StageKind;
 
   constructor(
     public stateService: AppStateService,

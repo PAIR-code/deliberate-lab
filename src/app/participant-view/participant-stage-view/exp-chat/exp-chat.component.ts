@@ -12,9 +12,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { ChatAboutItems, ItemPair, Message, StageKinds } from 'src/lib/staged-exp/data-model';
 import { Participant } from 'src/lib/staged-exp/participant';
+import { ChatAboutItems } from 'src/lib/types/chats.types';
+import { ItemPair } from 'src/lib/types/items.types';
+import { Message } from 'src/lib/types/messages.types';
 import { ParticipantExtended } from 'src/lib/types/participants.types';
+import { StageKind } from 'src/lib/types/stages.types';
 import { AppStateService } from '../../../services/app-state.service';
 import { ChatDiscussItemsMessageComponent } from './chat-discuss-items-message/chat-discuss-items-message.component';
 import { ChatMediatorMessageComponent } from './chat-mediator-message/chat-mediator-message.component';
@@ -52,8 +55,8 @@ export class ExpChatComponent {
   public currentRatingsToDiscuss: Signal<ItemPair>;
 
   constructor(stateService: AppStateService) {
-    const { participant, stageData } = stateService.getParticipantAndStage(StageKinds.groupChat);
-    this.stageData = stageData;
+    const { participant, stageData } = stateService.getParticipantAndStage(StageKind.GroupChat);
+    this.stageData = stageData as Signal<ChatAboutItems>; // TODO: temporary fix
     this.participant = participant;
 
     this.messages = computed(() => {

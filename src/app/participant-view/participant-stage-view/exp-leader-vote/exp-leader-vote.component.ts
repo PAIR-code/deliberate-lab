@@ -12,7 +12,8 @@ import { MatRadioModule } from '@angular/material/radio';
 
 import { Participant } from 'src/lib/staged-exp/participant';
 import { ParticipantExtended } from 'src/lib/types/participants.types';
-import { LeaderVote, StageKinds, Votes } from '../../../../lib/staged-exp/data-model';
+import { StageKind } from 'src/lib/types/stages.types';
+import { Vote, Votes } from 'src/lib/types/votes.types';
 import { AppStateService } from '../../../services/app-state.service';
 
 @Component({
@@ -25,16 +26,16 @@ import { AppStateService } from '../../../services/app-state.service';
 export class ExpLeaderVoteComponent {
   public otherParticipants: Signal<ParticipantExtended[]>;
 
-  readonly LeaderVote = LeaderVote;
+  readonly Vote = Vote;
 
   public participant: Participant;
   public votes: Votes;
 
   constructor(private stateService: AppStateService) {
     const { participant, stageData } = this.stateService.getParticipantAndStage(
-      StageKinds.voteForLeader,
+      StageKind.VoteForLeader,
     );
-    this.votes = stageData();
+    this.votes = stageData() as Votes; // TODO: temporary fix
     this.participant = participant;
 
     this.otherParticipants = computed(() => {
@@ -49,7 +50,7 @@ export class ExpLeaderVoteComponent {
     for (const p of this.otherParticipants()) {
       otherParticipantsMap[p.uid] = p;
       if (!(p.uid in this.votes)) {
-        this.votes[p.uid] = LeaderVote.NOT_RATED;
+        this.votes[p.uid] = Vote.NotRated;
       }
     }
     Object.keys(this.votes).forEach((uid) => {
@@ -63,7 +64,7 @@ export class ExpLeaderVoteComponent {
   isComplete() {
     let completed = true;
     this.otherParticipants().forEach((u) => {
-      if (!(u.uid in this.votes) || this.votes[u.uid] === LeaderVote.NOT_RATED) {
+      if (!(u.uid in this.votes) || this.votes[u.uid] === Vote.NotRated) {
         completed = false;
       }
     });
@@ -71,7 +72,7 @@ export class ExpLeaderVoteComponent {
   }
 
   setVote(event: unknown, userId: string) {
-    const { value } = event as { value: LeaderVote };
+    const { value } = event as { value: Vote };
     // if (this.isComplete()) {
     //   this.stateService.setStageComplete(true);
     // }
@@ -80,7 +81,7 @@ export class ExpLeaderVoteComponent {
   }
 
   resetVote(userId: string) {
-    this.votes[userId] = LeaderVote.NOT_RATED;
+    this.votes[userId] = Vote.NotRated;
     this.participant.editStageData(() => this.votes);
   }
 }

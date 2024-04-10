@@ -2,6 +2,7 @@
  * Types for the participants
  */
 
+import { ExcludeProps } from '../utils/object.utils';
 import { ExpStage } from './stages.types';
 
 export interface ParticipantId {
@@ -13,11 +14,13 @@ export interface ParticipantProfile extends ParticipantId {
   pronouns: string;
   avatarUrl: string;
   name: string;
-  acceptTosTimestamp: string;
+  acceptTosTimestamp: string | null;
 }
 
 // The stage data for a participant does not have its ids
-export type TosAndUserProfile = Exclude<ParticipantProfile, ParticipantId>;
+export type TosAndUserProfile = ExcludeProps<ParticipantProfile, ParticipantId> & {
+  tosLines: string[];
+};
 
 export interface ParticipantExtended extends ParticipantProfile {
   stageMap: Record<string, ExpStage>;

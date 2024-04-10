@@ -2,6 +2,7 @@
 
 import { uniqueId } from 'lodash';
 import { ItemPairWithRatings } from './items.types';
+import { TosAndUserProfile } from './participants.types';
 
 export enum SurveyQuestionKind {
   Text = 'TextQuestion',
@@ -101,5 +102,15 @@ export const getDefaultScaleQuestion = (): ScaleQuestion => {
 export const getDefaultSurveyConfig = (): Survey => {
   return {
     questions: [],
+  };
+};
+
+export const getDefaultTosAndUserProfileConfig = (): TosAndUserProfile => {
+  return {
+    pronouns: '',
+    avatarUrl: '',
+    name: '',
+    tosLines: [''],
+    acceptTosTimestamp: null,
   };
 };

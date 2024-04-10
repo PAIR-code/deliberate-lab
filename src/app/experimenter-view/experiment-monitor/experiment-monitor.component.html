@@ -32,7 +32,7 @@
     <div>
       {{ stageState.name }}: {{ stageState.participants.length }}
 
-      @if (isOfKind(stageState, StageKinds.groupChat)) {
+      @if (isOfKind(stageState, StageKind.GroupChat)) {
         <mat-accordion>
           <mat-expansion-panel>
             <mat-expansion-panel-header>
