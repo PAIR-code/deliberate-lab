@@ -83,15 +83,12 @@ export class AppHomeComponent implements AfterViewInit {
 
   async joinExperiment(accessCode: string) {
     this.error = '';
-    const parts = accessCode.split('/');
-    const userid = parts.pop();
-    const experimentName = parts.join('');
 
-    if (!userid || !experimentName) {
+    if (accessCode === '') {
       this.error = 'Bad access code';
       return;
     } else {
-      await this.router.navigate(['/participant', experimentName, userid]);
+      await this.router.navigate(['/participant', accessCode]);
     }
   }
 

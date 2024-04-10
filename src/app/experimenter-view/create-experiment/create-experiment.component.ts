@@ -70,7 +70,7 @@ export class CreateExperimentComponent {
 
   createExp = createExperimentMutation(this.http, this.client, ({ uid }) => {
     localStorage.removeItem(LOCAL_STORAGE_KEY); // Clear local storage
-    this.router.navigate([`/experimenter/experiment/${uid}`]);
+    this.router.navigate(['/experimenter', 'experiment', uid]);
   });
 
   createTemplate = createTemplateMutation(this.http, this.client, () => {
