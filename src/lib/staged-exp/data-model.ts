@@ -12,7 +12,7 @@ import { uniqueId } from 'lodash';
 export enum StageKinds {
   acceptTos = 'acceptTos',
   setProfile = 'setProfile',
-  acceptTosAndSetProfile = 'acceptTodAndSetProfile',
+  acceptTosAndSetProfile = 'acceptTosAndSetProfile',
   groupChat = 'groupChat',
   voteForLeader = 'voteForLeader',
   revealVoted = 'leaderReveal',

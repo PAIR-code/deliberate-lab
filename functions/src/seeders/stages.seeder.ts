@@ -3,7 +3,7 @@ export class StagesSeeder {
   public static createMany() {
     return [
       {
-        kind: 'acceptTodAndSetProfile',
+        kind: 'acceptTosAndSetProfile',
         name: '1. Agree to the experiment and set your profile',
         config: {
           pronouns: '',
