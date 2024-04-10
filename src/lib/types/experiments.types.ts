@@ -38,5 +38,9 @@ export interface TemplateCreationData {
 }
 
 export interface ProfileTOSData {
-  // TODO
+  uid: string;
+  name: string;
+  pronouns: string;
+  avatarUrl: string;
+  acceptTosTimestamp: string;
 }

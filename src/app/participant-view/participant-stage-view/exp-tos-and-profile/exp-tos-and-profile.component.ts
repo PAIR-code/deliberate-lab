@@ -105,7 +105,9 @@ export class ExpTosAndProfileComponent {
   }
 
   nextStep() {
-    // TODO: mutate and send the correct data
-    // this.profileMutation.mutate(this.profileFormControl.value);
+    this.profileMutation.mutate({
+      ...this.profileFormControl.value,
+      uid: this.participant.userData()?.uid,
+    } as ProfileTOSData);
   }
 }

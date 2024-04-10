@@ -34,7 +34,7 @@
         <input
           matInput
           placeholder="Write your response"
-          (change)="updateOtherPronounsValue($event)"
+          (input)="updateOtherPronounsValue($event)"
         /> </mat-form-field
     ></span>
 
@@ -80,9 +80,7 @@
   </form>
   <button
     color="primary"
-    [disabled]="
-      !profileFormControl.valid || profileMutation.isPending() || !participant.canViewNextStage()
-    "
+    [disabled]="!profileFormControl.valid || profileMutation.isPending()"
     (click)="nextStep()"
     mat-button
   >

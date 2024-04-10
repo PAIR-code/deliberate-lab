@@ -65,13 +65,15 @@ export const updateProfileAndTOSMutation = (
   onSuccess?: OnSuccess<unknown>,
 ) => {
   return injectMutation(() => ({
-    mutationFn: (data: ProfileTOSData) =>
+    mutationFn: ({ uid, ...data }: ProfileTOSData) =>
       lastValueFrom(
-        // TODO: update with the correct endpoint
-        http.post<unknown>(`${environment.cloudFunctionsUrl}/updateProfileAndTOS`, data),
+        http.post<ProfileTOSData>(
+          `${environment.cloudFunctionsUrl}/updateProfileAndTOS/${uid}`,
+          data,
+        ),
       ),
     onSuccess: (data) => {
-      client.refetchQueries({ queryKey: ['participant'] }); // TODO: only specifically refetch the user that was updated (include its ID in the query key)
+      client.refetchQueries({ queryKey: ['participant', data.uid] });
       onSuccess?.(data);
     },
   }));

@@ -13,7 +13,12 @@ export interface CreationResponse {
 
 export type QueryType<T> = CreateQueryResult<T, Error>;
 
-export type MutationType<T> = CreateMutationResult<unknown, Error, T, unknown>;
+export type MutationType<Input, Output = Input> = CreateMutationResult<
+  Output,
+  Error,
+  Input,
+  unknown
+>;
 
 /** Type for a onSuccess function callback */
 export type OnSuccess<T> = (data: T) => Promise<void> | void;

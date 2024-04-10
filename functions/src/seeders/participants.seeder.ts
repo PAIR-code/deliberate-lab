@@ -18,6 +18,7 @@ export class ParticipantSeeder {
       experimentId,
       stageMap,
       allowedStageProgressionMap,
+      acceptTosTimestamp: null,
       futureStageNames: Object.keys(stageMap).slice(1),
       workingOnStageName: Object.keys(stageMap)[0],
       completedStageNames: [],
