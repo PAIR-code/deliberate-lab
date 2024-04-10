@@ -20,8 +20,7 @@ import { ProviderService } from 'src/app/services/provider.service';
 import { updateProfileAndTOSMutation } from 'src/lib/api/mutations';
 import { Participant } from 'src/lib/participant';
 import { StageKinds } from 'src/lib/staged-exp/data-model';
-import { MutationType } from 'src/lib/types/api.types';
-import { ProfileTOSData } from 'src/lib/types/experiments.types';
+import { MutationType, ProfileTOSData } from 'src/lib/types/api.types';
 
 enum Pronouns {
   HeHim = 'He/Him',

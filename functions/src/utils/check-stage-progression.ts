@@ -19,7 +19,7 @@ export const checkStageProgression = (participant: Document, body: any) => {
     if (data.completedStageNames.includes(justFinishedStageName)) return {};
 
     // Rebuild the `completedStageNames` -> `workingOnStageName` -> `futureStageNames` sequence
-    const index = data.futureStageNames.indexOf(justFinishedStageName); // n'existe pas encore !
+    const index = data.futureStageNames.indexOf(justFinishedStageName);
     const completedStageNames = [
       ...data.completedStageNames,
       data.workingOnStageName,

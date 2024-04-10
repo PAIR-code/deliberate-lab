@@ -1,6 +1,7 @@
 /** Types wrappers for the API */
 
 import { CreateMutationResult, CreateQueryResult } from '@tanstack/angular-query-experimental';
+import { ExpStage } from '../staged-exp/data-model';
 
 /** Simple response with data */
 export interface SimpleResponse<T> {
@@ -26,4 +27,19 @@ export type OnSuccess<T> = (data: T) => Promise<void> | void;
 /** Send additional stage progression information for participants. */
 export interface Progression {
   justFinishedStageName?: string;
+}
+
+/** Data to be sent to the backend in order to generate a template */
+export interface TemplateCreationData {
+  name: string;
+  stageMap: Record<string, ExpStage>;
+  allowedStageProgressionMap: Record<string, boolean>;
+}
+
+export interface ProfileTOSData extends Progression {
+  uid: string;
+  name: string;
+  pronouns: string;
+  avatarUrl: string;
+  acceptTosTimestamp: string;
 }

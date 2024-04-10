@@ -20,7 +20,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { ExpChatComponent } from '../participant-view/participant-stage-view/exp-chat/exp-chat.component';
 import { ExpLeaderRevealComponent } from '../participant-view/participant-stage-view/exp-leader-reveal/exp-leader-reveal.component';
 import { ExpLeaderVoteComponent } from '../participant-view/participant-stage-view/exp-leader-vote/exp-leader-vote.component';
-import { ExpProfileComponent } from '../participant-view/participant-stage-view/exp-profile/exp-profile.component';
 //import { ExpRatingComponent } from '../exp-rating/exp-rating.component';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -40,7 +39,6 @@ import { GoogleAuthService } from '../services/google-auth.service';
     MatFormFieldModule,
     ExpChatComponent,
     ExpLeaderVoteComponent,
-    ExpProfileComponent,
     //ExpRatingComponent,
     ExpSurveyComponent,
     ExpTosAndProfileComponent,

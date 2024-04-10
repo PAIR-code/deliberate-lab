@@ -5,12 +5,14 @@ import { HttpClient } from '@angular/common/http';
 import { QueryClient, injectMutation } from '@tanstack/angular-query-experimental';
 import { lastValueFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { CreationResponse, OnSuccess, SimpleResponse } from '../types/api.types';
 import {
-  ExperimentCreationData,
+  CreationResponse,
+  OnSuccess,
   ProfileTOSData,
+  SimpleResponse,
   TemplateCreationData,
-} from '../types/experiments.types';
+} from '../types/api.types';
+import { ExperimentCreationData } from '../types/experiments.types';
 
 export const deleteExperimentMutation = (http: HttpClient, client: QueryClient) =>
   injectMutation(() => ({

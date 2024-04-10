@@ -1,5 +1,6 @@
+/** API experiment types. For the actual stage types, see stages.types.ts */
+
 import { ExpStage } from '../staged-exp/data-model';
-import { Progression } from './api.types';
 import { ParticipantExtended } from './participants.types';
 
 /** Experiment metadata */
@@ -29,19 +30,4 @@ export interface Template {
   name: string;
   stageMap: Record<string, ExpStage>;
   allowedStageProgressionMap: Record<string, boolean>;
-}
-
-/** Data to be sent to the backend in order to generate a template */
-export interface TemplateCreationData {
-  name: string;
-  stageMap: Record<string, ExpStage>;
-  allowedStageProgressionMap: Record<string, boolean>;
-}
-
-export interface ProfileTOSData extends Progression {
-  uid: string;
-  name: string;
-  pronouns: string;
-  avatarUrl: string;
-  acceptTosTimestamp: string;
 }
