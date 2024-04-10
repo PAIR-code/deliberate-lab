@@ -61,6 +61,7 @@ export class ExpTosAndProfileComponent {
   queryClient = injectQueryClient();
 
   profileMutation: MutationType<ProfileTOSData>;
+  value = ''; // Custom pronouns input value
 
   constructor(participantProvider: ProviderService<Participant>) {
     this.participant = participantProvider.get();
@@ -70,15 +71,20 @@ export class ExpTosAndProfileComponent {
       this.participant.navigateToNextStage,
     );
 
-    // TODO: prefill the form in an async way ? Test this by directly logging into the first stage from a URL / the login form
+    // This WILL already have been fetched by the backend at this point,
+    // because the auth guard ensures that the participant data is available before rendering this component.
     const data = this.participant.userData();
+
     if (data) {
       this.profileFormControl.setValue({
         name: data.name,
         pronouns: data.pronouns,
         avatarUrl: data.avatarUrl,
-        acceptTosTimestamp: null,
+        acceptTosTimestamp: data.acceptTosTimestamp,
       });
+      if (this.isOtherPronoun(data.pronouns)) {
+        this.value = data.pronouns;
+      }
     }
 
     // Extract the TOS lines and make them available for the template
