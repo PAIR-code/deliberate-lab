@@ -30,7 +30,7 @@ export class StagesSeeder {
               item2: {
                 name: 'blanket',
                 imageUrl:
-                  'https://m.media-amazon.com/images/W/MEDIAX_792452-T1/images/I/81-x+F2EsHL._AC_UF894,1000_QL80_.jpg',
+                  'https://img.freepik.com/free-psd/blanket-isolated-transparent-background_191095-10098.jpg?size=338&ext=jpg&ga=GA1.1.1700460183.1712448000&semt=sph',
               },
               choice: null,
               confidence: null,
@@ -61,7 +61,7 @@ export class StagesSeeder {
             {
               name: 'blanket',
               imageUrl:
-                'https://m.media-amazon.com/images/W/MEDIAX_792452-T1/images/I/81-x+F2EsHL._AC_UF894,1000_QL80_.jpg',
+                'https://img.freepik.com/free-psd/blanket-isolated-transparent-background_191095-10098.jpg?size=338&ext=jpg&ga=GA1.1.1700460183.1712448000&semt=sph',
             },
             {
               name: 'lighter',
@@ -124,7 +124,7 @@ export class StagesSeeder {
               item2: {
                 name: 'blanket',
                 imageUrl:
-                  'https://m.media-amazon.com/images/W/MEDIAX_792452-T1/images/I/81-x+F2EsHL._AC_UF894,1000_QL80_.jpg',
+                  'https://img.freepik.com/free-psd/blanket-isolated-transparent-background_191095-10098.jpg?size=338&ext=jpg&ga=GA1.1.1700460183.1712448000&semt=sph',
               },
               choice: null,
               confidence: null,
