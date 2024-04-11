@@ -15,7 +15,6 @@ import { HttpClient } from '@angular/common/http';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Router } from '@angular/router';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
-import { AppStateService } from 'src/app/services/app-state.service';
 import { LocalService } from 'src/app/services/local.service';
 import { tryCast } from 'src/lib/algebraic-data';
 import { createExperimentMutation, createTemplateMutation } from 'src/lib/api/mutations';
@@ -98,7 +97,6 @@ export class CreateExperimentComponent {
   ];
 
   constructor(
-    private appStateService: AppStateService,
     private router: Router,
     private localStore: LocalService,
   ) {

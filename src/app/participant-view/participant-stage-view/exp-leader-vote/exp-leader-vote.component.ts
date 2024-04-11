@@ -6,15 +6,15 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, computed, Signal } from '@angular/core';
+import { Component, signal, Signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRadioModule } from '@angular/material/radio';
+import { ProviderService } from 'src/app/services/provider.service';
+import { Participant } from 'src/lib/participant';
 
-import { Participant } from 'src/lib/staged-exp/participant';
 import { ParticipantExtended } from 'src/lib/types/participants.types';
 import { StageKind } from 'src/lib/types/stages.types';
 import { Vote, Votes } from 'src/lib/types/votes.types';
-import { AppStateService } from '../../../services/app-state.service';
 
 @Component({
   selector: 'app-exp-leader-vote',
@@ -31,18 +31,20 @@ export class ExpLeaderVoteComponent {
   public participant: Participant;
   public votes: Votes;
 
-  constructor(private stateService: AppStateService) {
-    const { participant, stageData } = this.stateService.getParticipantAndStage(
-      StageKind.VoteForLeader,
-    );
-    this.votes = stageData() as Votes; // TODO: temporary fix
-    this.participant = participant;
+  constructor(private participantProvider: ProviderService<Participant>) {
+    this.participant = participantProvider.get();
 
-    this.otherParticipants = computed(() => {
-      const thisUserId = this.participant.userData().uid;
-      const allUsers = Object.values(this.participant.experiment().participants);
-      return allUsers.filter((u) => u.uid !== thisUserId);
-    });
+    const { config } = this.participant.assertViewingStageCast(StageKind.VoteForLeader)!;
+
+    this.votes = config;
+
+    // TODO: use new backend
+    this.otherParticipants = signal([]);
+    //  computed(() => {
+    //   const thisUserId = this.participant.userData().uid;
+    //   const allUsers = Object.values(this.participant.experiment().participants);
+    //   return allUsers.filter((u) => u.uid !== thisUserId);
+    // });
 
     // Make sure that votes has all other participants, and only them... if things
     // are configured fully in an experiment definition this is not needed.
@@ -77,11 +79,13 @@ export class ExpLeaderVoteComponent {
     //   this.stateService.setStageComplete(true);
     // }
     this.votes[userId] = value;
-    this.participant.editStageData(() => this.votes);
+    // TODO: use new backend
+    // this.participant.editStageData(() => this.votes);
   }
 
   resetVote(userId: string) {
     this.votes[userId] = Vote.NotRated;
-    this.participant.editStageData(() => this.votes);
+    // TODO: use new backend
+    // this.participant.editStageData(() => this.votes);
   }
 }

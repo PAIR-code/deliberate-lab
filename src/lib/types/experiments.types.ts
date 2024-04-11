@@ -1,7 +1,7 @@
 /** API experiment types. For the actual stage types, see stages.types.ts */
 
-import { ExpStage } from '../staged-exp/data-model';
 import { ParticipantExtended } from './participants.types';
+import { ExpStage } from './stages.types';
 
 /** Experiment metadata */
 export interface Experiment {

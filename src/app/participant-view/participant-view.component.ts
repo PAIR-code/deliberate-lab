@@ -14,7 +14,6 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Participant } from 'src/lib/participant';
 import { routeParamSignal, routeQueryStringSignal } from 'src/lib/utils/angular.utils';
-import { AppStateService } from '../services/app-state.service';
 import { ProviderService } from '../services/provider.service';
 import { ParticipantStageViewComponent } from './participant-stage-view/participant-stage-view.component';
 
@@ -43,7 +42,6 @@ export class ParticipantViewComponent implements OnDestroy {
     private route: ActivatedRoute,
     public participantService: ProviderService<Participant>,
     public router: Router,
-    public stateService: AppStateService,
   ) {
     // Create a new participant handler class instance and bind it to this subroute
     this.participant = new Participant(

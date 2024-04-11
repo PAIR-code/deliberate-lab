@@ -63,7 +63,7 @@ export class ExpSurveyComponent {
     this.stage = this.participant.assertViewingStageCast(StageKind.TakeSurvey)!;
 
     this.stage.config.questions.forEach((_question, _index) => {
-      // TODO: fill the questions array form
+      // TODO: fill the questions array form (depending on the kinds.)
     });
 
     // TODO: this stage needs a mutation and all the rest in order to proceed with the rest.

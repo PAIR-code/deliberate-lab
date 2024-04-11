@@ -6,7 +6,7 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, effect, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -16,12 +16,15 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { initialAppData, SavedAppData } from 'src/lib/staged-exp/app';
+import { bytes, describeBytes } from 'src/lib/utils/string.utils';
 import { ConfigUpdate } from '../codemirror-config-editor/codemirror-config-editor.component';
 import { CodemirrorConfigEditorModule } from '../codemirror-config-editor/codemirror-config-editor.module';
-import { AppStateService } from '../services/app-state.service';
 import { GoogleAuthService } from '../services/google-auth.service';
 import { GoogleDriveAppdataService } from '../services/google-drive-appdata.service';
+
+export interface SavedAppData {
+  // TODO: define the export schema for a full experiment
+}
 
 @Component({
   selector: 'app-app-settings',
@@ -41,10 +44,10 @@ import { GoogleDriveAppdataService } from '../services/google-drive-appdata.serv
   templateUrl: './app-settings.component.html',
   styleUrls: ['./app-settings.component.scss'],
 })
-export class AppSettingsComponent implements OnInit {
+export class AppSettingsComponent {
   public appNameControl: FormControl<string | null>;
 
-  public defaultDataStr: string = JSON.stringify(initialAppData(), null, 2);
+  public defaultDataStr: string = JSON.stringify({}, null, 2);
   public currentDataStr: string = this.defaultDataStr.slice();
 
   public downloadUrl?: string;
@@ -57,47 +60,26 @@ export class AppSettingsComponent implements OnInit {
   @ViewChild('downloadLink') downloadLink!: ElementRef<HTMLAnchorElement>;
 
   constructor(
-    private appStateService: AppStateService,
     private driveService: GoogleDriveAppdataService,
     private authService: GoogleAuthService,
   ) {
-    this.appNameControl = new FormControl<string | null>(this.appStateService.appName());
-    this.appNameControl.valueChanges.forEach((n) => {
-      if (n) {
-        this.appStateService.setSetting('name', n);
-      }
-    });
-
-    // When app data changes, update the fields in this UI.
-    effect(() => {
-      const newName = this.appStateService.appName();
-      if (this.appNameControl.value !== null && this.appNameControl.value !== newName) {
-        this.appNameControl.setValue(newName, { emitEvent: false });
-      }
-    });
-
-    effect(() => {
-      this.currentDataStr = JSON.stringify(this.appStateService.data(), null, 2);
-    });
+    this.appNameControl = new FormControl<string | null>('Default app name');
   }
 
-  ngOnInit(): void {}
-
   reset() {
-    this.appStateService.reset();
-    this.appNameControl.setValue(this.appStateService.appName());
-    this.currentDataStr = JSON.stringify(this.appStateService.data(), null, 2);
+    this.appNameControl.setValue('Default app name');
+    this.currentDataStr = this.defaultDataStr.slice();
   }
 
   async saveToGoogleDrive() {
-    const json = JSON.stringify(this.appStateService.data());
+    const json = this.currentDataStr;
     const token = await this.authService.getToken(
       'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file',
     );
 
     const response = await this.driveService.saveData(
       json,
-      `${this.appStateService.appName()}.json`,
+      `${this.appNameControl.value}.json`,
       '',
       token,
     );
@@ -106,7 +88,7 @@ export class AppSettingsComponent implements OnInit {
   }
 
   download(anchorLink: HTMLAnchorElement) {
-    const json = JSON.stringify(this.appStateService.data());
+    const json = this.currentDataStr;
     const blob = new Blob([json], { type: 'data:application/json;charset=utf-8' });
     if (this.downloadUrl) {
       URL.revokeObjectURL(this.downloadUrl);
@@ -135,24 +117,10 @@ export class AppSettingsComponent implements OnInit {
       return;
     }
 
-    this.appStateService.data.set(configUpdate.obj);
     this.currentDataStr = configUpdate.json;
   }
 
   sizeString() {
-    const bytes = this.appStateService.dataSize();
-    if (bytes >= 1073741824) {
-      return (bytes / 1073741824).toFixed(2) + ' GB';
-    } else if (bytes >= 1048576) {
-      return (bytes / 1048576).toFixed(2) + ' MB';
-    } else if (bytes >= 1024) {
-      return (bytes / 1024).toFixed(2) + ' KB';
-    } else if (bytes > 1) {
-      return bytes + ' bytes';
-    } else if (bytes == 1) {
-      return bytes + ' byte';
-    } else {
-      return '0 bytes';
-    }
+    return describeBytes(bytes(this.currentDataStr));
   }
 }

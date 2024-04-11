@@ -1,7 +1,7 @@
 /** Types wrappers for the API */
 
 import { CreateMutationResult, CreateQueryResult } from '@tanstack/angular-query-experimental';
-import { ExpStage } from '../staged-exp/data-model';
+import { ExpStage } from './stages.types';
 
 /** Simple response with data */
 export interface SimpleResponse<T> {

@@ -6,19 +6,18 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, Signal, computed, effect } from '@angular/core';
+import { Component, Signal, computed, effect, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { Participant } from 'src/lib/staged-exp/participant';
+import { ProviderService } from 'src/app/services/provider.service';
+import { Participant } from 'src/lib/participant';
 import { ChatAboutItems } from 'src/lib/types/chats.types';
 import { ItemPair } from 'src/lib/types/items.types';
 import { Message } from 'src/lib/types/messages.types';
 import { ParticipantExtended } from 'src/lib/types/participants.types';
-import { StageKind } from 'src/lib/types/stages.types';
-import { AppStateService } from '../../../services/app-state.service';
 import { ChatDiscussItemsMessageComponent } from './chat-discuss-items-message/chat-discuss-items-message.component';
 import { ChatMediatorMessageComponent } from './chat-mediator-message/chat-mediator-message.component';
 import { ChatUserMessageComponent } from './chat-user-message/chat-user-message.component';
@@ -54,27 +53,30 @@ export class ExpChatComponent {
   public ratingsToDiscuss: Signal<ItemPair[]>;
   public currentRatingsToDiscuss: Signal<ItemPair>;
 
-  constructor(stateService: AppStateService) {
-    const { participant, stageData } = stateService.getParticipantAndStage(StageKind.GroupChat);
-    this.stageData = stageData as Signal<ChatAboutItems>; // TODO: temporary fix
-    this.participant = participant;
+  constructor(private participantProvider: ProviderService<Participant>) {
+    this.stageData = {} as Signal<ChatAboutItems>; // TODO: temporary fix
+    this.participant = participantProvider.get();
 
     this.messages = computed(() => {
       return this.stageData().messages;
     });
 
-    this.otherParticipants = computed(() => {
-      const thisUserId = this.participant.userData().uid;
-      const allUsers = Object.values(this.participant.experiment().participants);
-      return allUsers.filter((u) => u.uid !== thisUserId);
-    });
+    // TODO: use the new backend
+    this.otherParticipants = signal<ParticipantExtended[]>([]);
+    // computed(() => {
+    //   const thisUserId = this.participant.userData().uid;
+    //   const allUsers = Object.values(this.participant.experiment().participants);
+    //   return allUsers.filter((u) => u.uid !== thisUserId);
+    // });
 
-    this.everyoneReachedTheChat = computed(() => {
-      const users = Object.values(this.participant.experiment().participants);
-      return users
-        .map((userData) => userData.workingOnStageName)
-        .every((n) => n === this.participant.userData().workingOnStageName);
-    });
+    // TODO: use the new backend way of syncing participant progression
+    this.everyoneReachedTheChat = signal<boolean>(false);
+    //  computed(() => {
+    //   const users = Object.values(this.participant.experiment().participants);
+    //   return users
+    //     .map((userData) => userData.workingOnStageName)
+    //     .every((n) => n === this.participant.userData().workingOnStageName);
+    // });
 
     this.everyoneFinishedTheChat = computed(() => {
       // const users = Object.values(this.participant.experiment().participants);
@@ -83,25 +85,25 @@ export class ExpChatComponent {
       //   return otherUserChatStage.config.readyToEndChat;
       // });
       const participantsReady: ParticipantExtended[] = [];
-      if (this.stageData().readyToEndChat) {
-        participantsReady.push(this.participant.userData());
-      }
-      this.otherParticipants().forEach((p) => {
-        const stage = p.stageMap[this.participant.userData().workingOnStageName]
-          .config as ChatAboutItems;
-        if (stage.readyToEndChat) {
-          participantsReady.push(p);
-        }
-      });
+      // if (this.stageData().readyToEndChat) {
+      //   participantsReady.push(this.participant.userData());
+      // }
+      // this.otherParticipants().forEach((p) => {
+      //   const stage = p.stageMap[this.participant.userData().workingOnStageName]
+      //     .config as ChatAboutItems;
+      //   if (stage.readyToEndChat) {
+      //     participantsReady.push(p);
+      //   }
+      // });
       const isReady = participantsReady.length === this.otherParticipants().length + 1;
 
       // Allow "Next" to be pushed.
-      if (isReady) {
-        const allUsers = Object.values(this.participant.experiment().participants);
-        for (const user of allUsers) {
-          user.allowedStageProgressionMap[user.workingOnStageName] = true;
-        }
-      }
+      // if (isReady) {
+      //   const allUsers = Object.values(this.participant.experiment().participants);
+      //   for (const user of allUsers) {
+      //     user.allowedStageProgressionMap[user.workingOnStageName] = true;
+      //   }
+      // }
       return isReady;
     });
 
@@ -129,15 +131,16 @@ export class ExpChatComponent {
   }
 
   sendMessage() {
-    this.participant.sendMessage(this.message);
+    // TODO: use the new backend
+    // this.participant.sendMessage(this.message);
     this.message = '';
     this.stageData().isSilent = false;
   }
 
-  updateToogleValue(updatedValue: MatSlideToggleChange) {
-    this.participant.editStageData<ChatAboutItems>((d) => {
-      d.readyToEndChat = updatedValue.checked;
-    });
+  updateToogleValue(_updatedValue: MatSlideToggleChange) {
+    // this.participant.editStageData<ChatAboutItems>((d) => {
+    //   d.readyToEndChat = updatedValue.checked;
+    // });
     // console.log('this.everyoneFinishedTheChat()', this.everyoneFinishedTheChat());
   }
 }

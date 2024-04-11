@@ -12,7 +12,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { ExpChatComponent } from './exp-chat/exp-chat.component';
 import { ExpLeaderRevealComponent } from './exp-leader-reveal/exp-leader-reveal.component';
 import { ExpLeaderVoteComponent } from './exp-leader-vote/exp-leader-vote.component';
-import { ExpProfileComponent } from './exp-profile/exp-profile.component';
 //import { ExpRatingComponent } from '../exp-rating/exp-rating.component';
 import { ProviderService } from 'src/app/services/provider.service';
 import { Participant } from 'src/lib/participant';
@@ -26,7 +25,6 @@ import { ExpTosAndProfileComponent } from './exp-tos-and-profile/exp-tos-and-pro
   imports: [
     ExpChatComponent,
     ExpLeaderVoteComponent,
-    ExpProfileComponent,
     ExpSurveyComponent,
     ExpTosAndProfileComponent,
     ExpLeaderRevealComponent,

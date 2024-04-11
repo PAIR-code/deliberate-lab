@@ -3,7 +3,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterLink, RouterLinkActive, RouterModule } from '@angular/router';
-import { AppStateService } from 'src/app/services/app-state.service';
 
 import { HttpClient } from '@angular/common/http';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -64,10 +63,7 @@ export class ExperimentMonitorComponent {
   isOfKind = isOfKind;
   readonly StageKind = StageKind;
 
-  constructor(
-    public stateService: AppStateService,
-    public router: Router,
-  ) {
+  constructor(public router: Router) {
     // Prepare the request
     this._experiment = experimentQuery(this.http, this.experimentUid);
 
