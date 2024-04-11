@@ -8,6 +8,7 @@ src/environments/gcloud_env.ts
 
 # Compiled output
 /dist
+/docs
 /tmp
 /out-tsc
 /bazel-out
