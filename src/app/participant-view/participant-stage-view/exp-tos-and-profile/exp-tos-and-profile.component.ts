@@ -19,8 +19,8 @@ import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { ProviderService } from 'src/app/services/provider.service';
 import { updateProfileAndTOSMutation } from 'src/lib/api/mutations';
 import { Participant } from 'src/lib/participant';
-import { StageKinds } from 'src/lib/staged-exp/data-model';
 import { MutationType, ProfileTOSData } from 'src/lib/types/api.types';
+import { StageKind } from 'src/lib/types/stages.types';
 
 enum Pronouns {
   HeHim = 'He/Him',
@@ -85,8 +85,8 @@ export class ExpTosAndProfileComponent {
     }
 
     // Extract the TOS lines and make them available for the template
-    const tosLines = this.participant.assertViewingStageCast(StageKinds.acceptTosAndSetProfile);
-    this.tosLines = tosLines?.config.tosLines;
+    const stage = this.participant.assertViewingStageCast(StageKind.AcceptTosAndSetProfile);
+    this.tosLines = stage?.config.tosLines;
   }
 
   isOtherPronoun(s: string) {

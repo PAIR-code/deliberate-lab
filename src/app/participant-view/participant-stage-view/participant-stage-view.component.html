@@ -2,19 +2,19 @@
   <h2>{{ this.participant.viewingStage()?.name }} ({{ this.participant.viewingStage()?.kind }})</h2>
   <div class="exp-stage-content">
     @switch (this.participant.viewingStage()?.kind) {
-      @case (StageKind.acceptTosAndSetProfile) {
+      @case (StageKind.AcceptTosAndSetProfile) {
         <app-exp-tos-and-profile></app-exp-tos-and-profile>
       }
-      @case (StageKind.groupChat) {
+      @case (StageKind.GroupChat) {
         <app-exp-chat></app-exp-chat>
       }
-      @case (StageKind.takeSurvey) {
+      @case (StageKind.TakeSurvey) {
         <app-exp-survey></app-exp-survey>
       }
-      @case (StageKind.voteForLeader) {
+      @case (StageKind.VoteForLeader) {
         <app-exp-leader-vote></app-exp-leader-vote>
       }
-      @case (StageKind.revealVoted) {
+      @case (StageKind.RevealVoted) {
         <app-exp-leader-reveal></app-exp-leader-reveal>
       }
       @default {

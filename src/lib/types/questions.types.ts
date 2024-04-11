@@ -1,7 +1,7 @@
 /** Survey question types */
 
 import { uniqueId } from 'lodash';
-import { ItemPairWithRatings } from './items.types';
+import { ItemPairWithRatings, getDefaultItemRating } from './items.types';
 import { TosAndUserProfile } from './participants.types';
 
 export enum SurveyQuestionKind {
@@ -30,11 +30,10 @@ export interface CheckQuestion extends AbstractQuestion {
   checkMark: boolean | null;
 }
 
-export interface RatingQuestion extends AbstractQuestion {
+export interface RatingQuestion extends AbstractQuestion, ItemPairWithRatings {
   kind: SurveyQuestionKind.Rating;
 
   questionText: string;
-  rating: ItemPairWithRatings;
 }
 
 export interface ScaleQuestion extends AbstractQuestion {
@@ -51,6 +50,22 @@ export type Question = TextQuestion | RatingQuestion | ScaleQuestion | CheckQues
 export interface Survey {
   questions: Question[];
 }
+
+// ********************************************************************************************* //
+//                                             UTILS                                             //
+// ********************************************************************************************* //
+
+/** Asserts that the input question is of the given type, and returns it */
+export const questionAsKind = <T extends Question>(
+  question: Question,
+  kind: SurveyQuestionKind,
+): T => {
+  if (question.kind !== kind) {
+    throw new Error(`Expected question of kind ${kind}, got ${question.kind}`);
+  }
+
+  return question as T;
+};
 
 // ********************************************************************************************* //
 //                                           DEFAULTS                                            //
@@ -79,12 +94,7 @@ export const getDefaultItemRatingsQuestion = (): RatingQuestion => {
     kind: SurveyQuestionKind.Rating,
     id: uniqueId(),
     questionText: '',
-    rating: {
-      item1: { name: '', imageUrl: '' },
-      item2: { name: '', imageUrl: '' },
-      choice: null,
-      confidence: null,
-    },
+    ...getDefaultItemRating(),
   };
 };
 

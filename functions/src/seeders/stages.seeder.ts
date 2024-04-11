@@ -22,20 +22,18 @@ export class StagesSeeder {
               kind: 'RatingQuestion',
               id: '1',
               questionText: 'Rate the items by how helpful they would be for survival.',
-              rating: {
-                item1: {
-                  name: 'compas',
-                  imageUrl:
-                    'https://m.media-amazon.com/images/I/81NUeKWdiQL._AC_UF1000,1000_QL80_.jpg',
-                },
-                item2: {
-                  name: 'blanket',
-                  imageUrl:
-                    'https://m.media-amazon.com/images/W/MEDIAX_792452-T1/images/I/81-x+F2EsHL._AC_UF894,1000_QL80_.jpg',
-                },
-                choice: null,
-                confidence: null,
+              item1: {
+                name: 'compas',
+                imageUrl:
+                  'https://m.media-amazon.com/images/I/81NUeKWdiQL._AC_UF1000,1000_QL80_.jpg',
               },
+              item2: {
+                name: 'blanket',
+                imageUrl:
+                  'https://m.media-amazon.com/images/W/MEDIAX_792452-T1/images/I/81-x+F2EsHL._AC_UF894,1000_QL80_.jpg',
+              },
+              choice: null,
+              confidence: null,
             },
             {
               kind: 'ScaleQuestion',
@@ -118,20 +116,18 @@ export class StagesSeeder {
               kind: 'RatingQuestion',
               id: '5',
               questionText: 'Please rating the following accoring to which is best for survival',
-              rating: {
-                item1: {
-                  name: 'compas',
-                  imageUrl:
-                    'https://m.media-amazon.com/images/I/81NUeKWdiQL._AC_UF1000,1000_QL80_.jpg',
-                },
-                item2: {
-                  name: 'blanket',
-                  imageUrl:
-                    'https://m.media-amazon.com/images/W/MEDIAX_792452-T1/images/I/81-x+F2EsHL._AC_UF894,1000_QL80_.jpg',
-                },
-                choice: null,
-                confidence: null,
+              item1: {
+                name: 'compas',
+                imageUrl:
+                  'https://m.media-amazon.com/images/I/81NUeKWdiQL._AC_UF1000,1000_QL80_.jpg',
               },
+              item2: {
+                name: 'blanket',
+                imageUrl:
+                  'https://m.media-amazon.com/images/W/MEDIAX_792452-T1/images/I/81-x+F2EsHL._AC_UF894,1000_QL80_.jpg',
+              },
+              choice: null,
+              confidence: null,
             },
           ],
         },

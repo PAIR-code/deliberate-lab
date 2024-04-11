@@ -3,9 +3,9 @@ import { Signal, WritableSignal, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { assertCast } from './algebraic-data';
 import { participantQuery } from './api/queries';
-import { ExpStage, StageKinds } from './staged-exp/data-model';
 import { Progression, QueryType, SimpleResponse } from './types/api.types';
 import { ParticipantExtended } from './types/participants.types';
+import { ExpStage, StageKind } from './types/stages.types';
 import { lazyInitWritable } from './utils/angular.utils';
 
 export class Participant {
@@ -101,7 +101,7 @@ export class Participant {
   }
 
   /** Returns the current viewing stage and asserts its kind. Throws an error if the cast is incorrect. */
-  assertViewingStageCast<T extends StageKinds>(kind: T): (ExpStage & { kind: T }) | undefined {
+  assertViewingStageCast<T extends StageKind>(kind: T): (ExpStage & { kind: T }) | undefined {
     const viewing = this.viewingStage();
 
     if (!viewing) {

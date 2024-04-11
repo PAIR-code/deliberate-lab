@@ -18,10 +18,6 @@ export interface ItemPairWithRatings extends ItemPair {
   confidence: number | null; // 0 = 50/50, 1 = most confident
 }
 
-export interface ItemRatings {
-  ratings: ItemPairWithRatings[];
-}
-
 // ********************************************************************************************* //
 //                                           DEFAULTS                                            //
 // ********************************************************************************************* //

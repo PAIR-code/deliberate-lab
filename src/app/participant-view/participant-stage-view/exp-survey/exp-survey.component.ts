@@ -6,21 +6,23 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, computed, Signal } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Component } from '@angular/core';
+import {
+  FormArray,
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSliderModule } from '@angular/material/slider';
 
-import { Participant } from 'src/lib/staged-exp/participant';
-import { Question } from 'src/lib/staged-exp/question';
-import {
-  QuestionData,
-  StageKinds,
-  Survey,
-  SurveyQuestionKind,
-} from '../../../../lib/staged-exp/data-model';
-import { AppStateService } from '../../../services/app-state.service';
+import { ProviderService } from 'src/app/services/provider.service';
+import { Participant } from 'src/lib/participant';
+
+import { SurveyQuestionKind, questionAsKind } from 'src/lib/types/questions.types';
+import { ExpStageSurvey, StageKind } from 'src/lib/types/stages.types';
 import { SurveyCheckQuestionComponent } from './survey-check-question/survey-check-question.component';
 import { SurveyRatingQuestionComponent } from './survey-rating-question/survey-rating-question.component';
 import { SurveyScaleQuestionComponent } from './survey-scale-question/survey-scale-question.component';
@@ -45,25 +47,30 @@ import { SurveyTextQuestionComponent } from './survey-text-question/survey-text-
 })
 export class ExpSurveyComponent {
   public participant: Participant;
-  public stageData: Signal<Survey>;
-  public questions: Signal<Question<QuestionData>[]>;
+  public stage: ExpStageSurvey;
+
+  public questions: FormArray;
 
   readonly SurveyQuestionKind = SurveyQuestionKind;
+  readonly questionAsKind = questionAsKind;
 
-  constructor(stateService: AppStateService) {
-    const { participant, stageData } = stateService.getParticipantAndStage(StageKinds.takeSurvey);
-    this.stageData = stageData;
-    this.participant = participant;
+  constructor(
+    private fb: FormBuilder,
+    private participantProvider: ProviderService<Participant>,
+  ) {
+    this.participant = participantProvider.get();
+    this.questions = this.fb.array([]);
+    this.stage = this.participant.assertViewingStageCast(StageKind.TakeSurvey)!;
 
-    this.questions = computed(() => {
-      return stageData().questions.map((v, i) => new Question(this.participant, this.stageData, i));
+    this.stage.config.questions.forEach((_question, _index) => {
+      // TODO: fill the questions array form
     });
+
+    // TODO: this stage needs a mutation and all the rest in order to proceed with the rest.
   }
 
-  questionAsKind<K extends SurveyQuestionKind>(
-    kind: K,
-    q: Question<QuestionData>,
-  ): Question<QuestionData & { kind: K }> {
-    return q as Question<QuestionData & { kind: K }>;
+  /** Returns controls for each individual question component */
+  get questionControls() {
+    return this.questions.controls as FormGroup[];
   }
 }

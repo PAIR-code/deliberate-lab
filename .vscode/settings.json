@@ -22,6 +22,7 @@
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit"
   },
+  "restoreTerminals.runOnStartup": false,
   "restoreTerminals.terminals": [
     {
       "splitTerminals": [
