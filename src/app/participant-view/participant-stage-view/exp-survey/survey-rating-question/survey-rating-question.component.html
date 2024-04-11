@@ -18,7 +18,7 @@
       </mat-radio-button>
     </mat-radio-group>
 
-    @if (question.choice !== null) {
+    @if (questionForm.value.choice !== null) {
       <div class="item-pair-confidence">
         <div class="confidence-value">
           <strong>Confidence:</strong>
@@ -32,7 +32,9 @@
           } @else {
             <span class="slider-end-label">50/50 🤷</span>
           }
-          <mat-slider min="0.5" max="1" step="0.1" discrete formControlName="confidence" />
+          <mat-slider min="0" max="1" step="0.1" discrete>
+            <input matSliderThumb formControlName="confidence" />
+          </mat-slider>
           @if (question.confidence === 1) {
             <span class="slider-end-label"
               >👍<b> Full <br />confidence</b></span

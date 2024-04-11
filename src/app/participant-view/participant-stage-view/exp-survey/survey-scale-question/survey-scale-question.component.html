@@ -9,7 +9,9 @@
     <tr>
       <td class="bound">{{ question.lowerBound }}</td>
       <td>
-        <mat-slider min="0" max="10" step="1" showTickMarks discrete formControlName="score" />
+        <mat-slider min="0" max="10" step="1" showTickMarks discrete>
+          <input matSliderThumb formControlName="score" />
+        </mat-slider>
       </td>
       <td class="bound">{{ question.upperBound }}</td>
     </tr>

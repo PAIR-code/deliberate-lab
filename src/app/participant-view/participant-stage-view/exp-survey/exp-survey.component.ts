@@ -21,7 +21,12 @@ import { MatSliderModule } from '@angular/material/slider';
 import { ProviderService } from 'src/app/services/provider.service';
 import { Participant } from 'src/lib/participant';
 
-import { SurveyQuestionKind, questionAsKind } from 'src/lib/types/questions.types';
+import { MatButtonModule } from '@angular/material/button';
+import {
+  SurveyQuestionKind,
+  buildQuestionForm,
+  questionAsKind,
+} from 'src/lib/types/questions.types';
 import { ExpStageSurvey, StageKind } from 'src/lib/types/stages.types';
 import { SurveyCheckQuestionComponent } from './survey-check-question/survey-check-question.component';
 import { SurveyRatingQuestionComponent } from './survey-rating-question/survey-rating-question.component';
@@ -36,6 +41,7 @@ import { SurveyTextQuestionComponent } from './survey-text-question/survey-text-
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
+    MatButtonModule,
     MatSliderModule,
     SurveyCheckQuestionComponent,
     SurveyRatingQuestionComponent,
@@ -50,6 +56,7 @@ export class ExpSurveyComponent {
   public stage: ExpStageSurvey;
 
   public questions: FormArray;
+  public surveyForm: FormGroup;
 
   readonly SurveyQuestionKind = SurveyQuestionKind;
   readonly questionAsKind = questionAsKind;
@@ -62,8 +69,12 @@ export class ExpSurveyComponent {
     this.questions = this.fb.array([]);
     this.stage = this.participant.assertViewingStageCast(StageKind.TakeSurvey)!;
 
-    this.stage.config.questions.forEach((_question, _index) => {
-      // TODO: fill the questions array form (depending on the kinds.)
+    this.stage.config.questions.forEach((question) => {
+      this.questions.push(buildQuestionForm(this.fb, question));
+    });
+
+    this.surveyForm = this.fb.group({
+      questions: this.questions,
     });
 
     // TODO: this stage needs a mutation and all the rest in order to proceed with the rest.
@@ -72,5 +83,10 @@ export class ExpSurveyComponent {
   /** Returns controls for each individual question component */
   get questionControls() {
     return this.questions.controls as FormGroup[];
+  }
+
+  nextStep() {
+    // TODO: use a mutation
+    console.log(this.surveyForm.value);
   }
 }
