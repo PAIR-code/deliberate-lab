@@ -25,8 +25,8 @@ export class Participant {
    * @param viewingStageName name of the stage being viewed by the participant. If not provided, it will follow the workingOnStage signal.
    */
   constructor(
-    private participantId: Signal<string | undefined>,
-    private viewingStageName?: Signal<string | undefined>,
+    participantId: Signal<string | undefined>,
+    viewingStageName?: Signal<string | undefined>,
   ) {
     // Query data from the backend about this participant
     this.query = participantQuery(this.http, participantId());
@@ -83,7 +83,7 @@ export class Participant {
 
   navigateToNextStage() {
     const current = this.viewingStage();
-    const userData = this.userData(); // bug : ça "s'arrête" ici ??? est-ce que c'est parce qu'on ne peut pas utiliser de signaux ici ?
+    const userData = this.userData();
     if (!current || !userData) {
       return;
     }
@@ -97,6 +97,7 @@ export class Participant {
       return; // No more stages to navigate to
     }
 
+    this.workingOnStage.set(userData.stageMap[stage]);
     this.router.navigate(['/participant', this.userData()?.uid], { queryParams: { stage } });
   }
 

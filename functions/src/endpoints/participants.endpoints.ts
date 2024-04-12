@@ -48,7 +48,7 @@ export const updateProfileAndTOS = onRequest(async (request, response) => {
   if (Value.Check(ProfileAndTOS, body)) {
     // Patch the data
     await participant.ref.update(checkStageProgression(participant, body));
-    response.send({ data: { uid: participant.id, ...body } }); // Send back the data
+    response.send({ uid: participant.id, ...body }); // Send back the data
   } else {
     response.status(400).send('Invalid data');
     return;
