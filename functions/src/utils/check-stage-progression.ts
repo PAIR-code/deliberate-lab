@@ -1,4 +1,3 @@
-import { Value } from '@sinclair/typebox/value';
 import { Progression } from '../validation/participants.validation';
 import { Document } from './type-aliases';
 
@@ -9,9 +8,9 @@ import { Document } from './type-aliases';
  * @param body - The body of the request (potentially containing a new completed stage)
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const checkStageProgression = (participant: Document, body: any) => {
+export const checkStageProgression = <T extends Progression>(participant: Document, body: T) => {
   // Validate the body data
-  if (Value.Check(Progression, body)) {
+  if (body.justFinishedStageName) {
     const data = participant.data();
     if (!data) return body;
 

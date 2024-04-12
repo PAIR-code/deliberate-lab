@@ -1,6 +1,7 @@
 /** Types wrappers for the API */
 
 import { CreateMutationResult, CreateQueryResult } from '@tanstack/angular-query-experimental';
+import { QuestionUpdate } from './questions.types';
 import { ExpStage } from './stages.types';
 
 /** Simple response with data */
@@ -43,3 +44,18 @@ export interface ProfileTOSData extends Progression {
   avatarUrl: string;
   acceptTosTimestamp: string;
 }
+
+// ********************************************************************************************* //
+//                                        STAGE UPDATES                                          //
+// ********************************************************************************************* //
+
+/** Generic stage update data */
+export interface GenericStageUpdate<T> extends Progression {
+  uid: string; // Participant UID
+  name: string; // Stage name (unique identifier)
+  data: T;
+}
+
+export type SurveyStageUpdate = GenericStageUpdate<{
+  questions: QuestionUpdate[];
+}>;

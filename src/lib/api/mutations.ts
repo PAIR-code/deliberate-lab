@@ -10,6 +10,7 @@ import {
   OnSuccess,
   ProfileTOSData,
   SimpleResponse,
+  SurveyStageUpdate,
   TemplateCreationData,
 } from '../types/api.types';
 import { ExperimentCreationData } from '../types/experiments.types';
@@ -73,6 +74,23 @@ export const updateProfileAndTOSMutation = (
           `${environment.cloudFunctionsUrl}/updateProfileAndTOS/${uid}`,
           data,
         ),
+      ),
+    onSuccess: (data) => {
+      client.refetchQueries({ queryKey: ['participant', data.uid] });
+      onSuccess?.(data);
+    },
+  }));
+};
+
+export const updateSurveyStageMutation = (
+  http: HttpClient,
+  client: QueryClient,
+  onSuccess?: OnSuccess<{ uid: string }>,
+) => {
+  return injectMutation(() => ({
+    mutationFn: ({ uid, ...data }: SurveyStageUpdate) =>
+      lastValueFrom(
+        http.post<{ uid: string }>(`${environment.cloudFunctionsUrl}/updateStage/${uid}`, data),
       ),
     onSuccess: (data) => {
       client.refetchQueries({ queryKey: ['participant', data.uid] });

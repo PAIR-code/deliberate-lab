@@ -6,7 +6,7 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import {
   FormArray,
   FormBuilder,
@@ -21,7 +21,11 @@ import { MatSliderModule } from '@angular/material/slider';
 import { ProviderService } from 'src/app/services/provider.service';
 import { Participant } from 'src/lib/participant';
 
+import { HttpClient } from '@angular/common/http';
 import { MatButtonModule } from '@angular/material/button';
+import { injectQueryClient } from '@tanstack/angular-query-experimental';
+import { updateSurveyStageMutation } from 'src/lib/api/mutations';
+import { MutationType, SurveyStageUpdate } from 'src/lib/types/api.types';
 import {
   SurveyQuestionKind,
   buildQuestionForm,
@@ -61,23 +65,27 @@ export class ExpSurveyComponent {
   readonly SurveyQuestionKind = SurveyQuestionKind;
   readonly questionAsKind = questionAsKind;
 
-  constructor(
-    private fb: FormBuilder,
-    private participantProvider: ProviderService<Participant>,
-  ) {
+  http = inject(HttpClient);
+  queryClient = injectQueryClient();
+
+  surveyMutation: MutationType<SurveyStageUpdate, { uid: string }>;
+
+  constructor(fb: FormBuilder, participantProvider: ProviderService<Participant>) {
     this.participant = participantProvider.get();
-    this.questions = this.fb.array([]);
+    this.questions = fb.array([]);
     this.stage = this.participant.assertViewingStageCast(StageKind.TakeSurvey)!;
 
     this.stage.config.questions.forEach((question) => {
-      this.questions.push(buildQuestionForm(this.fb, question));
+      this.questions.push(buildQuestionForm(fb, question));
     });
 
-    this.surveyForm = this.fb.group({
+    this.surveyForm = fb.group({
       questions: this.questions,
     });
 
-    // TODO: this stage needs a mutation and all the rest in order to proceed with the rest.
+    this.surveyMutation = updateSurveyStageMutation(this.http, this.queryClient, () =>
+      this.participant.navigateToNextStage(),
+    );
   }
 
   /** Returns controls for each individual question component */
@@ -86,7 +94,13 @@ export class ExpSurveyComponent {
   }
 
   nextStep() {
-    // TODO: use a mutation
-    console.log(this.surveyForm.value);
+    this.surveyMutation.mutate({
+      name: this.stage.name,
+      data: {
+        questions: this.surveyForm.value.questions,
+      },
+      ...this.participant.getStageProgression(),
+      uid: this.participant.userData()?.uid as string,
+    });
   }
 }

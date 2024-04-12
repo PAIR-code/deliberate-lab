@@ -49,6 +49,12 @@ export interface ScaleQuestion extends AbstractQuestion {
 
 export type Question = TextQuestion | RatingQuestion | ScaleQuestion | CheckQuestion;
 
+export type QuestionUpdate =
+  | QuestionAnswer<TextQuestion>
+  | QuestionAnswer<CheckQuestion>
+  | QuestionAnswer<RatingQuestion>
+  | QuestionAnswer<ScaleQuestion>;
+
 export interface Survey {
   questions: Question[];
 }
