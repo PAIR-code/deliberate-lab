@@ -50,6 +50,7 @@ export class ParticipantViewComponent implements OnDestroy {
     );
 
     // Share it to subcomponents via the service
+    participantService.apply((p) => p?.destroy()); // Destroy the previous one just in case
     participantService.set(this.participant);
   }
 

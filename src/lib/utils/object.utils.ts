@@ -30,3 +30,15 @@ export const lookupTable = <
 export type ExcludeProps<T, U> = {
   [P in Exclude<keyof T, keyof U>]: T[P];
 };
+
+/** Iterate through all keys of an object in order, and returns a key -> index map. */
+export const keysRanking = (obj: object): Record<string, number> => {
+  const keys = Object.keys(obj);
+  const ranking: Record<string, number> = {} as Record<string, number>;
+
+  keys.forEach((key, index) => {
+    ranking[key] = index;
+  });
+
+  return ranking;
+};

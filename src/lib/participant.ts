@@ -1,23 +1,35 @@
 import { HttpClient } from '@angular/common/http';
-import { Signal, WritableSignal, computed, inject } from '@angular/core';
+import { Signal, WritableSignal, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
+import { Unsubscribe } from 'firebase/firestore';
+import { Destroyable } from 'src/app/services/provider.service';
 import { assertCast } from './algebraic-data';
 import { participantQuery } from './api/queries';
 import { Progression, QueryType, SimpleResponse } from './types/api.types';
-import { ParticipantExtended } from './types/participants.types';
+import { ParticipantExtended, ParticipantsProgression } from './types/participants.types';
 import { ExpStage, StageKind } from './types/stages.types';
 import { lazyInitWritable } from './utils/angular.utils';
+import { firestoreDocSubscription } from './utils/firestore.utils';
+import { keysRanking } from './utils/object.utils';
 
-export class Participant {
+/**
+ * Handle all participant-related logic for a single user that plays the role of a participant.
+ */
+export class Participant implements Destroyable {
   public query: QueryType<SimpleResponse<ParticipantExtended>>;
   public userData: Signal<ParticipantExtended | undefined>;
 
   // Frontend-only signals to help navigation
   public viewingStage: Signal<ExpStage | undefined>; // Current stage the participant is viewing
   public workingOnStage: WritableSignal<ExpStage | undefined>; // Current active stage for the participant
+  public commonLastWorkingOnStageName: WritableSignal<string | undefined>; // Last stage that all participants have been working on
+  public experimentId: Signal<string | undefined>; // ID of the experiment this participant is part of
 
   private http = inject(HttpClient);
   private router = inject(Router);
+
+  // Firestore subscriptions
+  private unsubscribe: Unsubscribe | undefined;
 
   /**
    *
@@ -31,6 +43,9 @@ export class Participant {
     // Query data from the backend about this participant
     this.query = participantQuery(this.http, participantId());
     this.userData = computed(() => this.query.data()?.data); // Shortcut to extract query data
+
+    this.experimentId = computed(() => this.userData()?.experimentId);
+    this.commonLastWorkingOnStageName = signal(undefined);
 
     // Initialize workingOnStage with the last completed stage once the backend data arrives
     this.workingOnStage = lazyInitWritable(this.userData, (data) => {
@@ -57,6 +72,34 @@ export class Participant {
       // Follow the workingOnStage signal by default
       this.viewingStage = computed(this.workingOnStage);
     }
+
+    // Subscribe to Firestore to get real time updates on all participant's progressions
+    effect(
+      () => {
+        this.unsubscribe?.();
+        const experimentId = this.experimentId();
+
+        if (experimentId) {
+          this.unsubscribe = firestoreDocSubscription<ParticipantsProgression>(
+            `participants_progressions/${experimentId}`,
+            (data) => {
+              if (!data) {
+                this.commonLastWorkingOnStageName.set(undefined);
+                return;
+              }
+
+              const stageMap = untracked(this.userData)?.stageMap ?? {};
+              const rank = keysRanking(stageMap);
+
+              // Compute the minimum worked on stage
+              const min = Math.min(...Object.values(data.progressions).map((n) => rank[n]));
+              this.commonLastWorkingOnStageName.set(Object.keys(stageMap)[min]);
+            },
+          );
+        }
+      },
+      { allowSignalWrites: true },
+    );
   }
 
   nextStep() {
@@ -109,5 +152,10 @@ export class Participant {
       return undefined;
     }
     return assertCast(viewing, kind);
+  }
+
+  /** Call this method in order to properly unsubscribe from firebase when it is not needed */
+  destroy() {
+    this.unsubscribe?.();
   }
 }

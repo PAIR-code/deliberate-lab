@@ -1,6 +1,8 @@
 /** Default environment configuration (used for production) */
 
 export const environment = {
+  production: true,
+
   cloudFunctionsUrl: 'enter your firebase cloud functions url here',
 
   // Google API keys (they have no business being here in the frontend, remove this later)

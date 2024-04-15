@@ -1,6 +1,8 @@
 /** Development environment configuration */
 
 export const environment = {
+  production: false,
+
   cloudFunctionsUrl: 'http://localhost:5001/llm-mediator-political/us-central1',
 
   // Google API keys (they have no business being here in the frontend, remove this later)

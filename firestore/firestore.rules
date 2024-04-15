@@ -14,6 +14,12 @@ service cloud.firestore {
       )
     }
 
+    // Rules for the participants_progressions collection
+    match /participants_progressions/{progressionId} {
+      // Allow single-document reads
+      allow read: if true;
+    }
+
     // Else: disallow everything (access via cloud functions only)
     match /{document=**} {
       allow read, write: if false;
