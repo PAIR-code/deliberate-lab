@@ -25,17 +25,30 @@ export const seedDatabase = onRequest(async (request, response) => {
   // Reuse the template and inject a uuid for the chat stage
   template.stageMap['3. Group discussion'].config.chatId = uuidv4() as unknown as null; // Trick to silence the TS error
 
-  ParticipantSeeder.createMany(
+  const participants = ParticipantSeeder.createMany(
     experiment.id,
     template.stageMap,
     template.allowedStageProgressionMap,
     3,
-  ).forEach((participant) => {
+  );
+  const progressions: Record<string, string> = {};
+
+  participants.forEach((participant) => {
     // Get a unique ID for the participant
     const ref = app.firestore().collection('participants').doc();
 
     // Add the participant to the batch write
     batch.set(ref, participant);
+
+    // Add the participant to the progression map
+    progressions[ref.id] = participant.workingOnStageName;
+  });
+
+  // Create their progression data in a separate collection (for synchronization purposes)
+  const ref = app.firestore().doc(`participants_progressions/${experiment.id}`);
+  batch.set(ref, {
+    experimentId: experiment.id,
+    progressions,
   });
 
   // Commit the batch write

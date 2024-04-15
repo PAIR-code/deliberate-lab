@@ -30,6 +30,12 @@ export interface ParticipantExtended extends ParticipantProfile {
   workingOnStageName: string;
 }
 
+/** Isolated document data to synchronize participants progression for an experiment using firestore subscriptions */
+export interface ParticipantsProgression {
+  experimentId: string;
+  progressions: Record<string, string>;
+}
+
 // ********************************************************************************************* //
 //                                           DEFAULTS                                            //
 // ********************************************************************************************* //

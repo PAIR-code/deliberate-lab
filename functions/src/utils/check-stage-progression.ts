@@ -1,8 +1,12 @@
+import { app } from '../app';
 import { Progression } from '../validation/participants.validation';
 import { Document } from './type-aliases';
 
 /**
- * Checks if a participant's progress needs to be updated. Returns the original body data as well
+ * Checks if a participant's progress needs to be updated. Returns the original body data as well.
+ *
+ * Internally, if the stage needs to be changed, it will update the corresponding `participants_progressions`
+ * document entry in Firestore.
  *
  * @param participant - The participant document that might need to be updated
  * @param body - The body of the request (potentially containing a new completed stage)
@@ -28,6 +32,9 @@ export const checkStageProgression = <T extends Progression>(participant: Docume
     const workingOnStageName =
       data.futureStageNames[0] ?? completedStageNames[completedStageNames.length - 1];
 
+    // Update the `participants_progressions` document
+    updateParticipantProgression(data.experimentId, participant.id, workingOnStageName);
+
     return {
       ...rest,
       completedStageNames,
@@ -37,4 +44,17 @@ export const checkStageProgression = <T extends Progression>(participant: Docume
   }
 
   return body;
+};
+
+const updateParticipantProgression = (
+  experimentId: string,
+  participantId: string,
+  workingOnStageName: string,
+) => {
+  // Update the `participants_progressions` document
+  const progressionRef = app.firestore().doc(`participants_progressions/${experimentId}`);
+
+  progressionRef.update({
+    [`progressions.${participantId}`]: workingOnStageName,
+  });
 };

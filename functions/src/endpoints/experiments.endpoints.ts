@@ -107,9 +107,19 @@ export const createExperiment = onRequest(async (request, response) => {
         numberOfParticipants,
       );
 
+      const progressions: Record<string, string> = {};
+
       participants.forEach((participant) => {
         const participantRef = app.firestore().collection('participants').doc();
+        progressions[participantRef.id] = participant.workingOnStageName;
         transaction.set(participantRef, participant);
+      });
+
+      // Create the progression data in a separate collection
+      const progressionRef = app.firestore().doc(`participants_progressions/${experiment.id}`);
+      transaction.set(progressionRef, {
+        experimentId: experiment.id,
+        progressions,
       });
     });
   } catch (e) {
