@@ -10,7 +10,7 @@ import { ParticipantExtended, ParticipantsProgression } from './types/participan
 import { ExpStage, StageKind } from './types/stages.types';
 import { lazyInitWritable } from './utils/angular.utils';
 import { firestoreDocSubscription } from './utils/firestore.utils';
-import { keysRanking } from './utils/object.utils';
+import { keyRank, keysRanking } from './utils/object.utils';
 
 /**
  * Handle all participant-related logic for a single user that plays the role of a participant.
@@ -24,6 +24,7 @@ export class Participant implements Destroyable {
   public workingOnStage: WritableSignal<ExpStage | undefined>; // Current active stage for the participant
   public commonLastWorkingOnStageName: WritableSignal<string | undefined>; // Last stage that all participants have been working on
   public experimentId: Signal<string | undefined>; // ID of the experiment this participant is part of
+  public everyoneReachedCurrentStage: Signal<boolean>; // Whether all participants have reached the current stage
 
   private http = inject(HttpClient);
   private router = inject(Router);
@@ -100,6 +101,16 @@ export class Participant implements Destroyable {
       },
       { allowSignalWrites: true },
     );
+
+    // Everyone reached the current stage when their current stage corresponds to the current one or to later ones.
+    this.everyoneReachedCurrentStage = computed(() => {
+      const stageMap = this.userData()?.stageMap;
+      if (!stageMap) return false;
+      return (
+        keyRank(stageMap, this.userData()!.workingOnStageName) <=
+        keyRank(stageMap, this.commonLastWorkingOnStageName()!)
+      );
+    });
   }
 
   nextStep() {

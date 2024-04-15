@@ -53,7 +53,7 @@ export class ExpChatComponent {
   public ratingsToDiscuss: Signal<ItemPair[]>;
   public currentRatingsToDiscuss: Signal<ItemPair>;
 
-  constructor(private participantProvider: ProviderService<Participant>) {
+  constructor(participantProvider: ProviderService<Participant>) {
     this.stageData = {} as Signal<ChatAboutItems>; // TODO: temporary fix
     this.participant = participantProvider.get();
 
@@ -69,14 +69,7 @@ export class ExpChatComponent {
     //   return allUsers.filter((u) => u.uid !== thisUserId);
     // });
 
-    // TODO: use the new backend way of syncing participant progression
-    this.everyoneReachedTheChat = signal<boolean>(false);
-    //  computed(() => {
-    //   const users = Object.values(this.participant.experiment().participants);
-    //   return users
-    //     .map((userData) => userData.workingOnStageName)
-    //     .every((n) => n === this.participant.userData().workingOnStageName);
-    // });
+    this.everyoneReachedTheChat = this.participant.everyoneReachedCurrentStage;
 
     this.everyoneFinishedTheChat = computed(() => {
       // const users = Object.values(this.participant.experiment().participants);
@@ -110,7 +103,7 @@ export class ExpChatComponent {
     effect(
       () => {
         if (this.everyoneFinishedTheChat()) {
-          this.participant.nextStep();
+          this.participant.nextStep(); // TODO: && viewingstage ) workingonstage
         }
       },
       { allowSignalWrites: true },

@@ -42,3 +42,9 @@ export const keysRanking = (obj: object): Record<string, number> => {
 
   return ranking;
 };
+
+/** Returns the rank index of a key in an object */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const keyRank = (obj: Record<string, any>, key: string): number => {
+  return Object.keys(obj).indexOf(key);
+};
