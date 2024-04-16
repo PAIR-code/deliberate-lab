@@ -68,14 +68,7 @@ export class ExperimentMonitorComponent {
     this._experiment = experimentQuery(this.http, this.experimentUid);
 
     // Extract participants data from the extended experiment
-    this.participants = computed(() => {
-      const data = this._experiment.data();
-
-      if (!data) {
-        return [];
-      }
-      return Object.values(data.participants);
-    });
+    this.participants = computed(() => this._experiment.data()?.participants ?? []);
 
     // TODO: factor into service?
     this.stageStates = computed(() => {

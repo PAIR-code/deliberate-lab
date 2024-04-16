@@ -24,19 +24,20 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { Unsubscribe } from 'firebase/firestore';
-import { ProviderService } from 'src/app/services/provider.service';
 import { userMessageMutation } from 'src/lib/api/mutations';
-import { experimentQuery } from 'src/lib/api/queries';
 import { Participant } from 'src/lib/participant';
-import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
-import { MutationType, QueryType } from 'src/lib/types/api.types';
-import { ExperimentExtended } from 'src/lib/types/experiments.types';
+import {
+  EXPERIMENT_PROVIDER_TOKEN,
+  ExperimentProvider,
+  PARTICIPANT_PROVIDER_TOKEN,
+  ParticipantProvider,
+} from 'src/lib/provider-tokens';
+import { MutationType } from 'src/lib/types/api.types';
 import { ItemPair } from 'src/lib/types/items.types';
 import { Message, UserMessageMutationData } from 'src/lib/types/messages.types';
 import { ParticipantExtended } from 'src/lib/types/participants.types';
 import { ExpStageChatAboutItems, StageKind } from 'src/lib/types/stages.types';
 import { chatMessagesSubscription } from 'src/lib/utils/firestore.utils';
-import { valuesArray } from 'src/lib/utils/object.utils';
 import { ChatDiscussItemsMessageComponent } from './chat-discuss-items-message/chat-discuss-items-message.component';
 import { ChatMediatorMessageComponent } from './chat-mediator-message/chat-mediator-message.component';
 import { ChatUserMessageComponent } from './chat-user-message/chat-user-message.component';
@@ -75,7 +76,6 @@ export class ExpChatComponent implements OnDestroy {
 
   // Queries
   private http = inject(HttpClient);
-  public query: QueryType<ExperimentExtended>;
 
   // TODO: another subscription
   public readyToEndChat: boolean = false;
@@ -88,8 +88,8 @@ export class ExpChatComponent implements OnDestroy {
   public messageMutation: MutationType<UserMessageMutationData, object>;
 
   constructor(
-    @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ProviderService<Participant>,
-    experimentProvider: ProviderService<Signal<ExperimentExtended>>,
+    @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ParticipantProvider,
+    @Inject(EXPERIMENT_PROVIDER_TOKEN) experimentProvider: ExperimentProvider,
   ) {
     this.participant = participantProvider.get(); // Get the participant instance
     this.everyoneReachedTheChat = this.participant.everyoneReachedCurrentStage;
@@ -102,31 +102,19 @@ export class ExpChatComponent implements OnDestroy {
       return this.ratingsToDiscuss()[this.ratingsToDiscuss().length - 1];
     });
 
-    // Fetch all participants
-    this.query = experimentQuery(this.http, this.participant.experimentId);
-    this.otherParticipants = computed(() =>
-      valuesArray(this.query.data()?.participants).filter(
-        ({ uid }) => uid !== this.participant.userData()?.uid,
-      ),
+    this.otherParticipants = computed(
+      () =>
+        experimentProvider
+          .get()()
+          ?.participants.filter(({ uid }) => uid !== this.participant.userData()?.uid) ?? [],
     );
-    experimentProvider.set(this.query.data as Signal<ExperimentExtended>);
 
     // Firestore subscription for messages
-    // HERE: inject profiles into messages
     this.messages = signal([]);
     this.unsubscribe = chatMessagesSubscription(
       this.stage.config.chatId,
       (m) => this.messages.set(m), // TODO: merge the messages instead of replacing them
     );
-
-    effect(() => {
-      console.log('messages : ', this.messages());
-    });
-    // TODO: essayer de fix ça avec des injection token
-
-    // Mieux : remplacer les messages in place. on va être oebligés d'extend le type pour éviter les lectures ? de toutes façons c'est une sub...
-    // regarder comment garder le signal vide tant qu'on n'a pas l'experiment extended.
-    //
 
     // Message mutation creation
     this.messageMutation = userMessageMutation(this.http);
@@ -181,11 +169,14 @@ export class ExpChatComponent implements OnDestroy {
   }
 
   sendMessage() {
+    if (this.message === '') return;
+
     this.messageMutation.mutate({
       chatId: this.stage.config.chatId,
       text: this.message,
       fromUserId: this.participant.userData()!.uid,
     });
+    this.message = '';
   }
 
   updateToogleValue(_updatedValue: MatSlideToggleChange) {

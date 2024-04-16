@@ -152,26 +152,11 @@ ${nv('conversation')}
 ${this.suffix}`;
 
     // Create empty list in conversation
-    const conversation: { username: string; message: string }[] = [];
-    // Add messages from this.messages() to the conversation
-    this.messages().forEach((m) => {
-      if (m.messageType === 'userMessage') {
-        conversation.push({
-          username: m.fromProfile.name,
-          message: m.text,
-        });
-      } else if (m.messageType === 'discussItemsMessage') {
-        conversation.push({
-          username: 'Mediator',
-          message: m.text,
-        });
-      } else if (m.messageType === 'mediatorMessage') {
-        conversation.push({
-          username: 'Mediator',
-          message: m.text,
-        });
-      }
-    });
+    const conversation: { username: string; message: string }[] = this.messages().map((m) => ({
+      message: m.text,
+      // TODO: add an experiment provider at the experimenter base.
+      username: m.messageType === 'userMessage' ? 'User' : 'Mediator', // TODO: display user profile
+    }));
 
     const mediationWithMessages = mediationTempl.substs({
       conversation: nMediationExamplesTempl.apply(conversation).escaped,
