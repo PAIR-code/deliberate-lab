@@ -2,7 +2,6 @@ import { HttpClient } from '@angular/common/http';
 import { Signal, WritableSignal, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
 import { Unsubscribe } from 'firebase/firestore';
-import { Destroyable } from 'src/app/services/provider.service';
 import { assertCast } from './algebraic-data';
 import { participantQuery } from './api/queries';
 import { Progression, QueryType, SimpleResponse } from './types/api.types';
@@ -15,7 +14,7 @@ import { keyRank, keysRanking } from './utils/object.utils';
 /**
  * Handle all participant-related logic for a single user that plays the role of a participant.
  */
-export class Participant implements Destroyable {
+export class Participant {
   public query: QueryType<SimpleResponse<ParticipantExtended>>;
   public userData: Signal<ParticipantExtended | undefined>;
 

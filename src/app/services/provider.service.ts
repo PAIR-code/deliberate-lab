@@ -1,14 +1,10 @@
-import { Injectable, OnDestroy } from '@angular/core';
-
-export interface Destroyable {
-  destroy?(): void;
-}
+import { Injectable } from '@angular/core';
 
 /** Generic provider service to share an object instance to subcomponents
  * without relying on an unified global state (inspired from React js context API)
  */
 @Injectable()
-export class ProviderService<T extends Destroyable> implements OnDestroy {
+export class ProviderService<T> {
   private state: T | undefined;
 
   constructor() {
@@ -24,17 +20,14 @@ export class ProviderService<T extends Destroyable> implements OnDestroy {
     return this.state;
   }
 
-  public set(value: T): void {
+  /** Returns the current value */
+  public set(value: T): T | undefined {
+    const current = this.state;
     this.state = value;
+    return current;
   }
 
   public apply(callback: (state: T | undefined) => void) {
     callback(this.state);
-  }
-
-  ngOnDestroy(): void {
-    if (this.state && this.state.destroy) {
-      this.state.destroy();
-    }
   }
 }

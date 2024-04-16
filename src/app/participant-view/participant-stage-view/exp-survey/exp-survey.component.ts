@@ -6,7 +6,7 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, inject } from '@angular/core';
+import { Component, Inject, inject } from '@angular/core';
 import {
   FormArray,
   FormBuilder,
@@ -25,6 +25,7 @@ import { HttpClient } from '@angular/common/http';
 import { MatButtonModule } from '@angular/material/button';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { updateSurveyStageMutation } from 'src/lib/api/mutations';
+import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
 import { MutationType, SurveyStageUpdate } from 'src/lib/types/api.types';
 import {
   SurveyQuestionKind,
@@ -70,7 +71,10 @@ export class ExpSurveyComponent {
 
   surveyMutation: MutationType<SurveyStageUpdate, { uid: string }>;
 
-  constructor(fb: FormBuilder, participantProvider: ProviderService<Participant>) {
+  constructor(
+    fb: FormBuilder,
+    @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ProviderService<Participant>,
+  ) {
     this.participant = participantProvider.get();
     this.questions = fb.array([]);
     this.stage = this.participant.assertViewingStageCast(StageKind.TakeSurvey)!;

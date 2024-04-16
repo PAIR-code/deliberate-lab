@@ -2,8 +2,6 @@
 
 import { ItemPair } from './items.types';
 
-// TODO: refactor messages with the backend structure in mind
-
 export enum MessageType {
   UserMessage = 'userMessage',
   DiscussItemsMessage = 'discussItemsMessage',

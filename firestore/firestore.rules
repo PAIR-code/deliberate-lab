@@ -4,14 +4,7 @@ service cloud.firestore {
 
     // Rules for the messages collection
     match /messages/{messageId} {
-
-      // Allow read access if the authenticated user's ID matches a participantId or experimenterId
-      // in the message document that corresponds to an existing document in the participants or experimenters collections
-      // We could use stricter rules !
-      allow read: if (
-        exists(/databases/$(database)/documents/participants/$(request.resource.data.participantId)) ||
-        exists(/databases/$(database)/documents/experimenters/$(request.resource.data.experimenterId))
-      )
+      allow list: if true; // TODO: use some sort of authentication (with firebase) to be able to restrict this access
     }
 
     // Rules for the participants_progressions collection

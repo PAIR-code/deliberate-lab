@@ -47,14 +47,14 @@
           matInput
           placeholder="Write your message"
           [(ngModel)]="message"
-          [disabled]="this.stageData().readyToEndChat === true"
+          [disabled]="this.readyToEndChat === true"
         />
       </mat-form-field>
       <button
         color="primary"
         mat-button
         (click)="sendMessage()"
-        [disabled]="this.stageData().readyToEndChat === true"
+        [disabled]="this.readyToEndChat === true"
       >
         <!-- <mat-icon>redo</mat-icon> -->
         <span>Send</span>
@@ -62,7 +62,7 @@
     </div>
     <div>
       <mat-slide-toggle
-        [checked]="this.stageData().readyToEndChat === true"
+        [checked]="this.readyToEndChat === true"
         [disabled]="this.isSilent()"
         (change)="updateToogleValue($event)"
       >

@@ -5,7 +5,7 @@
  * Use of this source code is governed by an Apache2 license that can be
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
-import { Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
+import { Component, ElementRef, Inject, OnDestroy, ViewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
@@ -13,6 +13,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Participant } from 'src/lib/participant';
+import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
 import { routeParamSignal, routeQueryStringSignal } from 'src/lib/utils/angular.utils';
 import { ProviderService } from '../services/provider.service';
 import { ParticipantStageViewComponent } from './participant-stage-view/participant-stage-view.component';
@@ -29,7 +30,12 @@ import { ParticipantStageViewComponent } from './participant-stage-view/particip
     RouterModule,
     ParticipantStageViewComponent,
   ],
-  providers: [ProviderService<Participant>],
+  providers: [
+    {
+      provide: PARTICIPANT_PROVIDER_TOKEN,
+      useFactory: () => new ProviderService<Participant>(),
+    },
+  ],
   templateUrl: './participant-view.component.html',
   styleUrl: './participant-view.component.scss',
 })
@@ -40,7 +46,7 @@ export class ParticipantViewComponent implements OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    public participantService: ProviderService<Participant>,
+    @Inject(PARTICIPANT_PROVIDER_TOKEN) participantService: ProviderService<Participant>,
     public router: Router,
   ) {
     // Create a new participant handler class instance and bind it to this subroute
@@ -49,9 +55,8 @@ export class ParticipantViewComponent implements OnDestroy {
       routeQueryStringSignal(this.route, 'stage'), // Bind the stage being viewed to the 'stage' query string param
     );
 
-    // Share it to subcomponents via the service
-    participantService.apply((p) => p?.destroy()); // Destroy the previous one just in case
-    participantService.set(this.participant);
+    // Share it to subcomponents via the service (destroy the previous instance)
+    participantService.set(this.participant)?.destroy();
   }
 
   updateCurrentStageName(_stageName: string) {

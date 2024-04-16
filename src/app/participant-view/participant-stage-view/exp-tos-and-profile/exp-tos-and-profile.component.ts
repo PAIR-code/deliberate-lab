@@ -7,7 +7,7 @@
 ==============================================================================*/
 
 import { HttpClient } from '@angular/common/http';
-import { Component, inject } from '@angular/core';
+import { Component, Inject, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxChange, MatCheckboxModule } from '@angular/material/checkbox';
@@ -19,6 +19,7 @@ import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { ProviderService } from 'src/app/services/provider.service';
 import { updateProfileAndTOSMutation } from 'src/lib/api/mutations';
 import { Participant } from 'src/lib/participant';
+import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
 import { MutationType, ProfileTOSData } from 'src/lib/types/api.types';
 import { StageKind } from 'src/lib/types/stages.types';
 
@@ -62,7 +63,9 @@ export class ExpTosAndProfileComponent {
   profileMutation: MutationType<ProfileTOSData>;
   value = ''; // Custom pronouns input value
 
-  constructor(participantProvider: ProviderService<Participant>) {
+  constructor(
+    @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ProviderService<Participant>,
+  ) {
     this.participant = participantProvider.get();
     this.profileMutation = updateProfileAndTOSMutation(this.http, this.queryClient, () =>
       this.participant.navigateToNextStage(),
