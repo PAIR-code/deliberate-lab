@@ -1,3 +1,5 @@
+import * as _ from 'lodash';
+
 /** All types that can safely be used to index an object */
 export type Index = string | number | symbol;
 
@@ -53,4 +55,13 @@ export const keyRank = (obj: Record<string, any>, key: string): number => {
 export const valuesArray = <T>(obj: Record<string, T> | undefined): T[] => {
   return Object.values(obj ?? {});
 };
-// TODO: timestamp pour les dates + merge utils, etc !
+
+/** Extend an old array of objects with a new one, but check elements by the given key in order to avoid overlapping.
+ * This function assumes that both arrays are somehow sorted so that the new array is a continuation of the old one.
+ */
+export const extendUntilMatch = <T, K extends keyof T>(oldArr: T[], newArr: T[], key: K): T[] => {
+  if (newArr.length === 0) return oldArr;
+
+  const stop = newArr[0][key];
+  return _.takeWhile(oldArr, (item) => item[key] !== stop).concat(newArr);
+};

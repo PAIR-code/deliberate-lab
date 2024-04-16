@@ -30,6 +30,6 @@ export const chatMessagesSubscription = (
     limit(5), // Support new messages being added by batch
   );
   return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map((doc) => doc.data() as Message));
+    callback(snapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() }) as Message));
   });
 };

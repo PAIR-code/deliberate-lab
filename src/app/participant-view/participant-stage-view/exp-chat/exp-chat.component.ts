@@ -38,6 +38,7 @@ import { Message, UserMessageMutationData } from 'src/lib/types/messages.types';
 import { ParticipantExtended } from 'src/lib/types/participants.types';
 import { ExpStageChatAboutItems, StageKind } from 'src/lib/types/stages.types';
 import { chatMessagesSubscription } from 'src/lib/utils/firestore.utils';
+import { extendUntilMatch } from 'src/lib/utils/object.utils';
 import { ChatDiscussItemsMessageComponent } from './chat-discuss-items-message/chat-discuss-items-message.component';
 import { ChatMediatorMessageComponent } from './chat-mediator-message/chat-mediator-message.component';
 import { ChatUserMessageComponent } from './chat-user-message/chat-user-message.component';
@@ -111,10 +112,9 @@ export class ExpChatComponent implements OnDestroy {
 
     // Firestore subscription for messages
     this.messages = signal([]);
-    this.unsubscribe = chatMessagesSubscription(
-      this.stage.config.chatId,
-      (m) => this.messages.set(m), // TODO: merge the messages instead of replacing them
-    );
+    this.unsubscribe = chatMessagesSubscription(this.stage.config.chatId, (m) => {
+      this.messages.set(extendUntilMatch(this.messages(), m.reverse(), 'uid'));
+    });
 
     // Message mutation creation
     this.messageMutation = userMessageMutation(this.http);
