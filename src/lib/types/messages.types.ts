@@ -1,5 +1,6 @@
 /** Chat message types */
 
+import { Timestamp } from 'firebase/firestore';
 import { ItemPair } from './items.types';
 
 export enum MessageType {
@@ -11,7 +12,7 @@ export enum MessageType {
 export interface MessageBase {
   chatId: string;
   messageType: MessageType;
-  timestamp: string;
+  timestamp: Timestamp;
   text: string;
 }
 
@@ -64,7 +65,7 @@ export interface MediatorMessageMutationData {
 export const getDefaultUserMessage = (): UserMessage => ({
   chatId: '',
   messageType: MessageType.UserMessage,
-  timestamp: new Date().toISOString(),
+  timestamp: Timestamp.now(),
   fromUserId: '',
   text: 'fakeMessage',
 });
@@ -72,6 +73,6 @@ export const getDefaultUserMessage = (): UserMessage => ({
 export const getDefaultMediatorMessage = (): MediatorMessage => ({
   chatId: '',
   messageType: MessageType.MediatorMessage,
-  timestamp: new Date().toISOString(),
+  timestamp: Timestamp.now(),
   text: 'fakeMessage',
 });

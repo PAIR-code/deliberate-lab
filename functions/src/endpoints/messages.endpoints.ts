@@ -22,11 +22,12 @@ export const userMessage = onRequest(async (request, response) => {
     const data = {
       ...body,
       messageType: 'userMessage',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(),
     };
 
     const ref = await app.firestore().collection('messages').add(data);
     response.send({ id: ref.id });
+    return;
   }
 
   response.status(400).send('Invalid data');
@@ -42,11 +43,12 @@ export const discussItemsMessage = onRequest(async (request, response) => {
     const data = {
       ...body,
       messageType: 'discussItemsMessage',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(),
     };
 
     const ref = await app.firestore().collection('messages').add(data);
     response.send({ id: ref.id });
+    return;
   }
 
   response.status(400).send('Invalid data');
@@ -62,7 +64,7 @@ export const mediatorMessage = onRequest(async (request, response) => {
     const data = {
       ...body,
       messageType: 'mediatorMessage',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(),
     };
 
     const ref = await app.firestore().collection('messages').add(data);

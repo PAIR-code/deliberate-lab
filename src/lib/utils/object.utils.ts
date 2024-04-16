@@ -53,3 +53,4 @@ export const keyRank = (obj: Record<string, any>, key: string): number => {
 export const valuesArray = <T>(obj: Record<string, T> | undefined): T[] => {
   return Object.values(obj ?? {});
 };
+// TODO: timestamp pour les dates + merge utils, etc !
