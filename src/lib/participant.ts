@@ -23,7 +23,7 @@ export class Participant implements Destroyable {
   public viewingStage: Signal<ExpStage | undefined>; // Current stage the participant is viewing
   public workingOnStage: WritableSignal<ExpStage | undefined>; // Current active stage for the participant
   public commonLastWorkingOnStageName: WritableSignal<string | undefined>; // Last stage that all participants have been working on
-  public experimentId: Signal<string | undefined>; // ID of the experiment this participant is part of
+  public experimentId: Signal<string | null>; // ID of the experiment this participant is part of
   public everyoneReachedCurrentStage: Signal<boolean>; // Whether all participants have reached the current stage
 
   private http = inject(HttpClient);
@@ -45,7 +45,7 @@ export class Participant implements Destroyable {
     this.query = participantQuery(this.http, participantId());
     this.userData = computed(() => this.query.data()?.data); // Shortcut to extract query data
 
-    this.experimentId = computed(() => this.userData()?.experimentId);
+    this.experimentId = computed(() => this.userData()?.experimentId ?? null);
     this.commonLastWorkingOnStageName = signal(undefined);
 
     // Initialize workingOnStage with the last completed stage once the backend data arrives

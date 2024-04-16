@@ -5,7 +5,7 @@ import { Item, ItemPair } from './items.types';
 import { Message } from './messages.types';
 
 export interface BaseChat {
-  uid: string;
+  chatId: string;
   messages: Message[];
 }
 
@@ -24,7 +24,7 @@ export interface ChatAboutItems extends BaseChat {
 
 export const getDefaultChatAboutItemsConfig = (): ChatAboutItems => {
   return {
-    uid: uniqueId('chat'),
+    chatId: uniqueId('chat'),
     ratingsToDiscuss: [],
     messages: [],
     items: [],

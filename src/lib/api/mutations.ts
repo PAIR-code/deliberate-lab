@@ -14,6 +14,11 @@ import {
   TemplateCreationData,
 } from '../types/api.types';
 import { ExperimentCreationData } from '../types/experiments.types';
+import {
+  DiscussItemsMessageMutationData,
+  MediatorMessageMutationData,
+  UserMessageMutationData,
+} from '../types/messages.types';
 
 export const deleteExperimentMutation = (http: HttpClient, client: QueryClient) =>
   injectMutation(() => ({
@@ -96,5 +101,30 @@ export const updateSurveyStageMutation = (
       client.refetchQueries({ queryKey: ['participant', data.uid] });
       onSuccess?.(data);
     },
+  }));
+};
+
+// ********************************************************************************************* //
+//                                         MESSAGE MUTATIONS                                     //
+// ********************************************************************************************* //
+
+export const userMessageMutation = (http: HttpClient) => {
+  return injectMutation(() => ({
+    mutationFn: (data: UserMessageMutationData) =>
+      lastValueFrom(http.post(`${environment.cloudFunctionsUrl}/userMessage`, data)),
+  }));
+};
+
+export const discussItemMessageMutation = (http: HttpClient) => {
+  return injectMutation(() => ({
+    mutationFn: (data: DiscussItemsMessageMutationData) =>
+      lastValueFrom(http.post(`${environment.cloudFunctionsUrl}/discussItemMessage`, data)),
+  }));
+};
+
+export const mediatorMessageMutation = (http: HttpClient) => {
+  return injectMutation(() => ({
+    mutationFn: (data: MediatorMessageMutationData) =>
+      lastValueFrom(http.post(`${environment.cloudFunctionsUrl}/mediatorMessage`, data)),
   }));
 };

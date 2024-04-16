@@ -1,7 +1,6 @@
 /** Chat message types */
 
 import { ItemPair } from './items.types';
-import { ParticipantProfile, getDefaultProfile } from './participants.types';
 
 // TODO: refactor messages with the backend structure in mind
 
@@ -12,6 +11,7 @@ export enum MessageType {
 }
 
 export interface MessageBase {
+  chatId: string;
   messageType: MessageType;
   timestamp: string;
   text: string;
@@ -21,7 +21,6 @@ export interface UserMessage extends MessageBase {
   messageType: MessageType.UserMessage;
 
   fromUserId: string;
-  fromProfile: ParticipantProfile;
 }
 
 export interface DiscussItemsMessage extends MessageBase {
@@ -38,18 +37,42 @@ export interface MediatorMessage extends MessageBase {
 export type Message = UserMessage | DiscussItemsMessage | MediatorMessage;
 
 // ********************************************************************************************* //
+//                                   MESSAGE MUTATION TYPES                                      //
+// ********************************************************************************************* //
+
+export interface UserMessageMutationData {
+  chatId: string;
+  text: string;
+  fromUserId: string;
+  // ...the other fields will be filled in by the backend for security
+}
+
+export interface DiscussItemsMessageMutationData {
+  chatId: string;
+  text: string;
+  itemPair: ItemPair;
+  // itemRatingToDiscuss: ItemRating;
+}
+
+export interface MediatorMessageMutationData {
+  chatId: string;
+  text: string;
+}
+
+// ********************************************************************************************* //
 //                                           DEFAULTS                                            //
 // ********************************************************************************************* //
 
 export const getDefaultUserMessage = (): UserMessage => ({
+  chatId: '',
   messageType: MessageType.UserMessage,
   timestamp: new Date().toISOString(),
   fromUserId: '',
-  fromProfile: getDefaultProfile(),
   text: 'fakeMessage',
 });
 
 export const getDefaultMediatorMessage = (): MediatorMessage => ({
+  chatId: '',
   messageType: MessageType.MediatorMessage,
   timestamp: new Date().toISOString(),
   text: 'fakeMessage',

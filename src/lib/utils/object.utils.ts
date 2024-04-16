@@ -48,3 +48,8 @@ export const keysRanking = (obj: object): Record<string, number> => {
 export const keyRank = (obj: Record<string, any>, key: string): number => {
   return Object.keys(obj).indexOf(key);
 };
+
+/** Shorthand to make code more readable */
+export const valuesArray = <T>(obj: Record<string, T> | undefined): T[] => {
+  return Object.values(obj ?? {});
+};
