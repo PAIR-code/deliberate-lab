@@ -6,6 +6,7 @@ import { QueryClient, injectMutation } from '@tanstack/angular-query-experimenta
 import { lastValueFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import {
+  ChatStageUpdate,
   CreationResponse,
   OnSuccess,
   ProfileTOSData,
@@ -94,6 +95,23 @@ export const updateSurveyStageMutation = (
 ) => {
   return injectMutation(() => ({
     mutationFn: ({ uid, ...data }: SurveyStageUpdate) =>
+      lastValueFrom(
+        http.post<{ uid: string }>(`${environment.cloudFunctionsUrl}/updateStage/${uid}`, data),
+      ),
+    onSuccess: (data) => {
+      client.refetchQueries({ queryKey: ['participant', data.uid] });
+      onSuccess?.(data);
+    },
+  }));
+};
+
+export const updateChatStageMutation = (
+  http: HttpClient,
+  client: QueryClient,
+  onSuccess?: OnSuccess<{ uid: string }>,
+) => {
+  return injectMutation(() => ({
+    mutationFn: ({ uid, ...data }: ChatStageUpdate) =>
       lastValueFrom(
         http.post<{ uid: string }>(`${environment.cloudFunctionsUrl}/updateStage/${uid}`, data),
       ),

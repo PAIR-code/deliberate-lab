@@ -59,3 +59,7 @@ export interface GenericStageUpdate<T> extends Progression {
 export type SurveyStageUpdate = GenericStageUpdate<{
   questions: QuestionUpdate[];
 }>;
+
+export type ChatStageUpdate = GenericStageUpdate<{
+  readyToEndChat: boolean;
+}>;

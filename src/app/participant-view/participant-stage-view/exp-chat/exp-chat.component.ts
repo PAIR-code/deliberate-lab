@@ -23,8 +23,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { Unsubscribe } from 'firebase/firestore';
-import { userMessageMutation } from 'src/lib/api/mutations';
+import { updateChatStageMutation, userMessageMutation } from 'src/lib/api/mutations';
 import { Participant } from 'src/lib/participant';
 import {
   EXPERIMENT_PROVIDER_TOKEN,
@@ -76,6 +77,7 @@ export class ExpChatComponent implements OnDestroy {
 
   // Queries
   private http = inject(HttpClient);
+  private client = injectQueryClient();
 
   // TODO: another subscription. NOTE: c'est la query du pax, refetch ?
   public readyToEndChat: boolean = false;
@@ -90,6 +92,11 @@ export class ExpChatComponent implements OnDestroy {
   // Message mutation & form
   public messageMutation: MutationType<UserMessageMutationData, object>;
   public message = new FormControl<string>('', Validators.required);
+
+  // Chat completion mutation
+  public finishChatMutation = updateChatStageMutation(this.http, this.client, () =>
+    this.participant.navigateToNextStage(),
+  );
 
   constructor(
     @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ParticipantProvider,
@@ -133,18 +140,19 @@ export class ExpChatComponent implements OnDestroy {
     // Message mutation creation
     this.messageMutation = userMessageMutation(this.http);
 
-    // TODO : handle this and advancement
-    effect(
-      () => {
-        if (
-          this.everyoneFinishedTheChat() &&
-          this.participant.workingOnStage()?.name === this.stage.name
-        ) {
-          this.participant.navigateToNextStage();
-        }
-      },
-      { allowSignalWrites: true },
-    );
+    // When all users are ready, and if the current user is still on the stage, finish the chat and move to the next stage
+    effect(() => {
+      if (
+        this.everyoneFinishedTheChat() &&
+        this.participant.workingOnStage()?.name === this.stage.name
+      ) {
+        this.finishChatMutation.mutate({
+          uid: this.participant.userData()!.uid,
+          name: this.stage.name,
+          data: { readyToEndChat: true },
+        });
+      }
+    });
   }
 
   isSilent() {
