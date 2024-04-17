@@ -5,7 +5,11 @@ import { onRequest } from 'firebase-functions/v2/https';
 import { app } from '../app';
 import { checkStageProgression } from '../utils/check-stage-progression';
 import { ProfileAndTOS } from '../validation/participants.validation';
-import { GenericStageUpdate, validateStageUpdateAndMerge } from '../validation/stages.validation';
+import {
+  GenericStageUpdate,
+  ToggleReadyToEndChat,
+  validateStageUpdateAndMerge,
+} from '../validation/stages.validation';
 
 /** Fetch a specific participant */
 export const participant = onRequest(async (request, response) => {
@@ -90,4 +94,25 @@ export const updateStage = onRequest(async (request, response) => {
       response.send({ uid: participantUid }); // Send back the uid for refetch
     }
   }
+});
+
+/** Toggle On/Off ready state for given participant and chat */
+export const toggleReadyToEndChat = onRequest(async (request, response) => {
+  const participantUid = request.params[0];
+
+  if (!participantUid) {
+    response.status(400).send('Missing participant UID');
+    return;
+  }
+
+  const { body } = request;
+
+  if (Value.Check(ToggleReadyToEndChat, body)) {
+    const ref = app.firestore().collection('participants_ready_to_end_chat').doc(body.chatId);
+    await ref.update({ [`readyToEndChat.${participantUid}`]: body.readyToEndChat });
+    response.send({ uid: participantUid });
+    return;
+  }
+
+  response.status(400).send('Invalid data');
 });

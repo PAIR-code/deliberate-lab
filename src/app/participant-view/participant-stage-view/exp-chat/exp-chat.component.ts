@@ -25,7 +25,11 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { Unsubscribe } from 'firebase/firestore';
-import { updateChatStageMutation, userMessageMutation } from 'src/lib/api/mutations';
+import {
+  toggleChatMutation,
+  updateChatStageMutation,
+  userMessageMutation,
+} from 'src/lib/api/mutations';
 import { Participant } from 'src/lib/participant';
 import {
   EXPERIMENT_PROVIDER_TOKEN,
@@ -79,9 +83,6 @@ export class ExpChatComponent implements OnDestroy {
   private http = inject(HttpClient);
   private client = injectQueryClient();
 
-  // TODO: another subscription. NOTE: c'est la query du pax, refetch ?
-  public readyToEndChat: boolean = false;
-
   // Message subscription
   public messages: WritableSignal<Message[]>;
   private unsubscribeMessages: Unsubscribe | undefined;
@@ -97,6 +98,9 @@ export class ExpChatComponent implements OnDestroy {
   public finishChatMutation = updateChatStageMutation(this.http, this.client, () =>
     this.participant.navigateToNextStage(),
   );
+
+  public toggleMutation = toggleChatMutation(this.http);
+  public readyToEndChat: WritableSignal<boolean> = signal(false); // Frontend-only, no need to have fine-grained backend sync for this
 
   constructor(
     @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ParticipantProvider,
@@ -171,8 +175,17 @@ export class ExpChatComponent implements OnDestroy {
     this.message.setValue('');
   }
 
-  updateToogleValue(_updatedValue: MatSlideToggleChange) {
-    // TODO: simple query as well. Juste mettre une mutation.
+  updateTogleValue(updatedValue: MatSlideToggleChange) {
+    this.readyToEndChat.set(updatedValue.checked);
+
+    this.toggleMutation.mutate({
+      chatId: this.stage.config.chatId,
+      participantId: this.participant.userData()!.uid,
+      readyToEndChat: updatedValue.checked,
+    });
+
+    if (updatedValue.checked) this.message.disable();
+    else this.message.enable();
   }
 
   ngOnDestroy() {

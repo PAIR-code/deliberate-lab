@@ -45,6 +45,12 @@ export interface ProfileTOSData extends Progression {
   acceptTosTimestamp: string;
 }
 
+export interface ChatToggleUpdate {
+  readyToEndChat: boolean;
+  participantId: string;
+  chatId: string;
+}
+
 // ********************************************************************************************* //
 //                                        STAGE UPDATES                                          //
 // ********************************************************************************************* //

@@ -29,6 +29,16 @@ export const GenericStageUpdate = Type.Object(
 
 export type GenericStageUpdate = Static<typeof GenericStageUpdate>;
 
+export const ToggleReadyToEndChat = Type.Object(
+  {
+    readyToEndChat: Type.Boolean(),
+    chatId: Type.String(),
+  },
+  { additionalProperties: false },
+);
+
+export type ToggleReadyToEndChat = Static<typeof ToggleReadyToEndChat>;
+
 // ********************************************************************************************* //
 //                                         DEFINITIONS                                           //
 // ********************************************************************************************* //

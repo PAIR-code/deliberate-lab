@@ -7,6 +7,7 @@ import { lastValueFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import {
   ChatStageUpdate,
+  ChatToggleUpdate,
   CreationResponse,
   OnSuccess,
   ProfileTOSData,
@@ -144,5 +145,15 @@ export const mediatorMessageMutation = (http: HttpClient) => {
   return injectMutation(() => ({
     mutationFn: (data: MediatorMessageMutationData) =>
       lastValueFrom(http.post(`${environment.cloudFunctionsUrl}/mediatorMessage`, data)),
+  }));
+};
+
+// Chat toggle mutation
+export const toggleChatMutation = (http: HttpClient) => {
+  return injectMutation(() => ({
+    mutationFn: ({ participantId, ...data }: ChatToggleUpdate) =>
+      lastValueFrom(
+        http.post(`${environment.cloudFunctionsUrl}/toggleReadyToEndChat/${participantId}`, data),
+      ),
   }));
 };

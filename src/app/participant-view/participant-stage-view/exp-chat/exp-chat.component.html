@@ -44,13 +44,12 @@
       <mat-form-field class="full-width">
         <mat-label>Message to send</mat-label>
         <input matInput placeholder="Write your message" [formControl]="message" />
-        <!-- TODO: disable the input dynamically through the form control when the user is ready to end the chat -->
       </mat-form-field>
       <button
         type="submit"
         color="primary"
         mat-button
-        [disabled]="this.readyToEndChat === true || !this.message.valid"
+        [disabled]="this.readyToEndChat() || !this.message.valid"
       >
         <!-- <mat-icon>redo</mat-icon> -->
         <span>Send</span>
@@ -58,9 +57,9 @@
     </form>
     <div>
       <mat-slide-toggle
-        [checked]="this.readyToEndChat === true"
+        [checked]="this.readyToEndChat()"
         [disabled]="this.isSilent()"
-        (change)="updateToogleValue($event)"
+        (change)="updateTogleValue($event)"
       >
         I'm done with chatting and ready to move on
       </mat-slide-toggle>
