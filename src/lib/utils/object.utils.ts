@@ -1,4 +1,6 @@
 import * as _ from 'lodash';
+import { isOfKind } from '../algebraic-data';
+import { ExpStage, ExpStageChatAboutItems, StageKind } from '../types/stages.types';
 
 /** All types that can safely be used to index an object */
 export type Index = string | number | symbol;
@@ -64,4 +66,17 @@ export const extendUntilMatch = <T, K extends keyof T>(oldArr: T[], newArr: T[],
 
   const stop = newArr[0][key];
   return _.takeWhile(oldArr, (item) => item[key] !== stop).concat(newArr);
+};
+
+/** Extract a chat stage from a list of stages by its id */
+export const getChatFromId = (
+  chatId: string,
+  stages: ExpStage[],
+): ExpStageChatAboutItems | undefined => {
+  for (const stage of stages) {
+    if (isOfKind(stage, StageKind.GroupChat)) {
+      if (stage.config.chatId === chatId) return stage;
+    }
+  }
+  return undefined;
 };

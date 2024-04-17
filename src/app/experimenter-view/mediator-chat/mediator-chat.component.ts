@@ -1,17 +1,19 @@
-import { Component, Input, Signal, WritableSignal, computed, signal } from '@angular/core';
+import { Component, Input, OnDestroy, Signal, WritableSignal, effect, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectChange, MatSelectModule } from '@angular/material/select';
+import { MatSelectModule } from '@angular/material/select';
+import { Unsubscribe } from 'firebase/firestore';
 import { VertexApiService } from 'src/app/services/vertex-api.service';
 import { FewShotTemplate } from 'src/lib/text-templates/fewshot_template';
 import { preparePalm2Request, sendPalm2Request } from 'src/lib/text-templates/llm_vertexapi_palm2';
 import { nv, template } from 'src/lib/text-templates/template';
 import { ChatAboutItems } from 'src/lib/types/chats.types';
-import { Item, ItemPair } from 'src/lib/types/items.types';
 import { Message } from 'src/lib/types/messages.types';
 import { ParticipantExtended } from 'src/lib/types/participants.types';
+import { chatMessagesSubscription } from 'src/lib/utils/firestore.utils';
+import { extendUntilMatch } from 'src/lib/utils/object.utils';
 import { ChatDiscussItemsMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-discuss-items-message/chat-discuss-items-message.component';
 import { ChatMediatorMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-mediator-message/chat-mediator-message.component';
 import { ChatUserMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-user-message/chat-user-message.component';
@@ -34,23 +36,21 @@ import { MediatorFeedbackComponent } from '../../participant-view/participant-st
   templateUrl: './mediator-chat.component.html',
   styleUrl: './mediator-chat.component.scss',
 })
-export class MediatorChatComponent {
-  roomName: WritableSignal<string> = signal('');
-
+export class MediatorChatComponent implements OnDestroy {
   @Input() experiment?: Signal<string | null>;
   @Input() participants?: Signal<ParticipantExtended[]>;
 
   @Input()
-  set chatRoomName(name: string) {
-    this.roomName.set(name);
+  set chatValue(value: ChatAboutItems | undefined) {
+    this.chat.set(value);
   }
 
-  public messages: Signal<Message[]>;
-  public message: string = '';
+  public chat: WritableSignal<ChatAboutItems | undefined> = signal(undefined);
 
-  public items: Signal<Item[]>;
-  public itemPair: Signal<ItemPair>;
-  public instructions: string = '';
+  public messages: WritableSignal<Message[]>;
+  public unsubscribeMessages: Unsubscribe | undefined;
+
+  public message: string = '';
 
   public defaultPrefix: string =
     'You are a mediator assistant guiding a conversation whose goal is to discuss and decide the best item to survive a sinking yacht lost in the South Pacific.';
@@ -60,28 +60,18 @@ export class MediatorChatComponent {
   public suffix: string = this.defaultSuffix;
 
   constructor(private llmService: VertexApiService) {
-    this.messages = computed(() => {
-      if (this.roomName() === '' || !this.experiment || !this.participants) {
-        return [];
-      }
-      // TODO: think about how to show a merged view in cases when
-      // partcipants have different views...
-      const participant0 = this.participants()[0];
-      const chat = participant0.stageMap[this.roomName()].config as ChatAboutItems;
-      return chat.messages;
-    });
+    // Firestore subscription for messages, dynamically changes based on the input chat id
+    this.messages = signal([]);
+    effect(() => {
+      const id = this.chat()?.chatId;
 
-    this.items = computed(() => {
-      if (this.roomName() === '' || !this.experiment || !this.participants) {
-        return [];
-      }
-      const participant0 = this.participants()[0];
-      const chat = participant0.stageMap[this.roomName()].config as ChatAboutItems;
-      return chat.items;
-    });
+      this.unsubscribeMessages?.();
 
-    this.itemPair = computed(() => {
-      return { item1: this.items()[0], item2: this.items()[1] };
+      if (id !== undefined) {
+        this.unsubscribeMessages = chatMessagesSubscription(id, (m) => {
+          this.messages.set(extendUntilMatch(this.messages(), m.reverse(), 'uid'));
+        });
+      }
     });
   }
 
@@ -95,30 +85,8 @@ export class MediatorChatComponent {
     //   stageName: this.roomName(),
     //   message: this.message,
     // });
+    // TODO: use a reactive form, as done with the users
     this.message = '';
-  }
-
-  updateItemPair(updatedValue: MatSelectChange, i: number) {
-    if (i === 1) {
-      this.itemPair().item1 = updatedValue.value;
-    } else if (i === 2) {
-      this.itemPair().item2 = updatedValue.value;
-    } else {
-      throw new Error('Only two items in one pair of item');
-    }
-  }
-
-  sendRatingToDiscuss() {
-    const experiment = this.experiment?.();
-    if (!experiment) {
-      throw new Error('Tried to send a RatingToDiscuss without knowing the experiment');
-    }
-    // TODO: use the new backend
-    // sendMediatorGroupRatingToDiscuss(this.appStateService.data, experiment, {
-    //   stageName: this.roomName(),
-    //   itemPair: this.itemPair(),
-    //   message: this.instructions,
-    // });
   }
 
   async sendLLMMessage() {
@@ -176,5 +144,9 @@ ${this.suffix}`;
     // Send message to chat
     this.message = response.predictions[0].content;
     this.sendMessage();
+  }
+
+  ngOnDestroy() {
+    this.unsubscribeMessages?.();
   }
 }
