@@ -12,18 +12,9 @@ import { deleteExperimentMutation } from 'src/lib/api/mutations';
 import { experimentQuery } from 'src/lib/api/queries';
 import { QueryType } from 'src/lib/types/api.types';
 import { ExperimentExtended } from 'src/lib/types/experiments.types';
-import { ParticipantExtended, ParticipantProfile } from 'src/lib/types/participants.types';
-import { StageKind } from 'src/lib/types/stages.types';
-import { lookupTable } from 'src/lib/utils/object.utils';
+import { ParticipantExtended } from 'src/lib/types/participants.types';
+import { ExpStage, StageKind } from 'src/lib/types/stages.types';
 import { MediatorChatComponent } from '../mediator-chat/mediator-chat.component';
-
-// TODO: generalise into a sensible class for viewing all relevant info on
-// where participants are at w.r.t. this stage.
-export interface StageState {
-  name: string;
-  kind: StageKind;
-  participants: ParticipantProfile[];
-}
 
 @Component({
   selector: 'app-experiment-monitor',
@@ -58,10 +49,9 @@ export class ExperimentMonitorComponent {
     this.experimentUid.set(name);
   }
 
-  public stageStates: Signal<StageState[]>;
-
   isOfKind = isOfKind;
   readonly StageKind = StageKind;
+  public expStages: Signal<ExpStage[]>;
 
   constructor(public router: Router) {
     // Prepare the request
@@ -70,25 +60,9 @@ export class ExperimentMonitorComponent {
     // Extract participants data from the extended experiment
     this.participants = computed(() => this._experiment.data()?.participants ?? []);
 
-    // TODO: factor into service?
-    this.stageStates = computed(() => {
-      const participant0 = this.participants()[0];
-
-      // Build stage states
-      const stageStates: StageState[] = Object.entries(participant0.stageMap).map(
-        ([name, { kind }]) => ({
-          name,
-          kind,
-          participants: [],
-        }),
-      );
-
-      const statesLookup = lookupTable(stageStates, 'name');
-      this.participants().forEach((p) => {
-        statesLookup[p.workingOnStageName].participants.push(p);
-      });
-
-      return stageStates; // statesLookup should modify the objects in place, we do not even need to return Object.values(statesLookup)
+    this.expStages = computed(() => {
+      const p = this.participants()[0];
+      return p ? Object.values(p.stageMap) : [];
     });
   }
 
