@@ -13,6 +13,12 @@ service cloud.firestore {
       allow read: if true;
     }
 
+    // Rules for the chat toggle collection
+    match /participants_ready_to_end_chat/{chatId} {
+      // Allow single document reads
+      allow read: if true;
+    }
+
     // Else: disallow everything (access via cloud functions only)
     match /{document=**} {
       allow read, write: if false;

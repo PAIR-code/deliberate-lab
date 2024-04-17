@@ -154,6 +154,7 @@ export class ExpChatComponent implements OnDestroy {
           uid: this.participant.userData()!.uid,
           name: this.stage.name,
           data: { readyToEndChat: true },
+          ...this.participant.getStageProgression(),
         });
       }
     });

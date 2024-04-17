@@ -43,6 +43,7 @@ export const checkStageProgression = <T extends Progression>(participant: Docume
     };
   }
 
+  delete body.justFinishedStageName; // Just in case it is defined with `undefined` as a value
   return body;
 };
 
