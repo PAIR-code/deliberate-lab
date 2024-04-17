@@ -112,10 +112,6 @@ export class Participant {
     });
   }
 
-  nextStep() {
-    // TODO: remove this once all old occurrences have been removed
-  }
-
   /** Returns a non empty progression data object if going to the next stage would
    * need to update the backend stage progression state as well.
    */

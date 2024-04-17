@@ -18,6 +18,12 @@ export interface ChatAboutItems extends BaseChat {
   isSilent: boolean; // What does this mean ? Is it a muting option for mediators ?
 }
 
+/** Isolated document data to synchronize participants willing to end the chat using firestore subscriptions */
+export interface ReadyToEndChat {
+  chatId: string;
+  readyToEndChat: Record<string, boolean>;
+}
+
 // ********************************************************************************************* //
 //                                           DEFAULTS                                            //
 // ********************************************************************************************* //

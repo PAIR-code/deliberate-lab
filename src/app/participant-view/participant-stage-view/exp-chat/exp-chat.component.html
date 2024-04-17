@@ -39,27 +39,23 @@
       }
     </div>
 
-    <div class="message-form">
+    <form class="message-form" (ngSubmit)="sendMessage()">
       <app-chat-user-profile [profile]="participant.userData()!"></app-chat-user-profile>
       <mat-form-field class="full-width">
         <mat-label>Message to send</mat-label>
-        <input
-          matInput
-          placeholder="Write your message"
-          [(ngModel)]="message"
-          [disabled]="this.readyToEndChat === true"
-        />
+        <input matInput placeholder="Write your message" [formControl]="message" />
+        <!-- TODO: disable the input dynamically through the form control when the user is ready to end the chat -->
       </mat-form-field>
       <button
+        type="submit"
         color="primary"
         mat-button
-        (click)="sendMessage()"
-        [disabled]="this.readyToEndChat === true"
+        [disabled]="this.readyToEndChat === true || !this.message.valid"
       >
         <!-- <mat-icon>redo</mat-icon> -->
         <span>Send</span>
       </button>
-    </div>
+    </form>
     <div>
       <mat-slide-toggle
         [checked]="this.readyToEndChat === true"
