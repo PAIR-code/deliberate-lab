@@ -87,7 +87,7 @@ export const createExperiment = onRequest(async (request, response) => {
     const { name, stageMap, numberOfParticipants, allowedStageProgressionMap } = request.body;
     const date = new Date();
 
-    replaceChatStagesUuid(stageMap); // Assign a new UUID to each chat stage
+    const chatIds = replaceChatStagesUuid(stageMap); // Assign a new UUID to each chat stage
 
     await app.firestore().runTransaction(async (transaction) => {
       // Create the main parent experiment
@@ -108,9 +108,11 @@ export const createExperiment = onRequest(async (request, response) => {
       );
 
       const progressions: Record<string, string> = {};
+      const participantRefs: string[] = [];
 
       participants.forEach((participant) => {
         const participantRef = app.firestore().collection('participants').doc();
+        participantRefs.push(participantRef.id);
         progressions[participantRef.id] = participant.workingOnStageName;
         transaction.set(participantRef, participant);
       });
@@ -121,6 +123,18 @@ export const createExperiment = onRequest(async (request, response) => {
         experimentId: experiment.id,
         progressions,
       });
+
+      for (const chatId of chatIds) {
+        const ref = app.firestore().doc(`participants_ready_to_end_chat/${chatId}`);
+        const readyToEndChat = participantRefs.reduce(
+          (acc, uid) => {
+            acc[uid] = false;
+            return acc;
+          },
+          {} as Record<string, boolean>,
+        );
+        transaction.set(ref, { chatId, readyToEndChat });
+      }
     });
   } catch (e) {
     response.status(500).send(`Error creating experiment: ${e}`);

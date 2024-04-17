@@ -23,7 +23,8 @@ export const seedDatabase = onRequest(async (request, response) => {
   const batch = app.firestore().batch();
 
   // Reuse the template and inject a uuid for the chat stage
-  template.stageMap['3. Group discussion'].config.chatId = uuidv4() as unknown as null; // Trick to silence the TS error
+  const chatId = uuidv4();
+  template.stageMap['3. Group discussion'].config.chatId = chatId as unknown as null; // Trick to silence the TS error
 
   const participants = ParticipantSeeder.createMany(
     experiment.id,
@@ -32,6 +33,7 @@ export const seedDatabase = onRequest(async (request, response) => {
     3,
   );
   const progressions: Record<string, string> = {};
+  const readyToEndChat: Record<string, boolean> = {};
 
   participants.forEach((participant) => {
     // Get a unique ID for the participant
@@ -42,13 +44,21 @@ export const seedDatabase = onRequest(async (request, response) => {
 
     // Add the participant to the progression map
     progressions[ref.id] = participant.workingOnStageName;
+    readyToEndChat[ref.id] = false;
   });
 
   // Create their progression data in a separate collection (for synchronization purposes)
-  const ref = app.firestore().doc(`participants_progressions/${experiment.id}`);
+  let ref = app.firestore().doc(`participants_progressions/${experiment.id}`);
   batch.set(ref, {
     experimentId: experiment.id,
     progressions,
+  });
+
+  // Create the `ready_to_end_chat` entry for synchronization purposes
+  ref = app.firestore().doc(`participants_ready_to_end_chat/${chatId}`);
+  batch.set(ref, {
+    chatId,
+    readyToEndChat,
   });
 
   // Commit the batch write
