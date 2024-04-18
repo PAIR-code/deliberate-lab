@@ -15,6 +15,7 @@
   },
   "main": "lib/index.js",
   "dependencies": {
+    "@sinclair/typebox": "^0.32.20",
     "firebase-admin": "^11.8.0",
     "firebase-functions": "^4.3.1",
     "unique-names-generator": "^4.7.1",

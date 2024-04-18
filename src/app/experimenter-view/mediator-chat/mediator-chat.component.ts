@@ -5,17 +5,17 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectChange, MatSelectModule } from '@angular/material/select';
 import { VertexApiService } from 'src/app/services/vertex-api.service';
-import { sendMediatorGroupMessage, sendMediatorGroupRatingToDiscuss } from 'src/lib/staged-exp/app';
-import { ChatAboutItems, Item, ItemPair, Message } from 'src/lib/staged-exp/data-model';
 import { FewShotTemplate } from 'src/lib/text-templates/fewshot_template';
 import { preparePalm2Request, sendPalm2Request } from 'src/lib/text-templates/llm_vertexapi_palm2';
 import { nv, template } from 'src/lib/text-templates/template';
+import { ChatAboutItems } from 'src/lib/types/chats.types';
+import { Item, ItemPair } from 'src/lib/types/items.types';
+import { Message } from 'src/lib/types/messages.types';
 import { ParticipantExtended } from 'src/lib/types/participants.types';
 import { ChatDiscussItemsMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-discuss-items-message/chat-discuss-items-message.component';
 import { ChatMediatorMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-mediator-message/chat-mediator-message.component';
 import { ChatUserMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-user-message/chat-user-message.component';
 import { MediatorFeedbackComponent } from '../../participant-view/participant-stage-view/exp-chat/mediator-feedback/mediator-feedback.component';
-import { AppStateService } from '../../services/app-state.service';
 
 @Component({
   selector: 'app-mediator-chat',
@@ -59,10 +59,7 @@ export class MediatorChatComponent {
   public prefix: string = this.defaultPrefix;
   public suffix: string = this.defaultSuffix;
 
-  constructor(
-    private appStateService: AppStateService,
-    private llmService: VertexApiService,
-  ) {
+  constructor(private llmService: VertexApiService) {
     this.messages = computed(() => {
       if (this.roomName() === '' || !this.experiment || !this.participants) {
         return [];
@@ -93,10 +90,11 @@ export class MediatorChatComponent {
     if (!experiment) {
       throw new Error('Tried to send a message without knowing the experiment');
     }
-    sendMediatorGroupMessage(this.appStateService.data, experiment, {
-      stageName: this.roomName(),
-      message: this.message,
-    });
+    // TODO: use the new backend
+    // sendMediatorGroupMessage(this.appStateService.data, experiment, {
+    //   stageName: this.roomName(),
+    //   message: this.message,
+    // });
     this.message = '';
   }
 
@@ -115,11 +113,12 @@ export class MediatorChatComponent {
     if (!experiment) {
       throw new Error('Tried to send a RatingToDiscuss without knowing the experiment');
     }
-    sendMediatorGroupRatingToDiscuss(this.appStateService.data, experiment, {
-      stageName: this.roomName(),
-      itemPair: this.itemPair(),
-      message: this.instructions,
-    });
+    // TODO: use the new backend
+    // sendMediatorGroupRatingToDiscuss(this.appStateService.data, experiment, {
+    //   stageName: this.roomName(),
+    //   itemPair: this.itemPair(),
+    //   message: this.instructions,
+    // });
   }
 
   async sendLLMMessage() {

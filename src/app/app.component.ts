@@ -6,8 +6,7 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, effect } from '@angular/core';
-import { AppStateService } from './services/app-state.service';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-root',
@@ -15,9 +14,5 @@ import { AppStateService } from './services/app-state.service';
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
-  constructor(public stateService: AppStateService) {
-    effect(() => {
-      document.title = `Experiment: ${this.stateService.appName()}`;
-    });
-  }
+  constructor() {}
 }

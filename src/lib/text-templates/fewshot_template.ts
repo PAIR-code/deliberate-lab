@@ -22,7 +22,7 @@ const nameDescriptionTempl = new FewShotTempl(template
 See the test file (.spec) for more detailed examples.
 */
 
-import { flatten } from 'underscore';
+import { flatten } from 'lodash';
 import { Template, TemplateMatch, escapeStringInMatch, matchTemplate } from './template';
 import { NamedVar } from './variable';
 

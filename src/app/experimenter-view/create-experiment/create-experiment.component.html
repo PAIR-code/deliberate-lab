@@ -70,19 +70,16 @@
             matTooltip="{{ stageData.kind || 'Please select a stage kind!' }}"
           >
             @switch (stageData.kind) {
-              @case (StageKinds.acceptTos) {
-                <mat-icon>portrait</mat-icon>
-              }
-              @case (StageKinds.groupChat) {
+              @case (StageKind.GroupChat) {
                 <mat-icon>forum</mat-icon>
               }
-              @case (StageKinds.takeSurvey) {
+              @case (StageKind.TakeSurvey) {
                 <mat-icon>poll</mat-icon>
               }
-              @case (StageKinds.voteForLeader) {
+              @case (StageKind.VoteForLeader) {
                 <mat-icon>how_to_vote</mat-icon>
               }
-              @case (StageKinds.revealVoted) {
+              @case (StageKind.RevealVoted) {
                 <mat-icon>emoji_events</mat-icon>
               }
               @default {
@@ -130,7 +127,7 @@
                   [(ngModel)]="currentEditingStage.kind"
                   (selectionChange)="onChange($event, 'stage-kind')"
                 >
-                  @for (kind of availableStageKinds; track kind) {
+                  @for (kind of availableStageKind; track kind) {
                     <mat-option [value]="kind">{{ kind }}</mat-option>
                   }
                 </mat-select>
@@ -154,7 +151,7 @@
             </div>
           </div>
 
-          @if (tryCast(StageKinds.acceptTosAndSetProfile, currentEditingStage); as stage) {
+          @if (tryCast(StageKind.AcceptTosAndSetProfile, currentEditingStage); as stage) {
             <div class="config-title">
               <h3>Terms of Service (ToS) lines:</h3>
               <div class="fill"></div>
@@ -190,7 +187,7 @@
               </div>
             </div>
           }
-          @if (tryCast(StageKinds.takeSurvey, currentEditingStage); as surveyStage) {
+          @if (tryCast(StageKind.TakeSurvey, currentEditingStage); as surveyStage) {
             <div class="config-title">
               <h3>Survey questions:</h3>
               <div class="fill"></div>
@@ -238,7 +235,7 @@
                       }
                     </div>
 
-                    @if (tryCast(SurveyQuestionKind.CHECK, question); as question) {
+                    @if (tryCast(SurveyQuestionKind.Check, question); as question) {
                       <mat-form-field cdkDrag class="mat-form-field">
                         <mat-label>Checkbox question text:</mat-label>
                         <input
@@ -250,7 +247,7 @@
                         />
                       </mat-form-field>
                     }
-                    @if (tryCast(SurveyQuestionKind.TEXT, question); as question) {
+                    @if (tryCast(SurveyQuestionKind.Text, question); as question) {
                       <mat-form-field cdkDrag class="mat-form-field">
                         <mat-label>Freeform question text:</mat-label>
                         <input
@@ -262,7 +259,7 @@
                         />
                       </mat-form-field>
                     }
-                    @if (tryCast(SurveyQuestionKind.SCALE, question); as question) {
+                    @if (tryCast(SurveyQuestionKind.Scale, question); as question) {
                       <!-- @if (!question.itemRatings) { -->
                       <!-- scale question -->
                       <div class="question-fields">
@@ -298,7 +295,7 @@
                         </mat-form-field>
                       </div>
                     }
-                    @if (tryCast(SurveyQuestionKind.RATING, question); as question) {
+                    @if (tryCast(SurveyQuestionKind.Rating, question); as question) {
                       <!-- ratings question -->
                       <div class="question-fields">
                         <mat-form-field cdkDrag class="mat-form-field">
@@ -321,7 +318,7 @@
                                   matInput
                                   type="text"
                                   placeholder="compass"
-                                  [(ngModel)]="question.rating.item1.name"
+                                  [(ngModel)]="question.item1.name"
                                   (input)="onChange($event)"
                                 />
                               </mat-form-field>
@@ -331,7 +328,7 @@
                                   matInput
                                   type="text"
                                   placeholder="https://m.media-amazon.com/images/I/81NUeKWdiQL._AC_UF1000,1000_QL80_.jpg"
-                                  [(ngModel)]="question.rating.item1.imageUrl"
+                                  [(ngModel)]="question.item1.imageUrl"
                                   (input)="onChange($event)"
                                 />
                               </mat-form-field>
@@ -344,7 +341,7 @@
                                   matInput
                                   type="text"
                                   placeholder="compass"
-                                  [(ngModel)]="question.rating.item2.name"
+                                  [(ngModel)]="question.item2.name"
                                   (input)="onChange($event)"
                                 />
                               </mat-form-field>
@@ -354,7 +351,7 @@
                                   matInput
                                   type="text"
                                   placeholder="https://m.media-amazon.com/images/I/81NUeKWdiQL._AC_UF1000,1000_QL80_.jpg"
-                                  [(ngModel)]="question.rating.item2.imageUrl"
+                                  [(ngModel)]="question.item2.imageUrl"
                                   (input)="onChange($event)"
                                 />
                               </mat-form-field>

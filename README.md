@@ -1,5 +1,39 @@
 # Llm Mediators
 
+<div>
+  <img src="https://img.shields.io/badge/Node.js-v18-339933?style=for-the-badge&logo=node.js" />
+  <img src="https://img.shields.io/badge/firebase-ffca28?style=for-the-badge&logo=firebase&logoColor=black"/>
+  <img src="https://img.shields.io/badge/Angular-17-DD0031?style=for-the-badge&logo=angular&logoColor=white"/>
+  <img src="https://img.shields.io/badge/prettier-1A2C34?style=for-the-badge&logo=prettier&logoColor=F7BA3E" />
+  <img src="https://img.shields.io/badge/eslint-3A33D1?style=for-the-badge&logo=eslint&logoColor=white" />
+</div>
+
+## Project Structure
+
+```bash
+├── .vscode    # VSCode configuration
+├── firestore  # Firebase Firestore rules
+│
+├── functions  # Firebase Cloud Functions
+│   ├── lib           # Build output
+│   ├── node_modules
+│   └── src           # Cloud functions source code
+│       ├── endpoints   # Cloud functions endpoints
+│       ├── seeders     # Model factories
+│       ├── utils       # Utilities
+│       ├── validation  # TypeBox validation utilities
+│       ├── app.ts      # Firebase app initialization
+│       └── index.ts    # Cloud functions entrypoint
+│
+├── node_modules
+│
+└── src               # Frontend source code
+    ├── app           # Angular JS 17 app & components
+    ├── assets        # Static assets
+    ├── environments  # Environment configuration
+    └── lib           # API, types & utilities
+```
+
 ## Firebase
 
 This project uses Firebase as its backend. The configuration can be found in the [`.firebaserc`](./.firebaserc) and [`firebase.json`](./firebase.json) files.
@@ -52,6 +86,10 @@ You will then be able to access the following UIs:
 - Emulator UI: `http://localhost:4000`
 - Firestore UI: `http://localhost:4000/firestore`
 - Cloud Functions UI: `http://localhost:4000/functions`
+
+### Quickstart
+
+If you have everything installed, you can use the `restore terminals` extension in order to run all necessary commands at once (`ctrl + shift + P` > `Restore Terminals`).
 
 ## Development server
 

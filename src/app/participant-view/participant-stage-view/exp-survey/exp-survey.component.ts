@@ -6,21 +6,32 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, computed, Signal } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Component, inject } from '@angular/core';
+import {
+  FormArray,
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSliderModule } from '@angular/material/slider';
 
-import { Participant } from 'src/lib/staged-exp/participant';
-import { Question } from 'src/lib/staged-exp/question';
+import { ProviderService } from 'src/app/services/provider.service';
+import { Participant } from 'src/lib/participant';
+
+import { HttpClient } from '@angular/common/http';
+import { MatButtonModule } from '@angular/material/button';
+import { injectQueryClient } from '@tanstack/angular-query-experimental';
+import { updateSurveyStageMutation } from 'src/lib/api/mutations';
+import { MutationType, SurveyStageUpdate } from 'src/lib/types/api.types';
 import {
-  QuestionData,
-  StageKinds,
-  Survey,
   SurveyQuestionKind,
-} from '../../../../lib/staged-exp/data-model';
-import { AppStateService } from '../../../services/app-state.service';
+  buildQuestionForm,
+  questionAsKind,
+} from 'src/lib/types/questions.types';
+import { ExpStageSurvey, StageKind } from 'src/lib/types/stages.types';
 import { SurveyCheckQuestionComponent } from './survey-check-question/survey-check-question.component';
 import { SurveyRatingQuestionComponent } from './survey-rating-question/survey-rating-question.component';
 import { SurveyScaleQuestionComponent } from './survey-scale-question/survey-scale-question.component';
@@ -34,6 +45,7 @@ import { SurveyTextQuestionComponent } from './survey-text-question/survey-text-
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
+    MatButtonModule,
     MatSliderModule,
     SurveyCheckQuestionComponent,
     SurveyRatingQuestionComponent,
@@ -45,25 +57,50 @@ import { SurveyTextQuestionComponent } from './survey-text-question/survey-text-
 })
 export class ExpSurveyComponent {
   public participant: Participant;
-  public stageData: Signal<Survey>;
-  public questions: Signal<Question<QuestionData>[]>;
+  public stage: ExpStageSurvey;
+
+  public questions: FormArray;
+  public surveyForm: FormGroup;
 
   readonly SurveyQuestionKind = SurveyQuestionKind;
+  readonly questionAsKind = questionAsKind;
 
-  constructor(stateService: AppStateService) {
-    const { participant, stageData } = stateService.getParticipantAndStage(StageKinds.takeSurvey);
-    this.stageData = stageData;
-    this.participant = participant;
+  http = inject(HttpClient);
+  queryClient = injectQueryClient();
 
-    this.questions = computed(() => {
-      return stageData().questions.map((v, i) => new Question(this.participant, this.stageData, i));
+  surveyMutation: MutationType<SurveyStageUpdate, { uid: string }>;
+
+  constructor(fb: FormBuilder, participantProvider: ProviderService<Participant>) {
+    this.participant = participantProvider.get();
+    this.questions = fb.array([]);
+    this.stage = this.participant.assertViewingStageCast(StageKind.TakeSurvey)!;
+
+    this.stage.config.questions.forEach((question) => {
+      this.questions.push(buildQuestionForm(fb, question));
     });
+
+    this.surveyForm = fb.group({
+      questions: this.questions,
+    });
+
+    this.surveyMutation = updateSurveyStageMutation(this.http, this.queryClient, () =>
+      this.participant.navigateToNextStage(),
+    );
   }
 
-  questionAsKind<K extends SurveyQuestionKind>(
-    kind: K,
-    q: Question<QuestionData>,
-  ): Question<QuestionData & { kind: K }> {
-    return q as Question<QuestionData & { kind: K }>;
+  /** Returns controls for each individual question component */
+  get questionControls() {
+    return this.questions.controls as FormGroup[];
+  }
+
+  nextStep() {
+    this.surveyMutation.mutate({
+      name: this.stage.name,
+      data: {
+        questions: this.surveyForm.value.questions,
+      },
+      ...this.participant.getStageProgression(),
+      uid: this.participant.userData()?.uid as string,
+    });
   }
 }

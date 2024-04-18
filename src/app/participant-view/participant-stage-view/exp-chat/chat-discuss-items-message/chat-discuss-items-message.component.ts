@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
-import { DiscussItemsMessage } from 'src/lib/staged-exp/data-model';
+import { DiscussItemsMessage } from 'src/lib/types/messages.types';
+import { dateStrOfTimestamp } from 'src/lib/utils/string.utils';
 
 @Component({
   selector: 'app-chat-discuss-items-message',
@@ -11,11 +12,5 @@ import { DiscussItemsMessage } from 'src/lib/staged-exp/data-model';
 export class ChatDiscussItemsMessageComponent {
   @Input() discussItemsMessage!: DiscussItemsMessage;
 
-  dateStrOfTimestamp(timestamp: number): string {
-    const date = new Date(timestamp);
-    return (
-      `${date.getFullYear()} - ${date.getMonth()} - ${date.getDate()}:` +
-      ` ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
-    );
-  }
+  readonly dateStrOfTimestamp = dateStrOfTimestamp;
 }

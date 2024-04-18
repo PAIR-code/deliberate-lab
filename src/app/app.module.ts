@@ -38,11 +38,8 @@ import { PageNotFoundComponent } from './page-not-found/page-not-found.component
 import { ExpChatComponent } from './participant-view/participant-stage-view/exp-chat/exp-chat.component';
 import { ExpLeaderRevealComponent } from './participant-view/participant-stage-view/exp-leader-reveal/exp-leader-reveal.component';
 import { ExpLeaderVoteComponent } from './participant-view/participant-stage-view/exp-leader-vote/exp-leader-vote.component';
-import { ExpProfileComponent } from './participant-view/participant-stage-view/exp-profile/exp-profile.component';
 import { ExpSurveyComponent } from './participant-view/participant-stage-view/exp-survey/exp-survey.component';
 import { ExpTosAndProfileComponent } from './participant-view/participant-stage-view/exp-tos-and-profile/exp-tos-and-profile.component';
-import { ExpTosComponent } from './participant-view/participant-stage-view/exp-tos/exp-tos.component';
-import { AppStateService } from './services/app-state.service';
 import { GoogleAuthService } from './services/google-auth.service';
 import { GoogleSheetsService } from './services/google-sheets.service';
 import { LmApiService } from './services/lm-api.service';
@@ -52,7 +49,6 @@ import { VertexApiService } from './services/vertex-api.service';
   declarations: [AppComponent],
   providers: [
     VertexApiService,
-    AppStateService,
     LmApiService,
     GoogleAuthService,
     GoogleSheetsService,
@@ -85,10 +81,8 @@ import { VertexApiService } from './services/vertex-api.service';
     LlmApiConfigComponent,
     ExpSurveyComponent,
     ExpLeaderVoteComponent,
-    ExpProfileComponent,
     //ExpRatingComponent,
     ExpChatComponent,
-    ExpTosComponent,
     ExpTosAndProfileComponent,
     ExpLeaderRevealComponent,
     ExperimenterViewComponent,

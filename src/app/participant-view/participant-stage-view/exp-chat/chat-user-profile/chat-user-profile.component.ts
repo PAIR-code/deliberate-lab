@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { UserProfile } from 'src/lib/staged-exp/data-model';
+import { ParticipantProfile } from 'src/lib/types/participants.types';
 
 @Component({
   selector: 'app-chat-user-profile',
@@ -9,5 +9,5 @@ import { UserProfile } from 'src/lib/staged-exp/data-model';
   styleUrl: './chat-user-profile.component.scss',
 })
 export class ChatUserProfileComponent {
-  @Input() profile!: UserProfile;
+  @Input() profile!: ParticipantProfile;
 }

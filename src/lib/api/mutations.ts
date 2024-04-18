@@ -5,8 +5,15 @@ import { HttpClient } from '@angular/common/http';
 import { QueryClient, injectMutation } from '@tanstack/angular-query-experimental';
 import { lastValueFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { CreationResponse, SimpleResponse } from '../types/api.types';
-import { ExperimentCreationData, TemplateCreationData } from '../types/experiments.types';
+import {
+  CreationResponse,
+  OnSuccess,
+  ProfileTOSData,
+  SimpleResponse,
+  SurveyStageUpdate,
+  TemplateCreationData,
+} from '../types/api.types';
+import { ExperimentCreationData } from '../types/experiments.types';
 
 export const deleteExperimentMutation = (http: HttpClient, client: QueryClient) =>
   injectMutation(() => ({
@@ -24,7 +31,7 @@ export const deleteExperimentMutation = (http: HttpClient, client: QueryClient) 
 export const createExperimentMutation = (
   http: HttpClient,
   client: QueryClient,
-  onSuccess?: (data: CreationResponse) => Promise<void> | void,
+  onSuccess?: OnSuccess<CreationResponse>,
 ) => {
   return injectMutation(() => ({
     mutationFn: (data: ExperimentCreationData) =>
@@ -41,7 +48,7 @@ export const createExperimentMutation = (
 export const createTemplateMutation = (
   http: HttpClient,
   client: QueryClient,
-  onSuccess?: (data: CreationResponse) => Promise<void> | void,
+  onSuccess?: OnSuccess<CreationResponse>,
 ) => {
   return injectMutation(() => ({
     mutationFn: (data: TemplateCreationData) =>
@@ -50,6 +57,43 @@ export const createTemplateMutation = (
       ),
     onSuccess: (data) => {
       client.refetchQueries({ queryKey: ['templates'] });
+      onSuccess?.(data);
+    },
+  }));
+};
+
+export const updateProfileAndTOSMutation = (
+  http: HttpClient,
+  client: QueryClient,
+  onSuccess?: OnSuccess<ProfileTOSData>,
+) => {
+  return injectMutation(() => ({
+    mutationFn: ({ uid, ...data }: ProfileTOSData) =>
+      lastValueFrom(
+        http.post<ProfileTOSData>(
+          `${environment.cloudFunctionsUrl}/updateProfileAndTOS/${uid}`,
+          data,
+        ),
+      ),
+    onSuccess: (data) => {
+      client.refetchQueries({ queryKey: ['participant', data.uid] });
+      onSuccess?.(data);
+    },
+  }));
+};
+
+export const updateSurveyStageMutation = (
+  http: HttpClient,
+  client: QueryClient,
+  onSuccess?: OnSuccess<{ uid: string }>,
+) => {
+  return injectMutation(() => ({
+    mutationFn: ({ uid, ...data }: SurveyStageUpdate) =>
+      lastValueFrom(
+        http.post<{ uid: string }>(`${environment.cloudFunctionsUrl}/updateStage/${uid}`, data),
+      ),
+    onSuccess: (data) => {
+      client.refetchQueries({ queryKey: ['participant', data.uid] });
       onSuccess?.(data);
     },
   }));

@@ -4,11 +4,9 @@
   <div>
     <p>Number of participants ({{ participants().length }})</p>
     @for (p of participants(); track p.uid) {
-      <a
-        [routerLink]="['/participant', this.experimentUid(), p.uid]"
-        [queryParams]="{ stage: p.workingOnStageName }"
-        >{{ p.uid }}</a
-      >
+      <a [routerLink]="['/participant', p.uid]" [queryParams]="{ stage: p.workingOnStageName }">{{
+        p.uid
+      }}</a>
       <ul>
         <li>Name: {{ p.name }}</li>
         <li>Preffered pronouns: {{ p.pronouns }}</li>
@@ -34,7 +32,7 @@
     <div>
       {{ stageState.name }}: {{ stageState.participants.length }}
 
-      @if (isOfKind(stageState, StageKinds.groupChat)) {
+      @if (isOfKind(stageState, StageKind.GroupChat)) {
         <mat-accordion>
           <mat-expansion-panel>
             <mat-expansion-panel-header>

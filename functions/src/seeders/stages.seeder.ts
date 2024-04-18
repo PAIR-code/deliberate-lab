@@ -3,7 +3,7 @@ export class StagesSeeder {
   public static createMany() {
     return [
       {
-        kind: 'acceptTodAndSetProfile',
+        kind: 'acceptTosAndSetProfile',
         name: '1. Agree to the experiment and set your profile',
         config: {
           pronouns: '',
@@ -22,20 +22,18 @@ export class StagesSeeder {
               kind: 'RatingQuestion',
               id: '1',
               questionText: 'Rate the items by how helpful they would be for survival.',
-              rating: {
-                item1: {
-                  name: 'compas',
-                  imageUrl:
-                    'https://m.media-amazon.com/images/I/81NUeKWdiQL._AC_UF1000,1000_QL80_.jpg',
-                },
-                item2: {
-                  name: 'blanket',
-                  imageUrl:
-                    'https://m.media-amazon.com/images/W/MEDIAX_792452-T1/images/I/81-x+F2EsHL._AC_UF894,1000_QL80_.jpg',
-                },
-                choice: null,
-                confidence: null,
+              item1: {
+                name: 'compas',
+                imageUrl:
+                  'https://m.media-amazon.com/images/I/81NUeKWdiQL._AC_UF1000,1000_QL80_.jpg',
               },
+              item2: {
+                name: 'blanket',
+                imageUrl:
+                  'https://img.freepik.com/free-psd/blanket-isolated-transparent-background_191095-10098.jpg?size=338&ext=jpg&ga=GA1.1.1700460183.1712448000&semt=sph',
+              },
+              choice: null,
+              confidence: null,
             },
             {
               kind: 'ScaleQuestion',
@@ -63,7 +61,7 @@ export class StagesSeeder {
             {
               name: 'blanket',
               imageUrl:
-                'https://m.media-amazon.com/images/W/MEDIAX_792452-T1/images/I/81-x+F2EsHL._AC_UF894,1000_QL80_.jpg',
+                'https://img.freepik.com/free-psd/blanket-isolated-transparent-background_191095-10098.jpg?size=338&ext=jpg&ga=GA1.1.1700460183.1712448000&semt=sph',
             },
             {
               name: 'lighter',
@@ -118,20 +116,18 @@ export class StagesSeeder {
               kind: 'RatingQuestion',
               id: '5',
               questionText: 'Please rating the following accoring to which is best for survival',
-              rating: {
-                item1: {
-                  name: 'compas',
-                  imageUrl:
-                    'https://m.media-amazon.com/images/I/81NUeKWdiQL._AC_UF1000,1000_QL80_.jpg',
-                },
-                item2: {
-                  name: 'blanket',
-                  imageUrl:
-                    'https://m.media-amazon.com/images/W/MEDIAX_792452-T1/images/I/81-x+F2EsHL._AC_UF894,1000_QL80_.jpg',
-                },
-                choice: null,
-                confidence: null,
+              item1: {
+                name: 'compas',
+                imageUrl:
+                  'https://m.media-amazon.com/images/I/81NUeKWdiQL._AC_UF1000,1000_QL80_.jpg',
               },
+              item2: {
+                name: 'blanket',
+                imageUrl:
+                  'https://img.freepik.com/free-psd/blanket-isolated-transparent-background_191095-10098.jpg?size=338&ext=jpg&ga=GA1.1.1700460183.1712448000&semt=sph',
+              },
+              choice: null,
+              confidence: null,
             },
           ],
         },

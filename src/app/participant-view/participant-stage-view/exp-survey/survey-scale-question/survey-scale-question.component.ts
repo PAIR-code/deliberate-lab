@@ -1,21 +1,16 @@
 import { Component, Input } from '@angular/core';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatSliderModule } from '@angular/material/slider';
-import { ScaleQuestion } from 'src/lib/staged-exp/data-model';
-import { Question } from 'src/lib/staged-exp/question';
+import { ScaleQuestion } from 'src/lib/types/questions.types';
 
 @Component({
   selector: 'app-survey-scale-question',
   standalone: true,
-  imports: [MatSliderModule],
+  imports: [MatSliderModule, ReactiveFormsModule],
   templateUrl: './survey-scale-question.component.html',
   styleUrl: './survey-scale-question.component.scss',
 })
 export class SurveyScaleQuestionComponent {
-  @Input() question!: Question<ScaleQuestion>;
-
-  setSliderValue(newValue: number) {
-    this.question.edit(() => {
-      this.question.data.score = newValue;
-    });
-  }
+  @Input() question!: ScaleQuestion;
+  @Input() questionForm!: FormGroup;
 }

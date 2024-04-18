@@ -1,23 +1,35 @@
-<!-- eslint-disable @angular-eslint/template/interactive-supports-focus -->
-<!-- eslint-disable @angular-eslint/template/click-events-have-key-events -->
 <div class="main">
-  @for (question of questions(); track question; let questionIdx = $index) {
-    @if (question.data.kind === SurveyQuestionKind.CHECK) {
-      <app-survey-check-question
-        [question]="questionAsKind(SurveyQuestionKind.CHECK, question)"
-      ></app-survey-check-question>
-    } @else if (question.data.kind === SurveyQuestionKind.TEXT) {
-      <app-survey-text-question
-        [question]="questionAsKind(SurveyQuestionKind.TEXT, question)"
-      ></app-survey-text-question>
-    } @else if (question.data.kind === SurveyQuestionKind.RATING) {
-      <app-survey-rating-question
-        [question]="questionAsKind(SurveyQuestionKind.RATING, question)"
-      ></app-survey-rating-question>
-    } @else if (question.data.kind === SurveyQuestionKind.SCALE) {
-      <app-survey-scale-question
-        [question]="questionAsKind(SurveyQuestionKind.SCALE, question)"
-      ></app-survey-scale-question>
+  <form [formGroup]="surveyForm">
+    @for (question of stage.config.questions; track question.id; let index = $index) {
+      @switch (question.kind) {
+        @case (SurveyQuestionKind.Check) {
+          <app-survey-check-question
+            [question]="questionAsKind(question, SurveyQuestionKind.Check)"
+            [questionForm]="questionControls[index]"
+          />
+        }
+        @case (SurveyQuestionKind.Text) {
+          <app-survey-text-question
+            [question]="questionAsKind(question, SurveyQuestionKind.Text)"
+            [questionForm]="questionControls[index]"
+          />
+        }
+        @case (SurveyQuestionKind.Rating) {
+          <app-survey-rating-question
+            [question]="questionAsKind(question, SurveyQuestionKind.Rating)"
+            [questionForm]="questionControls[index]"
+          />
+        }
+        @case (SurveyQuestionKind.Scale) {
+          <app-survey-scale-question
+            [question]="questionAsKind(question, SurveyQuestionKind.Scale)"
+            [questionForm]="questionControls[index]"
+          />
+        }
+      }
     }
-  }
+  </form>
+  <button color="primary" [disabled]="!surveyForm.valid" (click)="nextStep()" mat-button>
+    Next step
+  </button>
 </div>

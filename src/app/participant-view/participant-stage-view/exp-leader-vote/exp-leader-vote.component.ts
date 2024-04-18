@@ -6,14 +6,15 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, computed, Signal } from '@angular/core';
+import { Component, signal, Signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRadioModule } from '@angular/material/radio';
+import { ProviderService } from 'src/app/services/provider.service';
+import { Participant } from 'src/lib/participant';
 
-import { Participant } from 'src/lib/staged-exp/participant';
 import { ParticipantExtended } from 'src/lib/types/participants.types';
-import { LeaderVote, StageKinds, Votes } from '../../../../lib/staged-exp/data-model';
-import { AppStateService } from '../../../services/app-state.service';
+import { StageKind } from 'src/lib/types/stages.types';
+import { Vote, Votes } from 'src/lib/types/votes.types';
 
 @Component({
   selector: 'app-exp-leader-vote',
@@ -25,23 +26,25 @@ import { AppStateService } from '../../../services/app-state.service';
 export class ExpLeaderVoteComponent {
   public otherParticipants: Signal<ParticipantExtended[]>;
 
-  readonly LeaderVote = LeaderVote;
+  readonly Vote = Vote;
 
   public participant: Participant;
   public votes: Votes;
 
-  constructor(private stateService: AppStateService) {
-    const { participant, stageData } = this.stateService.getParticipantAndStage(
-      StageKinds.voteForLeader,
-    );
-    this.votes = stageData();
-    this.participant = participant;
+  constructor(private participantProvider: ProviderService<Participant>) {
+    this.participant = participantProvider.get();
 
-    this.otherParticipants = computed(() => {
-      const thisUserId = this.participant.userData().uid;
-      const allUsers = Object.values(this.participant.experiment().participants);
-      return allUsers.filter((u) => u.uid !== thisUserId);
-    });
+    const { config } = this.participant.assertViewingStageCast(StageKind.VoteForLeader)!;
+
+    this.votes = config;
+
+    // TODO: use new backend
+    this.otherParticipants = signal([]);
+    //  computed(() => {
+    //   const thisUserId = this.participant.userData().uid;
+    //   const allUsers = Object.values(this.participant.experiment().participants);
+    //   return allUsers.filter((u) => u.uid !== thisUserId);
+    // });
 
     // Make sure that votes has all other participants, and only them... if things
     // are configured fully in an experiment definition this is not needed.
@@ -49,7 +52,7 @@ export class ExpLeaderVoteComponent {
     for (const p of this.otherParticipants()) {
       otherParticipantsMap[p.uid] = p;
       if (!(p.uid in this.votes)) {
-        this.votes[p.uid] = LeaderVote.NOT_RATED;
+        this.votes[p.uid] = Vote.NotRated;
       }
     }
     Object.keys(this.votes).forEach((uid) => {
@@ -63,7 +66,7 @@ export class ExpLeaderVoteComponent {
   isComplete() {
     let completed = true;
     this.otherParticipants().forEach((u) => {
-      if (!(u.uid in this.votes) || this.votes[u.uid] === LeaderVote.NOT_RATED) {
+      if (!(u.uid in this.votes) || this.votes[u.uid] === Vote.NotRated) {
         completed = false;
       }
     });
@@ -71,16 +74,18 @@ export class ExpLeaderVoteComponent {
   }
 
   setVote(event: unknown, userId: string) {
-    const { value } = event as { value: LeaderVote };
+    const { value } = event as { value: Vote };
     // if (this.isComplete()) {
     //   this.stateService.setStageComplete(true);
     // }
     this.votes[userId] = value;
-    this.participant.editStageData(() => this.votes);
+    // TODO: use new backend
+    // this.participant.editStageData(() => this.votes);
   }
 
   resetVote(userId: string) {
-    this.votes[userId] = LeaderVote.NOT_RATED;
-    this.participant.editStageData(() => this.votes);
+    this.votes[userId] = Vote.NotRated;
+    // TODO: use new backend
+    // this.participant.editStageData(() => this.votes);
   }
 }

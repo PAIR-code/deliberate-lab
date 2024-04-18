@@ -2,16 +2,25 @@
  * Types for the participants
  */
 
-import { ExpStage } from '../staged-exp/data-model';
+import { ExcludeProps } from '../utils/object.utils';
+import { ExpStage } from './stages.types';
 
-export interface ParticipantProfile {
+export interface ParticipantId {
   uid: string; // Unique identifier for the participant.
   experimentId: string; // Participants are strongly tied to an experiment.
+}
 
+export interface ParticipantProfile extends ParticipantId {
   pronouns: string;
   avatarUrl: string;
   name: string;
+  acceptTosTimestamp: string | null;
 }
+
+// The stage data for a participant does not have its ids
+export type TosAndUserProfile = ExcludeProps<ParticipantProfile, ParticipantId> & {
+  tosLines: string[];
+};
 
 export interface ParticipantExtended extends ParticipantProfile {
   stageMap: Record<string, ExpStage>;
@@ -20,3 +29,16 @@ export interface ParticipantExtended extends ParticipantProfile {
   completedStageNames: string[];
   workingOnStageName: string;
 }
+
+// ********************************************************************************************* //
+//                                           DEFAULTS                                            //
+// ********************************************************************************************* //
+
+export const getDefaultProfile = (): ParticipantProfile => ({
+  uid: 'fakeId',
+  experimentId: 'fakeExpId',
+  pronouns: 'they/them',
+  avatarUrl: '',
+  name: 'fakeName',
+  acceptTosTimestamp: 'fakeTimestamp',
+});
