@@ -51,7 +51,11 @@ export class StagesSeeder {
         name: '3. Group discussion',
         config: {
           chatId: null, // To be set in order to be able to use relations in the database
-          ratingsToDiscuss: [],
+          ratingsToDiscuss: [
+            [0, 1],
+            [1, 2],
+            [0, 2],
+          ],
           messages: [],
           items: [
             {

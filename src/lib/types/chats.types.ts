@@ -1,7 +1,7 @@
 /** Chat between participants and mediators */
 
 import { uniqueId } from 'lodash';
-import { Item, ItemPair } from './items.types';
+import { Item } from './items.types';
 import { Message } from './messages.types';
 
 export interface BaseChat {
@@ -9,11 +9,9 @@ export interface BaseChat {
   messages: Message[];
 }
 
-// TODO: refactor chat structure (the type and name choices seem weird to me)
 export interface ChatAboutItems extends BaseChat {
-  ratingsToDiscuss: ItemPair[];
+  ratingsToDiscuss: [number, number][]; // Item index pairs that will be discussed
   items: Item[];
-  readyToEndChat: boolean;
   // TODO(cjqian): This needs to be a per-participant value.
   isSilent: boolean; // What does this mean ? Is it a muting option for mediators ?
 }
@@ -22,6 +20,7 @@ export interface ChatAboutItems extends BaseChat {
 export interface ReadyToEndChat {
   chatId: string;
   readyToEndChat: Record<string, boolean>;
+  currentPair: number; // Index of the current pair being discussed. If >= ratingsToDiscuss.length, the chat is over.
 }
 
 // ********************************************************************************************* //
@@ -32,9 +31,8 @@ export const getDefaultChatAboutItemsConfig = (): ChatAboutItems => {
   return {
     chatId: uniqueId('chat'),
     ratingsToDiscuss: [],
-    messages: [],
     items: [],
-    readyToEndChat: false,
+    messages: [],
     isSilent: true,
   };
 };

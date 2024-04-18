@@ -39,7 +39,7 @@ import {
 } from 'src/lib/provider-tokens';
 import { ReadyToEndChat } from 'src/lib/types/chats.types';
 import { ItemPair } from 'src/lib/types/items.types';
-import { Message } from 'src/lib/types/messages.types';
+import { DiscussItemsMessage, Message, MessageType } from 'src/lib/types/messages.types';
 import { ParticipantExtended } from 'src/lib/types/participants.types';
 import { ExpStageChatAboutItems, StageKind } from 'src/lib/types/stages.types';
 import { chatMessagesSubscription, firestoreDocSubscription } from 'src/lib/utils/firestore.utils';
@@ -49,6 +49,7 @@ import { ChatMediatorMessageComponent } from './chat-mediator-message/chat-media
 import { ChatUserMessageComponent } from './chat-user-message/chat-user-message.component';
 import { ChatUserProfileComponent } from './chat-user-profile/chat-user-profile.component';
 import { MediatorFeedbackComponent } from './mediator-feedback/mediator-feedback.component';
+
 @Component({
   selector: 'app-exp-chat',
   standalone: true,
@@ -75,8 +76,7 @@ export class ExpChatComponent implements OnDestroy {
 
   // Extracted stage data
   public stage: ExpStageChatAboutItems;
-  public ratingsToDiscuss: Signal<ItemPair[]>;
-  public currentRatingsToDiscuss: Signal<ItemPair>;
+  public currentRatingsToDiscuss: WritableSignal<ItemPair>;
 
   // Queries
   private http = inject(HttpClient);
@@ -85,8 +85,8 @@ export class ExpChatComponent implements OnDestroy {
   // Message subscription
   public messages: WritableSignal<Message[]>;
   private unsubscribeMessages: Unsubscribe | undefined;
+
   // Ready to end chat subscription
-  public everyoneFinishedTheChat: WritableSignal<boolean>;
   private unsubscribeReadyToEndChat: Unsubscribe | undefined;
 
   // Message mutation & form
@@ -97,6 +97,8 @@ export class ExpChatComponent implements OnDestroy {
   public finishChatMutation = updateChatStageMutation(this.http, this.client, () =>
     this.participant.navigateToNextStage(),
   );
+
+  public discussingPairIndex = signal(0);
 
   public toggleMutation = toggleChatMutation(this.http);
   public readyToEndChat: WritableSignal<boolean> = signal(false); // Frontend-only, no need to have fine-grained backend sync for this
@@ -110,10 +112,12 @@ export class ExpChatComponent implements OnDestroy {
 
     // Extract stage data
     this.stage = this.participant.assertViewingStageCast(StageKind.GroupChat)!;
-    this.ratingsToDiscuss = signal(this.stage.config.ratingsToDiscuss); // TODO: the experimenter may send an update about the ratings to discuss. Firestore subscription
-    this.currentRatingsToDiscuss = computed(() => {
-      // Last item in the array
-      return this.ratingsToDiscuss()[this.ratingsToDiscuss().length - 1];
+
+    // Initialize the current rating to discuss with the first available pair
+    const [a, b] = this.stage.config.ratingsToDiscuss[0];
+    this.currentRatingsToDiscuss = signal({
+      item1: this.stage.config.items[a],
+      item2: this.stage.config.items[b],
     });
 
     this.otherParticipants = computed(
@@ -127,25 +131,34 @@ export class ExpChatComponent implements OnDestroy {
     this.messages = signal([]);
     this.unsubscribeMessages = chatMessagesSubscription(this.stage.config.chatId, (m) => {
       this.messages.set(extendUntilMatch(this.messages(), m.reverse(), 'uid'));
+
+      // Find if new discuss items message have arrived
+      const last = m.find((m) => m.messageType === MessageType.DiscussItemsMessage) as
+        | DiscussItemsMessage
+        | undefined;
+
+      if (last) this.currentRatingsToDiscuss.set(last.itemPair);
     });
 
     // Firestore subscription for ready to end chat
-    this.everyoneFinishedTheChat = signal(false);
     this.unsubscribeReadyToEndChat = firestoreDocSubscription<ReadyToEndChat>(
       `participants_ready_to_end_chat/${this.stage.config.chatId}`,
       (d) => {
-        this.everyoneFinishedTheChat.set(
-          d ? Object.values(d.readyToEndChat).every((v) => v) : false,
-        );
+        if (this.discussingPairIndex() !== d?.currentPair && d)
+          this.discussingPairIndex.set(d?.currentPair);
       },
     );
 
-    // When all users are ready, and if the current user is still on the stage, finish the chat and move to the next stage
     effect(() => {
-      if (
-        this.everyoneFinishedTheChat() &&
-        this.participant.workingOnStage()?.name === this.stage.name
-      ) {
+      if (this.participant.workingOnStage()?.name !== this.stage.name) return; // Continue only if this stage is active
+
+      const index = this.discussingPairIndex();
+
+      if (index < this.stage.config.ratingsToDiscuss.length) {
+        // Update to the next, reset the counter.
+        // TODO
+      } else {
+        // The chat experiment has ended
         this.finishChatMutation.mutate({
           uid: this.participant.userData()!.uid,
           name: this.stage.name,

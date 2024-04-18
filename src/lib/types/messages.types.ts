@@ -28,7 +28,6 @@ export interface DiscussItemsMessage extends MessageBase {
   messageType: MessageType.DiscussItemsMessage;
 
   itemPair: ItemPair;
-  // itemRatingToDiscuss: ItemRating;
 }
 
 export interface MediatorMessage extends MessageBase {
