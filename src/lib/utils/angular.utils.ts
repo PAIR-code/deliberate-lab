@@ -1,6 +1,13 @@
 /** Util functions to manipulate Angular constructs */
 
-import { Signal, WritableSignal, effect, signal, untracked } from '@angular/core';
+import {
+  CreateEffectOptions,
+  Signal,
+  WritableSignal,
+  effect,
+  signal,
+  untracked,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { Observable, map } from 'rxjs';
@@ -70,16 +77,27 @@ export const lazyInitWritable = <T, K>(
 };
 
 /** Creates a second-counter timer that is synchronized with the local storage in order to resume ticking when reloading the page */
-export const localStorageTimer = (key: string, defaultStartSeconds: number) => {
+export const localStorageTimer = (
+  key: string,
+  defaultStartSeconds: number,
+  onFinish: () => void,
+) => {
+  // Use an object to store the interval reference
+  const utils = {
+    interval: undefined as ReturnType<typeof setInterval> | undefined,
+  };
+
   const initInterval = () =>
-    setInterval(() => {
+    (utils.interval = setInterval(() => {
       const newValue = timer() - 1;
       if (newValue < 0) {
+        onFinish();
+        remove();
         return;
       }
       timer.set(newValue);
       localStorage.setItem(key, newValue.toString());
-    }, 1000);
+    }, 1000));
 
   const existingSeconds = localStorage.getItem(key);
   if (existingSeconds) {
@@ -88,11 +106,6 @@ export const localStorageTimer = (key: string, defaultStartSeconds: number) => {
     localStorage.setItem(key, defaultStartSeconds.toString());
   }
   const timer = signal(defaultStartSeconds);
-
-  // Use an object to store the interval reference
-  const utils = {
-    interval: undefined as ReturnType<typeof setInterval> | undefined,
-  };
 
   const reset = (startSeconds: number) => {
     clearInterval(utils.interval);
@@ -112,4 +125,13 @@ export const localStorageTimer = (key: string, defaultStartSeconds: number) => {
   };
 
   return { timer, start, reset, remove } as const;
+};
+
+/** Angular effect that runs util the given callback returns true */
+export const onceEffect = (callback: () => boolean, options?: CreateEffectOptions | undefined) => {
+  const ref = effect(() => {
+    if (callback()) {
+      ref.destroy();
+    }
+  }, options);
 };

@@ -89,7 +89,7 @@ export const createExperiment = onRequest(async (request, response) => {
 
     const chatIds = replaceChatStagesUuid(stageMap); // Assign a new UUID to each chat stage
 
-    await app.firestore().runTransaction(async (transaction) => {
+    await app.firestore().runTransaction(async (transaction): Promise<void> => {
       // Create the main parent experiment
       const experiment = app.firestore().collection('experiments').doc();
       transaction.set(experiment, {
@@ -133,7 +133,7 @@ export const createExperiment = onRequest(async (request, response) => {
           },
           {} as Record<string, boolean>,
         );
-        transaction.set(ref, { chatId, readyToEndChat });
+        transaction.set(ref, { chatId, readyToEndChat, currentPair: 0 });
       }
     });
   } catch (e) {

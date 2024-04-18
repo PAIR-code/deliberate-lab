@@ -22,7 +22,7 @@ import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { Unsubscribe } from 'firebase/firestore';
 import {
@@ -42,6 +42,7 @@ import { ItemPair } from 'src/lib/types/items.types';
 import { DiscussItemsMessage, Message, MessageType } from 'src/lib/types/messages.types';
 import { ParticipantExtended } from 'src/lib/types/participants.types';
 import { ExpStageChatAboutItems, StageKind } from 'src/lib/types/stages.types';
+import { localStorageTimer, onceEffect } from 'src/lib/utils/angular.utils';
 import { chatMessagesSubscription, firestoreDocSubscription } from 'src/lib/utils/firestore.utils';
 import { extendUntilMatch } from 'src/lib/utils/object.utils';
 import { ChatDiscussItemsMessageComponent } from './chat-discuss-items-message/chat-discuss-items-message.component';
@@ -103,6 +104,8 @@ export class ExpChatComponent implements OnDestroy {
   public toggleMutation = toggleChatMutation(this.http);
   public readyToEndChat: WritableSignal<boolean> = signal(false); // Frontend-only, no need to have fine-grained backend sync for this
 
+  public timer = localStorageTimer('chat-timer', 60, () => this.toggleEndChat()); // 1 minute timer
+
   constructor(
     @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ParticipantProvider,
     @Inject(EXPERIMENT_PROVIDER_TOKEN) experimentProvider: ExperimentProvider,
@@ -114,10 +117,10 @@ export class ExpChatComponent implements OnDestroy {
     this.stage = this.participant.assertViewingStageCast(StageKind.GroupChat)!;
 
     // Initialize the current rating to discuss with the first available pair
-    const [a, b] = this.stage.config.ratingsToDiscuss[0];
+    const { id1, id2 } = this.stage.config.ratingsToDiscuss[0];
     this.currentRatingsToDiscuss = signal({
-      item1: this.stage.config.items[a],
-      item2: this.stage.config.items[b],
+      item1: this.stage.config.items[id1],
+      item2: this.stage.config.items[id2],
     });
 
     this.otherParticipants = computed(
@@ -149,24 +152,42 @@ export class ExpChatComponent implements OnDestroy {
       },
     );
 
-    effect(() => {
-      if (this.participant.workingOnStage()?.name !== this.stage.name) return; // Continue only if this stage is active
+    // Start the timer once the data is loaded and show that we are currently working on this stage
+    onceEffect(
+      () => {
+        const workingOnStage = this.participant.workingOnStage();
+        if (workingOnStage?.name === this.stage.name && this.everyoneReachedTheChat()) {
+          this.timer.start(); // start si tout le monde est là !
+          this.message.enable();
+          this.readyToEndChat.set(false);
+          return true;
+        }
+        return false;
+      },
+      { allowSignalWrites: true },
+    );
 
-      const index = this.discussingPairIndex();
+    effect(
+      () => {
+        if (this.participant.workingOnStage()?.name !== this.stage.name) return; // Continue only if this stage is active
 
-      if (index < this.stage.config.ratingsToDiscuss.length) {
-        // Update to the next, reset the counter.
-        // TODO
-      } else {
-        // The chat experiment has ended
-        this.finishChatMutation.mutate({
-          uid: this.participant.userData()!.uid,
-          name: this.stage.name,
-          data: { readyToEndChat: true },
-          ...this.participant.getStageProgression(),
-        });
-      }
-    });
+        const index = this.discussingPairIndex(); // bug: undefined.
+
+        if (index < this.stage.config.ratingsToDiscuss.length) {
+          // Update to the next, reset the counter.
+          this.timer.reset(60);
+        } else {
+          // The chat experiment has ended
+          this.finishChatMutation.mutate({
+            uid: this.participant.userData()!.uid,
+            name: this.stage.name,
+            data: { readyToEndChat: true },
+            ...this.participant.getStageProgression(),
+          });
+        }
+      },
+      { allowSignalWrites: true },
+    );
   }
 
   isSilent() {
@@ -185,17 +206,17 @@ export class ExpChatComponent implements OnDestroy {
     this.message.setValue('');
   }
 
-  updateTogleValue(updatedValue: MatSlideToggleChange) {
-    this.readyToEndChat.set(updatedValue.checked);
+  toggleEndChat() {
+    if (this.readyToEndChat()) return;
 
+    this.readyToEndChat.set(true);
     this.toggleMutation.mutate({
       chatId: this.stage.config.chatId,
       participantId: this.participant.userData()!.uid,
-      readyToEndChat: updatedValue.checked,
+      readyToEndChat: true,
     });
 
-    if (updatedValue.checked) this.message.disable();
-    else this.message.enable();
+    this.message.disable();
   }
 
   ngOnDestroy() {

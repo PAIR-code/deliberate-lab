@@ -59,6 +59,7 @@ export const seedDatabase = onRequest(async (request, response) => {
   batch.set(ref, {
     chatId,
     readyToEndChat,
+    currentPair: 0,
   });
 
   // Commit the batch write

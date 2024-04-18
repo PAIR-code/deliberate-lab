@@ -10,7 +10,7 @@ export interface BaseChat {
 }
 
 export interface ChatAboutItems extends BaseChat {
-  ratingsToDiscuss: [number, number][]; // Item index pairs that will be discussed
+  ratingsToDiscuss: { id1: number; id2: number }[]; // Item index pairs that will be discussed
   items: Item[];
   // TODO(cjqian): This needs to be a per-participant value.
   isSilent: boolean; // What does this mean ? Is it a muting option for mediators ?
