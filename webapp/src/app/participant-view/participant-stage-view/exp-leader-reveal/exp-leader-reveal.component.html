@@ -1,0 +1,9 @@
+<div class="main">
+  @if (!everyoneReachedTheEnd()) {
+    <div class="hold-message-container">Please hold for everyone else to reach the end of the experiment...</div>
+  } @else {
+    <div class="leader-reveal-container">
+      The leader is <strong>{{ finalLeader() }}</strong>
+    </div>
+  }
+</div>

@@ -1,0 +1,46 @@
+.flex-container {
+    /* We first create a flex layout context */
+    display: flex;
+    
+    /* Then we define the flow direction 
+       and if we allow the items to wrap 
+     * Remember this is the same as:
+     * flex-direction: row;
+     * flex-wrap: wrap;
+     */
+    flex-flow: column wrap;
+    
+    /* Then we define how is distributed the remaining space */
+    //justify-content: space-around;
+    
+    //padding: 0;
+    margin: 0;
+    list-style: none;
+    //align-items: center;
+  
+     //display: inline-block;
+    margin-bottom: 10px;
+    padding: 10px;
+    //width: calc(100% - 25px);
+    width: 540px;
+  
+    background: #fff;
+    border-radius: 2px;
+  }
+  
+  .message {
+      //display: inline-block;
+      margin-left: 10px;
+  }
+  
+  .date {
+      font-size: 10px;
+      color: #aaa;
+      margin-left: 6px;
+  }
+  
+  .profile_and_message {
+      display: flex;
+      flex-flow: row wrap;
+      align-items: center;
+  }

@@ -1,0 +1,60 @@
+<div class="toolbar" role="banner">
+  <button mat-icon-button (click)="sidenav.toggle()"><mat-icon>menu</mat-icon></button>
+  <span class="title">Experiment Management</span>
+  <div class="spacer"></div>
+  <a class="small-logo" aria-label="PAIR" href="https://pair.withgoogle.com/" title="Home">
+    <img src="/assets/pair-logo.svg" alt="PAIR logo" />
+  </a>
+</div>
+
+<div class="content" role="main">
+  <mat-sidenav-container>
+    <mat-sidenav #sidenav mode="side" opened="true">
+      <mat-nav-list class="menu-buttons">
+        @for (experiment of experiments(); track experiment.name) {
+          <mat-list-item
+            matListItemTitle
+            [routerLink]="['experiment', experiment.name]"
+            ariaCurrentWhenActive="page"
+            class="menu-item"
+          >
+            <div class="menu-item-inner">
+              {{ experiment.name }}
+              <!-- <mat-icon class="icon completed" fontIcon="check"></mat-icon> -->
+            </div>
+          </mat-list-item>
+        }
+        <mat-list-item
+          matListItemTitle
+          [routerLink]="['create-experiment']"
+          routerLinkActive="highlighted"
+          ariaCurrentWhenActive="page"
+        >
+          <div class="icon-menu-item"><mat-icon>design_services</mat-icon>Create an experiment</div>
+        </mat-list-item>
+        <mat-list-item
+          matListItemTitle
+          [routerLink]="['settings']"
+          ariaCurrentWhenActive="page"
+          class="menu-item"
+        >
+          <mat-icon fontIcon="settings"></mat-icon> Settings
+        </mat-list-item>
+        <mat-list-item
+          matListItemTitle
+          [routerLink]="['llm-settings']"
+          ariaCurrentWhenActive="page"
+          class="menu-item"
+        >
+          <mat-icon fontIcon="settings"></mat-icon> LLM Settings
+        </mat-list-item>
+      </mat-nav-list>
+    </mat-sidenav>
+
+    <mat-sidenav-content>
+      <div class="page">
+        <router-outlet></router-outlet>
+      </div>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>

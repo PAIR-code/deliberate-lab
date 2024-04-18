@@ -1,0 +1,62 @@
+.main {
+  padding: 20px;
+
+  .exp-stage-content {
+    position: relative;
+    width: 100%;
+
+    .mask {
+      background-color: white;
+      opacity: 0.2;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999999999;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.buttons-and-progress {
+  margin-top: -18px;
+}
+
+.buttons {
+}
+
+.error {
+  padding: 5px;
+  border-radius: 5px;
+  background-color: #faa;
+  border: solid 1px #a00;
+  // color: #FF0000;
+  display: flex;
+}
+
+.error-message {
+  flex: 1;
+}
+
+// .minus-button-width {
+//   width: calc(100% - 80px);
+// }
+.search-response-sep {
+  height: 20px;
+}
+
+.item-text-form {
+  min-width: 150px;
+  // max-width: 500px;
+  width: 100%;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+  flex: 1 1 auto;
+}
+
+.full-width {
+  width: 100%;
+}

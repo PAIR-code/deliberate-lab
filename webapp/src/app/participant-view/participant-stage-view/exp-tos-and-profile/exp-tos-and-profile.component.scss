@@ -1,0 +1,40 @@
+.main {
+  padding: 2rem 1rem;
+}
+
+label {
+  font-weight: bold;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.pronouns-radio-group {
+  display: flex;
+  align-items: center;
+
+  .pronouns-radio-button {
+    margin: 5px;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+.avatar-radio-group {
+  display: flex;
+  flex-flow: row wrap;
+  margin: 15px 15px;
+  column-gap: 20px;
+ //align-content: space-between;
+  //justify-content: space-around;
+  //gap: 100px 100px;
+}
+
+.avatar-radio-button {
+  margin: 5px;
+}
+
+.avatar-container {
+  display: flex;
+  flex-flow: column wrap;
+}
+

@@ -1,0 +1,83 @@
+<div class="chat-members"> 
+  <b>Other chat members </b>
+  <div class="container">
+    @for (user of this.otherParticipants(); track user.userId) {
+      @if (user.workingOnStageName === this.participant.userData().workingOnStageName) {
+        <div class="profile">
+          <img class="avatar" src={{user.profile.avatarUrl}} >
+          <div class="name">
+            {{user.profile.name}}
+          </div>
+          <div class="pronoun">
+            ({{ user.profile.pronouns }})
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+@if (!everyoneReachedTheChat()){
+  <div class="hold-message-container">Please hold for everyone else to reach the chat...</div>
+}
+
+@else{
+  <div class="discussion"> 
+    <b>Discussion</b> 
+
+    <div class="messages">
+      @for (message of messages(); track $index) {
+        <div class="message">
+          @if (message.messageType === 'userMessage') {
+            <app-chat-user-message [message]="message"></app-chat-user-message>
+          } @else if (message.messageType === 'mediatorMessage') {
+            <app-chat-mediator-message [message]="message"></app-chat-mediator-message>
+          } @else if (message.messageType === 'discussItemsMessage') {
+            <app-chat-discuss-items-message [discussItemsMessage]="message"></app-chat-discuss-items-message>
+          } @else {
+            <div></div>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="message-form">
+      <app-chat-user-profile [profile]="participant.userData().profile"></app-chat-user-profile>
+      <mat-form-field class="full-width">
+        <mat-label>Message to send</mat-label>
+        <input matInput placeholder="Write your message" [(ngModel)]="message"
+        [disabled]="this.stageData().readyToEndChat === true" />
+      </mat-form-field>
+      <button color="primary" mat-button (click)="sendMessage()"
+      [disabled]="this.stageData().readyToEndChat === true">
+        <!-- <mat-icon>redo</mat-icon> -->
+        <span>Send</span>
+      </button>
+    </div>
+    <div>
+      <mat-slide-toggle 
+        [checked]="this.stageData().readyToEndChat === true"
+        [disabled]="this.isSilent()"
+        (change)="updateToogleValue($event)"
+      >
+      I'm done with chatting and ready to move on
+      </mat-slide-toggle>
+    </div>
+  </div>
+
+  @if (currentRatingsToDiscuss()){
+    <b>Your discussion is now focusing on selecting the best item between the following items</b> 
+    <div class="flex-container">
+      <div class="item-pair-displays"> 
+        <div class="item-pair-item">
+          <img src="{{ currentRatingsToDiscuss().item1.imageUrl }}" alt="{{ currentRatingsToDiscuss().item1.name }}" width="20px" /> 
+          <span>{{ currentRatingsToDiscuss().item1.name }}</span> 
+        </div>
+        <div class="item-pair-item">
+          <img src="{{ currentRatingsToDiscuss().item2.imageUrl }}" alt="{{ currentRatingsToDiscuss().item2.name }}" width="20px" /> 
+          <span>{{ currentRatingsToDiscuss().item2.name }}</span>
+        </div>
+      </div>
+    </div>
+  }
+}

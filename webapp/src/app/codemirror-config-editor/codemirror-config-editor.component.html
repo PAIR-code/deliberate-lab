@@ -1,0 +1,57 @@
+<div class="buttons">
+  <div class="whatIsBeingEditedName">
+    {{ whatIsBeingEditedName }}<span *ngIf="changed$ | async"> (edited)</span>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div>
+    <button *ngIf="changed$ | async" color="accent" mat-raised-button (click)="tryEmitConfig()">
+      save
+    </button>
+    <button
+      *ngIf="closable && !(changed$ | async)"
+      color="primary"
+      mat-raised-button
+      (click)="justClose()"
+    >
+      close
+    </button>
+    <button
+      *ngIf="(changed$ | async) && closable"
+      color="primary"
+      mat-raised-button
+      (click)="tryEmitConfigAndClose()"
+    >
+      save & close
+    </button>
+  </div>
+
+  <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Options">
+    <mat-icon>more_vert</mat-icon>
+  </button>
+  <mat-menu #menu="matMenu">
+    <button mat-menu-item (click)="resetConfig()" [disabled]="isDefault">
+      <mat-icon>settings_backup_restore</mat-icon>
+      <span>Reset to default</span>
+    </button>
+    <button mat-menu-item (click)="undoChanges()" [disabled]="!(changed$ | async)">
+      <mat-icon>restore</mat-icon>
+      <span>Restore last saved</span>
+    </button>
+    <button
+      mat-menu-item
+      (click)="redoChanges()"
+      [disabled]="(changed$ | async) || !tmpConfigString"
+    >
+      <mat-icon>redo</mat-icon>
+      <span>Return to last changed</span>
+    </button>
+  </mat-menu>
+</div>
+
+<div *ngIf="configError" class="hint-error">{{ configError }}</div>
+
+<div class="code">
+  <div #codemirror></div>
+</div>
