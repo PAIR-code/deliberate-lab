@@ -37,10 +37,9 @@ import {
   PARTICIPANT_PROVIDER_TOKEN,
   ParticipantProvider,
 } from 'src/lib/provider-tokens';
-import { MutationType } from 'src/lib/types/api.types';
 import { ReadyToEndChat } from 'src/lib/types/chats.types';
 import { ItemPair } from 'src/lib/types/items.types';
-import { Message, UserMessageMutationData } from 'src/lib/types/messages.types';
+import { Message } from 'src/lib/types/messages.types';
 import { ParticipantExtended } from 'src/lib/types/participants.types';
 import { ExpStageChatAboutItems, StageKind } from 'src/lib/types/stages.types';
 import { chatMessagesSubscription, firestoreDocSubscription } from 'src/lib/utils/firestore.utils';
@@ -91,7 +90,7 @@ export class ExpChatComponent implements OnDestroy {
   private unsubscribeReadyToEndChat: Unsubscribe | undefined;
 
   // Message mutation & form
-  public messageMutation: MutationType<UserMessageMutationData, object>;
+  public messageMutation = userMessageMutation(this.http);
   public message = new FormControl<string>('', Validators.required);
 
   // Chat completion mutation
@@ -140,9 +139,6 @@ export class ExpChatComponent implements OnDestroy {
         );
       },
     );
-
-    // Message mutation creation
-    this.messageMutation = userMessageMutation(this.http);
 
     // When all users are ready, and if the current user is still on the stage, finish the chat and move to the next stage
     effect(() => {

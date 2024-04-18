@@ -18,17 +18,17 @@
   }
 </div>
 
-<div class="message-form">
+<form class="message-form" (ngSubmit)="sendMessage()">
   <h4>Send any message to the chat</h4>
   <mat-form-field class="full-width">
     <mat-label>Message to send</mat-label>
-    <input matInput placeholder="Write your response" [(ngModel)]="message" />
+    <input matInput placeholder="Write your response" [formControl]="message" />
   </mat-form-field>
-  <button color="primary" mat-button (click)="sendMessage()">
+  <button color="primary" mat-button type="submit" [disabled]="!this.message.valid">
     <!-- <mat-icon>redo</mat-icon> -->
     <span>Send</span>
   </button>
-</div>
+</form>
 
 <div>
   <h4>

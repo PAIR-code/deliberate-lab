@@ -1,11 +1,22 @@
-import { Component, Input, OnDestroy, Signal, WritableSignal, effect, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import {
+  Component,
+  Input,
+  OnDestroy,
+  Signal,
+  WritableSignal,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { Unsubscribe } from 'firebase/firestore';
 import { VertexApiService } from 'src/app/services/vertex-api.service';
+import { mediatorMessageMutation } from 'src/lib/api/mutations';
 import { FewShotTemplate } from 'src/lib/text-templates/fewshot_template';
 import { preparePalm2Request, sendPalm2Request } from 'src/lib/text-templates/llm_vertexapi_palm2';
 import { nv, template } from 'src/lib/text-templates/template';
@@ -32,6 +43,7 @@ import { MediatorFeedbackComponent } from '../../participant-view/participant-st
     MatButtonModule,
     MatInputModule,
     MatSelectModule,
+    ReactiveFormsModule,
   ],
   templateUrl: './mediator-chat.component.html',
   styleUrl: './mediator-chat.component.scss',
@@ -50,7 +62,11 @@ export class MediatorChatComponent implements OnDestroy {
   public messages: WritableSignal<Message[]>;
   public unsubscribeMessages: Unsubscribe | undefined;
 
-  public message: string = '';
+  public http = inject(HttpClient);
+
+  // Message mutation & form
+  public messageMutation = mediatorMessageMutation(this.http);
+  public message = new FormControl<string>('', Validators.required);
 
   public defaultPrefix: string =
     'You are a mediator assistant guiding a conversation whose goal is to discuss and decide the best item to survive a sinking yacht lost in the South Pacific.';
@@ -76,17 +92,13 @@ export class MediatorChatComponent implements OnDestroy {
   }
 
   sendMessage() {
-    const experiment = this.experiment?.();
-    if (!experiment) {
-      throw new Error('Tried to send a message without knowing the experiment');
-    }
-    // TODO: use the new backend
-    // sendMediatorGroupMessage(this.appStateService.data, experiment, {
-    //   stageName: this.roomName(),
-    //   message: this.message,
-    // });
-    // TODO: use a reactive form, as done with the users
-    this.message = '';
+    if (!this.message.valid) return;
+
+    this.messageMutation.mutate({
+      chatId: this.chat()!.chatId,
+      text: this.message.value!,
+    });
+    this.message.setValue('');
   }
 
   async sendLLMMessage() {
@@ -142,7 +154,7 @@ ${this.suffix}`;
     // console.log(JSON.stringify(response));
     // console.log(response.predictions[0].content);
     // Send message to chat
-    this.message = response.predictions[0].content;
+    this.message.setValue(response.predictions[0].content);
     this.sendMessage();
   }
 
