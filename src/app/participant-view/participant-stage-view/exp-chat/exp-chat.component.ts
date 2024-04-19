@@ -52,7 +52,7 @@ import { ChatUserMessageComponent } from './chat-user-message/chat-user-message.
 import { ChatUserProfileComponent } from './chat-user-profile/chat-user-profile.component';
 import { MediatorFeedbackComponent } from './mediator-feedback/mediator-feedback.component';
 
-const TIMER_SECONDS = 10;
+const TIMER_SECONDS = 60; // 1 minute between item pairs for discussions
 
 @Component({
   selector: 'app-exp-chat',
