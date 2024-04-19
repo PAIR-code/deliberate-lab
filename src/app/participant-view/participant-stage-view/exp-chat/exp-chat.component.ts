@@ -114,10 +114,10 @@ export class ExpChatComponent implements OnDestroy {
     @Inject(EXPERIMENT_PROVIDER_TOKEN) experimentProvider: ExperimentProvider,
   ) {
     this.participant = participantProvider.get(); // Get the participant instance
-    this.everyoneReachedTheChat = this.participant.everyoneReachedCurrentStage;
 
     // Extract stage data
     this.stage = this.participant.assertViewingStageCast(StageKind.GroupChat)!;
+    this.everyoneReachedTheChat = this.participant.everyoneReachedCurrentStage(this.stage.name);
 
     // Initialize the current rating to discuss with the first available pair
     const { id1, id2 } = this.stage.config.ratingsToDiscuss[0];

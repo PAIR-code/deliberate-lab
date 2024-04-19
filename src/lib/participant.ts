@@ -23,7 +23,6 @@ export class Participant {
   public workingOnStage: WritableSignal<ExpStage | undefined>; // Current active stage for the participant
   public commonLastWorkingOnStageName: WritableSignal<string | undefined>; // Last stage that all participants have been working on
   public experimentId: Signal<string | null>; // ID of the experiment this participant is part of
-  public everyoneReachedCurrentStage: Signal<boolean>; // Whether all participants have reached the current stage
 
   private http = inject(HttpClient);
   private router = inject(Router);
@@ -100,16 +99,6 @@ export class Participant {
       },
       { allowSignalWrites: true },
     );
-
-    // Everyone reached the current stage when their current stage corresponds to the current one or to later ones.
-    this.everyoneReachedCurrentStage = computed(() => {
-      const stageMap = this.userData()?.stageMap;
-      if (!stageMap) return false;
-      return (
-        keyRank(stageMap, this.userData()!.workingOnStageName) <=
-        keyRank(stageMap, this.commonLastWorkingOnStageName()!)
-      );
-    });
   }
 
   /** Returns a non empty progression data object if going to the next stage would
@@ -163,5 +152,19 @@ export class Participant {
   /** Call this method in order to properly unsubscribe from firebase when it is not needed */
   destroy() {
     this.unsubscribe?.();
+  }
+
+  /** Given a stage name, returns a signal to monitor whether all participants
+   * have at least reached the given stage.
+   */
+  everyoneReachedCurrentStage(stageName: string): Signal<boolean> {
+    return computed(() => {
+      const stageMap = this.userData()?.stageMap;
+      if (!stageMap) return false;
+
+      return (
+        keyRank(stageMap, stageName) <= keyRank(stageMap, this.commonLastWorkingOnStageName()!)
+      );
+    });
   }
 }
