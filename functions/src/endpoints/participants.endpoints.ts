@@ -1,7 +1,7 @@
 /** Endpoints for interactions with participants */
 
-import { Timestamp } from '@firebase/firestore';
 import { Value } from '@sinclair/typebox/value';
+import { Timestamp } from 'firebase-admin/firestore';
 import { onRequest } from 'firebase-functions/v2/https';
 import { app } from '../app';
 import { checkStageProgression } from '../utils/check-stage-progression';
@@ -144,24 +144,19 @@ export const toggleReadyToEndChat = onRequest(async (request, response) => {
             throw new Error('Stage not found');
           }
 
-          if (stage.ratingsToDiscuss.length < data.currentPair) {
-            const [a, b] = stage.config.ratingsToDiscuss[data.currentPair];
+          if (stage.config.ratingsToDiscuss.length > data.currentPair) {
+            const { id1, id2 } = stage.config.ratingsToDiscuss[data.currentPair];
             const itemPair = {
-              item1: stage.config.items[a],
-              item2: stage.config.items[b],
+              item1: stage.config.items[id1],
+              item2: stage.config.items[id2],
             };
-
-            transaction.set(
-              app.firestore().collection('messages').doc(),
-              {
-                chatId: body.chatId,
-                messageType: 'discussItemsMessage',
-                text: 'Discuss aabout this pair of items.',
-                itemPair,
-                timestamp: Timestamp.now(),
-              },
-              { merge: true },
-            );
+            transaction.set(app.firestore().collection('messages').doc(), {
+              chatId: body.chatId,
+              messageType: 'discussItemsMessage',
+              text: 'Discuss aabout this pair of items.',
+              itemPair,
+              timestamp: Timestamp.now(),
+            });
           }
         }
 

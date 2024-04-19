@@ -1,13 +1,6 @@
 /** Util functions to manipulate Angular constructs */
 
-import {
-  CreateEffectOptions,
-  Signal,
-  WritableSignal,
-  effect,
-  signal,
-  untracked,
-} from '@angular/core';
+import { Signal, WritableSignal, effect, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { Observable, map } from 'rxjs';
@@ -90,6 +83,7 @@ export const localStorageTimer = (
   const initInterval = () =>
     (utils.interval = setInterval(() => {
       const newValue = timer() - 1;
+      console.log('New timer value !', newValue);
       if (newValue < 0) {
         onFinish();
         remove();
@@ -125,13 +119,4 @@ export const localStorageTimer = (
   };
 
   return { timer, start, reset, remove } as const;
-};
-
-/** Angular effect that runs util the given callback returns true */
-export const onceEffect = (callback: () => boolean, options?: CreateEffectOptions | undefined) => {
-  const ref = effect(() => {
-    if (callback()) {
-      ref.destroy();
-    }
-  }, options);
 };
