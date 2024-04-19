@@ -13,6 +13,8 @@ import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Unsubscribe, signOut } from 'firebase/auth';
+import { auth, authenticationHandler } from 'src/lib/api/firebase';
 import { experimentQuery } from 'src/lib/api/queries';
 import { Participant } from 'src/lib/participant';
 import {
@@ -59,6 +61,8 @@ export class ParticipantViewComponent implements OnDestroy {
 
   participant: Participant;
 
+  unsubscribe: Unsubscribe;
+
   constructor(
     @Inject(PARTICIPANT_PROVIDER_TOKEN) participantService: ParticipantProvider,
     @Inject(EXPERIMENT_PROVIDER_TOKEN) experimentService: ExperimentProvider,
@@ -77,18 +81,15 @@ export class ParticipantViewComponent implements OnDestroy {
 
     const query = experimentQuery(http, this.participant.experimentId);
     experimentService.set(query.data);
+
+    this.unsubscribe = authenticationHandler(router);
   }
 
-  updateCurrentStageName(_stageName: string) {
-    if (this.participant) {
-      // this.participant.setViewingStage(stageName);
-    }
+  logout() {
+    signOut(auth);
   }
 
-  ngOnDestroy(): void {
-    if (this.participant) {
-      //} && this.participant.destory) {
-      // this.participant.destory();
-    }
+  ngOnDestroy() {
+    this.unsubscribe();
   }
 }

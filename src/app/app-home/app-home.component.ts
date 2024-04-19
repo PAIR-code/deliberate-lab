@@ -6,9 +6,9 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { UserCredential } from 'firebase/auth';
+import { Unsubscribe } from 'firebase/auth';
 
 import { ExpChatComponent } from '../participant-view/participant-stage-view/exp-chat/exp-chat.component';
 import { ExpLeaderRevealComponent } from '../participant-view/participant-stage-view/exp-leader-reveal/exp-leader-reveal.component';
@@ -19,6 +19,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { Router, RouterModule } from '@angular/router';
+import { authenticationHandler } from 'src/lib/api/firebase';
 import { loginMutation } from 'src/lib/api/mutations';
 import { ExperimenterViewComponent } from '../experimenter-view/experimenter-view.component';
 import { ExpSurveyComponent } from '../participant-view/participant-stage-view/exp-survey/exp-survey.component';
@@ -47,22 +48,21 @@ import { GoogleAuthService } from '../services/google-auth.service';
   templateUrl: './app-home.component.html',
   styleUrls: ['./app-home.component.scss'],
 })
-export class AppHomeComponent implements AfterViewInit {
+export class AppHomeComponent implements AfterViewInit, OnDestroy {
   @ViewChild('googleButton') googleButton!: ElementRef<HTMLElement>;
 
   public error: string = '';
-
   public login = new FormControl('', Validators.required);
+  public loginMut = loginMutation(undefined, () => (this.error = 'Invalid credentials.'));
 
-  public loginMut = loginMutation(
-    (d) => this.navigateToRelevantPage(d),
-    () => (this.error = 'Invalid credentials.'),
-  );
+  private unsubscribe: Unsubscribe;
 
   constructor(
     public router: Router,
     public authService: GoogleAuthService,
-  ) {}
+  ) {
+    this.unsubscribe = authenticationHandler(router);
+  }
 
   async loginPalabrate() {
     this.error = '';
@@ -81,15 +81,7 @@ export class AppHomeComponent implements AfterViewInit {
     }
   }
 
-  /** Navigate to the correct main page after successful authentication */
-  async navigateToRelevantPage(user: UserCredential) {
-    const { claims } = await user.user.getIdTokenResult();
-    if (claims['role'] === 'participant') {
-      this.router.navigate(['/participant', claims['participantId']]);
-    } else if (claims['role'] === 'experimenter') {
-      this.router.navigate(['/experimenter']);
-    } else {
-      this.error = 'Invalid role.';
-    }
+  ngOnDestroy() {
+    this.unsubscribe();
   }
 }
