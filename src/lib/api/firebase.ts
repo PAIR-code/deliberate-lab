@@ -1,6 +1,7 @@
 /** Firebase configuration */
 
 import { FirebaseOptions, initializeApp } from 'firebase/app';
+import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import { environment } from 'src/environments/environment';
 
@@ -17,8 +18,10 @@ const firebaseConfig: FirebaseOptions = {
 export const app = initializeApp(firebaseConfig);
 
 export const firestore = getFirestore(app);
+export const auth = getAuth(app);
 
 // Register the emulators when runnning in development mode
 if (!environment.production) {
   connectFirestoreEmulator(firestore, 'localhost', 8080);
+  connectAuthEmulator(auth, 'http://localhost:9099');
 }

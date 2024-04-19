@@ -27,19 +27,29 @@
     </div>
   }
 
-  <div>
-    <p>To join an experiment, enter your access code:</p>
-    <p>
-      <mat-form-field class="full-width">
-        <mat-label>Access code</mat-label>
-        <input matInput #accessCodeInput placeholder="Write your response" />
-      </mat-form-field>
-      <br />
-      <button color="primary" mat-button (click)="joinExperiment(accessCodeInput.value)">
-        <!-- [disabled]="!this.dataService.stageComplete()"  -->
-        <!-- <mat-icon>redo</mat-icon> -->
-        <span>Join the experiment</span>
-      </button>
-    </p>
-  </div>
+  <mat-card>
+    <mat-card-content>
+      <form (ngSubmit)="loginPalabrate()">
+        <p>To join an experiment, enter your access code:</p>
+        <mat-form-field class="full-width">
+          <mat-label>Access code</mat-label>
+          <input
+            matInput
+            #accessCodeInput
+            placeholder="Write your response"
+            [formControl]="login"
+          />
+        </mat-form-field>
+        <br />
+        <button
+          color="primary"
+          type="submit"
+          mat-button
+          [disabled]="!login.valid || loginMut.isPending()"
+        >
+          <span>Join the experiment</span>
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
 </div>

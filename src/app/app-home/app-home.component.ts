@@ -8,15 +8,18 @@
 
 import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { UserCredential } from 'firebase/auth';
 
 import { ExpChatComponent } from '../participant-view/participant-stage-view/exp-chat/exp-chat.component';
 import { ExpLeaderRevealComponent } from '../participant-view/participant-stage-view/exp-leader-reveal/exp-leader-reveal.component';
 import { ExpLeaderVoteComponent } from '../participant-view/participant-stage-view/exp-leader-vote/exp-leader-vote.component';
 //import { ExpRatingComponent } from '../exp-rating/exp-rating.component';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
+import { loginMutation } from 'src/lib/api/mutations';
 import { ExperimenterViewComponent } from '../experimenter-view/experimenter-view.component';
 import { ExpSurveyComponent } from '../participant-view/participant-stage-view/exp-survey/exp-survey.component';
 import { ExpTosAndProfileComponent } from '../participant-view/participant-stage-view/exp-tos-and-profile/exp-tos-and-profile.component';
@@ -38,6 +41,8 @@ import { GoogleAuthService } from '../services/google-auth.service';
     FormsModule,
     MatInputModule,
     RouterModule,
+    MatCardModule,
+    ReactiveFormsModule,
   ],
   templateUrl: './app-home.component.html',
   styleUrls: ['./app-home.component.scss'],
@@ -47,21 +52,21 @@ export class AppHomeComponent implements AfterViewInit {
 
   public error: string = '';
 
+  public login = new FormControl('', Validators.required);
+
+  public loginMut = loginMutation(
+    (d) => this.navigateToRelevantPage(d),
+    () => (this.error = 'Invalid credentials.'),
+  );
+
   constructor(
-    private route: ActivatedRoute,
     public router: Router,
     public authService: GoogleAuthService,
   ) {}
 
-  async joinExperiment(accessCode: string) {
+  async loginPalabrate() {
     this.error = '';
-
-    if (accessCode === '') {
-      this.error = 'Bad access code';
-      return;
-    } else {
-      await this.router.navigate(['/participant', accessCode]);
-    }
+    this.loginMut.mutate(this.login.value as string);
   }
 
   ngAfterViewInit() {
@@ -76,7 +81,15 @@ export class AppHomeComponent implements AfterViewInit {
     }
   }
 
-  clearError() {
-    this.error = '';
+  /** Navigate to the correct main page after successful authentication */
+  async navigateToRelevantPage(user: UserCredential) {
+    const { claims } = await user.user.getIdTokenResult();
+    if (claims['role'] === 'participant') {
+      this.router.navigate(['/participant', claims['participantId']]);
+    } else if (claims['role'] === 'experimenter') {
+      this.router.navigate(['/experimenter']);
+    } else {
+      this.error = 'Invalid role.';
+    }
   }
 }

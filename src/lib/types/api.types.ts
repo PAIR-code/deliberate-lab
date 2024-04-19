@@ -25,6 +25,8 @@ export type MutationType<Input, Output = Input> = CreateMutationResult<
 /** Type for a onSuccess function callback */
 export type OnSuccess<T> = (data: T) => Promise<void> | void;
 
+export type OnError = ((error: Error, variables: string, context: unknown) => unknown) | undefined;
+
 /** Send additional stage progression information for participants. */
 export interface Progression {
   justFinishedStageName?: string;

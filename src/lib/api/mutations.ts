@@ -3,12 +3,14 @@
 
 import { HttpClient } from '@angular/common/http';
 import { QueryClient, injectMutation } from '@tanstack/angular-query-experimental';
+import { UserCredential, signInWithEmailAndPassword } from 'firebase/auth';
 import { lastValueFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import {
   ChatStageUpdate,
   ChatToggleUpdate,
   CreationResponse,
+  OnError,
   OnSuccess,
   ProfileTOSData,
   SimpleResponse,
@@ -21,6 +23,7 @@ import {
   MediatorMessageMutationData,
   UserMessageMutationData,
 } from '../types/messages.types';
+import { auth } from './firebase';
 
 export const deleteExperimentMutation = (http: HttpClient, client: QueryClient) =>
   injectMutation(() => ({
@@ -155,5 +158,18 @@ export const toggleChatMutation = (http: HttpClient) => {
       lastValueFrom(
         http.post(`${environment.cloudFunctionsUrl}/toggleReadyToEndChat/${participantId}`, data),
       ),
+  }));
+};
+
+// ********************************************************************************************* //
+//                                          AUTH MUTATIONS                                       //
+// ********************************************************************************************* //
+
+// Login mutation
+export const loginMutation = (onSuccess?: OnSuccess<UserCredential>, onError?: OnError) => {
+  return injectMutation(() => ({
+    mutationFn: (code: string) => signInWithEmailAndPassword(auth, `${code}@test`, code),
+    onSuccess,
+    onError,
   }));
 };

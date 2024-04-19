@@ -42,11 +42,13 @@ $toolbar-height: 60px;
 }
 
 .content {
-}
+  padding: 1em;
+  margin-top: 10em;
 
-.content .mat-drawer-container {
-  min-height: calc(100vh - $toolbar-height);
-  min-width: 100%;
+  .mat-drawer-container {
+    min-height: calc(100vh - $toolbar-height);
+    min-width: 100%;
+  }
 }
 
 .menu-buttons {
@@ -114,6 +116,15 @@ $toolbar-height: 60px;
   margin-bottom: 1em;
 }
 
-.content {
-  padding: 1em;
+mat-card {
+  margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+  width: 100%;
+  @media (min-width: 768px) {
+    width: 30%;
+  }
 }
