@@ -3,6 +3,7 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import { app } from '../app';
 import { ParticipantSeeder } from '../seeders/participants.seeder';
+import { createParticipantUser } from '../utils/create-participant-user';
 import { replaceChatStagesUuid } from '../utils/replace-chat-uuid';
 
 /** Fetch all experiments in database (not paginated) */
@@ -110,12 +111,15 @@ export const createExperiment = onRequest(async (request, response) => {
       const progressions: Record<string, string> = {};
       const participantRefs: string[] = [];
 
-      participants.forEach((participant) => {
+      for (const participant of participants) {
         const participantRef = app.firestore().collection('participants').doc();
         participantRefs.push(participantRef.id);
         progressions[participantRef.id] = participant.workingOnStageName;
         transaction.set(participantRef, participant);
-      });
+
+        // Create a user for this participant
+        await createParticipantUser(participantRef.id, participant.name, chatIds);
+      }
 
       // Create the progression data in a separate collection
       const progressionRef = app.firestore().doc(`participants_progressions/${experiment.id}`);

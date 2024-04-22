@@ -168,7 +168,7 @@ export const toggleChatMutation = (http: HttpClient) => {
 // Login mutation
 export const loginMutation = (onSuccess?: OnSuccess<UserCredential>, onError?: OnError) => {
   return injectMutation(() => ({
-    mutationFn: (code: string) => signInWithEmailAndPassword(auth, `${code}@test`, code),
+    mutationFn: (code: string) => signInWithEmailAndPassword(auth, `${code}@palabrate`, code),
     onSuccess,
     onError,
   }));

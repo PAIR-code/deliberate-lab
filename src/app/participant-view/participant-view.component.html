@@ -10,7 +10,7 @@
 </div>
 
 <div class="content" role="main">
-  <mat-sidenav-container>
+  <mat-sidenav-container autosize>
     <mat-sidenav #sidenav mode="side" opened="true">
       <mat-nav-list class="menu-buttons">
         @for (stageName of participant.userData()?.completedStageNames; track stageName) {

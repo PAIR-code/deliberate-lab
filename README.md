@@ -72,6 +72,26 @@ npm run watch-functions  # Build the functions and watch for file changes for re
 
 Upon running `npm run build`, if the emulator is running, it will automatically reload the functions.
 
+### Authentication
+
+This project sets up Firebase Authentication with email/password and Google sign-in.
+
+#### Email - Password authentication
+
+By default, experiment participants log in using their `uid`. It is passed to the Firebase Authentication service as `email:{uid}@palabrate` and `password:{uid}`.
+
+#### Google sign-in
+
+The Google sign-in is used for the administrators. They can log in using their Google account.
+
+In order to create a dummy google account when running the project locally with emulators, follow these steps:
+
+1. Launch the frontend and click on the Google sign-in button.
+2. Create a new dummy profile.
+3. Go to the Firebase Authentication UI and edit the created profile by adding `{"role": "experimenter"}` to the `Custom Claims` field. Add a dummy password, and save the profile.
+
+You can now login as an experimenter using this profile.
+
 ### Emulators
 
 In order to run offline and for development purposes, we use Java Firebase emulators.
@@ -83,6 +103,7 @@ firebase emulators:start  # Start the emulators
 
 You will then be able to access the following UIs:
 
+- Authentication UI: `http://localhost:4000/auth`
 - Emulator UI: `http://localhost:4000`
 - Firestore UI: `http://localhost:4000/firestore`
 - Cloud Functions UI: `http://localhost:4000/functions`
