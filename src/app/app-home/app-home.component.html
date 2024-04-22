@@ -7,7 +7,11 @@
     </div>
   } @else {
     <div #googleButton></div>
-    <button (click)="loginWithGoogle()">Login with google</button>
+
+    <button class="google-login-button" (click)="loginWithGoogle()">
+      <img src="assets/google_logo.svg" alt="Google logo" class="google-logo" />
+      Sign in with Google
+    </button>
   }
   <a class="small-logo" aria-label="PAIR" href="https://pair.withgoogle.com/" title="Home">
     <img src="/assets/pair-logo.svg" alt="PAIR logo" />
