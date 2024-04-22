@@ -6,15 +6,15 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, Inject, OnDestroy, Signal, ViewChild } from '@angular/core';
+import { Component, ElementRef, Inject, Signal, ViewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Unsubscribe, signOut } from 'firebase/auth';
-import { auth, authenticationHandler } from 'src/lib/api/firebase';
+import { signOut } from 'firebase/auth';
+import { auth } from 'src/lib/api/firebase';
 import { experimentQuery } from 'src/lib/api/queries';
 import { Participant } from 'src/lib/participant';
 import {
@@ -56,12 +56,10 @@ import { ParticipantStageViewComponent } from './participant-stage-view/particip
   templateUrl: './participant-view.component.html',
   styleUrl: './participant-view.component.scss',
 })
-export class ParticipantViewComponent implements OnDestroy {
+export class ParticipantViewComponent {
   @ViewChild('googleButton') googleButton!: ElementRef<HTMLElement>;
 
   participant: Participant;
-
-  unsubscribe: Unsubscribe;
 
   constructor(
     @Inject(PARTICIPANT_PROVIDER_TOKEN) participantService: ParticipantProvider,
@@ -81,15 +79,9 @@ export class ParticipantViewComponent implements OnDestroy {
 
     const query = experimentQuery(http, this.participant.experimentId);
     experimentService.set(query.data);
-
-    this.unsubscribe = authenticationHandler(router);
   }
 
   logout() {
     signOut(auth);
-  }
-
-  ngOnDestroy() {
-    this.unsubscribe();
   }
 }

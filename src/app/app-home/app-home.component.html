@@ -1,13 +1,11 @@
 <div class="toolbar" role="banner">
   <span class="title">Palabrate</span>
   <div class="spacer"></div>
-  @if (authService.credential(); as creds) {
+  @if (firebase.user(); as user) {
     <div>
-      <img class="profileImg" [src]="creds.picture" alt="profile picture" />
+      <img class="profileImg" [src]="user.photoURL" alt="profile picture" />
     </div>
   } @else {
-    <div #googleButton></div>
-
     <button class="google-login-button" (click)="loginWithGoogle()">
       <img src="assets/google_logo.svg" alt="Google logo" class="google-logo" />
       Sign in with Google
@@ -21,15 +19,6 @@
 <div class="content" role="main">
   @if (error) {
     <div class="error">{{ error }}</div>
-  }
-  @if (authService.credential(); as creds) {
-    <div>
-      <p>
-        You are logged in as an experiment, you can
-        <a routerLink="experimenter">view experiments</a> or
-        <a routerLink="experimenter/create-experiment">create a new one</a>
-      </p>
-    </div>
   }
 
   <mat-card>
