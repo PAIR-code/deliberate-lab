@@ -49,7 +49,7 @@ export const seedDatabase = onRequest(async (request, response) => {
     readyToEndChat[ref.id] = false;
 
     // Create a user for this participant
-    await createParticipantUser(ref.id, participant.name, [chatId]);
+    await createParticipantUser(ref.id, experiment.id, participant.name, [chatId]);
   }
 
   // Create their progression data in a separate collection (for synchronization purposes)

@@ -5,12 +5,15 @@ import { onCall } from 'firebase-functions/v2/https';
 import { v4 as uuidv4 } from 'uuid';
 import { app } from '../app';
 import { ParticipantSeeder } from '../seeders/participants.seeder';
+import { AuthGuard } from '../utils/auth-guard';
 import { createParticipantUser } from '../utils/create-participant-user';
 import { getUserChatIds } from '../utils/get-user-chat';
 import { replaceChatStagesUuid } from '../utils/replace-chat-uuid';
 
 /** Fetch all experiments in database (not paginated) */
-export const experiments = onCall(async () => {
+export const experiments = onCall(async (request) => {
+  await AuthGuard.isExperimenter(request);
+
   const experiments = await app.firestore().collection('experiments').get();
   const data = experiments.docs.map((doc) => ({ uid: doc.id, ...doc.data() }));
   return { data };
@@ -24,6 +27,7 @@ export const experiment = onCall(async (request) => {
     throw new functions.https.HttpsError('invalid-argument', 'Missing experiment UID');
   }
 
+  await AuthGuard.participatesInExperiment(request, experimentUid);
   const experiment = await app.firestore().collection('experiments').doc(experimentUid).get();
 
   if (!experiment.exists) {
@@ -52,6 +56,8 @@ export const experiment = onCall(async (request) => {
 });
 
 export const deleteExperiment = onCall(async (request) => {
+  await AuthGuard.isExperimenter(request);
+
   const { experimentId } = request.data;
 
   if (!experimentId) {
@@ -89,6 +95,8 @@ export const deleteExperiment = onCall(async (request) => {
 });
 
 export const createExperiment = onCall(async (request) => {
+  await AuthGuard.isExperimenter(request);
+
   let uid = '';
   // Extract data from the body
   const { name, stageMap, numberOfParticipants, allowedStageProgressionMap } = request.data;
@@ -125,7 +133,7 @@ export const createExperiment = onCall(async (request) => {
       transaction.set(participantRef, participant);
 
       // Create a user for this participant
-      await createParticipantUser(participantRef.id, participant.name, chatIds);
+      await createParticipantUser(participantRef.id, experiment.id, participant.name, chatIds);
     }
 
     // Create the progression data in a separate collection

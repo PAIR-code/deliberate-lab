@@ -3,7 +3,6 @@ import { Value } from '@sinclair/typebox/value';
 import * as functions from 'firebase-functions';
 import { onCall } from 'firebase-functions/v2/https';
 import { app } from '../app';
-import { validateUserChat } from '../utils/validate-user-chat';
 import {
   DiscussItemsMessageMutationData,
   MediatorMessageMutationData,
@@ -11,17 +10,13 @@ import {
 } from '../validation/messages.validation';
 
 import 'firebase/compat/auth';
+import { AuthGuard } from '../utils/auth-guard';
 
 export const userMessage = onCall(async (request) => {
   const { data } = request;
 
   if (Value.Check(UserMessageMutationData, data)) {
-    if (!validateUserChat(data.fromUserId, data.chatId)) {
-      throw new functions.https.HttpsError(
-        'permission-denied',
-        'User is not allowed to post to this chat',
-      );
-    }
+    await AuthGuard.canSendUserMessage(request, data.chatId);
 
     // Build message data
     const msgData = {
@@ -38,7 +33,7 @@ export const userMessage = onCall(async (request) => {
 });
 
 export const discussItemsMessage = onCall(async (request) => {
-  // TODO: experimenter authentication
+  await AuthGuard.isExperimenter(request);
 
   const { data } = request;
 
@@ -58,9 +53,9 @@ export const discussItemsMessage = onCall(async (request) => {
 });
 
 export const mediatorMessage = onCall(async (request) => {
-  // TODO: experimenter authentication
-  // access authenticated user
+  await AuthGuard.isExperimenter(request);
 
+  // access authenticated user
   const { data } = request;
 
   if (Value.Check(MediatorMessageMutationData, data)) {

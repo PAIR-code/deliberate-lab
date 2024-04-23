@@ -2,6 +2,7 @@ import { app } from '../app';
 
 export const createParticipantUser = async (
   participantId: string,
+  experimentId: string,
   name: string,
   chatIds: string[],
 ) => {
@@ -18,6 +19,7 @@ export const createParticipantUser = async (
   await app.auth().setCustomUserClaims(user.uid, {
     role: 'participant',
     participantId,
+    experimentId,
     chatIds,
   });
 

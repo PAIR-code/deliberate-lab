@@ -4,6 +4,7 @@ import { Value } from '@sinclair/typebox/value';
 import * as functions from 'firebase-functions';
 import { onCall } from 'firebase-functions/v2/https';
 import { app } from '../app';
+import { AuthGuard } from '../utils/auth-guard';
 import { checkStageProgression } from '../utils/check-stage-progression';
 import { ProfileAndTOS } from '../validation/participants.validation';
 import {
@@ -26,6 +27,8 @@ export const participant = onCall(async (request) => {
     throw new functions.https.HttpsError('not-found', 'Participant not found');
   }
 
+  await AuthGuard.belongsToSameExperimentAs(request, participant);
+
   const data = { uid: participant.id, ...participant.data() };
 
   return data;
@@ -34,6 +37,7 @@ export const participant = onCall(async (request) => {
 /** Update the profile and terms of service acceptance date for a participant */
 export const updateProfileAndTOS = onCall(async (request) => {
   const { uid, ...body } = request.data;
+  await AuthGuard.isThisParticipant(request, uid);
 
   if (!uid) {
     throw new functions.https.HttpsError('invalid-argument', 'Missing participant UID');
@@ -58,6 +62,7 @@ export const updateProfileAndTOS = onCall(async (request) => {
 /** Generic endpoint for stage update. */
 export const updateStage = onCall(async (request) => {
   const { uid, ...body } = request.data;
+  await AuthGuard.isThisParticipant(request, uid);
 
   if (!uid) {
     throw new functions.https.HttpsError('invalid-argument', 'Missing participant UID');
@@ -96,6 +101,7 @@ export const updateStage = onCall(async (request) => {
 /** Toggle On/Off ready state for given participant and chat */
 export const toggleReadyToEndChat = onCall(async (request) => {
   const { uid, ...body } = request.data;
+  await AuthGuard.isThisParticipant(request, uid);
 
   if (!uid) {
     throw new functions.https.HttpsError('invalid-argument', 'Missing participant UID');
