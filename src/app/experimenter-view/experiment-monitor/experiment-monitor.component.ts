@@ -75,7 +75,7 @@ export class ExperimentMonitorComponent {
     @Inject(EXPERIMENT_PROVIDER_TOKEN) experimentProvider: ExperimentProvider,
   ) {
     // Prepare the request
-    this._experiment = experimentQuery(this.http, this.experimentUid);
+    this._experiment = experimentQuery(this.experimentUid);
     experimentProvider.set(this._experiment.data); // Expose the current experiment through the provider
 
     // Extract participants data from the extended experiment

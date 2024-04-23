@@ -5,14 +5,15 @@
  * Use of this source code is governed by an Apache2 license that can be
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
-import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, Inject, OnDestroy, Signal, ViewChild } from '@angular/core';
+import { Component, ElementRef, Inject, Signal, ViewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
+import { signOut } from 'firebase/auth';
+import { auth } from 'src/lib/api/firebase';
 import { experimentQuery } from 'src/lib/api/queries';
 import { Participant } from 'src/lib/participant';
 import {
@@ -54,7 +55,7 @@ import { ParticipantStageViewComponent } from './participant-stage-view/particip
   templateUrl: './participant-view.component.html',
   styleUrl: './participant-view.component.scss',
 })
-export class ParticipantViewComponent implements OnDestroy {
+export class ParticipantViewComponent {
   @ViewChild('googleButton') googleButton!: ElementRef<HTMLElement>;
 
   participant: Participant;
@@ -63,8 +64,6 @@ export class ParticipantViewComponent implements OnDestroy {
     @Inject(PARTICIPANT_PROVIDER_TOKEN) participantService: ParticipantProvider,
     @Inject(EXPERIMENT_PROVIDER_TOKEN) experimentService: ExperimentProvider,
     route: ActivatedRoute,
-    router: Router,
-    http: HttpClient,
   ) {
     // Create a new participant handler class instance and bind it to this subroute
     this.participant = new Participant(
@@ -75,20 +74,11 @@ export class ParticipantViewComponent implements OnDestroy {
     // Share it to subcomponents via the service (destroy the previous instance)
     participantService.set(this.participant)?.destroy();
 
-    const query = experimentQuery(http, this.participant.experimentId);
+    const query = experimentQuery(this.participant.experimentId);
     experimentService.set(query.data);
   }
 
-  updateCurrentStageName(_stageName: string) {
-    if (this.participant) {
-      // this.participant.setViewingStage(stageName);
-    }
-  }
-
-  ngOnDestroy(): void {
-    if (this.participant) {
-      //} && this.participant.destory) {
-      // this.participant.destory();
-    }
+  logout() {
+    signOut(auth);
   }
 }

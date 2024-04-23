@@ -6,7 +6,7 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, Inject, inject } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import {
   FormArray,
   FormBuilder,
@@ -21,7 +21,6 @@ import { MatSliderModule } from '@angular/material/slider';
 import { ProviderService } from 'src/app/services/provider.service';
 import { Participant } from 'src/lib/participant';
 
-import { HttpClient } from '@angular/common/http';
 import { MatButtonModule } from '@angular/material/button';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { updateSurveyStageMutation } from 'src/lib/api/mutations';
@@ -66,7 +65,6 @@ export class ExpSurveyComponent {
   readonly SurveyQuestionKind = SurveyQuestionKind;
   readonly questionAsKind = questionAsKind;
 
-  http = inject(HttpClient);
   queryClient = injectQueryClient();
 
   surveyMutation: MutationType<SurveyStageUpdate, { uid: string }>;
@@ -87,7 +85,7 @@ export class ExpSurveyComponent {
       questions: this.questions,
     });
 
-    this.surveyMutation = updateSurveyStageMutation(this.http, this.queryClient, () =>
+    this.surveyMutation = updateSurveyStageMutation(this.queryClient, () =>
       this.participant.navigateToNextStage(),
     );
   }

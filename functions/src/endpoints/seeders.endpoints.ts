@@ -8,6 +8,7 @@ import { app } from '../app';
 import { ExperimentSeeder } from '../seeders/experiments.seeder';
 import { ParticipantSeeder } from '../seeders/participants.seeder';
 import { TemplatesSeeder } from '../seeders/templates.seeder';
+import { createParticipantUser } from '../utils/create-participant-user';
 
 export const seedDatabase = onRequest(async (request, response) => {
   // TODO: check request auth (avoid generating dummy stuff without checking)
@@ -35,9 +36,10 @@ export const seedDatabase = onRequest(async (request, response) => {
   const progressions: Record<string, string> = {};
   const readyToEndChat: Record<string, boolean> = {};
 
-  participants.forEach((participant) => {
+  for (const participant of participants) {
     // Get a unique ID for the participant
-    const ref = app.firestore().collection('participants').doc();
+    const participantId = uuidv4(); // Use a uuid (is valid in email addresses, contrary to Firestore ids which can be uppercase)
+    const ref = app.firestore().collection('participants').doc(participantId);
 
     // Add the participant to the batch write
     batch.set(ref, participant);
@@ -45,7 +47,10 @@ export const seedDatabase = onRequest(async (request, response) => {
     // Add the participant to the progression map
     progressions[ref.id] = participant.workingOnStageName;
     readyToEndChat[ref.id] = false;
-  });
+
+    // Create a user for this participant
+    await createParticipantUser(ref.id, experiment.id, participant.name, [chatId]);
+  }
 
   // Create their progression data in a separate collection (for synchronization purposes)
   let ref = app.firestore().doc(`participants_progressions/${experiment.id}`);

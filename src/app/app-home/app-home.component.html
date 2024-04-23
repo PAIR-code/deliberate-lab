@@ -1,12 +1,15 @@
 <div class="toolbar" role="banner">
   <span class="title">Palabrate</span>
   <div class="spacer"></div>
-  @if (authService.credential(); as creds) {
+  @if (firebase.user(); as user) {
     <div>
-      <img class="profileImg" [src]="creds.picture" alt="profile picture" />
+      <img class="profileImg" [src]="user.photoURL" alt="profile picture" />
     </div>
   } @else {
-    <div #googleButton></div>
+    <button class="google-login-button" (click)="loginWithGoogle()">
+      <img src="assets/google_logo.svg" alt="Google logo" class="google-logo" />
+      Sign in with Google
+    </button>
   }
   <a class="small-logo" aria-label="PAIR" href="https://pair.withgoogle.com/" title="Home">
     <img src="/assets/pair-logo.svg" alt="PAIR logo" />
@@ -17,29 +20,35 @@
   @if (error) {
     <div class="error">{{ error }}</div>
   }
-  @if (authService.credential(); as creds) {
-    <div>
-      <p>
-        You are logged in as an experiment, you can
-        <a routerLink="experimenter">view experiments</a> or
-        <a routerLink="experimenter/create-experiment">create a new one</a>
-      </p>
-    </div>
-  }
 
-  <div>
-    <p>To join an experiment, enter your access code:</p>
-    <p>
-      <mat-form-field class="full-width">
-        <mat-label>Access code</mat-label>
-        <input matInput #accessCodeInput placeholder="Write your response" />
-      </mat-form-field>
-      <br />
-      <button color="primary" mat-button (click)="joinExperiment(accessCodeInput.value)">
-        <!-- [disabled]="!this.dataService.stageComplete()"  -->
-        <!-- <mat-icon>redo</mat-icon> -->
-        <span>Join the experiment</span>
-      </button>
-    </p>
-  </div>
+  <mat-card>
+    <mat-card-content>
+      @if (!authenticated()) {
+        <form (ngSubmit)="loginPalabrate()">
+          <p>To join an experiment, enter your access code:</p>
+          <mat-form-field class="full-width">
+            <mat-label>Access code</mat-label>
+            <input
+              matInput
+              #accessCodeInput
+              placeholder="Write your response"
+              [formControl]="login"
+            />
+          </mat-form-field>
+          <br />
+          <button
+            color="primary"
+            type="submit"
+            mat-button
+            [disabled]="!login.valid || loginMut.isPending()"
+          >
+            <span>Join the experiment</span>
+          </button>
+        </form>
+      } @else {
+        <p>Your Google account is not linked to an experimenter or a participant.</p>
+        <button (click)="logout()">Logout</button>
+      }
+    </mat-card-content>
+  </mat-card>
 </div>

@@ -42,11 +42,13 @@ $toolbar-height: 60px;
 }
 
 .content {
-}
+  padding: 1em;
+  margin-top: 10em;
 
-.content .mat-drawer-container {
-  min-height: calc(100vh - $toolbar-height);
-  min-width: 100%;
+  .mat-drawer-container {
+    min-height: calc(100vh - $toolbar-height);
+    min-width: 100%;
+  }
 }
 
 .menu-buttons {
@@ -114,6 +116,41 @@ $toolbar-height: 60px;
   margin-bottom: 1em;
 }
 
-.content {
-  padding: 1em;
+mat-card {
+  margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+  width: 100%;
+  @media (min-width: 768px) {
+    width: 30%;
+  }
+}
+
+.google-login-button {
+  background-color: #fff;
+  color: #757575;
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 20px;
+  padding-left: 0;
+  margin: 10px;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.google-login-button:hover {
+  background-color: #e5e5e5;
+}
+
+.google-logo {
+  width: 18px;
+  height: 18px;
 }

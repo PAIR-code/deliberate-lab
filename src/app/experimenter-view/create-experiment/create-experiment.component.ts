@@ -1,7 +1,7 @@
 import { isEqual } from 'lodash';
 
 import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
-import { Component, effect, inject } from '@angular/core';
+import { Component, effect } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -11,7 +11,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { HttpClient } from '@angular/common/http';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Router } from '@angular/router';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
@@ -65,19 +64,18 @@ const getInitStageData = (): Partial<ExpStage> => {
   styleUrl: './create-experiment.component.scss',
 })
 export class CreateExperimentComponent {
-  http = inject(HttpClient);
   client = injectQueryClient();
 
-  createExp = createExperimentMutation(this.http, this.client, ({ uid }) => {
+  createExp = createExperimentMutation(this.client, ({ uid }) => {
     localStorage.removeItem(LOCAL_STORAGE_KEY); // Clear local storage
     this.router.navigate(['/experimenter', 'experiment', uid]);
   });
 
-  createTemplate = createTemplateMutation(this.http, this.client, () => {
+  createTemplate = createTemplateMutation(this.client, () => {
     this.resetExistingStages(); // Reset after setting as template
   });
 
-  templates = templatesQuery(this.http);
+  templates = templatesQuery();
 
   public existingStages: Partial<ExpStage>[] = [];
   public currentEditingStageIndex = -1;

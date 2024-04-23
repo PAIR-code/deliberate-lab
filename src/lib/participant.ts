@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { Unsubscribe } from 'firebase/firestore';
 import { assertCast } from './algebraic-data';
 import { participantQuery } from './api/queries';
-import { Progression, QueryType, SimpleResponse } from './types/api.types';
+import { Progression, QueryType } from './types/api.types';
 import { ParticipantExtended, ParticipantsProgression } from './types/participants.types';
 import { ExpStage, StageKind } from './types/stages.types';
 import { lazyInitWritable } from './utils/angular.utils';
@@ -15,7 +15,7 @@ import { keyRank, keysRanking } from './utils/object.utils';
  * Handle all participant-related logic for a single user that plays the role of a participant.
  */
 export class Participant {
-  public query: QueryType<SimpleResponse<ParticipantExtended>>;
+  public query: QueryType<ParticipantExtended>;
   public userData: Signal<ParticipantExtended | undefined>;
 
   // Frontend-only signals to help navigation
@@ -40,8 +40,8 @@ export class Participant {
     viewingStageName?: Signal<string | undefined>,
   ) {
     // Query data from the backend about this participant
-    this.query = participantQuery(this.http, participantId());
-    this.userData = computed(() => this.query.data()?.data); // Shortcut to extract query data
+    this.query = participantQuery(participantId());
+    this.userData = computed(() => this.query.data()); // Shortcut to extract query data
 
     this.experimentId = computed(() => this.userData()?.experimentId ?? null);
     this.commonLastWorkingOnStageName = signal(undefined);

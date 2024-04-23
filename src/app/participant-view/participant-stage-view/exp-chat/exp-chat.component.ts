@@ -6,7 +6,6 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { HttpClient } from '@angular/common/http';
 import {
   Component,
   Inject,
@@ -15,7 +14,6 @@ import {
   WritableSignal,
   computed,
   effect,
-  inject,
   signal,
   untracked,
 } from '@angular/core';
@@ -83,7 +81,6 @@ export class ExpChatComponent implements OnDestroy {
   public currentRatingsToDiscuss: WritableSignal<ItemPair>;
 
   // Queries
-  private http = inject(HttpClient);
   private client = injectQueryClient();
 
   // Message subscription
@@ -94,17 +91,17 @@ export class ExpChatComponent implements OnDestroy {
   private unsubscribeReadyToEndChat: Unsubscribe | undefined;
 
   // Message mutation & form
-  public messageMutation = userMessageMutation(this.http);
+  public messageMutation = userMessageMutation();
   public message = new FormControl<string>('', Validators.required);
 
   // Chat completion mutation
-  public finishChatMutation = updateChatStageMutation(this.http, this.client, () =>
+  public finishChatMutation = updateChatStageMutation(this.client, () =>
     this.participant.navigateToNextStage(),
   );
 
   public discussingPairIndex = signal(0);
 
-  public toggleMutation = toggleChatMutation(this.http);
+  public toggleMutation = toggleChatMutation();
   public readyToEndChat: WritableSignal<boolean> = signal(false); // Frontend-only, no need to have fine-grained backend sync for this
 
   public timer = localStorageTimer('chat-timer', TIMER_SECONDS, () => this.toggleEndChat()); // 1 minute timer
