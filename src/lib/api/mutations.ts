@@ -4,8 +4,6 @@
 import { HttpClient } from '@angular/common/http';
 import { QueryClient, injectMutation } from '@tanstack/angular-query-experimental';
 import { UserCredential, signInWithEmailAndPassword } from 'firebase/auth';
-import { lastValueFrom } from 'rxjs';
-import { environment } from 'src/environments/environment';
 import {
   ChatStageUpdate,
   CreationResponse,
@@ -13,10 +11,10 @@ import {
   OnSuccess,
   ProfileTOSData,
   SurveyStageUpdate,
-  TemplateCreationData,
 } from '../types/api.types';
 import {
   createExperimentCallable,
+  createTemplateCallable,
   deleteExperimentCallable,
   discussItemsMessageCallable,
   mediatorMessageCallable,
@@ -36,7 +34,6 @@ export const deleteExperimentMutation = (http: HttpClient, client: QueryClient) 
   }));
 
 export const createExperimentMutation = (
-  http: HttpClient,
   client: QueryClient,
   onSuccess?: OnSuccess<CreationResponse>,
 ) => {
@@ -50,15 +47,11 @@ export const createExperimentMutation = (
 };
 
 export const createTemplateMutation = (
-  http: HttpClient,
   client: QueryClient,
   onSuccess?: OnSuccess<CreationResponse>,
 ) => {
   return injectMutation(() => ({
-    mutationFn: (data: TemplateCreationData) =>
-      lastValueFrom(
-        http.post<CreationResponse>(`${environment.cloudFunctionsUrl}/createTemplate`, data),
-      ),
+    mutationFn: createTemplateCallable,
     onSuccess: (data) => {
       client.refetchQueries({ queryKey: ['templates'] });
       onSuccess?.(data);

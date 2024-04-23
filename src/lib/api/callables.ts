@@ -12,8 +12,14 @@ import {
   GenericStageUpdate,
   ProfileTOSData,
   SimpleResponse,
+  TemplateCreationData,
 } from '../types/api.types';
-import { Experiment, ExperimentCreationData, ExperimentExtended } from '../types/experiments.types';
+import {
+  Experiment,
+  ExperimentCreationData,
+  ExperimentExtended,
+  Template,
+} from '../types/experiments.types';
 import { ParticipantExtended } from '../types/participants.types';
 import { functions } from './firebase';
 
@@ -69,4 +75,12 @@ export const updateStageCallable = data(
 
 export const toggleReadyToEndChatCallable = data(
   httpsCallable<ChatToggleUpdate, CreationResponse>(functions, 'toggleReadyToEndChat'),
+);
+
+export const templatesCallable = data(
+  httpsCallable<never, SimpleResponse<Template[]>>(functions, 'templates'),
+);
+
+export const createTemplateCallable = data(
+  httpsCallable<TemplateCreationData, CreationResponse>(functions, 'createTemplate'),
 );

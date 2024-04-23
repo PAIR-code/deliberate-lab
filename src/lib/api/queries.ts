@@ -2,14 +2,15 @@
  * They are defined here in order to make the query structure more apparent.
  */
 
-import { HttpClient } from '@angular/common/http';
 import { Signal } from '@angular/core';
 import { injectQuery } from '@tanstack/angular-query-experimental';
-import { lastValueFrom } from 'rxjs';
-import { environment } from 'src/environments/environment';
-import { SimpleResponse } from '../types/api.types';
-import { ExperimentExtended, Template } from '../types/experiments.types';
-import { experimentCallable, experimentsCallable, participantCallable } from './callables';
+import { ExperimentExtended } from '../types/experiments.types';
+import {
+  experimentCallable,
+  experimentsCallable,
+  participantCallable,
+  templatesCallable,
+} from './callables';
 
 /** Fetch all experiments stored in database (without pagination) */
 export const experimentsQuery = () =>
@@ -32,13 +33,10 @@ export const experimentQuery = (experimentId: Signal<string | null>) => {
 };
 
 /** Fetch all templates */
-export const templatesQuery = (http: HttpClient) =>
+export const templatesQuery = () =>
   injectQuery(() => ({
     queryKey: ['templates'],
-    queryFn: () =>
-      lastValueFrom(
-        http.get<SimpleResponse<Template[]>>(`${environment.cloudFunctionsUrl}/templates`),
-      ),
+    queryFn: () => templatesCallable(),
   }));
 
 /** Fetch a specific participant. Can be used to verify that a participant ID is valid */
