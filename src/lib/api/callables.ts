@@ -1,6 +1,11 @@
 /** Firebase cloud function callables */
 
 import { HttpsCallableResult, httpsCallable } from 'firebase/functions';
+import {
+  DiscussItemsMessageMutationData,
+  MediatorMessageMutationData,
+  UserMessageMutationData,
+} from 'functions/src/validation/messages.validation';
 import { CreationResponse, SimpleResponse } from '../types/api.types';
 import { Experiment, ExperimentCreationData, ExperimentExtended } from '../types/experiments.types';
 import { functions } from './firebase';
@@ -25,4 +30,19 @@ export const deleteExperimentCallable = data(
 
 export const createExperimentCallable = data(
   httpsCallable<ExperimentCreationData, CreationResponse>(functions, 'createExperiment'),
+);
+
+export const userMessageCallable = data(
+  httpsCallable<UserMessageMutationData, CreationResponse>(functions, 'userMessage'),
+);
+
+export const discussItemsMessageCallable = data(
+  httpsCallable<DiscussItemsMessageMutationData, CreationResponse>(
+    functions,
+    'discussItemsMessage',
+  ),
+);
+
+export const mediatorMessageCallable = data(
+  httpsCallable<MediatorMessageMutationData, CreationResponse>(functions, 'mediatorMessage'),
 );

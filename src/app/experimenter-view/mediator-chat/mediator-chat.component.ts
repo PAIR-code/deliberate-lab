@@ -1,14 +1,4 @@
-import { HttpClient } from '@angular/common/http';
-import {
-  Component,
-  Input,
-  OnDestroy,
-  Signal,
-  WritableSignal,
-  effect,
-  inject,
-  signal,
-} from '@angular/core';
+import { Component, Input, OnDestroy, Signal, WritableSignal, effect, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -62,10 +52,8 @@ export class MediatorChatComponent implements OnDestroy {
   public messages: WritableSignal<Message[]>;
   public unsubscribeMessages: Unsubscribe | undefined;
 
-  public http = inject(HttpClient);
-
   // Message mutation & form
-  public messageMutation = mediatorMessageMutation(this.http);
+  public messageMutation = mediatorMessageMutation();
   public message = new FormControl<string>('', Validators.required);
 
   public defaultPrefix: string =

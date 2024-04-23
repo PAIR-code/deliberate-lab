@@ -94,7 +94,7 @@ export class ExpChatComponent implements OnDestroy {
   private unsubscribeReadyToEndChat: Unsubscribe | undefined;
 
   // Message mutation & form
-  public messageMutation = userMessageMutation(this.http);
+  public messageMutation = userMessageMutation();
   public message = new FormControl<string>('', Validators.required);
 
   // Chat completion mutation

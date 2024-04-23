@@ -17,11 +17,12 @@ import {
   TemplateCreationData,
 } from '../types/api.types';
 import {
-  DiscussItemsMessageMutationData,
-  MediatorMessageMutationData,
-  UserMessageMutationData,
-} from '../types/messages.types';
-import { createExperimentCallable, deleteExperimentCallable } from './callables';
+  createExperimentCallable,
+  deleteExperimentCallable,
+  discussItemsMessageCallable,
+  mediatorMessageCallable,
+  userMessageCallable,
+} from './callables';
 import { auth } from './firebase';
 
 export const deleteExperimentMutation = (http: HttpClient, client: QueryClient) =>
@@ -121,24 +122,21 @@ export const updateChatStageMutation = (
 //                                         MESSAGE MUTATIONS                                     //
 // ********************************************************************************************* //
 
-export const userMessageMutation = (http: HttpClient) => {
+export const userMessageMutation = () => {
   return injectMutation(() => ({
-    mutationFn: (data: UserMessageMutationData) =>
-      lastValueFrom(http.post(`${environment.cloudFunctionsUrl}/userMessage`, data)),
+    mutationFn: userMessageCallable,
   }));
 };
 
-export const discussItemMessageMutation = (http: HttpClient) => {
+export const discussItemMessageMutation = () => {
   return injectMutation(() => ({
-    mutationFn: (data: DiscussItemsMessageMutationData) =>
-      lastValueFrom(http.post(`${environment.cloudFunctionsUrl}/discussItemMessage`, data)),
+    mutationFn: discussItemsMessageCallable,
   }));
 };
 
-export const mediatorMessageMutation = (http: HttpClient) => {
+export const mediatorMessageMutation = () => {
   return injectMutation(() => ({
-    mutationFn: (data: MediatorMessageMutationData) =>
-      lastValueFrom(http.post(`${environment.cloudFunctionsUrl}/mediatorMessage`, data)),
+    mutationFn: mediatorMessageCallable,
   }));
 };
 
