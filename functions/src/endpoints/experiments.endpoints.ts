@@ -5,6 +5,7 @@ import { onCall } from 'firebase-functions/v2/https';
 import { app } from '../app';
 import { ParticipantSeeder } from '../seeders/participants.seeder';
 import { createParticipantUser } from '../utils/create-participant-user';
+import { getUserChatIds } from '../utils/get-user-chat';
 import { replaceChatStagesUuid } from '../utils/replace-chat-uuid';
 
 /** Fetch all experiments in database (not paginated) */
@@ -69,9 +70,18 @@ export const deleteExperiment = onCall(async (request) => {
     .where('experimentId', '==', experimentId)
     .get();
 
+  const chatIds = getUserChatIds(participants.docs[0]);
+
   const batch = app.firestore().batch();
   batch.delete(experiment.ref);
   participants.docs.forEach((doc) => batch.delete(doc.ref));
+
+  // Delete the chat stage sync documents & the progression document
+  batch.delete(app.firestore().doc(`participants_progressions/${experimentId}`));
+  chatIds.forEach((chatId) => {
+    batch.delete(app.firestore().doc(`participants_ready_to_end_chat/${chatId}`));
+  });
+
   await batch.commit();
 
   return { data: `Experiment of ID ${experimentId} was successfully deleted` };
