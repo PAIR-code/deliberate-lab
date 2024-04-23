@@ -1,11 +1,13 @@
 /** Endpoints for interactions with participants */
 
 import { Value } from '@sinclair/typebox/value';
+import { Timestamp } from 'firebase-admin/firestore';
 import * as functions from 'firebase-functions';
 import { onCall } from 'firebase-functions/v2/https';
 import { app } from '../app';
 import { AuthGuard } from '../utils/auth-guard';
 import { checkStageProgression } from '../utils/check-stage-progression';
+import { getUserChat } from '../utils/get-user-chat';
 import { ProfileAndTOS } from '../validation/participants.validation';
 import {
   GenericStageUpdate,
@@ -108,8 +110,64 @@ export const toggleReadyToEndChat = onCall(async (request) => {
   }
 
   if (Value.Check(ToggleReadyToEndChat, body)) {
-    const ref = app.firestore().collection('participants_ready_to_end_chat').doc(body.chatId);
-    await ref.update({ [`readyToEndChat.${uid}`]: body.readyToEndChat });
+    if (body.readyToEndChat === false) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Cannot set readyToEndChat to false. Only true is allowed.',
+      );
+    }
+
+    await app.firestore().runTransaction(async (transaction) => {
+      const doc = await transaction.get(
+        app.firestore().collection('participants_ready_to_end_chat').doc(body.chatId),
+      );
+
+      const data = doc.data();
+
+      if (!data) {
+        throw new functions.https.HttpsError('not-found', 'Chat sync document not found');
+      }
+
+      if (data.readyToEndChat[uid] === true) {
+        throw new functions.https.HttpsError(
+          'invalid-argument',
+          'Participant is already ready to end chat',
+        );
+      }
+
+      data.readyToEndChat[uid] = true;
+
+      // If everyone is now ready for the next pair, increment the current pair and reset everyone to false.
+      if (Object.values(data.readyToEndChat).every((value) => value === true)) {
+        data.currentPair += 1;
+        Object.keys(data.readyToEndChat).forEach((key) => {
+          data.readyToEndChat[key] = false;
+        });
+
+        const stage = await getUserChat(transaction, uid, body.chatId);
+
+        if (!stage) {
+          throw new functions.https.HttpsError('not-found', 'Chat not found');
+        }
+
+        if (stage.config.ratingsToDiscuss.length > data.currentPair) {
+          const { id1, id2 } = stage.config.ratingsToDiscuss[data.currentPair];
+          const itemPair = {
+            item1: stage.config.items[id1],
+            item2: stage.config.items[id2],
+          };
+          transaction.set(app.firestore().collection('messages').doc(), {
+            chatId: body.chatId,
+            messageType: 'discussItemsMessage',
+            text: 'Discuss aabout this pair of items.',
+            itemPair,
+            timestamp: Timestamp.now(),
+          });
+        }
+      }
+
+      transaction.set(doc.ref, data);
+    });
     return { uid };
   }
 
