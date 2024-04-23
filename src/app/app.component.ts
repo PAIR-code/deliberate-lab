@@ -7,6 +7,7 @@
 ==============================================================================*/
 
 import { Component } from '@angular/core';
+import { FirebaseService } from './firebase.service';
 
 @Component({
   selector: 'app-root',
@@ -14,5 +15,6 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
-  constructor() {}
+  // Inject the Firebase Service here because it is in charge of auth redirection and must exist before the app starts
+  constructor(private firebaseService: FirebaseService) {}
 }
