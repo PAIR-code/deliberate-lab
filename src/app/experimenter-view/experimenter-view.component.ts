@@ -1,5 +1,4 @@
-import { HttpClient } from '@angular/common/http';
-import { Component, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -40,10 +39,8 @@ import { ExperimentSettingsComponent } from './experiment-settings/experiment-se
   styleUrl: './experimenter-view.component.scss',
 })
 export class ExperimenterViewComponent {
-  http = inject(HttpClient);
-
   // Fetch experiments from database
-  experiments = experimentsQuery(this.http);
+  experiments = experimentsQuery();
 
   logout() {
     signOut(auth);

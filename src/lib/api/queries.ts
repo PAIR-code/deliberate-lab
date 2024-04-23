@@ -8,31 +8,29 @@ import { injectQuery } from '@tanstack/angular-query-experimental';
 import { lastValueFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { SimpleResponse } from '../types/api.types';
-import { Experiment, ExperimentExtended, Template } from '../types/experiments.types';
+import { ExperimentExtended, Template } from '../types/experiments.types';
 import { ParticipantExtended } from '../types/participants.types';
+import { experimentCallable, experimentsCallable } from './callables';
 
 /** Fetch all experiments stored in database (without pagination) */
-export const experimentsQuery = (http: HttpClient) =>
+export const experimentsQuery = () =>
   injectQuery(() => ({
     queryKey: ['experiments'],
-    queryFn: () =>
-      lastValueFrom(
-        http.get<SimpleResponse<Experiment[]>>(`${environment.cloudFunctionsUrl}/experiments`),
-      ),
+    queryFn: () => experimentsCallable(),
   }));
 
 /** Fetch data about a specific experiment (will fetch its participant's data too) */
-export const experimentQuery = (http: HttpClient, experimentId: Signal<string | null>) =>
-  injectQuery(() => ({
+export const experimentQuery = (experimentId: Signal<string | null>) => {
+  return injectQuery(() => ({
     queryKey: ['experiment', experimentId()],
-    queryFn: () =>
-      lastValueFrom(
-        http.get<ExperimentExtended>(
-          `${environment.cloudFunctionsUrl}/experiment/${experimentId()}`,
-        ),
-      ),
+    queryFn: () => {
+      const experimentUid = experimentId();
+      if (!experimentUid) return {} as ExperimentExtended;
+      return experimentCallable({ experimentUid });
+    },
     disabled: experimentId() === null,
   }));
+};
 
 /** Fetch all templates */
 export const templatesQuery = (http: HttpClient) =>

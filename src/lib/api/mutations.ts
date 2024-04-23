@@ -13,26 +13,20 @@ import {
   OnError,
   OnSuccess,
   ProfileTOSData,
-  SimpleResponse,
   SurveyStageUpdate,
   TemplateCreationData,
 } from '../types/api.types';
-import { ExperimentCreationData } from '../types/experiments.types';
 import {
   DiscussItemsMessageMutationData,
   MediatorMessageMutationData,
   UserMessageMutationData,
 } from '../types/messages.types';
+import { createExperimentCallable, deleteExperimentCallable } from './callables';
 import { auth } from './firebase';
 
 export const deleteExperimentMutation = (http: HttpClient, client: QueryClient) =>
   injectMutation(() => ({
-    mutationFn: (experimentId: string) =>
-      lastValueFrom(
-        http.delete<SimpleResponse<string>>(
-          `${environment.cloudFunctionsUrl}/deleteExperiment/${experimentId}`,
-        ),
-      ),
+    mutationFn: (experimentId: string) => deleteExperimentCallable({ experimentId }),
     onSuccess: () => {
       client.refetchQueries({ queryKey: ['experiments'] });
     },
@@ -44,10 +38,7 @@ export const createExperimentMutation = (
   onSuccess?: OnSuccess<CreationResponse>,
 ) => {
   return injectMutation(() => ({
-    mutationFn: (data: ExperimentCreationData) =>
-      lastValueFrom(
-        http.post<CreationResponse>(`${environment.cloudFunctionsUrl}/createExperiment`, data),
-      ),
+    mutationFn: createExperimentCallable,
     onSuccess: (data) => {
       client.refetchQueries({ queryKey: ['experiments'] });
       onSuccess?.(data);
