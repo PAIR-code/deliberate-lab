@@ -20,7 +20,14 @@ export class ProviderService<T> {
     return this.state;
   }
 
-  public set(value: T): void {
+  /** Returns the current value */
+  public set(value: T): T | undefined {
+    const current = this.state;
     this.state = value;
+    return current;
+  }
+
+  public apply(callback: (state: T | undefined) => void) {
+    callback(this.state);
   }
 }

@@ -1,5 +1,7 @@
-export const dateStrOfTimestamp = (timestamp: string): string => {
-  const date = new Date(timestamp);
+import { Timestamp } from 'firebase/firestore';
+
+export const dateStrOfTimestamp = (timestamp: Timestamp): string => {
+  const date = timestamp.toDate();
   return (
     `${date.getFullYear()} - ${date.getMonth()} - ${date.getDate()}:` +
     ` ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`

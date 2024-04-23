@@ -39,32 +39,29 @@
       }
     </div>
 
-    <div class="message-form">
+    <form class="message-form" (ngSubmit)="sendMessage()">
       <app-chat-user-profile [profile]="participant.userData()!"></app-chat-user-profile>
       <mat-form-field class="full-width">
         <mat-label>Message to send</mat-label>
-        <input
-          matInput
-          placeholder="Write your message"
-          [(ngModel)]="message"
-          [disabled]="this.stageData().readyToEndChat === true"
-        />
+        <input matInput placeholder="Write your message" [formControl]="message" />
       </mat-form-field>
       <button
+        type="submit"
         color="primary"
         mat-button
-        (click)="sendMessage()"
-        [disabled]="this.stageData().readyToEndChat === true"
+        [disabled]="this.readyToEndChat() || !this.message.valid"
       >
         <!-- <mat-icon>redo</mat-icon> -->
         <span>Send</span>
+        <br />
+        <span>{{ timer.timer() }} seconds left until the next pair...</span>
       </button>
-    </div>
+    </form>
     <div>
       <mat-slide-toggle
-        [checked]="this.stageData().readyToEndChat === true"
-        [disabled]="this.isSilent()"
-        (change)="updateToogleValue($event)"
+        [checked]="this.readyToEndChat()"
+        [disabled]="this.isSilent() || this.readyToEndChat()"
+        (change)="toggleEndChat()"
       >
         I'm done with chatting and ready to move on
       </mat-slide-toggle>

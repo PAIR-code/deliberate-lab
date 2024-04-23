@@ -68,3 +68,55 @@ export const lazyInitWritable = <T, K>(
 
   return result;
 };
+
+/** Creates a second-counter timer that is synchronized with the local storage in order to resume ticking when reloading the page */
+export const localStorageTimer = (
+  key: string,
+  defaultStartSeconds: number,
+  onFinish: () => void,
+) => {
+  // Use an object to store the interval reference
+  const utils = {
+    interval: undefined as ReturnType<typeof setInterval> | undefined,
+  };
+
+  const initInterval = () =>
+    (utils.interval = setInterval(() => {
+      const newValue = timer() - 1;
+      console.log('New timer value !', newValue);
+      if (newValue < 0) {
+        onFinish();
+        remove();
+        return;
+      }
+      timer.set(newValue);
+      localStorage.setItem(key, newValue.toString());
+    }, 1000));
+
+  const existingSeconds = localStorage.getItem(key);
+  if (existingSeconds) {
+    defaultStartSeconds = parseInt(existingSeconds, 10);
+  } else {
+    localStorage.setItem(key, defaultStartSeconds.toString());
+  }
+  const timer = signal(defaultStartSeconds);
+
+  const reset = (startSeconds: number) => {
+    clearInterval(utils.interval);
+    utils.interval = initInterval();
+    timer.set(startSeconds);
+    localStorage.setItem(key, startSeconds.toString());
+  };
+
+  const remove = () => {
+    clearInterval(utils.interval);
+    localStorage.removeItem(key);
+  };
+
+  const start = () => {
+    clearInterval(utils.interval);
+    utils.interval = initInterval();
+  };
+
+  return { timer, start, reset, remove } as const;
+};

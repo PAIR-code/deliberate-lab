@@ -6,11 +6,12 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, signal, Signal } from '@angular/core';
+import { Component, Inject, signal, Signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRadioModule } from '@angular/material/radio';
 import { ProviderService } from 'src/app/services/provider.service';
 import { Participant } from 'src/lib/participant';
+import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
 
 import { ParticipantExtended } from 'src/lib/types/participants.types';
 import { StageKind } from 'src/lib/types/stages.types';
@@ -31,7 +32,9 @@ export class ExpLeaderVoteComponent {
   public participant: Participant;
   public votes: Votes;
 
-  constructor(private participantProvider: ProviderService<Participant>) {
+  constructor(
+    @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ProviderService<Participant>,
+  ) {
     this.participant = participantProvider.get();
 
     const { config } = this.participant.assertViewingStageCast(StageKind.VoteForLeader)!;

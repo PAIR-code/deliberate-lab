@@ -1,17 +1,12 @@
-/**
- * @license
- * Copyright Google LLC All Rights Reserved.
- *
- * Use of this source code is governed by an Apache2 license that can be
- * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
-==============================================================================*/
-import { driveApiKey, oauthClientId, sheetsApiKey } from './gcloud_env';
+/** Development environment configuration */
 
 export const environment = {
-  oauthClientId,
-  sheetsApiKey,
-  driveApiKey,
+  production: false,
 
-  // Development local addresses
-  cloudFunctionsUrl: 'http://127.0.0.1:5001/llm-mediator-political/us-central1',
+  cloudFunctionsUrl: 'http://localhost:5001/llm-mediator-political/us-central1',
+
+  // Google API keys (they have no business being here in the frontend, remove this later)
+  oauthClientId: 'enter you oauth client id here',
+  sheetsApiKey: 'enter api key for sheets api here',
+  driveApiKey: 'enter api key for drive api here',
 };

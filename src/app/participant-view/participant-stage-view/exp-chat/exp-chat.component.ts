@@ -6,23 +6,54 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, Signal, computed, effect, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import {
+  Component,
+  Inject,
+  OnDestroy,
+  Signal,
+  WritableSignal,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { ProviderService } from 'src/app/services/provider.service';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { injectQueryClient } from '@tanstack/angular-query-experimental';
+import { Unsubscribe } from 'firebase/firestore';
+import {
+  toggleChatMutation,
+  updateChatStageMutation,
+  userMessageMutation,
+} from 'src/lib/api/mutations';
 import { Participant } from 'src/lib/participant';
-import { ChatAboutItems } from 'src/lib/types/chats.types';
+import {
+  EXPERIMENT_PROVIDER_TOKEN,
+  ExperimentProvider,
+  PARTICIPANT_PROVIDER_TOKEN,
+  ParticipantProvider,
+} from 'src/lib/provider-tokens';
+import { ReadyToEndChat } from 'src/lib/types/chats.types';
 import { ItemPair } from 'src/lib/types/items.types';
-import { Message } from 'src/lib/types/messages.types';
+import { DiscussItemsMessage, Message, MessageType } from 'src/lib/types/messages.types';
 import { ParticipantExtended } from 'src/lib/types/participants.types';
+import { ExpStageChatAboutItems, StageKind } from 'src/lib/types/stages.types';
+import { localStorageTimer } from 'src/lib/utils/angular.utils';
+import { chatMessagesSubscription, firestoreDocSubscription } from 'src/lib/utils/firestore.utils';
+import { extendUntilMatch } from 'src/lib/utils/object.utils';
 import { ChatDiscussItemsMessageComponent } from './chat-discuss-items-message/chat-discuss-items-message.component';
 import { ChatMediatorMessageComponent } from './chat-mediator-message/chat-mediator-message.component';
 import { ChatUserMessageComponent } from './chat-user-message/chat-user-message.component';
 import { ChatUserProfileComponent } from './chat-user-profile/chat-user-profile.component';
 import { MediatorFeedbackComponent } from './mediator-feedback/mediator-feedback.component';
+
+const TIMER_SECONDS = 60; // 1 minute between item pairs for discussions
+
 @Component({
   selector: 'app-exp-chat',
   standalone: true,
@@ -37,110 +68,153 @@ import { MediatorFeedbackComponent } from './mediator-feedback/mediator-feedback
     MatButtonModule,
     MatInputModule,
     MatSlideToggleModule,
+    ReactiveFormsModule,
   ],
   templateUrl: './exp-chat.component.html',
   styleUrl: './exp-chat.component.scss',
 })
-export class ExpChatComponent {
-  public messages: Signal<Message[]>;
-  public stageData: Signal<ChatAboutItems>;
-  public message: string = '';
-
+export class ExpChatComponent implements OnDestroy {
   public participant: Participant;
   public otherParticipants: Signal<ParticipantExtended[]>;
   public everyoneReachedTheChat: Signal<boolean>;
-  public everyoneFinishedTheChat: Signal<boolean>;
-  public ratingsToDiscuss: Signal<ItemPair[]>;
-  public currentRatingsToDiscuss: Signal<ItemPair>;
 
-  constructor(private participantProvider: ProviderService<Participant>) {
-    this.stageData = {} as Signal<ChatAboutItems>; // TODO: temporary fix
-    this.participant = participantProvider.get();
+  // Extracted stage data
+  public stage: ExpStageChatAboutItems;
+  public currentRatingsToDiscuss: WritableSignal<ItemPair>;
 
-    this.messages = computed(() => {
-      return this.stageData().messages;
+  // Queries
+  private http = inject(HttpClient);
+  private client = injectQueryClient();
+
+  // Message subscription
+  public messages: WritableSignal<Message[]>;
+  private unsubscribeMessages: Unsubscribe | undefined;
+
+  // Ready to end chat subscription
+  private unsubscribeReadyToEndChat: Unsubscribe | undefined;
+
+  // Message mutation & form
+  public messageMutation = userMessageMutation(this.http);
+  public message = new FormControl<string>('', Validators.required);
+
+  // Chat completion mutation
+  public finishChatMutation = updateChatStageMutation(this.http, this.client, () =>
+    this.participant.navigateToNextStage(),
+  );
+
+  public discussingPairIndex = signal(0);
+
+  public toggleMutation = toggleChatMutation(this.http);
+  public readyToEndChat: WritableSignal<boolean> = signal(false); // Frontend-only, no need to have fine-grained backend sync for this
+
+  public timer = localStorageTimer('chat-timer', TIMER_SECONDS, () => this.toggleEndChat()); // 1 minute timer
+
+  constructor(
+    @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ParticipantProvider,
+    @Inject(EXPERIMENT_PROVIDER_TOKEN) experimentProvider: ExperimentProvider,
+  ) {
+    this.participant = participantProvider.get(); // Get the participant instance
+
+    // Extract stage data
+    this.stage = this.participant.assertViewingStageCast(StageKind.GroupChat)!;
+    this.everyoneReachedTheChat = this.participant.everyoneReachedCurrentStage(this.stage.name);
+
+    // Initialize the current rating to discuss with the first available pair
+    const { id1, id2 } = this.stage.config.ratingsToDiscuss[0];
+    this.currentRatingsToDiscuss = signal({
+      item1: this.stage.config.items[id1],
+      item2: this.stage.config.items[id2],
     });
 
-    // TODO: use the new backend
-    this.otherParticipants = signal<ParticipantExtended[]>([]);
-    // computed(() => {
-    //   const thisUserId = this.participant.userData().uid;
-    //   const allUsers = Object.values(this.participant.experiment().participants);
-    //   return allUsers.filter((u) => u.uid !== thisUserId);
-    // });
+    this.otherParticipants = computed(
+      () =>
+        experimentProvider
+          .get()()
+          ?.participants.filter(({ uid }) => uid !== this.participant.userData()?.uid) ?? [],
+    );
 
-    // TODO: use the new backend way of syncing participant progression
-    this.everyoneReachedTheChat = signal<boolean>(false);
-    //  computed(() => {
-    //   const users = Object.values(this.participant.experiment().participants);
-    //   return users
-    //     .map((userData) => userData.workingOnStageName)
-    //     .every((n) => n === this.participant.userData().workingOnStageName);
-    // });
+    // Firestore subscription for messages
+    this.messages = signal([]);
+    this.unsubscribeMessages = chatMessagesSubscription(this.stage.config.chatId, (m) => {
+      this.messages.set(extendUntilMatch(this.messages(), m.reverse(), 'uid'));
 
-    this.everyoneFinishedTheChat = computed(() => {
-      // const users = Object.values(this.participant.experiment().participants);
-      // return users.every((userData) => {
-      //   const otherUserChatStage = userData.stageMap[this.stageData.name] as ExpStageChatAboutItems;
-      //   return otherUserChatStage.config.readyToEndChat;
-      // });
-      const participantsReady: ParticipantExtended[] = [];
-      // if (this.stageData().readyToEndChat) {
-      //   participantsReady.push(this.participant.userData());
-      // }
-      // this.otherParticipants().forEach((p) => {
-      //   const stage = p.stageMap[this.participant.userData().workingOnStageName]
-      //     .config as ChatAboutItems;
-      //   if (stage.readyToEndChat) {
-      //     participantsReady.push(p);
-      //   }
-      // });
-      const isReady = participantsReady.length === this.otherParticipants().length + 1;
+      // Find if new discuss items message have arrived
+      const last = m.find((m) => m.messageType === MessageType.DiscussItemsMessage) as
+        | DiscussItemsMessage
+        | undefined;
 
-      // Allow "Next" to be pushed.
-      // if (isReady) {
-      //   const allUsers = Object.values(this.participant.experiment().participants);
-      //   for (const user of allUsers) {
-      //     user.allowedStageProgressionMap[user.workingOnStageName] = true;
-      //   }
-      // }
-      return isReady;
+      if (last) this.currentRatingsToDiscuss.set(last.itemPair);
     });
+
+    // Firestore subscription for ready to end chat
+    this.unsubscribeReadyToEndChat = firestoreDocSubscription<ReadyToEndChat>(
+      `participants_ready_to_end_chat/${this.stage.config.chatId}`,
+      (d) => {
+        if (this.discussingPairIndex() !== d?.currentPair && d)
+          this.discussingPairIndex.set(d?.currentPair);
+      },
+    );
 
     effect(
       () => {
-        if (this.everyoneFinishedTheChat()) {
-          this.participant.nextStep();
+        if (
+          this.participant.workingOnStage()?.name !== this.stage.name ||
+          !this.everyoneReachedTheChat()
+        )
+          return; // Continue only if this stage is active
+
+        const index = this.discussingPairIndex();
+
+        if (index < this.stage.config.ratingsToDiscuss.length) {
+          // Update to the next, reset the counter.
+          this.timer.reset(TIMER_SECONDS);
+          this.readyToEndChat.set(false);
+        } else {
+          // The chat experiment has ended
+          this.finishChatMutation.mutate({
+            uid: untracked(this.participant.userData)!.uid,
+            name: this.stage.name,
+            data: { readyToEndChat: true },
+            ...this.participant.getStageProgression(),
+          });
         }
       },
       { allowSignalWrites: true },
     );
-
-    this.ratingsToDiscuss = computed(() => {
-      return this.stageData().ratingsToDiscuss;
-    });
-
-    this.currentRatingsToDiscuss = computed(() => {
-      // last item in the array
-      return this.ratingsToDiscuss()[this.ratingsToDiscuss().length - 1];
-    });
   }
 
   isSilent() {
-    return this.stageData().isSilent !== false;
+    return false;
+    // return this.stageData().isSilent !== false;
   }
 
   sendMessage() {
-    // TODO: use the new backend
-    // this.participant.sendMessage(this.message);
-    this.message = '';
-    this.stageData().isSilent = false;
+    if (!this.message.valid) return;
+
+    this.messageMutation.mutate({
+      chatId: this.stage.config.chatId,
+      text: this.message.value!,
+      fromUserId: this.participant.userData()!.uid,
+    });
+    this.message.setValue('');
   }
 
-  updateToogleValue(_updatedValue: MatSlideToggleChange) {
-    // this.participant.editStageData<ChatAboutItems>((d) => {
-    //   d.readyToEndChat = updatedValue.checked;
-    // });
-    // console.log('this.everyoneFinishedTheChat()', this.everyoneFinishedTheChat());
+  toggleEndChat() {
+    if (this.readyToEndChat()) return;
+
+    this.readyToEndChat.set(true);
+    this.toggleMutation.mutate({
+      chatId: this.stage.config.chatId,
+      participantId: this.participant.userData()!.uid,
+      readyToEndChat: true,
+    });
+
+    this.message.disable();
+    this.timer.remove();
+  }
+
+  ngOnDestroy() {
+    this.unsubscribeMessages?.();
+    this.unsubscribeReadyToEndChat?.();
   }
 }

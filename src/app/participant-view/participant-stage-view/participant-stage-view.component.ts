@@ -6,7 +6,7 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 
 import { ExpChatComponent } from './exp-chat/exp-chat.component';
@@ -15,6 +15,7 @@ import { ExpLeaderVoteComponent } from './exp-leader-vote/exp-leader-vote.compon
 //import { ExpRatingComponent } from '../exp-rating/exp-rating.component';
 import { ProviderService } from 'src/app/services/provider.service';
 import { Participant } from 'src/lib/participant';
+import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
 import { StageKind } from 'src/lib/types/stages.types';
 import { ExpSurveyComponent } from './exp-survey/exp-survey.component';
 import { ExpTosAndProfileComponent } from './exp-tos-and-profile/exp-tos-and-profile.component';
@@ -37,7 +38,9 @@ export class ParticipantStageViewComponent {
   public participant: Participant;
   readonly StageKind = StageKind;
 
-  constructor(participantProvider: ProviderService<Participant>) {
+  constructor(
+    @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ProviderService<Participant>,
+  ) {
     this.participant = participantProvider.get();
   }
 

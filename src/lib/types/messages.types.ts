@@ -1,9 +1,8 @@
 /** Chat message types */
 
+import { Timestamp } from 'firebase/firestore';
+import { uniqueId } from 'lodash';
 import { ItemPair } from './items.types';
-import { ParticipantProfile, getDefaultProfile } from './participants.types';
-
-// TODO: refactor messages with the backend structure in mind
 
 export enum MessageType {
   UserMessage = 'userMessage',
@@ -12,8 +11,10 @@ export enum MessageType {
 }
 
 export interface MessageBase {
+  uid: string;
+  chatId: string;
   messageType: MessageType;
-  timestamp: string;
+  timestamp: Timestamp;
   text: string;
 }
 
@@ -21,14 +22,12 @@ export interface UserMessage extends MessageBase {
   messageType: MessageType.UserMessage;
 
   fromUserId: string;
-  fromProfile: ParticipantProfile;
 }
 
 export interface DiscussItemsMessage extends MessageBase {
   messageType: MessageType.DiscussItemsMessage;
 
   itemPair: ItemPair;
-  // itemRatingToDiscuss: ItemRating;
 }
 
 export interface MediatorMessage extends MessageBase {
@@ -38,19 +37,45 @@ export interface MediatorMessage extends MessageBase {
 export type Message = UserMessage | DiscussItemsMessage | MediatorMessage;
 
 // ********************************************************************************************* //
+//                                   MESSAGE MUTATION TYPES                                      //
+// ********************************************************************************************* //
+
+export interface UserMessageMutationData {
+  chatId: string;
+  text: string;
+  fromUserId: string;
+  // ...the other fields will be filled in by the backend for security
+}
+
+export interface DiscussItemsMessageMutationData {
+  chatId: string;
+  text: string;
+  itemPair: ItemPair;
+  // itemRatingToDiscuss: ItemRating;
+}
+
+export interface MediatorMessageMutationData {
+  chatId: string;
+  text: string;
+}
+
+// ********************************************************************************************* //
 //                                           DEFAULTS                                            //
 // ********************************************************************************************* //
 
 export const getDefaultUserMessage = (): UserMessage => ({
+  uid: uniqueId('message'),
+  chatId: '',
   messageType: MessageType.UserMessage,
-  timestamp: new Date().toISOString(),
+  timestamp: Timestamp.now(),
   fromUserId: '',
-  fromProfile: getDefaultProfile(),
   text: 'fakeMessage',
 });
 
 export const getDefaultMediatorMessage = (): MediatorMessage => ({
+  uid: uniqueId('message'),
+  chatId: '',
   messageType: MessageType.MediatorMessage,
-  timestamp: new Date().toISOString(),
+  timestamp: Timestamp.now(),
   text: 'fakeMessage',
 });

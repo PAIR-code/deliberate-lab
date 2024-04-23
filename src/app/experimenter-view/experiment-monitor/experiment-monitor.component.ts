@@ -1,4 +1,13 @@
-import { Component, Input, Signal, WritableSignal, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  Inject,
+  Input,
+  Signal,
+  WritableSignal,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
@@ -7,23 +16,16 @@ import { Router, RouterLink, RouterLinkActive, RouterModule } from '@angular/rou
 import { HttpClient } from '@angular/common/http';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
+import { ProviderService } from 'src/app/services/provider.service';
 import { isOfKind } from 'src/lib/algebraic-data';
 import { deleteExperimentMutation } from 'src/lib/api/mutations';
 import { experimentQuery } from 'src/lib/api/queries';
+import { EXPERIMENT_PROVIDER_TOKEN, ExperimentProvider } from 'src/lib/provider-tokens';
 import { QueryType } from 'src/lib/types/api.types';
 import { ExperimentExtended } from 'src/lib/types/experiments.types';
-import { ParticipantExtended, ParticipantProfile } from 'src/lib/types/participants.types';
-import { StageKind } from 'src/lib/types/stages.types';
-import { lookupTable } from 'src/lib/utils/object.utils';
+import { ParticipantExtended } from 'src/lib/types/participants.types';
+import { ExpStage, StageKind } from 'src/lib/types/stages.types';
 import { MediatorChatComponent } from '../mediator-chat/mediator-chat.component';
-
-// TODO: generalise into a sensible class for viewing all relevant info on
-// where participants are at w.r.t. this stage.
-export interface StageState {
-  name: string;
-  kind: StageKind;
-  participants: ParticipantProfile[];
-}
 
 @Component({
   selector: 'app-experiment-monitor',
@@ -37,6 +39,12 @@ export interface StageState {
     MatExpansionModule,
     MatIconModule,
     MatProgressSpinnerModule,
+  ],
+  providers: [
+    {
+      provide: EXPERIMENT_PROVIDER_TOKEN,
+      useFactory: () => new ProviderService<Signal<ExperimentExtended | undefined>>(),
+    },
   ],
   templateUrl: './experiment-monitor.component.html',
   styleUrl: './experiment-monitor.component.scss',
@@ -58,44 +66,24 @@ export class ExperimentMonitorComponent {
     this.experimentUid.set(name);
   }
 
-  public stageStates: Signal<StageState[]>;
-
   isOfKind = isOfKind;
   readonly StageKind = StageKind;
+  public expStages: Signal<ExpStage[]>;
 
-  constructor(public router: Router) {
+  constructor(
+    public router: Router,
+    @Inject(EXPERIMENT_PROVIDER_TOKEN) experimentProvider: ExperimentProvider,
+  ) {
     // Prepare the request
     this._experiment = experimentQuery(this.http, this.experimentUid);
+    experimentProvider.set(this._experiment.data); // Expose the current experiment through the provider
 
     // Extract participants data from the extended experiment
-    this.participants = computed(() => {
-      const data = this._experiment.data();
+    this.participants = computed(() => this._experiment.data()?.participants ?? []);
 
-      if (!data) {
-        return [];
-      }
-      return Object.values(data.participants);
-    });
-
-    // TODO: factor into service?
-    this.stageStates = computed(() => {
-      const participant0 = this.participants()[0];
-
-      // Build stage states
-      const stageStates: StageState[] = Object.entries(participant0.stageMap).map(
-        ([name, { kind }]) => ({
-          name,
-          kind,
-          participants: [],
-        }),
-      );
-
-      const statesLookup = lookupTable(stageStates, 'name');
-      this.participants().forEach((p) => {
-        statesLookup[p.workingOnStageName].participants.push(p);
-      });
-
-      return stageStates; // statesLookup should modify the objects in place, we do not even need to return Object.values(statesLookup)
+    this.expStages = computed(() => {
+      const p = this.participants()[0];
+      return p ? Object.values(p.stageMap) : [];
     });
   }
 

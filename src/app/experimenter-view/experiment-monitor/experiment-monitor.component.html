@@ -28,11 +28,11 @@
 
   <h2>Experiment stages:</h2>
 
-  @for (stageState of stageStates(); track stageState.name) {
+  @for (exp of expStages(); track exp.name) {
     <div>
-      {{ stageState.name }}: {{ stageState.participants.length }}
+      {{ exp.name }}: {{ participants().length }}
 
-      @if (isOfKind(stageState, StageKind.GroupChat)) {
+      @if (isOfKind(exp, StageKind.GroupChat)) {
         <mat-accordion>
           <mat-expansion-panel>
             <mat-expansion-panel-header>
@@ -44,7 +44,7 @@
             <app-mediator-chat
               [experiment]="experimentUid"
               [participants]="this.participants"
-              [chatRoomName]="stageState.name"
+              [chatValue]="exp.config"
             ></app-mediator-chat>
           </mat-expansion-panel>
         </mat-accordion>

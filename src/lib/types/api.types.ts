@@ -45,6 +45,12 @@ export interface ProfileTOSData extends Progression {
   acceptTosTimestamp: string;
 }
 
+export interface ChatToggleUpdate {
+  readyToEndChat: boolean;
+  participantId: string;
+  chatId: string;
+}
+
 // ********************************************************************************************* //
 //                                        STAGE UPDATES                                          //
 // ********************************************************************************************* //
@@ -58,4 +64,8 @@ export interface GenericStageUpdate<T> extends Progression {
 
 export type SurveyStageUpdate = GenericStageUpdate<{
   questions: QuestionUpdate[];
+}>;
+
+export type ChatStageUpdate = GenericStageUpdate<{
+  readyToEndChat: boolean;
 }>;

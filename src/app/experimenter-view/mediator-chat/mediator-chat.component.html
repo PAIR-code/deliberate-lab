@@ -18,70 +18,17 @@
   }
 </div>
 
-<div class="message-form">
-  <h4>Select a pair of item to send to the chat participants</h4>
-
-  @if (itemPair().item1 == itemPair().item2) {
-    <div class="error-message">Please select two different items</div>
-  }
-  <!-- select pair of items -->
-  <mat-form-field>
-    <mat-label>Item 1</mat-label>
-    <mat-select [(value)]="itemPair().item1" (selectionChange)="updateItemPair($event, 1)" required>
-      @for (item of items(); track item) {
-        <!-- @if (item != itemPair().item2){ -->
-        <mat-option [value]="item">
-          <div class="item-pair">
-            <img src="{{ item.imageUrl }}" alt="{{ item.name }}" width="20px" /> {{ item.name }}
-          </div>
-        </mat-option>
-        <!-- } -->
-      }
-    </mat-select>
-  </mat-form-field>
-
-  <mat-form-field>
-    <mat-label>Item 2</mat-label>
-    <mat-select [(value)]="itemPair().item2" (selectionChange)="updateItemPair($event, 2)" required>
-      @for (item of items(); track item) {
-        <!-- @if (item != itemPair().item1){ -->
-        <mat-option [value]="item">
-          <div class="item-pair">
-            <img src="{{ item.imageUrl }}" alt="{{ item.name }}" width="20px" /> {{ item.name }}
-          </div>
-        </mat-option>
-        <!-- } -->
-      }
-    </mat-select>
-  </mat-form-field>
-
-  <mat-form-field class="full-width">
-    <mat-label>Instructions to send</mat-label>
-    <input matInput placeholder="Write your response" [(ngModel)]="instructions" />
-  </mat-form-field>
-
-  <button
-    color="primary"
-    mat-button
-    (click)="sendRatingToDiscuss()"
-    [disabled]="itemPair().item1 === itemPair().item2"
-  >
-    <!-- <mat-icon>redo</mat-icon> -->
-    <span>Send</span>
-  </button>
-</div>
-
-<div class="message-form">
+<form class="message-form" (ngSubmit)="sendMessage()">
   <h4>Send any message to the chat</h4>
   <mat-form-field class="full-width">
     <mat-label>Message to send</mat-label>
-    <input matInput placeholder="Write your response" [(ngModel)]="message" />
+    <input matInput placeholder="Write your response" [formControl]="message" />
   </mat-form-field>
-  <button color="primary" mat-button (click)="sendMessage()">
+  <button color="primary" mat-button type="submit" [disabled]="!this.message.valid">
     <!-- <mat-icon>redo</mat-icon> -->
     <span>Send</span>
   </button>
-</div>
+</form>
 
 <div>
   <h4>

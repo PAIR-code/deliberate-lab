@@ -1,7 +1,8 @@
-import { Component, signal, Signal } from '@angular/core';
+import { Component, Inject, signal, Signal } from '@angular/core';
 
 import { ProviderService } from 'src/app/services/provider.service';
 import { Participant } from 'src/lib/participant';
+import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
 import { StageKind } from 'src/lib/types/stages.types';
 import { VoteReveal } from 'src/lib/types/votes.types';
 
@@ -19,7 +20,9 @@ export class ExpLeaderRevealComponent {
   public everyoneReachedTheEnd: Signal<boolean>;
   public finalLeader: Signal<string>;
 
-  constructor(private participantProvider: ProviderService<Participant>) {
+  constructor(
+    @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ProviderService<Participant>,
+  ) {
     this.participant = participantProvider.get();
     const { config } = this.participant.assertViewingStageCast(StageKind.RevealVoted)!;
 

@@ -6,9 +6,9 @@ export const PROGRESSION = {
 
 export const ProfileAndTOS = Type.Object(
   {
-    name: Type.String(),
-    pronouns: Type.String(),
-    avatarUrl: Type.String(),
+    name: Type.String({ minLength: 1 }),
+    pronouns: Type.String({ minLength: 1 }),
+    avatarUrl: Type.String({ minLength: 1 }),
     acceptTosTimestamp: Type.String(),
     ...PROGRESSION,
   },

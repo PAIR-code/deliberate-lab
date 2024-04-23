@@ -29,6 +29,16 @@ export const GenericStageUpdate = Type.Object(
 
 export type GenericStageUpdate = Static<typeof GenericStageUpdate>;
 
+export const ToggleReadyToEndChat = Type.Object(
+  {
+    readyToEndChat: Type.Boolean(),
+    chatId: Type.String(),
+  },
+  { additionalProperties: false },
+);
+
+export type ToggleReadyToEndChat = Static<typeof ToggleReadyToEndChat>;
+
 // ********************************************************************************************* //
 //                                         DEFINITIONS                                           //
 // ********************************************************************************************* //
@@ -37,7 +47,13 @@ export const SurveyUpdate = Type.Object({
   questions: Type.Array(Type.Any()),
 });
 
+export const ChatUpdate = Type.Object({
+  readyToEndChat: Type.Boolean(),
+});
+
 export type SurveyUpdate = Static<typeof SurveyUpdate>;
+
+export type ChatUpdate = Static<typeof ChatUpdate>;
 
 // ********************************************************************************************* //
 //                                             UTILS                                             //
@@ -54,7 +70,8 @@ export const validateStageUpdateAndMerge = (stage: any, data: any): boolean => {
     case StageKind.TakeSurvey:
       return validateSurveyUpdateAndMerge(stage, data);
 
-    // TODO: implement the rest
+    case StageKind.GroupChat:
+      return validateChatUpdateAndMerge(stage, data);
 
     default:
       return false;
@@ -67,6 +84,14 @@ export const validateSurveyUpdateAndMerge = (stage: any, data: any): boolean => 
       validateQuestionUpdateAndMerge(stage.config.questions[index], questionUpdate);
     });
 
+    return true;
+  }
+  return false;
+};
+
+export const validateChatUpdateAndMerge = (stage: any, data: any): boolean => {
+  if (Value.Check(ChatUpdate, data)) {
+    stage.config.readyToEndChat = true;
     return true;
   }
   return false;
