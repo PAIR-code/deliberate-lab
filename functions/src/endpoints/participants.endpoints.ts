@@ -1,6 +1,8 @@
 /** Endpoints for interactions with participants */
 
 import { Value } from '@sinclair/typebox/value';
+import * as functions from 'firebase-functions';
+import { onCall } from 'firebase-functions/v2/https';
 import { app } from '../app';
 import { checkStageProgression } from '../utils/check-stage-progression';
 import { ProfileAndTOS } from '../validation/participants.validation';

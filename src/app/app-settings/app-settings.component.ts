@@ -19,8 +19,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { bytes, describeBytes } from 'src/lib/utils/string.utils';
 import { ConfigUpdate } from '../codemirror-config-editor/codemirror-config-editor.component';
 import { CodemirrorConfigEditorModule } from '../codemirror-config-editor/codemirror-config-editor.module';
-import { GoogleAuthService } from '../services/google-auth.service';
-import { GoogleDriveAppdataService } from '../services/google-drive-appdata.service';
+import { FirebaseService } from '../firebase.service';
 
 export interface SavedAppData {
   // TODO: define the export schema for a full experiment
@@ -59,10 +58,7 @@ export class AppSettingsComponent {
 
   @ViewChild('downloadLink') downloadLink!: ElementRef<HTMLAnchorElement>;
 
-  constructor(
-    private driveService: GoogleDriveAppdataService,
-    private authService: GoogleAuthService,
-  ) {
+  constructor(private firebaseService: FirebaseService) {
     this.appNameControl = new FormControl<string | null>('Default app name');
   }
 
@@ -72,19 +68,9 @@ export class AppSettingsComponent {
   }
 
   async saveToGoogleDrive() {
-    const json = this.currentDataStr;
-    const token = await this.authService.getToken(
-      'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file',
-    );
+    this.firebaseService.createAndUploadJsonFile(this.currentDataStr);
 
-    const response = await this.driveService.saveData(
-      json,
-      `${this.appNameControl.value}.json`,
-      '',
-      token,
-    );
-
-    console.log('saveToGoogleDrive:response', response);
+    console.log('saveToGoogleDrive:response');
   }
 
   download(anchorLink: HTMLAnchorElement) {
