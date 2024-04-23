@@ -6,8 +6,15 @@ import {
   MediatorMessageMutationData,
   UserMessageMutationData,
 } from 'functions/src/validation/messages.validation';
-import { CreationResponse, SimpleResponse } from '../types/api.types';
+import {
+  ChatToggleUpdate,
+  CreationResponse,
+  GenericStageUpdate,
+  ProfileTOSData,
+  SimpleResponse,
+} from '../types/api.types';
 import { Experiment, ExperimentCreationData, ExperimentExtended } from '../types/experiments.types';
+import { ParticipantExtended } from '../types/participants.types';
 import { functions } from './firebase';
 
 /** Wrapper to extract the data attribute from all callable cloud functions */
@@ -45,4 +52,21 @@ export const discussItemsMessageCallable = data(
 
 export const mediatorMessageCallable = data(
   httpsCallable<MediatorMessageMutationData, CreationResponse>(functions, 'mediatorMessage'),
+);
+
+export const participantCallable = data(
+  httpsCallable<{ participantUid: string }, ParticipantExtended>(functions, 'participant'),
+);
+
+export const updateProfileAndTOSCallable = data(
+  httpsCallable<ProfileTOSData, ProfileTOSData>(functions, 'updateProfileAndTOS'),
+);
+
+export const updateStageCallable = data(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  httpsCallable<GenericStageUpdate<any>, CreationResponse>(functions, 'updateStage'),
+);
+
+export const toggleReadyToEndChatCallable = data(
+  httpsCallable<ChatToggleUpdate, CreationResponse>(functions, 'toggleReadyToEndChat'),
 );

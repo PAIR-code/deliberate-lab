@@ -8,7 +8,6 @@ import { lastValueFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import {
   ChatStageUpdate,
-  ChatToggleUpdate,
   CreationResponse,
   OnError,
   OnSuccess,
@@ -21,6 +20,9 @@ import {
   deleteExperimentCallable,
   discussItemsMessageCallable,
   mediatorMessageCallable,
+  toggleReadyToEndChatCallable,
+  updateProfileAndTOSCallable,
+  updateStageCallable,
   userMessageCallable,
 } from './callables';
 import { auth } from './firebase';
@@ -65,18 +67,11 @@ export const createTemplateMutation = (
 };
 
 export const updateProfileAndTOSMutation = (
-  http: HttpClient,
   client: QueryClient,
   onSuccess?: OnSuccess<ProfileTOSData>,
 ) => {
   return injectMutation(() => ({
-    mutationFn: ({ uid, ...data }: ProfileTOSData) =>
-      lastValueFrom(
-        http.post<ProfileTOSData>(
-          `${environment.cloudFunctionsUrl}/updateProfileAndTOS/${uid}`,
-          data,
-        ),
-      ),
+    mutationFn: updateProfileAndTOSCallable,
     onSuccess: (data) => {
       client.refetchQueries({ queryKey: ['participant', data.uid] });
       onSuccess?.(data);
@@ -85,15 +80,11 @@ export const updateProfileAndTOSMutation = (
 };
 
 export const updateSurveyStageMutation = (
-  http: HttpClient,
   client: QueryClient,
   onSuccess?: OnSuccess<{ uid: string }>,
 ) => {
   return injectMutation(() => ({
-    mutationFn: ({ uid, ...data }: SurveyStageUpdate) =>
-      lastValueFrom(
-        http.post<{ uid: string }>(`${environment.cloudFunctionsUrl}/updateStage/${uid}`, data),
-      ),
+    mutationFn: (data: SurveyStageUpdate) => updateStageCallable(data),
     onSuccess: (data) => {
       client.refetchQueries({ queryKey: ['participant', data.uid] });
       onSuccess?.(data);
@@ -102,15 +93,11 @@ export const updateSurveyStageMutation = (
 };
 
 export const updateChatStageMutation = (
-  http: HttpClient,
   client: QueryClient,
   onSuccess?: OnSuccess<{ uid: string }>,
 ) => {
   return injectMutation(() => ({
-    mutationFn: ({ uid, ...data }: ChatStageUpdate) =>
-      lastValueFrom(
-        http.post<{ uid: string }>(`${environment.cloudFunctionsUrl}/updateStage/${uid}`, data),
-      ),
+    mutationFn: (data: ChatStageUpdate) => updateStageCallable(data),
     onSuccess: (data) => {
       client.refetchQueries({ queryKey: ['participant', data.uid] });
       onSuccess?.(data);
@@ -141,12 +128,9 @@ export const mediatorMessageMutation = () => {
 };
 
 // Chat toggle mutation
-export const toggleChatMutation = (http: HttpClient) => {
+export const toggleChatMutation = () => {
   return injectMutation(() => ({
-    mutationFn: ({ participantId, ...data }: ChatToggleUpdate) =>
-      lastValueFrom(
-        http.post(`${environment.cloudFunctionsUrl}/toggleReadyToEndChat/${participantId}`, data),
-      ),
+    mutationFn: toggleReadyToEndChatCallable,
   }));
 };
 

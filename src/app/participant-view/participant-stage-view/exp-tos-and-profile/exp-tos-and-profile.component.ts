@@ -60,14 +60,14 @@ export class ExpTosAndProfileComponent {
   http = inject(HttpClient);
   queryClient = injectQueryClient();
 
-  profileMutation: MutationType<ProfileTOSData>;
+  profileMutation: MutationType<ProfileTOSData | null | undefined, ProfileTOSData>;
   value = ''; // Custom pronouns input value
 
   constructor(
     @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ProviderService<Participant>,
   ) {
     this.participant = participantProvider.get();
-    this.profileMutation = updateProfileAndTOSMutation(this.http, this.queryClient, () =>
+    this.profileMutation = updateProfileAndTOSMutation(this.queryClient, () =>
       this.participant.navigateToNextStage(),
     );
 

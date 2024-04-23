@@ -9,8 +9,7 @@ import { lastValueFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { SimpleResponse } from '../types/api.types';
 import { ExperimentExtended, Template } from '../types/experiments.types';
-import { ParticipantExtended } from '../types/participants.types';
-import { experimentCallable, experimentsCallable } from './callables';
+import { experimentCallable, experimentsCallable, participantCallable } from './callables';
 
 /** Fetch all experiments stored in database (without pagination) */
 export const experimentsQuery = () =>
@@ -43,15 +42,9 @@ export const templatesQuery = (http: HttpClient) =>
   }));
 
 /** Fetch a specific participant. Can be used to verify that a participant ID is valid */
-export const participantQuery = (http: HttpClient, participantId?: string) =>
+export const participantQuery = (participantUid?: string) =>
   injectQuery(() => ({
-    queryKey: ['participant', participantId],
-    queryFn: () =>
-      lastValueFrom(
-        http.get<SimpleResponse<ParticipantExtended>>(
-          `${environment.cloudFunctionsUrl}/participant/${participantId}`,
-        ),
-      ),
-    retry: 0, // Avoid background refetches when the participant ID is invalid
-    disabled: participantId === undefined,
+    queryKey: ['participant', participantUid],
+    queryFn: () => participantCallable({ participantUid: participantUid! }),
+    disabled: participantUid === undefined,
   }));
