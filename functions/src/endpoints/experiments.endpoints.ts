@@ -2,6 +2,7 @@
 
 import * as functions from 'firebase-functions';
 import { onCall } from 'firebase-functions/v2/https';
+import { v4 as uuidv4 } from 'uuid';
 import { app } from '../app';
 import { ParticipantSeeder } from '../seeders/participants.seeder';
 import { createParticipantUser } from '../utils/create-participant-user';
@@ -117,7 +118,8 @@ export const createExperiment = onCall(async (request) => {
     const participantRefs: string[] = [];
 
     for (const participant of participants) {
-      const participantRef = app.firestore().collection('participants').doc();
+      const participantId = uuidv4();
+      const participantRef = app.firestore().collection('participants').doc(participantId);
       participantRefs.push(participantRef.id);
       progressions[participantRef.id] = participant.workingOnStageName;
       transaction.set(participantRef, participant);

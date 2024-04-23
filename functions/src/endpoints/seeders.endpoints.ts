@@ -38,7 +38,8 @@ export const seedDatabase = onRequest(async (request, response) => {
 
   for (const participant of participants) {
     // Get a unique ID for the participant
-    const ref = app.firestore().collection('participants').doc();
+    const participantId = uuidv4(); // Use a uuid (is valid in email addresses, contrary to Firestore ids which can be uppercase)
+    const ref = app.firestore().collection('participants').doc(participantId);
 
     // Add the participant to the batch write
     batch.set(ref, participant);
