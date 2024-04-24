@@ -1,0 +1,21 @@
+{
+  "root": true,
+  "ignorePatterns": ["projects/**/*"],
+  "plugins": ["only-warn"],
+  "overrides": [
+    {
+      "files": ["*.ts"],
+      "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:prettier/recommended"
+      ],
+      "rules": {
+        "eslint-plugin-vue/object-curly-spacing": "off"
+      }
+    }
+  ],
+  "parserOptions": {
+    "ecmaVersion": "latest"
+  }
+}
