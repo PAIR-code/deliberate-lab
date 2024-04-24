@@ -49,7 +49,10 @@ export const experiment = onCall(async (request) => {
   const data = {
     ...experimentData,
     uid: experiment.id,
-    participants: participants.docs.map((doc) => ({ uid: doc.id, ...doc.data() })),
+    participants: participants.docs.map((doc) => ({
+      uid: doc.id,
+      ...doc.data(),
+    })),
   };
 
   return data;

@@ -22,34 +22,4 @@
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit"
   },
-  "restoreTerminals.runOnStartup": false,
-  "restoreTerminals.terminals": [
-    {
-      "splitTerminals": [
-        {
-          "name": "frontend",
-          "commands": ["npm run start"],
-          "icon": "🌐"
-        }
-      ]
-    },
-    {
-      "splitTerminals": [
-        {
-          "name": "cloud functions",
-          "commands": ["npm run watch-functions"],
-          "icon": "🛠️"
-        }
-      ]
-    },
-    {
-      "splitTerminals": [
-        {
-          "name": "firebase",
-          "commands": ["firebase emulators:start"],
-          "icon": "🔥"
-        }
-      ]
-    }
-  ]
 }

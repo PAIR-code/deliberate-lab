@@ -18,6 +18,10 @@ This is a repository to support collaboration on using LLMs in behavioral econom
 ├── .vscode    # VSCode configuration
 ├── firestore  # Firebase Firestore rules
 │
+├── docs       # Documentation
+│
+├── firestore  # Firestore rules and indexes
+│
 ├── functions  # Firebase Cloud Functions
 │   ├── lib           # Build output
 │   ├── node_modules
@@ -48,6 +52,22 @@ Install the firebase cli tools with the following commands:
 npm install -g firebase-tools
 firebase login  # Login to the Google account destined to manage the Firebase project
 ```
+
+### Emulators
+
+In order to run offline and for development purposes, we use Java Firebase emulators.
+
+```bash
+export JAVA_TOOL_OPTIONS="-Xmx4g"  # Set your desired max RAM (here: 4GB)
+firebase emulators:start  # Start the emulators
+```
+
+You will then be able to access the following UIs:
+
+- Authentication UI: `http://localhost:4000/auth`
+- Emulator UI: `http://localhost:4000`
+- Firestore UI: `http://localhost:4000/firestore`
+- Cloud Functions UI: `http://localhost:4000/functions`
 
 ### Firestore
 
@@ -96,22 +116,6 @@ In order to create a dummy google account when running the project locally with 
 3. Go to the Firebase Authentication UI and edit the created profile by adding `{"role": "experimenter"}` to the `Custom Claims` field. Add a dummy password, and save the profile.
 
 You can now login as an experimenter using this profile.
-
-### Emulators
-
-In order to run offline and for development purposes, we use Java Firebase emulators.
-
-```bash
-export JAVA_TOOL_OPTIONS="-Xmx4g"  # Set your desired max RAM (here: 4GB)
-firebase emulators:start  # Start the emulators
-```
-
-You will then be able to access the following UIs:
-
-- Authentication UI: `http://localhost:4000/auth`
-- Emulator UI: `http://localhost:4000`
-- Firestore UI: `http://localhost:4000/firestore`
-- Cloud Functions UI: `http://localhost:4000/functions`
 
 ### Quickstart
 

@@ -1,0 +1,32 @@
+{
+  "restoreTerminals.runOnStartup": false,
+  "restoreTerminals.terminals": [
+    {
+      "splitTerminals": [
+        {
+          "name": "frontend",
+          "commands": ["cd webapp && npm run start"],
+          "icon": "🌐"
+        }
+      ]
+    },
+    {
+      "splitTerminals": [
+        {
+          "name": "cloud functions",
+          "commands": ["cd functions && npm run build:watch"],
+          "icon": "🛠️"
+        }
+      ]
+    },
+    {
+      "splitTerminals": [
+        {
+          "name": "firebase",
+          "commands": ["firebase emulators:start"],
+          "icon": "🔥"
+        }
+      ]
+    }
+  ]
+}

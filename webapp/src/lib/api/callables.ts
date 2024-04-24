@@ -2,11 +2,6 @@
 
 import { HttpsCallableResult, httpsCallable } from 'firebase/functions';
 import {
-  DiscussItemsMessageMutationData,
-  MediatorMessageMutationData,
-  UserMessageMutationData,
-} from 'functions/src/validation/messages.validation';
-import {
   ChatToggleUpdate,
   CreationResponse,
   GenericStageUpdate,
@@ -20,6 +15,11 @@ import {
   ExperimentExtended,
   Template,
 } from '../types/experiments.types';
+import {
+  DiscussItemsMessageMutationData,
+  MediatorMessageMutationData,
+  UserMessageMutationData,
+} from '../types/messages.types';
 import { ParticipantExtended } from '../types/participants.types';
 import { functions } from './firebase';
 
