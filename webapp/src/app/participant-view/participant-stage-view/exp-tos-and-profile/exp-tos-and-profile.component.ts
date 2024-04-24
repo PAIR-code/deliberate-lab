@@ -6,17 +6,22 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, Signal } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { Component, Inject, inject } from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxChange, MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatRadioChange, MatRadioModule } from '@angular/material/radio';
+import { MatRadioModule } from '@angular/material/radio';
+import { injectQueryClient } from '@tanstack/angular-query-experimental';
 
-import { StageKinds, TosAndUserProfile, UserData } from '../../../../lib/staged-exp/data-model';
-import { AppStateService } from '../../../services/app-state.service';
-import { Participant } from 'src/lib/staged-exp/participant';
+import { ProviderService } from 'src/app/services/provider.service';
+import { updateProfileAndTOSMutation } from 'src/lib/api/mutations';
+import { Participant } from 'src/lib/participant';
+import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
+import { MutationType, ProfileTOSData } from 'src/lib/types/api.types';
+import { StageKind } from 'src/lib/types/stages.types';
 
 enum Pronouns {
   HeHim = 'He/Him',
@@ -33,88 +38,83 @@ enum Pronouns {
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
-    FormsModule,
     ReactiveFormsModule,
+    MatButtonModule,
   ],
   templateUrl: './exp-tos-and-profile.component.html',
   styleUrl: './exp-tos-and-profile.component.scss',
 })
 export class ExpTosAndProfileComponent {
   public participant: Participant;
-  public stageData: Signal<TosAndUserProfile>;
-  private tosIsChecked: boolean;
+  public tosLines: string[] | undefined;
+
   readonly Pronouns = Pronouns;
 
-  constructor(stateService: AppStateService) {
-    const { participant, stageData } = stateService.getParticipantAndStage(
-      StageKinds.acceptTosAndSetProfile,
-    );
-    this.stageData = stageData;
-    this.participant = participant;
-    this.tosIsChecked = false;
-  }
+  profileFormControl = new FormGroup({
+    name: new FormControl('', Validators.required),
+    pronouns: new FormControl('', Validators.required),
+    avatarUrl: new FormControl('', Validators.required),
+    acceptTosTimestamp: new FormControl<string | null>(null, Validators.required),
+  });
 
-  canProceedToNextStep(user: UserData) {
-    return (user.profile.avatarUrl !== '') && 
-      (user.profile.name !== '') && 
-      (user.profile.pronouns !== '') &&
-      this.tosIsChecked;
+  http = inject(HttpClient);
+  queryClient = injectQueryClient();
+
+  profileMutation: MutationType<ProfileTOSData | null | undefined, ProfileTOSData>;
+  value = ''; // Custom pronouns input value
+
+  constructor(
+    @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ProviderService<Participant>,
+  ) {
+    this.participant = participantProvider.get();
+    this.profileMutation = updateProfileAndTOSMutation(this.queryClient, () =>
+      this.participant.navigateToNextStage(),
+    );
+
+    // This WILL already have been fetched by the backend at this point,
+    // because the auth guard ensures that the participant data is available before rendering this component.
+    const data = this.participant.userData();
+
+    if (data) {
+      this.profileFormControl.setValue({
+        name: data.name,
+        pronouns: data.pronouns,
+        avatarUrl: data.avatarUrl,
+        acceptTosTimestamp: data.acceptTosTimestamp,
+      });
+      if (this.isOtherPronoun(data.pronouns)) {
+        this.value = data.pronouns;
+      }
+    }
+
+    // Extract the TOS lines and make them available for the template
+    const stage = this.participant.assertViewingStageCast(StageKind.AcceptTosAndSetProfile);
+    this.tosLines = stage?.config.tosLines;
   }
 
   isOtherPronoun(s: string) {
     return s !== Pronouns.HeHim && s !== Pronouns.SheHer && s !== Pronouns.TheyThem;
   }
 
+  updateOtherPronounsValue(event: Event) {
+    const pronouns = (event.target as HTMLInputElement).value;
+
+    this.profileFormControl.patchValue({
+      pronouns,
+    });
+  }
+
   updateCheckboxValue(updatedValue: MatCheckboxChange) {
-    this.participant.editStageData<TosAndUserProfile>((d) => {
-      d.acceptedTosTimestamp = updatedValue.checked ? new Date() : null;
-      this.tosIsChecked = updatedValue.checked;
+    this.profileFormControl.patchValue({
+      acceptTosTimestamp: updatedValue.checked ? new Date().toISOString() : null,
     });
-
-    this.updateProceedToNextStep();
   }
 
-  updateName(name: string) {
-    this.participant.editStageData<TosAndUserProfile>((d) => {
-      d.name = name;
-    });
-    this.updateUserProfile();
-  }
-
-  updatePronouns(updatedValue: MatRadioChange) {
-    this.participant.editStageData<TosAndUserProfile>((d) => {
-      d.pronouns = updatedValue.value;
-    });
-    this.updateUserProfile();
-  }
-
-  updateOtherPronoun(pronoun: string) {
-    this.participant.editStageData<TosAndUserProfile>((d) => {
-      d.pronouns = pronoun;
-    });
-    this.updateUserProfile();
-  }
-
-  updateAvatarUrl(updatedValue: MatRadioChange) {
-    this.participant.editStageData<TosAndUserProfile>((d) => {
-      d.avatarUrl = updatedValue.value;
-    });
-    this.updateUserProfile();
-  }
-
-  updateProceedToNextStep() {
-    this.participant.edit((user) => {
-      user.allowedStageProgressionMap[user.workingOnStageName] = this.canProceedToNextStep(user);
-    })
-  }
-
-  updateUserProfile() {
-    this.participant.edit((user) => {
-      user.profile.avatarUrl = this.stageData().avatarUrl;
-      user.profile.name = this.stageData().name;
-      user.profile.pronouns = this.stageData().pronouns;
-    });
-
-    this.updateProceedToNextStep();
+  nextStep() {
+    this.profileMutation.mutate({
+      ...this.profileFormControl.value,
+      ...this.participant.getStageProgression(),
+      uid: this.participant.userData()?.uid,
+    } as ProfileTOSData);
   }
 }

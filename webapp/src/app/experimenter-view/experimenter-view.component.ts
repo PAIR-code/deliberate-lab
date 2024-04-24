@@ -1,23 +1,25 @@
-import { Component, Input, Signal, computed } from '@angular/core';
-import { AppStateService } from '../services/app-state.service';
-import { Experiment } from 'src/lib/staged-exp/data-model';
-import { GoogleAuthService, Credential } from '../services/google-auth.service';
+import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatInputModule } from '@angular/material/input';
+import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { RouterModule } from '@angular/router';
+import { signOut } from 'firebase/auth';
+import { auth } from 'src/lib/api/firebase';
+import { experimentsQuery } from 'src/lib/api/queries';
 import { ExperimentMonitorComponent } from './experiment-monitor/experiment-monitor.component';
 import { ExperimentSettingsComponent } from './experiment-settings/experiment-settings.component';
-import { MatListModule } from '@angular/material/list';
-import { MatButtonModule } from '@angular/material/button';
-import { RouterModule } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
 
 @Component({
   selector: 'app-experimenter-view',
   standalone: true,
   imports: [
+    MatProgressSpinnerModule,
     MatIconModule,
     MatSidenavModule,
     MatMenuModule,
@@ -37,12 +39,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
   styleUrl: './experimenter-view.component.scss',
 })
 export class ExperimenterViewComponent {
-  public experiments: Signal<Experiment[]>;
-  constructor(public stateService: AppStateService) {
-    this.experiments = computed(() => {
-      return Object.values(this.stateService.data().experiments).sort((a, b) => {
-        return a.name.localeCompare(b.name);
-      });
-    });
+  // Fetch experiments from database
+  experiments = experimentsQuery();
+
+  logout() {
+    signOut(auth);
   }
 }

@@ -1,5 +1,3 @@
-<div>
-  <mat-checkbox required (change)="updateCheckboxValue($event)">{{
-    this.question.data.questionText
-  }}</mat-checkbox>
-</div>
+<form [formGroup]="questionForm">
+  <mat-checkbox required formControlName="checkMark">{{ this.question.questionText }}</mat-checkbox>
+</form>

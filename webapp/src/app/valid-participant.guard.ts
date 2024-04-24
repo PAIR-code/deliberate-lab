@@ -1,22 +1,16 @@
 import { ActivatedRouteSnapshot, CanActivateFn, RouterStateSnapshot } from '@angular/router';
-import { AppStateService } from './services/app-state.service';
-import { inject } from '@angular/core';
+import { participantQuery } from 'src/lib/api/queries';
+import { querySuccessPromise } from 'src/lib/utils/queries.utils';
 
+/** Check that a participant exists */
 export const validParticipantGuard: CanActivateFn = (
   route: ActivatedRouteSnapshot,
   _state: RouterStateSnapshot,
 ) => {
-  const stateService = inject(AppStateService);
-  // console.log('validParticipantGuard,', route.params);
-  // console.log('validParticipantGuard,', route.params['experiment']);
-  // this.participant = makeRouteLinkedParticipant(router, route, stateService.data);
-  // if (this.participant) {
-  //   stateService.state.set({ kind: APPSTATE_PARTICIPANT, particpant: this.participant });
-  // }
+  const { participantId } = route.params;
+  // ISSUE: this starts as false ! we must use a promise and wait for this to resolve...
+  // et le pb2 c'est le participant qui veut pas bouger...
+  const participant = participantQuery(participantId);
 
-  return stateService.validParticipant(
-    route.params['experiment'],
-    route.params['user'],
-    // route.queryParams['stage'],
-  );
+  return querySuccessPromise(participant);
 };

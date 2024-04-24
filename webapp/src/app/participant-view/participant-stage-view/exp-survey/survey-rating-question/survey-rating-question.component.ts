@@ -1,27 +1,17 @@
 import { Component, Input } from '@angular/core';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { MatRadioModule } from '@angular/material/radio';
 import { MatSliderModule } from '@angular/material/slider';
-import { RatingQuestion } from 'src/lib/staged-exp/data-model';
-import { Question } from 'src/lib/staged-exp/question';
+import { RatingQuestion } from 'src/lib/types/questions.types';
 
 @Component({
   selector: 'app-survey-rating-question',
   standalone: true,
-  imports: [MatSliderModule],
+  imports: [MatSliderModule, ReactiveFormsModule, MatRadioModule],
   templateUrl: './survey-rating-question.component.html',
   styleUrl: './survey-rating-question.component.scss',
 })
 export class SurveyRatingQuestionComponent {
-  @Input() question!: Question<RatingQuestion>;
-
-  setChoice(choice: 'item1' | 'item2') {
-    this.question.edit(() => {
-      this.question.data.rating.choice = choice;
-    });
-  }
-
-  setConfidence(confidence: number) {
-    this.question.edit(() => {
-      this.question.data.rating.confidence = confidence;
-    });
-  }
+  @Input() question!: RatingQuestion;
+  @Input() questionForm!: FormGroup;
 }

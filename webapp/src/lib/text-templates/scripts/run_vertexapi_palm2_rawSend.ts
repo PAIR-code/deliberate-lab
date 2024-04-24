@@ -14,17 +14,16 @@ npx ts-node --esm ./run_vertexapi_palm2_rawSend.ts \
   --project=$(gcloud config get-value project) \
   --accessToken=$(gcloud auth print-access-token)
 */
-import { sendPalm2Request, preparePalm2Request } from '../llm_vertexapi_palm2';
+import { preparePalm2Request, sendPalm2Request } from '../llm_vertexapi_palm2';
 
 import * as yargs from 'yargs';
 
 interface Params {
-  accessToken: string,
-  project: string,
+  accessToken: string;
+  project: string;
 }
 
 async function run(args: Params): Promise<void> {
-
   const prompt = `
 The following are short movie summaries. They are specific, not generic (no movie is just "a classic"), and they don't contain plot synopsis. They just describe the experience of watching the movie. It tries to tell you the essence of the movie.
 
@@ -39,31 +38,30 @@ summary: ['
 `;
 
   const request = preparePalm2Request(prompt);
-  request.parameters.stopSequences.push(`']`);
-  const response = await sendPalm2Request(
-    args.project, args.accessToken, request);
+  request.parameters.stopSequences?.push(`']`);
+  const response = await sendPalm2Request(args.project, args.accessToken, request);
   console.log(JSON.stringify(response));
 }
 
 // ----------------------------------------------------------------------------
 const args = yargs
   .option('accessToken', {
-    describe: 'Google Cloud Auth Token ' +
-      'e.g. echo $(gcloud auth print-access-token)',
+    describe: 'Google Cloud Auth Token ' + 'e.g. echo $(gcloud auth print-access-token)',
     demandOption: true,
     type: 'string',
-  }).option('project', {
-    describe: 'The Google Cloud Project to use (it must have the VertexAI ' +
-      'API enabled).',
+  })
+  .option('project', {
+    describe: 'The Google Cloud Project to use (it must have the VertexAI ' + 'API enabled).',
     demandOption: true,
     type: 'string',
-  }).help().argv;
+  })
+  .help().argv;
 
 run(args as Params)
   .then(() => {
     console.log('Success!');
   })
-  .catch(e => {
+  .catch((e) => {
     console.error('Failed: ', e);
     throw Error('Failed');
   });

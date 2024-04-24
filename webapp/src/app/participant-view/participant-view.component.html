@@ -1,55 +1,53 @@
 <div class="toolbar" role="banner">
   <button mat-icon-button (click)="sidenav.toggle()"><mat-icon>menu</mat-icon></button>
-  <span class="title">Participant: {{ participant.experiment().name }}</span>
+  <span class="title">Participant: {{ participant.userData()?.experimentId }}</span>
   <div class="spacer"></div>
-  <div class="current-user">Current user: {{ participant.userData().userId }}</div>
+  <div class="current-user">Current user: {{ participant.userData()?.name }}</div>
+  <button (click)="logout()">Logout</button>
   <a class="small-logo" aria-label="PAIR" href="https://pair.withgoogle.com/" title="Home">
     <img src="/assets/pair-logo.svg" alt="PAIR logo" />
   </a>
 </div>
 
 <div class="content" role="main">
-  <mat-sidenav-container>
+  <mat-sidenav-container autosize>
     <mat-sidenav #sidenav mode="side" opened="true">
       <mat-nav-list class="menu-buttons">
-        <!-- Previous stages. -->
-        @for (stageName of participant.userData().completedStageNames; track stageName) {
+        @for (stageName of participant.userData()?.completedStageNames; track stageName) {
           <mat-list-item
             matListItemTitle
             [routerLink]="['./']"
             [queryParams]="{ stage: stageName }"
-            [class.highlighted]="participant.viewingStage().name === stageName"
+            [class.highlighted]="participant.viewingStage()?.name === stageName"
             ariaCurrentWhenActive="page"
             class="menu-item"
           >
             <!-- (click)="updateCurrentStageName(stageName)" -->
             <div class="menu-item-inner">
-              {{ getStageIndex(stageName) }}. {{ stageName }}
+              {{ stageName }}
               <mat-icon class="icon completed" fontIcon="check"></mat-icon>
             </div>
           </mat-list-item>
         }
-        <!-- Current stage. -->
         <mat-list-item
           matListItemTitle
           [routerLink]="['./']"
-          [queryParams]="{ stage: participant.workingOnStage().name }"
+          [queryParams]="{ stage: participant.workingOnStage()?.name }"
           ariaCurrentWhenActive="page"
           #rla="routerLinkActive"
           [routerLinkActiveOptions]="{ exact: true }"
           routerLinkActive
           class="menu-item working-on-stage"
           [class.highlighted]="
-            participant.viewingStage().name === participant.workingOnStage().name && rla.isActive
+            participant.viewingStage()?.name === participant.workingOnStage()?.name
           "
         >
           <div class="menu-item-inner">
-            {{ getStageIndex(participant.workingOnStage().name) }}. {{ participant.workingOnStage().name }}
+            {{ participant.workingOnStage()?.name }}
             <div class="ongoing-badge">ongoing</div>
           </div>
         </mat-list-item>
-        <!-- Future stages. -->
-        @for (stageName of participant.userData().futureStageNames; track stageName; let i = $index) {
+        @for (stageName of participant.userData()?.futureStageNames; track stageName) {
           <mat-list-item
             [disabled]="true"
             [activated]="false"
@@ -57,7 +55,7 @@
             ariaCurrentWhenActive="page"
             class="menu-item future-stage"
           >
-            {{ getStageIndex(stageName) }}. {{ stageName }}
+            {{ stageName }}
           </mat-list-item>
         }
       </mat-nav-list>

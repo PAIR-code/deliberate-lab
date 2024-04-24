@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Rules for the messages collection
+    match /messages/{messageId} {
+      allow list: if request.auth.token.role == 'experimenter' || request.auth.token.role == 'participant';
+    }
+
+    // Rules for the participants_progressions collection
+    match /participants_progressions/{progressionId} {
+      // Allow single-document reads
+      allow read: if request.auth.token.role == 'experimenter' || request.auth.token.role == 'participant';
+    }
+
+    // Rules for the chat toggle collection
+    match /participants_ready_to_end_chat/{chatId} {
+      // Allow single document reads
+      allow read: if request.auth.token.role == 'experimenter' || request.auth.token.role == 'participant';
+    }
+
+    // Else: disallow everything (access via cloud functions only)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

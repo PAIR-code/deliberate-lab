@@ -8,6 +8,7 @@ src/environments/gcloud_env.ts
 
 # Compiled output
 /dist
+/docs
 /tmp
 /out-tsc
 /bazel-out
@@ -46,3 +47,9 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+17.0.6/*
+
+llm-recs/*
+
+# Firebase logs
+*.log

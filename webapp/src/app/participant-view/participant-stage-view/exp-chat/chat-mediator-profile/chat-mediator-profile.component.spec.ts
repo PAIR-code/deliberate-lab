@@ -8,10 +8,9 @@ describe('ChatMediatorProfileComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ChatMediatorProfileComponent]
-    })
-    .compileComponents();
-    
+      imports: [ChatMediatorProfileComponent],
+    }).compileComponents();
+
     fixture = TestBed.createComponent(ChatMediatorProfileComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
