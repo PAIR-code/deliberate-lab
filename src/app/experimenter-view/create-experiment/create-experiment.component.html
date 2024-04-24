@@ -1,0 +1,391 @@
+<!-- eslint-disable @angular-eslint/template/label-has-associated-control -->
+<!-- eslint-disable @angular-eslint/template/interactive-supports-focus -->
+<!-- eslint-disable @angular-eslint/template/click-events-have-key-events -->
+<div class="main">
+  <div class="top-bar">
+    <h2>Create an experiment:</h2>
+    <mat-form-field class="mat-form-field">
+      <mat-label>Experiment Name</mat-label>
+      <input
+        matInput
+        type="text"
+        placeholder="new experiment name"
+        [(ngModel)]="newExperimentName"
+        (input)="onChange($event)"
+        required="true"
+      />
+    </mat-form-field>
+    <div>
+      <button
+        mat-raised-button
+        color="secondary"
+        (click)="addTemplate()"
+        [disabled]="
+          this.experimentSetupIncomplete() ||
+          this.createTemplate.isPending() ||
+          this.createExp.isPending()
+        "
+        style="margin-right: 5px"
+      >
+        Save as template
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="addExperiment()"
+        [disabled]="
+          this.experimentSetupIncomplete() ||
+          this.createTemplate.isPending() ||
+          this.createExp.isPending()
+        "
+      >
+        Add new experiment
+      </button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div cdkDropList class="stage-list" (cdkDropListDropped)="dropStage($event)">
+      <mat-form-field>
+        <mat-label>Template</mat-label>
+        <mat-select
+          [compareWith]="compareTemplates"
+          [(value)]="currentTemplate"
+          (selectionChange)="resetToTemplate($event.value)"
+        >
+          @for (template of templates.data()?.data; track template.uid) {
+            <mat-option [value]="template">{{ template.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      @for (stageData of existingStages; track $index) {
+        <div
+          class="stage-container {{ $index === currentEditingStageIndex && 'active' }}"
+          (click)="navigateToStage($index)"
+          cdkDrag
+        >
+          <div class="stage-idx">{{ $index + 1 }}</div>
+          <div
+            class="stage-icon"
+            matTooltip="{{ stageData.kind || 'Please select a stage kind!' }}"
+          >
+            @switch (stageData.kind) {
+              @case (StageKind.GroupChat) {
+                <mat-icon>forum</mat-icon>
+              }
+              @case (StageKind.TakeSurvey) {
+                <mat-icon>poll</mat-icon>
+              }
+              @case (StageKind.VoteForLeader) {
+                <mat-icon>how_to_vote</mat-icon>
+              }
+              @case (StageKind.RevealVoted) {
+                <mat-icon>emoji_events</mat-icon>
+              }
+              @default {
+                <mat-icon class="unknow-stage-kind">question_mark</mat-icon>
+              }
+            }
+          </div>
+          <div class="stage-content">
+            {{ !stageData.name || stageData.name.length === 0 ? 'Unnamed stage' : stageData.name }}
+          </div>
+          @if (stageSetupIncomplete(stageData)) {
+            <div class="stage-incomplete" matTooltip="Stage incomplete">
+              <mat-icon>warning</mat-icon>
+            </div>
+          }
+          <div class="stage-delete">
+            <button
+              mat-icon-button
+              matTooltip="Delelte this stage"
+              (click)="deleteStage($event, $index)"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        </div>
+      }
+
+      <br />
+      <button mat-button (click)="addNewStage()"><mat-icon>add</mat-icon> New stage</button>
+      <br />
+      <button mat-raised-button color="warn" (click)="resetExistingStages()">Reset all</button>
+      <br />
+    </div>
+
+    @if (currentEditingStage !== undefined) {
+      <mat-card class="stage-creation-container">
+        <div class="main-content">
+          <div class="stage-kind-selection">
+            <h3>Stage kind:</h3>
+            &nbsp;&nbsp;&nbsp;
+            <div class="form-element-wrapper">
+              <mat-form-field class="mat-form-field">
+                <mat-label>Choose a stage:</mat-label>
+                <mat-select
+                  [(ngModel)]="currentEditingStage.kind"
+                  (selectionChange)="onChange($event, 'stage-kind')"
+                >
+                  @for (kind of availableStageKind; track kind) {
+                    <mat-option [value]="kind">{{ kind }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="stage-name-edit">
+            <h3>Stage name:</h3>
+            &nbsp;&nbsp;&nbsp;
+            <div class="form-element-wrapper">
+              <mat-form-field class="mat-form-field">
+                <input
+                  matInput
+                  type="text"
+                  placeholder="Welcome to the experiment!"
+                  [(ngModel)]="currentEditingStage.name"
+                  (input)="onChange($event)"
+                />
+              </mat-form-field>
+            </div>
+          </div>
+
+          @if (tryCast(StageKind.AcceptTosAndSetProfile, currentEditingStage); as stage) {
+            <div class="config-title">
+              <h3>Terms of Service (ToS) lines:</h3>
+              <div class="fill"></div>
+              <button mat-button (click)="addNewTosLine(stage)">
+                <mat-icon>add</mat-icon>ToS Line
+              </button>
+            </div>
+
+            <div class="config-wrapper">
+              <div cdkDropList class="tos-lines" (cdkDropListDropped)="dropTosLine(stage, $event)">
+                @for (line of stage.config.tosLines; track $index) {
+                  <div class="tos-line">
+                    <mat-form-field cdkDrag class="mat-form-field">
+                      <textarea
+                        matInput
+                        type="text"
+                        placeholder="In vel diam malesuada nibh vehicula rutrum eget vel lectus."
+                        [(ngModel)]="stage.config.tosLines[$index]"
+                        (input)="onChange($event)"
+                      >
+                      </textarea>
+                    </mat-form-field>
+                    &nbsp;
+                    <button
+                      mat-icon-button
+                      matTooltip="Delelte this line"
+                      (click)="deleteTosLine(stage, $index)"
+                    >
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+          @if (tryCast(StageKind.TakeSurvey, currentEditingStage); as surveyStage) {
+            <div class="config-title">
+              <h3>Survey questions:</h3>
+              <div class="fill"></div>
+              <button mat-button (click)="addNewSurveyQuestion($event, 'rating')">
+                <mat-icon>add</mat-icon> Items Rating question
+              </button>
+              <button mat-button (click)="addNewSurveyQuestion($event, 'scale')">
+                <mat-icon>add</mat-icon> Scale question
+              </button>
+            </div>
+            <div class="config-wrapper">
+              @if (surveyStage.config.questions.length === 0) {
+                <div class="warning">Please add a question to this survey</div>
+              }
+              <div
+                cdkDropList
+                class="survey-questions"
+                (cdkDropListDropped)="dropSurveyQuestion($event)"
+              >
+                @for (
+                  question of surveyStage.config.questions;
+                  let questionIdx = $index;
+                  track questionIdx
+                ) {
+                  <div class="question">
+                    <div class="question-index">
+                      @if (questionIdx > 0) {
+                        <div
+                          matTooltip="move up"
+                          class="move-button"
+                          (click)="moveSurveyQuestion('up', questionIdx)"
+                        >
+                          <mat-icon>arrow_upward</mat-icon>
+                        </div>
+                      }
+                      <div class="idx">Q{{ questionIdx + 1 }}</div>
+                      @if (questionIdx < surveyStage.config.questions.length - 1) {
+                        <div
+                          matTooltip="move down"
+                          class="move-button"
+                          (click)="moveSurveyQuestion('down', questionIdx)"
+                        >
+                          <mat-icon>arrow_downward</mat-icon>
+                        </div>
+                      }
+                    </div>
+
+                    @if (tryCast(SurveyQuestionKind.Check, question); as question) {
+                      <mat-form-field cdkDrag class="mat-form-field">
+                        <mat-label>Checkbox question text:</mat-label>
+                        <input
+                          matInput
+                          type="text"
+                          placeholder="In vel diam malesuada nibh vehicula rutrum eget vel lectus."
+                          [(ngModel)]="question.questionText"
+                          (input)="onChange($event)"
+                        />
+                      </mat-form-field>
+                    }
+                    @if (tryCast(SurveyQuestionKind.Text, question); as question) {
+                      <mat-form-field cdkDrag class="mat-form-field">
+                        <mat-label>Freeform question text:</mat-label>
+                        <input
+                          matInput
+                          type="text"
+                          placeholder="In vel diam malesuada nibh vehicula rutrum eget vel lectus."
+                          [(ngModel)]="question.questionText"
+                          (input)="onChange($event)"
+                        />
+                      </mat-form-field>
+                    }
+                    @if (tryCast(SurveyQuestionKind.Scale, question); as question) {
+                      <!-- @if (!question.itemRatings) { -->
+                      <!-- scale question -->
+                      <div class="question-fields">
+                        <mat-form-field cdkDrag class="mat-form-field">
+                          <mat-label>Scale question text:</mat-label>
+                          <input
+                            matInput
+                            type="text"
+                            placeholder="In vel diam malesuada nibh vehicula rutrum eget vel lectus."
+                            [(ngModel)]="question.questionText"
+                            (input)="onChange($event)"
+                          />
+                        </mat-form-field>
+                        <mat-form-field cdkDrag class="mat-form-field">
+                          <mat-label>Lowerbound label:</mat-label>
+                          <input
+                            matInput
+                            type="text"
+                            placeholder="In vel diam malesuada nibh vehicula rutrum eget vel lectus."
+                            [(ngModel)]="question.lowerBound"
+                            (input)="onChange($event)"
+                          />
+                        </mat-form-field>
+                        <mat-form-field cdkDrag class="mat-form-field">
+                          <mat-label>Upperbound label:</mat-label>
+                          <input
+                            matInput
+                            type="text"
+                            placeholder="In vel diam malesuada nibh vehicula rutrum eget vel lectus."
+                            [(ngModel)]="question.upperBound"
+                            (input)="onChange($event)"
+                          />
+                        </mat-form-field>
+                      </div>
+                    }
+                    @if (tryCast(SurveyQuestionKind.Rating, question); as question) {
+                      <!-- ratings question -->
+                      <div class="question-fields">
+                        <mat-form-field cdkDrag class="mat-form-field">
+                          <mat-label>Rating question text:</mat-label>
+                          <input
+                            matInput
+                            type="text"
+                            placeholder="In vel diam malesuada nibh vehicula rutrum eget vel lectus."
+                            [(ngModel)]="question.questionText"
+                            (input)="onChange($event)"
+                          />
+                        </mat-form-field>
+                        <div class="question-rating-items">
+                          <div class="item-pair">
+                            <div class="question-rating-item">
+                              <div>Item 1</div>
+                              <mat-form-field cdkDrag class="mat-form-field">
+                                <mat-label>Name:</mat-label>
+                                <input
+                                  matInput
+                                  type="text"
+                                  placeholder="compass"
+                                  [(ngModel)]="question.item1.name"
+                                  (input)="onChange($event)"
+                                />
+                              </mat-form-field>
+                              <mat-form-field cdkDrag class="mat-form-field">
+                                <mat-label>Image URL:</mat-label>
+                                <input
+                                  matInput
+                                  type="text"
+                                  placeholder="https://m.media-amazon.com/images/I/81NUeKWdiQL._AC_UF1000,1000_QL80_.jpg"
+                                  [(ngModel)]="question.item1.imageUrl"
+                                  (input)="onChange($event)"
+                                />
+                              </mat-form-field>
+                            </div>
+                            <div class="question-rating-item">
+                              <div>Item 2</div>
+                              <mat-form-field cdkDrag class="mat-form-field">
+                                <mat-label>Name:</mat-label>
+                                <input
+                                  matInput
+                                  type="text"
+                                  placeholder="compass"
+                                  [(ngModel)]="question.item2.name"
+                                  (input)="onChange($event)"
+                                />
+                              </mat-form-field>
+                              <mat-form-field cdkDrag class="mat-form-field">
+                                <mat-label>Image URL:</mat-label>
+                                <input
+                                  matInput
+                                  type="text"
+                                  placeholder="https://m.media-amazon.com/images/I/81NUeKWdiQL._AC_UF1000,1000_QL80_.jpg"
+                                  [(ngModel)]="question.item2.imageUrl"
+                                  (input)="onChange($event)"
+                                />
+                              </mat-form-field>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    }
+                    <button
+                      mat-icon-button
+                      matTooltip="Delete this question"
+                      (click)="deleteSurveyQuestion($event, questionIdx)"
+                    >
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+        <div class="tool-bar">
+          @if (stageSetupIncomplete()) {
+            <div class="unsaved-warning">(Incomplete stage setup)</div>
+          }
+
+          @if (hasUnsavedData) {
+            <div class="unsaved-warning">(Unsaved data)</div>
+            <button mat-raised-button color="primary" (click)="persistExistingStages()">
+              Save data
+            </button>
+          }
+        </div>
+      </mat-card>
+    }
+  </div>
+</div>

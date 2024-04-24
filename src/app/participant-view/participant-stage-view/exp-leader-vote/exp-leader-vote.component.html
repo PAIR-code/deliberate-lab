@@ -1,0 +1,26 @@
+<!-- eslint-disable @angular-eslint/template/label-has-associated-control -->
+<div class="main">
+  @for (user of this.otherParticipants(); track user.uid) {
+    <label [id]="user.uid">{{ user.name }} ({{ user.pronouns }}):</label>
+    <mat-radio-group
+      class="vote-radio-group"
+      [value]="votes[user.uid]"
+      (change)="setVote($event, user.uid)"
+    >
+      <mat-radio-button class="vote-radio-button" [value]="Vote.Positive">
+        {{ Vote.Positive }}
+      </mat-radio-button>
+      <mat-radio-button class="vote-radio-button" [value]="Vote.Neutral">
+        {{ Vote.Neutral }}
+      </mat-radio-button>
+      <mat-radio-button class="vote-radio-button" [value]="Vote.Negative">
+        {{ Vote.Negative }}
+      </mat-radio-button>
+
+      <button mat-button class="vote-clear-button" color="accent" (click)="resetVote(user.uid)">
+        Clear
+      </button>
+    </mat-radio-group>
+    <br />
+  }
+</div>

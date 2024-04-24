@@ -1,0 +1,35 @@
+<div class="main">
+  <form [formGroup]="surveyForm">
+    @for (question of stage.config.questions; track question.id; let index = $index) {
+      @switch (question.kind) {
+        @case (SurveyQuestionKind.Check) {
+          <app-survey-check-question
+            [question]="questionAsKind(question, SurveyQuestionKind.Check)"
+            [questionForm]="questionControls[index]"
+          />
+        }
+        @case (SurveyQuestionKind.Text) {
+          <app-survey-text-question
+            [question]="questionAsKind(question, SurveyQuestionKind.Text)"
+            [questionForm]="questionControls[index]"
+          />
+        }
+        @case (SurveyQuestionKind.Rating) {
+          <app-survey-rating-question
+            [question]="questionAsKind(question, SurveyQuestionKind.Rating)"
+            [questionForm]="questionControls[index]"
+          />
+        }
+        @case (SurveyQuestionKind.Scale) {
+          <app-survey-scale-question
+            [question]="questionAsKind(question, SurveyQuestionKind.Scale)"
+            [questionForm]="questionControls[index]"
+          />
+        }
+      }
+    }
+  </form>
+  <button color="primary" [disabled]="!surveyForm.valid" (click)="nextStep()" mat-button>
+    Next step
+  </button>
+</div>

@@ -1,0 +1,174 @@
+$toolbar-height: 60px;
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  background-color: rgb(33, 33, 33);
+  color: white;
+  font-weight: 600;
+  flex: 0 0 $toolbar-height;
+
+  /* Fixed top toolbar */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: $toolbar-height;
+  z-index: 1000; /* Ensure the toolbar is above other content */
+
+  img {
+    margin: 0 16px;
+  }
+}
+
+.small-logo {
+  width: 100px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.page {
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+.title {
+  font-weight: 400;
+}
+
+.current-user {
+  margin: 0px 15px;
+  font-weight: 300;
+  color: #ccc;
+}
+
+.content {
+  position: relative;
+  top: $toolbar-height;
+
+  // Content display
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+
+  margin: 0;
+  overflow: auto;
+
+  .highlighted {
+    background-color: #ddd;
+  }
+
+  // .working-on-stage {
+  //   .menu-item-inner {
+  //   }
+  // }
+
+  .active {
+    color: #d00;
+  }
+
+  .menu-item-inner {
+    display: flex;
+    align-items: center;
+
+    .ongoing-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 8px;
+      border-radius: 5px;
+      background-color: orange;
+      padding: 1px 4px;
+      line-height: 1.1rem;
+      color: #fff;
+      font-size: 12px;
+      opacity: 1;
+    }
+
+    .icon {
+      margin-left: 6px;
+
+      &.completed {
+        color: rgb(1, 133, 1);
+      }
+    }
+  }
+}
+
+.content .mat-drawer-container {
+  min-height: calc(100vh - $toolbar-height);
+  min-width: 100%;
+}
+
+.menu-buttons {
+  // Fixed to the top toolbar
+  // BUG: it need to stick to the top, but the rest must be aware of it
+  position: static;
+  top: $toolbar-height;
+
+  display: flex;
+  // flex-wrap: wrap;
+  flex-direction: column;
+  // justify-content: flex-start;
+  // align-items: flex-start;
+  // max-width: 600px;
+  // min-height: 600px;
+}
+
+.icon-menu-item {
+  display: flex;
+  // flex-wrap: wrap;
+  // flex-direction: column;
+  justify-content: flex-start;
+  align-content: center;
+
+  // align-items: flex-start;
+  // max-width: 600px;
+  // min-height: 600px;
+  mat-icon {
+    margin-right: 5px;
+  }
+}
+
+.profileImg {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+// .menu-buttons li {
+//   margin: 8px 8px 8px 0;
+//   float: left;
+//   list-style: none;
+//   text-align: center;
+//   // background-color: #000000;
+//   margin-right: 30px;
+//   width: 150px;
+//   line-height: 60px;
+// }
+// .menu-buttons li a {
+//   text-decoration: none;
+//   color: #000000;
+//   display: block;
+// }
+// .menu-buttons li a:hover {
+//   text-decoration: none;
+//   color: #000000;
+//   // background-color: #33B5E5;
+// }
+
+// .menu-button .mat-mdc-button-base {
+//   margin: 8px 8px 8px 0;
+// }
+
+.error {
+  color: #f00;
+  background-color: #fee;
+  border-radius: 5px;
+  border: 1px solid #aaa;
+}

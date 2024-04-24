@@ -1,0 +1,54 @@
+<div class="toolbar" role="banner">
+  <span class="title">Palabrate</span>
+  <div class="spacer"></div>
+  @if (firebase.user(); as user) {
+    <div>
+      <img class="profileImg" [src]="user.photoURL" alt="profile picture" />
+    </div>
+  } @else {
+    <button class="google-login-button" (click)="loginWithGoogle()">
+      <img src="assets/google_logo.svg" alt="Google logo" class="google-logo" />
+      Sign in with Google
+    </button>
+  }
+  <a class="small-logo" aria-label="PAIR" href="https://pair.withgoogle.com/" title="Home">
+    <img src="/assets/pair-logo.svg" alt="PAIR logo" />
+  </a>
+</div>
+
+<div class="content" role="main">
+  @if (error) {
+    <div class="error">{{ error }}</div>
+  }
+
+  <mat-card>
+    <mat-card-content>
+      @if (!authenticated()) {
+        <form (ngSubmit)="loginPalabrate()">
+          <p>To join an experiment, enter your access code:</p>
+          <mat-form-field class="full-width">
+            <mat-label>Access code</mat-label>
+            <input
+              matInput
+              #accessCodeInput
+              placeholder="Write your response"
+              [formControl]="login"
+            />
+          </mat-form-field>
+          <br />
+          <button
+            color="primary"
+            type="submit"
+            mat-button
+            [disabled]="!login.valid || loginMut.isPending()"
+          >
+            <span>Join the experiment</span>
+          </button>
+        </form>
+      } @else {
+        <p>Your Google account is not linked to an experimenter or a participant.</p>
+        <button (click)="logout()">Logout</button>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>
