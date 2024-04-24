@@ -21,17 +21,17 @@ npx ts-node --esm ./run_vertexapi_palm2_predict.ts \
 Assumes that you have run:
   gcloud config set project ${YOUR_GOOGLE_CLOUD_PROJECT_ID}
 */
-import { VertexPalm2LLM } from '../llm_vertexapi_palm2';
 import { FewShotTemplate } from '../fewshot_template';
+import { VertexPalm2LLM } from '../llm_vertexapi_palm2';
 
 import * as yargs from 'yargs';
-import { nv, template } from '../template';
 import { fillTemplate } from '../llm';
+import { nv, template } from '../template';
 
 interface Params {
-  accessToken: string,
-  project: string,
-  movie: string,
+  accessToken: string;
+  project: string;
+  movie: string;
 }
 
 function prettyMovieRec(index: number, movie: string, summaries: string): string {
@@ -42,10 +42,10 @@ I think you'll find the movie ${nv('movie')}:
 ${nv('bullets')}
 
 Do you like my summary?`;
-  const splitSummaries = summaries.split(`', '`).map(
-    summaryPoint => { return { summaryPoint } })
-  const outputBullets = new FewShotTemplate(
-    template`* ${nv('summaryPoint')}`, '\n\n');
+  const splitSummaries = summaries.split(`', '`).map((summaryPoint) => {
+    return { summaryPoint };
+  });
+  const outputBullets = new FewShotTemplate(template`* ${nv('summaryPoint')}`, '\n\n');
   const bullets = outputBullets.apply(splitSummaries).stringify();
   // Notice the nice type error is I try and and stringify, but forgot to
   // fill in the template...
@@ -54,7 +54,6 @@ Do you like my summary?`;
   // return outputFormat.substs({ movie, bullets }).stringify();
   return outputFormat.substs({ movie, bullets, index: `${index}` }).stringify();
 }
-
 
 async function run(args: Params): Promise<void> {
   // Notice the few-shot prompt doesn't always have a synopsis or rating, but
@@ -75,44 +74,42 @@ summary: ['${nv('summaries')}']
 rating (1 to 5 scale): ${nv('rating', { match: '[12345](.\\d)?' })}
 synopsis: '${nv('synopsis')}'`;
 
-  const llm = new VertexPalm2LLM(
-    args.project,
-    args.accessToken,
-  );
+  const llm = new VertexPalm2LLM(args.project, args.accessToken);
   const templateToFill = t.substs({ movie: args.movie });
   const responses = await fillTemplate(llm, templateToFill);
-  const badlyFormedResponsesCount = responses.filter(r => !r.substs).length;
+  const badlyFormedResponsesCount = responses.filter((r) => !r.substs).length;
   console.log(`badlyFormedResponses count: ${badlyFormedResponsesCount}`);
   console.log(`responses: ${JSON.stringify(responses, null, 2)} `);
 
-  responses.filter(r => r.substs).forEach(
-    (r, i) => console.log(prettyMovieRec(i, args.movie, r.substs!.summaries))
-  );
+  responses
+    .filter((r) => r.substs)
+    .forEach((r, i) => console.log(prettyMovieRec(i, args.movie, r.substs!.summaries)));
 }
 
 // ----------------------------------------------------------------------------
 const args = yargs
   .option('accessToken', {
-    describe: 'Google Cloud Auth Token ' +
-      'e.g. echo $(gcloud auth print-access-token)',
+    describe: 'Google Cloud Auth Token ' + 'e.g. echo $(gcloud auth print-access-token)',
     demandOption: true,
     type: 'string',
-  }).option('project', {
-    describe: 'The Google Cloud Project to use (it must have the VertexAI ' +
-      'API enabled).',
+  })
+  .option('project', {
+    describe: 'The Google Cloud Project to use (it must have the VertexAI ' + 'API enabled).',
     demandOption: true,
     type: 'string',
-  }).option('movie', {
+  })
+  .option('movie', {
     describe: 'The name of a movie to get a review of',
     demandOption: true,
     type: 'string',
-  }).help().argv;
+  })
+  .help().argv;
 
 run(args as Params)
   .then(() => {
     console.log('Success!');
   })
-  .catch(e => {
+  .catch((e) => {
     console.error('Failed: ', e);
     throw Error('Failed');
   });

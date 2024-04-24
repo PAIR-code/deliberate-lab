@@ -1,6 +1,7 @@
 import { Component, Input } from '@angular/core';
+import { MediatorMessage } from 'src/lib/types/messages.types';
+import { dateStrOfTimestamp } from 'src/lib/utils/string.utils';
 import { ChatMediatorProfileComponent } from '../chat-mediator-profile/chat-mediator-profile.component';
-import { MediatorMessage } from 'src/lib/staged-exp/data-model';
 
 @Component({
   selector: 'app-chat-mediator-message',
@@ -12,11 +13,5 @@ import { MediatorMessage } from 'src/lib/staged-exp/data-model';
 export class ChatMediatorMessageComponent {
   @Input() message!: MediatorMessage;
 
-  dateStrOfTimestamp(timestamp: number): string {
-    const date = new Date(timestamp);
-    return (
-      `${date.getFullYear()} - ${date.getMonth()} - ${date.getDate()}:` +
-      ` ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
-    );
-  }
+  readonly dateStrOfTimestamp = dateStrOfTimestamp;
 }

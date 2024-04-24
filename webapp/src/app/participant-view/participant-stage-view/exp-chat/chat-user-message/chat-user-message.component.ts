@@ -1,13 +1,10 @@
-import { Component, Input, Signal, WritableSignal, computed, signal } from '@angular/core';
-import {
-  FAKE_EMPTY_USERID,
-  UserMessage,
-  UserProfile,
-  fakeEmptyMessage,
-  fakeEmptyProfile,
-} from 'src/lib/staged-exp/data-model';
+import { Component, Inject, Input, Signal, computed } from '@angular/core';
+import { EXPERIMENT_PROVIDER_TOKEN, ExperimentProvider } from 'src/lib/provider-tokens';
+import { UserMessage } from 'src/lib/types/messages.types';
+import { ParticipantExtended } from 'src/lib/types/participants.types';
+import { lookupTable } from 'src/lib/utils/object.utils';
+import { dateStrOfTimestamp } from 'src/lib/utils/string.utils';
 import { ChatUserProfileComponent } from '../chat-user-profile/chat-user-profile.component';
-import { AppStateService } from 'src/app/services/app-state.service';
 
 @Component({
   selector: 'app-chat-user-message',
@@ -19,11 +16,13 @@ import { AppStateService } from 'src/app/services/app-state.service';
 export class ChatUserMessageComponent {
   @Input() message!: UserMessage;
 
-  dateStrOfTimestamp(timestamp: number): string {
-    const date = new Date(timestamp);
-    return (
-      `${date.getFullYear()} - ${date.getMonth()} - ${date.getDate()}:` +
-      ` ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
+  lookup: Signal<Record<string, ParticipantExtended>>;
+
+  constructor(@Inject(EXPERIMENT_PROVIDER_TOKEN) experimentProvider: ExperimentProvider) {
+    this.lookup = computed(() =>
+      lookupTable(experimentProvider.get()()?.participants ?? [], 'uid'),
     );
   }
+
+  readonly dateStrOfTimestamp = dateStrOfTimestamp;
 }

@@ -6,13 +6,12 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, effect } from '@angular/core';
-import { FormControl } from '@angular/forms';
-import { VertexApiService } from '../../services/vertex-api.service';
-import { MatInputModule } from '@angular/material/input';
+import { Component } from '@angular/core';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { ReactiveFormsModule } from '@angular/forms';
+import { MatInputModule } from '@angular/material/input';
 import { preparePalm2Request, sendPalm2Request } from 'src/lib/text-templates/llm_vertexapi_palm2';
+import { VertexApiService } from '../../services/vertex-api.service';
 
 @Component({
   selector: 'app-llm-api-config',
@@ -29,14 +28,14 @@ export class LlmApiConfigComponent {
     this.tokenControl = new FormControl<string | null>(this.llmService.accessToken);
     this.projectControl = new FormControl<string | null>(this.llmService.projectId);
 
-    this.tokenControl.valueChanges.forEach(update => {
+    this.tokenControl.valueChanges.forEach((update) => {
       if (update && this.llmService.accessToken !== update) {
-        this.llmService.accessToken = update
+        this.llmService.accessToken = update;
       }
     });
-    this.projectControl.valueChanges.forEach(update => {
+    this.projectControl.valueChanges.forEach((update) => {
       if (update && this.llmService.projectId !== update) {
-        this.llmService.projectId = update
+        this.llmService.projectId = update;
       }
     });
   }
@@ -48,7 +47,10 @@ export class LlmApiConfigComponent {
     console.log(this.llmService.projectId);
     console.log(this.llmService.accessToken);
     const response = await sendPalm2Request(
-      this.llmService.projectId, this.llmService.accessToken, request);
+      this.llmService.projectId,
+      this.llmService.accessToken,
+      request,
+    );
     console.log(JSON.stringify(response));
-  };
+  }
 }

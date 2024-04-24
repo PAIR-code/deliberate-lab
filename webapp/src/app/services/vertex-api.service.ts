@@ -6,9 +6,9 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Inject, Injectable } from '@angular/core';
-import { VertexPalm2LLM } from '../../lib/text-templates/llm_vertexapi_palm2';
+import { Injectable } from '@angular/core';
 import { VertexEmbedder } from 'src/lib/text-embeddings/embedder_vertexapi';
+import { VertexPalm2LLM } from '../../lib/text-templates/llm_vertexapi_palm2';
 
 // TODO: Unclear to me if this is needed or helpful...
 //

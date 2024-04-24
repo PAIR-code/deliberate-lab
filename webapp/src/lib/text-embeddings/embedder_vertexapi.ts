@@ -6,8 +6,8 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { SimpleError, isErrorResponse } from "../simple-errors/simple-errors";
-import { Embedder, Embedding } from "./embedder";
+import { SimpleError, isErrorResponse } from '../simple-errors/simple-errors';
+import { Embedder, Embedding } from './embedder';
 
 /*
 Google Cloud Vertex Embedding API
@@ -15,10 +15,10 @@ See: https://cloud.google.com/vertex-ai/docs/generative-ai/embeddings/get-text-e
 (Same models as Google Generative AI Developer API but different API)
 */
 
-export interface EmbedRequestParams { };
+export interface EmbedRequestParams {}
 
 export interface EmbedRequest {
-  instances: { content: string }[]
+  instances: { content: string }[];
 }
 
 export interface VertexEmbedding {
@@ -29,11 +29,11 @@ export interface VertexEmbedding {
         token_count: number;
       };
       values: number[];
-    }
+    };
   }[];
   metadata: {
     billableCharacterCount: number;
-  }
+  };
 }
 
 export interface VertexEmbedError {
@@ -42,10 +42,10 @@ export interface VertexEmbedError {
     details: unknown[];
     message: string;
     status: string;
-  }
+  };
 }
 
-export function prepareEmbedRequest(text: string, options?: EmbedRequestParams): EmbedRequest {
+export function prepareEmbedRequest(text: string, _options?: EmbedRequestParams): EmbedRequest {
   return {
     instances: [{ content: text }],
   };
@@ -60,7 +60,7 @@ async function postDataToLLM(url = '', accessToken: string, data: EmbedRequest) 
     credentials: 'same-origin', // include, *same-origin, omit
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       // 'Content-Type': 'application/x-www-form-urlencoded',
     },
     redirect: 'follow', // manual, *follow, error
@@ -82,13 +82,13 @@ export async function sendEmbedRequest(
     // apiEndpoint.
     `https://${apiEndpoint}/v1/projects/${projectId}/locations/us-central1/publishers/google/models/${modelId}:predict`,
     accessToken,
-    req
+    req,
   );
 }
 
 interface EmbedApiOptions {
-  modelId: string,
-  apiEndpoint: string,
+  modelId: string;
+  apiEndpoint: string;
 }
 
 export class VertexEmbedder implements Embedder<EmbedApiOptions> {
@@ -105,20 +105,18 @@ export class VertexEmbedder implements Embedder<EmbedApiOptions> {
     this.name = `VertexEmbedder:` + this.defaultOptions.modelId;
   }
 
-  async embed(
-    query: string, params?: EmbedApiOptions
-  ): Promise<Embedding | SimpleError> {
-
+  async embed(query: string, params?: EmbedApiOptions): Promise<Embedding | SimpleError> {
     const apiRequest: EmbedRequest = {
       instances: [{ content: query }],
-    }
+    };
 
     const apiResponse = await sendEmbedRequest(
       this.projectId,
       this.accessToken,
       apiRequest,
       params ? params.modelId : this.defaultOptions.modelId,
-      params ? params.apiEndpoint : this.defaultOptions.apiEndpoint);
+      params ? params.apiEndpoint : this.defaultOptions.apiEndpoint,
+    );
 
     console.log(apiResponse);
 

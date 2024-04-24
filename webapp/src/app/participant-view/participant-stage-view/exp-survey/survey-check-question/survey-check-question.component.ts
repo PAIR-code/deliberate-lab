@@ -1,21 +1,16 @@
 import { Component, Input } from '@angular/core';
-import { MatCheckboxChange, MatCheckboxModule } from '@angular/material/checkbox';
-import { CheckQuestion } from 'src/lib/staged-exp/data-model';
-import { Question } from 'src/lib/staged-exp/question';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { CheckQuestion } from 'src/lib/types/questions.types';
 
 @Component({
   selector: 'app-survey-check-question',
   standalone: true,
-  imports: [MatCheckboxModule],
+  imports: [MatCheckboxModule, ReactiveFormsModule],
   templateUrl: './survey-check-question.component.html',
   styleUrl: './survey-check-question.component.scss',
 })
 export class SurveyCheckQuestionComponent {
-  @Input() question!: Question<CheckQuestion>;
-
-  updateCheckboxValue(updatedValue: MatCheckboxChange) {
-    this.question.edit(() => {
-      this.question.data.checkMark = updatedValue.checked;
-    });
-  }
+  @Input() question!: CheckQuestion;
+  @Input() questionForm!: FormGroup;
 }

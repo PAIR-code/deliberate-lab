@@ -14,48 +14,47 @@ npx ts-node --esm ./run_embedder_raw.ts \
   --project=$(gcloud config get-value project) \
   --accessToken=$(gcloud auth print-access-token)
 */
-import { sendEmbedRequest, prepareEmbedRequest } from '../embedder_vertexapi';
+import { prepareEmbedRequest, sendEmbedRequest } from '../embedder_vertexapi';
 
 import * as yargs from 'yargs';
 
 interface Params {
-  accessToken: string,
-  project: string,
-  model: string,
+  accessToken: string;
+  project: string;
+  model: string;
 }
 
 async function run(args: Params): Promise<void> {
   const text = `I am a hungry hippo`;
   const request = prepareEmbedRequest(text);
-  const response = await sendEmbedRequest(
-    args.project, args.accessToken, request);
+  const response = await sendEmbedRequest(args.project, args.accessToken, request);
   console.log(JSON.stringify(response));
 }
 
 // ----------------------------------------------------------------------------
 const args = yargs
   .option('accessToken', {
-    describe: 'Google Cloud Auth Token ' +
-      'e.g. echo $(gcloud auth print-access-token)',
+    describe: 'Google Cloud Auth Token ' + 'e.g. echo $(gcloud auth print-access-token)',
     demandOption: true,
     type: 'string',
-  }).option('project', {
-    describe: 'The Google Cloud Project to use (it must have the VertexAI ' +
-      'API enabled).',
+  })
+  .option('project', {
+    describe: 'The Google Cloud Project to use (it must have the VertexAI ' + 'API enabled).',
     demandOption: true,
     type: 'string',
-  }).option('model', {
-    describe: 'The Google Cloud Project to use (it must have the VertexAI ' +
-      'API enabled).',
+  })
+  .option('model', {
+    describe: 'The Google Cloud Project to use (it must have the VertexAI ' + 'API enabled).',
     default: 'textembedding-gecko',
     type: 'string',
-  }).help().argv;
+  })
+  .help().argv;
 
 run(args as Params)
   .then(() => {
     console.log('Success!');
   })
-  .catch(e => {
+  .catch((e) => {
     console.error('Failed: ', e);
     throw Error('Failed');
   });

@@ -6,10 +6,8 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { flatten } from 'underscore';
-import { Template, escapeStr, template, nv, unEscapeStr, matchTemplate } from './template';
-import { NamedVar } from './variable';
 import { FewShotTemplate, matchFewShotTemplate } from './fewshot_template';
+import { Template, matchTemplate, nv, template } from './template';
 
 // // ----------------------------------------------------------------------------
 // const movieSuggestionPrompt: Template<never> = template``;
@@ -22,41 +20,40 @@ import { FewShotTemplate, matchFewShotTemplate } from './fewshot_template';
 // Idea: abstraction: generate a variable (have a stopping condition as first
 // class entity.
 
-
 describe('fewshot_template', () => {
-  beforeEach(() => {
-  });
+  beforeEach(() => {});
 
   it('A mini walkthrough of why this is neat...', () => {
-
     // ----------------------------------------------------------------------------
     // ----------------------------------------------------------------------------
     const criteriaPoints = [
       {
         name: 'Concise',
-        description: 'not waffley.'
+        description: 'not waffley.',
       },
       {
         name: 'No synposes',
-        description: 'do not give plot synopses.'
+        description: 'do not give plot synopses.',
       },
       {
         name: 'Specific',
-        description: 'not vague (i.e. not "an amazing movie.", "a classic.").'
+        description: 'not vague (i.e. not "an amazing movie.", "a classic.").',
       },
     ];
-    const nCriteriaTempl = new FewShotTemplate(template
-      `(${nv('number')}) ${nv('name')}: ${nv('description')}`,
-      '\n');
-    const numberedCriteriaPoints =
-      criteriaPoints.map((e, i) => { return { ...e, number: `${i + 1}` } });
-    const criteriaTempl: Template<never> = nCriteriaTempl.apply(
-      numberedCriteriaPoints);
+    const nCriteriaTempl = new FewShotTemplate(
+      template`(${nv('number')}) ${nv('name')}: ${nv('description')}`,
+      '\n',
+    );
+    const numberedCriteriaPoints = criteriaPoints.map((e, i) => {
+      return { ...e, number: `${i + 1}` };
+    });
+    const criteriaTempl: Template<never> = nCriteriaTempl.apply(numberedCriteriaPoints);
 
     expect(criteriaTempl.escaped).toEqual(
       `(1) Concise: not waffley.
 (2) No synposes: do not give plot synopses.
-(3) Specific: not vague (i.e. not "an amazing movie.", "a classic.").`);
+(3) Specific: not vague (i.e. not "an amazing movie.", "a classic.").`,
+    );
 
     // ----------------------------------------------------------------------------
     // Probably too clever... but showing how you can have meta-templates.
@@ -71,9 +68,10 @@ describe('fewshot_template', () => {
     // The Motivation to do this is to make sure that you get consistent
     // joining, e.g. ": " always separates the property from the value, and
     // "\n" always separates different property-vcalue pairs.
-    const nPropertyValuePerLineTempl = new FewShotTemplate(template
-      `${nv('property')}: "${nv('value')}"`,
-      '\n');
+    const nPropertyValuePerLineTempl = new FewShotTemplate(
+      template`${nv('property')}: "${nv('value')}"`,
+      '\n',
+    );
     const movieAndRecList = [
       {
         property: 'Movie',
@@ -82,21 +80,22 @@ describe('fewshot_template', () => {
       {
         property: 'Recommendation',
         value: nv('recommendation'),
-      }
+      },
     ];
     const movieRecTempl = nPropertyValuePerLineTempl.apply(movieAndRecList);
-    const movieRecEvalTempl =
-      nPropertyValuePerLineTempl.apply(
-        [...movieAndRecList,
-        {
-          property: 'Evaluation',
-          value: nv('evaluation'),
-        }]);
+    const movieRecEvalTempl = nPropertyValuePerLineTempl.apply([
+      ...movieAndRecList,
+      {
+        property: 'Evaluation',
+        value: nv('evaluation'),
+      },
+    ]);
 
     expect(movieRecEvalTempl.escaped).toEqual(
       `Movie: "{{movie}}"
 Recommendation: "{{recommendation}}"
-Evaluation: "{{evaluation}}"`);
+Evaluation: "{{evaluation}}"`,
+    );
 
     // ----------------------------------------------------------------------------
     const fewShotCriticExamples = [
@@ -108,17 +107,15 @@ Evaluation: "{{evaluation}}"`);
       {
         movie: 'The Godfather',
         recommendation: 'a masterpiece of cinema',
-        evaluation: 'Specific: the recommendation is vague, it should be more precise.'
+        evaluation: 'Specific: the recommendation is vague, it should be more precise.',
       },
     ];
 
-    const nCriticExamplesTempl = new FewShotTemplate(
-      movieRecEvalTempl, '\n\n');
+    const nCriticExamplesTempl = new FewShotTemplate(movieRecEvalTempl, '\n\n');
 
     // ----------------------------------------------------------------------------
     // Tenplates can contain other templates inline also.
-    const criticTempl = template
-      `Given the following criteria for movie recommendations:
+    const criticTempl = template`Given the following criteria for movie recommendations:
 ${nv('Constitution')}
 
 Evaluate the following movie recommendations.
@@ -131,8 +128,7 @@ Evaluation: "`;
 
     const criticWithConstitutionAndExamples = criticTempl.substs({
       Constitution: criteriaTempl.escaped,
-      fewShotCriticExamples:
-        nCriticExamplesTempl.apply(fewShotCriticExamples).escaped
+      fewShotCriticExamples: nCriticExamplesTempl.apply(fewShotCriticExamples).escaped,
     });
 
     expect(criticWithConstitutionAndExamples.escaped).toEqual(
@@ -154,7 +150,8 @@ Evaluation: "Specific: the recommendation is vague, it should be more precise."
 
 Movie: "{{movie}}"
 Recommendation: "{{recommendation}}"
-Evaluation: "`);
+Evaluation: "`,
+    );
   });
 
   it('parts template matching with multi-line match-string', () => {
@@ -166,24 +163,26 @@ Liked or Disliked: ${nv('likedOrDisliked')}, because:
 ]`;
 
     const t = itemExperienceTempl.substs({
-      experience: 'The Garden of Forking Paths: like it'
+      experience: 'The Garden of Forking Paths: like it',
     });
 
     const parts = t.parts();
-    const s1 = "The Garden of Forking Paths (short story by Jorge Luis Borges)\nLiked or Disliked: Liked, because:\n[\n  \"Intriguing\",\n  \"Philosophical\",\n  \"Thought-provoking\"\n]\n\nfoo foo\n]";
+    const s1 =
+      'The Garden of Forking Paths (short story by Jorge Luis Borges)\nLiked or Disliked: Liked, because:\n[\n  "Intriguing",\n  "Philosophical",\n  "Thought-provoking"\n]\n\nfoo foo\n]';
     const m1 = matchTemplate(parts, s1, false);
     expect(m1.substs).toEqual({
       aboutEntity: 'The Garden of Forking Paths',
       aboutDetails: 'short story by Jorge Luis Borges',
       likedOrDisliked: 'Liked',
-      characteristics: '\"Intriguing\",\n  \"Philosophical\",\n  \"Thought-provoking\"'
+      characteristics: '"Intriguing",\n  "Philosophical",\n  "Thought-provoking"',
     });
   });
 
   it('match fewshot template', () => {
-    const templ = new FewShotTemplate(template
-      `(${nv('id')}) ${nv('property')}: "${nv('value')}"`,
-      '\n');
+    const templ = new FewShotTemplate(
+      template`(${nv('id')}) ${nv('property')}: "${nv('value')}"`,
+      '\n',
+    );
 
     const str = `(1) Concise: "not waffley"
 (2) No synposes: "do not give plot synopses"
@@ -193,9 +192,17 @@ Liked or Disliked: ${nv('likedOrDisliked')}, because:
     expect(m.length).toEqual(3);
     expect(m[0].substs).toEqual({ id: '1', property: 'Concise', value: 'not waffley' });
     expect(m[0].curPart).toEqual(undefined);
-    expect(m[1].substs).toEqual({ id: '2', property: 'No synposes', value: 'do not give plot synopses' });
+    expect(m[1].substs).toEqual({
+      id: '2',
+      property: 'No synposes',
+      value: 'do not give plot synopses',
+    });
     expect(m[1].curPart).toEqual(undefined);
-    expect(m[2].substs).toEqual({ id: '3', property: 'Specific', value: 'not vague (i.e. not \'an amazing movie.\', \'a classic.\')' });
+    expect(m[2].substs).toEqual({
+      id: '3',
+      property: 'Specific',
+      value: "not vague (i.e. not 'an amazing movie.', 'a classic.')",
+    });
     expect(m[2].curPart).toEqual(undefined);
   });
 });

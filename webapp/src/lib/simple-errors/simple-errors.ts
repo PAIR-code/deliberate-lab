@@ -10,19 +10,23 @@ export interface AbstractSimpleResponse {
   error: unknown;
 }
 
-export interface SimpleError {
+export interface SimpleError extends AbstractSimpleResponse {
   error: string;
 }
 
-export function isErrorResponse<T, E extends AbstractSimpleResponse>(response: T | E): response is E {
+export function isErrorResponse<T, E extends AbstractSimpleResponse>(
+  response: T | E,
+): response is E {
   if ((response as E).error) {
     return true;
   }
   return false;
 }
 
-export function assertNoErrorResponse<T, E extends AbstractSimpleResponse>(response: T | E): asserts response is T {
-  if ((response as E).error) {
+export function assertNoErrorResponse<E extends AbstractSimpleResponse, T extends object>(
+  response: E | T,
+): asserts response is Exclude<T, E> {
+  if ('error' in response && (response as E).error) {
     throw new Error('response was an error after all');
   }
 }

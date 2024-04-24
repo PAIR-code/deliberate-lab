@@ -8,10 +8,9 @@ describe('MediatorFeedbackComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MediatorFeedbackComponent]
-    })
-    .compileComponents();
-    
+      imports: [MediatorFeedbackComponent],
+    }).compileComponents();
+
     fixture = TestBed.createComponent(MediatorFeedbackComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

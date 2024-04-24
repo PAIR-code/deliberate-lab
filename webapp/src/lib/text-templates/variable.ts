@@ -13,7 +13,7 @@ An implementation of named nariables that can occur in a string template.
 export abstract class NamedVar<N extends string> {
   public abstract contentMatchStr?: string;
 
-  constructor(public name: N) { };
+  constructor(public name: N) {}
 
   // Apply the substitution, replacing this variable in `s` with the value
   // string.
@@ -36,7 +36,6 @@ export abstract class NamedVar<N extends string> {
   public abstract literal: string;
 }
 
-
 // Assumes that regexp matches /.*${literal}.*/
 // (Required for the RegExpVar literal/applyFn property.
 export interface RegExpVarOptions {
@@ -46,7 +45,7 @@ export interface RegExpVarOptions {
   // It also should not include the $ or ^ markers (match end/start of regexp.
   // This is intented to be part of the regexp used to control generation, or
   // match the output in a template.
-  match?: string,
+  match?: string;
 
   // Optional string that much match right after the variable.
   postVarMatch?: string;

@@ -1,89 +1,97 @@
-import { Component, Input, Signal, WritableSignal, computed, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterModule } from '@angular/router';
-import { AppStateService } from 'src/app/services/app-state.service';
-import { deleteExperiment } from 'src/lib/staged-exp/app';
-import { MatExpansionModule } from '@angular/material/expansion';
+import {
+  Component,
+  Inject,
+  Input,
+  Signal,
+  WritableSignal,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
+import { Router, RouterLink, RouterLinkActive, RouterModule } from '@angular/router';
 
-import { StageKinds, UserData, UserProfile } from 'src/lib/staged-exp/data-model';
+import { HttpClient } from '@angular/common/http';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { injectQueryClient } from '@tanstack/angular-query-experimental';
+import { ProviderService } from 'src/app/services/provider.service';
+import { isOfKind } from 'src/lib/algebraic-data';
+import { deleteExperimentMutation } from 'src/lib/api/mutations';
+import { experimentQuery } from 'src/lib/api/queries';
+import { EXPERIMENT_PROVIDER_TOKEN, ExperimentProvider } from 'src/lib/provider-tokens';
+import { QueryType } from 'src/lib/types/api.types';
+import { ExperimentExtended } from 'src/lib/types/experiments.types';
+import { ParticipantExtended } from 'src/lib/types/participants.types';
+import { ExpStage, StageKind } from 'src/lib/types/stages.types';
 import { MediatorChatComponent } from '../mediator-chat/mediator-chat.component';
-import { isOfKind } from 'src/lib/albebraic-data';
-
-// TODO: generalise into a senisble class for viewing all relevant info on
-// where participants are at w.r.t. this stage.
-export interface StageState {
-  name: string;
-  kind: StageKinds;
-  participants: UserProfile[];
-}
 
 @Component({
   selector: 'app-experiment-monitor',
   standalone: true,
-  imports: [RouterModule, RouterLink, RouterLinkActive, MediatorChatComponent, MatButtonModule, MatExpansionModule, MatIconModule],
+  imports: [
+    RouterModule,
+    RouterLink,
+    RouterLinkActive,
+    MediatorChatComponent,
+    MatButtonModule,
+    MatExpansionModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+  ],
+  providers: [
+    {
+      provide: EXPERIMENT_PROVIDER_TOKEN,
+      useFactory: () => new ProviderService<Signal<ExperimentExtended | undefined>>(),
+    },
+  ],
   templateUrl: './experiment-monitor.component.html',
   styleUrl: './experiment-monitor.component.scss',
 })
 export class ExperimentMonitorComponent {
-  public experimentName: WritableSignal<string> = signal('');
-  public participants: Signal<UserData[]>;
+  http = inject(HttpClient);
+  queryClient = injectQueryClient();
+
+  // Experiment deletion mutation
+  rmExperiment = deleteExperimentMutation(this.http, this.queryClient);
+
+  public experimentUid: WritableSignal<string | null> = signal(null);
+  public _experiment: QueryType<ExperimentExtended>;
+  public participants: Signal<ParticipantExtended[]>;
 
   @Input()
+  // This one is set by the route parameter
   set experiment(name: string) {
-    this.experimentName.set(name);
+    this.experimentUid.set(name);
   }
 
-  public stageStates: Signal<StageState[]>;
-
-
   isOfKind = isOfKind;
-  readonly StageKinds = StageKinds;
+  readonly StageKind = StageKind;
+  public expStages: Signal<ExpStage[]>;
 
-  constructor(public stateService: AppStateService, public router: Router) {
-    this.participants = computed(() => {
-      console.log('experimentName:', this.experimentName());
-      if (!(this.experimentName() in this.stateService.data().experiments)) {
-        return [];
-      }
-      const exp = this.stateService.data().experiments[this.experimentName()];
-      return Object.values(exp.participants);
-    });
+  constructor(
+    public router: Router,
+    @Inject(EXPERIMENT_PROVIDER_TOKEN) experimentProvider: ExperimentProvider,
+  ) {
+    // Prepare the request
+    this._experiment = experimentQuery(this.experimentUid);
+    experimentProvider.set(this._experiment.data); // Expose the current experiment through the provider
 
-    // TODO: factor into service?
-    this.stageStates = computed(() => {
-      const participant0 = this.participants()[0];
-      const stageStateMap: { [stageName: string]: StageState } = {};
-      const stageStates: StageState[] = [
-        ...participant0.completedStageNames,
-        participant0.workingOnStageName,
-        ...participant0.futureStageNames,
-      ].map((name) => {
-        const kind = participant0.stageMap[name].kind;
-        return {
-          name,
-          kind,
-          participants: [],
-        };
-      });
-      stageStates.forEach((s) => (stageStateMap[s.name] = s));
-      this.participants().forEach((p) => {
-        if (p.workingOnStageName in stageStateMap) {
-          stageStateMap[p.workingOnStageName].participants.push(p.profile);
-        } else {
-          throw new Error(`stage not in the first participants stages: ${p.workingOnStageName}`);
-        }
-      });
-      return stageStates;
+    // Extract participants data from the extended experiment
+    this.participants = computed(() => this._experiment.data()?.participants ?? []);
+
+    this.expStages = computed(() => {
+      const p = this.participants()[0];
+      return p ? Object.values(p.stageMap) : [];
     });
   }
 
   deleteExperiment() {
-    if (confirm("⚠️ This will delete the experiment! Are you sure?")) {
-      this.stateService.editData((data) =>
-        deleteExperiment(this.experimentName(), data),
-      );
-      
+    const experimentUid = this.experimentUid();
+    if (experimentUid !== null && confirm('⚠️ This will delete the experiment! Are you sure?')) {
+      this.rmExperiment.mutate(experimentUid);
+
       // Redirect to settings page.
       this.router.navigate(['/experimenter', 'settings']);
     }

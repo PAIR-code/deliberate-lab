@@ -3,28 +3,6 @@ export interface AlgebraicData<Data> {
   data: Data;
 }
 
-enum Foo {
-  bar = 'bar',
-  ugg = 'ugg',
-}
-
-interface UggData extends AlgebraicData<object> {
-  kind: Foo.ugg;
-  data: { uggName: string };
-}
-
-interface BarData extends AlgebraicData<object> {
-  kind: Foo.bar;
-  data: { barNumber: number };
-}
-
-type FooData = BarData | UggData;
-
-const bar: BarData = {
-  kind: Foo.bar,
-  data: { barNumber: 5 },
-};
-
 // Elaborate data getter that in the presense of a kind gets the right kind of data.
 export function getKindData<T extends AlgebraicData<object>, K extends T['kind']>(
   kind: K,
@@ -72,25 +50,3 @@ export function isOfKind<T extends { kind: string }, K extends T['kind']>(
 ): objMaybeOfKind is T & { kind: K } {
   return objMaybeOfKind.kind === kind;
 }
-
-//
-
-const foo = bar as never as FooData;
-
-const test = getKindData(Foo.bar, foo);
-// typeof test === BarData['data'] !
-
-const test2 = castToKind(Foo.bar, foo);
-// typeof test2 === BarData
-
-if (isOfKind(foo, Foo.bar)) {
-  foo.data.barNumber += 1;
-}
-
-// // Elaborate data getter that in the presense of a kind gets the right kind of data.
-// export function getKindData<K extends FooData['kind'], T extends FooData & { kinds: K }>(
-//   kind: K,
-//   foo: T,
-// ): T extends AlgebraicData<infer Kind> ? Kind : never {
-//   return foo.data as T extends AlgebraicData<infer Kind> ? Kind : never;
-// }

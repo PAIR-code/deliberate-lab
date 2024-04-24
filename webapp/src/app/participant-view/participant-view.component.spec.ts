@@ -8,10 +8,9 @@ describe('ParticipantViewComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ParticipantViewComponent]
-    })
-    .compileComponents();
-    
+      imports: [ParticipantViewComponent],
+    }).compileComponents();
+
     fixture = TestBed.createComponent(ParticipantViewComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

@@ -6,19 +6,8 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import {
-  AfterViewInit,
-  Component,
-  ElementRef,
-  Signal,
-  ViewChild,
-  computed,
-  effect,
-} from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
-import { AppStateService } from './services/app-state.service';
-import { GoogleAuthService } from './services/google-auth.service';
-import { Experiment } from 'src/lib/staged-exp/data-model';
+import { Component } from '@angular/core';
+import { FirebaseService } from './firebase.service';
 
 @Component({
   selector: 'app-root',
@@ -26,9 +15,6 @@ import { Experiment } from 'src/lib/staged-exp/data-model';
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
-  constructor(public stateService: AppStateService) {
-    effect(() => {
-      document.title = `Experiment: ${this.stateService.appName()}`;
-    });
-  }
+  // Inject the Firebase Service here because it is in charge of auth redirection and must exist before the app starts
+  constructor(private firebaseService: FirebaseService) {}
 }

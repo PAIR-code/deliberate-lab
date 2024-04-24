@@ -5,8 +5,6 @@ import { Component } from '@angular/core';
   standalone: true,
   imports: [],
   templateUrl: './chat-mediator-profile.component.html',
-  styleUrl: './chat-mediator-profile.component.scss'
+  styleUrl: './chat-mediator-profile.component.scss',
 })
-export class ChatMediatorProfileComponent {
-
-}
+export class ChatMediatorProfileComponent {}
