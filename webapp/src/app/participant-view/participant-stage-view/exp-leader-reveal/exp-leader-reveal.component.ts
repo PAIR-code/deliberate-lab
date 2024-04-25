@@ -1,9 +1,9 @@
-import { Component, Inject, signal, Signal } from '@angular/core';
+import { Component, Inject, Input, signal, Signal } from '@angular/core';
 
 import { ProviderService } from 'src/app/services/provider.service';
 import { Participant } from 'src/lib/participant';
 import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
-import { StageKind } from 'src/lib/types/stages.types';
+import { ExpStageVoteReveal } from 'src/lib/types/stages.types';
 import { VoteReveal } from 'src/lib/types/votes.types';
 
 @Component({
@@ -14,6 +14,20 @@ import { VoteReveal } from 'src/lib/types/votes.types';
   styleUrl: './exp-leader-reveal.component.scss',
 })
 export class ExpLeaderRevealComponent {
+  // Reload the internal logic dynamically when the stage changes
+  @Input({ required: true })
+  set stage(value: ExpStageVoteReveal) {
+    this._stage = value;
+
+    this.stageData = this.stage.config;
+  }
+
+  get stage(): ExpStageVoteReveal {
+    return this._stage as ExpStageVoteReveal;
+  }
+
+  private _stage?: ExpStageVoteReveal;
+
   public participant: Participant;
   public stageData: VoteReveal;
 
@@ -24,9 +38,7 @@ export class ExpLeaderRevealComponent {
     @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ProviderService<Participant>,
   ) {
     this.participant = participantProvider.get();
-    const { config } = this.participant.assertViewingStageCast(StageKind.RevealVoted)!;
-
-    this.stageData = config;
+    this.stageData = this.stage?.config; // This will truly be initialized in ngOnInit. this.stage can be undefined here
 
     // TODO: use the new backend way of syncing participant progression
     this.everyoneReachedTheEnd = signal<boolean>(false);

@@ -9,6 +9,7 @@
 import {
   Component,
   Inject,
+  Input,
   OnDestroy,
   Signal,
   WritableSignal,
@@ -37,10 +38,10 @@ import {
   ParticipantProvider,
 } from 'src/lib/provider-tokens';
 import { ReadyToEndChat } from 'src/lib/types/chats.types';
-import { ItemPair } from 'src/lib/types/items.types';
+import { ItemPair, getDefaultItemPair } from 'src/lib/types/items.types';
 import { DiscussItemsMessage, Message, MessageType } from 'src/lib/types/messages.types';
 import { ParticipantExtended } from 'src/lib/types/participants.types';
-import { ExpStageChatAboutItems, StageKind } from 'src/lib/types/stages.types';
+import { ExpStageChatAboutItems } from 'src/lib/types/stages.types';
 import { localStorageTimer } from 'src/lib/utils/angular.utils';
 import { chatMessagesSubscription, firestoreDocSubscription } from 'src/lib/utils/firestore.utils';
 import { extendUntilMatch } from 'src/lib/utils/object.utils';
@@ -72,49 +73,12 @@ const TIMER_SECONDS = 60; // 1 minute between item pairs for discussions
   styleUrl: './exp-chat.component.scss',
 })
 export class ExpChatComponent implements OnDestroy {
-  public participant: Participant;
-  public otherParticipants: Signal<ParticipantExtended[]>;
-  public everyoneReachedTheChat: Signal<boolean>;
+  // Reload the internal logic dynamically when the stage changes
+  @Input({ required: true })
+  set stage(value: ExpStageChatAboutItems) {
+    this._stage = value;
 
-  // Extracted stage data
-  public stage: ExpStageChatAboutItems;
-  public currentRatingsToDiscuss: WritableSignal<ItemPair>;
-
-  // Queries
-  private client = injectQueryClient();
-
-  // Message subscription
-  public messages: WritableSignal<Message[]>;
-  private unsubscribeMessages: Unsubscribe | undefined;
-
-  // Ready to end chat subscription
-  private unsubscribeReadyToEndChat: Unsubscribe | undefined;
-
-  // Message mutation & form
-  public messageMutation = userMessageMutation();
-  public message = new FormControl<string>('', Validators.required);
-
-  // Chat completion mutation
-  public finishChatMutation = updateChatStageMutation(this.client, () =>
-    this.participant.navigateToNextStage(),
-  );
-
-  public discussingPairIndex = signal(0);
-
-  public toggleMutation = toggleChatMutation();
-  public readyToEndChat: WritableSignal<boolean> = signal(false); // Frontend-only, no need to have fine-grained backend sync for this
-
-  public timer = localStorageTimer('chat-timer', TIMER_SECONDS, () => this.toggleEndChat()); // 1 minute timer
-
-  constructor(
-    @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ParticipantProvider,
-    @Inject(EXPERIMENT_PROVIDER_TOKEN) experimentProvider: ExperimentProvider,
-  ) {
-    this.participant = participantProvider.get(); // Get the participant instance
-
-    // Extract stage data
-    this.stage = this.participant.assertViewingStageCast(StageKind.GroupChat)!;
-    this.everyoneReachedTheChat = this.participant.everyoneReachedCurrentStage(this.stage.name);
+    this.participant.everyoneReachedCurrentStage(this.stage.name);
 
     // Initialize the current rating to discuss with the first available pair
     const { id1, id2 } = this.stage.config.ratingsToDiscuss[0];
@@ -123,15 +87,6 @@ export class ExpChatComponent implements OnDestroy {
       item2: this.stage.config.items[id2],
     });
 
-    this.otherParticipants = computed(
-      () =>
-        experimentProvider
-          .get()()
-          ?.participants.filter(({ uid }) => uid !== this.participant.userData()?.uid) ?? [],
-    );
-
-    // Firestore subscription for messages
-    this.messages = signal([]);
     this.unsubscribeMessages = chatMessagesSubscription(this.stage.config.chatId, (m) => {
       this.messages.set(extendUntilMatch(this.messages(), m.reverse(), 'uid'));
 
@@ -178,6 +133,65 @@ export class ExpChatComponent implements OnDestroy {
       },
       { allowSignalWrites: true },
     );
+  }
+  get stage() {
+    return this._stage as ExpStageChatAboutItems;
+  }
+
+  public _stage?: ExpStageChatAboutItems;
+
+  public participant: Participant;
+  public otherParticipants: Signal<ParticipantExtended[]>;
+  public everyoneReachedTheChat: Signal<boolean>;
+
+  // Extracted stage data
+  public currentRatingsToDiscuss: WritableSignal<ItemPair>;
+
+  // Queries
+  private client = injectQueryClient();
+
+  // Message subscription
+  public messages: WritableSignal<Message[]>;
+  private unsubscribeMessages: Unsubscribe | undefined;
+
+  // Ready to end chat subscription
+  private unsubscribeReadyToEndChat: Unsubscribe | undefined;
+
+  // Message mutation & form
+  public messageMutation = userMessageMutation();
+  public message = new FormControl<string>('', Validators.required);
+
+  // Chat completion mutation
+  public finishChatMutation = updateChatStageMutation(this.client, () =>
+    this.participant.navigateToNextStage(),
+  );
+
+  public discussingPairIndex = signal(0);
+
+  public toggleMutation = toggleChatMutation();
+  public readyToEndChat: WritableSignal<boolean> = signal(false); // Frontend-only, no need to have fine-grained backend sync for this
+
+  public timer = localStorageTimer('chat-timer', TIMER_SECONDS, () => this.toggleEndChat()); // 1 minute timer
+
+  constructor(
+    @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ParticipantProvider,
+    @Inject(EXPERIMENT_PROVIDER_TOKEN) experimentProvider: ExperimentProvider,
+  ) {
+    this.participant = participantProvider.get(); // Get the participant instance
+
+    // Extract stage data
+    this.everyoneReachedTheChat = signal(false);
+    this.currentRatingsToDiscuss = signal(getDefaultItemPair());
+
+    this.otherParticipants = computed(
+      () =>
+        experimentProvider
+          .get()()
+          ?.participants.filter(({ uid }) => uid !== this.participant.userData()?.uid) ?? [],
+    );
+
+    // Firestore subscription for messages
+    this.messages = signal([]);
   }
 
   isSilent() {

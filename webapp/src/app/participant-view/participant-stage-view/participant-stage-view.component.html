@@ -3,19 +3,29 @@
   <div class="exp-stage-content">
     @switch (this.participant.viewingStage()?.kind) {
       @case (StageKind.AcceptTosAndSetProfile) {
-        <app-exp-tos-and-profile></app-exp-tos-and-profile>
+        <app-exp-tos-and-profile
+          [stage]="stageAsKind(this.participant.viewingStage(), StageKind.AcceptTosAndSetProfile)"
+        ></app-exp-tos-and-profile>
       }
       @case (StageKind.GroupChat) {
-        <app-exp-chat></app-exp-chat>
+        <app-exp-chat
+          [stage]="stageAsKind(this.participant.viewingStage(), StageKind.GroupChat)"
+        ></app-exp-chat>
       }
       @case (StageKind.TakeSurvey) {
-        <app-exp-survey></app-exp-survey>
+        <app-exp-survey
+          [stage]="stageAsKind(this.participant.viewingStage(), StageKind.TakeSurvey)"
+        ></app-exp-survey>
       }
       @case (StageKind.VoteForLeader) {
-        <app-exp-leader-vote></app-exp-leader-vote>
+        <app-exp-leader-vote
+          [stage]="stageAsKind(this.participant.viewingStage(), StageKind.VoteForLeader)"
+        ></app-exp-leader-vote>
       }
       @case (StageKind.RevealVoted) {
-        <app-exp-leader-reveal></app-exp-leader-reveal>
+        <app-exp-leader-reveal
+          [stage]="stageAsKind(this.participant.viewingStage(), StageKind.RevealVoted)"
+        ></app-exp-leader-reveal>
       }
       @default {
         <div class="error">

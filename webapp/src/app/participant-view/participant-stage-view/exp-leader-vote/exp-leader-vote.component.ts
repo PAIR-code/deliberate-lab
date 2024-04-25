@@ -6,7 +6,7 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, Inject, signal, Signal } from '@angular/core';
+import { Component, Inject, Input, signal, Signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRadioModule } from '@angular/material/radio';
 import { ProviderService } from 'src/app/services/provider.service';
@@ -14,7 +14,7 @@ import { Participant } from 'src/lib/participant';
 import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
 
 import { ParticipantExtended } from 'src/lib/types/participants.types';
-import { StageKind } from 'src/lib/types/stages.types';
+import { ExpStageVotes } from 'src/lib/types/stages.types';
 import { Vote, Votes } from 'src/lib/types/votes.types';
 
 @Component({
@@ -25,29 +25,12 @@ import { Vote, Votes } from 'src/lib/types/votes.types';
   imports: [MatRadioModule, MatButtonModule],
 })
 export class ExpLeaderVoteComponent {
-  public otherParticipants: Signal<ParticipantExtended[]>;
+  // Reload the internal logic dynamically when the stage changes
+  @Input({ required: true })
+  set stage(value: ExpStageVotes) {
+    this._stage = value;
 
-  readonly Vote = Vote;
-
-  public participant: Participant;
-  public votes: Votes;
-
-  constructor(
-    @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ProviderService<Participant>,
-  ) {
-    this.participant = participantProvider.get();
-
-    const { config } = this.participant.assertViewingStageCast(StageKind.VoteForLeader)!;
-
-    this.votes = config;
-
-    // TODO: use new backend
-    this.otherParticipants = signal([]);
-    //  computed(() => {
-    //   const thisUserId = this.participant.userData().uid;
-    //   const allUsers = Object.values(this.participant.experiment().participants);
-    //   return allUsers.filter((u) => u.uid !== thisUserId);
-    // });
+    this.votes = this.stage.config;
 
     // Make sure that votes has all other participants, and only them... if things
     // are configured fully in an experiment definition this is not needed.
@@ -63,6 +46,34 @@ export class ExpLeaderVoteComponent {
         delete this.votes[uid];
       }
     });
+  }
+
+  get stage(): ExpStageVotes {
+    return this._stage as ExpStageVotes;
+  }
+
+  private _stage?: ExpStageVotes;
+
+  public otherParticipants: Signal<ParticipantExtended[]>;
+
+  readonly Vote = Vote;
+
+  public participant: Participant;
+  public votes: Votes;
+
+  constructor(
+    @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ProviderService<Participant>,
+  ) {
+    this.participant = participantProvider.get();
+    this.votes = this.stage?.config;
+
+    // TODO: use new backend
+    this.otherParticipants = signal([]);
+    //  computed(() => {
+    //   const thisUserId = this.participant.userData().uid;
+    //   const allUsers = Object.values(this.participant.experiment().participants);
+    //   return allUsers.filter((u) => u.uid !== thisUserId);
+    // });
   }
 
   // True when all other users have been voted on.

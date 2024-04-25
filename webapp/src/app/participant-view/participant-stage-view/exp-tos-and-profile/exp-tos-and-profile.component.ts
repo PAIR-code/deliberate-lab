@@ -7,7 +7,7 @@
 ==============================================================================*/
 
 import { HttpClient } from '@angular/common/http';
-import { Component, Inject, inject } from '@angular/core';
+import { Component, Inject, Input, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxChange, MatCheckboxModule } from '@angular/material/checkbox';
@@ -21,7 +21,7 @@ import { updateProfileAndTOSMutation } from 'src/lib/api/mutations';
 import { Participant } from 'src/lib/participant';
 import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
 import { MutationType, ProfileTOSData } from 'src/lib/types/api.types';
-import { StageKind } from 'src/lib/types/stages.types';
+import { ExpStageTosAndUserProfile } from 'src/lib/types/stages.types';
 
 enum Pronouns {
   HeHim = 'He/Him',
@@ -45,6 +45,21 @@ enum Pronouns {
   styleUrl: './exp-tos-and-profile.component.scss',
 })
 export class ExpTosAndProfileComponent {
+  // Reload the internal logic dynamically when the stage changes
+  @Input({ required: true })
+  set stage(value: ExpStageTosAndUserProfile) {
+    this._stage = value;
+
+    // Extract the TOS lines and make them available for the template
+    this.tosLines = this.stage?.config.tosLines;
+  }
+
+  get stage(): ExpStageTosAndUserProfile {
+    return this._stage as ExpStageTosAndUserProfile;
+  }
+
+  private _stage?: ExpStageTosAndUserProfile;
+
   public participant: Participant;
   public tosLines: string[] | undefined;
 
@@ -86,10 +101,6 @@ export class ExpTosAndProfileComponent {
         this.value = data.pronouns;
       }
     }
-
-    // Extract the TOS lines and make them available for the template
-    const stage = this.participant.assertViewingStageCast(StageKind.AcceptTosAndSetProfile);
-    this.tosLines = stage?.config.tosLines;
   }
 
   isOtherPronoun(s: string) {

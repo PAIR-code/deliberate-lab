@@ -16,7 +16,7 @@ import { ExpLeaderVoteComponent } from './exp-leader-vote/exp-leader-vote.compon
 import { ProviderService } from 'src/app/services/provider.service';
 import { Participant } from 'src/lib/participant';
 import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
-import { StageKind } from 'src/lib/types/stages.types';
+import { StageKind, stageAsKind } from 'src/lib/types/stages.types';
 import { ExpSurveyComponent } from './exp-survey/exp-survey.component';
 import { ExpTosAndProfileComponent } from './exp-tos-and-profile/exp-tos-and-profile.component';
 
@@ -37,6 +37,7 @@ import { ExpTosAndProfileComponent } from './exp-tos-and-profile/exp-tos-and-pro
 export class ParticipantStageViewComponent {
   public participant: Participant;
   readonly StageKind = StageKind;
+  readonly stageAsKind = stageAsKind;
 
   constructor(
     @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ProviderService<Participant>,
