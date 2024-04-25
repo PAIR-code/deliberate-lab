@@ -1,5 +1,5 @@
 {
-  "name": "llm-recs-webclient",
+  "name": "llm-mediation-experiments",
   "version": "0.0.1",
   "scripts": {
     "ng": "ng",
