@@ -35,4 +35,12 @@ For staging purposes, you can still seed the database in production. This can be
 
 ## Deploy the Webapp
 
-Coming soon...
+You must first build the webapp and docker image.
+The app will be deployed under the prefix name `palabrate` in a k8s cluster.
+
+```bash
+ng build --configuration=production --base-href /palabrate/
+docker build . -t palabrate
+```
+
+...
