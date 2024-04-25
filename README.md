@@ -53,6 +53,17 @@ npm install -g firebase-tools
 firebase login  # Login to the Google account destined to manage the Firebase project
 ```
 
+### Configuration
+
+Create the configuration files for a default firebase project:
+
+```bash
+cp .firebaserc.example .firebaserc
+cp webapp/src/lib/api/firebase-config.example.ts webapp/src/lib/api/firebase-config.ts
+```
+
+This should be enough for local development with emulators. Be sure to input the correct project id and keys once you actually deploy the project to firebase!
+
 ### Emulators
 
 In order to run offline and for development purposes, we use Java Firebase emulators.
@@ -74,7 +85,7 @@ You will then be able to access the following UIs:
 We use Firestore as our database. The rules are located in the [`firestore.rules`](./firestore.rules) file.
 Basically, the database cannot be externally accessed, and must be interacted with through cloud functions.
 
-A database prototype schema can be found [here on dbdiagrams.io](https://dbdiagram.io/d/Firebase-LLM-Mediation-660d473a03593b6b61123f24) (readonly, change it with your own if you take-on the project).
+A database prototype schema can be found [here on dbdiagrams.io](https://dbdiagram.io/d/Firebase-LLM-Mediation-660d473a03593b6b61123f24) (readonly, change it with your own if you take over the project).
 
 You can seed the database with the default data by running the following command:
 

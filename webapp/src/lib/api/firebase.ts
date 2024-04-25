@@ -6,15 +6,7 @@ import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
 
 import { environment } from 'src/environments/environment';
-
-const firebaseConfig = {
-  apiKey: 'AIzaSyC9Oh3TeTLSxMNkFLkBOOoLVs01kTHcDik',
-  authDomain: 'friendlychat-d6dc5.firebaseapp.com',
-  projectId: 'friendlychat-d6dc5',
-  storageBucket: 'friendlychat-d6dc5.appspot.com',
-  messagingSenderId: '550311295925',
-  appId: '1:550311295925:web:cad179f7e3f9c390d5f7fc',
-};
+import { firebaseConfig } from './firebase-config';
 
 export const app = initializeApp(firebaseConfig);
 
