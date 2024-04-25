@@ -1,0 +1,3 @@
+# Files & folders to be ignored by docker when building the frontend image
+node_modules/
+.angular/
