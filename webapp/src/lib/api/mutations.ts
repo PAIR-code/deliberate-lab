@@ -6,6 +6,7 @@ import { UserCredential, signInWithEmailAndPassword } from 'firebase/auth';
 import {
   ChatStageUpdate,
   CreationResponse,
+  LeaderRevealStageUpdate,
   LeaderVoteStageUpdate,
   OnError,
   OnSuccess,
@@ -108,6 +109,19 @@ export const updateLeaderVoteStageMutation = (
 ) => {
   return injectMutation(() => ({
     mutationFn: (data: LeaderVoteStageUpdate) => updateStageCallable(data),
+    onSuccess: (data) => {
+      client.refetchQueries({ queryKey: ['participant', data.uid] });
+      onSuccess?.(data);
+    },
+  }));
+};
+
+export const updateLeaderRevealStageMutation = (
+  client: QueryClient,
+  onSuccess?: OnSuccess<{ uid: string }>,
+) => {
+  return injectMutation(() => ({
+    mutationFn: (data: LeaderRevealStageUpdate) => updateStageCallable(data),
     onSuccess: (data) => {
       client.refetchQueries({ queryKey: ['participant', data.uid] });
       onSuccess?.(data);

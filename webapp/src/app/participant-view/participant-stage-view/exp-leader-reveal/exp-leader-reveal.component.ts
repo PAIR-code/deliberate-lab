@@ -1,6 +1,9 @@
 import { Component, Inject, Input, signal, Signal } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { injectQueryClient } from '@tanstack/angular-query-experimental';
 
 import { ProviderService } from 'src/app/services/provider.service';
+import { updateLeaderRevealStageMutation } from 'src/lib/api/mutations';
 import { Participant } from 'src/lib/participant';
 import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
 import { ExpStageVoteReveal } from 'src/lib/types/stages.types';
@@ -9,7 +12,7 @@ import { VoteReveal } from 'src/lib/types/votes.types';
 @Component({
   selector: 'app-exp-leader-reveal',
   standalone: true,
-  imports: [],
+  imports: [MatButtonModule],
   templateUrl: './exp-leader-reveal.component.html',
   styleUrl: './exp-leader-reveal.component.scss',
 })
@@ -20,7 +23,13 @@ export class ExpLeaderRevealComponent {
     this._stage = value;
 
     this.stageData = this.stage.config;
+    this.everyoneReachedThisStage = this.participant.everyoneReachedCurrentStage(this.stage.name);
   }
+
+  private queryClient = injectQueryClient();
+  private mutationReveal = updateLeaderRevealStageMutation(this.queryClient, () =>
+    this.participant.navigateToNextStage(),
+  );
 
   get stage(): ExpStageVoteReveal {
     return this._stage as ExpStageVoteReveal;
@@ -31,7 +40,7 @@ export class ExpLeaderRevealComponent {
   public participant: Participant;
   public stageData: VoteReveal;
 
-  public everyoneReachedTheEnd: Signal<boolean>;
+  public everyoneReachedThisStage: Signal<boolean>;
   public finalLeader: Signal<string>;
 
   constructor(
@@ -40,53 +49,18 @@ export class ExpLeaderRevealComponent {
     this.participant = participantProvider.get();
     this.stageData = this.stage?.config; // This will truly be initialized in ngOnInit. this.stage can be undefined here
 
-    // TODO: use the new backend way of syncing participant progression
-    this.everyoneReachedTheEnd = signal<boolean>(false);
-    //  computed(() => {
-    //   const users = Object.values(this.participant.experiment().participants);
-    //   const isReady = users
-    //     .map((userData) => userData.futureStageNames.length)
-    //     .every((n) => n === 1);
-    //   // Allow "Next" to be pushed.
-    //   if (isReady) {
-    //     for (const user of users) {
-    //       user.allowedStageProgressionMap[user.workingOnStageName] = true;
-    //     }
-    //   }
-    //   return isReady;
-    // });
+    this.everyoneReachedThisStage = signal<boolean>(false);
 
     // TODO: use the new backend
-    this.finalLeader = signal<string>('');
-    //  computed(() => {
-    //   const users = Object.values(this.participant.experiment().participants);
-    //   const votes: { [userId: string]: number } = {};
-    //   users.forEach(({ uid }) => {
-    //     votes[uid] = 0;
-    //   });
+    this.finalLeader = signal<string>('TODO');
+  }
 
-    //   for (const user of users) {
-    //     const leaderVotes = user.stageMap[this.stageData.pendingVoteStageName].config as Votes;
-    //     for (const userId of Object.keys(leaderVotes)) {
-    //       const vote = leaderVotes[userId];
-    //       if (vote === 'positive') {
-    //         votes[userId] += 1;
-    //       } else if (vote === 'negative') {
-    //         votes[userId] -= 1;
-    //       } else if (vote === 'neutral') {
-    //         votes[userId] += 0;
-    //       }
-    //     }
-    //   }
-
-    //   const sorted = reverse(
-    //     sortBy(
-    //       Object.entries(votes).map(([userId, vote]) => ({ userId, vote })),
-    //       ['vote'],
-    //     ),
-    //   );
-
-    //   return sorted[0].userId;
-    // });
+  nextStep() {
+    this.mutationReveal.mutate({
+      data: undefined,
+      name: this.stage.name,
+      ...this.participant.getStageProgression(),
+      uid: this.participant.userData()!.uid,
+    });
   }
 }

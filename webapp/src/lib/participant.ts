@@ -1,4 +1,3 @@
-import { HttpClient } from '@angular/common/http';
 import { Signal, WritableSignal, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
 import { Unsubscribe } from 'firebase/firestore';
@@ -24,7 +23,6 @@ export class Participant {
   public commonLastWorkingOnStageName: WritableSignal<string | undefined>; // Last stage that all participants have been working on
   public experimentId: Signal<string | null>; // ID of the experiment this participant is part of
 
-  private http = inject(HttpClient);
   private router = inject(Router);
 
   // Firestore subscriptions

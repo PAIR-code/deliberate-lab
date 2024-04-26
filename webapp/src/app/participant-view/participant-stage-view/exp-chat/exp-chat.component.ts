@@ -78,7 +78,7 @@ export class ExpChatComponent implements OnDestroy {
   set stage(value: ExpStageChatAboutItems) {
     this._stage = value;
 
-    this.participant.everyoneReachedCurrentStage(this.stage.name);
+    this.everyoneReachedTheChat = this.participant.everyoneReachedCurrentStage(this.stage.name);
 
     // Initialize the current rating to discuss with the first available pair
     const { id1, id2 } = this.stage.config.ratingsToDiscuss[0];

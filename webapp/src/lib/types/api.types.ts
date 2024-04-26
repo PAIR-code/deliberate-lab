@@ -74,3 +74,5 @@ export type ChatStageUpdate = GenericStageUpdate<{
 }>;
 
 export type LeaderVoteStageUpdate = GenericStageUpdate<Votes>;
+
+export type LeaderRevealStageUpdate = GenericStageUpdate<undefined>;

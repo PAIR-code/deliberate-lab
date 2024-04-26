@@ -80,6 +80,8 @@ export const validateStageUpdateAndMerge = (stage: any, data: any): boolean => {
     case StageKind.VoteForLeader:
       return validateVoteUpdateAndMerge(stage, data);
 
+    case StageKind.RevealVoted:
+      return validateLeaderRevealAndMerge(stage, data);
     default:
       return false;
   }
@@ -107,6 +109,13 @@ const validateChatUpdateAndMerge = (stage: any, data: any): boolean => {
 const validateVoteUpdateAndMerge = (stage: any, data: any): boolean => {
   if (Value.Check(VoteUpdate, data)) {
     stage.config.votes = data;
+    return true;
+  }
+  return false;
+};
+
+const validateLeaderRevealAndMerge = (stage: any, data: any): boolean => {
+  if (data === null) {
     return true;
   }
   return false;

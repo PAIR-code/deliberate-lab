@@ -1,5 +1,5 @@
 <div class="main">
-  @if (!everyoneReachedTheEnd()) {
+  @if (!everyoneReachedThisStage()) {
     <div class="hold-message-container">
       Please hold for everyone else to reach the end of the experiment...
     </div>
@@ -8,4 +8,6 @@
       The leader is <strong>{{ finalLeader() }}</strong>
     </div>
   }
+
+  <button color="primary" mat-button (click)="nextStep()">Next step</button>
 </div>
