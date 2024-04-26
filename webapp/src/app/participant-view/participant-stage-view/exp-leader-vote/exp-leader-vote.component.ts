@@ -17,7 +17,9 @@ import {
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRadioModule } from '@angular/material/radio';
+import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { ProviderService } from 'src/app/services/provider.service';
+import { updateLeaderVoteStageMutation } from 'src/lib/api/mutations';
 import { Participant } from 'src/lib/participant';
 import {
   EXPERIMENT_PROVIDER_TOKEN,
@@ -62,6 +64,13 @@ export class ExpLeaderVoteComponent {
 
   public votesForm: FormGroup;
 
+  private client = injectQueryClient();
+
+  // Vote completion mutation
+  public voteMutation = updateLeaderVoteStageMutation(this.client, () =>
+    this.participant.navigateToNextStage(),
+  );
+
   constructor(
     @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ProviderService<Participant>,
     @Inject(EXPERIMENT_PROVIDER_TOKEN) experimentProvider: ExperimentProvider,
@@ -104,7 +113,12 @@ export class ExpLeaderVoteComponent {
   }
 
   nextStep() {
-    // TODO
+    this.voteMutation.mutate({
+      data: this.votesForm.value.votes,
+      name: this.stage.name,
+      uid: this.participant.userData()!.uid,
+      ...this.participant.getStageProgression(),
+    });
   }
 
   /** Call this when the input or the other participants signal change in order to stay up to date */

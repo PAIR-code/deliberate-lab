@@ -3,6 +3,7 @@
 import { CreateMutationResult, CreateQueryResult } from '@tanstack/angular-query-experimental';
 import { QuestionUpdate } from './questions.types';
 import { ExpStage } from './stages.types';
+import { Votes } from './votes.types';
 
 /** Simple response with data */
 export interface SimpleResponse<T> {
@@ -71,3 +72,5 @@ export type SurveyStageUpdate = GenericStageUpdate<{
 export type ChatStageUpdate = GenericStageUpdate<{
   readyToEndChat: boolean;
 }>;
+
+export type LeaderVoteStageUpdate = GenericStageUpdate<Votes>;

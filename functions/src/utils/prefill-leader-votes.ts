@@ -9,7 +9,7 @@ export const prefillLeaderVotes = (stages: Record<string, any>, participantUids:
 
   Object.keys(stages).forEach((uuid) => {
     if (stages[uuid].kind === 'voteForLeader') {
-      stages[uuid].config = defaultVotes;
+      stages[uuid].config = { votes: defaultVotes };
     }
   });
 };

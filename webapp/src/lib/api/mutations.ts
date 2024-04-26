@@ -1,31 +1,31 @@
 /** Tanstack angular mutations.
  */
 
-import { HttpClient } from '@angular/common/http';
 import { QueryClient, injectMutation } from '@tanstack/angular-query-experimental';
 import { UserCredential, signInWithEmailAndPassword } from 'firebase/auth';
 import {
-    ChatStageUpdate,
-    CreationResponse,
-    OnError,
-    OnSuccess,
-    ProfileTOSData,
-    SurveyStageUpdate,
+  ChatStageUpdate,
+  CreationResponse,
+  LeaderVoteStageUpdate,
+  OnError,
+  OnSuccess,
+  ProfileTOSData,
+  SurveyStageUpdate,
 } from '../types/api.types';
 import {
-    createExperimentCallable,
-    createTemplateCallable,
-    deleteExperimentCallable,
-    discussItemsMessageCallable,
-    mediatorMessageCallable,
-    toggleReadyToEndChatCallable,
-    updateProfileAndTOSCallable,
-    updateStageCallable,
-    userMessageCallable,
+  createExperimentCallable,
+  createTemplateCallable,
+  deleteExperimentCallable,
+  discussItemsMessageCallable,
+  mediatorMessageCallable,
+  toggleReadyToEndChatCallable,
+  updateProfileAndTOSCallable,
+  updateStageCallable,
+  userMessageCallable,
 } from './callables';
 import { auth } from './firebase';
 
-export const deleteExperimentMutation = (http: HttpClient, client: QueryClient) =>
+export const deleteExperimentMutation = (client: QueryClient) =>
   injectMutation(() => ({
     mutationFn: (experimentId: string) => deleteExperimentCallable({ experimentId }),
     onSuccess: () => {
@@ -59,6 +59,10 @@ export const createTemplateMutation = (
   }));
 };
 
+// ********************************************************************************************* //
+//                                         STAGE MUTATIONS                                       //
+// ********************************************************************************************* //
+
 export const updateProfileAndTOSMutation = (
   client: QueryClient,
   onSuccess?: OnSuccess<ProfileTOSData>,
@@ -91,6 +95,19 @@ export const updateChatStageMutation = (
 ) => {
   return injectMutation(() => ({
     mutationFn: (data: ChatStageUpdate) => updateStageCallable(data),
+    onSuccess: (data) => {
+      client.refetchQueries({ queryKey: ['participant', data.uid] });
+      onSuccess?.(data);
+    },
+  }));
+};
+
+export const updateLeaderVoteStageMutation = (
+  client: QueryClient,
+  onSuccess?: OnSuccess<{ uid: string }>,
+) => {
+  return injectMutation(() => ({
+    mutationFn: (data: LeaderVoteStageUpdate) => updateStageCallable(data),
     onSuccess: (data) => {
       client.refetchQueries({ queryKey: ['participant', data.uid] });
       onSuccess?.(data);

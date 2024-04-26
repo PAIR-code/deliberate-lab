@@ -1,19 +1,9 @@
-import {
-  Component,
-  Inject,
-  Input,
-  Signal,
-  WritableSignal,
-  computed,
-  inject,
-  signal,
-} from '@angular/core';
+import { Component, Inject, Input, Signal, WritableSignal, computed, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterLink, RouterLinkActive, RouterModule } from '@angular/router';
 
-import { HttpClient } from '@angular/common/http';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { ProviderService } from 'src/app/services/provider.service';
@@ -50,11 +40,10 @@ import { MediatorChatComponent } from '../mediator-chat/mediator-chat.component'
   styleUrl: './experiment-monitor.component.scss',
 })
 export class ExperimentMonitorComponent {
-  http = inject(HttpClient);
   queryClient = injectQueryClient();
 
   // Experiment deletion mutation
-  rmExperiment = deleteExperimentMutation(this.http, this.queryClient);
+  rmExperiment = deleteExperimentMutation(this.queryClient);
 
   public experimentUid: WritableSignal<string | null> = signal(null);
   public _experiment: QueryType<ExperimentExtended>;
