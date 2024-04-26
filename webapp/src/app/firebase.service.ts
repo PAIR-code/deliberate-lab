@@ -1,7 +1,6 @@
 import { Injectable, OnDestroy, Signal, WritableSignal, signal } from '@angular/core';
-import { NavigationEnd, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { Unsubscribe, User, onAuthStateChanged } from 'firebase/auth';
-import { filter, take } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { auth } from 'src/lib/api/firebase';
 
@@ -42,23 +41,18 @@ export class FirebaseService implements OnDestroy {
     // Subscribe to auth state changes & navigate to the appropriate page when the user is signed in
     this.unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // User is signed in, navigate to the appropriate page.
-        const { claims } = await user.getIdTokenResult();
-        // Wait for the router to settle. Redirect authenticated users only if they currently are on the home page.
-        router.events
-          .pipe(
-            filter((event) => event instanceof NavigationEnd),
-            take(1),
-          )
-          .subscribe((e) => {
-            const url = (e as NavigationEnd).url;
+        const isOnHomePage = window.location.hash === '#/';
 
-            if (claims['role'] === 'participant' && url === '/') {
-              router.navigate(['/participant', claims['participantId']]);
-            } else if (claims['role'] === 'experimenter' && url === '/') {
-              router.navigate(['/experimenter']);
-            }
-          });
+        if (isOnHomePage) {
+          // User is signed in, navigate to the appropriate page.
+          const { claims } = await user.getIdTokenResult();
+
+          if (claims['role'] === 'participant') {
+            router.navigate(['/participant', claims['participantId']]);
+          } else if (claims['role'] === 'experimenter') {
+            router.navigate(['/experimenter']);
+          }
+        }
       } else {
         // No user is signed in, navigate back to home
         router.navigate(['/']);
