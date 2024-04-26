@@ -10,8 +10,6 @@
 
 This is a repository to support collaboration on using LLMs in behavioral economics experiments. e.g. library of relevant UI components and a library for calling LLMs.
 
-[Instance deployed at EPFL](./EPFL.md)
-
 ## Project Structure
 
 ```bash
@@ -50,7 +48,7 @@ Install the firebase cli tools with the following commands:
 
 ```bash
 npm install -g firebase-tools
-firebase login  # Login to the Google account destined to manage the Firebase project
+firebase login  # Login to an account that has admin rights for the Firebase project
 ```
 
 ### Configuration
@@ -69,7 +67,6 @@ This should be enough for local development with emulators. Be sure to input the
 In order to run offline and for development purposes, we use Java Firebase emulators.
 
 ```bash
-export JAVA_TOOL_OPTIONS="-Xmx4g"  # Set your desired max RAM (here: 4GB)
 firebase emulators:start  # Start the emulators
 ```
 
