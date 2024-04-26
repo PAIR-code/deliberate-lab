@@ -9,6 +9,7 @@ import { ExperimentSeeder } from '../seeders/experiments.seeder';
 import { ParticipantSeeder } from '../seeders/participants.seeder';
 import { TemplatesSeeder } from '../seeders/templates.seeder';
 import { createParticipantUser } from '../utils/create-participant-user';
+import { prefillLeaderVotes } from '../utils/prefill-leader-votes';
 
 export const seedDatabase = onRequest(async (request, response) => {
   if (process.env.SEEDER_PASSWORD !== request.query.seeder_password) {
@@ -28,7 +29,9 @@ export const seedDatabase = onRequest(async (request, response) => {
 
   // Reuse the template and inject a uuid for the chat stage
   const chatId = uuidv4();
+  const participantIds = Array.from({ length: 3 }, () => uuidv4());
   template.stageMap['3. Group discussion'].config.chatId = chatId as unknown as null; // Trick to silence the TS error
+  prefillLeaderVotes(template.stageMap, participantIds);
 
   const participants = ParticipantSeeder.createMany(
     experiment.id,
@@ -39,9 +42,9 @@ export const seedDatabase = onRequest(async (request, response) => {
   const progressions: Record<string, string> = {};
   const readyToEndChat: Record<string, boolean> = {};
 
-  for (const participant of participants) {
+  for (const [i, participant] of participants.entries()) {
     // Get a unique ID for the participant
-    const participantId = uuidv4(); // Use a uuid (is valid in email addresses, contrary to Firestore ids which can be uppercase)
+    const participantId = participantIds[i];
     const ref = app.firestore().collection('participants').doc(participantId);
 
     // Add the participant to the batch write

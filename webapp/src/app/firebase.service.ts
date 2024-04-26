@@ -1,6 +1,7 @@
 import { Injectable, OnDestroy, Signal, WritableSignal, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
 import { Unsubscribe, User, onAuthStateChanged } from 'firebase/auth';
+import { filter, take } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { auth } from 'src/lib/api/firebase';
 
@@ -43,19 +44,27 @@ export class FirebaseService implements OnDestroy {
       if (user) {
         // User is signed in, navigate to the appropriate page.
         const { claims } = await user.getIdTokenResult();
-        if (claims['role'] === 'participant') {
-          router.navigate(['/participant', claims['participantId']]);
-        } else if (claims['role'] === 'experimenter') {
-          router.navigate(['/experimenter']);
-        }
+        // Wait for the router to settle. Redirect authenticated users only if they currently are on the home page.
+        router.events
+          .pipe(
+            filter((event) => event instanceof NavigationEnd),
+            take(1),
+          )
+          .subscribe((e) => {
+            const url = (e as NavigationEnd).url;
+
+            if (claims['role'] === 'participant' && url === '/') {
+              router.navigate(['/participant', claims['participantId']]);
+            } else if (claims['role'] === 'experimenter' && url === '/') {
+              router.navigate(['/experimenter']);
+            }
+          });
       } else {
         // No user is signed in, navigate back to home
         router.navigate(['/']);
       }
       this._user.set(user);
     });
-
-    auth.currentUser;
   }
 
   // TODO: implement gapi auth if this function must be used

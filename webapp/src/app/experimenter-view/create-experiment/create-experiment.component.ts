@@ -209,7 +209,6 @@ export class CreateExperimentComponent {
     if (this.newExperimentName.trim().length === 0) {
       return true;
     }
-    console.log('called !');
     return this.existingStages.some((stage) => this.stageSetupIncomplete(stage));
   }
 
