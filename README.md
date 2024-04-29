@@ -31,6 +31,8 @@ This is a repository to support collaboration on using LLMs in behavioral econom
 │       ├── app.ts      # Firebase app initialization
 │       └── index.ts    # Cloud functions entrypoint
 │
+├── scripts    # Seeding scripts
+│
 └── webapp     # Webapp frontend source code
     ├── node_modules
     └── src               # Frontend source code
@@ -87,10 +89,8 @@ A database prototype schema can be found [here on dbdiagrams.io](https://dbdiagr
 You can seed the database with the default data by running the following command:
 
 ```bash
-curl "http://127.0.0.1:5001/friendlychat-d6dc5/us-central1/seedDatabase?seeder_password=seeder_password"
+cd scripts && npm run seed-db
 ```
-
-This calls a cloud functions that adds to the database the default data. You may want to clear it first.
 
 ### Cloud Functions
 
