@@ -107,11 +107,8 @@ Upon running `npm run build`, if the emulator is running, it will automatically 
 
 ### Authentication
 
-This project sets up Firebase Authentication with email/password and Google sign-in.
-
-#### Email - Password authentication
-
-By default, experiment participants log in using their `uid`. It is passed to the Firebase Authentication service as `email:{uid}@palabrate` and `password:{uid}`.
+This project sets up Firebase Authentication with Google sign-in.
+Note that participants are not tracked by Firebase Authentication. Their UID work as a unique identifier, nothing else is stored.
 
 #### Google sign-in
 
