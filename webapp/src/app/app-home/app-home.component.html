@@ -24,7 +24,7 @@
   <mat-card>
     <mat-card-content>
       @if (!authenticated()) {
-        <form (ngSubmit)="loginPalabrate()">
+        <form (ngSubmit)="loginAsParticipant()">
           <p>To join an experiment, enter your access code:</p>
           <mat-form-field class="full-width">
             <mat-label>Access code</mat-label>
@@ -36,12 +36,7 @@
             />
           </mat-form-field>
           <br />
-          <button
-            color="primary"
-            type="submit"
-            mat-button
-            [disabled]="!login.valid || loginMut.isPending()"
-          >
+          <button color="primary" type="submit" mat-button [disabled]="!login.valid">
             <span>Join the experiment</span>
           </button>
         </form>

@@ -10,13 +10,13 @@ service cloud.firestore {
     // Rules for the participants_progressions collection
     match /participants_progressions/{progressionId} {
       // Allow single-document reads
-      allow read: if request.auth.token.role == 'experimenter' || request.auth.token.role == 'participant';
+      allow read: if true;
     }
 
     // Rules for the chat toggle collection
     match /participants_ready_to_end_chat/{chatId} {
       // Allow single document reads
-      allow read: if request.auth.token.role == 'experimenter' || request.auth.token.role == 'participant';
+      allow read: if true;
     }
 
     // Else: disallow everything (access via cloud functions only)

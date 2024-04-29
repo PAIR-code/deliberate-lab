@@ -6,7 +6,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { app } from '../app';
 import { ParticipantSeeder } from '../seeders/participants.seeder';
 import { AuthGuard } from '../utils/auth-guard';
-import { createParticipantUser } from '../utils/create-participant-user';
 import { getUserChatIds } from '../utils/get-user-chat';
 import { prefillLeaderVotes } from '../utils/prefill-leader-votes';
 import { replaceChatStagesUuid } from '../utils/replace-chat-uuid';
@@ -28,7 +27,6 @@ export const experiment = onCall(async (request) => {
     throw new functions.https.HttpsError('invalid-argument', 'Missing experiment UID');
   }
 
-  await AuthGuard.participatesInExperiment(request, experimentUid);
   const experiment = await app.firestore().collection('experiments').doc(experimentUid).get();
 
   if (!experiment.exists) {
@@ -137,9 +135,6 @@ export const createExperiment = onCall(async (request) => {
       participantRefs.push(participantRef.id);
       progressions[participantRef.id] = participant.workingOnStageName;
       transaction.set(participantRef, participant);
-
-      // Create a user for this participant
-      await createParticipantUser(participantRef.id, experiment.id, participant.name, chatIds);
     }
 
     // Create the progression data in a separate collection

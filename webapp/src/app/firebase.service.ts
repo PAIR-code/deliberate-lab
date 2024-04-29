@@ -54,8 +54,9 @@ export class FirebaseService implements OnDestroy {
           }
         }
       } else {
-        // No user is signed in, navigate back to home
-        router.navigate(['/']);
+        if (window.location.hash.includes('experimenter'))
+          // No user is signed in, navigate back to home
+          router.navigate(['/']);
       }
       this._user.set(user);
     });

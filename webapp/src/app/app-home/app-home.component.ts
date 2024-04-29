@@ -18,9 +18,8 @@ import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { auth, provider } from 'src/lib/api/firebase';
-import { loginMutation } from 'src/lib/api/mutations';
 import { ExperimenterViewComponent } from '../experimenter-view/experimenter-view.component';
 import { FirebaseService } from '../firebase.service';
 import { ExpSurveyComponent } from '../participant-view/participant-stage-view/exp-survey/exp-survey.component';
@@ -53,16 +52,20 @@ export class AppHomeComponent {
 
   public error: string = '';
   public login = new FormControl('', Validators.required);
-  public loginMut = loginMutation(undefined, () => (this.error = 'Invalid credentials.'));
   public authenticated: Signal<boolean>; // If an user is authenticated and still on this page, their account is not valid.
 
-  constructor(public firebase: FirebaseService) {
+  constructor(
+    public firebase: FirebaseService,
+    private router: Router,
+  ) {
     this.authenticated = computed(() => firebase.user() !== null);
   }
 
-  async loginPalabrate() {
+  async loginAsParticipant() {
     this.error = '';
-    this.loginMut.mutate(this.login.value as string);
+    this.router.navigate(['/participant', this.login.value]).then((success) => {
+      if (!success) this.error = 'Invalid credentials';
+    });
   }
 
   loginWithGoogle() {

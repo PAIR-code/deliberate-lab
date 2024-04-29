@@ -2,13 +2,11 @@
  */
 
 import { QueryClient, injectMutation } from '@tanstack/angular-query-experimental';
-import { UserCredential, signInWithEmailAndPassword } from 'firebase/auth';
 import {
   ChatStageUpdate,
   CreationResponse,
   LeaderRevealStageUpdate,
   LeaderVoteStageUpdate,
-  OnError,
   OnSuccess,
   ProfileTOSData,
   SurveyStageUpdate,
@@ -24,7 +22,6 @@ import {
   updateStageCallable,
   userMessageCallable,
 } from './callables';
-import { auth } from './firebase';
 
 export const deleteExperimentMutation = (client: QueryClient) =>
   injectMutation(() => ({
@@ -155,18 +152,5 @@ export const mediatorMessageMutation = () => {
 export const toggleChatMutation = () => {
   return injectMutation(() => ({
     mutationFn: toggleReadyToEndChatCallable,
-  }));
-};
-
-// ********************************************************************************************* //
-//                                          AUTH MUTATIONS                                       //
-// ********************************************************************************************* //
-
-// Login mutation
-export const loginMutation = (onSuccess?: OnSuccess<UserCredential>, onError?: OnError) => {
-  return injectMutation(() => ({
-    mutationFn: (code: string) => signInWithEmailAndPassword(auth, `${code}@palabrate.com`, code),
-    onSuccess,
-    onError,
   }));
 };
