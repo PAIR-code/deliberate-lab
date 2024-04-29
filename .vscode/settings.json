@@ -23,7 +23,7 @@
       "splitTerminals": [
         {
           "name": "firebase",
-          "commands": ["firebase emulators:start"],
+          "commands": ["firebase emulators:start --import ./export"],
           "icon": "🔥"
         }
       ]

@@ -1,0 +1,47 @@
+{
+  "kind": "identitytoolkit#DownloadAccountResponse",
+  "users": [
+    {
+      "localId": "R7dWvQjkuhsCJgplJ3WtnUDsD9kR",
+      "displayName": "Experimenter",
+      "email": "experimenter@google.com",
+      "emailVerified": true,
+      "createdAt": "1714400539266",
+      "lastLoginAt": "1714400583451",
+      "providerUserInfo": [
+        {
+          "providerId": "google.com",
+          "rawId": "1651642867512372825802162318175962691422",
+          "federatedId": "1651642867512372825802162318175962691422",
+          "displayName": "Experimenter",
+          "email": "experimenter@google.com"
+        }
+      ],
+      "lastRefreshAt": "2024-04-29T14:23:03.451Z",
+      "salt": "fakeSalttpRdKDA4NS5sxXb2GeoT",
+      "passwordHash": "fakeHash:salt=fakeSalttpRdKDA4NS5sxXb2GeoT:password=xxxxxx",
+      "passwordUpdatedAt": 1714400578192,
+      "validSince": "1714400578",
+      "photoUrl": "",
+      "customAttributes": "{\"role\": \"experimenter\"}"
+    },
+    {
+      "localId": "e5bXFO0SONUk6VYbiuThBLjrWUfL",
+      "displayName": "Not Experimenter",
+      "email": "not-experimenter@google.com",
+      "emailVerified": true,
+      "createdAt": "1714400557162",
+      "lastLoginAt": "1714400557163",
+      "providerUserInfo": [
+        {
+          "providerId": "google.com",
+          "rawId": "5305811106632233234179828366493146036480",
+          "federatedId": "5305811106632233234179828366493146036480",
+          "displayName": "Not Experimenter",
+          "email": "not-experimenter@google.com"
+        }
+      ],
+      "lastRefreshAt": "2024-04-29T14:22:37.163Z"
+    }
+  ]
+}

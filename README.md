@@ -18,6 +18,8 @@ This is a repository to support collaboration on using LLMs in behavioral econom
 │
 ├── docs       # Documentation
 │
+├── export     # Firebase Authentication export with default google accounts for Auth emulator
+│
 ├── firestore  # Firestore rules and indexes
 │
 ├── functions  # Firebase Cloud Functions
@@ -69,7 +71,7 @@ This should be enough for local development with emulators. Be sure to input the
 In order to run offline and for development purposes, we use Java Firebase emulators.
 
 ```bash
-firebase emulators:start  # Start the emulators
+firebase emulators:start --import ./export  # Start the emulators and load the default Auth dump
 ```
 
 You will then be able to access the following UIs:
