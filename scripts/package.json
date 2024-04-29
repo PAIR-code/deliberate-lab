@@ -1,0 +1,15 @@
+{
+  "name": "scripts",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "seed-db": "npx ts-node src/seed-database.ts",
+    "seed-db-prod": "NODE_ENV=production npx ts-node src/seed-database.ts"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7"
+  }
+}
