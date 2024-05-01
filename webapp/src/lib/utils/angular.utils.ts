@@ -83,7 +83,6 @@ export const localStorageTimer = (
   const initInterval = () =>
     (utils.interval = setInterval(() => {
       const newValue = timer() - 1;
-      console.log('New timer value !', newValue);
       if (newValue < 0) {
         onFinish();
         remove();

@@ -106,33 +106,6 @@ export class ExpChatComponent implements OnDestroy {
           this.discussingPairIndex.set(d?.currentPair);
       },
     );
-
-    effect(
-      () => {
-        if (
-          this.participant.workingOnStage()?.name !== this.stage.name ||
-          !this.everyoneReachedTheChat()
-        )
-          return; // Continue only if this stage is active
-
-        const index = this.discussingPairIndex();
-
-        if (index < this.stage.config.ratingsToDiscuss.length) {
-          // Update to the next, reset the counter.
-          this.timer.reset(TIMER_SECONDS);
-          this.readyToEndChat.set(false);
-        } else {
-          // The chat experiment has ended
-          this.finishChatMutation.mutate({
-            uid: untracked(this.participant.userData)!.uid,
-            name: this.stage.name,
-            data: { readyToEndChat: true },
-            ...this.participant.getStageProgression(),
-          });
-        }
-      },
-      { allowSignalWrites: true },
-    );
   }
   get stage() {
     return this._stage as ExpStageChatAboutItems;
@@ -192,6 +165,33 @@ export class ExpChatComponent implements OnDestroy {
 
     // Firestore subscription for messages
     this.messages = signal([]);
+
+    effect(
+      () => {
+        if (
+          this.participant.workingOnStage()?.name !== this.stage.name ||
+          !this.everyoneReachedTheChat()
+        )
+          return; // Continue only if this stage is active
+
+        const index = this.discussingPairIndex();
+
+        if (index < this.stage.config.ratingsToDiscuss.length) {
+          // Update to the next, reset the counter.
+          this.timer.reset(TIMER_SECONDS);
+          this.readyToEndChat.set(false);
+        } else {
+          // The chat experiment has ended
+          this.finishChatMutation.mutate({
+            uid: untracked(this.participant.userData)!.uid,
+            name: this.stage.name,
+            data: { readyToEndChat: true },
+            ...this.participant.getStageProgression(),
+          });
+        }
+      },
+      { allowSignalWrites: true },
+    );
   }
 
   isSilent() {
