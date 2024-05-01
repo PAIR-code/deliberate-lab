@@ -86,15 +86,12 @@ export const stageAsKind = <T extends ExpStage>(
 //                                            CONFIG                                             //
 // ********************************************************************************************* //
 
-const AUTO_PROGRESS_STAGES = [StageKind.TakeSurvey, StageKind.VoteForLeader];
-
-/** NOTE: this is completely useless. We could check stage kinds directly in the frontend instead of generating this. */
-export const generateAllowedStageProgressionMap = (stages: ExpStage[]): Record<string, boolean> => {
-  const allowedStageProgressionMap: Record<string, boolean> = {};
-
-  stages.forEach(
-    (stage) => (allowedStageProgressionMap[stage.name] = AUTO_PROGRESS_STAGES.includes(stage.kind)),
-  );
-
-  return allowedStageProgressionMap;
-};
+/** Some stages require all participants to finish before allowing anyone to go on to the next stage */
+export const ALLOWED_STAGE_PROGRESSION = {
+  [StageKind.AcceptTosAndSetProfile]: false,
+  [StageKind.GroupChat]: false,
+  [StageKind.VoteForLeader]: true,
+  [StageKind.RevealVoted]: false,
+  [StageKind.TakeSurvey]: true,
+  // [StageKind.RankItems]: false,
+} as const;

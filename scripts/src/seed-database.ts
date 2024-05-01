@@ -249,34 +249,12 @@ const DEFAULT_STAGE_MAP = DEFAULT_STAGES.reduce((acc, stage) => {
 const DEFAULT_TEMPLATE = {
   name: "Default template",
   stageMap: DEFAULT_STAGE_MAP,
-  allowedStageProgressionMap: {
-    "1. Agree to the experiment and set your profile": false,
-    "2. Initial leadership survey": true,
-    "3. Group discussion": false,
-    "4. Post-chat survey": true,
-    "5. Post-discussion leadership survey": true,
-    "6. Vote for the leader": true,
-    "7. Post-discussion work": true,
-    "8. Leader reveal": false,
-    "9. final satisfaction survey": true,
-  },
 };
 
 const DEFAULT_PARTICIPANTS = [
   {
     experimentId: "default-experiment-id",
     stageMap: DEFAULT_STAGE_MAP,
-    allowedStageProgressionMap: {
-      "1. Agree to the experiment and set your profile": false,
-      "2. Initial leadership survey": true,
-      "3. Group discussion": false,
-      "4. Post-chat survey": true,
-      "5. Post-discussion leadership survey": true,
-      "6. Vote for the leader": true,
-      "7. Post-discussion work": true,
-      "8. Leader reveal": false,
-      "9. final satisfaction survey": true,
-    },
     acceptTosTimestamp: null,
     futureStageNames: [
       "2. Initial leadership survey",
@@ -297,17 +275,6 @@ const DEFAULT_PARTICIPANTS = [
   {
     experimentId: "default-experiment-id",
     stageMap: DEFAULT_STAGE_MAP,
-    allowedStageProgressionMap: {
-      "1. Agree to the experiment and set your profile": false,
-      "2. Initial leadership survey": true,
-      "3. Group discussion": false,
-      "4. Post-chat survey": true,
-      "5. Post-discussion leadership survey": true,
-      "6. Vote for the leader": true,
-      "7. Post-discussion work": true,
-      "8. Leader reveal": false,
-      "9. final satisfaction survey": true,
-    },
     acceptTosTimestamp: null,
     futureStageNames: [
       "2. Initial leadership survey",
@@ -328,17 +295,6 @@ const DEFAULT_PARTICIPANTS = [
   {
     experimentId: "default-experiment-id",
     stageMap: DEFAULT_STAGE_MAP,
-    allowedStageProgressionMap: {
-      "1. Agree to the experiment and set your profile": false,
-      "2. Initial leadership survey": true,
-      "3. Group discussion": false,
-      "4. Post-chat survey": true,
-      "5. Post-discussion leadership survey": true,
-      "6. Vote for the leader": true,
-      "7. Post-discussion work": true,
-      "8. Leader reveal": false,
-      "9. final satisfaction survey": true,
-    },
     acceptTosTimestamp: null,
     futureStageNames: [
       "2. Initial leadership survey",

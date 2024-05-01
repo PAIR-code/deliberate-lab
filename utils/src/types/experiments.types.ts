@@ -21,7 +21,6 @@ export interface ExperimentCreationData {
   name: string;
   stageMap: Record<string, ExpStage>;
   numberOfParticipants: number;
-  allowedStageProgressionMap: Record<string, boolean>;
 }
 
 /** An experiment template */
@@ -29,5 +28,4 @@ export interface Template {
   uid: string;
   name: string;
   stageMap: Record<string, ExpStage>;
-  allowedStageProgressionMap: Record<string, boolean>;
 }

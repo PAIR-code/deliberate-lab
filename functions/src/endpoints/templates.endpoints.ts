@@ -18,14 +18,13 @@ export const createTemplate = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
 
   // Extract data from the body
-  const { name, stageMap, allowedStageProgressionMap } = request.data;
+  const { name, stageMap } = request.data;
 
   const template = app.firestore().collection('templates').doc();
   await app.firestore().runTransaction(async (transaction) => {
     transaction.set(template, {
       name,
       stageMap,
-      allowedStageProgressionMap,
     });
   });
 

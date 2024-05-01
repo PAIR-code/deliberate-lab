@@ -44,15 +44,4 @@ export class ParticipantStageViewComponent {
   ) {
     this.participant = participantProvider.get();
   }
-
-  shouldShowNextStep() {
-    const userData = this.participant.userData();
-    const workingOnStage = this.participant.workingOnStage();
-
-    if (!userData || !workingOnStage) {
-      return false;
-    }
-
-    return userData.allowedStageProgressionMap[workingOnStage.name];
-  }
 }

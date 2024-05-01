@@ -30,7 +30,6 @@ export interface Progression {
 export interface TemplateCreationData {
   name: string;
   stageMap: Record<string, ExpStage>;
-  allowedStageProgressionMap: Record<string, boolean>;
 }
 
 export interface ProfileTOSData extends Progression {
