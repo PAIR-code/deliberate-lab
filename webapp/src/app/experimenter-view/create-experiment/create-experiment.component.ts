@@ -21,7 +21,6 @@ import {
   StageKind,
   SurveyQuestionKind,
   Template,
-  generateAllowedStageProgressionMap,
   getDefaultChatAboutItemsConfig,
   getDefaultItemRatingsQuestion,
   getDefaultLeaderRevealConfig,
@@ -310,7 +309,6 @@ export class CreateExperimentComponent {
     this.createExp.mutate({
       name: this.newExperimentName,
       numberOfParticipants: 3, // TODO: provide a way to parametrize this ?
-      allowedStageProgressionMap: generateAllowedStageProgressionMap(stages),
       stageMap: lookupTable(stages, 'name'),
     });
   }
@@ -320,7 +318,6 @@ export class CreateExperimentComponent {
 
     this.createTemplate.mutate({
       name: this.newExperimentName,
-      allowedStageProgressionMap: generateAllowedStageProgressionMap(stages),
       stageMap: lookupTable(stages, 'name'),
     });
   }

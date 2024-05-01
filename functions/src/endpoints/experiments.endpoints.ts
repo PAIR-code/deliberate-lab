@@ -101,7 +101,7 @@ export const createExperiment = onCall(async (request) => {
 
   let uid = '';
   // Extract data from the body
-  const { name, stageMap, numberOfParticipants, allowedStageProgressionMap } = request.data;
+  const { name, stageMap, numberOfParticipants } = request.data;
   const date = new Date();
 
   const chatIds = replaceChatStagesUuid(stageMap); // Assign a new UUID to each chat stage
@@ -122,7 +122,6 @@ export const createExperiment = onCall(async (request) => {
     const participants = ParticipantSeeder.createMany(
       experiment.id,
       stageMap,
-      allowedStageProgressionMap,
       numberOfParticipants,
     );
 

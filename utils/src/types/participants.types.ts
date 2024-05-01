@@ -24,7 +24,6 @@ export type TosAndUserProfile = ExcludeProps<ParticipantProfile, ParticipantId> 
 
 export interface ParticipantExtended extends ParticipantProfile {
   stageMap: Record<string, ExpStage>;
-  allowedStageProgressionMap: Record<string, boolean>;
   futureStageNames: string[];
   completedStageNames: string[];
   workingOnStageName: string;
