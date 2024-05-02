@@ -18,7 +18,7 @@ This is a repository to support collaboration on using LLMs in behavioral econom
 │
 ├── docs       # Documentation
 │
-├── export     # Firebase Authentication export with default google accounts for Auth emulator
+├── emulator_test_config  # Firebase Authentication export with default google accounts for Auth emulator
 │
 ├── firestore  # Firestore rules and indexes
 │
@@ -64,14 +64,17 @@ cp .firebaserc.example .firebaserc
 cp webapp/src/lib/api/firebase-config.example.ts webapp/src/lib/api/firebase-config.ts
 ```
 
-This should be enough for local development with emulators. Be sure to input the correct project id and keys once you actually deploy the project to firebase!
+This should be enough for local development with emulators. Before deploying to production, be sure to:
+
+- Update the project ID in the [`.firebaserc`](./.firebaserc) file.
+- Update the Firebase app configuration in the [`webapp/src/lib/api/firebase-config.ts`](./webapp/src/lib/api/firebase-config.ts) file.
 
 ### Emulators
 
 In order to run offline and for development purposes, we use Java Firebase emulators.
 
 ```bash
-firebase emulators:start --import ./export  # Start the emulators and load the default Auth dump
+firebase emulators:start --import ./emulator_test_config  # Start the emulators and load the default Authentication configuration
 ```
 
 You will then be able to access the following UIs:
