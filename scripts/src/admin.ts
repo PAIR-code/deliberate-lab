@@ -1,4 +1,8 @@
-/** Load the Firebase app and expose it to scripts */
+/** Connect to a running Firebase app and expose it to scripts:
+ *
+ * - Default: connects to local emulators
+ * - `NODE_ENV=production` will connect to the production Firebase project specified in `service-account.json`
+ */
 
 import * as admin from "firebase-admin";
 import * as fs from "fs";
@@ -29,7 +33,7 @@ export const initializeApp = () => {
       projectId: firebaserc.projects.default,
     });
   }
-  console.log("Firebase app initialized");
+  console.log("Successfully connected to Firebase!");
 };
 
 export default admin;
