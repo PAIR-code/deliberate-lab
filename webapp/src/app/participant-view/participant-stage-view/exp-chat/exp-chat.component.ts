@@ -44,7 +44,7 @@ import { ParticipantExtended } from 'src/lib/types/participants.types';
 import { ExpStageChatAboutItems } from 'src/lib/types/stages.types';
 import { localStorageTimer } from 'src/lib/utils/angular.utils';
 import { chatMessagesSubscription, firestoreDocSubscription } from 'src/lib/utils/firestore.utils';
-import { extendUntilMatch } from 'src/lib/utils/object.utils';
+import { mergeByKey } from 'src/lib/utils/object.utils';
 import { ChatDiscussItemsMessageComponent } from './chat-discuss-items-message/chat-discuss-items-message.component';
 import { ChatMediatorMessageComponent } from './chat-mediator-message/chat-mediator-message.component';
 import { ChatUserMessageComponent } from './chat-user-message/chat-user-message.component';
@@ -90,7 +90,8 @@ export class ExpChatComponent implements OnDestroy {
     this.unsubscribeMessages = chatMessagesSubscription(
       this.stage.config.chatId,
       (incomingMessages) => {
-        this.messages.set(extendUntilMatch(this.messages(), incomingMessages.reverse(), 'uid'));
+        // Merge incoming and current message, giving incoming messages priority. Messages are uniquely identified by their uid.
+        this.messages.set(mergeByKey(this.messages(), incomingMessages, 'uid'));
 
         // Find if new discuss items message have arrived
         const last = incomingMessages.find(

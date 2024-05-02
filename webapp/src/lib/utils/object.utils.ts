@@ -1,4 +1,3 @@
-import * as _ from 'lodash';
 import { isOfKind } from '../algebraic-data';
 import { ExpStage, ExpStageChatAboutItems, StageKind } from '../types/stages.types';
 
@@ -58,16 +57,6 @@ export const valuesArray = <T>(obj: Record<string, T> | undefined): T[] => {
   return Object.values(obj ?? {});
 };
 
-/** Extend an old array of objects with a new one, but check elements by the given key in order to avoid overlapping.
- * This function assumes that both arrays are somehow sorted so that the new array is a continuation of the old one.
- */
-export const extendUntilMatch = <T, K extends keyof T>(oldArr: T[], newArr: T[], key: K): T[] => {
-  if (newArr.length === 0) return oldArr;
-
-  const stop = newArr[0][key];
-  return _.takeWhile(oldArr, (item) => item[key] !== stop).concat(newArr);
-};
-
 /** Extract a chat stage from a list of stages by its id */
 export const getChatFromId = (
   chatId: string,
@@ -79,4 +68,15 @@ export const getChatFromId = (
     }
   }
   return undefined;
+};
+
+/** Merge two arrays of objects into a new array, uniquely identifying objects by the given key.
+ * When two objects have the same key, the one from the incoming array is kept.
+ */
+export const mergeByKey = <T extends object, K extends Indexable<T>>(
+  previousArray: T[],
+  incomingArray: T[],
+  key: K,
+): T[] => {
+  return Object.values({ ...lookupTable(previousArray, key), ...lookupTable(incomingArray, key) });
 };
