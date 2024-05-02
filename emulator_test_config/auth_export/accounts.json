@@ -6,8 +6,6 @@
       "displayName": "Experimenter",
       "email": "experimenter@google.com",
       "emailVerified": true,
-      "createdAt": "1714400539266",
-      "lastLoginAt": "1714400583451",
       "providerUserInfo": [
         {
           "providerId": "google.com",
@@ -17,11 +15,6 @@
           "email": "experimenter@google.com"
         }
       ],
-      "lastRefreshAt": "2024-04-29T14:23:03.451Z",
-      "salt": "fakeSalttpRdKDA4NS5sxXb2GeoT",
-      "passwordHash": "fakeHash:salt=fakeSalttpRdKDA4NS5sxXb2GeoT:password=xxxxxx",
-      "passwordUpdatedAt": 1714400578192,
-      "validSince": "1714400578",
       "photoUrl": "",
       "customAttributes": "{\"role\": \"experimenter\"}"
     },
@@ -30,8 +23,6 @@
       "displayName": "Not Experimenter",
       "email": "not-experimenter@google.com",
       "emailVerified": true,
-      "createdAt": "1714400557162",
-      "lastLoginAt": "1714400557163",
       "providerUserInfo": [
         {
           "providerId": "google.com",
@@ -40,8 +31,7 @@
           "displayName": "Not Experimenter",
           "email": "not-experimenter@google.com"
         }
-      ],
-      "lastRefreshAt": "2024-04-29T14:22:37.163Z"
+      ]
     }
   ]
 }
