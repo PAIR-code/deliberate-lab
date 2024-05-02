@@ -87,16 +87,19 @@ export class ExpChatComponent implements OnDestroy {
       item2: this.stage.config.items[id2],
     });
 
-    this.unsubscribeMessages = chatMessagesSubscription(this.stage.config.chatId, (m) => {
-      this.messages.set(extendUntilMatch(this.messages(), m.reverse(), 'uid'));
+    this.unsubscribeMessages = chatMessagesSubscription(
+      this.stage.config.chatId,
+      (incomingMessages) => {
+        this.messages.set(extendUntilMatch(this.messages(), incomingMessages.reverse(), 'uid'));
 
-      // Find if new discuss items message have arrived
-      const last = m.find((m) => m.messageType === MessageType.DiscussItemsMessage) as
-        | DiscussItemsMessage
-        | undefined;
+        // Find if new discuss items message have arrived
+        const last = incomingMessages.find(
+          (m) => m.messageType === MessageType.DiscussItemsMessage,
+        ) as DiscussItemsMessage | undefined;
 
-      if (last) this.currentRatingsToDiscuss.set(last.itemPair);
-    });
+        if (last) this.currentRatingsToDiscuss.set(last.itemPair);
+      },
+    );
 
     // Firestore subscription for ready to end chat
     this.unsubscribeReadyToEndChat = firestoreDocSubscription<ReadyToEndChat>(
