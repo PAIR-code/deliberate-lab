@@ -16,12 +16,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatRadioModule } from '@angular/material/radio';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
 
+import { ExpStageTosAndUserProfile, ProfileTOSData } from '@llm-mediation-experiments/utils';
 import { ProviderService } from 'src/app/services/provider.service';
 import { updateProfileAndTOSMutation } from 'src/lib/api/mutations';
 import { Participant } from 'src/lib/participant';
 import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
-import { MutationType, ProfileTOSData } from 'src/lib/types/api.types';
-import { ExpStageTosAndUserProfile } from 'src/lib/types/stages.types';
+import { MutationType } from 'src/lib/types/tanstack.types';
 
 enum Pronouns {
   HeHim = 'He/Him',

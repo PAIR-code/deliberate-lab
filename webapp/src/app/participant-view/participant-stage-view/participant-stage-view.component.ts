@@ -13,10 +13,10 @@ import { ExpChatComponent } from './exp-chat/exp-chat.component';
 import { ExpLeaderRevealComponent } from './exp-leader-reveal/exp-leader-reveal.component';
 import { ExpLeaderVoteComponent } from './exp-leader-vote/exp-leader-vote.component';
 //import { ExpRatingComponent } from '../exp-rating/exp-rating.component';
+import { StageKind, stageAsKind } from '@llm-mediation-experiments/utils';
 import { ProviderService } from 'src/app/services/provider.service';
 import { Participant } from 'src/lib/participant';
 import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
-import { StageKind, stageAsKind } from 'src/lib/types/stages.types';
 import { ExpSurveyComponent } from './exp-survey/exp-survey.component';
 import { ExpTosAndProfileComponent } from './exp-tos-and-profile/exp-tos-and-profile.component';
 

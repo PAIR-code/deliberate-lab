@@ -12,6 +12,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { ExperimentExtended } from '@llm-mediation-experiments/utils';
 import { experimentQuery } from 'src/lib/api/queries';
 import { Participant } from 'src/lib/participant';
 import {
@@ -20,7 +21,6 @@ import {
   PARTICIPANT_PROVIDER_TOKEN,
   ParticipantProvider,
 } from 'src/lib/provider-tokens';
-import { ExperimentExtended } from 'src/lib/types/experiments.types';
 import { routeParamSignal, routeQueryStringSignal } from 'src/lib/utils/angular.utils';
 import { ProviderService } from '../services/provider.service';
 import { ParticipantStageViewComponent } from './participant-stage-view/participant-stage-view.component';

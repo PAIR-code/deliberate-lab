@@ -1,6 +1,6 @@
+import { Message } from '@llm-mediation-experiments/utils';
 import { collection, doc, limit, onSnapshot, orderBy, query, where } from 'firebase/firestore';
 import { firestore } from '../api/firebase';
-import { Message } from '../types/messages.types';
 
 /** Subscribe to a firestore document. Returns an unsubscription method. */
 export const firestoreDocSubscription = <T>(

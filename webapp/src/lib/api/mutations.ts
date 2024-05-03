@@ -1,7 +1,6 @@
 /** Tanstack angular mutations.
  */
 
-import { QueryClient, injectMutation } from '@tanstack/angular-query-experimental';
 import {
   ChatStageUpdate,
   CreationResponse,
@@ -10,7 +9,8 @@ import {
   OnSuccess,
   ProfileTOSData,
   SurveyStageUpdate,
-} from '../types/api.types';
+} from '@llm-mediation-experiments/utils';
+import { QueryClient, injectMutation } from '@tanstack/angular-query-experimental';
 import {
   createExperimentCallable,
   createTemplateCallable,

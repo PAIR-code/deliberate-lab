@@ -22,16 +22,17 @@ import { ProviderService } from 'src/app/services/provider.service';
 import { Participant } from 'src/lib/participant';
 
 import { MatButtonModule } from '@angular/material/button';
+import {
+  ExpStageSurvey,
+  SurveyQuestionKind,
+  SurveyStageUpdate,
+  questionAsKind,
+} from '@llm-mediation-experiments/utils';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { updateSurveyStageMutation } from 'src/lib/api/mutations';
 import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
-import { MutationType, SurveyStageUpdate } from 'src/lib/types/api.types';
-import {
-  SurveyQuestionKind,
-  buildQuestionForm,
-  questionAsKind,
-} from 'src/lib/types/questions.types';
-import { ExpStageSurvey } from 'src/lib/types/stages.types';
+import { MutationType } from 'src/lib/types/tanstack.types';
+import { buildQuestionForm } from 'src/lib/utils/angular.utils';
 import { SurveyCheckQuestionComponent } from './survey-check-question/survey-check-question.component';
 import { SurveyRatingQuestionComponent } from './survey-rating-question/survey-rating-question.component';
 import { SurveyScaleQuestionComponent } from './survey-scale-question/survey-scale-question.component';

@@ -1,6 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { DiscussItemsMessage } from 'src/lib/types/messages.types';
-import { dateStrOfTimestamp } from 'src/lib/utils/string.utils';
+import { DiscussItemsMessage, dateStrOfTimestamp } from '@llm-mediation-experiments/utils';
 
 @Component({
   selector: 'app-chat-discuss-items-message',

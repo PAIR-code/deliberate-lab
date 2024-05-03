@@ -3,8 +3,8 @@
  */
 
 import { Signal } from '@angular/core';
+import { ExperimentExtended } from '@llm-mediation-experiments/utils';
 import { injectQuery } from '@tanstack/angular-query-experimental';
-import { ExperimentExtended } from '../types/experiments.types';
 import {
   experimentCallable,
   experimentsCallable,

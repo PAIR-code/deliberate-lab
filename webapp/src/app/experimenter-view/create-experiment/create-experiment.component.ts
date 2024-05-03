@@ -13,30 +13,29 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Router } from '@angular/router';
-import { injectQueryClient } from '@tanstack/angular-query-experimental';
-import { LocalService } from 'src/app/services/local.service';
-import { tryCast } from 'src/lib/algebraic-data';
-import { createExperimentMutation, createTemplateMutation } from 'src/lib/api/mutations';
-import { templatesQuery } from 'src/lib/api/queries';
-import { getDefaultChatAboutItemsConfig } from 'src/lib/types/chats.types';
-import { Template } from 'src/lib/types/experiments.types';
-import {
-  Question,
-  SurveyQuestionKind,
-  getDefaultItemRatingsQuestion,
-  getDefaultScaleQuestion,
-  getDefaultSurveyConfig,
-  getDefaultTosAndUserProfileConfig,
-} from 'src/lib/types/questions.types';
 import {
   ExpStage,
   ExpStageSurvey,
   ExpStageTosAndUserProfile,
+  Question,
   StageKind,
+  SurveyQuestionKind,
+  Template,
   generateAllowedStageProgressionMap,
-} from 'src/lib/types/stages.types';
-import { getDefaultLeaderRevealConfig, getDefaultVotesConfig } from 'src/lib/types/votes.types';
-import { lookupTable } from 'src/lib/utils/object.utils';
+  getDefaultChatAboutItemsConfig,
+  getDefaultItemRatingsQuestion,
+  getDefaultLeaderRevealConfig,
+  getDefaultScaleQuestion,
+  getDefaultSurveyConfig,
+  getDefaultTosAndUserProfileConfig,
+  getDefaultVotesConfig,
+  lookupTable,
+  tryCast,
+} from '@llm-mediation-experiments/utils';
+import { injectQueryClient } from '@tanstack/angular-query-experimental';
+import { LocalService } from 'src/app/services/local.service';
+import { createExperimentMutation, createTemplateMutation } from 'src/lib/api/mutations';
+import { templatesQuery } from 'src/lib/api/queries';
 
 const LOCAL_STORAGE_KEY = 'ongoing-experiment-creation';
 

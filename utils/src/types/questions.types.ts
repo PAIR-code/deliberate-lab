@@ -1,16 +1,15 @@
 /** Survey question types */
 
-import { FormBuilder, Validators } from '@angular/forms';
-import { uniqueId } from 'lodash';
-import { ExcludeProps } from '../utils/object.utils';
-import { ItemPairWithRatings, getDefaultItemRating } from './items.types';
-import { TosAndUserProfile } from './participants.types';
+import { uniqueId } from "../utils/algebraic.utils";
+import { ExcludeProps } from "../utils/object.utils";
+import { ItemPairWithRatings, getDefaultItemRating } from "./items.types";
+import { TosAndUserProfile } from "./participants.types";
 
 export enum SurveyQuestionKind {
-  Text = 'TextQuestion',
-  Check = 'CheckQuestion',
-  Rating = 'RatingQuestion',
-  Scale = 'ScaleQuestion',
+  Text = "TextQuestion",
+  Check = "CheckQuestion",
+  Rating = "RatingQuestion",
+  Scale = "ScaleQuestion",
 }
 
 export interface AbstractQuestion {
@@ -47,7 +46,11 @@ export interface ScaleQuestion extends AbstractQuestion {
   score: number | null; //  10 point scale.
 }
 
-export type Question = TextQuestion | RatingQuestion | ScaleQuestion | CheckQuestion;
+export type Question =
+  | TextQuestion
+  | RatingQuestion
+  | ScaleQuestion
+  | CheckQuestion;
 
 export type QuestionUpdate =
   | QuestionAnswer<TextQuestion>
@@ -66,54 +69,13 @@ export interface Survey {
 /** Asserts that the input question is of the given type, and returns it */
 export const questionAsKind = <T extends Question>(
   question: Question,
-  kind: SurveyQuestionKind,
+  kind: SurveyQuestionKind
 ): T => {
   if (question.kind !== kind) {
     throw new Error(`Expected question of kind ${kind}, got ${question.kind}`);
   }
 
   return question as T;
-};
-
-// ********************************************************************************************* //
-//                                         FORM BUILDER                                          //
-// ********************************************************************************************* //
-
-export const buildTextQuestionForm = (fb: FormBuilder, question: TextQuestion) =>
-  fb.group({
-    answerText: [question.answerText ?? '', Validators.required],
-  });
-
-export const buildCheckQuestionForm = (fb: FormBuilder, question: CheckQuestion) =>
-  fb.group({
-    checkMark: [question.checkMark ?? false],
-  });
-
-export const buildRatingQuestionForm = (fb: FormBuilder, question: RatingQuestion) =>
-  fb.group({
-    choice: [question.choice, Validators.required],
-    confidence: [
-      question.confidence ?? 0,
-      [Validators.required, Validators.min(0), Validators.max(1)],
-    ],
-  });
-
-export const buildScaleQuestionForm = (fb: FormBuilder, question: ScaleQuestion) =>
-  fb.group({
-    score: [question.score ?? 0, [Validators.required, Validators.min(0), Validators.max(10)]],
-  });
-
-export const buildQuestionForm = (fb: FormBuilder, question: Question) => {
-  switch (question.kind) {
-    case SurveyQuestionKind.Text:
-      return buildTextQuestionForm(fb, question);
-    case SurveyQuestionKind.Check:
-      return buildCheckQuestionForm(fb, question);
-    case SurveyQuestionKind.Rating:
-      return buildRatingQuestionForm(fb, question);
-    case SurveyQuestionKind.Scale:
-      return buildScaleQuestionForm(fb, question);
-  }
 };
 
 // ********************************************************************************************* //
@@ -124,8 +86,8 @@ export const getDefaultTextQuestion = (): TextQuestion => {
   return {
     kind: SurveyQuestionKind.Text,
     id: uniqueId(),
-    questionText: '',
-    answerText: '',
+    questionText: "",
+    answerText: "",
   };
 };
 
@@ -133,7 +95,7 @@ export const getDefaultCheckQuestion = (): CheckQuestion => {
   return {
     kind: SurveyQuestionKind.Check,
     id: uniqueId(),
-    questionText: '',
+    questionText: "",
     checkMark: null,
   };
 };
@@ -142,7 +104,7 @@ export const getDefaultItemRatingsQuestion = (): RatingQuestion => {
   return {
     kind: SurveyQuestionKind.Rating,
     id: uniqueId(),
-    questionText: '',
+    questionText: "",
     ...getDefaultItemRating(),
   };
 };
@@ -151,9 +113,9 @@ export const getDefaultScaleQuestion = (): ScaleQuestion => {
   return {
     kind: SurveyQuestionKind.Scale,
     id: uniqueId(),
-    questionText: '',
-    upperBound: '',
-    lowerBound: '',
+    questionText: "",
+    upperBound: "",
+    lowerBound: "",
     score: null,
   };
 };
@@ -166,10 +128,10 @@ export const getDefaultSurveyConfig = (): Survey => {
 
 export const getDefaultTosAndUserProfileConfig = (): TosAndUserProfile => {
   return {
-    pronouns: '',
-    avatarUrl: '',
-    name: '',
-    tosLines: [''],
+    pronouns: "",
+    avatarUrl: "",
+    name: "",
+    tosLines: [""],
     acceptTosTimestamp: null,
   };
 };

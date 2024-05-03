@@ -1,7 +1,7 @@
 import { InjectionToken, Signal } from '@angular/core';
+import { ExperimentExtended } from '@llm-mediation-experiments/utils';
 import { ProviderService } from 'src/app/services/provider.service';
 import { Participant } from './participant';
-import { ExperimentExtended } from './types/experiments.types';
 
 export const PARTICIPANT_PROVIDER_TOKEN = new InjectionToken<ProviderService<Participant>>(
   'ParticipantProvider',

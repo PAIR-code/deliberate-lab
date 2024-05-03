@@ -5,16 +5,19 @@ import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterLink, RouterLinkActive, RouterModule } from '@angular/router';
 
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import {
+  ExpStage,
+  ExperimentExtended,
+  ParticipantExtended,
+  StageKind,
+  isOfKind,
+} from '@llm-mediation-experiments/utils';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { ProviderService } from 'src/app/services/provider.service';
-import { isOfKind } from 'src/lib/algebraic-data';
 import { deleteExperimentMutation } from 'src/lib/api/mutations';
 import { experimentQuery } from 'src/lib/api/queries';
 import { EXPERIMENT_PROVIDER_TOKEN, ExperimentProvider } from 'src/lib/provider-tokens';
-import { QueryType } from 'src/lib/types/api.types';
-import { ExperimentExtended } from 'src/lib/types/experiments.types';
-import { ParticipantExtended } from 'src/lib/types/participants.types';
-import { ExpStage, StageKind } from 'src/lib/types/stages.types';
+import { QueryType } from 'src/lib/types/tanstack.types';
 import { MediatorChatComponent } from '../mediator-chat/mediator-chat.component';
 
 @Component({

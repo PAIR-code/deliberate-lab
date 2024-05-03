@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { CheckQuestion } from 'src/lib/types/questions.types';
+import { CheckQuestion } from '@llm-mediation-experiments/utils';
 
 @Component({
   selector: 'app-survey-check-question',

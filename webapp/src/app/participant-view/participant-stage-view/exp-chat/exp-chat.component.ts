@@ -23,6 +23,17 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import {
+  DiscussItemsMessage,
+  ExpStageChatAboutItems,
+  ItemPair,
+  Message,
+  MessageType,
+  ParticipantExtended,
+  ReadyToEndChat,
+  getDefaultItemPair,
+  mergeByKey,
+} from '@llm-mediation-experiments/utils';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { Unsubscribe } from 'firebase/firestore';
 import {
@@ -37,14 +48,8 @@ import {
   PARTICIPANT_PROVIDER_TOKEN,
   ParticipantProvider,
 } from 'src/lib/provider-tokens';
-import { ReadyToEndChat } from 'src/lib/types/chats.types';
-import { ItemPair, getDefaultItemPair } from 'src/lib/types/items.types';
-import { DiscussItemsMessage, Message, MessageType } from 'src/lib/types/messages.types';
-import { ParticipantExtended } from 'src/lib/types/participants.types';
-import { ExpStageChatAboutItems } from 'src/lib/types/stages.types';
 import { localStorageTimer } from 'src/lib/utils/angular.utils';
 import { chatMessagesSubscription, firestoreDocSubscription } from 'src/lib/utils/firestore.utils';
-import { mergeByKey } from 'src/lib/utils/object.utils';
 import { ChatDiscussItemsMessageComponent } from './chat-discuss-items-message/chat-discuss-items-message.component';
 import { ChatMediatorMessageComponent } from './chat-mediator-message/chat-mediator-message.component';
 import { ChatUserMessageComponent } from './chat-user-message/chat-user-message.component';

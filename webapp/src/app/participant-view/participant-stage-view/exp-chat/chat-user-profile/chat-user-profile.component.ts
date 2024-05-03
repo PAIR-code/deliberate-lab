@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { ParticipantProfile } from 'src/lib/types/participants.types';
+import { ParticipantProfile } from '@llm-mediation-experiments/utils';
 
 @Component({
   selector: 'app-chat-user-profile',

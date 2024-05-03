@@ -4,17 +4,19 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import {
+  ChatAboutItems,
+  Message,
+  ParticipantExtended,
+  mergeByKey,
+} from '@llm-mediation-experiments/utils';
 import { Unsubscribe } from 'firebase/firestore';
 import { VertexApiService } from 'src/app/services/vertex-api.service';
 import { mediatorMessageMutation } from 'src/lib/api/mutations';
 import { FewShotTemplate } from 'src/lib/text-templates/fewshot_template';
 import { preparePalm2Request, sendPalm2Request } from 'src/lib/text-templates/llm_vertexapi_palm2';
 import { nv, template } from 'src/lib/text-templates/template';
-import { ChatAboutItems } from 'src/lib/types/chats.types';
-import { Message } from 'src/lib/types/messages.types';
-import { ParticipantExtended } from 'src/lib/types/participants.types';
 import { chatMessagesSubscription } from 'src/lib/utils/firestore.utils';
-import { extendUntilMatch } from 'src/lib/utils/object.utils';
 import { ChatDiscussItemsMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-discuss-items-message/chat-discuss-items-message.component';
 import { ChatMediatorMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-mediator-message/chat-mediator-message.component';
 import { ChatUserMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-user-message/chat-user-message.component';
@@ -73,7 +75,8 @@ export class MediatorChatComponent implements OnDestroy {
 
       if (id !== undefined) {
         this.unsubscribeMessages = chatMessagesSubscription(id, (m) => {
-          this.messages.set(extendUntilMatch(this.messages(), m.reverse(), 'uid'));
+          // Merge new messages with existing messages, uniquly identifying them by their message uid
+          this.messages.set(mergeByKey(this.messages(), m, 'uid'));
         });
       }
     });

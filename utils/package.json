@@ -1,0 +1,17 @@
+{
+  "name": "@llm-mediation-experiments/utils",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc -w"
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "peerDependencies": {
+    "firebase": "^10.11.1"
+  }
+}

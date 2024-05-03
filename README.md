@@ -35,6 +35,8 @@ This is a repository to support collaboration on using LLMs in behavioral econom
 │
 ├── scripts    # Seeding scripts
 │
+├── utils      # Shared types, default values & utilities
+│
 └── webapp     # Webapp frontend source code
     ├── node_modules
     └── src               # Frontend source code
@@ -42,6 +44,17 @@ This is a repository to support collaboration on using LLMs in behavioral econom
         ├── assets        # Static assets
         ├── environments  # Environment configuration
         └── lib           # API, types & utilities
+```
+
+## Shared Utilities
+
+The webapp, cloud functions, and seeding scripts share some utilities. These are located in the [`utils`](./utils) directory.
+
+To build the shared utilities and watch for changes, run the following command:
+
+```bash
+cd utils
+npm run build:watch
 ```
 
 ## Firebase

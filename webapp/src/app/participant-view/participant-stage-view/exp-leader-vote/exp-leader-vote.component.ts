@@ -27,10 +27,8 @@ import {
   PARTICIPANT_PROVIDER_TOKEN,
 } from 'src/lib/provider-tokens';
 
-import { ParticipantExtended } from 'src/lib/types/participants.types';
-import { ExpStageVotes } from 'src/lib/types/stages.types';
-import { Vote, Votes } from 'src/lib/types/votes.types';
-import { forbiddenValueValidator } from 'src/lib/utils/validators.utils';
+import { ExpStageVotes, ParticipantExtended, Vote, Votes } from '@llm-mediation-experiments/utils';
+import { forbiddenValueValidator } from 'src/lib/utils/angular.utils';
 
 @Component({
   selector: 'app-exp-leader-vote',

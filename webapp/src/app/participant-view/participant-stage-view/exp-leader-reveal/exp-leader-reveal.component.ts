@@ -2,12 +2,11 @@ import { Component, Inject, Input, signal, Signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
 
+import { ExpStageVoteReveal, VoteReveal } from '@llm-mediation-experiments/utils';
 import { ProviderService } from 'src/app/services/provider.service';
 import { updateLeaderRevealStageMutation } from 'src/lib/api/mutations';
 import { Participant } from 'src/lib/participant';
 import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
-import { ExpStageVoteReveal } from 'src/lib/types/stages.types';
-import { VoteReveal } from 'src/lib/types/votes.types';
 
 @Component({
   selector: 'app-exp-leader-reveal',

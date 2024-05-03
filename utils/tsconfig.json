@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "strict": true,
+    "sourceMap": true,
+    "lib": ["ESNext", "dom"]
+  },
+  "include": ["src/**/*"]
+}
