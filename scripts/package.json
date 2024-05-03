@@ -7,6 +7,7 @@
     "seed-db-prod": "NODE_ENV=production npx ts-node src/seed-database.ts"
   },
   "dependencies": {
+    "@llm-mediation-experiments/utils": "file:../utils",
     "firebase-admin": "^12.1.0"
   },
   "devDependencies": {

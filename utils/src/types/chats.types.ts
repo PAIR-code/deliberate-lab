@@ -1,8 +1,16 @@
 /** Chat between participants and mediators */
 
-import { uniqueId } from "../utils/algebraic.utils";
-import { Item } from "./items.types";
-import { Message } from "./messages.types";
+import { uniqueId } from '../utils/algebraic.utils';
+import { Item, ItemName } from './items.types';
+import { Message } from './messages.types';
+
+export enum ChatKind {
+  ChatAboutItems = 'chatAboutItems',
+}
+
+// TODO : mettre des types de configs pour les chats aussi !
+// en vrai ça va être très stylé, je pense qu'avec cette structure on devrait pouvoir avancer très vite !
+// comment on stocke cette config ?
 
 export interface BaseChat {
   chatId: string;
@@ -24,12 +32,28 @@ export interface ReadyToEndChat {
 }
 
 // ********************************************************************************************* //
+//                                            CONFIGS                                            //
+// ********************************************************************************************* //
+
+interface BaseChatConfig {
+  kind: ChatKind;
+}
+
+export interface ChatAboutItemsConfig extends BaseChatConfig {
+  kind: ChatKind.ChatAboutItems;
+
+  ratingsToDiscuss: { item1: ItemName; item2: ItemName }[];
+}
+
+export type ChatConfig = ChatAboutItemsConfig;
+
+// ********************************************************************************************* //
 //                                           DEFAULTS                                            //
 // ********************************************************************************************* //
 
 export const getDefaultChatAboutItemsConfig = (): ChatAboutItems => {
   return {
-    chatId: uniqueId("chat"),
+    chatId: uniqueId('chat'),
     ratingsToDiscuss: [],
     items: [],
     messages: [],

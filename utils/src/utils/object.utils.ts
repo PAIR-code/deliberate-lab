@@ -1,9 +1,5 @@
-import {
-  ExpStage,
-  ExpStageChatAboutItems,
-  StageKind,
-} from "../types/stages.types";
-import { isOfKind } from "./algebraic.utils";
+import { ExpStage, ExpStageChatAboutItems, StageKind } from '../types/stages.types';
+import { isOfKind } from './algebraic.utils';
 
 /** All types that can safely be used to index an object */
 export type Index = string | number | symbol;
@@ -20,10 +16,10 @@ export type Indexable<Obj> = KeyOfType<Obj, Index>;
 export const lookupTable = <
   Type extends object,
   KeyName extends Indexable<Type>,
-  KeyType extends Type[KeyName] & Index
+  KeyType extends Type[KeyName] & Index,
 >(
   list: Type[],
-  key: KeyName
+  key: KeyName,
 ): Record<KeyType, Type> => {
   const table: Record<KeyType, Type> = {} as Record<KeyType, Type>;
 
@@ -64,7 +60,7 @@ export const valuesArray = <T>(obj: Record<string, T> | undefined): T[] => {
 /** Extract a chat stage from a list of stages by its id */
 export const getChatFromId = (
   chatId: string,
-  stages: ExpStage[]
+  stages: ExpStage[],
 ): ExpStageChatAboutItems | undefined => {
   for (const stage of stages) {
     if (isOfKind(stage, StageKind.GroupChat)) {
@@ -80,7 +76,7 @@ export const getChatFromId = (
 export const mergeByKey = <T extends object, K extends Indexable<T>>(
   previousArray: T[],
   incomingArray: T[],
-  key: K
+  key: K,
 ): T[] => {
   return Object.values({
     ...lookupTable(previousArray, key),
