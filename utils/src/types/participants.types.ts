@@ -3,18 +3,23 @@
  */
 
 import { ExcludeProps } from '../utils/object.utils';
+import { UnifiedTimestamp } from './api.types';
 import { ExpStage } from './stages.types';
 
 export interface ParticipantId {
   uid: string; // Unique identifier for the participant.
-  experimentId: string; // Participants are strongly tied to an experiment.
+  experimentId: string; // Participants are strongly tied to an experiment ? est-ce qu'on a besoin de savoir ça ? nan, pour y accéder ça sera stocké quelque part
 }
 
-export interface ParticipantProfile extends ParticipantId {
-  pronouns: string;
-  avatarUrl: string;
-  name: string;
-  acceptTosTimestamp: string | null;
+export interface ParticipantProfile {
+  publicId: string; // Public identifier for the participant inside an experiment
+
+  pronouns: string | null;
+  avatarUrl: string | null;
+  name: string | null;
+
+  acceptTosTimestamp: UnifiedTimestamp | null;
+  workingOnStageName: string;
 }
 
 // The stage data for a participant does not have its ids
@@ -39,11 +44,14 @@ export interface ParticipantsProgression {
 //                                           DEFAULTS                                            //
 // ********************************************************************************************* //
 
-export const getDefaultProfile = (): ParticipantProfile => ({
-  uid: 'fakeId',
-  experimentId: 'fakeExpId',
-  pronouns: 'they/them',
-  avatarUrl: '',
-  name: 'fakeName',
-  acceptTosTimestamp: 'fakeTimestamp',
+export const getDefaultProfile = (
+  publicId: string,
+  workingOnStageName: string,
+): ParticipantProfile => ({
+  publicId,
+  pronouns: null,
+  avatarUrl: null,
+  name: null,
+  acceptTosTimestamp: null,
+  workingOnStageName,
 });

@@ -1,13 +1,13 @@
 /** Chat message types */
 
-import { uniqueId } from "../utils/algebraic.utils";
-import { UnifiedTimestamp } from "./api.types";
-import { ItemPair } from "./items.types";
+import { uniqueId } from '../utils/algebraic.utils';
+import { UnifiedTimestamp } from './api.types';
+import { ItemPair } from './items.types';
 
 export enum MessageType {
-  UserMessage = "userMessage",
-  DiscussItemsMessage = "discussItemsMessage",
-  MediatorMessage = "mediatorMessage",
+  UserMessage = 'userMessage',
+  DiscussItemsMessage = 'discussItemsMessage',
+  MediatorMessage = 'mediatorMessage',
 }
 
 export interface MessageBase {
@@ -63,23 +63,19 @@ export interface MediatorMessageMutationData {
 //                                           DEFAULTS                                            //
 // ********************************************************************************************* //
 
-export const getDefaultUserMessage = (
-  timestamp: UnifiedTimestamp
-): UserMessage => ({
-  uid: uniqueId("message"),
-  chatId: "",
+export const getDefaultUserMessage = (timestamp: UnifiedTimestamp): UserMessage => ({
+  uid: uniqueId('message'),
+  chatId: '',
   messageType: MessageType.UserMessage,
   timestamp,
-  fromUserId: "",
-  text: "fakeMessage",
+  fromUserId: '',
+  text: 'fakeMessage',
 });
 
-export const getDefaultMediatorMessage = (
-  timestamp: UnifiedTimestamp
-): MediatorMessage => ({
-  uid: uniqueId("message"),
-  chatId: "",
+export const getDefaultMediatorMessage = (timestamp: UnifiedTimestamp): MediatorMessage => ({
+  uid: uniqueId('message'),
+  chatId: '',
   messageType: MessageType.MediatorMessage,
   timestamp,
-  text: "fakeMessage",
+  text: 'fakeMessage',
 });

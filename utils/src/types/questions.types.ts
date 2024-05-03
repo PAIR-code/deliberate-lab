@@ -1,15 +1,14 @@
 /** Survey question types */
 
-import { uniqueId } from "../utils/algebraic.utils";
-import { ExcludeProps } from "../utils/object.utils";
-import { ItemPairWithRatings, getDefaultItemRating } from "./items.types";
-import { TosAndUserProfile } from "./participants.types";
+import { uniqueId } from '../utils/algebraic.utils';
+import { ExcludeProps } from '../utils/object.utils';
+import { ItemName, ItemPairWithRatings, getDefaultItemRating } from './items.types';
 
 export enum SurveyQuestionKind {
-  Text = "TextQuestion",
-  Check = "CheckQuestion",
-  Rating = "RatingQuestion",
-  Scale = "ScaleQuestion",
+  Text = 'TextQuestion',
+  Check = 'CheckQuestion',
+  Rating = 'RatingQuestion',
+  Scale = 'ScaleQuestion',
 }
 
 export interface AbstractQuestion {
@@ -46,12 +45,9 @@ export interface ScaleQuestion extends AbstractQuestion {
   score: number | null; //  10 point scale.
 }
 
-export type Question =
-  | TextQuestion
-  | RatingQuestion
-  | ScaleQuestion
-  | CheckQuestion;
+export type Question = TextQuestion | RatingQuestion | ScaleQuestion | CheckQuestion;
 
+// TODO: remove this once we do fine-grained firestore updates
 export type QuestionUpdate =
   | QuestionAnswer<TextQuestion>
   | QuestionAnswer<CheckQuestion>
@@ -63,13 +59,50 @@ export interface Survey {
 }
 
 // ********************************************************************************************* //
+//                                           CONFIGS                                             //
+// ********************************************************************************************* //
+
+interface BaseQuestionConfig {
+  kind: SurveyQuestionKind;
+  questionText: string;
+}
+
+export interface TextQuestionConfig extends BaseQuestionConfig {
+  kind: SurveyQuestionKind.Text;
+}
+
+export interface CheckQuestionConfig extends BaseQuestionConfig {
+  kind: SurveyQuestionKind.Check;
+}
+
+export interface RatingQuestionConfig extends BaseQuestionConfig {
+  kind: SurveyQuestionKind.Rating;
+
+  item1: ItemName;
+  item2: ItemName;
+}
+
+export interface ScaleQuestionConfig extends BaseQuestionConfig {
+  kind: SurveyQuestionKind.Scale;
+
+  upperBound: string; // Description for the upper bound of the scale
+  lowerBound: string; // Description for the lower bound of the scale
+}
+
+export type QuestionConfig =
+  | TextQuestionConfig
+  | CheckQuestionConfig
+  | RatingQuestionConfig
+  | ScaleQuestionConfig;
+
+// ********************************************************************************************* //
 //                                             UTILS                                             //
 // ********************************************************************************************* //
 
 /** Asserts that the input question is of the given type, and returns it */
 export const questionAsKind = <T extends Question>(
   question: Question,
-  kind: SurveyQuestionKind
+  kind: SurveyQuestionKind,
 ): T => {
   if (question.kind !== kind) {
     throw new Error(`Expected question of kind ${kind}, got ${question.kind}`);
@@ -86,8 +119,8 @@ export const getDefaultTextQuestion = (): TextQuestion => {
   return {
     kind: SurveyQuestionKind.Text,
     id: uniqueId(),
-    questionText: "",
-    answerText: "",
+    questionText: '',
+    answerText: '',
   };
 };
 
@@ -95,7 +128,7 @@ export const getDefaultCheckQuestion = (): CheckQuestion => {
   return {
     kind: SurveyQuestionKind.Check,
     id: uniqueId(),
-    questionText: "",
+    questionText: '',
     checkMark: null,
   };
 };
@@ -104,7 +137,7 @@ export const getDefaultItemRatingsQuestion = (): RatingQuestion => {
   return {
     kind: SurveyQuestionKind.Rating,
     id: uniqueId(),
-    questionText: "",
+    questionText: '',
     ...getDefaultItemRating(),
   };
 };
@@ -113,9 +146,9 @@ export const getDefaultScaleQuestion = (): ScaleQuestion => {
   return {
     kind: SurveyQuestionKind.Scale,
     id: uniqueId(),
-    questionText: "",
-    upperBound: "",
-    lowerBound: "",
+    questionText: '',
+    upperBound: '',
+    lowerBound: '',
     score: null,
   };
 };
@@ -123,15 +156,5 @@ export const getDefaultScaleQuestion = (): ScaleQuestion => {
 export const getDefaultSurveyConfig = (): Survey => {
   return {
     questions: [],
-  };
-};
-
-export const getDefaultTosAndUserProfileConfig = (): TosAndUserProfile => {
-  return {
-    pronouns: "",
-    avatarUrl: "",
-    name: "",
-    tosLines: [""],
-    acceptTosTimestamp: null,
   };
 };

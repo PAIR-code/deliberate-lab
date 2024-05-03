@@ -1,11 +1,13 @@
 /** Stages types & default definitions */
 
-import { ChatAboutItems } from './chats.types';
+import { ChatAboutItems, ChatConfig } from './chats.types';
 import { TosAndUserProfile } from './participants.types';
-import { Survey } from './questions.types';
+import { QuestionConfig, Survey } from './questions.types';
 import { VoteReveal, Votes } from './votes.types';
 
 export enum StageKind {
+  TermsOfService = 'termsOfService',
+  Profile = 'profile',
   AcceptTosAndSetProfile = 'acceptTosAndSetProfile',
   GroupChat = 'groupChat',
   VoteForLeader = 'voteForLeader',
@@ -83,7 +85,7 @@ export const stageAsKind = <T extends ExpStage>(
 };
 
 // ********************************************************************************************* //
-//                                            CONFIG                                             //
+//                                           CONFIGS                                             //
 // ********************************************************************************************* //
 
 /** Some stages require all participants to finish before allowing anyone to go on to the next stage */
@@ -95,3 +97,55 @@ export const ALLOWED_STAGE_PROGRESSION = {
   [StageKind.TakeSurvey]: true,
   // [StageKind.RankItems]: false,
 } as const;
+
+interface BaseStageConfig {
+  kind: StageKind;
+}
+
+export interface TermsOfServiceStageConfig extends BaseStageConfig {
+  kind: StageKind.TermsOfService;
+
+  tosLines: string[];
+}
+
+export interface ProfileStageConfig extends BaseStageConfig {
+  kind: StageKind.Profile;
+}
+
+export interface AcceptTosAndSetProfileStageConfig extends BaseStageConfig {
+  kind: StageKind.AcceptTosAndSetProfile;
+
+  tosLines: string[];
+}
+
+export interface SurveyStageConfig extends BaseStageConfig {
+  kind: StageKind.TakeSurvey;
+
+  questions: QuestionConfig[];
+}
+
+export interface GroupChatStageConfig extends BaseStageConfig {
+  kind: StageKind.GroupChat;
+
+  chatId: string;
+  chatConfig: ChatConfig;
+}
+
+export interface VoteForLeaderStageConfig extends BaseStageConfig {
+  kind: StageKind.VoteForLeader;
+}
+
+export interface RevealVotedStageConfig extends BaseStageConfig {
+  kind: StageKind.RevealVoted;
+
+  pendingVoteStageName: string; // Name of the `VoteForLeader` stage that this stage is revealing the results of
+}
+
+export type StageConfig =
+  | TermsOfServiceStageConfig
+  | ProfileStageConfig
+  | AcceptTosAndSetProfileStageConfig
+  | SurveyStageConfig
+  | GroupChatStageConfig
+  | VoteForLeaderStageConfig
+  | RevealVotedStageConfig;

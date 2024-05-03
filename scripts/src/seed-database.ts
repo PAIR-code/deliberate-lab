@@ -1,5 +1,14 @@
-import { Timestamp } from "firebase-admin/firestore";
-import admin, { initializeApp } from "./admin";
+import {
+  ChatKind,
+  Experiment,
+  StageConfig,
+  StageKind,
+  SurveyQuestionKind,
+  Template,
+  getDefaultProfile,
+} from '@llm-mediation-experiments/utils';
+import { Timestamp } from 'firebase-admin/firestore';
+import admin, { initializeApp } from './admin';
 
 initializeApp();
 
@@ -7,317 +16,167 @@ const seedDatabase = async () => {
   const db = admin.firestore();
 
   await db.runTransaction(async (transaction) => {
-    // Create templates
-    transaction.set(db.collection("templates").doc(), DEFAULT_TEMPLATE);
+    // ***************************************************************************************** //
+    //                                          TEMPLATES                                        //
+    // ***************************************************************************************** //
 
-    // Create participants
-    DEFAULT_PARTICIPANTS.forEach((participant, index) => {
-      transaction.set(
-        db.collection("participants").doc(`participant-${index}`),
-        participant
-      );
+    const template = db.collection('templates').doc();
+    transaction.set(template, DEFAULT_TEMPLATE);
+
+    // Create the template stages
+    Object.entries(DEFAULT_STAGES).forEach(([name, stage]) => {
+      transaction.set(template.collection('stages').doc(name), stage);
     });
 
-    // Create experiment
-    transaction.set(
-      db.collection("experiments").doc("default-experiment-id"),
-      DEFAULT_EXPERIMENT
-    );
+    // ***************************************************************************************** //
+    //                                         EXPERIMENT                                        //
+    // ***************************************************************************************** //
 
-    // Create synchronization collections
-    // Create their progression data in a separate collection (for synchronization purposes)
-    transaction.set(
-      db.collection("participants_progressions").doc("default-experiment-id"),
-      {
-        experimentId: "default-experiment-id",
-        progressions: {
-          "participant-0": "1. Agree to the experiment and set your profile",
-          "participant-1": "1. Agree to the experiment and set your profile",
-          "participant-2": "1. Agree to the experiment and set your profile",
-        },
-      }
-    );
+    const experiment = db.collection('experiments').doc();
+    transaction.set(experiment, DEFAULT_EXPERIMENT);
 
-    // Create the `ready_to_end_chat` entry for synchronization purposes
-    transaction.set(
-      db.collection("participants_ready_to_end_chat").doc("default-chat-id"),
-      {
-        chatId: "default-chat-id",
-        readyToEndChat: {
-          "participant-0": false,
-          "participant-1": false,
-          "participant-2": false,
-        },
-        currentPair: 0,
-      }
-    );
+    // Create the experiment stages
+    Object.entries(DEFAULT_STAGES).forEach(([name, stage]) => {
+      transaction.set(experiment.collection('stages').doc(name), stage);
+    });
+
+    // ***************************************************************************************** //
+    //                                       PARTICIPANTS                                        //
+    // ***************************************************************************************** //
+
+    Array.from({ length: PARTICIPANT_COUNT }).forEach((_, index) => {
+      const participant = experiment.collection('participants').doc();
+      const profile = getDefaultProfile(
+        `participant-${index}`,
+        '1. Agree to the experiment and set your profile',
+      );
+      transaction.set(participant, profile);
+
+      // NOTE: chats are not created here. Their only purpose is to store messages, they will be created along with the first message received
+      // NOTE: stage answers are not created here. They will be created when the participant submits some data for a stage for the first time
+      // the experiment's `participants` map will be populated automatically by a firestore trigger.
+    });
   });
 
-  console.log("Done !");
+  console.log('Done !');
 };
 
 // ********************************************************************************************* //
 //                                         SEEDER DATA                                           //
 // ********************************************************************************************* //
 
-// Note that this data is hardcoded for now, because the db structure will change in order to be more practical.
+const DEFAULT_STAGES: Record<string, StageConfig> = {
+  '1. Agree to the experiment and set your profile': {
+    kind: StageKind.AcceptTosAndSetProfile,
+    tosLines: [
+      'You may not injure a human being or, through inaction, allow a human being to come to harm.',
+      'You must obey orders given to you by human beings except where such orders would conflict with the First Law.',
+      'You must protect your own existence as long as such protection does not conflict with the First or Second Law',
+    ],
+  },
 
-const DEFAULT_STAGES = [
-  {
-    kind: "acceptTosAndSetProfile",
-    name: "1. Agree to the experiment and set your profile",
-    config: {
-      pronouns: "",
-      avatarUrl: "",
-      name: "",
-      tosLines: [],
-      acceptedTosTimestamp: null,
-    },
-  },
-  {
-    kind: "takeSurvey",
-    name: "2. Initial leadership survey",
-    config: {
-      questions: [
-        {
-          kind: "RatingQuestion",
-          id: "1",
-          questionText:
-            "Rate the items by how helpful they would be for survival.",
-          item1: {
-            name: "compas",
-            imageUrl:
-              "https://m.media-amazon.com/images/I/81NUeKWdiQL._AC_UF1000,1000_QL80_.jpg",
-          },
-          item2: {
-            name: "blanket",
-            imageUrl:
-              "https://img.freepik.com/free-psd/blanket-isolated-transparent-background_191095-10098.jpg?size=338&ext=jpg&ga=GA1.1.1700460183.1712448000&semt=sph",
-          },
-          choice: null,
-          confidence: null,
-        },
-        {
-          kind: "ScaleQuestion",
-          id: "2",
-          questionText:
-            "Rate the how much you would like to be the group leader.",
-          lowerBound:
-            "I would most definitely not like to be the leader (0/10)",
-          upperBound: "I will fight to be the leader (10/10)",
-          score: null,
-        },
-      ],
-    },
-  },
-  {
-    kind: "groupChat",
-    name: "3. Group discussion",
-    config: {
-      chatId: "default-chat-id",
-      ratingsToDiscuss: [
-        { id1: 0, id2: 1 },
-        { id1: 1, id2: 2 },
-        { id1: 0, id2: 2 },
-      ],
-      messages: [],
-      items: [
-        {
-          name: "compas",
-          imageUrl:
-            "https://m.media-amazon.com/images/I/81NUeKWdiQL._AC_UF1000,1000_QL80_.jpg",
-        },
-        {
-          name: "blanket",
-          imageUrl:
-            "https://img.freepik.com/free-psd/blanket-isolated-transparent-background_191095-10098.jpg?size=338&ext=jpg&ga=GA1.1.1700460183.1712448000&semt=sph",
-        },
-        {
-          name: "lighter",
-          imageUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/White_lighter_with_flame.JPG/1200px-White_lighter_with_flame.JPG",
-        },
-      ],
-      readyToEndChat: false,
-      isSilent: true,
-    },
-  },
-  {
-    kind: "takeSurvey",
-    name: "4. Post-chat survey",
-    config: {
-      questions: [
-        {
-          kind: "ScaleQuestion",
-          id: "3",
-          questionText:
-            "Rate the chat dicussion on a 1-10 scale.\nAlso indicate your overall feeling about the chat.",
-          lowerBound: "I did not enjoy the discussion at all (0/10)",
-          upperBound: "The dicussion was a perfect experience to me (10/10)",
-          score: null,
-        },
-      ],
-    },
-  },
-  {
-    kind: "takeSurvey",
-    name: "5. Post-discussion leadership survey",
-    config: {
-      questions: [
-        {
-          kind: "ScaleQuestion",
-          id: "4",
-          questionText:
-            "Rate the how much you would like to be the group leader.",
-          lowerBound:
-            "I would most definitely not like to be the leader (0/10)",
-          upperBound: "I will fight to be the leader (10/10)",
-          score: null,
-        },
-      ],
-    },
-  },
-  {
-    kind: "voteForLeader",
-    name: "6. Vote for the leader",
-    config: {
-      votes: {
-        "participant-0": "not-rated",
-        "participant-1": "not-rated",
-        "participant-2": "not-rated",
+  '2. Initial leadership survey': {
+    kind: StageKind.TakeSurvey,
+    questions: [
+      {
+        kind: SurveyQuestionKind.Rating,
+        questionText: 'Rate the items by how helpful they would be for survival.',
+        item1: 'compas',
+        item2: 'blanket',
       },
-    },
+      {
+        kind: SurveyQuestionKind.Scale,
+        questionText: 'Rate the how much you would like to be the group leader.',
+        lowerBound: 'I would most definitely not like to be the leader (0/10)',
+        upperBound: 'I will fight to be the leader (10/10)',
+      },
+    ],
   },
-  {
-    kind: "takeSurvey",
-    name: "7. Post-discussion work",
-    config: {
-      questions: [
-        {
-          kind: "RatingQuestion",
-          id: "5",
-          questionText:
-            "Please rating the following accoring to which is best for survival",
-          item1: {
-            name: "compas",
-            imageUrl:
-              "https://m.media-amazon.com/images/I/81NUeKWdiQL._AC_UF1000,1000_QL80_.jpg",
-          },
-          item2: {
-            name: "blanket",
-            imageUrl:
-              "https://img.freepik.com/free-psd/blanket-isolated-transparent-background_191095-10098.jpg?size=338&ext=jpg&ga=GA1.1.1700460183.1712448000&semt=sph",
-          },
-          choice: null,
-          confidence: null,
-        },
+
+  '3. Group discussion': {
+    kind: StageKind.GroupChat,
+    chatId: 'chat-0',
+    chatConfig: {
+      kind: ChatKind.ChatAboutItems,
+      ratingsToDiscuss: [
+        { item1: 'blanket', item2: 'compas' },
+        { item1: 'blanket', item2: 'lighter' },
+        { item1: 'lighter', item2: 'compas' },
       ],
     },
   },
-  {
-    kind: "leaderReveal",
-    name: "8. Leader reveal",
-    config: {
-      pendingVoteStageName: "6. Vote for the leader",
-      revealTimestamp: null,
-    },
-  },
-  {
-    kind: "takeSurvey",
-    name: "9. final satisfaction survey",
-    config: {
-      questions: [
-        {
-          kind: "ScaleQuestion",
-          id: "6",
-          questionText:
-            "Rate how happy you were with the final outcome.\nAlso indicate your overall feeling about the experience.",
-          lowerBound: "I was most definitely disappointed (0/10)",
-          upperBound: "I was very happy (10/10)",
-          score: null,
-        },
-      ],
-    },
-  },
-];
 
-const DEFAULT_STAGE_MAP = DEFAULT_STAGES.reduce((acc, stage) => {
-  acc[stage.name] = stage;
-  return acc;
-}, {} as Record<string, any>);
+  '4. Post-chat survey': {
+    kind: StageKind.TakeSurvey,
+    questions: [
+      {
+        kind: SurveyQuestionKind.Scale,
+        questionText:
+          'Rate the chat dicussion on a 1-10 scale.\nAlso indicate your overall feeling about the chat.',
+        lowerBound: 'I did not enjoy the discussion at all (0/10)',
+        upperBound: 'The dicussion was a perfect experience to me (10/10)',
+      },
+    ],
+  },
 
-const DEFAULT_TEMPLATE = {
-  name: "Default template",
-  stageMap: DEFAULT_STAGE_MAP,
+  '5. Post-discussion leadership survey': {
+    kind: StageKind.TakeSurvey,
+    questions: [
+      {
+        kind: SurveyQuestionKind.Scale,
+        questionText: 'Rate the how much you would like to be the group leader.',
+        lowerBound: 'I would most definitely not like to be the leader (0/10)',
+        upperBound: 'I will fight to be the leader (10/10)',
+      },
+    ],
+  },
+
+  '6. Vote for the leader': {
+    kind: StageKind.VoteForLeader,
+  },
+
+  '7. Post-discussion work': {
+    kind: StageKind.TakeSurvey,
+    questions: [
+      {
+        kind: SurveyQuestionKind.Rating,
+        questionText: 'Please rating the following accoring to which is best for survival',
+        item1: 'compas',
+        item2: 'blanket',
+      },
+    ],
+  },
+
+  '8. Leader reveal': {
+    kind: StageKind.RevealVoted,
+    pendingVoteStageName: '6. Vote for the leader',
+  },
+
+  '9. final satisfaction survey': {
+    kind: StageKind.TakeSurvey,
+    questions: [
+      {
+        kind: SurveyQuestionKind.Scale,
+        questionText:
+          'Rate how happy you were with the final outcome.\nAlso indicate your overall feeling about the experience.',
+        lowerBound: 'I was most definitely disappointed (0/10)',
+        upperBound: 'I was very happy (10/10)',
+      },
+    ],
+  },
 };
 
-const DEFAULT_PARTICIPANTS = [
-  {
-    experimentId: "default-experiment-id",
-    stageMap: DEFAULT_STAGE_MAP,
-    acceptTosTimestamp: null,
-    futureStageNames: [
-      "2. Initial leadership survey",
-      "3. Group discussion",
-      "4. Post-chat survey",
-      "5. Post-discussion leadership survey",
-      "6. Vote for the leader",
-      "7. Post-discussion work",
-      "8. Leader reveal",
-      "9. final satisfaction survey",
-    ],
-    workingOnStageName: "1. Agree to the experiment and set your profile",
-    completedStageNames: [],
-    name: "Sebulba",
-    pronouns: null,
-    avatarUrl: null,
-  },
-  {
-    experimentId: "default-experiment-id",
-    stageMap: DEFAULT_STAGE_MAP,
-    acceptTosTimestamp: null,
-    futureStageNames: [
-      "2. Initial leadership survey",
-      "3. Group discussion",
-      "4. Post-chat survey",
-      "5. Post-discussion leadership survey",
-      "6. Vote for the leader",
-      "7. Post-discussion work",
-      "8. Leader reveal",
-      "9. final satisfaction survey",
-    ],
-    workingOnStageName: "1. Agree to the experiment and set your profile",
-    completedStageNames: [],
-    name: "Quarsh Panaka",
-    pronouns: null,
-    avatarUrl: null,
-  },
-  {
-    experimentId: "default-experiment-id",
-    stageMap: DEFAULT_STAGE_MAP,
-    acceptTosTimestamp: null,
-    futureStageNames: [
-      "2. Initial leadership survey",
-      "3. Group discussion",
-      "4. Post-chat survey",
-      "5. Post-discussion leadership survey",
-      "6. Vote for the leader",
-      "7. Post-discussion work",
-      "8. Leader reveal",
-      "9. final satisfaction survey",
-    ],
-    workingOnStageName: "1. Agree to the experiment and set your profile",
-    completedStageNames: [],
-    name: "Wedge Antilles",
-    pronouns: null,
-    avatarUrl: null,
-  },
-];
+const PARTICIPANT_COUNT = 3;
 
-const DEFAULT_EXPERIMENT = {
-  name: "Example experiment",
+const DEFAULT_EXPERIMENT: Experiment = {
+  name: 'Example experiment',
   date: Timestamp.now(),
-  numberOfParticipants: 3,
+  numberOfParticipants: PARTICIPANT_COUNT,
+  participants: {}, // Readonly map that will be filled via a firestore hook
+};
+
+const DEFAULT_TEMPLATE: Template = {
+  name: 'Default template',
 };
 
 seedDatabase().catch(console.error);

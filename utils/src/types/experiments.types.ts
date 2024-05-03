@@ -1,19 +1,17 @@
 /** API experiment types. For the actual stage types, see stages.types.ts */
 
-import { ParticipantExtended } from './participants.types';
+import { UnifiedTimestamp } from './api.types';
+import { ParticipantProfile } from './participants.types';
 import { ExpStage } from './stages.types';
 
 /** Experiment metadata */
 export interface Experiment {
-  uid: string; // id in the "experiments" collection
   name: string;
-  date: Date;
+  date: UnifiedTimestamp;
   numberOfParticipants: number;
-}
 
-/** Experiment extended with the participants' data */
-export interface ExperimentExtended extends Experiment {
-  participants: ParticipantExtended[];
+  // Readonly participant public id => participant profile map
+  participants: Record<string, ParticipantProfile>;
 }
 
 /** Data to be sent to the backend in order to generate an experiment and its participants */
@@ -25,7 +23,5 @@ export interface ExperimentCreationData {
 
 /** An experiment template */
 export interface Template {
-  uid: string;
   name: string;
-  stageMap: Record<string, ExpStage>;
 }
