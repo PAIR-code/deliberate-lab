@@ -2,7 +2,7 @@
 
 import { UnifiedTimestamp } from './api.types';
 import { ParticipantProfile } from './participants.types';
-import { ExpStage } from './stages.types';
+import { StageConfig } from './stages.types';
 
 /** Experiment metadata */
 export interface Experiment {
@@ -17,7 +17,7 @@ export interface Experiment {
 /** Data to be sent to the backend in order to generate an experiment and its participants */
 export interface ExperimentCreationData {
   name: string;
-  stageMap: Record<string, ExpStage>;
+  stageMap: Record<string, StageConfig>;
   numberOfParticipants: number;
 }
 

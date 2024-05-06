@@ -1,61 +1,12 @@
 /** Survey question types */
 
-import { uniqueId } from '../utils/algebraic.utils';
-import { ExcludeProps } from '../utils/object.utils';
-import { ItemName, ItemPairWithRatings, getDefaultItemRating } from './items.types';
+import { ItemName } from './items.types';
 
 export enum SurveyQuestionKind {
   Text = 'TextQuestion',
   Check = 'CheckQuestion',
   Rating = 'RatingQuestion',
   Scale = 'ScaleQuestion',
-}
-
-export interface AbstractQuestion {
-  kind: SurveyQuestionKind;
-  questionText: string;
-
-  id: string;
-}
-
-/** The actual response data to be sent to the backend */
-export type QuestionAnswer<T> = ExcludeProps<T, AbstractQuestion>;
-
-export interface TextQuestion extends AbstractQuestion {
-  kind: SurveyQuestionKind.Text;
-
-  answerText: string;
-}
-
-export interface CheckQuestion extends AbstractQuestion {
-  kind: SurveyQuestionKind.Check;
-
-  checkMark: boolean | null;
-}
-
-export interface RatingQuestion extends AbstractQuestion, ItemPairWithRatings {
-  kind: SurveyQuestionKind.Rating;
-}
-
-export interface ScaleQuestion extends AbstractQuestion {
-  kind: SurveyQuestionKind.Scale;
-
-  upperBound: string; // Descriptor for the upper bound of the scale
-  lowerBound: string; // Descriptor for the lower bound of the scale
-  score: number | null; //  10 point scale.
-}
-
-export type Question = TextQuestion | RatingQuestion | ScaleQuestion | CheckQuestion;
-
-// TODO: remove this once we do fine-grained firestore updates
-export type QuestionUpdate =
-  | QuestionAnswer<TextQuestion>
-  | QuestionAnswer<CheckQuestion>
-  | QuestionAnswer<RatingQuestion>
-  | QuestionAnswer<ScaleQuestion>;
-
-export interface Survey {
-  questions: Question[];
 }
 
 // ********************************************************************************************* //
@@ -96,65 +47,76 @@ export type QuestionConfig =
   | ScaleQuestionConfig;
 
 // ********************************************************************************************* //
-//                                             UTILS                                             //
+//                                           ANSWERS                                             //
 // ********************************************************************************************* //
 
-/** Asserts that the input question is of the given type, and returns it */
-export const questionAsKind = <T extends Question>(
-  question: Question,
-  kind: SurveyQuestionKind,
-): T => {
-  if (question.kind !== kind) {
-    throw new Error(`Expected question of kind ${kind}, got ${question.kind}`);
-  }
+interface BaseQuestionAnswer {
+  kind: SurveyQuestionKind;
+}
 
-  return question as T;
-};
+export interface TextQuestionAnswer extends BaseQuestionAnswer {
+  kind: SurveyQuestionKind.Text;
+
+  answerText: string | null;
+}
+
+export interface CheckQuestionAnswer extends BaseQuestionAnswer {
+  kind: SurveyQuestionKind.Check;
+
+  checkMark: boolean | null;
+}
+
+export interface RatingQuestionAnswer extends BaseQuestionAnswer {
+  kind: SurveyQuestionKind.Rating;
+
+  choice: ItemName | null;
+  confidence: number | null;
+}
+
+export interface ScaleQuestionAnswer extends BaseQuestionAnswer {
+  kind: SurveyQuestionKind.Scale;
+
+  score: number | null;
+}
+
+export type QuestionAnswer =
+  | TextQuestionAnswer
+  | CheckQuestionAnswer
+  | RatingQuestionAnswer
+  | ScaleQuestionAnswer;
 
 // ********************************************************************************************* //
-//                                           DEFAULTS                                            //
+//                                       DEFAULT CONFIGS                                         //
 // ********************************************************************************************* //
 
-export const getDefaultTextQuestion = (): TextQuestion => {
+export const getDefaultTextQuestion = (): TextQuestionConfig => {
   return {
     kind: SurveyQuestionKind.Text,
-    id: uniqueId(),
     questionText: '',
-    answerText: '',
   };
 };
 
-export const getDefaultCheckQuestion = (): CheckQuestion => {
+export const getDefaultCheckQuestion = (): CheckQuestionConfig => {
   return {
     kind: SurveyQuestionKind.Check,
-    id: uniqueId(),
     questionText: '',
-    checkMark: null,
   };
 };
 
-export const getDefaultItemRatingsQuestion = (): RatingQuestion => {
+export const getDefaultItemRatingsQuestion = (): RatingQuestionConfig => {
   return {
     kind: SurveyQuestionKind.Rating,
-    id: uniqueId(),
     questionText: '',
-    ...getDefaultItemRating(),
+    item1: 'blanket',
+    item2: 'compas',
   };
 };
 
-export const getDefaultScaleQuestion = (): ScaleQuestion => {
+export const getDefaultScaleQuestion = (): ScaleQuestionConfig => {
   return {
     kind: SurveyQuestionKind.Scale,
-    id: uniqueId(),
     questionText: '',
     upperBound: '',
     lowerBound: '',
-    score: null,
-  };
-};
-
-export const getDefaultSurveyConfig = (): Survey => {
-  return {
-    questions: [],
   };
 };

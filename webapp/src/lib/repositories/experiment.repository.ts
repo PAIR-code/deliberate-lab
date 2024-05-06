@@ -1,4 +1,4 @@
-import { Signal, WritableSignal, signal } from '@angular/core';
+import { Signal, WritableSignal, computed, signal } from '@angular/core';
 import { Experiment, StageConfig } from '@llm-mediation-experiments/utils';
 import { collection, doc, getDocs, onSnapshot } from 'firebase/firestore';
 import { firestore } from '../api/firebase';
@@ -23,6 +23,8 @@ export class ExperimentRepository extends BaseRepository {
   public get publicStageDataMap(): Record<string, Signal<unknown>> {
     return this._publicStageDataMap;
   }
+
+  public stageNames = computed(() => Object.keys(this._stageConfigMap() || {}));
 
   /** @param uid Experiment unique identifier (firestore document id) */
   constructor(public readonly uid: string) {
