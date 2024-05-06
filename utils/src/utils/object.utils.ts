@@ -1,6 +1,3 @@
-import { ExpStage, ExpStageChatAboutItems, StageKind } from '../types/stages.types';
-import { isOfKind } from './algebraic.utils';
-
 /** All types that can safely be used to index an object */
 export type Index = string | number | symbol;
 
@@ -55,19 +52,6 @@ export const keyRank = (obj: Record<string, any>, key: string): number => {
 /** Shorthand to make code more readable */
 export const valuesArray = <T>(obj: Record<string, T> | undefined): T[] => {
   return Object.values(obj ?? {});
-};
-
-/** Extract a chat stage from a list of stages by its id */
-export const getChatFromId = (
-  chatId: string,
-  stages: ExpStage[],
-): ExpStageChatAboutItems | undefined => {
-  for (const stage of stages) {
-    if (isOfKind(stage, StageKind.GroupChat)) {
-      if (stage.config.chatId === chatId) return stage;
-    }
-  }
-  return undefined;
 };
 
 /** Merge two arrays of objects into a new array, uniquely identifying objects by the given key.

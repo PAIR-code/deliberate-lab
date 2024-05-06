@@ -7,16 +7,11 @@ export interface Item {
 }
 
 export interface ItemPair {
-  item1: Item;
-  item2: Item;
+  item1: ItemName;
+  item2: ItemName;
 }
 
 export type ItemChoice = keyof ItemPair;
-
-export interface ItemPairWithRatings extends ItemPair {
-  choice: ItemChoice | null;
-  confidence: number | null; // 0 = 50/50, 1 = most confident
-}
 
 // ********************************************************************************************* //
 //                                             ITEMS                                             //
@@ -46,15 +41,7 @@ export const ITEMS: Record<ItemName, Item> = {
 
 export const getDefaultItemPair = (): ItemPair => {
   return {
-    item1: ITEMS.blanket,
-    item2: ITEMS.compas,
-  };
-};
-
-export const getDefaultItemRating = (): ItemPairWithRatings => {
-  return {
-    ...getDefaultItemPair(),
-    choice: null,
-    confidence: null,
+    item1: 'blanket',
+    item2: 'compas',
   };
 };

@@ -30,3 +30,5 @@ export const getDefaultProfile = (
   acceptTosTimestamp: null,
   workingOnStageName,
 });
+
+export const participantPublicId = (index: number) => `participant-${index}`;

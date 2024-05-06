@@ -1,6 +1,6 @@
 /** Stages types & default definitions */
 
-import { ChatConfig } from './chats.types';
+import { ChatConfig, PublicChatData } from './chats.types';
 import { QuestionAnswer, QuestionConfig } from './questions.types';
 import { Votes } from './votes.types';
 
@@ -104,3 +104,26 @@ export interface VoteForLeaderStageAnswer extends BaseStageAnswer {
 export type StageAnswer = SurveyStageAnswer | VoteForLeaderStageAnswer;
 
 // NOTE: profile & TOS stages do not have "answers", as the results are stored directly in the participant profile
+
+// ********************************************************************************************* //
+//                                        PUBLIC DATA                                            //
+// ********************************************************************************************* //
+
+interface BasePublicStageData {
+  kind: StageKind;
+}
+
+export interface GroupChatStagePublicData extends BasePublicStageData {
+  kind: StageKind.GroupChat;
+
+  readyToEndChat: Record<string, boolean>; // Participant public id => ready to end chat
+  chatData: PublicChatData;
+}
+
+export interface VoteForLeaderStagePublicData extends BasePublicStageData {
+  kind: StageKind.VoteForLeader;
+
+  participantvotes: Record<string, Votes>; // Participant public id => votes of this participant
+}
+
+export type PublicStageData = GroupChatStagePublicData | VoteForLeaderStagePublicData;

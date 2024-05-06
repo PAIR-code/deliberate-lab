@@ -1,8 +1,8 @@
 /** Types wrappers for the API */
 
 import type { Timestamp } from 'firebase/firestore';
-import { QuestionUpdate } from './questions.types';
-import { ExpStage } from './stages.types';
+import { QuestionAnswer } from './questions.types';
+import { StageConfig } from './stages.types';
 import { Votes } from './votes.types';
 
 /** Simple response with data */
@@ -27,7 +27,7 @@ export interface Progression {
 /** Data to be sent to the backend in order to generate a template */
 export interface TemplateCreationData {
   name: string;
-  stageMap: Record<string, ExpStage>;
+  stageMap: Record<string, StageConfig>;
 }
 
 export interface ProfileTOSData extends Progression {
@@ -56,7 +56,7 @@ export interface GenericStageUpdate<T> extends Progression {
 }
 
 export type SurveyStageUpdate = GenericStageUpdate<{
-  questions: QuestionUpdate[];
+  questions: QuestionAnswer[];
 }>;
 
 export type ChatStageUpdate = GenericStageUpdate<{
