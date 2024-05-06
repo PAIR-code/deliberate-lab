@@ -1,5 +1,5 @@
 import { Signal, WritableSignal, computed, signal } from '@angular/core';
-import { Experiment, StageConfig } from '@llm-mediation-experiments/utils';
+import { Experiment, PublicStageData, StageConfig } from '@llm-mediation-experiments/utils';
 import { collection, doc, getDocs, onSnapshot } from 'firebase/firestore';
 import { firestore } from '../api/firebase';
 import { BaseRepository } from './base.repository';
@@ -7,7 +7,7 @@ import { BaseRepository } from './base.repository';
 export class ExperimentRepository extends BaseRepository {
   // Internal writable signals
   private _experiment: WritableSignal<Experiment | undefined> = signal(undefined);
-  private _publicStageDataMap: Record<string, WritableSignal<unknown>> = {}; // TODO: type ?
+  private _publicStageDataMap: Record<string, WritableSignal<PublicStageData>> = {};
   private _stageConfigMap: WritableSignal<Record<string, StageConfig> | undefined> =
     signal(undefined);
 
@@ -45,7 +45,9 @@ export class ExperimentRepository extends BaseRepository {
 
         // Update the public stage data signals
         changedDocs.forEach((doc) => {
-          this._publicStageDataMap[doc.id].set(doc.data() as unknown);
+          const data = doc.data() as PublicStageData;
+          if (!this._publicStageDataMap[doc.id]) this._publicStageDataMap[doc.id] = signal(data);
+          else this._publicStageDataMap[doc.id].set(data);
         });
       }),
     );

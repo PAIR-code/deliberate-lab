@@ -12,8 +12,8 @@ export enum MessageType {
 
 export interface MessageBase {
   uid: string;
-  chatId: string;
   messageType: MessageType;
+
   timestamp: UnifiedTimestamp;
   text: string;
 }
@@ -21,7 +21,7 @@ export interface MessageBase {
 export interface UserMessage extends MessageBase {
   messageType: MessageType.UserMessage;
 
-  fromUserId: string;
+  fromPublicParticipantId: string;
 }
 
 export interface DiscussItemsMessage extends MessageBase {
@@ -65,16 +65,14 @@ export interface MediatorMessageMutationData {
 
 export const getDefaultUserMessage = (timestamp: UnifiedTimestamp): UserMessage => ({
   uid: uniqueId('message'),
-  chatId: '',
   messageType: MessageType.UserMessage,
   timestamp,
-  fromUserId: '',
+  fromPublicParticipantId: '',
   text: 'fakeMessage',
 });
 
 export const getDefaultMediatorMessage = (timestamp: UnifiedTimestamp): MediatorMessage => ({
   uid: uniqueId('message'),
-  chatId: '',
   messageType: MessageType.MediatorMessage,
   timestamp,
   text: 'fakeMessage',
