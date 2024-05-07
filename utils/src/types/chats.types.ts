@@ -29,6 +29,10 @@ export type ChatConfig = ChatAboutItemsConfig;
 /** Per-participant chat config */
 export interface ChatAnswer {
   readyToEndChat: boolean;
+
+  // Indexes (facilitate automated actions)
+  participantPublicId: string;
+  stageName: string;
 }
 
 // ********************************************************************************************* //

@@ -7,6 +7,8 @@ export * from './endpoints/participants.endpoints';
 export * from './endpoints/templates.endpoints';
 
 // Firestore triggers
+export * from './triggers/chats.triggers';
 export * from './triggers/experiments.triggers';
+export * from './triggers/stages.triggers';
 
 // All cloud functions are defined in their own files and imported here.
