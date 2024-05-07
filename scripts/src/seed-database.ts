@@ -1,4 +1,5 @@
 import {
+  ChatAnswer,
   ChatKind,
   Experiment,
   StageConfig,
@@ -6,6 +7,7 @@ import {
   SurveyQuestionKind,
   Template,
   getDefaultProfile,
+  participantPublicId,
 } from '@llm-mediation-experiments/utils';
 import { Timestamp } from 'firebase-admin/firestore';
 import admin, { initializeApp } from './admin';
@@ -47,14 +49,28 @@ const seedDatabase = async () => {
     Array.from({ length: PARTICIPANT_COUNT }).forEach((_, index) => {
       const participant = experiment.collection('participants').doc();
       const profile = getDefaultProfile(
-        `participant-${index}`,
+        participantPublicId(index),
         '1. Agree to the experiment and set your profile',
       );
       transaction.set(participant, profile);
 
-      // NOTE: chats are not created here. Their only purpose is to store messages, they will be created along with the first message received
       // NOTE: stage answers are not created here. They will be created when the participant submits some data for a stage for the first time
       // the experiment's `participants` map will be populated automatically by a firestore trigger.
+
+      // We have to manually create every chat document for each participant because they require knowledge about both the participant and the stage.
+      // We cannot rely on firestore triggers because when they are triggered by the creation of a participant / chat stage, the other document may not exist yet.
+      Object.entries(DEFAULT_STAGES).forEach(([stageName, stage]) => {
+        if (stage.kind === StageKind.GroupChat) {
+          const chat = participant.collection('chats').doc(stage.chatId);
+          const data: ChatAnswer = {
+            participantPublicId: participantPublicId(index),
+            stageName,
+            readyToEndChat: false,
+          };
+
+          transaction.set(chat, data);
+        }
+      });
     });
   });
 
