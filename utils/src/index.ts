@@ -13,5 +13,6 @@ export * from './types/votes.types';
 
 // Utils
 export * from './utils/algebraic.utils';
+export * from './utils/cache.utils';
 export * from './utils/object.utils';
 export * from './utils/string.utils';

@@ -15,6 +15,11 @@ export interface ParticipantProfile {
   workingOnStageName: string;
 }
 
+/** For experimenters to be aware of the private ID */
+export interface ParticipantProfileExtended extends ParticipantProfile {
+  privateId: string;
+}
+
 // ********************************************************************************************* //
 //                                           DEFAULTS                                            //
 // ********************************************************************************************* //
