@@ -2,26 +2,45 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Rules for the messages collection
-    match /messages/{messageId} {
-      allow list: if request.auth.token.role == 'experimenter' || request.auth.token.role == 'participant';
+    // Template rules (experimenter-only)
+    match /templates/{documents=**} {
+      allow read: if request.auth.token.role == 'experimenter';
+      allow write: if false; // Complex validation through cloud functions 
     }
 
-    // Rules for the participants_progressions collection
-    match /participants_progressions/{progressionId} {
-      // Allow single-document reads
-      allow read: if true;
-    }
+    // Experiment rules
+    match /experiments/{experimentId} {
 
-    // Rules for the chat toggle collection
-    match /participants_ready_to_end_chat/{chatId} {
-      // Allow single document reads
-      allow read: if true;
-    }
+      match /stages/{stageId} {
+        allow read: if true; // Public read
+        allow write: if false; // Write as experimenter through cloud functions
+      }
 
-    // Else: disallow everything (access via cloud functions only)
-    match /{document=**} {
-      allow read, write: if false;
+      match /publicStageData/{stageId} {
+        allow read: if true;
+        allow write: if false; // Public readonly for everyone. Computed through firestore triggers
+      }
+
+      // Participant rules
+      match /participants/{participantId} {
+        allow get: if true; // Public if you know the ID
+        allow list: if false; // Avoid leaking IDs
+        allow update: if true; // TODO: contentn validation on write
+
+        match /stages/{stageId} {
+          allow read: if true;
+          allow write: if false; // Complex validation through cloud functions
+        }
+
+        match /chats/{chatId} {
+          allow read, update: if true; // TODO: content validation on write
+        
+          match /messages/{messageId} {
+            allow read: if true;
+            allow write: if false; // Replication to all participants done through cloud functions in order to avoid trigger loops
+          }
+        }
+      }
     }
   }
 }
