@@ -10,6 +10,12 @@ export class Lazy<T> {
     }
     return this.value;
   }
+
+  clear(destructor?: (value: T) => void) {
+    if (!this.value) return;
+    destructor?.(this.value);
+    this.value = undefined;
+  }
 }
 
 /** Cache values in a map with lazy instanciation */
@@ -31,5 +37,12 @@ export class CacheMap<K, V> {
     if (!value) return;
     this.map.delete(key);
     destructor?.(value);
+  }
+
+  clear(destructor?: (value: V) => void) {
+    this.map.forEach((value, key) => {
+      destructor?.(value);
+      this.map.delete(key);
+    });
   }
 }

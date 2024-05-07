@@ -10,3 +10,8 @@ export abstract class BaseRepository {
     this.unsubscribe = [];
   }
 }
+
+/** Helper callback to clear repositories */
+export const destroyRepository = <T extends BaseRepository>(repository: T) => {
+  repository.unsubscribeAll();
+};
