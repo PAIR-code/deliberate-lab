@@ -12,14 +12,9 @@ import { ParticipantRepository } from 'src/lib/repositories/participant.reposito
 export class AppStateService implements OnDestroy {
   // Repositories
   public readonly experimenter = new Lazy(() => new ExperimenterRepository());
-  public readonly experiments = new CacheMap((id: string) => new ExperimentRepository(id));
-  public readonly participants = new CacheMap(
-    ([expId, partId]: [string, string]) => new ParticipantRepository(expId, partId),
-  );
-  public readonly chats = new CacheMap(
-    ([expId, partId, chatId]: [string, string, string]) =>
-      new ChatRepository(expId, partId, chatId),
-  );
+  public readonly experiments = new CacheMap(createExperimentRepository);
+  public readonly participants = new CacheMap(createParticipantRepository);
+  public readonly chats = new CacheMap(createChatRepository);
 
   constructor() {}
 
@@ -31,3 +26,12 @@ export class AppStateService implements OnDestroy {
     this.chats.clear(destroyRepository);
   }
 }
+
+// Helpers
+const createExperimentRepository = (experimentId: string) => new ExperimentRepository(experimentId);
+
+const createParticipantRepository = ([experimentId, participantId]: [string, string]) =>
+  new ParticipantRepository(experimentId, participantId);
+
+const createChatRepository = ([experimentId, participantId, chatId]: [string, string, string]) =>
+  new ChatRepository(experimentId, participantId, chatId);
