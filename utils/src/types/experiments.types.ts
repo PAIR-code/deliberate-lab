@@ -6,6 +6,8 @@ import { StageConfig } from './stages.types';
 
 /** Experiment metadata */
 export interface Experiment {
+  id: string;
+
   name: string;
   date: UnifiedTimestamp;
   numberOfParticipants: number;

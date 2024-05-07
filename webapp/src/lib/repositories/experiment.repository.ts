@@ -20,7 +20,7 @@ export class ExperimentRepository extends BaseRepository {
     return this._stageConfigMap;
   }
 
-  public get publicStageDataMap(): Record<string, Signal<unknown>> {
+  public get publicStageDataMap(): Record<string, Signal<PublicStageData>> {
     return this._publicStageDataMap;
   }
 
@@ -33,7 +33,7 @@ export class ExperimentRepository extends BaseRepository {
     // Subscribe to the experiment
     this.unsubscribe.push(
       onSnapshot(doc(firestore, 'experiments', uid), (doc) => {
-        this._experiment.set(doc.data() as Experiment);
+        this._experiment.set({ id: doc.id, ...doc.data() } as Experiment);
       }),
     );
 

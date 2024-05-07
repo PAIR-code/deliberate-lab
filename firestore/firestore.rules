@@ -11,6 +11,10 @@ service cloud.firestore {
     // Experiment rules
     match /experiments/{experimentId} {
 
+      allow get: if true;
+      allow list: if request.auth.token.role == 'experimenter';
+      allow write: if false; // Complex validation through cloud functions
+
       match /stages/{stageId} {
         allow read: if true; // Public read
         allow write: if false; // Write as experimenter through cloud functions
