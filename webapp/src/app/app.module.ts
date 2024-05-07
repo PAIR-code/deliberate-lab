@@ -41,6 +41,7 @@ import { ExpLeaderRevealComponent } from './participant-view/participant-stage-v
 import { ExpLeaderVoteComponent } from './participant-view/participant-stage-view/exp-leader-vote/exp-leader-vote.component';
 import { ExpSurveyComponent } from './participant-view/participant-stage-view/exp-survey/exp-survey.component';
 import { ExpTosAndProfileComponent } from './participant-view/participant-stage-view/exp-tos-and-profile/exp-tos-and-profile.component';
+import { AppStateService } from './services/app-state.service';
 import { LmApiService } from './services/lm-api.service';
 import { VertexApiService } from './services/vertex-api.service';
 
@@ -50,6 +51,7 @@ import { VertexApiService } from './services/vertex-api.service';
     VertexApiService,
     LmApiService,
     FirebaseService,
+    AppStateService,
     provideHttpClient(),
     provideAngularQuery(new QueryClient()),
   ],

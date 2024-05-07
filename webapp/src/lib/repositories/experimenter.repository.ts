@@ -13,7 +13,7 @@ import { BaseRepository } from './base.repository';
 export class ExperimenterRepository extends BaseRepository {
   // Internal writable signals
   private _experiments: WritableSignal<Experiment[]> = signal([]);
-  public experimentParticipants = new CacheMap(this.createParticipantsSignal);
+  public readonly experimentParticipants = new CacheMap(this.createParticipantsSignal);
 
   // Expose the signals as read-only
   public get experiments(): Signal<Experiment[]> {
@@ -32,15 +32,15 @@ export class ExperimenterRepository extends BaseRepository {
 
   /** Create a signal that holds the value of all participant profiles for a given experiment. */
   private createParticipantsSignal(experimentId: string): Signal<ParticipantProfileExtended[]> {
-    const sig = signal<ParticipantProfileExtended[]>([]);
+    const _signal = signal<ParticipantProfileExtended[]>([]);
 
     // Bind the signal to the firestore collection
     this.unsubscribe.push(
       onSnapshot(collection(firestore, 'experiments', experimentId, 'participants'), (snapshot) => {
-        sig.set(collectSnapshotWithId<ParticipantProfileExtended>(snapshot, 'privateId'));
+        _signal.set(collectSnapshotWithId<ParticipantProfileExtended>(snapshot, 'privateId'));
       }),
     );
 
-    return sig;
+    return _signal;
   }
 }
