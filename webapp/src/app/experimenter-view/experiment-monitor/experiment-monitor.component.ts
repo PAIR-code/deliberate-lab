@@ -1,4 +1,4 @@
-import { Component, Inject, Input, Signal, WritableSignal, computed, signal } from '@angular/core';
+import { Component, Input, Signal, WritableSignal, computed, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,18 +6,15 @@ import { Router, RouterLink, RouterLinkActive, RouterModule } from '@angular/rou
 
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import {
-  ExpStage,
-  ExperimentExtended,
-  ParticipantExtended,
+  ParticipantProfileExtended,
+  StageConfig,
   StageKind,
   isOfKind,
 } from '@llm-mediation-experiments/utils';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
-import { ProviderService } from 'src/app/services/provider.service';
+import { AppStateService } from 'src/app/services/app-state.service';
 import { deleteExperimentMutation } from 'src/lib/api/mutations';
-import { experimentQuery } from 'src/lib/api/queries';
-import { EXPERIMENT_PROVIDER_TOKEN, ExperimentProvider } from 'src/lib/provider-tokens';
-import { QueryType } from 'src/lib/types/tanstack.types';
+import { ExperimentRepository } from 'src/lib/repositories/experiment.repository';
 import { MediatorChatComponent } from '../mediator-chat/mediator-chat.component';
 
 @Component({
@@ -33,55 +30,57 @@ import { MediatorChatComponent } from '../mediator-chat/mediator-chat.component'
     MatIconModule,
     MatProgressSpinnerModule,
   ],
-  providers: [
-    {
-      provide: EXPERIMENT_PROVIDER_TOKEN,
-      useFactory: () => new ProviderService<Signal<ExperimentExtended | undefined>>(),
-    },
-  ],
   templateUrl: './experiment-monitor.component.html',
   styleUrl: './experiment-monitor.component.scss',
 })
 export class ExperimentMonitorComponent {
-  queryClient = injectQueryClient();
-
   // Experiment deletion mutation
-  rmExperiment = deleteExperimentMutation(this.queryClient);
+  rmExperiment = deleteExperimentMutation(injectQueryClient());
 
-  public experimentUid: WritableSignal<string | null> = signal(null);
-  public _experiment: QueryType<ExperimentExtended>;
-  public participants: Signal<ParticipantExtended[]>;
+  public _experimentId: WritableSignal<string | undefined> = signal(undefined);
 
   @Input()
   // This one is set by the route parameter
-  set experiment(name: string) {
-    this.experimentUid.set(name);
+  set experimentId(name: string | undefined) {
+    this._experimentId.set(name);
   }
 
-  isOfKind = isOfKind;
+  get experimentId(): Signal<string | undefined> {
+    return this._experimentId;
+  }
+
+  readonly isOfKind = isOfKind;
   readonly StageKind = StageKind;
-  public expStages: Signal<ExpStage[]>;
+
+  // Helper computed signals
+  participants: Signal<ParticipantProfileExtended[]>;
+  experiment: Signal<ExperimentRepository | undefined>;
+  stages: Signal<StageConfig[]>;
 
   constructor(
     public router: Router,
-    @Inject(EXPERIMENT_PROVIDER_TOKEN) experimentProvider: ExperimentProvider,
+    public appState: AppStateService,
   ) {
-    // Prepare the request
-    this._experiment = experimentQuery(this.experimentUid);
-    experimentProvider.set(this._experiment.data); // Expose the current experiment through the provider
-
-    // Extract participants data from the extended experiment
-    this.participants = computed(() => this._experiment.data()?.participants ?? []);
-
-    this.expStages = computed(() => {
-      const p = this.participants()[0];
-      return p ? Object.values(p.stageMap) : [];
+    // Fetch the participants for this experiment, and dynamically change the list when the experiment changes.
+    this.participants = computed(() => {
+      const experimentId = this.experimentId();
+      if (!experimentId) return [];
+      return appState.experimenter.get().experimentParticipants.get(experimentId)();
     });
+
+    // Get the related experiment repository
+    this.experiment = computed(() => {
+      const experimentId = this.experimentId();
+      if (!experimentId) return undefined;
+      return appState.experiments.get({ experimentId });
+    });
+
+    this.stages = computed(() => Object.values(this.experiment()?.stageConfigMap() ?? {}));
   }
 
   deleteExperiment() {
-    const experimentUid = this.experimentUid();
-    if (experimentUid !== null && confirm('⚠️ This will delete the experiment! Are you sure?')) {
+    const experimentUid = this.experimentId();
+    if (experimentUid && confirm('⚠️ This will delete the experiment! Are you sure?')) {
       this.rmExperiment.mutate(experimentUid);
 
       // Redirect to settings page.

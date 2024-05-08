@@ -1,22 +1,21 @@
-import { Component, Input, OnDestroy, Signal, WritableSignal, effect, signal } from '@angular/core';
+import { Component, Input, Signal, WritableSignal, computed, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import {
-  ChatAboutItems,
-  Message,
-  ParticipantExtended,
-  mergeByKey,
+  GroupChatStageConfig,
+  ParticipantProfileExtended,
+  lookupTable,
 } from '@llm-mediation-experiments/utils';
-import { Unsubscribe } from 'firebase/firestore';
+import { AppStateService } from 'src/app/services/app-state.service';
 import { VertexApiService } from 'src/app/services/vertex-api.service';
 import { mediatorMessageMutation } from 'src/lib/api/mutations';
+import { ChatRepository } from 'src/lib/repositories/chat.repository';
 import { FewShotTemplate } from 'src/lib/text-templates/fewshot_template';
 import { preparePalm2Request, sendPalm2Request } from 'src/lib/text-templates/llm_vertexapi_palm2';
 import { nv, template } from 'src/lib/text-templates/template';
-import { chatMessagesSubscription } from 'src/lib/utils/firestore.utils';
 import { ChatDiscussItemsMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-discuss-items-message/chat-discuss-items-message.component';
 import { ChatMediatorMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-mediator-message/chat-mediator-message.component';
 import { ChatUserMessageComponent } from '../../participant-view/participant-stage-view/exp-chat/chat-user-message/chat-user-message.component';
@@ -40,19 +39,18 @@ import { MediatorFeedbackComponent } from '../../participant-view/participant-st
   templateUrl: './mediator-chat.component.html',
   styleUrl: './mediator-chat.component.scss',
 })
-export class MediatorChatComponent implements OnDestroy {
-  @Input() experiment?: Signal<string | null>;
-  @Input() participants?: Signal<ParticipantExtended[]>;
+export class MediatorChatComponent {
+  @Input() participants!: Signal<ParticipantProfileExtended[]>;
+  @Input() experimentId!: Signal<string | undefined>;
 
   @Input()
-  set chatValue(value: ChatAboutItems | undefined) {
-    this.chat.set(value);
+  set chatValue(value: GroupChatStageConfig | undefined) {
+    this.chatConfig.set(value);
   }
 
-  public chat: WritableSignal<ChatAboutItems | undefined> = signal(undefined);
-
-  public messages: WritableSignal<Message[]>;
-  public unsubscribeMessages: Unsubscribe | undefined;
+  public chatConfig: WritableSignal<GroupChatStageConfig | undefined> = signal(undefined);
+  public viewingParticipantId: WritableSignal<string | undefined> = signal(undefined); // TODO: make it possible in the UI to select a participant whose chat to view
+  public chatRepository: Signal<ChatRepository | undefined> = signal(undefined);
 
   // Message mutation & form
   public messageMutation = mediatorMessageMutation();
@@ -65,20 +63,23 @@ export class MediatorChatComponent implements OnDestroy {
   public prefix: string = this.defaultPrefix;
   public suffix: string = this.defaultSuffix;
 
-  constructor(private llmService: VertexApiService) {
-    // Firestore subscription for messages, dynamically changes based on the input chat id
-    this.messages = signal([]);
-    effect(() => {
-      const id = this.chat()?.chatId;
+  constructor(
+    private llmService: VertexApiService,
+    appState: AppStateService,
+  ) {
+    // Dynamically get the chat repository
+    this.chatRepository = computed(() => {
+      const participantId = this.viewingParticipantId();
+      const chatId = this.chatConfig()?.chatId;
+      const experimentId = this.experimentId();
 
-      this.unsubscribeMessages?.();
+      if (!participantId || !chatId || !experimentId) return undefined;
 
-      if (id !== undefined) {
-        this.unsubscribeMessages = chatMessagesSubscription(id, (m) => {
-          // Merge new messages with existing messages, uniquly identifying them by their message uid
-          this.messages.set(mergeByKey(this.messages(), m, 'uid'));
-        });
-      }
+      return appState.chats.get({
+        experimentId,
+        participantId,
+        chatId,
+      });
     });
   }
 
@@ -86,7 +87,7 @@ export class MediatorChatComponent implements OnDestroy {
     if (!this.message.valid) return;
 
     this.messageMutation.mutate({
-      chatId: this.chat()!.chatId,
+      chatId: this.chatConfig()!.chatId,
       text: this.message.value!,
     });
     this.message.setValue('');
@@ -123,11 +124,17 @@ ${nv('conversation')}
 ${this.suffix}`;
 
     // Create empty list in conversation
-    const conversation: { username: string; message: string }[] = this.messages().map((m) => ({
-      message: m.text,
-      // TODO: add an experiment provider at the experimenter base.
-      username: m.messageType === 'userMessage' ? 'User' : 'Mediator', // TODO: display user profile
-    }));
+    const participantsLookup = lookupTable(this.participants(), 'publicId');
+    const conversation: { username: string; message: string }[] =
+      this.chatRepository()
+        ?.messages()
+        .map((m) => ({
+          message: m.text,
+          username:
+            m.messageType === 'userMessage'
+              ? participantsLookup[m.fromPublicParticipantId].name ?? 'User'
+              : 'Mediator',
+        })) ?? [];
 
     const mediationWithMessages = mediationTempl.substs({
       conversation: nMediationExamplesTempl.apply(conversation).escaped,
@@ -147,9 +154,5 @@ ${this.suffix}`;
     // Send message to chat
     this.message.setValue(response.predictions[0].content);
     this.sendMessage();
-  }
-
-  ngOnDestroy() {
-    this.unsubscribeMessages?.();
   }
 }

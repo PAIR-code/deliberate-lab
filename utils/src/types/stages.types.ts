@@ -31,6 +31,7 @@ export const ALLOWED_STAGE_PROGRESSION = {
 
 interface BaseStageConfig {
   kind: StageKind;
+  name: string;
 }
 
 export interface TermsOfServiceStageConfig extends BaseStageConfig {
@@ -205,3 +206,31 @@ export type CompleteParticipantStage =
   | CompleteGroupChatStage
   | CompleteVoteForLeaderStage
   | CompleteRevealVotedStage;
+
+// ********************************************************************************************* //
+//                                         DEFAULTS                                              //
+// ********************************************************************************************* //
+
+export const getDefaultTosAndUserProfileConfig = (): AcceptTosAndSetProfileStageConfig => {
+  return {
+    kind: StageKind.AcceptTosAndSetProfile,
+    name: 'Accept TOS and set profile',
+    tosLines: [],
+  };
+};
+
+export const getDefaultSurveyConfig = (): SurveyStageConfig => {
+  return {
+    kind: StageKind.TakeSurvey,
+    name: 'Take survey',
+    questions: [],
+  };
+};
+
+export const getDefaultLeaderRevealConfig = (): RevealVotedStageConfig => {
+  return {
+    kind: StageKind.RevealVoted,
+    name: 'Reveal voted leader',
+    pendingVoteStageName: '',
+  };
+};

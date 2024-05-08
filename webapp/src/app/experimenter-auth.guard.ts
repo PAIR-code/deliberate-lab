@@ -1,7 +1,12 @@
+import { inject } from '@angular/core';
 import { CanActivateFn } from '@angular/router';
+import { FirebaseService } from './firebase.service';
 
-export const experimenterAuthGuard: CanActivateFn = (_route, _state) => {
-  return true;
-  // Change to this to actually limit access.
-  // return inject(GoogleAuthService).credential() !== null;
+export const experimenterAuthGuard: CanActivateFn = () => {
+  return (
+    inject(FirebaseService)
+      .user()
+      ?.getIdTokenResult()
+      .then((result) => result.claims['role'] === 'experimenter') ?? false
+  );
 };

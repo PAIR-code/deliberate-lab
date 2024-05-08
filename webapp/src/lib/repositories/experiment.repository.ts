@@ -26,6 +26,7 @@ export class ExperimentRepository extends BaseRepository {
 
   // Computed helper signals
   public stageNames = computed(() => Object.keys(this._stageConfigMap() || {}));
+  public isLoading = computed(() => !this._experiment() || !this._stageConfigMap());
 
   /** @param uid Experiment unique identifier (firestore document id) */
   constructor(public readonly uid: string) {
