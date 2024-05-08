@@ -1,7 +1,7 @@
 import { isEqual } from 'lodash';
 
 import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
-import { Component, effect } from '@angular/core';
+import { Component, Signal, WritableSignal, computed, effect, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -14,13 +14,13 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Router } from '@angular/router';
 import {
-  ExpStage,
-  ExpStageSurvey,
-  ExpStageTosAndUserProfile,
-  Question,
+  AcceptTosAndSetProfileStageConfig,
+  ExperimentTemplate,
+  QuestionConfig,
+  StageConfig,
   StageKind,
   SurveyQuestionKind,
-  Template,
+  SurveyStageConfig,
   getDefaultChatAboutItemsConfig,
   getDefaultItemRatingsQuestion,
   getDefaultLeaderRevealConfig,
@@ -32,13 +32,13 @@ import {
   tryCast,
 } from '@llm-mediation-experiments/utils';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
+import { AppStateService } from 'src/app/services/app-state.service';
 import { LocalService } from 'src/app/services/local.service';
 import { createExperimentMutation, createTemplateMutation } from 'src/lib/api/mutations';
-import { templatesQuery } from 'src/lib/api/queries';
 
 const LOCAL_STORAGE_KEY = 'ongoing-experiment-creation';
 
-const getInitStageData = (): Partial<ExpStage> => {
+const getInitStageData = (): Partial<StageConfig> => {
   return { name: '' };
 };
 
@@ -73,12 +73,17 @@ export class CreateExperimentComponent {
     this.resetExistingStages(); // Reset after setting as template
   });
 
-  templates = templatesQuery();
-
-  public existingStages: Partial<ExpStage>[] = [];
+  public existingStages: Partial<StageConfig>[] = [];
   public currentEditingStageIndex = -1;
   public newExperimentName = '';
-  public currentTemplate: Template | null = null;
+  public currentTemplateChoice: WritableSignal<ExperimentTemplate | undefined> = signal(undefined); // Dropdown choice
+  public currentFullTemplate = computed(() => {
+    // Template with its full config
+    const choice = this.currentTemplateChoice();
+    if (!choice) return undefined;
+
+    return this.appState.experimenter.get().templatesWithConfigs.get(choice.id)();
+  });
 
   // Make these fields available in the template
   readonly StageKind = StageKind;
@@ -92,23 +97,36 @@ export class CreateExperimentComponent {
     StageKind.RevealVoted,
   ];
 
+  // Convenience signals
+  public templates: Signal<ExperimentTemplate[]>;
+
   constructor(
     private router: Router,
     private localStore: LocalService,
+    private appState: AppStateService,
   ) {
+    this.templates = appState.experimenter.get().templates;
+
     // Set the current experiment template to the first fetched template
     effect(() => {
-      const data = this.templates.data()?.data;
+      const data = this.templates();
 
       if (data && this.existingStages.length === 0) {
         // Set the current stages to this template's stages
-        this.currentTemplate = data[0];
-        this.existingStages = Object.values(this.currentTemplate.stageMap);
-        this.persistExistingStages();
+        this.currentTemplateChoice.set(data[0]);
       }
     });
 
-    const existingStages = this.localStore.getData(LOCAL_STORAGE_KEY) as ExpStage[];
+    // When the chosen full template changes, update the stages
+    effect(() => {
+      const fullTemplate = this.currentFullTemplate();
+      if (!fullTemplate) return;
+
+      this.existingStages = Object.values(fullTemplate.stageMap);
+      this.persistExistingStages();
+    });
+
+    const existingStages = this.localStore.getData(LOCAL_STORAGE_KEY) as StageConfig[];
     if (existingStages) {
       this.existingStages = existingStages;
     }
@@ -116,61 +134,65 @@ export class CreateExperimentComponent {
     this.currentEditingStageIndex = 0;
   }
 
-  get currentEditingStage() {
+  get currentEditingStage(): StageConfig | undefined {
     const stage = this.existingStages[this.currentEditingStageIndex];
 
-    return stage === undefined ? undefined : (stage as ExpStage);
+    return stage as StageConfig | undefined;
+  }
+
+  set currentEditingStage(stage: Partial<StageConfig>) {
+    this.existingStages[this.currentEditingStageIndex] = stage;
   }
 
   get hasUnsavedData() {
-    const existingStages = this.localStore.getData(LOCAL_STORAGE_KEY) as ExpStage[];
+    const existingStages = this.localStore.getData(LOCAL_STORAGE_KEY) as StageConfig[];
     return !isEqual(existingStages, this.existingStages);
   }
 
   // tos lines
-  addNewTosLine(stage: ExpStageTosAndUserProfile) {
-    stage.config.tosLines.push('');
+  addNewTosLine(stage: AcceptTosAndSetProfileStageConfig) {
+    stage.tosLines.push('');
     this.persistExistingStages();
   }
 
-  deleteTosLine(stage: ExpStageTosAndUserProfile, index: number) {
-    stage.config.tosLines.splice(index, 1);
+  deleteTosLine(stage: AcceptTosAndSetProfileStageConfig, index: number) {
+    stage.tosLines.splice(index, 1);
     this.persistExistingStages();
   }
 
-  dropTosLine(stage: ExpStageTosAndUserProfile, event: CdkDragDrop<string[]>) {
-    moveItemInArray(stage.config.tosLines, event.previousIndex, event.currentIndex);
+  dropTosLine(stage: AcceptTosAndSetProfileStageConfig, event: CdkDragDrop<string[]>) {
+    moveItemInArray(stage.tosLines, event.previousIndex, event.currentIndex);
 
     this.persistExistingStages();
   }
 
   // survey questions
   addNewSurveyQuestion(event: Event, type: 'rating' | 'scale') {
-    let question: Question | null = null;
+    let question: QuestionConfig | null = null;
     if (type === 'rating') {
       question = getDefaultItemRatingsQuestion();
     } else if (type === 'scale') {
       question = getDefaultScaleQuestion();
     }
-    (this.currentEditingStage as ExpStageSurvey).config.questions.push(question as Question);
+    (this.currentEditingStage as SurveyStageConfig).questions.push(question as QuestionConfig);
     this.persistExistingStages();
   }
 
   deleteSurveyQuestion(event: Event, index: number) {
-    (this.currentEditingStage as ExpStageSurvey).config.questions.splice(index, 1);
+    (this.currentEditingStage as SurveyStageConfig).questions.splice(index, 1);
     this.persistExistingStages();
   }
 
   moveSurveyQuestion(direction: 'up' | 'down', questionIndex: number) {
     if (questionIndex === 0 && direction === 'up') return;
     if (
-      questionIndex === (this.currentEditingStage as ExpStageSurvey).config?.questions.length - 1 &&
+      questionIndex === (this.currentEditingStage as SurveyStageConfig)?.questions.length - 1 &&
       direction === 'down'
     )
       return;
 
     moveItemInArray(
-      (this.currentEditingStage as ExpStageSurvey).config.questions,
+      (this.currentEditingStage as SurveyStageConfig).questions,
       questionIndex,
       direction === 'up' ? questionIndex - 1 : questionIndex + 1,
     );
@@ -178,7 +200,7 @@ export class CreateExperimentComponent {
 
   dropSurveyQuestion(event: CdkDragDrop<string[]>) {
     moveItemInArray(
-      (this.currentEditingStage as ExpStageSurvey).config.questions,
+      (this.currentEditingStage as SurveyStageConfig).questions,
       event.previousIndex,
       event.currentIndex,
     );
@@ -186,7 +208,7 @@ export class CreateExperimentComponent {
     this.persistExistingStages();
   }
 
-  stageSetupIncomplete(stageData?: Partial<ExpStage>) {
+  stageSetupIncomplete(stageData?: Partial<StageConfig>) {
     const _stageData = stageData || this.currentEditingStage;
     if (!_stageData) return true;
 
@@ -197,7 +219,7 @@ export class CreateExperimentComponent {
       return false;
       // if (_stageData.config?.tosLines.length === 0) return true;
     } else if (_stageData.kind === StageKind.TakeSurvey) {
-      if (_stageData.config?.questions.length === 0) return true;
+      if (_stageData?.questions?.length === 0) return true;
     }
 
     return false;
@@ -246,12 +268,13 @@ export class CreateExperimentComponent {
 
   resetExistingStages() {
     this.localStore.removeData(LOCAL_STORAGE_KEY);
+    const currentTemplate = this.currentFullTemplate();
 
-    if (this.currentTemplate !== null) {
-      this.existingStages = Object.values(this.currentTemplate.stageMap);
+    if (currentTemplate) {
+      this.existingStages = Object.values(currentTemplate.stageMap);
     } else {
       // We assume that the user cannot click on reset when the page has not fully loaded
-      this.existingStages = Object.values(this.templates.data()!.data[0]?.stageMap ?? {});
+      this.existingStages = [];
     }
 
     this.persistExistingStages();
@@ -286,25 +309,19 @@ export class CreateExperimentComponent {
           newConfig = getDefaultLeaderRevealConfig();
           break;
       }
-      this.currentEditingStage.config = newConfig;
+      this.currentEditingStage = newConfig;
     }
 
     this.persistExistingStages();
   }
 
-  /** When selecting a template, reset everything */
-  resetToTemplate(template: Template) {
-    this.existingStages = Object.values(template.stageMap);
-    this.persistExistingStages();
-  }
-
-  compareTemplates(a: Template, b: Template) {
-    return a.uid === b.uid;
+  compareTemplates(a: ExperimentTemplate, b: ExperimentTemplate) {
+    return a.id === b.id;
   }
 
   /** Create the experiment and send it to be stored in the database */
   addExperiment() {
-    const stages = this.existingStages as ExpStage[];
+    const stages = this.existingStages as StageConfig[];
 
     this.createExp.mutate({
       name: this.newExperimentName,
@@ -314,7 +331,7 @@ export class CreateExperimentComponent {
   }
 
   addTemplate() {
-    const stages = this.existingStages as ExpStage[];
+    const stages = this.existingStages as StageConfig[];
 
     this.createTemplate.mutate({
       name: this.newExperimentName,

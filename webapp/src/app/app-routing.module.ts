@@ -43,7 +43,7 @@ const routes: Routes = [
         pathMatch: 'full',
       },
       {
-        path: 'experiment/:experiment',
+        path: 'experiment/:experimentId',
         component: ExperimentMonitorComponent,
         pathMatch: 'full',
       },

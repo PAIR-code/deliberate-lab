@@ -1,12 +1,14 @@
 <h2>Experimenter View</h2>
 
-@if (_experiment.data()) {
+@if (experiment() && !experiment()?.isLoading()) {
   <div>
     <p>Number of participants ({{ participants().length }})</p>
-    @for (p of participants(); track p.uid) {
-      <a [routerLink]="['/participant', p.uid]" [queryParams]="{ stage: p.workingOnStageName }">{{
-        p.uid
-      }}</a>
+    @for (p of participants(); track p.privateId) {
+      <a
+        [routerLink]="['/participant', experimentId(), p.privateId]"
+        [queryParams]="{ stage: p.workingOnStageName }"
+        >{{ p.privateId }}</a
+      >
       <ul>
         <li>Name: {{ p.name }}</li>
         <li>Preffered pronouns: {{ p.pronouns }}</li>
@@ -20,7 +22,7 @@
         </li>
         <li>Working on stage: {{ p.workingOnStageName }}</li>
         <li>
-          Access Code: <span class="code">{{ p.uid }}</span>
+          Access Code: <span class="code">{{ experimentId() }} / {{ p.privateId }}</span>
         </li>
       </ul>
     }
@@ -28,11 +30,11 @@
 
   <h2>Experiment stages:</h2>
 
-  @for (exp of expStages(); track exp.name) {
+  @for (stage of stages(); track stage.name) {
     <div>
-      {{ exp.name }}: {{ participants().length }}
+      {{ stage.name }}: {{ participants().length }}
 
-      @if (isOfKind(exp, StageKind.GroupChat)) {
+      @if (isOfKind(stage, StageKind.GroupChat)) {
         <mat-accordion>
           <mat-expansion-panel>
             <mat-expansion-panel-header>
@@ -42,9 +44,9 @@
               </mat-panel-description>
             </mat-expansion-panel-header>
             <app-mediator-chat
-              [experiment]="experimentUid"
-              [participants]="this.participants"
-              [chatValue]="exp.config"
+              [experimentId]="experimentId"
+              [participants]="participants"
+              [chatValue]="stage"
             ></app-mediator-chat>
           </mat-expansion-panel>
         </mat-accordion>

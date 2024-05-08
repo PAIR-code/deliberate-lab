@@ -2,10 +2,10 @@ import {
   ChatAnswer,
   ChatKind,
   Experiment,
+  ExperimentTemplate,
   StageConfig,
   StageKind,
   SurveyQuestionKind,
-  Template,
   getDefaultProfile,
   participantPublicId,
 } from '@llm-mediation-experiments/utils';
@@ -83,6 +83,7 @@ const seedDatabase = async () => {
 
 const DEFAULT_STAGES: Record<string, StageConfig> = {
   '1. Agree to the experiment and set your profile': {
+    name: '1. Agree to the experiment and set your profile',
     kind: StageKind.AcceptTosAndSetProfile,
     tosLines: [
       'You may not injure a human being or, through inaction, allow a human being to come to harm.',
@@ -92,6 +93,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
   },
 
   '2. Initial leadership survey': {
+    name: '2. Initial leadership survey',
     kind: StageKind.TakeSurvey,
     questions: [
       {
@@ -110,6 +112,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
   },
 
   '3. Group discussion': {
+    name: '3. Group discussion',
     kind: StageKind.GroupChat,
     chatId: 'chat-0',
     chatConfig: {
@@ -123,6 +126,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
   },
 
   '4. Post-chat survey': {
+    name: '4. Post-chat survey',
     kind: StageKind.TakeSurvey,
     questions: [
       {
@@ -136,6 +140,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
   },
 
   '5. Post-discussion leadership survey': {
+    name: '5. Post-discussion leadership survey',
     kind: StageKind.TakeSurvey,
     questions: [
       {
@@ -148,10 +153,12 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
   },
 
   '6. Vote for the leader': {
+    name: '6. Vote for the leader',
     kind: StageKind.VoteForLeader,
   },
 
   '7. Post-discussion work': {
+    name: '7. Post-discussion work',
     kind: StageKind.TakeSurvey,
     questions: [
       {
@@ -164,11 +171,13 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
   },
 
   '8. Leader reveal': {
+    name: '8. Leader reveal',
     kind: StageKind.RevealVoted,
     pendingVoteStageName: '6. Vote for the leader',
   },
 
   '9. final satisfaction survey': {
+    name: '9. final satisfaction survey',
     kind: StageKind.TakeSurvey,
     questions: [
       {
@@ -184,14 +193,14 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
 
 const PARTICIPANT_COUNT = 3;
 
-const DEFAULT_EXPERIMENT: Experiment = {
+const DEFAULT_EXPERIMENT: Omit<Experiment, 'id'> = {
   name: 'Example experiment',
   date: Timestamp.now(),
   numberOfParticipants: PARTICIPANT_COUNT,
   participants: {}, // Readonly map that will be filled via a firestore hook
 };
 
-const DEFAULT_TEMPLATE: Template = {
+const DEFAULT_TEMPLATE: Omit<ExperimentTemplate, 'id'> = {
   name: 'Default template',
 };
 

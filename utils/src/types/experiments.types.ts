@@ -24,6 +24,12 @@ export interface ExperimentCreationData {
 }
 
 /** An experiment template */
-export interface Template {
+export interface ExperimentTemplate {
+  id: string;
   name: string;
+}
+
+/** An experiment template with all its stages preloaded */
+export interface ExperimentTemplateExtended extends ExperimentTemplate {
+  stageMap: Record<string, StageConfig>;
 }

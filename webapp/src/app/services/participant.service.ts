@@ -19,15 +19,20 @@ export class ParticipantService {
   public participant: Signal<ParticipantRepository | undefined> = signal(undefined);
   public experiment: Signal<ExperimentRepository | undefined> = signal(undefined);
 
-  // Convenienve signal to agregate stage data
+  // Convenient signal to agregate stage data
   public viewingStage: Signal<CompleteParticipantStage | undefined> = signal(undefined);
+
+  // Stage status signals
+  public completedStageNames: Signal<string[]> = signal([]);
+  public workingOnStageName: Signal<string | undefined> = signal(undefined);
+  public futureStageNames: Signal<string[]> = signal([]);
 
   constructor(public readonly appState: AppStateService) {}
 
   /** Initialize the service with new parameters */
   initialize(
-    participantId: Signal<string | undefined>,
     experimentId: Signal<string | undefined>,
+    participantId: Signal<string | undefined>,
     viewingStageName: Signal<string | undefined>,
   ) {
     // Set the signals
@@ -51,7 +56,7 @@ export class ParticipantService {
       return this.appState.experiments.get({ experimentId });
     });
 
-    /** Load stage config, public data and answers into one object with bound types */
+    // Load stage config, public data and answers into one object with bound types
     this.viewingStage = computed(() => {
       const currentStage = this.viewingStageName();
       const experiment = this.experiment();
@@ -75,6 +80,30 @@ export class ParticipantService {
         public: experiment.publicStageDataMap[currentStage]?.(),
         answers: participant.stageAnswers[currentStage]?.(),
       } as CompleteParticipantStage;
+    });
+
+    // Recompute the stage status signals
+    this.workingOnStageName = computed(() => {
+      const participant = this.participant();
+      return participant?.profile()?.workingOnStageName;
+    });
+
+    this.completedStageNames = computed(() => {
+      const participant = this.participant();
+      const experiment = this.experiment();
+      const workingOnStageName = this.workingOnStageName();
+      if (!participant || !experiment || !workingOnStageName) return [];
+
+      return experiment.stageNames().slice(0, experiment.stageNames().indexOf(workingOnStageName));
+    });
+
+    this.futureStageNames = computed(() => {
+      const participant = this.participant();
+      const experiment = this.experiment();
+      const workingOnStageName = this.workingOnStageName();
+      if (!participant || !experiment || !workingOnStageName) return [];
+
+      return experiment.stageNames().slice(experiment.stageNames().indexOf(workingOnStageName) + 1);
     });
   }
 
