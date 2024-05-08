@@ -127,3 +127,81 @@ export interface VoteForLeaderStagePublicData extends BasePublicStageData {
 }
 
 export type PublicStageData = GroupChatStagePublicData | VoteForLeaderStagePublicData;
+
+// ********************************************************************************************* //
+//                               COMPLETE AGREGATED TYPE HELPER                                  //
+// ********************************************************************************************* //
+
+// For repositories and consumers that will agregate all stage data into one object for convenience of use
+interface CompleteParticipantStageBase {
+  kind: StageKind; // The stage kind is repeated here at top level so that typescript can use it to discriminate the union type (nested kind is not enough for that)
+
+  config: StageConfig;
+  public: PublicStageData | undefined;
+  answers: StageAnswer | undefined;
+}
+
+export interface CompleteTermsOfServiceStage extends CompleteParticipantStageBase {
+  kind: StageKind.TermsOfService;
+
+  config: TermsOfServiceStageConfig;
+  public: undefined;
+  answers: undefined;
+}
+
+export interface CompleteProfileStage extends CompleteParticipantStageBase {
+  kind: StageKind.Profile;
+
+  config: ProfileStageConfig;
+  public: undefined;
+  answers: undefined;
+}
+
+export interface CompleteAcceptTosAndSetProfileStage extends CompleteParticipantStageBase {
+  kind: StageKind.AcceptTosAndSetProfile;
+
+  config: AcceptTosAndSetProfileStageConfig;
+  public: undefined;
+  answers: undefined;
+}
+
+export interface CompleteSurveyStage extends CompleteParticipantStageBase {
+  kind: StageKind.TakeSurvey;
+
+  config: SurveyStageConfig;
+  public: undefined;
+  answers: SurveyStageAnswer;
+}
+
+export interface CompleteGroupChatStage extends CompleteParticipantStageBase {
+  kind: StageKind.GroupChat;
+
+  config: GroupChatStageConfig;
+  public: GroupChatStagePublicData;
+  answers: undefined;
+}
+
+export interface CompleteVoteForLeaderStage extends CompleteParticipantStageBase {
+  kind: StageKind.VoteForLeader;
+
+  config: VoteForLeaderStageConfig;
+  public: VoteForLeaderStagePublicData;
+  answers: VoteForLeaderStageAnswer;
+}
+
+export interface CompleteRevealVotedStage extends CompleteParticipantStageBase {
+  kind: StageKind.RevealVoted;
+
+  config: RevealVotedStageConfig;
+  public: undefined;
+  answers: undefined;
+}
+
+export type CompleteParticipantStage =
+  | CompleteTermsOfServiceStage
+  | CompleteProfileStage
+  | CompleteAcceptTosAndSetProfileStage
+  | CompleteSurveyStage
+  | CompleteGroupChatStage
+  | CompleteVoteForLeaderStage
+  | CompleteRevealVotedStage;

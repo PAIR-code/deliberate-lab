@@ -1,4 +1,5 @@
 import { Injectable, Signal, computed, signal } from '@angular/core';
+import { CompleteParticipantStage } from '@llm-mediation-experiments/utils';
 import { ChatRepository } from 'src/lib/repositories/chat.repository';
 import { ExperimentRepository } from 'src/lib/repositories/experiment.repository';
 import { ParticipantRepository } from 'src/lib/repositories/participant.repository';
@@ -17,6 +18,9 @@ export class ParticipantService {
   // Repository signals
   public participant: Signal<ParticipantRepository | undefined> = signal(undefined);
   public experiment: Signal<ExperimentRepository | undefined> = signal(undefined);
+
+  // Convenienve signal to agregate stage data
+  public viewingStage: Signal<CompleteParticipantStage | undefined> = signal(undefined);
 
   constructor(public readonly appState: AppStateService) {}
 
@@ -45,6 +49,32 @@ export class ParticipantService {
       if (!experimentId) return undefined;
 
       return this.appState.experiments.get({ experimentId });
+    });
+
+    /** Load stage config, public data and answers into one object with bound types */
+    this.viewingStage = computed(() => {
+      const currentStage = this.viewingStageName();
+      const experiment = this.experiment();
+      const participant = this.participant();
+
+      if (
+        !currentStage ||
+        !participant ||
+        !experiment ||
+        !experiment.stageNames().includes(currentStage)
+      )
+        return undefined;
+
+      const config = experiment.stageConfigMap()?.[currentStage];
+
+      if (!config) return undefined;
+
+      return {
+        kind: config.kind,
+        config,
+        public: experiment.publicStageDataMap[currentStage]?.(),
+        answers: participant.stageAnswers[currentStage]?.(),
+      } as CompleteParticipantStage;
     });
   }
 
