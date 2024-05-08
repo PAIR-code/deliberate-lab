@@ -24,6 +24,7 @@ export class ExperimentRepository extends BaseRepository {
     return this._publicStageDataMap;
   }
 
+  // Computed helper signals
   public stageNames = computed(() => Object.keys(this._stageConfigMap() || {}));
 
   /** @param uid Experiment unique identifier (firestore document id) */
@@ -61,6 +62,21 @@ export class ExperimentRepository extends BaseRepository {
       });
 
       this._stageConfigMap.set(map);
+    });
+  }
+
+  /** Build a signal that tracks whether every participant has at least reached the given stage */
+  everyoneReachedStage(targetStage: string): Signal<boolean> {
+    return computed(() => {
+      const participants = this.experiment()?.participants;
+      const stages = this.stageNames();
+      const targetIndex = stages.indexOf(targetStage);
+
+      if (!participants || targetIndex === -1) return false;
+
+      return Object.values(participants).every(
+        (participant) => stages.indexOf(participant.workingOnStageName) >= targetIndex,
+      );
     });
   }
 }
