@@ -28,10 +28,28 @@ export class AppStateService implements OnDestroy {
 }
 
 // Helpers
-const createExperimentRepository = (experimentId: string) => new ExperimentRepository(experimentId);
+interface CreateExperimentRepositoryParams {
+  experimentId: string;
+}
+const createExperimentRepository = ({ experimentId }: CreateExperimentRepositoryParams) =>
+  new ExperimentRepository(experimentId);
 
-const createParticipantRepository = ([experimentId, participantId]: [string, string]) =>
-  new ParticipantRepository(experimentId, participantId);
+interface CreateParticipantRepositoryParams {
+  experimentId: string;
+  participantId: string;
+}
+const createParticipantRepository = ({
+  experimentId,
+  participantId,
+}: CreateParticipantRepositoryParams) => new ParticipantRepository(experimentId, participantId);
 
-const createChatRepository = ([experimentId, participantId, chatId]: [string, string, string]) =>
-  new ChatRepository(experimentId, participantId, chatId);
+interface CreateChatRepositoryParams {
+  experimentId: string;
+  participantId: string;
+  chatId: string;
+}
+const createChatRepository = ({
+  experimentId,
+  participantId,
+  chatId,
+}: CreateChatRepositoryParams) => new ChatRepository(experimentId, participantId, chatId);
