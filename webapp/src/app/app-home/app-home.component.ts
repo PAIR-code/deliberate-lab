@@ -63,7 +63,15 @@ export class AppHomeComponent {
 
   async loginAsParticipant() {
     this.error = '';
-    this.router.navigate(['/participant', this.login.value]).then((success) => {
+
+    if (!this.login.valid) {
+      this.error = 'Invalid credentials';
+      return;
+    }
+
+    const [experimentId, participantId] = this.login.value!.split('/');
+
+    this.router.navigate(['/participant', experimentId, participantId]).then((success) => {
       if (!success) this.error = 'Invalid credentials';
     });
   }
