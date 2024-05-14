@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatSliderModule } from '@angular/material/slider';
-import { ScaleQuestion } from '@llm-mediation-experiments/utils';
+import { ScaleQuestionConfig } from '@llm-mediation-experiments/utils';
 
 @Component({
   selector: 'app-survey-scale-question',
@@ -11,6 +11,6 @@ import { ScaleQuestion } from '@llm-mediation-experiments/utils';
   styleUrl: './survey-scale-question.component.scss',
 })
 export class SurveyScaleQuestionComponent {
-  @Input() question!: ScaleQuestion;
+  @Input() question!: ScaleQuestionConfig;
   @Input() questionForm!: FormGroup;
 }

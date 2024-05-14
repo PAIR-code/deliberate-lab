@@ -17,9 +17,6 @@ import { routeParamSignal, routeQueryStringSignal } from 'src/lib/utils/angular.
 import { ParticipantService } from '../services/participant.service';
 import { ParticipantStageViewComponent } from './participant-stage-view/participant-stage-view.component';
 
-// NOTE: est-ce qu'on devrait pas provide ici l'expérience ? en tout cas faudra le faire.
-// mettre un signal, ou alors balec. mais injecter au bon endroit
-
 @Component({
   selector: 'app-participant-view',
   standalone: true,

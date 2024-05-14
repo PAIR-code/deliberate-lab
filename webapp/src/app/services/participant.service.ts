@@ -1,5 +1,15 @@
-import { Injectable, Signal, computed, signal } from '@angular/core';
-import { CompleteParticipantStage } from '@llm-mediation-experiments/utils';
+/**
+ * Helper service that exposes participant and experiment data from the app state service in a convenient bundled way.
+ */
+
+import { Injectable, Signal, computed, signal, untracked } from '@angular/core';
+import {
+  ParticipantProfile,
+  PublicStageData,
+  StageAnswer,
+  StageConfig,
+  StageKind,
+} from '@llm-mediation-experiments/utils';
 import { ChatRepository } from 'src/lib/repositories/chat.repository';
 import { ExperimentRepository } from 'src/lib/repositories/experiment.repository';
 import { ParticipantRepository } from 'src/lib/repositories/participant.repository';
@@ -19,8 +29,11 @@ export class ParticipantService {
   public participant: Signal<ParticipantRepository | undefined> = signal(undefined);
   public experiment: Signal<ExperimentRepository | undefined> = signal(undefined);
 
-  // Convenient signal to agregate stage data
-  public viewingStage: Signal<CompleteParticipantStage | undefined> = signal(undefined);
+  // Convenience signal to agregate stage data
+  // This object can be passed directly to subcomponents that need all stage reactive data
+  public viewingStage: Signal<ViewingStage | undefined> = signal(undefined);
+
+  public otherParticipants: Signal<ParticipantProfile[]> = signal([]);
 
   // Stage status signals
   public completedStageNames: Signal<string[]> = signal([]);
@@ -29,7 +42,7 @@ export class ParticipantService {
 
   constructor(public readonly appState: AppStateService) {}
 
-  /** Initialize the service with new parameters */
+  /** Initialize the service with the participant and experiment IDs */
   initialize(
     experimentId: Signal<string | undefined>,
     participantId: Signal<string | undefined>,
@@ -56,30 +69,27 @@ export class ParticipantService {
       return this.appState.experiments.get({ experimentId });
     });
 
-    // Load stage config, public data and answers into one object with bound types
+    // Bundle all stage data together. This attribute has 2 nested signals:
+    // - The first one changes when the viewing stage name changes
+    // - The individual nested ones track individual config, public data and answer changes for the current stage
     this.viewingStage = computed(() => {
       const currentStage = this.viewingStageName();
       const experiment = this.experiment();
       const participant = this.participant();
 
-      if (
-        !currentStage ||
-        !participant ||
-        !experiment ||
-        !experiment.stageNames().includes(currentStage)
-      )
-        return undefined;
+      if (!currentStage || !experiment || !participant || experiment.isLoading()) return;
 
-      const config = experiment.stageConfigMap()?.[currentStage];
-
-      if (!config) return undefined;
+      const config = experiment.stageConfigMap[currentStage];
+      const publicData = experiment.publicStageDataMap[currentStage];
+      const answers = participant.stageAnswers[currentStage];
+      const kind = untracked(config).kind;
 
       return {
-        kind: config.kind,
+        kind,
         config,
-        public: experiment.publicStageDataMap[currentStage]?.(),
-        answers: participant.stageAnswers[currentStage]?.(),
-      } as CompleteParticipantStage;
+        public: publicData,
+        answers,
+      };
     });
 
     // Recompute the stage status signals
@@ -105,6 +115,12 @@ export class ParticipantService {
 
       return experiment.stageNames().slice(experiment.stageNames().indexOf(workingOnStageName) + 1);
     });
+
+    this.otherParticipants = computed(() =>
+      Object.values(this.experiment()?.experiment()?.participants ?? {}).filter(
+        ({ publicId }) => publicId !== this.participant()?.profile()?.publicId,
+      ),
+    );
   }
 
   /** Get a chat repository from its ID, bound to the current experiment and participant */
@@ -119,3 +135,40 @@ export class ParticipantService {
     });
   }
 }
+
+// ********************************************************************************************* //
+//                              HELPER TYPES AND CASTING FUNCTIONS                               //
+// ********************************************************************************************* //
+
+/** If a stage is of the given kind, returns a Signal of it. Else, returns undefined.
+ * This is a cosmetic type to prevent `Signal<never> | undefined` unions.
+ */
+type SignalOrUndef<Stage, Kind> = Stage extends { kind: Kind } ? Signal<Stage> : undefined;
+
+/** ViewingStage's signals, cast to a specific stage kind. */
+export interface CastViewingStage<K extends StageKind> {
+  kind: K;
+  config: Signal<StageConfig & { kind: K }>;
+  public: SignalOrUndef<PublicStageData, K> | undefined;
+  answers: SignalOrUndef<StageAnswer, K> | undefined;
+}
+
+/** Object that exposes a stage's given config, public data and participant answers all at once. */
+interface ViewingStage {
+  kind: StageKind;
+  config: Signal<StageConfig>;
+  public: Signal<PublicStageData> | undefined;
+  answers: Signal<StageAnswer> | undefined;
+}
+
+/** Safely cast the full stage bundle signals to a specific stage kind */
+export const assertCastStageSignals = <K extends StageKind>(
+  viewingStage: ViewingStage | undefined,
+  kind: K,
+) => {
+  if (!viewingStage) throw new Error(`Test is undefined`);
+  if (viewingStage?.kind !== kind)
+    throw new Error(`Wrong kind ${viewingStage?.kind} for expected kind ${kind}`);
+
+  return viewingStage as CastViewingStage<K>;
+};

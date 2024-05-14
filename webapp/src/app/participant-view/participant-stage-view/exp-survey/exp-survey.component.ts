@@ -6,7 +6,7 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, Inject, Input } from '@angular/core';
+import { Component, Input, signal } from '@angular/core';
 import {
   FormArray,
   FormBuilder,
@@ -18,21 +18,18 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSliderModule } from '@angular/material/slider';
 
-import { ProviderService } from 'src/app/services/provider.service';
-import { Participant } from 'src/lib/participant';
-
 import { MatButtonModule } from '@angular/material/button';
 import {
-  ExpStageSurvey,
+  StageKind,
   SurveyQuestionKind,
   SurveyStageUpdate,
-  questionAsKind,
+  assertCast,
 } from '@llm-mediation-experiments/utils';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
+import { CastViewingStage } from 'src/app/services/participant.service';
 import { updateSurveyStageMutation } from 'src/lib/api/mutations';
-import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
 import { MutationType } from 'src/lib/types/tanstack.types';
-import { buildQuestionForm } from 'src/lib/utils/angular.utils';
+import { buildQuestionForm, subscribeSignals } from 'src/lib/utils/angular.utils';
 import { SurveyCheckQuestionComponent } from './survey-check-question/survey-check-question.component';
 import { SurveyRatingQuestionComponent } from './survey-rating-question/survey-rating-question.component';
 import { SurveyScaleQuestionComponent } from './survey-scale-question/survey-scale-question.component';
@@ -59,47 +56,47 @@ import { SurveyTextQuestionComponent } from './survey-text-question/survey-text-
 export class ExpSurveyComponent {
   // Reload the internal logic dynamically when the stage changes
   @Input({ required: true })
-  set stage(value: ExpStageSurvey) {
+  set stage(value: CastViewingStage<StageKind.TakeSurvey>) {
     this._stage = value;
 
-    // Regenerate the questions
-    this.questions.clear();
-    this.stage.config.questions.forEach((question) => {
-      this.questions.push(buildQuestionForm(this.fb, question));
-    });
+    // Regenerate the questions everytime the stage config or answers change
+    subscribeSignals(
+      [this.stage.config, this.stage.answers ?? signal(undefined)],
+      ({ questions }, answers) => {
+        this.questions.clear();
+        questions.forEach((config, i) => {
+          const answer = answers?.answers[i];
+          // The config serves as the source of truth for the question type
+          // The answer, if defined, will be used to populate the form
+          this.questions.push(buildQuestionForm(this.fb, config, answer));
+        });
+      },
+    );
   }
 
-  get stage(): ExpStageSurvey {
-    return this._stage as ExpStageSurvey;
+  get stage() {
+    return this._stage as CastViewingStage<StageKind.TakeSurvey>;
   }
 
-  private _stage?: ExpStageSurvey;
-
-  public participant: Participant;
+  private _stage?: CastViewingStage<StageKind.TakeSurvey>;
 
   public questions: FormArray;
   public surveyForm: FormGroup;
 
   readonly SurveyQuestionKind = SurveyQuestionKind;
-  readonly questionAsKind = questionAsKind;
+  readonly assertCast = assertCast;
 
   queryClient = injectQueryClient();
 
   surveyMutation: MutationType<SurveyStageUpdate, { uid: string }>;
 
-  constructor(
-    private fb: FormBuilder,
-    @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ProviderService<Participant>,
-  ) {
-    this.participant = participantProvider.get();
+  constructor(private fb: FormBuilder) {
     this.questions = fb.array([]);
     this.surveyForm = fb.group({
       questions: this.questions,
     });
 
-    this.surveyMutation = updateSurveyStageMutation(this.queryClient, () =>
-      this.participant.navigateToNextStage(),
-    );
+    this.surveyMutation = updateSurveyStageMutation(this.queryClient);
   }
 
   /** Returns controls for each individual question component */
@@ -108,13 +105,6 @@ export class ExpSurveyComponent {
   }
 
   nextStep() {
-    this.surveyMutation.mutate({
-      name: this.stage.name,
-      data: {
-        questions: this.surveyForm.value.questions,
-      },
-      ...this.participant.getStageProgression(),
-      uid: this.participant.userData()?.uid as string,
-    });
+    // TODO: use new backend
   }
 }

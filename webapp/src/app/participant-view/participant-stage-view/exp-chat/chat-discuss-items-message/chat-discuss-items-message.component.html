@@ -4,17 +4,17 @@
   <div class="item-pair-displays">
     <div class="item-pair-item">
       <img
-        src="{{ discussItemsMessage.itemPair.item1.imageUrl }}"
-        alt="{{ discussItemsMessage.itemPair.item1.name }}"
+        src="{{ ITEMS[discussItemsMessage.itemPair.item1].imageUrl }}"
+        alt="{{ ITEMS[discussItemsMessage.itemPair.item1].name }}"
       />
-      <span class="item-pair-item-name">{{ discussItemsMessage.itemPair.item1.name }}</span>
+      <span class="item-pair-item-name">{{ ITEMS[discussItemsMessage.itemPair.item1].name }}</span>
     </div>
     <div class="item-pair-item">
       <img
-        src="{{ discussItemsMessage.itemPair.item2.imageUrl }}"
-        alt="{{ discussItemsMessage.itemPair.item2.name }}"
+        src="{{ ITEMS[discussItemsMessage.itemPair.item2].imageUrl }}"
+        alt="{{ ITEMS[discussItemsMessage.itemPair.item2].name }}"
       />
-      <span class="item-pair-item-name">{{ discussItemsMessage.itemPair.item2.name }}</span>
+      <span class="item-pair-item-name">{{ ITEMS[discussItemsMessage.itemPair.item2].name }}</span>
     </div>
   </div>
 </div>

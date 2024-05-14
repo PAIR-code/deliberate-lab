@@ -1,7 +1,7 @@
 /** Util functions to manipulate Angular constructs */
 
-import { Signal, WritableSignal, effect, signal, untracked } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Signal, WritableSignal, computed, effect, signal, untracked } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
   FormBuilder,
@@ -11,12 +11,14 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import {
-  CheckQuestion,
-  Question,
-  RatingQuestion,
-  ScaleQuestion,
+  CheckQuestionAnswer,
+  QuestionAnswer,
+  QuestionConfig,
+  RatingQuestionAnswer,
+  ScaleQuestionAnswer,
   SurveyQuestionKind,
-  TextQuestion,
+  TextQuestionAnswer,
+  assertCastOrUndefined,
 } from '@llm-mediation-experiments/utils';
 import { Observable, map } from 'rxjs';
 
@@ -84,6 +86,41 @@ export const lazyInitWritable = <T, K>(
   return result;
 };
 
+export const assertSignalCast = <T extends { kind: string }, K extends T['kind']>(
+  signalMaybeOfKind: Signal<T | undefined>,
+  kind: K,
+): Signal<T & { kind: K }> => {
+  if (signalMaybeOfKind()?.kind === kind) {
+    return signalMaybeOfKind as Signal<T & { kind: K }>;
+  } else {
+    throw new Error(
+      `Given object with kind=${signalMaybeOfKind()?.kind} needs to have kind=${kind}`,
+    );
+  }
+};
+
+/** Subscribe to a signal's updates. This function does not rely on `effect()` and can be used outside of injection contexts */
+export const subscribeSignal = <T>(_signal: Signal<T>, callback: (value: T) => void) => {
+  toObservable(_signal).subscribe(callback);
+};
+
+/** Subscribe to a list of signal updates. This function does not rely on `effect()` and can be used outside of injection contexts */
+export const subscribeSignals = <T extends Signal<unknown>[]>(
+  signals: [...T],
+  callback: (...args: [...UnwrappedSignalArrayType<T>]) => void,
+): void => {
+  const bundle = computed(() => signals.map((s) => s()));
+  toObservable(bundle).subscribe((args) => callback(...(args as [...UnwrappedSignalArrayType<T>])));
+};
+
+// Helper types for `subscribeSignals` function
+/** `Signal<T>` -> `T` */
+type UnwrappedSignalType<T> = T extends Signal<infer U> ? U : never;
+/** `Signal<T>[]` -> `[T]` */
+type UnwrappedSignalArrayType<T extends Signal<unknown>[]> = {
+  [K in keyof T]: UnwrappedSignalType<T[K]>;
+};
+
 /** Creates a second-counter timer that is synchronized with the local storage in order to resume ticking when reloading the page */
 export const localStorageTimer = (
   key: string,
@@ -139,40 +176,44 @@ export const localStorageTimer = (
 //                                         FORM BUILDER                                          //
 // ********************************************************************************************* //
 
-export const buildTextQuestionForm = (fb: FormBuilder, question: TextQuestion) =>
+export const buildTextQuestionForm = (fb: FormBuilder, answer?: TextQuestionAnswer) =>
   fb.group({
-    answerText: [question.answerText ?? '', Validators.required],
+    answerText: [answer?.answerText ?? '', Validators.required],
   });
 
-export const buildCheckQuestionForm = (fb: FormBuilder, question: CheckQuestion) =>
+export const buildCheckQuestionForm = (fb: FormBuilder, answer?: CheckQuestionAnswer) =>
   fb.group({
-    checkMark: [question.checkMark ?? false],
+    checkMark: [answer?.checkMark ?? false],
   });
 
-export const buildRatingQuestionForm = (fb: FormBuilder, question: RatingQuestion) =>
+export const buildRatingQuestionForm = (fb: FormBuilder, answer?: RatingQuestionAnswer) =>
   fb.group({
-    choice: [question.choice, Validators.required],
+    choice: [answer?.choice, Validators.required],
     confidence: [
-      question.confidence ?? 0,
+      answer?.confidence ?? 0,
       [Validators.required, Validators.min(0), Validators.max(1)],
     ],
   });
 
-export const buildScaleQuestionForm = (fb: FormBuilder, question: ScaleQuestion) =>
+export const buildScaleQuestionForm = (fb: FormBuilder, answer?: ScaleQuestionAnswer) =>
   fb.group({
-    score: [question.score ?? 0, [Validators.required, Validators.min(0), Validators.max(10)]],
+    score: [answer?.score ?? 0, [Validators.required, Validators.min(0), Validators.max(10)]],
   });
 
-export const buildQuestionForm = (fb: FormBuilder, question: Question) => {
-  switch (question.kind) {
+export const buildQuestionForm = (
+  fb: FormBuilder,
+  config: QuestionConfig,
+  answer?: QuestionAnswer,
+) => {
+  switch (config.kind) {
     case SurveyQuestionKind.Text:
-      return buildTextQuestionForm(fb, question);
+      return buildTextQuestionForm(fb, assertCastOrUndefined(answer, SurveyQuestionKind.Text));
     case SurveyQuestionKind.Check:
-      return buildCheckQuestionForm(fb, question);
+      return buildCheckQuestionForm(fb, assertCastOrUndefined(answer, SurveyQuestionKind.Check));
     case SurveyQuestionKind.Rating:
-      return buildRatingQuestionForm(fb, question);
+      return buildRatingQuestionForm(fb, assertCastOrUndefined(answer, SurveyQuestionKind.Rating));
     case SurveyQuestionKind.Scale:
-      return buildScaleQuestionForm(fb, question);
+      return buildScaleQuestionForm(fb, assertCastOrUndefined(answer, SurveyQuestionKind.Scale));
   }
 };
 

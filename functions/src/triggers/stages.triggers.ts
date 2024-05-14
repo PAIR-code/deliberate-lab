@@ -22,6 +22,7 @@ export const initializePublicStageData = onDocumentWritten(
         publicData = {
           kind: data.kind,
           participantvotes: {},
+          currentLeader: null,
         };
         break;
       case StageKind.GroupChat:
@@ -55,3 +56,6 @@ export const initializePublicStageData = onDocumentWritten(
     publicStageData.set(publicData);
   },
 );
+
+// TODO: publish stage data when a user votes or chats
+// for VoteForLeader stages, also decide on the current leader after each incremental vote.

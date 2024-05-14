@@ -7,7 +7,7 @@
 ==============================================================================*/
 
 import { HttpClient } from '@angular/common/http';
-import { Component, Inject, Input, inject } from '@angular/core';
+import { Component, Input, effect, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxChange, MatCheckboxModule } from '@angular/material/checkbox';
@@ -16,11 +16,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatRadioModule } from '@angular/material/radio';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
 
-import { ExpStageTosAndUserProfile, ProfileTOSData } from '@llm-mediation-experiments/utils';
-import { ProviderService } from 'src/app/services/provider.service';
+import { ProfileTOSData, StageKind, UnifiedTimestamp } from '@llm-mediation-experiments/utils';
+import { Timestamp } from 'firebase/firestore';
+import { CastViewingStage, ParticipantService } from 'src/app/services/participant.service';
 import { updateProfileAndTOSMutation } from 'src/lib/api/mutations';
-import { Participant } from 'src/lib/participant';
-import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
 import { MutationType } from 'src/lib/types/tanstack.types';
 
 enum Pronouns {
@@ -46,30 +45,16 @@ enum Pronouns {
 })
 export class ExpTosAndProfileComponent {
   // Reload the internal logic dynamically when the stage changes
-  @Input({ required: true })
-  set stage(value: ExpStageTosAndUserProfile) {
-    this._stage = value;
-
-    // Extract the TOS lines and make them available for the template
-    this.tosLines = this.stage?.config.tosLines;
-  }
-
-  get stage(): ExpStageTosAndUserProfile {
-    return this._stage as ExpStageTosAndUserProfile;
-  }
-
-  private _stage?: ExpStageTosAndUserProfile;
-
-  public participant: Participant;
-  public tosLines: string[] | undefined;
+  @Input({ required: true }) stage!: CastViewingStage<StageKind.AcceptTosAndSetProfile>;
 
   readonly Pronouns = Pronouns;
+  tosLines: string[] = [];
 
   profileFormControl = new FormGroup({
     name: new FormControl('', Validators.required),
     pronouns: new FormControl('', Validators.required),
     avatarUrl: new FormControl('', Validators.required),
-    acceptTosTimestamp: new FormControl<string | null>(null, Validators.required),
+    acceptTosTimestamp: new FormControl<UnifiedTimestamp | null>(null, Validators.required),
   });
 
   http = inject(HttpClient);
@@ -78,29 +63,22 @@ export class ExpTosAndProfileComponent {
   profileMutation: MutationType<ProfileTOSData | null | undefined, ProfileTOSData>;
   value = ''; // Custom pronouns input value
 
-  constructor(
-    @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ProviderService<Participant>,
-  ) {
-    this.participant = participantProvider.get();
-    this.profileMutation = updateProfileAndTOSMutation(this.queryClient, () =>
-      this.participant.navigateToNextStage(),
-    );
+  constructor(participantService: ParticipantService) {
+    this.profileMutation = updateProfileAndTOSMutation(this.queryClient);
 
-    // This WILL already have been fetched by the backend at this point,
-    // because the auth guard ensures that the participant data is available before rendering this component.
-    const data = this.participant.userData();
+    // Refresh the form data when the participant profile changes
+    effect(() => {
+      const profile = participantService.participant()?.profile();
 
-    if (data) {
+      if (!profile) return;
+
       this.profileFormControl.setValue({
-        name: data.name,
-        pronouns: data.pronouns,
-        avatarUrl: data.avatarUrl,
-        acceptTosTimestamp: data.acceptTosTimestamp,
+        name: profile.name,
+        pronouns: profile.pronouns,
+        avatarUrl: profile.avatarUrl,
+        acceptTosTimestamp: profile.acceptTosTimestamp,
       });
-      if (this.isOtherPronoun(data.pronouns)) {
-        this.value = data.pronouns;
-      }
-    }
+    });
   }
 
   isOtherPronoun(s: string) {
@@ -117,15 +95,11 @@ export class ExpTosAndProfileComponent {
 
   updateCheckboxValue(updatedValue: MatCheckboxChange) {
     this.profileFormControl.patchValue({
-      acceptTosTimestamp: updatedValue.checked ? new Date().toISOString() : null,
+      acceptTosTimestamp: updatedValue.checked ? Timestamp.now() : null,
     });
   }
 
   nextStep() {
-    this.profileMutation.mutate({
-      ...this.profileFormControl.value,
-      ...this.participant.getStageProgression(),
-      uid: this.participant.userData()?.uid,
-    } as ProfileTOSData);
+    // TODO: refactor with new backend
   }
 }

@@ -28,7 +28,7 @@ service cloud.firestore {
       // Participant rules
       match /participants/{participantId} {
         allow get: if true; // Public if you know the ID
-        allow list: if false; // Avoid leaking IDs
+        allow list: if request.auth.token.role == 'experimenter'; // Avoid leaking IDs (only experimenters can view them)
         allow update: if true; // TODO: contentn validation on write
 
         match /stages/{stageId} {

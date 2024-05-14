@@ -1,12 +1,11 @@
-import { Component, Inject, Input, signal, Signal } from '@angular/core';
+import { Component, computed, Input, signal, Signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { injectQueryClient } from '@tanstack/angular-query-experimental';
-
-import { ExpStageVoteReveal, VoteReveal } from '@llm-mediation-experiments/utils';
-import { ProviderService } from 'src/app/services/provider.service';
-import { updateLeaderRevealStageMutation } from 'src/lib/api/mutations';
-import { Participant } from 'src/lib/participant';
-import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
+import {
+  assertCast,
+  StageKind,
+  VoteForLeaderStagePublicData,
+} from '@llm-mediation-experiments/utils';
+import { CastViewingStage, ParticipantService } from 'src/app/services/participant.service';
 
 @Component({
   selector: 'app-exp-leader-reveal',
@@ -18,48 +17,38 @@ import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
 export class ExpLeaderRevealComponent {
   // Reload the internal logic dynamically when the stage changes
   @Input({ required: true })
-  set stage(value: ExpStageVoteReveal) {
+  set stage(value: CastViewingStage<StageKind.RevealVoted>) {
     this._stage = value;
 
-    this.stageData = this.stage.config;
-    this.everyoneReachedThisStage = this.participant.everyoneReachedCurrentStage(this.stage.name);
+    this.everyoneReachedThisStage = computed(() =>
+      this.participantService.experiment()!.everyoneReachedStage(this.stage.config().name)(),
+    );
+
+    // Extract results from the public vote for leader stage data
+    this.results = computed(() =>
+      assertCast(
+        this.participantService.experiment()!.publicStageDataMap[
+          this.stage.config().pendingVoteStageName
+        ]!(),
+        StageKind.VoteForLeader,
+      ),
+    );
   }
 
-  private queryClient = injectQueryClient();
-  private mutationReveal = updateLeaderRevealStageMutation(this.queryClient, () =>
-    this.participant.navigateToNextStage(),
-  );
-
-  get stage(): ExpStageVoteReveal {
-    return this._stage as ExpStageVoteReveal;
+  get stage() {
+    return this._stage as CastViewingStage<StageKind.RevealVoted>;
   }
 
-  private _stage?: ExpStageVoteReveal;
-
-  public participant: Participant;
-  public stageData: VoteReveal;
+  private _stage?: CastViewingStage<StageKind.RevealVoted>;
 
   public everyoneReachedThisStage: Signal<boolean>;
-  public finalLeader: Signal<string>;
+  public results: Signal<VoteForLeaderStagePublicData | undefined> = signal(undefined);
 
-  constructor(
-    @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ProviderService<Participant>,
-  ) {
-    this.participant = participantProvider.get();
-    this.stageData = this.stage?.config; // This will truly be initialized in ngOnInit. this.stage can be undefined here
-
-    this.everyoneReachedThisStage = signal<boolean>(false);
-
-    // TODO: use the new backend
-    this.finalLeader = signal<string>('TODO');
+  constructor(private participantService: ParticipantService) {
+    this.everyoneReachedThisStage = signal(false);
   }
 
   nextStep() {
-    this.mutationReveal.mutate({
-      data: undefined,
-      name: this.stage.name,
-      ...this.participant.getStageProgression(),
-      uid: this.participant.userData()!.uid,
-    });
+    // TODO: use the new backend
   }
 }

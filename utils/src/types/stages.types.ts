@@ -102,9 +102,9 @@ export interface VoteForLeaderStageAnswer extends BaseStageAnswer {
   votes: Votes;
 }
 
+// NOTE: profile & TOS stages do not have "answers", as the results are stored directly in the participant profile.
+// NOTE: answer documents are lazily created in firestore. They may not exist before the participant submits their answers for the first time.
 export type StageAnswer = SurveyStageAnswer | VoteForLeaderStageAnswer;
-
-// NOTE: profile & TOS stages do not have "answers", as the results are stored directly in the participant profile
 
 // ********************************************************************************************* //
 //                                        PUBLIC DATA                                            //
@@ -125,87 +125,11 @@ export interface VoteForLeaderStagePublicData extends BasePublicStageData {
   kind: StageKind.VoteForLeader;
 
   participantvotes: Record<string, Votes>; // Participant public id => votes of this participant
+  currentLeader: string | null; // Updated automatically after each vote
 }
 
+// NOTE: some stages do not have public stage data
 export type PublicStageData = GroupChatStagePublicData | VoteForLeaderStagePublicData;
-
-// ********************************************************************************************* //
-//                               COMPLETE AGREGATED TYPE HELPER                                  //
-// ********************************************************************************************* //
-
-// For repositories and consumers that will agregate all stage data into one object for convenience of use
-interface CompleteParticipantStageBase {
-  kind: StageKind; // The stage kind is repeated here at top level so that typescript can use it to discriminate the union type (nested kind is not enough for that)
-
-  config: StageConfig;
-  public: PublicStageData | undefined;
-  answers: StageAnswer | undefined;
-}
-
-export interface CompleteTermsOfServiceStage extends CompleteParticipantStageBase {
-  kind: StageKind.TermsOfService;
-
-  config: TermsOfServiceStageConfig;
-  public: undefined;
-  answers: undefined;
-}
-
-export interface CompleteProfileStage extends CompleteParticipantStageBase {
-  kind: StageKind.Profile;
-
-  config: ProfileStageConfig;
-  public: undefined;
-  answers: undefined;
-}
-
-export interface CompleteAcceptTosAndSetProfileStage extends CompleteParticipantStageBase {
-  kind: StageKind.AcceptTosAndSetProfile;
-
-  config: AcceptTosAndSetProfileStageConfig;
-  public: undefined;
-  answers: undefined;
-}
-
-export interface CompleteSurveyStage extends CompleteParticipantStageBase {
-  kind: StageKind.TakeSurvey;
-
-  config: SurveyStageConfig;
-  public: undefined;
-  answers: SurveyStageAnswer;
-}
-
-export interface CompleteGroupChatStage extends CompleteParticipantStageBase {
-  kind: StageKind.GroupChat;
-
-  config: GroupChatStageConfig;
-  public: GroupChatStagePublicData;
-  answers: undefined;
-}
-
-export interface CompleteVoteForLeaderStage extends CompleteParticipantStageBase {
-  kind: StageKind.VoteForLeader;
-
-  config: VoteForLeaderStageConfig;
-  public: VoteForLeaderStagePublicData;
-  answers: VoteForLeaderStageAnswer;
-}
-
-export interface CompleteRevealVotedStage extends CompleteParticipantStageBase {
-  kind: StageKind.RevealVoted;
-
-  config: RevealVotedStageConfig;
-  public: undefined;
-  answers: undefined;
-}
-
-export type CompleteParticipantStage =
-  | CompleteTermsOfServiceStage
-  | CompleteProfileStage
-  | CompleteAcceptTosAndSetProfileStage
-  | CompleteSurveyStage
-  | CompleteGroupChatStage
-  | CompleteVoteForLeaderStage
-  | CompleteRevealVotedStage;
 
 // ********************************************************************************************* //
 //                                         DEFAULTS                                              //

@@ -66,7 +66,7 @@
     <p>Please read and accept the following terms of service before proceeding:</p>
 
     <ul>
-      @for (line of tosLines; track line) {
+      @for (line of stage.config().tosLines; track line) {
         <li>{{ line }}</li>
       }
     </ul>
