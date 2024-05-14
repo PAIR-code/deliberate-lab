@@ -6,13 +6,12 @@ import {
   DiscussItemsMessageMutationData,
   Experiment,
   ExperimentCreationData,
-  ExperimentExtended,
+  ExperimentTemplate,
   GenericStageUpdate,
   MediatorMessageMutationData,
-  ParticipantExtended,
+  ParticipantProfile,
   ProfileTOSData,
   SimpleResponse,
-  Template,
   TemplateCreationData,
   UserMessageMutationData,
 } from '@llm-mediation-experiments/utils';
@@ -30,7 +29,7 @@ export const experimentsCallable = data(
 );
 
 export const experimentCallable = data(
-  httpsCallable<{ experimentUid: string }, ExperimentExtended>(functions, 'experiment'),
+  httpsCallable<{ experimentUid: string }, Experiment>(functions, 'experiment'),
 );
 
 export const deleteExperimentCallable = data(
@@ -57,7 +56,7 @@ export const mediatorMessageCallable = data(
 );
 
 export const participantCallable = data(
-  httpsCallable<{ participantUid: string }, ParticipantExtended>(functions, 'participant'),
+  httpsCallable<{ participantUid: string }, ParticipantProfile>(functions, 'participant'),
 );
 
 export const updateProfileAndTOSCallable = data(
@@ -74,7 +73,7 @@ export const toggleReadyToEndChatCallable = data(
 );
 
 export const templatesCallable = data(
-  httpsCallable<never, SimpleResponse<Template[]>>(functions, 'templates'),
+  httpsCallable<never, SimpleResponse<ExperimentTemplate[]>>(functions, 'templates'),
 );
 
 export const createTemplateCallable = data(

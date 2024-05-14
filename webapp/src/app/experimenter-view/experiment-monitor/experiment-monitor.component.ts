@@ -75,7 +75,9 @@ export class ExperimentMonitorComponent {
       return appState.experiments.get({ experimentId });
     });
 
-    this.stages = computed(() => Object.values(this.experiment()?.stageConfigMap() ?? {}));
+    this.stages = computed(() =>
+      Object.values(this.experiment()?.stageConfigMap ?? {}).map((s) => s()),
+    );
   }
 
   deleteExperiment() {

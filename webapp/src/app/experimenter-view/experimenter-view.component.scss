@@ -6,7 +6,6 @@ $toolbar-height: 60px;
   background-color: rgb(33, 33, 33);
   color: white;
   font-weight: 600;
-  flex: 0 0 $toolbar-height;
 
   /* Fixed top toolbar */
   position: fixed;
@@ -30,8 +29,7 @@ $toolbar-height: 60px;
 }
 
 .page {
-  margin-left: 20px;
-  margin-right: 20px;
+  margin: 20px;
 }
 
 .title {
@@ -50,23 +48,12 @@ $toolbar-height: 60px;
 
   // Content display
   display: flex;
-  flex: 1 1 auto;
-  flex-wrap: wrap;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: flex-start;
-
-  margin: 0;
-  overflow: auto;
+  height: calc(100vh - $toolbar-height); // Full height minus toolbar height
+  overflow: hidden; // Prevent scrolling on the .content itself
 
   .highlighted {
     background-color: #ddd;
   }
-
-  // .working-on-stage {
-  //   .menu-item-inner {
-  //   }
-  // }
 
   .active {
     color: #d00;
@@ -107,29 +94,18 @@ $toolbar-height: 60px;
 
 .menu-buttons {
   // Fixed to the top toolbar
-  // BUG: it need to stick to the top, but the rest must be aware of it
   position: static;
   top: $toolbar-height;
 
   display: flex;
-  // flex-wrap: wrap;
   flex-direction: column;
-  // justify-content: flex-start;
-  // align-items: flex-start;
-  // max-width: 600px;
-  // min-height: 600px;
 }
 
 .icon-menu-item {
   display: flex;
-  // flex-wrap: wrap;
-  // flex-direction: column;
   justify-content: flex-start;
   align-content: center;
 
-  // align-items: flex-start;
-  // max-width: 600px;
-  // min-height: 600px;
   mat-icon {
     margin-right: 5px;
   }
@@ -141,34 +117,26 @@ $toolbar-height: 60px;
   border-radius: 50%;
 }
 
-// .menu-buttons li {
-//   margin: 8px 8px 8px 0;
-//   float: left;
-//   list-style: none;
-//   text-align: center;
-//   // background-color: #000000;
-//   margin-right: 30px;
-//   width: 150px;
-//   line-height: 60px;
-// }
-// .menu-buttons li a {
-//   text-decoration: none;
-//   color: #000000;
-//   display: block;
-// }
-// .menu-buttons li a:hover {
-//   text-decoration: none;
-//   color: #000000;
-//   // background-color: #33B5E5;
-// }
-
-// .menu-button .mat-mdc-button-base {
-//   margin: 8px 8px 8px 0;
-// }
-
 .error {
   color: #f00;
   background-color: #fee;
   border-radius: 5px;
   border: 1px solid #aaa;
+}
+
+.mat-sidenav-container {
+  height: 100%;
+  display: flex;
+  flex: 1;
+}
+
+.sidenav {
+  width: 200px; // Adjust width as necessary
+  overflow: auto; // Allow the sidenav itself to scroll if needed
+}
+
+.sidenav-content {
+  flex-grow: 1;
+  overflow-y: auto; // Scroll vertically if needed
+  overflow-x: hidden; // Prevent horizontal scrolling
 }

@@ -108,14 +108,17 @@ export class CreateExperimentComponent {
     this.templates = appState.experimenter.get().templates;
 
     // Set the current experiment template to the first fetched template
-    effect(() => {
-      const data = this.templates();
+    effect(
+      () => {
+        const data = this.templates();
 
-      if (data && this.existingStages.length === 0) {
-        // Set the current stages to this template's stages
-        this.currentTemplateChoice.set(data[0]);
-      }
-    });
+        if (data && this.existingStages.length === 0) {
+          // Set the current stages to this template's stages
+          this.currentTemplateChoice.set(data[0]);
+        }
+      },
+      { allowSignalWrites: true },
+    );
 
     // When the chosen full template changes, update the stages
     effect(() => {

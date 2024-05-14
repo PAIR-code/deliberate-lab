@@ -7,14 +7,14 @@ import { BaseRepository } from './base.repository';
 export class ParticipantRepository extends BaseRepository {
   // Internal writable signals
   private _profile: WritableSignal<ParticipantProfile | undefined> = signal(undefined);
-  private _stageAnswers: Record<string, WritableSignal<StageAnswer>> = {};
+  private _stageAnswers: Record<string, WritableSignal<StageAnswer> | undefined> = {};
 
   // Expose the signals as read-only
   public get profile(): Signal<ParticipantProfile | undefined> {
     return this._profile;
   }
 
-  public get stageAnswers(): Record<string, Signal<StageAnswer>> {
+  public get stageAnswers(): Record<string, Signal<StageAnswer> | undefined> {
     return this._stageAnswers;
   }
 
@@ -48,7 +48,9 @@ export class ParticipantRepository extends BaseRepository {
 
           // Update the public stage data signals
           changedDocs.forEach((doc) => {
-            this._stageAnswers[doc.id].set(doc.data() as StageAnswer);
+            if (!this._stageAnswers[doc.id])
+              this._stageAnswers[doc.id] = signal(doc.data() as StageAnswer);
+            else this._stageAnswers[doc.id]!.set(doc.data() as StageAnswer);
           });
         },
       ),

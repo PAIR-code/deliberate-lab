@@ -24,7 +24,9 @@ export class ExperimenterRepository extends BaseRepository {
   private _templates: WritableSignal<ExperimentTemplate[]> = signal([]);
 
   public readonly templatesWithConfigs = new CacheMap(loadExperimentTemplate);
-  public readonly experimentParticipants = new CacheMap(this.createParticipantsSignal);
+  public readonly experimentParticipants = new CacheMap((expId: string) =>
+    this.createParticipantsSignal(expId),
+  );
 
   // Expose the signals as read-only
   public get experiments(): Signal<Experiment[]> {

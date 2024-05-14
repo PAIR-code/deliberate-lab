@@ -1,44 +1,56 @@
 <div class="main">
-  <h2>{{ this.participant.viewingStage()?.name }} ({{ this.participant.viewingStage()?.kind }})</h2>
-  <div class="exp-stage-content">
-    @switch (this.participant.viewingStage()?.kind) {
-      @case (StageKind.AcceptTosAndSetProfile) {
-        <app-exp-tos-and-profile
-          [stage]="stageAsKind(this.participant.viewingStage(), StageKind.AcceptTosAndSetProfile)"
-        ></app-exp-tos-and-profile>
+  @if (participantService.viewingStage() === undefined) {
+    Loading...
+  } @else {
+    <h2>
+      {{ participantService.viewingStage()!.config().name }} ({{
+        participantService.viewingStage()!.config().kind
+      }})
+    </h2>
+    <div class="exp-stage-content">
+      @switch (participantService.viewingStage()!.config().kind) {
+        @case (StageKind.AcceptTosAndSetProfile) {
+          <app-exp-tos-and-profile
+            [stage]="
+              assertCast(participantService.viewingStage(), StageKind.AcceptTosAndSetProfile)
+            "
+          ></app-exp-tos-and-profile>
+        }
+        @case (StageKind.GroupChat) {
+          <app-exp-chat
+            [stage]="assertCast(participantService.viewingStage(), StageKind.GroupChat)"
+          ></app-exp-chat>
+        }
+        @case (StageKind.TakeSurvey) {
+          <app-exp-survey
+            [stage]="assertCast(participantService.viewingStage(), StageKind.TakeSurvey)"
+          ></app-exp-survey>
+        }
+        @case (StageKind.VoteForLeader) {
+          <app-exp-leader-vote
+            [stage]="assertCast(participantService.viewingStage(), StageKind.VoteForLeader)"
+          ></app-exp-leader-vote>
+        }
+        @case (StageKind.RevealVoted) {
+          <app-exp-leader-reveal
+            [stage]="assertCast(participantService.viewingStage(), StageKind.RevealVoted)"
+          ></app-exp-leader-reveal>
+        }
+        @default {
+          <div class="error">
+            Oh no! It looks like something went wrong, there is no component for
+            <span>{{ participantService.viewingStage()!.config().kind }}</span>
+          </div>
+        }
       }
-      @case (StageKind.GroupChat) {
-        <app-exp-chat
-          [stage]="stageAsKind(this.participant.viewingStage(), StageKind.GroupChat)"
-        ></app-exp-chat>
-      }
-      @case (StageKind.TakeSurvey) {
-        <app-exp-survey
-          [stage]="stageAsKind(this.participant.viewingStage(), StageKind.TakeSurvey)"
-        ></app-exp-survey>
-      }
-      @case (StageKind.VoteForLeader) {
-        <app-exp-leader-vote
-          [stage]="stageAsKind(this.participant.viewingStage(), StageKind.VoteForLeader)"
-        ></app-exp-leader-vote>
-      }
-      @case (StageKind.RevealVoted) {
-        <app-exp-leader-reveal
-          [stage]="stageAsKind(this.participant.viewingStage(), StageKind.RevealVoted)"
-        ></app-exp-leader-reveal>
-      }
-      @default {
-        <div class="error">
-          Oh no! It looks like something went wrong, there is no component for
-          <span>{{ this.participant.viewingStage()?.kind }}</span>
+
+      @if (
+        participantService.viewingStage()!.config().name !== participantService.workingOnStageName()
+      ) {
+        <div class="mask">
+          <!-- TODO: should probably disable editing in individual stage components as well -->
         </div>
       }
-    }
-
-    @if (this.participant.viewingStage()?.name !== this.participant.workingOnStage()?.name) {
-      <div class="mask">
-        <!-- TODO: should probably disable editing in individual stage components as well -->
-      </div>
-    }
-  </div>
+    </div>
+  }
 </div>

@@ -1,8 +1,10 @@
 <div class="chat-members">
   <b>Other chat members </b>
   <div class="container">
-    @for (user of this.otherParticipants(); track user.uid) {
-      @if (user.workingOnStageName === this.participant.userData()?.workingOnStageName) {
+    @for (user of participantService.otherParticipants(); track user.publicId) {
+      @if (
+        user.workingOnStageName === participantService.participant()?.profile()?.workingOnStageName
+      ) {
         <div class="profile">
           <img class="avatar" src="{{ user.avatarUrl }}" alt="avatar" />
           <div class="name">
@@ -22,7 +24,7 @@
     <b>Discussion</b>
 
     <div class="messages">
-      @for (message of messages(); track $index) {
+      @for (message of chat?.messages(); track $index) {
         <div class="message">
           @if (message.messageType === 'userMessage') {
             <app-chat-user-message [message]="message"></app-chat-user-message>
@@ -40,7 +42,9 @@
     </div>
 
     <form class="message-form" (ngSubmit)="sendMessage()">
-      <app-chat-user-profile [profile]="participant.userData()!"></app-chat-user-profile>
+      <app-chat-user-profile
+        [profile]="participantService.participant()?.profile()!"
+      ></app-chat-user-profile>
       <mat-form-field class="full-width">
         <mat-label>Message to send</mat-label>
         <input matInput placeholder="Write your message" [formControl]="message" />
@@ -49,7 +53,7 @@
         type="submit"
         color="primary"
         mat-button
-        [disabled]="this.readyToEndChat() || !this.message.valid"
+        [disabled]="readyToEndChat() || !message.valid"
       >
         <!-- <mat-icon>redo</mat-icon> -->
         <span>Send</span>
@@ -59,8 +63,8 @@
     </form>
     <div>
       <mat-slide-toggle
-        [checked]="this.readyToEndChat()"
-        [disabled]="this.isSilent() || this.readyToEndChat()"
+        [checked]="readyToEndChat()"
+        [disabled]="isSilent() || readyToEndChat()"
         (change)="toggleEndChat()"
       >
         I'm done with chatting and ready to move on
@@ -74,19 +78,19 @@
       <div class="item-pair-displays">
         <div class="item-pair-item">
           <img
-            src="{{ currentRatingsToDiscuss().item1.imageUrl }}"
-            alt="{{ currentRatingsToDiscuss().item1.name }}"
+            src="{{ ITEMS[currentRatingsToDiscuss().item1].imageUrl }}"
+            alt="{{ ITEMS[currentRatingsToDiscuss().item1].name }}"
             width="20px"
           />
-          <span>{{ currentRatingsToDiscuss().item1.name }}</span>
+          <span>{{ ITEMS[currentRatingsToDiscuss().item1].name }}</span>
         </div>
         <div class="item-pair-item">
           <img
-            src="{{ currentRatingsToDiscuss().item2.imageUrl }}"
-            alt="{{ currentRatingsToDiscuss().item2.name }}"
+            src="{{ ITEMS[currentRatingsToDiscuss().item2].imageUrl }}"
+            alt="{{ ITEMS[currentRatingsToDiscuss().item2].name }}"
             width="20px"
           />
-          <span>{{ currentRatingsToDiscuss().item2.name }}</span>
+          <span>{{ ITEMS[currentRatingsToDiscuss().item2].name }}</span>
         </div>
       </div>
     </div>

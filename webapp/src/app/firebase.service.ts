@@ -1,6 +1,7 @@
 import { Injectable, Signal, WritableSignal, signal } from '@angular/core';
-import { User } from 'firebase/auth';
-import { environment } from 'src/environments/environment';
+import { Router } from '@angular/router';
+import { User, onAuthStateChanged } from 'firebase/auth';
+import { auth } from 'src/lib/api/firebase';
 
 // NOTE: if using gapi to save files to google drive is REALLY necessary, modify the authentication this way:
 // https://stackoverflow.com/a/74822511
@@ -26,14 +27,33 @@ export class FirebaseService {
   private gapiClientLoaded = new Promise<void>((resolve) => {
     gapi.load('client', async () => {
       await gapi.client.init({
-        apiKey: environment.driveApiKey,
+        apiKey: '', // environment.driveApiKey,
         discoveryDocs: [DISCOVERY_DOC],
       });
       resolve();
     });
   });
 
-  constructor() {}
+  constructor(router: Router) {
+    // Subscribe to auth state changes & navigate to the appropriate page when the user is signed in
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const isOnHomePage = window.location.hash === '#/';
+
+        // Redirect experimenters to the correct page on login
+        // Note that no redirection on logout needs to be specified, as they are handled by route guards
+        if (isOnHomePage) {
+          // User is signed in, navigate to the appropriate page.
+          const { claims } = await user.getIdTokenResult();
+          if (claims['role'] === 'experimenter') {
+            router.navigate(['/experimenter']);
+          }
+        }
+      }
+
+      this._user.set(user);
+    });
+  }
 
   // TODO: implement gapi auth if this function must be used
   async createAndUploadJsonFile(jsonData: string) {

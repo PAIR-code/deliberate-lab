@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { DiscussItemsMessage, dateStrOfTimestamp } from '@llm-mediation-experiments/utils';
+import { DiscussItemsMessage, ITEMS, dateStrOfTimestamp } from '@llm-mediation-experiments/utils';
 
 @Component({
   selector: 'app-chat-discuss-items-message',
@@ -12,4 +12,5 @@ export class ChatDiscussItemsMessageComponent {
   @Input() discussItemsMessage!: DiscussItemsMessage;
 
   readonly dateStrOfTimestamp = dateStrOfTimestamp;
+  readonly ITEMS = ITEMS;
 }

@@ -44,6 +44,19 @@ export function assertCast<T extends { kind: string }, K extends T['kind']>(
   }
 }
 
+export function assertCastOrUndefined<T extends { kind: string }, K extends T['kind']>(
+  objMaybeOfKind: T | undefined,
+  kind: K,
+): (T & { kind: K }) | undefined {
+  if (objMaybeOfKind === undefined) {
+    return undefined;
+  } else if (objMaybeOfKind.kind === kind) {
+    return objMaybeOfKind as T & { kind: K };
+  } else {
+    throw new Error(`Given object with kind=${objMaybeOfKind.kind} needs to have kind=${kind}`);
+  }
+}
+
 export function isOfKind<T extends { kind: string }, K extends T['kind']>(
   objMaybeOfKind: T,
   kind: K,
