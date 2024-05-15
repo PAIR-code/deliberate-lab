@@ -3,68 +3,35 @@ import { Value } from '@sinclair/typebox/value';
 import * as functions from 'firebase-functions';
 import { onCall } from 'firebase-functions/v2/https';
 import { app } from '../app';
-import {
-  DiscussItemsMessageMutationData,
-  MediatorMessageMutationData,
-  UserMessageMutationData,
-} from '../validation/messages.validation';
+import { MessageData } from '../validation/messages.validation';
 
+import { MessageKind } from '@llm-mediation-experiments/utils';
+import { Timestamp } from 'firebase-admin/firestore';
 import { AuthGuard } from '../utils/auth-guard';
 
-export const userMessage = onCall(async (request) => {
+export const message = onCall(async (request) => {
   const { data } = request;
 
-  if (Value.Check(UserMessageMutationData, data)) {
-    // Build message data
-    const msgData = {
-      ...data,
-      messageType: 'userMessage',
-      timestamp: new Date(),
-    };
+  if (Value.Check(MessageData, data)) {
+    // Validate authentication status for experimenter messages
+    if (data.message.kind !== MessageKind.UserMessage) await AuthGuard.isExperimenter(request);
 
-    const ref = await app.firestore().collection('messages').add(msgData);
-    return { uid: ref.id };
-  }
+    const timestamp = Timestamp.now();
 
-  throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
-});
+    const participants = await app
+      .firestore()
+      .collection(`experiments/${data.experimentId}/participants`)
+      .get();
 
-export const discussItemsMessage = onCall(async (request) => {
-  await AuthGuard.isExperimenter(request);
-
-  const { data } = request;
-
-  if (Value.Check(DiscussItemsMessageMutationData, data)) {
-    // Build message data
-    const msgData = {
-      ...data,
-      messageType: 'discussItemsMessage',
-      timestamp: new Date(),
-    };
-
-    const ref = await app.firestore().collection('messages').add(msgData);
-    return { uid: ref.id };
-  }
-
-  throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
-});
-
-export const mediatorMessage = onCall(async (request) => {
-  await AuthGuard.isExperimenter(request);
-
-  // access authenticated user
-  const { data } = request;
-
-  if (Value.Check(MediatorMessageMutationData, data)) {
-    // Build message data
-    const msgData = {
-      ...data,
-      messageType: 'mediatorMessage',
-      timestamp: new Date(),
-    };
-
-    const ref = await app.firestore().collection('messages').add(msgData);
-    return { uid: ref.id };
+    // Create all messages in transaction
+    await app.firestore().runTransaction(async (transaction) => {
+      participants.docs.forEach((participant) => {
+        transaction.set(participant.ref.collection(`chats/${data.chatId}/messages`).doc(), {
+          ...data.message,
+          timestamp,
+        });
+      });
+    });
   }
 
   throw new functions.https.HttpsError('invalid-argument', 'Invalid data');

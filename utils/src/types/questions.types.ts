@@ -15,6 +15,7 @@ export enum SurveyQuestionKind {
 
 interface BaseQuestionConfig {
   kind: SurveyQuestionKind;
+  id: number;
   questionText: string;
 }
 
@@ -52,6 +53,7 @@ export type QuestionConfig =
 
 interface BaseQuestionAnswer {
   kind: SurveyQuestionKind;
+  id: number;
 }
 
 export interface TextQuestionAnswer extends BaseQuestionAnswer {
@@ -70,13 +72,13 @@ export interface RatingQuestionAnswer extends BaseQuestionAnswer {
   kind: SurveyQuestionKind.Rating;
 
   choice: ItemName | null;
-  confidence: number | null;
+  confidence: number | null; // Confidence in the choice, from 0 to 1
 }
 
 export interface ScaleQuestionAnswer extends BaseQuestionAnswer {
   kind: SurveyQuestionKind.Scale;
 
-  score: number | null;
+  score: number | null; // Score on a scale of 0 to 10
 }
 
 export type QuestionAnswer =
@@ -91,6 +93,7 @@ export type QuestionAnswer =
 
 export const getDefaultTextQuestion = (): TextQuestionConfig => {
   return {
+    id: 0,
     kind: SurveyQuestionKind.Text,
     questionText: '',
   };
@@ -98,6 +101,7 @@ export const getDefaultTextQuestion = (): TextQuestionConfig => {
 
 export const getDefaultCheckQuestion = (): CheckQuestionConfig => {
   return {
+    id: 0,
     kind: SurveyQuestionKind.Check,
     questionText: '',
   };
@@ -105,6 +109,7 @@ export const getDefaultCheckQuestion = (): CheckQuestionConfig => {
 
 export const getDefaultItemRatingsQuestion = (): RatingQuestionConfig => {
   return {
+    id: 0,
     kind: SurveyQuestionKind.Rating,
     questionText: '',
     item1: 'blanket',
@@ -114,6 +119,7 @@ export const getDefaultItemRatingsQuestion = (): RatingQuestionConfig => {
 
 export const getDefaultScaleQuestion = (): ScaleQuestionConfig => {
   return {
+    id: 0,
     kind: SurveyQuestionKind.Scale,
     questionText: '',
     upperBound: '',

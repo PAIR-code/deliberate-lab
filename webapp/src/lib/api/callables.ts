@@ -1,7 +1,6 @@
 /** Firebase cloud function callables */
 
 import {
-  ChatToggleUpdate,
   CreationResponse,
   DiscussItemsMessageMutationData,
   Experiment,
@@ -10,7 +9,6 @@ import {
   GenericStageUpdate,
   MediatorMessageMutationData,
   ParticipantProfile,
-  ProfileTOSData,
   SimpleResponse,
   TemplateCreationData,
   UserMessageMutationData,
@@ -59,17 +57,9 @@ export const participantCallable = data(
   httpsCallable<{ participantUid: string }, ParticipantProfile>(functions, 'participant'),
 );
 
-export const updateProfileAndTOSCallable = data(
-  httpsCallable<ProfileTOSData, ProfileTOSData>(functions, 'updateProfileAndTOS'),
-);
-
 export const updateStageCallable = data(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   httpsCallable<GenericStageUpdate<any>, CreationResponse>(functions, 'updateStage'),
-);
-
-export const toggleReadyToEndChatCallable = data(
-  httpsCallable<ChatToggleUpdate, CreationResponse>(functions, 'toggleReadyToEndChat'),
 );
 
 export const templatesCallable = data(
@@ -79,3 +69,5 @@ export const templatesCallable = data(
 export const createTemplateCallable = data(
   httpsCallable<TemplateCreationData, CreationResponse>(functions, 'createTemplate'),
 );
+
+// TODO : create callables for the 3 new cloud functions, and remove the declarations for the old ones

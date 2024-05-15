@@ -4,14 +4,18 @@
 
 import { UnifiedTimestamp } from './api.types';
 
-export interface ParticipantProfile {
-  publicId: string; // Public identifier for the participant inside an experiment
-
+/** Profile data that is modifiable by the participant */
+export interface ParticipantProfileBase {
   pronouns: string | null;
   avatarUrl: string | null;
   name: string | null;
 
   acceptTosTimestamp: UnifiedTimestamp | null;
+}
+
+/** Full participant profile document data */
+export interface ParticipantProfile extends ParticipantProfileBase {
+  publicId: string; // Public identifier for the participant inside an experiment
   workingOnStageName: string;
 }
 

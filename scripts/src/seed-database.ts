@@ -97,12 +97,14 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     kind: StageKind.TakeSurvey,
     questions: [
       {
+        id: 0,
         kind: SurveyQuestionKind.Rating,
         questionText: 'Rate the items by how helpful they would be for survival.',
         item1: 'compas',
         item2: 'blanket',
       },
       {
+        id: 1,
         kind: SurveyQuestionKind.Scale,
         questionText: 'Rate the how much you would like to be the group leader.',
         lowerBound: 'I would most definitely not like to be the leader (0/10)',
@@ -130,6 +132,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     kind: StageKind.TakeSurvey,
     questions: [
       {
+        id: 0,
         kind: SurveyQuestionKind.Scale,
         questionText:
           'Rate the chat dicussion on a 1-10 scale.\nAlso indicate your overall feeling about the chat.',
@@ -144,6 +147,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     kind: StageKind.TakeSurvey,
     questions: [
       {
+        id: 0,
         kind: SurveyQuestionKind.Scale,
         questionText: 'Rate the how much you would like to be the group leader.',
         lowerBound: 'I would most definitely not like to be the leader (0/10)',
@@ -162,6 +166,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     kind: StageKind.TakeSurvey,
     questions: [
       {
+        id: 0,
         kind: SurveyQuestionKind.Rating,
         questionText: 'Please rating the following accoring to which is best for survival',
         item1: 'compas',
@@ -181,6 +186,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     kind: StageKind.TakeSurvey,
     questions: [
       {
+        id: 0,
         kind: SurveyQuestionKind.Scale,
         questionText:
           'Rate how happy you were with the final outcome.\nAlso indicate your overall feeling about the experience.',

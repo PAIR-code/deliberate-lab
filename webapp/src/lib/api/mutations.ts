@@ -1,156 +1,65 @@
-/** Tanstack angular mutations.
+/** Tanstack angular mutations (not anymore, remove tanstack after this)
  */
 
-import {
-  ChatStageUpdate,
-  CreationResponse,
-  LeaderRevealStageUpdate,
-  LeaderVoteStageUpdate,
-  OnSuccess,
-  ProfileTOSData,
-  SurveyStageUpdate,
-} from '@llm-mediation-experiments/utils';
-import { QueryClient, injectMutation } from '@tanstack/angular-query-experimental';
-import {
-  createExperimentCallable,
-  createTemplateCallable,
-  deleteExperimentCallable,
-  discussItemsMessageCallable,
-  mediatorMessageCallable,
-  toggleReadyToEndChatCallable,
-  updateProfileAndTOSCallable,
-  updateStageCallable,
-  userMessageCallable,
-} from './callables';
+import { ParticipantProfileBase } from '@llm-mediation-experiments/utils';
 
-export const deleteExperimentMutation = (client: QueryClient) =>
-  injectMutation(() => ({
-    mutationFn: (experimentId: string) => deleteExperimentCallable({ experimentId }),
-    onSuccess: () => {
-      client.refetchQueries({ queryKey: ['experiments'] });
-    },
-  }));
-
-export const createExperimentMutation = (
-  client: QueryClient,
-  onSuccess?: OnSuccess<CreationResponse>,
-) => {
-  return injectMutation(() => ({
-    mutationFn: createExperimentCallable,
-    onSuccess: (data) => {
-      client.refetchQueries({ queryKey: ['experiments'] });
-      onSuccess?.(data);
-    },
-  }));
-};
-
-export const createTemplateMutation = (
-  client: QueryClient,
-  onSuccess?: OnSuccess<CreationResponse>,
-) => {
-  return injectMutation(() => ({
-    mutationFn: createTemplateCallable,
-    onSuccess: (data) => {
-      client.refetchQueries({ queryKey: ['templates'] });
-      onSuccess?.(data);
-    },
-  }));
-};
+// TODO: put all these functions in the relevant repositories instead !
 
 // ********************************************************************************************* //
-//                                         STAGE MUTATIONS                                       //
+//                                             DELETE                                            //
 // ********************************************************************************************* //
 
-export const updateProfileAndTOSMutation = (
-  client: QueryClient,
-  onSuccess?: OnSuccess<ProfileTOSData>,
-) => {
-  return injectMutation(() => ({
-    mutationFn: updateProfileAndTOSCallable,
-    onSuccess: (data) => {
-      client.refetchQueries({ queryKey: ['participant', data.uid] });
-      onSuccess?.(data);
-    },
-  }));
-};
+import { deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { firestore } from './firebase';
 
-export const updateSurveyStageMutation = (
-  client: QueryClient,
-  onSuccess?: OnSuccess<{ uid: string }>,
-) => {
-  return injectMutation(() => ({
-    mutationFn: (data: SurveyStageUpdate) => updateStageCallable(data),
-    onSuccess: (data) => {
-      client.refetchQueries({ queryKey: ['participant', data.uid] });
-      onSuccess?.(data);
-    },
-  }));
-};
+/** Delete an experiment.
+ * @rights Experimenter
+ */
+export const deleteExperiment = (experimentId: string) =>
+  deleteDoc(doc(firestore, 'experiments', experimentId));
 
-export const updateChatStageMutation = (
-  client: QueryClient,
-  onSuccess?: OnSuccess<{ uid: string }>,
-) => {
-  return injectMutation(() => ({
-    mutationFn: (data: ChatStageUpdate) => updateStageCallable(data),
-    onSuccess: (data) => {
-      client.refetchQueries({ queryKey: ['participant', data.uid] });
-      onSuccess?.(data);
-    },
-  }));
-};
-
-export const updateLeaderVoteStageMutation = (
-  client: QueryClient,
-  onSuccess?: OnSuccess<{ uid: string }>,
-) => {
-  return injectMutation(() => ({
-    mutationFn: (data: LeaderVoteStageUpdate) => updateStageCallable(data),
-    onSuccess: (data) => {
-      client.refetchQueries({ queryKey: ['participant', data.uid] });
-      onSuccess?.(data);
-    },
-  }));
-};
-
-export const updateLeaderRevealStageMutation = (
-  client: QueryClient,
-  onSuccess?: OnSuccess<{ uid: string }>,
-) => {
-  return injectMutation(() => ({
-    mutationFn: (data: LeaderRevealStageUpdate) => updateStageCallable(data),
-    onSuccess: (data) => {
-      client.refetchQueries({ queryKey: ['participant', data.uid] });
-      onSuccess?.(data);
-    },
-  }));
-};
+/** Delete a template.
+ * @rights Experimenter
+ */
+export const deleteTemplate = (templateId: string) =>
+  deleteDoc(doc(firestore, 'templates', templateId));
 
 // ********************************************************************************************* //
-//                                         MESSAGE MUTATIONS                                     //
+//                                               CHAT                                            //
 // ********************************************************************************************* //
 
-export const userMessageMutation = () => {
-  return injectMutation(() => ({
-    mutationFn: userMessageCallable,
-  }));
-};
+/** Mark the given participant as ready to end the chat, or to go to the next pair
+ * @rights Participant
+ */
+export const markReadyToEndChat = (experimentId: string, participantId: string, chatId: string) =>
+  updateDoc(
+    doc(firestore, 'experiments', experimentId, 'participants', participantId, 'chats', chatId),
+    {
+      readyToEndChat: true,
+    },
+  );
 
-export const discussItemMessageMutation = () => {
-  return injectMutation(() => ({
-    mutationFn: discussItemsMessageCallable,
-  }));
-};
+// ********************************************************************************************* //
+//                                         PROFILE & TOS                                         //
+// ********************************************************************************************* //
 
-export const mediatorMessageMutation = () => {
-  return injectMutation(() => ({
-    mutationFn: mediatorMessageCallable,
-  }));
-};
+/** Update a participant's profile and acceptance of TOS.
+ * @rights Participant
+ */
+export const updateTOSAndProfile = (
+  experimentId: string,
+  participantId: string,
+  data: Partial<ParticipantProfileBase>,
+) => updateDoc(doc(firestore, 'experiments', experimentId, 'participants', participantId), data);
 
-// Chat toggle mutation
-export const toggleChatMutation = () => {
-  return injectMutation(() => ({
-    mutationFn: toggleReadyToEndChatCallable,
-  }));
-};
+// ********************************************************************************************* //
+//                                             STAGES                                            //
+// ********************************************************************************************* //
+
+/** Update a participant's `workingOnStageName`
+ * @rights Participant
+ */
+export const workOnStage = (experimentId: string, participantId: string, stageName: string) =>
+  updateDoc(doc(firestore, 'experiments', experimentId, 'participants', participantId), {
+    workingOnStageName: stageName,
+  });

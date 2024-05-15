@@ -2,8 +2,12 @@ import {
   ChatKind,
   PublicChatData,
   PublicStageData,
+  StageAnswer,
   StageConfig,
   StageKind,
+  VoteForLeaderStagePublicData,
+  allVoteScores,
+  chooseLeader,
 } from '@llm-mediation-experiments/utils';
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { app } from '../app';
@@ -57,5 +61,41 @@ export const initializePublicStageData = onDocumentWritten(
   },
 );
 
-// TODO: publish stage data when a user votes or chats
-// for VoteForLeader stages, also decide on the current leader after each incremental vote.
+/** When a participant updates stage answers, publish the answers to  */
+export const publishStageData = onDocumentWritten(
+  'experiment/{experimentId}/participants/{participantId}/stages/{stageName}',
+  async (event) => {
+    const data = event.data?.after.data() as StageAnswer | undefined;
+    if (!data) return;
+
+    const { experimentId, participantId, stageName } = event.params;
+
+    switch (data.kind) {
+      case StageKind.VoteForLeader:
+        // Read the document 1st to avoid 2 writes
+        const publicDoc = await app
+          .firestore()
+          .doc(`experiments/${experimentId}/publicStageData/${stageName}`)
+          .get();
+        const publicData = publicDoc.data() as VoteForLeaderStagePublicData;
+
+        // Compute the updated votes
+        const newVotes = publicData.participantvotes;
+        newVotes[participantId] = data.votes;
+
+        // Compute the new leader with these votes
+        const currentLeader = chooseLeader(allVoteScores(newVotes));
+
+        // Update the public data
+        await publicDoc.ref.update({
+          participantvotes: newVotes,
+          currentLeader,
+        });
+
+        break;
+      case StageKind.TakeSurvey:
+        // Nothing to publish
+        break;
+    }
+  },
+);

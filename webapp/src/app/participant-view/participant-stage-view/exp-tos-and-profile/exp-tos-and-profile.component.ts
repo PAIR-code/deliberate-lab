@@ -16,11 +16,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatRadioModule } from '@angular/material/radio';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
 
-import { ProfileTOSData, StageKind, UnifiedTimestamp } from '@llm-mediation-experiments/utils';
+import { StageKind, UnifiedTimestamp } from '@llm-mediation-experiments/utils';
 import { Timestamp } from 'firebase/firestore';
 import { CastViewingStage, ParticipantService } from 'src/app/services/participant.service';
-import { updateProfileAndTOSMutation } from 'src/lib/api/mutations';
-import { MutationType } from 'src/lib/types/tanstack.types';
+import { updateTOSAndProfile } from 'src/lib/api/mutations';
 
 enum Pronouns {
   HeHim = 'He/Him',
@@ -60,12 +59,9 @@ export class ExpTosAndProfileComponent {
   http = inject(HttpClient);
   queryClient = injectQueryClient();
 
-  profileMutation: MutationType<ProfileTOSData | null | undefined, ProfileTOSData>;
   value = ''; // Custom pronouns input value
 
-  constructor(participantService: ParticipantService) {
-    this.profileMutation = updateProfileAndTOSMutation(this.queryClient);
-
+  constructor(public participantService: ParticipantService) {
     // Refresh the form data when the participant profile changes
     effect(() => {
       const profile = participantService.participant()?.profile();
@@ -100,6 +96,12 @@ export class ExpTosAndProfileComponent {
   }
 
   nextStep() {
-    // TODO: refactor with new backend
+    updateTOSAndProfile(
+      this.participantService.experimentId()!,
+      this.participantService.participantId()!,
+      this.profileFormControl.value,
+    );
+
+    // TODO: naviguate to next stage on success, after editing "viewing stage", on success of it
   }
 }

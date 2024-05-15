@@ -2,6 +2,46 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ***************************************************************************************** //
+    //                                     VALIDATION FUNCTIONS                                  //
+    // ***************************************************************************************** //
+
+    function validateString(value) {
+      return value is string;
+    }
+
+    function validateInt(value) {
+      return value is int
+    }
+
+    function validateFloat(value) {
+      return value is int || value is float;
+    }
+
+    function validateTimestamp(value) {
+      return value.keys().hasAll(['seconds', 'nanoseconds']) &&
+        validateNumber(value.seconds) &&
+        validateNumber(value.nanoseconds);
+    }
+
+    // Validate the profile
+    function validateProfile(value) {
+      return value.keys().hasOnly(['pronouns', 'avatarUrl', 'name', 'acceptTosTimestamp']) &&
+        (!value.pronouns || validateString(value.pronouns)) &&
+        (!value.avatarUrl || validateString(value.avatarUrl)) &&
+        (!value.name || validateString(value.name)) &&
+        (!value.acceptTosTimestamp || validateTimestamp(value.acceptTosTimestamp));
+    }
+
+    // Validate the chat document data
+    function validateChat(value) {
+      return value.keys().hasOnly(['readyToEndChat']) && value.readyToEndChat == false;
+    }
+
+    // ***************************************************************************************** //
+    //                                            RULES                                          //
+    // ***************************************************************************************** //
+
     // Template rules (experimenter-only)
     match /templates/{documents=**} {
       allow read: if request.auth.token.role == 'experimenter';
@@ -27,9 +67,10 @@ service cloud.firestore {
 
       // Participant rules
       match /participants/{participantId} {
+
         allow get: if true; // Public if you know the ID
         allow list: if request.auth.token.role == 'experimenter'; // Avoid leaking IDs (only experimenters can view them)
-        allow update: if true; // TODO: contentn validation on write
+        allow update: if validateProfile(request.resource.data);
 
         match /stages/{stageId} {
           allow read: if true;
@@ -37,7 +78,8 @@ service cloud.firestore {
         }
 
         match /chats/{chatId} {
-          allow read, update: if true; // TODO: content validation on write
+          allow read: if true;
+          allow update: if validateChat(request.resource.data);
         
           match /messages/{messageId} {
             allow read: if true;

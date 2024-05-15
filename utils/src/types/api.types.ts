@@ -30,14 +30,6 @@ export interface TemplateCreationData {
   stageMap: Record<string, StageConfig>;
 }
 
-export interface ProfileTOSData extends Progression {
-  uid: string;
-  name: string;
-  pronouns: string;
-  avatarUrl: string;
-  acceptTosTimestamp: string;
-}
-
 export interface ChatToggleUpdate {
   readyToEndChat: boolean;
   participantId: string;
@@ -59,13 +51,7 @@ export type SurveyStageUpdate = GenericStageUpdate<{
   questions: QuestionAnswer[];
 }>;
 
-export type ChatStageUpdate = GenericStageUpdate<{
-  readyToEndChat: boolean;
-}>;
-
 export type LeaderVoteStageUpdate = GenericStageUpdate<Votes>;
-
-export type LeaderRevealStageUpdate = GenericStageUpdate<undefined>;
 
 // Helper for Timestamp (make it work between admin & sdk)
 // Packages firebase-admin/firestore and firebase/firestore use different Timestamp types

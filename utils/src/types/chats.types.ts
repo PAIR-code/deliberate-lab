@@ -26,7 +26,7 @@ export type ChatConfig = ChatAboutItemsConfig;
 //                                            ANSWERS                                            //
 // ********************************************************************************************* //
 
-/** Per-participant chat config */
+/** Per-participant chat config (stored in the participant chat document and not the chat stage answers) */
 export interface ChatAnswer {
   readyToEndChat: boolean;
 

@@ -75,6 +75,7 @@ Create the configuration files for a default firebase project:
 ```bash
 cp .firebaserc.example .firebaserc
 cp webapp/src/lib/api/firebase-config.example.ts webapp/src/lib/api/firebase-config.ts
+cp scripts/service-account.example.json scripts/service-account.json
 ```
 
 This should be enough for local development with emulators. Before deploying to production, be sure to:

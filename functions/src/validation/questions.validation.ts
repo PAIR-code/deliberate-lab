@@ -1,103 +1,99 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/** Validation for the questions */
+import { SurveyQuestionKind } from '@llm-mediation-experiments/utils';
+import { Type } from '@sinclair/typebox';
+import { ItemData } from './items.validation';
 
-import { Type, type Static } from '@sinclair/typebox';
-import { Value } from '@sinclair/typebox/value';
-
-// Copied from questions.types.ts
-export enum SurveyQuestionKind {
-  Text = 'TextQuestion',
-  Check = 'CheckQuestion',
-  Rating = 'RatingQuestion',
-  Scale = 'ScaleQuestion',
-}
+/** Shorthand for strict TypeBox object validation */
+const strict = { additionalProperties: false } as const;
 
 // ********************************************************************************************* //
-//                                         DEFINITIONS                                           //
+//                                              CONFIGS                                          //
 // ********************************************************************************************* //
 
-// Text Question
-
-export const TextQuestionUpdate = Type.Object(
+/** Text question config */
+export const TextQuestionConfigData = Type.Object(
   {
-    answerText: Type.String(),
+    kind: Type.Literal(SurveyQuestionKind.Text),
+    id: Type.Number(),
+    questionText: Type.String({ minLength: 1 }),
   },
-  { additionalProperties: false },
+  strict,
 );
 
-export type TextQuestionUpdate = Static<typeof TextQuestionUpdate>;
-
-// Check Question
-
-export const CheckQuestionUpdate = Type.Object(
+/** Check question config */
+export const CheckQuestionConfigData = Type.Object(
   {
+    kind: Type.Literal(SurveyQuestionKind.Check),
+    id: Type.Number(),
+    questionText: Type.String({ minLength: 1 }),
+  },
+  strict,
+);
+
+/** Rating question config */
+export const RatingQuestionConfigData = Type.Object(
+  {
+    kind: Type.Literal(SurveyQuestionKind.Rating),
+    id: Type.Number(),
+    questionText: Type.String({ minLength: 1 }),
+    item1: ItemData,
+    item2: ItemData,
+  },
+  strict,
+);
+
+/** Scale question config */
+export const ScaleQuestionConfigData = Type.Object(
+  {
+    kind: Type.Literal(SurveyQuestionKind.Scale),
+    id: Type.Number(),
+    questionText: Type.String({ minLength: 1 }),
+    upperBound: Type.String({ minLength: 1 }),
+    lowerBound: Type.String({ minLength: 1 }),
+  },
+  strict,
+);
+
+// ********************************************************************************************* //
+//                                              ANSWERS                                          //
+// ********************************************************************************************* //
+
+/** Text question answer data */
+export const TextQuestionAnswerData = Type.Object(
+  {
+    kind: Type.Literal(SurveyQuestionKind.Text),
+    id: Type.Number(),
+    answerText: Type.String({ minLength: 1 }),
+  },
+  strict,
+);
+
+/** Check question answer data */
+export const CheckQuestionAnswerData = Type.Object(
+  {
+    kind: Type.Literal(SurveyQuestionKind.Check),
+    id: Type.Number(),
     checkMark: Type.Boolean(),
   },
-  { additionalProperties: false },
+  strict,
 );
 
-export type CheckQuestionUpdate = Static<typeof CheckQuestionUpdate>;
-
-// Rating Question
-
-export const RatingQuestionUpdate = Type.Object(
+/** Rating question answer data */
+export const RatingQuestionAnswerData = Type.Object(
   {
-    choice: Type.String(),
+    kind: Type.Literal(SurveyQuestionKind.Rating),
+    id: Type.Number(),
+    choice: ItemData,
     confidence: Type.Number({ minimum: 0, maximum: 1 }),
   },
-  { additionalProperties: false },
+  strict,
 );
 
-export type RatingQuestionUpdate = Static<typeof RatingQuestionUpdate>;
-
-// Scale Question
-
-export const ScaleQuestionUpdate = Type.Object(
+/** Scale question answer data */
+export const ScaleQuestionAnswerData = Type.Object(
   {
+    kind: Type.Literal(SurveyQuestionKind.Scale),
+    id: Type.Number(),
     score: Type.Number({ minimum: 0, maximum: 10 }),
   },
-  { additionalProperties: false },
+  strict,
 );
-
-export type ScaleQuestionUpdate = Static<typeof ScaleQuestionUpdate>;
-
-// ********************************************************************************************* //
-//                                             UTILS                                             //
-// ********************************************************************************************* //
-
-/** Merge incoming update with the question data in place.
- *
- * @param question Existing question data from database
- * @param data Incoming update data from the request
- * @returns true if the update is valid and the merge was successful, false otherwise
- */
-export const validateQuestionUpdateAndMerge = (question: any, data: any): boolean => {
-  let valid = false;
-
-  switch (question.kind as SurveyQuestionKind) {
-    case SurveyQuestionKind.Text:
-      valid = Value.Check(TextQuestionUpdate, data);
-      break;
-    case SurveyQuestionKind.Check:
-      valid = Value.Check(CheckQuestionUpdate, data);
-      break;
-
-    case SurveyQuestionKind.Rating:
-      valid = Value.Check(RatingQuestionUpdate, data);
-      break;
-
-    case SurveyQuestionKind.Scale:
-      valid = Value.Check(ScaleQuestionUpdate, data);
-      break;
-
-    default:
-      valid = false;
-  }
-
-  if (!valid) return false;
-
-  // Merge the data in place
-  Object.assign(question, data);
-
-  return true;
-};

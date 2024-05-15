@@ -17,7 +17,8 @@ export type ItemChoice = keyof ItemPair;
 //                                             ITEMS                                             //
 // ********************************************************************************************* //
 
-export type ItemName = 'compas' | 'blanket' | 'lighter';
+export const ITEM_NAMES = ['blanket', 'compas', 'lighter'] as const;
+export type ItemName = (typeof ITEM_NAMES)[number];
 export const ITEMS: Record<ItemName, Item> = {
   blanket: {
     name: 'blanket',

@@ -11,9 +11,8 @@ import {
   StageKind,
   isOfKind,
 } from '@llm-mediation-experiments/utils';
-import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { AppStateService } from 'src/app/services/app-state.service';
-import { deleteExperimentMutation } from 'src/lib/api/mutations';
+import { deleteExperiment } from 'src/lib/api/mutations';
 import { ExperimentRepository } from 'src/lib/repositories/experiment.repository';
 import { MediatorChatComponent } from '../mediator-chat/mediator-chat.component';
 
@@ -34,9 +33,6 @@ import { MediatorChatComponent } from '../mediator-chat/mediator-chat.component'
   styleUrl: './experiment-monitor.component.scss',
 })
 export class ExperimentMonitorComponent {
-  // Experiment deletion mutation
-  rmExperiment = deleteExperimentMutation(injectQueryClient());
-
   public _experimentId: WritableSignal<string | undefined> = signal(undefined);
 
   @Input()
@@ -80,13 +76,13 @@ export class ExperimentMonitorComponent {
     );
   }
 
-  deleteExperiment() {
+  deleteExperimentAndNavigate() {
     const experimentUid = this.experimentId();
     if (experimentUid && confirm('⚠️ This will delete the experiment! Are you sure?')) {
-      this.rmExperiment.mutate(experimentUid);
-
-      // Redirect to settings page.
-      this.router.navigate(['/experimenter', 'settings']);
+      deleteExperiment(experimentUid).then(() => {
+        // Redirect to settings page.
+        this.router.navigate(['/experimenter', 'settings']);
+      });
     }
   }
 }

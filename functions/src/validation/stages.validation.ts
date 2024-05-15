@@ -1,122 +1,147 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/** Validation for stage updates */
-
+import { StageKind, Vote } from '@llm-mediation-experiments/utils';
 import { Type, type Static } from '@sinclair/typebox';
-import { Value } from '@sinclair/typebox/value';
-import { PROGRESSION } from './participants.validation';
-import { validateQuestionUpdateAndMerge } from './questions.validation';
+import { ChatAboutItemsConfigData } from './chats.validation';
+import {
+  CheckQuestionAnswerData,
+  CheckQuestionConfigData,
+  RatingQuestionAnswerData,
+  RatingQuestionConfigData,
+  ScaleQuestionAnswerData,
+  ScaleQuestionConfigData,
+  TextQuestionAnswerData,
+  TextQuestionConfigData,
+} from './questions.validation';
 
-// Generic definition
+/** Shorthand for strict TypeBox object validation */
+const strict = { additionalProperties: false } as const;
 
-// Copied from stages.types.ts
-export enum StageKind {
-  AcceptTosAndSetProfile = 'acceptTosAndSetProfile',
-  GroupChat = 'groupChat',
-  VoteForLeader = 'voteForLeader',
-  RevealVoted = 'leaderReveal',
-  TakeSurvey = 'takeSurvey',
-  // RankItems = 'rankItems',
-}
+// ********************************************************************************************* //
+//                                              CONFIGS                                          //
+// ********************************************************************************************* //
 
-export const GenericStageUpdate = Type.Object(
+/** Terms of service stage config */
+export const TermsOfServiceConfigData = Type.Object(
   {
-    name: Type.String(), // Stage name
-    data: Type.Any(), // Data to update
-    ...PROGRESSION,
+    kind: Type.Literal(StageKind.TermsOfService),
+    name: Type.String({ minLength: 1 }),
+    tosLines: Type.Array(Type.String({ minLength: 1 })),
   },
-  { additionalProperties: false },
+  strict,
 );
 
-export type GenericStageUpdate = Static<typeof GenericStageUpdate>;
-
-export const ToggleReadyToEndChat = Type.Object(
+/** Profile stage config */
+export const ProfileStageConfigData = Type.Object(
   {
-    readyToEndChat: Type.Boolean(),
-    chatId: Type.String(),
+    kind: Type.Literal(StageKind.Profile),
+    name: Type.String({ minLength: 1 }),
   },
-  { additionalProperties: false },
+  strict,
 );
 
-export type ToggleReadyToEndChat = Static<typeof ToggleReadyToEndChat>;
+/** Accept TOS and set profile stage config */
+export const TOSAndProfileConfigData = Type.Object(
+  {
+    kind: Type.Literal(StageKind.AcceptTosAndSetProfile),
+    name: Type.String({ minLength: 1 }),
+    tosLines: Type.Array(Type.String({ minLength: 1 })),
+  },
+  strict,
+);
+
+/** Survey stage config */
+export const SurveyStageConfigData = Type.Object(
+  {
+    kind: Type.Literal(StageKind.TakeSurvey),
+    name: Type.String({ minLength: 1 }),
+    questions: Type.Array(
+      Type.Union([
+        TextQuestionConfigData,
+        CheckQuestionConfigData,
+        RatingQuestionConfigData,
+        ScaleQuestionConfigData,
+      ]),
+    ),
+  },
+  strict,
+);
+
+/** Group chat stage config */
+export const GroupChatStageConfigData = Type.Object(
+  {
+    kind: Type.Literal(StageKind.GroupChat),
+    name: Type.String({ minLength: 1 }),
+    chatId: Type.String({ minLength: 1 }),
+    chatConfig: Type.Union([ChatAboutItemsConfigData]),
+  },
+  strict,
+);
+
+/** Vote for leader stage config */
+export const VoteForLeaderConfigData = Type.Object(
+  {
+    kind: Type.Literal(StageKind.VoteForLeader),
+    name: Type.String({ minLength: 1 }),
+  },
+  strict,
+);
+
+/** Reveal leader after vote stage config */
+export const RevealVotedConfigData = Type.Object(
+  {
+    kind: Type.Literal(StageKind.RevealVoted),
+    name: Type.String({ minLength: 1 }),
+    pendingVoteStageName: Type.String({ minLength: 1 }),
+  },
+  strict,
+);
 
 // ********************************************************************************************* //
-//                                         DEFINITIONS                                           //
+//                                              ANSWERS                                          //
 // ********************************************************************************************* //
 
-const SurveyUpdate = Type.Object({
-  questions: Type.Array(Type.Any()),
-});
+/** Survey stage answer data */
+export const SurveyStageAnswerData = Type.Object(
+  {
+    kind: Type.Literal(StageKind.TakeSurvey),
+    answers: Type.Record(
+      Type.Number({ minimum: 0 }),
+      Type.Union([
+        TextQuestionAnswerData,
+        CheckQuestionAnswerData,
+        RatingQuestionAnswerData,
+        ScaleQuestionAnswerData,
+      ]),
+    ),
+  },
+  strict,
+);
 
-const ChatUpdate = Type.Object({
-  readyToEndChat: Type.Boolean(),
-});
+/** Vote for leader stage answer data */
+export const VoteForLeaderStageAnswerData = Type.Object(
+  {
+    kind: Type.Literal(StageKind.VoteForLeader),
+    votes: Type.Record(
+      Type.String({ minLength: 1 }),
+      Type.Union([
+        Type.Literal(Vote.Positive),
+        Type.Literal(Vote.Neutral),
+        Type.Literal(Vote.Negative),
+        Type.Literal(Vote.NotRated),
+      ]),
+    ),
+  },
+  strict,
+);
 
-const VoteUpdate = Type.Record(Type.String(), Type.String());
+/** Stage answer data */
+export const StageAnswerData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    participantId: Type.String({ minLength: 1 }),
+    stageName: Type.String({ minLength: 1 }),
+    stage: Type.Union([SurveyStageAnswerData, VoteForLeaderStageAnswerData]),
+  },
+  strict,
+);
 
-type SurveyUpdate = Static<typeof SurveyUpdate>;
-
-type ChatUpdate = Static<typeof ChatUpdate>;
-
-type VoteUpdate = Static<typeof VoteUpdate>;
-
-// ********************************************************************************************* //
-//                                             UTILS                                             //
-// ********************************************************************************************* //
-
-/** Merges incoming update with the stage data in place.
- *
- * @param stage Existing stage data from database
- * @param data Incoming update data from the request
- * @returns true if the update is valid and the merge was successful, false otherwise
- */
-export const validateStageUpdateAndMerge = (stage: any, data: any): boolean => {
-  switch (stage.kind as StageKind) {
-    case StageKind.TakeSurvey:
-      return validateSurveyUpdateAndMerge(stage, data);
-
-    case StageKind.GroupChat:
-      return validateChatUpdateAndMerge(stage, data);
-
-    case StageKind.VoteForLeader:
-      return validateVoteUpdateAndMerge(stage, data);
-
-    case StageKind.RevealVoted:
-      return validateLeaderRevealAndMerge(stage, data);
-    default:
-      return false;
-  }
-};
-
-const validateSurveyUpdateAndMerge = (stage: any, data: any): boolean => {
-  if (Value.Check(SurveyUpdate, data)) {
-    data.questions.forEach((questionUpdate, index) => {
-      validateQuestionUpdateAndMerge(stage.config.questions[index], questionUpdate);
-    });
-
-    return true;
-  }
-  return false;
-};
-
-const validateChatUpdateAndMerge = (stage: any, data: any): boolean => {
-  if (Value.Check(ChatUpdate, data)) {
-    stage.config.readyToEndChat = true;
-    return true;
-  }
-  return false;
-};
-
-const validateVoteUpdateAndMerge = (stage: any, data: any): boolean => {
-  if (Value.Check(VoteUpdate, data)) {
-    stage.config.votes = data;
-    return true;
-  }
-  return false;
-};
-
-const validateLeaderRevealAndMerge = (stage: any, data: any): boolean => {
-  if (data === null) {
-    return true;
-  }
-  return false;
-};
+export type StageAnswerData = Static<typeof StageAnswerData>;

@@ -16,6 +16,7 @@ import { ITEMS, ItemPair, StageKind, getDefaultItemPair } from '@llm-mediation-e
 
 import { AppStateService } from 'src/app/services/app-state.service';
 import { CastViewingStage, ParticipantService } from 'src/app/services/participant.service';
+import { markReadyToEndChat } from 'src/lib/api/mutations';
 import { ChatRepository } from 'src/lib/repositories/chat.repository';
 import { localStorageTimer, subscribeSignal } from 'src/lib/utils/angular.utils';
 import { ChatDiscussItemsMessageComponent } from './chat-discuss-items-message/chat-discuss-items-message.component';
@@ -67,6 +68,8 @@ export class ExpChatComponent {
         participantId: this.participantService.participantId()!,
       });
 
+      this.readyToEndChat = computed(() => this.chat?.chat()?.readyToEndChat ?? false);
+
       // Initialize the current rating to discuss with the first available pair
       const { item1, item2 } = config.chatConfig.ratingsToDiscuss[0];
       this.currentRatingsToDiscuss = signal({ item1, item2 });
@@ -77,7 +80,7 @@ export class ExpChatComponent {
   }
 
   public everyoneReachedTheChat: Signal<boolean>;
-  public readyToEndChat = signal(false);
+  public readyToEndChat: Signal<boolean> = signal(false);
 
   // Extracted stage data (needed ?)
   public currentRatingsToDiscuss: WritableSignal<ItemPair>;
@@ -116,17 +119,14 @@ export class ExpChatComponent {
 
   toggleEndChat() {
     if (this.readyToEndChat()) return;
-    // TODO: use new backend
-    // this.toggleMutation.mutate({
-    //   chatId: this.stage.config.chatId,
-    //   participantId: this.participant.userData()!.uid,
-    //   readyToEndChat: true,
-    // });
+
+    markReadyToEndChat(
+      this.participantService.experimentId()!,
+      this.participantService.participantId()!,
+      this.stage.config().chatId,
+    );
 
     this.message.disable();
     this.timer.remove();
   }
 }
-
-// TODO: faire fonctionner le reste du html, puis go courses.
-// ensuite yaura les petits "sous-messages" à voir.
