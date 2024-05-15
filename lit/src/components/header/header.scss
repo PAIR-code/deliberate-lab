@@ -1,0 +1,63 @@
+@use "../../sass/colors";
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  background: var(--md-sys-color-surface-variant);
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  left: common.$sidenav-width;
+  padding-top: common.$sidenav-padding;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 1;
+}
+
+@include common.viewport-small {
+  :host {
+    left: 0;
+  }
+}
+
+.header {
+  @include common.flex-row-align-center;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  box-sizing: border-box;
+  gap: common.$spacing-medium;
+  height: common.$header-height;
+  justify-content: space-between;
+  max-width: common.$main-content-max-width;
+  padding: 0 common.$main-content-padding;
+  width: 100%;
+
+  .left,
+  .right {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-medium;
+  }
+}
+
+h1 {
+  @include typescale.title-large;
+  margin: 0;
+}
+
+.action-button {
+  @include common.flex-row-align-center;
+  @include typescale.label-medium;
+  border: 1px solid var(--md-sys-color-primary);
+  border-radius: common.$spacing-xxl;
+  color: var(--md-sys-color-primary);
+  cursor: pointer;
+  gap: common.$spacing-small;
+  padding: common.$spacing-medium common.$spacing-large;
+
+  &:focus,
+  &:hover {
+    --pr-icon-color: var(--md-sys-color-secondary);
+    border-color: var(--md-sys-color-secondary);
+    color: var(--md-sys-color-secondary);
+  }
+}

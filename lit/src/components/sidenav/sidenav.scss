@@ -1,0 +1,47 @@
+@use "../../sass/colors";
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+
+  background: var(--md-sys-color-surface);
+  border-right: 1px solid var(--md-sys-color-outline-variant-high);
+  flex-shrink: 0;
+  gap: common.$spacing-small;
+  padding: common.$sidenav-padding;
+  width: common.$sidenav-width;
+}
+
+@include common.viewport-small {
+  :host {
+    display: none;
+  }
+}
+
+.title {
+  @include common.flex-row-align-center;
+  @include typescale.label-large;
+  box-sizing: border-box;
+  cursor: pointer;
+  flex-shrink: 0;
+  height: common.$header-height;
+  padding: common.$spacing-medium common.$spacing-xl;
+}
+
+.nav-item {
+  @include common.nav-item;
+}
+
+.top {
+  @include common.flex-column;
+  flex-grow: 1;
+  gap: common.$spacing-small;
+  overflow: auto;
+}
+
+.bottom {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+  overflow: auto;
+}

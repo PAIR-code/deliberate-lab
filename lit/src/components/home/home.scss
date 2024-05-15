@@ -1,0 +1,6 @@
+@use "../../sass/common";
+
+:host {
+  @include common.default;
+  @include common.flex-column;
+}

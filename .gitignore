@@ -1,7 +1,7 @@
 *.log
+*.DS_Store
 .firebaserc
 node_modules/
-.DS_Store
 
 # Packed shared utils package
 llm-mediation-experiments-utils-*.tgz

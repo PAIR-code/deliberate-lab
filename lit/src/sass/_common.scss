@@ -1,0 +1,109 @@
+@use "./typescale.scss";
+@use "./colors.scss";
+
+/**
+ * Common mixins to be used across app.
+ * Note: Typescale, color mixins are defined in their own files.
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+/** Default component mixin. */
+@mixin default {
+  @include typescale.body-small;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  margin: 0;
+
+  a {
+    color: var(--md-sys-color-primary);
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+@mixin flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+@mixin flex-row-align-center {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+@mixin flex-column-align-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+@mixin overflow-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@mixin full-percentage {
+  width: 100%;
+  height: 100%;
+}
+
+@mixin nav-item {
+  align-items: center;
+  border-radius: 100px;
+  color: var(--md-sys-color-on-secondary-container);
+  display: flex;
+  gap: 10px;
+  padding: 12px 24px;
+
+  &:focus,
+  &:hover {
+    background: var(--md-sys-color-secondary-container-low);
+    cursor: pointer;
+  }
+
+  &.selected {
+    background: var(--md-sys-color-secondary-container);
+  }
+
+  pr-icon {
+    --pr-icon-color: var(--md-sys-color-on-secondary-container);
+  }
+}
+
+@mixin viewport-small {
+  @media screen and (max-width: 720px) {
+    @content;
+  }
+}
+
+@mixin viewport-xsmall {
+  @media screen and (max-width: 440px) {
+    @content;
+  }
+}
+
+/** Constants. */
+$spacing-xs: 2px;
+$spacing-small: 4px;
+$spacing-medium: 8px;
+$spacing-large: 12px;
+$spacing-xl: 16px;
+$spacing-xxl: 24px;
+
+$header-height: 44px;
+$main-content-max-width: 720px;
+$main-content-padding: $spacing-xl;
+$sidenav-padding: $spacing-large;
+$sidenav-width: 240px;
