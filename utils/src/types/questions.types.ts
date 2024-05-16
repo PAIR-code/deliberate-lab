@@ -15,7 +15,7 @@ export enum SurveyQuestionKind {
 
 interface BaseQuestionConfig {
   kind: SurveyQuestionKind;
-  id: number;
+  id: number; // Note that the question id is not related to the question's position in the survey
   questionText: string;
 }
 

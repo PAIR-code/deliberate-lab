@@ -79,12 +79,7 @@
       I accept the terms of service
     </mat-checkbox>
   </form>
-  <button
-    color="primary"
-    [disabled]="!profileFormControl.valid || profileMutation.isPending()"
-    (click)="nextStep()"
-    mat-button
-  >
+  <button color="primary" [disabled]="!profileFormControl.valid" (click)="nextStep()" mat-button>
     Next step
   </button>
 </div>

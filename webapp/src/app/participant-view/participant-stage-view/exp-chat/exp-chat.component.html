@@ -26,11 +26,11 @@
     <div class="messages">
       @for (message of chat?.messages(); track $index) {
         <div class="message">
-          @if (message.messageType === 'userMessage') {
+          @if (message.kind === 'userMessage') {
             <app-chat-user-message [message]="message"></app-chat-user-message>
-          } @else if (message.messageType === 'mediatorMessage') {
+          } @else if (message.kind === 'mediatorMessage') {
             <app-chat-mediator-message [message]="message"></app-chat-mediator-message>
-          } @else if (message.messageType === 'discussItemsMessage') {
+          } @else if (message.kind === 'discussItemsMessage') {
             <app-chat-discuss-items-message
               [discussItemsMessage]="message"
             ></app-chat-discuss-items-message>

@@ -20,11 +20,7 @@
         mat-raised-button
         color="secondary"
         (click)="addTemplate()"
-        [disabled]="
-          this.experimentSetupIncomplete() ||
-          this.createTemplate.isPending() ||
-          this.createExp.isPending()
-        "
+        [disabled]="this.experimentSetupIncomplete()"
         style="margin-right: 5px"
       >
         Save as template
@@ -33,11 +29,7 @@
         mat-raised-button
         color="primary"
         (click)="addExperiment()"
-        [disabled]="
-          this.experimentSetupIncomplete() ||
-          this.createTemplate.isPending() ||
-          this.createExp.isPending()
-        "
+        [disabled]="this.experimentSetupIncomplete()"
       >
         Add new experiment
       </button>

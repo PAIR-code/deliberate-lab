@@ -60,8 +60,7 @@
     mat-raised-button
     color="warn"
     aria-label="Delete"
-    (click)="deleteExperiment()"
-    [disabled]="rmExperiment.isPending()"
+    (click)="deleteExperimentAndNavigate()"
   >
     <mat-icon>delete</mat-icon> Delete this experiment
   </button>

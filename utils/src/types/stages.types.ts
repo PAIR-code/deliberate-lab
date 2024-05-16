@@ -53,9 +53,7 @@ export interface AcceptTosAndSetProfileStageConfig extends BaseStageConfig {
 export interface SurveyStageConfig extends BaseStageConfig {
   kind: StageKind.TakeSurvey;
 
-  // Store questions in a map to allow for easy access by id.
-  // The question id is actually its index as if this was an array.
-  questions: Record<number, QuestionConfig>;
+  questions: QuestionConfig[];
 }
 
 export interface GroupChatStageConfig extends BaseStageConfig {
@@ -95,6 +93,7 @@ interface BaseStageAnswer {
 export interface SurveyStageAnswer extends BaseStageAnswer {
   kind: StageKind.TakeSurvey;
 
+  // For convenience, we store answers in a `question id` -> `answer` record
   answers: Record<number, QuestionAnswer>;
 }
 

@@ -6,12 +6,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import {
   GroupChatStageConfig,
+  MessageKind,
   ParticipantProfileExtended,
   lookupTable,
 } from '@llm-mediation-experiments/utils';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { VertexApiService } from 'src/app/services/vertex-api.service';
-import { mediatorMessageMutation } from 'src/lib/api/mutations';
 import { ChatRepository } from 'src/lib/repositories/chat.repository';
 import { FewShotTemplate } from 'src/lib/text-templates/fewshot_template';
 import { preparePalm2Request, sendPalm2Request } from 'src/lib/text-templates/llm_vertexapi_palm2';
@@ -53,7 +53,6 @@ export class MediatorChatComponent {
   public chatRepository: Signal<ChatRepository | undefined> = signal(undefined);
 
   // Message mutation & form
-  public messageMutation = mediatorMessageMutation();
   public message = new FormControl<string>('', Validators.required);
 
   public defaultPrefix: string =
@@ -86,10 +85,7 @@ export class MediatorChatComponent {
   sendMessage() {
     if (!this.message.valid) return;
 
-    this.messageMutation.mutate({
-      chatId: this.chatConfig()!.chatId,
-      text: this.message.value!,
-    });
+    // TODO: use new backend
     this.message.setValue('');
   }
 
@@ -131,7 +127,7 @@ ${this.suffix}`;
         .map((m) => ({
           message: m.text,
           username:
-            m.messageType === 'userMessage'
+            m.kind === MessageKind.UserMessage
               ? participantsLookup[m.fromPublicParticipantId].name ?? 'User'
               : 'Mediator',
         })) ?? [];

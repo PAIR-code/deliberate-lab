@@ -66,3 +66,25 @@ export const mergeByKey = <T extends object, K extends Indexable<T>>(
     ...lookupTable(incomingArray, key),
   });
 };
+
+/** Converts a record into an object that allows record field merging into firestore.
+ * When updating a firestore document, you can only merge top level attributes, not values nested in object attributes.
+ * In order to merge nested values, you need to flatten the record into a single level object with keys that represent the path to the nested value.
+ *
+ * @example
+ * const firestoreData = { answers: { q1: "maybe", q2: "maybe", q3: "maybe"}}
+ * const answers = { q1: "yes", q2: "no" };  // Incoming data to be merged
+ *
+ * //    mergeableAnsers = { "answers.q1": "yes", "answers.q2": "no" };
+ * const mergeableAnsers = mergeableRecord(answers, "answers")
+ * firestoreDoc.set(mergeableAnsers, { merge: true });
+ */
+export const mergeableRecord = <K extends Index, V>(record: Record<K, V>, fieldName: string) => {
+  const result: Record<string, V> = {};
+
+  Object.entries(record).forEach(([key, value]) => {
+    result[`${fieldName}.${key}`] = value as V;
+  });
+
+  return result;
+};
