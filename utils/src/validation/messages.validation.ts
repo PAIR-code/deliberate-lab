@@ -1,5 +1,5 @@
-import { MessageKind } from '@llm-mediation-experiments/utils';
 import { Type, type Static } from '@sinclair/typebox';
+import { MessageKind } from '../types/messages.types';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = { additionalProperties: false } as const;

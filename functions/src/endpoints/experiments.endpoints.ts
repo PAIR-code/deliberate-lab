@@ -2,6 +2,7 @@
 
 import {
   ChatAnswer,
+  ExperimentCreationData,
   GroupChatStageConfig,
   ParticipantProfile,
   StageKind,
@@ -13,7 +14,6 @@ import * as functions from 'firebase-functions';
 import { onCall } from 'firebase-functions/v2/https';
 import { app } from '../app';
 import { AuthGuard } from '../utils/auth-guard';
-import { ExperimentCreationData } from '../validation/experiments.validation';
 
 /** Generic endpoint to create either experiments or experiment templates */
 export const createExperiment = onCall(async (request) => {

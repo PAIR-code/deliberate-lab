@@ -1,9 +1,7 @@
 /** Types wrappers for the API */
 
 import type { Timestamp } from 'firebase/firestore';
-import { QuestionAnswer } from './questions.types';
 import { StageConfig } from './stages.types';
-import { Votes } from './votes.types';
 
 /** Simple response with data */
 export interface SimpleResponse<T> {
@@ -19,11 +17,6 @@ export type OnSuccess<T> = (data: T) => Promise<void> | void;
 
 export type OnError = ((error: Error, variables: string, context: unknown) => unknown) | undefined;
 
-/** Send additional stage progression information for participants. */
-export interface Progression {
-  justFinishedStageName?: string;
-}
-
 /** Data to be sent to the backend in order to generate a template */
 export interface TemplateCreationData {
   name: string;
@@ -35,23 +28,6 @@ export interface ChatToggleUpdate {
   participantId: string;
   chatId: string;
 }
-
-// ********************************************************************************************* //
-//                                        STAGE UPDATES                                          //
-// ********************************************************************************************* //
-
-/** Generic stage update data */
-export interface GenericStageUpdate<T> extends Progression {
-  uid: string; // Participant UID
-  name: string; // Stage name (unique identifier)
-  data: T;
-}
-
-export type SurveyStageUpdate = GenericStageUpdate<{
-  questions: QuestionAnswer[];
-}>;
-
-export type LeaderVoteStageUpdate = GenericStageUpdate<Votes>;
 
 // Helper for Timestamp (make it work between admin & sdk)
 // Packages firebase-admin/firestore and firebase/firestore use different Timestamp types

@@ -3,9 +3,8 @@ import { Value } from '@sinclair/typebox/value';
 import * as functions from 'firebase-functions';
 import { onCall } from 'firebase-functions/v2/https';
 import { app } from '../app';
-import { MessageData } from '../validation/messages.validation';
 
-import { MessageKind } from '@llm-mediation-experiments/utils';
+import { MessageData, MessageKind } from '@llm-mediation-experiments/utils';
 import { Timestamp } from 'firebase-admin/firestore';
 import { AuthGuard } from '../utils/auth-guard';
 
@@ -32,6 +31,8 @@ export const message = onCall(async (request) => {
         });
       });
     });
+
+    return { data: 'success' };
   }
 
   throw new functions.https.HttpsError('invalid-argument', 'Invalid data');

@@ -16,13 +16,6 @@ export interface Experiment {
   participants: Record<string, ParticipantProfile>;
 }
 
-/** Data to be sent to the backend in order to generate an experiment and its participants */
-export interface ExperimentCreationData {
-  name: string;
-  stageMap: Record<string, StageConfig>;
-  numberOfParticipants: number;
-}
-
 /** An experiment template */
 export interface ExperimentTemplate {
   id: string;

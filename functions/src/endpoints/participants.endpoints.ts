@@ -1,11 +1,15 @@
 /** Endpoints for interactions with participants */
 
-import { QuestionAnswer, StageKind, SurveyStageConfig } from '@llm-mediation-experiments/utils';
+import {
+  QuestionAnswer,
+  StageAnswerData,
+  StageKind,
+  SurveyStageConfig,
+} from '@llm-mediation-experiments/utils';
 import { Value } from '@sinclair/typebox/value';
 import * as functions from 'firebase-functions';
 import { onCall } from 'firebase-functions/v2/https';
 import { app } from '../app';
-import { StageAnswerData } from '../validation/stages.validation';
 
 /** Generic endpoint for stage answering. */
 export const updateStage = onCall(async (request) => {

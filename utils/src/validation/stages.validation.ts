@@ -1,5 +1,6 @@
-import { StageKind, Vote } from '@llm-mediation-experiments/utils';
 import { Type, type Static } from '@sinclair/typebox';
+import { StageKind } from '../types/stages.types';
+import { Vote } from '../types/votes.types';
 import { ChatAboutItemsConfigData } from './chats.validation';
 import {
   CheckQuestionAnswerData,

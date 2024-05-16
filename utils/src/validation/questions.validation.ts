@@ -1,5 +1,5 @@
-import { SurveyQuestionKind } from '@llm-mediation-experiments/utils';
 import { Type } from '@sinclair/typebox';
+import { SurveyQuestionKind } from '../types/questions.types';
 import { ItemData } from './items.validation';
 
 /** Shorthand for strict TypeBox object validation */

@@ -1,5 +1,5 @@
-import { ChatKind } from '@llm-mediation-experiments/utils';
-import { Type } from '@sinclair/typebox';
+import { Type, type Static } from '@sinclair/typebox';
+import { ChatKind } from '../types/chats.types';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = { additionalProperties: false } as const;
@@ -21,3 +21,5 @@ export const ChatAboutItemsConfigData = Type.Object(
   },
   strict,
 );
+
+export type ChatAboutItemsConfigData = Static<typeof ChatAboutItemsConfigData>;
