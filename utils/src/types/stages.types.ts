@@ -6,8 +6,7 @@ import { Votes } from './votes.types';
 
 export enum StageKind {
   TermsOfService = 'termsOfService',
-  Profile = 'profile',
-  AcceptTosAndSetProfile = 'acceptTosAndSetProfile',
+  SetProfile = 'setProfile',
   GroupChat = 'groupChat',
   VoteForLeader = 'voteForLeader',
   RevealVoted = 'leaderReveal',
@@ -21,7 +20,8 @@ export enum StageKind {
 
 /** Some stages require all participants to finish before allowing anyone to go on to the next stage */
 export const ALLOWED_STAGE_PROGRESSION = {
-  [StageKind.AcceptTosAndSetProfile]: false,
+  [StageKind.TermsOfService]: false,
+  [StageKind.SetProfile]: false,
   [StageKind.GroupChat]: false,
   [StageKind.VoteForLeader]: true,
   [StageKind.RevealVoted]: false,
@@ -41,13 +41,7 @@ export interface TermsOfServiceStageConfig extends BaseStageConfig {
 }
 
 export interface ProfileStageConfig extends BaseStageConfig {
-  kind: StageKind.Profile;
-}
-
-export interface AcceptTosAndSetProfileStageConfig extends BaseStageConfig {
-  kind: StageKind.AcceptTosAndSetProfile;
-
-  tosLines: string[];
+  kind: StageKind.SetProfile;
 }
 
 export interface SurveyStageConfig extends BaseStageConfig {
@@ -76,7 +70,6 @@ export interface RevealVotedStageConfig extends BaseStageConfig {
 export type StageConfig =
   | TermsOfServiceStageConfig
   | ProfileStageConfig
-  | AcceptTosAndSetProfileStageConfig
   | SurveyStageConfig
   | GroupChatStageConfig
   | VoteForLeaderStageConfig
@@ -135,11 +128,18 @@ export type PublicStageData = GroupChatStagePublicData | VoteForLeaderStagePubli
 //                                         DEFAULTS                                              //
 // ********************************************************************************************* //
 
-export const getDefaultTosAndUserProfileConfig = (): AcceptTosAndSetProfileStageConfig => {
+export const getDefaultTosConfig = (): TermsOfServiceStageConfig => {
   return {
-    kind: StageKind.AcceptTosAndSetProfile,
-    name: 'Accept TOS and set profile',
+    kind: StageKind.TermsOfService,
+    name: 'Accept TOS',
     tosLines: [],
+  };
+};
+
+export const getDefaultUserProfileConfig = (): ProfileStageConfig => {
+  return {
+    kind: StageKind.SetProfile,
+    name: 'Set profile',
   };
 };
 

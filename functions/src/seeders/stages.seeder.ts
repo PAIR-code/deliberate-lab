@@ -3,19 +3,25 @@ export class StagesSeeder {
   public static createMany() {
     return [
       {
-        kind: 'acceptTosAndSetProfile',
-        name: '1. Agree to the experiment and set your profile',
+        kind: 'termsOfService',
+        name: '01. Agree to the experiment',
         config: {
-          pronouns: '',
-          avatarUrl: '',
-          name: '',
           tosLines: [],
           acceptedTosTimestamp: null,
         },
       },
       {
+        kind: 'setProfile',
+        name: '02. Set your profile',
+        config: {
+          pronouns: '',
+          avatarUrl: '',
+          name: '',
+        },
+      },
+      {
         kind: 'takeSurvey',
-        name: '2. Initial leadership survey',
+        name: '03. Initial leadership survey',
         config: {
           questions: [
             {
@@ -48,7 +54,7 @@ export class StagesSeeder {
       },
       {
         kind: 'groupChat',
-        name: '3. Group discussion',
+        name: '04. Group discussion',
         config: {
           chatId: null, // To be set in order to be able to use relations in the database
           ratingsToDiscuss: [
@@ -79,7 +85,7 @@ export class StagesSeeder {
       },
       {
         kind: 'takeSurvey',
-        name: '4. Post-chat survey',
+        name: '05. Post-chat survey',
         config: {
           questions: [
             {
@@ -96,7 +102,7 @@ export class StagesSeeder {
       },
       {
         kind: 'takeSurvey',
-        name: '5. Post-discussion leadership survey',
+        name: '06. Post-discussion leadership survey',
         config: {
           questions: [
             {
@@ -110,10 +116,10 @@ export class StagesSeeder {
           ],
         },
       },
-      { kind: 'voteForLeader', name: '6. Vote for the leader', config: {} },
+      { kind: 'voteForLeader', name: '07. Vote for the leader', config: {} },
       {
         kind: 'takeSurvey',
-        name: '7. Post-discussion work',
+        name: '08. Post-discussion work',
         config: {
           questions: [
             {
@@ -138,12 +144,12 @@ export class StagesSeeder {
       },
       {
         kind: 'leaderReveal',
-        name: '8. Leader reveal',
+        name: '09. Leader reveal',
         config: { pendingVoteStageName: '6. Vote for the leader', revealTimestamp: null },
       },
       {
         kind: 'takeSurvey',
-        name: '9. final satisfaction survey',
+        name: '10. final satisfaction survey',
         config: {
           questions: [
             {

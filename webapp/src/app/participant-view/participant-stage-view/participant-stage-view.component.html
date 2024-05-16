@@ -9,12 +9,17 @@
     </h2>
     <div class="exp-stage-content">
       @switch (participantService.viewingStage()!.config().kind) {
-        @case (StageKind.AcceptTosAndSetProfile) {
-          <app-exp-tos-and-profile
+        @case (StageKind.TermsOfService) {
+          <app-exp-tos
+            [stage]="assertCast(participantService.viewingStage(), StageKind.TermsOfService)"
+          ></app-exp-tos>
+        }
+        @case (StageKind.SetProfile) {
+          <app-exp-profile
             [stage]="
-              assertCast(participantService.viewingStage(), StageKind.AcceptTosAndSetProfile)
+              assertCast(participantService.viewingStage(), StageKind.SetProfile)
             "
-          ></app-exp-tos-and-profile>
+          ></app-exp-profile>
         }
         @case (StageKind.GroupChat) {
           <app-exp-chat

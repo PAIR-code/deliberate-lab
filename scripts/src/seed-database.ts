@@ -50,7 +50,7 @@ const seedDatabase = async () => {
       const participant = experiment.collection('participants').doc();
       const profile = getDefaultProfile(
         participantPublicId(index),
-        '1. Agree to the experiment and set your profile',
+        '01. Agree to the experiment',
       );
       transaction.set(participant, profile);
 
@@ -82,9 +82,9 @@ const seedDatabase = async () => {
 // ********************************************************************************************* //
 
 const DEFAULT_STAGES: Record<string, StageConfig> = {
-  '1. Agree to the experiment and set your profile': {
-    name: '1. Agree to the experiment and set your profile',
-    kind: StageKind.AcceptTosAndSetProfile,
+  '01. Agree to the experiment': {
+    name: '01. Agree to the experiment',
+    kind: StageKind.TermsOfService,
     tosLines: [
       'You may not injure a human being or, through inaction, allow a human being to come to harm.',
       'You must obey orders given to you by human beings except where such orders would conflict with the First Law.',
@@ -92,8 +92,13 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     ],
   },
 
-  '2. Initial leadership survey': {
-    name: '2. Initial leadership survey',
+  '02. Set your profile': {
+    name: '02. Set your profile',
+    kind: StageKind.SetProfile,
+  },
+
+  '03. Initial leadership survey': {
+    name: '03. Initial leadership survey',
     kind: StageKind.TakeSurvey,
     questions: [
       {
@@ -111,8 +116,8 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     ],
   },
 
-  '3. Group discussion': {
-    name: '3. Group discussion',
+  '04. Group discussion': {
+    name: '04. Group discussion',
     kind: StageKind.GroupChat,
     chatId: 'chat-0',
     chatConfig: {
@@ -125,8 +130,8 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     },
   },
 
-  '4. Post-chat survey': {
-    name: '4. Post-chat survey',
+  '05. Post-chat survey': {
+    name: '05. Post-chat survey',
     kind: StageKind.TakeSurvey,
     questions: [
       {
@@ -139,8 +144,8 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     ],
   },
 
-  '5. Post-discussion leadership survey': {
-    name: '5. Post-discussion leadership survey',
+  '06. Post-discussion leadership survey': {
+    name: '06. Post-discussion leadership survey',
     kind: StageKind.TakeSurvey,
     questions: [
       {
@@ -152,13 +157,13 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     ],
   },
 
-  '6. Vote for the leader': {
-    name: '6. Vote for the leader',
+  '07. Vote for the leader': {
+    name: '07. Vote for the leader',
     kind: StageKind.VoteForLeader,
   },
 
-  '7. Post-discussion work': {
-    name: '7. Post-discussion work',
+  '08. Post-discussion work': {
+    name: '08. Post-discussion work',
     kind: StageKind.TakeSurvey,
     questions: [
       {
@@ -170,14 +175,14 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     ],
   },
 
-  '8. Leader reveal': {
-    name: '8. Leader reveal',
+  '09. Leader reveal': {
+    name: '09. Leader reveal',
     kind: StageKind.RevealVoted,
     pendingVoteStageName: '6. Vote for the leader',
   },
 
-  '9. final satisfaction survey': {
-    name: '9. final satisfaction survey',
+  '10. final satisfaction survey': {
+    name: '10. final satisfaction survey',
     kind: StageKind.TakeSurvey,
     questions: [
       {

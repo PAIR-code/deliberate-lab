@@ -14,8 +14,9 @@ import { ParticipantService, assertCastStageSignals } from 'src/app/services/par
 import { ExpChatComponent } from './exp-chat/exp-chat.component';
 import { ExpLeaderRevealComponent } from './exp-leader-reveal/exp-leader-reveal.component';
 import { ExpLeaderVoteComponent } from './exp-leader-vote/exp-leader-vote.component';
+import { ExpProfileComponent } from './exp-profile/exp-profile.component';
 import { ExpSurveyComponent } from './exp-survey/exp-survey.component';
-import { ExpTosAndProfileComponent } from './exp-tos-and-profile/exp-tos-and-profile.component';
+import { ExpTosComponent } from './exp-tos/exp-tos.component';
 
 @Component({
   selector: 'app-participant-stage-view',
@@ -24,7 +25,8 @@ import { ExpTosAndProfileComponent } from './exp-tos-and-profile/exp-tos-and-pro
     ExpChatComponent,
     ExpLeaderVoteComponent,
     ExpSurveyComponent,
-    ExpTosAndProfileComponent,
+    ExpTosComponent,
+    ExpProfileComponent,
     ExpLeaderRevealComponent,
     MatButtonModule,
   ],

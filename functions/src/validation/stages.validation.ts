@@ -10,7 +10,8 @@ import { validateQuestionUpdateAndMerge } from './questions.validation';
 
 // Copied from stages.types.ts
 export enum StageKind {
-  AcceptTosAndSetProfile = 'acceptTosAndSetProfile',
+  AcceptTos = 'termsOfService',
+  SetProfile = 'setProfile',
   GroupChat = 'groupChat',
   VoteForLeader = 'voteForLeader',
   RevealVoted = 'leaderReveal',
