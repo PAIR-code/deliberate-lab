@@ -12,13 +12,21 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { ITEMS, ItemPair, StageKind, getDefaultItemPair } from '@llm-mediation-experiments/utils';
+import {
+  ChatKind,
+  GroupChatStageConfig,
+  GroupChatStagePublicData,
+  ITEMS,
+  ItemPair,
+  StageKind,
+  assertCast,
+  getDefaultItemPair,
+} from '@llm-mediation-experiments/utils';
 
 import { AppStateService } from 'src/app/services/app-state.service';
 import { CastViewingStage, ParticipantService } from 'src/app/services/participant.service';
-import { markReadyToEndChat } from 'src/lib/api/mutations';
 import { ChatRepository } from 'src/lib/repositories/chat.repository';
-import { localStorageTimer, subscribeSignal } from 'src/lib/utils/angular.utils';
+import { localStorageTimer, subscribeSignal, subscribeSignals } from 'src/lib/utils/angular.utils';
 import { ChatDiscussItemsMessageComponent } from './chat-discuss-items-message/chat-discuss-items-message.component';
 import { ChatMediatorMessageComponent } from './chat-mediator-message/chat-mediator-message.component';
 import { ChatUserMessageComponent } from './chat-user-message/chat-user-message.component';
@@ -74,6 +82,13 @@ export class ExpChatComponent {
       const { item1, item2 } = config.chatConfig.ratingsToDiscuss[0];
       this.currentRatingsToDiscuss = signal({ item1, item2 });
     });
+
+    // Automatic next step progression when the chat has ended
+    if (this.participantService.workingOnStageName() === this.stage.config().name) {
+      subscribeSignals([this.stage.config, this.stage.public!], (config, pub) => {
+        if (chatReadyToEnd(config, pub)) this.nextStep();
+      });
+    }
   }
   get stage() {
     return this._stage as CastViewingStage<StageKind.GroupChat>;
@@ -105,28 +120,41 @@ export class ExpChatComponent {
     // return this.stageData().isSilent !== false;
   }
 
-  sendMessage() {
-    if (!this.message.valid) return;
+  async sendMessage() {
+    if (!this.message.valid || !this.message.value) return;
 
-    // TODO: use new backend
-    // this.messageMutation.mutate({
-    //   chatId: this.stage.config.chatId,
-    //   text: this.message.value!,
-    //   fromUserId: this.participant.userData()!.uid,
-    // });
+    this.chat?.sendUserMessage(this.message.value);
     this.message.setValue('');
   }
 
   toggleEndChat() {
     if (this.readyToEndChat()) return;
 
-    markReadyToEndChat(
-      this.participantService.experimentId()!,
-      this.participantService.participantId()!,
-      this.stage.config().chatId,
-    );
+    this.chat?.markReadyToEndChat();
 
     this.message.disable();
     this.timer.remove();
   }
+
+  async nextStep() {
+    await this.participantService.workOnNextStage();
+    this.timer.remove();
+  }
 }
+
+const chatReadyToEnd = (config: GroupChatStageConfig, pub: GroupChatStagePublicData) => {
+  // If someone is not ready to end, return false
+  if (Object.values(pub.readyToEndChat).some((bool) => !bool)) return false;
+
+  // If this is a chat about items, all items must have been discussed
+  if (config.chatConfig.kind === ChatKind.ChatAboutItems) {
+    if (
+      assertCast(pub.chatData, ChatKind.ChatAboutItems).currentRatingIndex <
+      config.chatConfig.ratingsToDiscuss.length
+    )
+      return false;
+  }
+
+  // If all checks passed, the chat stage is ready to end
+  return true;
+};

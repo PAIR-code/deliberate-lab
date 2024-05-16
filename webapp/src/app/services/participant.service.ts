@@ -3,6 +3,7 @@
  */
 
 import { Injectable, Signal, computed, signal, untracked } from '@angular/core';
+import { Router } from '@angular/router';
 import {
   ParticipantProfile,
   PublicStageData,
@@ -40,7 +41,10 @@ export class ParticipantService {
   public workingOnStageName: Signal<string | undefined> = signal(undefined);
   public futureStageNames: Signal<string[]> = signal([]);
 
-  constructor(public readonly appState: AppStateService) {}
+  constructor(
+    public readonly appState: AppStateService,
+    private router: Router,
+  ) {}
 
   /** Initialize the service with the participant and experiment IDs */
   initialize(
@@ -132,6 +136,19 @@ export class ParticipantService {
       if (!participantId || !experimentId || !id) return undefined;
 
       return this.appState.chats.get({ experimentId, participantId, chatId: id });
+    });
+  }
+
+  /** Update the participant's workingOnStageName to the next stage
+   * @rights Participant
+   */
+  async workOnNextStage() {
+    const nextStage = this.futureStageNames()[0];
+
+    if (!nextStage) return;
+    await this.participant()?.workOnStage(nextStage);
+    await this.router.navigate(['/participant', this.experimentId()!, this.participantId()!], {
+      queryParams: { stage: nextStage },
     });
   }
 }

@@ -32,6 +32,7 @@ import {
 } from '@llm-mediation-experiments/utils';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { LocalService } from 'src/app/services/local.service';
+import { ExperimenterRepository } from 'src/lib/repositories/experimenter.repository';
 
 const LOCAL_STORAGE_KEY = 'ongoing-experiment-creation';
 
@@ -59,15 +60,6 @@ const getInitStageData = (): Partial<StageConfig> => {
   styleUrl: './create-experiment.component.scss',
 })
 export class CreateExperimentComponent {
-  // createExp = createExperimentMutation(this.client, ({ uid }) => {
-  //   localStorage.removeItem(LOCAL_STORAGE_KEY); // Clear local storage
-  //   this.router.navigate(['/experimenter', 'experiment', uid]);
-  // });
-
-  // createTemplate = createTemplateMutation(this.client, () => {
-  //   this.resetExistingStages(); // Reset after setting as template
-  // });
-
   public existingStages: Partial<StageConfig>[] = [];
   public currentEditingStageIndex = -1;
   public newExperimentName = '';
@@ -95,12 +87,15 @@ export class CreateExperimentComponent {
   // Convenience signals
   public templates: Signal<ExperimentTemplate[]>;
 
+  private experimenter: ExperimenterRepository;
+
   constructor(
     private router: Router,
     private localStore: LocalService,
     private appState: AppStateService,
   ) {
     this.templates = appState.experimenter.get().templates;
+    this.experimenter = appState.experimenter.get();
 
     // Set the current experiment template to the first fetched template
     effect(
@@ -318,15 +313,19 @@ export class CreateExperimentComponent {
   }
 
   /** Create the experiment and send it to be stored in the database */
-  addExperiment() {
+  async addExperiment() {
     const stages = this.existingStages as StageConfig[];
+    const { id } = await this.experimenter.createExperiment(this.newExperimentName, stages);
 
-    // TODO: use new backend
+    // Navigate to the experiment page after creation
+    localStorage.removeItem(LOCAL_STORAGE_KEY); // Clear local storage
+    this.router.navigate(['/experimenter', 'experiment', id]);
   }
 
-  addTemplate() {
+  async addTemplate() {
     const stages = this.existingStages as StageConfig[];
 
-    // TODO: use new backend
+    await this.experimenter.createTemplate(this.newExperimentName, stages);
+    this.resetExistingStages();
   }
 }

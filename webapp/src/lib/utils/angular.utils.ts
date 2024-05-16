@@ -12,12 +12,16 @@ import {
 import { ActivatedRoute } from '@angular/router';
 import {
   CheckQuestionAnswer,
+  CheckQuestionConfig,
   QuestionAnswer,
   QuestionConfig,
   RatingQuestionAnswer,
+  RatingQuestionConfig,
   ScaleQuestionAnswer,
+  ScaleQuestionConfig,
   SurveyQuestionKind,
   TextQuestionAnswer,
+  TextQuestionConfig,
   assertCastOrUndefined,
 } from '@llm-mediation-experiments/utils';
 import { Observable, map } from 'rxjs';
@@ -176,18 +180,36 @@ export const localStorageTimer = (
 //                                         FORM BUILDER                                          //
 // ********************************************************************************************* //
 
-export const buildTextQuestionForm = (fb: FormBuilder, answer?: TextQuestionAnswer) =>
+export const buildTextQuestionForm = (
+  fb: FormBuilder,
+  config: TextQuestionConfig,
+  answer?: TextQuestionAnswer,
+) =>
   fb.group({
+    kind: SurveyQuestionKind.Text,
+    id: config.id,
     answerText: [answer?.answerText ?? '', Validators.required],
   });
 
-export const buildCheckQuestionForm = (fb: FormBuilder, answer?: CheckQuestionAnswer) =>
+export const buildCheckQuestionForm = (
+  fb: FormBuilder,
+  config: CheckQuestionConfig,
+  answer?: CheckQuestionAnswer,
+) =>
   fb.group({
+    kind: SurveyQuestionKind.Check,
+    id: config.id,
     checkMark: [answer?.checkMark ?? false],
   });
 
-export const buildRatingQuestionForm = (fb: FormBuilder, answer?: RatingQuestionAnswer) =>
+export const buildRatingQuestionForm = (
+  fb: FormBuilder,
+  config: RatingQuestionConfig,
+  answer?: RatingQuestionAnswer,
+) =>
   fb.group({
+    kind: SurveyQuestionKind.Rating,
+    id: config.id,
     choice: [answer?.choice, Validators.required],
     confidence: [
       answer?.confidence ?? 0,
@@ -195,8 +217,14 @@ export const buildRatingQuestionForm = (fb: FormBuilder, answer?: RatingQuestion
     ],
   });
 
-export const buildScaleQuestionForm = (fb: FormBuilder, answer?: ScaleQuestionAnswer) =>
+export const buildScaleQuestionForm = (
+  fb: FormBuilder,
+  config: ScaleQuestionConfig,
+  answer?: ScaleQuestionAnswer,
+) =>
   fb.group({
+    kind: SurveyQuestionKind.Scale,
+    id: config.id,
     score: [answer?.score ?? 0, [Validators.required, Validators.min(0), Validators.max(10)]],
   });
 
@@ -207,13 +235,29 @@ export const buildQuestionForm = (
 ) => {
   switch (config.kind) {
     case SurveyQuestionKind.Text:
-      return buildTextQuestionForm(fb, assertCastOrUndefined(answer, SurveyQuestionKind.Text));
+      return buildTextQuestionForm(
+        fb,
+        config,
+        assertCastOrUndefined(answer, SurveyQuestionKind.Text),
+      );
     case SurveyQuestionKind.Check:
-      return buildCheckQuestionForm(fb, assertCastOrUndefined(answer, SurveyQuestionKind.Check));
+      return buildCheckQuestionForm(
+        fb,
+        config,
+        assertCastOrUndefined(answer, SurveyQuestionKind.Check),
+      );
     case SurveyQuestionKind.Rating:
-      return buildRatingQuestionForm(fb, assertCastOrUndefined(answer, SurveyQuestionKind.Rating));
+      return buildRatingQuestionForm(
+        fb,
+        config,
+        assertCastOrUndefined(answer, SurveyQuestionKind.Rating),
+      );
     case SurveyQuestionKind.Scale:
-      return buildScaleQuestionForm(fb, assertCastOrUndefined(answer, SurveyQuestionKind.Scale));
+      return buildScaleQuestionForm(
+        fb,
+        config,
+        assertCastOrUndefined(answer, SurveyQuestionKind.Scale),
+      );
   }
 };
 

@@ -48,7 +48,7 @@ export class ExpLeaderRevealComponent {
     this.everyoneReachedThisStage = signal(false);
   }
 
-  nextStep() {
-    // TODO: use the new backend
+  async nextStep() {
+    await this.participantService.workOnNextStage();
   }
 }

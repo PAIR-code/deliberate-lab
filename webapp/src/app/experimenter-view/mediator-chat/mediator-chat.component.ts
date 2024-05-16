@@ -83,9 +83,9 @@ export class MediatorChatComponent {
   }
 
   sendMessage() {
-    if (!this.message.valid) return;
+    if (!this.message.valid || !this.message.value) return;
 
-    // TODO: use new backend
+    this.chatRepository()?.sendMediatorMessage(this.message.value);
     this.message.setValue('');
   }
 

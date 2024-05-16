@@ -17,7 +17,6 @@ import { MatRadioModule } from '@angular/material/radio';
 import { StageKind, UnifiedTimestamp } from '@llm-mediation-experiments/utils';
 import { Timestamp } from 'firebase/firestore';
 import { CastViewingStage, ParticipantService } from 'src/app/services/participant.service';
-import { updateTOSAndProfile } from 'src/lib/api/mutations';
 
 enum Pronouns {
   HeHim = 'He/Him',
@@ -90,13 +89,8 @@ export class ExpTosAndProfileComponent {
     });
   }
 
-  nextStep() {
-    updateTOSAndProfile(
-      this.participantService.experimentId()!,
-      this.participantService.participantId()!,
-      this.profileFormControl.value,
-    );
-
-    // TODO: naviguate to next stage on success, after editing "viewing stage", on success of it
+  async nextStep() {
+    await this.participantService.participant()?.updateProfile(this.profileFormControl.value);
+    await this.participantService.workOnNextStage();
   }
 }

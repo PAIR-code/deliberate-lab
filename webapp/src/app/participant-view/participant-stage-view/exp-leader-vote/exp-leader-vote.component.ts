@@ -79,8 +79,11 @@ export class ExpLeaderVoteComponent {
     });
   }
 
-  nextStep() {
-    // TODO: use new backend
+  async nextStep() {
+    await this.participantService
+      .participant()
+      ?.updateVoteForLeaderStage(this.stage.config().name, this.votesForm.value.votes);
+    await this.participantService.workOnNextStage();
   }
 
   /** Call this when the input or the other participants signal change in order to stay up to date */
