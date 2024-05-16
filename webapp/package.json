@@ -22,7 +22,6 @@
     "@angular/platform-browser-dynamic": "^17.0.6",
     "@angular/router": "^17.0.6",
     "@llm-mediation-experiments/utils": "file:../utils",
-    "@tanstack/angular-query-experimental": "5.28.13",
     "firebase": "^10.11.0",
     "lodash": "^4.17.21",
     "rxjs": "~7.8.0",

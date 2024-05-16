@@ -28,13 +28,10 @@ import {
   getDefaultSurveyConfig,
   getDefaultTosAndUserProfileConfig,
   getDefaultVotesConfig,
-  lookupTable,
   tryCast,
 } from '@llm-mediation-experiments/utils';
-import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { LocalService } from 'src/app/services/local.service';
-import { createExperimentMutation, createTemplateMutation } from 'src/lib/api/mutations';
 
 const LOCAL_STORAGE_KEY = 'ongoing-experiment-creation';
 
@@ -62,16 +59,14 @@ const getInitStageData = (): Partial<StageConfig> => {
   styleUrl: './create-experiment.component.scss',
 })
 export class CreateExperimentComponent {
-  client = injectQueryClient();
+  // createExp = createExperimentMutation(this.client, ({ uid }) => {
+  //   localStorage.removeItem(LOCAL_STORAGE_KEY); // Clear local storage
+  //   this.router.navigate(['/experimenter', 'experiment', uid]);
+  // });
 
-  createExp = createExperimentMutation(this.client, ({ uid }) => {
-    localStorage.removeItem(LOCAL_STORAGE_KEY); // Clear local storage
-    this.router.navigate(['/experimenter', 'experiment', uid]);
-  });
-
-  createTemplate = createTemplateMutation(this.client, () => {
-    this.resetExistingStages(); // Reset after setting as template
-  });
+  // createTemplate = createTemplateMutation(this.client, () => {
+  //   this.resetExistingStages(); // Reset after setting as template
+  // });
 
   public existingStages: Partial<StageConfig>[] = [];
   public currentEditingStageIndex = -1;
@@ -326,19 +321,12 @@ export class CreateExperimentComponent {
   addExperiment() {
     const stages = this.existingStages as StageConfig[];
 
-    this.createExp.mutate({
-      name: this.newExperimentName,
-      numberOfParticipants: 3, // TODO: provide a way to parametrize this ?
-      stageMap: lookupTable(stages, 'name'),
-    });
+    // TODO: use new backend
   }
 
   addTemplate() {
     const stages = this.existingStages as StageConfig[];
 
-    this.createTemplate.mutate({
-      name: this.newExperimentName,
-      stageMap: lookupTable(stages, 'name'),
-    });
+    // TODO: use new backend
   }
 }

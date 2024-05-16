@@ -31,7 +31,6 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { RouterModule } from '@angular/router';
-import { QueryClient, provideAngularQuery } from '@tanstack/angular-query-experimental';
 import { ExperimenterViewComponent } from './experimenter-view/experimenter-view.component';
 import { LlmApiConfigComponent } from './experimenter-view/llm-api-config/llm-api-config.component';
 import { FirebaseService } from './firebase.service';
@@ -53,7 +52,6 @@ import { VertexApiService } from './services/vertex-api.service';
     FirebaseService,
     AppStateService,
     provideHttpClient(),
-    provideAngularQuery(new QueryClient()),
   ],
   bootstrap: [AppComponent],
   imports: [

@@ -19,16 +19,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSliderModule } from '@angular/material/slider';
 
 import { MatButtonModule } from '@angular/material/button';
-import {
-  StageKind,
-  SurveyQuestionKind,
-  SurveyStageUpdate,
-  assertCast,
-} from '@llm-mediation-experiments/utils';
-import { injectQueryClient } from '@tanstack/angular-query-experimental';
+import { StageKind, SurveyQuestionKind, assertCast } from '@llm-mediation-experiments/utils';
 import { CastViewingStage } from 'src/app/services/participant.service';
-import { updateSurveyStageMutation } from 'src/lib/api/mutations';
-import { MutationType } from 'src/lib/types/tanstack.types';
 import { buildQuestionForm, subscribeSignals } from 'src/lib/utils/angular.utils';
 import { SurveyCheckQuestionComponent } from './survey-check-question/survey-check-question.component';
 import { SurveyRatingQuestionComponent } from './survey-rating-question/survey-rating-question.component';
@@ -86,17 +78,11 @@ export class ExpSurveyComponent {
   readonly SurveyQuestionKind = SurveyQuestionKind;
   readonly assertCast = assertCast;
 
-  queryClient = injectQueryClient();
-
-  surveyMutation: MutationType<SurveyStageUpdate, { uid: string }>;
-
   constructor(private fb: FormBuilder) {
     this.questions = fb.array([]);
     this.surveyForm = fb.group({
       questions: this.questions,
     });
-
-    this.surveyMutation = updateSurveyStageMutation(this.queryClient);
   }
 
   /** Returns controls for each individual question component */

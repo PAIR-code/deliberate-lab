@@ -6,15 +6,13 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { HttpClient } from '@angular/common/http';
-import { Component, Input, effect, inject } from '@angular/core';
+import { Component, Input, effect } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxChange, MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatRadioModule } from '@angular/material/radio';
-import { injectQueryClient } from '@tanstack/angular-query-experimental';
 
 import { StageKind, UnifiedTimestamp } from '@llm-mediation-experiments/utils';
 import { Timestamp } from 'firebase/firestore';
@@ -55,9 +53,6 @@ export class ExpTosAndProfileComponent {
     avatarUrl: new FormControl('', Validators.required),
     acceptTosTimestamp: new FormControl<UnifiedTimestamp | null>(null, Validators.required),
   });
-
-  http = inject(HttpClient);
-  queryClient = injectQueryClient();
 
   value = ''; // Custom pronouns input value
 

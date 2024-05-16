@@ -16,8 +16,6 @@ import {
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRadioModule } from '@angular/material/radio';
-import { injectQueryClient } from '@tanstack/angular-query-experimental';
-import { updateLeaderVoteStageMutation } from 'src/lib/api/mutations';
 
 import { StageKind, Vote, VoteForLeaderStageAnswer } from '@llm-mediation-experiments/utils';
 import { CastViewingStage, ParticipantService } from 'src/app/services/participant.service';
@@ -49,10 +47,7 @@ export class ExpLeaderVoteComponent {
   }
 
   private _stage?: CastViewingStage<StageKind.VoteForLeader>;
-  private client = injectQueryClient();
 
-  // Vote completion mutation
-  public voteMutation = updateLeaderVoteStageMutation(this.client);
   readonly Vote = Vote;
   public votesForm: FormGroup;
 
