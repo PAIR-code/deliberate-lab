@@ -1,7 +1,6 @@
 /** Types wrappers for the API */
 
 import type { Timestamp } from 'firebase/firestore';
-import { StageConfig } from './stages.types';
 
 /** Simple response with data */
 export interface SimpleResponse<T> {
@@ -9,25 +8,13 @@ export interface SimpleResponse<T> {
 }
 
 export interface CreationResponse {
-  uid: string;
+  id: string;
 }
 
 /** Type for a onSuccess function callback */
 export type OnSuccess<T> = (data: T) => Promise<void> | void;
 
 export type OnError = ((error: Error, variables: string, context: unknown) => unknown) | undefined;
-
-/** Data to be sent to the backend in order to generate a template */
-export interface TemplateCreationData {
-  name: string;
-  stageMap: Record<string, StageConfig>;
-}
-
-export interface ChatToggleUpdate {
-  readyToEndChat: boolean;
-  participantId: string;
-  chatId: string;
-}
 
 // Helper for Timestamp (make it work between admin & sdk)
 // Packages firebase-admin/firestore and firebase/firestore use different Timestamp types

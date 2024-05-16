@@ -36,6 +36,8 @@ export const updateStage = onCall(async (request) => {
       .doc(`experiments/${experimentId}/participants/${participantId}/stages/${stageName}`);
 
     await answerDoc.set(data, { merge: true });
+
+    return { data: 'success' };
   }
 
   throw new functions.https.HttpsError('invalid-argument', 'Invalid data');

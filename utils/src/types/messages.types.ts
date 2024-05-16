@@ -37,29 +37,6 @@ export interface MediatorMessage extends MessageBase {
 export type Message = UserMessage | DiscussItemsMessage | MediatorMessage;
 
 // ********************************************************************************************* //
-//                                   MESSAGE MUTATION TYPES                                      //
-// ********************************************************************************************* //
-
-export interface UserMessageMutationData {
-  chatId: string;
-  text: string;
-  fromUserId: string;
-  // ...the other fields will be filled in by the backend for security
-}
-
-export interface DiscussItemsMessageMutationData {
-  chatId: string;
-  text: string;
-  itemPair: ItemPair;
-  // itemRatingToDiscuss: ItemRating;
-}
-
-export interface MediatorMessageMutationData {
-  chatId: string;
-  text: string;
-}
-
-// ********************************************************************************************* //
 //                                           DEFAULTS                                            //
 // ********************************************************************************************* //
 
