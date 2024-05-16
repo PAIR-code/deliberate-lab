@@ -75,13 +75,11 @@ export class ExperimentMonitorComponent {
     );
   }
 
-  deleteExperimentAndNavigate() {
+  async deleteExperimentAndNavigate() {
     const experiment = this.experiment();
     if (experiment && confirm('⚠️ This will delete the experiment! Are you sure?')) {
-      experiment.delete().then(() => {
-        // Redirect to settings page.
-        this.router.navigate(['/experimenter', 'settings']);
-      });
+      await experiment.delete();
+      await this.router.navigate(['/experimenter', 'settings']); // Redirect to settings page.
     }
   }
 }
