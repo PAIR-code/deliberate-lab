@@ -14,19 +14,20 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Router } from '@angular/router';
 import {
-  AcceptTosAndSetProfileStageConfig,
   ExperimentTemplate,
   QuestionConfig,
   StageConfig,
   StageKind,
   SurveyQuestionKind,
   SurveyStageConfig,
+  TermsOfServiceStageConfig,
   getDefaultChatAboutItemsConfig,
   getDefaultItemRatingsQuestion,
   getDefaultLeaderRevealConfig,
   getDefaultScaleQuestion,
   getDefaultSurveyConfig,
-  getDefaultTosAndUserProfileConfig,
+  getDefaultTosConfig,
+  getDefaultUserProfileConfig,
   getDefaultVotesConfig,
   tryCast,
 } from '@llm-mediation-experiments/utils';
@@ -77,7 +78,8 @@ export class CreateExperimentComponent {
   readonly SurveyQuestionKind = SurveyQuestionKind;
   readonly tryCast = tryCast;
   readonly availableStageKind = [
-    StageKind.AcceptTosAndSetProfile,
+    StageKind.TermsOfService,
+    StageKind.SetProfile,
     StageKind.TakeSurvey,
     StageKind.VoteForLeader,
     StageKind.GroupChat,
@@ -148,17 +150,17 @@ export class CreateExperimentComponent {
   }
 
   // tos lines
-  addNewTosLine(stage: AcceptTosAndSetProfileStageConfig) {
+  addNewTosLine(stage: TermsOfServiceStageConfig) {
     stage.tosLines.push('');
     this.persistExistingStages();
   }
 
-  deleteTosLine(stage: AcceptTosAndSetProfileStageConfig, index: number) {
+  deleteTosLine(stage: TermsOfServiceStageConfig, index: number) {
     stage.tosLines.splice(index, 1);
     this.persistExistingStages();
   }
 
-  dropTosLine(stage: AcceptTosAndSetProfileStageConfig, event: CdkDragDrop<string[]>) {
+  dropTosLine(stage: TermsOfServiceStageConfig, event: CdkDragDrop<string[]>) {
     moveItemInArray(stage.tosLines, event.previousIndex, event.currentIndex);
 
     this.persistExistingStages();
@@ -213,7 +215,7 @@ export class CreateExperimentComponent {
     if (!_stageData.kind) return true;
     if (!_stageData.name || _stageData.name.trim().length === 0) return true;
 
-    if (_stageData.kind === StageKind.AcceptTosAndSetProfile) {
+    if (_stageData.kind === StageKind.TermsOfService || _stageData.kind === StageKind.SetProfile) {
       return false;
       // if (_stageData.config?.tosLines.length === 0) return true;
     } else if (_stageData.kind === StageKind.TakeSurvey) {
@@ -291,8 +293,11 @@ export class CreateExperimentComponent {
       console.log('Switched to:', this.currentEditingStage.kind);
       let newConfig = {};
       switch (this.currentEditingStage.kind) {
-        case StageKind.AcceptTosAndSetProfile:
-          newConfig = getDefaultTosAndUserProfileConfig();
+        case StageKind.TermsOfService:
+          newConfig = getDefaultTosConfig();
+          break;
+        case StageKind.SetProfile:
+          newConfig = getDefaultUserProfileConfig();
           break;
         case StageKind.TakeSurvey:
           newConfig = getDefaultSurveyConfig();

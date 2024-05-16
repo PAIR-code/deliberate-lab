@@ -1,0 +1,28 @@
+<div class="main">
+  <form [formGroup]="tosFormControl">
+    <h2>Terms of Service</h2>
+    <p>Please read and accept the following terms of service before proceeding:</p>
+
+    <ul>
+      @for (line of stage.config().tosLines; track line) {
+        <li>{{ line }}</li>
+      }
+    </ul>
+
+    <mat-checkbox
+      required
+      [checked]="tosFormControl.get('acceptTosTimestamp')?.value !== null"
+      (change)="updateCheckboxValue($event)"
+    >
+      I accept the terms of service
+    </mat-checkbox>
+  </form>
+  <button
+    color="primary"
+    [disabled]="!tosFormControl.valid || profileMutation.isPending()"
+    (click)="nextStep()"
+    mat-button
+  >
+    Next step
+  </button>
+</div>
