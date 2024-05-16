@@ -1,6 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { MediatorMessage } from 'src/lib/types/messages.types';
-import { dateStrOfTimestamp } from 'src/lib/utils/string.utils';
+import { MediatorMessage, dateStrOfTimestamp } from '@llm-mediation-experiments/utils';
 import { ChatMediatorProfileComponent } from '../chat-mediator-profile/chat-mediator-profile.component';
 
 @Component({

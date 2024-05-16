@@ -5,7 +5,6 @@ import { Timestamp } from 'firebase-admin/firestore';
 import * as functions from 'firebase-functions';
 import { onCall } from 'firebase-functions/v2/https';
 import { app } from '../app';
-import { AuthGuard } from '../utils/auth-guard';
 import { checkStageProgression } from '../utils/check-stage-progression';
 import { getUserChat } from '../utils/get-user-chat';
 import { ProfileAndTOS } from '../validation/participants.validation';
@@ -29,8 +28,6 @@ export const participant = onCall(async (request) => {
     throw new functions.https.HttpsError('not-found', 'Participant not found');
   }
 
-  await AuthGuard.belongsToSameExperimentAs(request, participant);
-
   const data = { uid: participant.id, ...participant.data() };
 
   return data;
@@ -39,7 +36,6 @@ export const participant = onCall(async (request) => {
 /** Update the profile and terms of service acceptance date for a participant */
 export const updateProfileAndTOS = onCall(async (request) => {
   const { uid, ...body } = request.data;
-  await AuthGuard.isThisParticipant(request, uid);
 
   if (!uid) {
     throw new functions.https.HttpsError('invalid-argument', 'Missing participant UID');
@@ -64,7 +60,6 @@ export const updateProfileAndTOS = onCall(async (request) => {
 /** Generic endpoint for stage update. */
 export const updateStage = onCall(async (request) => {
   const { uid, ...body } = request.data;
-  await AuthGuard.isThisParticipant(request, uid);
 
   if (!uid) {
     throw new functions.https.HttpsError('invalid-argument', 'Missing participant UID');
@@ -102,10 +97,9 @@ export const updateStage = onCall(async (request) => {
 
 /** Toggle On/Off ready state for given participant and chat */
 export const toggleReadyToEndChat = onCall(async (request) => {
-  const { uid, ...body } = request.data;
-  await AuthGuard.isThisParticipant(request, uid);
+  const { participantId, ...body } = request.data;
 
-  if (!uid) {
+  if (!participantId) {
     throw new functions.https.HttpsError('invalid-argument', 'Missing participant UID');
   }
 
@@ -128,14 +122,14 @@ export const toggleReadyToEndChat = onCall(async (request) => {
         throw new functions.https.HttpsError('not-found', 'Chat sync document not found');
       }
 
-      if (data.readyToEndChat[uid] === true) {
+      if (data.readyToEndChat[participantId] === true) {
         throw new functions.https.HttpsError(
           'invalid-argument',
           'Participant is already ready to end chat',
         );
       }
 
-      data.readyToEndChat[uid] = true;
+      data.readyToEndChat[participantId] = true;
 
       // If everyone is now ready for the next pair, increment the current pair and reset everyone to false.
       if (Object.values(data.readyToEndChat).every((value) => value === true)) {
@@ -144,7 +138,7 @@ export const toggleReadyToEndChat = onCall(async (request) => {
           data.readyToEndChat[key] = false;
         });
 
-        const stage = await getUserChat(transaction, uid, body.chatId);
+        const stage = await getUserChat(transaction, participantId, body.chatId);
 
         if (!stage) {
           throw new functions.https.HttpsError('not-found', 'Chat not found');
@@ -159,7 +153,7 @@ export const toggleReadyToEndChat = onCall(async (request) => {
           transaction.set(app.firestore().collection('messages').doc(), {
             chatId: body.chatId,
             messageType: 'discussItemsMessage',
-            text: 'Discuss aabout this pair of items.',
+            text: 'Discuss about this pair of items.',
             itemPair,
             timestamp: Timestamp.now(),
           });
@@ -168,7 +162,7 @@ export const toggleReadyToEndChat = onCall(async (request) => {
 
       transaction.set(doc.ref, data);
     });
-    return { uid };
+    return { uid: participantId };
   }
 
   throw new functions.https.HttpsError('invalid-argument', 'Invalid data');

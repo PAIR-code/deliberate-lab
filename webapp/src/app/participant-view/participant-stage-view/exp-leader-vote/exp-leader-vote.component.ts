@@ -6,89 +6,130 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, Inject, signal, Signal } from '@angular/core';
+import { Component, computed, Inject, Input, Signal } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
+import {
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRadioModule } from '@angular/material/radio';
+import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { ProviderService } from 'src/app/services/provider.service';
+import { updateLeaderVoteStageMutation } from 'src/lib/api/mutations';
 import { Participant } from 'src/lib/participant';
-import { PARTICIPANT_PROVIDER_TOKEN } from 'src/lib/provider-tokens';
+import {
+  EXPERIMENT_PROVIDER_TOKEN,
+  ExperimentProvider,
+  PARTICIPANT_PROVIDER_TOKEN,
+} from 'src/lib/provider-tokens';
 
-import { ParticipantExtended } from 'src/lib/types/participants.types';
-import { StageKind } from 'src/lib/types/stages.types';
-import { Vote, Votes } from 'src/lib/types/votes.types';
+import { ExpStageVotes, ParticipantExtended, Vote, Votes } from '@llm-mediation-experiments/utils';
+import { forbiddenValueValidator } from 'src/lib/utils/angular.utils';
 
 @Component({
   selector: 'app-exp-leader-vote',
   templateUrl: './exp-leader-vote.component.html',
   styleUrl: './exp-leader-vote.component.scss',
   standalone: true,
-  imports: [MatRadioModule, MatButtonModule],
+  imports: [MatRadioModule, MatButtonModule, FormsModule, ReactiveFormsModule],
 })
 export class ExpLeaderVoteComponent {
+  // Reload the internal logic dynamically when the stage changes
+  @Input({ required: true })
+  set stage(value: ExpStageVotes) {
+    this._stage = value;
+    this.voteConfig = this.stage.config;
+
+    this.initializeForm();
+  }
+
+  get stage(): ExpStageVotes {
+    return this._stage as ExpStageVotes;
+  }
+
+  private _stage?: ExpStageVotes;
+
   public otherParticipants: Signal<ParticipantExtended[]>;
 
   readonly Vote = Vote;
 
   public participant: Participant;
-  public votes: Votes;
+  public voteConfig: Votes;
+
+  public votesForm: FormGroup;
+
+  private client = injectQueryClient();
+
+  // Vote completion mutation
+  public voteMutation = updateLeaderVoteStageMutation(this.client, () =>
+    this.participant.navigateToNextStage(),
+  );
 
   constructor(
     @Inject(PARTICIPANT_PROVIDER_TOKEN) participantProvider: ProviderService<Participant>,
+    @Inject(EXPERIMENT_PROVIDER_TOKEN) experimentProvider: ExperimentProvider,
+    fb: FormBuilder,
   ) {
     this.participant = participantProvider.get();
+    this.voteConfig = this.stage?.config;
 
-    const { config } = this.participant.assertViewingStageCast(StageKind.VoteForLeader)!;
-
-    this.votes = config;
-
-    // TODO: use new backend
-    this.otherParticipants = signal([]);
-    //  computed(() => {
-    //   const thisUserId = this.participant.userData().uid;
-    //   const allUsers = Object.values(this.participant.experiment().participants);
-    //   return allUsers.filter((u) => u.uid !== thisUserId);
-    // });
-
-    // Make sure that votes has all other participants, and only them... if things
-    // are configured fully in an experiment definition this is not needed.
-    const otherParticipantsMap: { [userId: string]: ParticipantExtended } = {};
-    for (const p of this.otherParticipants()) {
-      otherParticipantsMap[p.uid] = p;
-      if (!(p.uid in this.votes)) {
-        this.votes[p.uid] = Vote.NotRated;
-      }
-    }
-    Object.keys(this.votes).forEach((uid) => {
-      if (!(uid in otherParticipantsMap)) {
-        delete this.votes[uid];
-      }
+    this.votesForm = fb.group({
+      votes: fb.group({}),
     });
+
+    this.otherParticipants = computed(
+      () =>
+        experimentProvider
+          .get()()
+          ?.participants.filter(({ uid }) => uid !== this.participant.userData()?.uid) ?? [],
+    );
+
+    toObservable(this.otherParticipants).subscribe(() => this.initializeForm());
   }
 
-  // True when all other users have been voted on.
-  isComplete() {
-    let completed = true;
-    this.otherParticipants().forEach((u) => {
-      if (!(u.uid in this.votes) || this.votes[u.uid] === Vote.NotRated) {
-        completed = false;
-      }
-    });
-    return completed;
+  get votes() {
+    return this.votesForm.get('votes') as FormGroup;
   }
 
-  setVote(event: unknown, userId: string) {
-    const { value } = event as { value: Vote };
-    // if (this.isComplete()) {
-    //   this.stateService.setStageComplete(true);
-    // }
-    this.votes[userId] = value;
-    // TODO: use new backend
-    // this.participant.editStageData(() => this.votes);
+  get controls() {
+    return this.votes.controls as Record<string, FormControl>;
   }
 
   resetVote(userId: string) {
-    this.votes[userId] = Vote.NotRated;
-    // TODO: use new backend
-    // this.participant.editStageData(() => this.votes);
+    this.votes.controls[userId].setValue(Vote.NotRated);
+  }
+
+  /** Clear the form in order to replace its contents */
+  clearForm() {
+    Object.keys(this.votes.controls).forEach((key) => {
+      this.votes.removeControl(key);
+    });
+  }
+
+  nextStep() {
+    this.voteMutation.mutate({
+      data: this.votesForm.value.votes,
+      name: this.stage.name,
+      uid: this.participant.userData()!.uid,
+      ...this.participant.getStageProgression(),
+    });
+  }
+
+  /** Call this when the input or the other participants signal change in order to stay up to date */
+  initializeForm() {
+    this.clearForm();
+    for (const p of this.otherParticipants()) {
+      this.votes.addControl(
+        p.uid,
+        new FormControl(
+          this.voteConfig[p.uid] || Vote.NotRated,
+          forbiddenValueValidator(Vote.NotRated),
+        ),
+      );
+    }
   }
 }

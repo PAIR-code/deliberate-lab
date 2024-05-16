@@ -1,0 +1,14 @@
+:4200 {
+	root * /usr/share/caddy/html
+	file_server
+	encode gzip # Enable gzip compression
+
+	# Redirect all requests that are not for the root url to the root url
+	# Catch-all route to serve index.html for all requests
+	@notFound {
+		not {
+			file
+		}
+	}
+	rewrite @notFound /index.html
+}

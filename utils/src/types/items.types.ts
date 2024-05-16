@@ -22,7 +22,7 @@ export interface ItemPairWithRatings extends ItemPair {
 //                                           DEFAULTS                                            //
 // ********************************************************************************************* //
 
-export const getDefaultItemRating = (): ItemPairWithRatings => {
+export const getDefaultItemPair = (): ItemPair => {
   return {
     item1: {
       name: '',
@@ -32,6 +32,12 @@ export const getDefaultItemRating = (): ItemPairWithRatings => {
       name: '',
       imageUrl: '',
     },
+  };
+};
+
+export const getDefaultItemRating = (): ItemPairWithRatings => {
+  return {
+    ...getDefaultItemPair(),
     choice: null,
     confidence: null,
   };

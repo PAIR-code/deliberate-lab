@@ -1,8 +1,8 @@
 /** Chat between participants and mediators */
 
-import { uniqueId } from 'lodash';
-import { Item } from './items.types';
-import { Message } from './messages.types';
+import { uniqueId } from "../utils/algebraic.utils";
+import { Item } from "./items.types";
+import { Message } from "./messages.types";
 
 export interface BaseChat {
   chatId: string;
@@ -29,7 +29,7 @@ export interface ReadyToEndChat {
 
 export const getDefaultChatAboutItemsConfig = (): ChatAboutItems => {
   return {
-    chatId: uniqueId('chat'),
+    chatId: uniqueId("chat"),
     ratingsToDiscuss: [],
     items: [],
     messages: [],

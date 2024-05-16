@@ -1,26 +1,22 @@
 /** Firebase cloud function callables */
 
-import { HttpsCallableResult, httpsCallable } from 'firebase/functions';
 import {
   ChatToggleUpdate,
   CreationResponse,
-  GenericStageUpdate,
-  ProfileTOSData,
-  SimpleResponse,
-  TemplateCreationData,
-} from '../types/api.types';
-import {
+  DiscussItemsMessageMutationData,
   Experiment,
   ExperimentCreationData,
   ExperimentExtended,
-  Template,
-} from '../types/experiments.types';
-import {
-  DiscussItemsMessageMutationData,
+  GenericStageUpdate,
   MediatorMessageMutationData,
+  ParticipantExtended,
+  ProfileTOSData,
+  SimpleResponse,
+  Template,
+  TemplateCreationData,
   UserMessageMutationData,
-} from '../types/messages.types';
-import { ParticipantExtended } from '../types/participants.types';
+} from '@llm-mediation-experiments/utils';
+import { HttpsCallableResult, httpsCallable } from 'firebase/functions';
 import { functions } from './firebase';
 
 /** Wrapper to extract the data attribute from all callable cloud functions */

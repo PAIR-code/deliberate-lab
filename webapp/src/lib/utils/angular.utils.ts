@@ -2,7 +2,22 @@
 
 import { Signal, WritableSignal, effect, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import {
+  AbstractControl,
+  FormBuilder,
+  ValidationErrors,
+  ValidatorFn,
+  Validators,
+} from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import {
+  CheckQuestion,
+  Question,
+  RatingQuestion,
+  ScaleQuestion,
+  SurveyQuestionKind,
+  TextQuestion,
+} from '@llm-mediation-experiments/utils';
 import { Observable, map } from 'rxjs';
 
 /** Extract a route parameter as an observable.
@@ -83,7 +98,6 @@ export const localStorageTimer = (
   const initInterval = () =>
     (utils.interval = setInterval(() => {
       const newValue = timer() - 1;
-      console.log('New timer value !', newValue);
       if (newValue < 0) {
         onFinish();
         remove();
@@ -120,3 +134,60 @@ export const localStorageTimer = (
 
   return { timer, start, reset, remove } as const;
 };
+
+// ********************************************************************************************* //
+//                                         FORM BUILDER                                          //
+// ********************************************************************************************* //
+
+export const buildTextQuestionForm = (fb: FormBuilder, question: TextQuestion) =>
+  fb.group({
+    answerText: [question.answerText ?? '', Validators.required],
+  });
+
+export const buildCheckQuestionForm = (fb: FormBuilder, question: CheckQuestion) =>
+  fb.group({
+    checkMark: [question.checkMark ?? false],
+  });
+
+export const buildRatingQuestionForm = (fb: FormBuilder, question: RatingQuestion) =>
+  fb.group({
+    choice: [question.choice, Validators.required],
+    confidence: [
+      question.confidence ?? 0,
+      [Validators.required, Validators.min(0), Validators.max(1)],
+    ],
+  });
+
+export const buildScaleQuestionForm = (fb: FormBuilder, question: ScaleQuestion) =>
+  fb.group({
+    score: [question.score ?? 0, [Validators.required, Validators.min(0), Validators.max(10)]],
+  });
+
+export const buildQuestionForm = (fb: FormBuilder, question: Question) => {
+  switch (question.kind) {
+    case SurveyQuestionKind.Text:
+      return buildTextQuestionForm(fb, question);
+    case SurveyQuestionKind.Check:
+      return buildCheckQuestionForm(fb, question);
+    case SurveyQuestionKind.Rating:
+      return buildRatingQuestionForm(fb, question);
+    case SurveyQuestionKind.Scale:
+      return buildScaleQuestionForm(fb, question);
+  }
+};
+
+// ********************************************************************************************* //
+//                                           VALIDATORS                                          //
+// ********************************************************************************************* //
+
+/** Validator that interprets a value as forbidden (useful for string enum forms with a default) */
+export function forbiddenValueValidator(forbiddenValue: string): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const value = control.value;
+    if (value === forbiddenValue) {
+      // Return an error if the value is the forbidden value
+      return { forbiddenValue: { value: control.value } };
+    }
+    return null; // Return null if there is no error
+  };
+}

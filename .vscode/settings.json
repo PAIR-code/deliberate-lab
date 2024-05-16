@@ -22,8 +22,19 @@
     {
       "splitTerminals": [
         {
+          "name": "shared utilities",
+          "commands": ["cd utils && npm run build:watch"],
+          "icon": "🛠️"
+        }
+      ]
+    },
+    {
+      "splitTerminals": [
+        {
           "name": "firebase",
-          "commands": ["firebase emulators:start"],
+          "commands": [
+            "firebase emulators:start --import ./emulator_test_config"
+          ],
           "icon": "🔥"
         }
       ]

@@ -1,15 +1,20 @@
-import { HttpClient } from '@angular/common/http';
 import { Signal, WritableSignal, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
+import {
+  ExpStage,
+  ParticipantExtended,
+  ParticipantsProgression,
+  Progression,
+  StageKind,
+  assertCast,
+  keyRank,
+  keysRanking,
+} from '@llm-mediation-experiments/utils';
 import { Unsubscribe } from 'firebase/firestore';
-import { assertCast } from './algebraic-data';
 import { participantQuery } from './api/queries';
-import { Progression, QueryType } from './types/api.types';
-import { ParticipantExtended, ParticipantsProgression } from './types/participants.types';
-import { ExpStage, StageKind } from './types/stages.types';
+import { QueryType } from './types/tanstack.types';
 import { lazyInitWritable } from './utils/angular.utils';
 import { firestoreDocSubscription } from './utils/firestore.utils';
-import { keyRank, keysRanking } from './utils/object.utils';
 
 /**
  * Handle all participant-related logic for a single user that plays the role of a participant.
@@ -24,7 +29,6 @@ export class Participant {
   public commonLastWorkingOnStageName: WritableSignal<string | undefined>; // Last stage that all participants have been working on
   public experimentId: Signal<string | null>; // ID of the experiment this participant is part of
 
-  private http = inject(HttpClient);
   private router = inject(Router);
 
   // Firestore subscriptions

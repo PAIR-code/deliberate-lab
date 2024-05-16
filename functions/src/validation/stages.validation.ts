@@ -43,17 +43,21 @@ export type ToggleReadyToEndChat = Static<typeof ToggleReadyToEndChat>;
 //                                         DEFINITIONS                                           //
 // ********************************************************************************************* //
 
-export const SurveyUpdate = Type.Object({
+const SurveyUpdate = Type.Object({
   questions: Type.Array(Type.Any()),
 });
 
-export const ChatUpdate = Type.Object({
+const ChatUpdate = Type.Object({
   readyToEndChat: Type.Boolean(),
 });
 
-export type SurveyUpdate = Static<typeof SurveyUpdate>;
+const VoteUpdate = Type.Record(Type.String(), Type.String());
 
-export type ChatUpdate = Static<typeof ChatUpdate>;
+type SurveyUpdate = Static<typeof SurveyUpdate>;
+
+type ChatUpdate = Static<typeof ChatUpdate>;
+
+type VoteUpdate = Static<typeof VoteUpdate>;
 
 // ********************************************************************************************* //
 //                                             UTILS                                             //
@@ -73,12 +77,17 @@ export const validateStageUpdateAndMerge = (stage: any, data: any): boolean => {
     case StageKind.GroupChat:
       return validateChatUpdateAndMerge(stage, data);
 
+    case StageKind.VoteForLeader:
+      return validateVoteUpdateAndMerge(stage, data);
+
+    case StageKind.RevealVoted:
+      return validateLeaderRevealAndMerge(stage, data);
     default:
       return false;
   }
 };
 
-export const validateSurveyUpdateAndMerge = (stage: any, data: any): boolean => {
+const validateSurveyUpdateAndMerge = (stage: any, data: any): boolean => {
   if (Value.Check(SurveyUpdate, data)) {
     data.questions.forEach((questionUpdate, index) => {
       validateQuestionUpdateAndMerge(stage.config.questions[index], questionUpdate);
@@ -89,9 +98,24 @@ export const validateSurveyUpdateAndMerge = (stage: any, data: any): boolean => 
   return false;
 };
 
-export const validateChatUpdateAndMerge = (stage: any, data: any): boolean => {
+const validateChatUpdateAndMerge = (stage: any, data: any): boolean => {
   if (Value.Check(ChatUpdate, data)) {
     stage.config.readyToEndChat = true;
+    return true;
+  }
+  return false;
+};
+
+const validateVoteUpdateAndMerge = (stage: any, data: any): boolean => {
+  if (Value.Check(VoteUpdate, data)) {
+    stage.config.votes = data;
+    return true;
+  }
+  return false;
+};
+
+const validateLeaderRevealAndMerge = (stage: any, data: any): boolean => {
+  if (data === null) {
     return true;
   }
   return false;

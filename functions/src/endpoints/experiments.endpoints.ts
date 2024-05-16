@@ -6,8 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { app } from '../app';
 import { ParticipantSeeder } from '../seeders/participants.seeder';
 import { AuthGuard } from '../utils/auth-guard';
-import { createParticipantUser } from '../utils/create-participant-user';
 import { getUserChatIds } from '../utils/get-user-chat';
+import { prefillLeaderVotes } from '../utils/prefill-leader-votes';
 import { replaceChatStagesUuid } from '../utils/replace-chat-uuid';
 
 /** Fetch all experiments in database (not paginated) */
@@ -27,7 +27,6 @@ export const experiment = onCall(async (request) => {
     throw new functions.https.HttpsError('invalid-argument', 'Missing experiment UID');
   }
 
-  await AuthGuard.participatesInExperiment(request, experimentUid);
   const experiment = await app.firestore().collection('experiments').doc(experimentUid).get();
 
   if (!experiment.exists) {
@@ -106,6 +105,8 @@ export const createExperiment = onCall(async (request) => {
   const date = new Date();
 
   const chatIds = replaceChatStagesUuid(stageMap); // Assign a new UUID to each chat stage
+  const participantIds = Array.from({ length: numberOfParticipants }, () => uuidv4());
+  prefillLeaderVotes(stageMap, participantIds);
 
   await app.firestore().runTransaction(async (transaction) => {
     // Create the main parent experiment
@@ -128,15 +129,12 @@ export const createExperiment = onCall(async (request) => {
     const progressions: Record<string, string> = {};
     const participantRefs: string[] = [];
 
-    for (const participant of participants) {
-      const participantId = uuidv4();
+    for (const [i, participant] of participants.entries()) {
+      const participantId = participantIds[i];
       const participantRef = app.firestore().collection('participants').doc(participantId);
       participantRefs.push(participantRef.id);
       progressions[participantRef.id] = participant.workingOnStageName;
       transaction.set(participantRef, participant);
-
-      // Create a user for this participant
-      await createParticipantUser(participantRef.id, experiment.id, participant.name, chatIds);
     }
 
     // Create the progression data in a separate collection
@@ -148,13 +146,10 @@ export const createExperiment = onCall(async (request) => {
 
     for (const chatId of chatIds) {
       const ref = app.firestore().doc(`participants_ready_to_end_chat/${chatId}`);
-      const readyToEndChat = participantRefs.reduce(
-        (acc, uid) => {
-          acc[uid] = false;
-          return acc;
-        },
-        {} as Record<string, boolean>,
-      );
+      const readyToEndChat = participantRefs.reduce((acc, uid) => {
+        acc[uid] = false;
+        return acc;
+      }, {} as Record<string, boolean>);
       transaction.set(ref, { chatId, readyToEndChat, currentPair: 0 });
     }
   });

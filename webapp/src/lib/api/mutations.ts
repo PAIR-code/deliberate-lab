@@ -1,31 +1,29 @@
 /** Tanstack angular mutations.
  */
 
-import { HttpClient } from '@angular/common/http';
+import {
+  ChatStageUpdate,
+  CreationResponse,
+  LeaderRevealStageUpdate,
+  LeaderVoteStageUpdate,
+  OnSuccess,
+  ProfileTOSData,
+  SurveyStageUpdate,
+} from '@llm-mediation-experiments/utils';
 import { QueryClient, injectMutation } from '@tanstack/angular-query-experimental';
-import { UserCredential, signInWithEmailAndPassword } from 'firebase/auth';
 import {
-    ChatStageUpdate,
-    CreationResponse,
-    OnError,
-    OnSuccess,
-    ProfileTOSData,
-    SurveyStageUpdate,
-} from '../types/api.types';
-import {
-    createExperimentCallable,
-    createTemplateCallable,
-    deleteExperimentCallable,
-    discussItemsMessageCallable,
-    mediatorMessageCallable,
-    toggleReadyToEndChatCallable,
-    updateProfileAndTOSCallable,
-    updateStageCallable,
-    userMessageCallable,
+  createExperimentCallable,
+  createTemplateCallable,
+  deleteExperimentCallable,
+  discussItemsMessageCallable,
+  mediatorMessageCallable,
+  toggleReadyToEndChatCallable,
+  updateProfileAndTOSCallable,
+  updateStageCallable,
+  userMessageCallable,
 } from './callables';
-import { auth } from './firebase';
 
-export const deleteExperimentMutation = (http: HttpClient, client: QueryClient) =>
+export const deleteExperimentMutation = (client: QueryClient) =>
   injectMutation(() => ({
     mutationFn: (experimentId: string) => deleteExperimentCallable({ experimentId }),
     onSuccess: () => {
@@ -58,6 +56,10 @@ export const createTemplateMutation = (
     },
   }));
 };
+
+// ********************************************************************************************* //
+//                                         STAGE MUTATIONS                                       //
+// ********************************************************************************************* //
 
 export const updateProfileAndTOSMutation = (
   client: QueryClient,
@@ -98,6 +100,32 @@ export const updateChatStageMutation = (
   }));
 };
 
+export const updateLeaderVoteStageMutation = (
+  client: QueryClient,
+  onSuccess?: OnSuccess<{ uid: string }>,
+) => {
+  return injectMutation(() => ({
+    mutationFn: (data: LeaderVoteStageUpdate) => updateStageCallable(data),
+    onSuccess: (data) => {
+      client.refetchQueries({ queryKey: ['participant', data.uid] });
+      onSuccess?.(data);
+    },
+  }));
+};
+
+export const updateLeaderRevealStageMutation = (
+  client: QueryClient,
+  onSuccess?: OnSuccess<{ uid: string }>,
+) => {
+  return injectMutation(() => ({
+    mutationFn: (data: LeaderRevealStageUpdate) => updateStageCallable(data),
+    onSuccess: (data) => {
+      client.refetchQueries({ queryKey: ['participant', data.uid] });
+      onSuccess?.(data);
+    },
+  }));
+};
+
 // ********************************************************************************************* //
 //                                         MESSAGE MUTATIONS                                     //
 // ********************************************************************************************* //
@@ -124,18 +152,5 @@ export const mediatorMessageMutation = () => {
 export const toggleChatMutation = () => {
   return injectMutation(() => ({
     mutationFn: toggleReadyToEndChatCallable,
-  }));
-};
-
-// ********************************************************************************************* //
-//                                          AUTH MUTATIONS                                       //
-// ********************************************************************************************* //
-
-// Login mutation
-export const loginMutation = (onSuccess?: OnSuccess<UserCredential>, onError?: OnError) => {
-  return injectMutation(() => ({
-    mutationFn: (code: string) => signInWithEmailAndPassword(auth, `${code}@palabrate.com`, code),
-    onSuccess,
-    onError,
   }));
 };

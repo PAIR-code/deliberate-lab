@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatSliderModule } from '@angular/material/slider';
-import { ScaleQuestion } from 'src/lib/types/questions.types';
+import { ScaleQuestion } from '@llm-mediation-experiments/utils';
 
 @Component({
   selector: 'app-survey-scale-question',

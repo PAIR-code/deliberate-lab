@@ -1,1 +1,3 @@
 *.log
+.firebaserc
+node_modules/

@@ -15,8 +15,6 @@ export const userMessage = onCall(async (request) => {
   const { data } = request;
 
   if (Value.Check(UserMessageMutationData, data)) {
-    await AuthGuard.canSendUserMessage(request, data.chatId);
-
     // Build message data
     const msgData = {
       ...data,

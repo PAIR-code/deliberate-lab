@@ -1,9 +1,11 @@
 import { Component, Inject, Input, Signal, computed } from '@angular/core';
+import {
+  ParticipantExtended,
+  UserMessage,
+  dateStrOfTimestamp,
+  lookupTable,
+} from '@llm-mediation-experiments/utils';
 import { EXPERIMENT_PROVIDER_TOKEN, ExperimentProvider } from 'src/lib/provider-tokens';
-import { UserMessage } from 'src/lib/types/messages.types';
-import { ParticipantExtended } from 'src/lib/types/participants.types';
-import { lookupTable } from 'src/lib/utils/object.utils';
-import { dateStrOfTimestamp } from 'src/lib/utils/string.utils';
 import { ChatUserProfileComponent } from '../chat-user-profile/chat-user-profile.component';
 
 @Component({

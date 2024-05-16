@@ -41,21 +41,25 @@ export class FirebaseService implements OnDestroy {
     // Subscribe to auth state changes & navigate to the appropriate page when the user is signed in
     this.unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // User is signed in, navigate to the appropriate page.
-        const { claims } = await user.getIdTokenResult();
-        if (claims['role'] === 'participant') {
-          router.navigate(['/participant', claims['participantId']]);
-        } else if (claims['role'] === 'experimenter') {
-          router.navigate(['/experimenter']);
+        const isOnHomePage = window.location.hash === '#/';
+
+        if (isOnHomePage) {
+          // User is signed in, navigate to the appropriate page.
+          const { claims } = await user.getIdTokenResult();
+
+          if (claims['role'] === 'participant') {
+            router.navigate(['/participant', claims['participantId']]);
+          } else if (claims['role'] === 'experimenter') {
+            router.navigate(['/experimenter']);
+          }
         }
       } else {
-        // No user is signed in, navigate back to home
-        router.navigate(['/']);
+        if (window.location.hash.includes('experimenter'))
+          // No user is signed in, navigate back to home
+          router.navigate(['/']);
       }
       this._user.set(user);
     });
-
-    auth.currentUser;
   }
 
   // TODO: implement gapi auth if this function must be used

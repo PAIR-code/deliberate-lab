@@ -3,8 +3,8 @@
  */
 
 import { Signal } from '@angular/core';
+import { ExperimentExtended } from '@llm-mediation-experiments/utils';
 import { injectQuery } from '@tanstack/angular-query-experimental';
-import { ExperimentExtended } from '../types/experiments.types';
 import {
   experimentCallable,
   experimentsCallable,
@@ -40,9 +40,10 @@ export const templatesQuery = () =>
   }));
 
 /** Fetch a specific participant. Can be used to verify that a participant ID is valid */
-export const participantQuery = (participantUid?: string) =>
+export const participantQuery = (participantUid?: string, isForAuth?: boolean) =>
   injectQuery(() => ({
     queryKey: ['participant', participantUid],
     queryFn: () => participantCallable({ participantUid: participantUid! }),
     disabled: participantUid === undefined,
+    retry: isForAuth ? 0 : undefined,
   }));

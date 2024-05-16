@@ -1,0 +1,37 @@
+{
+  "kind": "identitytoolkit#DownloadAccountResponse",
+  "users": [
+    {
+      "localId": "R7dWvQjkuhsCJgplJ3WtnUDsD9kR",
+      "displayName": "Experimenter",
+      "email": "experimenter@google.com",
+      "emailVerified": true,
+      "providerUserInfo": [
+        {
+          "providerId": "google.com",
+          "rawId": "1651642867512372825802162318175962691422",
+          "federatedId": "1651642867512372825802162318175962691422",
+          "displayName": "Experimenter",
+          "email": "experimenter@google.com"
+        }
+      ],
+      "photoUrl": "",
+      "customAttributes": "{\"role\": \"experimenter\"}"
+    },
+    {
+      "localId": "e5bXFO0SONUk6VYbiuThBLjrWUfL",
+      "displayName": "Not Experimenter",
+      "email": "not-experimenter@google.com",
+      "emailVerified": true,
+      "providerUserInfo": [
+        {
+          "providerId": "google.com",
+          "rawId": "5305811106632233234179828366493146036480",
+          "federatedId": "5305811106632233234179828366493146036480",
+          "displayName": "Not Experimenter",
+          "email": "not-experimenter@google.com"
+        }
+      ]
+    }
+  ]
+}

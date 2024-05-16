@@ -16,7 +16,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { bytes, describeBytes } from 'src/lib/utils/string.utils';
+import { bytes, describeBytes } from '@llm-mediation-experiments/utils';
 import { ConfigUpdate } from '../codemirror-config-editor/codemirror-config-editor.component';
 import { CodemirrorConfigEditorModule } from '../codemirror-config-editor/codemirror-config-editor.module';
 import { FirebaseService } from '../firebase.service';

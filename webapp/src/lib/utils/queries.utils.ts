@@ -1,5 +1,5 @@
 import { toObservable } from '@angular/core/rxjs-interop';
-import { QueryType } from 'src/lib/types/api.types';
+import { QueryType } from '../types/tanstack.types';
 
 /** Given an Angular Tanstack Query, returns a promise that resolves to:
  * - `true` if the query was successful

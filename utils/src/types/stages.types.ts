@@ -67,6 +67,22 @@ export type ExpStage =
   | ExpStageVoteReveal;
 
 // ********************************************************************************************* //
+//                                             UTILS                                             //
+// ********************************************************************************************* //
+
+/** Asserts that the input question is of the given type, and returns it */
+export const stageAsKind = <T extends ExpStage>(
+  stage: ExpStage | undefined,
+  kind: StageKind,
+): T => {
+  if (stage?.kind !== kind) {
+    throw new Error(`Expected stage of kind ${kind}, got ${stage?.kind}`);
+  }
+
+  return stage as T;
+};
+
+// ********************************************************************************************* //
 //                                            CONFIG                                             //
 // ********************************************************************************************* //
 
