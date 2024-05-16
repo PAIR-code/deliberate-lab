@@ -5,9 +5,11 @@ import {
   ExperimentTemplate,
   ExperimentTemplateExtended,
   ParticipantProfileExtended,
+  StageConfig,
   lookupTable,
 } from '@llm-mediation-experiments/utils';
-import { collection, doc, getDoc, getDocs, onSnapshot } from 'firebase/firestore';
+import { collection, deleteDoc, doc, getDoc, getDocs, onSnapshot } from 'firebase/firestore';
+import { createExperimentCallable } from '../api/callables';
 import { firestore } from '../api/firebase';
 import { collectSnapshotWithId } from '../utils/firestore.utils';
 import { BaseRepository } from './base.repository';
@@ -65,6 +67,39 @@ export class ExperimenterRepository extends BaseRepository {
     );
 
     return _signal;
+  }
+
+  // ******************************************************************************************* //
+  //                                          MUTATIONS                                          //
+  // ******************************************************************************************* //
+
+  /** Delete a template.
+   * @rights Experimenter
+   */
+  async deleteTemplate(templateId: string) {
+    return deleteDoc(doc(firestore, 'templates', templateId));
+  }
+
+  /** Create an experiment.
+   * @rights Experimenter
+   */
+  async createExperiment(name: string, stages: StageConfig[]) {
+    return createExperimentCallable({
+      type: 'experiments',
+      metadata: { name },
+      stages,
+    });
+  }
+
+  /** Create an experiment template.
+   * @rights Experimenter
+   */
+  async createTemplate(name: string, stages: StageConfig[]) {
+    return createExperimentCallable({
+      type: 'templates',
+      metadata: { name },
+      stages,
+    });
   }
 }
 

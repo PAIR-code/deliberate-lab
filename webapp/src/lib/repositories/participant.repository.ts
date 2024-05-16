@@ -1,6 +1,15 @@
 import { Signal, WritableSignal, signal } from '@angular/core';
-import { ParticipantProfile, StageAnswer } from '@llm-mediation-experiments/utils';
-import { collection, doc, onSnapshot } from 'firebase/firestore';
+import {
+  ParticipantProfile,
+  ParticipantProfileBase,
+  QuestionAnswer,
+  StageAnswer,
+  StageKind,
+  Votes,
+  lookupTable,
+} from '@llm-mediation-experiments/utils';
+import { collection, doc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { updateStageCallable } from '../api/callables';
 import { firestore } from '../api/firebase';
 import { BaseRepository } from './base.repository';
 
@@ -55,5 +64,61 @@ export class ParticipantRepository extends BaseRepository {
         },
       ),
     );
+  }
+
+  // ******************************************************************************************* //
+  //                                          MUTATIONS                                          //
+  // ******************************************************************************************* //
+
+  /** Update this participants's profile and acceptance of the Terms of Service.
+   * @rights Participant
+   */
+  async updateProfile(data: Partial<ParticipantProfileBase>) {
+    return updateDoc(
+      doc(firestore, 'experiments', this.experimentId, 'participants', this.participantId),
+      data,
+    );
+  }
+
+  /** Update this participant's `workingOnStageName`
+   * @rights Participant
+   */
+  async workOnStage(stageName: string) {
+    return updateDoc(
+      doc(firestore, 'experiments', this.experimentId, 'participants', this.participantId),
+      {
+        workingOnStageName: stageName,
+      },
+    );
+  }
+
+  /** Update this participant's `workingOnStageName`
+   * @rights Participant
+   */
+  async updateSurveyStage(stageName: string, answers: QuestionAnswer[]) {
+    return updateStageCallable({
+      experimentId: this.experimentId,
+      participantId: this.participantId,
+      stageName,
+      stage: {
+        kind: StageKind.TakeSurvey,
+        answers: lookupTable(answers, 'id'),
+      },
+    });
+  }
+
+  /** Update this participant's `workingOnStageName`
+   * @rights Participant
+   */
+  async updateVoteForLeaderStage(stageName: string, votes: Votes) {
+    return updateStageCallable({
+      experimentId: this.experimentId,
+      participantId: this.participantId,
+      stageName,
+      stage: {
+        kind: StageKind.VoteForLeader,
+        votes,
+      },
+    });
   }
 }

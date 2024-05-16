@@ -9,7 +9,7 @@ export const UserMessageData = Type.Object(
   {
     kind: Type.Literal(MessageKind.UserMessage),
     text: Type.String({ minLength: 1 }),
-    fromPublicParticipantId: Type.String({ minLength: 1 }),
+    fromPrivateParticipantId: Type.String({ minLength: 1 }),
   },
   strict,
 );

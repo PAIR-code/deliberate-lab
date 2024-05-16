@@ -1,6 +1,7 @@
 import { Signal, WritableSignal, signal } from '@angular/core';
-import { ChatAnswer, Message } from '@llm-mediation-experiments/utils';
-import { collection, doc, onSnapshot, orderBy, query } from 'firebase/firestore';
+import { ChatAnswer, Message, MessageKind } from '@llm-mediation-experiments/utils';
+import { collection, doc, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
+import { createMessageCallable } from '../api/callables';
 import { firestore } from '../api/firebase';
 import { collectSnapshotWithId } from '../utils/firestore.utils';
 import { BaseRepository } from './base.repository';
@@ -63,5 +64,58 @@ export class ChatRepository extends BaseRepository {
         },
       ),
     );
+  }
+
+  // ******************************************************************************************* //
+  //                                          MUTATIONS                                          //
+  // ******************************************************************************************* //
+
+  /** Mark this participant as ready to end the chat, or ready to discuss about the next pair of items.
+   * @rights Participant
+   */
+  async markReadyToEndChat() {
+    return updateDoc(
+      doc(
+        firestore,
+        'experiments',
+        this.experimentId,
+        'participants',
+        this.participantId,
+        'chats',
+        this.chatId,
+      ),
+      {
+        readyToEndChat: true,
+      },
+    );
+  }
+
+  /** Send a message as a participant.
+   * @rights Participant
+   */
+  async sendUserMessage(text: string) {
+    return createMessageCallable({
+      chatId: this.chatId,
+      experimentId: this.experimentId,
+      message: {
+        kind: MessageKind.UserMessage,
+        fromPrivateParticipantId: this.participantId,
+        text,
+      },
+    });
+  }
+
+  /** Send a message as a mediator.
+   * @rights Experimenter
+   */
+  async sendMediatorMessage(text: string) {
+    return createMessageCallable({
+      chatId: this.chatId,
+      experimentId: this.experimentId,
+      message: {
+        kind: MessageKind.MediatorMessage,
+        text,
+      },
+    });
   }
 }

@@ -59,26 +59,26 @@ interface BaseQuestionAnswer {
 export interface TextQuestionAnswer extends BaseQuestionAnswer {
   kind: SurveyQuestionKind.Text;
 
-  answerText: string | null;
+  answerText: string;
 }
 
 export interface CheckQuestionAnswer extends BaseQuestionAnswer {
   kind: SurveyQuestionKind.Check;
 
-  checkMark: boolean | null;
+  checkMark: boolean;
 }
 
 export interface RatingQuestionAnswer extends BaseQuestionAnswer {
   kind: SurveyQuestionKind.Rating;
 
-  choice: ItemName | null;
-  confidence: number | null; // Confidence in the choice, from 0 to 1
+  choice: ItemName;
+  confidence: number; // Confidence in the choice, from 0 to 1
 }
 
 export interface ScaleQuestionAnswer extends BaseQuestionAnswer {
   kind: SurveyQuestionKind.Scale;
 
-  score: number | null; // Score on a scale of 0 to 10
+  score: number; // Score on a scale of 0 to 10
 }
 
 export type QuestionAnswer =

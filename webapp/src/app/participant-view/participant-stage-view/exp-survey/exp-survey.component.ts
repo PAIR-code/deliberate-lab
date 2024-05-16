@@ -55,12 +55,12 @@ export class ExpSurveyComponent {
     subscribeSignals(
       [this.stage.config, this.stage.answers ?? signal(undefined)],
       ({ questions }, answers) => {
-        this.questions.clear();
+        this.answers.clear();
         questions.forEach((config) => {
           const answer = answers?.answers[config.id];
           // The config serves as the source of truth for the question type
           // The answer, if defined, will be used to populate the form
-          this.questions.push(buildQuestionForm(this.fb, config, answer));
+          this.answers.push(buildQuestionForm(this.fb, config, answer));
         });
       },
     );
@@ -72,22 +72,22 @@ export class ExpSurveyComponent {
 
   private _stage?: CastViewingStage<StageKind.TakeSurvey>;
 
-  public questions: FormArray;
+  public answers: FormArray;
   public surveyForm: FormGroup;
 
   readonly SurveyQuestionKind = SurveyQuestionKind;
   readonly assertCast = assertCast;
 
   constructor(private fb: FormBuilder) {
-    this.questions = fb.array([]);
+    this.answers = fb.array([]);
     this.surveyForm = fb.group({
-      questions: this.questions,
+      answers: this.answers,
     });
   }
 
   /** Returns controls for each individual question component */
   get questionControls() {
-    return this.questions.controls as FormGroup[];
+    return this.answers.controls as FormGroup[];
   }
 
   nextStep() {

@@ -1,6 +1,6 @@
 import { Signal, WritableSignal, computed, signal } from '@angular/core';
 import { Experiment, PublicStageData, StageConfig } from '@llm-mediation-experiments/utils';
-import { collection, doc, onSnapshot } from 'firebase/firestore';
+import { collection, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
 import { firestore } from '../api/firebase';
 import { BaseRepository } from './base.repository';
 
@@ -101,5 +101,16 @@ export class ExperimentRepository extends BaseRepository {
         (participant) => stages.indexOf(participant.workingOnStageName) >= targetIndex,
       );
     });
+  }
+
+  // ******************************************************************************************* //
+  //                                           MUTATIONS                                         //
+  // ******************************************************************************************* //
+
+  /** Delete the experiment..
+   * @rights Experimenter
+   */
+  async delete() {
+    return deleteDoc(doc(firestore, 'experiments', this.uid));
   }
 }

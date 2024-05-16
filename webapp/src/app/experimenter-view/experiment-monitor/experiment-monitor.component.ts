@@ -12,7 +12,6 @@ import {
   isOfKind,
 } from '@llm-mediation-experiments/utils';
 import { AppStateService } from 'src/app/services/app-state.service';
-import { deleteExperiment } from 'src/lib/api/mutations';
 import { ExperimentRepository } from 'src/lib/repositories/experiment.repository';
 import { MediatorChatComponent } from '../mediator-chat/mediator-chat.component';
 
@@ -77,9 +76,9 @@ export class ExperimentMonitorComponent {
   }
 
   deleteExperimentAndNavigate() {
-    const experimentUid = this.experimentId();
-    if (experimentUid && confirm('⚠️ This will delete the experiment! Are you sure?')) {
-      deleteExperiment(experimentUid).then(() => {
+    const experiment = this.experiment();
+    if (experiment && confirm('⚠️ This will delete the experiment! Are you sure?')) {
+      experiment.delete().then(() => {
         // Redirect to settings page.
         this.router.navigate(['/experimenter', 'settings']);
       });
