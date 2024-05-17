@@ -24,8 +24,8 @@ export class StagesSeeder {
               questionText: 'Rate the items by how helpful they would be for survival.',
               item1: {
                 name: 'shavingMirror',
-              imageUrl:
-              'https://upload.wikimedia.org/wikipedia/commons/3/32/Mirror%2C_shaving_%28AM_880330-3%29.jpg',
+                imageUrl:
+                'https://upload.wikimedia.org/wikipedia/commons/3/32/Mirror%2C_shaving_%28AM_880330-3%29.jpg',
               },
               item2: {
                   name: 'sextant',
