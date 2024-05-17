@@ -1,12 +1,19 @@
 {
   "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
     "outDir": "./dist",
-    "module": "commonjs",
+    "rootDir": "./src",
+    "moduleResolution": "node",
     "declaration": true,
-    "preserveConstEnums": true,
-    "strict": true,
+    "declarationMap": true,
     "sourceMap": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "preserveConstEnums": true,
     "lib": ["ESNext", "dom"]
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

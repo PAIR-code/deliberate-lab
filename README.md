@@ -48,14 +48,14 @@ This is a repository to support collaboration on using LLMs in behavioral econom
 
 ## Shared Utilities
 
-The webapp, cloud functions, and seeding scripts share some utilities. These are located in the [`utils`](./utils) directory.
-
 To build the shared utilities and watch for changes, run the following command:
 
 ```bash
 cd utils
 npm run build:watch
 ```
+
+The shared utilities are built using [`tsup`](https://tsup.egoist.dev) to produce both esm (for the webapp) and cjs (for the cloud functions and scripts) code.
 
 ## Firebase
 

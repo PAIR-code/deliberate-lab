@@ -1,12 +1,13 @@
 {
   "name": "@llm-mediation-experiments/utils",
   "version": "1.0.0",
-  "description": "",
+  "description": "Shared utilities for frontend and backend",
   "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "build:watch": "tsc -w"
+    "build": "tsup",
+    "build:watch": "tsup --watch"
   },
   "files": [
     "dist/**/*"
@@ -14,5 +15,9 @@
   "peerDependencies": {
     "@sinclair/typebox": "^0.32.30",
     "firebase": "^10.11.1"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.5"
   }
 }
