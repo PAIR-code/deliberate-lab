@@ -112,8 +112,8 @@ export const getDefaultItemRatingsQuestion = (): RatingQuestionConfig => {
     id: 0,
     kind: SurveyQuestionKind.Rating,
     questionText: '',
-    item1: 'blanket',
-    item2: 'compas',
+    item1: 'sextant',
+    item2: 'shavingMirror',
   };
 };
 
