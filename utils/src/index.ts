@@ -15,6 +15,7 @@ export * from './types/votes.types';
 export * from './utils/algebraic.utils';
 export * from './utils/cache.utils';
 export * from './utils/object.utils';
+export * from './utils/random.utils';
 export * from './utils/string.utils';
 
 // Validation (peer dependency: @sinclair/typebox)

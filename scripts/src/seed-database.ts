@@ -4,54 +4,22 @@ import {
   Experiment,
   ExperimentTemplate,
   ITEM_NAMES,
-  ItemName,
-  QuestionConfig,
+  RatingQuestionConfig,
   StageConfig,
   StageKind,
   SurveyQuestionKind,
+  choices,
   getDefaultProfile,
+  pairs,
   participantPublicId,
+  seed,
 } from '@llm-mediation-experiments/utils';
 import { Timestamp } from 'firebase-admin/firestore';
 import admin, { initializeApp } from './admin';
 
 initializeApp();
 
-// TODO: bouger ça dans des utils, rassifier les types, et ammend le commit, puis push force with lease
-// function to generate n random pairs from all the ITEMS
-const getRandomPairs = (itemNames: readonly ItemName[], pairNum: number) => {
-  const itemPairs = [];
-  for (let i = 0; i < itemNames.length; i++) {
-    for (let j = i + 1; j < itemNames.length; j++) {
-      itemPairs.push([itemNames[i], itemNames[j]]);
-    }
-  }
-
-  const randomPairs = [];
-  // no duplicates
-  while (randomPairs.length < pairNum) {
-    const randomIndex = Math.floor(Math.random() * itemPairs.length);
-    // randomly swap the first and second item in the pair
-    const randomPair = itemPairs[randomIndex];
-    if (Math.random() > 0.5) {
-      itemPairs[randomIndex] = [itemPairs[randomIndex][1], itemPairs[randomIndex][0]];
-    }
-    randomPairs.push(randomPair);
-    itemPairs.splice(randomIndex, 1);
-  }
-
-  return randomPairs;
-};
-
-const randomPairs = getRandomPairs(ITEM_NAMES, 5);
-
-const ratingQuestions: QuestionConfig[] = randomPairs.map(([item1, item2], id) => ({
-  id,
-  kind: SurveyQuestionKind.Rating,
-  questionText: 'Rate the items by how helpful they would be for survival.',
-  item1,
-  item2,
-}));
+seed(585050400); // Seed the random number generator
 
 const seedDatabase = async () => {
   const db = admin.firestore();
@@ -119,6 +87,17 @@ const seedDatabase = async () => {
 // ********************************************************************************************* //
 //                                         SEEDER DATA                                           //
 // ********************************************************************************************* //
+const RANDOM_ITEM_PAIRS = choices(pairs(ITEM_NAMES), 5);
+
+const RATING_QUESTION_CONFIGS: RatingQuestionConfig[] = RANDOM_ITEM_PAIRS.map(
+  ([item1, item2], id) => ({
+    id,
+    kind: SurveyQuestionKind.Rating,
+    questionText: 'Rate the items by how helpful they would be for survival.',
+    item1,
+    item2,
+  }),
+);
 
 const DEFAULT_STAGES: Record<string, StageConfig> = {
   '1. Agree to the experiment and set your profile': {
@@ -135,7 +114,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     name: '2. Initial leadership survey',
     kind: StageKind.TakeSurvey,
     questions: [
-      ...ratingQuestions,
+      ...RATING_QUESTION_CONFIGS,
       {
         id: 99, // Avoid collision with rating questions id (starting from 0)
         kind: SurveyQuestionKind.Scale,
@@ -143,7 +122,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
         lowerBound: 'I would most definitely not like to be the leader (0/10)',
         upperBound: 'I will fight to be the leader (10/10)',
       },
-    ] as QuestionConfig[],
+    ],
   },
 
   '3. Group discussion': {
@@ -152,7 +131,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     chatId: 'chat-0',
     chatConfig: {
       kind: ChatKind.ChatAboutItems,
-      ratingsToDiscuss: randomPairs.map(([i1, i2]) => ({ item1: i1, item2: i2 })),
+      ratingsToDiscuss: RANDOM_ITEM_PAIRS.map(([i1, i2]) => ({ item1: i1, item2: i2 })),
     },
   },
 
@@ -193,7 +172,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
   '7. Post-discussion work': {
     name: '7. Post-discussion work',
     kind: StageKind.TakeSurvey,
-    questions: ratingQuestions,
+    questions: RATING_QUESTION_CONFIGS,
   },
 
   '8. Leader reveal': {
