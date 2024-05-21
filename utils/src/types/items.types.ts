@@ -37,17 +37,17 @@ export const ITEM_NAMES = [
 export type ItemName = (typeof ITEM_NAMES)[number];
 export const ITEMS: Record<ItemName, Item> = {
   sextant: {
-    name: 'sextant',
+    name: 'Sextant',
     imageUrl:
       'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Sextant_von_Alexander_von_Humboldt.jpg/640px-Sextant_von_Alexander_von_Humboldt.jpg',
   },
   shavingMirror: {
-    name: 'shavingMirror',
+    name: 'Shaving mirror',
     imageUrl:
       'https://upload.wikimedia.org/wikipedia/commons/3/32/Mirror%2C_shaving_%28AM_880330-3%29.jpg',
   },
   mosquitoNetting: {
-    name: 'mosquitoNetting',
+    name: 'Mosquito netting',
     imageUrl:
       'https://commons.wikimedia.org/wiki/Category:Mosquito_nets#/media/File:Net,_mosquito_(AM_2015.20.7-1).jpg',
   },
