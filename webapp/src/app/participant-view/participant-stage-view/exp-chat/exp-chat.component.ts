@@ -102,8 +102,11 @@ export class ExpChatComponent {
       });
 
       effect(() => {
+        // Only if we are currently working on this stage
+        if (this.participantService.workingOnStageName() !== this.stage.config().name) return;
         this.currentRatingsIndex(); // Trigger reactivity when the currentRatingsIndex changes
         this.chat?.markReadyToEndChat(false); // Reset readyToEndChat when the items to discuss change
+        this.timer.reset(TIMER_SECONDS); // Reset the timer
       });
 
       if (this.participantService.workingOnStageName() === this.stage.config().name) {
