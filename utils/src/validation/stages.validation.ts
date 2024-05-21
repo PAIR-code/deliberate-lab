@@ -33,18 +33,8 @@ export const TermsOfServiceConfigData = Type.Object(
 /** Profile stage config */
 export const ProfileStageConfigData = Type.Object(
   {
-    kind: Type.Literal(StageKind.Profile),
+    kind: Type.Literal(StageKind.SetProfile),
     name: Type.String({ minLength: 1 }),
-  },
-  strict,
-);
-
-/** Accept TOS and set profile stage config */
-export const TOSAndProfileConfigData = Type.Object(
-  {
-    kind: Type.Literal(StageKind.AcceptTosAndSetProfile),
-    name: Type.String({ minLength: 1 }),
-    tosLines: Type.Array(Type.String({ minLength: 1 })),
   },
   strict,
 );
