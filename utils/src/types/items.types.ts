@@ -49,7 +49,7 @@ export const ITEMS: Record<ItemName, Item> = {
   mosquitoNetting: {
     name: 'Mosquito netting',
     imageUrl:
-      'https://commons.wikimedia.org/wiki/Category:Mosquito_nets#/media/File:Net,_mosquito_(AM_2015.20.7-1).jpg',
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Net%2C_mosquito_%28AM_2015.20.7-1%29.jpg/2560px-Net%2C_mosquito_%28AM_2015.20.7-1%29.jpg',
   },
   waterContainer: {
     name: '25 liter container of Water',
