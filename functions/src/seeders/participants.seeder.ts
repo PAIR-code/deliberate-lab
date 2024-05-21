@@ -9,15 +9,10 @@ export class ParticipantSeeder {
    * @param experimentId the experiment this participant belongs to
    * @param stages the empty stages of the experiment, for this participant
    */
-  public static create(
-    experimentId: string,
-    stageMap: Record<string, object>,
-    allowedStageProgressionMap: Record<string, boolean>,
-  ) {
+  public static create(experimentId: string, stageMap: Record<string, object>) {
     return {
       experimentId,
       stageMap,
-      allowedStageProgressionMap,
       acceptTosTimestamp: null,
       futureStageNames: Object.keys(stageMap).slice(1),
       workingOnStageName: Object.keys(stageMap)[0],
@@ -28,15 +23,10 @@ export class ParticipantSeeder {
     };
   }
 
-  public static createMany(
-    experimentId: string,
-    stageMap: Record<string, object>,
-    allowedStageProgressionMap: Record<string, boolean>,
-    count: number,
-  ) {
+  public static createMany(experimentId: string, stageMap: Record<string, object>, count: number) {
     const participants = [];
     for (let i = 0; i < count; i++) {
-      participants.push(this.create(experimentId, stageMap, allowedStageProgressionMap));
+      participants.push(this.create(experimentId, stageMap));
     }
     return participants;
   }

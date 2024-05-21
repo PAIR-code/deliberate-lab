@@ -1,137 +1,128 @@
 /** Survey question types */
 
-import { uniqueId } from "../utils/algebraic.utils";
-import { ExcludeProps } from "../utils/object.utils";
-import { ItemPairWithRatings, getDefaultItemRating } from "./items.types";
-import { TosAndUserProfile } from "./participants.types";
+import { ItemName } from './items.types';
 
 export enum SurveyQuestionKind {
-  Text = "TextQuestion",
-  Check = "CheckQuestion",
-  Rating = "RatingQuestion",
-  Scale = "ScaleQuestion",
+  Text = 'TextQuestion',
+  Check = 'CheckQuestion',
+  Rating = 'RatingQuestion',
+  Scale = 'ScaleQuestion',
 }
 
-export interface AbstractQuestion {
+// ********************************************************************************************* //
+//                                           CONFIGS                                             //
+// ********************************************************************************************* //
+
+interface BaseQuestionConfig {
   kind: SurveyQuestionKind;
+  id: number; // Note that the question id is not related to the question's position in the survey
   questionText: string;
-
-  id: string;
 }
 
-/** The actual response data to be sent to the backend */
-export type QuestionAnswer<T> = ExcludeProps<T, AbstractQuestion>;
+export interface TextQuestionConfig extends BaseQuestionConfig {
+  kind: SurveyQuestionKind.Text;
+}
 
-export interface TextQuestion extends AbstractQuestion {
+export interface CheckQuestionConfig extends BaseQuestionConfig {
+  kind: SurveyQuestionKind.Check;
+}
+
+export interface RatingQuestionConfig extends BaseQuestionConfig {
+  kind: SurveyQuestionKind.Rating;
+
+  item1: ItemName;
+  item2: ItemName;
+}
+
+export interface ScaleQuestionConfig extends BaseQuestionConfig {
+  kind: SurveyQuestionKind.Scale;
+
+  upperBound: string; // Description for the upper bound of the scale
+  lowerBound: string; // Description for the lower bound of the scale
+}
+
+export type QuestionConfig =
+  | TextQuestionConfig
+  | CheckQuestionConfig
+  | RatingQuestionConfig
+  | ScaleQuestionConfig;
+
+// ********************************************************************************************* //
+//                                           ANSWERS                                             //
+// ********************************************************************************************* //
+
+interface BaseQuestionAnswer {
+  kind: SurveyQuestionKind;
+  id: number;
+}
+
+export interface TextQuestionAnswer extends BaseQuestionAnswer {
   kind: SurveyQuestionKind.Text;
 
   answerText: string;
 }
 
-export interface CheckQuestion extends AbstractQuestion {
+export interface CheckQuestionAnswer extends BaseQuestionAnswer {
   kind: SurveyQuestionKind.Check;
 
-  checkMark: boolean | null;
+  checkMark: boolean;
 }
 
-export interface RatingQuestion extends AbstractQuestion, ItemPairWithRatings {
+export interface RatingQuestionAnswer extends BaseQuestionAnswer {
   kind: SurveyQuestionKind.Rating;
+
+  choice: ItemName;
+  confidence: number; // Confidence in the choice, from 0 to 1
 }
 
-export interface ScaleQuestion extends AbstractQuestion {
+export interface ScaleQuestionAnswer extends BaseQuestionAnswer {
   kind: SurveyQuestionKind.Scale;
 
-  upperBound: string; // Descriptor for the upper bound of the scale
-  lowerBound: string; // Descriptor for the lower bound of the scale
-  score: number | null; //  10 point scale.
+  score: number; // Score on a scale of 0 to 10
 }
 
-export type Question =
-  | TextQuestion
-  | RatingQuestion
-  | ScaleQuestion
-  | CheckQuestion;
-
-export type QuestionUpdate =
-  | QuestionAnswer<TextQuestion>
-  | QuestionAnswer<CheckQuestion>
-  | QuestionAnswer<RatingQuestion>
-  | QuestionAnswer<ScaleQuestion>;
-
-export interface Survey {
-  questions: Question[];
-}
+export type QuestionAnswer =
+  | TextQuestionAnswer
+  | CheckQuestionAnswer
+  | RatingQuestionAnswer
+  | ScaleQuestionAnswer;
 
 // ********************************************************************************************* //
-//                                             UTILS                                             //
+//                                       DEFAULT CONFIGS                                         //
 // ********************************************************************************************* //
 
-/** Asserts that the input question is of the given type, and returns it */
-export const questionAsKind = <T extends Question>(
-  question: Question,
-  kind: SurveyQuestionKind
-): T => {
-  if (question.kind !== kind) {
-    throw new Error(`Expected question of kind ${kind}, got ${question.kind}`);
-  }
-
-  return question as T;
-};
-
-// ********************************************************************************************* //
-//                                           DEFAULTS                                            //
-// ********************************************************************************************* //
-
-export const getDefaultTextQuestion = (): TextQuestion => {
+export const getDefaultTextQuestion = (): TextQuestionConfig => {
   return {
+    id: 0,
     kind: SurveyQuestionKind.Text,
-    id: uniqueId(),
-    questionText: "",
-    answerText: "",
+    questionText: '',
   };
 };
 
-export const getDefaultCheckQuestion = (): CheckQuestion => {
+export const getDefaultCheckQuestion = (): CheckQuestionConfig => {
   return {
+    id: 0,
     kind: SurveyQuestionKind.Check,
-    id: uniqueId(),
-    questionText: "",
-    checkMark: null,
+    questionText: '',
   };
 };
 
-export const getDefaultItemRatingsQuestion = (): RatingQuestion => {
+export const getDefaultItemRatingsQuestion = (): RatingQuestionConfig => {
   return {
+    id: 0,
     kind: SurveyQuestionKind.Rating,
-    id: uniqueId(),
-    questionText: "",
-    ...getDefaultItemRating(),
+    questionText: '',
+    item1: 'sextant',
+    item2: 'shavingMirror',
   };
 };
 
-export const getDefaultScaleQuestion = (): ScaleQuestion => {
+export const getDefaultScaleQuestion = (): ScaleQuestionConfig => {
   return {
+    id: 0,
     kind: SurveyQuestionKind.Scale,
-    id: uniqueId(),
-    questionText: "",
-    upperBound: "",
-    lowerBound: "",
-    score: null,
-  };
-};
-
-export const getDefaultSurveyConfig = (): Survey => {
-  return {
-    questions: [],
-  };
-};
-
-export const getDefaultTosAndUserProfileConfig = (): TosAndUserProfile => {
-  return {
-    pronouns: "",
-    avatarUrl: "",
-    name: "",
-    tosLines: [""],
-    acceptTosTimestamp: null,
+    questionText: '',
+    upperBound: '',
+    lowerBound: '',
   };
 };

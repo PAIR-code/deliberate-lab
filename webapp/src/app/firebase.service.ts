@@ -1,7 +1,6 @@
-import { Injectable, OnDestroy, Signal, WritableSignal, signal } from '@angular/core';
+import { Injectable, Signal, WritableSignal, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { Unsubscribe, User, onAuthStateChanged } from 'firebase/auth';
-import { environment } from 'src/environments/environment';
+import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth } from 'src/lib/api/firebase';
 
 // NOTE: if using gapi to save files to google drive is REALLY necessary, modify the authentication this way:
@@ -16,9 +15,7 @@ const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/res
 @Injectable({
   providedIn: 'root',
 })
-export class FirebaseService implements OnDestroy {
-  unsubscribeAuth: Unsubscribe;
-
+export class FirebaseService {
   // User authentication data
   private _user: WritableSignal<User | null> = signal(null);
   public get user() {
@@ -30,7 +27,7 @@ export class FirebaseService implements OnDestroy {
   private gapiClientLoaded = new Promise<void>((resolve) => {
     gapi.load('client', async () => {
       await gapi.client.init({
-        apiKey: environment.driveApiKey,
+        apiKey: '', // environment.driveApiKey,
         discoveryDocs: [DISCOVERY_DOC],
       });
       resolve();
@@ -39,25 +36,21 @@ export class FirebaseService implements OnDestroy {
 
   constructor(router: Router) {
     // Subscribe to auth state changes & navigate to the appropriate page when the user is signed in
-    this.unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+    onAuthStateChanged(auth, async (user) => {
       if (user) {
         const isOnHomePage = window.location.hash === '#/';
 
+        // Redirect experimenters to the correct page on login
+        // Note that no redirection on logout needs to be specified, as they are handled by route guards
         if (isOnHomePage) {
           // User is signed in, navigate to the appropriate page.
           const { claims } = await user.getIdTokenResult();
-
-          if (claims['role'] === 'participant') {
-            router.navigate(['/participant', claims['participantId']]);
-          } else if (claims['role'] === 'experimenter') {
+          if (claims['role'] === 'experimenter') {
             router.navigate(['/experimenter']);
           }
         }
-      } else {
-        if (window.location.hash.includes('experimenter'))
-          // No user is signed in, navigate back to home
-          router.navigate(['/']);
       }
+
       this._user.set(user);
     });
   }
@@ -103,9 +96,5 @@ export class FirebaseService implements OnDestroy {
         console.log('File created successfully on Google Drive:', file);
       }
     });
-  }
-
-  ngOnDestroy() {
-    this.unsubscribeAuth();
   }
 }

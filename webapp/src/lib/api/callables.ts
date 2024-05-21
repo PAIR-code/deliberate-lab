@@ -1,20 +1,12 @@
 /** Firebase cloud function callables */
 
 import {
-  ChatToggleUpdate,
   CreationResponse,
-  DiscussItemsMessageMutationData,
-  Experiment,
   ExperimentCreationData,
-  ExperimentExtended,
-  GenericStageUpdate,
-  MediatorMessageMutationData,
-  ParticipantExtended,
-  ProfileTOSData,
+  ExperimentDeletionData,
+  MessageData,
   SimpleResponse,
-  Template,
-  TemplateCreationData,
-  UserMessageMutationData,
+  StageAnswerData,
 } from '@llm-mediation-experiments/utils';
 import { HttpsCallableResult, httpsCallable } from 'firebase/functions';
 import { functions } from './firebase';
@@ -25,58 +17,22 @@ const data =
   (args?: TArgs) =>
     f(args).then((r) => r.data);
 
-export const experimentsCallable = data(
-  httpsCallable<never, SimpleResponse<Experiment[]>>(functions, 'experiments'),
+/** Generic endpoint to create messages */
+export const createMessageCallable = data(
+  httpsCallable<MessageData, SimpleResponse<string>>(functions, 'message'),
 );
 
-export const experimentCallable = data(
-  httpsCallable<{ experimentUid: string }, ExperimentExtended>(functions, 'experiment'),
-);
-
-export const deleteExperimentCallable = data(
-  httpsCallable<{ experimentId: string }, SimpleResponse<string>>(functions, 'deleteExperiment'),
-);
-
+/** Generic endpoint to create experiments or experiment templates */
 export const createExperimentCallable = data(
   httpsCallable<ExperimentCreationData, CreationResponse>(functions, 'createExperiment'),
 );
 
-export const userMessageCallable = data(
-  httpsCallable<UserMessageMutationData, CreationResponse>(functions, 'userMessage'),
-);
-
-export const discussItemsMessageCallable = data(
-  httpsCallable<DiscussItemsMessageMutationData, CreationResponse>(
-    functions,
-    'discussItemsMessage',
-  ),
-);
-
-export const mediatorMessageCallable = data(
-  httpsCallable<MediatorMessageMutationData, CreationResponse>(functions, 'mediatorMessage'),
-);
-
-export const participantCallable = data(
-  httpsCallable<{ participantUid: string }, ParticipantExtended>(functions, 'participant'),
-);
-
-export const updateProfileAndTOSCallable = data(
-  httpsCallable<ProfileTOSData, ProfileTOSData>(functions, 'updateProfileAndTOS'),
-);
-
+/** Generic endpoint to update any participant stage */
 export const updateStageCallable = data(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  httpsCallable<GenericStageUpdate<any>, CreationResponse>(functions, 'updateStage'),
+  httpsCallable<StageAnswerData, SimpleResponse<string>>(functions, 'updateStage'),
 );
 
-export const toggleReadyToEndChatCallable = data(
-  httpsCallable<ChatToggleUpdate, CreationResponse>(functions, 'toggleReadyToEndChat'),
-);
-
-export const templatesCallable = data(
-  httpsCallable<never, SimpleResponse<Template[]>>(functions, 'templates'),
-);
-
-export const createTemplateCallable = data(
-  httpsCallable<TemplateCreationData, CreationResponse>(functions, 'createTemplate'),
+/** Generic endpoint to delete experiments or experiment templates */
+export const deleteExperimentCallable = data(
+  httpsCallable<ExperimentDeletionData, never>(functions, 'deleteExperiment'),
 );

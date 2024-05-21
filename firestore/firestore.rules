@@ -2,26 +2,92 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Rules for the messages collection
-    match /messages/{messageId} {
-      allow list: if request.auth.token.role == 'experimenter' || request.auth.token.role == 'participant';
+    // ***************************************************************************************** //
+    //                                     VALIDATION FUNCTIONS                                  //
+    // ***************************************************************************************** //
+
+    function validateString(value) {
+      return value is string;
     }
 
-    // Rules for the participants_progressions collection
-    match /participants_progressions/{progressionId} {
-      // Allow single-document reads
-      allow read: if true;
+    function validateInt(value) {
+      return value is int
     }
 
-    // Rules for the chat toggle collection
-    match /participants_ready_to_end_chat/{chatId} {
-      // Allow single document reads
-      allow read: if true;
+    function validateFloat(value) {
+      return value is int || value is float;
     }
 
-    // Else: disallow everything (access via cloud functions only)
-    match /{document=**} {
-      allow read, write: if false;
+    function validateTimestamp(value) {
+      return value.keys().hasAll(['seconds', 'nanoseconds']) &&
+        validateNumber(value.seconds) &&
+        validateNumber(value.nanoseconds);
+    }
+
+    // Validate the profile
+    function validateProfile(value) {
+      return value.keys().hasOnly(['pronouns', 'avatarUrl', 'name', 'acceptTosTimestamp']) &&
+        (!('pronouns' in value) || validateString(value.pronouns)) &&
+        (!('avatarUrl' in value) || validateString(value.avatarUrl)) &&
+        (!('name' in value) || validateString(value.name)) &&
+        (!('acceptTosTimestamp' in value) || validateTimestamp(value.acceptTosTimestamp));
+    }
+
+    // Validate the chat document data
+    function validateChat(value) {
+      return value.keys().hasOnly(['readyToEndChat']) && value.readyToEndChat == false;
+    }
+
+    // ***************************************************************************************** //
+    //                                            RULES                                          //
+    // ***************************************************************************************** //
+
+    // Template rules (experimenter-only)
+    match /templates/{documents=**} {
+      allow read: if request.auth.token.role == 'experimenter';
+      allow write: if false; // Complex validation through cloud functions 
+    }
+
+    // Experiment rules
+    match /experiments/{experimentId} {
+
+      allow get: if true;
+      allow list: if request.auth.token.role == 'experimenter';
+      allow delete: if request.auth.token.role == 'experimenter';
+      allow write: if false; // Complex validation through cloud functions
+
+      match /stages/{stageId} {
+        allow read: if true; // Public read
+        allow write: if false; // Write as experimenter through cloud functions
+      }
+
+      match /publicStageData/{stageId} {
+        allow read: if true;
+        allow write: if false; // Public readonly for everyone. Computed through firestore triggers
+      }
+
+      // Participant rules
+      match /participants/{participantId} {
+
+        allow get: if true; // Public if you know the ID
+        allow list: if request.auth.token.role == 'experimenter'; // Avoid leaking IDs (only experimenters can view them)
+        allow update: if true; // validateProfile(request.resource.data); // emulator bug
+
+        match /stages/{stageId} {
+          allow read: if true;
+          allow write: if false; // Complex validation through cloud functions
+        }
+
+        match /chats/{chatId} {
+          allow read: if true;
+          allow update: if true; // validateChat(request.resource.data); // emulator bug
+        
+          match /messages/{messageId} {
+            allow read: if true;
+            allow write: if false; // Replication to all participants done through cloud functions in order to avoid trigger loops
+          }
+        }
+      }
     }
   }
 }

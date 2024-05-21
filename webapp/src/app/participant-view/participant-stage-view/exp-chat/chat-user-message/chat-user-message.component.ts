@@ -1,11 +1,10 @@
-import { Component, Inject, Input, Signal, computed } from '@angular/core';
+import { Component, Input, Signal, computed } from '@angular/core';
 import {
-  ParticipantExtended,
+  ParticipantProfile,
   UserMessage,
   dateStrOfTimestamp,
-  lookupTable,
 } from '@llm-mediation-experiments/utils';
-import { EXPERIMENT_PROVIDER_TOKEN, ExperimentProvider } from 'src/lib/provider-tokens';
+import { ParticipantService } from 'src/app/services/participant.service';
 import { ChatUserProfileComponent } from '../chat-user-profile/chat-user-profile.component';
 
 @Component({
@@ -18,11 +17,11 @@ import { ChatUserProfileComponent } from '../chat-user-profile/chat-user-profile
 export class ChatUserMessageComponent {
   @Input() message!: UserMessage;
 
-  lookup: Signal<Record<string, ParticipantExtended>>;
+  participants: Signal<Record<string, ParticipantProfile>>;
 
-  constructor(@Inject(EXPERIMENT_PROVIDER_TOKEN) experimentProvider: ExperimentProvider) {
-    this.lookup = computed(() =>
-      lookupTable(experimentProvider.get()()?.participants ?? [], 'uid'),
+  constructor(participantService: ParticipantService) {
+    this.participants = computed(
+      () => participantService.experiment()?.experiment()?.participants ?? {},
     );
   }
 

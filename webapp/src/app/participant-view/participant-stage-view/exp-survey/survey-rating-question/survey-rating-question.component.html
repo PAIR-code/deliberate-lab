@@ -3,18 +3,18 @@
     <div class="title">{{ question.questionText }}</div>
     <mat-radio-group formControlName="choice" class="item-pair-displays">
       <mat-radio-button
-        class="item-pair-item {{ question.choice === 'item1' ? 'selected' : '' }}"
-        value="item1"
+        class="item-pair-item {{ questionForm.value['choice'] === 'item1' ? 'selected' : '' }}"
+        [value]="question.item1"
       >
-        <img src="{{ question.item1.imageUrl }}" alt="{{ question.item1.name }}" />
-        <span class="item-pair-item-name">{{ question.item1.name }}</span>
+        <img src="{{ ITEMS[question.item1].imageUrl }}" alt="{{ ITEMS[question.item1].name }}" />
+        <span class="item-pair-item-name">{{ ITEMS[question.item1].name }}</span>
       </mat-radio-button>
       <mat-radio-button
-        class="item-pair-item {{ question.choice === 'item2' ? 'selected' : '' }}"
-        value="item2"
+        class="item-pair-item {{ questionForm.value['choice'] === 'item2' ? 'selected' : '' }}"
+        [value]="question.item1"
       >
-        <img src="{{ question.item2.imageUrl }}" alt="{{ question.item2.name }}" />
-        <span class="item-pair-item-name">{{ question.item2.name }}</span>
+        <img src="{{ ITEMS[question.item2].imageUrl }}" alt="{{ ITEMS[question.item2].name }}" />
+        <span class="item-pair-item-name">{{ ITEMS[question.item2].name }}</span>
       </mat-radio-button>
     </mat-radio-group>
 
@@ -22,12 +22,18 @@
       <div class="item-pair-confidence">
         <div class="confidence-value">
           <strong>Confidence:</strong>
-          <span class="value {{ question.confidence === null ? 'not-rated' : '' }}">
-            {{ question.confidence !== null ? question.confidence.toFixed(1) : 'Not rated' }}
+          <span class="value {{ questionForm.value['confidence'] === null ? 'not-rated' : '' }}">
+            {{
+              questionForm.value['confidence'] !== null
+                ? questionForm.value['confidence'].toFixed(1)
+                : 'Not rated'
+            }}
           </span>
         </div>
         <div class="slider-container">
-          @if (question.confidence === 0 || question.confidence === null) {
+          @if (
+            questionForm.value['confidence'] === 0 || questionForm.value['confidence'] === null
+          ) {
             <span class="slider-end-label"><b> 50/50 🤷</b></span>
           } @else {
             <span class="slider-end-label">50/50 🤷</span>
@@ -35,7 +41,7 @@
           <mat-slider min="0" max="1" step="0.1" discrete>
             <input matSliderThumb formControlName="confidence" />
           </mat-slider>
-          @if (question.confidence === 1) {
+          @if (questionForm.value['confidence'] === 1) {
             <span class="slider-end-label"
               >👍<b> Full <br />confidence</b></span
             >

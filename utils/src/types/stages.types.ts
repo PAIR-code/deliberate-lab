@@ -1,11 +1,12 @@
 /** Stages types & default definitions */
 
-import { ChatAboutItems } from './chats.types';
-import { TosAndUserProfile } from './participants.types';
-import { Survey } from './questions.types';
-import { VoteReveal, Votes } from './votes.types';
+import { ChatConfig, PublicChatData } from './chats.types';
+import { QuestionAnswer, QuestionConfig } from './questions.types';
+import { Votes } from './votes.types';
 
 export enum StageKind {
+  TermsOfService = 'termsOfService',
+  Profile = 'profile',
   AcceptTosAndSetProfile = 'acceptTosAndSetProfile',
   GroupChat = 'groupChat',
   VoteForLeader = 'voteForLeader',
@@ -14,87 +15,147 @@ export enum StageKind {
   // RankItems = 'rankItems',
 }
 
-export type ExpConfig =
-  | TosAndUserProfile
-  | Survey
-  | Votes
-  | ChatAboutItems
-  //| ItemRatings
-  | VoteReveal;
+// ********************************************************************************************* //
+//                                           CONFIGS                                             //
+// ********************************************************************************************* //
 
-export interface GenericExpStage {
+/** Some stages require all participants to finish before allowing anyone to go on to the next stage */
+export const ALLOWED_STAGE_PROGRESSION = {
+  [StageKind.AcceptTosAndSetProfile]: false,
+  [StageKind.GroupChat]: false,
+  [StageKind.VoteForLeader]: true,
+  [StageKind.RevealVoted]: false,
+  [StageKind.TakeSurvey]: true,
+  // [StageKind.RankItems]: false,
+} as const;
+
+interface BaseStageConfig {
   kind: StageKind;
   name: string;
-  config: ExpConfig;
 }
 
-export interface ExpStageChatAboutItems extends GenericExpStage {
-  kind: StageKind.GroupChat;
-  config: ChatAboutItems;
+export interface TermsOfServiceStageConfig extends BaseStageConfig {
+  kind: StageKind.TermsOfService;
+
+  tosLines: string[];
 }
 
-export interface ExpStageVotes extends GenericExpStage {
-  kind: StageKind.VoteForLeader;
-  config: Votes;
+export interface ProfileStageConfig extends BaseStageConfig {
+  kind: StageKind.Profile;
 }
 
-export interface ExpStageTosAndUserProfile extends GenericExpStage {
+export interface AcceptTosAndSetProfileStageConfig extends BaseStageConfig {
   kind: StageKind.AcceptTosAndSetProfile;
-  config: TosAndUserProfile;
+
+  tosLines: string[];
 }
 
-export interface ExpStageSurvey extends GenericExpStage {
+export interface SurveyStageConfig extends BaseStageConfig {
   kind: StageKind.TakeSurvey;
-  config: Survey;
+
+  questions: QuestionConfig[];
 }
 
-export interface ExpStageVoteReveal extends GenericExpStage {
+export interface GroupChatStageConfig extends BaseStageConfig {
+  kind: StageKind.GroupChat;
+
+  chatId: string;
+  chatConfig: ChatConfig;
+}
+
+export interface VoteForLeaderStageConfig extends BaseStageConfig {
+  kind: StageKind.VoteForLeader;
+}
+
+export interface RevealVotedStageConfig extends BaseStageConfig {
   kind: StageKind.RevealVoted;
-  config: VoteReveal;
+
+  pendingVoteStageName: string; // Name of the `VoteForLeader` stage that this stage is revealing the results of
 }
 
-// export interface ExpStageItemRatings extends GenericExpStage {
-//   kind: StageKind.RankItems;
-//   config: ItemRatings;
-// }
-
-export type ExpStage =
-  | ExpStageTosAndUserProfile
-  | ExpStageSurvey
-  | ExpStageVotes
-  | ExpStageChatAboutItems
-  // | ExpStageItemRatings
-  | ExpStageVoteReveal;
+export type StageConfig =
+  | TermsOfServiceStageConfig
+  | ProfileStageConfig
+  | AcceptTosAndSetProfileStageConfig
+  | SurveyStageConfig
+  | GroupChatStageConfig
+  | VoteForLeaderStageConfig
+  | RevealVotedStageConfig;
 
 // ********************************************************************************************* //
-//                                             UTILS                                             //
+//                                           ANSWERS                                             //
 // ********************************************************************************************* //
 
-/** Asserts that the input question is of the given type, and returns it */
-export const stageAsKind = <T extends ExpStage>(
-  stage: ExpStage | undefined,
-  kind: StageKind,
-): T => {
-  if (stage?.kind !== kind) {
-    throw new Error(`Expected stage of kind ${kind}, got ${stage?.kind}`);
-  }
+interface BaseStageAnswer {
+  kind: StageKind;
+}
 
-  return stage as T;
+export interface SurveyStageAnswer extends BaseStageAnswer {
+  kind: StageKind.TakeSurvey;
+
+  // For convenience, we store answers in a `question id` -> `answer` record
+  answers: Record<number, QuestionAnswer>;
+}
+
+export interface VoteForLeaderStageAnswer extends BaseStageAnswer {
+  kind: StageKind.VoteForLeader;
+
+  votes: Votes;
+}
+
+// NOTE: profile & TOS stages do not have "answers", as the results are stored directly in the participant profile.
+// NOTE: answer documents are lazily created in firestore. They may not exist before the participant submits their answers for the first time.
+export type StageAnswer = SurveyStageAnswer | VoteForLeaderStageAnswer;
+
+// ********************************************************************************************* //
+//                                        PUBLIC DATA                                            //
+// ********************************************************************************************* //
+
+interface BasePublicStageData {
+  kind: StageKind;
+}
+
+export interface GroupChatStagePublicData extends BasePublicStageData {
+  kind: StageKind.GroupChat;
+
+  readyToEndChat: Record<string, boolean>; // Participant public id => ready to end chat
+  chatData: PublicChatData;
+}
+
+export interface VoteForLeaderStagePublicData extends BasePublicStageData {
+  kind: StageKind.VoteForLeader;
+
+  participantvotes: Record<string, Votes>; // Participant public id => votes of this participant
+  currentLeader: string | null; // Updated automatically after each vote
+}
+
+// NOTE: some stages do not have public stage data
+export type PublicStageData = GroupChatStagePublicData | VoteForLeaderStagePublicData;
+
+// ********************************************************************************************* //
+//                                         DEFAULTS                                              //
+// ********************************************************************************************* //
+
+export const getDefaultTosAndUserProfileConfig = (): AcceptTosAndSetProfileStageConfig => {
+  return {
+    kind: StageKind.AcceptTosAndSetProfile,
+    name: 'Accept TOS and set profile',
+    tosLines: [],
+  };
 };
 
-// ********************************************************************************************* //
-//                                            CONFIG                                             //
-// ********************************************************************************************* //
+export const getDefaultSurveyConfig = (): SurveyStageConfig => {
+  return {
+    kind: StageKind.TakeSurvey,
+    name: 'Take survey',
+    questions: [],
+  };
+};
 
-const AUTO_PROGRESS_STAGES = [StageKind.TakeSurvey, StageKind.VoteForLeader];
-
-/** NOTE: this is completely useless. We could check stage kinds directly in the frontend instead of generating this. */
-export const generateAllowedStageProgressionMap = (stages: ExpStage[]): Record<string, boolean> => {
-  const allowedStageProgressionMap: Record<string, boolean> = {};
-
-  stages.forEach(
-    (stage) => (allowedStageProgressionMap[stage.name] = AUTO_PROGRESS_STAGES.includes(stage.kind)),
-  );
-
-  return allowedStageProgressionMap;
+export const getDefaultLeaderRevealConfig = (): RevealVotedStageConfig => {
+  return {
+    kind: StageKind.RevealVoted,
+    name: 'Reveal voted leader',
+    pendingVoteStageName: '',
+  };
 };

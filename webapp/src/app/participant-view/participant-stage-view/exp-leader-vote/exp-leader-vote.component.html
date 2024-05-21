@@ -1,9 +1,9 @@
 <!-- eslint-disable @angular-eslint/template/label-has-associated-control -->
 <div class="main">
   <form [formGroup]="votesForm">
-    @for (user of this.otherParticipants(); track user.uid) {
-      <label [id]="user.uid">{{ user.name }} ({{ user.pronouns }}):</label>
-      <mat-radio-group class="vote-radio-group" [formControl]="controls[user.uid]">
+    @for (user of participantService.otherParticipants(); track user.publicId) {
+      <label [id]="user.publicId">{{ user.name }} ({{ user.pronouns }}):</label>
+      <mat-radio-group class="vote-radio-group" [formControl]="controls[user.publicId]">
         <mat-radio-button class="vote-radio-button" [value]="Vote.Positive">
           {{ Vote.Positive }}
         </mat-radio-button>
@@ -14,7 +14,12 @@
           {{ Vote.Negative }}
         </mat-radio-button>
 
-        <button mat-button class="vote-clear-button" color="accent" (click)="resetVote(user.uid)">
+        <button
+          mat-button
+          class="vote-clear-button"
+          color="accent"
+          (click)="resetVote(user.publicId)"
+        >
           Clear
         </button>
       </mat-radio-group>

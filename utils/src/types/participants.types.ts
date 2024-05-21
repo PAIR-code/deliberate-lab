@@ -2,49 +2,42 @@
  * Types for the participants
  */
 
-import { ExcludeProps } from '../utils/object.utils';
-import { ExpStage } from './stages.types';
+import { UnifiedTimestamp } from './api.types';
 
-export interface ParticipantId {
-  uid: string; // Unique identifier for the participant.
-  experimentId: string; // Participants are strongly tied to an experiment.
+/** Profile data that is modifiable by the participant */
+export interface ParticipantProfileBase {
+  pronouns: string | null;
+  avatarUrl: string | null;
+  name: string | null;
+
+  acceptTosTimestamp: UnifiedTimestamp | null;
 }
 
-export interface ParticipantProfile extends ParticipantId {
-  pronouns: string;
-  avatarUrl: string;
-  name: string;
-  acceptTosTimestamp: string | null;
-}
-
-// The stage data for a participant does not have its ids
-export type TosAndUserProfile = ExcludeProps<ParticipantProfile, ParticipantId> & {
-  tosLines: string[];
-};
-
-export interface ParticipantExtended extends ParticipantProfile {
-  stageMap: Record<string, ExpStage>;
-  allowedStageProgressionMap: Record<string, boolean>;
-  futureStageNames: string[];
-  completedStageNames: string[];
+/** Full participant profile document data */
+export interface ParticipantProfile extends ParticipantProfileBase {
+  publicId: string; // Public identifier for the participant inside an experiment
   workingOnStageName: string;
 }
 
-/** Isolated document data to synchronize participants progression for an experiment using firestore subscriptions */
-export interface ParticipantsProgression {
-  experimentId: string;
-  progressions: Record<string, string>;
+/** For experimenters to be aware of the private ID */
+export interface ParticipantProfileExtended extends ParticipantProfile {
+  privateId: string;
 }
 
 // ********************************************************************************************* //
 //                                           DEFAULTS                                            //
 // ********************************************************************************************* //
 
-export const getDefaultProfile = (): ParticipantProfile => ({
-  uid: 'fakeId',
-  experimentId: 'fakeExpId',
-  pronouns: 'they/them',
-  avatarUrl: '',
-  name: 'fakeName',
-  acceptTosTimestamp: 'fakeTimestamp',
+export const getDefaultProfile = (
+  publicId: string,
+  workingOnStageName: string,
+): ParticipantProfile => ({
+  publicId,
+  pronouns: null,
+  avatarUrl: null,
+  name: null,
+  acceptTosTimestamp: null,
+  workingOnStageName,
 });
+
+export const participantPublicId = (index: number) => `participant-${index}`;

@@ -23,14 +23,13 @@ export class StagesSeeder {
               id: '1',
               questionText: 'Rate the items by how helpful they would be for survival.',
               item1: {
-                name: 'compas',
+                name: 'shavingMirror',
                 imageUrl:
-                  'https://m.media-amazon.com/images/I/81NUeKWdiQL._AC_UF1000,1000_QL80_.jpg',
+                'https://upload.wikimedia.org/wikipedia/commons/3/32/Mirror%2C_shaving_%28AM_880330-3%29.jpg',
               },
               item2: {
-                name: 'blanket',
-                imageUrl:
-                  'https://img.freepik.com/free-psd/blanket-isolated-transparent-background_191095-10098.jpg?size=338&ext=jpg&ga=GA1.1.1700460183.1712448000&semt=sph',
+                  name: 'sextant',
+                  imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Sextant_von_Alexander_von_Humboldt.jpg/640px-Sextant_von_Alexander_von_Humboldt.jpg',
               },
               choice: null,
               confidence: null,
@@ -59,18 +58,18 @@ export class StagesSeeder {
           messages: [],
           items: [
             {
-              name: 'compas',
-              imageUrl: 'https://m.media-amazon.com/images/I/81NUeKWdiQL._AC_UF1000,1000_QL80_.jpg',
+              name: 'shavingMirror',
+              imageUrl:
+              'https://upload.wikimedia.org/wikipedia/commons/3/32/Mirror%2C_shaving_%28AM_880330-3%29.jpg',
             },
             {
-              name: 'blanket',
-              imageUrl:
-                'https://img.freepik.com/free-psd/blanket-isolated-transparent-background_191095-10098.jpg?size=338&ext=jpg&ga=GA1.1.1700460183.1712448000&semt=sph',
+              name: 'sextant',
+              imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Sextant_von_Alexander_von_Humboldt.jpg/640px-Sextant_von_Alexander_von_Humboldt.jpg',
             },
             {
-              name: 'lighter',
+              name: 'mosquitoNetting',
               imageUrl:
-                'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/White_lighter_with_flame.JPG/1200px-White_lighter_with_flame.JPG',
+              'https://commons.wikimedia.org/wiki/Category:Mosquito_nets#/media/File:Net,_mosquito_(AM_2015.20.7-1).jpg',
             },
           ],
           readyToEndChat: false,
@@ -121,14 +120,13 @@ export class StagesSeeder {
               id: '5',
               questionText: 'Please rating the following accoring to which is best for survival',
               item1: {
-                name: 'compas',
-                imageUrl:
-                  'https://m.media-amazon.com/images/I/81NUeKWdiQL._AC_UF1000,1000_QL80_.jpg',
+                name: 'shavingMirror',
+              imageUrl:
+              'https://upload.wikimedia.org/wikipedia/commons/3/32/Mirror%2C_shaving_%28AM_880330-3%29.jpg',
               },
               item2: {
-                name: 'blanket',
-                imageUrl:
-                  'https://img.freepik.com/free-psd/blanket-isolated-transparent-background_191095-10098.jpg?size=338&ext=jpg&ga=GA1.1.1700460183.1712448000&semt=sph',
+                name: 'sextant',
+                imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Sextant_von_Alexander_von_Humboldt.jpg/640px-Sextant_von_Alexander_von_Humboldt.jpg',
               },
               choice: null,
               confidence: null,

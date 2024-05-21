@@ -1,38 +1,63 @@
 /** Chat between participants and mediators */
 
-import { uniqueId } from "../utils/algebraic.utils";
-import { Item } from "./items.types";
-import { Message } from "./messages.types";
+import { ItemName } from './items.types';
 
-export interface BaseChat {
-  chatId: string;
-  messages: Message[];
+export enum ChatKind {
+  ChatAboutItems = 'chatAboutItems',
 }
 
-export interface ChatAboutItems extends BaseChat {
-  ratingsToDiscuss: { id1: number; id2: number }[]; // Item index pairs that will be discussed
-  items: Item[];
-  // TODO(cjqian): This needs to be a per-participant value.
-  isSilent: boolean; // What does this mean ? Is it a muting option for mediators ?
+// ********************************************************************************************* //
+//                                            CONFIGS                                            //
+// ********************************************************************************************* //
+
+interface BaseChatConfig {
+  kind: ChatKind;
 }
 
-/** Isolated document data to synchronize participants willing to end the chat using firestore subscriptions */
-export interface ReadyToEndChat {
-  chatId: string;
-  readyToEndChat: Record<string, boolean>;
-  currentPair: number; // Index of the current pair being discussed. If >= ratingsToDiscuss.length, the chat is over.
+export interface ChatAboutItemsConfig extends BaseChatConfig {
+  kind: ChatKind.ChatAboutItems;
+
+  ratingsToDiscuss: { item1: ItemName; item2: ItemName }[];
 }
+
+export type ChatConfig = ChatAboutItemsConfig;
+
+// ********************************************************************************************* //
+//                                            ANSWERS                                            //
+// ********************************************************************************************* //
+
+/** Per-participant chat config (stored in the participant chat document and not the chat stage answers) */
+export interface ChatAnswer {
+  readyToEndChat: boolean;
+
+  // Indexes (facilitate automated actions)
+  participantPublicId: string;
+  stageName: string;
+}
+
+// ********************************************************************************************* //
+//                                         PUBLIC DATA                                           //
+// ********************************************************************************************* //
+
+interface BaseChatPublicData {
+  kind: ChatKind;
+}
+
+export interface PublicChatAboutItemsData extends BaseChatPublicData {
+  kind: ChatKind.ChatAboutItems;
+
+  currentRatingIndex: number;
+}
+
+export type PublicChatData = PublicChatAboutItemsData;
 
 // ********************************************************************************************* //
 //                                           DEFAULTS                                            //
 // ********************************************************************************************* //
 
-export const getDefaultChatAboutItemsConfig = (): ChatAboutItems => {
+export const getDefaultChatAboutItemsConfig = (): ChatAboutItemsConfig => {
   return {
-    chatId: uniqueId("chat"),
+    kind: ChatKind.ChatAboutItems,
     ratingsToDiscuss: [],
-    items: [],
-    messages: [],
-    isSilent: true,
   };
 };

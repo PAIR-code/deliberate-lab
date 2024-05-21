@@ -48,14 +48,14 @@ This is a repository to support collaboration on using LLMs in behavioral econom
 
 ## Shared Utilities
 
-The webapp, cloud functions, and seeding scripts share some utilities. These are located in the [`utils`](./utils) directory.
-
 To build the shared utilities and watch for changes, run the following command:
 
 ```bash
 cd utils
 npm run build:watch
 ```
+
+The shared utilities are built using [`tsup`](https://tsup.egoist.dev) to produce both esm (for the webapp) and cjs (for the cloud functions and scripts) code.
 
 ## Firebase
 
@@ -75,6 +75,7 @@ Create the configuration files for a default firebase project:
 ```bash
 cp .firebaserc.example .firebaserc
 cp webapp/src/lib/api/firebase-config.example.ts webapp/src/lib/api/firebase-config.ts
+cp scripts/service-account.example.json scripts/service-account.json
 ```
 
 This should be enough for local development with emulators. Before deploying to production, be sure to:

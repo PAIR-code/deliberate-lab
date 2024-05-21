@@ -10,24 +10,20 @@
 
 <div class="content" role="main">
   <mat-sidenav-container>
-    <mat-sidenav #sidenav mode="side" opened="true">
+    <mat-sidenav #sidenav mode="side" opened="true" class="sidenav">
       <mat-nav-list class="menu-buttons">
-        @if (experiments.data(); as response) {
-          @for (experiment of response.data; track experiment.name) {
-            <mat-list-item
-              matListItemTitle
-              [routerLink]="['experiment', experiment.uid]"
-              ariaCurrentWhenActive="page"
-              class="menu-item"
-            >
-              <div class="menu-item-inner">
-                {{ experiment.name }}
-                <!-- <mat-icon class="icon completed" fontIcon="check"></mat-icon> -->
-              </div>
-            </mat-list-item>
-          }
-        } @else {
-          <mat-spinner />
+        @for (experiment of experiments(); track experiment.name) {
+          <mat-list-item
+            matListItemTitle
+            [routerLink]="['experiment', experiment.id]"
+            ariaCurrentWhenActive="page"
+            routerLinkActive="highlighted"
+            class="menu-item"
+          >
+            <div class="menu-item-inner">
+              {{ experiment.name }}
+            </div>
+          </mat-list-item>
         }
 
         <mat-list-item
@@ -57,7 +53,7 @@
       </mat-nav-list>
     </mat-sidenav>
 
-    <mat-sidenav-content>
+    <mat-sidenav-content class="sidenav-content">
       <div class="page">
         <router-outlet></router-outlet>
       </div>

@@ -31,7 +31,6 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { RouterModule } from '@angular/router';
-import { QueryClient, provideAngularQuery } from '@tanstack/angular-query-experimental';
 import { ExperimenterViewComponent } from './experimenter-view/experimenter-view.component';
 import { LlmApiConfigComponent } from './experimenter-view/llm-api-config/llm-api-config.component';
 import { FirebaseService } from './firebase.service';
@@ -41,6 +40,7 @@ import { ExpLeaderRevealComponent } from './participant-view/participant-stage-v
 import { ExpLeaderVoteComponent } from './participant-view/participant-stage-view/exp-leader-vote/exp-leader-vote.component';
 import { ExpSurveyComponent } from './participant-view/participant-stage-view/exp-survey/exp-survey.component';
 import { ExpTosAndProfileComponent } from './participant-view/participant-stage-view/exp-tos-and-profile/exp-tos-and-profile.component';
+import { AppStateService } from './services/app-state.service';
 import { LmApiService } from './services/lm-api.service';
 import { VertexApiService } from './services/vertex-api.service';
 
@@ -50,8 +50,8 @@ import { VertexApiService } from './services/vertex-api.service';
     VertexApiService,
     LmApiService,
     FirebaseService,
+    AppStateService,
     provideHttpClient(),
-    provideAngularQuery(new QueryClient()),
   ],
   bootstrap: [AppComponent],
   imports: [

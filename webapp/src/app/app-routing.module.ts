@@ -22,7 +22,7 @@ import { validParticipantGuard } from './valid-participant.guard';
 
 const routes: Routes = [
   {
-    path: 'participant/:participantId',
+    path: 'participant/:experimentId/:participantId',
     component: ParticipantViewComponent,
     canActivate: [validParticipantGuard],
     pathMatch: 'full',
@@ -43,7 +43,7 @@ const routes: Routes = [
         pathMatch: 'full',
       },
       {
-        path: 'experiment/:experiment',
+        path: 'experiment/:experimentId',
         component: ExperimentMonitorComponent,
         pathMatch: 'full',
       },

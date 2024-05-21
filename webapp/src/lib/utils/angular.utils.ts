@@ -1,7 +1,7 @@
 /** Util functions to manipulate Angular constructs */
 
 import { Signal, WritableSignal, effect, signal, untracked } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
   FormBuilder,
@@ -11,12 +11,18 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import {
-  CheckQuestion,
-  Question,
-  RatingQuestion,
-  ScaleQuestion,
+  CheckQuestionAnswer,
+  CheckQuestionConfig,
+  QuestionAnswer,
+  QuestionConfig,
+  RatingQuestionAnswer,
+  RatingQuestionConfig,
+  ScaleQuestionAnswer,
+  ScaleQuestionConfig,
   SurveyQuestionKind,
-  TextQuestion,
+  TextQuestionAnswer,
+  TextQuestionConfig,
+  assertCastOrUndefined,
 } from '@llm-mediation-experiments/utils';
 import { Observable, map } from 'rxjs';
 
@@ -84,6 +90,24 @@ export const lazyInitWritable = <T, K>(
   return result;
 };
 
+export const assertSignalCast = <T extends { kind: string }, K extends T['kind']>(
+  signalMaybeOfKind: Signal<T | undefined>,
+  kind: K,
+): Signal<T & { kind: K }> => {
+  if (signalMaybeOfKind()?.kind === kind) {
+    return signalMaybeOfKind as Signal<T & { kind: K }>;
+  } else {
+    throw new Error(
+      `Given object with kind=${signalMaybeOfKind()?.kind} needs to have kind=${kind}`,
+    );
+  }
+};
+
+/** Subscribe to a signal's updates. This function must be run in an injection context. */
+export const subscribeSignal = <T>(_signal: Signal<T>, callback: (value: T) => void) => {
+  toObservable(_signal).subscribe(callback);
+};
+
 /** Creates a second-counter timer that is synchronized with the local storage in order to resume ticking when reloading the page */
 export const localStorageTimer = (
   key: string,
@@ -139,40 +163,84 @@ export const localStorageTimer = (
 //                                         FORM BUILDER                                          //
 // ********************************************************************************************* //
 
-export const buildTextQuestionForm = (fb: FormBuilder, question: TextQuestion) =>
+export const buildTextQuestionForm = (
+  fb: FormBuilder,
+  config: TextQuestionConfig,
+  answer?: TextQuestionAnswer,
+) =>
   fb.group({
-    answerText: [question.answerText ?? '', Validators.required],
+    kind: SurveyQuestionKind.Text,
+    id: config.id,
+    answerText: [answer?.answerText ?? '', Validators.required],
   });
 
-export const buildCheckQuestionForm = (fb: FormBuilder, question: CheckQuestion) =>
+export const buildCheckQuestionForm = (
+  fb: FormBuilder,
+  config: CheckQuestionConfig,
+  answer?: CheckQuestionAnswer,
+) =>
   fb.group({
-    checkMark: [question.checkMark ?? false],
+    kind: SurveyQuestionKind.Check,
+    id: config.id,
+    checkMark: [answer?.checkMark ?? false],
   });
 
-export const buildRatingQuestionForm = (fb: FormBuilder, question: RatingQuestion) =>
+export const buildRatingQuestionForm = (
+  fb: FormBuilder,
+  config: RatingQuestionConfig,
+  answer?: RatingQuestionAnswer,
+) =>
   fb.group({
-    choice: [question.choice, Validators.required],
+    kind: SurveyQuestionKind.Rating,
+    id: config.id,
+    choice: [answer?.choice, Validators.required],
     confidence: [
-      question.confidence ?? 0,
+      answer?.confidence ?? 0,
       [Validators.required, Validators.min(0), Validators.max(1)],
     ],
   });
 
-export const buildScaleQuestionForm = (fb: FormBuilder, question: ScaleQuestion) =>
+export const buildScaleQuestionForm = (
+  fb: FormBuilder,
+  config: ScaleQuestionConfig,
+  answer?: ScaleQuestionAnswer,
+) =>
   fb.group({
-    score: [question.score ?? 0, [Validators.required, Validators.min(0), Validators.max(10)]],
+    kind: SurveyQuestionKind.Scale,
+    id: config.id,
+    score: [answer?.score ?? 0, [Validators.required, Validators.min(0), Validators.max(10)]],
   });
 
-export const buildQuestionForm = (fb: FormBuilder, question: Question) => {
-  switch (question.kind) {
+export const buildQuestionForm = (
+  fb: FormBuilder,
+  config: QuestionConfig,
+  answer?: QuestionAnswer,
+) => {
+  switch (config.kind) {
     case SurveyQuestionKind.Text:
-      return buildTextQuestionForm(fb, question);
+      return buildTextQuestionForm(
+        fb,
+        config,
+        assertCastOrUndefined(answer, SurveyQuestionKind.Text),
+      );
     case SurveyQuestionKind.Check:
-      return buildCheckQuestionForm(fb, question);
+      return buildCheckQuestionForm(
+        fb,
+        config,
+        assertCastOrUndefined(answer, SurveyQuestionKind.Check),
+      );
     case SurveyQuestionKind.Rating:
-      return buildRatingQuestionForm(fb, question);
+      return buildRatingQuestionForm(
+        fb,
+        config,
+        assertCastOrUndefined(answer, SurveyQuestionKind.Rating),
+      );
     case SurveyQuestionKind.Scale:
-      return buildScaleQuestionForm(fb, question);
+      return buildScaleQuestionForm(
+        fb,
+        config,
+        assertCastOrUndefined(answer, SurveyQuestionKind.Scale),
+      );
   }
 };
 

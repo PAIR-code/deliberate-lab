@@ -1,10 +1,3 @@
-import {
-  ExpStage,
-  ExpStageChatAboutItems,
-  StageKind,
-} from "../types/stages.types";
-import { isOfKind } from "./algebraic.utils";
-
 /** All types that can safely be used to index an object */
 export type Index = string | number | symbol;
 
@@ -20,10 +13,10 @@ export type Indexable<Obj> = KeyOfType<Obj, Index>;
 export const lookupTable = <
   Type extends object,
   KeyName extends Indexable<Type>,
-  KeyType extends Type[KeyName] & Index
+  KeyType extends Type[KeyName] & Index,
 >(
   list: Type[],
-  key: KeyName
+  key: KeyName,
 ): Record<KeyType, Type> => {
   const table: Record<KeyType, Type> = {} as Record<KeyType, Type>;
 
@@ -51,8 +44,7 @@ export const keysRanking = (obj: object): Record<string, number> => {
 };
 
 /** Returns the rank index of a key in an object */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const keyRank = (obj: Record<string, any>, key: string): number => {
+export const keyRank = (obj: Record<string, unknown>, key: string): number => {
   return Object.keys(obj).indexOf(key);
 };
 
@@ -61,29 +53,51 @@ export const valuesArray = <T>(obj: Record<string, T> | undefined): T[] => {
   return Object.values(obj ?? {});
 };
 
-/** Extract a chat stage from a list of stages by its id */
-export const getChatFromId = (
-  chatId: string,
-  stages: ExpStage[]
-): ExpStageChatAboutItems | undefined => {
-  for (const stage of stages) {
-    if (isOfKind(stage, StageKind.GroupChat)) {
-      if (stage.config.chatId === chatId) return stage;
-    }
-  }
-  return undefined;
-};
-
 /** Merge two arrays of objects into a new array, uniquely identifying objects by the given key.
  * When two objects have the same key, the one from the incoming array is kept.
  */
 export const mergeByKey = <T extends object, K extends Indexable<T>>(
   previousArray: T[],
   incomingArray: T[],
-  key: K
+  key: K,
 ): T[] => {
   return Object.values({
     ...lookupTable(previousArray, key),
     ...lookupTable(incomingArray, key),
   });
+};
+
+/** Converts a record into an object that allows record field merging into firestore.
+ * When updating a firestore document, you can only merge top level attributes, not values nested in object attributes.
+ * In order to merge nested values, you need to flatten the record into a single level object with keys that represent the path to the nested value.
+ *
+ * @example
+ * const firestoreData = { answers: { q1: "maybe", q2: "maybe", q3: "maybe"}}
+ * const answers = { q1: "yes", q2: "no" };  // Incoming data to be merged
+ *
+ * //    mergeableAnsers = { "answers.q1": "yes", "answers.q2": "no" };
+ * const mergeableAnsers = mergeableRecord(answers, "answers")
+ * firestoreDoc.set(mergeableAnsers, { merge: true });
+ */
+export const mergeableRecord = <K extends Index, V>(record: Record<K, V>, fieldName: string) => {
+  const result: Record<string, V> = {};
+
+  Object.entries(record).forEach(([key, value]) => {
+    result[`${fieldName}.${key}`] = value as V;
+  });
+
+  return result;
+};
+
+/** Returns a list of all possible pairs of array elements without duplicates, assuming the array elements are distinct */
+export const pairs = <T>(array: readonly T[]): [T, T][] => {
+  const result: [T, T][] = [];
+
+  for (let i = 0; i < array.length - 1; i++) {
+    for (let j = i + 1; j < array.length; j++) {
+      result.push([array[i], array[j]]);
+    }
+  }
+
+  return result;
 };

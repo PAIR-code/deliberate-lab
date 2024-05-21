@@ -1,17 +1,24 @@
 {
   "name": "@llm-mediation-experiments/utils",
   "version": "1.0.0",
-  "description": "",
+  "description": "Shared utilities for frontend and backend",
   "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "build:watch": "tsc -w"
+    "declarations": "tsc --declaration --emitDeclarationOnly",
+    "build": "tsup --onSuccess \"npm run declarations\"",
+    "build:watch": "tsup --watch --onSuccess \"npm run declarations\""
   },
   "files": [
     "dist/**/*"
   ],
   "peerDependencies": {
+    "@sinclair/typebox": "^0.32.30",
     "firebase": "^10.11.1"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.5"
   }
 }
