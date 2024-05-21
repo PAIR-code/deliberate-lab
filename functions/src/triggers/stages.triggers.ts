@@ -63,7 +63,7 @@ export const initializePublicStageData = onDocumentWritten(
 
 /** When a participant updates stage answers, publish the answers to  */
 export const publishStageData = onDocumentWritten(
-  'experiment/{experimentId}/participants/{participantId}/stages/{stageName}',
+  'experiments/{experimentId}/participants/{participantId}/stages/{stageName}',
   async (event) => {
     const data = event.data?.after.data() as StageAnswer | undefined;
     if (!data) return;

@@ -6,7 +6,16 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, Input, Signal, WritableSignal, computed, signal } from '@angular/core';
+import {
+  Component,
+  EnvironmentInjector,
+  Input,
+  Signal,
+  computed,
+  effect,
+  runInInjectionContext,
+  signal,
+} from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -26,7 +35,7 @@ import {
 import { AppStateService } from 'src/app/services/app-state.service';
 import { CastViewingStage, ParticipantService } from 'src/app/services/participant.service';
 import { ChatRepository } from 'src/lib/repositories/chat.repository';
-import { localStorageTimer, subscribeSignal, subscribeSignals } from 'src/lib/utils/angular.utils';
+import { localStorageTimer } from 'src/lib/utils/angular.utils';
 import { ChatDiscussItemsMessageComponent } from './chat-discuss-items-message/chat-discuss-items-message.component';
 import { ChatMediatorMessageComponent } from './chat-mediator-message/chat-mediator-message.component';
 import { ChatUserMessageComponent } from './chat-user-message/chat-user-message.component';
@@ -67,28 +76,45 @@ export class ExpChatComponent {
       this.participantService.experiment()!.everyoneReachedStage(this.stage.config().name)(),
     );
 
-    // On config change, extract the relevant chat repository
-    subscribeSignal(this.stage.config, (config) => {
-      // Extract the relevant chat repository for this chat
-      this.chat = this.appState.chats.get({
-        chatId: config.chatId,
-        experimentId: this.participantService.experimentId()!,
-        participantId: this.participantService.participantId()!,
+    runInInjectionContext(this.injector, () => {
+      // On config change, extract the relevant chat repository and recompute signals
+      effect(() => {
+        const config = this.stage.config();
+
+        // Extract the relevant chat repository for this chat
+        this.chat = this.appState.chats.get({
+          chatId: config.chatId,
+          experimentId: this.participantService.experimentId()!,
+          participantId: this.participantService.participantId()!,
+        });
+
+        this.readyToEndChat = computed(() => this.chat!.chat()?.readyToEndChat ?? false);
+        this.currentRatingsIndex = computed(() => {
+          return this.stage.public!().chatData.currentRatingIndex ?? 0;
+        });
+
+        // Initialize the current rating to discuss with the first available pair
+        const { item1, item2 } = config.chatConfig.ratingsToDiscuss[0];
+        this.currentRatingsToDiscuss = signal({ item1, item2 });
+        this.currentRatingsToDiscuss = computed(
+          () => config.chatConfig.ratingsToDiscuss[this.currentRatingsIndex()],
+        );
       });
 
-      this.readyToEndChat = computed(() => this.chat?.chat()?.readyToEndChat ?? false);
+      effect(() => {
+        this.currentRatingsIndex(); // Trigger reactivity when the currentRatingsIndex changes
+        this.chat?.markReadyToEndChat(false); // Reset readyToEndChat when the items to discuss change
+      });
 
-      // Initialize the current rating to discuss with the first available pair
-      const { item1, item2 } = config.chatConfig.ratingsToDiscuss[0];
-      this.currentRatingsToDiscuss = signal({ item1, item2 });
+      if (this.participantService.workingOnStageName() === this.stage.config().name) {
+        // Automatic next step progression when the chat has ended
+        effect(() => {
+          const config = this.stage.config();
+          const pub = this.stage.public!();
+          if (chatReadyToEnd(config, pub)) this.nextStep();
+        });
+      }
     });
-
-    // Automatic next step progression when the chat has ended
-    if (this.participantService.workingOnStageName() === this.stage.config().name) {
-      subscribeSignals([this.stage.config, this.stage.public!], (config, pub) => {
-        if (chatReadyToEnd(config, pub)) this.nextStep();
-      });
-    }
   }
   get stage() {
     return this._stage as CastViewingStage<StageKind.GroupChat>;
@@ -97,8 +123,9 @@ export class ExpChatComponent {
   public everyoneReachedTheChat: Signal<boolean>;
   public readyToEndChat: Signal<boolean> = signal(false);
 
-  // Extracted stage data (needed ?)
-  public currentRatingsToDiscuss: WritableSignal<ItemPair>;
+  // Extracted stage data
+  public currentRatingsIndex: Signal<number>;
+  public currentRatingsToDiscuss: Signal<ItemPair>;
 
   // Message mutation & form
   public message = new FormControl<string>('', Validators.required);
@@ -109,9 +136,11 @@ export class ExpChatComponent {
   constructor(
     private appState: AppStateService,
     public participantService: ParticipantService,
+    private injector: EnvironmentInjector,
   ) {
     // Extract stage data
     this.everyoneReachedTheChat = signal(false);
+    this.currentRatingsIndex = signal(0);
     this.currentRatingsToDiscuss = signal(getDefaultItemPair());
   }
 
@@ -122,7 +151,6 @@ export class ExpChatComponent {
 
   async sendMessage() {
     if (!this.message.valid || !this.message.value) return;
-
     this.chat?.sendUserMessage(this.message.value);
     this.message.setValue('');
   }
@@ -130,7 +158,7 @@ export class ExpChatComponent {
   toggleEndChat() {
     if (this.readyToEndChat()) return;
 
-    this.chat?.markReadyToEndChat();
+    this.chat?.markReadyToEndChat(true);
 
     this.message.disable();
     this.timer.remove();

@@ -1,6 +1,6 @@
 /** Util functions to manipulate Angular constructs */
 
-import { Signal, WritableSignal, computed, effect, signal, untracked } from '@angular/core';
+import { Signal, WritableSignal, effect, signal, untracked } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
@@ -103,26 +103,9 @@ export const assertSignalCast = <T extends { kind: string }, K extends T['kind']
   }
 };
 
-/** Subscribe to a signal's updates. This function does not rely on `effect()` and can be used outside of injection contexts */
+/** Subscribe to a signal's updates. This function must be run in an injection context. */
 export const subscribeSignal = <T>(_signal: Signal<T>, callback: (value: T) => void) => {
   toObservable(_signal).subscribe(callback);
-};
-
-/** Subscribe to a list of signal updates. This function does not rely on `effect()` and can be used outside of injection contexts */
-export const subscribeSignals = <T extends Signal<unknown>[]>(
-  signals: [...T],
-  callback: (...args: [...UnwrappedSignalArrayType<T>]) => void,
-): void => {
-  const bundle = computed(() => signals.map((s) => s()));
-  toObservable(bundle).subscribe((args) => callback(...(args as [...UnwrappedSignalArrayType<T>])));
-};
-
-// Helper types for `subscribeSignals` function
-/** `Signal<T>` -> `T` */
-type UnwrappedSignalType<T> = T extends Signal<infer U> ? U : never;
-/** `Signal<T>[]` -> `[T]` */
-type UnwrappedSignalArrayType<T extends Signal<unknown>[]> = {
-  [K in keyof T]: UnwrappedSignalType<T[K]>;
 };
 
 /** Creates a second-counter timer that is synchronized with the local storage in order to resume ticking when reloading the page */

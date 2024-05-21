@@ -60,7 +60,7 @@ export class ChatRepository extends BaseRepository {
         ),
         (snapshot) => {
           // Note that Firestore will send incremental updates. The full list of messages can be reconstructed easily from the snapshot.
-          this._messages.set(collectSnapshotWithId<Message>(snapshot, 'uid'));
+          this._messages.set(collectSnapshotWithId<Message>(snapshot, 'uid').reverse());
         },
       ),
     );
@@ -73,7 +73,7 @@ export class ChatRepository extends BaseRepository {
   /** Mark this participant as ready to end the chat, or ready to discuss about the next pair of items.
    * @rights Participant
    */
-  async markReadyToEndChat() {
+  async markReadyToEndChat(readyToEndChat: boolean) {
     return updateDoc(
       doc(
         firestore,
@@ -85,7 +85,7 @@ export class ChatRepository extends BaseRepository {
         this.chatId,
       ),
       {
-        readyToEndChat: true,
+        readyToEndChat,
       },
     );
   }

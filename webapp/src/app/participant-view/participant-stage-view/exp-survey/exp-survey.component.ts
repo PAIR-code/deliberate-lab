@@ -6,7 +6,13 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, Input, signal } from '@angular/core';
+import {
+  Component,
+  EnvironmentInjector,
+  Input,
+  effect,
+  runInInjectionContext,
+} from '@angular/core';
 import {
   FormArray,
   FormBuilder,
@@ -21,7 +27,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatButtonModule } from '@angular/material/button';
 import { StageKind, SurveyQuestionKind, assertCast } from '@llm-mediation-experiments/utils';
 import { CastViewingStage, ParticipantService } from 'src/app/services/participant.service';
-import { buildQuestionForm, subscribeSignals } from 'src/lib/utils/angular.utils';
+import { buildQuestionForm } from 'src/lib/utils/angular.utils';
 import { SurveyCheckQuestionComponent } from './survey-check-question/survey-check-question.component';
 import { SurveyRatingQuestionComponent } from './survey-rating-question/survey-rating-question.component';
 import { SurveyScaleQuestionComponent } from './survey-scale-question/survey-scale-question.component';
@@ -52,9 +58,11 @@ export class ExpSurveyComponent {
     this._stage = value;
 
     // Regenerate the questions everytime the stage config or answers change
-    subscribeSignals(
-      [this.stage.config, this.stage.answers ?? signal(undefined)],
-      ({ questions }, answers) => {
+    runInInjectionContext(this.injector, () => {
+      effect(() => {
+        const { questions } = this.stage.config();
+        const answers = this.stage.answers?.();
+
         this.answers.clear();
         questions.forEach((config) => {
           const answer = answers?.answers[config.id];
@@ -62,8 +70,8 @@ export class ExpSurveyComponent {
           // The answer, if defined, will be used to populate the form
           this.answers.push(buildQuestionForm(this.fb, config, answer));
         });
-      },
-    );
+      });
+    });
   }
 
   get stage() {
@@ -81,6 +89,7 @@ export class ExpSurveyComponent {
   constructor(
     private fb: FormBuilder,
     public participantService: ParticipantService,
+    private injector: EnvironmentInjector,
   ) {
     this.answers = fb.array([]);
     this.surveyForm = fb.group({

@@ -6,8 +6,9 @@
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsup",
-    "build:watch": "tsup --watch"
+    "declarations": "tsc --declaration --emitDeclarationOnly",
+    "build": "tsup --onSuccess \"npm run declarations\"",
+    "build:watch": "tsup --watch --onSuccess \"npm run declarations\""
   },
   "files": [
     "dist/**/*"

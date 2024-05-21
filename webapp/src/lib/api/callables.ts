@@ -3,6 +3,7 @@
 import {
   CreationResponse,
   ExperimentCreationData,
+  ExperimentDeletionData,
   MessageData,
   SimpleResponse,
   StageAnswerData,
@@ -29,4 +30,9 @@ export const createExperimentCallable = data(
 /** Generic endpoint to update any participant stage */
 export const updateStageCallable = data(
   httpsCallable<StageAnswerData, SimpleResponse<string>>(functions, 'updateStage'),
+);
+
+/** Generic endpoint to delete experiments or experiment templates */
+export const deleteExperimentCallable = data(
+  httpsCallable<ExperimentDeletionData, never>(functions, 'deleteExperiment'),
 );

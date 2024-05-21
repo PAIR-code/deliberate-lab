@@ -1,6 +1,7 @@
 import { Signal, WritableSignal, computed, signal } from '@angular/core';
 import { Experiment, PublicStageData, StageConfig } from '@llm-mediation-experiments/utils';
-import { collection, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
+import { collection, doc, onSnapshot } from 'firebase/firestore';
+import { deleteExperimentCallable } from '../api/callables';
 import { firestore } from '../api/firebase';
 import { BaseRepository } from './base.repository';
 
@@ -111,6 +112,6 @@ export class ExperimentRepository extends BaseRepository {
    * @rights Experimenter
    */
   async delete() {
-    return deleteDoc(doc(firestore, 'experiments', this.uid));
+    return deleteExperimentCallable({ type: 'experiments', id: this.uid });
   }
 }

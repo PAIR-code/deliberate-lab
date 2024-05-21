@@ -5,7 +5,8 @@
     </div>
   } @else {
     <div class="leader-reveal-container">
-      The leader is <strong>{{ results()?.currentLeader }}</strong>
+      The leader is
+      <app-chat-user-profile [profile]="winner()!"></app-chat-user-profile>
     </div>
   }
 

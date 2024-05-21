@@ -12,6 +12,19 @@ import {
 /** Shorthand for strict TypeBox object validation */
 const strict = { additionalProperties: false } as const;
 
+/** Generic experiment or template deletion data */
+export const ExperimentDeletionData = Type.Object(
+  {
+    // Discriminate between experiment and template
+    type: Type.Union([Type.Literal('experiments'), Type.Literal('templates')]),
+
+    id: Type.String({ minLength: 1 }),
+  },
+  strict,
+);
+
+export type ExperimentDeletionData = Static<typeof ExperimentDeletionData>;
+
 /**
  * Generic experiment or template creation data
  */

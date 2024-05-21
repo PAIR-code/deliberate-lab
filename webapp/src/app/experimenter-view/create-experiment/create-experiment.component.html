@@ -40,7 +40,11 @@
     <div cdkDropList class="stage-list" (cdkDropListDropped)="dropStage($event)">
       <mat-form-field>
         <mat-label>Template</mat-label>
-        <mat-select [compareWith]="compareTemplates" [(value)]="currentTemplateChoice">
+        <mat-select
+          [compareWith]="compareTemplates"
+          (value)="currentTemplateChoice()"
+          (selectionChange)="selectTemplate($event)"
+        >
           @for (template of templates(); track template.id) {
             <mat-option [value]="template">{{ template.name }}</mat-option>
           }

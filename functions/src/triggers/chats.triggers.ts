@@ -24,7 +24,7 @@ export const publishParticipantReadyToEndChat = onDocumentWritten(
     // If the chat is a chat about items, increment the current item index
     const docData = (await publicChatData.get()).data();
 
-    if (docData && Object.values(docData['readyToEndChat']).every((bool) => !bool)) {
+    if (docData && Object.values(docData['readyToEndChat']).every((ready) => ready)) {
       // Everyone is ready to end the chat
       if (docData['chatData'].kind === ChatKind.ChatAboutItems) {
         // Increment the current item index

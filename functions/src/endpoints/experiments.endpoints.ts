@@ -3,6 +3,7 @@
 import {
   ChatAnswer,
   ExperimentCreationData,
+  ExperimentDeletionData,
   GroupChatStageConfig,
   ParticipantProfile,
   StageKind,
@@ -81,6 +82,22 @@ export const createExperiment = onCall(async (request) => {
     });
 
     return { id: document.id };
+  }
+
+  throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
+});
+
+/** Generic endpoint to recursively delete either experiments or experiment templates.
+ * Recursive deletion is only supported server-side.
+ */
+export const deleteExperiment = onCall(async (request) => {
+  await AuthGuard.isExperimenter(request);
+
+  const { data } = request;
+
+  if (Value.Check(ExperimentDeletionData, data)) {
+    const doc = app.firestore().doc(`${data.type}/${data.id}`);
+    app.firestore().recursiveDelete(doc);
   }
 
   throw new functions.https.HttpsError('invalid-argument', 'Invalid data');

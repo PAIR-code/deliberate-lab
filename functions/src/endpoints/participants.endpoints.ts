@@ -29,7 +29,7 @@ export const updateStage = onCall(async (request) => {
       case StageKind.VoteForLeader:
         if (participantId in stage.votes)
           throw new functions.https.HttpsError('invalid-argument', 'Invalid answers');
-        await answerDoc.set({ votes: stage.votes }, { merge: true });
+        await answerDoc.set({ kind: StageKind.VoteForLeader, votes: stage.votes }, { merge: true });
         break;
 
       case StageKind.TakeSurvey:

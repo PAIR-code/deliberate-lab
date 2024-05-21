@@ -4,14 +4,14 @@
     <mat-radio-group formControlName="choice" class="item-pair-displays">
       <mat-radio-button
         class="item-pair-item {{ questionForm.value['choice'] === 'item1' ? 'selected' : '' }}"
-        value="item1"
+        [value]="question.item1"
       >
         <img src="{{ ITEMS[question.item1].imageUrl }}" alt="{{ ITEMS[question.item1].name }}" />
         <span class="item-pair-item-name">{{ ITEMS[question.item1].name }}</span>
       </mat-radio-button>
       <mat-radio-button
         class="item-pair-item {{ questionForm.value['choice'] === 'item2' ? 'selected' : '' }}"
-        value="item2"
+        [value]="question.item1"
       >
         <img src="{{ ITEMS[question.item2].imageUrl }}" alt="{{ ITEMS[question.item2].name }}" />
         <span class="item-pair-item-name">{{ ITEMS[question.item2].name }}</span>

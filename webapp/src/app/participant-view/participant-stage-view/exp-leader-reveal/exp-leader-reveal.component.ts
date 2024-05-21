@@ -2,15 +2,17 @@ import { Component, computed, Input, signal, Signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import {
   assertCast,
+  ParticipantProfile,
   StageKind,
   VoteForLeaderStagePublicData,
 } from '@llm-mediation-experiments/utils';
 import { CastViewingStage, ParticipantService } from 'src/app/services/participant.service';
+import { ChatUserProfileComponent } from '../exp-chat/chat-user-profile/chat-user-profile.component';
 
 @Component({
   selector: 'app-exp-leader-reveal',
   standalone: true,
-  imports: [MatButtonModule],
+  imports: [MatButtonModule, ChatUserProfileComponent],
   templateUrl: './exp-leader-reveal.component.html',
   styleUrl: './exp-leader-reveal.component.scss',
 })
@@ -33,6 +35,12 @@ export class ExpLeaderRevealComponent {
         StageKind.VoteForLeader,
       ),
     );
+
+    this.winner = computed(() => {
+      return this.participantService.experiment()?.experiment()?.participants[
+        this.results()!.currentLeader!
+      ];
+    });
   }
 
   get stage() {
@@ -43,6 +51,7 @@ export class ExpLeaderRevealComponent {
 
   public everyoneReachedThisStage: Signal<boolean>;
   public results: Signal<VoteForLeaderStagePublicData | undefined> = signal(undefined);
+  public winner: Signal<ParticipantProfile | undefined> = signal(undefined);
 
   constructor(private participantService: ParticipantService) {
     this.everyoneReachedThisStage = signal(false);
