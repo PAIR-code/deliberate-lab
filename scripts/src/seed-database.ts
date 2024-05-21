@@ -3,16 +3,23 @@ import {
   ChatKind,
   Experiment,
   ExperimentTemplate,
+  ITEM_NAMES,
+  RatingQuestionConfig,
   StageConfig,
   StageKind,
   SurveyQuestionKind,
+  choices,
   getDefaultProfile,
+  pairs,
   participantPublicId,
+  seed,
 } from '@llm-mediation-experiments/utils';
 import { Timestamp } from 'firebase-admin/firestore';
 import admin, { initializeApp } from './admin';
 
 initializeApp();
+
+seed(585050400); // Seed the random number generator
 
 const seedDatabase = async () => {
   const db = admin.firestore();
@@ -80,6 +87,17 @@ const seedDatabase = async () => {
 // ********************************************************************************************* //
 //                                         SEEDER DATA                                           //
 // ********************************************************************************************* //
+const RANDOM_ITEM_PAIRS = choices(pairs(ITEM_NAMES), 5);
+
+const RATING_QUESTION_CONFIGS: RatingQuestionConfig[] = RANDOM_ITEM_PAIRS.map(
+  ([item1, item2], id) => ({
+    id,
+    kind: SurveyQuestionKind.Rating,
+    questionText: 'Rate the items by how helpful they would be for survival.',
+    item1,
+    item2,
+  }),
+);
 
 const DEFAULT_STAGES: Record<string, StageConfig> = {
   '1. Agree to the experiment and set your profile': {
@@ -96,15 +114,9 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     name: '2. Initial leadership survey',
     kind: StageKind.TakeSurvey,
     questions: [
+      ...RATING_QUESTION_CONFIGS,
       {
-        id: 0,
-        kind: SurveyQuestionKind.Rating,
-        questionText: 'Rate the items by how helpful they would be for survival.',
-        item1: 'compas',
-        item2: 'blanket',
-      },
-      {
-        id: 1,
+        id: 99, // Avoid collision with rating questions id (starting from 0)
         kind: SurveyQuestionKind.Scale,
         questionText: 'Rate the how much you would like to be the group leader.',
         lowerBound: 'I would most definitely not like to be the leader (0/10)',
@@ -119,11 +131,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     chatId: 'chat-0',
     chatConfig: {
       kind: ChatKind.ChatAboutItems,
-      ratingsToDiscuss: [
-        { item1: 'blanket', item2: 'compas' },
-        { item1: 'blanket', item2: 'lighter' },
-        { item1: 'lighter', item2: 'compas' },
-      ],
+      ratingsToDiscuss: RANDOM_ITEM_PAIRS.map(([i1, i2]) => ({ item1: i1, item2: i2 })),
     },
   },
 
@@ -164,15 +172,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
   '7. Post-discussion work': {
     name: '7. Post-discussion work',
     kind: StageKind.TakeSurvey,
-    questions: [
-      {
-        id: 0,
-        kind: SurveyQuestionKind.Rating,
-        questionText: 'Please rating the following accoring to which is best for survival',
-        item1: 'compas',
-        item2: 'blanket',
-      },
-    ],
+    questions: RATING_QUESTION_CONFIGS,
   },
 
   '8. Leader reveal': {

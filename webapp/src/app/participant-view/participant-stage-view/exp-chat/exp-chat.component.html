@@ -67,13 +67,21 @@
         [disabled]="isSilent() || readyToEndChat()"
         (change)="toggleEndChat()"
       >
-        I'm done with chatting and ready to move on
+        @if (currentRatingsIndex() < stage.config().chatConfig.ratingsToDiscuss.length - 1) {
+          I'm done with chatting and ready to move on to the next pair of items
+        } @else {
+          I'm done with chatting and ready to move on to the next stage
+        }
       </mat-slide-toggle>
     </div>
   </div>
 
   @if (currentRatingsToDiscuss()) {
-    <b>Your discussion is now focusing on selecting the best item between the following items</b>
+    <b
+      >Your discussion is now focusing on selecting the best item between the following items ({{
+        currentRatingsIndex() + 1
+      }}/{{ stage.config().chatConfig.ratingsToDiscuss.length }})</b
+    >
     <div class="flex-container">
       <div class="item-pair-displays">
         <div class="item-pair-item">

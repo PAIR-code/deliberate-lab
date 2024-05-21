@@ -88,3 +88,16 @@ export const mergeableRecord = <K extends Index, V>(record: Record<K, V>, fieldN
 
   return result;
 };
+
+/** Returns a list of all possible pairs of array elements without duplicates, assuming the array elements are distinct */
+export const pairs = <T>(array: readonly T[]): [T, T][] => {
+  const result: [T, T][] = [];
+
+  for (let i = 0; i < array.length - 1; i++) {
+    for (let j = i + 1; j < array.length; j++) {
+      result.push([array[i], array[j]]);
+    }
+  }
+
+  return result;
+};
