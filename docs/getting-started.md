@@ -1,56 +1,129 @@
-# Development guide
+# Getting Started
 
-## Initial setup
-1. Download `npm`. Install Angular with `npm install -g @angular/cli`.
-1. Copy `./src/environments/gcloud_env.template.ts` to `./src/environments/gcloud_env.ts`.
-1. Contact a member of the team directly (either cjqian@ or iislucas@) for access to the API key values.
+This project has x different entities :
 
-## Development server
+- shared utilities package
+- web application
+- firebase emulators (emulate firestore, firebase authentication, cloud functions)
+- cloud functions
+- utility scripts
 
-Run `npm run start` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+This document will guide you through setting up the project for development.
 
-## Recommended editor setup
+## Shared Utilities
 
-This code is being developed using [Visual Studio Code](https://code.visualstudio.com/). Make sure to install the angular extension.
+To build the shared utilities and watch for changes, run the following command:
 
-## Code scaffolding
+```bash
+cd utils
+npm install  # Run this command only once
+npm run build:watch
+```
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+The shared utilities are built using [`tsup`](https://tsup.egoist.dev) to produce both esm (for the webapp) and cjs (for the cloud functions and scripts) code.
 
-## Build
+## Webapp
 
-Run `npm run build` to build the project. The build artifacts will be stored in the `dist/` directory.
+The webapp is made using Angular JS 17.
 
-## Running unit tests
+### Recommended editor setup
 
-Run `npm run test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+This code is being developed using [Visual Studio Code](https://code.visualstudio.com/).
+Make sure to install the angular extension.\
+Run `ng generate component component-name` to generate a new component.\
+You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
 
-## Running end-to-end tests
+### Development server
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+First, install the dependencies:
 
-## Further help
+```bash
+cd webapp
+npm install  # Run this command only once
+```
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page. This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.2.7; it was then updated to Angular 17.
+You can then run the development server:
 
-## Deploy a mock up (no backend service) on github pages
-1. clone [this repo](https://github.com/LSIR/recommendation-rudders)
+```bash
+npm run start
+```
 
-Note: for some reason, assets (images) are not rendered correctly when the app is deployed on GitHub pages. Compared to the PAIR repo, I had to prepend `/recommendation-rudders` to paths pointing to `/assets/*`. For instance: `/assets/avatars/she.png` becomes `/recommendation-rudders/assets/avatars/she.png`. 
+Navigate to [`http://localhost:4200/`](http://localhost:4200/). The application will automatically reload if you change any of the source files.
 
-2. run `git remote add origin https://github.com/LSIR/recommendation-rudders.git`
-3. run `git branch -M main`
-4. run `git checkout -b gh-pages`
-5. run `git push -u origin main`
-6. run `cd recommendation-rudders`
-7. run `npm install`
-8. run `ng build --output-path docs --base-href /recommendation-rudders/`
-9. When the build is complete, make a copy of `docs/index.html` and name it `docs/404.html`.
-10. Commit and push
-11. On the GitHub project page, go to Settings and select the Pages option from the left sidebar to configure the site to [publish from the docs folder and gh-pages branch](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#choosing-a-publishing-source).
-12. Click Save
-13. Hopefully at this step, the app is live and running as expected at https://[<user_name>].github.io/recommendation-rudders/#/experimenter/
+## Firebase
 
-Here is a [quick video tutorial](https://mail.google.com/mail/u/0/#inbox/QgrcJHsTfQgVhDSJBNQBGTzQNLwzGBhqxbv?projector=1) on how to use the app.
+This project uses Firebase as its backend. The configuration can be found in the [`.firebaserc`](./.firebaserc) and [`firebase.json`](./firebase.json) files.
 
-More info on the deployment on Github-pages [there](https://angular.io/guide/deployment#deploy-to-github-pages).
+Install the firebase cli tools with the following commands:
+
+```bash
+npm install -g firebase-tools
+firebase login  # Login to an account that has admin rights for the Firebase project
+```
+
+### Configuration
+
+Create the configuration files for a default firebase project:
+
+```bash
+cp .firebaserc.example .firebaserc
+cp webapp/src/lib/api/firebase-config.example.ts webapp/src/lib/api/firebase-config.ts
+cp scripts/service-account.example.json scripts/service-account.json
+```
+
+This should be enough for local development with emulators.
+
+### Emulators
+
+In order to run offline and for development purposes, we use Java Firebase emulators.
+
+```bash
+firebase emulators:start --import ./emulator_test_config  # Start the emulators and load the default Authentication configuration
+```
+
+You will then be able to access the following UIs:
+
+- Authentication UI: `http://localhost:4000/auth`
+- Emulator UI: `http://localhost:4000`
+- Firestore UI: `http://localhost:4000/firestore`
+- Cloud Functions UI: `http://localhost:4000/functions`
+
+### Firestore
+
+We use Firestore as our database. The rules are located in the [`firestore.rules`](./firestore.rules) file.
+Basically, the database cannot be externally accessed, and must be interacted with through cloud functions.
+
+A database prototype schema can be found [here on dbdiagrams.io](https://dbdiagram.io/d/Firebase-LLM-Mediation-660d473a03593b6b61123f24) (readonly, change it with your own if you take over the project).
+
+You can seed the database with the default data by running the following command:
+
+```bash
+cd scripts
+npm install  # Run this command only once
+npm run seed-db
+```
+
+### Cloud Functions
+
+We use Firebase Cloud Functions to run server-side code. The functions are located in the [`functions`](./functions) directory.
+
+```bash
+cd functions
+cp .env.example .env  # Copy the example environment file
+npm install  # Run this command only once
+npm run build:watch # Build the functions and watch for file changes for rebuilding
+```
+
+Upon running `npm run build`, if the emulator is running, it will automatically reload the functions.
+
+### Authentication
+
+This project sets up Firebase Authentication with Google sign-in.
+Note that participants are not tracked by Firebase Authentication. Their UID work as a unique identifier, nothing else is stored.
+
+Experimenters can log in using Google-compatible accounts. There are 2 default accounts in the emulator configuration:
+
+- experimenter@google.com
+- not-experimenter@google.com
+
+When you click on the "Sign in with Google", you will see both of them and be able to choose which one you can to log in with.
