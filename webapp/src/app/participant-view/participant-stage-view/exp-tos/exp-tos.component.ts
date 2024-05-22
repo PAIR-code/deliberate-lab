@@ -18,14 +18,8 @@ import { StageKind, UnifiedTimestamp } from '@llm-mediation-experiments/utils';
 import { Timestamp } from 'firebase/firestore';
 import { CastViewingStage, ParticipantService } from 'src/app/services/participant.service';
 
-enum Pronouns {
-  HeHim = 'He/Him',
-  SheHer = 'She/Her',
-  TheyThem = 'They/Them',
-}
-
 @Component({
-  selector: 'app-exp-tos-and-profile',
+  selector: 'app-exp-tos',
   standalone: true,
   imports: [
     MatCheckboxModule,
@@ -36,61 +30,42 @@ enum Pronouns {
     ReactiveFormsModule,
     MatButtonModule,
   ],
-  templateUrl: './exp-tos-and-profile.component.html',
-  styleUrl: './exp-tos-and-profile.component.scss',
+  templateUrl: './exp-tos.component.html',
+  styleUrl: './exp-tos.component.scss',
 })
-export class ExpTosAndProfileComponent {
+export class ExpTosComponent {
   // Reload the internal logic dynamically when the stage changes
-  @Input({ required: true }) stage!: CastViewingStage<StageKind.AcceptTosAndSetProfile>;
+  @Input({ required: true }) stage!: CastViewingStage<StageKind.TermsOfService>;
 
-  readonly Pronouns = Pronouns;
   tosLines: string[] = [];
 
-  profileFormControl = new FormGroup({
-    name: new FormControl('', Validators.required),
-    pronouns: new FormControl('', Validators.required),
-    avatarUrl: new FormControl('', Validators.required),
+  tosFormControl = new FormGroup({
     acceptTosTimestamp: new FormControl<UnifiedTimestamp | null>(null, Validators.required),
   });
 
-  value = ''; // Custom pronouns input value
-
-  constructor(public participantService: ParticipantService) {
+  constructor(private participantService: ParticipantService) {
     // Refresh the form data when the participant profile changes
     effect(() => {
       const profile = participantService.participant()?.profile();
 
       if (!profile) return;
 
-      this.profileFormControl.setValue({
-        name: profile.name,
-        pronouns: profile.pronouns,
-        avatarUrl: profile.avatarUrl,
+      this.tosFormControl.setValue({
         acceptTosTimestamp: profile.acceptTosTimestamp,
       });
     });
   }
 
-  isOtherPronoun(s: string) {
-    return s !== Pronouns.HeHim && s !== Pronouns.SheHer && s !== Pronouns.TheyThem;
-  }
-
-  updateOtherPronounsValue(event: Event) {
-    const pronouns = (event.target as HTMLInputElement).value;
-
-    this.profileFormControl.patchValue({
-      pronouns,
-    });
-  }
-
   updateCheckboxValue(updatedValue: MatCheckboxChange) {
-    this.profileFormControl.patchValue({
+    this.tosFormControl.patchValue({
       acceptTosTimestamp: updatedValue.checked ? Timestamp.now() : null,
     });
   }
 
   async nextStep() {
-    await this.participantService.participant()?.updateProfile(this.profileFormControl.value);
+    const { acceptTosTimestamp } = this.tosFormControl.value;
+
+    await this.participantService.participant()?.updateProfile({ acceptTosTimestamp });
     await this.participantService.workOnNextStage();
   }
 }

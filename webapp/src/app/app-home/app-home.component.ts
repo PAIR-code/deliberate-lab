@@ -22,8 +22,9 @@ import { Router, RouterModule } from '@angular/router';
 import { auth, provider } from 'src/lib/api/firebase';
 import { ExperimenterViewComponent } from '../experimenter-view/experimenter-view.component';
 import { FirebaseService } from '../firebase.service';
+import { ExpProfileComponent } from '../participant-view/participant-stage-view/exp-profile/exp-profile.component';
 import { ExpSurveyComponent } from '../participant-view/participant-stage-view/exp-survey/exp-survey.component';
-import { ExpTosAndProfileComponent } from '../participant-view/participant-stage-view/exp-tos-and-profile/exp-tos-and-profile.component';
+import { ExpTosComponent } from '../participant-view/participant-stage-view/exp-tos/exp-tos.component';
 
 @Component({
   selector: 'app-home',
@@ -34,7 +35,8 @@ import { ExpTosAndProfileComponent } from '../participant-view/participant-stage
     ExpLeaderVoteComponent,
     //ExpRatingComponent,
     ExpSurveyComponent,
-    ExpTosAndProfileComponent,
+    ExpProfileComponent,
+    ExpTosComponent,
     ExpLeaderRevealComponent,
     MatButtonModule,
     ExperimenterViewComponent,

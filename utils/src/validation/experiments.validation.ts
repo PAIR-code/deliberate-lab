@@ -4,7 +4,6 @@ import {
   ProfileStageConfigData,
   RevealVotedConfigData,
   SurveyStageConfigData,
-  TOSAndProfileConfigData,
   TermsOfServiceConfigData,
   VoteForLeaderConfigData,
 } from './stages.validation';
@@ -46,7 +45,6 @@ export const ExperimentCreationData = Type.Object(
       Type.Union([
         TermsOfServiceConfigData,
         ProfileStageConfigData,
-        TOSAndProfileConfigData,
         SurveyStageConfigData,
         GroupChatStageConfigData,
         VoteForLeaderConfigData,
