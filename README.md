@@ -82,6 +82,7 @@ This should be enough for local development with emulators. Before deploying to 
 
 - Update the project ID in the [`.firebaserc`](./.firebaserc) file.
 - Update the Firebase app configuration in the [`webapp/src/lib/api/firebase-config.ts`](./webapp/src/lib/api/firebase-config.ts) file.
+- Update the project ID, private key ID, private key, (client email, and client ID) in the [`scripts/service-account.json`](./scripts/service-account.json) file. You can generate a private key in the Firebase console under `Project settings` > `Service accounts`. The fields of the generated JSON file should be copied to the `service-account.json` file.
 
 ### Emulators
 
