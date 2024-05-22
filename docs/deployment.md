@@ -56,7 +56,25 @@ firebase deploy --only firestore:indexes
 firebase deploy --only firestore:rules
 ```
 
-#### Adding experimenters
+### About cloud functions
+
+Firebase builds the cloud functions this way:
+
+1. Locally compile the cloud functions to javascript with `tsc`.
+2. Bundle the `functions` folder and send it to the cloud **without the `node_modules`**.
+3. Install the `node_modules` on the cloud.
+
+In order to make this work with our local `utils` package, we have an additional configuration that does the following:
+
+1. When deploying cloud functions, run a predeploy script (configured in the [`firebase.json`](../firebase.json) file)
+2. The [`predeploy.sh`](../functions/predeploy.sh) script runs `npm pack` in the `utils` folder to produce a `.tgz` archive, and then moves it over to the `functions` folder.
+3. The `package.json` in the `functions` folder mentions `"file:./llm-mediation-experiments-utils-1.0.0.tgz"` as the source for the `@llm-mediation-experiments/utils` package.
+
+Note that this still works in development mode without the `.tgz` archive thanks to the `paths` configuration in the [`tsconfig.json`](../functions/tsconfig.json) file.
+
+Taken from https://github.com/firebase/firebase-tools/issues/968#issuecomment-460323113.
+
+### Adding experimenters
 
 Once your app is running in production, you may want to add experimenter accounts. To do so, follow these steps:
 

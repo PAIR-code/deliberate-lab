@@ -11,7 +11,8 @@
         "plugin:prettier/recommended"
       ],
       "rules": {
-        "eslint-plugin-vue/object-curly-spacing": "off"
+        "eslint-plugin-vue/object-curly-spacing": "off",
+        "no-case-declarations": "off"
       }
     }
   ],

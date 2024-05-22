@@ -29,7 +29,9 @@ export const createExperiment = onCall(async (request) => {
     const document = app.firestore().collection(data.type).doc();
 
     await app.firestore().runTransaction(async (transaction) => {
-      let { name, numberOfParticipants } = data.metadata;
+      let { numberOfParticipants } = data.metadata;
+      const { name } = data.metadata;
+
       numberOfParticipants = numberOfParticipants ?? DEFAULT_PARTICIPANT_COUNT;
 
       // Create the metadata document

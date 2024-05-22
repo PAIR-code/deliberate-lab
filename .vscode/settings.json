@@ -5,7 +5,8 @@
       "splitTerminals": [
         {
           "name": "frontend",
-          "commands": ["cd webapp && npm run start"],
+          // Wait 5 seconds to make sure that utils types have been built
+          "commands": ["cd webapp && sleep 5 && npm run start"],
           "icon": "🌐"
         }
       ]
@@ -50,5 +51,11 @@
   },
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit"
-  }
+  },
+  "eslint.workingDirectories": [
+    "./webapp",
+    "./functions",
+    "./utils",
+    "./scripts"
+  ]
 }

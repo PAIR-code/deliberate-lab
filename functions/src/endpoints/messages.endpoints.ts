@@ -33,7 +33,9 @@ export const message = onCall(async (request) => {
         .get();
 
       // Ignore ts warnings because we immediately write the data to firestore and do not need to keep consistent types until then
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       const participant = participantDoc.data() as ParticipantProfile; // @ts-ignore
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       delete data.message.fromPrivateParticipantId; // @ts-ignore
       data.message.fromPublicParticipantId = participant.publicId; // see [UserMessage] type
     }
