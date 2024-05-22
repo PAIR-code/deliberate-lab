@@ -6,21 +6,17 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { HttpClient } from '@angular/common/http';
-import { Component, Input, effect, inject } from '@angular/core';
+import { Component, Input, effect } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxChange, MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatRadioModule } from '@angular/material/radio';
-import { injectQueryClient } from '@tanstack/angular-query-experimental';
 
-import { ProfileTOSData, StageKind, UnifiedTimestamp } from '@llm-mediation-experiments/utils';
+import { StageKind, UnifiedTimestamp } from '@llm-mediation-experiments/utils';
 import { Timestamp } from 'firebase/firestore';
 import { CastViewingStage, ParticipantService } from 'src/app/services/participant.service';
-import { updateProfileAndTOSMutation } from 'src/lib/api/mutations';
-import { MutationType } from 'src/lib/types/tanstack.types';
 
 @Component({
   selector: 'app-exp-tos',
@@ -47,14 +43,7 @@ export class ExpTosComponent {
     acceptTosTimestamp: new FormControl<UnifiedTimestamp | null>(null, Validators.required),
   });
 
-  http = inject(HttpClient);
-  queryClient = injectQueryClient();
-
-  profileMutation: MutationType<ProfileTOSData | null | undefined, ProfileTOSData>;
-
-  constructor(participantService: ParticipantService) {
-    this.profileMutation = updateProfileAndTOSMutation(this.queryClient);
-
+  constructor(private participantService: ParticipantService) {
     // Refresh the form data when the participant profile changes
     effect(() => {
       const profile = participantService.participant()?.profile();
@@ -73,7 +62,10 @@ export class ExpTosComponent {
     });
   }
 
-  nextStep() {
-    // TODO: refactor with new backend
+  async nextStep() {
+    const { acceptTosTimestamp } = this.tosFormControl.value;
+
+    await this.participantService.participant()?.updateProfile({ acceptTosTimestamp });
+    await this.participantService.workOnNextStage();
   }
 }

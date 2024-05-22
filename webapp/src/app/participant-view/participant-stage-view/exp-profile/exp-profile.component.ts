@@ -6,20 +6,16 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { HttpClient } from '@angular/common/http';
-import { Component, Input, effect, inject } from '@angular/core';
+import { Component, Input, effect } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatRadioModule } from '@angular/material/radio';
-import { injectQueryClient } from '@tanstack/angular-query-experimental';
 
-import { ProfileTOSData, StageKind } from '@llm-mediation-experiments/utils';
+import { StageKind } from '@llm-mediation-experiments/utils';
 import { CastViewingStage, ParticipantService } from 'src/app/services/participant.service';
-import { updateProfileAndTOSMutation } from 'src/lib/api/mutations';
-import { MutationType } from 'src/lib/types/tanstack.types';
 
 enum Pronouns {
   HeHim = 'He/Him',
@@ -54,15 +50,9 @@ export class ExpProfileComponent {
     avatarUrl: new FormControl('', Validators.required),
   });
 
-  http = inject(HttpClient);
-  queryClient = injectQueryClient();
-
-  profileMutation: MutationType<ProfileTOSData | null | undefined, ProfileTOSData>;
   value = ''; // Custom pronouns input value
 
-  constructor(participantService: ParticipantService) {
-    this.profileMutation = updateProfileAndTOSMutation(this.queryClient);
-
+  constructor(private participantService: ParticipantService) {
     // Refresh the form data when the participant profile changes
     effect(() => {
       const profile = participantService.participant()?.profile();
@@ -89,7 +79,10 @@ export class ExpProfileComponent {
     });
   }
 
-  nextStep() {
-    // TODO: refactor with new backend
+  async nextStep() {
+    const { name, pronouns, avatarUrl } = this.profileFormControl.value;
+
+    await this.participantService.participant()?.updateProfile({ name, pronouns, avatarUrl });
+    await this.participantService.workOnNextStage();
   }
 }
