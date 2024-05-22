@@ -158,11 +158,12 @@ export class ExpChatComponent {
   }
 
   toggleEndChat() {
-    if (this.readyToEndChat()) return;
+    const ready = this.readyToEndChat();
 
-    this.chat?.markReadyToEndChat(true);
+    this.chat?.markReadyToEndChat(ready);
 
-    this.message.disable();
+    if (ready) this.message.disable();
+    else this.message.enable();
     // this.timer.remove();
   }
 

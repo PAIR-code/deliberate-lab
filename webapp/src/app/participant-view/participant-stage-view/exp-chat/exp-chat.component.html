@@ -64,7 +64,7 @@
     <div>
       <mat-slide-toggle
         [checked]="readyToEndChat()"
-        [disabled]="isSilent() || readyToEndChat()"
+        [disabled]="isSilent()"
         (change)="toggleEndChat()"
       >
         @if (currentRatingsIndex() < stage.config().chatConfig.ratingsToDiscuss.length - 1) {
