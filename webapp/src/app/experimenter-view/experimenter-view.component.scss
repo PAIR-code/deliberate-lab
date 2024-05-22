@@ -131,7 +131,7 @@ $toolbar-height: 60px;
 }
 
 .sidenav {
-  width: 200px; // Adjust width as necessary
+  width: 250px; // Adjust width as necessary
   overflow: auto; // Allow the sidenav itself to scroll if needed
 }
 
@@ -139,4 +139,25 @@ $toolbar-height: 60px;
   flex-grow: 1;
   overflow-y: auto; // Scroll vertically if needed
   overflow-x: hidden; // Prevent horizontal scrolling
+}
+
+.section-title {
+  // Font
+  font-weight: bold;
+  font-size: 1.25rem;
+  color: rgba(0, 0, 0, 0.87); /* Default Material Design text color */
+  user-select: none; /* Prevent text selection */
+
+  // Shape
+  height: 48px;
+  padding-left: 16px; /* Align with mat-list-item padding */
+  padding-right: 16px;
+
+  // Color
+  background-color: #e5e7eb;
+
+  // Alignment
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

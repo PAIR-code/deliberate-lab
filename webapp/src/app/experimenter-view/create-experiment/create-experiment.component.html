@@ -15,6 +15,12 @@
         required="true"
       />
     </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Number of participants</mat-label>
+      <input matInput type="number" placeholder="3" [(ngModel)]="numberOfParticipants" />
+    </mat-form-field>
+
     <div>
       <button
         mat-raised-button

@@ -12,6 +12,8 @@
   <mat-sidenav-container>
     <mat-sidenav #sidenav mode="side" opened="true" class="sidenav">
       <mat-nav-list class="menu-buttons">
+        <div class="section-title">Existing experiments</div>
+
         @for (experiment of experiments(); track experiment.name) {
           <mat-list-item
             matListItemTitle
@@ -25,6 +27,8 @@
             </div>
           </mat-list-item>
         }
+
+        <div class="section-title">Experimenter menu</div>
 
         <mat-list-item
           matListItemTitle

@@ -83,10 +83,10 @@ export class ExperimenterRepository extends BaseRepository {
   /** Create an experiment.
    * @rights Experimenter
    */
-  async createExperiment(name: string, stages: StageConfig[]) {
+  async createExperiment(name: string, stages: StageConfig[], numberOfParticipants?: number) {
     return createExperimentCallable({
       type: 'experiments',
-      metadata: { name },
+      metadata: { name, numberOfParticipants },
       stages,
     });
   }
