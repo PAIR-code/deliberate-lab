@@ -14,9 +14,7 @@
         }
         @case (StageKind.SetProfile) {
           <app-exp-profile
-            [stage]="
-              assertCast(participantService.viewingStage(), StageKind.SetProfile)
-            "
+            [stage]="assertCast(participantService.viewingStage(), StageKind.SetProfile)"
           ></app-exp-profile>
         }
         @case (StageKind.GroupChat) {
