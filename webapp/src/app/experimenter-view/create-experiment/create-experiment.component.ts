@@ -64,6 +64,7 @@ export class CreateExperimentComponent {
   public existingStages: Partial<StageConfig>[] = [];
   public currentEditingStageIndex = -1;
   public newExperimentName = '';
+  public numberOfParticipants = 3;
   public currentTemplateChoice: WritableSignal<ExperimentTemplate | undefined> = signal(undefined); // Dropdown choice
   public currentFullTemplate = computed(() => {
     // Template with its full config
@@ -325,7 +326,11 @@ export class CreateExperimentComponent {
   /** Create the experiment and send it to be stored in the database */
   async addExperiment() {
     const stages = this.existingStages as StageConfig[];
-    const { id } = await this.experimenter.createExperiment(this.newExperimentName, stages);
+    const { id } = await this.experimenter.createExperiment(
+      this.newExperimentName,
+      stages,
+      this.numberOfParticipants,
+    );
 
     // Navigate to the experiment page after creation
     localStorage.removeItem(LOCAL_STORAGE_KEY); // Clear local storage

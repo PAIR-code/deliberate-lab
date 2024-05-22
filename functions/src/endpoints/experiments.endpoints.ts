@@ -16,21 +16,25 @@ import { onCall } from 'firebase-functions/v2/https';
 import { app } from '../app';
 import { AuthGuard } from '../utils/auth-guard';
 
+const DEFAULT_PARTICIPANT_COUNT = 3;
+
 /** Generic endpoint to create either experiments or experiment templates */
 export const createExperiment = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
 
   const { data } = request;
-  const numberOfParticipants = 3;
 
   if (Value.Check(ExperimentCreationData, data)) {
     // Run in a transaction to ensure consistency
     const document = app.firestore().collection(data.type).doc();
 
     await app.firestore().runTransaction(async (transaction) => {
+      let { name, numberOfParticipants } = data.metadata;
+      numberOfParticipants = numberOfParticipants ?? DEFAULT_PARTICIPANT_COUNT;
+
       // Create the metadata document
       transaction.set(document, {
-        ...data.metadata,
+        name,
         ...(data.type === 'experiments'
           ? {
               date: Timestamp.now(),
