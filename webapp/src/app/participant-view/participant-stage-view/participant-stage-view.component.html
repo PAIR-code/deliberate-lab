@@ -3,9 +3,7 @@
     Loading...
   } @else {
     <h2>
-      {{ participantService.viewingStage()!.config().name }} ({{
-        participantService.viewingStage()!.config().kind
-      }})
+      {{ participantService.viewingStage()!.config().name }}
     </h2>
     <div class="exp-stage-content">
       @switch (participantService.viewingStage()!.config().kind) {
