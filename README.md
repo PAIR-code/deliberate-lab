@@ -190,3 +190,14 @@ Test the container locally with the following command:
 ```bash
 docker run -p 4200:4200 myapp
 ```
+
+#### Adding experimenters
+
+Once your app is running in production, you may want to add experimenter accounts. To do so, follow these steps:
+
+1. Have someone connect to the application using a Google-compatible account.
+2. Run the following command in the `scripts` directory, after having set your own `service-account.json` credentials in it (see the [`service-account.example.json`](./scripts/service-account.example.json) file):
+
+```bash
+npm run set-experimenter <email> yes
+```
