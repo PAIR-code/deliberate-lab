@@ -51,6 +51,7 @@ mat-slider {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  text-align: center;
 
   .item-pair-item {
     display: flex;
@@ -79,6 +80,13 @@ mat-slider {
       width: 150px;
       height: 150px;
       object-fit: contain;
+    }
+
+    .item-pair-item-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 10px;
     }
 
     .item-pair-item-name {
