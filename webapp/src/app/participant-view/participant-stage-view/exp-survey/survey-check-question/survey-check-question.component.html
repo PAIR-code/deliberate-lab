@@ -1,3 +1,7 @@
-<form [formGroup]="questionForm">
-  <mat-checkbox required formControlName="checkMark">{{ this.question.questionText }}</mat-checkbox>
-</form>
+@if (questionForm) {
+  <form [formGroup]="questionForm">
+    <mat-checkbox required formControlName="checkMark">{{
+      this.question.questionText
+    }}</mat-checkbox>
+  </form>
+}
