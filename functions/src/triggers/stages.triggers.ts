@@ -1,5 +1,6 @@
 import {
   ChatKind,
+  Experiment,
   PublicChatData,
   PublicStageData,
   StageAnswer,
@@ -42,8 +43,16 @@ export const initializePublicStageData = onDocumentWritten(
             break;
         }
 
+        // Read the number of participants from the experiment document
+        const experimentDoc = await app
+          .firestore()
+          .doc(`experiments/${event.params.experimentId}`)
+          .get();
+        const { numberOfParticipants } = experimentDoc.data() as Experiment;
+
         publicData = {
           kind: data.kind,
+          numberOfParticipants,
           readyToEndChat: {},
           chatData,
         };
