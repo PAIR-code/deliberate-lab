@@ -15,7 +15,7 @@
   },
   "main": "lib/index.js",
   "dependencies": {
-    "@llm-mediation-experiments/utils": "file:./llm-mediation-experiments-utils-1.0.0.tgz",
+    "@llm-mediation-experiments/utils": "file:llm-mediation-experiments-utils-1.0.0.tgz",
     "@sinclair/typebox": "^0.32.30",
     "firebase-admin": "^12.1.0",
     "firebase-functions": "^5.0.0",
