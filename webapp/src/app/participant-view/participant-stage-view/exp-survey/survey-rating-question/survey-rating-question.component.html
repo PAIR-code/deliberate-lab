@@ -39,19 +39,19 @@
             @if (
               questionForm.value['confidence'] === 0 || questionForm.value['confidence'] === null
             ) {
-              <span class="slider-end-label"><b> 50/50 🤷</b></span>
+              <span class="slider-end-label"><b>Not confident</b></span>
             } @else {
-              <span class="slider-end-label">50/50 🤷</span>
+              <span class="slider-end-label">Not confident</span>
             }
             <mat-slider min="0" max="1" step="0.1" discrete>
               <input matSliderThumb formControlName="confidence" />
             </mat-slider>
             @if (questionForm.value['confidence'] === 1) {
               <span class="slider-end-label"
-                >👍<b> Full <br />confidence</b></span
+                ><b>Very confident</b></span
               >
             } @else {
-              <span class="slider-end-label">👍 Full <br />confidence</span>
+              <span class="slider-end-label">Very confident</span>
             }
           </div>
         </div>

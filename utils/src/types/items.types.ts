@@ -4,6 +4,7 @@
 export interface Item {
   name: string; // unique
   imageUrl: string;
+  ranking: number; // 1 means it is the most valuable item.
 }
 
 export interface ItemPair {
@@ -37,72 +38,83 @@ export const ITEM_NAMES = [
 export type ItemName = (typeof ITEM_NAMES)[number];
 export const ITEMS: Record<ItemName, Item> = {
   sextant: {
-    name: 'Sextant',
+    name: 'Compass',
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Sextant_von_Alexander_von_Humboldt.jpg/640px-Sextant_von_Alexander_von_Humboldt.jpg',
+      '/assets/items/compass.jpeg',
+    ranking: 15, // Useless without tables and chronometer.
   },
   shavingMirror: {
-    name: 'Shaving mirror',
+    name: 'Mirror',
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/3/32/Mirror%2C_shaving_%28AM_880330-3%29.jpg',
+      '/assets/items/mirror.jpeg',
+    ranking: 1,
   },
   mosquitoNetting: {
     name: 'Mosquito netting',
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Net%2C_mosquito_%28AM_2015.20.7-1%29.jpg/2560px-Net%2C_mosquito_%28AM_2015.20.7-1%29.jpg',
+      '/assets/items/netting.jpeg',
+    ranking: 14,
   },
   waterContainer: {
-    name: '25 liter container of Water',
+    name: 'Water (25L)',
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/c/c4/PikiWiki_Israel_65236_container_for_water.jpg',
+      '/assets/items/water.jpeg',
+    ranking: 3,
   },
   armyRations: {
-    name: 'Case of Army Rations',
-    imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/0/00/24_Hour_Multi_Climate_Ration_Pack_MOD_45157289.jpg',
+    name: 'Case of army rations',
+    imageUrl: '/assets/items/rations.jpeg',
+    ranking: 4,
   },
   pacificMaps: {
-    name: 'Maps of the Pacific Ocean', // ToDo - Change to Atlantic ocean?
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d6/Kepler-world.jpg',
+    name: 'Maps of the Atlantic Ocean', 
+    imageUrl: '/assets/items/map.jpeg',
+    ranking: 13,
   },
   floatingSeatCushion: {
-    name: 'Floating Seat Cushion',
-    imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/e/ec/EM_USAIRWAYS_EXPRESS_CRJ-200_%282878446162%29.jpg',
+    name: 'Floating seat cushion',
+    imageUrl: '/assets/items/cushion.jpeg',
+    ranking: 9,
   },
   canOilMixture: {
-    name: '10 liter can of Oil/Petrol mixture',
-    imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/3/33/Britische_copy_wehrmacht-einheitskanister_1943_jerrycan.jpg',
+    name: 'Can of oil/petrol (10L)',
+    imageUrl: '/assets/items/oil.jpeg',
+    ranking: 2,
   },
   transistorRadio: {
-    name: 'Small Transistor Radio',
-    imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/b/b6/Vintage_Philco_6-Transistor_Radio%2C_Model_T76-124%2C_1958%2C_Leather_Case_%288385122630%29.jpg',
+    name: 'Small transistor radio',
+    imageUrl: '/assets/items/radio.jpeg',
+    ranking: 12,
   },
   plasticSheeting: {
-    name: 'Plastic Sheeting',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/13/Film_StandardForm001.jpg',
+    name: 'Plastic sheeting',
+    imageUrl: '/assets/items/sheeting.jpeg',
+    ranking: 5, 
   },
   sharkRepellent: {
-    name: 'Can of Shark Repellent',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/11/Konservendose-1.jpg',
+    name: 'Can of shark repellent',
+    imageUrl: '/assets/items/repellent.jpeg',
+    ranking: 10,
   },
   rubbingAlcohol: {
-    name: 'One bottle rubbing alcohol',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/b7/Rubbing_alcohol.JPG',
+    name: 'Bottle of rubbing alcohol',
+    imageUrl: '/assets/items/rubbing_alcohol.jpeg',
+    ranking: 11,
   },
   nylonRope: {
-    name: '15 ft. of Nylon Rope',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/35/Nylon_Rope.JPG',
+    name: 'Nylon rope (15 ft.)',
+    imageUrl: '/assets/items/rope.jpeg',
+    ranking: 8,
   },
   chocolateBars: {
-    name: '2 boxes of Chocolate Bars',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/91/2Tablettes_Grand_crus.png',
+    name: 'Chocolate bars (2 boxes)',
+    imageUrl: '/assets/items/chocolate.jpeg',
+    ranking: 6,
   },
   fishingKit: {
-    name: 'An ocean Fishing Kit & Pole',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/29/Fishing_time_at_sea.jpg',
+    name: 'A fishing kit & pole',
+    imageUrl: '/assets/items/fishing.jpeg',
+    ranking: 7,
   },
 };
 
