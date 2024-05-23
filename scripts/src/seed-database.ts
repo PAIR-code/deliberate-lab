@@ -148,7 +148,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
       {
         id: 99, // Avoid collision with rating questions id (starting from 0)
         kind: SurveyQuestionKind.Scale,
-        questionText: 'Now that you have a sense of the question, how willing would you be to serve as the representative and complete this task on behalf of your crew?',
+        questionText: 'Now that you have a sense of the task, how willing would you be to serve as the representative and complete this task on behalf of your crew?',
         lowerBound: 'I would STRONGLY DISLIKE to be the representative (0/10)',
         upperBound: 'I would STRONGLY LIKE to be the representative (10/10)',
       },
