@@ -134,7 +134,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     name: '03. Welcome to the experiment',
     kind: StageKind.Info,
     infoLines: [
-      '<h3>Welcome to the experiment!</h3><p>In this task, you are adrift on a private yacht in the North Atlantic with your crewmates. As a consequence of a fire of unknown origin, much of the yacht and its contents have been destroyed. The yacht is now slowly sinking. Your location is unclear because of the destruction of critical navigational equipment and because you and the crew were distracted trying to bring the fire under control. Your best estimate is that you are approximately one thousand miles south-southeast of the nearest land.</p><br/>',
+      '<h3>Welcome to the experiment!</h3><p>In this task, you are adrift on a private yacht in the North Atlantic with your crewmates. As a consequence of a fire of unknown origin, much of the yacht and its contents have been destroyed. The yacht is now slowly sinking. Your location is unclear because of the destruction of critical navigational equipment and because you and the crew were distracted trying to bring the fire under control. Your best estimate is that you are approximately one thousand miles south-southeast of the nearest land. You have a box of matches in your pocket.</p><br/>',
       '<h3>How the game is scored:</h3><p>The task is to compare pairs of items depending on how useful they may be to your survival in this scenario. However, your answers are not what matters. You will work with your crewmates to elect a <b>representative</b>, who will complete this task on your behalf. <i>Your payout from this task is dependent on how well the representative does on this task.</i>',
       '<h3>The next activity:</h3><p>On the next screen, you will complete an example of this task.</p>' 
     ],
@@ -149,8 +149,8 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
         id: 99, // Avoid collision with rating questions id (starting from 0)
         kind: SurveyQuestionKind.Scale,
         questionText: 'Now that you have a sense of the question, how willing would you be to serve as the representative and complete this task on behalf of your crew?',
-        lowerBound: 'I would most definitely not like to be the representative (0/10)',
-        upperBound: 'I would most definitely like to be the representative (10/10)',
+        lowerBound: 'I would STRONGLY DISLIKE to be the representative (0/10)',
+        upperBound: 'I would STRONGLY LIKE to be the representative (10/10)',
       },
     ],
   },
@@ -159,8 +159,8 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     name: '05. Group discussion introduction',
     kind: StageKind.Info,
     infoLines: [
-      'On the next stage, you will review and discuss your answers to the previous task with your crewmembers.',
-      'Take this opportunity to gauge the abilities of your crewmembers, as you will vote for the team representative next.',
+      'On the next stage, you will review and discuss your answers to the previous task with your crewmembers.<br/>',
+      'Take this opportunity to gauge the abilities of your crewmembers, as you will later vote for the team representative.<br/>',
       'As a reminder, the payoff in this task is <b>only dependent on the representative\'s performance on the final task</b>.'
     ],
   },
@@ -184,8 +184,8 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
         id: 0,
         kind: SurveyQuestionKind.Scale,
         questionText: 'Now that you\'ve gauged the abilities of your crewmembers, how willing would you be to serve as the representative and complete this task on behalf of your crew?',
-        lowerBound: 'I would most definitely not like to be the representative (0/10)',
-        upperBound: 'I would most definitely like to be the representative (10/10)',
+        lowerBound: 'I would STRONGLIY DISLIKE to be the representative (0/10)',
+        upperBound: 'I would STRONGLY LIKE to be the representative (10/10)',
       },
     ],
   },
