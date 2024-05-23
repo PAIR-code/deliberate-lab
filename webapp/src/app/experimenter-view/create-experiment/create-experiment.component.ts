@@ -15,6 +15,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Router } from '@angular/router';
 import {
   ExperimentTemplate,
+  InfoStageConfig,
   QuestionConfig,
   StageConfig,
   StageKind,
@@ -22,6 +23,7 @@ import {
   SurveyStageConfig,
   TermsOfServiceStageConfig,
   getDefaultChatAboutItemsConfig,
+  getDefaultInfoConfig,
   getDefaultItemRatingsQuestion,
   getDefaultLeaderRevealConfig,
   getDefaultScaleQuestion,
@@ -79,6 +81,7 @@ export class CreateExperimentComponent {
   readonly SurveyQuestionKind = SurveyQuestionKind;
   readonly tryCast = tryCast;
   readonly availableStageKind = [
+    StageKind.Info,
     StageKind.TermsOfService,
     StageKind.SetProfile,
     StageKind.TakeSurvey,
@@ -148,6 +151,23 @@ export class CreateExperimentComponent {
   get hasUnsavedData() {
     const existingStages = this.localStore.getData(LOCAL_STORAGE_KEY) as StageConfig[];
     return !isEqual(existingStages, this.existingStages);
+  }
+
+  // Add content
+  addNewInfoLine(stage: InfoStageConfig) {
+    stage.infoLines.push('');
+    this.persistExistingStages();
+  }
+
+  deleteInfoLine(stage: InfoStageConfig, index: number) {
+    stage.infoLines.splice(index, 1);
+    this.persistExistingStages();
+  }
+
+  dropInfoLine(stage: InfoStageConfig, event: CdkDragDrop<string[]>) {
+    moveItemInArray(stage.infoLines, event.previousIndex, event.currentIndex);
+
+    this.persistExistingStages();
   }
 
   // tos lines
@@ -294,6 +314,9 @@ export class CreateExperimentComponent {
       console.log('Switched to:', this.currentEditingStage.kind);
       let newConfig = {};
       switch (this.currentEditingStage.kind) {
+        case StageKind.Info:
+          newConfig = getDefaultInfoConfig();
+          break;
         case StageKind.TermsOfService:
           newConfig = getDefaultTosConfig();
           break;

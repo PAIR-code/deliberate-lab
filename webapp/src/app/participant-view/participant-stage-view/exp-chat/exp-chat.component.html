@@ -1,106 +1,115 @@
-<div class="chat-members">
-  <b>Other chat members </b>
-  <div class="container">
-    @for (user of participantService.otherParticipants(); track user.publicId) {
-      @if (
-        user.workingOnStageName === participantService.participant()?.profile()?.workingOnStageName
-      ) {
-        <div class="profile">
-          <img class="avatar" src="{{ user.avatarUrl }}" alt="avatar" />
-          <div class="name">
-            {{ user.name }}
+<div class="main-container">
+  <!-- Show the information on the left. -->
+  <div class="left">
+    <div class="chat-members">
+      <b>Other chat members </b>
+      <div class="container">
+        @for (user of participantService.otherParticipants(); track user.publicId) {
+          @if (
+            user.workingOnStageName === participantService.participant()?.profile()?.workingOnStageName
+          ) {
+            <div class="profile">
+              <img class="avatar" src="{{ user.avatarUrl }}" alt="avatar" />
+              <div class="name">
+                {{ user.name }}
+              </div>
+              <div class="pronoun">({{ user.pronouns }})</div>
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+    @if (!everyoneReachedTheChat()) {
+      <div class="hold-message-container">Please hold for everyone else to reach the chat...</div>
+    } @else {
+      @if (currentRatingsToDiscuss()) {
+        <b
+          >Please deliberate on which of the following items would be more useful to your survival. ({{
+            currentRatingsIndex() + 1
+          }}/{{ stage.config().chatConfig.ratingsToDiscuss.length }})</b
+        >
+        <div class="flex-container">
+          <div class="item-pair-displays">
+            <div class="item-pair-item">
+              <img
+                src="{{ ITEMS[currentRatingsToDiscuss().item1].imageUrl }}"
+                alt="{{ ITEMS[currentRatingsToDiscuss().item1].name }}"
+                width="20px"
+              />
+              <span>{{ ITEMS[currentRatingsToDiscuss().item1].name }}</span>
+            </div>
+            <div class="item-pair-item">
+              <img
+                src="{{ ITEMS[currentRatingsToDiscuss().item2].imageUrl }}"
+                alt="{{ ITEMS[currentRatingsToDiscuss().item2].name }}"
+                width="20px"
+              />
+              <span>{{ ITEMS[currentRatingsToDiscuss().item2].name }}</span>
+            </div>
           </div>
-          <div class="pronoun">({{ user.pronouns }})</div>
         </div>
       }
     }
   </div>
-</div>
+  <!-- Show the chat on the right. -->
+  <div class="right">
+    @if (everyoneReachedTheChat() && currentRatingsToDiscuss()) {
+      <div class="discussion">
+        <b>Discussion</b>
 
-@if (!everyoneReachedTheChat()) {
-  <div class="hold-message-container">Please hold for everyone else to reach the chat...</div>
-} @else {
-  <div class="discussion">
-    <b>Discussion</b>
-
-    <div class="messages">
-      @for (message of chat?.messages(); track $index) {
-        <div class="message">
-          @if (message.kind === 'userMessage') {
-            <app-chat-user-message [message]="message"></app-chat-user-message>
-          } @else if (message.kind === 'mediatorMessage') {
-            <app-chat-mediator-message [message]="message"></app-chat-mediator-message>
-          } @else if (message.kind === 'discussItemsMessage') {
-            <app-chat-discuss-items-message
-              [discussItemsMessage]="message"
-            ></app-chat-discuss-items-message>
-          } @else {
-            <div></div>
+        <div class="messages">
+          @for (message of chat?.messages(); track $index) {
+            <div class="message">
+              @if (message.kind === 'userMessage') {
+                <app-chat-user-message [message]="message"></app-chat-user-message>
+              } @else if (message.kind === 'mediatorMessage') {
+                <app-chat-mediator-message [message]="message"></app-chat-mediator-message>
+              } @else if (message.kind === 'discussItemsMessage') {
+                <app-chat-discuss-items-message
+                  [discussItemsMessage]="message"
+                ></app-chat-discuss-items-message>
+              } @else {
+                <div></div>
+              }
+            </div>
           }
         </div>
-      }
-    </div>
 
-    <form class="message-form" (ngSubmit)="sendMessage()">
-      <app-chat-user-profile
-        [profile]="participantService.participant()?.profile()!"
-      ></app-chat-user-profile>
-      <mat-form-field class="full-width">
-        <mat-label>Message to send</mat-label>
-        <input matInput placeholder="Write your message" [formControl]="message" />
-      </mat-form-field>
-      <button
-        type="submit"
-        color="primary"
-        mat-button
-        [disabled]="readyToEndChat() || !message.valid"
-      >
-        <!-- <mat-icon>redo</mat-icon> -->
-        <span>Send</span>
-        <br />
-        <!-- <span>{{ timer.timer() }} seconds left until the next pair...</span> -->
-      </button>
-    </form>
-    <div>
-      <mat-slide-toggle
-        [checked]="readyToEndChat()"
-        [disabled]="isSilent()"
-        (change)="toggleEndChat()"
-      >
-        @if (currentRatingsIndex() < stage.config().chatConfig.ratingsToDiscuss.length - 1) {
-          I'm done with chatting and ready to move on to the next pair of items
-        } @else {
-          I'm done with chatting and ready to move on to the next stage
-        }
-      </mat-slide-toggle>
-    </div>
-  </div>
-
-  @if (currentRatingsToDiscuss()) {
-    <b
-      >Your discussion is now focusing on selecting the best item between the following items ({{
-        currentRatingsIndex() + 1
-      }}/{{ stage.config().chatConfig.ratingsToDiscuss.length }})</b
-    >
-    <div class="flex-container">
-      <div class="item-pair-displays">
-        <div class="item-pair-item">
-          <img
-            src="{{ ITEMS[currentRatingsToDiscuss().item1].imageUrl }}"
-            alt="{{ ITEMS[currentRatingsToDiscuss().item1].name }}"
-            width="20px"
-          />
-          <span>{{ ITEMS[currentRatingsToDiscuss().item1].name }}</span>
-        </div>
-        <div class="item-pair-item">
-          <img
-            src="{{ ITEMS[currentRatingsToDiscuss().item2].imageUrl }}"
-            alt="{{ ITEMS[currentRatingsToDiscuss().item2].name }}"
-            width="20px"
-          />
-          <span>{{ ITEMS[currentRatingsToDiscuss().item2].name }}</span>
+        <form class="message-form" (ngSubmit)="sendMessage()">
+          <app-chat-user-profile
+            [profile]="participantService.participant()?.profile()!"
+          ></app-chat-user-profile>
+          <mat-form-field class="full-width">
+            <mat-label>Message to send</mat-label>
+            <input matInput placeholder="Write your message" [formControl]="message" />
+          </mat-form-field>
+          <button
+            type="submit"
+            color="primary"
+            mat-button
+            [disabled]="readyToEndChat() || !message.valid"
+          >
+            <!-- <mat-icon>redo</mat-icon> -->
+            <span>Send</span>
+            <br />
+            <!-- <span>{{ timer.timer() }} seconds left until the next pair...</span> -->
+          </button>
+        </form>
+        <div>
+          <mat-slide-toggle
+            [checked]="readyToEndChat()"
+            [disabled]="isSilent()"
+            (change)="toggleEndChat()"
+          >
+            @if (currentRatingsIndex() < stage.config().chatConfig.ratingsToDiscuss.length - 1) {
+              I'm done with chatting and ready to move on to the next pair of items
+            } @else {
+              I'm done with chatting and ready to move on to the next stage
+            }
+          </mat-slide-toggle>
         </div>
       </div>
-    </div>
-  }
-}
+    }
+  </div>
+</div>

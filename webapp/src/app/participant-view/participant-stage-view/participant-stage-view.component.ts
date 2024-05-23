@@ -12,6 +12,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { StageKind } from '@llm-mediation-experiments/utils';
 import { ParticipantService, assertCastStageSignals } from 'src/app/services/participant.service';
 import { ExpChatComponent } from './exp-chat/exp-chat.component';
+import { ExpInfoComponent } from './exp-info/exp-info.component';
 import { ExpLeaderRevealComponent } from './exp-leader-reveal/exp-leader-reveal.component';
 import { ExpLeaderVoteComponent } from './exp-leader-vote/exp-leader-vote.component';
 import { ExpProfileComponent } from './exp-profile/exp-profile.component';
@@ -23,6 +24,7 @@ import { ExpTosComponent } from './exp-tos/exp-tos.component';
   standalone: true,
   imports: [
     ExpChatComponent,
+    ExpInfoComponent,
     ExpLeaderVoteComponent,
     ExpSurveyComponent,
     ExpTosComponent,

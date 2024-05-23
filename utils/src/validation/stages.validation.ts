@@ -19,6 +19,15 @@ const strict = { additionalProperties: false } as const;
 // ********************************************************************************************* //
 //                                              CONFIGS                                          //
 // ********************************************************************************************* //
+/** Terms of service stage config */
+export const InfoConfigData = Type.Object(
+  {
+    kind: Type.Literal(StageKind.Info),
+    name: Type.String({ minLength: 1 }),
+    infoLines: Type.Array(Type.String({ minLength: 1 })),
+  },
+  strict,
+);
 
 /** Terms of service stage config */
 export const TermsOfServiceConfigData = Type.Object(
