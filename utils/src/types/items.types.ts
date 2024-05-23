@@ -72,7 +72,7 @@ export const ITEMS: Record<ItemName, Item> = {
   },
   pacificMaps: {
     name: 'Maps of the Atlantic Ocean', 
-    imageUrl: IMAGE_HEADER + 'rations.jpeg' + IMAGE_SUFFIX,
+    imageUrl: IMAGE_HEADER + 'map.jpeg' + IMAGE_SUFFIX,
     ranking: 13,
   },
   floatingSeatCushion: {
