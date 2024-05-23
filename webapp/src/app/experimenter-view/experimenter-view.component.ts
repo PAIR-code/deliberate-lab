@@ -8,7 +8,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Experiment } from '@llm-mediation-experiments/utils';
 import { signOut } from 'firebase/auth';
 import { auth } from 'src/lib/api/firebase';
@@ -42,11 +42,15 @@ import { ExperimentSettingsComponent } from './experiment-settings/experiment-se
 export class ExperimenterViewComponent {
   experiments: Signal<Experiment[]>;
 
-  constructor(public readonly appState: AppStateService) {
+  constructor(
+    public readonly appState: AppStateService,
+    private router: Router,
+  ) {
     this.experiments = appState.experimenter.get().experiments;
   }
 
   logout() {
     signOut(auth);
+    this.router.navigate(['/']);
   }
 }
