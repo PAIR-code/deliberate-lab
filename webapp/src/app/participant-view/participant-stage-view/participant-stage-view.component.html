@@ -7,6 +7,11 @@
     </h2>
     <div class="exp-stage-content">
       @switch (participantService.viewingStage()!.config().kind) {
+        @case (StageKind.Info) {
+          <app-exp-info
+            [stage]="assertCast(participantService.viewingStage(), StageKind.Info)"
+          ></app-exp-info>
+        }
         @case (StageKind.TermsOfService) {
           <app-exp-tos
             [stage]="assertCast(participantService.viewingStage(), StageKind.TermsOfService)"

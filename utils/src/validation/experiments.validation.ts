@@ -1,6 +1,7 @@
 import { Type, type Static } from '@sinclair/typebox';
 import {
   GroupChatStageConfigData,
+  InfoConfigData,
   ProfileStageConfigData,
   RevealVotedConfigData,
   SurveyStageConfigData,
@@ -44,6 +45,7 @@ export const ExperimentCreationData = Type.Object(
     // Stage config data
     stages: Type.Array(
       Type.Union([
+        InfoConfigData,
         TermsOfServiceConfigData,
         ProfileStageConfigData,
         SurveyStageConfigData,

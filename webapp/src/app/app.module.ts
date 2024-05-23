@@ -36,6 +36,7 @@ import { LlmApiConfigComponent } from './experimenter-view/llm-api-config/llm-ap
 import { FirebaseService } from './firebase.service';
 import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
 import { ExpChatComponent } from './participant-view/participant-stage-view/exp-chat/exp-chat.component';
+import { ExpInfoComponent } from './participant-view/participant-stage-view/exp-info/exp-info.component';
 import { ExpLeaderRevealComponent } from './participant-view/participant-stage-view/exp-leader-reveal/exp-leader-reveal.component';
 import { ExpLeaderVoteComponent } from './participant-view/participant-stage-view/exp-leader-vote/exp-leader-vote.component';
 import { ExpProfileComponent } from './participant-view/participant-stage-view/exp-profile/exp-profile.component';
@@ -82,6 +83,7 @@ import { VertexApiService } from './services/vertex-api.service';
     ExpLeaderVoteComponent,
     //ExpRatingComponent,
     ExpChatComponent,
+    ExpInfoComponent,
     ExpTosComponent,
     ExpProfileComponent,
     ExpLeaderRevealComponent,

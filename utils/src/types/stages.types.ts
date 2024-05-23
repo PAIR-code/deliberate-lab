@@ -5,6 +5,7 @@ import { QuestionAnswer, QuestionConfig } from './questions.types';
 import { Votes } from './votes.types';
 
 export enum StageKind {
+  Info = 'info',
   TermsOfService = 'termsOfService',
   SetProfile = 'setProfile',
   GroupChat = 'groupChat',
@@ -20,6 +21,7 @@ export enum StageKind {
 
 /** Some stages require all participants to finish before allowing anyone to go on to the next stage */
 export const ALLOWED_STAGE_PROGRESSION = {
+  [StageKind.Info]: false,
   [StageKind.TermsOfService]: false,
   [StageKind.SetProfile]: false,
   [StageKind.GroupChat]: false,
@@ -32,6 +34,11 @@ export const ALLOWED_STAGE_PROGRESSION = {
 interface BaseStageConfig {
   kind: StageKind;
   name: string;
+}
+
+export interface InfoStageConfig extends BaseStageConfig {
+  kind: StageKind.Info;
+  infoLines: string[];
 }
 
 export interface TermsOfServiceStageConfig extends BaseStageConfig {
@@ -68,6 +75,7 @@ export interface RevealVotedStageConfig extends BaseStageConfig {
 }
 
 export type StageConfig =
+  | InfoStageConfig
   | TermsOfServiceStageConfig
   | ProfileStageConfig
   | SurveyStageConfig
@@ -128,6 +136,14 @@ export type PublicStageData = GroupChatStagePublicData | VoteForLeaderStagePubli
 // ********************************************************************************************* //
 //                                         DEFAULTS                                              //
 // ********************************************************************************************* //
+
+export const getDefaultInfoConfig = (): InfoStageConfig => {
+  return {
+    kind: StageKind.Info,
+    name: 'Information',
+    infoLines: [],
+  };
+};
 
 export const getDefaultTosConfig = (): TermsOfServiceStageConfig => {
   return {

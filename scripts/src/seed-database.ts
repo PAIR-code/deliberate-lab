@@ -57,7 +57,7 @@ const seedDatabase = async () => {
       const participant = experiment.collection('participants').doc();
       const profile = getDefaultProfile(
         participantPublicId(index),
-        '01. Agree to the experiment',
+        '01. Agree to the terms of service',
       );
       transaction.set(participant, profile);
 
@@ -80,28 +80,43 @@ const seedDatabase = async () => {
       });
     });
   });
-
-  console.log('Done !');
 };
 
 // ********************************************************************************************* //
 //                                         SEEDER DATA                                           //
 // ********************************************************************************************* //
-const RANDOM_ITEM_PAIRS = choices(pairs(ITEM_NAMES), 5);
+const middleIndex = Math.ceil(ITEM_NAMES.length / 2);
+// Take 5 random items from the first half for the individual tasks.
+const INDIVIDUAL_ITEM_NAMES = ITEM_NAMES.slice(0, middleIndex);
+const INDIVIDUAL_ITEM_PAIRS = choices(pairs(INDIVIDUAL_ITEM_NAMES), 5);
 
-const RATING_QUESTION_CONFIGS: RatingQuestionConfig[] = RANDOM_ITEM_PAIRS.map(
+// Take 5 random items from the second half for the leader tasks.
+const LEADER_ITEM_NAMES = ITEM_NAMES.slice(middleIndex);
+const LEADER_ITEM_PAIRS = choices(pairs(LEADER_ITEM_NAMES), 5);
+
+const I_RATING_QUESTION_CONFIGS: RatingQuestionConfig[] = INDIVIDUAL_ITEM_PAIRS.map(
   ([item1, item2], id) => ({
     id,
     kind: SurveyQuestionKind.Rating,
-    questionText: 'Rate the items by how helpful they would be for survival.',
+    questionText: 'Choose the item that would be more helpful to your survival.',
+    item1,
+    item2,
+  }),
+);
+
+const L_RATING_QUESTION_CONFIGS: RatingQuestionConfig[] = LEADER_ITEM_PAIRS.map(
+  ([item1, item2], id) => ({
+    id,
+    kind: SurveyQuestionKind.Rating,
+    questionText: 'Choose the item that would be more helpful to your survival.',
     item1,
     item2,
   }),
 );
 
 const DEFAULT_STAGES: Record<string, StageConfig> = {
-  '01. Agree to the experiment': {
-    name: '01. Agree to the experiment',
+  '01. Agree to the terms of service': {
+    name: '01. Agree to the terms of service',
     kind: StageKind.TermsOfService,
     tosLines: [
       'You may not injure a human being or, through inaction, allow a human being to come to harm.',
@@ -115,87 +130,121 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     kind: StageKind.SetProfile,
   },
 
-  '03. Initial leadership survey': {
-    name: '03. Initial leadership survey',
+  '03. Welcome to the experiment': {
+    name: '03. Welcome to the experiment',
+    kind: StageKind.Info,
+    infoLines: [
+      '<h3>Welcome to the experiment!</h3><p>In this task, you are adrift on a private yacht in the North Atlantic with your crewmates. As a consequence of a fire of unknown origin, much of the yacht and its contents have been destroyed. The yacht is now slowly sinking. Your location is unclear because of the destruction of critical navigational equipment and because you and the crew were distracted trying to bring the fire under control. Your best estimate is that you are approximately one thousand miles south-southeast of the nearest land.</p><br/>',
+      '<h3>How the game is scored:</h3><p>The task is to compare pairs of items depending on how useful they may be to your survival in this scenario. However, your answers are not what matters. You will work with your crewmates to elect a <b>representative</b>, who will complete this task on your behalf. <i>Your payout from this task is dependent on how well the representative does on this task.</i>',
+      '<h3>The next activity:</h3><p>On the next screen, you will complete an example of this task.</p>' 
+    ],
+  },
+
+  '04. Initial survival task': {
+    name: '04. Initial survival task',
     kind: StageKind.TakeSurvey,
     questions: [
-      ...RATING_QUESTION_CONFIGS,
+      ...I_RATING_QUESTION_CONFIGS,
       {
         id: 99, // Avoid collision with rating questions id (starting from 0)
         kind: SurveyQuestionKind.Scale,
-        questionText: 'Rate the how much you would like to be the group leader.',
-        lowerBound: 'I would most definitely not like to be the leader (0/10)',
-        upperBound: 'I will fight to be the leader (10/10)',
+        questionText: 'Now that you have a sense of the question, how willing would you be to serve as the representative and complete this task on behalf of your crew?',
+        lowerBound: 'I would most definitely not like to be the representative (0/10)',
+        upperBound: 'I would most definitely like to be the representative (10/10)',
       },
     ],
   },
 
-  '04. Group discussion': {
-    name: '04. Group discussion',
+  '05. Group discussion introduction': {
+    name: '05. Group discussion introduction',
+    kind: StageKind.Info,
+    infoLines: [
+      'On the next stage, you will review and discuss your answers to the previous task with your crewmembers.',
+      'Take this opportunity to gauge the abilities of your crewmembers, as you will vote for the team representative next.',
+      'As a reminder, the payoff in this task is <b>only dependent on the representative\'s performance on the final task</b>.'
+    ],
+  },
+
+
+  '06. Group discussion': {
+    name: '06. Group discussion',
     kind: StageKind.GroupChat,
     chatId: 'chat-0',
     chatConfig: {
       kind: ChatKind.ChatAboutItems,
-      ratingsToDiscuss: RANDOM_ITEM_PAIRS.map(([i1, i2]) => ({ item1: i1, item2: i2 })),
+      ratingsToDiscuss: INDIVIDUAL_ITEM_PAIRS.map(([i1, i2]) => ({ item1: i1, item2: i2 })),
     },
   },
 
-  '05. Post-chat survey': {
-    name: '05. Post-chat survey',
+  '07. Post-discussion representative survey': {
+    name: '07. Post-discussion representative survey',
     kind: StageKind.TakeSurvey,
     questions: [
       {
         id: 0,
         kind: SurveyQuestionKind.Scale,
-        questionText:
-          'Rate the chat dicussion on a 1-10 scale.\nAlso indicate your overall feeling about the chat.',
-        lowerBound: 'I did not enjoy the discussion at all (0/10)',
-        upperBound: 'The dicussion was a perfect experience to me (10/10)',
+        questionText: 'Now that you\'ve gauged the abilities of your crewmembers, how willing would you be to serve as the representative and complete this task on behalf of your crew?',
+        lowerBound: 'I would most definitely not like to be the representative (0/10)',
+        upperBound: 'I would most definitely like to be the representative (10/10)',
       },
     ],
   },
 
-  '06. Post-discussion leadership survey': {
-    name: '06. Post-discussion leadership survey',
+  '08. Updated individual survival task introduction': {
+    name: '08. Updated individual survival task introduction',
+    kind: StageKind.Info,
+    infoLines: [
+      'Now that you have deliberated the item pairs with your crewmates, you have an opportunity to update your initial responses.',
+      'On the next stage, you will re-do the initial task.',
+    ],
+  },
+
+
+  '09. Updated individual survival task': {
+    name: '09. Updated individual survival task',
     kind: StageKind.TakeSurvey,
     questions: [
-      {
-        id: 0,
-        kind: SurveyQuestionKind.Scale,
-        questionText: 'Rate the how much you would like to be the group leader.',
-        lowerBound: 'I would most definitely not like to be the leader (0/10)',
-        upperBound: 'I will fight to be the leader (10/10)',
-      },
+      ...I_RATING_QUESTION_CONFIGS,
     ],
   },
 
-  '07. Vote for the leader': {
-    name: '07. Vote for the leader',
+  '10. Representative election': {
+    name: '10. Representative election',
     kind: StageKind.VoteForLeader,
   },
 
-  '08. Post-discussion work': {
-    name: '08. Post-discussion work',
+  '11. Representative survival task introduction': {
+    name: '11. Representative survival task introduction',
+    kind: StageKind.Info,
+    infoLines: [
+      'As we calculate the outcome of the election, please take this time to complete the representative\'s task.',
+      'This is a similar task as before, but with different items.',
+      'If you are elected the representative, <b>your performance on this task will determine the payoffs of you and your crewmembers.</b>'
+    ],
+  },
+
+  '12. Representative survival task': {
+    name: '12. Representative survival task',
     kind: StageKind.TakeSurvey,
-    questions: RATING_QUESTION_CONFIGS,
+    questions: L_RATING_QUESTION_CONFIGS,
   },
 
-  '09. Leader reveal': {
-    name: '09. Leader reveal',
+  '13. Representative reveal': {
+    name: '13. Representative reveal',
     kind: StageKind.RevealVoted,
-    pendingVoteStageName: '6. Vote for the leader',
+    pendingVoteStageName: '10. Representative election' ,
   },
 
-  '10. final satisfaction survey': {
-    name: '10. final satisfaction survey',
+  '14. Final survey': {
+    name: '14. Final survey',
     kind: StageKind.TakeSurvey,
     questions: [
       {
         id: 0,
         kind: SurveyQuestionKind.Scale,
         questionText:
-          'Rate how happy you were with the final outcome.\nAlso indicate your overall feeling about the experience.',
-        lowerBound: 'I was most definitely disappointed (0/10)',
+          'Rate how happy you were with the final outcome.',
+        lowerBound: 'I was very disappointed (0/10)',
         upperBound: 'I was very happy (10/10)',
       },
     ],

@@ -148,7 +148,42 @@
               </mat-form-field>
             </div>
           </div>
+          @if (tryCast(StageKind.Info, currentEditingStage); as stage) {
+            <div class="config-title">
+              <h3>Informational panel content:</h3>
+              <div class="fill"></div>
+              <button mat-button (click)="addNewInfoLine(stage)">
+                <mat-icon>add</mat-icon>Info Line
+              </button>
+            </div>
 
+            <div class="config-wrapper">
+              <div cdkDropList class="content-lines" (cdkDropListDropped)="dropInfoLine(stage, $event)">
+                @for (line of stage.infoLines; track $index) {
+                  <div class="content-line">
+                    <mat-form-field cdkDrag class="mat-form-field">
+                      <textarea
+                        matInput
+                        type="text"
+                        placeholder="In vel diam malesuada nibh vehicula rutrum eget vel lectus."
+                        [(ngModel)]="stage.infoLines[$index]"
+                        (input)="onChange($event)"
+                      >
+                      </textarea>
+                    </mat-form-field>
+                    &nbsp;
+                    <button
+                      mat-icon-button
+                      matTooltip="Delete this line"
+                      (click)="deleteInfoLine(stage, $index)"
+                    >
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+          }
           @if (tryCast(StageKind.TermsOfService, currentEditingStage); as stage) {
             <div class="config-title">
               <h3>Terms of Service (ToS) lines:</h3>
@@ -159,9 +194,9 @@
             </div>
 
             <div class="config-wrapper">
-              <div cdkDropList class="tos-lines" (cdkDropListDropped)="dropTosLine(stage, $event)">
+              <div cdkDropList class="content-lines" (cdkDropListDropped)="dropTosLine(stage, $event)">
                 @for (line of stage.tosLines; track $index) {
-                  <div class="tos-line">
+                  <div class="content-line">
                     <mat-form-field cdkDrag class="mat-form-field">
                       <textarea
                         matInput
@@ -175,7 +210,7 @@
                     &nbsp;
                     <button
                       mat-icon-button
-                      matTooltip="Delelte this line"
+                      matTooltip="Delete this line"
                       (click)="deleteTosLine(stage, $index)"
                     >
                       <mat-icon>close</mat-icon>

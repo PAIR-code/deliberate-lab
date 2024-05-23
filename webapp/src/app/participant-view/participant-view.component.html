@@ -1,8 +1,8 @@
 <div class="toolbar" role="banner">
   <button mat-icon-button (click)="sidenav.toggle()"><mat-icon>menu</mat-icon></button>
-  <span class="title">Participant: {{ participantService.experimentId() }}</span>
+  <span class="title">Current user: {{ participantProfile()?.name }}</span>
   <div class="spacer"></div>
-  <div class="current-user">Current user: {{ participantProfile()?.name }}</div>
+  <div class="current-user">Participant ID: {{ participantService.experimentId() }}</div>
   <button (click)="logout()">Logout</button>
   <a class="small-logo" aria-label="PAIR" href="https://pair.withgoogle.com/" title="Home">
     <img src="/assets/pair-logo.svg" alt="PAIR logo" />
