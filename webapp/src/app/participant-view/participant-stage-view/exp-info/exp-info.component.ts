@@ -15,9 +15,7 @@ import { CastViewingStage, ParticipantService } from 'src/app/services/participa
 @Component({
   selector: 'app-exp-info',
   standalone: true,
-  imports: [
-    MatButtonModule,
-  ],
+  imports: [MatButtonModule],
   templateUrl: './exp-info.component.html',
   styleUrl: './exp-info.component.scss',
 })
@@ -27,9 +25,7 @@ export class ExpInfoComponent {
 
   html: string = '';
 
-  constructor(private participantService: ParticipantService) {
-  }
-
+  constructor(private participantService: ParticipantService) {}
 
   async nextStep() {
     await this.participantService.workOnNextStage();

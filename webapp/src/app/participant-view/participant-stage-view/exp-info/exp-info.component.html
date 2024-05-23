@@ -3,11 +3,8 @@
     @for (line of stage.config().infoLines; track line) {
       <div [innerHTML]="line"></div>
     }
-    <br/>
+    <br />
   </div>
 
-
-  <button color="primary" (click)="nextStep()" mat-button>
-    Next step
-  </button>
+  <button color="primary" (click)="nextStep()" mat-button>Next step</button>
 </div>
