@@ -159,8 +159,8 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     name: '05. Group discussion introduction',
     kind: StageKind.Info,
     infoLines: [
-      'On the next stage, you will review and discuss your answers to the previous task with your crewmembers.<br/>',
-      'Take this opportunity to gauge the abilities of your crewmembers, as you will later vote for the team representative.<br/>',
+      'On the next stage, you will review and discuss your answers to the previous task with your crewmembers.<br/><br/>',
+      'Take this opportunity to gauge the abilities of your crewmembers, as you will later vote for the team representative.<br/><br/>',
       'As a reminder, the payoff in this task is <b>only dependent on the representative\'s performance on the final task</b>.'
     ],
   },
