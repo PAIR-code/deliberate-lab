@@ -46,8 +46,8 @@ export const IMAGE_SUFFIX = "?raw=true";
 export type ItemName = (typeof ITEM_NAMES)[number];
 export const ITEMS: Record<ItemName, Item> = {
   sextant: {
-    name: 'Compass',
-    imageUrl: IMAGE_HEADER + 'compass.jpeg' + IMAGE_SUFFIX,
+    name: 'Sextant',
+    imageUrl: IMAGE_HEADER + 'sextant.jpeg' + IMAGE_SUFFIX,
     ranking: 15, // Useless without tables and chronometer.
   },
   shavingMirror: {
