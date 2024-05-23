@@ -160,7 +160,7 @@ export class ExpChatComponent {
   toggleEndChat() {
     const ready = this.readyToEndChat();
 
-    this.chat?.markReadyToEndChat(ready);
+    this.chat?.markReadyToEndChat(!ready);
 
     if (ready) this.message.disable();
     else this.message.enable();
