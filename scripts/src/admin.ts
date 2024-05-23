@@ -33,7 +33,7 @@ export const initializeApp = () => {
       projectId: firebaserc.projects.default,
     });
   }
-  console.log("Successfully connected to Firebase!");
+  console.log("Successfully connected to Firebase emulator!");
 };
 
 export default admin;

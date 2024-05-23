@@ -119,9 +119,10 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     name: '01. Agree to the terms of service',
     kind: StageKind.TermsOfService,
     tosLines: [
+      '(These are placeholder terms of service!)',
       'You may not injure a human being or, through inaction, allow a human being to come to harm.',
       'You must obey orders given to you by human beings except where such orders would conflict with the First Law.',
-      'You must protect your own existence as long as such protection does not conflict with the First or Second Law',
+      'You must protect your own existence as long as such protection does not conflict with the First or Second Law.',
     ],
   },
 
