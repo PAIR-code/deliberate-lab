@@ -10,5 +10,7 @@
     </div>
   }
 
-  <button color="primary" mat-button (click)="nextStep()">Next step</button>
+  <button color="primary" mat-button (click)="nextStep()" [disabled]="!everyoneReachedThisStage()">
+    Next step
+  </button>
 </div>
