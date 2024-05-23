@@ -13,6 +13,7 @@ import {
 } from '@llm-mediation-experiments/utils';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { ExperimentRepository } from 'src/lib/repositories/experiment.repository';
+import { bindSignalReRender } from 'src/lib/utils/angular.utils';
 import { MediatorChatComponent } from '../mediator-chat/mediator-chat.component';
 
 @Component({
@@ -73,6 +74,9 @@ export class ExperimentMonitorComponent {
     this.stages = computed(() =>
       Object.values(this.experiment()?.stageConfigMap ?? {}).map((s) => s()),
     );
+
+    // Fix experiment loading on first login
+    bindSignalReRender(this.participants);
   }
 
   async deleteExperimentAndNavigate() {
