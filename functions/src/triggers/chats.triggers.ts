@@ -1,4 +1,4 @@
-import { ChatAnswer, ChatKind } from '@llm-mediation-experiments/utils';
+import { ChatAnswer, ChatKind, GroupChatStagePublicData } from '@llm-mediation-experiments/utils';
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { app } from '../app';
 
@@ -22,9 +22,10 @@ export const publishParticipantReadyToEndChat = onDocumentWritten(
 
     // Check whether all participants are ready to end the chat
     // If the chat is a chat about items, increment the current item index
-    const docData = (await publicChatData.get()).data();
+    const docData = (await publicChatData.get()).data() as GroupChatStagePublicData;
+    const readys = Object.values(docData?.readyToEndChat ?? {});
 
-    if (docData && Object.values(docData['readyToEndChat']).every((ready) => ready)) {
+    if (docData && readys.length === docData.numberOfParticipants && readys.every((r) => r)) {
       // Everyone is ready to end the chat
       if (docData['chatData'].kind === ChatKind.ChatAboutItems) {
         // Increment the current item index

@@ -119,6 +119,7 @@ interface BasePublicStageData {
 export interface GroupChatStagePublicData extends BasePublicStageData {
   kind: StageKind.GroupChat;
 
+  numberOfParticipants: number; // Repeat this here for convenience
   readyToEndChat: Record<string, boolean>; // Participant public id => ready to end chat
   chatData: PublicChatData;
 }
