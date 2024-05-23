@@ -46,3 +46,20 @@ export class CacheMap<K, V> {
     });
   }
 }
+
+/** Run a callback only once depending on a specific key.
+ * This is useful during automatic progressions / operations where you need to perform a specific action only once,
+ * and when a specific condition is met. Because angular signals can change often, this utility ensures that the action is performed only once.
+ *
+ * Use this class when you need to perform an action only once, in a context of race conditions.
+ */
+export class Once<Key> {
+  private value: Key | undefined;
+
+  run(key: Key, callback: Function) {
+    if (this.value === key) return;
+
+    this.value = key;
+    callback();
+  }
+}

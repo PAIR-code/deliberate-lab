@@ -27,6 +27,7 @@ import {
   GroupChatStagePublicData,
   ITEMS,
   ItemPair,
+  Once,
   StageKind,
   assertCast,
   getDefaultItemPair,
@@ -65,6 +66,7 @@ import { MediatorFeedbackComponent } from './mediator-feedback/mediator-feedback
 export class ExpChatComponent {
   private _stage?: CastViewingStage<StageKind.GroupChat>;
   readonly ITEMS = ITEMS;
+  private onceChatDone = new Once<string>();
 
   // Reload the internal logic dynamically when the stage changes
   @Input({ required: true })
@@ -113,7 +115,9 @@ export class ExpChatComponent {
         effect(() => {
           const config = this.stage.config();
           const pub = this.stage.public!();
-          if (chatReadyToEnd(config, pub)) this.nextStep();
+          if (chatReadyToEnd(config, pub))
+            // Encapsulate the next step progression in a once class to ensure it is only called once
+            this.onceChatDone.run(config.chatId, () => this.nextStep());
         });
       }
     });
