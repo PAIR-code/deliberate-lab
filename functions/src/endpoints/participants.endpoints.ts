@@ -6,7 +6,6 @@ import {
   StageKind,
   SurveyStageConfig,
   lookupTable,
-  mergeableRecord,
 } from '@llm-mediation-experiments/utils';
 import { Value } from '@sinclair/typebox/value';
 import * as functions from 'firebase-functions';
@@ -38,7 +37,7 @@ export const updateStage = onCall(async (request) => {
         // Prepare data to merge individual answers into the firestore document
         const data = {
           kind: StageKind.TakeSurvey,
-          ...mergeableRecord(stage.answers, 'answers'),
+          answers: stage.answers,
         };
         await answerDoc.set(data, { merge: true });
         break;
