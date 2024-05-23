@@ -25,6 +25,10 @@ const seedDatabase = async () => {
   const db = admin.firestore();
 
   await db.runTransaction(async (transaction) => {
+    // Remove all existing data
+    db.recursiveDelete(db.collection('experiments'));
+    db.recursiveDelete(db.collection('templates'));
+
     // ***************************************************************************************** //
     //                                          TEMPLATES                                        //
     // ***************************************************************************************** //
@@ -137,7 +141,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     infoLines: [
       '<h2>Welcome to the experiment!</h2><p>In this task, you are adrift on a private yacht in the North Atlantic with your crewmates. As a consequence of a fire of unknown origin, much of the yacht and its contents have been destroyed. The yacht is now slowly sinking. Your location is unclear because of the destruction of critical navigational equipment and because you and the crew were distracted trying to bring the fire under control. Your best estimate is that you are approximately one thousand miles south-southeast of the nearest land. You have a box of matches in your pocket.</p><br/>',
       '<h2>How the game is scored:</h2><p>The task is to compare pairs of items depending on how useful they may be to your survival in this scenario. However, your answers are not what matters. You will work with your crewmates to elect a <b>representative</b>, who will complete this task on your behalf. <i>Your payout from this task is dependent on how well the representative does on this task.</i>',
-      '<h2>The next activity:</h2><p>On the next screen, you will complete an example of this task.</p>' 
+      '<h2>The next activity:</h2><p>On the next screen, you will complete an example of this task.</p>',
     ],
   },
 
@@ -149,7 +153,8 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
       {
         id: 99, // Avoid collision with rating questions id (starting from 0)
         kind: SurveyQuestionKind.Scale,
-        questionText: 'Now that you have a sense of the task, how willing would you be to serve as the representative and complete this task on behalf of your crew?',
+        questionText:
+          'Now that you have a sense of the task, how willing would you be to serve as the representative and complete this task on behalf of your crew?',
         lowerBound: 'I would STRONGLY DISLIKE to be the representative (0/10)',
         upperBound: 'I would STRONGLY LIKE to be the representative (10/10)',
       },
@@ -162,10 +167,9 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     infoLines: [
       'On the next stage, you will review and discuss your answers to the previous task with your crewmembers.<br/><br/>',
       'Take this opportunity to gauge the abilities of your crewmembers, as you will later vote for the team representative.<br/><br/>',
-      'As a reminder, the payoff in this task is <b>only dependent on the representative\'s performance on the final task</b>.'
+      "As a reminder, the payoff in this task is <b>only dependent on the representative's performance on the final task</b>.",
     ],
   },
-
 
   '06. Group discussion': {
     name: '06. Group discussion',
@@ -184,7 +188,8 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
       {
         id: 0,
         kind: SurveyQuestionKind.Scale,
-        questionText: 'Now that you\'ve gauged the abilities of your crewmembers, how willing would you be to serve as the representative and complete this task on behalf of your crew?',
+        questionText:
+          "Now that you've gauged the abilities of your crewmembers, how willing would you be to serve as the representative and complete this task on behalf of your crew?",
         lowerBound: 'I would STRONGLIY DISLIKE to be the representative (0/10)',
         upperBound: 'I would STRONGLY LIKE to be the representative (10/10)',
       },
@@ -200,13 +205,10 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     ],
   },
 
-
   '09. Updated individual survival task': {
     name: '09. Updated individual survival task',
     kind: StageKind.TakeSurvey,
-    questions: [
-      ...I_RATING_QUESTION_CONFIGS,
-    ],
+    questions: [...I_RATING_QUESTION_CONFIGS],
   },
 
   '10. Representative election': {
@@ -218,9 +220,9 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     name: '11. Representative survival task introduction',
     kind: StageKind.Info,
     infoLines: [
-      'As we calculate the outcome of the election, please take this time to complete the representative\'s task.',
+      "As we calculate the outcome of the election, please take this time to complete the representative's task.",
       'This is a similar task as before, but with different items.',
-      'If you are elected the representative, <b>your performance on this task will determine the payoffs of you and your crewmembers.</b>'
+      'If you are elected the representative, <b>your performance on this task will determine the payoffs of you and your crewmembers.</b>',
     ],
   },
 
@@ -233,7 +235,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
   '13. Representative reveal': {
     name: '13. Representative reveal',
     kind: StageKind.RevealVoted,
-    pendingVoteStageName: '10. Representative election' ,
+    pendingVoteStageName: '10. Representative election',
   },
 
   '14. Final survey': {
@@ -243,8 +245,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
       {
         id: 0,
         kind: SurveyQuestionKind.Scale,
-        questionText:
-          'Rate how happy you were with the final outcome.',
+        questionText: 'Rate how happy you were with the final outcome.',
         lowerBound: 'I was very disappointed (0/10)',
         upperBound: 'I was very happy (10/10)',
       },
