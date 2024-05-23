@@ -1,6 +1,14 @@
 /** Util functions to manipulate Angular constructs */
 
-import { Signal, WritableSignal, effect, signal, untracked } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Signal,
+  WritableSignal,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
@@ -157,6 +165,21 @@ export const localStorageTimer = (
   };
 
   return { timer, start, reset, remove } as const;
+};
+
+/** Bind a signal to the component's change detection.
+ * For some reason, some components do not update properly in specific situations
+ * (e.g. when loging in as an experimenter to the experimenter home on a fresh page load).
+ * This function is a workaround to force the component to re-render when the signal changes.
+ *
+ * This function can only be called in an injection context.
+ */
+export const bindSignalReRender = <T>(signal: Signal<T>) => {
+  const cdr = inject(ChangeDetectorRef);
+  effect(() => {
+    signal();
+    cdr.detectChanges();
+  });
 };
 
 // ********************************************************************************************* //

@@ -65,7 +65,7 @@ export class ExpSurveyComponent {
 
         this.answers.clear();
         questions.forEach((config) => {
-          const answer = answers?.answers[config.id];
+          const answer = answers?.answers?.[config.id];
           // The config serves as the source of truth for the question type
           // The answer, if defined, will be used to populate the form
           this.answers.push(buildQuestionForm(this.fb, config, answer));

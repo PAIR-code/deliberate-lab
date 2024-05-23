@@ -7,10 +7,12 @@
 # zips the whole "functions" directory and sends it to the cloud.
 
 # Navigate to the utils folder and pack it
-cd ../utils
-npm pack
+cd ../functions
 
-# Move the packed file to the functions directory
-mv llm-mediation-experiments-utils-*.tgz ../functions
+# Pack the utils package
+npm pack ../utils
+
+# Update the SHA of the utils package in the package-lock.json file
+npm install @llm-mediation-experiments/utils
 
 echo "Successfully packed the utils package in the cloud functions directory!"
