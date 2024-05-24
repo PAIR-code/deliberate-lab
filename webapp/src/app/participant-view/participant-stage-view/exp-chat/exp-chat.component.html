@@ -6,7 +6,8 @@
       <div class="container">
         @for (user of participantService.otherParticipants(); track user.publicId) {
           @if (
-            user.workingOnStageName === participantService.participant()?.profile()?.workingOnStageName
+            user.workingOnStageName ===
+            participantService.participant()?.profile()?.workingOnStageName
           ) {
             <div class="profile">
               <img class="avatar" src="{{ user.avatarUrl }}" alt="avatar" />
@@ -25,9 +26,10 @@
     } @else {
       @if (currentRatingsToDiscuss()) {
         <b
-          >Please deliberate on which of the following items would be more useful to your survival. ({{
-            currentRatingsIndex() + 1
-          }}/{{ stage.config().chatConfig.ratingsToDiscuss.length }})</b
+          >Please deliberate on which of the following items would be more useful to your survival.
+          ({{ currentRatingsIndex() + 1 }}/{{
+            stage.config().chatConfig.ratingsToDiscuss.length
+          }})</b
         >
         <div class="flex-container">
           <div class="item-pair-displays">
