@@ -27,7 +27,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatButtonModule } from '@angular/material/button';
 import { StageKind, SurveyQuestionKind, assertCast } from '@llm-mediation-experiments/utils';
 import { CastViewingStage, ParticipantService } from 'src/app/services/participant.service';
-import { buildQuestionForm } from 'src/lib/utils/angular.utils';
+import { Loading, buildQuestionForm } from 'src/lib/utils/angular.utils';
 import { SurveyCheckQuestionComponent } from './survey-check-question/survey-check-question.component';
 import { SurveyRatingQuestionComponent } from './survey-rating-question/survey-rating-question.component';
 import { SurveyScaleQuestionComponent } from './survey-scale-question/survey-scale-question.component';
@@ -86,6 +86,8 @@ export class ExpSurveyComponent {
   readonly SurveyQuestionKind = SurveyQuestionKind;
   readonly assertCast = assertCast;
 
+  public submitLoading = new Loading();
+
   constructor(
     private fb: FormBuilder,
     public participantService: ParticipantService,
@@ -103,9 +105,12 @@ export class ExpSurveyComponent {
   }
 
   async nextStep() {
-    await this.participantService
-      .participant()
-      ?.updateSurveyStage(this.stage.config().name, this.surveyForm.value.answers);
+    // Run the submission inside a loading indicator
+    await this.submitLoading.run(
+      this.participantService
+        .participant()
+        ?.updateSurveyStage(this.stage.config().name, this.surveyForm.value.answers),
+    );
     await this.participantService.workOnNextStage();
   }
 }

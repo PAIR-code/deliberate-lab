@@ -177,6 +177,20 @@ export const bindSignalReRender = <T>(signal: Signal<T>) => {
   });
 };
 
+/** Helper class to wrap a loading promise and expose a loading indicator */
+export class Loading {
+  private _isLoading = signal(false);
+  public get isLoading(): Signal<boolean> {
+    return this._isLoading;
+  }
+
+  async run(promise?: Promise<unknown>) {
+    this._isLoading.set(true);
+    await promise;
+    this._isLoading.set(false);
+  }
+}
+
 // ********************************************************************************************* //
 //                                         FORM BUILDER                                          //
 // ********************************************************************************************* //

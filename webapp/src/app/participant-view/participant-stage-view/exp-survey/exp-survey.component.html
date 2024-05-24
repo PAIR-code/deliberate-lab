@@ -29,7 +29,12 @@
       }
     }
   </form>
-  <button color="primary" [disabled]="!surveyForm.valid" (click)="nextStep()" mat-button>
+  <button
+    color="primary"
+    [disabled]="!surveyForm.valid || submitLoading.isLoading()"
+    (click)="nextStep()"
+    mat-button
+  >
     Next step
   </button>
 </div>
