@@ -6,7 +6,13 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, Input } from '@angular/core';
+import {
+  Component,
+  EnvironmentInjector,
+  Input,
+  effect,
+  runInInjectionContext,
+} from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -19,7 +25,7 @@ import { MatRadioModule } from '@angular/material/radio';
 
 import { StageKind, Vote, VoteForLeaderStageAnswer } from '@llm-mediation-experiments/utils';
 import { CastViewingStage, ParticipantService } from 'src/app/services/participant.service';
-import { forbiddenValueValidator, subscribeSignal } from 'src/lib/utils/angular.utils';
+import { forbiddenValueValidator } from 'src/lib/utils/angular.utils';
 
 @Component({
   selector: 'app-exp-leader-vote',
@@ -36,10 +42,12 @@ export class ExpLeaderVoteComponent {
 
     // Update the form when the answers change (this will also initialize the form the first time)
     if (this.stage.answers)
-      subscribeSignal(this.stage.answers, (answers: VoteForLeaderStageAnswer) =>
-        this.initializeForm(answers),
-      );
-    else this.initializeForm({ votes: {}, kind: StageKind.VoteForLeader }); // Initialize the form with empty answers
+      runInInjectionContext(this.injector, () => {
+        effect(() => {
+          const answers = this.stage.answers();
+          this.initializeForm(answers ?? { votes: {}, kind: StageKind.VoteForLeader });
+        });
+      });
   }
 
   get stage() {
@@ -54,6 +62,7 @@ export class ExpLeaderVoteComponent {
   constructor(
     public participantService: ParticipantService,
     fb: FormBuilder,
+    private injector: EnvironmentInjector,
   ) {
     this.votesForm = fb.group({
       votes: fb.group({}),

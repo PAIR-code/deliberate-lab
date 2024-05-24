@@ -91,8 +91,8 @@ export class ParticipantService {
       return {
         kind,
         config,
-        public: publicData,
-        answers,
+        public: publicData ?? signal(undefined),
+        answers: answers ?? signal(undefined),
       };
     });
 
@@ -157,25 +157,20 @@ export class ParticipantService {
 //                              HELPER TYPES AND CASTING FUNCTIONS                               //
 // ********************************************************************************************* //
 
-/** If a stage is of the given kind, returns a Signal of it. Else, returns undefined.
- * This is a cosmetic type to prevent `Signal<never> | undefined` unions.
- */
-type SignalOrUndef<Stage, Kind> = Stage extends { kind: Kind } ? Signal<Stage> : undefined;
-
 /** ViewingStage's signals, cast to a specific stage kind. */
 export interface CastViewingStage<K extends StageKind> {
   kind: K;
   config: Signal<StageConfig & { kind: K }>;
-  public: SignalOrUndef<PublicStageData, K> | undefined;
-  answers: SignalOrUndef<StageAnswer, K> | undefined;
+  public: Signal<PublicStageData & { kind: K }>; // NOTE : public data always exists, so if the cast is successful, it will never be undefined
+  answers: Signal<(StageAnswer & { kind: K }) | undefined>;
 }
 
 /** Object that exposes a stage's given config, public data and participant answers all at once. */
 interface ViewingStage {
   kind: StageKind;
   config: Signal<StageConfig>;
-  public: Signal<PublicStageData> | undefined;
-  answers: Signal<StageAnswer> | undefined;
+  public: Signal<PublicStageData | undefined>;
+  answers: Signal<StageAnswer | undefined>;
 }
 
 /** Safely cast the full stage bundle signals to a specific stage kind */

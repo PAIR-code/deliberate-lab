@@ -9,7 +9,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { toSignal } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
   FormBuilder,
@@ -109,11 +109,6 @@ export const assertSignalCast = <T extends { kind: string }, K extends T['kind']
       `Given object with kind=${signalMaybeOfKind()?.kind} needs to have kind=${kind}`,
     );
   }
-};
-
-/** Subscribe to a signal's updates. This function must be run in an injection context. */
-export const subscribeSignal = <T>(_signal: Signal<T>, callback: (value: T) => void) => {
-  toObservable(_signal).subscribe(callback);
 };
 
 /** Creates a second-counter timer that is synchronized with the local storage in order to resume ticking when reloading the page */

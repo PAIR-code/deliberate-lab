@@ -91,7 +91,7 @@ export class ExpChatComponent {
 
         this.readyToEndChat = computed(() => this.chat!.chat()?.readyToEndChat ?? false);
         this.currentRatingsIndex = computed(() => {
-          return this.stage.public!().chatData.currentRatingIndex ?? 0;
+          return this.stage.public().chatData.currentRatingIndex ?? 0;
         });
 
         // Initialize the current rating to discuss with the first available pair
@@ -114,7 +114,7 @@ export class ExpChatComponent {
         // Automatic next step progression when the chat has ended
         effect(() => {
           const config = this.stage.config();
-          const pub = this.stage.public!();
+          const pub = this.stage.public();
           if (chatReadyToEnd(config, pub))
             // Encapsulate the next step progression in a once class to ensure it is only called once
             this.onceChatDone.run(config.chatId, () => this.nextStep());
