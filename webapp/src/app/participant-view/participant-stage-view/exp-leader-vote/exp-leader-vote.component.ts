@@ -6,13 +6,7 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import {
-  Component,
-  EnvironmentInjector,
-  Input,
-  effect,
-  runInInjectionContext,
-} from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -35,38 +29,19 @@ import { forbiddenValueValidator } from 'src/lib/utils/angular.utils';
   imports: [MatRadioModule, MatButtonModule, FormsModule, ReactiveFormsModule],
 })
 export class ExpLeaderVoteComponent {
-  // Reload the internal logic dynamically when the stage changes
-  @Input({ required: true })
-  set stage(value: CastViewingStage<StageKind.VoteForLeader>) {
-    this._stage = value;
-
-    // Update the form when the answers change (this will also initialize the form the first time)
-    if (this.stage.answers)
-      runInInjectionContext(this.injector, () => {
-        effect(() => {
-          const answers = this.stage.answers();
-          this.initializeForm(answers ?? { votes: {}, kind: StageKind.VoteForLeader });
-        });
-      });
-  }
-
-  get stage() {
-    return this._stage as CastViewingStage<StageKind.VoteForLeader>;
-  }
-
-  private _stage?: CastViewingStage<StageKind.VoteForLeader>;
-
   readonly Vote = Vote;
   public votesForm: FormGroup;
 
   constructor(
+    @Inject('stage') public stage: CastViewingStage<StageKind.VoteForLeader>,
     public participantService: ParticipantService,
     fb: FormBuilder,
-    private injector: EnvironmentInjector,
   ) {
     this.votesForm = fb.group({
       votes: fb.group({}),
     });
+
+    this.initializeForm(stage.answers() ?? { votes: {}, kind: StageKind.VoteForLeader });
   }
 
   get votes() {

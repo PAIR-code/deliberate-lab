@@ -6,7 +6,7 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, Input, effect } from '@angular/core';
+import { Component, Inject, effect } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -39,9 +39,6 @@ enum Pronouns {
   styleUrl: './exp-profile.component.scss',
 })
 export class ExpProfileComponent {
-  // Reload the internal logic dynamically when the stage changes
-  @Input({ required: true }) stage!: CastViewingStage<StageKind.SetProfile>;
-
   readonly Pronouns = Pronouns;
 
   profileFormControl = new FormGroup({
@@ -52,7 +49,10 @@ export class ExpProfileComponent {
 
   value = ''; // Custom pronouns input value
 
-  constructor(private participantService: ParticipantService) {
+  constructor(
+    @Inject('stage') public stage: CastViewingStage<StageKind.SetProfile>,
+    private participantService: ParticipantService,
+  ) {
     // Refresh the form data when the participant profile changes
     effect(() => {
       const profile = participantService.participant()?.profile();

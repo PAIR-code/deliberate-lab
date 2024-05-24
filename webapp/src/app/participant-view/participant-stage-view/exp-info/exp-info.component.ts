@@ -6,7 +6,7 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, Input } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 
 import { StageKind } from '@llm-mediation-experiments/utils';
@@ -20,12 +20,12 @@ import { CastViewingStage, ParticipantService } from 'src/app/services/participa
   styleUrl: './exp-info.component.scss',
 })
 export class ExpInfoComponent {
-  // Reload the internal logic dynamically when the stage changes
-  @Input({ required: true }) stage!: CastViewingStage<StageKind.Info>;
-
   html: string = '';
 
-  constructor(private participantService: ParticipantService) {}
+  constructor(
+    private participantService: ParticipantService,
+    @Inject('stage') public stage: CastViewingStage<StageKind.Info>,
+  ) {}
 
   async nextStep() {
     await this.participantService.workOnNextStage();
