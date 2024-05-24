@@ -52,6 +52,7 @@ export class ExperimentMonitorComponent {
   participants: Signal<ParticipantProfileExtended[]>;
   experiment: Signal<ExperimentRepository | undefined>;
   stages: Signal<StageConfig[]>;
+  participantsPerStage: Signal<Record<string, number | undefined>>;
 
   constructor(
     public router: Router,
@@ -71,6 +72,16 @@ export class ExperimentMonitorComponent {
       return appState.experiments.get({ experimentId });
     });
 
+    this.participantsPerStage = computed(() => {
+      return this.participants().reduce(
+        (acc, p) => {
+          acc[p.workingOnStageName] = (acc[p.workingOnStageName] ?? 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
+    });
+
     this.stages = computed(() =>
       Object.values(this.experiment()?.stageConfigMap ?? {}).map((s) => s()),
     );
@@ -87,3 +98,5 @@ export class ExperimentMonitorComponent {
     }
   }
 }
+
+// TODO : agregate the participants per stage into a sort of record / signal ? / record of signals ?

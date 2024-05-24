@@ -56,6 +56,9 @@ export class CacheMap<K, V> {
 export class Once<Key> {
   private value: Key | undefined;
 
+  /** Run the callback function only if the internal key is not already set to the given one.
+   * This makes sure that the callback is run only once, and only if the key is different from the previous one.
+   */
   run(key: Key, callback: Function) {
     if (this.value === key) return;
 

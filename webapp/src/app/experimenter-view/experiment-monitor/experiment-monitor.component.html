@@ -32,7 +32,7 @@
 
   @for (stage of stages(); track stage.name) {
     <div>
-      {{ stage.name }}: {{ participants().length }}
+      {{ stage.name }}: {{ participantsPerStage()[stage.name] ?? 0 }}
 
       @if (isOfKind(stage, StageKind.GroupChat)) {
         <mat-accordion>
