@@ -121,9 +121,9 @@ export class ParticipantService {
     });
 
     this.otherParticipants = computed(() =>
-      Object.values(this.experiment()?.experiment()?.participants ?? {}).filter(
-        ({ publicId }) => publicId !== this.participant()?.profile()?.publicId,
-      ),
+      Object.values(this.experiment()?.experiment()?.participants ?? {})
+        .filter(({ publicId }) => publicId !== this.participant()?.profile()?.publicId)
+        .sort((a, b) => a.publicId.localeCompare(b.publicId)),
     );
   }
 
