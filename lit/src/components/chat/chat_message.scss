@@ -1,0 +1,40 @@
+@use "../../sass/colors";
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+$bubble-radius: 20px;
+$bubble-radius-small: 2px;
+
+.bubble {
+  @include common.flex-column;
+  justify-content: end;
+
+  gap: common.$spacing-small;
+}
+
+.chat-bubble {
+  @include common.flex-column;
+  @include typescale.body-small;
+  align-items: end;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium common.$spacing-large;
+  background: var(--md-sys-color-primary-container);
+  border-radius: $bubble-radius $bubble-radius $bubble-radius-small
+    $bubble-radius;
+  color: var(--md-sys-color-on-primary-container);
+  max-width: 80%;
+  width: max-content;
+  align-self: end;
+
+  &.other-user {
+    background: var(--md-sys-color-surface-container-low);
+    border-radius: $bubble-radius $bubble-radius $bubble-radius
+      $bubble-radius-small;
+    color: var(--md-sys-color-on-surface-container);
+    align-self: start;
+  }
+}
+
+.chat-body {
+  @include common.flex-column;
+}

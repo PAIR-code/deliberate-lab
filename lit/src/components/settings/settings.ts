@@ -8,7 +8,7 @@ import { Ref, createRef, ref } from "lit/directives/ref.js";
 import { core } from "../../core/core";
 import { SettingsService } from "../../services/settings_service";
 
-import { ColorMode, ColorTheme, TextSize } from "../../shared/types";
+import { ColorMode, ColorTheme, Role, TextSize } from "../../shared/types";
 
 import { styles } from "./settings.scss";
 
@@ -25,6 +25,7 @@ export class Settings extends MobxLitElement {
         ${this.renderColorModeSection()}
         ${this.renderColorThemeSection()}
         ${this.renderTextSizeSection()}
+        ${this.renderRoleSection()}
       </div>
     `;
   }
@@ -156,6 +157,42 @@ export class Settings extends MobxLitElement {
             }}
           >
             Large
+          </pr-button>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderRoleSection() {
+    const handleClick = (role: Role) => {
+      this.settingsService.setRole(role);
+    };
+
+    const isRole = (role: Role) => {
+      return this.settingsService.role === role;
+    };
+
+    return html`
+      <div class="section">
+        <h2>Role</h2>
+        <div class="action-buttons">
+          <pr-button
+            color=${isRole(Role.EXPERIMENTER) ? "primary" : "neutral"}
+            variant=${isRole(Role.EXPERIMENTER) ? "tonal" : "default"}
+            @click=${() => {
+              handleClick(Role.EXPERIMENTER);
+            }}
+          >
+            Experimenter
+          </pr-button>
+          <pr-button
+            color=${isRole(Role.PARTICIPANT) ? "primary" : "neutral"}
+            variant=${isRole(Role.PARTICIPANT) ? "tonal" : "default"}
+            @click=${() => {
+              handleClick(Role.PARTICIPANT);
+            }}
+          >
+            Participant
           </pr-button>
         </div>
       </div>

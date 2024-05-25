@@ -28,6 +28,14 @@ export class RouterService extends Service {
       name: Pages.SETTINGS,
       path: "/settings",
     },
+    {
+      name: Pages.EXPERIMENT,
+      path: "/:experiment",
+    },
+    {
+      name: Pages.EXPERIMENT_STAGE,
+      path: "/:experiment/:stage",
+    }
   ];
 
   private readonly router: router5.Router;
@@ -93,6 +101,8 @@ export type RouteChange = router5.SubscribeState;
 export enum Pages {
   HOME = "HOME",
   SETTINGS = "SETTINGS",
+  EXPERIMENT = "EXPERIMENT",
+  EXPERIMENT_STAGE = "EXPERIMENT_STAGE",
 }
 
 /**

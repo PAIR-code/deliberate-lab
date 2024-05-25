@@ -1,0 +1,76 @@
+@use "../../sass/colors";
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  @include common.full-percentage;
+}
+
+.chat {
+  @include common.flex-column;
+  @include common.full-percentage;
+  flex-shrink: 1;
+  justify-content: space-between;
+  overflow: auto;
+}
+
+.chat-scroll {
+  flex-shrink: 1;
+  overflow: auto;
+}
+
+.chat-history {
+  @include common.flex-column;
+  justify-content: end;
+
+  // Set bottom height to accommodate chat bubble action bar
+  padding: common.$spacing-xl common.$spacing-xxl calc(var(--md-sys-typescale-body-small-line-height) * 2);
+}
+
+.chat-message-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-xs;
+  padding: common.$spacing-medium 0;
+}
+
+.input-row-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-xl;
+  padding: 0 common.$spacing-large;
+}
+
+@include common.viewport-small {
+  .input-row-wrapper {
+    left: 0;
+  }
+}
+
+.input-row {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-xl;
+  width: -webkit-fill-available;
+  max-width: common.$main-content-max-width;
+}
+
+.input-wrapper {
+  padding: 0 0 common.$spacing-xl;
+  width: 100%;
+}
+
+.input {
+  align-items: center;
+  background: var(--md-sys-color-surface-bright);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 28px;
+  box-sizing: border-box;
+  display: flex;
+  gap: common.$spacing-small;
+  padding: common.$spacing-large common.$spacing-xl common.$spacing-large
+    common.$spacing-xxl;
+  width: 100%;
+
+  pr-textarea {
+    flex-grow: 1;
+  }
+}

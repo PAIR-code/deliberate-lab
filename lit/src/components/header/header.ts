@@ -30,6 +30,10 @@ export class Header extends MobxLitElement {
       return "Home";
     } else if (activePage === Pages.SETTINGS) {
       return "Settings";
+    } else if (activePage === Pages.EXPERIMENT) {
+      return "My Experiment";
+    } else if (activePage === Pages.EXPERIMENT_STAGE) {
+      return "Experiment Stage";
     }
     return "";
   }

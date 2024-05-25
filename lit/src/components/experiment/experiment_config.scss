@@ -1,0 +1,23 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.default;
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+h2 {
+  @include typescale.body-medium;
+  margin: 0;
+}
+
+.stages-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+.buttons-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+}

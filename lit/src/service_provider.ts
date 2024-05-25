@@ -1,4 +1,6 @@
 import { Core } from "./core/core";
+import { ChatService } from "./services/chat_service";
+import { ExperimentService } from "./services/experiment_service";
 import { InitializationService } from "./services/initialization_service";
 import { RouterService } from "./services/router_service";
 import { SettingsService } from "./services/settings_service";
@@ -17,6 +19,12 @@ export function makeServiceProvider(self: Core) {
     get settingsService() {
       return self.getService(SettingsService);
     },
+    get experimentService() {
+      return self.getService(ExperimentService);
+    },
+    get chatService() {
+      return self.getService(ChatService);
+    }
   };
 
   return serviceProvider;

@@ -1,18 +1,24 @@
+import "./components/chat/chat_config";
+import "./components/chat/chat_interface";
+import "./components/experiment/experiment_config";
 import "./components/header/header";
 import "./components/home/home";
+import "./components/info/info_config";
 import "./components/settings/settings";
 import "./components/sidenav/sidenav";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html } from "lit";
+import { CSSResultGroup, html, nothing } from "lit";
 import { customElement } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
 import { core } from "./core/core";
+import { ChatService } from "./services/chat_service";
+import { ExperimentService } from "./services/experiment_service";
 import { Pages, RouterService } from "./services/router_service";
 import { SettingsService } from "./services/settings_service";
 
-import { ColorMode, ColorTheme, TextSize } from "./shared/types";
+import { ColorMode, ColorTheme, StageType, Role, TextSize } from "./shared/types";
 
 import { styles } from "./app.scss";
 
@@ -21,6 +27,8 @@ import { styles } from "./app.scss";
 export class App extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly chatService = core.getService(ChatService);
+  private readonly experimentService = core.getService(ExperimentService);
   private readonly routerService = core.getService(RouterService);
   private readonly settingsService = core.getService(SettingsService);
 
@@ -33,6 +41,35 @@ export class App extends MobxLitElement {
       return html`<home-page></home-page>`
     } else if (this.routerService.activePage === Pages.SETTINGS) {
       return html`<settings-page></settings-page>`;
+    } else if (this.routerService.activePage === Pages.EXPERIMENT) {
+      return html`
+        ${this.settingsService.role === Role.EXPERIMENTER ?
+          html`<experiment-config></experiment-config>` :
+          html`<div>Experiment intro goes here.</div>`}
+      `;
+    } else if (this.routerService.activePage === Pages.EXPERIMENT_STAGE) {
+      const stageId = this.routerService.activeRoute.params["stage"];
+      this.experimentService.setCurrentStage(stageId);
+
+      const currentStage = this.experimentService.currentStage;
+
+      if (currentStage.type === StageType.CHAT) {
+        this.chatService.setChats(currentStage.messages);
+
+        if (this.settingsService.role === Role.EXPERIMENTER) {
+          return html`<chat-config></chat-config>`;
+        } else if (this.settingsService.role === Role.PARTICIPANT) {
+          return html`<chat-interface></chat-interface>`;
+        }
+      }
+      if (currentStage.type === StageType.INFO) {
+        if (this.settingsService.role === Role.EXPERIMENTER) {
+          return html`<info-config></info-config>`;
+        } else if (this.settingsService.role === Role.PARTICIPANT){
+          return currentStage.type === StageType.INFO ?
+            html`<div>${currentStage.content}</div>` : nothing;
+        }
+      }
     }
     return html`<div>404: Page not found</div>`
   }
