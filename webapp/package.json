@@ -40,6 +40,7 @@
     "@angular-eslint/template-parser": "17.2.0",
     "@angular/cli": "^17.0.6",
     "@angular/compiler-cli": "^17.0.6",
+    "@angular/language-service": "^17.3.10",
     "@codemirror/commands": "^6.2.4",
     "@codemirror/lang-json": "^6.0.1",
     "@codemirror/language": "^6.9.0",
