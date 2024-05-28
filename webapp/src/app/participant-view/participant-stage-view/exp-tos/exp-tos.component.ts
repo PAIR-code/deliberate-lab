@@ -6,7 +6,7 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, Inject, effect } from '@angular/core';
+import { Component, Inject, Signal, effect } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxChange, MatCheckboxModule } from '@angular/material/checkbox';
@@ -42,6 +42,7 @@ export class ExpTosComponent {
 
   constructor(
     @Inject('stage') public stage: CastViewingStage<StageKind.TermsOfService>,
+    @Inject('hidden') public hidden: Signal<boolean>,
     private participantService: ParticipantService,
   ) {
     // Refresh the form data when the participant profile changes

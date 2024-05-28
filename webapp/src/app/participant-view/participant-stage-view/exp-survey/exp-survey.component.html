@@ -1,4 +1,4 @@
-<div class="main">
+<div class="main" [hidden]="hidden()">
   <form [formGroup]="surveyForm">
     @for (question of stage.config().questions; track index; let index = $index) {
       @switch (question.kind) {

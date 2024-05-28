@@ -1,5 +1,5 @@
 <!-- eslint-disable @angular-eslint/template/label-has-associated-control -->
-<div class="main">
+<div class="main" [hidden]="hidden()">
   <form [formGroup]="votesForm">
     @for (user of participantService.otherParticipants(); track user.publicId) {
       <label [id]="user.publicId">{{ user.name }} ({{ user.pronouns }}):</label>

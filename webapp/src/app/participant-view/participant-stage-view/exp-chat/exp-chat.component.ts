@@ -72,6 +72,7 @@ export class ExpChatComponent {
   public chat: ChatRepository | undefined;
 
   constructor(
+    @Inject('hidden') public hidden: Signal<boolean>,
     @Inject('stage') public stage: CastViewingStage<StageKind.GroupChat>,
     private appState: AppStateService,
     public participantService: ParticipantService,

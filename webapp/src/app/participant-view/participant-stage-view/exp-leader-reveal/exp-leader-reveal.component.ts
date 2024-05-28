@@ -23,6 +23,7 @@ export class ExpLeaderRevealComponent {
 
   constructor(
     @Inject('stage') public stage: CastViewingStage<StageKind.RevealVoted>,
+    @Inject('hidden') public hidden: Signal<boolean>,
     private participantService: ParticipantService,
   ) {
     this.everyoneReachedThisStage = computed(() =>

@@ -6,7 +6,7 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, Inject, effect } from '@angular/core';
+import { Component, Inject, Signal, effect } from '@angular/core';
 import {
   FormArray,
   FormBuilder,
@@ -56,6 +56,7 @@ export class ExpSurveyComponent {
 
   constructor(
     @Inject('stage') public stage: CastViewingStage<StageKind.TakeSurvey>,
+    @Inject('hidden') public hidden: Signal<boolean>,
     public participantService: ParticipantService,
     fb: FormBuilder,
   ) {

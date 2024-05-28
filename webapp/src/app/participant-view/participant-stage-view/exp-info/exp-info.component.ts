@@ -6,7 +6,7 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, Signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 
 import { StageKind } from '@llm-mediation-experiments/utils';
@@ -24,6 +24,7 @@ export class ExpInfoComponent {
 
   constructor(
     private participantService: ParticipantService,
+    @Inject('hidden') public hidden: Signal<boolean>,
     @Inject('stage') public stage: CastViewingStage<StageKind.Info>,
   ) {}
 

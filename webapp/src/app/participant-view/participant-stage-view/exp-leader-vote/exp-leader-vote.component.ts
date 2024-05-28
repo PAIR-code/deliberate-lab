@@ -6,7 +6,7 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, Signal } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -34,6 +34,7 @@ export class ExpLeaderVoteComponent {
 
   constructor(
     @Inject('stage') public stage: CastViewingStage<StageKind.VoteForLeader>,
+    @Inject('hidden') public hidden: Signal<boolean>,
     public participantService: ParticipantService,
     fb: FormBuilder,
   ) {

@@ -1,4 +1,4 @@
-<div class="main">
+<div class="main" [hidden]="hidden()">
   <div>
     @for (line of stage.config().infoLines; track line) {
       <div [innerHTML]="line"></div>
