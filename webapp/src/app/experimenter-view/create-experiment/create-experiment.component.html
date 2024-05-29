@@ -158,7 +158,11 @@
             </div>
 
             <div class="config-wrapper">
-              <div cdkDropList class="content-lines" (cdkDropListDropped)="dropInfoLine(stage, $event)">
+              <div
+                cdkDropList
+                class="content-lines"
+                (cdkDropListDropped)="dropInfoLine(stage, $event)"
+              >
                 @for (line of stage.infoLines; track $index) {
                   <div class="content-line">
                     <mat-form-field cdkDrag class="mat-form-field">
@@ -194,7 +198,11 @@
             </div>
 
             <div class="config-wrapper">
-              <div cdkDropList class="content-lines" (cdkDropListDropped)="dropTosLine(stage, $event)">
+              <div
+                cdkDropList
+                class="content-lines"
+                (cdkDropListDropped)="dropTosLine(stage, $event)"
+              >
                 @for (line of stage.tosLines; track $index) {
                   <div class="content-line">
                     <mat-form-field cdkDrag class="mat-form-field">

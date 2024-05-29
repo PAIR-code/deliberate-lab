@@ -9,7 +9,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { toSignal } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
   FormBuilder,
@@ -111,11 +111,6 @@ export const assertSignalCast = <T extends { kind: string }, K extends T['kind']
   }
 };
 
-/** Subscribe to a signal's updates. This function must be run in an injection context. */
-export const subscribeSignal = <T>(_signal: Signal<T>, callback: (value: T) => void) => {
-  toObservable(_signal).subscribe(callback);
-};
-
 /** Creates a second-counter timer that is synchronized with the local storage in order to resume ticking when reloading the page */
 export const localStorageTimer = (
   key: string,
@@ -181,6 +176,20 @@ export const bindSignalReRender = <T>(signal: Signal<T>) => {
     cdr.detectChanges();
   });
 };
+
+/** Helper class to wrap a loading promise and expose a loading indicator */
+export class Loading {
+  private _isLoading = signal(false);
+  public get isLoading(): Signal<boolean> {
+    return this._isLoading;
+  }
+
+  async run(promise?: Promise<unknown>) {
+    this._isLoading.set(true);
+    await promise;
+    this._isLoading.set(false);
+  }
+}
 
 // ********************************************************************************************* //
 //                                         FORM BUILDER                                          //

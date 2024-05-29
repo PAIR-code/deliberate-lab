@@ -4,11 +4,12 @@
   "compilerOptions": {
     "outDir": "./out-tsc/spec",
     "types": [
-      "jasmine", "gapi", "gapi.client.sheets-v4", "gapi.client.discovery-v1", "google.accounts"
+      "jasmine",
+      "gapi",
+      "gapi.client.sheets-v4",
+      "gapi.client.discovery-v1",
+      "google.accounts"
     ]
   },
-  "include": [
-    "src/**/*.spec.ts",
-    "src/**/*.d.ts"
-  ]
+  "include": ["src/**/*.spec.ts", "src/**/*.d.ts"]
 }

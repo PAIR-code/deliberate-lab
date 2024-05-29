@@ -6,7 +6,7 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, Input, effect } from '@angular/core';
+import { Component, Inject, Signal, effect } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxChange, MatCheckboxModule } from '@angular/material/checkbox';
@@ -34,16 +34,17 @@ import { CastViewingStage, ParticipantService } from 'src/app/services/participa
   styleUrl: './exp-tos.component.scss',
 })
 export class ExpTosComponent {
-  // Reload the internal logic dynamically when the stage changes
-  @Input({ required: true }) stage!: CastViewingStage<StageKind.TermsOfService>;
-
   tosLines: string[] = [];
 
   tosFormControl = new FormGroup({
     acceptTosTimestamp: new FormControl<UnifiedTimestamp | null>(null, Validators.required),
   });
 
-  constructor(private participantService: ParticipantService) {
+  constructor(
+    @Inject('stage') public stage: CastViewingStage<StageKind.TermsOfService>,
+    @Inject('hidden') public hidden: Signal<boolean>,
+    private participantService: ParticipantService,
+  ) {
     // Refresh the form data when the participant profile changes
     effect(() => {
       const profile = participantService.participant()?.profile();

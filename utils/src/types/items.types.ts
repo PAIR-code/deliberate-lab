@@ -37,11 +37,11 @@ export const ITEM_NAMES = [
 ] as const;
 
 // Use external hosting as a temporary workaround..
-export const IMAGE_HEADER = 'https://raw.githubusercontent.com/PAIR-code/llm-mediation-experiments/main/webapp/src/assets/items/'
-export const IMAGE_SUFFIX = "?raw=true";
+export const IMAGE_HEADER =
+  'https://raw.githubusercontent.com/PAIR-code/llm-mediation-experiments/main/webapp/src/assets/items/';
+export const IMAGE_SUFFIX = '?raw=true';
 // export const IMAGE_HEADER = '/assets/items/';
 // export const IMAGE_SUFFIX = "";
-
 
 export type ItemName = (typeof ITEM_NAMES)[number];
 export const ITEMS: Record<ItemName, Item> = {
@@ -71,7 +71,7 @@ export const ITEMS: Record<ItemName, Item> = {
     ranking: 4,
   },
   pacificMaps: {
-    name: 'Maps of the Atlantic Ocean', 
+    name: 'Maps of the Atlantic Ocean',
     imageUrl: IMAGE_HEADER + 'map.jpeg' + IMAGE_SUFFIX,
     ranking: 13,
   },
@@ -93,7 +93,7 @@ export const ITEMS: Record<ItemName, Item> = {
   plasticSheeting: {
     name: 'Plastic sheeting',
     imageUrl: IMAGE_HEADER + 'sheeting.jpeg' + IMAGE_SUFFIX,
-    ranking: 5, 
+    ranking: 5,
   },
   sharkRepellent: {
     name: 'Can of shark repellent',

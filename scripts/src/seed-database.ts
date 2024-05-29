@@ -190,7 +190,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
         kind: SurveyQuestionKind.Scale,
         questionText:
           "Now that you've gauged the abilities of your crewmembers, how willing would you be to serve as the representative and complete this task on behalf of your crew?",
-        lowerBound: 'I would STRONGLIY DISLIKE to be the representative (0/10)',
+        lowerBound: 'I would STRONGLY DISLIKE to be the representative (0/10)',
         upperBound: 'I would STRONGLY LIKE to be the representative (10/10)',
       },
     ],

@@ -1,7 +1,10 @@
-<div class="main">
+<div class="main" [hidden]="hidden()">
   <form [formGroup]="profileFormControl">
-    <p>Please set up your profile. These characteristics will be used to refer to you throughout the task, and will be seen by other users.</p>
-  
+    <p>
+      Please set up your profile. These characteristics will be used to refer to you throughout the
+      task, and will be seen by other users.
+    </p>
+
     <h3>
       <br />
       Name:
@@ -41,14 +44,38 @@
     <div class="avatar-container">
       <h3>Avatar:</h3>
       <mat-radio-group class="avatar-radio-group" formControlName="avatarUrl">
-        <mat-radio-button class="avatar-radio-button" value="https://github.com/PAIR-code/llm-mediation-experiments/blob/main/webapp/src/assets/avatars/she.png?raw=true">
-          <img src="https://github.com/PAIR-code/llm-mediation-experiments/blob/main/webapp/src/assets/avatars/she.png?raw=true" alt="Avatar Female" width="72" height="77" />
+        <mat-radio-button
+          class="avatar-radio-button"
+          value="https://github.com/PAIR-code/llm-mediation-experiments/blob/main/webapp/src/assets/avatars/she.png?raw=true"
+        >
+          <img
+            src="https://github.com/PAIR-code/llm-mediation-experiments/blob/main/webapp/src/assets/avatars/she.png?raw=true"
+            alt="Avatar Female"
+            width="72"
+            height="77"
+          />
         </mat-radio-button>
-        <mat-radio-button class="avatar-radio-button" value="https://github.com/PAIR-code/llm-mediation-experiments/blob/main/webapp/src/assets/avatars/they.png?raw=true">
-          <img src="https://github.com/PAIR-code/llm-mediation-experiments/blob/main/webapp/src/assets/avatars/they.png?raw=true" alt="Avatar Neutral" width="72" height="77" />
+        <mat-radio-button
+          class="avatar-radio-button"
+          value="https://github.com/PAIR-code/llm-mediation-experiments/blob/main/webapp/src/assets/avatars/they.png?raw=true"
+        >
+          <img
+            src="https://github.com/PAIR-code/llm-mediation-experiments/blob/main/webapp/src/assets/avatars/they.png?raw=true"
+            alt="Avatar Neutral"
+            width="72"
+            height="77"
+          />
         </mat-radio-button>
-        <mat-radio-button class="avatar-radio-button" value="https://github.com/PAIR-code/llm-mediation-experiments/blob/main/webapp/src/assets/avatars/he.png?raw=true">
-          <img src="https://github.com/PAIR-code/llm-mediation-experiments/blob/main/webapp/src/assets/avatars/he.png?raw=true" alt="Avatar Male" width="72" height="77" />
+        <mat-radio-button
+          class="avatar-radio-button"
+          value="https://github.com/PAIR-code/llm-mediation-experiments/blob/main/webapp/src/assets/avatars/he.png?raw=true"
+        >
+          <img
+            src="https://github.com/PAIR-code/llm-mediation-experiments/blob/main/webapp/src/assets/avatars/he.png?raw=true"
+            alt="Avatar Male"
+            width="72"
+            height="77"
+          />
         </mat-radio-button>
         <!-- Uncomment this out and replace when local hosting is available. -->
         <!--

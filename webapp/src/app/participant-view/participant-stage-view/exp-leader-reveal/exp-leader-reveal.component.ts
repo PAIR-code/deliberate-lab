@@ -1,4 +1,4 @@
-import { Component, computed, Input, signal, Signal } from '@angular/core';
+import { Component, computed, Inject, signal, Signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import {
   assertCast,
@@ -17,11 +17,15 @@ import { ChatUserProfileComponent } from '../exp-chat/chat-user-profile/chat-use
   styleUrl: './exp-leader-reveal.component.scss',
 })
 export class ExpLeaderRevealComponent {
-  // Reload the internal logic dynamically when the stage changes
-  @Input({ required: true })
-  set stage(value: CastViewingStage<StageKind.RevealVoted>) {
-    this._stage = value;
+  public everyoneReachedThisStage: Signal<boolean>;
+  public results: Signal<VoteForLeaderStagePublicData | undefined> = signal(undefined);
+  public winner: Signal<ParticipantProfile | undefined> = signal(undefined);
 
+  constructor(
+    @Inject('stage') public stage: CastViewingStage<StageKind.RevealVoted>,
+    @Inject('hidden') public hidden: Signal<boolean>,
+    private participantService: ParticipantService,
+  ) {
     this.everyoneReachedThisStage = computed(() =>
       this.participantService.experiment()!.everyoneReachedStage(this.stage.config().name)(),
     );
@@ -41,20 +45,6 @@ export class ExpLeaderRevealComponent {
         this.results()!.currentLeader!
       ];
     });
-  }
-
-  get stage() {
-    return this._stage as CastViewingStage<StageKind.RevealVoted>;
-  }
-
-  private _stage?: CastViewingStage<StageKind.RevealVoted>;
-
-  public everyoneReachedThisStage: Signal<boolean>;
-  public results: Signal<VoteForLeaderStagePublicData | undefined> = signal(undefined);
-  public winner: Signal<ParticipantProfile | undefined> = signal(undefined);
-
-  constructor(private participantService: ParticipantService) {
-    this.everyoneReachedThisStage = signal(false);
   }
 
   async nextStep() {

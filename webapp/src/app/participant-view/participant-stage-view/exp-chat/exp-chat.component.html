@@ -1,12 +1,14 @@
-<div class="main-container">
+<div class="main-container" [hidden]="hidden()">
   <!-- Show the information on the left. -->
-  <div class="left">
+  <!-- The repeated [hidden] attribute is needed (else this part is not hidden when loading the page on a chat stage and switching stages) -->
+  <div class="left" [hidden]="hidden()">
     <div class="chat-members">
       <b>Other chat members </b>
       <div class="container">
         @for (user of participantService.otherParticipants(); track user.publicId) {
           @if (
-            user.workingOnStageName === participantService.participant()?.profile()?.workingOnStageName
+            user.workingOnStageName ===
+            participantService.participant()?.profile()?.workingOnStageName
           ) {
             <div class="profile">
               <img class="avatar" src="{{ user.avatarUrl }}" alt="avatar" />
@@ -25,9 +27,10 @@
     } @else {
       @if (currentRatingsToDiscuss()) {
         <b
-          >Please deliberate on which of the following items would be more useful to your survival. ({{
-            currentRatingsIndex() + 1
-          }}/{{ stage.config().chatConfig.ratingsToDiscuss.length }})</b
+          >Please deliberate on which of the following items would be more useful to your survival.
+          ({{ currentRatingsIndex() + 1 }}/{{
+            stage.config().chatConfig.ratingsToDiscuss.length
+          }})</b
         >
         <div class="flex-container">
           <div class="item-pair-displays">

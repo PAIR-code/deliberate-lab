@@ -6,50 +6,6 @@
       {{ participantService.viewingStage()!.config().name }}
     </h2>
     <div class="exp-stage-content">
-      @switch (participantService.viewingStage()!.config().kind) {
-        @case (StageKind.Info) {
-          <app-exp-info
-            [stage]="assertCast(participantService.viewingStage(), StageKind.Info)"
-          ></app-exp-info>
-        }
-        @case (StageKind.TermsOfService) {
-          <app-exp-tos
-            [stage]="assertCast(participantService.viewingStage(), StageKind.TermsOfService)"
-          ></app-exp-tos>
-        }
-        @case (StageKind.SetProfile) {
-          <app-exp-profile
-            [stage]="assertCast(participantService.viewingStage(), StageKind.SetProfile)"
-          ></app-exp-profile>
-        }
-        @case (StageKind.GroupChat) {
-          <app-exp-chat
-            [stage]="assertCast(participantService.viewingStage(), StageKind.GroupChat)"
-          ></app-exp-chat>
-        }
-        @case (StageKind.TakeSurvey) {
-          <app-exp-survey
-            [stage]="assertCast(participantService.viewingStage(), StageKind.TakeSurvey)"
-          ></app-exp-survey>
-        }
-        @case (StageKind.VoteForLeader) {
-          <app-exp-leader-vote
-            [stage]="assertCast(participantService.viewingStage(), StageKind.VoteForLeader)"
-          ></app-exp-leader-vote>
-        }
-        @case (StageKind.RevealVoted) {
-          <app-exp-leader-reveal
-            [stage]="assertCast(participantService.viewingStage(), StageKind.RevealVoted)"
-          ></app-exp-leader-reveal>
-        }
-        @default {
-          <div class="error">
-            Oh no! It looks like something went wrong, there is no component for
-            <span>{{ participantService.viewingStage()!.config().kind }}</span>
-          </div>
-        }
-      }
-
       @if (
         participantService.viewingStage()!.config().name !== participantService.workingOnStageName()
       ) {
@@ -59,4 +15,6 @@
       }
     </div>
   }
+  <!-- Define this container outside any @if condition to ensure that it is available in ngAfterViewInit -->
+  <ng-container #stagesContainer></ng-container>
 </div>

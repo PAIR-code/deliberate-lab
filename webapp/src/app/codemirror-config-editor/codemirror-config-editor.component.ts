@@ -14,7 +14,7 @@ limitations under the License.
 ==============================================================================*/
 
 import {
-  AfterContentInit,
+  AfterViewInit,
   Component,
   ElementRef,
   EventEmitter,
@@ -43,7 +43,7 @@ export interface ConfigUpdate<T> {
   templateUrl: './codemirror-config-editor.component.html',
   styleUrls: ['./codemirror-config-editor.component.scss'],
 })
-export class CodemirrorConfigEditorComponent implements OnInit, AfterContentInit {
+export class CodemirrorConfigEditorComponent implements OnInit, AfterViewInit {
   @Input() whatIsBeingEditedName: string = '';
   @Input() defaultConfig: string = '';
   @Input() closable: boolean = true;
@@ -135,8 +135,6 @@ export class CodemirrorConfigEditorComponent implements OnInit, AfterContentInit
       ],
     });
   }
-
-  ngAfterContentInit() {}
 
   ngAfterViewInit() {
     if (!this.codemirrorElementRef) {

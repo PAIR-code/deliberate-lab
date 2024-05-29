@@ -32,7 +32,7 @@
 
   @for (stage of stages(); track stage.name) {
     <div>
-      {{ stage.name }}: {{ participants().length }}
+      {{ stage.name }}: {{ participantsPerStage()[stage.name] ?? 0 }}
 
       @if (isOfKind(stage, StageKind.GroupChat)) {
         <mat-accordion>
@@ -63,6 +63,9 @@
     (click)="deleteExperimentAndNavigate()"
   >
     <mat-icon>delete</mat-icon> Delete this experiment
+  </button>
+  <button mat-raised-button color="primary" aria-label="Download" (click)="downloadExperiment()">
+    <mat-icon>download</mat-icon> Download this experiment
   </button>
 } @else {
   <mat-spinner />

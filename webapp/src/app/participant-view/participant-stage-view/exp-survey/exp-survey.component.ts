@@ -6,13 +6,7 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import {
-  Component,
-  EnvironmentInjector,
-  Input,
-  effect,
-  runInInjectionContext,
-} from '@angular/core';
+import { Component, Inject, Signal, effect } from '@angular/core';
 import {
   FormArray,
   FormBuilder,
@@ -27,7 +21,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatButtonModule } from '@angular/material/button';
 import { StageKind, SurveyQuestionKind, assertCast } from '@llm-mediation-experiments/utils';
 import { CastViewingStage, ParticipantService } from 'src/app/services/participant.service';
-import { buildQuestionForm } from 'src/lib/utils/angular.utils';
+import { Loading, buildQuestionForm } from 'src/lib/utils/angular.utils';
 import { SurveyCheckQuestionComponent } from './survey-check-question/survey-check-question.component';
 import { SurveyRatingQuestionComponent } from './survey-rating-question/survey-rating-question.component';
 import { SurveyScaleQuestionComponent } from './survey-scale-question/survey-scale-question.component';
@@ -52,48 +46,36 @@ import { SurveyTextQuestionComponent } from './survey-text-question/survey-text-
   styleUrl: './exp-survey.component.scss',
 })
 export class ExpSurveyComponent {
-  // Reload the internal logic dynamically when the stage changes
-  @Input({ required: true })
-  set stage(value: CastViewingStage<StageKind.TakeSurvey>) {
-    this._stage = value;
-
-    // Regenerate the questions everytime the stage config or answers change
-    runInInjectionContext(this.injector, () => {
-      effect(() => {
-        const { questions } = this.stage.config();
-        const answers = this.stage.answers?.();
-
-        this.answers.clear();
-        questions.forEach((config) => {
-          const answer = answers?.answers?.[config.id];
-          // The config serves as the source of truth for the question type
-          // The answer, if defined, will be used to populate the form
-          this.answers.push(buildQuestionForm(this.fb, config, answer));
-        });
-      });
-    });
-  }
-
-  get stage() {
-    return this._stage as CastViewingStage<StageKind.TakeSurvey>;
-  }
-
-  private _stage?: CastViewingStage<StageKind.TakeSurvey>;
-
   public answers: FormArray;
   public surveyForm: FormGroup;
 
   readonly SurveyQuestionKind = SurveyQuestionKind;
   readonly assertCast = assertCast;
 
+  public submitLoading = new Loading();
+
   constructor(
-    private fb: FormBuilder,
+    @Inject('stage') public stage: CastViewingStage<StageKind.TakeSurvey>,
+    @Inject('hidden') public hidden: Signal<boolean>,
     public participantService: ParticipantService,
-    private injector: EnvironmentInjector,
+    fb: FormBuilder,
   ) {
     this.answers = fb.array([]);
     this.surveyForm = fb.group({
       answers: this.answers,
+    });
+
+    effect(() => {
+      const { questions } = this.stage.config();
+      const answers = this.stage.answers?.();
+
+      this.answers.clear();
+      questions.forEach((config) => {
+        const answer = answers?.answers?.[config.id];
+        // The config serves as the source of truth for the question type
+        // The answer, if defined, will be used to populate the form
+        this.answers.push(buildQuestionForm(fb, config, answer));
+      });
     });
   }
 
@@ -103,9 +85,12 @@ export class ExpSurveyComponent {
   }
 
   async nextStep() {
-    await this.participantService
-      .participant()
-      ?.updateSurveyStage(this.stage.config().name, this.surveyForm.value.answers);
+    // Run the submission inside a loading indicator
+    await this.submitLoading.run(
+      this.participantService
+        .participant()
+        ?.updateSurveyStage(this.stage.config().name, this.surveyForm.value.answers),
+    );
     await this.participantService.workOnNextStage();
   }
 }

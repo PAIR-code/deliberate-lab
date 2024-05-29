@@ -6,7 +6,7 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import { Component, Input } from '@angular/core';
+import { Component, Inject, Signal } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -19,7 +19,7 @@ import { MatRadioModule } from '@angular/material/radio';
 
 import { StageKind, Vote, VoteForLeaderStageAnswer } from '@llm-mediation-experiments/utils';
 import { CastViewingStage, ParticipantService } from 'src/app/services/participant.service';
-import { forbiddenValueValidator, subscribeSignal } from 'src/lib/utils/angular.utils';
+import { forbiddenValueValidator } from 'src/lib/utils/angular.utils';
 
 @Component({
   selector: 'app-exp-leader-vote',
@@ -29,35 +29,20 @@ import { forbiddenValueValidator, subscribeSignal } from 'src/lib/utils/angular.
   imports: [MatRadioModule, MatButtonModule, FormsModule, ReactiveFormsModule],
 })
 export class ExpLeaderVoteComponent {
-  // Reload the internal logic dynamically when the stage changes
-  @Input({ required: true })
-  set stage(value: CastViewingStage<StageKind.VoteForLeader>) {
-    this._stage = value;
-
-    // Update the form when the answers change (this will also initialize the form the first time)
-    if (this.stage.answers)
-      subscribeSignal(this.stage.answers, (answers: VoteForLeaderStageAnswer) =>
-        this.initializeForm(answers),
-      );
-    else this.initializeForm({ votes: {}, kind: StageKind.VoteForLeader }); // Initialize the form with empty answers
-  }
-
-  get stage() {
-    return this._stage as CastViewingStage<StageKind.VoteForLeader>;
-  }
-
-  private _stage?: CastViewingStage<StageKind.VoteForLeader>;
-
   readonly Vote = Vote;
   public votesForm: FormGroup;
 
   constructor(
+    @Inject('stage') public stage: CastViewingStage<StageKind.VoteForLeader>,
+    @Inject('hidden') public hidden: Signal<boolean>,
     public participantService: ParticipantService,
     fb: FormBuilder,
   ) {
     this.votesForm = fb.group({
       votes: fb.group({}),
     });
+
+    this.initializeForm(stage.answers() ?? { votes: {}, kind: StageKind.VoteForLeader });
   }
 
   get votes() {

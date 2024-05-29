@@ -45,7 +45,7 @@ export class SimpleEmbedder implements Embedder<object> {
   constructor() {
     this.name = `SimpleEmbedder`;
   }
-  async embed(text: string, params?: {}): Promise<Embedding | EmbedError> {
+  async embed(text: string, _params?: object): Promise<Embedding | EmbedError> {
     const apiResponse = await sendEmbedRequest({ text });
     return apiResponse;
   }

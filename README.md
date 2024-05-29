@@ -48,9 +48,10 @@ This is a repository to support collaboration on using LLMs in behavioral econom
 
 ## Instructions
 
-| Documentation                                | Description                          |
-| -------------------------------------------- | ------------------------------------ |
-| [Getting Started](./docs/getting-started.md) | How to get started with the project  |
-| [Deployment](./docs/deployment.md)           | How to deploy this app to production |
-| [Contributing](./docs/contributing.md)       | How to contribute to this project    |
-| [Code of Conduct](./docs/code-of-conduct.md) | Code of conduct for contributors     |
+| Documentation                                        | Description                            |
+| ---------------------------------------------------- | -------------------------------------- |
+| [Getting Started](./docs/getting-started.md)         | How to get started with the project    |
+| [Application Logic](./docs/application-structure.md) | Documentation of the application logic |
+| [Deployment](./docs/deployment.md)                   | How to deploy this app to production   |
+| [Contributing](./docs/contributing.md)               | How to contribute to this project      |
+| [Code of Conduct](./docs/code-of-conduct.md)         | Code of conduct for contributors       |

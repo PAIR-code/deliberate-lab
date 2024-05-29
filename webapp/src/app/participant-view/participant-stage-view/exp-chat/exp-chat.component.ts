@@ -6,16 +6,7 @@
  * found in the LICENSE file and http://www.apache.org/licenses/LICENSE-2.0
 ==============================================================================*/
 
-import {
-  Component,
-  EnvironmentInjector,
-  Input,
-  Signal,
-  computed,
-  effect,
-  runInInjectionContext,
-  signal,
-} from '@angular/core';
+import { Component, Inject, Signal, computed, effect, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -64,67 +55,8 @@ import { MediatorFeedbackComponent } from './mediator-feedback/mediator-feedback
   styleUrl: './exp-chat.component.scss',
 })
 export class ExpChatComponent {
-  private _stage?: CastViewingStage<StageKind.GroupChat>;
   readonly ITEMS = ITEMS;
   private onceChatDone = new Once<string>();
-
-  // Reload the internal logic dynamically when the stage changes
-  @Input({ required: true })
-  set stage(value: CastViewingStage<StageKind.GroupChat>) {
-    this._stage = value;
-
-    this.everyoneReachedTheChat = computed(() =>
-      this.participantService.experiment()!.everyoneReachedStage(this.stage.config().name)(),
-    );
-
-    runInInjectionContext(this.injector, () => {
-      // On config change, extract the relevant chat repository and recompute signals
-      effect(() => {
-        const config = this.stage.config();
-
-        // Extract the relevant chat repository for this chat
-        this.chat = this.appState.chats.get({
-          chatId: config.chatId,
-          experimentId: this.participantService.experimentId()!,
-          participantId: this.participantService.participantId()!,
-        });
-
-        this.readyToEndChat = computed(() => this.chat!.chat()?.readyToEndChat ?? false);
-        this.currentRatingsIndex = computed(() => {
-          return this.stage.public!().chatData.currentRatingIndex ?? 0;
-        });
-
-        // Initialize the current rating to discuss with the first available pair
-        const { item1, item2 } = config.chatConfig.ratingsToDiscuss[0];
-        this.currentRatingsToDiscuss = signal({ item1, item2 });
-        this.currentRatingsToDiscuss = computed(
-          () => config.chatConfig.ratingsToDiscuss[this.currentRatingsIndex()],
-        );
-      });
-
-      effect(() => {
-        // Only if we are currently working on this stage
-        if (this.participantService.workingOnStageName() !== this.stage.config().name) return;
-        this.currentRatingsIndex(); // Trigger reactivity when the currentRatingsIndex changes
-        this.chat?.markReadyToEndChat(false); // Reset readyToEndChat when the items to discuss change
-        // this.timer.reset(TIMER_SECONDS); // Reset the timer
-      });
-
-      if (this.participantService.workingOnStageName() === this.stage.config().name) {
-        // Automatic next step progression when the chat has ended
-        effect(() => {
-          const config = this.stage.config();
-          const pub = this.stage.public!();
-          if (chatReadyToEnd(config, pub))
-            // Encapsulate the next step progression in a once class to ensure it is only called once
-            this.onceChatDone.run(config.chatId, () => this.nextStep());
-        });
-      }
-    });
-  }
-  get stage() {
-    return this._stage as CastViewingStage<StageKind.GroupChat>;
-  }
 
   public everyoneReachedTheChat: Signal<boolean>;
   public readyToEndChat: Signal<boolean> = signal(false);
@@ -140,14 +72,61 @@ export class ExpChatComponent {
   public chat: ChatRepository | undefined;
 
   constructor(
+    @Inject('hidden') public hidden: Signal<boolean>,
+    @Inject('stage') public stage: CastViewingStage<StageKind.GroupChat>,
     private appState: AppStateService,
     public participantService: ParticipantService,
-    private injector: EnvironmentInjector,
   ) {
-    // Extract stage data
-    this.everyoneReachedTheChat = signal(false);
     this.currentRatingsIndex = signal(0);
     this.currentRatingsToDiscuss = signal(getDefaultItemPair());
+
+    // Extract stage data
+    this.everyoneReachedTheChat = computed(() =>
+      this.participantService.experiment()!.everyoneReachedStage(this.stage.config().name)(),
+    );
+
+    // On config change, extract the relevant chat repository and recompute signals
+    effect(() => {
+      const config = this.stage.config();
+
+      // Extract the relevant chat repository for this chat
+      this.chat = this.appState.chats.get({
+        chatId: config.chatId,
+        experimentId: this.participantService.experimentId()!,
+        participantId: this.participantService.participantId()!,
+      });
+
+      this.readyToEndChat = computed(() => this.chat!.chat()?.readyToEndChat ?? false);
+      this.currentRatingsIndex = computed(() => {
+        return this.stage.public().chatData.currentRatingIndex ?? 0;
+      });
+
+      // Initialize the current rating to discuss with the first available pair
+      const { item1, item2 } = config.chatConfig.ratingsToDiscuss[0];
+      this.currentRatingsToDiscuss = signal({ item1, item2 });
+      this.currentRatingsToDiscuss = computed(
+        () => config.chatConfig.ratingsToDiscuss[this.currentRatingsIndex()],
+      );
+    });
+
+    effect(() => {
+      // Only if we are currently working on this stage
+      if (this.participantService.workingOnStageName() !== this.stage.config().name) return;
+      this.currentRatingsIndex(); // Trigger reactivity when the currentRatingsIndex changes
+      this.chat?.markReadyToEndChat(false); // Reset readyToEndChat when the items to discuss change
+      // this.timer.reset(TIMER_SECONDS); // Reset the timer
+    });
+
+    if (this.participantService.workingOnStageName() === this.stage.config().name) {
+      // Automatic next step progression when the chat has ended
+      effect(() => {
+        const config = this.stage.config();
+        const pub = this.stage.public();
+        if (chatReadyToEnd(config, pub))
+          // Encapsulate the next step progression in a once class to ensure it is only called once
+          this.onceChatDone.run(config.chatId, () => this.nextStep());
+      });
+    }
   }
 
   isSilent() {
@@ -162,9 +141,10 @@ export class ExpChatComponent {
   }
 
   toggleEndChat() {
-    const ready = this.readyToEndChat();
+    const current = this.readyToEndChat();
+    const ready = !current;
 
-    this.chat?.markReadyToEndChat(!ready);
+    this.chat?.markReadyToEndChat(ready);
 
     if (ready) this.message.disable();
     else this.message.enable();

@@ -1,4 +1,4 @@
-<div class="main">
+<div class="main" [hidden]="hidden()">
   <form [formGroup]="surveyForm">
     @for (question of stage.config().questions; track index; let index = $index) {
       @switch (question.kind) {
@@ -29,7 +29,12 @@
       }
     }
   </form>
-  <button color="primary" [disabled]="!surveyForm.valid" (click)="nextStep()" mat-button>
+  <button
+    color="primary"
+    [disabled]="!surveyForm.valid || submitLoading.isLoading()"
+    (click)="nextStep()"
+    mat-button
+  >
     Next step
   </button>
 </div>
