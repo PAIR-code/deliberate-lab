@@ -6,9 +6,10 @@ import { customElement, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 
 import { core } from "../../core/core";
+import { AuthService } from "../../services/auth_service";
 import { SettingsService } from "../../services/settings_service";
 
-import { ColorMode, ColorTheme, Role, TextSize } from "../../shared/types";
+import { ColorMode, ColorTheme, TextSize } from "../../shared/types";
 
 import { styles } from "./settings.scss";
 
@@ -17,6 +18,7 @@ import { styles } from "./settings.scss";
 export class Settings extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly authService = core.getService(AuthService);
   private readonly settingsService = core.getService(SettingsService);
 
   override render() {
@@ -25,7 +27,7 @@ export class Settings extends MobxLitElement {
         ${this.renderColorModeSection()}
         ${this.renderColorThemeSection()}
         ${this.renderTextSizeSection()}
-        ${this.renderRoleSection()}
+        ${this.renderAccountSection()}
       </div>
     `;
   }
@@ -163,36 +165,25 @@ export class Settings extends MobxLitElement {
     `;
   }
 
-  private renderRoleSection() {
-    const handleClick = (role: Role) => {
-      this.settingsService.setRole(role);
-    };
-
-    const isRole = (role: Role) => {
-      return this.settingsService.role === role;
+  private renderAccountSection() {
+    const handleSignOut = () => {
+      this.authService.signOut();
     };
 
     return html`
       <div class="section">
-        <h2>Role</h2>
+        <h2>Account</h2>
+        <p><b>User ID:</b> ${this.authService.userId}</p>
+        <p>
+          <b>Role:</b>
+          ${this.authService.isExperimenter ? 'experimenter' : 'participant'}
+        </p>
         <div class="action-buttons">
           <pr-button
-            color=${isRole(Role.EXPERIMENTER) ? "primary" : "neutral"}
-            variant=${isRole(Role.EXPERIMENTER) ? "tonal" : "default"}
-            @click=${() => {
-              handleClick(Role.EXPERIMENTER);
-            }}
-          >
-            Experimenter
-          </pr-button>
-          <pr-button
-            color=${isRole(Role.PARTICIPANT) ? "primary" : "neutral"}
-            variant=${isRole(Role.PARTICIPANT) ? "tonal" : "default"}
-            @click=${() => {
-              handleClick(Role.PARTICIPANT);
-            }}
-          >
-            Participant
+            color="error"
+            variant="outlined"
+            @click=${handleSignOut}>
+            Log out
           </pr-button>
         </div>
       </div>

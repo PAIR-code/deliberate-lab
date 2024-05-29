@@ -7,10 +7,11 @@ export type Constructor<T> = {
   new (...args: any[]): T;
 };
 
-/** Role. */
-export enum Role {
-  EXPERIMENTER = "experimenter",
-  PARTICIPANT = "participant",
+/** Current permissions. */
+export enum Permission {
+  EDIT = "edit",  // Used for experimenters
+  PREVIEW = "preview",  // Used for experimenter
+  PARTICIPATE = "participate", // Used for participant
 }
 
 /** Color modes. */

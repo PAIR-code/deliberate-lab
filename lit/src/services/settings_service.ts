@@ -4,7 +4,6 @@ import { Service } from "./service";
 import {
   ColorMode,
   ColorTheme,
-  Role,
   TextSize,
 } from "../shared/types";
 
@@ -22,7 +21,6 @@ export class SettingsService extends Service {
   @observable colorMode: ColorMode = ColorMode.DEFAULT;
   @observable colorTheme: ColorTheme = ColorTheme.KAMINO;
   @observable textSize: TextSize = TextSize.SMALL;
-  @observable role: Role = Role.EXPERIMENTER;
 
   @action setColorMode(colorMode: ColorMode) {
     this.colorMode = colorMode;
@@ -34,9 +32,5 @@ export class SettingsService extends Service {
 
   @action setTextSize(textSize: TextSize) {
     this.textSize = textSize;
-  }
-
-  @action setRole(role: Role) {
-    this.role = role;
   }
 }

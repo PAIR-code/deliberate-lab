@@ -23,6 +23,7 @@
     "@adobe/lit-mobx": "^2.2.2",
     "@types/router5": "^5.0.0",
     "css-loader": "^7.0.0",
+    "firebase": "^10.12.2",
     "lit": "^3.1.2",
     "lit-element": "^4.0.4",
     "mobx": "^6.12.3",
