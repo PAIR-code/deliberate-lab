@@ -64,6 +64,9 @@
   >
     <mat-icon>delete</mat-icon> Delete this experiment
   </button>
+  <button mat-raised-button color="primary" aria-label="Download" (click)="downloadExperiment()">
+    <mat-icon>download</mat-icon> Download this experiment
+  </button>
 } @else {
   <mat-spinner />
 }

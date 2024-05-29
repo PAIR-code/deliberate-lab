@@ -6,14 +6,21 @@ import { Router, RouterLink, RouterLinkActive, RouterModule } from '@angular/rou
 
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import {
+  Message,
   ParticipantProfileExtended,
+  PublicStageData,
+  StageAnswer,
   StageConfig,
   StageKind,
   isOfKind,
+  lookupTable,
 } from '@llm-mediation-experiments/utils';
+import { collection, getDocs } from 'firebase/firestore';
 import { AppStateService } from 'src/app/services/app-state.service';
+import { firestore } from 'src/lib/api/firebase';
 import { ExperimentRepository } from 'src/lib/repositories/experiment.repository';
 import { bindSignalReRender } from 'src/lib/utils/angular.utils';
+import { downloadJsonFile } from 'src/lib/utils/files.utils';
 import { MediatorChatComponent } from '../mediator-chat/mediator-chat.component';
 
 @Component({
@@ -97,6 +104,115 @@ export class ExperimentMonitorComponent {
       await this.router.navigate(['/experimenter', 'settings']); // Redirect to settings page.
     }
   }
+
+  /** Download an experiment's data as a single JSON file */
+  async downloadExperiment() {
+    const experiment = this.experiment()?.experiment();
+    const participants = this.participants();
+    const configs = this.stages();
+
+    if (!experiment) return;
+
+    const experimentId = experiment.id;
+
+    const stagePublicData = (
+      await getDocs(collection(firestore, 'experiments', experimentId, 'publicStageData'))
+    ).docs.map((doc) => ({ ...(doc.data() as PublicStageData), name: doc.id }));
+
+    // Get stage answers per participant.
+    const stageAnswers = await Promise.all(
+      participants.map(async (participant) => {
+        return (
+          await getDocs(
+            collection(
+              firestore,
+              'experiments',
+              experimentId,
+              'participants',
+              participant.privateId,
+              'stages',
+            ),
+          )
+        ).docs.map((doc) => ({ ...(doc.data() as StageAnswer), name: doc.id }));
+      }),
+    );
+
+    // Get chat data.
+    // TODO: technically, there are as many chat copies as there are participants
+    // but because we do not change them, we will only download the first copy of each chat here
+
+    const chats = await getDocs(
+      collection(
+        firestore,
+        'experiments',
+        experimentId,
+        'participants',
+        participants[0].privateId,
+        'chats',
+      ),
+    );
+
+    const chatMessages = await Promise.all(
+      chats.docs.map((doc) =>
+        getDocs(
+          collection(
+            firestore,
+            'experiments',
+            experimentId,
+            'participants',
+            participants[0].privateId,
+            'chats',
+            doc.id,
+            'messages',
+          ),
+        ),
+      ),
+    );
+
+    // Lookups
+    const publicData = lookupTable(stagePublicData, 'name');
+    const answersLookup = stageAnswers.reduce(
+      (acc, stageAnswers, index) => {
+        const participantId = participants[index].publicId;
+
+        stageAnswers.forEach((stageAnswer) => {
+          if (!acc[stageAnswer.name]) acc[stageAnswer.name] = {};
+
+          acc[stageAnswer.name][participantId] = excludeName(stageAnswer) as StageAnswer;
+        });
+        return acc;
+      },
+      {} as Record<string, Record<string, StageAnswer>>,
+    );
+
+    const data = {
+      ...experiment,
+      participants,
+
+      stages: configs.map((config) => {
+        const stagePublicData = publicData[config.name];
+        const cleanedPublicData = stagePublicData ? excludeName(stagePublicData) : undefined;
+        const answers = answersLookup[config.name];
+        return { config, public: cleanedPublicData, answers };
+      }),
+
+      chats: chatMessages.reduce(
+        (acc, chat, index) => {
+          const messages = chat.docs.map((doc) => doc.data() as Message);
+          acc[`chat-${index}`] = messages;
+          return acc;
+        },
+        {} as Record<string, Message[]>,
+      ),
+    };
+
+    downloadJsonFile(data, `${experiment.name}.json`);
+  }
 }
 
-// TODO : agregate the participants per stage into a sort of record / signal ? / record of signals ?
+/** Helper to cleanup experiment data from redundant stage names */
+const excludeName = <T extends { name: string }>(obj: T) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { name, ...rest } = obj;
+  return rest;
+};
