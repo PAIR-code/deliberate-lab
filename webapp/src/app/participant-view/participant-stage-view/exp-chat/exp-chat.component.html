@@ -1,6 +1,7 @@
 <div class="main-container" [hidden]="hidden()">
   <!-- Show the information on the left. -->
-  <div class="left">
+  <!-- The repeated [hidden] attribute is needed (else this part is not hidden when loading the page on a chat stage and switching stages) -->
+  <div class="left" [hidden]="hidden()">
     <div class="chat-members">
       <b>Other chat members </b>
       <div class="container">
