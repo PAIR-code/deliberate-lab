@@ -59,10 +59,26 @@ export class Once<Key> {
   /** Run the callback function only if the internal key is not already set to the given one.
    * This makes sure that the callback is run only once, and only if the key is different from the previous one.
    */
-  run(key: Key, callback: Function) {
+  run(key: Key, callback: () => unknown) {
     if (this.value === key) return;
 
     this.value = key;
     callback();
   }
 }
+
+/** Return a promise that can be resolved externally in order to lock processes.
+ * This is useful to wait for Angular @ViewChild elements to be set before performing reactive
+ * actions that cannot be done in Angular lifecycle hooks (like an effect that depends on signals).
+ */
+export const lockPromise = () => {
+  let resolve = () => {};
+  let reject = () => {};
+
+  const promise = new Promise<void>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+
+  return { promise, resolve, reject } as const;
+};

@@ -166,7 +166,7 @@ export interface CastViewingStage<K extends StageKind> {
 }
 
 /** Object that exposes a stage's given config, public data and participant answers all at once. */
-interface ViewingStage {
+export interface ViewingStage {
   kind: StageKind;
   config: Signal<StageConfig>;
   public: Signal<PublicStageData | undefined>;
