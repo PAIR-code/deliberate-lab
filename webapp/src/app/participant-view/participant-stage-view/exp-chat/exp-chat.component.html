@@ -62,7 +62,7 @@
         <b>Discussion</b>
 
         <div class="messages">
-          @for (message of chat?.messages(); track $index) {
+          <ng-template #messageTemplate let-message>
             <div class="message">
               @if (message.kind === 'userMessage') {
                 <app-chat-user-message [message]="message"></app-chat-user-message>
@@ -76,7 +76,13 @@
                 <div></div>
               }
             </div>
-          }
+          </ng-template>
+
+          <app-bottom-scroll-list
+            [dataList]="chat?.messages() ?? []"
+            [itemTemplate]="messageTemplate"
+            maxHeight="25em"
+          ></app-bottom-scroll-list>
         </div>
 
         <form class="message-form" (ngSubmit)="sendMessage()">

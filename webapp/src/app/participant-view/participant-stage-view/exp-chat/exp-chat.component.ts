@@ -24,6 +24,7 @@ import {
   getDefaultItemPair,
 } from '@llm-mediation-experiments/utils';
 
+import { BottomScrollListComponent } from 'src/app/components/bottom-scroll-list/bottom-scroll-list.component';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { CastViewingStage, ParticipantService } from 'src/app/services/participant.service';
 import { ChatRepository } from 'src/lib/repositories/chat.repository';
@@ -50,6 +51,7 @@ import { MediatorFeedbackComponent } from './mediator-feedback/mediator-feedback
     MatInputModule,
     MatSlideToggleModule,
     ReactiveFormsModule,
+    BottomScrollListComponent,
   ],
   templateUrl: './exp-chat.component.html',
   styleUrl: './exp-chat.component.scss',
