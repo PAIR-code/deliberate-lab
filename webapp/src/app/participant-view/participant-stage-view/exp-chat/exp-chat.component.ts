@@ -66,6 +66,7 @@ export class ExpChatComponent {
   // Extracted stage data
   public currentRatingsIndex: Signal<number>;
   public currentRatingsToDiscuss: Signal<ItemPair>;
+  public usersDoneWithChat: Signal<Record<string, boolean>>; // publicID -> done with chat
 
   // Message mutation & form
   public message = new FormControl<string>('', Validators.required);
@@ -86,6 +87,8 @@ export class ExpChatComponent {
     this.everyoneReachedTheChat = computed(() =>
       this.participantService.experiment()!.everyoneReachedStage(this.stage.config().name)(),
     );
+
+    this.usersDoneWithChat = computed(() => this.stage.public().readyToEndChat);
 
     // On config change, extract the relevant chat repository and recompute signals
     effect(() => {

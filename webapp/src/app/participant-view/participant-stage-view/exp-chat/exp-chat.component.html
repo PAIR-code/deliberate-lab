@@ -16,6 +16,11 @@
                 {{ user.name }}
               </div>
               <div class="pronoun">({{ user.pronouns }})</div>
+              @if (usersDoneWithChat()[user.publicId]) {
+                <div>Done!</div>
+              } @else {
+                <div>Chatting...</div>
+              }
             </div>
           }
         }
