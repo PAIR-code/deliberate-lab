@@ -72,7 +72,7 @@ export interface RatingQuestionAnswer extends BaseQuestionAnswer {
   kind: SurveyQuestionKind.Rating;
 
   choice: ItemName;
-  confidence: number; // Confidence in the choice, from 0 to 1
+  confidence: number; // Confidence in the choice, from 0.5 to 1
 }
 
 export interface ScaleQuestionAnswer extends BaseQuestionAnswer {
