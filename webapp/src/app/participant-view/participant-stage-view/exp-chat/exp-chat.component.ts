@@ -144,12 +144,9 @@ export class ExpChatComponent {
 
   toggleEndChat() {
     const current = this.readyToEndChat();
-    const ready = !current;
+    if (current === true) return; // Cannot undo the ready to end chat
 
-    this.chat?.markReadyToEndChat(ready);
-
-    if (ready) this.message.disable();
-    else this.message.enable();
+    this.chat?.markReadyToEndChat(true);
     // this.timer.remove();
   }
 

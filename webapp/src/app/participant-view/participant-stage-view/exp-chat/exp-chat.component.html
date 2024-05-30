@@ -93,12 +93,7 @@
             <mat-label>Message to send</mat-label>
             <input matInput placeholder="Write your message" [formControl]="message" />
           </mat-form-field>
-          <button
-            type="submit"
-            color="primary"
-            mat-button
-            [disabled]="readyToEndChat() || !message.valid"
-          >
+          <button type="submit" color="primary" mat-button [disabled]="!message.valid">
             <!-- <mat-icon>redo</mat-icon> -->
             <span>Send</span>
             <br />
