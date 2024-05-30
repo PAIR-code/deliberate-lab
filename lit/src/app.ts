@@ -51,6 +51,8 @@ export class App extends MobxLitElement {
     } else if (this.routerService.activePage === Pages.SETTINGS) {
       return html`<settings-page></settings-page>`;
     } else if (this.routerService.activePage === Pages.EXPERIMENT) {
+      const id = this.routerService.activeRoute.params["experiment"];
+      this.experimentService.setExperimentId(id);
       return html`
         ${this.authService.permission === Permission.EDIT ?
           html`<experiment-config></experiment-config>` :

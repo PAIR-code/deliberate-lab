@@ -19,7 +19,12 @@ export class ExperimentService extends Service {
   }
 
   @observable stages: ExperimentStage[] = [];
+  @observable id: string|null = null;
   @observable currentStage: ExperimentStage|undefined = undefined;
+
+  setExperimentId(id: string|null) {
+    this.id = id;
+  }
 
   setStages(stages: ExperimentStage[]) {
     this.stages = stages;

@@ -44,6 +44,13 @@ export class RouterService extends Service {
   @observable isHandlingRouteChange = false;
   @observable hasNavigated = false; // True if navigated at least once in app
 
+  // Used to display subnav for current experiment
+  @observable sidenavExperimentId: string|null = null;
+
+  setSidenavExperiment(id: string|null) {
+    this.sidenavExperimentId = id;
+  }
+
   private getPage(route: Route): Pages | undefined {
     if (!route) return undefined;
     return route.name as Pages;

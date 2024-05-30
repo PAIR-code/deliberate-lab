@@ -75,7 +75,8 @@
   color: var(--md-sys-color-on-secondary-container);
   display: flex;
   gap: 10px;
-  padding: 12px 24px;
+  padding: $spacing-large;
+  width: 100%;
 
   &:focus,
   &:hover {

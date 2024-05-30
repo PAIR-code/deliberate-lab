@@ -1,4 +1,4 @@
-import { observable, makeObservable } from "mobx";
+import { computed, observable, makeObservable } from "mobx";
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import {
   GoogleAuthProvider,
@@ -71,6 +71,11 @@ export class FirebaseService extends Service {
   provider: GoogleAuthProvider;
   unsubscribe: Unsubscribe[] = [];
   @observable experiments: Experiment[] = [];
+  @observable currentExperimentId: string|null = null;
+
+  @computed get currentExperiment() {
+    return this.experiments.find(e => e.id === this.currentExperimentId);
+  }
 
   subscribe(collectionName: string) {
     this.unsubscribe.push(
@@ -123,6 +128,10 @@ export class FirebaseService extends Service {
 
   async deleteExperiment(experimentId: string) {
     return deleteDoc(doc(this.firestore, 'experiments', experimentId));
+  }
+
+  getExperiment(experimentId: string) {
+    return this.experiments.find(experiment => experiment.id === experimentId);
   }
 
   /** Generic endpoint to create experiments or experiment templates */
