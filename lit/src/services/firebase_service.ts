@@ -1,3 +1,4 @@
+import { observable, makeObservable } from "mobx";
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import {
   GoogleAuthProvider,
@@ -8,15 +9,27 @@ import {
   User
 } from 'firebase/auth';
 import {
+  collection,
   connectFirestoreEmulator,
+  deleteDoc,
+  doc,
+  DocumentData,
   getFirestore,
-  Firestore
+  Firestore,
+  onSnapshot,
+  Unsubscribe
 } from 'firebase/firestore';
 import {
   connectFunctionsEmulator,
+  Functions,
   getFunctions,
-  Functions
+  httpsCallable
 } from 'firebase/functions';
+import {
+  CreationResponse,
+  Experiment,
+  ExperimentCreationData,
+} from '@llm-mediation-experiments/utils';
 
 import {
   FIREBASE_CONFIG,
@@ -24,14 +37,18 @@ import {
   FIREBASE_LOCAL_HOST_PORT_AUTH,
   FIREBASE_LOCAL_HOST_PORT_FUNCTIONS
 } from '../shared/constants';
+import { Snapshot, StageConfig, StageType } from "../shared/types";
+import { collectSnapshotWithId, extractDataFromCallable } from "../shared/utils";
 
 import { Service } from "./service";
 
 interface ServiceProvider {}
 
+/** Manages Firebase connection, experiments subscription. */
 export class FirebaseService extends Service {
   constructor(private readonly sp: ServiceProvider) {
     super();
+    makeObservable(this);
 
     this.app = initializeApp(FIREBASE_CONFIG);
     this.firestore = getFirestore(this.app);
@@ -52,6 +69,25 @@ export class FirebaseService extends Service {
   auth: Auth;
   functions: Functions;
   provider: GoogleAuthProvider;
+  unsubscribe: Unsubscribe[] = [];
+  @observable experiments: Experiment[] = [];
+
+  subscribe(collectionName: string) {
+    this.unsubscribe.push(
+      onSnapshot(
+        collection(this.firestore, collectionName),
+        (snapshot: Snapshot) => {
+          this.experiments =
+            collectSnapshotWithId<Experiment>(snapshot, 'id');
+        }
+      ),
+    );
+  }
+
+  unsubscribeAll() {
+    this.unsubscribe.forEach(unsubscribe => unsubscribe());
+    this.unsubscribe = [];
+  }
 
   registerEmulators() {
     connectFirestoreEmulator(
@@ -67,6 +103,35 @@ export class FirebaseService extends Service {
       this.functions,
       'localhost',
       FIREBASE_LOCAL_HOST_PORT_FUNCTIONS
+    );
+  }
+
+  async createExperiment(
+    name: string, stages: StageConfig[], numberOfParticipants?: number
+  ) {
+    if (stages.length === 0) {
+      console.log('Error: Cannot create experiment with 0 stages');
+      return;
+    }
+
+    return this.createExperimentCallable({
+      type: 'experiments',
+      metadata: { name, numberOfParticipants },
+      stages,
+    });
+  }
+
+  async deleteExperiment(experimentId: string) {
+    return deleteDoc(doc(this.firestore, 'experiments', experimentId));
+  }
+
+  /** Generic endpoint to create experiments or experiment templates */
+  createExperimentCallable(args: ExperimentCreationData) {
+    extractDataFromCallable(
+      args,
+      httpsCallable<ExperimentCreationData, CreationResponse>(
+        this.functions, 'createExperiment'
+      )
     );
   }
 }

@@ -27,11 +27,15 @@ export class AuthService extends Service {
         // https://firebase.google.com/docs/reference/js/auth.user
         this.user = user;
         this.user.getIdTokenResult().then((result) => {
-          this.isExperimenter = result.claims['role'] === 'experimenter';
+          if (result.claims['role'] === 'experimenter') {
+            this.isExperimenter = true;
+            this.sp.firebaseService.subscribe('experiments');
+          }
         });
       } else {
         // User is signed out
         this.user = null;
+        this.sp.firebaseService.unsubscribeAll();
       }
     });
   }

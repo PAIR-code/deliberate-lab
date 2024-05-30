@@ -31,11 +31,5 @@ h2 {
 }
 
 .card {
-  @include common.flex-column;
-  background: var(--md-sys-color-surface);
-  border-radius: common.$spacing-large;
-  color: var(--md-sys-color-on-surface);
-  gap: common.$spacing-medium;
-  min-height: 200px;
-  padding: common.$spacing-large;
+  @include common.info-card;
 }

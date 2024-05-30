@@ -49,8 +49,6 @@
   left: var(--left);
   right: var(--right);
   /* stylelint-enable */
-
-  font-family: var(--pr-textarea-font-family, "Google Sans Text");
   font-size: 12px;
 
   z-index: var(--z-index);
