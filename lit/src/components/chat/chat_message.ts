@@ -5,6 +5,9 @@ import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
+import { core } from "../../core/core";
+import { AuthService } from "../../services/auth_service";
+
 import { styles } from "./chat_message.scss";
 
 /** Chat message component */
@@ -12,29 +15,25 @@ import { styles } from "./chat_message.scss";
 export class ChatMessage extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly authService = core.getService(AuthService);
+
   @property() chatMessage = "";
   @property() author = "";
   @observable private isLoading = false;
 
-  private renderBody() {
-    const chatBubbleClasses = classMap({
-      "chat-bubble": true,
-      "other-user": this.author === "experimenter", // TODO: Add real logic
+  override render() {
+    const classes = classMap({
+      "chat-message": true,
+      "current-user": this.author === this.authService.userId
     });
 
     return html`
-      <div class=${chatBubbleClasses}>
-        <div class="chat-body">
-          ${this.chatMessage}
+      <div class=${classes}>
+        <div class="avatar"></div>
+        <div class="content">
+          <div class="label">${this.author}</div>
+          <div class="chat-bubble">${this.chatMessage}</div>
         </div>
-      </div>
-    `;
-  }
-
-  override render() {
-    return html`
-      <div class="bubble">
-        ${this.renderBody()}
       </div>
     `;
   }

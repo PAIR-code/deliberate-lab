@@ -26,7 +26,7 @@ export class ChatService extends Service {
   addChatMessage(content: string) {
     this.chats.push({
       id: generateId(),
-      author: this.sp.authService.isExperimenter ? 'experimenter' : 'participant',
+      author: this.sp.authService.userId,
       content
     });
   }
