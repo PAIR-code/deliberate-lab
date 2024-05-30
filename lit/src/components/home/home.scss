@@ -3,4 +3,5 @@
 :host {
   @include common.default;
   @include common.flex-column;
+  gap: common.$spacing-medium;
 }

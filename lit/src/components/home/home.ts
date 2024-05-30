@@ -10,7 +10,11 @@ export class Home extends MobxLitElement {
 
   override render() {
     return html`
-      <p>Home page content goes here</p>
+      <p>Placeholder for home page content.</p>
+      <p>
+        This could potentially include all experiments (with the ability
+        to set any of them to the current experiment available in sidebar).
+      </p>
     `;
   }
 }

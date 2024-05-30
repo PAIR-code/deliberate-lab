@@ -1,15 +1,21 @@
 import { computed, observable, makeObservable } from "mobx";
 import { Service } from "./service";
 
+import { EXPERIMENT_EXAMPLE_STAGES } from "../shared/constants";
 import { ExperimentStage } from "../shared/types";
 import { createBlankChatStage, createBlankInfoStage } from "../shared/utils";
 
 interface ServiceProvider {}
 
+/** Manages state for current experiment. */
 export class ExperimentService extends Service {
   constructor(private readonly sp: ServiceProvider) {
     super();
     makeObservable(this);
+
+    // TODO: Load all/current experiments from Firebase
+    // Temporary client-side only example
+    this.setStages(EXPERIMENT_EXAMPLE_STAGES);
   }
 
   @observable stages: ExperimentStage[] = [];

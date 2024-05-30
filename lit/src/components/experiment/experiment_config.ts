@@ -31,7 +31,7 @@ export class ExperimentConfig extends MobxLitElement {
   }
 
   private renderStage(stage: ExperimentStage, index: number) {
-    return html`<p>Stage ${index + 1}: ${stage.name}</p>`;
+    return html`<p>${index + 1}. ${stage.name}</p>`;
   }
 
   private renderAddStageButtons() {
