@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@adobe/lit-mobx": "^2.2.2",
+    "@llm-mediation-experiments/utils": "file:../utils",
     "@types/router5": "^5.0.0",
     "css-loader": "^7.0.0",
     "firebase": "^10.12.2",

@@ -28,7 +28,8 @@ export class ChatConfig extends MobxLitElement {
         label="Stage name"
         variant="outlined"
         @input=${handleInput}
-        .value=${this.experimentService.currentStage.name}>
+        .value=${this.experimentService.currentStage!.name}
+      >
       </pr-textarea>
     `;
   }

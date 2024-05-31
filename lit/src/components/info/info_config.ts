@@ -35,13 +35,17 @@ export class InfoConfig extends MobxLitElement {
         label="Stage name"
         variant="outlined"
         @input=${handleNameInput}
-        .value=${this.experimentService.currentStage.name}>
+        .value=${this.experimentService.currentStage?.name}
+      >
       </pr-textarea>
       <pr-textarea
         label="Info content"
         variant="outlined"
         @input=${handleContentInput}
-        .value=${this.experimentService.currentStage.type === StageType.INFO ? this.experimentService.currentStage.content : ""}>
+        .value=${this.experimentService.currentStage?.type === StageType.INFO
+          ? this.experimentService.currentStage.content
+          : ""}
+      >
       </pr-textarea>
     `;
   }
