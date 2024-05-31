@@ -6,6 +6,7 @@ import { customElement } from "lit/decorators.js";
 
 import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
+import { ExperimentService } from "../../services/experiment_service";
 import { Pages, RouterService } from "../../services/router_service";
 
 import { Permission } from "../../shared/types";
@@ -18,6 +19,7 @@ export class Header extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly authService = core.getService(AuthService);
+  private readonly experimentService = core.getService(ExperimentService);
   private readonly routerService = core.getService(RouterService);
 
   override render() {
@@ -43,16 +45,15 @@ export class Header extends MobxLitElement {
     } else if (activePage === Pages.EXPERIMENT) {
       return "My Experiment";
     } else if (activePage === Pages.EXPERIMENT_STAGE) {
-      return "Experiment Stage";
+      const index = Number(this.routerService.activeRoute.params["stage"]);
+      return this.experimentService.stageNames[index];
     }
     return "";
   }
 
   private renderPermissionsToggle() {
     const activePage = this.routerService.activePage;
-    if (!this.authService.isExperimenter ||
-      (activePage !== Pages.EXPERIMENT &&
-        activePage !== Pages.EXPERIMENT_STAGE)) {
+    if (this.authService.permission === Permission.PARTICIPATE) {
       return nothing;
     }
 
