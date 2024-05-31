@@ -64,7 +64,7 @@ export class App extends MobxLitElement {
 
       const currentStage = this.experimentService.currentStage;
 
-      if (currentStage.type === StageType.CHAT) {
+      if (currentStage?.type === StageType.CHAT) {
         this.chatService.setChats(currentStage.messages);
 
         if (this.authService.permission === Permission.EDIT) {
@@ -73,7 +73,7 @@ export class App extends MobxLitElement {
           return html`<chat-interface></chat-interface>`;
         }
       }
-      if (currentStage.type === StageType.INFO) {
+      if (currentStage?.type === StageType.INFO) {
         if (this.authService.permission === Permission.EDIT) {
           return html`<info-config></info-config>`;
         } else {

@@ -45,7 +45,7 @@ export class ExperimentService extends Service {
       ...this.stages.slice(0, index),
       updatedStage,
       ...this.stages.slice(index + 1),
-    ]);
+    ] as ExperimentStage[]);
   }
 
   updateCurrentStageContent(content: string) {
@@ -59,7 +59,7 @@ export class ExperimentService extends Service {
       ...this.stages.slice(0, index),
       updatedStage,
       ...this.stages.slice(index + 1),
-    ]);
+    ] as ExperimentStage[]);
   }
 
   addStage(stage: ExperimentStage) {
