@@ -9,7 +9,7 @@ import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
 import { SettingsService } from "../../services/settings_service";
 
-import { ColorMode, ColorTheme, TextSize } from "../../shared/types";
+import { ColorMode, ColorTheme, Permission, TextSize } from "../../shared/types";
 
 import { styles } from "./settings.scss";
 
@@ -176,7 +176,8 @@ export class Settings extends MobxLitElement {
         <p><b>User ID:</b> ${this.authService.userId}</p>
         <p>
           <b>Role:</b>
-          ${this.authService.isExperimenter ? 'experimenter' : 'participant'}
+          ${this.authService.permission === Permission.PARTICIPATE ?
+            'participant' : 'experimenter'}
         </p>
         <div class="action-buttons">
           <pr-button

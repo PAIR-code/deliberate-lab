@@ -24,6 +24,8 @@ import {
   ColorMode,
   ColorTheme,
   Permission,
+  StageConfig,
+  StageKind,
   StageType,
   TextSize
 } from "./shared/types";
@@ -46,43 +48,69 @@ export class App extends MobxLitElement {
   }
 
   private renderPageContent() {
-    if (this.routerService.activePage === Pages.HOME) {
-      return html`<home-page></home-page>`
-    } else if (this.routerService.activePage === Pages.SETTINGS) {
-      return html`<settings-page></settings-page>`;
-    } else if (this.routerService.activePage === Pages.EXPERIMENT) {
-      const id = this.routerService.activeRoute.params["experiment"];
+    switch(this.routerService.activePage) {
+      case Pages.HOME:
+        return html`<home-page></home-page>`;
+      case Pages.SETTINGS:
+        return html`<settings-page></settings-page>`;
+      case Pages.EXPERIMENT:
+        return this.renderExperiment();
+      case Pages.EXPERIMENT_STAGE:
+        return this.renderExperimentStage();
+      default:
+        return this.render404();
+    }
+  }
+
+  private render404(message = "Page not found") {
+    return html`<div>404: ${message}</div>`;
+  }
+
+  private renderExperiment() {
+    const id = this.routerService.activeRoute.params["experiment"];
+    if (id !== this.experimentService.id) {
       this.experimentService.setExperimentId(id);
-      return html`
-        ${this.authService.permission === Permission.EDIT ?
-          html`<experiment-config></experiment-config>` :
-          html`<div>Experiment intro goes here.</div>`}
-      `;
-    } else if (this.routerService.activePage === Pages.EXPERIMENT_STAGE) {
-      const stageId = this.routerService.activeRoute.params["stage"];
-      this.experimentService.setCurrentStage(stageId);
+    }
 
-      const currentStage = this.experimentService.currentStage;
+    if (this.experimentService.isLoading) {
+      return html`<div>Loading experiment...</div>`;
+    }
 
-      if (currentStage?.type === StageType.CHAT) {
-        this.chatService.setChats(currentStage.messages);
+    if (this.authService.permission === Permission.EDIT) {
+      return html`<experiment-config></experiment-config>`;
+    }
 
-        if (this.authService.permission === Permission.EDIT) {
-          return html`<chat-config></chat-config>`;
-        } else {
-          return html`<chat-interface></chat-interface>`;
-        }
-      }
-      if (currentStage?.type === StageType.INFO) {
-        if (this.authService.permission === Permission.EDIT) {
-          return html`<info-config></info-config>`;
-        } else {
-          return currentStage.type === StageType.INFO ?
-            html`<div>${currentStage.content}</div>` : nothing;
-        }
+    return html`<div>Experiment preview goes here</div>`;
+  }
+
+  private renderExperimentStage() {
+    const id = this.routerService.activeRoute.params["experiment"];
+    if (id !== this.experimentService.id) {
+      this.experimentService.setExperimentId(id);
+    }
+
+    if (this.experimentService.isLoading) {
+      return html`<div>Loading experiment...</div>`;
+    }
+
+    const index = Number(this.routerService.activeRoute.params["stage"]);
+    if (index >= this.experimentService.stageNames.length) {
+      return this.render404(`Could not find experiment stage ${index + 1}`);
+    }
+    const stageName = this.experimentService.stageNames[index];
+
+    const currentStage: StageConfig =
+      this.experimentService.stageConfigMap[stageName];
+
+    if (currentStage?.kind === StageKind.Info) {
+      if (this.authService.permission === Permission.EDIT) {
+        return html`<info-config></info-config>`;
+      } else {
+        return currentStage.kind === StageKind.Info ?
+          html`<div>${currentStage.infoLines}</div>` : nothing;
       }
     }
-    return html`<div>404: Page not found</div>`
+    return this.render404("Could not load experiment stage");
   }
 
   override render() {

@@ -1,29 +1,69 @@
 import { computed, observable, makeObservable } from "mobx";
+
+import {
+  collection,
+  doc,
+  onSnapshot,
+} from 'firebase/firestore';
+
 import { Service } from "./service";
+import { FirebaseService } from "./firebase_service";
 
 import { EXPERIMENT_EXAMPLE_STAGES } from "../shared/constants";
-import { ExperimentStage } from "../shared/types";
+import { ExperimentStage, Snapshot, StageConfig } from "../shared/types";
 import { createBlankChatStage, createBlankInfoStage } from "../shared/utils";
 
-interface ServiceProvider {}
+interface ServiceProvider {
+  firebaseService: FirebaseService;
+}
 
 /** Manages state for current experiment. */
 export class ExperimentService extends Service {
   constructor(private readonly sp: ServiceProvider) {
     super();
     makeObservable(this);
-
-    // TODO: Load all/current experiments from Firebase
-    // Temporary client-side only example
-    this.setStages(EXPERIMENT_EXAMPLE_STAGES);
   }
 
+  // TODO: Delete stages
   @observable stages: ExperimentStage[] = [];
-  @observable id: string|null = null;
+  // TODO: Delete current stage
   @observable currentStage: ExperimentStage|undefined = undefined;
+
+  @observable id: string|null = null;
+  @observable stageConfigMap: Record<string, StageConfig> = {};
+  @observable stageNames: string[] = [];
+  @observable isLoading = false;
 
   setExperimentId(id: string|null) {
     this.id = id;
+    this.isLoading = true;
+    this.loadStageData();
+  }
+
+  loadStageData() {
+    // Fetch the experiment config (no subscription needed)
+    const unsubscribe = onSnapshot(
+      collection(
+        this.sp.firebaseService.firestore, 'experiments', this.id, 'stages'
+    ), (snapshot) => {
+      let changedDocs = snapshot.docChanges().map((change) => change.doc);
+      if (changedDocs.length === 0) {
+        changedDocs = snapshot.docs;
+      }
+
+      changedDocs.forEach((doc) => {
+        const data = doc.data() as StageConfig;
+        this.stageConfigMap[doc.id] = data;
+      });
+
+      // Load the stage names
+      this.stageNames = Object.keys(this.stageConfigMap);
+      this.isLoading = false;
+    });
+  }
+
+  getStage(stageName: string) {
+    return this.stageConfigMap[stageName];
   }
 
   setStages(stages: ExperimentStage[]) {

@@ -127,6 +127,7 @@ export class FirebaseService extends Service {
   }
 
   async deleteExperiment(experimentId: string) {
+    // TODO: If experiment stages shown in sidenav, update sidenav view
     return deleteDoc(doc(this.firestore, 'experiments', experimentId));
   }
 
