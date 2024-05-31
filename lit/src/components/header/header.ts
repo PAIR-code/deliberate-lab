@@ -45,8 +45,7 @@ export class Header extends MobxLitElement {
     } else if (activePage === Pages.EXPERIMENT) {
       return "My Experiment";
     } else if (activePage === Pages.EXPERIMENT_STAGE) {
-      const index = Number(this.routerService.activeRoute.params["stage"]);
-      return this.experimentService.stageNames[index];
+      return this.routerService.activeRoute.params["stage"];
     }
     return "";
   }

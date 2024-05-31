@@ -4,6 +4,7 @@ import {
   collection,
   doc,
   onSnapshot,
+  Unsubscribe,
 } from 'firebase/firestore';
 
 import { Service } from "./service";
@@ -32,6 +33,7 @@ export class ExperimentService extends Service {
   @observable id: string|null = null;
   @observable stageConfigMap: Record<string, StageConfig> = {};
   @observable stageNames: string[] = [];
+  @observable unsubscribe: Unsubscribe[] = [];
   @observable isLoading = false;
 
   setExperimentId(id: string|null) {
@@ -41,8 +43,10 @@ export class ExperimentService extends Service {
   }
 
   loadStageData() {
-    // Fetch the experiment config (no subscription needed)
-    const unsubscribe = onSnapshot(
+    this.unsubscribeAll();
+
+    // Fetch the experiment config
+    this.unsubscribe.push(onSnapshot(
       collection(
         this.sp.firebaseService.firestore, 'experiments', this.id, 'stages'
     ), (snapshot) => {
@@ -59,7 +63,12 @@ export class ExperimentService extends Service {
       // Load the stage names
       this.stageNames = Object.keys(this.stageConfigMap);
       this.isLoading = false;
-    });
+    }));
+  }
+
+  unsubscribeAll() {
+    this.unsubscribe.forEach(unsubscribe => unsubscribe());
+    this.unsubscribe = [];
   }
 
   getStage(stageName: string) {

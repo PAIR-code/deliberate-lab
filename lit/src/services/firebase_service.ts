@@ -122,7 +122,9 @@ export class FirebaseService extends Service {
     return this.createExperimentCallable({
       type: 'experiments',
       metadata: { name, numberOfParticipants },
-      stages,
+      stages: stages.map((stage, index) => {
+        return { ...stage, name: `${index + 1}. ${stage.name}`}
+      }),
     });
   }
 

@@ -93,14 +93,12 @@ export class App extends MobxLitElement {
       return html`<div>Loading experiment...</div>`;
     }
 
-    const index = Number(this.routerService.activeRoute.params["stage"]);
-    if (index >= this.experimentService.stageNames.length) {
-      return this.render404(`Could not find experiment stage ${index + 1}`);
-    }
-    const stageName = this.experimentService.stageNames[index];
+    const stageName = this.routerService.activeRoute.params["stage"];
+    const currentStage = this.experimentService.getStage(stageName);
 
-    const currentStage: StageConfig =
-      this.experimentService.stageConfigMap[stageName];
+    if (currentStage === undefined) {
+      return this.render404(`Could not find experiment stage "${stageName}""`);
+    }
 
     if (currentStage?.kind === StageKind.Info) {
       if (this.authService.permission === Permission.EDIT) {

@@ -64,8 +64,7 @@ export class SideNav extends MobxLitElement {
     return html`
       ${this.renderExperimentItem(experiment!, true)}
       ${this.experimentService.stageNames.map(
-        (stage: string, index: number) =>
-        this.renderStageItem(id, stage, index)
+        (stage: string) => this.renderStageItem(id, stage)
       )}
     `;
   }
@@ -133,7 +132,7 @@ export class SideNav extends MobxLitElement {
     `;
   }
 
-  private renderStageItem(id: string, stage: string, index: number) {
+  private renderStageItem(id: string, stage: string) {
     const navItemClasses = classMap({
       "nav-item": true,
       selected: this.routerService.activePage === Pages.EXPERIMENT_STAGE &&
@@ -142,12 +141,12 @@ export class SideNav extends MobxLitElement {
 
     const handleClick = (e: Event) => {
       this.routerService.navigate(Pages.EXPERIMENT_STAGE,
-        { "experiment": id, "stage": `${index}` });
+        { "experiment": id, "stage": stage });
       }
 
     return html`
       <div class=${navItemClasses} role="button" @click=${handleClick}>
-        ${index + 1}. ${stage}
+        ${stage}
       </div>
     `;
   }
