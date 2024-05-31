@@ -59,10 +59,10 @@ export class SideNav extends MobxLitElement {
 
   private renderExperimentSubnav() {
     const id = this.experimentService.id;
-    const experiment = this.firebaseService.getExperiment(id);
+    const experiment = this.firebaseService.getExperiment(id!);
 
     return html`
-      ${this.renderExperimentItem(experiment, true)}
+      ${this.renderExperimentItem(experiment!, true)}
       ${this.experimentService.stageNames.map(
         (stage: string, index: number) =>
         this.renderStageItem(id, stage, index)

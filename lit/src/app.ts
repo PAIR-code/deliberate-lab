@@ -102,7 +102,7 @@ export class App extends MobxLitElement {
     const currentStage: StageConfig =
       this.experimentService.stageConfigMap[stageName];
 
-    if (currentStage.kind === StageKind.Info) {
+    if (currentStage?.kind === StageKind.Info) {
       if (this.authService.permission === Permission.EDIT) {
         return html`<info-config></info-config>`;
       } else {

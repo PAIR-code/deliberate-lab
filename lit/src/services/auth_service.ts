@@ -21,7 +21,7 @@ export class AuthService extends Service {
     super();
     makeObservable(this);
 
-    onAuthStateChanged(this.sp.firebaseService.auth, (user: User) => {
+    onAuthStateChanged(this.sp.firebaseService.auth, (user: User | null) => {
       if (user) {
         // User is signed in, see docs for a list of available properties
         // https://firebase.google.com/docs/reference/js/auth.user
