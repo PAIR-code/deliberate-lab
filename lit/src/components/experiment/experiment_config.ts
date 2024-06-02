@@ -2,6 +2,8 @@ import "../../pair-components/button";
 import "../../pair-components/textarea";
 import "../../pair-components/tooltip";
 
+import "../modules/info/info_config";
+
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
@@ -11,6 +13,8 @@ import { core } from "../../core/core";
 import {
   ExperimentConfigService
 } from "../../services/config/experiment_config_service";
+import { InfoConfigService } from "../../services/config/info_config_service";
+
 import { AuthService } from "../../services/auth_service";
 import { FirebaseService } from "../../services/firebase_service";
 import { Pages, RouterService } from "../../services/router_service";
@@ -28,6 +32,7 @@ export class ExperimentConfig extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly experimentConfig = core.getService(ExperimentConfigService);
+  private readonly infoConfig = core.getService(InfoConfigService);
 
   private readonly authService = core.getService(AuthService);
   private readonly firebaseService = core.getService(FirebaseService);
@@ -57,9 +62,11 @@ export class ExperimentConfig extends MobxLitElement {
     const currentStage = this.experimentConfig.currentStage;
     switch (currentStage?.kind) {
       case StageKind.Info:
+        this.infoConfig.reset();
+        this.infoConfig.stage = currentStage;
         return html`
           ${this.renderStageInfo(StageKind.Info, STAGE_DESCRIPTION_INFO)}
-          <div>${currentStage.infoLines}</div>
+          <info-config></info-config>
         `;
       default:
         return this.renderMetadata();

@@ -10,6 +10,7 @@ import { SettingsService } from "./services/settings_service";
 import {
   ExperimentConfigService
 } from "./services/config/experiment_config_service";
+import { InfoConfigService } from './services/config/info_config_service';
 
 /**
  * Defines a map of services to their identifier
@@ -39,6 +40,9 @@ export function makeServiceProvider(self: Core) {
     },
     get experimentConfigService() {
       return self.getService(ExperimentConfigService);
+    },
+    get infoConfigService() {
+      return self.getService(InfoConfigService);
     }
   };
 

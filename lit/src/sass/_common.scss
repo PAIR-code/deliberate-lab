@@ -116,6 +116,36 @@
   }
 }
 
+@mixin html-preview {
+  h1,h2,h3,h4,h5,h6,p {
+    margin: 0;
+  }
+  h1 {
+    @include typescale.title-large;
+  }
+  h2 {
+    @include typescale.title-medium;
+  }
+  h3 {
+    @include typescale.title-small;
+  }
+  h4 {
+    @include typescale.body-small;
+    font-weight: 500;
+  }
+  h5 {
+    @include typescale.label-small;
+    font-weight: 400;
+  }
+  h6 {
+    @include typescale.label-small;
+    text-transform: uppercase;
+  }
+  a {
+    color: var(--md-sys-color-primary);
+  }
+}
+
 @mixin viewport-small {
   @media screen and (max-width: 720px) {
     @content;

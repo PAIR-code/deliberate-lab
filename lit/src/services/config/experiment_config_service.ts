@@ -4,6 +4,7 @@ import { Service } from "../service";
 import { FirebaseService } from "../firebase_service";
 
 import { StageConfig, StageKind } from "../../shared/types";
+import { convertExperimentStages } from "../../shared/utils";
 
 /** Manages metadata for new experiment config. */
 export class ExperimentConfigService extends Service {
@@ -20,7 +21,7 @@ export class ExperimentConfigService extends Service {
   getExperiment() {
     return {
       name: toJS(this.name),
-      stages: toJS(this.stages),
+      stages: convertExperimentStages(toJS(this.stages)),
       numberOfParticipants: toJS(this.numParticipants),
     };
   }

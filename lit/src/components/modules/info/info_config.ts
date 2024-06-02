@@ -6,7 +6,7 @@ import { CSSResultGroup, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 import { core } from "../../../core/core";
-import { ExperimentService } from "../../../services/experiment_service";
+import { InfoConfigService } from "../../../services/config/info_config_service";
 
 import { styles } from "./info_config.scss";
 
@@ -15,25 +15,33 @@ import { styles } from "./info_config.scss";
 export class InfoConfig extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly infoConfig = core.getService(InfoConfigService);
+
   override render() {
     const handleNameInput = (e: Event) => {
       const value = (e.target as HTMLTextAreaElement).value;
+      this.infoConfig.updateName(value);
     };
 
     const handleContentInput = (e: Event) => {
       const value = (e.target as HTMLTextAreaElement).value;
+      this.infoConfig.updateContent(value);
     };
 
     return html`
       <pr-textarea
         label="Stage name"
+        placeholder="Stage name"
         variant="outlined"
+        .value=${this.infoConfig.name}
         @input=${handleNameInput}
       >
       </pr-textarea>
       <pr-textarea
-        label="Info content"
+        label="Content (in Git-Flavored Markdown)"
+        placeholder="Add Markdown content here"
         variant="outlined"
+        .value=${this.infoConfig.content}
         @input=${handleContentInput}
       >
       </pr-textarea>

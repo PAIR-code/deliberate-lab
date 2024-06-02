@@ -10,6 +10,7 @@
   "author": "",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@types/sanitize-html": "^2.11.0",
     "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^7.11.0",
     "eslint": "^8.56.0",
@@ -30,9 +31,12 @@
     "firebase": "^10.12.2",
     "lit": "^3.1.2",
     "lit-element": "^4.0.4",
+    "micromark": "^4.0.0",
+    "micromark-extension-gfm": "^3.0.0",
     "mobx": "^6.12.3",
     "router5": "^8.0.1",
     "router5-plugin-browser": "^8.0.1",
+    "sanitize-html": "^2.13.0",
     "style-loader": "^3.3.4",
     "tslib": "^2.6.2",
     "uuid": "^9.0.1"

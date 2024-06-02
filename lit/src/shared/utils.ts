@@ -3,12 +3,38 @@
  */
 
 import { HttpsCallableResult } from 'firebase/functions';
+import { micromark } from "micromark";
+import { gfm, gfmHtml } from "micromark-extension-gfm";
 import { v4 as uuidv4 } from "uuid";
-import { Snapshot } from "./types";
+import { Snapshot, StageConfig, StageKind } from "./types";
 
 /** Generate unique id. */
 export function generateId(): string {
   return uuidv4();
+}
+
+/** Use micromark to convert Git-flavored markdown to HTML. */
+export function convertMarkdownToHTML(markdown: string, sanitize = true) {
+  const html = micromark(markdown, {
+    allowDangerousHtml: !sanitize,
+    extensions: [gfm()],
+    htmlExtensions: [gfmHtml()],
+  });
+
+  return html;
+}
+
+/** Adjust experiment stages to Firebase format (e.g., HTML instead of .md) */
+export function convertExperimentStages(stages: StageConfig[]) {
+  return stages.map((stage) => {
+    if (stage.kind === StageKind.Info) {
+      stage.infoLines = stage.infoLines.map(
+        info => convertMarkdownToHTML(info)
+      );
+      return stage;
+    }
+    return stage;
+  })
 }
 
 /**

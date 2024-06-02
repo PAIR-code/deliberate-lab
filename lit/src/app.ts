@@ -5,6 +5,8 @@ import "./components/login/login";
 import "./components/settings/settings";
 import "./components/sidenav/sidenav";
 
+import "./components/modules/info/info_preview";
+
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
 import { customElement } from "lit/decorators.js";
@@ -95,7 +97,7 @@ export class App extends MobxLitElement {
 
     if (currentStage?.kind === StageKind.Info) {
       return currentStage.kind === StageKind.Info ?
-        html`<div>${currentStage.infoLines}</div>` : nothing;
+        html`<info-preview .stage=${currentStage}></info-preview>` : nothing;
     }
     return this.render404("Could not load experiment stage");
   }
