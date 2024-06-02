@@ -13,3 +13,6 @@ export const FIREBASE_CONFIG: FirebaseOptions = {
   messagingSenderId: 'your-messaging-sender-id',
   appId: 'your-app-id',
 };
+
+/** Stage config descriptions. */
+export const STAGE_DESCRIPTION_INFO = "Shows Markdown-rendered information";

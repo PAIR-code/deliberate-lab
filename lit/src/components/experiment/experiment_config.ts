@@ -1,4 +1,5 @@
 import "../../pair-components/button";
+import "../../pair-components/textarea";
 import "../../pair-components/tooltip";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
@@ -14,6 +15,9 @@ import { AuthService } from "../../services/auth_service";
 import { FirebaseService } from "../../services/firebase_service";
 import { Pages, RouterService } from "../../services/router_service";
 
+import {
+  STAGE_DESCRIPTION_INFO
+} from "../../shared/constants";
 import { StageConfig, StageKind } from "../../shared/types";
 
 import { styles } from "./experiment_config.scss";
@@ -39,13 +43,69 @@ export class ExperimentConfig extends MobxLitElement {
       <div class="stages-wrapper">
         ${this.renderNav()}
         <div class="current-stage">
-          <div>Coming soon: Edit experiment settings, stages</div>
+          ${this.renderCurrentStage()}
         </div>
       </div>
       ${this.experimentConfig.getExperimentErrors().map(error =>
         html`<div class="error">Error: ${error}</div>`
       )}
       ${this.renderBottomActionButtons()}
+    `;
+  }
+
+  private renderCurrentStage() {
+    const currentStage = this.experimentConfig.currentStage;
+    switch (currentStage?.kind) {
+      case StageKind.Info:
+        return html`
+          ${this.renderStageInfo(StageKind.Info, STAGE_DESCRIPTION_INFO)}
+          <div>${currentStage.infoLines}</div>
+        `;
+      default:
+        return this.renderMetadata();
+    }
+  }
+
+  private renderStageInfo(chip: string, content: string) {
+    return html`
+      <div class="stage-info">
+        <div class="stage-chip">${chip}</div>
+        <div class="stage-description">${content}</div>
+      </div>
+    `;
+  }
+
+  private renderMetadata() {
+    const handleName = (e: Event) => {
+      const value = (e.target as HTMLTextAreaElement).value;
+      this.experimentConfig.updateName(value);
+    };
+
+    const handleNum = (e: Event) => {
+      const num = Number((e.target as HTMLTextAreaElement).value);
+      this.experimentConfig.updateNumParticipants(num);
+    };
+
+    return html`
+      <pr-textarea
+        label="Experiment name"
+        placeholder="Name of experiment"
+        variant="outlined"
+        .value=${this.experimentConfig.name}
+        @input=${handleName}
+      >
+      </pr-textarea>
+      <div class="number-input">
+        <label for="num">Number of participants</label>
+        <input
+          type="number"
+          id="num"
+          name="numParticipants"
+          min="0"
+          .value=${this.experimentConfig.numParticipants}
+          @input=${handleNum}
+        />
+      </div>
     `;
   }
 

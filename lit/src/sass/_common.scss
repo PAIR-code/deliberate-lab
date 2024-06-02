@@ -59,6 +59,29 @@
   height: 100%;
 }
 
+@mixin number-input {
+  @include flex-column;
+  gap: $spacing-small;
+
+  label {
+    @include typescale.label-small;
+  }
+
+  input {
+    @include typescale.body-small;
+    background: none;
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: $spacing-medium;
+    color: var(--md-sys-color-on-surface);
+    padding: $spacing-small;
+
+    &:focus,
+    &:hover {
+      outline: none;
+    }
+  }
+}
+
 @mixin info-card {
   @include flex-column;
   background: var(--md-sys-color-surface);

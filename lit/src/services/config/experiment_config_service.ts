@@ -26,6 +26,7 @@ export class ExperimentConfigService extends Service {
   }
 
   getExperimentErrors() {
+    // TODO: Check more comprehensively (i.e., all stage fields must be filled)
     const errors: string[] = [];
 
     if (this.name.length === 0) {
@@ -51,6 +52,21 @@ export class ExperimentConfigService extends Service {
       return null;
     }
     return this.stages[this.currentStageIndex];
+  }
+
+  // Update experiment name
+  updateName(name: string) {
+    this.name = name;
+  }
+
+  updateNumParticipants(num: number) {
+    this.numParticipants = num;
+  }
+
+  updateStageName(name: string, stageIndex = this.currentStageIndex) {
+    if (stageIndex >= 0 && stageIndex < this.stages.length) {
+      this.stages[stageIndex].name = name;
+    }
   }
 
   reset() {
