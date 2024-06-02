@@ -26,7 +26,6 @@ import {
   Permission,
   StageConfig,
   StageKind,
-  StageType,
   TextSize
 } from "./shared/types";
 
@@ -38,7 +37,6 @@ export class App extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly authService = core.getService(AuthService);
-  private readonly chatService = core.getService(ChatService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly routerService = core.getService(RouterService);
   private readonly settingsService = core.getService(SettingsService);
@@ -55,6 +53,8 @@ export class App extends MobxLitElement {
         return html`<settings-page></settings-page>`;
       case Pages.EXPERIMENT:
         return this.renderExperiment();
+      case Pages.EXPERIMENT_CREATE:
+        return html`<experiment-config></experiment-config>`;
       case Pages.EXPERIMENT_STAGE:
         return this.renderExperimentStage();
       default:
@@ -74,10 +74,6 @@ export class App extends MobxLitElement {
 
     if (this.experimentService.isLoading) {
       return html`<div>Loading experiment...</div>`;
-    }
-
-    if (this.authService.permission === Permission.EDIT) {
-      return html`<experiment-config></experiment-config>`;
     }
 
     return html`<div>Experiment preview goes here</div>`;
@@ -101,12 +97,8 @@ export class App extends MobxLitElement {
     }
 
     if (currentStage?.kind === StageKind.Info) {
-      if (this.authService.permission === Permission.EDIT) {
-        return html`<info-config></info-config>`;
-      } else {
-        return currentStage.kind === StageKind.Info ?
-          html`<div>${currentStage.infoLines}</div>` : nothing;
-      }
+      return currentStage.kind === StageKind.Info ?
+        html`<div>${currentStage.infoLines}</div>` : nothing;
     }
     return this.render404("Could not load experiment stage");
   }

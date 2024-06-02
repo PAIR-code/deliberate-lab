@@ -19,8 +19,6 @@ import {
   RouterService,
 } from "../../services/router_service";
 
-import { ExperimentStage } from "../../shared/types";
-
 import { styles } from "./sidenav.scss";
 
 /** Sidenav menu component */
@@ -50,6 +48,10 @@ export class SideNav extends MobxLitElement {
   private renderExperimentList() {
     const experiments = this.firebaseService.experiments;
 
+    if (this.experimentService.isLoading) {
+      return html`<div class="empty-message">Loading...</div>`;
+    }
+
     return html`
       ${experiments.length === 0 ?
         html`<div class="empty-message">No experiments yet.</div>` : nothing}
@@ -60,6 +62,10 @@ export class SideNav extends MobxLitElement {
   private renderExperimentSubnav() {
     const id = this.experimentService.id;
     const experiment = this.firebaseService.getExperiment(id!);
+
+    if (this.experimentService.isLoading) {
+      return html`<div class="empty-message">Loading...</div>`;
+    }
 
     return html`
       ${this.renderExperimentItem(experiment!, true)}

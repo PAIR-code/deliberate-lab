@@ -5,6 +5,7 @@
   @include common.default;
   @include common.flex-column;
   gap: common.$spacing-large;
+  height: 100%;
 }
 
 h2 {
@@ -12,12 +13,45 @@ h2 {
   margin: 0;
 }
 
+.error {
+  color: var(--md-sys-color-error);
+}
+
 .stages-wrapper {
+  @include common.flex-row;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: common.$spacing-medium;
+  min-height: 400px;
+  overflow: hidden;
+}
+
+.stages-nav {
   @include common.flex-column;
-  gap: common.$spacing-large;
+  min-width: common.$sidenav-width;
+  height: max-content;
+  max-height: 100%;
+  position: sticky;
+  top: 0;
+}
+
+.nav-item {
+  @include common.nav-item;
+  border-radius: 0;
+}
+
+.current-stage {
+  border-left: 1px solid var(--md-sys-color-outline);
+  padding: common.$sidenav-padding;
 }
 
 .buttons-wrapper {
   @include common.flex-row-align-center;
   gap: common.$spacing-medium;
+  justify-content: end;
+
+  &.bottom {
+    margin-bottom: 0;
+    margin-top: auto;
+    padding-bottom: common.$spacing-xxl;
+  }
 }

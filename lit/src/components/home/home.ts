@@ -10,6 +10,7 @@ import { Experiment } from '@llm-mediation-experiments/utils';
 
 import { core } from "../../core/core";
 import { FirebaseService } from "../../services/firebase_service";
+import { Pages, RouterService } from "../../services/router_service";
 
 import { StageKind } from "../../shared/types";
 
@@ -21,18 +22,15 @@ export class Home extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly firebaseService = core.getService(FirebaseService);
+  private readonly routerService = core.getService(RouterService);
 
   override render() {
-    const handleCreate = () => {
-      this.firebaseService.createExperiment(
-        "Test experiment",
-        [{ kind: StageKind.Info, name: "Test stage", infoLines: ["Line 1"]}],
-        1
-      );
+    const handleClick = () => {
+      this.routerService.navigate(Pages.EXPERIMENT_CREATE);
     }
 
     return html`
-      <pr-button @click=${handleCreate}>New experiment</pr-button>
+      <pr-button @click=${handleClick}>Create new experiment</pr-button>
       <div class="cards-wrapper">
         ${this.firebaseService.experiments.map(
           experiment => this.renderExperimentCard(experiment)

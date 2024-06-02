@@ -7,6 +7,10 @@ import { InitializationService } from "./services/initialization_service";
 import { RouterService } from "./services/router_service";
 import { SettingsService } from "./services/settings_service";
 
+import {
+  ExperimentConfigService
+} from "./services/config/experiment_config_service";
+
 /**
  * Defines a map of services to their identifier
  */
@@ -32,6 +36,9 @@ export function makeServiceProvider(self: Core) {
     },
     get chatService() {
       return self.getService(ChatService);
+    },
+    get experimentConfigService() {
+      return self.getService(ExperimentConfigService);
     }
   };
 

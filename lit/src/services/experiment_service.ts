@@ -10,9 +10,7 @@ import {
 import { Service } from "./service";
 import { FirebaseService } from "./firebase_service";
 
-import { EXPERIMENT_EXAMPLE_STAGES } from "../shared/constants";
-import { ExperimentStage, Snapshot, StageConfig } from "../shared/types";
-import { createBlankChatStage, createBlankInfoStage } from "../shared/utils";
+import { Snapshot, StageConfig } from "../shared/types";
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
@@ -25,18 +23,13 @@ export class ExperimentService extends Service {
     makeObservable(this);
   }
 
-  // TODO: Delete stages
-  @observable stages: ExperimentStage[] = [];
-  // TODO: Delete current stage
-  @observable currentStage: ExperimentStage|undefined = undefined;
-
-  @observable id: string|null = null;
+  @observable id = '';
   @observable stageConfigMap: Record<string, StageConfig> = {};
   @observable stageNames: string[] = [];
   @observable unsubscribe: Unsubscribe[] = [];
   @observable isLoading = false;
 
-  setExperimentId(id: string|null) {
+  setExperimentId(id: string) {
     this.id = id;
     this.isLoading = true;
     this.loadStageData();
@@ -44,6 +37,10 @@ export class ExperimentService extends Service {
 
   loadStageData() {
     this.unsubscribeAll();
+
+    // Reset stage configs
+    this.stageConfigMap = {};
+    this.stageNames = [];
 
     // Fetch the experiment config
     this.unsubscribe.push(onSnapshot(
@@ -73,54 +70,5 @@ export class ExperimentService extends Service {
 
   getStage(stageName: string) {
     return this.stageConfigMap[stageName];
-  }
-
-  setStages(stages: ExperimentStage[]) {
-    this.stages = stages;
-  }
-
-  setCurrentStage(id: string) {
-    this.currentStage = this.stages.find(stage => stage.id === id);
-  }
-
-  updateCurrentStageName(name: string) {
-    const index = this.stages.findIndex(
-      stage => stage.id === this.currentStage?.id
-    );
-
-    const updatedStage = { ...this.currentStage, name };
-
-    this.setStages([
-      ...this.stages.slice(0, index),
-      updatedStage,
-      ...this.stages.slice(index + 1),
-    ] as ExperimentStage[]);
-  }
-
-  updateCurrentStageContent(content: string) {
-    const index = this.stages.findIndex(
-      stage => stage.id === this.currentStage?.id
-    );
-
-    const updatedStage = { ...this.currentStage, content };
-
-    this.setStages([
-      ...this.stages.slice(0, index),
-      updatedStage,
-      ...this.stages.slice(index + 1),
-    ] as ExperimentStage[]);
-  }
-
-  addStage(stage: ExperimentStage) {
-    console.log(stage);
-    this.stages.push(stage);
-  }
-
-  addChatStage() {
-    this.addStage(createBlankChatStage());
-  }
-
-  addInfoStage() {
-    this.addStage(createBlankInfoStage());
   }
 }

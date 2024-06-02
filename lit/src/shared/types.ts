@@ -66,24 +66,6 @@ export interface InfoStageConfig extends BaseStageConfig {
 export type StageConfig = InfoStageConfig;
 
 // Temporary types
-export type ExperimentStage = ChatStage | InfoStage;
-
-export enum StageType {
-  CHAT = "chat",
-  INFO = "info",
-}
-
-export interface Stage<T = StageType> {
-  id: string;
-  name: string;
-  type: T;
-}
-
-export interface ChatStage extends Stage<"chat"> {
-  profiles: Profile[];
-  messages: ChatMessage[];
-}
-
 export interface ChatMessage {
   id: string;
   author: string;
@@ -95,9 +77,4 @@ export interface Profile {
   name: string;
   pronouns: string;
   avatar: string;
-}
-
-export interface InfoStage extends Stage<"info"> {
-  content: string;
-  acknowledgment: boolean;
 }
