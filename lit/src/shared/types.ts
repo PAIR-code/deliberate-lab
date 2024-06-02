@@ -38,39 +38,7 @@ export enum TextSize {
   LARGE = "large",
 }
 
-// TODO: Combine temporary types with legacy types
-
-// Legacy types
-export enum StageKind {
-  Info = 'info',
-  TermsOfService = 'termsOfService',
-  SetProfile = 'setProfile',
-  GroupChat = 'groupChat',
-  VoteForLeader = 'voteForLeader',
-  RevealVoted = 'leaderReveal',
-  TakeSurvey = 'takeSurvey',
-  // RankItems = 'rankItems',
-}
-
-interface BaseStageConfig {
-  kind: StageKind;
-  name: string;
-}
-
-export interface InfoStageConfig extends BaseStageConfig {
-  kind: StageKind.Info;
-  infoLines: string[];
-}
-
-export interface TermsOfServiceStageConfig extends BaseStageConfig {
-  kind: StageKind.TermsOfService;
-  tosLines: string[];
-}
-
-// TODO: Add other stage config types
-export type StageConfig = InfoStageConfig | TermsOfServiceStageConfig;
-
-// Temporary types
+// TODO: Clean up temporary types
 export interface ChatMessage {
   id: string;
   author: string;

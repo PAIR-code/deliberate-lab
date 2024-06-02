@@ -3,7 +3,7 @@ import { computed, get, observable, makeObservable, toJS } from "mobx";
 import { Service } from "../service";
 import { FirebaseService } from "../firebase_service";
 
-import { StageConfig, StageKind } from "../../shared/types";
+import { StageConfig, StageKind } from "@llm-mediation-experiments/utils";
 import { convertExperimentStages, createTOSStage } from "../../shared/utils";
 
 /** Manages metadata for new experiment config. */

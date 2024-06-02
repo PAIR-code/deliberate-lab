@@ -25,7 +25,7 @@ import {
   STAGE_DESCRIPTION_INFO,
   STAGE_DESCRIPTION_TOS
 } from "../../shared/constants";
-import { StageConfig, StageKind } from "../../shared/types";
+import { StageConfig, StageKind } from "@llm-mediation-experiments/utils";
 import { createInfoStage } from "../../shared/utils";
 
 import { styles } from "./experiment_config.scss";

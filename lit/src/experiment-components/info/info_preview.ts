@@ -8,7 +8,7 @@ import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
-import { InfoStageConfig } from "../../shared/types";
+import { InfoStageConfig } from "@llm-mediation-experiments/utils";
 
 import { styles } from "./info_preview.scss";
 

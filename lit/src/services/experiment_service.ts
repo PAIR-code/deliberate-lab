@@ -10,7 +10,8 @@ import {
 import { Service } from "./service";
 import { FirebaseService } from "./firebase_service";
 
-import { Snapshot, StageConfig } from "../shared/types";
+import { Snapshot } from "../shared/types";
+import { StageConfig } from "@llm-mediation-experiments/utils";
 
 interface ServiceProvider {
   firebaseService: FirebaseService;

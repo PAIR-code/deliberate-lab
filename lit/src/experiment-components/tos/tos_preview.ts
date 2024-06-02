@@ -8,7 +8,7 @@ import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
-import { TermsOfServiceStageConfig } from "../../shared/types";
+import { TermsOfServiceStageConfig } from "@llm-mediation-experiments/utils";
 
 import { styles } from "./tos_preview.scss";
 

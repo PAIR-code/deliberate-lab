@@ -29,6 +29,7 @@ import {
   CreationResponse,
   Experiment,
   ExperimentCreationData,
+  StageConfig
 } from '@llm-mediation-experiments/utils';
 
 import {
@@ -37,7 +38,7 @@ import {
   FIREBASE_LOCAL_HOST_PORT_AUTH,
   FIREBASE_LOCAL_HOST_PORT_FUNCTIONS
 } from '../shared/constants';
-import { Snapshot, StageConfig } from "../shared/types";
+import { Snapshot } from "../shared/types";
 import { collectSnapshotWithId, extractDataFromCallable } from "../shared/utils";
 
 import { Service } from "./service";

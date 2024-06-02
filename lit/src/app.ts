@@ -24,10 +24,12 @@ import {
   ColorMode,
   ColorTheme,
   Permission,
-  StageConfig,
-  StageKind,
   TextSize
 } from "./shared/types";
+import {
+  StageConfig,
+  StageKind
+} from "@llm-mediation-experiments/utils";
 
 import { styles } from "./app.scss";
 

@@ -2,7 +2,7 @@ import { computed, get, observable, makeObservable, toJS } from "mobx";
 
 import { Service } from "../service";
 
-import { InfoStageConfig, StageKind } from "../../shared/types";
+import { InfoStageConfig, StageKind } from "@llm-mediation-experiments/utils";
 
 /** Manages metadata for info stage config. */
 export class InfoConfigService extends Service {

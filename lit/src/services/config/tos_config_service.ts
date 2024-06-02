@@ -2,7 +2,7 @@ import { computed, get, observable, makeObservable, toJS } from "mobx";
 
 import { Service } from "../service";
 
-import { StageKind, TermsOfServiceStageConfig } from "../../shared/types";
+import { StageKind, TermsOfServiceStageConfig } from "@llm-mediation-experiments/utils";
 
 /** Manages metadata for TOS stage config. */
 export class TOSConfigService extends Service {

@@ -6,13 +6,13 @@ import { HttpsCallableResult } from 'firebase/functions';
 import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
 import { v4 as uuidv4 } from "uuid";
+import { Snapshot } from "./types";
 import {
   InfoStageConfig,
-  Snapshot,
   StageConfig,
   StageKind,
   TermsOfServiceStageConfig
-} from "./types";
+} from '@llm-mediation-experiments/utils';
 
 /** Generate unique id. */
 export function generateId(): string {

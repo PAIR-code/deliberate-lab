@@ -13,7 +13,7 @@ import { AuthService } from "../../services/auth_service";
 import { FirebaseService } from "../../services/firebase_service";
 import { Pages, RouterService } from "../../services/router_service";
 
-import { StageKind } from "../../shared/types";
+import { StageKind } from "@llm-mediation-experiments/utils";
 
 import { styles } from "./home.scss";
 
