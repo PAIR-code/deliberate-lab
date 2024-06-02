@@ -1,11 +1,11 @@
-import "./components/experiment/experiment_config";
+import "./experiment-components/experiment/experiment_config";
+import "./experiment-components/info/info_preview";
+
 import "./components/header/header";
 import "./components/home/home";
 import "./components/login/login";
 import "./components/settings/settings";
 import "./components/sidenav/sidenav";
-
-import "./components/modules/info/info_preview";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";

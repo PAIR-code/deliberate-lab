@@ -1,4 +1,4 @@
-import "../../../pair-components/textarea";
+import "../../pair-components/textarea";
 
 import * as sanitizeHtml from "sanitize-html";
 
@@ -8,7 +8,7 @@ import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
-import { InfoStageConfig } from "../../../shared/types";
+import { InfoStageConfig } from "../../shared/types";
 
 import { styles } from "./info_preview.scss";
 

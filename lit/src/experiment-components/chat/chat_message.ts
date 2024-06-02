@@ -5,8 +5,8 @@ import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
-import { core } from "../../../core/core";
-import { AuthService } from "../../../services/auth_service";
+import { core } from "../../core/core";
+import { AuthService } from "../../services/auth_service";
 
 import { styles } from "./chat_message.scss";
 

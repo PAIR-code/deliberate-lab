@@ -2,7 +2,7 @@ import "../../pair-components/button";
 import "../../pair-components/textarea";
 import "../../pair-components/tooltip";
 
-import "../modules/info/info_config";
+import "../info/info_config";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";

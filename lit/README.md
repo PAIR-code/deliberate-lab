@@ -87,32 +87,38 @@ a Firebase-ready experiment config, which is then passed to FirebaseService.
 
 ExperimentConfigService (`src/services/config/experiment_config_service.ts`)
 manages metadata (name, number of participants) and list of stages.
-It generally corresponds to `src/components/experiment/experiment_config.ts`,
+It generally corresponds to `src/experiment-components/experiment_config.ts`,
 which renders the experiment config editor and manages navigation between
 stages.
 
 The other services are stage-specific, managing relevant stage configs
 (e.g., InfoStageConfig) as the user is viewing/editing them. Each of these
 correspond to `*_config.ts` components, all found under
-`src/components/modules` (see next section).
+`src/experiment-components` (see next section).
 
-### Component Modules
+### Experiment Components and Modules
 
-Both config and preview components for stages are organized under
-`src/components/modules`, where each module is a set of closely associated
-stages.
+Experiment components (including configurations and previews)
+are organized under `src/experiment-components`.
 
-For example, `src/components/modules/info` contains info stage components:
+Standalone or base components (e.g., `survey`, which is used across tasks)
+are at the top level of the experiment directory, while any closely
+associated components (e.g., for a specific game or task) are clustered
+under the `modules` subdirectory.
+
+For example, `src/experiment-components/info` (not a module)
+contains info components, which can be flexibly used across many types
+of experiments:
 
 - `info_config`: Used during experiment configuration
 - `info_preview`: Shown to users during experiment
 
-while `src/components/modules/leader` might contain config/preview
-components for both the `voteForLeader` and `leaderReveal` stages
-(since they are likely to be used together in the same experiments).
+while components for `voteForLeader` and `leaderReveal` stages
+might be organized under a `leader` module
+(since they are intended to be used together in the same experiments).
 
 This is to help with eventual organization across multiple types of
-experiments, e.g., rather than specifying many individual stages
+experiments: rather than specifying many individual stages
 in an experiment config, an experimenter might initially select a few
-top-level modules (`leader`, `chat`, `game1` vs. `leader`, `game2`) with
-the option to edit/order specific lower-level stages.
+top-level modules (`leader`, `game1` vs. `game2`) alongside standalone
+stages (`info`, `survey`).
