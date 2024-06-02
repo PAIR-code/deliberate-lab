@@ -4,7 +4,7 @@ import { Service } from "../service";
 import { FirebaseService } from "../firebase_service";
 
 import { StageConfig, StageKind } from "../../shared/types";
-import { convertExperimentStages } from "../../shared/utils";
+import { convertExperimentStages, createTOSStage } from "../../shared/utils";
 
 /** Manages metadata for new experiment config. */
 export class ExperimentConfigService extends Service {
@@ -15,7 +15,7 @@ export class ExperimentConfigService extends Service {
 
   @observable name = 'New experiment';
   @observable numParticipants = 1;
-  @observable stages: StageConfig[] = [];
+  @observable stages: StageConfig[] = [createTOSStage()];
   @observable currentStageIndex = -1;
 
   getExperiment() {
@@ -73,12 +73,11 @@ export class ExperimentConfigService extends Service {
   reset() {
     this.name = 'New experiment';
     this.numParticipants = 1;
-    this.stages = [];
+    this.stages = [createTOSStage()];
     this.currentStageIndex = -1;
   }
 
-  addInfoConfig(name = "Untitled stage", info = "Placeholder info") {
-    const infoLines = [info];
-    this.stages.push({ kind: StageKind.Info, name, infoLines });
+  addStage(stage: StageConfig) {
+    this.stages.push(stage);
   }
 }

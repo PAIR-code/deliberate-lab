@@ -62,8 +62,13 @@ export interface InfoStageConfig extends BaseStageConfig {
   infoLines: string[];
 }
 
+export interface TermsOfServiceStageConfig extends BaseStageConfig {
+  kind: StageKind.TermsOfService;
+  tosLines: string[];
+}
+
 // TODO: Add other stage config types
-export type StageConfig = InfoStageConfig;
+export type StageConfig = InfoStageConfig | TermsOfServiceStageConfig;
 
 // Temporary types
 export interface ChatMessage {

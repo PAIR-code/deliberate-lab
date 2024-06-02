@@ -6,11 +6,34 @@ import { HttpsCallableResult } from 'firebase/functions';
 import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
 import { v4 as uuidv4 } from "uuid";
-import { Snapshot, StageConfig, StageKind } from "./types";
+import {
+  InfoStageConfig,
+  Snapshot,
+  StageConfig,
+  StageKind,
+  TermsOfServiceStageConfig
+} from "./types";
 
 /** Generate unique id. */
 export function generateId(): string {
   return uuidv4();
+}
+
+/** Create info stage. */
+export function createInfoStage(
+  name = "Info", content = "Placeholder info"
+): InfoStageConfig {
+  const infoLines = [content];
+  return { kind: StageKind.Info, name, infoLines };
+}
+
+/** Create TOS stage. */
+export function createTOSStage(
+  name = "Terms of Service",
+  content = "- Placeholder term 1\n- Placeholder term 2\n- Placeholder term 3",
+): TermsOfServiceStageConfig {
+  const tosLines = [content];
+  return { kind: StageKind.TermsOfService, name, tosLines };
 }
 
 /** Use micromark to convert Git-flavored markdown to HTML. */
@@ -29,6 +52,12 @@ export function convertExperimentStages(stages: StageConfig[]) {
   return stages.map((stage) => {
     if (stage.kind === StageKind.Info) {
       stage.infoLines = stage.infoLines.map(
+        info => convertMarkdownToHTML(info)
+      );
+      return stage;
+    }
+    if (stage.kind === StageKind.TermsOfService) {
+      stage.tosLines = stage.tosLines.map(
         info => convertMarkdownToHTML(info)
       );
       return stage;

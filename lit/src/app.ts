@@ -1,5 +1,6 @@
 import "./experiment-components/experiment/experiment_config";
 import "./experiment-components/info/info_preview";
+import "./experiment-components/tos/tos_preview";
 
 import "./components/header/header";
 import "./components/home/home";
@@ -96,8 +97,10 @@ export class App extends MobxLitElement {
     }
 
     if (currentStage?.kind === StageKind.Info) {
-      return currentStage.kind === StageKind.Info ?
-        html`<info-preview .stage=${currentStage}></info-preview>` : nothing;
+      return html`<info-preview .stage=${currentStage}></info-preview>`;
+    }
+    if (currentStage?.kind === StageKind.TermsOfService) {
+      return html`<tos-preview .stage=${currentStage}></tos-preview>`;
     }
     return this.render404("Could not load experiment stage");
   }

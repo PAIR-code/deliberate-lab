@@ -3,6 +3,7 @@ import "../../pair-components/textarea";
 import "../../pair-components/tooltip";
 
 import "../info/info_config";
+import "../tos/tos_config";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
@@ -14,15 +15,18 @@ import {
   ExperimentConfigService
 } from "../../services/config/experiment_config_service";
 import { InfoConfigService } from "../../services/config/info_config_service";
+import { TOSConfigService } from "../../services/config/tos_config_service";
 
 import { AuthService } from "../../services/auth_service";
 import { FirebaseService } from "../../services/firebase_service";
 import { Pages, RouterService } from "../../services/router_service";
 
 import {
-  STAGE_DESCRIPTION_INFO
+  STAGE_DESCRIPTION_INFO,
+  STAGE_DESCRIPTION_TOS
 } from "../../shared/constants";
 import { StageConfig, StageKind } from "../../shared/types";
+import { createInfoStage } from "../../shared/utils";
 
 import { styles } from "./experiment_config.scss";
 
@@ -33,6 +37,7 @@ export class ExperimentConfig extends MobxLitElement {
 
   private readonly experimentConfig = core.getService(ExperimentConfigService);
   private readonly infoConfig = core.getService(InfoConfigService);
+  private readonly tosConfig = core.getService(TOSConfigService);
 
   private readonly authService = core.getService(AuthService);
   private readonly firebaseService = core.getService(FirebaseService);
@@ -67,6 +72,14 @@ export class ExperimentConfig extends MobxLitElement {
         return html`
           ${this.renderStageInfo(StageKind.Info, STAGE_DESCRIPTION_INFO)}
           <info-config></info-config>
+        `;
+      case StageKind.TermsOfService:
+        this.tosConfig.reset();
+        this.tosConfig.stage = currentStage;
+        return html`
+          ${this.renderStageInfo(
+            StageKind.TermsOfService, STAGE_DESCRIPTION_TOS)}
+          <tos-config></tos-config>
         `;
       default:
         return this.renderMetadata();
@@ -157,7 +170,7 @@ export class ExperimentConfig extends MobxLitElement {
 
   private renderTopActionButtons() {
     const onAddInfoClick = () => {
-      this.experimentConfig.addInfoConfig();
+      this.experimentConfig.addStage(createInfoStage());
       this.experimentConfig.setCurrentStageIndex(
         this.experimentConfig.stages.length - 1
       );
