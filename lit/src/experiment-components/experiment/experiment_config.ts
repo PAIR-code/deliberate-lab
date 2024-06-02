@@ -1,4 +1,5 @@
 import "../../pair-components/button";
+import "../../pair-components/menu";
 import "../../pair-components/textarea";
 import "../../pair-components/tooltip";
 
@@ -132,6 +133,7 @@ export class ExperimentConfig extends MobxLitElement {
   private renderNav() {
     const settingsClasses = classMap({
       "nav-item": true,
+      "main-nav": true,
       "selected": this.experimentConfig.currentStage === null
     });
 
@@ -154,6 +156,7 @@ export class ExperimentConfig extends MobxLitElement {
   private renderStageNavItem(stage: StageConfig, index: number) {
     const classes = classMap({
       "nav-item": true,
+      "main-nav": true,
       "selected": this.experimentConfig.currentStageIndex === index
     });
 
@@ -178,9 +181,11 @@ export class ExperimentConfig extends MobxLitElement {
 
     return html`
       <div class="buttons-wrapper">
-        <pr-button variant="default" @click=${onAddInfoClick}>
-          + Add stage
-        </pr-button>
+        <pr-menu name="Add stage">
+          <div class="nav-item" role="button" @click=${onAddInfoClick}>
+            Info stage
+          </div>
+        </pr-menu>
       </div>
     `;
   }

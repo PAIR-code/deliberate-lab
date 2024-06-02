@@ -36,7 +36,11 @@ h2 {
 
 .nav-item {
   @include common.nav-item;
-  border-radius: 0;
+  border-radius: common.$spacing-medium;
+
+  &.main-nav {
+    border-radius: 0;
+  }
 }
 
 .current-stage {
