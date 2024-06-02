@@ -176,8 +176,7 @@ export class Settings extends MobxLitElement {
         <p><b>User ID:</b> ${this.authService.userId}</p>
         <p>
           <b>Role:</b>
-          ${this.authService.permission === Permission.PARTICIPATE ?
-            'participant' : 'experimenter'}
+          ${this.authService.isExperimenter ? 'experimenter' : 'participant'}
         </p>
         <div class="action-buttons">
           <pr-button

@@ -38,10 +38,6 @@ export class ExperimentService extends Service {
   loadStageData() {
     this.unsubscribeAll();
 
-    // Reset stage configs
-    this.stageConfigMap = {};
-    this.stageNames = [];
-
     // Fetch the experiment config
     this.unsubscribe.push(onSnapshot(
       collection(
@@ -66,6 +62,10 @@ export class ExperimentService extends Service {
   unsubscribeAll() {
     this.unsubscribe.forEach(unsubscribe => unsubscribe());
     this.unsubscribe = [];
+
+    // Reset stage configs
+    this.stageConfigMap = {};
+    this.stageNames = [];
   }
 
   getStage(stageName: string) {

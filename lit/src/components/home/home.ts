@@ -9,6 +9,7 @@ import { customElement, state } from "lit/decorators.js";
 import { Experiment } from '@llm-mediation-experiments/utils';
 
 import { core } from "../../core/core";
+import { AuthService } from "../../services/auth_service";
 import { FirebaseService } from "../../services/firebase_service";
 import { Pages, RouterService } from "../../services/router_service";
 
@@ -21,16 +22,13 @@ import { styles } from "./home.scss";
 export class Home extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly authService = core.getService(AuthService);
   private readonly firebaseService = core.getService(FirebaseService);
   private readonly routerService = core.getService(RouterService);
 
   override render() {
-    const handleClick = () => {
-      this.routerService.navigate(Pages.EXPERIMENT_CREATE);
-    }
-
     return html`
-      <pr-button @click=${handleClick}>Create new experiment</pr-button>
+      ${this.renderCreateButton()}
       <div class="cards-wrapper">
         ${this.firebaseService.experiments.map(
           experiment => this.renderExperimentCard(experiment)
@@ -39,6 +37,19 @@ export class Home extends MobxLitElement {
     `;
   }
 
+  private renderCreateButton() {
+    if (!this.authService.isExperimenter) {
+      return nothing;
+    }
+
+    const handleClick = () => {
+      this.routerService.navigate(Pages.EXPERIMENT_CREATE);
+    }
+
+    return html`
+      <pr-button @click=${handleClick}>Create new experiment</pr-button>
+    `;
+  }
   private renderExperimentCard(experiment: Experiment) {
     const handleDelete = () => {
       this.firebaseService.deleteExperiment(experiment.id);

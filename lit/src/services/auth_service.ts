@@ -8,11 +8,13 @@ import {
 } from 'firebase/auth';
 
 import { Service } from "./service";
+import { ExperimentService } from "./experiment_service";
 import { FirebaseService } from "./firebase_service";
 
 import { Permission } from "../shared/types";
 
 interface ServiceProvider {
+  experimentService: ExperimentService;
   firebaseService: FirebaseService;
 }
 
@@ -30,12 +32,16 @@ export class AuthService extends Service {
           if (result.claims['role'] === 'experimenter') {
             this.isExperimenter = true;
             this.sp.firebaseService.subscribe('experiments');
+          } else {
+            this.isExperimenter = false;
+            this.sp.firebaseService.unsubscribeAll();
+            this.sp.experimentService.unsubscribeAll();
           }
         });
       } else {
         // User is signed out
         this.user = null;
-        this.sp.firebaseService.unsubscribeAll();
+        this.isExperimenter = null;
       }
     });
   }
@@ -57,7 +63,7 @@ export class AuthService extends Service {
   }
 
   @computed get permission() {
-    if (this.authenticated) {
+    if (this.authenticated && this.isExperimenter) {
       if (this.editMode) {
         return Permission.EDIT;
       } else {
@@ -76,5 +82,7 @@ export class AuthService extends Service {
 
   signOut() {
     signOut(this.sp.firebaseService.auth);
+    this.sp.firebaseService.unsubscribeAll();
+    this.sp.experimentService.unsubscribeAll();
   }
 }

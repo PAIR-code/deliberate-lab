@@ -92,6 +92,10 @@ export class FirebaseService extends Service {
   unsubscribeAll() {
     this.unsubscribe.forEach(unsubscribe => unsubscribe());
     this.unsubscribe = [];
+
+    // Clear data
+    this.experiments = [];
+    this.currentExperimentId = null;
   }
 
   registerEmulators() {

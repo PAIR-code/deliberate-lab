@@ -10,6 +10,7 @@ import { core } from "../../core/core";
 import {
   ExperimentConfigService
 } from "../../services/config/experiment_config_service";
+import { AuthService } from "../../services/auth_service";
 import { FirebaseService } from "../../services/firebase_service";
 import { Pages, RouterService } from "../../services/router_service";
 
@@ -23,10 +24,16 @@ export class ExperimentConfig extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly experimentConfig = core.getService(ExperimentConfigService);
+
+  private readonly authService = core.getService(AuthService);
   private readonly firebaseService = core.getService(FirebaseService);
   private readonly routerService = core.getService(RouterService);
 
   override render() {
+    if (!this.authService.isExperimenter) {
+      return html`<div>Sorry, participants cannot create experiments!</div>`;
+    }
+
     return html`
       ${this.renderTopActionButtons()}
       <div class="stages-wrapper">
