@@ -1,9 +1,6 @@
-import "./components/chat/chat_config";
-import "./components/chat/chat_interface";
 import "./components/experiment/experiment_config";
 import "./components/header/header";
 import "./components/home/home";
-import "./components/info/info_config";
 import "./components/login/login";
 import "./components/settings/settings";
 import "./components/sidenav/sidenav";

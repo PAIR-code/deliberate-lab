@@ -1,11 +1,11 @@
-import "../../pair-components/textarea";
+import "../../../pair-components/textarea";
 
 import { observable } from "mobx";
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
-import { core } from "../../core/core";
+import { core } from "../../../core/core";
 
 import { styles } from "./chat_config.scss";
 
