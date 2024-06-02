@@ -122,3 +122,11 @@ experiments: rather than specifying many individual stages
 in an experiment config, an experimenter might initially select a few
 top-level modules (`leader`, `game1` vs. `game2`) alongside standalone
 stages (`info`, `survey`).
+
+#### Config vs. Preview Components
+
+Config components use services in `src/services/config` to update
+a new experiment.
+
+Preview components do not use services; rather, they pass in the current
+stage as a property.
