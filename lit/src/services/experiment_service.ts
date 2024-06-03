@@ -12,6 +12,7 @@ import { FirebaseService } from "./firebase_service";
 
 import { Snapshot } from "../shared/types";
 import { Experiment, PublicStageData, StageConfig } from "@llm-mediation-experiments/utils";
+import { deleteExperimentCallable } from "../shared/callables";
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
@@ -115,5 +116,29 @@ export class ExperimentService extends Service {
 
   getStage(stageName: string) {
     return this.stageConfigMap[stageName];
+  }
+
+  /** Build a signal that tracks whether every participant has at least reached the given stage */
+  everyoneReachedStage(targetStage: string): boolean {
+    const participants = this.experiment?.participants;
+    const stages = this.stageNames;
+    const targetIndex = stages.indexOf(targetStage);
+
+    if (!participants || targetIndex === -1) return false;
+
+    return Object.values(participants).every(
+      (participant) => stages.indexOf(participant.workingOnStageName) >= targetIndex,
+    );
+  }
+
+  // ******************************************************************************************* //
+  //                                           MUTATIONS                                         //
+  // ******************************************************************************************* //
+
+  /** Delete the experiment..
+   * @rights Experimenter
+   */
+  async delete() {
+    return deleteExperimentCallable(this.sp.firebaseService.functions, { type: 'experiments', id: this.id! });
   }
 }
