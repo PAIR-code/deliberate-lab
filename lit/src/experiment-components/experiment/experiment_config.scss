@@ -38,6 +38,8 @@ h2 {
 .nav-item {
   @include common.nav-item;
   border-radius: common.$spacing-medium;
+  height: calc(common.$spacing-large * 2
+    + var(--md-sys-typescale-body-small-line-height));
   justify-content: space-between;
 
   &.main-nav {
