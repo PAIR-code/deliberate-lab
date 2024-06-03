@@ -3,8 +3,8 @@ import { Service } from "./service";
 import { AuthService } from "./auth_service";
 import { SettingsService } from "./settings_service";
 
-import { collectSnapshotWithId, generateId } from "../shared/utils";
-import { Timestamp, Unsubscribe, collection, doc, onSnapshot, orderBy, query, updateDoc } from "firebase/firestore";
+import { collectSnapshotWithId } from "../shared/utils";
+import { Unsubscribe, collection, doc, onSnapshot, orderBy, query, updateDoc } from "firebase/firestore";
 import { FirebaseService } from "./firebase_service";
 import { ChatAnswer, Message, MessageKind } from "@llm-mediation-experiments/utils";
 import { createMessageCallable } from "../shared/callables";
@@ -36,10 +36,10 @@ export class ChatService extends Service {
     this.participantId = participantId;
     this.chatId = chatId;
     this.isLoading = true;
-    this.loadStageData();
+    this.loadChatData();
   }
 
-  loadStageData() {
+  loadChatData() {
     this.unsubscribeAll();
 
     if (this.experimentId === null || this.participantId === null || this.chatId === null) {
