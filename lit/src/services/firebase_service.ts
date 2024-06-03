@@ -1,48 +1,32 @@
-import { computed, observable, makeObservable } from "mobx";
-import { initializeApp, FirebaseApp } from 'firebase/app';
+import { FirebaseApp, initializeApp } from 'firebase/app';
 import {
-  GoogleAuthProvider,
-  connectAuthEmulator,
-  getAuth,
-  onAuthStateChanged,
-  Auth,
-  User
+    Auth,
+    GoogleAuthProvider,
+    connectAuthEmulator,
+    getAuth
 } from 'firebase/auth';
 import {
-  collection,
-  connectFirestoreEmulator,
-  deleteDoc,
-  doc,
-  DocumentData,
-  getFirestore,
-  Firestore,
-  onSnapshot,
-  Unsubscribe
+    Firestore,
+    Unsubscribe,
+    connectFirestoreEmulator,
+    getFirestore
 } from 'firebase/firestore';
 import {
-  connectFunctionsEmulator,
-  Functions,
-  getFunctions,
-  httpsCallable
+    Functions,
+    connectFunctionsEmulator,
+    getFunctions
 } from 'firebase/functions';
-import {
-  CreationResponse,
-  Experiment,
-  ExperimentCreationData,
-  StageConfig
-} from '@llm-mediation-experiments/utils';
+import { makeObservable } from "mobx";
 
 import {
-  FIREBASE_CONFIG,
-  FIREBASE_LOCAL_HOST_PORT_FIRESTORE,
-  FIREBASE_LOCAL_HOST_PORT_AUTH,
-  FIREBASE_LOCAL_HOST_PORT_FUNCTIONS
+    FIREBASE_CONFIG,
+    FIREBASE_LOCAL_HOST_PORT_AUTH,
+    FIREBASE_LOCAL_HOST_PORT_FIRESTORE,
+    FIREBASE_LOCAL_HOST_PORT_FUNCTIONS
 } from '../shared/constants';
-import { Snapshot } from "../shared/types";
-import { collectSnapshotWithId, extractDataFromCallable } from "../shared/utils";
 
-import { Service } from "./service";
 import { RouterService } from "./router_service";
+import { Service } from "./service";
 
 interface ServiceProvider {
   routerService: RouterService;
