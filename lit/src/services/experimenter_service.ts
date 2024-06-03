@@ -60,6 +60,18 @@ export class ExperimenterService extends Service {
     );
   }
 
+  unsubscribeAll() {
+    this.unsubscribe.forEach(unsubscribe => unsubscribe());
+    this.unsubscribe = [];
+
+    // Reset observables
+    this.experiments = [];
+    this.templates = [];
+    this.templatesWithConfigs = new CacheMap((templateId: string) =>
+      this.loadExperimentTemplate(templateId)
+    );
+  }
+
   private loadExperimentTemplate (
     templateId: string,
    ) {

@@ -38,6 +38,7 @@ export class AuthService extends Service {
             // I think this will unnecessarily complicate the service flow
             // NOTE: Added this because the data persisted across different
             // logins, though maybe there's a better fix for that?
+            this.sp.experimenterService.unsubscribeAll();
             this.sp.experimentService.unsubscribeAll();
           }
         });
