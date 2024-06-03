@@ -11,7 +11,13 @@ import { Service } from "./service";
 import { FirebaseService } from "./firebase_service";
 
 import { Snapshot } from "../shared/types";
-import { Experiment, PublicStageData, StageConfig } from "@llm-mediation-experiments/utils";
+import {
+  Experiment,
+  ParticipantProfileExtended,
+  PublicStageData,
+  StageConfig
+} from "@llm-mediation-experiments/utils";
+import { collectSnapshotWithId } from "../shared/utils";
 import { deleteExperimentCallable } from "../shared/callables";
 
 interface ServiceProvider {
@@ -31,6 +37,7 @@ export class ExperimentService extends Service {
   @observable stageConfigMap: Record<string, StageConfig> = {};
   @observable publicStageDataMap: Record<string, PublicStageData | undefined> = {};
   @observable stageNames: string[] = [];
+  @observable participants: ParticipantProfileExtended[] = [];
   
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -102,7 +109,22 @@ export class ExperimentService extends Service {
       // Load the stage names
       this.stageNames = Object.keys(this.stageConfigMap);
       this.isConfigLoading = false;
+
+      // Load participants
+      this.loadExperimentParticipants();
     }));
+  }
+
+  private loadExperimentParticipants() {
+    if (this.id !== null) {
+      // Bind the array to the firestore collection
+      this.unsubscribe.push(
+        onSnapshot(collection(this.sp.firebaseService.firestore, 'experiments', this.id, 'participants'), (snapshot) => {
+          // Replace the values in the array in place to not break the reference
+          this.participants.splice(0, this.participants.length, ...collectSnapshotWithId<ParticipantProfileExtended>(snapshot, 'privateId'))
+        }),
+      );
+    }
   }
 
   unsubscribeAll() {

@@ -1,4 +1,4 @@
-import { CacheMap, Experiment, ExperimentTemplate, ExperimentTemplateExtended, ParticipantProfileExtended, StageConfig, lookupTable } from "@llm-mediation-experiments/utils";
+import { CacheMap, Experiment, ExperimentTemplate, ExperimentTemplateExtended, StageConfig, lookupTable } from "@llm-mediation-experiments/utils";
 import { Unsubscribe, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot } from "firebase/firestore";
 import { computed, makeObservable, observable } from "mobx";
 import { createExperimentCallable, deleteExperimentCallable } from "../shared/callables";
@@ -25,7 +25,24 @@ export class ExperimenterService extends Service {
   constructor(private readonly sp: ServiceProvider) {
     super();
     makeObservable(this);
+  }
 
+  @observable experiments: Experiment[] = [];
+  @observable templates: ExperimentTemplate[] = [];
+  @observable templatesWithConfigs = new CacheMap((templateId: string) =>
+    this.loadExperimentTemplate(templateId),
+  );
+
+  // Loading
+  @observable unsubscribe: Unsubscribe[] = [];
+  @observable areExperimentsLoading = true;
+  @observable areTemplatesLoading = true;
+
+  @computed get isLoading() {
+    return this.areExperimentsLoading || this.areTemplatesLoading;
+  }
+
+  subscribe() {
     // Subscribe to all experiment documents
     this.unsubscribe.push(
       onSnapshot(collection(this.sp.firebaseService.firestore, 'experiments'), (snapshot) => {
@@ -43,36 +60,6 @@ export class ExperimenterService extends Service {
     );
   }
 
-  @observable experiments: Experiment[] = [];
-  @observable templates: ExperimentTemplate[] = [];
-  @observable experimentParticipants = new CacheMap((expId: string) =>
-    this.loadExperimentParticipants(expId),
-  );
-  @observable templatesWithConfigs = new CacheMap((templateId: string) => this.loadExperimentTemplate(templateId));
-
-  // Loading
-  @observable unsubscribe: Unsubscribe[] = [];
-  @observable areExperimentsLoading = true;
-  @observable areTemplatesLoading = true;
-
-  @computed get isLoading() {
-    return this.areExperimentsLoading || this.areTemplatesLoading;
-  }
-
-  private loadExperimentParticipants(experimentId: string) {
-    const participants: ParticipantProfileExtended[] = [];
-
-    // Bind the array to the firestore collection
-    this.unsubscribe.push(
-      onSnapshot(collection(this.sp.firebaseService.firestore, 'experiments', experimentId, 'participants'), (snapshot) => {
-        // Replace the values in the array in place to not break the reference
-        participants.splice(0, participants.length, ...collectSnapshotWithId<ParticipantProfileExtended>(snapshot, 'privateId'))
-      }),
-    );
-
-    return participants;
-  }
-  
   private loadExperimentTemplate (
     templateId: string,
    ) {

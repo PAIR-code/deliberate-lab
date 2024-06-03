@@ -9,12 +9,14 @@ import {
 
 import { Service } from "./service";
 import { ExperimentService } from "./experiment_service";
+import { ExperimenterService } from "./experimenter_service";
 import { FirebaseService } from "./firebase_service";
 
 import { Permission } from "../shared/types";
 
 interface ServiceProvider {
   experimentService: ExperimentService;
+  experimenterService: ExperimenterService;
   firebaseService: FirebaseService;
 }
 
@@ -31,6 +33,7 @@ export class AuthService extends Service {
         this.user.getIdTokenResult().then((result) => {
           if (result.claims['role'] === 'experimenter') {
             this.isExperimenter = true;
+            this.sp.experimenterService.subscribe();
           } else {
             this.isExperimenter = false;
             // NOTE: I don't think we need to forcefully clear the in-memory data here, as the user cannot access it.
