@@ -11,7 +11,7 @@ import { Service } from "./service";
 import { FirebaseService } from "./firebase_service";
 
 import { Snapshot } from "../shared/types";
-import { StageConfig } from "@llm-mediation-experiments/utils";
+import { Experiment, PublicStageData, StageConfig } from "@llm-mediation-experiments/utils";
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
@@ -25,8 +25,12 @@ export class ExperimentService extends Service {
   }
 
   @observable id: string | null = null;
+  @observable experiment: Experiment | undefined = undefined;
+
   @observable stageConfigMap: Record<string, StageConfig> = {};
+  @observable publicStageDataMap: Record<string, PublicStageData | undefined> = {};
   @observable stageNames: string[] = [];
+  
   @observable unsubscribe: Unsubscribe[] = [];
   @observable isLoading = false;
 
@@ -43,6 +47,26 @@ export class ExperimentService extends Service {
       this.isLoading = false;
       return;
     }
+    
+    // Subscribe to the experiment
+    this.unsubscribe.push(
+      onSnapshot(doc(this.sp.firebaseService.firestore, 'experiments', this.id), (doc) => {
+        this.experiment = { id: doc.id, ...doc.data() } as Experiment;
+      }),
+    );
+
+    // Subscribe to the public stage data
+    this.unsubscribe.push(
+      onSnapshot(collection(this.sp.firebaseService.firestore, 'experiments', this.id, 'publicStageData'), (snapshot) => {
+        let changedDocs = snapshot.docChanges().map((change) => change.doc);
+        if (changedDocs.length === 0) changedDocs = snapshot.docs;
+
+        // Update the public stage data signals
+        changedDocs.forEach((doc) => {
+          this.publicStageDataMap[doc.id] = doc.data() as PublicStageData;
+        });
+      }),
+    );
 
     // Fetch the experiment config
     this.unsubscribe.push(onSnapshot(
