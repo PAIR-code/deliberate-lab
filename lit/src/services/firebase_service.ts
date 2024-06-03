@@ -42,8 +42,11 @@ import { Snapshot } from "../shared/types";
 import { collectSnapshotWithId, extractDataFromCallable } from "../shared/utils";
 
 import { Service } from "./service";
+import { RouterService } from "./router_service";
 
-interface ServiceProvider {}
+interface ServiceProvider {
+  routerService: RouterService;
+}
 
 /** Manages Firebase connection, experiments subscription. */
 export class FirebaseService extends Service {
@@ -134,7 +137,11 @@ export class FirebaseService extends Service {
   }
 
   async deleteExperiment(experimentId: string) {
-    // TODO: If experiment stages shown in sidenav, update sidenav view
+    // If experiment stages shown in sidenav, update sidenav view
+    if (this.sp.routerService.sidenavExperimentId === experimentId) {
+      this.sp.routerService.setSidenavExperiment(null);
+    }
+
     return deleteDoc(doc(this.firestore, 'experiments', experimentId));
   }
 
