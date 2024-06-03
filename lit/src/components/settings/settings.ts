@@ -9,7 +9,7 @@ import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
 import { SettingsService } from "../../services/settings_service";
 
-import { ColorMode, ColorTheme, Permission, TextSize } from "../../shared/types";
+import { ColorMode, ColorTheme, TextSize } from "../../shared/types";
 
 import { styles } from "./settings.scss";
 

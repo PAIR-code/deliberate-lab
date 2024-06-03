@@ -12,13 +12,6 @@ export type Constructor<T> = {
 /* Snapshot for Firebase calls. */
 export type Snapshot = QuerySnapshot<DocumentData, DocumentData>;
 
-/** Current permissions. */
-export enum Permission {
-  EDIT = "edit",  // Used for experimenters
-  PREVIEW = "preview",  // Used for experimenter
-  PARTICIPATE = "participate", // Used for participant
-}
-
 /** Color modes. */
 export enum ColorMode {
   LIGHT = "light",

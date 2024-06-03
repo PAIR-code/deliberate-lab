@@ -25,7 +25,6 @@ import { SettingsService } from "./services/settings_service";
 import {
   ColorMode,
   ColorTheme,
-  Permission,
   TextSize
 } from "./shared/types";
 import {

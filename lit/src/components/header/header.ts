@@ -8,8 +8,6 @@ import { customElement } from "lit/decorators.js";
 import { core } from "../../core/core";
 import { Pages, RouterService } from "../../services/router_service";
 
-import { Permission } from "../../shared/types";
-
 import { styles } from "./header.scss";
 
 /** Header component for app pages */

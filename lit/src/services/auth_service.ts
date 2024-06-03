@@ -12,8 +12,6 @@ import { ExperimentService } from "./experiment_service";
 import { ExperimenterService } from "./experimenter_service";
 import { FirebaseService } from "./firebase_service";
 
-import { Permission } from "../shared/types";
-
 interface ServiceProvider {
   experimentService: ExperimentService;
   experimenterService: ExperimenterService;
@@ -53,7 +51,6 @@ export class AuthService extends Service {
 
   @observable user: User|null|undefined = undefined;
   @observable isExperimenter: boolean|null = null;
-  @observable editMode = false;
 
   @computed get userId() {
     return this.user?.uid;
@@ -65,18 +62,6 @@ export class AuthService extends Service {
 
   @computed get authenticated() {
     return this.initialAuthCheck && this.user !== null;
-  }
-
-  @computed get permission() {
-    if (this.authenticated && this.isExperimenter) {
-      if (this.editMode) {
-        return Permission.EDIT;
-      } else {
-        return Permission.PREVIEW;
-      }
-    } else {
-      return Permission.PARTICIPATE;
-    }
   }
 
   signInWithGoogle() {
