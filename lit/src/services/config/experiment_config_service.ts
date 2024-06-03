@@ -19,6 +19,8 @@ export class ExperimentConfigService extends Service {
   @observable currentStageIndex = -1;
   @observable map: Map<string, StageConfig> = new Map();
 
+  // Converts and returns data required for experiment creation
+  // (note that this adjusts some stage data, e.g., adds numbering to stages)
   getExperiment() {
     return {
       name: toJS(this.name),

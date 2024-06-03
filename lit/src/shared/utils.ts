@@ -124,9 +124,18 @@ export function convertMarkdownToHTML(markdown: string, sanitize = true) {
   return html;
 }
 
-/** Adjust experiment stages to Firebase format (e.g., HTML instead of .md) */
+/**
+ *  Adjust experiment stages to Firebase format (e.g., HTML instead of .md)
+ *  and add numbering to stages.
+ */
 export function convertExperimentStages(stages: StageConfig[]) {
-  return stages.map((stage) => {
+  const addIndexToStageName = (name: string, index: number) => {
+    return `${index + 1}. ${name}`;
+  };
+
+  return stages.map((stage, index) => {
+    stage.name = addIndexToStageName(stage.name, index);
+
     if (stage.kind === StageKind.Info) {
       stage.infoLines = stage.infoLines.map(
         info => convertMarkdownToHTML(info)
@@ -141,8 +150,8 @@ export function convertExperimentStages(stages: StageConfig[]) {
     }
     if (stage.kind === StageKind.RevealVoted) {
       // NOTE: This assumes there is only one VoteForLeader stage.
-      const index = findStageKind(stages, StageKind.VoteForLeader);
-      stage.pendingVoteStageName = `${index + 1}. ${stages[index].name}`;
+      const voteIndex = findStageKind(stages, StageKind.VoteForLeader);
+      stage.pendingVoteStageName = addIndexToStageName(stage.name, voteIndex);
       return stage;
     }
     return stage;
