@@ -1,4 +1,4 @@
-import { makeObservable, observable } from "mobx";
+import { computed, makeObservable, observable } from "mobx";
 import { AuthService } from "./auth_service";
 import { FirebaseService } from "./firebase_service";
 import { Service } from "./service";
@@ -26,8 +26,19 @@ export class ParticipantService extends Service {
   @observable profile: ParticipantProfile | undefined = undefined;
   @observable stageAnswers: Record<string, StageAnswer | undefined> = {};
 
+  // Loading
   @observable unsubscribe: Unsubscribe[] = [];
-  @observable isLoading = false;
+  @observable isProfileLoading = false;
+  @observable areAnswersLoading = false;
+
+  @computed get isLoading() {
+    return this.isProfileLoading || this.areAnswersLoading;
+  }
+
+  set isLoading(value: boolean) {
+    this.isProfileLoading = value;
+    this.areAnswersLoading = value;
+  }
 
   setParticipant(experimentId: string | null, participantId: string | null) {
     this.experimentId = experimentId;
@@ -50,6 +61,7 @@ export class ParticipantService extends Service {
         doc(this.sp.firebaseService.firestore, 'experiments', this.experimentId, 'participants', this.participantId),
         (doc) => {
           this.profile = doc.data() as ParticipantProfile;
+          this.isProfileLoading = false;
         },
       ),
     );
@@ -66,6 +78,7 @@ export class ParticipantService extends Service {
           changedDocs.forEach((doc) => {
             this.stageAnswers[doc.id] = doc.data() as StageAnswer;
           });
+          this.areAnswersLoading = false;
         },
       ),
     );

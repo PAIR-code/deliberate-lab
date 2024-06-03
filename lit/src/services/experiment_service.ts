@@ -31,8 +31,20 @@ export class ExperimentService extends Service {
   @observable publicStageDataMap: Record<string, PublicStageData | undefined> = {};
   @observable stageNames: string[] = [];
   
+  // Loading
   @observable unsubscribe: Unsubscribe[] = [];
-  @observable isLoading = false;
+  @observable isConfigLoading = false;
+  @observable isPublicStageDataLoading = false;
+  @observable isMetadataLoading = false;
+  
+  @computed get isLoading() {
+    return this.isConfigLoading || this.isPublicStageDataLoading || this.isMetadataLoading;
+  }
+  set isLoading(value: boolean) {
+    this.isConfigLoading = value;
+    this.isPublicStageDataLoading = value;
+    this.isMetadataLoading = value;
+  }
 
   setExperimentId(id: string | null) {
     this.id = id;
@@ -52,6 +64,7 @@ export class ExperimentService extends Service {
     this.unsubscribe.push(
       onSnapshot(doc(this.sp.firebaseService.firestore, 'experiments', this.id), (doc) => {
         this.experiment = { id: doc.id, ...doc.data() } as Experiment;
+        this.isMetadataLoading = false;
       }),
     );
 
@@ -65,6 +78,8 @@ export class ExperimentService extends Service {
         changedDocs.forEach((doc) => {
           this.publicStageDataMap[doc.id] = doc.data() as PublicStageData;
         });
+
+        this.isPublicStageDataLoading = false;
       }),
     );
 
@@ -85,7 +100,7 @@ export class ExperimentService extends Service {
 
       // Load the stage names
       this.stageNames = Object.keys(this.stageConfigMap);
-      this.isLoading = false;
+      this.isConfigLoading = false;
     }));
   }
 

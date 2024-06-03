@@ -1,4 +1,4 @@
-import { observable, makeObservable } from "mobx";
+import { observable, makeObservable, computed } from "mobx";
 import { Service } from "./service";
 import { AuthService } from "./auth_service";
 import { SettingsService } from "./settings_service";
@@ -28,8 +28,20 @@ export class ChatService extends Service {
 
   @observable chat: ChatAnswer | undefined = undefined;
   @observable messages: Message[] = [];
+
+  // Loading
   @observable unsubscribe: Unsubscribe[] = [];
-  @observable isLoading = false;
+  @observable isConfigLoading = false;
+  @observable areMessagesLoading = false;
+
+  @computed get isLoading() {
+    return this.isConfigLoading || this.areMessagesLoading;
+  }
+
+  set isLoading(value: boolean) {
+    this.isConfigLoading = value;
+    this.areMessagesLoading = value;
+  }
 
   setChat(experimentId: string | null, participantId: string | null, chatId: string | null) {
     this.experimentId = experimentId;
@@ -53,6 +65,7 @@ export class ChatService extends Service {
         doc(this.sp.firebaseService.firestore, 'experiments', this.experimentId, 'participants', this.participantId, 'chats', this.chatId),
         (doc) => {
           this.chat = doc.data() as ChatAnswer;
+          this.isConfigLoading = false;
         },
       ),
     );
@@ -76,6 +89,7 @@ export class ChatService extends Service {
         (snapshot) => {
           // Note that Firestore will send incremental updates. The full list of messages can be reconstructed easily from the snapshot.
           this.messages = collectSnapshotWithId<Message>(snapshot, 'uid').reverse();
+          this.areMessagesLoading = false;
         },
       ),
     );
