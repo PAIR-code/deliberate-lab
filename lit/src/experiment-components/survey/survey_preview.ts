@@ -42,7 +42,7 @@ export class SurveyPreview extends MobxLitElement {
         <div class="question-title">${question.questionText}</div>
         <div class="slider-wrapper">
           <div>${question.lowerBound}</div>
-          <md-slider step="1" ticks min="0" max="10"></md-slider>
+          <md-slider step="1" ticks min="0" max="10" labeled></md-slider>
           <div>${question.upperBound}</div>
         </div>
       </div>
