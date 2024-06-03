@@ -51,8 +51,13 @@ Services that interact with Firebase are organized at the
 
 `src/services/firebase_service.ts`
 
-This initializes the Firebase connection (including firestore, auth),
-loads all experiments (for the Home page), and manages experiment
+This initializes the Firebase connection (including firestore, auth).
+
+#### ExperimenterService
+
+`src/services/experimenter_service.ts`
+
+This loads all experiments (for the Home page) and manages experiment
 and template creation/deletion.
 
 #### AuthService
