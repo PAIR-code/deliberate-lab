@@ -71,11 +71,16 @@ export class App extends MobxLitElement {
     return html`<div>404: ${message}</div>`;
   }
 
+  private render403(message = "Participants do not have access") {
+    return html`<div>403: ${message}</div>`;
+  }
+
   private renderExperiment() {
-    const id = this.routerService.activeRoute.params["experiment"];
-    if (id !== this.experimentService.id) {
-      this.experimentService.setExperimentId(id);
+    if (!this.authService.isExperimenter) {
+      return this.render403();
     }
+
+    this.experimentService.updateForCurrentRoute();
 
     if (this.experimentService.isLoading) {
       return html`<div>Loading experiment...</div>`;
@@ -85,10 +90,11 @@ export class App extends MobxLitElement {
   }
 
   private renderExperimentStage() {
-    const id = this.routerService.activeRoute.params["experiment"];
-    if (id !== this.experimentService.id) {
-      this.experimentService.setExperimentId(id);
+    if (!this.authService.isExperimenter) {
+      return this.render403();
     }
+
+    this.experimentService.updateForCurrentRoute();
 
     if (this.experimentService.isLoading) {
       return html`<div>Loading experiment...</div>`;

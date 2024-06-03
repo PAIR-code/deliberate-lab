@@ -9,6 +9,7 @@ import {
 
 import { Service } from "./service";
 import { FirebaseService } from "./firebase_service";
+import { RouterService } from "./router_service";
 
 import { Snapshot } from "../shared/types";
 import {
@@ -22,6 +23,7 @@ import { deleteExperimentCallable } from "../shared/callables";
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
+  routerService: RouterService;
 }
 
 /** Manages state for current experiment. */
@@ -58,6 +60,13 @@ export class ExperimentService extends Service {
     this.id = id;
     this.isLoading = true;
     this.loadStageData();
+  }
+
+  updateForCurrentRoute() {
+    const id = this.sp.routerService.activeRoute.params["experiment"];
+    if (id !== this.id) {
+      this.setExperimentId(id);
+    }
   }
 
   loadStageData() {
