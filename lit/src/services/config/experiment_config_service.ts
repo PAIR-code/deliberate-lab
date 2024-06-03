@@ -74,6 +74,13 @@ export class ExperimentConfigService extends Service {
     }
   }
 
+  deleteStage(index: number) {
+    this.stages = [
+      ...this.stages.slice(0, index),
+      ...this.stages.slice(index + 1)
+    ];
+  }
+
   moveStageUp(index: number) {
     this.stages = [
       ...this.stages.slice(0, index - 1),

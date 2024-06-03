@@ -71,6 +71,7 @@ export class ExperimentConfig extends MobxLitElement {
         ${this.renderNav()}
         <div class="current-stage">
           ${this.renderCurrentStage()}
+          ${this.renderDeleteCurrentStage()}
         </div>
       </div>
       ${this.experimentConfig.getExperimentErrors().map(error =>
@@ -139,6 +140,26 @@ export class ExperimentConfig extends MobxLitElement {
       default:
         return this.renderMetadata();
     }
+  }
+
+  private renderDeleteCurrentStage() {
+    if (!this.experimentConfig.currentStage ||
+      this.experimentConfig.currentStage.kind === StageKind.TermsOfService) {
+      return nothing;
+    }
+
+    const handleDelete = () => {
+      this.experimentConfig.deleteStage(
+        this.experimentConfig.currentStageIndex);
+    };
+
+    return html`
+      <div class="buttons-wrapper bottom">
+        <pr-button color="error" variant="default" @click=${handleDelete}>
+          Delete stage
+        </pr-button>
+      </div>
+    `;
   }
 
   private renderStageInfo(chip: string, content: string) {
