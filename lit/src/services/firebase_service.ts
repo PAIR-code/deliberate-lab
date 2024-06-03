@@ -1,48 +1,32 @@
-import { computed, observable, makeObservable } from "mobx";
-import { initializeApp, FirebaseApp } from 'firebase/app';
+import { FirebaseApp, initializeApp } from 'firebase/app';
 import {
-  GoogleAuthProvider,
-  connectAuthEmulator,
-  getAuth,
-  onAuthStateChanged,
-  Auth,
-  User
+    Auth,
+    GoogleAuthProvider,
+    connectAuthEmulator,
+    getAuth
 } from 'firebase/auth';
 import {
-  collection,
-  connectFirestoreEmulator,
-  deleteDoc,
-  doc,
-  DocumentData,
-  getFirestore,
-  Firestore,
-  onSnapshot,
-  Unsubscribe
+    Firestore,
+    Unsubscribe,
+    connectFirestoreEmulator,
+    getFirestore
 } from 'firebase/firestore';
 import {
-  connectFunctionsEmulator,
-  Functions,
-  getFunctions,
-  httpsCallable
+    Functions,
+    connectFunctionsEmulator,
+    getFunctions
 } from 'firebase/functions';
-import {
-  CreationResponse,
-  Experiment,
-  ExperimentCreationData,
-  StageConfig
-} from '@llm-mediation-experiments/utils';
+import { makeObservable } from "mobx";
 
 import {
-  FIREBASE_CONFIG,
-  FIREBASE_LOCAL_HOST_PORT_FIRESTORE,
-  FIREBASE_LOCAL_HOST_PORT_AUTH,
-  FIREBASE_LOCAL_HOST_PORT_FUNCTIONS
+    FIREBASE_CONFIG,
+    FIREBASE_LOCAL_HOST_PORT_AUTH,
+    FIREBASE_LOCAL_HOST_PORT_FIRESTORE,
+    FIREBASE_LOCAL_HOST_PORT_FUNCTIONS
 } from '../shared/constants';
-import { Snapshot } from "../shared/types";
-import { collectSnapshotWithId, extractDataFromCallable } from "../shared/utils";
 
-import { Service } from "./service";
 import { RouterService } from "./router_service";
+import { Service } from "./service";
 
 interface ServiceProvider {
   routerService: RouterService;
@@ -74,33 +58,6 @@ export class FirebaseService extends Service {
   functions: Functions;
   provider: GoogleAuthProvider;
   unsubscribe: Unsubscribe[] = [];
-  @observable experiments: Experiment[] = [];
-  @observable currentExperimentId: string|null = null;
-
-  @computed get currentExperiment() {
-    return this.experiments.find(e => e.id === this.currentExperimentId);
-  }
-
-  subscribe(collectionName: string) {
-    this.unsubscribe.push(
-      onSnapshot(
-        collection(this.firestore, collectionName),
-        (snapshot: Snapshot) => {
-          this.experiments =
-            collectSnapshotWithId<Experiment>(snapshot, 'id');
-        }
-      ),
-    );
-  }
-
-  unsubscribeAll() {
-    this.unsubscribe.forEach(unsubscribe => unsubscribe());
-    this.unsubscribe = [];
-
-    // Clear data
-    this.experiments = [];
-    this.currentExperimentId = null;
-  }
 
   registerEmulators() {
     connectFirestoreEmulator(
@@ -116,46 +73,6 @@ export class FirebaseService extends Service {
       this.functions,
       'localhost',
       FIREBASE_LOCAL_HOST_PORT_FUNCTIONS
-    );
-  }
-
-  async createExperiment(
-    name: string, stages: StageConfig[], numberOfParticipants?: number
-  ) {
-    if (stages.length === 0) {
-      console.log('Error: Cannot create experiment with 0 stages');
-      return;
-    }
-
-    return this.createExperimentCallable({
-      type: 'experiments',
-      metadata: { name, numberOfParticipants },
-      stages: stages.map((stage, index) => {
-        return { ...stage, name: `${index + 1}. ${stage.name}`}
-      }),
-    });
-  }
-
-  async deleteExperiment(experimentId: string) {
-    // If experiment stages shown in sidenav, update sidenav view
-    if (this.sp.routerService.sidenavExperimentId === experimentId) {
-      this.sp.routerService.setSidenavExperiment(null);
-    }
-
-    return deleteDoc(doc(this.firestore, 'experiments', experimentId));
-  }
-
-  getExperiment(experimentId: string) {
-    return this.experiments.find(experiment => experiment.id === experimentId);
-  }
-
-  /** Generic endpoint to create experiments or experiment templates */
-  createExperimentCallable(args: ExperimentCreationData) {
-    extractDataFromCallable(
-      args,
-      httpsCallable<ExperimentCreationData, CreationResponse>(
-        this.functions, 'createExperiment'
-      )
     );
   }
 }

@@ -20,6 +20,7 @@ import {
 } from "../../services/router_service";
 
 import { styles } from "./sidenav.scss";
+import { ExperimenterService } from "../../services/experimenter_service";
 
 /** Sidenav menu component */
 @customElement("sidenav-menu")
@@ -28,6 +29,7 @@ export class SideNav extends MobxLitElement {
   private readonly experimentService = core.getService(ExperimentService);
   private readonly firebaseService = core.getService(FirebaseService);
   private readonly routerService = core.getService(RouterService);
+  private readonly experimenterService = core.getService(ExperimenterService);
 
   override render() {
     return html`
@@ -46,7 +48,7 @@ export class SideNav extends MobxLitElement {
   }
 
   private renderExperimentList() {
-    const experiments = this.firebaseService.experiments;
+    const experiments = this.experimenterService.experiments;
 
     if (this.experimentService.isLoading) {
       return html`<div class="empty-message">Loading...</div>`;
@@ -61,7 +63,7 @@ export class SideNav extends MobxLitElement {
 
   private renderExperimentSubnav() {
     const id = this.experimentService.id;
-    const experiment = this.firebaseService.getExperiment(id!);
+    const experiment = this.experimenterService.getExperiment(id!);
 
     if (this.experimentService.isLoading) {
       return html`<div class="empty-message">Loading...</div>`;
@@ -70,13 +72,13 @@ export class SideNav extends MobxLitElement {
     return html`
       ${this.renderExperimentItem(experiment!, true)}
       ${this.experimentService.stageNames.map(
-        (stage: string) => this.renderStageItem(id, stage)
+        (stage: string) => this.renderStageItem(id!, stage)
       )}
     `;
   }
 
   private renderExperimentBackArrow(id: string) {
-    const handleClick = (e: Event) => {
+    const handleClick = (_e: Event) => {
       this.routerService.navigate(Pages.EXPERIMENT, { "experiment": id });
       this.routerService.setSidenavExperiment(null);
     }
@@ -95,7 +97,7 @@ export class SideNav extends MobxLitElement {
 
 
   private renderExperimentForwardArrow(id: string) {
-    const handleClick = (e: Event) => {
+    const handleClick = (_e: Event) => {
       this.routerService.navigate(Pages.EXPERIMENT, { "experiment": id });
       this.routerService.setSidenavExperiment(id);
     }
@@ -118,7 +120,7 @@ export class SideNav extends MobxLitElement {
         && experiment.id === this.experimentService.id,
     });
 
-    const handleClick = (e: Event) => {
+    const handleClick = (_e: Event) => {
       this.routerService.navigate(
         Pages.EXPERIMENT, { "experiment": experiment.id }
       );
@@ -145,7 +147,7 @@ export class SideNav extends MobxLitElement {
         this.routerService.activeRoute.params["stage"] === stage,
     });
 
-    const handleClick = (e: Event) => {
+    const handleClick = (_e: Event) => {
       this.routerService.navigate(Pages.EXPERIMENT_STAGE,
         { "experiment": id, "stage": stage });
       }
@@ -163,7 +165,7 @@ export class SideNav extends MobxLitElement {
       selected: this.routerService.activePage === navItem.page,
     });
 
-    const handleNavItemClicked = (e: Event) => {
+    const handleNavItemClicked = (_e: Event) => {
       this.routerService.navigate(navItem.page);
     };
 

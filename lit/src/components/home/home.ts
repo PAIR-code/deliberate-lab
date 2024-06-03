@@ -16,6 +16,7 @@ import { Pages, RouterService } from "../../services/router_service";
 import { StageKind } from "@llm-mediation-experiments/utils";
 
 import { styles } from "./home.scss";
+import { ExperimenterService } from "../../services/experimenter_service";
 
 /** Home page component */
 @customElement("home-page")
@@ -23,14 +24,14 @@ export class Home extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly authService = core.getService(AuthService);
-  private readonly firebaseService = core.getService(FirebaseService);
   private readonly routerService = core.getService(RouterService);
+  private readonly experimenterService = core.getService(ExperimenterService);
 
   override render() {
     return html`
       ${this.renderCreateButton()}
       <div class="cards-wrapper">
-        ${this.firebaseService.experiments.map(
+        ${this.experimenterService.experiments.map(
           experiment => this.renderExperimentCard(experiment)
         )}
       </div>
@@ -52,7 +53,7 @@ export class Home extends MobxLitElement {
   }
   private renderExperimentCard(experiment: Experiment) {
     const handleDelete = () => {
-      this.firebaseService.deleteExperiment(experiment.id);
+      this.experimenterService.deleteExperiment(experiment.id);
     };
 
     return html`

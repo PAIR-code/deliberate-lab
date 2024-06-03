@@ -31,10 +31,10 @@ export class AuthService extends Service {
         this.user.getIdTokenResult().then((result) => {
           if (result.claims['role'] === 'experimenter') {
             this.isExperimenter = true;
-            this.sp.firebaseService.subscribe('experiments');
           } else {
             this.isExperimenter = false;
-            this.sp.firebaseService.unsubscribeAll();
+            // NOTE: I don't think we need to forcefully clear the in-memory data here, as the user cannot access it.
+            // I think this will unnecessarily complicate the service flow
             this.sp.experimentService.unsubscribeAll();
           }
         });
@@ -82,7 +82,6 @@ export class AuthService extends Service {
 
   signOut() {
     signOut(this.sp.firebaseService.auth);
-    this.sp.firebaseService.unsubscribeAll();
     this.sp.experimentService.unsubscribeAll();
   }
 }

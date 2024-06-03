@@ -157,10 +157,3 @@ export function collectSnapshotWithId<T>(snapshot: Snapshot, idKey: keyof T) {
   return snapshot.docs.map((doc) => ({ [idKey]: doc.id, ...doc.data() }) as T);
 }
 
-/** Wrapper to extract the data attribute from all callable cloud functions */
-export function extractDataFromCallable<TArgs, TReturn>(
-  args: TArgs,
-  f: (args: TArgs) => Promise<HttpsCallableResult<TReturn>>
-) {
-  return f(args).then((r) => r.data);
-}

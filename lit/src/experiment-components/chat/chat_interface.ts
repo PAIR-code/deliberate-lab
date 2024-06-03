@@ -4,7 +4,6 @@ import "../../pair-components/textarea";
 import "../../pair-components/tooltip";
 import "./chat_message";
 
-import { observable } from "mobx";
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
@@ -12,9 +11,8 @@ import { customElement, property } from "lit/decorators.js";
 import { core } from "../../core/core";
 import { ChatService } from "../../services/chat_service";
 
-import { ChatMessage } from "../../shared/types";
-
 import { styles } from "./chat_interface.scss";
+import { Message } from "@llm-mediation-experiments/utils";
 
 /** Chat interface component */
 @customElement("chat-interface")
@@ -25,16 +23,15 @@ export class ChatInterface extends MobxLitElement {
   private readonly chatService = core.getService(ChatService);
 
   private sendUserInput() {
-    this.chatService.addChatMessage(this.value);
+    this.chatService.sendUserMessage(this.value);
     this.value = "";
   }
 
-  private renderChatMessage(chatMessage: ChatMessage) {
+  private renderChatMessage(chatMessage: Message) {
     return html`
       <div class="chat-message-wrapper">
         <chat-message
-          .chatMessage=${chatMessage.content}
-          .author=${chatMessage.author}>
+          .chatMessage=${chatMessage}
         </chat-message>
       </div>
     `;
@@ -44,7 +41,7 @@ export class ChatInterface extends MobxLitElement {
     return html`
       <div class="chat-scroll">
         <div class="chat-history">
-          ${this.chatService.chats.map(this.renderChatMessage.bind(this))}
+          ${this.chatService.messages.map(this.renderChatMessage.bind(this))}
         </div>
       </div>
     `;
