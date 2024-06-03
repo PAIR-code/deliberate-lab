@@ -35,4 +35,3 @@ export const deleteExperimentCallable = async (functions: Functions, deletion: E
   const { data } = await httpsCallable<ExperimentDeletionData, never>(functions, 'deleteExperiment')(deletion);
   return data;
 }
-

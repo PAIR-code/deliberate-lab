@@ -25,12 +25,9 @@ import {
     FIREBASE_LOCAL_HOST_PORT_FUNCTIONS
 } from '../shared/constants';
 
-import { RouterService } from "./router_service";
 import { Service } from "./service";
 
-interface ServiceProvider {
-  routerService: RouterService;
-}
+interface ServiceProvider {}
 
 /** Manages Firebase connection, experiments subscription. */
 export class FirebaseService extends Service {

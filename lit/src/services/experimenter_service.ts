@@ -3,16 +3,14 @@ import { Unsubscribe, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot } 
 import { computed, makeObservable, observable } from "mobx";
 import { createExperimentCallable, deleteExperimentCallable } from "../shared/callables";
 import { collectSnapshotWithId } from "../shared/utils";
-import { AuthService } from "./auth_service";
-import { FirebaseService } from "./firebase_service";
-import { Service } from "./service";
-import { SettingsService } from "./settings_service";
 
+import { Service } from "./service";
+import { FirebaseService } from "./firebase_service";
+import { RouterService } from "./router_service";
 
 interface ServiceProvider {
-  authService: AuthService;
-  settingsService: SettingsService;
   firebaseService: FirebaseService;
+  routerService: RouterService;
 }
 
 /** Handle experimenter-related data:
@@ -137,10 +135,20 @@ export class ExperimenterService extends Service {
   /** Delete an experiment.
    * @rights Experimenter
    */
-  async deleteExperiment(experimentId: string) {
-    return deleteExperimentCallable(this.sp.firebaseService.functions, {
+  async deleteExperiment(experimentId: string) {    
+    // If experiment stages shown in sidenav, update sidenav view
+    if (this.sp.routerService.sidenavExperimentId === experimentId) {
+      this.sp.routerService.setSidenavExperiment(null);
+    }
+
+    return deleteDoc(
+      doc(this.sp.firebaseService.firestore, 'experiments', experimentId)
+    );
+
+    // Temporarily comment out legacy deletion call (returns errors)
+    /* return deleteExperimentCallable(this.sp.firebaseService.functions, {
       id: experimentId,
       type: 'experiments',
-    })
+    }) */
   }
 }
