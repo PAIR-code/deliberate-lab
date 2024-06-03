@@ -9,10 +9,12 @@ import { v4 as uuidv4 } from "uuid";
 import { Snapshot } from "./types";
 import {
   InfoStageConfig,
+  ProfileStageConfig,
   StageConfig,
   StageKind,
   SurveyStageConfig,
-  TermsOfServiceStageConfig
+  TermsOfServiceStageConfig,
+  VoteForLeaderStageConfig
 } from '@llm-mediation-experiments/utils';
 
 /** Generate unique id. */
@@ -43,6 +45,18 @@ export function createSurveyStage(
   questions = []
 ): SurveyStageConfig {
   return { kind: StageKind.TakeSurvey, name, questions };
+}
+
+/** Create profile stage. */
+export function createProfileStage(name = "Set profile"): ProfileStageConfig {
+  return { kind: StageKind.SetProfile, name };
+}
+
+/** Create leader vote stage. */
+export function createVoteForLeaderStage(
+  name = "Leader vote"
+): VoteForLeaderStageConfig {
+  return { kind: StageKind.VoteForLeader, name };
 }
 
 /** Use micromark to convert Git-flavored markdown to HTML. */

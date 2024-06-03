@@ -47,6 +47,10 @@ export class ExperimentConfigService extends Service {
     this.currentStageIndex = index;
   }
 
+  setCurrentStageIndexToLast() {
+    this.currentStageIndex = this.stages.length - 1;
+  }
+
   @computed get currentStage() {
     if (this.currentStageIndex < 0 ||
         this.currentStageIndex >= this.stages.length) {

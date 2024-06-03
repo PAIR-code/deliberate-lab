@@ -19,3 +19,8 @@ export const STAGE_DESCRIPTION_INFO = "Shows Markdown-rendered information";
 export const STAGE_DESCRIPTION_TOS = "Shows Markdown-rendered terms of service";
 export const STAGE_DESCRIPTION_SURVEY =
   "Answer questions on a sliding scale of 1 to 10";
+export const STAGE_DESCRIPTION_PROFILE =
+  "Set profile name and other details";
+export const STAGE_DESCRIPTION_CHAT = "Chat with other participants";
+export const STAGE_DESCRIPTION_VOTE = "Choose a participant leader";
+export const STAGE_DESCRIPTION_REVEAL = "Show leader voting results";

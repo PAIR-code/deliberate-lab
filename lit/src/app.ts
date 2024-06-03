@@ -99,16 +99,20 @@ export class App extends MobxLitElement {
       return this.render404(`Could not find experiment stage "${stageName}""`);
     }
 
-    if (currentStage?.kind === StageKind.Info) {
-      return html`<info-preview .stage=${currentStage}></info-preview>`;
+    switch (currentStage.kind) {
+      case StageKind.Info:
+        return html`<info-preview .stage=${currentStage}></info-preview>`;
+      case StageKind.TermsOfService:
+        return html`<tos-preview .stage=${currentStage}></tos-preview>`;
+      case StageKind.TakeSurvey:
+        return html`<survey-preview .stage=${currentStage}></survey-preview>`;
+      case StageKind.SetProfile:
+        return html`Placeholder: SetProfile stage`;
+      case StageKind.VoteForLeader:
+        return html`Placeholder: VoteForLeader stage`;
+      default:
+        return this.render404("Could not load experiment stage");
     }
-    if (currentStage?.kind === StageKind.TermsOfService) {
-      return html`<tos-preview .stage=${currentStage}></tos-preview>`;
-    }
-    if (currentStage?.kind === StageKind.TakeSurvey) {
-      return html`<survey-preview .stage=${currentStage}></survey-preview>`;
-    }
-    return this.render404("Could not load experiment stage");
   }
 
   override render() {
