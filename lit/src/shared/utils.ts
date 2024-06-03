@@ -8,11 +8,15 @@ import { gfm, gfmHtml } from "micromark-extension-gfm";
 import { v4 as uuidv4 } from "uuid";
 import { Snapshot } from "./types";
 import {
+  ChatKind,
   InfoStageConfig,
+  ItemName,
   ProfileStageConfig,
+  RevealVotedStageConfig,
   StageConfig,
   StageKind,
   SurveyStageConfig,
+  SurveyQuestionKind,
   TermsOfServiceStageConfig,
   VoteForLeaderStageConfig
 } from '@llm-mediation-experiments/utils';
@@ -52,11 +56,61 @@ export function createProfileStage(name = "Set profile"): ProfileStageConfig {
   return { kind: StageKind.SetProfile, name };
 }
 
+/** Create chat (with ranking discussion) stage. */
+export function createChatStage(
+  name = "Group chat",
+  ratingsToDiscuss: { item1: ItemName; item2: ItemName }[] = []
+) {
+  return {
+    name,
+    kind: StageKind.GroupChat,
+    chatConfig: {
+      kind: ChatKind.ChatAboutItems,
+      chatId: generateId(),
+      ratingsToDiscuss
+    }
+  };
+}
+
 /** Create leader vote stage. */
 export function createVoteForLeaderStage(
   name = "Leader vote"
 ): VoteForLeaderStageConfig {
   return { kind: StageKind.VoteForLeader, name };
+}
+
+/**
+ * Create leader reveal stage.
+ * NOTE: This currently does not assign the VoteForLeader stage to
+ * the RevealVoted stage; rather, this is assigned in `convertExperimentStages`
+ * with the assumption that there is only one VoteForLeader stage.
+ */
+export function createRevealVotedStage(
+  name = "Leader reveal"
+): RevealVotedStageConfig {
+  return { kind: StageKind.RevealVoted, name, pendingVoteStageName: "" };
+}
+
+/**
+ * Check if stage is part of ranking module.
+ * TODO: Use more robust logic, e.g., add a moduleType field to track this.
+ */
+export function isRankingModuleStage(stage: StageConfig) {
+  // This relies on the fact that we only allow RatingQuestions and Chat
+  // stages for ranking module stages.
+  return (stage.kind === StageKind.TakeSurvey &&
+    stage.questions.find(q => q.kind === SurveyQuestionKind.Rating))
+    || stage.kind === StageKind.GroupChat;
+}
+
+/**
+ * Find index of specific stage kind.
+ * NOTE: Currently used to assign VoteForLeader stage to Reveal stage
+ * (as stage names are not guaranteed to be unique, and we currenly
+ * only allow one VoteForLeader stage)
+ */
+export function findStageKind(stages: StageConfig[], kind: StageKind) {
+  return stages.findIndex(stage => stage.kind === kind);
 }
 
 /** Use micromark to convert Git-flavored markdown to HTML. */
@@ -83,6 +137,12 @@ export function convertExperimentStages(stages: StageConfig[]) {
       stage.tosLines = stage.tosLines.map(
         info => convertMarkdownToHTML(info)
       );
+      return stage;
+    }
+    if (stage.kind === StageKind.RevealVoted) {
+      // NOTE: This assumes there is only one VoteForLeader stage.
+      const index = findStageKind(stages, StageKind.VoteForLeader);
+      stage.pendingVoteStageName = `${index + 1}. ${stages[index].name}`;
       return stage;
     }
     return stage;

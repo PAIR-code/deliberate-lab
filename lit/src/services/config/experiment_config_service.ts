@@ -17,6 +17,7 @@ export class ExperimentConfigService extends Service {
   @observable numParticipants = 1;
   @observable stages: StageConfig[] = [createTOSStage()];
   @observable currentStageIndex = -1;
+  @observable map: Map<string, StageConfig> = new Map();
 
   getExperiment() {
     return {
@@ -74,11 +75,19 @@ export class ExperimentConfigService extends Service {
     }
   }
 
+  addStage(stage: StageConfig) {
+    this.stages.push(stage);
+  }
+
   deleteStage(index: number) {
     this.stages = [
       ...this.stages.slice(0, index),
       ...this.stages.slice(index + 1)
     ];
+  }
+
+  hasStageKind(kind: StageKind) {
+    return this.stages.findIndex(stage => stage.kind === kind) !== -1;
   }
 
   moveStageUp(index: number) {
@@ -104,9 +113,5 @@ export class ExperimentConfigService extends Service {
     this.numParticipants = 1;
     this.stages = [createTOSStage()];
     this.currentStageIndex = -1;
-  }
-
-  addStage(stage: StageConfig) {
-    this.stages.push(stage);
   }
 }

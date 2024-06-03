@@ -1,3 +1,4 @@
+import "./experiment-components/chat/chat_interface";
 import "./experiment-components/experiment/experiment_config";
 import "./experiment-components/info/info_preview";
 import "./experiment-components/tos/tos_preview";
@@ -110,6 +111,10 @@ export class App extends MobxLitElement {
         return html`Placeholder: SetProfile stage`;
       case StageKind.VoteForLeader:
         return html`Placeholder: VoteForLeader stage`;
+      case StageKind.RevealVoted:
+        return html`Placeholder: RevealVoted stage`;
+      case StageKind.GroupChat:
+        return html`<chat-interface></chat-interface>`;
       default:
         return this.render404("Could not load experiment stage");
     }

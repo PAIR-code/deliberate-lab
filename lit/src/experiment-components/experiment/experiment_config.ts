@@ -34,12 +34,15 @@ import {
   STAGE_DESCRIPTION_PROFILE,
   STAGE_DESCRIPTION_CHAT,
   STAGE_DESCRIPTION_VOTE,
-  STAGE_DESCRIPTION_REVEAL
+  STAGE_DESCRIPTION_REVEAL,
+  MODULE_DESCRIPTION_LEADER,
+  MODULE_DESCRIPTION_RANKING
 } from "../../shared/constants";
 import { StageConfig, StageKind } from "@llm-mediation-experiments/utils";
 import {
   createInfoStage,
   createProfileStage,
+  createRevealVotedStage,
   createSurveyStage,
   createVoteForLeaderStage,
 } from "../../shared/utils";
@@ -135,6 +138,16 @@ export class ExperimentConfig extends MobxLitElement {
         return html`
           ${this.renderStageInfo(
             StageKind.VoteForLeader, STAGE_DESCRIPTION_VOTE)}
+          ${this.renderStageInfo(
+            "leaderModule", MODULE_DESCRIPTION_LEADER, true)}
+          ${this.renderCurrentStageNameField()}
+        `;
+      case StageKind.RevealVoted:
+        return html`
+          ${this.renderStageInfo(
+            StageKind.RevealVoted, STAGE_DESCRIPTION_REVEAL)}
+          ${this.renderStageInfo(
+            "leaderModule", MODULE_DESCRIPTION_LEADER, true)}
           ${this.renderCurrentStageNameField()}
         `;
       default:
@@ -162,10 +175,15 @@ export class ExperimentConfig extends MobxLitElement {
     `;
   }
 
-  private renderStageInfo(chip: string, content: string) {
+  private renderStageInfo(chip: string, content: string, isModule = false) {
+    const chipClasses = classMap({
+      "stage-chip": true,
+      "tertiary": isModule
+    });
+
     return html`
       <div class="stage-info">
-        <div class="stage-chip">${chip}</div>
+        <div class=${chipClasses}>${chip}</div>
         <div class="stage-description">${content}</div>
       </div>
     `;
@@ -298,27 +316,62 @@ export class ExperimentConfig extends MobxLitElement {
       this.experimentConfig.setCurrentStageIndexToLast();
     }
 
-    const onAddVoteClick = () => {
+    const onAddLeaderClick = () => {
       this.experimentConfig.addStage(
         { kind: StageKind.VoteForLeader, name: "Vote for leader" }
       );
+      this.experimentConfig.addStage(createRevealVotedStage());
       this.experimentConfig.setCurrentStageIndexToLast();
     }
+
+    const onAddRankingClick = () => {
+      // TODO: Generate and add ranking-related stages
+    }
+
+    const renderLeaderModule = () => {
+      if (this.experimentConfig.hasStageKind(StageKind.VoteForLeader)) {
+        return nothing;
+      }
+      return html`
+        <div class="menu-item" role="button" @click=${onAddLeaderClick}>
+          <div class="module-title">Leader</div>
+          <div class="module-info">${MODULE_DESCRIPTION_LEADER}</div>
+        </div>
+      `;
+    };
+
+    const renderRankingModule = () => {
+      if (this.experimentConfig.hasStageKind(StageKind.GroupChat)) {
+        return nothing;
+      }
+      return html`
+        <div class="menu-item" role="button" @click=${onAddRankingClick}>
+          <div class="module-title">Ranking</div>
+          <div class="module-info">${MODULE_DESCRIPTION_RANKING}
+        </div>
+      `;
+    };
 
     return html`
       <div class="buttons-wrapper">
         <pr-menu name="Add stage">
-          <div class="nav-item" role="button" @click=${onAddInfoClick}>
-            Info stage
-          </div>
-          <div class="nav-item" role="button" @click=${onAddSurveyClick}>
-            Survey stage
-          </div>
-          <div class="nav-item" role="button" @click=${onAddProfileClick}>
-            Profile stage
-          </div>
-          <div class="nav-item" role="button" @click=${onAddVoteClick}>
-            Leader vote stage
+          <div class="menu-wrapper">
+            <div class="stages">
+              <div class="category">Stages</div>
+              <div class="menu-item" role="button" @click=${onAddInfoClick}>
+                Info stage
+              </div>
+              <div class="menu-item" role="button" @click=${onAddSurveyClick}>
+                Survey stage
+              </div>
+              <div class="menu-item" role="button" @click=${onAddProfileClick}>
+                Profile stage
+              </div>
+            </div>
+            <div class="modules">
+              <div class="category tertiary">Modules</div>
+                ${renderLeaderModule()}
+              </div>
           </div>
         </pr-menu>
       </div>

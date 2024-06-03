@@ -24,3 +24,8 @@ export const STAGE_DESCRIPTION_PROFILE =
 export const STAGE_DESCRIPTION_CHAT = "Chat with other participants";
 export const STAGE_DESCRIPTION_VOTE = "Choose a participant leader";
 export const STAGE_DESCRIPTION_REVEAL = "Show leader voting results";
+
+export const MODULE_DESCRIPTION_LEADER =
+  "Includes voting stage and reveal stage for choosing a participant leader";
+export const MODULE_DESCRIPTION_RANKING =
+  "Includes two solo item rankings, a group chat about those items, and a final leader item ranking";
