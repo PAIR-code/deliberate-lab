@@ -48,6 +48,7 @@ import {
 } from "../../shared/utils";
 
 import { styles } from "./experiment_config.scss";
+import { ExperimenterService } from "../../services/experimenter_service";
 
 /** Experiment config page component */
 @customElement("experiment-config")
@@ -60,7 +61,7 @@ export class ExperimentConfig extends MobxLitElement {
   private readonly surveyConfig = core.getService(SurveyConfigService);
 
   private readonly authService = core.getService(AuthService);
-  private readonly firebaseService = core.getService(FirebaseService);
+  private readonly experimenterService = core.getService(ExperimenterService);
   private readonly routerService = core.getService(RouterService);
 
   override render() {
@@ -387,7 +388,7 @@ export class ExperimentConfig extends MobxLitElement {
       const { name, stages, numberOfParticipants } =
         this.experimentConfig.getExperiment();
 
-      await this.firebaseService.createExperiment(
+      await this.experimenterService.createExperiment(
         name, stages, numberOfParticipants
       );
 

@@ -1,7 +1,7 @@
 import { CacheMap, Experiment, ExperimentTemplate, ExperimentTemplateExtended, ParticipantProfileExtended, StageConfig, lookupTable } from "@llm-mediation-experiments/utils";
 import { Unsubscribe, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot } from "firebase/firestore";
 import { computed, makeObservable, observable } from "mobx";
-import { createExperimentCallable } from "../shared/callables";
+import { createExperimentCallable, deleteExperimentCallable } from "../shared/callables";
 import { collectSnapshotWithId } from "../shared/utils";
 import { AuthService } from "./auth_service";
 import { FirebaseService } from "./firebase_service";
@@ -92,7 +92,12 @@ export class ExperimenterService extends Service {
   });
 
   return template;
-}
+  }
+
+  getExperiment(experimentId: string) {
+    return this.experiments.find((exp) => exp.id === experimentId);
+  }
+
   // ******************************************************************************************* //
   //                                          MUTATIONS                                          //
   // ******************************************************************************************* //
@@ -128,5 +133,15 @@ export class ExperimenterService extends Service {
       metadata: { name },
       stages,
     });
+  }
+
+  /** Delete an experiment.
+   * @rights Experimenter
+   */
+  async deleteExperiment(experimentId: string) {
+    return deleteExperimentCallable(this.sp.firebaseService.functions, {
+      id: experimentId,
+      type: 'experiments',
+    })
   }
 }

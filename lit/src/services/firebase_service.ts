@@ -74,33 +74,6 @@ export class FirebaseService extends Service {
   functions: Functions;
   provider: GoogleAuthProvider;
   unsubscribe: Unsubscribe[] = [];
-  @observable experiments: Experiment[] = [];
-  @observable currentExperimentId: string|null = null;
-
-  @computed get currentExperiment() {
-    return this.experiments.find(e => e.id === this.currentExperimentId);
-  }
-
-  subscribe(collectionName: string) {
-    this.unsubscribe.push(
-      onSnapshot(
-        collection(this.firestore, collectionName),
-        (snapshot: Snapshot) => {
-          this.experiments =
-            collectSnapshotWithId<Experiment>(snapshot, 'id');
-        }
-      ),
-    );
-  }
-
-  unsubscribeAll() {
-    this.unsubscribe.forEach(unsubscribe => unsubscribe());
-    this.unsubscribe = [];
-
-    // Clear data
-    this.experiments = [];
-    this.currentExperimentId = null;
-  }
 
   registerEmulators() {
     connectFirestoreEmulator(
@@ -116,46 +89,6 @@ export class FirebaseService extends Service {
       this.functions,
       'localhost',
       FIREBASE_LOCAL_HOST_PORT_FUNCTIONS
-    );
-  }
-
-  async createExperiment(
-    name: string, stages: StageConfig[], numberOfParticipants?: number
-  ) {
-    if (stages.length === 0) {
-      console.log('Error: Cannot create experiment with 0 stages');
-      return;
-    }
-
-    return this.createExperimentCallable({
-      type: 'experiments',
-      metadata: { name, numberOfParticipants },
-      stages: stages.map((stage, index) => {
-        return { ...stage, name: `${index + 1}. ${stage.name}`}
-      }),
-    });
-  }
-
-  async deleteExperiment(experimentId: string) {
-    // If experiment stages shown in sidenav, update sidenav view
-    if (this.sp.routerService.sidenavExperimentId === experimentId) {
-      this.sp.routerService.setSidenavExperiment(null);
-    }
-
-    return deleteDoc(doc(this.firestore, 'experiments', experimentId));
-  }
-
-  getExperiment(experimentId: string) {
-    return this.experiments.find(experiment => experiment.id === experimentId);
-  }
-
-  /** Generic endpoint to create experiments or experiment templates */
-  createExperimentCallable(args: ExperimentCreationData) {
-    extractDataFromCallable(
-      args,
-      httpsCallable<ExperimentCreationData, CreationResponse>(
-        this.functions, 'createExperiment'
-      )
     );
   }
 }
