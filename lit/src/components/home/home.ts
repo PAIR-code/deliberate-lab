@@ -39,7 +39,7 @@ export class Home extends MobxLitElement {
   }
 
   private renderCreateButton() {
-    if (!this.authService.isExperimenter) {
+    if (this.authService.isParticipantView) {
       return nothing;
     }
 

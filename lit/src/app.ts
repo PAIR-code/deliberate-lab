@@ -1,3 +1,5 @@
+import "./pair-components/button";
+
 import "./experiment-components/chat/chat_interface";
 import "./experiment-components/experiment/experiment_config";
 import "./experiment-components/experiment/experiment_preview";
@@ -21,6 +23,7 @@ import { core } from "./core/core";
 import { AuthService } from "./services/auth_service";
 import { ChatService } from "./services/chat_service";
 import { ExperimentService } from "./services/experiment_service";
+import { ParticipantService } from "./services/participant_service";
 import { Pages, RouterService } from "./services/router_service";
 import { SettingsService } from "./services/settings_service";
 
@@ -43,6 +46,7 @@ export class App extends MobxLitElement {
 
   private readonly authService = core.getService(AuthService);
   private readonly experimentService = core.getService(ExperimentService);
+  private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
   private readonly settingsService = core.getService(SettingsService);
 
@@ -76,7 +80,7 @@ export class App extends MobxLitElement {
   }
 
   private renderExperiment() {
-    if (!this.authService.isExperimenter) {
+    if (this.authService.isParticipantView) {
       return this.render403();
     }
 
@@ -90,7 +94,7 @@ export class App extends MobxLitElement {
   }
 
   private renderExperimentStage() {
-    if (!this.authService.isExperimenter) {
+    if (this.authService.isParticipantView) {
       return this.render403();
     }
 
@@ -125,6 +129,34 @@ export class App extends MobxLitElement {
       default:
         return this.render404("Could not load experiment stage");
     }
+  }
+
+  private renderAuthBanner() {
+    if (!this.authService.isParticipantView) {
+      return nothing;
+    }
+
+    const handlePreviewOff = () => {
+      this.authService.setPreviewMode(false);
+    };
+
+    return html`
+      <div class="banner">
+        <div>
+          You are previewing as Participant
+          ${this.participantService.participantId}.
+        </div>
+        <pr-button
+          color="tertiary"
+          padding="small"
+          size="small"
+          variant="default"
+          @click=${handlePreviewOff}
+        >
+          Back to experimenter view
+        </pr-button>
+      </div>
+    `;
   }
 
   override render() {
@@ -169,6 +201,7 @@ export class App extends MobxLitElement {
           <sidenav-menu></sidenav-menu>
           <div class="content-wrapper">
             <page-header></page-header>
+            ${this.renderAuthBanner()}
             <div class="content">
               ${this.renderPageContent()}
             </div>

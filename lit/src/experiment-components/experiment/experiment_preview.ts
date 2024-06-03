@@ -22,7 +22,7 @@ export class ExperimentPreview extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   override render() {
-    if (!this.authService.isExperimenter) {
+    if (this.authService.isParticipantView) {
       return html`<div>Use the left nav to begin the experiment</div>`;
     }
 
