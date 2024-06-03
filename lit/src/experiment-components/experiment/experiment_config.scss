@@ -38,9 +38,18 @@ h2 {
 .nav-item {
   @include common.nav-item;
   border-radius: common.$spacing-medium;
+  justify-content: space-between;
 
   &.main-nav {
     border-radius: 0;
+  }
+
+  .label {
+    max-width: 200px;
+  }
+
+  .buttons {
+    @include common.flex-row-align-center;
   }
 }
 

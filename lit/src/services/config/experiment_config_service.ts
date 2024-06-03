@@ -74,6 +74,24 @@ export class ExperimentConfigService extends Service {
     }
   }
 
+  moveStageUp(index: number) {
+    this.stages = [
+      ...this.stages.slice(0, index - 1),
+      ...this.stages.slice(index, index + 1),
+      ...this.stages.slice(index - 1, index),
+      ...this.stages.slice(index + 1)
+    ];
+  }
+
+  moveStageDown(index: number) {
+    this.stages = [
+      ...this.stages.slice(0, index),
+      ...this.stages.slice(index + 1, index + 2),
+      ...this.stages.slice(index, index + 1),
+      ...this.stages.slice(index + 2)
+    ];
+  }
+
   reset() {
     this.name = 'New experiment';
     this.numParticipants = 1;

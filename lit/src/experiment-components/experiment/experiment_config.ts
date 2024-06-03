@@ -1,4 +1,5 @@
 import "../../pair-components/button";
+import "../../pair-components/icon_button";
 import "../../pair-components/menu";
 import "../../pair-components/textarea";
 import "../../pair-components/tooltip";
@@ -217,9 +218,41 @@ export class ExperimentConfig extends MobxLitElement {
       this.experimentConfig.setCurrentStageIndex(index);
     };
 
+    const handleMoveUp = () => {
+      this.experimentConfig.moveStageUp(index);
+    }
+
+    const handleMoveDown = () => {
+      this.experimentConfig.moveStageDown(index);
+    }
+
     return html`
-      <div class=${classes} role="button" @click=${handleClick}>
-        ${index + 1}. ${stage.name}
+      <div class=${classes}>
+        <div class="label" role="button" @click=${handleClick}>
+          ${index + 1}. ${stage.name}
+        </div>
+        <div class="buttons">
+          <pr-icon-button
+            color="neutral"
+            icon="arrow_upward"
+            padding="small"
+            size="small"
+            variant="default"
+            ?disabled=${index === 0}
+            @click=${handleMoveUp}
+          >
+          </pr-icon-button>
+          <pr-icon-button
+            color="neutral"
+            icon="arrow_downward"
+            padding="small"
+            size="small"
+            variant="default"
+            ?disabled=${index === this.experimentConfig.stages.length - 1}
+            @click=${handleMoveDown}
+          >
+          </pr-icon-button>
+        </div>
       </div>
     `;
   }
