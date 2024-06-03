@@ -12,6 +12,9 @@ import {
 } from "./services/config/experiment_config_service";
 import { InfoConfigService } from './services/config/info_config_service';
 import { TOSConfigService } from './services/config/tos_config_service';
+import {
+  SurveyConfigService
+} from "./services/config/survey_config_service";
 
 /**
  * Defines a map of services to their identifier
@@ -47,6 +50,9 @@ export function makeServiceProvider(self: Core) {
     },
     get tosConfigService() {
       return self.getService(TOSConfigService);
+    },
+    get surveyConfigService() {
+      return self.getService(SurveyConfigService);
     }
   };
 

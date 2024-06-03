@@ -11,6 +11,7 @@ import {
   InfoStageConfig,
   StageConfig,
   StageKind,
+  SurveyStageConfig,
   TermsOfServiceStageConfig
 } from '@llm-mediation-experiments/utils';
 
@@ -34,6 +35,14 @@ export function createTOSStage(
 ): TermsOfServiceStageConfig {
   const tosLines = [content];
   return { kind: StageKind.TermsOfService, name, tosLines };
+}
+
+/** Create survey stage. */
+export function createSurveyStage(
+  name = "Survey",
+  questions = []
+): SurveyStageConfig {
+  return { kind: StageKind.TakeSurvey, name, questions };
 }
 
 /** Use micromark to convert Git-flavored markdown to HTML. */

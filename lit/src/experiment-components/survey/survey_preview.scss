@@ -1,0 +1,17 @@
+@use "../../sass/common";
+
+:host {
+  @include common.flex-column;
+  @include common.html-preview;
+  gap: common.$spacing-xl;
+}
+
+.question {
+  @include common.flex-column;
+  gap: common.$spacing-large; 
+}
+
+.slider-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+}

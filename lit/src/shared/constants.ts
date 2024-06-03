@@ -17,3 +17,5 @@ export const FIREBASE_CONFIG: FirebaseOptions = {
 /** Stage config descriptions. */
 export const STAGE_DESCRIPTION_INFO = "Shows Markdown-rendered information";
 export const STAGE_DESCRIPTION_TOS = "Shows Markdown-rendered terms of service";
+export const STAGE_DESCRIPTION_SURVEY =
+  "Answer questions on a sliding scale of 1 to 10";

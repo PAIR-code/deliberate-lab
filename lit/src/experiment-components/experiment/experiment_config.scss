@@ -47,6 +47,7 @@ h2 {
   @include common.flex-column;
   border-left: 1px solid var(--md-sys-color-outline);
   gap: common.$spacing-xxl;
+  overflow: auto;
   padding: common.$sidenav-padding;
   width: 100%;
 }

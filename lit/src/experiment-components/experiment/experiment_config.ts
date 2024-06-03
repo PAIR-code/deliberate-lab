@@ -5,6 +5,7 @@ import "../../pair-components/tooltip";
 
 import "../info/info_config";
 import "../tos/tos_config";
+import "../survey/survey_config";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
@@ -17,6 +18,9 @@ import {
 } from "../../services/config/experiment_config_service";
 import { InfoConfigService } from "../../services/config/info_config_service";
 import { TOSConfigService } from "../../services/config/tos_config_service";
+import {
+  SurveyConfigService
+} from "../../services/config/survey_config_service";
 
 import { AuthService } from "../../services/auth_service";
 import { FirebaseService } from "../../services/firebase_service";
@@ -24,10 +28,11 @@ import { Pages, RouterService } from "../../services/router_service";
 
 import {
   STAGE_DESCRIPTION_INFO,
-  STAGE_DESCRIPTION_TOS
+  STAGE_DESCRIPTION_TOS,
+  STAGE_DESCRIPTION_SURVEY,
 } from "../../shared/constants";
 import { StageConfig, StageKind } from "@llm-mediation-experiments/utils";
-import { createInfoStage } from "../../shared/utils";
+import { createInfoStage, createSurveyStage } from "../../shared/utils";
 
 import { styles } from "./experiment_config.scss";
 
@@ -39,6 +44,7 @@ export class ExperimentConfig extends MobxLitElement {
   private readonly experimentConfig = core.getService(ExperimentConfigService);
   private readonly infoConfig = core.getService(InfoConfigService);
   private readonly tosConfig = core.getService(TOSConfigService);
+  private readonly surveyConfig = core.getService(SurveyConfigService);
 
   private readonly authService = core.getService(AuthService);
   private readonly firebaseService = core.getService(FirebaseService);
@@ -81,6 +87,14 @@ export class ExperimentConfig extends MobxLitElement {
           ${this.renderStageInfo(
             StageKind.TermsOfService, STAGE_DESCRIPTION_TOS)}
           <tos-config></tos-config>
+        `;
+      case StageKind.TakeSurvey:
+        this.surveyConfig.reset();
+        this.surveyConfig.stage = currentStage;
+        return html`
+          ${this.renderStageInfo(
+            StageKind.TakeSurvey, STAGE_DESCRIPTION_SURVEY)}
+          <survey-config></survey-config>
         `;
       default:
         return this.renderMetadata();
@@ -179,11 +193,21 @@ export class ExperimentConfig extends MobxLitElement {
       );
     }
 
+    const onAddSurveyClick = () => {
+      this.experimentConfig.addStage(createSurveyStage());
+      this.experimentConfig.setCurrentStageIndex(
+        this.experimentConfig.stages.length - 1
+      );
+    }
+
     return html`
       <div class="buttons-wrapper">
         <pr-menu name="Add stage">
           <div class="nav-item" role="button" @click=${onAddInfoClick}>
             Info stage
+          </div>
+          <div class="nav-item" role="button" @click=${onAddSurveyClick}>
+            Survey stage
           </div>
         </pr-menu>
       </div>
