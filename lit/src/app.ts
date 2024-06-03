@@ -1,6 +1,8 @@
 import "./experiment-components/chat/chat_interface";
 import "./experiment-components/experiment/experiment_config";
+import "./experiment-components/experiment/experiment_preview";
 import "./experiment-components/info/info_preview";
+import "./experiment-components/profile/profile_config";
 import "./experiment-components/tos/tos_preview";
 import "./experiment-components/survey/survey_preview";
 
@@ -79,7 +81,7 @@ export class App extends MobxLitElement {
       return html`<div>Loading experiment...</div>`;
     }
 
-    return html`<div>Experiment preview goes here</div>`;
+    return html`<experiment-preview></experiment-preview>`;
   }
 
   private renderExperimentStage() {
@@ -107,7 +109,7 @@ export class App extends MobxLitElement {
       case StageKind.TakeSurvey:
         return html`<survey-preview .stage=${currentStage}></survey-preview>`;
       case StageKind.SetProfile:
-        return html`Placeholder: SetProfile stage`;
+        return html`<profile-config></profile-config>`;
       case StageKind.VoteForLeader:
         return html`Placeholder: VoteForLeader stage`;
       case StageKind.RevealVoted:

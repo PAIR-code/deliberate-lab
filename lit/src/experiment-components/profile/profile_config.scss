@@ -1,0 +1,21 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-xxl;
+}
+
+.title {
+  @include typescale.label-small;
+}
+
+.radio-question {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.radio-button {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+}
