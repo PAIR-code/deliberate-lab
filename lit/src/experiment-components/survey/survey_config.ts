@@ -78,7 +78,7 @@ export class SurveyConfig extends MobxLitElement {
 
     return html`
       <div class="question">
-        <h3>Question ${index + 1}</h3>
+        <h3>Question ${index + 1} of ${this.surveyConfig.questions.length}</h3>
         <pr-textarea
           label="Question text"
           placeholder="Question text"

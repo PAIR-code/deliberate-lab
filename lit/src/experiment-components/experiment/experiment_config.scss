@@ -21,7 +21,8 @@ h2 {
   @include common.flex-row;
   border: 1px solid var(--md-sys-color-outline);
   border-radius: common.$spacing-medium;
-  min-height: 400px;
+  height: 600px;
+  max-height: calc(100vh - 400px);
   overflow: hidden;
 }
 
