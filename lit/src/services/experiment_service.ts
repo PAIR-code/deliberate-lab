@@ -24,13 +24,13 @@ export class ExperimentService extends Service {
     makeObservable(this);
   }
 
-  @observable id = '';
+  @observable id: string | null = null;
   @observable stageConfigMap: Record<string, StageConfig> = {};
   @observable stageNames: string[] = [];
   @observable unsubscribe: Unsubscribe[] = [];
   @observable isLoading = false;
 
-  setExperimentId(id: string) {
+  setExperimentId(id: string | null) {
     this.id = id;
     this.isLoading = true;
     this.loadStageData();
@@ -38,6 +38,11 @@ export class ExperimentService extends Service {
 
   loadStageData() {
     this.unsubscribeAll();
+
+    if (this.id === null) {
+      this.isLoading = false;
+      return;
+    }
 
     // Fetch the experiment config
     this.unsubscribe.push(onSnapshot(

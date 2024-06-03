@@ -70,7 +70,7 @@ export class SideNav extends MobxLitElement {
     return html`
       ${this.renderExperimentItem(experiment!, true)}
       ${this.experimentService.stageNames.map(
-        (stage: string) => this.renderStageItem(id, stage)
+        (stage: string) => this.renderStageItem(id!, stage)
       )}
     `;
   }
