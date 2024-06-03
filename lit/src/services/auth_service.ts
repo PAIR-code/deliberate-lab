@@ -35,6 +35,8 @@ export class AuthService extends Service {
             this.isExperimenter = false;
             // NOTE: I don't think we need to forcefully clear the in-memory data here, as the user cannot access it.
             // I think this will unnecessarily complicate the service flow
+            // NOTE: Added this because the data persisted across different
+            // logins, though maybe there's a better fix for that?
             this.sp.experimentService.unsubscribeAll();
           }
         });
