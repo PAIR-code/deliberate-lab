@@ -218,17 +218,19 @@ export class ExperimentConfig extends MobxLitElement {
       this.experimentConfig.setCurrentStageIndex(index);
     };
 
-    const handleMoveUp = () => {
+    const handleMoveUp = (e: Event) => {
       this.experimentConfig.moveStageUp(index);
+      e.stopPropagation();
     }
 
-    const handleMoveDown = () => {
+    const handleMoveDown = (e: Event) => {
       this.experimentConfig.moveStageDown(index);
+      e.stopPropagation();
     }
 
     return html`
-      <div class=${classes}>
-        <div class="label" role="button" @click=${handleClick}>
+      <div class=${classes} role="button" @click=${handleClick}>
+        <div class="label">
           ${index + 1}. ${stage.name}
         </div>
         <div class="buttons">
