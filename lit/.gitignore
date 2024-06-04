@@ -11,3 +11,5 @@ dist/bundle.js
 npm-debug.log*
 
 .vscode/
+
+firebase_config.ts
