@@ -22,18 +22,21 @@ npm run build:watch
 
 The shared utilities are built using [`tsup`](https://tsup.egoist.dev) to produce both esm (for the webapp) and cjs (for the cloud functions and scripts) code.
 
-## Webapp
+## Frontend
 
-The webapp is made using Angular JS 17.
+### Angular frontend (current)
 
-### Recommended editor setup
+The most up-to-date frontend for this project is under `/webapp`
+and uses Angular JS 17.
+
+#### Recommended editor setup
 
 This code is being developed using [Visual Studio Code](https://code.visualstudio.com/).
 Make sure to install the angular extension.\
 Run `ng generate component component-name` to generate a new component.\
 You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
 
-### Development server
+#### Development server
 
 First, install the dependencies:
 
@@ -48,7 +51,24 @@ You can then run the development server:
 npm run start
 ```
 
-Navigate to [`http://localhost:4200/`](http://localhost:4200/). The application will automatically reload if you change any of the source files.
+Navigate to [`http://localhost:4200/`](http://localhost:4200/).
+The application will automatically reload if you change any of the source files.
+
+### Lit frontend (in progress)
+
+> NOTE: This is not yet fully functional!
+
+An alternate frontend (written in Lit/MobX with updated UX, but without
+full functionality, e.g., participant read/write ability, yet) can be
+found under `/lit`, with documentation at `/lit/README.md`.
+
+This can be run instead of (or alongside) the Angular webapp.
+
+```bash
+cd lit
+npm install
+npm run start  # Builds the Lit app at localhost:4201
+```
 
 ## Firebase
 

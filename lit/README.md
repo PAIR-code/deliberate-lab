@@ -3,8 +3,8 @@
 This directory contains a Lit Element / MobX frontend for the LLM Mediation
 Experiments project.
 
-NOTE: This is an experiment in progress! Code is not yet connected to
-the Firebase backend.
+> NOTE: This is an in-progress alternative to the Angular frontend,
+which has additional functionality and can be viewed/run from `/webapp`.
 
 ## Local development
 
@@ -13,6 +13,8 @@ To run locally:
 ```
 npm run start
 ```
+
+Then, navigate to [`http://localhost:4201/`](http://localhost:4201/).
 
 ## Code structure
 
