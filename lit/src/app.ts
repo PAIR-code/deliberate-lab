@@ -80,10 +80,6 @@ export class App extends MobxLitElement {
   }
 
   private renderExperiment() {
-    if (this.authService.isParticipantView) {
-      return this.render403();
-    }
-
     this.experimentService.updateForCurrentRoute();
 
     if (this.experimentService.isLoading) {
@@ -94,10 +90,6 @@ export class App extends MobxLitElement {
   }
 
   private renderExperimentStage() {
-    if (this.authService.isParticipantView) {
-      return this.render403();
-    }
-
     this.experimentService.updateForCurrentRoute();
 
     if (this.experimentService.isLoading) {
@@ -132,7 +124,7 @@ export class App extends MobxLitElement {
   }
 
   private renderAuthBanner() {
-    if (!this.authService.isParticipantView) {
+    if (!this.authService.isPreviewMode) {
       return nothing;
     }
 
