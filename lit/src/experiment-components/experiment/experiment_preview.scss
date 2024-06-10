@@ -1,0 +1,13 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+  padding-bottom: common.$spacing-xxl;
+}
+
+h2 {
+  @include typescale.body-medium;
+  margin: 0;
+}

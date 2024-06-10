@@ -1,0 +1,7 @@
+@use "../../sass/common";
+
+:host {
+  @include common.flex-column;
+  @include common.html-preview;
+  gap: common.$spacing-xl;
+}

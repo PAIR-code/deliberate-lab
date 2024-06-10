@@ -1,0 +1,62 @@
+@use "../../sass/colors";
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+$avatar-height: 30px;
+$bubble-radius: 20px;
+$bubble-radius-small: common.$spacing-small;
+
+.chat-message {
+  @include common.flex-row;
+  gap: common.$spacing-large;
+  width: 100%;
+}
+
+.label {
+  @include typescale.label-medium;
+  color: var(--md-sys-color-outline);
+  width: max-content;
+}
+
+.content {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
+.avatar {
+  background: var(--md-sys-color-outline-variant);
+  border-radius: 100%;
+  flex-shrink: 0;
+  height: $avatar-height;
+  margin-top: calc(common.$spacing-small +
+    var(--md-sys-typescale-label-medium-line-height));
+  width: $avatar-height;
+}
+
+.chat-bubble {
+  @include common.flex-column;
+  @include typescale.body-small;
+  align-items: end;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium common.$spacing-large;
+  background: var(--md-sys-color-surface-container-low);
+  border-radius: $bubble-radius $bubble-radius $bubble-radius
+    $bubble-radius-small;
+  color: var(--md-sys-color-on-surface-container);
+}
+
+.current-user {
+  flex-direction: row-reverse;
+
+  .content {
+    align-items: end;
+  }
+
+  .chat-bubble {
+    align-self: end;
+    background: var(--md-sys-color-primary-container);
+    border-radius: $bubble-radius $bubble-radius $bubble-radius-small
+      $bubble-radius;
+    color: var(--md-sys-color-on-primary-container);
+  }
+}

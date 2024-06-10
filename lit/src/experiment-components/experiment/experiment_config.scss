@@ -1,0 +1,152 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.default;
+  @include common.flex-column;
+  gap: common.$spacing-large;
+  height: 100%;
+  padding-bottom: common.$spacing-xxl;
+}
+
+h2 {
+  @include typescale.body-medium;
+  margin: 0;
+}
+
+.error {
+  color: var(--md-sys-color-error);
+}
+
+.stages-wrapper {
+  @include common.flex-row;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: common.$spacing-medium;
+  height: 600px;
+  max-height: calc(100vh - 400px);
+  overflow: hidden;
+}
+
+.stages-nav {
+  @include common.flex-column;
+  min-width: common.$sidenav-width;
+  height: max-content;
+  max-height: 100%;
+  position: sticky;
+  top: 0;
+}
+
+.nav-item {
+  @include common.nav-item;
+  border-radius: common.$spacing-medium;
+  height: calc(common.$spacing-large * 2
+    + var(--md-sys-typescale-body-small-line-height));
+  justify-content: space-between;
+
+  &.main-nav {
+    border-radius: 0;
+  }
+
+  .label {
+    max-width: 200px;
+  }
+
+  .buttons {
+    @include common.flex-row-align-center;
+  }
+}
+
+.current-stage {
+  @include common.flex-column;
+  border-left: 1px solid var(--md-sys-color-outline);
+  gap: common.$spacing-xxl;
+  overflow: auto;
+  padding: common.$sidenav-padding;
+  width: 100%;
+}
+
+.stage-info {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-medium;
+}
+
+.stage-chip {
+  @include typescale.label-small;
+  background: var(--md-sys-color-primary-container);
+  border-radius: common.$spacing-small;
+  color: var(--md-sys-color-on-secondary-container);
+  height: max-content;
+  padding: common.$spacing-small common.$spacing-medium;
+  width: max-content;
+
+  &.tertiary {
+    background: var(--md-sys-color-tertiary-container);
+    color: var(--md-sys-color-on-tertiary-container);
+  }
+}
+
+.stage-description {
+  @include typescale.body-small;
+  color: var(--md-sys-color-outline);
+  font-style: italic;
+}
+
+.menu-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+
+  .modules,
+  .stages {
+    @include common.flex-column;
+    gap: common.$spacing-small;
+  }
+}
+
+.menu-item {
+  @include common.flex-column;
+  border: 1px solid transparent;
+  border-radius: common.$spacing-medium;
+  cursor: pointer;
+  padding: common.$spacing-medium;
+
+  &:focus,
+  &:hover {
+    border-color: var(--md-sys-color-outline-variant);
+  }
+}
+
+.category {
+  @include typescale.label-small;
+  color: var(--md-sys-color-primary);
+  text-transform: uppercase;
+
+  &.tertiary {
+    color: var(--md-sys-color-tertiary);
+  }
+}
+
+.module-title {
+  @include typescale.title-small;
+}
+
+.module-info {
+  color: var(--md-sys-color-outline);
+  font-style: italic;
+}
+
+.number-input {
+  @include common.number-input;
+}
+
+.buttons-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  justify-content: end;
+
+  &.bottom {
+    margin-bottom: 0;
+    margin-top: auto;
+  }
+}

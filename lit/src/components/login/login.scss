@@ -1,0 +1,35 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.default;
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+h1 {
+  @include typescale.title-large;
+  margin: 0;
+  text-align: center;
+}
+
+h2 {
+  @include typescale.title-medium;
+  margin: 0;
+}
+
+.cards-wrapper {
+  display: grid;
+  gap: common.$spacing-large;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@include common.viewport-small {
+  .cards-wrapper {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
+
+.card {
+  @include common.info-card;
+}

@@ -1,0 +1,95 @@
+@use "./sass/colors";
+@use "./sass/common";
+@use "./sass/typescale";
+
+* {
+  @include common.default;
+}
+
+.app-wrapper {
+  @include colors.kamino-ref;
+  @include typescale.app-small;
+
+  align-items: center;
+  background: var(--md-sys-color-surface-bright);
+  color: var(--md-sys-color-on-surface);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+}
+
+.size--small {
+  @include typescale.app-small;
+}
+
+.size--medium {
+  @include typescale.app-medium;
+}
+
+.size--large {
+  @include typescale.app-large;
+}
+
+.mode--light {
+  @include colors.light;
+}
+
+.mode--dark {
+  @include colors.dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  .app-wrapper:not(.mode--light) {
+    @include colors.dark;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .app-wrapper:not(.mode--dark) {
+    @include colors.light;
+  }
+}
+
+main {
+  @include common.full-percentage;
+  @include common.flex-row;
+}
+
+.banner {
+  @include common.flex-row-align-center;
+  background: var(--md-sys-color-tertiary-container);
+  color: var(--md-sys-color-on-tertiary-container);
+  gap: common.$spacing-small;
+  justify-content: space-between;
+  max-width: common.$main-content-max-width;
+  padding: common.$spacing-medium;
+  position: sticky;
+  top: 0;
+  width: 100%;
+}
+
+.content-wrapper {
+  @include common.flex-column;
+  align-items: center;
+  background: var(--md-sys-color-surface-variant);
+  flex-grow: 1;
+  overflow: auto;
+
+  &:has(page-header) {
+    padding-top: calc(common.$header-height + common.$sidenav-padding);
+  }
+}
+
+.content {
+  @include common.full-percentage;
+  flex-grow: 1;
+  max-width: common.$main-content-max-width;
+  padding: common.$main-content-padding;
+}
+
+@include common.viewport-small {
+  .content:has(page-header) {
+    padding-top: common.$header-height;
+  }
+}
