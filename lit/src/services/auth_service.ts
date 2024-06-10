@@ -45,6 +45,7 @@ export class AuthService extends Service {
   }
 
   @observable user: User|null|undefined = undefined;
+  @observable participant: { experimentId: string, participantId: string }|undefined = undefined;
   @observable isExperimenter: boolean|null = null;
   @observable isPreviewMode = false; // Used for experimenters
 
@@ -52,12 +53,13 @@ export class AuthService extends Service {
     return this.user?.uid;
   }
 
+  /** Authentication check to determine wether to display the login page */
   @computed get initialAuthCheck() {
-    return this.user !== undefined;
+    return this.user !== undefined || this.participant !== undefined;
   }
 
   @computed get authenticated() {
-    return this.initialAuthCheck && this.user !== null;
+    return this.initialAuthCheck && (this.user !== null || this.participant !== undefined);
   }
 
   @computed get isParticipantView() {

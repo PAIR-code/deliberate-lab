@@ -3,7 +3,6 @@ import "../../pair-components/button";
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import { Ref, createRef, ref } from "lit/directives/ref.js";
 
 import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
@@ -12,6 +11,7 @@ import { SettingsService } from "../../services/settings_service";
 import { ColorMode, ColorTheme, TextSize } from "../../shared/types";
 
 import { styles } from "./settings.scss";
+import { Pages, RouterService } from "../../services/router_service";
 
 /** Settings page component */
 @customElement("settings-page")
@@ -20,6 +20,7 @@ export class Settings extends MobxLitElement {
 
   private readonly authService = core.getService(AuthService);
   private readonly settingsService = core.getService(SettingsService);
+  private readonly routerService = core.getService(RouterService);
 
   override render() {
     return html`
@@ -167,13 +168,19 @@ export class Settings extends MobxLitElement {
 
   private renderAccountSection() {
     const handleSignOut = () => {
-      this.authService.signOut();
+      if (this.authService.isExperimenter)
+        this.authService.signOut();
+      else {
+        this.authService.participant = undefined;
+        this.routerService.navigate(Pages.HOME);
+      }
     };
+    const userId = this.authService.isExperimenter ? this.authService.userId : this.authService.participant?.participantId;
 
     return html`
       <div class="section">
         <h2>Account</h2>
-        <p><b>User ID:</b> ${this.authService.userId}</p>
+        <p><b>User ID:</b> ${userId}</p>
         <p>
           <b>Role:</b>
           ${this.authService.isExperimenter ? 'experimenter' : 'participant'}
