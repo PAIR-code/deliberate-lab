@@ -38,7 +38,7 @@ export class ProfilePreview extends MobxLitElement {
           this.profile.privateId
         );
         this.routerService.navigate(
-          Pages.EXPERIMENT_PARTICIPANT,
+          Pages.PARTICIPANT,
           {
             "experiment": this.experimentService.id,
             "participant": this.profile.privateId

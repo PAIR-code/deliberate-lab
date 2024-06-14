@@ -41,6 +41,11 @@ export class SideNav extends MobxLitElement {
         <div class="top">
           ${this.renderParticipantNav()}
         </div>
+        <div class="bottom">
+          ${NAV_ITEMS.filter(
+            (navItem) => navItem.isParticipantPage
+          ).map((navItem) => this.renderNavItem(navItem))}
+        </div>
       `;
     }
 
@@ -50,7 +55,7 @@ export class SideNav extends MobxLitElement {
       </div>
       <div class="bottom">
         ${NAV_ITEMS.filter(
-          (navItem) => navItem.showInSidenav
+          (navItem) => navItem.isExperimenterPage
         ).map((navItem) => this.renderNavItem(navItem))}
       </div>
     `;
@@ -115,13 +120,13 @@ export class SideNav extends MobxLitElement {
     const navItemClasses = classMap({
       "nav-item": true,
       "primary": true,
-      selected: this.routerService.activePage === Pages.EXPERIMENT_PARTICIPANT
+      selected: this.routerService.activePage === Pages.PARTICIPANT
         && experiment.id === this.experimentService.id,
     });
 
     const handleClick = (_e: Event) => {
       this.routerService.navigate(
-        Pages.EXPERIMENT_PARTICIPANT,
+        Pages.PARTICIPANT,
         { "experiment": experiment.id, "participant": participantId }
       );
     }
@@ -172,12 +177,12 @@ export class SideNav extends MobxLitElement {
     const navItemClasses = classMap({
       "nav-item": true,
       selected:
-        this.routerService.activePage === Pages.EXPERIMENT_PARTICIPANT_STAGE &&
+        this.routerService.activePage === Pages.PARTICIPANT_STAGE &&
         this.routerService.activeRoute.params["stage"] === stage,
     });
 
     const handleClick = (_e: Event) => {
-      this.routerService.navigate(Pages.EXPERIMENT_PARTICIPANT_STAGE,
+      this.routerService.navigate(Pages.PARTICIPANT_STAGE,
         {
           "experiment": experimentId,
           "participant": participantId,
@@ -200,7 +205,20 @@ export class SideNav extends MobxLitElement {
     });
 
     const handleNavItemClicked = (_e: Event) => {
-      this.routerService.navigate(navItem.page);
+      if (navItem.isParticipantPage) {
+        const routeParams = this.routerService.activeRoute.params;
+        const experimentId = routeParams["experiment"];
+        const participantId = routeParams["participant"];
+
+        this.routerService.navigate(navItem.page,
+          {
+            "experiment": experimentId,
+            "participant": participantId,
+          }
+        );
+      } else {
+        this.routerService.navigate(navItem.page);
+      }
     };
 
     return html`

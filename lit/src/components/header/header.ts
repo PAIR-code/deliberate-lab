@@ -52,15 +52,16 @@ export class Header extends MobxLitElement {
 
     if (activePage === Pages.HOME) {
       return "Home";
-    } else if (activePage === Pages.SETTINGS) {
+    } else if (activePage === Pages.SETTINGS
+      || activePage === Pages.PARTICIPANT_SETTINGS) {
       return "Settings";
     } else if (activePage === Pages.EXPERIMENT) {
       return "My Experiment";
     } else if (activePage === Pages.EXPERIMENT_CREATE) {
       return "New experiment";
-    } else if (activePage === Pages.EXPERIMENT_PARTICIPANT) {
+    } else if (activePage === Pages.PARTICIPANT) {
       return "Welcome, participant!";
-    } else if (activePage === Pages.EXPERIMENT_PARTICIPANT_STAGE) {
+    } else if (activePage === Pages.PARTICIPANT_STAGE) {
       return this.routerService.activeRoute.params["stage"];
     }
     return "";

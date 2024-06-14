@@ -37,12 +37,16 @@ export class RouterService extends Service {
       path: "/new_experiment",
     },
     {
-      name: Pages.EXPERIMENT_PARTICIPANT,
+      name: Pages.PARTICIPANT,
       path: "/:experiment/:participant",
     },
     {
-      name: Pages.EXPERIMENT_PARTICIPANT_STAGE,
+      name: Pages.PARTICIPANT_STAGE,
       path: "/:experiment/:participant/:stage",
+    },
+    {
+      name: Pages.PARTICIPANT_SETTINGS,
+      path: "/:experiment/:participant/settings",
     }
   ];
 
@@ -116,8 +120,9 @@ export enum Pages {
   SETTINGS = "SETTINGS",
   EXPERIMENT = "EXPERIMENT",
   EXPERIMENT_CREATE = "EXPERIMENT_CREATE",
-  EXPERIMENT_PARTICIPANT = "EXPERIMENT_PARTICIPANT",
-  EXPERIMENT_PARTICIPANT_STAGE = "EXPERIMENT_PARTICIPANT_STAGE",
+  PARTICIPANT = "PARTICIPANT",
+  PARTICIPANT_STAGE = "PARTICIPANT_STAGE",
+  PARTICIPANT_SETTINGS = "PARTICIPANT_SETTINGS",
 }
 
 /**
@@ -127,8 +132,8 @@ export interface NavItem {
   page: Pages;
   title: string;
   icon: string;
-  showInSidenav: boolean;
-  isPrimaryPage: boolean;
+  isExperimenterPage: boolean;
+  isParticipantPage: boolean;
 }
 
 /**
@@ -139,14 +144,21 @@ export const NAV_ITEMS: NavItem[] = [
     page: Pages.HOME,
     title: "Home",
     icon: "home",
-    showInSidenav: true,
-    isPrimaryPage: true,
+    isExperimenterPage: true,
+    isParticipantPage: false,
   },
   {
     page: Pages.SETTINGS,
     title: "Settings",
     icon: "settings",
-    showInSidenav: true,
-    isPrimaryPage: false,
+    isExperimenterPage: true,
+    isParticipantPage: false,
   },
+  {
+    page: Pages.PARTICIPANT_SETTINGS,
+    title: "Settings",
+    icon: "manage_accounts",
+    isExperimenterPage: false,
+    isParticipantPage: true,
+  }
 ];

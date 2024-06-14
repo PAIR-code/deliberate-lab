@@ -2,7 +2,7 @@ import "../../pair-components/button";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
-import { customElement, state } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 import { Ref, createRef, ref } from "lit/directives/ref.js";
 
 import { core } from "../../core/core";
@@ -20,6 +20,8 @@ export class Settings extends MobxLitElement {
 
   private readonly authService = core.getService(AuthService);
   private readonly settingsService = core.getService(SettingsService);
+
+  @property() showAccount = false;
 
   override render() {
     return html`
@@ -166,6 +168,10 @@ export class Settings extends MobxLitElement {
   }
 
   private renderAccountSection() {
+    if (!this.showAccount) {
+      return nothing;
+    }
+
     const handleSignOut = () => {
       this.authService.signOut();
     };
