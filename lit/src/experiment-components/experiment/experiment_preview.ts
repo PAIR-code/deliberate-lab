@@ -22,8 +22,8 @@ export class ExperimentPreview extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   override render() {
-    if (this.authService.isParticipantView) {
-      return html`<div>Use the left nav to begin the experiment</div>`;
+    if (!this.authService.isExperimenter) {
+      return html`<div>403: Participants cannot access this page</div>`;
     }
 
     return html`

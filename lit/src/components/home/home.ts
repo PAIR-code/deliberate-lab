@@ -28,6 +28,10 @@ export class Home extends MobxLitElement {
   private readonly experimenterService = core.getService(ExperimenterService);
 
   override render() {
+    if (!this.authService.isExperimenter) {
+      return html`<div>403: Participants do not have access</div>`;
+    }
+
     return html`
       ${this.renderCreateButton()}
       <div class="cards-wrapper">
@@ -39,7 +43,7 @@ export class Home extends MobxLitElement {
   }
 
   private renderCreateButton() {
-    if (this.authService.isParticipantView) {
+    if (!this.authService.isExperimenter) {
       return nothing;
     }
 

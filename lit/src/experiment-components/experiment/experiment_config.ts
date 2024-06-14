@@ -65,7 +65,7 @@ export class ExperimentConfig extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   override render() {
-    if (this.authService.isParticipantView) {
+    if (!this.authService.isExperimenter) {
       return html`<div>Sorry, participants cannot create experiments!</div>`;
     }
 

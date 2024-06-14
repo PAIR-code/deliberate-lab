@@ -69,6 +69,9 @@ and template creation/deletion.
 This manages the authentication process and current login state.
 (Logic for rendering the login screen/workflow is in `app.ts`.)
 
+NOTE: Participant pages (defined in RouterService as URLs with participant
+IDs specified) are not login-gated.
+
 #### ExperimentService
 
 `src/services/experiment_service.ts`
@@ -77,11 +80,12 @@ This manages the current experiment, i.e., whichever one the user is
 currently viewing. Specifically, it subscribes to the current experiment's
 stages; this information is then used to populate experiment/stage pages.
 
-#### ParticipantService
+#### ParticipantService and ChatService
 
-Coming soon.
+`src/services/participant_service.ts`
+`src/services/chat_service.ts`
 
-This will manage participation in the current experiment (e.g., updating
+These manage participation in the current experiment (e.g., updating
 a participant's response or stage progress in Firebase).
 
 ### Experiment Configuration
@@ -103,14 +107,14 @@ The other services are stage-specific, managing relevant stage configs
 correspond to `*_config.ts` components, all found under
 `src/experiment-components` (see next section).
 
-### Experiment Components and Modules
+### Experiment Stages and Modules
 
 Experiment components (including configurations and previews)
 are organized under `src/experiment-components`.
 
-Standalone or base components (e.g., `survey`, which is used across tasks)
+Standalone stage components (e.g., `survey`, which is used across tasks)
 are at the top level of the experiment directory, while any closely
-associated components (e.g., for a specific game or task) are clustered
+associated stage components (e.g., for a specific game or task) are clustered
 under the `modules` subdirectory.
 
 For example, `src/experiment-components/info` (not a module)
@@ -133,7 +137,8 @@ stages (`info`, `survey`).
 #### Config vs. Preview Components
 
 Config components use services in `src/services/config` to update
-a new experiment.
+a new experiment (i.e., on the "Create experiment" page).
 
-Preview components do not use services; rather, they pass in the current
-stage as a property.
+Preview components pass in data from (and/or use) participant services
+(ParticipantService, ChatService); these are used to render experiment stage
+pages.

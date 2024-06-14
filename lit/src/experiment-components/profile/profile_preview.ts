@@ -8,7 +8,7 @@ import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
 import { ExperimentService } from "../../services/experiment_service";
 import { ParticipantService } from "../../services/participant_service";
-import { RouterService } from "../../services/router_service";
+import { Pages, RouterService } from "../../services/router_service";
 
 import { ParticipantProfileExtended } from "@llm-mediation-experiments/utils";
 
@@ -31,12 +31,18 @@ export class ProfilePreview extends MobxLitElement {
       return nothing;
     }
 
-    const setPreview = () => {
-      if (this.profile) {
-        this.authService.setPreviewMode(true);
+    const handlePreview = () => {
+      if (this.profile && this.experimentService.id) {
         this.participantService.setParticipant(
           this.experimentService.id,
           this.profile.privateId
+        );
+        this.routerService.navigate(
+          Pages.EXPERIMENT_PARTICIPANT,
+          {
+            "experiment": this.experimentService.id,
+            "participant": this.profile.privateId
+          }
         );
       }
     };
@@ -51,7 +57,7 @@ export class ProfilePreview extends MobxLitElement {
 
       <pr-button
         variant="tonal"
-        @click=${setPreview}>
+        @click=${handlePreview}>
         Preview as participant
       </pr-button>
     `;

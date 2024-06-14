@@ -64,7 +64,9 @@ export class App extends MobxLitElement {
         return this.renderExperiment();
       case Pages.EXPERIMENT_CREATE:
         return html`<experiment-config></experiment-config>`;
-      case Pages.EXPERIMENT_STAGE:
+      case Pages.EXPERIMENT_PARTICIPANT:
+        return this.renderParticipant();
+      case Pages.EXPERIMENT_PARTICIPANT_STAGE:
         return this.renderExperimentStage();
       default:
         return this.render404();
@@ -80,7 +82,7 @@ export class App extends MobxLitElement {
   }
 
   private renderExperiment() {
-    if (this.authService.isParticipantView) {
+    if (!this.authService.isExperimenter) {
       return this.render403();
     }
 
@@ -88,20 +90,48 @@ export class App extends MobxLitElement {
 
     if (this.experimentService.isLoading) {
       return html`<div>Loading experiment...</div>`;
+    }
+
+    if (this.experimentService.experiment === undefined) {
+      return html`<div>Could not load experiment</div>`;
     }
 
     return html`<experiment-preview></experiment-preview>`;
   }
 
-  private renderExperimentStage() {
-    if (this.authService.isParticipantView) {
-      return this.render403();
+  private renderParticipant() {
+    this.experimentService.updateForCurrentRoute();
+    this.participantService.updateForCurrentRoute();
+
+    if (this.experimentService.isLoading || this.participantService.isLoading) {
+      return html`<div>Loading experiment...</div>`;
     }
 
-    this.experimentService.updateForCurrentRoute();
+    if (this.experimentService.experiment === undefined) {
+      return this.render404(`Could not find experiment`);
+    }
 
-    if (this.experimentService.isLoading) {
-      return html`<div>Loading experiment...</div>`;
+    if (this.participantService.profile === undefined) {
+      return this.render404(`Could not find participant ID`)
+    }
+
+    return html`${JSON.stringify(this.participantService.profile)}`;
+  }
+
+  private renderExperimentStage() {
+    this.experimentService.updateForCurrentRoute();
+    this.participantService.updateForCurrentRoute();
+
+    if (this.experimentService.isLoading || this.participantService.isLoading) {
+      return html`<div>Loading experiment stage...</div>`;
+    }
+
+    if (this.experimentService.experiment === undefined) {
+      return this.render404(`Could not find experiment`);
+    }
+
+    if (this.participantService.profile === undefined) {
+      return this.render404(`Could not find participant ID`)
     }
 
     const stageName = this.routerService.activeRoute.params["stage"];
@@ -132,12 +162,16 @@ export class App extends MobxLitElement {
   }
 
   private renderAuthBanner() {
-    if (!this.authService.isParticipantView) {
+    if (!this.authService.isExperimenter
+      || !this.routerService.isParticipantPage) {
       return nothing;
     }
 
     const handlePreviewOff = () => {
-      this.authService.setPreviewMode(false);
+      this.routerService.navigate(
+        Pages.EXPERIMENT,
+        { "experiment": this.routerService.activeRoute.params["experiment"] }
+      );
     };
 
     return html`
@@ -153,7 +187,7 @@ export class App extends MobxLitElement {
           variant="default"
           @click=${handlePreviewOff}
         >
-          Back to experimenter view
+          Back to experiment overview
         </pr-button>
       </div>
     `;
@@ -182,7 +216,7 @@ export class App extends MobxLitElement {
       "size--large": isSize(TextSize.LARGE),
     });
 
-    if (!this.authService.authenticated) {
+    if (!this.authService.authenticated && !this.routerService.isParticipantPage) {
       // Render login screen if relevant after initial auth check
       return html`
         <div class=${classes}>

@@ -135,12 +135,7 @@ export class ExperimenterService extends Service {
   /** Delete an experiment.
    * @rights Experimenter
    */
-  async deleteExperiment(experimentId: string) {    
-    // If experiment stages shown in sidenav, update sidenav view
-    if (this.sp.routerService.sidenavExperimentId === experimentId) {
-      this.sp.routerService.setSidenavExperiment(null);
-    }
-
+  async deleteExperiment(experimentId: string) {
     return deleteDoc(
       doc(this.sp.firebaseService.firestore, 'experiments', experimentId)
     );

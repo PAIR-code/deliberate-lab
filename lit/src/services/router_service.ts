@@ -37,8 +37,12 @@ export class RouterService extends Service {
       path: "/new_experiment",
     },
     {
-      name: Pages.EXPERIMENT_STAGE,
-      path: "/:experiment/:stage",
+      name: Pages.EXPERIMENT_PARTICIPANT,
+      path: "/:experiment/:participant",
+    },
+    {
+      name: Pages.EXPERIMENT_PARTICIPANT_STAGE,
+      path: "/:experiment/:participant/:stage",
     }
   ];
 
@@ -48,13 +52,6 @@ export class RouterService extends Service {
   @observable isHandlingRouteChange = false;
   @observable hasNavigated = false; // True if navigated at least once in app
 
-  // Used to display subnav for current experiment
-  @observable sidenavExperimentId: string|null = null;
-
-  setSidenavExperiment(id: string|null) {
-    this.sidenavExperimentId = id;
-  }
-
   private getPage(route: Route): Pages | undefined {
     if (!route) return undefined;
     return route.name as Pages;
@@ -63,6 +60,11 @@ export class RouterService extends Service {
   @computed
   get activePage(): Pages | undefined {
     return this.getPage(this.activeRoute);
+  }
+
+  @computed
+  get isParticipantPage() {
+    return this.activeRoute.params["participant"] !== undefined;
   }
 
   override initialize() {
@@ -114,7 +116,8 @@ export enum Pages {
   SETTINGS = "SETTINGS",
   EXPERIMENT = "EXPERIMENT",
   EXPERIMENT_CREATE = "EXPERIMENT_CREATE",
-  EXPERIMENT_STAGE = "EXPERIMENT_STAGE",
+  EXPERIMENT_PARTICIPANT = "EXPERIMENT_PARTICIPANT",
+  EXPERIMENT_PARTICIPANT_STAGE = "EXPERIMENT_PARTICIPANT_STAGE",
 }
 
 /**
