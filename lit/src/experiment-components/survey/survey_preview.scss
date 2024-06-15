@@ -1,14 +1,25 @@
 @use "../../sass/common";
+@use "../../sass/typescale";
 
 :host {
   @include common.flex-column;
-  @include common.html-preview;
+  gap: common.$spacing-xl;
+  height: 100%;
+}
+
+.questions-wrapper {
+  @include common.flex-column;
+  flex-grow: 1;
   gap: common.$spacing-xl;
 }
 
 .question {
   @include common.flex-column;
   gap: common.$spacing-large; 
+}
+
+.question-title {
+  @include typescale.title-medium;
 }
 
 .slider-wrapper {

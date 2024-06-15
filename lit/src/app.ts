@@ -189,9 +189,9 @@ export class App extends MobxLitElement {
     const navigateToCurrentStage = () => {
       this.routerService.navigate(Pages.PARTICIPANT_STAGE,
         {
-          "experiment": this.participantService.experimentId ?? "",
-          "participant": this.participantService.participantId ?? "",
-          "stage": this.participantService.profile?.workingOnStageName ?? "",
+          "experiment": this.participantService.experimentId!,
+          "participant": this.participantService.participantId!,
+          "stage": this.participantService.profile?.workingOnStageName!,
         }
       );
     }
@@ -213,7 +213,11 @@ export class App extends MobxLitElement {
       case StageKind.TermsOfService:
         return html`<tos-preview .stage=${currentStage}></tos-preview>`;
       case StageKind.TakeSurvey:
-        return html`<survey-preview .stage=${currentStage}></survey-preview>`;
+        const answer = this.participantService.stageAnswers[currentStage.name];
+        return html`
+          <survey-preview .stage=${currentStage} .answer=${answer}>
+          </survey-preview>
+        `;
       case StageKind.SetProfile:
         return html`<profile-config></profile-config>`;
       case StageKind.VoteForLeader:

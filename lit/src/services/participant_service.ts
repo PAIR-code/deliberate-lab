@@ -99,6 +99,9 @@ export class ParticipantService extends Service {
   unsubscribeAll() {
     this.unsubscribe.forEach((unsubscribe) => unsubscribe());
     this.unsubscribe = [];
+
+    this.profile = undefined;
+    this.stageAnswers = {};
   }
   
   // ******************************************************************************************* //
