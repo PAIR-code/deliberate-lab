@@ -36,6 +36,10 @@ export class SideNav extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   override render() {
+    const routeToHome = () => {
+      this.routerService.navigate(Pages.HOME);
+    }
+
     if (this.routerService.isParticipantPage) {
       return html`
         <div class="top">
@@ -45,6 +49,10 @@ export class SideNav extends MobxLitElement {
           ${NAV_ITEMS.filter(
             (navItem) => navItem.isParticipantPage
           ).map((navItem) => this.renderNavItem(navItem))}
+          <div class="nav-item" role="button" @click=${routeToHome}>
+            <pr-icon icon="logout"></pr-icon>
+            <div>Log out</div>
+          </div>
         </div>
       `;
     }
