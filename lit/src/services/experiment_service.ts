@@ -149,6 +149,18 @@ export class ExperimentService extends Service {
     return this.stageConfigMap[stageName];
   }
 
+  getStageIndex(stageName: string) {
+    return this.stageNames.indexOf(stageName);
+  }
+
+  getNextStageName(stageName: string) {
+    const currentIndex = this.stageNames.indexOf(stageName);
+    if (currentIndex >= 0 && currentIndex < this.stageNames.length - 1) {
+      return this.stageNames[currentIndex + 1];
+    }
+    return null;
+  }
+
   /** Build a signal that tracks whether every participant has at least reached the given stage */
   everyoneReachedStage(targetStage: string): boolean {
     const participants = this.experiment?.participants;

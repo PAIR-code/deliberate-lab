@@ -11,14 +11,15 @@
 .tos-wrapper {
   @include common.flex-column;
   gap: common.$spacing-xl;
+  overflow: auto;
 }
 
 .ack-wrapper {
   @include common.flex-column;
-  bottom: 0;
+  background: var(--md-sys-color-surface-variant);
+  bottom: common.$footer-height;
   margin-bottom: 0;
   margin-top: auto;
-  padding-bottom: common.$spacing-xxl;
   position: sticky;
 }
 

@@ -45,7 +45,9 @@ export class ParticipantService extends Service {
     this.loadParticipantData();
   }
 
-  isCurrentStage(stageName: string) {
+  isCurrentStage(
+    stageName = this.sp.routerService.activeRoute.params["stage"]
+  ) {
     return this.profile?.workingOnStageName === stageName;
   }
 
@@ -116,7 +118,7 @@ export class ParticipantService extends Service {
   /** Update this participant's `workingOnStageName`
    * @rights Participant
    */
-  async workOnStage(stageName: string) {
+  async updateWorkingOnStageName(stageName: string) {
     return updateDoc(
       doc(this.sp.firebaseService.firestore, 'experiments', this.experimentId!, 'participants', this.participantId!),
       {

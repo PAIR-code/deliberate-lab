@@ -1,5 +1,7 @@
 import "../../pair-components/textarea";
 
+import "../footer/footer";
+
 import * as sanitizeHtml from "sanitize-html";
 
 import { observable } from "mobx";
@@ -25,7 +27,12 @@ export class InfoPreview extends MobxLitElement {
     }
 
     const cleanHTML = sanitizeHtml(this.stage?.infoLines.join('\n\n'));
-    return html`${unsafeHTML(cleanHTML)}`;
+    return html`
+      <div class="html-wrapper">
+        ${unsafeHTML(cleanHTML)}
+      </div>
+      <stage-footer></stage-footer>
+    `;
   }
 }
 
