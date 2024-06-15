@@ -7,6 +7,7 @@ import "./experiment-components/info/info_preview";
 import "./experiment-components/profile/profile_config";
 import "./experiment-components/tos/tos_preview";
 import "./experiment-components/survey/survey_preview";
+import "./experiment-components/modules/election/election_preview";
 
 import "./components/header/header";
 import "./components/home/home";
@@ -207,13 +208,14 @@ export class App extends MobxLitElement {
       `;
     }
 
+    const answer = this.participantService.stageAnswers[currentStage.name];
+
     switch (currentStage.kind) {
       case StageKind.Info:
         return html`<info-preview .stage=${currentStage}></info-preview>`;
       case StageKind.TermsOfService:
         return html`<tos-preview .stage=${currentStage}></tos-preview>`;
       case StageKind.TakeSurvey:
-        const answer = this.participantService.stageAnswers[currentStage.name];
         return html`
           <survey-preview .stage=${currentStage} .answer=${answer}>
           </survey-preview>
@@ -221,7 +223,7 @@ export class App extends MobxLitElement {
       case StageKind.SetProfile:
         return html`<profile-config></profile-config>`;
       case StageKind.VoteForLeader:
-        return html`Placeholder: VoteForLeader stage`;
+        return html`<election-preview .answer=${answer}></election-preview>`;
       case StageKind.RevealVoted:
         return html`Placeholder: RevealVoted stage`;
       case StageKind.GroupChat:
