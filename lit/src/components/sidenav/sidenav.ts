@@ -50,7 +50,7 @@ export class SideNav extends MobxLitElement {
             (navItem) => navItem.isParticipantPage
           ).map((navItem) => this.renderNavItem(navItem))}
           <div class="nav-item" role="button" @click=${routeToHome}>
-            <pr-icon icon="logout"></pr-icon>
+            <pr-icon class="icon" icon="logout"></pr-icon>
             <div>Log out</div>
           </div>
         </div>
@@ -97,18 +97,11 @@ export class SideNav extends MobxLitElement {
     const participantId = routeParams["participant"];
     const experiment = this.experimentService.experiment;
 
-    const isDisabledStage = (index: number) => {
-      const workingOnStageIndex = this.experimentService.stageNames.findIndex(
-        (name) => this.participantService.profile?.workingOnStageName === name
-      );
-      return index > workingOnStageIndex;
-    }
-
     return html`
       ${this.renderParticipantItem(experiment!, participantId)}
       ${this.experimentService.stageNames.map(
         (stage: string, index: number) => this.renderStageItem(
-          experimentId!, participantId!, stage, isDisabledStage(index)
+          experimentId!, participantId!, stage, index
         )
       )}
     `;
@@ -190,7 +183,7 @@ export class SideNav extends MobxLitElement {
     experimentId: string,
     participantId: string,
     stage: string,
-    disabled: boolean
+    index: number,
   ) {
     const navItemClasses = classMap({
       "nav-item": true,
@@ -209,7 +202,11 @@ export class SideNav extends MobxLitElement {
       );
     };
 
-    if (disabled) {
+    const lockedStage = index > this.experimentService.stageNames.indexOf(
+      this.participantService.profile?.workingOnStageName!
+    );
+
+    if (lockedStage) {
       return html`
         <div class="nav-item no-hover">${stage}</div>
       `;
@@ -218,14 +215,14 @@ export class SideNav extends MobxLitElement {
     return html`
       <div class=${navItemClasses} role="button" @click=${handleClick}>
         ${stage}
-        ${this.renderCurrentStageChip(stage)}
+        ${this.renderActiveStageChip(stage)}
       </div>
     `;
   }
 
-  private renderCurrentStageChip(stage: string) {
+  private renderActiveStageChip(stage: string) {
     if (!this.participantService.isCurrentStage(stage)) {
-      return nothing;
+      return html`<pr-icon color="success" icon="check_circle"></pr-icon>`;
     }
     return html`<div class="chip">ongoing</div>`;
   }
@@ -255,7 +252,7 @@ export class SideNav extends MobxLitElement {
 
     return html`
       <div class=${navItemClasses} role="button" @click=${handleNavItemClicked}>
-        <pr-icon icon=${navItem.icon}></pr-icon>
+        <pr-icon class="icon" icon=${navItem.icon}></pr-icon>
         ${navItem.title}
       </div>
     `;

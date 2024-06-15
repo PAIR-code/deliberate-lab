@@ -33,6 +33,7 @@ export class Icon extends LitElement {
       "palette-tertiary": this.color === "tertiary",
       "palette-neutral": this.color === "neutral",
       "palette-error": this.color === "error",
+      "palette-success": this.color === "success",
       "state-filled": this.filled,
     });
 
