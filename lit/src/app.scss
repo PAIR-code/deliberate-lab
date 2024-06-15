@@ -7,6 +7,7 @@
 }
 
 .app-wrapper {
+  @include colors.global;
   @include colors.kamino-ref;
   @include typescale.app-small;
 
@@ -67,6 +68,7 @@ main {
   position: sticky;
   top: 0;
   width: 100%;
+  z-index: 1;
 }
 
 .content-wrapper {

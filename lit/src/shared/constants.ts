@@ -18,3 +18,10 @@ export const MODULE_DESCRIPTION_LEADER =
   "Includes voting stage and reveal stage for choosing a participant leader";
 export const MODULE_DESCRIPTION_RANKING =
   "Includes two solo item rankings, a group chat about those items, and a final leader item ranking";
+
+/** Profile avatars. */
+export const PROFILE_AVATARS = [
+  '👩🏻','👩🏼','👩🏽','👩🏾','👩🏿',
+  '👨🏻','👨🏼','👨🏽','👨🏾','👨🏿',
+  '🧑🏻','🧑🏼','🧑🏽','🧑🏾','🧑🏿'
+];

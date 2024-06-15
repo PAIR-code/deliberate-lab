@@ -1,5 +1,7 @@
 import "../../pair-components/button";
 
+import "./profile_avatar";
+
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
@@ -47,15 +49,31 @@ export class ProfilePreview extends MobxLitElement {
       }
     };
 
+    const formatDate = () => {
+      const timestamp = this.profile?.acceptTosTimestamp;
+      if (timestamp) {
+        return new Date(timestamp.seconds * 1000);
+      }
+      return "";
+    }
+
     return html`
-      <div><b>Name:</b> ${this.profile.name}</div>
-      <div><b>Pronouns:</b> ${this.profile.pronouns}</div>
-      <div><b>Current stage:</b> ${this.profile.workingOnStageName}</div>
-      <div><b>Terms of Service:</b> ${this.profile.acceptTosTimestamp}</div>
-      <div><b>Public ID:</b> ${this.profile.publicId}</div>
-      <div><b>Private ID:</b> ${this.profile.privateId}</div>
+      <div class="profile">
+        <profile-avatar .emoji=${this.profile.avatarUrl}></profile-avatar>
+        <div class="right">
+          <div class="title">${this.profile.name}</div>
+          <div class="subtitle">${this.profile.pronouns}</div>
+        </div>
+      </div>
+
+      <div><span>Current stage:</span> ${this.profile.workingOnStageName}</div>
+      <div>
+        <span>Terms of Service:</span> ${formatDate()}</div>
+      <div><span>Public ID:</span> ${this.profile.publicId}</div>
+      <div><span>Private ID:</span> ${this.profile.privateId}</div>
 
       <pr-button
+        color="secondary"
         variant="tonal"
         @click=${handlePreview}>
         Preview as participant

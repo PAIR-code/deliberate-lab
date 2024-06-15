@@ -244,10 +244,13 @@ export class App extends MobxLitElement {
       );
     };
 
+    const participantName = this.participantService.profile?.name;
+
     return html`
       <div class="banner">
         <div>
-          You are previewing as Participant
+          You are previewing as
+          ${participantName ? `${participantName} - ` : 'Participant '}
           ${this.participantService.participantId}.
         </div>
         <pr-button
@@ -257,7 +260,7 @@ export class App extends MobxLitElement {
           variant="default"
           @click=${handlePreviewOff}
         >
-          Back to experiment overview
+          Exit preview
         </pr-button>
       </div>
     `;
