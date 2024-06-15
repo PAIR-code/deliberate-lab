@@ -152,9 +152,10 @@ export function convertExperimentStages(stages: StageConfig[]) {
       return stage;
     }
     if (stage.kind === StageKind.RevealVoted) {
-      // NOTE: This assumes there is only one VoteForLeader stage.
+      // NOTE: This assumes there is only one VoteForLeader stage
+      // and that it is ordered before the reveal stage.
       const voteIndex = findStageKind(stages, StageKind.VoteForLeader);
-      stage.pendingVoteStageName = addIndexToStageName(stage.name, voteIndex);
+      stage.pendingVoteStageName = stages[voteIndex]?.name;
       return stage;
     }
     return stage;

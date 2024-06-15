@@ -8,6 +8,7 @@ import "./experiment-components/profile/profile_config";
 import "./experiment-components/tos/tos_preview";
 import "./experiment-components/survey/survey_preview";
 import "./experiment-components/modules/election/election_preview";
+import "./experiment-components/modules/election/election_reveal";
 
 import "./components/header/header";
 import "./components/home/home";
@@ -225,7 +226,8 @@ export class App extends MobxLitElement {
       case StageKind.VoteForLeader:
         return html`<election-preview .answer=${answer}></election-preview>`;
       case StageKind.RevealVoted:
-        return html`Placeholder: RevealVoted stage`;
+        const electionStage = currentStage.pendingVoteStageName;
+        return html`<election-reveal .voteStageName=${electionStage}></election-reveal>`;
       case StageKind.GroupChat:
         return html`<chat-interface></chat-interface>`;
       default:
