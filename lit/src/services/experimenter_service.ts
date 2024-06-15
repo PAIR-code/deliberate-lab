@@ -136,14 +136,9 @@ export class ExperimenterService extends Service {
    * @rights Experimenter
    */
   async deleteExperiment(experimentId: string) {
-    return deleteDoc(
-      doc(this.sp.firebaseService.firestore, 'experiments', experimentId)
-    );
-
-    // Temporarily comment out legacy deletion call (returns errors)
-    /* return deleteExperimentCallable(this.sp.firebaseService.functions, {
+    return deleteExperimentCallable(this.sp.firebaseService.functions, {
       id: experimentId,
       type: 'experiments',
-    }) */
+    });
   }
 }
