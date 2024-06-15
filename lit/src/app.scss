@@ -93,3 +93,8 @@ main {
     padding-top: common.$header-height;
   }
 }
+
+.error-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}

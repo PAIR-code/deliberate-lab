@@ -163,6 +163,37 @@ export class App extends MobxLitElement {
       return this.render404(`Could not find experiment stage "${stageName}""`);
     }
 
+    const isLockedStage = (stageName: string) => {
+      const currentStageIndex = this.experimentService.stageNames.findIndex(
+        (name) => stageName === name
+      )
+      const workingOnStageIndex = this.experimentService.stageNames.findIndex(
+        (name) => this.participantService.profile?.workingOnStageName === name
+      );
+      return currentStageIndex > workingOnStageIndex;
+    }
+
+    const navigateToCurrentStage = () => {
+      this.routerService.navigate(Pages.PARTICIPANT_STAGE,
+        {
+          "experiment": this.participantService.experimentId ?? "",
+          "participant": this.participantService.participantId ?? "",
+          "stage": this.participantService.profile?.workingOnStageName ?? "",
+        }
+      );
+    }
+
+    if (isLockedStage(stageName)) {
+      return html`
+        <div class="error-wrapper">
+          ${this.render403("This stage is not yet available")}
+          <pr-button @click=${navigateToCurrentStage}>
+            Go to current stage
+          </pr-button>
+        </div>
+      `;
+    }
+
     switch (currentStage.kind) {
       case StageKind.Info:
         return html`<info-preview .stage=${currentStage}></info-preview>`;

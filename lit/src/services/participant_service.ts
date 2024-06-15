@@ -45,6 +45,10 @@ export class ParticipantService extends Service {
     this.loadParticipantData();
   }
 
+  isCurrentStage(stageName: string) {
+    return this.profile?.workingOnStageName === stageName;
+  }
+
   updateForCurrentRoute() {
     const eid = this.sp.routerService.activeRoute.params["experiment"];
     const pid = this.sp.routerService.activeRoute.params["participant"];
