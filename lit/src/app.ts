@@ -117,7 +117,20 @@ export class App extends MobxLitElement {
       return this.render404(`Could not find participant ID`)
     }
 
-    return html`${JSON.stringify(this.participantService.profile)}`;
+    const routeToStage = () => {
+      this.routerService.navigate(
+        Pages.PARTICIPANT_STAGE,
+        {
+          "experiment": this.participantService.experimentId!,
+          "participant": this.participantService.participantId!,
+          "stage": this.participantService.profile?.workingOnStageName!,
+        }
+      );
+    };
+
+    return html`
+      <pr-button @click=${routeToStage}>Start experiment</pr-button>
+    `;
   }
 
   private renderParticipantSettings() {
