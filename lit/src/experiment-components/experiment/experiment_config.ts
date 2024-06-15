@@ -7,6 +7,7 @@ import "../../pair-components/tooltip";
 import "../info/info_config";
 import "../tos/tos_config";
 import "../survey/survey_config";
+import "./experiment_config_menu";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
@@ -300,81 +301,9 @@ export class ExperimentConfig extends MobxLitElement {
   }
 
   private renderTopActionButtons() {
-    const onAddInfoClick = () => {
-      this.experimentConfig.addStage(createInfoStage());
-      this.experimentConfig.setCurrentStageIndexToLast();
-    }
-
-    const onAddSurveyClick = () => {
-      this.experimentConfig.addStage(createSurveyStage());
-      this.experimentConfig.setCurrentStageIndexToLast();
-    }
-
-    const onAddProfileClick = () => {
-      this.experimentConfig.addStage(
-        { kind: StageKind.SetProfile, name: "Set profile" }
-      );
-      this.experimentConfig.setCurrentStageIndexToLast();
-    }
-
-    const onAddLeaderClick = () => {
-      this.experimentConfig.addStage(
-        { kind: StageKind.VoteForLeader, name: "Vote for leader" }
-      );
-      this.experimentConfig.addStage(createRevealVotedStage());
-      this.experimentConfig.setCurrentStageIndexToLast();
-    }
-
-    const onAddRankingClick = () => {
-      // TODO: Generate and add ranking-related stages
-    }
-
-    const renderLeaderModule = () => {
-      if (this.experimentConfig.hasStageKind(StageKind.VoteForLeader)) {
-        return nothing;
-      }
-      return html`
-        <div class="menu-item" role="button" @click=${onAddLeaderClick}>
-          <div class="module-title">Leader</div>
-          <div class="module-info">${MODULE_DESCRIPTION_LEADER}</div>
-        </div>
-      `;
-    };
-
-    const renderRankingModule = () => {
-      if (this.experimentConfig.hasStageKind(StageKind.GroupChat)) {
-        return nothing;
-      }
-      return html`
-        <div class="menu-item" role="button" @click=${onAddRankingClick}>
-          <div class="module-title">Ranking</div>
-          <div class="module-info">${MODULE_DESCRIPTION_RANKING}
-        </div>
-      `;
-    };
-
     return html`
       <div class="buttons-wrapper">
-        <pr-menu name="Add stage">
-          <div class="menu-wrapper">
-            <div class="stages">
-              <div class="category">Stages</div>
-              <div class="menu-item" role="button" @click=${onAddInfoClick}>
-                Info stage
-              </div>
-              <div class="menu-item" role="button" @click=${onAddSurveyClick}>
-                Survey stage
-              </div>
-              <div class="menu-item" role="button" @click=${onAddProfileClick}>
-                Profile stage
-              </div>
-            </div>
-            <div class="modules">
-              <div class="category tertiary">Modules</div>
-                ${renderLeaderModule()}
-              </div>
-          </div>
-        </pr-menu>
+        <experiment-config-menu></experiment-config-menu>
       </div>
     `;
   }

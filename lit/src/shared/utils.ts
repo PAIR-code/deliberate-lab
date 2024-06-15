@@ -72,9 +72,9 @@ export function createChatStage(
   };
 }
 
-/** Create leader vote stage. */
+/** Create leader vote (election) stage. */
 export function createVoteForLeaderStage(
-  name = "Leader vote"
+  name = "Leader election"
 ): VoteForLeaderStageConfig {
   return { kind: StageKind.VoteForLeader, name };
 }
@@ -84,9 +84,12 @@ export function createVoteForLeaderStage(
  * NOTE: This currently does not assign the VoteForLeader stage to
  * the RevealVoted stage; rather, this is assigned in `convertExperimentStages`
  * with the assumption that there is only one VoteForLeader stage.
+ *
+ * TODO: Make this an implicit "Reveal" stage for all stages, not just leader
+ * election.
  */
 export function createRevealVotedStage(
-  name = "Leader reveal"
+  name = "Reveal"
 ): RevealVotedStageConfig {
   return { kind: StageKind.RevealVoted, name, pendingVoteStageName: "" };
 }
