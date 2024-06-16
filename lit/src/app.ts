@@ -1,6 +1,6 @@
 import "./pair-components/button";
 
-import "./experiment-components/chat/chat_interface";
+import "./experiment-components/chat/basic_chat";
 import "./experiment-components/experiment/experiment_config";
 import "./experiment-components/experiment/experiment_preview";
 import "./experiment-components/info/info_preview";
@@ -231,7 +231,7 @@ export class App extends MobxLitElement {
         return html`<election-reveal .voteStageName=${electionStage}></election-reveal>`;
       case StageKind.GroupChat:
         this.chatService.updateForCurrentRoute();
-        return html`<chat-interface></chat-interface>`;
+        return html`<basic-chat></basic-chat>`;
       default:
         return this.render404("Could not load experiment stage");
     }

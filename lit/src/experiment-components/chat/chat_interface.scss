@@ -1,14 +1,7 @@
-@use "../../sass/colors";
 @use "../../sass/common";
 @use "../../sass/typescale";
 
 :host {
-  @include common.flex-column;
-  @include common.full-percentage;
-  justify-content: space-between;
-}
-
-.chat {
   @include common.flex-column;
   flex-grow: 1;
   gap: common.$spacing-xl;
@@ -16,9 +9,10 @@
 }
 
 .chat-content {
-  @include common.flex-column;
   border: 2px solid var(--md-sys-color-outline-variant);
   border-radius: common.$spacing-medium;
+  display: flex;
+  flex-direction: column-reverse;
   height: calc(100vh - 320px);
   overflow: auto;
 }

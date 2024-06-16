@@ -4,7 +4,6 @@ import "../../pair-components/textarea";
 import "../../pair-components/tooltip";
 
 import "./chat_message";
-import "../footer/footer";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html } from "lit";
@@ -13,8 +12,6 @@ import { customElement, property } from "lit/decorators.js";
 import { core } from "../../core/core";
 import { ChatService } from "../../services/chat_service";
 import { ExperimentService } from "../../services/experiment_service";
-import { ParticipantService } from "../../services/participant_service";
-import { RouterService } from "../../services/router_service";
 
 import { styles } from "./chat_interface.scss";
 import { Message, ParticipantProfile } from "@llm-mediation-experiments/utils";
@@ -26,10 +23,9 @@ export class ChatInterface extends MobxLitElement {
 
   private readonly chatService = core.getService(ChatService);
   private readonly experimentService = core.getService(ExperimentService);
-  private readonly participantService = core.getService(ParticipantService);
-  private readonly routerService = core.getService(RouterService);
 
   @property() value = "";
+  @property() disableInput = false;
 
   private sendUserInput() {
     this.chatService.sendUserMessage(this.value.trim());
@@ -105,7 +101,7 @@ export class ChatInterface extends MobxLitElement {
           placeholder="Send message"
           .value=${this.value}
           ?focused=${autoFocus()}
-          ?disabled=${!this.participantService.isCurrentStage() || this.readyToEnd()}
+          ?disabled=${this.disableInput}
           @keyup=${handleKeyUp}
           @input=${handleInput}
         >
@@ -119,7 +115,7 @@ export class ChatInterface extends MobxLitElement {
           <pr-icon-button
             icon="send"
             variant="tonal"
-            .disabled=${this.value === ""}
+            .disabled=${this.value === "" || this.disableInput}
             @click=${this.sendUserInput}
           >
           </pr-icon-button>
@@ -128,34 +124,15 @@ export class ChatInterface extends MobxLitElement {
     </div>`;
   }
 
-  private readyToEnd() {
-    const currentStage = this.routerService.activeRoute.params["stage"];
-    const publicId = this.participantService.profile?.publicId!;
-
-    return this.experimentService.isReadyToEndChat(currentStage, publicId);
-  }
-
   override render() {
     return html`
-      <div class="chat">
-        <div class="chat-content">
-          ${this.renderChatIntro()}
-          ${this.renderChatHistory()}
-        </div>
-        <div class="input-row-wrapper">
-          <div class="input-row">${this.renderInput()}</div>
-        </div>
+      <div class="chat-content">
+        ${this.renderChatHistory()}
+        ${this.renderChatIntro()}
       </div>
-      <stage-footer .disabled=${!this.readyToEnd()}>
-        <pr-button
-          color="tertiary"
-          variant="tonal"
-          ?disabled=${this.readyToEnd()}
-          @click=${() => { this.chatService.markReadyToEndChat(true); }}
-        >
-          Ready to end discussion
-        </pr-button>
-      </stage-footer>
+      <div class="input-row-wrapper">
+        <div class="input-row">${this.renderInput()}</div>
+      </div>
     `;
   }
 }
