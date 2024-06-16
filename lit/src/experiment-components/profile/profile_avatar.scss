@@ -16,6 +16,12 @@
   height: calc(common.$spacing-xxl * 1.5);
   justify-content: center;
   overflow: hidden;
+  user-select: none;
+
+  &.small {
+    @include typescale.title-small;
+    height: common.$spacing-xxl;
+  }
 
   &.square {
     border-radius: common.$spacing-small;

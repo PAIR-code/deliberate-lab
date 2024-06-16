@@ -15,10 +15,12 @@ export class ProfileAvatar extends MobxLitElement {
 
   @property() emoji = "";
   @property() square = false;
+  @property() small = false;
 
   override render() {
     const classes = classMap({
       "avatar": true,
+      "small": this.small,
       "square": this.square,
       "man": ['👨🏻','👨🏼','👨🏽','👨🏾','👨🏿'].indexOf(this.emoji) > -1,
       "woman": ['👩🏻','👩🏼','👩🏽','👩🏾','👩🏿'].indexOf(this.emoji) > -1,

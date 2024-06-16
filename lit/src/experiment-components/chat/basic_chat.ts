@@ -2,6 +2,7 @@ import "../../pair-components/button";
 
 import "./chat_interface";
 import "../footer/footer";
+import "../progress/progress_end_chat";
 import "../progress/progress_stage_waiting";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
@@ -56,6 +57,7 @@ export class BasicChat extends MobxLitElement {
         >
           Ready to end discussion
         </pr-button>
+        <progress-end-chat .stageName=${currentStage}></progress-end-chat>
       </stage-footer>
     `;
   }

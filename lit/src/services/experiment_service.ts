@@ -207,6 +207,33 @@ export class ExperimentService extends Service {
     return { ready, notReady };
   }
 
+  // Returns lists of participants who are/aren't ready to end chat
+  getParticipantsReadyToEndChat(stageName: string) {
+    const ready: ParticipantProfileExtended[] = [];
+    const notReady: ParticipantProfileExtended[] = [];
+
+    const stage = this.publicStageDataMap[stageName];
+
+    if (!stage || stage.kind !== StageKind.GroupChat) {
+      return { ready, notReady };
+    }
+
+    Object.keys(stage.readyToEndChat).forEach((publicId) => {
+      const participant = this.getParticipantProfile(publicId);
+      if (!participant) {
+        return;
+      }
+
+      if (stage.readyToEndChat[publicId]) {
+        ready.push(participant);
+      } else {
+        notReady.push(participant);
+      }
+    });
+
+    return { ready, notReady };
+  }
+
   getParticipantProfile(publicId: string) {
     return this.participants.find(participant => participant.publicId === publicId);
   }
