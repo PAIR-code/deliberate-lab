@@ -15,6 +15,7 @@
   border-radius: 100%;
   height: calc(common.$spacing-xxl * 1.5);
   justify-content: center;
+  overflow: hidden;
 
   &.square {
     border-radius: common.$spacing-small;
