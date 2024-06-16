@@ -8,6 +8,7 @@ $bubble-radius-small: common.$spacing-small;
 
 .chat-message {
   @include common.flex-row;
+  align-items: end;
   gap: common.$spacing-large;
   width: 100%;
 }
@@ -23,18 +24,7 @@ $bubble-radius-small: common.$spacing-small;
   gap: common.$spacing-small;
 }
 
-.avatar {
-  background: var(--md-sys-color-outline-variant);
-  border-radius: 100%;
-  flex-shrink: 0;
-  height: $avatar-height;
-  margin-top: calc(common.$spacing-small +
-    var(--md-sys-typescale-label-medium-line-height));
-  width: $avatar-height;
-}
-
 .chat-bubble {
-  @include common.flex-column;
   @include typescale.body-small;
   align-items: end;
   gap: common.$spacing-medium;
@@ -54,9 +44,9 @@ $bubble-radius-small: common.$spacing-small;
 
   .chat-bubble {
     align-self: end;
-    background: var(--md-sys-color-primary-container);
+    background: var(--md-sys-color-secondary-container);
     border-radius: $bubble-radius $bubble-radius $bubble-radius-small
       $bubble-radius;
-    color: var(--md-sys-color-on-primary-container);
+    color: var(--md-sys-color-on-secondary-container);
   }
 }

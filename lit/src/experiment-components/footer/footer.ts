@@ -27,6 +27,7 @@ export class Footer extends MobxLitElement {
     return html`
       <div class="footer">
         <div class="left">
+          <slot></slot>
         </div>
         <div class="right">
           ${this.renderNextStageButton()}

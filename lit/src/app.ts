@@ -47,6 +47,7 @@ export class App extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly authService = core.getService(AuthService);
+  private readonly chatService = core.getService(ChatService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
@@ -229,6 +230,7 @@ export class App extends MobxLitElement {
         const electionStage = currentStage.pendingVoteStageName;
         return html`<election-reveal .voteStageName=${electionStage}></election-reveal>`;
       case StageKind.GroupChat:
+        this.chatService.updateForCurrentRoute();
         return html`<chat-interface></chat-interface>`;
       default:
         return this.render404("Could not load experiment stage");

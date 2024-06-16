@@ -12,10 +12,12 @@ import { customElement, property } from "lit/decorators.js";
 
 import { core } from "../../core/core";
 import { ChatService } from "../../services/chat_service";
+import { ExperimentService } from "../../services/experiment_service";
 import { ParticipantService } from "../../services/participant_service";
+import { RouterService } from "../../services/router_service";
 
 import { styles } from "./chat_interface.scss";
-import { Message } from "@llm-mediation-experiments/utils";
+import { Message, ParticipantProfile } from "@llm-mediation-experiments/utils";
 
 /** Chat interface component */
 @customElement("chat-interface")
@@ -23,12 +25,14 @@ export class ChatInterface extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly chatService = core.getService(ChatService);
+  private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
+  private readonly routerService = core.getService(RouterService);
 
   @property() value = "";
 
   private sendUserInput() {
-    this.chatService.sendUserMessage(this.value);
+    this.chatService.sendUserMessage(this.value.trim());
     this.value = "";
   }
 
@@ -48,6 +52,31 @@ export class ChatInterface extends MobxLitElement {
         <div class="chat-history">
           ${this.chatService.messages.map(this.renderChatMessage.bind(this))}
         </div>
+      </div>
+    `;
+  }
+
+  private renderChatIntro() {
+    const renderParticipant = (participant: ParticipantProfile) => {
+      return html`
+        <div class="chat-participant">
+          <profile-avatar .emoji=${participant.avatarUrl}></profile-avatar>
+          <div>
+            ${participant.name ?? participant.publicId}
+            (${participant.pronouns})
+          </div>
+        </div>
+      `;
+    };
+
+    return html`
+      <div class="chat-info">
+        <div class="chat-participants-wrapper">
+          ${this.experimentService.participants.map(participant =>
+            renderParticipant(participant))}
+        </div>
+        <div class="divider"></div>
+        <div class="label">Group Discussion</div>
       </div>
     `;
   }
@@ -76,7 +105,7 @@ export class ChatInterface extends MobxLitElement {
           placeholder="Send message"
           .value=${this.value}
           ?focused=${autoFocus()}
-          ?disabled=${!this.participantService.isCurrentStage()}
+          ?disabled=${!this.participantService.isCurrentStage() || this.readyToEnd()}
           @keyup=${handleKeyUp}
           @input=${handleInput}
         >
@@ -99,15 +128,34 @@ export class ChatInterface extends MobxLitElement {
     </div>`;
   }
 
+  private readyToEnd() {
+    const currentStage = this.routerService.activeRoute.params["stage"];
+    const publicId = this.participantService.profile?.publicId!;
+
+    return this.experimentService.isReadyToEndChat(currentStage, publicId);
+  }
+
   override render() {
     return html`
       <div class="chat">
-        ${this.renderChatHistory()}
+        <div class="chat-content">
+          ${this.renderChatIntro()}
+          ${this.renderChatHistory()}
+        </div>
         <div class="input-row-wrapper">
           <div class="input-row">${this.renderInput()}</div>
         </div>
       </div>
-      <stage-footer></stage-footer>
+      <stage-footer .disabled=${!this.readyToEnd()}>
+        <pr-button
+          color="tertiary"
+          variant="tonal"
+          ?disabled=${this.readyToEnd()}
+          @click=${() => { this.chatService.markReadyToEndChat(true); }}
+        >
+          Ready to end discussion
+        </pr-button>
+      </stage-footer>
     `;
   }
 }

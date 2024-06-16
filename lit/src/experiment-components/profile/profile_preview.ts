@@ -61,7 +61,7 @@ export class ProfilePreview extends MobxLitElement {
       <div class="profile">
         <profile-avatar .emoji=${this.profile.avatarUrl}></profile-avatar>
         <div class="right">
-          <div class="title">${this.profile.name}</div>
+          <div class="title">${this.profile.name ?? this.profile.publicId}</div>
           <div class="subtitle">${this.profile.pronouns}</div>
         </div>
       </div>

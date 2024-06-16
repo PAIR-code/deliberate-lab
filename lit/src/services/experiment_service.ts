@@ -16,7 +16,8 @@ import {
   Experiment,
   ParticipantProfileExtended,
   PublicStageData,
-  StageConfig
+  StageConfig,
+  StageKind
 } from "@llm-mediation-experiments/utils";
 import { collectSnapshotWithId } from "../shared/utils";
 import { deleteExperimentCallable } from "../shared/callables";
@@ -159,6 +160,19 @@ export class ExperimentService extends Service {
       return this.stageNames[currentIndex + 1];
     }
     return null;
+  }
+
+  getParticipantProfile(publicId: string) {
+    return this.participants.find(participant => participant.publicId === publicId);
+  }
+
+  isReadyToEndChat(stageName: string, publicId: string) {
+    const stage = this.publicStageDataMap[stageName];
+    if (!stage || stage.kind !== StageKind.GroupChat) {
+      return false;
+    }
+
+    return stage.readyToEndChat[publicId];
   }
 
   /** Build a signal that tracks whether every participant has at least reached the given stage */

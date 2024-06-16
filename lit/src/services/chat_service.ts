@@ -1,15 +1,17 @@
 import { observable, makeObservable, computed } from "mobx";
 import { Service } from "./service";
+import { ExperimentService } from "./experiment_service";
 import { FirebaseService } from "./firebase_service";
 import { RouterService } from "./router_service";
 
 import { collectSnapshotWithId } from "../shared/utils";
 import { Unsubscribe, collection, doc, onSnapshot, orderBy, query, updateDoc } from "firebase/firestore";
-import { ChatAnswer, Message, MessageKind } from "@llm-mediation-experiments/utils";
+import { ChatAnswer, Message, MessageKind, StageKind, } from "@llm-mediation-experiments/utils";
 import { createMessageCallable } from "../shared/callables";
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
+  experimentService: ExperimentService;
   routerService: RouterService;
 }
 
@@ -52,8 +54,19 @@ export class ChatService extends Service {
   updateForCurrentRoute() {
     const eid = this.sp.routerService.activeRoute.params["experiment"];
     const pid = this.sp.routerService.activeRoute.params["participant"];
-    if (eid !== this.experimentId || pid !== this.participantId) {
-      this.setChat(eid, pid, this.chatId);
+    const stageName = this.sp.routerService.activeRoute.params["stage"];
+
+    const currentStage = this.sp.experimentService.getStage(stageName);
+
+    if (currentStage.kind !== StageKind.GroupChat) {
+      return;
+    }
+
+    const chatId = currentStage.chatId;
+
+    if (eid !== this.experimentId || pid !== this.participantId
+      || chatId !== this.chatId) {
+      this.setChat(eid, pid, chatId);
     }
   }
 
