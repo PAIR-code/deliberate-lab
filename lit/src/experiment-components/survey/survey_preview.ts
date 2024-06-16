@@ -1,6 +1,7 @@
 import "../../pair-components/textarea";
 
 import "../footer/footer";
+import "../progress/progress_stage_completed";
 
 import '@material/web/radio/radio.js';
 import '@material/web/slider/slider.js';
@@ -60,7 +61,9 @@ export class SurveyPreview extends MobxLitElement {
         ${this.stage.questions.map(question =>
         this.renderScaleQuestion(question))}
       </div>
-      <stage-footer .disabled=${!ratingsComplete()}></stage-footer>
+      <stage-footer .disabled=${!ratingsComplete()}>
+        <progress-stage-completed></progress-stage-completed>
+      </stage-footer>
     `;
   }
 

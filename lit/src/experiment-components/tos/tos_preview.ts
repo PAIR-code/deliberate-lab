@@ -1,6 +1,7 @@
 import "../../pair-components/icon_button";
 
 import "../footer/footer";
+import "../progress/progress_stage_completed";
 
 import "@material/web/checkbox/checkbox.js";
 import * as sanitizeHtml from "sanitize-html";
@@ -62,7 +63,9 @@ export class TOSPreview extends MobxLitElement {
             `Accepted at ${new Date(timestamp.seconds * 1000)}` : nothing}
         </div>
       </div>
-      <stage-footer .disabled=${timestamp === null}></stage-footer>
+      <stage-footer .disabled=${timestamp === null}>
+        <progress-stage-completed></progress-stage-completed>
+      </stage-footer>
     `;
   }
 }

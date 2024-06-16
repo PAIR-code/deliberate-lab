@@ -1,5 +1,6 @@
 import "../../footer/footer";
 import "../../profile/profile_avatar";
+import "../../progress/progress_stage_completed";
 import "../../progress/progress_stage_waiting";
 
 import '@material/web/radio/radio.js';
@@ -68,7 +69,9 @@ export class ElectionReveal extends MobxLitElement {
           </div>
         </div>
       </div>
-      <stage-footer></stage-footer>
+      <stage-footer>
+        <progress-stage-completed></progress-stage-completed>
+      </stage-footer>
     `;
   }
 }

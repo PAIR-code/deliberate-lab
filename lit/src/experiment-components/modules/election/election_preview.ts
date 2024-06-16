@@ -1,5 +1,6 @@
 import "../../footer/footer";
 import "../../profile/profile_avatar";
+import "../../progress/progress_stage_completed";
 
 import '@material/web/radio/radio.js';
 
@@ -40,7 +41,9 @@ export class ElectionPreview extends MobxLitElement {
         ${this.experimentService.participants.map(profile => 
         this.renderParticipant(profile))}
       </div>
-      <stage-footer .disabled=${disabled}></stage-footer>
+      <stage-footer .disabled=${disabled}>
+        <progress-stage-completed></progress-stage-completed>
+      </stage-footer>
     `;
   }
 

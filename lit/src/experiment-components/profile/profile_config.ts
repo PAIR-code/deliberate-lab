@@ -1,6 +1,7 @@
 import "../../pair-components/textarea";
 
 import "../footer/footer";
+import "../progress/progress_stage_completed";
 import "./profile_avatar";
 
 import "@material/web/radio/radio.js";
@@ -38,7 +39,9 @@ export class ProfileConfig extends MobxLitElement {
         ${this.renderPronouns()}
         ${this.renderAvatars()}
       </div>
-      <stage-footer .disabled=${!filled}></stage-footer>
+      <stage-footer .disabled=${!filled}>
+        <progress-stage-completed></progress-stage-completed>
+      </stage-footer>
     `;
   }
 
