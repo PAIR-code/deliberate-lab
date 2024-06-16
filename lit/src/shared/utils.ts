@@ -209,6 +209,9 @@ export function convertMarkdownToHTML(markdown: string, sanitize = true) {
  */
 export function convertExperimentStages(stages: StageConfig[]) {
   const addIndexToStageName = (name: string, index: number) => {
+    if (index + 1 < 10) {
+      return `0${index + 1}. ${name}`;
+    }
     return `${index + 1}. ${name}`;
   };
 
