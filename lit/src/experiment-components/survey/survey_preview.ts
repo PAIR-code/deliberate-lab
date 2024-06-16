@@ -40,10 +40,20 @@ export class SurveyPreview extends MobxLitElement {
     return html`
       <div class="questions-wrapper">
         ${this.stage.questions.map(question =>
+        this.renderRatingQuestion(question))}
+        ${this.stage.questions.map(question =>
         this.renderScaleQuestion(question))}
       </div>
       <stage-footer></stage-footer>
     `;
+  }
+
+  private renderRatingQuestion(question: QuestionConfig) {
+    if (question.kind !== SurveyQuestionKind.Rating) {
+      return nothing;
+    }
+
+    return html`<div>${JSON.stringify(question)}</div>`;
   }
 
   private renderScaleQuestion(question: QuestionConfig) {

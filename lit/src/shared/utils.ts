@@ -9,9 +9,15 @@ import { v4 as uuidv4 } from "uuid";
 import { Snapshot } from "./types";
 import {
   ChatKind,
+  choices,
+  GroupChatStageConfig,
   InfoStageConfig,
+  ITEM_NAMES,
   ItemName,
+  pairs,
   ProfileStageConfig,
+  QuestionConfig,
+  RatingQuestionConfig,
   RevealVotedStageConfig,
   StageConfig,
   StageKind,
@@ -46,7 +52,7 @@ export function createTOSStage(
 /** Create survey stage. */
 export function createSurveyStage(
   name = "Survey",
-  questions = []
+  questions: QuestionConfig[] = []
 ): SurveyStageConfig {
   return { kind: StageKind.TakeSurvey, name, questions };
 }
@@ -60,13 +66,13 @@ export function createProfileStage(name = "Set profile"): ProfileStageConfig {
 export function createChatStage(
   name = "Group chat",
   ratingsToDiscuss: { item1: ItemName; item2: ItemName }[] = []
-) {
+): GroupChatStageConfig {
   return {
     name,
     kind: StageKind.GroupChat,
+    chatId: generateId(),
     chatConfig: {
       kind: ChatKind.ChatAboutItems,
-      chatId: generateId(),
       ratingsToDiscuss
     }
   };
@@ -93,6 +99,76 @@ export function createRevealVotedStage(
 ): RevealVotedStageConfig {
   return { kind: StageKind.RevealVoted, name, pendingVoteStageName: "" };
 }
+
+/**
+ * Create ranking game module stages.
+ *
+ * This includes:
+ *   2 individual surveys with the same randomly-generated item pairs
+ *   1 chat discussion based around those item pairs
+ *   1 leader survey with different randomly-generated item pairs
+ */
+export function createRankingModuleStages(numPairs = 5): StageConfig[] {
+  const stages: StageConfig[] = [];
+
+  const middleIndex = Math.ceil(ITEM_NAMES.length / 2);
+
+  // Take random items from the first half for the individual tasks.
+  const INDIVIDUAL_ITEM_NAMES = ITEM_NAMES.slice(0, middleIndex);
+  const INDIVIDUAL_ITEM_PAIRS = choices(pairs(INDIVIDUAL_ITEM_NAMES), numPairs);
+
+  // Take random items from the second half for the leader tasks.
+  const LEADER_ITEM_NAMES = ITEM_NAMES.slice(middleIndex);
+  const LEADER_ITEM_PAIRS = choices(pairs(LEADER_ITEM_NAMES), numPairs);
+
+  // Add individual surveys
+  const INDIVIDUAL_QUESTIONS: RatingQuestionConfig[] = INDIVIDUAL_ITEM_PAIRS.map(
+    (pair, index) => getRatingQuestionFromPair(pair, index)
+  );
+
+  stages.push(createSurveyStage("Individual ranking 1", INDIVIDUAL_QUESTIONS));
+  stages.push(createSurveyStage("Individual ranking 2", INDIVIDUAL_QUESTIONS));
+
+  // Add chat with individual item pairs as discussion
+  stages.push(
+    createChatStage(
+      "Group chat",
+      INDIVIDUAL_ITEM_PAIRS.map(([i1, i2]) => ({ item1: i1, item2: i2 }))
+    )
+  );
+
+  // Add leader survey
+  const LEADER_QUESTIONS: RatingQuestionConfig[] = LEADER_ITEM_PAIRS.map(
+    (pair, index) => getRatingQuestionFromPair(pair, index)
+  );
+
+  stages.push(createSurveyStage("Leader ranking", LEADER_QUESTIONS));
+
+  return stages;
+}
+
+/**
+ * Uses item pair to create survey RatingQuestion.
+ */
+export function getRatingQuestionFromPair(
+  pair: [string, string],
+  id: number,
+  questionText = "Choose the item that would be more helpful to your survival",
+): RatingQuestionConfig {
+
+  const [one, two] = pair;
+  const item1: ItemName = (one as ItemName);
+  const item2: ItemName = (two as ItemName);
+
+  return {
+    id,
+    kind: SurveyQuestionKind.Rating,
+    questionText,
+    item1,
+    item2,
+  };
+}
+
 
 /**
  * Check if stage is part of ranking module.

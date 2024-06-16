@@ -14,6 +14,13 @@ h2 {
   margin: 0;
 }
 
+code {
+  color: var(--md-sys-color-outline);
+  font-size: var(--md-sys-typescale-label-small-font-size);
+  line-height: var(--md-sys-typescale-label-small-line-height);
+  overflow-wrap: anywhere;
+}
+
 .error {
   color: var(--md-sys-color-error);
 }
@@ -67,7 +74,6 @@ h2 {
 
 .stage-info {
   @include common.flex-row;
-  flex-wrap: wrap;
   gap: common.$spacing-medium;
 }
 

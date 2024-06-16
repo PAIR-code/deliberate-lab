@@ -2,7 +2,9 @@ import "../../pair-components/button";
 import "../../pair-components/icon_button";
 import "../../pair-components/textarea";
 import "../../pair-components/tooltip";
+
 import "./chat_message";
+import "../footer/footer";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html } from "lit";
@@ -10,6 +12,7 @@ import { customElement, property } from "lit/decorators.js";
 
 import { core } from "../../core/core";
 import { ChatService } from "../../services/chat_service";
+import { ParticipantService } from "../../services/participant_service";
 
 import { styles } from "./chat_interface.scss";
 import { Message } from "@llm-mediation-experiments/utils";
@@ -19,8 +22,10 @@ import { Message } from "@llm-mediation-experiments/utils";
 export class ChatInterface extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  @property() value = "";
   private readonly chatService = core.getService(ChatService);
+  private readonly participantService = core.getService(ParticipantService);
+
+  @property() value = "";
 
   private sendUserInput() {
     this.chatService.sendUserMessage(this.value);
@@ -71,6 +76,7 @@ export class ChatInterface extends MobxLitElement {
           placeholder="Send message"
           .value=${this.value}
           ?focused=${autoFocus()}
+          ?disabled=${!this.participantService.isCurrentStage()}
           @keyup=${handleKeyUp}
           @input=${handleInput}
         >
@@ -101,6 +107,7 @@ export class ChatInterface extends MobxLitElement {
           <div class="input-row">${this.renderInput()}</div>
         </div>
       </div>
+      <stage-footer></stage-footer>
     `;
   }
 }

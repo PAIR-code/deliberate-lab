@@ -35,6 +35,7 @@ import { StageConfig, StageKind } from "@llm-mediation-experiments/utils";
 import {
   createInfoStage,
   createProfileStage,
+  createRankingModuleStages,
   createRevealVotedStage,
   createSurveyStage,
   createVoteForLeaderStage,
@@ -85,6 +86,7 @@ export class ExperimentConfigMenu extends MobxLitElement {
           <div class="modules">
             <div class="category tertiary">Modules</div>
               ${this.renderLeaderModule()}
+              ${this.renderRankingModule()}
             </div>
         </div>
       </pr-menu>
@@ -116,7 +118,12 @@ export class ExperimentConfigMenu extends MobxLitElement {
     }
 
     const onAddRankingClick = () => {
-      // TODO: Generate and add ranking-related stages
+      const rankingStages = createRankingModuleStages();
+      rankingStages.forEach(stage => {
+        this.experimentConfig.addStage(stage);
+      });
+
+      this.experimentConfig.setCurrentStageIndexToLast();
     }
 
     return html`

@@ -46,6 +46,7 @@ import {
   createRevealVotedStage,
   createSurveyStage,
   createVoteForLeaderStage,
+  isRankingModuleStage,
 } from "../../shared/utils";
 
 import { styles } from "./experiment_config.scss";
@@ -128,6 +129,8 @@ export class ExperimentConfig extends MobxLitElement {
         return html`
           ${this.renderStageInfo(
             StageKind.TakeSurvey, STAGE_DESCRIPTION_SURVEY)}
+          ${isRankingModuleStage(currentStage) ? this.renderStageInfo(
+            "rankingGame", MODULE_DESCRIPTION_RANKING, true) : nothing}
           <survey-config></survey-config>
         `;
       case StageKind.SetProfile:
@@ -135,6 +138,17 @@ export class ExperimentConfig extends MobxLitElement {
           ${this.renderStageInfo(
             StageKind.SetProfile, STAGE_DESCRIPTION_PROFILE)}
           ${this.renderCurrentStageNameField()}
+        `;
+      case StageKind.GroupChat:
+        return html`
+          ${this.renderStageInfo(
+            StageKind.GroupChat, STAGE_DESCRIPTION_CHAT)}
+          ${isRankingModuleStage(currentStage) ? this.renderStageInfo(
+            "rankingGame", MODULE_DESCRIPTION_RANKING, true) : nothing}
+          ${this.renderCurrentStageNameField()}
+          ${isRankingModuleStage(currentStage) ?
+            html`<code>${JSON.stringify(currentStage.chatConfig)}</code>`
+            : nothing}
         `;
       case StageKind.VoteForLeader:
         return html`

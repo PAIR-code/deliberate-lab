@@ -5,27 +5,29 @@
 :host {
   @include common.flex-column;
   @include common.full-percentage;
+  justify-content: space-between;
 }
 
 .chat {
   @include common.flex-column;
-  @include common.full-percentage;
-  flex-shrink: 1;
-  justify-content: space-between;
-  overflow: auto;
+  flex-grow: 1;
+  gap: common.$spacing-xl;
+  justify-content: end;
 }
 
 .chat-scroll {
-  flex-shrink: 1;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-small;
+  display: flex;
+  flex-direction: column-reverse;
+  height: calc(100vh - 320px);
   overflow: auto;
 }
 
 .chat-history {
   @include common.flex-column;
-  justify-content: end;
-
-  // Set bottom height to accommodate chat bubble action bar
-  padding: common.$spacing-xl common.$spacing-xxl calc(var(--md-sys-typescale-body-small-line-height) * 2);
+  justify-content: flex-end;
+  padding: common.$spacing-xl;
 }
 
 .chat-message-wrapper {
@@ -36,8 +38,10 @@
 
 .input-row-wrapper {
   @include common.flex-row-align-center;
+  bottom: common.$footer-height;
   gap: common.$spacing-xl;
   padding: 0 common.$spacing-large;
+  position: sticky;
 }
 
 @include common.viewport-small {
