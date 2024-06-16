@@ -2,6 +2,7 @@ import "../../pair-components/button";
 
 import "./chat_interface";
 import "../footer/footer";
+import "../progress/progress_stage_waiting";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html } from "lit";
@@ -25,25 +26,32 @@ export class BasicChat extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
-  private readyToEnd() {
-    const currentStage = this.routerService.activeRoute.params["stage"];
-    const publicId = this.participantService.profile?.publicId!;
-
-    return this.experimentService.isReadyToEndChat(currentStage, publicId);
-  }
-
-  private disableInput() {
-    return !this.participantService.isCurrentStage() || this.readyToEnd();
-  }
-
   override render() {
+    const currentStage = this.routerService.activeRoute.params["stage"];
+    const { ready, notReady } =
+      this.experimentService.getParticipantsReadyForStage(currentStage);
+
+    if (notReady.length > 0) {
+      return html`
+        <progress-stage-waiting .stageName=${currentStage}>
+        </progress-stage-waiting>
+      `;
+    }
+
+    const publicId = this.participantService.profile?.publicId!;
+    const readyToEnd = this.experimentService.isReadyToEndChat(
+      currentStage, publicId
+    );
+
+    const disableInput = !this.participantService.isCurrentStage || readyToEnd;
+
     return html`
-      <chat-interface .disableInput=${this.disableInput()}></chat-interface>
-      <stage-footer .disabled=${!this.readyToEnd()}>
+      <chat-interface .disableInput=${disableInput}></chat-interface>
+      <stage-footer .disabled=${!readyToEnd}>
         <pr-button
           color="tertiary"
           variant="tonal"
-          ?disabled=${this.readyToEnd()}
+          ?disabled=${readyToEnd}
           @click=${() => { this.chatService.markReadyToEndChat(true); }}
         >
           Ready to end discussion

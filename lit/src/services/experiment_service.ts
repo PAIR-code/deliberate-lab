@@ -162,6 +162,51 @@ export class ExperimentService extends Service {
     return null;
   }
 
+  // Returns lists of participants who are/aren't past the given stage
+  getParticipantsCompletedStage(stageName: string) {
+    const completed: ParticipantProfileExtended[] = [];
+    const notCompleted: ParticipantProfileExtended[] = [];
+
+    const stageIndex = this.getStageIndex(stageName);
+
+    if (stageIndex === -1) {
+      return { completed, notCompleted };
+    }
+
+    this.participants.forEach((participant) => {
+      const index = this.getStageIndex(participant.workingOnStageName);
+      if (index >= 0 && index > stageIndex) {
+        completed.push(participant);
+      } else {
+        notCompleted.push(participant);
+      }
+    });
+
+    return { completed, notCompleted };
+  }
+
+  // Returns lists of participants who have/haven't reached the given stage
+  getParticipantsReadyForStage(stageName: string) {
+    const ready: ParticipantProfileExtended[] = [];
+    const notReady: ParticipantProfileExtended[] = [];
+
+    const stageIndex = this.getStageIndex(stageName);
+    if (stageIndex === -1) {
+      return { ready, notReady };
+    }
+
+    this.participants.forEach((participant) => {
+      const index = this.getStageIndex(participant.workingOnStageName);
+      if (index >= 0 && index >= stageIndex) {
+        ready.push(participant);
+      } else {
+        notReady.push(participant);
+      }
+    });
+
+    return { ready, notReady };
+  }
+
   getParticipantProfile(publicId: string) {
     return this.participants.find(participant => participant.publicId === publicId);
   }

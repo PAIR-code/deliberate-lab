@@ -1,5 +1,6 @@
 import "../../footer/footer";
 import "../../profile/profile_avatar";
+import "../../progress/progress_stage_waiting";
 
 import '@material/web/radio/radio.js';
 
@@ -14,6 +15,7 @@ import {
 
 import { core } from "../../../core/core";
 import { ExperimentService } from "../../../services/experiment_service";
+import { RouterService } from "../../../services/router_service";
 
 import { styles } from "./election_reveal.scss";
 
@@ -23,6 +25,7 @@ export class ElectionReveal extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly experimentService = core.getService(ExperimentService);
+  private readonly routerService = core.getService(RouterService);
 
   @property() voteStageName = "";
 
@@ -31,6 +34,17 @@ export class ElectionReveal extends MobxLitElement {
 
     if (stage?.kind !== StageKind.VoteForLeader) {
       return nothing;
+    }
+
+    const currentStage = this.routerService.activeRoute.params["stage"];
+    const { ready, notReady } =
+      this.experimentService.getParticipantsReadyForStage(currentStage);
+
+    if (notReady.length > 0) {
+      return html`
+        <progress-stage-waiting .stageName=${currentStage}>
+        </progress-stage-waiting>
+      `;
     }
 
     const leaderPublicId = stage.currentLeader;
