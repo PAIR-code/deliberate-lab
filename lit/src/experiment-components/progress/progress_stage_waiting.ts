@@ -7,7 +7,7 @@ import { customElement, property } from "lit/decorators.js";
 import { core } from "../../core/core";
 import { ExperimentService } from "../../services/experiment_service";
 
-import { styles } from "./progress_end_chat.scss";
+import { styles } from "./progress_stage_waiting.scss";
 import { ParticipantProfile } from "@llm-mediation-experiments/utils";
 
 /** Progress component: Shows how many participants are ready to begin stage */

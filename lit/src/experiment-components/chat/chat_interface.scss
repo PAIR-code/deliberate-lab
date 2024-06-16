@@ -60,6 +60,7 @@
   flex-wrap: wrap;
   gap: common.$spacing-medium;
   max-width: 80px;
+  overflow-wrap: anywhere;
 }
 
 .chat-history {
