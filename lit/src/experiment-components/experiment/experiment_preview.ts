@@ -1,3 +1,7 @@
+import "../../pair-components/button";
+import "../../pair-components/icon_button";
+import "../../pair-components/tooltip";
+
 import "../profile/profile_preview";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
@@ -27,8 +31,33 @@ export class ExperimentPreview extends MobxLitElement {
     }
 
     return html`
+      <div class="top-bar">
+        <div class="stat">
+          ${this.experimentService.experiment?.numberOfParticipants}
+          participants
+        </div>
+        ${this.renderDownload()}
+      </div>
       ${this.experimentService.privateParticipants.map(participant =>
         html`<profile-preview .profile=${participant}></profile-preview>`)}
+    `;
+  }
+
+  private renderDownload() {
+    const onDownload = () => {
+      this.experimentService.downloadExperiment();
+    };
+
+    return html`
+      <pr-tooltip text="Download experiment JSON" position="BOTTOM_END">
+        <pr-icon-button
+          icon="download"
+          color="neutral"
+          variant="default"
+          @click=${onDownload}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
     `;
   }
 }

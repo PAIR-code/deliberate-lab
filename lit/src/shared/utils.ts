@@ -268,3 +268,9 @@ export function collectSnapshotWithId<T>(snapshot: Snapshot, idKey: keyof T) {
   return snapshot.docs.map((doc) => ({ [idKey]: doc.id, ...doc.data() }) as T);
 }
 
+/** Helper to cleanup experiment data from redundant stage names */
+export function excludeName<T extends { name: string }>(obj: T) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { name, ...rest } = obj;
+  return rest;
+}

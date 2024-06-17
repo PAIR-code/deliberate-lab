@@ -3,6 +3,7 @@ import { computed, observable, makeObservable } from "mobx";
 import {
   collection,
   doc,
+  getDocs,
   onSnapshot,
   Unsubscribe,
 } from 'firebase/firestore';
@@ -14,14 +15,18 @@ import { RouterService } from "./router_service";
 import { Snapshot } from "../shared/types";
 import {
   Experiment,
+  lookupTable,
+  Message,
   ParticipantProfile,
   ParticipantProfileExtended,
   PublicStageData,
+  StageAnswer,
   StageConfig,
   StageKind
 } from "@llm-mediation-experiments/utils";
-import { collectSnapshotWithId } from "../shared/utils";
+import { collectSnapshotWithId, excludeName } from "../shared/utils";
 import { deleteExperimentCallable } from "../shared/callables";
+import { downloadJsonFile } from "../shared/file_utils";
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
@@ -280,6 +285,113 @@ export class ExperimentService extends Service {
     return Object.values(participants).every(
       (participant) => stages.indexOf(participant.workingOnStageName) >= targetIndex,
     );
+  }
+
+  /** Download experiment as a single JSON file */
+  async downloadExperiment() {
+    if (!this.experiment) {
+      return;
+    }
+
+    console.log(`Downloading experiment ${this.experiment.id}`);
+
+    const experimentId = this.experiment.id;
+    const participants = this.privateParticipants;
+    const configs = Object.values(this.stageConfigMap);
+
+    const stagePublicData = (
+      await getDocs(collection(this.sp.firebaseService.firestore, 'experiments', this.experiment.id, 'publicStageData'))
+    ).docs.map((doc) => ({ ...(doc.data() as PublicStageData), name: doc.id }));
+
+    // Get stage answers per participant.
+    const stageAnswers = await Promise.all(
+      participants.map(async (participant) => {
+        return (
+          await getDocs(
+            collection(
+              this.sp.firebaseService.firestore,
+              'experiments',
+              experimentId,
+              'participants',
+              participant.privateId,
+              'stages',
+            ),
+          )
+        ).docs.map((doc) => ({ ...(doc.data() as StageAnswer), name: doc.id }));
+      }),
+    );
+
+    // Get chat data.
+    // TODO: Technically, there are as many chat copies as there are participants
+    // but because we do not change them, we will only download the first copy of
+    // each chat here
+
+    const chats = await getDocs(
+      collection(
+        this.sp.firebaseService.firestore,
+        'experiments',
+        experimentId,
+        'participants',
+        participants[0].privateId,
+        'chats',
+      ),
+    );
+
+    const chatMessages = await Promise.all(
+      chats.docs.map((doc) =>
+        getDocs(
+          collection(
+            this.sp.firebaseService.firestore,
+            'experiments',
+            experimentId,
+            'participants',
+            participants[0].privateId,
+            'chats',
+            doc.id,
+            'messages',
+          ),
+        ),
+      ),
+    );
+
+    // Lookups
+    const publicData = lookupTable(stagePublicData, 'name');
+    const answersLookup = stageAnswers.reduce(
+      (acc, stageAnswers, index) => {
+        const participantId = participants[index].publicId;
+
+        stageAnswers.forEach((stageAnswer) => {
+          if (!acc[stageAnswer.name]) acc[stageAnswer.name] = {};
+
+          acc[stageAnswer.name][participantId] = excludeName(stageAnswer) as StageAnswer;
+        });
+        return acc;
+      },
+      {} as Record<string, Record<string, StageAnswer>>,
+    );
+
+    const data = {
+      ...this.experiment,
+      participants,
+
+      stages: configs.map((config) => {
+        const stagePublicData = publicData[config.name];
+        const cleanedPublicData = stagePublicData ? excludeName(stagePublicData) : undefined;
+        const answers = answersLookup[config.name];
+        return { config, public: cleanedPublicData, answers };
+      }),
+
+      chats: chatMessages.reduce(
+        (acc, chat, index) => {
+          const messages = chat.docs.map((doc) => doc.data() as Message);
+          acc[`chat-${index}`] = messages;
+          return acc;
+        },
+        {} as Record<string, Message[]>,
+      ),
+    };
+
+    downloadJsonFile(data, `${this.experiment.name}.json`);
   }
 
   // ******************************************************************************************* //
