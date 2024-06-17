@@ -1,18 +1,18 @@
 import { observable, makeObservable, computed } from "mobx";
 import { Service } from "./service";
-import { AuthService } from "./auth_service";
-import { SettingsService } from "./settings_service";
+import { ExperimentService } from "./experiment_service";
+import { FirebaseService } from "./firebase_service";
+import { RouterService } from "./router_service";
 
 import { collectSnapshotWithId } from "../shared/utils";
 import { Unsubscribe, collection, doc, onSnapshot, orderBy, query, updateDoc } from "firebase/firestore";
-import { FirebaseService } from "./firebase_service";
-import { ChatAnswer, Message, MessageKind } from "@llm-mediation-experiments/utils";
+import { ChatAnswer, Message, MessageKind, StageKind, } from "@llm-mediation-experiments/utils";
 import { createMessageCallable } from "../shared/callables";
 
 interface ServiceProvider {
-  authService: AuthService;
-  settingsService: SettingsService;
   firebaseService: FirebaseService;
+  experimentService: ExperimentService;
+  routerService: RouterService;
 }
 
 export class ChatService extends Service {
@@ -49,6 +49,16 @@ export class ChatService extends Service {
     this.chatId = chatId;
     this.isLoading = true;
     this.loadChatData();
+  }
+
+  updateForCurrentRoute(chatId: string) {
+    const eid = this.sp.routerService.activeRoute.params["experiment"];
+    const pid = this.sp.routerService.activeRoute.params["participant"];
+
+    if (eid !== this.experimentId || pid !== this.participantId
+      || chatId !== this.chatId) {
+      this.setChat(eid, pid, chatId);
+    }
   }
 
   loadChatData() {
@@ -103,8 +113,18 @@ export class ChatService extends Service {
     this.messages = [];
   }
 
+  getCurrentRatingIndex() {
+    const stageData = this.sp.experimentService.getPublicStageData(
+      this.chat?.stageName!
+    );
+    if (!stageData || stageData.kind !== StageKind.GroupChat) {
+      return -1;
+    }
 
-    // ******************************************************************************************* //
+    return stageData.chatData.currentRatingIndex;
+  }
+
+  // ******************************************************************************************* //
   //                                          MUTATIONS                                          //
   // ******************************************************************************************* //
 

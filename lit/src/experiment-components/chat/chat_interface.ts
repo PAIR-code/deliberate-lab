@@ -2,28 +2,34 @@ import "../../pair-components/button";
 import "../../pair-components/icon_button";
 import "../../pair-components/textarea";
 import "../../pair-components/tooltip";
+
 import "./chat_message";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html } from "lit";
+import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 import { core } from "../../core/core";
 import { ChatService } from "../../services/chat_service";
+import { ExperimentService } from "../../services/experiment_service";
 
 import { styles } from "./chat_interface.scss";
-import { Message } from "@llm-mediation-experiments/utils";
+import { Message, ParticipantProfile } from "@llm-mediation-experiments/utils";
 
 /** Chat interface component */
 @customElement("chat-interface")
 export class ChatInterface extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  @property() value = "";
   private readonly chatService = core.getService(ChatService);
+  private readonly experimentService = core.getService(ExperimentService);
+
+  @property() value = "";
+  @property() disableInput = false;
+  @property() showInfo = false;
 
   private sendUserInput() {
-    this.chatService.sendUserMessage(this.value);
+    this.chatService.sendUserMessage(this.value.trim());
     this.value = "";
   }
 
@@ -43,6 +49,30 @@ export class ChatInterface extends MobxLitElement {
         <div class="chat-history">
           ${this.chatService.messages.map(this.renderChatMessage.bind(this))}
         </div>
+      </div>
+    `;
+  }
+
+  private renderChatInfo() {
+    const renderParticipant = (participant: ParticipantProfile) => {
+      return html`
+        <div class="chat-participant">
+          <profile-avatar .emoji=${participant.avatarUrl}></profile-avatar>
+          <div>
+            ${participant.name ?? participant.publicId}
+            (${participant.pronouns})
+          </div>
+        </div>
+      `;
+    };
+
+    return html`
+      <div class="chat-info">
+        <div class="chat-participants-wrapper">
+          ${this.experimentService.getParticipantProfiles().map(participant =>
+            renderParticipant(participant))}
+        </div>
+        <div class="label">Group Discussion</div>
       </div>
     `;
   }
@@ -71,6 +101,7 @@ export class ChatInterface extends MobxLitElement {
           placeholder="Send message"
           .value=${this.value}
           ?focused=${autoFocus()}
+          ?disabled=${this.disableInput}
           @keyup=${handleKeyUp}
           @input=${handleInput}
         >
@@ -84,7 +115,7 @@ export class ChatInterface extends MobxLitElement {
           <pr-icon-button
             icon="send"
             variant="tonal"
-            .disabled=${this.value === ""}
+            .disabled=${this.value === "" || this.disableInput}
             @click=${this.sendUserInput}
           >
           </pr-icon-button>
@@ -95,11 +126,12 @@ export class ChatInterface extends MobxLitElement {
 
   override render() {
     return html`
-      <div class="chat">
+      <div class="chat-content">
         ${this.renderChatHistory()}
-        <div class="input-row-wrapper">
-          <div class="input-row">${this.renderInput()}</div>
-        </div>
+        ${this.showInfo ? this.renderChatInfo() : nothing}
+      </div>
+      <div class="input-row-wrapper">
+        <div class="input-row">${this.renderInput()}</div>
       </div>
     `;
   }

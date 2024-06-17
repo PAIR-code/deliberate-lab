@@ -2,6 +2,12 @@
 
 :host {
   @include common.flex-column;
+  gap: common.$spacing-large;
+  height: 100%;
+}
+
+.html-wrapper {
   @include common.html-preview;
+  flex-grow: 1;
   gap: common.$spacing-xl;
 }

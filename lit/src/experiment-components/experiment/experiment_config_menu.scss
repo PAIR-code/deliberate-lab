@@ -1,0 +1,51 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.default;
+  @include common.flex-column;
+}
+
+.menu-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+
+  .modules,
+  .stages {
+    @include common.flex-column;
+    gap: common.$spacing-small;
+  }
+}
+
+.menu-item {
+  @include common.flex-column;
+  border: 1px solid transparent;
+  border-radius: common.$spacing-medium;
+  cursor: pointer;
+  padding: common.$spacing-medium;
+
+  &:focus,
+  &:hover {
+    border-color: var(--md-sys-color-outline-variant);
+  }
+}
+
+.category {
+  @include typescale.label-small;
+  color: var(--md-sys-color-primary);
+  text-transform: uppercase;
+
+  &.tertiary {
+    color: var(--md-sys-color-tertiary);
+  }
+}
+
+.module-title {
+  @include typescale.title-small;
+}
+
+.module-info {
+  color: var(--md-sys-color-outline);
+  font-style: italic;
+}

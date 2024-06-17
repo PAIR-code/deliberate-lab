@@ -47,7 +47,6 @@ export class AuthService extends Service {
   @observable user: User|null|undefined = undefined;
   @observable participant: { experimentId: string, participantId: string }|undefined = undefined;
   @observable isExperimenter: boolean|null = null;
-  @observable isPreviewMode = false; // Used for experimenters
 
   @computed get userId() {
     return this.user?.uid;
@@ -60,14 +59,6 @@ export class AuthService extends Service {
 
   @computed get authenticated() {
     return this.initialAuthCheck && (this.user !== null || this.participant !== undefined);
-  }
-
-  @computed get isParticipantView() {
-    return !this.isExperimenter || this.isExperimenter && this.isPreviewMode;
-  }
-
-  setPreviewMode(mode: boolean) {
-    this.isPreviewMode = mode;
   }
 
   signInWithGoogle() {

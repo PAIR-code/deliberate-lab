@@ -1,23 +1,49 @@
 import { computed, get, observable, makeObservable, toJS } from "mobx";
+import { collection, getDocs } from "firebase/firestore";
 
 import { Service } from "../service";
 import { FirebaseService } from "../firebase_service";
 
 import { StageConfig, StageKind } from "@llm-mediation-experiments/utils";
-import { convertExperimentStages, createTOSStage } from "../../shared/utils";
+import {
+  collectSnapshotWithId,
+  convertExperimentStages,
+  convertTemplateStages,
+  createTOSStage
+} from "../../shared/utils";
+
+interface ServiceProvider {
+  firebaseService: FirebaseService;
+}
 
 /** Manages metadata for new experiment config. */
 export class ExperimentConfigService extends Service {
-  constructor() {
+  constructor(private readonly sp: ServiceProvider) {
     super();
     makeObservable(this);
   }
 
   @observable name = 'New experiment';
-  @observable numParticipants = 1;
+  @observable numParticipants = 3;
   @observable stages: StageConfig[] = [createTOSStage()];
   @observable currentStageIndex = -1;
   @observable map: Map<string, StageConfig> = new Map();
+
+  // Loads template as current config
+  loadTemplate(templateId: string, name = "New experiment") {
+    const templateCollection = collection(
+      this.sp.firebaseService.firestore,
+      'templates',
+      templateId,
+      'stages'
+    );
+
+    getDocs(templateCollection).then(stagesDocs => {
+      const stages = (collectSnapshotWithId(stagesDocs, 'name') as StageConfig[]);
+      this.stages = convertTemplateStages(stages);
+      this.name = name;
+    });
+  }
 
   // Converts and returns data required for experiment creation
   // (note that this adjusts some stage data, e.g., adds numbering to stages)
@@ -71,6 +97,10 @@ export class ExperimentConfigService extends Service {
     this.numParticipants = num;
   }
 
+  updateStages(stages: StageConfig[]) {
+    this.stages = stages;
+  }
+
   updateStageName(name: string, stageIndex = this.currentStageIndex) {
     if (stageIndex >= 0 && stageIndex < this.stages.length) {
       this.stages[stageIndex].name = name;
@@ -112,7 +142,7 @@ export class ExperimentConfigService extends Service {
 
   reset() {
     this.name = 'New experiment';
-    this.numParticipants = 1;
+    this.numParticipants = 3;
     this.stages = [createTOSStage()];
     this.currentStageIndex = -1;
   }

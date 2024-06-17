@@ -1,9 +1,16 @@
 @use "../../sass/common";
+@use "../../sass/typescale";
 
 :host {
   @include common.flex-column;
-  @include common.html-preview;
   gap: common.$spacing-xl;
+  height: 100%;
+}
+
+.questions-wrapper {
+  @include common.flex-column;
+  flex-grow: 1;
+  gap: calc(common.$spacing-xxl * 2);
 }
 
 .question {
@@ -11,7 +18,58 @@
   gap: common.$spacing-large; 
 }
 
+.question-title {
+  @include typescale.title-medium;
+}
+
 .slider-wrapper {
   @include common.flex-row-align-center;
   gap: common.$spacing-medium;
+}
+
+.ranking-question-wrapper {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-xl;
+}
+
+.ranking-question {
+  @include common.flex-column;
+  border: 2px solid transparent;
+  border-radius: common.$spacing-medium;
+  cursor: pointer;
+  gap: common.$spacing-large;
+  padding: common.$spacing-medium;
+
+  &.selected {
+    border-color: var(--md-sys-color-secondary);
+    cursor: auto;
+  }
+
+  &.disabled {
+    cursor: auto;
+  }
+
+  &.selected.disabled {
+    border-color: var(--md-sys-color-outline-variant);
+  }
+}
+
+.img-wrapper {
+  @include common.flex-row-align-center;
+  aspect-ratio: 1 / 1;
+  background: var(--md-sys-color-surface);
+  border-radius: common.$spacing-medium;
+  overflow: hidden;
+  width: 200px;
+
+  img {
+    height: auto;
+    width: 100%;
+  }
+}
+
+.radio-button {
+  @include common.flex-row;
+  gap: common.$spacing-large;
 }

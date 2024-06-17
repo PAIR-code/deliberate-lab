@@ -21,6 +21,7 @@ export const COMPONENT_COLORS = [
   "tertiary",
   "neutral",
   "error",
+  "success",
 ] as const;
 
 /** Color of component. */

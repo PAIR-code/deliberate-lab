@@ -7,6 +7,7 @@ import "../../pair-components/tooltip";
 import "../info/info_config";
 import "../tos/tos_config";
 import "../survey/survey_config";
+import "./experiment_config_menu";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
@@ -38,13 +39,14 @@ import {
   MODULE_DESCRIPTION_LEADER,
   MODULE_DESCRIPTION_RANKING
 } from "../../shared/constants";
-import { StageConfig, StageKind } from "@llm-mediation-experiments/utils";
+import { ExperimentTemplate, StageConfig, StageKind } from "@llm-mediation-experiments/utils";
 import {
   createInfoStage,
   createProfileStage,
   createRevealVotedStage,
   createSurveyStage,
   createVoteForLeaderStage,
+  isRankingModuleStage,
 } from "../../shared/utils";
 
 import { styles } from "./experiment_config.scss";
@@ -65,7 +67,7 @@ export class ExperimentConfig extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   override render() {
-    if (this.authService.isParticipantView) {
+    if (!this.authService.isExperimenter) {
       return html`<div>Sorry, participants cannot create experiments!</div>`;
     }
 
@@ -127,6 +129,8 @@ export class ExperimentConfig extends MobxLitElement {
         return html`
           ${this.renderStageInfo(
             StageKind.TakeSurvey, STAGE_DESCRIPTION_SURVEY)}
+          ${isRankingModuleStage(currentStage) ? this.renderStageInfo(
+            "rankingGame", MODULE_DESCRIPTION_RANKING, true) : nothing}
           <survey-config></survey-config>
         `;
       case StageKind.SetProfile:
@@ -135,6 +139,17 @@ export class ExperimentConfig extends MobxLitElement {
             StageKind.SetProfile, STAGE_DESCRIPTION_PROFILE)}
           ${this.renderCurrentStageNameField()}
         `;
+      case StageKind.GroupChat:
+        return html`
+          ${this.renderStageInfo(
+            StageKind.GroupChat, STAGE_DESCRIPTION_CHAT)}
+          ${isRankingModuleStage(currentStage) ? this.renderStageInfo(
+            "rankingGame", MODULE_DESCRIPTION_RANKING, true) : nothing}
+          ${this.renderCurrentStageNameField()}
+          ${isRankingModuleStage(currentStage) ?
+            html`<code>${JSON.stringify(currentStage.chatConfig)}</code>`
+            : nothing}
+          `;
       case StageKind.VoteForLeader:
         return html`
           ${this.renderStageInfo(
@@ -299,88 +314,37 @@ export class ExperimentConfig extends MobxLitElement {
     `;
   }
 
-  private renderTopActionButtons() {
-    const onAddInfoClick = () => {
-      this.experimentConfig.addStage(createInfoStage());
-      this.experimentConfig.setCurrentStageIndexToLast();
-    }
-
-    const onAddSurveyClick = () => {
-      this.experimentConfig.addStage(createSurveyStage());
-      this.experimentConfig.setCurrentStageIndexToLast();
-    }
-
-    const onAddProfileClick = () => {
-      this.experimentConfig.addStage(
-        { kind: StageKind.SetProfile, name: "Set profile" }
-      );
-      this.experimentConfig.setCurrentStageIndexToLast();
-    }
-
-    const onAddLeaderClick = () => {
-      this.experimentConfig.addStage(
-        { kind: StageKind.VoteForLeader, name: "Vote for leader" }
-      );
-      this.experimentConfig.addStage(createRevealVotedStage());
-      this.experimentConfig.setCurrentStageIndexToLast();
-    }
-
-    const onAddRankingClick = () => {
-      // TODO: Generate and add ranking-related stages
-    }
-
-    const renderLeaderModule = () => {
-      if (this.experimentConfig.hasStageKind(StageKind.VoteForLeader)) {
-        return nothing;
-      }
-      return html`
-        <div class="menu-item" role="button" @click=${onAddLeaderClick}>
-          <div class="module-title">Leader</div>
-          <div class="module-info">${MODULE_DESCRIPTION_LEADER}</div>
-        </div>
-      `;
-    };
-
-    const renderRankingModule = () => {
-      if (this.experimentConfig.hasStageKind(StageKind.GroupChat)) {
-        return nothing;
-      }
-      return html`
-        <div class="menu-item" role="button" @click=${onAddRankingClick}>
-          <div class="module-title">Ranking</div>
-          <div class="module-info">${MODULE_DESCRIPTION_RANKING}
-        </div>
-      `;
+  private renderTemplateItem(template: ExperimentTemplate) {
+    const onClick = () => {
+      this.experimentConfig.loadTemplate(template.id, template.name);
     };
 
     return html`
+      <div class="template-item" role="button" @click=${onClick}>
+        <div>${template.name}</div>
+        <div class="subtitle">${template.id}</div>
+      </div>
+    `;
+  }
+
+  private renderTopActionButtons() {
+    return html`
       <div class="buttons-wrapper">
-        <pr-menu name="Add stage">
+        <pr-menu color="secondary" name="Load template">
           <div class="menu-wrapper">
-            <div class="stages">
-              <div class="category">Stages</div>
-              <div class="menu-item" role="button" @click=${onAddInfoClick}>
-                Info stage
-              </div>
-              <div class="menu-item" role="button" @click=${onAddSurveyClick}>
-                Survey stage
-              </div>
-              <div class="menu-item" role="button" @click=${onAddProfileClick}>
-                Profile stage
-              </div>
-            </div>
-            <div class="modules">
-              <div class="category tertiary">Modules</div>
-                ${renderLeaderModule()}
-              </div>
+            ${this.experimenterService.templates.length === 0 ?
+              html`<div>No templates yet</div>` : nothing}
+            ${this.experimenterService.templates.map(
+              template => this.renderTemplateItem(template))}
           </div>
         </pr-menu>
+        <experiment-config-menu></experiment-config-menu>
       </div>
     `;
   }
 
   private renderBottomActionButtons() {
-    const onCreateClick = async () => {
+    const onCreateExperiment = async () => {
       if (this.experimentConfig.getExperimentErrors().length > 0) {
         return;
       }
@@ -396,7 +360,18 @@ export class ExperimentConfig extends MobxLitElement {
       this.routerService.navigate(Pages.HOME);
     }
 
-    const onClearClick = () => {
+    const onCreateTemplate = async () => {
+      const { name, stages, numberOfParticipants } =
+        this.experimentConfig.getExperiment();
+
+      await this.experimenterService.createTemplate(
+        name, stages
+      );
+
+      this.experimentConfig.reset();
+    }
+
+    const onClear = () => {
       this.experimentConfig.reset();
     }
 
@@ -405,11 +380,14 @@ export class ExperimentConfig extends MobxLitElement {
 
     return html`
       <div class="buttons-wrapper bottom">
-        <pr-button variant="default" @click=${onClearClick}>
+        <pr-button variant="default" @click=${onClear}>
           Clear
         </pr-button>
+        <pr-button variant="tonal" @click=${onCreateTemplate}>
+          Create template
+        </pr-button>
         <pr-tooltip text=${tooltipText} position="TOP_END">
-          <pr-button @click=${onCreateClick}>
+          <pr-button @click=${onCreateExperiment}>
             Create experiment
           </pr-button>
         </pr-tooltip>

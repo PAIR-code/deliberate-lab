@@ -1,3 +1,10 @@
+/* Global colors (not specific to palette). */
+@mixin global {
+  --md-sys-color-avatar-woman: #FBA9D6;
+  --md-sys-color-avatar-man: #AECBFA;
+  --md-sys-color-avatar-person: #D7AEFB;
+}
+
 /* Kamino reference definitions. */
 @mixin kamino-ref {
   --md-source: #365ABC;
@@ -191,7 +198,7 @@
   --md-sys-color-on-error-container: var(--md-ref-palette-error10);
   --md-sys-color-surface: var(--md-ref-palette-neutral99);
   --md-sys-color-on-surface: var(--md-ref-palette-neutral10);
-  --md-sys-color-surface-variant: var(--md-ref-palette-netural-variant94);
+  --md-sys-color-surface-variant: var(--md-ref-palette-neutral-variant94);
   --md-sys-color-on-surface-variant: var(--md-ref-palette-neutral-variant30);
   --md-sys-color-surface-container-highest: var(--md-ref-palette-neutral90);
   --md-sys-color-surface-container-high: var(--md-ref-palette-neutral92);

@@ -14,6 +14,13 @@ h2 {
   margin: 0;
 }
 
+code {
+  color: var(--md-sys-color-outline);
+  font-size: var(--md-sys-typescale-label-small-font-size);
+  line-height: var(--md-sys-typescale-label-small-line-height);
+  overflow-wrap: anywhere;
+}
+
 .error {
   color: var(--md-sys-color-error);
 }
@@ -34,6 +41,24 @@ h2 {
   max-height: 100%;
   position: sticky;
   top: 0;
+}
+
+.template-item {
+  @include common.flex-column;
+  border: 1px solid transparent;
+  border-radius: common.$spacing-medium;
+  cursor: pointer;
+  padding: common.$spacing-medium;
+
+  &:focus,
+  &:hover {
+    border-color: var(--md-sys-color-outline-variant);
+  }
+
+  .subtitle {
+    @include typescale.label-small;
+    color: var(--md-sys-color-outline);
+  }
 }
 
 .nav-item {
@@ -67,7 +92,6 @@ h2 {
 
 .stage-info {
   @include common.flex-row;
-  flex-wrap: wrap;
   gap: common.$spacing-medium;
 }
 
@@ -88,50 +112,6 @@ h2 {
 
 .stage-description {
   @include typescale.body-small;
-  color: var(--md-sys-color-outline);
-  font-style: italic;
-}
-
-.menu-wrapper {
-  @include common.flex-column;
-  gap: common.$spacing-medium;
-  padding: common.$spacing-medium;
-
-  .modules,
-  .stages {
-    @include common.flex-column;
-    gap: common.$spacing-small;
-  }
-}
-
-.menu-item {
-  @include common.flex-column;
-  border: 1px solid transparent;
-  border-radius: common.$spacing-medium;
-  cursor: pointer;
-  padding: common.$spacing-medium;
-
-  &:focus,
-  &:hover {
-    border-color: var(--md-sys-color-outline-variant);
-  }
-}
-
-.category {
-  @include typescale.label-small;
-  color: var(--md-sys-color-primary);
-  text-transform: uppercase;
-
-  &.tertiary {
-    color: var(--md-sys-color-tertiary);
-  }
-}
-
-.module-title {
-  @include typescale.title-small;
-}
-
-.module-info {
   color: var(--md-sys-color-outline);
   font-style: italic;
 }

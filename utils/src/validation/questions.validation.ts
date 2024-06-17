@@ -83,7 +83,7 @@ export const RatingQuestionAnswerData = Type.Object(
     kind: Type.Literal(SurveyQuestionKind.Rating),
     id: Type.Number(),
     choice: ItemData,
-    confidence: Type.Number({ minimum: 0, maximum: 1 }),
+    confidence: Type.Number({ minimum: 0.5, maximum: 1 }),
   },
   strict,
 );
