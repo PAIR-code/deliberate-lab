@@ -162,6 +162,10 @@ export class ExperimentService extends Service {
     return null;
   }
 
+  getPublicStageData(stageName: string) {
+    return this.publicStageDataMap[stageName];
+  }
+
   // Returns lists of participants who are/aren't past the given stage
   getParticipantsCompletedStage(stageName: string) {
     const completed: ParticipantProfileExtended[] = [];

@@ -25,10 +25,9 @@ export class BasicChat extends MobxLitElement {
   private readonly chatService = core.getService(ChatService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
-  private readonly routerService = core.getService(RouterService);
 
   override render() {
-    const currentStage = this.routerService.activeRoute.params["stage"];
+    const currentStage = this.chatService.chat?.stageName ?? "";
     const { ready, notReady } =
       this.experimentService.getParticipantsReadyForStage(currentStage);
 
@@ -39,15 +38,12 @@ export class BasicChat extends MobxLitElement {
       `;
     }
 
-    const publicId = this.participantService.profile?.publicId!;
-    const readyToEnd = this.experimentService.isReadyToEndChat(
-      currentStage, publicId
-    );
-
+    const readyToEnd = this.chatService.chat?.readyToEndChat;
     const disableInput = !this.participantService.isCurrentStage || readyToEnd;
 
     return html`
-      <chat-interface .disableInput=${disableInput}></chat-interface>
+      <chat-interface .disableInput=${disableInput} .showInfo=${true}>
+      </chat-interface>
       <stage-footer .disabled=${!readyToEnd}>
         <pr-button
           color="tertiary"

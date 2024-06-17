@@ -6,7 +6,7 @@ import "../../pair-components/tooltip";
 import "./chat_message";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html } from "lit";
+import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 import { core } from "../../core/core";
@@ -26,6 +26,7 @@ export class ChatInterface extends MobxLitElement {
 
   @property() value = "";
   @property() disableInput = false;
+  @property() showInfo = false;
 
   private sendUserInput() {
     this.chatService.sendUserMessage(this.value.trim());
@@ -52,7 +53,7 @@ export class ChatInterface extends MobxLitElement {
     `;
   }
 
-  private renderChatIntro() {
+  private renderChatInfo() {
     const renderParticipant = (participant: ParticipantProfile) => {
       return html`
         <div class="chat-participant">
@@ -128,7 +129,7 @@ export class ChatInterface extends MobxLitElement {
     return html`
       <div class="chat-content">
         ${this.renderChatHistory()}
-        ${this.renderChatIntro()}
+        ${this.showInfo ? this.renderChatInfo() : nothing}
       </div>
       <div class="input-row-wrapper">
         <div class="input-row">${this.renderInput()}</div>

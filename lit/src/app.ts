@@ -1,6 +1,6 @@
 import "./pair-components/button";
 
-import "./experiment-components/chat/basic_chat";
+import "./experiment-components/chat/ranking_chat";
 import "./experiment-components/experiment/experiment_config";
 import "./experiment-components/experiment/experiment_preview";
 import "./experiment-components/info/info_preview";
@@ -230,8 +230,9 @@ export class App extends MobxLitElement {
         const electionStage = currentStage.pendingVoteStageName;
         return html`<election-reveal .voteStageName=${electionStage}></election-reveal>`;
       case StageKind.GroupChat:
-        this.chatService.updateForCurrentRoute();
-        return html`<basic-chat></basic-chat>`;
+        this.chatService.updateForCurrentRoute(currentStage.chatId);
+        // Right now, the only kind of chat is the ranking one
+        return html`<ranking-chat .stage=${currentStage}></ranking-chat>`;
       default:
         return this.render404("Could not load experiment stage");
     }

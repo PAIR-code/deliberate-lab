@@ -51,18 +51,9 @@ export class ChatService extends Service {
     this.loadChatData();
   }
 
-  updateForCurrentRoute() {
+  updateForCurrentRoute(chatId: string) {
     const eid = this.sp.routerService.activeRoute.params["experiment"];
     const pid = this.sp.routerService.activeRoute.params["participant"];
-    const stageName = this.sp.routerService.activeRoute.params["stage"];
-
-    const currentStage = this.sp.experimentService.getStage(stageName);
-
-    if (currentStage.kind !== StageKind.GroupChat) {
-      return;
-    }
-
-    const chatId = currentStage.chatId;
 
     if (eid !== this.experimentId || pid !== this.participantId
       || chatId !== this.chatId) {
@@ -122,16 +113,39 @@ export class ChatService extends Service {
     this.messages = [];
   }
 
+  getCurrentRatingIndex() {
+    const stageData = this.sp.experimentService.getPublicStageData(
+      this.chat?.stageName!
+    );
+    if (!stageData || stageData.kind !== StageKind.GroupChat) {
+      return -1;
+    }
+
+    return stageData.chatData.currentRatingIndex;
+  }
+
 
     // ******************************************************************************************* //
   //                                          MUTATIONS                                          //
-  // ******************************************************************************************* //
+  // ****************************************************************************************** //
 
   /** Mark this participant as ready to end the chat, or ready to discuss about the next pair of items.
    * @rights Participant
    */
-  async markReadyToEndChat(readyToEndChat: boolean) {
-    return updateDoc(
+  async markReadyToEndChat(readyToEndChat: boolean, numDiscussions = 1) {
+    // TODO: Clean up temporary fix
+    // The backend functions don't currently update readyToEndChat to false
+    // after advancing to the next ranking discussion.
+    // To temporarily fix this, manually reset everyone's readyToEndChat
+    // if this is the last participant ending the current discussion.
+
+    const { ready, notReady } =
+      this.sp.experimentService.getParticipantsReadyToEndChat(this.chat?.stageName!);
+
+    const reset = notReady.length === 1 && this.getCurrentRatingIndex() < numDiscussions - 1;
+
+    // Actual logic to mark readyToEndChat
+    updateDoc(
       doc(
         this.sp.firebaseService.firestore,
         'experiments',
@@ -145,6 +159,26 @@ export class ChatService extends Service {
         readyToEndChat,
       },
     );
+
+    // Temporary fix to reset readyToEndChat (see above)
+    if (reset) {
+      for (const participant of this.sp.experimentService.participants) {
+        updateDoc(
+          doc(
+            this.sp.firebaseService.firestore,
+            'experiments',
+            this.experimentId!,
+            'participants',
+            participant.privateId,
+            'chats',
+            this.chatId!,
+          ),
+          {
+            readyToEndChat: false
+          }
+        );
+      }
+    }
   }
 
   /** Send a message as a participant.
