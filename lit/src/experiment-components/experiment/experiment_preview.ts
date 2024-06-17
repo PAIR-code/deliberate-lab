@@ -13,6 +13,9 @@ import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
 import { ExperimentService } from "../../services/experiment_service";
 import { Pages, RouterService } from "../../services/router_service";
+import { ExperimentConfigService } from "../../services/config/experiment_config_service";
+
+import { convertTemplateStages } from "../../shared/utils";
 
 import { styles } from "./experiment_preview.scss";
 
@@ -24,6 +27,7 @@ export class ExperimentPreview extends MobxLitElement {
   private readonly authService = core.getService(AuthService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly routerService = core.getService(RouterService);
+  private readonly experimentConfig = core.getService(ExperimentConfigService);
 
   override render() {
     if (!this.authService.isExperimenter) {
@@ -36,7 +40,10 @@ export class ExperimentPreview extends MobxLitElement {
           ${this.experimentService.experiment?.numberOfParticipants}
           participants
         </div>
-        ${this.renderDownload()}
+        <div class="right">
+          ${this.renderFork()}
+          ${this.renderDownload()}
+        </div>
       </div>
       ${this.experimentService.privateParticipants.map(participant =>
         html`<profile-preview .profile=${participant}></profile-preview>`)}
@@ -55,6 +62,34 @@ export class ExperimentPreview extends MobxLitElement {
           color="neutral"
           variant="default"
           @click=${onDownload}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
+  }
+
+  private renderFork() {
+    const onFork = () => {
+      const name = this.experimentService.experiment?.name!;
+      const num = this.experimentService.experiment?.numberOfParticipants!;
+      const stages = convertTemplateStages(
+        Object.values(this.experimentService.stageConfigMap)
+      );
+
+      this.experimentConfig.updateName(name);
+      this.experimentConfig.updateNumParticipants(num);
+      this.experimentConfig.updateStages(stages);
+
+      this.routerService.navigate(Pages.EXPERIMENT_CREATE);
+    };
+
+    return html`
+      <pr-tooltip text="Fork experiment" position="BOTTOM_END">
+        <pr-icon-button
+          icon="fork_right"
+          color="tertiary"
+          variant="tonal"
+          @click=${onFork}
         >
         </pr-icon-button>
       </pr-tooltip>

@@ -97,6 +97,10 @@ export class ExperimentConfigService extends Service {
     this.numParticipants = num;
   }
 
+  updateStages(stages: StageConfig[]) {
+    this.stages = stages;
+  }
+
   updateStageName(name: string, stageIndex = this.currentStageIndex) {
     if (stageIndex >= 0 && stageIndex < this.stages.length) {
       this.stages[stageIndex].name = name;
