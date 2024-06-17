@@ -39,6 +39,7 @@ export const initializePublicStageData = onDocumentWritten(
             chatData = {
               kind: ChatKind.ChatAboutItems,
               currentRatingIndex: 0,
+              ratingsToDiscuss: data.chatConfig.ratingsToDiscuss, // Also publish the config again for convenience
             };
             break;
         }

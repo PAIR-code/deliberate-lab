@@ -1,4 +1,11 @@
-import { ChatAnswer, ChatKind, GroupChatStagePublicData } from '@llm-mediation-experiments/utils';
+import {
+  ChatAnswer,
+  ChatKind,
+  DiscussItemsMessage,
+  GroupChatStagePublicData,
+  MessageKind,
+} from '@llm-mediation-experiments/utils';
+import { Timestamp } from 'firebase-admin/firestore';
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { app } from '../app';
 
@@ -10,7 +17,7 @@ export const publishParticipantReadyToEndChat = onDocumentWritten(
     if (!data) return;
 
     const { participantPublicId, readyToEndChat, stageName } = data;
-    const { experimentId } = event.params;
+    const { experimentId, chatId } = event.params;
 
     const publicChatData = app
       .firestore()
@@ -21,16 +28,45 @@ export const publishParticipantReadyToEndChat = onDocumentWritten(
     });
 
     // Check whether all participants are ready to end the chat
-    // If the chat is a chat about items, increment the current item index
+    // If the chat is a chat about items, increment the current item index,
+    // and publish a message about the new pair (if there is one) to the chat of every participant
     const docData = (await publicChatData.get()).data() as GroupChatStagePublicData;
     const readys = Object.values(docData?.readyToEndChat ?? {});
 
     if (docData && readys.length === docData.numberOfParticipants && readys.every((r) => r)) {
       // Everyone is ready to end the chat
       if (docData['chatData'].kind === ChatKind.ChatAboutItems) {
-        // Increment the current item index
+        // 1. Increment the current item index
         const current = docData['chatData'].currentRatingIndex;
         await publicChatData.update({ [`chatData.currentRatingIndex`]: current + 1 });
+
+        // 2. Publish a message about the new pair (if there is one) to the chat of every participant
+        if (current + 1 >= docData['chatData'].ratingsToDiscuss.length) return;
+
+        const itemPair = docData['chatData'].ratingsToDiscuss[current + 1];
+        const messageData: Omit<DiscussItemsMessage, 'uid'> = {
+          kind: MessageKind.DiscussItemsMessage,
+          itemPair,
+          text: 'New pair of objects',
+          timestamp: Timestamp.now(),
+        };
+
+        // Fetch all participant IDs in order to send the message to all of them (everyone has a copy of the chat)
+        const participantIds = (
+          await app.firestore().collection(`experiments/${experimentId}/participants`).get()
+        ).docs.map((doc) => doc.id);
+
+        await Promise.all(
+          participantIds.map(async (participantId) => {
+            return app
+              .firestore()
+              .collection(
+                `experiments/${experimentId}/participants/${participantId}/chats/${chatId}/messages`,
+              )
+              .doc()
+              .create(messageData);
+          }),
+        );
       }
     }
   },
