@@ -4,10 +4,17 @@
 :host {
   @include common.default;
   @include common.flex-column;
-  gap: common.$spacing-medium;
+  gap: common.$spacing-xl;
 }
 
 h2 {
+  @include typescale.label-medium;
+  color: var(--md-sys-color-secondary);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+h3 {
   @include typescale.title-medium;
   margin: 0;
 }
@@ -16,12 +23,24 @@ p {
   margin: 0;
 }
 
+.label {
+  @include typescale.label-medium;
+  color: var(--md-sys-color-outline);
+  font-style: italic;
+}
+
 .action-buttons {
   @include common.flex-row-align-center;
   gap: common.$spacing-medium;
-  justify-content: end;
+  justify-content: space-between;
   margin-bottom: 0;
   margin-top: auto;
+
+  .left,
+  .right {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-medium;
+  }
 }
 
 .cards-wrapper {
