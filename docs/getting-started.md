@@ -20,55 +20,24 @@ npm install  # Run this command only once
 npm run build:watch
 ```
 
-The shared utilities are built using [`tsup`](https://tsup.egoist.dev) to produce both esm (for the webapp) and cjs (for the cloud functions and scripts) code.
+The shared utilities are built using [`tsup`](https://tsup.egoist.dev) to produce both esm and cjs (for the cloud functions and scripts) code.
 
 ## Frontend
-
-### Angular frontend (current)
-
-The most up-to-date frontend for this project is under `/webapp`
-and uses Angular JS 17.
-
-#### Recommended editor setup
-
-This code is being developed using [Visual Studio Code](https://code.visualstudio.com/).
-Make sure to install the angular extension.\
-Run `ng generate component component-name` to generate a new component.\
-You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
 
 #### Development server
 
 First, install the dependencies:
 
 ```bash
-cd webapp
-npm install  # Run this command only once
-```
-
-You can then run the development server:
-
-```bash
-npm run start
+cd lit
+npm install
+npm run start  # Builds the Lit app at localhost:4201
 ```
 
 Navigate to [`http://localhost:4200/`](http://localhost:4200/).
 The application will automatically reload if you change any of the source files.
 
-### Lit frontend (in progress)
-
-> NOTE: This is not yet fully functional!
-
-An alternate frontend (written in Lit/MobX with updated UX, but without
-full functionality, e.g., participant read/write ability, yet) can be
-found under `/lit`, with documentation at `/lit/README.md`.
-
-This can be run instead of (or alongside) the Angular webapp.
-
-```bash
-cd lit
-npm install
-npm run start  # Builds the Lit app at localhost:4201
-```
+(There is also a deprecated version of the frontend in `webapp/`, written in Angular.)
 
 ## Firebase
 
@@ -83,11 +52,11 @@ firebase login  # Login to an account that has admin rights for the Firebase pro
 
 ### Configuration
 
-Create the configuration files for a default firebase project:
+From the root directory (`llm-mediation-app/`), create the configuration files for a default firebase project:
 
 ```bash
 cp .firebaserc.example .firebaserc
-cp webapp/src/lib/api/firebase-config.example.ts webapp/src/lib/api/firebase-config.ts
+cp lit/src/lib/api/firebase-config.example.ts lit/src/lib/api/firebase-config.ts
 cp scripts/service-account.example.json scripts/service-account.json
 ```
 
