@@ -67,7 +67,7 @@ export class RankingChat extends MobxLitElement {
           ${this.renderParticipants()}
           ${this.renderTask()}
         </div>
-        <chat-interface .showInfo=${true} .disableInput=${disableInput}></chat-interface>
+        <chat-interface .disableInput=${disableInput}></chat-interface>
       </div>
       <stage-footer .disabled=${!showNext}>
       </stage-footer>
