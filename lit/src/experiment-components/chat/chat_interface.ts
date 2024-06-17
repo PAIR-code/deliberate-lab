@@ -72,7 +72,6 @@ export class ChatInterface extends MobxLitElement {
           ${this.experimentService.getParticipantProfiles().map(participant =>
             renderParticipant(participant))}
         </div>
-        <div class="divider"></div>
         <div class="label">Group Discussion</div>
       </div>
     `;

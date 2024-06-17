@@ -12,7 +12,7 @@ import { ExperimentService } from "../../services/experiment_service";
 import { ParticipantService } from "../../services/participant_service";
 
 import { styles } from "./chat_message.scss";
-import { DiscussItemsMessage, MediatorMessage, Message, MessageKind, UserMessage, getDefaultUserMessage } from "@llm-mediation-experiments/utils";
+import { DiscussItemsMessage, ITEMS, MediatorMessage, Message, MessageKind, UserMessage, getDefaultUserMessage } from "@llm-mediation-experiments/utils";
 import { Timestamp } from "firebase/firestore";
 
 /** Chat message component */
@@ -83,16 +83,26 @@ export class ChatMessage extends MobxLitElement {
 
   renderDiscussItemsMessage(message: DiscussItemsMessage) {
     const classes = classMap({
-      "chat-message": true,
+      "discuss-message": true,
     });
 
     // TODO: display the pair of items being discussed
     return html`
       <div class=${classes}>
-        <div class="avatar"></div>
-        <div class="content">
-          <div class="label">TODO</div>
-          <div class="chat-bubble">${message.text}</div>
+        <div class="discuss-title">${message.text}</div>
+        <div class="pair">
+          <div class="item">
+            <div class="img-wrapper">
+              <img src=${ITEMS[message.itemPair.item1].imageUrl} />
+            </div>
+            <div>${ITEMS[message.itemPair.item1].name}</div>
+          </div>
+          <div class="item">
+            <div class="img-wrapper">
+              <img src=${ITEMS[message.itemPair.item2].imageUrl} />
+            </div>
+            <div>${ITEMS[message.itemPair.item2].name}</div>
+          </div>
         </div>
       </div>
     `;
