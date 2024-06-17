@@ -27,9 +27,9 @@ export class ExperimenterService extends Service {
 
   @observable experiments: Experiment[] = [];
   @observable templates: ExperimentTemplate[] = [];
-  @observable templatesWithConfigs = new CacheMap((templateId: string) =>
+  /* @observable templatesWithConfigs = new CacheMap((templateId: string) =>
     this.loadExperimentTemplate(templateId),
-  );
+  ); */
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -65,9 +65,9 @@ export class ExperimenterService extends Service {
     // Reset observables
     this.experiments = [];
     this.templates = [];
-    this.templatesWithConfigs = new CacheMap((templateId: string) =>
+    /* this.templatesWithConfigs = new CacheMap((templateId: string) =>
       this.loadExperimentTemplate(templateId)
-    );
+    ); */
   }
 
   private loadExperimentTemplate (

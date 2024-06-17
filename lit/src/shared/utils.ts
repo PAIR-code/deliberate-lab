@@ -242,6 +242,25 @@ export function convertExperimentStages(stages: StageConfig[]) {
 }
 
 /**
+ * Adjust template stages to experiment stage format
+ * (e.g., strip stage numbers)
+ */
+export function convertTemplateStages(stages: StageConfig[]) {
+  const stripNumbersFromTitle = (name: string) => {
+    const titleParts = name.split('. ');
+    if (titleParts.length > 1) {
+      return `${titleParts[1]}`;
+    }
+    return `Untitled stage`;
+  };
+
+  return stages.map((stage) => {
+    stage.name = stripNumbersFromTitle(stage.name);
+    return stage;
+  });
+}
+
+/**
  * Collect the data of multiple documents into an array,
  * including the document Firestore ID within the field with the given key.
  */

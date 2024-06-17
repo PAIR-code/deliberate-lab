@@ -43,6 +43,24 @@ code {
   top: 0;
 }
 
+.template-item {
+  @include common.flex-column;
+  border: 1px solid transparent;
+  border-radius: common.$spacing-medium;
+  cursor: pointer;
+  padding: common.$spacing-medium;
+
+  &:focus,
+  &:hover {
+    border-color: var(--md-sys-color-outline-variant);
+  }
+
+  .subtitle {
+    @include typescale.label-small;
+    color: var(--md-sys-color-outline);
+  }
+}
+
 .nav-item {
   @include common.nav-item;
   border-radius: common.$spacing-medium;

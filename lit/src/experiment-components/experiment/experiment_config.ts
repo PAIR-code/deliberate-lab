@@ -39,7 +39,7 @@ import {
   MODULE_DESCRIPTION_LEADER,
   MODULE_DESCRIPTION_RANKING
 } from "../../shared/constants";
-import { StageConfig, StageKind } from "@llm-mediation-experiments/utils";
+import { ExperimentTemplate, StageConfig, StageKind } from "@llm-mediation-experiments/utils";
 import {
   createInfoStage,
   createProfileStage,
@@ -149,7 +149,7 @@ export class ExperimentConfig extends MobxLitElement {
           ${isRankingModuleStage(currentStage) ?
             html`<code>${JSON.stringify(currentStage.chatConfig)}</code>`
             : nothing}
-        `;
+          `;
       case StageKind.VoteForLeader:
         return html`
           ${this.renderStageInfo(
@@ -314,16 +314,35 @@ export class ExperimentConfig extends MobxLitElement {
     `;
   }
 
+  private renderTemplateItem(template: ExperimentTemplate) {
+    const onClick = () => {
+      this.experimentConfig.loadTemplate(template.id, template.name);
+    };
+
+    return html`
+      <div class="template-item" role="button" @click=${onClick}>
+        <div>${template.name}</div>
+        <div class="subtitle">${template.id}</div>
+      </div>
+    `;
+  }
+
   private renderTopActionButtons() {
     return html`
       <div class="buttons-wrapper">
+        <pr-menu color="secondary" name="Load template">
+          <div class="menu-wrapper">
+            ${this.experimenterService.templates.map(
+              template => this.renderTemplateItem(template))}
+          </div>
+        </pr-menu>
         <experiment-config-menu></experiment-config-menu>
       </div>
     `;
   }
 
   private renderBottomActionButtons() {
-    const onCreateClick = async () => {
+    const onCreateExperiment = async () => {
       if (this.experimentConfig.getExperimentErrors().length > 0) {
         return;
       }
@@ -339,7 +358,18 @@ export class ExperimentConfig extends MobxLitElement {
       this.routerService.navigate(Pages.HOME);
     }
 
-    const onClearClick = () => {
+    const onCreateTemplate = async () => {
+      const { name, stages, numberOfParticipants } =
+        this.experimentConfig.getExperiment();
+
+      await this.experimenterService.createTemplate(
+        name, stages
+      );
+
+      this.experimentConfig.reset();
+    }
+
+    const onClear = () => {
       this.experimentConfig.reset();
     }
 
@@ -348,11 +378,14 @@ export class ExperimentConfig extends MobxLitElement {
 
     return html`
       <div class="buttons-wrapper bottom">
-        <pr-button variant="default" @click=${onClearClick}>
+        <pr-button variant="default" @click=${onClear}>
           Clear
         </pr-button>
+        <pr-button variant="tonal" @click=${onCreateTemplate}>
+          Create template
+        </pr-button>
         <pr-tooltip text=${tooltipText} position="TOP_END">
-          <pr-button @click=${onCreateClick}>
+          <pr-button @click=${onCreateExperiment}>
             Create experiment
           </pr-button>
         </pr-tooltip>
