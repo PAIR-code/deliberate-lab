@@ -104,7 +104,6 @@ export const deleteExperiment = onCall(async (request) => {
   if (Value.Check(ExperimentDeletionData, data)) {
     const doc = app.firestore().doc(`${data.type}/${data.id}`);
     app.firestore().recursiveDelete(doc);
-    return { success: true };
   }
 
   throw new functions.https.HttpsError('invalid-argument', 'Invalid data');

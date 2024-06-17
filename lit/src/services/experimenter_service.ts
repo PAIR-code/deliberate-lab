@@ -141,9 +141,14 @@ export class ExperimenterService extends Service {
       this.sp.routerService.setSidenavExperiment(null);
     }
 
-    return deleteExperimentCallable(this.sp.firebaseService.functions, {
+    return deleteDoc(
+      doc(this.sp.firebaseService.firestore, 'experiments', experimentId)
+    );
+
+    // Temporarily comment out legacy deletion call (returns errors)
+    /* return deleteExperimentCallable(this.sp.firebaseService.functions, {
       id: experimentId,
       type: 'experiments',
-    })
+    }) */
   }
 }

@@ -21,7 +21,6 @@ import {
 
 import { styles } from "./sidenav.scss";
 import { ExperimenterService } from "../../services/experimenter_service";
-import { AuthService } from "../../services/auth_service";
 
 /** Sidenav menu component */
 @customElement("sidenav-menu")
@@ -31,7 +30,6 @@ export class SideNav extends MobxLitElement {
   private readonly firebaseService = core.getService(FirebaseService);
   private readonly routerService = core.getService(RouterService);
   private readonly experimenterService = core.getService(ExperimenterService);
-  private readonly authService = core.getService(AuthService);
 
   override render() {
     return html`
@@ -50,12 +48,9 @@ export class SideNav extends MobxLitElement {
   }
 
   private renderExperimentList() {
-    // Show all experiments for an experimenter, but only the current experiment for a participant
-    const currentExperiment = this.experimentService.experiment ? [this.experimentService.experiment] : [];
-    const experiments = this.authService.isParticipantView ? currentExperiment : this.experimenterService.experiments;
-    const isLoading = this.authService.isParticipantView ? this.experimentService.isLoading : this.experimenterService.isLoading;
+    const experiments = this.experimenterService.experiments;
 
-    if (isLoading) {
+    if (this.experimentService.isLoading) {
       return html`<div class="empty-message">Loading...</div>`;
     }
 
@@ -68,7 +63,7 @@ export class SideNav extends MobxLitElement {
 
   private renderExperimentSubnav() {
     const id = this.experimentService.id;
-    const experiment = this.experimentService.experiment;
+    const experiment = this.experimenterService.getExperiment(id!);
 
     if (this.experimentService.isLoading) {
       return html`<div class="empty-message">Loading...</div>`;

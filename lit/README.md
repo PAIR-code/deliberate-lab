@@ -11,7 +11,6 @@ which has additional functionality and can be viewed/run from `/webapp`.
 To run locally:
 
 ```
-cp src/shared/firebase_config_example.ts src/shared/firebase_config.ts
 npm run start
 ```
 
