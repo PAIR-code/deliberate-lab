@@ -5,7 +5,8 @@ How to deploy this app to production.
 Before deploying to production, make sure that you have:
 
 - Updated the project ID in the [`.firebaserc`](./.firebaserc) file.
-- Updated the Firebase app configuration in the [`webapp/src/lib/api/firebase-config.ts`](./webapp/src/lib/api/firebase-config.ts) file.
+- Updated the Firebase app configuration in the [`webapp/src/lib/api/firebase-config.ts`](./webapp/src/lib/api/firebase-config.ts) file. This can be found by navigating to your project settings in Cloud Console > General > Your Apps (at the bottom) > Config. 
+
 - Update the project ID, private key ID, private key, (client email, and client ID) in the [`scripts/service-account.json`](./scripts/service-account.json) file. You can generate a private key in the Firebase console under `Project settings` > `Service accounts`. The fields of the generated JSON file should be copied to the `service-account.json` file.
 
 ## Webapp
@@ -24,13 +25,15 @@ A Dockerfile is provided in order to serve the webapp through a container.
 You can build the docker image with the following command:
 
 ```bash
-docker build -t webapp . -t myapp
+docker build -t webapp .
 ```
+
+This command builds the image with a `webapp` tag.
 
 Test the container locally with the following command:
 
 ```bash
-docker run -p 4200:4200 myapp
+docker run -p 4200:4200 webapp
 ```
 
 ## Firebase
