@@ -52,12 +52,14 @@ export class RankingChat extends MobxLitElement {
       `;
     }
 
-    const readyToEnd = this.chatService.chat?.readyToEndChat;
+    const readyToEnd = this.experimentService.getParticipantReadyToEndChat(
+      this.stage?.name!, this.participantService.profile?.publicId!,
+    );
     const disableInput = !this.participantService.isCurrentStage || readyToEnd;
 
     const numDiscussions = this.stage?.chatConfig.ratingsToDiscuss?.length;
-    const disableNext = !readyToEnd
-      || this.chatService.getCurrentRatingIndex() < numDiscussions;
+    const showNext =
+      this.chatService.getCurrentRatingIndex() >= numDiscussions;
 
     return html`
       <div class="chat-interface-wrapper">
@@ -67,7 +69,7 @@ export class RankingChat extends MobxLitElement {
         </div>
         <chat-interface .disableInput=${disableInput}></chat-interface>
       </div>
-      <stage-footer .disabled=${disableNext}>
+      <stage-footer .disabled=${!showNext}>
       </stage-footer>
     `;
   }
@@ -116,6 +118,19 @@ export class RankingChat extends MobxLitElement {
     const pair = 
       this.stage?.chatConfig.ratingsToDiscuss[Math.min(index, length - 1)];
 
+    const readyToEnd = this.experimentService.getParticipantReadyToEndChat(
+      this.stage?.name!, this.participantService.profile?.publicId!,
+    );
+
+    if (index >= length) {
+      return html`
+        <div class="panel-item">
+          <div class="panel-item-title">Discussions</div>
+          <div>${length} of ${length} discussions completed.</div>
+        </div>
+      `;
+    }
+
     return html`
       <div class="panel-item">
         <div class="panel-item-title">${this.getLabel()}</div>
@@ -126,7 +141,7 @@ export class RankingChat extends MobxLitElement {
         <pr-button
           color="tertiary"
           variant="tonal"
-          ?disabled=${this.chatService.chat?.readyToEndChat}
+          ?disabled=${readyToEnd || (index >= length)}
           @click=${() => {
             this.chatService.markReadyToEndChat(true); }}
         >

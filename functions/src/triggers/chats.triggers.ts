@@ -40,9 +40,18 @@ export const publishParticipantReadyToEndChat = onDocumentWritten(
         const current = docData['chatData'].currentRatingIndex;
         await publicChatData.update({ [`chatData.currentRatingIndex`]: current + 1 });
 
-        // 2. Publish a message about the new pair (if there is one) to the chat of every participant
+        // 2. If there is not a new pair of items, skip the next two steps
         if (current + 1 >= docData['chatData'].ratingsToDiscuss.length) return;
 
+        // 3. Reset all participants' readyToEndChat (for new discussion)
+        for (const id of Object.keys(docData?.readyToEndChat ?? {})) {
+          await publicChatData.update({
+            [`readyToEndChat.${id}`]: false
+          });
+          // TODO: Also update participants' private ChatAnswer?
+        }
+
+        // 4. Publish a message about the new pair to the chat of every participant
         const itemPair = docData['chatData'].ratingsToDiscuss[current + 1];
         const messageData: Omit<DiscussItemsMessage, 'uid'> = {
           kind: MessageKind.DiscussItemsMessage,

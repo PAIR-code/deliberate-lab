@@ -215,6 +215,16 @@ export class ExperimentService extends Service {
     return { ready, notReady };
   }
 
+  // Returns whether or not given participant is ready to end chat
+  getParticipantReadyToEndChat(stageName: string, publicId: string) {
+    const stage = this.publicStageDataMap[stageName];
+    if (!stage || stage.kind !== StageKind.GroupChat) {
+      return false;
+    }
+
+    return stage.readyToEndChat[publicId];
+  }
+
   // Returns lists of participants who are/aren't ready to end chat
   getParticipantsReadyToEndChat(stageName: string) {
     const ready: ParticipantProfile[] = [];
