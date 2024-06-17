@@ -332,6 +332,8 @@ export class ExperimentConfig extends MobxLitElement {
       <div class="buttons-wrapper">
         <pr-menu color="secondary" name="Load template">
           <div class="menu-wrapper">
+            ${this.experimenterService.templates.length === 0 ?
+              html`<div>No templates yet</div>` : nothing}
             ${this.experimenterService.templates.map(
               template => this.renderTemplateItem(template))}
           </div>
