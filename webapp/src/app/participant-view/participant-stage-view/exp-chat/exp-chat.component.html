@@ -16,11 +16,6 @@
                 {{ user.name }}
               </div>
               <div class="pronoun">({{ user.pronouns }})</div>
-              @if (usersDoneWithChat()[user.publicId]) {
-                <div>Done!</div>
-              } @else {
-                <div>Chatting...</div>
-              }
             </div>
           }
         }
@@ -67,7 +62,7 @@
         <b>Discussion</b>
 
         <div class="messages">
-          <ng-template #messageTemplate let-message>
+          @for (message of chat?.messages(); track $index) {
             <div class="message">
               @if (message.kind === 'userMessage') {
                 <app-chat-user-message [message]="message"></app-chat-user-message>
@@ -81,13 +76,7 @@
                 <div></div>
               }
             </div>
-          </ng-template>
-
-          <app-bottom-scroll-list
-            [dataList]="chat?.messages() ?? []"
-            [itemTemplate]="messageTemplate"
-            maxHeight="25em"
-          ></app-bottom-scroll-list>
+          }
         </div>
 
         <form class="message-form" (ngSubmit)="sendMessage()">
@@ -98,7 +87,12 @@
             <mat-label>Message to send</mat-label>
             <input matInput placeholder="Write your message" [formControl]="message" />
           </mat-form-field>
-          <button type="submit" color="primary" mat-button [disabled]="!message.valid">
+          <button
+            type="submit"
+            color="primary"
+            mat-button
+            [disabled]="readyToEndChat() || !message.valid"
+          >
             <!-- <mat-icon>redo</mat-icon> -->
             <span>Send</span>
             <br />
@@ -108,7 +102,7 @@
         <div>
           <mat-slide-toggle
             [checked]="readyToEndChat()"
-            [disabled]="isSilent() || readyToEndChat()"
+            [disabled]="isSilent()"
             (change)="toggleEndChat()"
           >
             @if (currentRatingsIndex() < stage.config().chatConfig.ratingsToDiscuss.length - 1) {

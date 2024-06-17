@@ -37,16 +37,8 @@ export class RouterService extends Service {
       path: "/new_experiment",
     },
     {
-      name: Pages.PARTICIPANT,
-      path: "/:experiment/:participant",
-    },
-    {
-      name: Pages.PARTICIPANT_STAGE,
-      path: "/:experiment/:participant/:stage",
-    },
-    {
-      name: Pages.PARTICIPANT_SETTINGS,
-      path: "/:experiment/:participant/settings",
+      name: Pages.EXPERIMENT_STAGE,
+      path: "/:experiment/:stage",
     }
   ];
 
@@ -56,6 +48,13 @@ export class RouterService extends Service {
   @observable isHandlingRouteChange = false;
   @observable hasNavigated = false; // True if navigated at least once in app
 
+  // Used to display subnav for current experiment
+  @observable sidenavExperimentId: string|null = null;
+
+  setSidenavExperiment(id: string|null) {
+    this.sidenavExperimentId = id;
+  }
+
   private getPage(route: Route): Pages | undefined {
     if (!route) return undefined;
     return route.name as Pages;
@@ -64,11 +63,6 @@ export class RouterService extends Service {
   @computed
   get activePage(): Pages | undefined {
     return this.getPage(this.activeRoute);
-  }
-
-  @computed
-  get isParticipantPage() {
-    return this.activeRoute.params["participant"] !== undefined;
   }
 
   override initialize() {
@@ -120,9 +114,7 @@ export enum Pages {
   SETTINGS = "SETTINGS",
   EXPERIMENT = "EXPERIMENT",
   EXPERIMENT_CREATE = "EXPERIMENT_CREATE",
-  PARTICIPANT = "PARTICIPANT",
-  PARTICIPANT_STAGE = "PARTICIPANT_STAGE",
-  PARTICIPANT_SETTINGS = "PARTICIPANT_SETTINGS",
+  EXPERIMENT_STAGE = "EXPERIMENT_STAGE",
 }
 
 /**
@@ -132,8 +124,8 @@ export interface NavItem {
   page: Pages;
   title: string;
   icon: string;
-  isExperimenterPage: boolean;
-  isParticipantPage: boolean;
+  showInSidenav: boolean;
+  isPrimaryPage: boolean;
 }
 
 /**
@@ -144,21 +136,14 @@ export const NAV_ITEMS: NavItem[] = [
     page: Pages.HOME,
     title: "Home",
     icon: "home",
-    isExperimenterPage: true,
-    isParticipantPage: false,
+    showInSidenav: true,
+    isPrimaryPage: true,
   },
   {
     page: Pages.SETTINGS,
     title: "Settings",
     icon: "settings",
-    isExperimenterPage: true,
-    isParticipantPage: false,
+    showInSidenav: true,
+    isPrimaryPage: false,
   },
-  {
-    page: Pages.PARTICIPANT_SETTINGS,
-    title: "Settings",
-    icon: "manage_accounts",
-    isExperimenterPage: false,
-    isParticipantPage: true,
-  }
 ];

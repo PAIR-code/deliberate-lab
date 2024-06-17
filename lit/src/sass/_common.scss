@@ -111,7 +111,7 @@
     background: var(--md-sys-color-secondary-container);
   }
 
-  .icon {
+  pr-icon {
     --pr-icon-color: var(--md-sys-color-on-secondary-container);
   }
 }
@@ -167,9 +167,7 @@ $spacing-xl: 16px;
 $spacing-xxl: 24px;
 
 $header-height: 44px;
-$footer-height: 60px;
-$main-content-max-width: 800px;
+$main-content-max-width: 720px;
 $main-content-padding: $spacing-xl;
 $sidenav-padding: $spacing-large;
-$sidenav-width: 300px;
-$panel-width: 240px;
+$sidenav-width: 240px;

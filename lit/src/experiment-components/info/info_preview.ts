@@ -1,8 +1,5 @@
 import "../../pair-components/textarea";
 
-import "../footer/footer";
-import "../progress/progress_stage_completed";
-
 import * as sanitizeHtml from "sanitize-html";
 
 import { observable } from "mobx";
@@ -28,14 +25,7 @@ export class InfoPreview extends MobxLitElement {
     }
 
     const cleanHTML = sanitizeHtml(this.stage?.infoLines.join('\n\n'));
-    return html`
-      <div class="html-wrapper">
-        ${unsafeHTML(cleanHTML)}
-      </div>
-      <stage-footer>
-        <progress-stage-completed></progress-stage-completed>
-      </stage-footer>
-    `;
+    return html`${unsafeHTML(cleanHTML)}`;
   }
 }
 

@@ -126,14 +126,6 @@
   --pr-on-palette-container: var(--md-sys-color-on-error-container, #410002);
 }
 
-.palette-success {
-  /* Defaults = primary green from GM3 Design Kit baseline color scheme */
-  --pr-palette: var(--md-sys-color-success, #146C2E);
-  --pr-palette-container: var(--md-sys-color-success-container, #C4EED0);
-  --pr-on-palette: var(--md-sys-color-on-success, #FFFFFF);
-  --pr-on-palette-container: var(--md-sys-color-on-success-container, #072711);
-}
-
 .palette-primary {
   /* Defaults = primary blue from GM3 Design Kit baseline color scheme */
   --pr-palette: var(--md-sys-color-primary, #0856cf);

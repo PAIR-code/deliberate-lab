@@ -1,9 +1,0 @@
-@use "../../sass/common";
-@use "../../sass/typescale";
-
-:host {
-  @include common.flex-row-align-center;
-  @include typescale.label-small;
-  flex-wrap: wrap;
-  gap: common.$spacing-small;
-}

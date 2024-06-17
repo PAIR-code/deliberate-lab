@@ -9,15 +9,9 @@ import { v4 as uuidv4 } from "uuid";
 import { Snapshot } from "./types";
 import {
   ChatKind,
-  choices,
-  GroupChatStageConfig,
   InfoStageConfig,
-  ITEM_NAMES,
   ItemName,
-  pairs,
   ProfileStageConfig,
-  QuestionConfig,
-  RatingQuestionConfig,
   RevealVotedStageConfig,
   StageConfig,
   StageKind,
@@ -52,7 +46,7 @@ export function createTOSStage(
 /** Create survey stage. */
 export function createSurveyStage(
   name = "Survey",
-  questions: QuestionConfig[] = []
+  questions = []
 ): SurveyStageConfig {
   return { kind: StageKind.TakeSurvey, name, questions };
 }
@@ -66,21 +60,21 @@ export function createProfileStage(name = "Set profile"): ProfileStageConfig {
 export function createChatStage(
   name = "Group chat",
   ratingsToDiscuss: { item1: ItemName; item2: ItemName }[] = []
-): GroupChatStageConfig {
+) {
   return {
     name,
     kind: StageKind.GroupChat,
-    chatId: generateId(),
     chatConfig: {
       kind: ChatKind.ChatAboutItems,
+      chatId: generateId(),
       ratingsToDiscuss
     }
   };
 }
 
-/** Create leader vote (election) stage. */
+/** Create leader vote stage. */
 export function createVoteForLeaderStage(
-  name = "Leader election"
+  name = "Leader vote"
 ): VoteForLeaderStageConfig {
   return { kind: StageKind.VoteForLeader, name };
 }
@@ -90,85 +84,12 @@ export function createVoteForLeaderStage(
  * NOTE: This currently does not assign the VoteForLeader stage to
  * the RevealVoted stage; rather, this is assigned in `convertExperimentStages`
  * with the assumption that there is only one VoteForLeader stage.
- *
- * TODO: Make this an implicit "Reveal" stage for all stages, not just leader
- * election.
  */
 export function createRevealVotedStage(
-  name = "Reveal"
+  name = "Leader reveal"
 ): RevealVotedStageConfig {
   return { kind: StageKind.RevealVoted, name, pendingVoteStageName: "" };
 }
-
-/**
- * Create ranking game module stages.
- *
- * This includes:
- *   2 individual surveys with the same randomly-generated item pairs
- *   1 chat discussion based around those item pairs
- *   1 leader survey with different randomly-generated item pairs
- */
-export function createRankingModuleStages(numPairs = 5): StageConfig[] {
-  const stages: StageConfig[] = [];
-
-  const middleIndex = Math.ceil(ITEM_NAMES.length / 2);
-
-  // Take random items from the first half for the individual tasks.
-  const INDIVIDUAL_ITEM_NAMES = ITEM_NAMES.slice(0, middleIndex);
-  const INDIVIDUAL_ITEM_PAIRS = choices(pairs(INDIVIDUAL_ITEM_NAMES), numPairs);
-
-  // Take random items from the second half for the leader tasks.
-  const LEADER_ITEM_NAMES = ITEM_NAMES.slice(middleIndex);
-  const LEADER_ITEM_PAIRS = choices(pairs(LEADER_ITEM_NAMES), numPairs);
-
-  // Add individual surveys
-  const INDIVIDUAL_QUESTIONS: RatingQuestionConfig[] = INDIVIDUAL_ITEM_PAIRS.map(
-    (pair, index) => getRatingQuestionFromPair(pair, index)
-  );
-
-  stages.push(createSurveyStage("Individual ranking 1", INDIVIDUAL_QUESTIONS));
-  stages.push(createSurveyStage("Individual ranking 2", INDIVIDUAL_QUESTIONS));
-
-  // Add chat with individual item pairs as discussion
-  stages.push(
-    createChatStage(
-      "Group chat",
-      INDIVIDUAL_ITEM_PAIRS.map(([i1, i2]) => ({ item1: i1, item2: i2 }))
-    )
-  );
-
-  // Add leader survey
-  const LEADER_QUESTIONS: RatingQuestionConfig[] = LEADER_ITEM_PAIRS.map(
-    (pair, index) => getRatingQuestionFromPair(pair, index)
-  );
-
-  stages.push(createSurveyStage("Leader ranking", LEADER_QUESTIONS));
-
-  return stages;
-}
-
-/**
- * Uses item pair to create survey RatingQuestion.
- */
-export function getRatingQuestionFromPair(
-  pair: [string, string],
-  id: number,
-  questionText = "Choose the item that would be more helpful to your survival",
-): RatingQuestionConfig {
-
-  const [one, two] = pair;
-  const item1: ItemName = (one as ItemName);
-  const item2: ItemName = (two as ItemName);
-
-  return {
-    id,
-    kind: SurveyQuestionKind.Rating,
-    questionText,
-    item1,
-    item2,
-  };
-}
-
 
 /**
  * Check if stage is part of ranking module.
@@ -209,9 +130,6 @@ export function convertMarkdownToHTML(markdown: string, sanitize = true) {
  */
 export function convertExperimentStages(stages: StageConfig[]) {
   const addIndexToStageName = (name: string, index: number) => {
-    if (index + 1 < 10) {
-      return `0${index + 1}. ${name}`;
-    }
     return `${index + 1}. ${name}`;
   };
 
@@ -231,33 +149,13 @@ export function convertExperimentStages(stages: StageConfig[]) {
       return stage;
     }
     if (stage.kind === StageKind.RevealVoted) {
-      // NOTE: This assumes there is only one VoteForLeader stage
-      // and that it is ordered before the reveal stage.
+      // NOTE: This assumes there is only one VoteForLeader stage.
       const voteIndex = findStageKind(stages, StageKind.VoteForLeader);
-      stage.pendingVoteStageName = stages[voteIndex]?.name;
+      stage.pendingVoteStageName = addIndexToStageName(stage.name, voteIndex);
       return stage;
     }
     return stage;
   })
-}
-
-/**
- * Adjust template stages to experiment stage format
- * (e.g., strip stage numbers)
- */
-export function convertTemplateStages(stages: StageConfig[]) {
-  const stripNumbersFromTitle = (name: string) => {
-    const titleParts = name.split('. ');
-    if (titleParts.length > 1) {
-      return `${titleParts[1]}`;
-    }
-    return `Untitled stage`;
-  };
-
-  return stages.map((stage) => {
-    stage.name = stripNumbersFromTitle(stage.name);
-    return stage;
-  });
 }
 
 /**
@@ -268,9 +166,3 @@ export function collectSnapshotWithId<T>(snapshot: Snapshot, idKey: keyof T) {
   return snapshot.docs.map((doc) => ({ [idKey]: doc.id, ...doc.data() }) as T);
 }
 
-/** Helper to cleanup experiment data from redundant stage names */
-export function excludeName<T extends { name: string }>(obj: T) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { name, ...rest } = obj;
-  return rest;
-}

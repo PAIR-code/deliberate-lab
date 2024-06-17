@@ -1,15 +1,17 @@
 import { computed, makeObservable, observable } from "mobx";
+import { AuthService } from "./auth_service";
 import { FirebaseService } from "./firebase_service";
 import { Service } from "./service";
-import { RouterService } from "./router_service";
+import { SettingsService } from "./settings_service";
 import { Unsubscribe, collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { ParticipantProfile, ParticipantProfileBase, QuestionAnswer, StageAnswer, StageKind, Votes, lookupTable } from "@llm-mediation-experiments/utils";
 import { updateStageCallable } from "../shared/callables";
 
 
 interface ServiceProvider {
+  authService: AuthService;
+  settingsService: SettingsService;
   firebaseService: FirebaseService;
-  routerService: RouterService;
 }
 
 export class ParticipantService extends Service {
@@ -43,20 +45,6 @@ export class ParticipantService extends Service {
     this.participantId = participantId;
     this.isLoading = true;
     this.loadParticipantData();
-  }
-
-  isCurrentStage(
-    stageName = this.sp.routerService.activeRoute.params["stage"]
-  ) {
-    return this.profile?.workingOnStageName === stageName;
-  }
-
-  updateForCurrentRoute() {
-    const eid = this.sp.routerService.activeRoute.params["experiment"];
-    const pid = this.sp.routerService.activeRoute.params["participant"];
-    if (eid !== this.experimentId || pid !== this.participantId) {
-      this.setParticipant(eid, pid);
-    }
   }
 
   loadParticipantData() {
@@ -99,9 +87,6 @@ export class ParticipantService extends Service {
   unsubscribeAll() {
     this.unsubscribe.forEach((unsubscribe) => unsubscribe());
     this.unsubscribe = [];
-
-    this.profile = undefined;
-    this.stageAnswers = {};
   }
   
   // ******************************************************************************************* //
@@ -121,7 +106,7 @@ export class ParticipantService extends Service {
   /** Update this participant's `workingOnStageName`
    * @rights Participant
    */
-  async updateWorkingOnStageName(stageName: string) {
+  async workOnStage(stageName: string) {
     return updateDoc(
       doc(this.sp.firebaseService.firestore, 'experiments', this.experimentId!, 'participants', this.participantId!),
       {

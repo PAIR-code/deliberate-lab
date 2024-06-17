@@ -37,13 +37,13 @@
           </div>
           <div class="slider-container">
             @if (
-              questionForm.value['confidence'] === 0.5 || questionForm.value['confidence'] === null
+              questionForm.value['confidence'] === 0 || questionForm.value['confidence'] === null
             ) {
               <span class="slider-end-label"><b>Not confident</b></span>
             } @else {
               <span class="slider-end-label">Not confident</span>
             }
-            <mat-slider min="0.5" max="1" step="0.05" discrete>
+            <mat-slider min="0" max="1" step="0.1" discrete>
               <input matSliderThumb formControlName="confidence" />
             </mat-slider>
             @if (questionForm.value['confidence'] === 1) {

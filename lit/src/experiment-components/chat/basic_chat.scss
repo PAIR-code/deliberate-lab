@@ -1,7 +1,0 @@
-@use "../../sass/common";
-
-:host {
-  @include common.flex-column;
-  @include common.full-percentage;
-  justify-content: space-between;
-}

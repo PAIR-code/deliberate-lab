@@ -3,7 +3,6 @@ import { computed, observable, makeObservable } from "mobx";
 import {
   collection,
   doc,
-  getDocs,
   onSnapshot,
   Unsubscribe,
 } from 'firebase/firestore';
@@ -15,18 +14,12 @@ import { RouterService } from "./router_service";
 import { Snapshot } from "../shared/types";
 import {
   Experiment,
-  lookupTable,
-  Message,
-  ParticipantProfile,
   ParticipantProfileExtended,
   PublicStageData,
-  StageAnswer,
-  StageConfig,
-  StageKind
+  StageConfig
 } from "@llm-mediation-experiments/utils";
-import { collectSnapshotWithId, excludeName } from "../shared/utils";
+import { collectSnapshotWithId } from "../shared/utils";
 import { deleteExperimentCallable } from "../shared/callables";
-import { downloadJsonFile } from "../shared/file_utils";
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
@@ -46,10 +39,7 @@ export class ExperimentService extends Service {
   @observable stageConfigMap: Record<string, StageConfig> = {};
   @observable publicStageDataMap: Record<string, PublicStageData | undefined> = {};
   @observable stageNames: string[] = [];
-
-  // Experimenter-accessible participant details (e.g., including private ID).
-  // For participant access to profiles, use getParticipantProfile(s)
-  @observable privateParticipants: ParticipantProfileExtended[] = [];
+  @observable participants: ParticipantProfileExtended[] = [];
   
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -140,7 +130,7 @@ export class ExperimentService extends Service {
       this.unsubscribe.push(
         onSnapshot(collection(this.sp.firebaseService.firestore, 'experiments', this.id, 'participants'), (snapshot) => {
           // Replace the values in the array in place to not break the reference
-          this.privateParticipants.splice(0, this.privateParticipants.length, ...collectSnapshotWithId<ParticipantProfileExtended>(snapshot, 'privateId'))
+          this.participants.splice(0, this.participants.length, ...collectSnapshotWithId<ParticipantProfileExtended>(snapshot, 'privateId'))
         }),
       );
     }
@@ -159,121 +149,6 @@ export class ExperimentService extends Service {
     return this.stageConfigMap[stageName];
   }
 
-  getStageIndex(stageName: string) {
-    return this.stageNames.indexOf(stageName);
-  }
-
-  getNextStageName(stageName: string) {
-    const currentIndex = this.stageNames.indexOf(stageName);
-    if (currentIndex >= 0 && currentIndex < this.stageNames.length - 1) {
-      return this.stageNames[currentIndex + 1];
-    }
-    return null;
-  }
-
-  getPublicStageData(stageName: string) {
-    return this.publicStageDataMap[stageName];
-  }
-
-  // Returns lists of participants who are/aren't past the given stage
-  getParticipantsCompletedStage(stageName: string) {
-    const completed: ParticipantProfile[] = [];
-    const notCompleted: ParticipantProfile[] = [];
-
-    const stageIndex = this.getStageIndex(stageName);
-
-    if (stageIndex === -1) {
-      return { completed, notCompleted };
-    }
-
-    this.getParticipantProfiles().forEach((participant) => {
-      const index = this.getStageIndex(participant.workingOnStageName);
-      if (index >= 0 && index > stageIndex) {
-        completed.push(participant);
-      } else {
-        notCompleted.push(participant);
-      }
-    });
-
-    return { completed, notCompleted };
-  }
-
-  // Returns lists of participants who have/haven't reached the given stage
-  getParticipantsReadyForStage(stageName: string) {
-    const ready: ParticipantProfile[] = [];
-    const notReady: ParticipantProfile[] = [];
-
-    const stageIndex = this.getStageIndex(stageName);
-    if (stageIndex === -1) {
-      return { ready, notReady };
-    }
-
-    this.getParticipantProfiles().forEach((participant) => {
-      const index = this.getStageIndex(participant.workingOnStageName);
-      if (index >= 0 && index >= stageIndex) {
-        ready.push(participant);
-      } else {
-        notReady.push(participant);
-      }
-    });
-
-    return { ready, notReady };
-  }
-
-  // Returns whether or not given participant is ready to end chat
-  getParticipantReadyToEndChat(stageName: string, publicId: string) {
-    const stage = this.publicStageDataMap[stageName];
-    if (!stage || stage.kind !== StageKind.GroupChat) {
-      return false;
-    }
-
-    return stage.readyToEndChat[publicId];
-  }
-
-  // Returns lists of participants who are/aren't ready to end chat
-  getParticipantsReadyToEndChat(stageName: string) {
-    const ready: ParticipantProfile[] = [];
-    const notReady: ParticipantProfile[] = [];
-
-    const stage = this.publicStageDataMap[stageName];
-
-    if (!stage || stage.kind !== StageKind.GroupChat) {
-      return { ready, notReady };
-    }
-
-    Object.keys(stage.readyToEndChat).forEach((publicId) => {
-      const participant = this.getParticipantProfile(publicId);
-      if (!participant) {
-        return;
-      }
-
-      if (stage.readyToEndChat[publicId]) {
-        ready.push(participant);
-      } else {
-        notReady.push(participant);
-      }
-    });
-
-    return { ready, notReady };
-  }
-
-  getParticipantProfiles(): ParticipantProfile[] {
-    return Object.values(this.experiment?.participants ?? {});
-  }
-
-  getParticipantProfile(publicId: string) {
-    return this.experiment?.participants[publicId];
-  }
-
-  isReadyToEndChat(stageName: string, publicId: string) {
-    const stage = this.publicStageDataMap[stageName];
-    if (!stage || stage.kind !== StageKind.GroupChat) {
-      return false;
-    }
-
-    return stage.readyToEndChat[publicId];
-  }
-
   /** Build a signal that tracks whether every participant has at least reached the given stage */
   everyoneReachedStage(targetStage: string): boolean {
     const participants = this.experiment?.participants;
@@ -285,113 +160,6 @@ export class ExperimentService extends Service {
     return Object.values(participants).every(
       (participant) => stages.indexOf(participant.workingOnStageName) >= targetIndex,
     );
-  }
-
-  /** Download experiment as a single JSON file */
-  async downloadExperiment() {
-    if (!this.experiment) {
-      return;
-    }
-
-    console.log(`Downloading experiment ${this.experiment.id}`);
-
-    const experimentId = this.experiment.id;
-    const participants = this.privateParticipants;
-    const configs = Object.values(this.stageConfigMap);
-
-    const stagePublicData = (
-      await getDocs(collection(this.sp.firebaseService.firestore, 'experiments', this.experiment.id, 'publicStageData'))
-    ).docs.map((doc) => ({ ...(doc.data() as PublicStageData), name: doc.id }));
-
-    // Get stage answers per participant.
-    const stageAnswers = await Promise.all(
-      participants.map(async (participant) => {
-        return (
-          await getDocs(
-            collection(
-              this.sp.firebaseService.firestore,
-              'experiments',
-              experimentId,
-              'participants',
-              participant.privateId,
-              'stages',
-            ),
-          )
-        ).docs.map((doc) => ({ ...(doc.data() as StageAnswer), name: doc.id }));
-      }),
-    );
-
-    // Get chat data.
-    // TODO: Technically, there are as many chat copies as there are participants
-    // but because we do not change them, we will only download the first copy of
-    // each chat here
-
-    const chats = await getDocs(
-      collection(
-        this.sp.firebaseService.firestore,
-        'experiments',
-        experimentId,
-        'participants',
-        participants[0].privateId,
-        'chats',
-      ),
-    );
-
-    const chatMessages = await Promise.all(
-      chats.docs.map((doc) =>
-        getDocs(
-          collection(
-            this.sp.firebaseService.firestore,
-            'experiments',
-            experimentId,
-            'participants',
-            participants[0].privateId,
-            'chats',
-            doc.id,
-            'messages',
-          ),
-        ),
-      ),
-    );
-
-    // Lookups
-    const publicData = lookupTable(stagePublicData, 'name');
-    const answersLookup = stageAnswers.reduce(
-      (acc, stageAnswers, index) => {
-        const participantId = participants[index].publicId;
-
-        stageAnswers.forEach((stageAnswer) => {
-          if (!acc[stageAnswer.name]) acc[stageAnswer.name] = {};
-
-          acc[stageAnswer.name][participantId] = excludeName(stageAnswer) as StageAnswer;
-        });
-        return acc;
-      },
-      {} as Record<string, Record<string, StageAnswer>>,
-    );
-
-    const data = {
-      ...this.experiment,
-      participants,
-
-      stages: configs.map((config) => {
-        const stagePublicData = publicData[config.name];
-        const cleanedPublicData = stagePublicData ? excludeName(stagePublicData) : undefined;
-        const answers = answersLookup[config.name];
-        return { config, public: cleanedPublicData, answers };
-      }),
-
-      chats: chatMessages.reduce(
-        (acc, chat, index) => {
-          const messages = chat.docs.map((doc) => doc.data() as Message);
-          acc[`chat-${index}`] = messages;
-          return acc;
-        },
-        {} as Record<string, Message[]>,
-      ),
-    };
-
-    downloadJsonFile(data, `${this.experiment.name}.json`);
   }
 
   // ******************************************************************************************* //

@@ -6,7 +6,6 @@ import { CSSResultGroup, html, nothing } from "lit";
 import { customElement } from "lit/decorators.js";
 
 import { core } from "../../core/core";
-import { AuthService } from "../../services/auth_service";
 import { Pages, RouterService } from "../../services/router_service";
 
 import { styles } from "./header.scss";
@@ -16,7 +15,6 @@ import { styles } from "./header.scss";
 export class Header extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  private readonly authService = core.getService(AuthService);
   private readonly routerService = core.getService(RouterService);
 
   override render() {
@@ -26,18 +24,12 @@ export class Header extends MobxLitElement {
           ${this.renderBackButton()}
           <h1>${this.renderTitle()}</h1>
         </div>
-        <div class="right">
-          ${this.renderActions()}
-        </div>
       </div>
     `;
   }
 
   private renderBackButton() {
-    if (
-      this.routerService.activePage !== Pages.EXPERIMENT_CREATE &&
-      this.routerService.activePage !== Pages.EXPERIMENT
-    ) {
+    if (this.routerService.activePage !== Pages.EXPERIMENT_CREATE) {
       return nothing;
     }
 
@@ -60,44 +52,16 @@ export class Header extends MobxLitElement {
 
     if (activePage === Pages.HOME) {
       return "Home";
-    } else if (activePage === Pages.SETTINGS
-      || activePage === Pages.PARTICIPANT_SETTINGS) {
+    } else if (activePage === Pages.SETTINGS) {
       return "Settings";
     } else if (activePage === Pages.EXPERIMENT) {
       return "My Experiment";
     } else if (activePage === Pages.EXPERIMENT_CREATE) {
       return "New experiment";
-    } else if (activePage === Pages.PARTICIPANT) {
-      return "Welcome, participant!";
-    } else if (activePage === Pages.PARTICIPANT_STAGE) {
+    } else if (activePage === Pages.EXPERIMENT_STAGE) {
       return this.routerService.activeRoute.params["stage"];
     }
     return "";
-  }
-
-  private renderActions() {
-    const activePage = this.routerService.activePage;
-    if (activePage === Pages.HOME) {
-      return this.renderCreateExperimentButton();
-    }
-
-    return nothing;
-  }
-
-  private renderCreateExperimentButton() {
-    if (!this.authService.isExperimenter) {
-      return nothing;
-    }
-
-    const handleClick = () => {
-      this.routerService.navigate(Pages.EXPERIMENT_CREATE);
-    }
-
-    return html`
-      <pr-button padding="small" variant="tonal" @click=${handleClick}>
-        Create experiment
-      </pr-button>
-    `;
   }
 }
 

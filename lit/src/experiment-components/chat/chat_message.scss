@@ -8,7 +8,6 @@ $bubble-radius-small: common.$spacing-small;
 
 .chat-message {
   @include common.flex-row;
-  align-items: end;
   gap: common.$spacing-large;
   width: 100%;
 }
@@ -24,7 +23,18 @@ $bubble-radius-small: common.$spacing-small;
   gap: common.$spacing-small;
 }
 
+.avatar {
+  background: var(--md-sys-color-outline-variant);
+  border-radius: 100%;
+  flex-shrink: 0;
+  height: $avatar-height;
+  margin-top: calc(common.$spacing-small +
+    var(--md-sys-typescale-label-medium-line-height));
+  width: $avatar-height;
+}
+
 .chat-bubble {
+  @include common.flex-column;
   @include typescale.body-small;
   align-items: end;
   gap: common.$spacing-medium;
@@ -44,52 +54,9 @@ $bubble-radius-small: common.$spacing-small;
 
   .chat-bubble {
     align-self: end;
-    background: var(--md-sys-color-secondary-container);
+    background: var(--md-sys-color-primary-container);
     border-radius: $bubble-radius $bubble-radius $bubble-radius-small
       $bubble-radius;
-    color: var(--md-sys-color-on-secondary-container);
-  }
-}
-
-.discuss-message {
-  @include common.flex-column-align-center;
-  border-top: 1px solid var(--md-sys-color-surface);
-  justify-content: center;
-  margin-top: common.$spacing-large;
-  padding: 0 common.$spacing-large common.$spacing-large;
-}
-
-.discuss-title {
-  @include typescale.label-small;
-  background: var(--md-sys-color-surface);
-  border-radius: common.$spacing-small;
-  color: var(--md-sys-color-outline);
-  padding: common.$spacing-small common.$spacing-medium;
-  text-transform: uppercase;
-  transform: translateY(calc(-1 * common.$spacing-large));
-}
-
-.pair {
-  @include common.flex-row;
-  gap: common.$spacing-large;
-}
-
-.item {
-  @include common.flex-row-align-center;
-  gap: common.$spacing-small;
-  overflow-wrap: anywhere;
-}
-
-.img-wrapper {
-  @include common.flex-row-align-center;
-  aspect-ratio: 1 / 1;
-  background: var(--md-sys-color-surface);
-  border-radius: 100%;
-  overflow: hidden;
-  width: 24px;
-
-  img {
-    height: auto;
-    width: 100%;
+    color: var(--md-sys-color-on-primary-container);
   }
 }

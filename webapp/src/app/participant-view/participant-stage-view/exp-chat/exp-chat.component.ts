@@ -24,7 +24,6 @@ import {
   getDefaultItemPair,
 } from '@llm-mediation-experiments/utils';
 
-import { BottomScrollListComponent } from 'src/app/components/bottom-scroll-list/bottom-scroll-list.component';
 import { AppStateService } from 'src/app/services/app-state.service';
 import { CastViewingStage, ParticipantService } from 'src/app/services/participant.service';
 import { ChatRepository } from 'src/lib/repositories/chat.repository';
@@ -51,7 +50,6 @@ import { MediatorFeedbackComponent } from './mediator-feedback/mediator-feedback
     MatInputModule,
     MatSlideToggleModule,
     ReactiveFormsModule,
-    BottomScrollListComponent,
   ],
   templateUrl: './exp-chat.component.html',
   styleUrl: './exp-chat.component.scss',
@@ -66,7 +64,6 @@ export class ExpChatComponent {
   // Extracted stage data
   public currentRatingsIndex: Signal<number>;
   public currentRatingsToDiscuss: Signal<ItemPair>;
-  public usersDoneWithChat: Signal<Record<string, boolean>>; // publicID -> done with chat
 
   // Message mutation & form
   public message = new FormControl<string>('', Validators.required);
@@ -87,8 +84,6 @@ export class ExpChatComponent {
     this.everyoneReachedTheChat = computed(() =>
       this.participantService.experiment()!.everyoneReachedStage(this.stage.config().name)(),
     );
-
-    this.usersDoneWithChat = computed(() => this.stage.public().readyToEndChat);
 
     // On config change, extract the relevant chat repository and recompute signals
     effect(() => {
@@ -147,9 +142,12 @@ export class ExpChatComponent {
 
   toggleEndChat() {
     const current = this.readyToEndChat();
-    if (current === true) return; // Cannot undo the ready to end chat
+    const ready = !current;
 
-    this.chat?.markReadyToEndChat(true);
+    this.chat?.markReadyToEndChat(ready);
+
+    if (ready) this.message.disable();
+    else this.message.enable();
     // this.timer.remove();
   }
 

@@ -11,21 +11,3 @@ h2 {
   @include typescale.body-medium;
   margin: 0;
 }
-
-.top-bar {
-  @include common.flex-row-align-center;
-  flex-wrap: wrap;
-  gap: common.$spacing-medium;
-  justify-content: space-between;
-
-  .left,
-  .right {
-    @include common.flex-row-align-center;
-    gap: common.$spacing-medium;
-  }
-}
-
-.stat {
-  @include typescale.body-medium;
-  color: var(--md-sys-color-outline);
-}

@@ -30,3 +30,17 @@ export enum TextSize {
   MEDIUM = "medium",
   LARGE = "large",
 }
+
+// TODO: Clean up temporary types
+export interface ChatMessage {
+  id: string;
+  author: string;
+  content: string;
+}
+
+export interface Profile {
+  id: string;
+  name: string;
+  pronouns: string;
+  avatar: string;
+}

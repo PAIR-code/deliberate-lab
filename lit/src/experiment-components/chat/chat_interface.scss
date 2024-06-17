@@ -1,67 +1,31 @@
+@use "../../sass/colors";
 @use "../../sass/common";
 @use "../../sass/typescale";
 
 :host {
   @include common.flex-column;
-  flex-grow: 1;
-  gap: common.$spacing-xl;
-  justify-content: end;
+  @include common.full-percentage;
 }
 
-.chat-content {
-  border: 2px solid var(--md-sys-color-outline-variant);
-  border-radius: common.$spacing-medium;
-  display: flex;
-  flex-direction: column-reverse;
-  height: calc(100vh - 320px);
+.chat {
+  @include common.flex-column;
+  @include common.full-percentage;
+  flex-shrink: 1;
+  justify-content: space-between;
   overflow: auto;
 }
 
 .chat-scroll {
-  display: flex;
-  flex-direction: column-reverse;
-}
-
-.chat-info {
-  @include common.flex-column-align-center;
-  border-bottom: 1px solid var(--md-sys-color-surface);
-  color: var(--md-sys-color-outline);
-  margin-bottom: common.$spacing-xl;
-  padding: common.$spacing-xl common.$spacing-xl 0;
-  text-align: center;
-
-  .title {
-    @include typescale.title-large;
-  }
-
-  .label {
-    @include typescale.label-small;
-    border-radius: common.$spacing-small;
-    background: var(--md-sys-color-surface);
-    padding: common.$spacing-small common.$spacing-medium;
-    text-transform: uppercase;
-    transform: translateY(calc(common.$spacing-large));
-  }
-}
-
-.chat-participants-wrapper {
-  @include common.flex-row;
-  flex-wrap: wrap;
-  gap: common.$spacing-medium;
-}
-
-.chat-participant {
-  @include common.flex-column-align-center;
-  flex-wrap: wrap;
-  gap: common.$spacing-medium;
-  max-width: 80px;
-  overflow-wrap: anywhere;
+  flex-shrink: 1;
+  overflow: auto;
 }
 
 .chat-history {
   @include common.flex-column;
-  justify-content: flex-end;
-  padding: common.$spacing-xl;
+  justify-content: end;
+
+  // Set bottom height to accommodate chat bubble action bar
+  padding: common.$spacing-xl common.$spacing-xxl calc(var(--md-sys-typescale-body-small-line-height) * 2);
 }
 
 .chat-message-wrapper {
@@ -72,10 +36,8 @@
 
 .input-row-wrapper {
   @include common.flex-row-align-center;
-  bottom: common.$footer-height;
   gap: common.$spacing-xl;
   padding: 0 common.$spacing-large;
-  position: sticky;
 }
 
 @include common.viewport-small {
