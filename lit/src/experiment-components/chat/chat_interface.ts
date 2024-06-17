@@ -69,7 +69,7 @@ export class ChatInterface extends MobxLitElement {
     return html`
       <div class="chat-info">
         <div class="chat-participants-wrapper">
-          ${this.experimentService.participants.map(participant =>
+          ${this.experimentService.getParticipantProfiles().map(participant =>
             renderParticipant(participant))}
         </div>
         <div class="divider"></div>

@@ -76,7 +76,7 @@ export class RankingChat extends MobxLitElement {
     return html`
       <div class="panel-item">
         <div class="panel-item-title">Participants</div>
-        ${this.experimentService.participants.map(p =>
+        ${this.experimentService.getParticipantProfiles().map(p =>
           html`
             <div class="profile">
               <profile-avatar .emoji=${p.avatarUrl}></profile-avatar>
@@ -128,7 +128,7 @@ export class RankingChat extends MobxLitElement {
           variant="tonal"
           ?disabled=${this.chatService.chat?.readyToEndChat}
           @click=${() => {
-            this.chatService.markReadyToEndChat(true, length); }}
+            this.chatService.markReadyToEndChat(true); }}
         >
           Ready to end discussion
         </pr-button>

@@ -14,6 +14,7 @@ import { RouterService } from "./router_service";
 import { Snapshot } from "../shared/types";
 import {
   Experiment,
+  ParticipantProfile,
   ParticipantProfileExtended,
   PublicStageData,
   StageConfig,
@@ -40,7 +41,10 @@ export class ExperimentService extends Service {
   @observable stageConfigMap: Record<string, StageConfig> = {};
   @observable publicStageDataMap: Record<string, PublicStageData | undefined> = {};
   @observable stageNames: string[] = [];
-  @observable participants: ParticipantProfileExtended[] = [];
+
+  // Experimenter-accessible participant details (e.g., including private ID).
+  // For participant access to profiles, use getParticipantProfile(s)
+  @observable privateParticipants: ParticipantProfileExtended[] = [];
   
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -131,7 +135,7 @@ export class ExperimentService extends Service {
       this.unsubscribe.push(
         onSnapshot(collection(this.sp.firebaseService.firestore, 'experiments', this.id, 'participants'), (snapshot) => {
           // Replace the values in the array in place to not break the reference
-          this.participants.splice(0, this.participants.length, ...collectSnapshotWithId<ParticipantProfileExtended>(snapshot, 'privateId'))
+          this.privateParticipants.splice(0, this.privateParticipants.length, ...collectSnapshotWithId<ParticipantProfileExtended>(snapshot, 'privateId'))
         }),
       );
     }
@@ -168,8 +172,8 @@ export class ExperimentService extends Service {
 
   // Returns lists of participants who are/aren't past the given stage
   getParticipantsCompletedStage(stageName: string) {
-    const completed: ParticipantProfileExtended[] = [];
-    const notCompleted: ParticipantProfileExtended[] = [];
+    const completed: ParticipantProfile[] = [];
+    const notCompleted: ParticipantProfile[] = [];
 
     const stageIndex = this.getStageIndex(stageName);
 
@@ -177,7 +181,7 @@ export class ExperimentService extends Service {
       return { completed, notCompleted };
     }
 
-    this.participants.forEach((participant) => {
+    this.getParticipantProfiles().forEach((participant) => {
       const index = this.getStageIndex(participant.workingOnStageName);
       if (index >= 0 && index > stageIndex) {
         completed.push(participant);
@@ -191,15 +195,15 @@ export class ExperimentService extends Service {
 
   // Returns lists of participants who have/haven't reached the given stage
   getParticipantsReadyForStage(stageName: string) {
-    const ready: ParticipantProfileExtended[] = [];
-    const notReady: ParticipantProfileExtended[] = [];
+    const ready: ParticipantProfile[] = [];
+    const notReady: ParticipantProfile[] = [];
 
     const stageIndex = this.getStageIndex(stageName);
     if (stageIndex === -1) {
       return { ready, notReady };
     }
 
-    this.participants.forEach((participant) => {
+    this.getParticipantProfiles().forEach((participant) => {
       const index = this.getStageIndex(participant.workingOnStageName);
       if (index >= 0 && index >= stageIndex) {
         ready.push(participant);
@@ -213,8 +217,8 @@ export class ExperimentService extends Service {
 
   // Returns lists of participants who are/aren't ready to end chat
   getParticipantsReadyToEndChat(stageName: string) {
-    const ready: ParticipantProfileExtended[] = [];
-    const notReady: ParticipantProfileExtended[] = [];
+    const ready: ParticipantProfile[] = [];
+    const notReady: ParticipantProfile[] = [];
 
     const stage = this.publicStageDataMap[stageName];
 
@@ -238,8 +242,12 @@ export class ExperimentService extends Service {
     return { ready, notReady };
   }
 
+  getParticipantProfiles(): ParticipantProfile[] {
+    return Object.values(this.experiment?.participants ?? {});
+  }
+
   getParticipantProfile(publicId: string) {
-    return this.participants.find(participant => participant.publicId === publicId);
+    return this.experiment?.participants[publicId];
   }
 
   isReadyToEndChat(stageName: string, publicId: string) {

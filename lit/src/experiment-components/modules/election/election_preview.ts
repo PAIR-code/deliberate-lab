@@ -34,11 +34,11 @@ export class ElectionPreview extends MobxLitElement {
 
   override render() {
     const disabled = Object.keys(this.answer?.votes ?? []).length <
-      this.experimentService.participants.length - 1;
+      this.experimentService.getParticipantProfiles().length - 1;
 
     return html`
       <div class="election-wrapper">
-        ${this.experimentService.participants.map(profile => 
+        ${this.experimentService.getParticipantProfiles().map(profile => 
         this.renderParticipant(profile))}
       </div>
       <stage-footer .disabled=${disabled}>

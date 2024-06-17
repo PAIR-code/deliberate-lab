@@ -27,7 +27,7 @@ export class ExperimentPreview extends MobxLitElement {
     }
 
     return html`
-      ${this.experimentService.participants.map(participant =>
+      ${this.experimentService.privateParticipants.map(participant =>
         html`<profile-preview .profile=${participant}></profile-preview>`)}
     `;
   }

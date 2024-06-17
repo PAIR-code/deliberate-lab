@@ -48,10 +48,8 @@ export class ElectionReveal extends MobxLitElement {
       `;
     }
 
-    const leaderPublicId = stage.currentLeader;
-    const leader = this.experimentService.participants.find(
-      participant => participant.publicId === leaderPublicId
-    );
+    const leaderPublicId = stage.currentLeader ?? "";
+    const leader = this.experimentService.getParticipantProfile(leaderPublicId);
 
     if (leader === undefined) {
       return nothing;

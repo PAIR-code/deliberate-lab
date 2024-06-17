@@ -124,28 +124,15 @@ export class ChatService extends Service {
     return stageData.chatData.currentRatingIndex;
   }
 
-
-    // ******************************************************************************************* //
+  // ******************************************************************************************* //
   //                                          MUTATIONS                                          //
-  // ****************************************************************************************** //
+  // ******************************************************************************************* //
 
   /** Mark this participant as ready to end the chat, or ready to discuss about the next pair of items.
    * @rights Participant
    */
-  async markReadyToEndChat(readyToEndChat: boolean, numDiscussions = 1) {
-    // TODO: Clean up temporary fix
-    // The backend functions don't currently update readyToEndChat to false
-    // after advancing to the next ranking discussion.
-    // To temporarily fix this, manually reset everyone's readyToEndChat
-    // if this is the last participant ending the current discussion.
-
-    const { ready, notReady } =
-      this.sp.experimentService.getParticipantsReadyToEndChat(this.chat?.stageName!);
-
-    const reset = notReady.length === 1 && this.getCurrentRatingIndex() < numDiscussions - 1;
-
-    // Actual logic to mark readyToEndChat
-    updateDoc(
+  async markReadyToEndChat(readyToEndChat: boolean) {
+    return updateDoc(
       doc(
         this.sp.firebaseService.firestore,
         'experiments',
@@ -159,26 +146,6 @@ export class ChatService extends Service {
         readyToEndChat,
       },
     );
-
-    // Temporary fix to reset readyToEndChat (see above)
-    if (reset) {
-      for (const participant of this.sp.experimentService.participants) {
-        updateDoc(
-          doc(
-            this.sp.firebaseService.firestore,
-            'experiments',
-            this.experimentId!,
-            'participants',
-            participant.privateId,
-            'chats',
-            this.chatId!,
-          ),
-          {
-            readyToEndChat: false
-          }
-        );
-      }
-    }
   }
 
   /** Send a message as a participant.
