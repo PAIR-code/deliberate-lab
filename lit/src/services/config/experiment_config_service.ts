@@ -14,7 +14,7 @@ export class ExperimentConfigService extends Service {
   }
 
   @observable name = 'New experiment';
-  @observable numParticipants = 1;
+  @observable numParticipants = 3;
   @observable stages: StageConfig[] = [createTOSStage()];
   @observable currentStageIndex = -1;
   @observable map: Map<string, StageConfig> = new Map();
@@ -112,7 +112,7 @@ export class ExperimentConfigService extends Service {
 
   reset() {
     this.name = 'New experiment';
-    this.numParticipants = 1;
+    this.numParticipants = 3;
     this.stages = [createTOSStage()];
     this.currentStageIndex = -1;
   }
