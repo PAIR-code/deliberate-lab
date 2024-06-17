@@ -31,13 +31,24 @@ First, install the dependencies:
 ```bash
 cd lit
 npm install
-npm run start  # Builds the Lit app at localhost:4201
 ```
 
-Navigate to [`http://localhost:4200/`](http://localhost:4200/).
-The application will automatically reload if you change any of the source files.
+Then, set up a Firebase config (fork the example and fill in details):
 
-(There is also a deprecated version of the frontend in `webapp/`, written in Angular.)
+```bash
+cp src/shared/firebase_config_example.ts src/shared/firebase_config.ts
+```
+
+Finally, run the app (with live reload):
+
+```bash
+npm run start
+```
+
+View the app at [`http://localhost:4201/`](http://localhost:4201/).
+
+(There is also a deprecated version of the frontend in `webapp/`,
+written in Angular.)
 
 ## Firebase
 

@@ -5,33 +5,22 @@ How to deploy this app to production.
 Before deploying to production, make sure that you have:
 
 - Updated the project ID in the [`.firebaserc`](./.firebaserc) file.
-- Updated the Firebase app configuration in the [`webapp/src/lib/api/firebase-config.ts`](./webapp/src/lib/api/firebase-config.ts) file.
+- Updated the Firebase app configuration in the [`lit/src/shared/firebase_config.ts`](./lit/src/shared/firebase_config.ts) file.
 - Update the project ID, private key ID, private key, (client email, and client ID) in the [`scripts/service-account.json`](./scripts/service-account.json) file. You can generate a private key in the Firebase console under `Project settings` > `Service accounts`. The fields of the generated JSON file should be copied to the `service-account.json` file.
 
-## Webapp
+## Frontend
 
-Build the webapp with the following command:
-
-```bash
-# Default build / test the image locally
-ng build --configuration=production
-
-# Serve the app from the /myapp prefix if you use a k8s cluster that shares the same domain for multiple services.
-ng build --configuration=production --base-href /myapp/
-```
-
-A Dockerfile is provided in order to serve the webapp through a container.
-You can build the docker image with the following command:
+Build the Lit frontend with the following command:
 
 ```bash
-docker build -t webapp . -t myapp
+cd lit
+npm run build
 ```
 
-Test the container locally with the following command:
+This will create the app at `lit/dist/index.html` (note that other
+dependencies, e.g., images, are in `lit/dist` too).
 
-```bash
-docker run -p 4200:4200 myapp
-```
+> TODO: Add Docker setup for Lit build
 
 ## Firebase
 

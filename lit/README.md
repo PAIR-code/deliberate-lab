@@ -3,9 +3,6 @@
 This directory contains a Lit Element / MobX frontend for the LLM Mediation
 Experiments project.
 
-> NOTE: This is an in-progress alternative to the Angular frontend,
-which has additional functionality and can be viewed/run from `/webapp`.
-
 ## Local development
 
 To run locally:

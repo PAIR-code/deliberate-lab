@@ -37,13 +37,13 @@ This is a repository to support collaboration on using LLMs in behavioral econom
 │
 ├── utils      # Shared types, default values & utilities
 │
-└── webapp     # Webapp frontend source code
+└── lit     # Lit frontend source code
     ├── node_modules
     └── src               # Frontend source code
-        ├── app           # Angular JS 17 app & components
-        ├── assets        # Static assets
-        ├── environments  # Environment configuration
-        └── lib           # API, types & utilities
+        ├── components    # General (home, nav) components
+        ├── experiment-components # Experiment stage config/preview components
+        ├── services      # MobX state management (with Firebase calls)
+        └── shared        # Constants, types, and utilities
 ```
 
 ## Instructions
