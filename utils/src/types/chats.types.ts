@@ -46,7 +46,6 @@ interface BaseChatPublicData {
 export interface PublicChatAboutItemsData extends BaseChatPublicData {
   kind: ChatKind.ChatAboutItems;
 
-  ratingsToDiscuss: { item1: ItemName; item2: ItemName }[]; // Repeat this here for convenience in triggers
   currentRatingIndex: number;
 }
 

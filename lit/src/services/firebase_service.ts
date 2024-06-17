@@ -19,13 +19,13 @@ import {
 import { makeObservable } from "mobx";
 
 import {
-    FIREBASE_CONFIG,
     FIREBASE_LOCAL_HOST_PORT_AUTH,
     FIREBASE_LOCAL_HOST_PORT_FIRESTORE,
     FIREBASE_LOCAL_HOST_PORT_FUNCTIONS
 } from '../shared/constants';
 
 import { Service } from "./service";
+import { FIREBASE_CONFIG } from '../shared/firebase_config';
 
 interface ServiceProvider {}
 
