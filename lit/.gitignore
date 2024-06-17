@@ -12,4 +12,7 @@ npm-debug.log*
 
 .vscode/
 
+.gcloudignore
+app.yaml
+
 firebase_config.ts
