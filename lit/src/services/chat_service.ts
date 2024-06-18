@@ -1,9 +1,14 @@
 import { observable, makeObservable, computed } from "mobx";
+import { Timestamp } from "firebase/firestore";
+
 import { Service } from "./service";
 import { ExperimentService } from "./experiment_service";
 import { FirebaseService } from "./firebase_service";
+import { LLMService } from "./llm_service";
+import { ParticipantService } from "./participant_service";
 import { RouterService } from "./router_service";
 
+import { createChatMediatorPrompt } from "../shared/prompts";
 import { collectSnapshotWithId } from "../shared/utils";
 import { Unsubscribe, collection, doc, onSnapshot, orderBy, query, updateDoc } from "firebase/firestore";
 import { ChatAnswer, Message, MessageKind, StageKind, } from "@llm-mediation-experiments/utils";
@@ -12,6 +17,8 @@ import { createMessageCallable } from "../shared/callables";
 interface ServiceProvider {
   firebaseService: FirebaseService;
   experimentService: ExperimentService;
+  llmService: LLMService;
+  participantService: ParticipantService;
   routerService: RouterService;
 }
 
@@ -152,7 +159,9 @@ export class ChatService extends Service {
    * @rights Participant
    */
   async sendUserMessage(text: string) {
-    return createMessageCallable(
+    const messages = this.messages;
+
+    createMessageCallable(
       this.sp.firebaseService.functions,
       {
       chatId: this.chatId!,
@@ -163,6 +172,24 @@ export class ChatService extends Service {
         text,
       },
     });
+
+    // Generate LLM message
+    // Add new message to previous messages
+    messages.push({
+      uid: '',
+      timestamp: Timestamp.now(),
+      kind: MessageKind.UserMessage,
+      fromPublicParticipantId: this.sp.participantService.profile?.publicId!,
+      text,
+    });
+
+    const prompt = createChatMediatorPrompt(
+      messages,
+      this.sp.experimentService.getParticipantProfiles().map(p => p.publicId)
+    );
+
+    // TODO: Create message response if appropriate
+    const reponse = this.sp.llmService.call(prompt);
   }
 
   /** Send a message as a mediator.

@@ -1,4 +1,4 @@
-# Lit Frontend
+  # Lit Frontend
 
 This directory contains a Lit Element / MobX frontend for the LLM Mediation
 Experiments project.
@@ -8,7 +8,7 @@ Experiments project.
 To run locally:
 
 ```
-cp src/shared/firebase_config_example.ts src/shared/firebase_config.ts
+cp src/shared/config_example.ts src/shared/config.ts
 npm run start
 ```
 
@@ -42,7 +42,22 @@ The actual rendering of different pages happens in `app.ts`.
 The `header` and `sidenav` components (under `src/components`) also notably
 contain routing logic.
 
+### LLM API
+
+Lit currently uses Google's [Gemini API](https://ai.google.dev/gemini-api)
+(you will need your own API key).
+
+Set up config under `src/shared/config.ts`
+(fork from `src/shared/config_example.ts`).
+
+The following LLM service manages calls to Gemini API:
+
+`src/services/llm_service.ts`
+
 ### Firebase
+
+Set up config under `src/shared/config.ts`
+(fork from `src/shared/config_example.ts`).
 
 Services that interact with Firebase are organized at the
 `src/services` level and include:

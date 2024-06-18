@@ -16,3 +16,4 @@ npm-debug.log*
 app.yaml
 
 firebase_config.ts
+config.ts
