@@ -12,6 +12,7 @@ import { classMap } from "lit/directives/class-map.js";
 import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
 import { ExperimentService } from "../../services/experiment_service";
+import { ExperimenterService } from "../../services/experimenter_service";
 import { Pages, RouterService } from "../../services/router_service";
 import { ExperimentConfigService } from "../../services/config/experiment_config_service";
 
@@ -26,6 +27,7 @@ export class ExperimentPreview extends MobxLitElement {
 
   private readonly authService = core.getService(AuthService);
   private readonly experimentService = core.getService(ExperimentService);
+  private readonly experimenterService = core.getService(ExperimenterService);
   private readonly routerService = core.getService(RouterService);
   private readonly experimentConfig = core.getService(ExperimentConfigService);
 
@@ -43,10 +45,30 @@ export class ExperimentPreview extends MobxLitElement {
         <div class="right">
           ${this.renderFork()}
           ${this.renderDownload()}
+          ${this.renderDelete()}
         </div>
       </div>
       ${this.experimentService.privateParticipants.map(participant =>
         html`<profile-preview .profile=${participant}></profile-preview>`)}
+    `;
+  }
+
+  private renderDelete() {
+    const onDelete = () => {
+      this.experimenterService.deleteExperiment(this.experimentService.id!);
+      this.routerService.navigate(Pages.HOME);
+    };
+
+    return html`
+      <pr-tooltip text="Delete experiment" position="BOTTOM_END">
+        <pr-icon-button
+          icon="delete"
+          color="error"
+          variant="tonal"
+          @click=${onDelete}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
     `;
   }
 
@@ -59,8 +81,8 @@ export class ExperimentPreview extends MobxLitElement {
       <pr-tooltip text="Download experiment JSON" position="BOTTOM_END">
         <pr-icon-button
           icon="download"
-          color="neutral"
-          variant="default"
+          color="secondary"
+          variant="tonal"
           @click=${onDownload}
         >
         </pr-icon-button>
@@ -87,7 +109,7 @@ export class ExperimentPreview extends MobxLitElement {
       <pr-tooltip text="Fork experiment" position="BOTTOM_END">
         <pr-icon-button
           icon="fork_right"
-          color="tertiary"
+          color="primary"
           variant="tonal"
           @click=${onFork}
         >
