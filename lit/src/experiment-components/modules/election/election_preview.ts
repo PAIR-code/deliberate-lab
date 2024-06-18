@@ -1,6 +1,7 @@
 import "../../footer/footer";
 import "../../profile/profile_avatar";
 import "../../progress/progress_stage_completed";
+import "../../progress/progress_stage_waiting";
 
 import '@material/web/radio/radio.js';
 
@@ -19,6 +20,7 @@ import {
 import { core } from "../../../core/core";
 import { ExperimentService } from "../../../services/experiment_service";
 import { ParticipantService } from "../../../services/participant_service";
+import { RouterService } from "../../../services/router_service";
 
 import { styles } from "./election_preview.scss";
 
@@ -29,10 +31,22 @@ export class ElectionPreview extends MobxLitElement {
 
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
+  private readonly routerService = core.getService(RouterService);
 
   @property() answer: VoteForLeaderStageAnswer|null = null;
 
   override render() {
+    const currentStage = this.routerService.activeRoute.params["stage"];
+    const { ready, notReady } =
+      this.experimentService.getParticipantsReadyForStage(currentStage);
+
+    if (notReady.length > 0) {
+      return html`
+        <progress-stage-waiting .stageName=${currentStage}>
+        </progress-stage-waiting>
+      `;
+    }
+
     const disabled = Object.keys(this.answer?.votes ?? []).length <
       this.experimentService.getParticipantProfiles().length - 1;
 
