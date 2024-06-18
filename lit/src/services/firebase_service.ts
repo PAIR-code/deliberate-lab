@@ -23,7 +23,7 @@ import {
     FIREBASE_LOCAL_HOST_PORT_FIRESTORE,
     FIREBASE_LOCAL_HOST_PORT_FUNCTIONS
 } from '../shared/constants';
-import { FIREBASE_CONFIG } from '../shared/firebase_config';
+import { FIREBASE_CONFIG } from '../shared/config_example';
 
 import { Service } from "./service";
 

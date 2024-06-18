@@ -33,10 +33,10 @@ cd lit
 npm install
 ```
 
-Then, set up a Firebase config (fork the example and fill in details):
+Then, set up Firebase and LLM config (fork the example and fill in details):
 
 ```bash
-cp src/shared/firebase_config_example.ts src/shared/firebase_config.ts
+cp src/shared/config_example.ts src/shared/config.ts
 ```
 
 Finally, run the app (with live reload):

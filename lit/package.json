@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@adobe/lit-mobx": "^2.2.2",
+    "@google/generative-ai": "^0.13.0",
     "@llm-mediation-experiments/utils": "file:../utils",
     "@material/web": "^1.5.0",
     "@types/router5": "^5.0.0",

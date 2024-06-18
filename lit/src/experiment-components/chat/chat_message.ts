@@ -7,13 +7,16 @@ import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
+import { DiscussItemsMessage, ITEMS, MediatorMessage, Message, MessageKind, UserMessage, getDefaultUserMessage } from "@llm-mediation-experiments/utils";
+import { Timestamp } from "firebase/firestore";
+
 import { core } from "../../core/core";
 import { ExperimentService } from "../../services/experiment_service";
 import { ParticipantService } from "../../services/participant_service";
 
+import { LLM_MEDIATOR_AVATAR } from "../../shared/constants";
+
 import { styles } from "./chat_message.scss";
-import { DiscussItemsMessage, ITEMS, MediatorMessage, Message, MessageKind, UserMessage, getDefaultUserMessage } from "@llm-mediation-experiments/utils";
-import { Timestamp } from "firebase/firestore";
 
 /** Chat message component */
 @customElement("chat-message")
@@ -72,10 +75,10 @@ export class ChatMessage extends MobxLitElement {
 
     return html`
       <div class=${classes}>
-        <div class="avatar"></div>
+        <profile-avatar .emoji=${LLM_MEDIATOR_AVATAR}></profile-avatar>
         <div class="content">
-          <div class="label">Mediator</div>
-          <div class="chat-bubble">${message.text}</div>
+          <div class="label">LLM Mediator</div>
+          <div class="mediator-bubble">${message.text}</div>
         </div>
       </div>
     `;

@@ -51,6 +51,17 @@ $bubble-radius-small: common.$spacing-small;
   }
 }
 
+.mediator-bubble {
+  @include typescale.body-small;
+  align-items: end;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium common.$spacing-large;
+  background: var(--md-sys-color-surface-container-high);
+  border-radius: $bubble-radius $bubble-radius $bubble-radius
+    $bubble-radius-small;
+  color: var(--md-sys-color-on-surface-container);
+}
+
 .discuss-message {
   @include common.flex-column-align-center;
   border-top: 1px solid var(--md-sys-color-surface);
