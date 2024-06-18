@@ -183,16 +183,27 @@ export class ChatService extends Service {
       text,
     });
 
+    const profiles = this.sp.experimentService.getParticipantProfiles();
+
     const prompt = createChatMediatorPrompt(
       messages,
-      this.sp.experimentService.getParticipantProfiles().map(p => p.publicId)
+      profiles.map(p => p.publicId)
     );
 
     await this.sp.llmService.call(prompt).then(modelResponse => {
       // If no new messages have been sent, convert LLM response to
       // new mediator chat message.
       if (this.messages.length <= messages.length) {
-        this.sendMediatorMessage(modelResponse.text);
+        let answer = modelResponse.text;
+        for (const participant of profiles) {
+          const id = `{${participant.publicId!}}`;
+
+          while (answer.includes(id)) {
+            answer = answer.replace(id, participant.name!);
+          }
+        }
+
+        this.sendMediatorMessage(answer);
       }
     });
   }
