@@ -188,8 +188,13 @@ export class ChatService extends Service {
       this.sp.experimentService.getParticipantProfiles().map(p => p.publicId)
     );
 
-    // TODO: Create message response if appropriate
-    const reponse = this.sp.llmService.call(prompt);
+    await this.sp.llmService.call(prompt).then(modelResponse => {
+      // If no new messages have been sent, convert LLM response to
+      // new mediator chat message.
+      if (this.messages.length <= messages.length) {
+        this.sendMediatorMessage(modelResponse.text);
+      }
+    });
   }
 
   /** Send a message as a mediator.

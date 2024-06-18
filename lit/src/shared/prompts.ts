@@ -2,14 +2,19 @@
  * Types, constants, and functions for LLM prompts.
  */
 
-import { Message, MessageKind } from '@llm-mediation-experiments/utils';
+import { ITEMS, Message, MessageKind } from '@llm-mediation-experiments/utils';
 
 /** Instructions for chat mediator prompt. */
 // TODO: Update placeholder prompt
 export const PROMPT_INSTRUCTIONS_CHAT_MEDIATOR = `
-  Summarize the following chat messages in less than 5 sentences.
-  Note whether or not all participants spoke for an equal amount of time
-  (and if not, which ones spoke the least)
+  You are the moderator for a group chat where the participants are
+  deciding which items will be useful while lost at sea.
+  For each topic of discussion, the participants will debate between
+  two items.
+
+  Respond with a 2 sentence summary of the current discussion.
+  Reference participants using the {participant-0} format.
+  Note anyone who did not get to speak or anyone who was rude.
 `;
 
 /** Create LLM chat mediator prompt. */
@@ -19,11 +24,9 @@ export function createChatMediatorPrompt(
   const formatMessage = (message: Message) => {
     switch (message.kind) {
       case MessageKind.UserMessage:
-        return `${message.fromPublicParticipantId}: ${message.text}`;
+        return `{${message.fromPublicParticipantId}}: ${message.text}`;
       case MessageKind.DiscussItemsMessage:
-        return `New discussion: ${message.itemPair.item1}, ${message.itemPair.item2}`;
-      case MessageKind.MediatorMessage:
-        return `LLM Mediator: ${message.text}`;
+        return `Discussion topic: ${ITEMS[message.itemPair.item1].name}, ${ITEMS[message.itemPair.item2].name}`;
       default:
         return '';
     }
@@ -33,12 +36,12 @@ export function createChatMediatorPrompt(
     ${PROMPT_INSTRUCTIONS_CHAT_MEDIATOR}
 
     [Participants]
-    ${participants.join(', ')}
+    ${participants.join(',')}
 
-    [Chat messages]
+    [Chat history]
     ${messages.map(message => formatMessage(message)).join('\n\n')}
 
-    [Summary]
+    [Moderator response]
   `;
 
   return prompt;
