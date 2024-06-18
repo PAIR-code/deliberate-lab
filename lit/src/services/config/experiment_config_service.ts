@@ -1,14 +1,15 @@
-import { computed, get, observable, makeObservable, toJS } from "mobx";
 import { collection, getDocs } from "firebase/firestore";
+import { computed, makeObservable, observable, toJS } from "mobx";
 
-import { Service } from "../service";
 import { FirebaseService } from "../firebase_service";
+import { Service } from "../service";
 
 import { StageConfig, StageKind } from "@llm-mediation-experiments/utils";
 import {
   collectSnapshotWithId,
   convertExperimentStages,
   convertTemplateStages,
+  createProfileStage,
   createTOSStage
 } from "../../shared/utils";
 
@@ -25,7 +26,7 @@ export class ExperimentConfigService extends Service {
 
   @observable name = 'New experiment';
   @observable numParticipants = 3;
-  @observable stages: StageConfig[] = [createTOSStage()];
+  @observable stages: StageConfig[] = [createTOSStage(), createProfileStage()];
   @observable currentStageIndex = -1;
   @observable map: Map<string, StageConfig> = new Map();
 

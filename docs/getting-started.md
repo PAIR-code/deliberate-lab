@@ -67,7 +67,7 @@ From the root directory (`llm-mediation-app/`), create the configuration files f
 
 ```bash
 cp .firebaserc.example .firebaserc
-cp lit/src/lib/api/firebase-config.example.ts lit/src/lib/api/firebase-config.ts
+cp webapp/src/lib/api/firebase-config.example.ts webapp/src/lib/api/firebase-config.ts
 cp scripts/service-account.example.json scripts/service-account.json
 ```
 
@@ -109,7 +109,7 @@ We use Firebase Cloud Functions to run server-side code. The functions are locat
 
 ```bash
 cd functions
-cp .env.example .env  # Copy the example environment file
+../functions/predeploy.sh # Run this command only once
 npm install  # Run this command only once
 npm run build:watch # Build the functions and watch for file changes for rebuilding
 ```

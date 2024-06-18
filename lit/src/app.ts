@@ -1,14 +1,14 @@
 import "./pair-components/button";
 
-import "./experiment-components/chat/ranking_chat";
+import "./experiment-components/chat/lost_at_sea_chat";
 import "./experiment-components/experiment/experiment_config";
 import "./experiment-components/experiment/experiment_preview";
 import "./experiment-components/info/info_preview";
-import "./experiment-components/profile/profile_config";
-import "./experiment-components/tos/tos_preview";
-import "./experiment-components/survey/survey_preview";
 import "./experiment-components/modules/election/election_preview";
 import "./experiment-components/modules/election/election_reveal";
+import "./experiment-components/profile/profile_config";
+import "./experiment-components/survey/survey_preview";
+import "./experiment-components/tos/tos_preview";
 
 import "./components/header/header";
 import "./components/home/home";
@@ -30,14 +30,13 @@ import { Pages, RouterService } from "./services/router_service";
 import { SettingsService } from "./services/settings_service";
 
 import {
+  StageKind
+} from "@llm-mediation-experiments/utils";
+import {
   ColorMode,
   ColorTheme,
   TextSize
 } from "./shared/types";
-import {
-  StageConfig,
-  StageKind
-} from "@llm-mediation-experiments/utils";
 
 import { styles } from "./app.scss";
 
@@ -231,8 +230,8 @@ export class App extends MobxLitElement {
         return html`<election-reveal .voteStageName=${electionStage}></election-reveal>`;
       case StageKind.GroupChat:
         this.chatService.updateForCurrentRoute(currentStage.chatId);
-        // Right now, the only kind of chat is the ranking one
-        return html`<ranking-chat .stage=${currentStage}></ranking-chat>`;
+        // Right now, the only kind of chat is the Lost at Sea one
+        return html`<lost-at-sea-chat .stage=${currentStage}></lost-at-sea-chat>`;
       default:
         return this.render404("Could not load experiment stage");
     }

@@ -1,9 +1,8 @@
 import "../../pair-components/textarea";
 
-import { observable } from "mobx";
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "lit/decorators.js";
 
 import { core } from "../../core/core";
 import {
@@ -11,8 +10,8 @@ import {
 } from "../../services/config/survey_config_service";
 
 import {
-  SurveyQuestionKind,
-  QuestionConfig
+  QuestionConfig,
+  SurveyQuestionKind
 } from "@llm-mediation-experiments/utils";
 
 import { styles } from "./survey_config.scss";
@@ -52,7 +51,7 @@ export class SurveyConfig extends MobxLitElement {
     `;
   }
 
-  // Used for ranking game stages only.
+  // Used for Lost at Sea game stages only.
   private renderRatingQuestion(question: QuestionConfig, index: number) {
     if (question.kind !== SurveyQuestionKind.Rating) {
       return nothing;

@@ -2,30 +2,29 @@
  * Shared utils functions.
  */
 
-import { HttpsCallableResult } from 'firebase/functions';
-import { micromark } from "micromark";
-import { gfm, gfmHtml } from "micromark-extension-gfm";
-import { v4 as uuidv4 } from "uuid";
-import { Snapshot } from "./types";
 import {
   ChatKind,
-  choices,
   GroupChatStageConfig,
-  InfoStageConfig,
   ITEM_NAMES,
+  InfoStageConfig,
   ItemName,
-  pairs,
   ProfileStageConfig,
   QuestionConfig,
   RatingQuestionConfig,
   RevealVotedStageConfig,
   StageConfig,
   StageKind,
-  SurveyStageConfig,
   SurveyQuestionKind,
+  SurveyStageConfig,
   TermsOfServiceStageConfig,
-  VoteForLeaderStageConfig
+  VoteForLeaderStageConfig,
+  choices,
+  pairs
 } from '@llm-mediation-experiments/utils';
+import { micromark } from "micromark";
+import { gfm, gfmHtml } from "micromark-extension-gfm";
+import { v4 as uuidv4 } from "uuid";
+import { Snapshot } from "./types";
 
 /** Generate unique id. */
 export function generateId(): string {
@@ -101,14 +100,15 @@ export function createRevealVotedStage(
 }
 
 /**
- * Create ranking game module stages.
+ * Create Lost at Sea game module stages.
  *
  * This includes:
- *   2 individual surveys with the same randomly-generated item pairs
+ *   2 individual tasks with the same randomly-generated item pairs
  *   1 chat discussion based around those item pairs
- *   1 leader survey with different randomly-generated item pairs
+ *   1 leader task with different randomly-generated item pairs
  */
-export function createRankingModuleStages(numPairs = 5): StageConfig[] {
+
+export function createLostAtSeaModuleStages(numPairs = 5): StageConfig[] {
   const stages: StageConfig[] = [];
 
   const middleIndex = Math.ceil(ITEM_NAMES.length / 2);
@@ -126,8 +126,7 @@ export function createRankingModuleStages(numPairs = 5): StageConfig[] {
     (pair, index) => getRatingQuestionFromPair(pair, index)
   );
 
-  stages.push(createSurveyStage("Individual ranking 1", INDIVIDUAL_QUESTIONS));
-  stages.push(createSurveyStage("Individual ranking 2", INDIVIDUAL_QUESTIONS));
+  stages.push(createSurveyStage("Individual task", INDIVIDUAL_QUESTIONS));
 
   // Add chat with individual item pairs as discussion
   stages.push(
@@ -137,12 +136,14 @@ export function createRankingModuleStages(numPairs = 5): StageConfig[] {
     )
   );
 
+  stages.push(createSurveyStage("Individual task (updated)", INDIVIDUAL_QUESTIONS));
+
   // Add leader survey
   const LEADER_QUESTIONS: RatingQuestionConfig[] = LEADER_ITEM_PAIRS.map(
     (pair, index) => getRatingQuestionFromPair(pair, index)
   );
 
-  stages.push(createSurveyStage("Leader ranking", LEADER_QUESTIONS));
+  stages.push(createSurveyStage("Leader task", LEADER_QUESTIONS));
 
   return stages;
 }
@@ -171,12 +172,12 @@ export function getRatingQuestionFromPair(
 
 
 /**
- * Check if stage is part of ranking module.
+ * Check if stage is part of the LostAtSea module.
  * TODO: Use more robust logic, e.g., add a moduleType field to track this.
  */
-export function isRankingModuleStage(stage: StageConfig) {
+export function isLostAtSeaModuleStage(stage: StageConfig) {
   // This relies on the fact that we only allow RatingQuestions and Chat
-  // stages for ranking module stages.
+  // stages for Lost at Sea module stages.
   return (stage.kind === StageKind.TakeSurvey &&
     stage.questions.find(q => q.kind === SurveyQuestionKind.Rating))
     || stage.kind === StageKind.GroupChat;

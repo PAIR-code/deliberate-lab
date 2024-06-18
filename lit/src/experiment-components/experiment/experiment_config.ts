@@ -5,13 +5,13 @@ import "../../pair-components/textarea";
 import "../../pair-components/tooltip";
 
 import "../info/info_config";
-import "../tos/tos_config";
 import "../survey/survey_config";
+import "../tos/tos_config";
 import "./experiment_config_menu";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
-import { customElement, state } from "lit/decorators.js";
+import { customElement } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
 import { core } from "../../core/core";
@@ -19,38 +19,32 @@ import {
   ExperimentConfigService
 } from "../../services/config/experiment_config_service";
 import { InfoConfigService } from "../../services/config/info_config_service";
-import { TOSConfigService } from "../../services/config/tos_config_service";
 import {
   SurveyConfigService
 } from "../../services/config/survey_config_service";
+import { TOSConfigService } from "../../services/config/tos_config_service";
 
 import { AuthService } from "../../services/auth_service";
-import { FirebaseService } from "../../services/firebase_service";
 import { Pages, RouterService } from "../../services/router_service";
 
-import {
-  STAGE_DESCRIPTION_INFO,
-  STAGE_DESCRIPTION_TOS,
-  STAGE_DESCRIPTION_SURVEY,
-  STAGE_DESCRIPTION_PROFILE,
-  STAGE_DESCRIPTION_CHAT,
-  STAGE_DESCRIPTION_VOTE,
-  STAGE_DESCRIPTION_REVEAL,
-  MODULE_DESCRIPTION_LEADER,
-  MODULE_DESCRIPTION_RANKING
-} from "../../shared/constants";
 import { ExperimentTemplate, StageConfig, StageKind } from "@llm-mediation-experiments/utils";
 import {
-  createInfoStage,
-  createProfileStage,
-  createRevealVotedStage,
-  createSurveyStage,
-  createVoteForLeaderStage,
-  isRankingModuleStage,
+  MODULE_DESCRIPTION_LAS,
+  MODULE_DESCRIPTION_LEADER,
+  STAGE_DESCRIPTION_CHAT,
+  STAGE_DESCRIPTION_INFO,
+  STAGE_DESCRIPTION_PROFILE,
+  STAGE_DESCRIPTION_REVEAL,
+  STAGE_DESCRIPTION_SURVEY,
+  STAGE_DESCRIPTION_TOS,
+  STAGE_DESCRIPTION_VOTE,
+} from "../../shared/constants";
+import {
+  isLostAtSeaModuleStage
 } from "../../shared/utils";
 
-import { styles } from "./experiment_config.scss";
 import { ExperimenterService } from "../../services/experimenter_service";
+import { styles } from "./experiment_config.scss";
 
 /** Experiment config page component */
 @customElement("experiment-config")
@@ -129,8 +123,8 @@ export class ExperimentConfig extends MobxLitElement {
         return html`
           ${this.renderStageInfo(
             StageKind.TakeSurvey, STAGE_DESCRIPTION_SURVEY)}
-          ${isRankingModuleStage(currentStage) ? this.renderStageInfo(
-            "rankingGame", MODULE_DESCRIPTION_RANKING, true) : nothing}
+          ${isLostAtSeaModuleStage(currentStage) ? this.renderStageInfo(
+            "lostAtSeaGame", MODULE_DESCRIPTION_LAS, true) : nothing}
           <survey-config></survey-config>
         `;
       case StageKind.SetProfile:
@@ -143,10 +137,10 @@ export class ExperimentConfig extends MobxLitElement {
         return html`
           ${this.renderStageInfo(
             StageKind.GroupChat, STAGE_DESCRIPTION_CHAT)}
-          ${isRankingModuleStage(currentStage) ? this.renderStageInfo(
-            "rankingGame", MODULE_DESCRIPTION_RANKING, true) : nothing}
+          ${isLostAtSeaModuleStage(currentStage) ? this.renderStageInfo(
+            "lostAtSeaGame", MODULE_DESCRIPTION_LAS, true) : nothing}
           ${this.renderCurrentStageNameField()}
-          ${isRankingModuleStage(currentStage) ?
+          ${isLostAtSeaModuleStage(currentStage) ?
             html`<code>${JSON.stringify(currentStage.chatConfig)}</code>`
             : nothing}
           `;
