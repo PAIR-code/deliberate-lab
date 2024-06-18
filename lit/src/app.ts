@@ -257,8 +257,8 @@ export class App extends MobxLitElement {
       <div class="banner">
         <div>
           You are previewing as
-          ${participantName ? `${participantName} - ` : 'Participant '}
-          ${this.participantService.participantId}.
+          ${participantName ? `${participantName} / ` : 'Participant '}
+          ${this.participantService.profile?.publicId}.
         </div>
         <pr-button
           color="tertiary"

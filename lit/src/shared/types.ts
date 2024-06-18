@@ -30,3 +30,11 @@ export enum TextSize {
   MEDIUM = "medium",
   LARGE = "large",
 }
+
+/**
+ * LLM API model response
+ */
+export interface ModelResponse {
+  score?: number;
+  text: string;
+}

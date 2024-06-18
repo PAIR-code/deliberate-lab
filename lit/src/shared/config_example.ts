@@ -8,3 +8,9 @@ export const FIREBASE_CONFIG: FirebaseOptions = {
   messagingSenderId: 'your-messaging-sender-id',
   appId: 'your-app-id',
 };
+
+export const LLM_CONFIG = {
+  apiKey: 'your-api-key',
+  modelName: 'gemini-pro',
+  maxTokens: 300,
+};

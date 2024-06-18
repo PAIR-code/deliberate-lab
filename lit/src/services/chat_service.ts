@@ -1,9 +1,14 @@
 import { observable, makeObservable, computed } from "mobx";
+import { Timestamp } from "firebase/firestore";
+
 import { Service } from "./service";
 import { ExperimentService } from "./experiment_service";
 import { FirebaseService } from "./firebase_service";
+import { LLMService } from "./llm_service";
+import { ParticipantService } from "./participant_service";
 import { RouterService } from "./router_service";
 
+import { createChatMediatorPrompt } from "../shared/prompts";
 import { collectSnapshotWithId } from "../shared/utils";
 import { Unsubscribe, collection, doc, onSnapshot, orderBy, query, updateDoc } from "firebase/firestore";
 import { ChatAnswer, Message, MessageKind, StageKind, } from "@llm-mediation-experiments/utils";
@@ -12,6 +17,8 @@ import { createMessageCallable } from "../shared/callables";
 interface ServiceProvider {
   firebaseService: FirebaseService;
   experimentService: ExperimentService;
+  llmService: LLMService;
+  participantService: ParticipantService;
   routerService: RouterService;
 }
 
@@ -152,7 +159,9 @@ export class ChatService extends Service {
    * @rights Participant
    */
   async sendUserMessage(text: string) {
-    return createMessageCallable(
+    const messages = this.messages;
+
+    createMessageCallable(
       this.sp.firebaseService.functions,
       {
       chatId: this.chatId!,
@@ -162,6 +171,40 @@ export class ChatService extends Service {
         fromPrivateParticipantId: this.participantId!,
         text,
       },
+    });
+
+    // Generate LLM message
+    // Add new message to previous messages
+    messages.push({
+      uid: '',
+      timestamp: Timestamp.now(),
+      kind: MessageKind.UserMessage,
+      fromPublicParticipantId: this.sp.participantService.profile?.publicId!,
+      text,
+    });
+
+    const profiles = this.sp.experimentService.getParticipantProfiles();
+
+    const prompt = createChatMediatorPrompt(
+      messages,
+      profiles.map(p => p.publicId)
+    );
+
+    await this.sp.llmService.call(prompt).then(modelResponse => {
+      // If no new messages have been sent, convert LLM response to
+      // new mediator chat message.
+      if (this.messages.length <= messages.length) {
+        let answer = modelResponse.text;
+        for (const participant of profiles) {
+          const id = `{${participant.publicId!}}`;
+
+          while (answer.includes(id)) {
+            answer = answer.replace(id, participant.name!);
+          }
+        }
+
+        this.sendMediatorMessage(answer);
+      }
     });
   }
 
