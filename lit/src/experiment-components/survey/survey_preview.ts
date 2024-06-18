@@ -48,7 +48,7 @@ export class SurveyPreview extends MobxLitElement {
       const answerMap = this.answer?.answers;
       const answerList = answerMap ? Object.values(answerMap) : [];
 
-      return (answerList.map(
+      return (answerList.filter(
         answer => answer.kind === SurveyQuestionKind.Rating).length) ===
         (this.stage?.questions.filter(
         question => question.kind === SurveyQuestionKind.Rating).length)
