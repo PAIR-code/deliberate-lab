@@ -1,10 +1,10 @@
 import "../../pair-components/button";
 
-import "./chat_interface";
 import "../footer/footer";
 import "../profile/profile_avatar";
 import "../progress/progress_end_chat";
 import "../progress/progress_stage_waiting";
+import "./chat_interface";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
@@ -14,19 +14,17 @@ import { core } from "../../core/core";
 import { ChatService } from "../../services/chat_service";
 import { ExperimentService } from "../../services/experiment_service";
 import { ParticipantService } from "../../services/participant_service";
-import { RouterService } from "../../services/router_service";
 
 import {
-  GroupChatStageConfig,
-  ItemName,
-  ITEMS,
-  StageKind
+    GroupChatStageConfig,
+    ItemName,
+    ITEMS
 } from "@llm-mediation-experiments/utils";
 
-import { styles } from "./ranking_chat.scss";
+import { styles } from "./lost_at_sea_chat.scss";
 
 /** Ranking chat stage (discuss different item pairs). */
-@customElement("ranking-chat")
+@customElement("lost-at-sea-chat")
 export class RankingChat extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -155,6 +153,6 @@ export class RankingChat extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "ranking-chat": RankingChat;
+    "lost-at-sea-chat": RankingChat;
   }
 }

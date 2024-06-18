@@ -5,45 +5,35 @@ import "../../pair-components/textarea";
 import "../../pair-components/tooltip";
 
 import "../info/info_config";
-import "../tos/tos_config";
 import "../survey/survey_config";
+import "../tos/tos_config";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
-import { customElement, state } from "lit/decorators.js";
-import { classMap } from "lit/directives/class-map.js";
+import { customElement } from "lit/decorators.js";
 
 import { core } from "../../core/core";
 import {
   ExperimentConfigService
 } from "../../services/config/experiment_config_service";
-import { InfoConfigService } from "../../services/config/info_config_service";
-import { TOSConfigService } from "../../services/config/tos_config_service";
-import {
-  SurveyConfigService
-} from "../../services/config/survey_config_service";
 
-import { AuthService } from "../../services/auth_service";
-import { FirebaseService } from "../../services/firebase_service";
-import { Pages, RouterService } from "../../services/router_service";
 
+import { StageKind } from "@llm-mediation-experiments/utils";
 import {
+  MODULE_DESCRIPTION_LAS,
   MODULE_DESCRIPTION_LEADER,
-  MODULE_DESCRIPTION_RANKING
 } from "../../shared/constants";
-import { StageConfig, StageKind } from "@llm-mediation-experiments/utils";
 import {
   createInfoStage,
+  createLostAtSeaModuleStages,
   createProfileStage,
-  createRankingModuleStages,
   createRevealVotedStage,
   createSurveyStage,
   createVoteForLeaderStage,
-  isRankingModuleStage,
+  isLostAtSeaModuleStage,
 } from "../../shared/utils";
 
 import { styles } from "./experiment_config_menu.scss";
-import { ExperimenterService } from "../../services/experimenter_service";
 
 /** Experiment config dropdown menu for adding stages. */
 @customElement("experiment-config-menu")
@@ -86,7 +76,7 @@ export class ExperimentConfigMenu extends MobxLitElement {
           <div class="modules">
             <div class="category tertiary">Modules</div>
               ${this.renderLeaderModule()}
-              ${this.renderRankingModule()}
+              ${this.renderLostAtSeaModule()}
             </div>
         </div>
       </pr-menu>
@@ -106,20 +96,20 @@ export class ExperimentConfigMenu extends MobxLitElement {
 
     return html`
       <div class="menu-item" role="button" @click=${onAddLeaderClick}>
-        <div class="module-title">Leader</div>
+        <div class="module-title">🗳️ Participant election</div>
         <div class="module-info">${MODULE_DESCRIPTION_LEADER}</div>
       </div>
     `;
   }
 
-  private renderRankingModule() {
-    if (this.experimentConfig.stages.find(stage => isRankingModuleStage(stage))) {
+  private renderLostAtSeaModule() {
+    if (this.experimentConfig.stages.find(stage => isLostAtSeaModuleStage(stage))) {
       return nothing;
     }
 
-    const onAddRankingClick = () => {
-      const rankingStages = createRankingModuleStages();
-      rankingStages.forEach(stage => {
+    const onAddLostAtSeaClick = () => {
+      const lostAtSeaStages = createLostAtSeaModuleStages();
+      lostAtSeaStages.forEach(stage => {
         this.experimentConfig.addStage(stage);
       });
 
@@ -127,9 +117,9 @@ export class ExperimentConfigMenu extends MobxLitElement {
     }
 
     return html`
-      <div class="menu-item" role="button" @click=${onAddRankingClick}>
-        <div class="module-title">Ranking</div>
-        <div class="module-info">${MODULE_DESCRIPTION_RANKING}
+      <div class="menu-item" role="button" @click=${onAddLostAtSeaClick}>
+        <div class="module-title">🌊 Lost at Sea</div>
+        <div class="module-info">${MODULE_DESCRIPTION_LAS}
       </div>
     `;
   }
