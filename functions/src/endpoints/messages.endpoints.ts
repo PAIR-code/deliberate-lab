@@ -13,7 +13,7 @@ export const message = onCall(async (request) => {
 
   if (Value.Check(MessageData, data)) {
     // Validate authentication status for experimenter messages
-    if (data.message.kind !== MessageKind.UserMessage) await AuthGuard.isExperimenter(request);
+    if (data.message.kind === MessageKind.DiscussItemsMessage) await AuthGuard.isExperimenter(request);
 
     const timestamp = Timestamp.now();
 
