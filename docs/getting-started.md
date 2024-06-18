@@ -67,7 +67,7 @@ From the root directory (`llm-mediation-app/`), create the configuration files f
 
 ```bash
 cp .firebaserc.example .firebaserc
-cp webapp/src/lib/api/firebase-config.example.ts webapp/src/lib/api/firebase-config.ts
+cp lit/src/shared/config_example.ts lit/src/shared/config.ts # if you haven't already done this as part of frontend setup
 cp scripts/service-account.example.json scripts/service-account.json
 ```
 
