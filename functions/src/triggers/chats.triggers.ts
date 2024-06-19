@@ -44,13 +44,27 @@ export const publishParticipantReadyToEndChat = onDocumentWritten(
         const total = docData['chatData'].ratingsToDiscuss.length;
         if (current + 1 >= total) return;
 
+        // Fetch all participant IDs in order to
+        // - Reset their "readyToEndChat" status
+        // - Send the message to all of them (everyone has a copy of the chat)
+        const participantIds = (
+          await app.firestore().collection(`experiments/${experimentId}/participants`).get()
+        ).docs.map((doc) => doc.id);
+
         // 3. Reset all participants' readyToEndChat (for new discussion)
-        for (const id of Object.keys(docData?.readyToEndChat ?? {})) {
-          await publicChatData.update({
-            [`readyToEndChat.${id}`]: false
-          });
-          // TODO: Also update participants' private ChatAnswer?
-        }
+        await Promise.all(
+          participantIds.map((participantId) =>
+            app
+              .firestore()
+              .collection(
+                `experiments/${experimentId}/participants/${participantId}/chats/${chatId}`,
+              )
+              .doc()
+              .update({
+                readyToEndChat: false,
+              }),
+          ),
+        );
 
         // 4. Publish a message about the new pair to the chat of every participant
         const itemPair = docData['chatData'].ratingsToDiscuss[current + 1];
@@ -60,11 +74,6 @@ export const publishParticipantReadyToEndChat = onDocumentWritten(
           text: `Discussion ${current + 1} of ${total}`,
           timestamp: Timestamp.now(),
         };
-
-        // Fetch all participant IDs in order to send the message to all of them (everyone has a copy of the chat)
-        const participantIds = (
-          await app.firestore().collection(`experiments/${experimentId}/participants`).get()
-        ).docs.map((doc) => doc.id);
 
         await Promise.all(
           participantIds.map(async (participantId) => {
