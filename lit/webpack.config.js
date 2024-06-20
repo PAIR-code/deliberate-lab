@@ -66,6 +66,11 @@ module.exports = {
     static: {
       directory: path.join(__dirname, "dist"),
     },
+    client: {
+      overlay: {
+        runtimeErrors: false,
+      },
+    },
     compress: true,
     allowedHosts: "all",
     port: 4201,
