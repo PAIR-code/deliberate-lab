@@ -1,6 +1,6 @@
 node_modules/
 
-dist/bundle.js
+dist/
 
 .DS_Store
 .env.local
