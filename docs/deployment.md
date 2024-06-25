@@ -10,17 +10,7 @@ Before deploying to production, make sure that you have:
 
 ## Frontend
 
-Build the Lit frontend with the following command:
-
-```bash
-cd lit
-npm run build
-```
-
-This will create the app at `lit/dist/index.html` (note that other
-dependencies, e.g., images, are in `lit/dist` too).
-
-> TODO: Add Docker setup for Lit build
+See [lit/README.md](../lit/README.md) for build/deployment instructions.
 
 ## Firebase
 

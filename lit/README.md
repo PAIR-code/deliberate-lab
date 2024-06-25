@@ -168,6 +168,9 @@ npm run build  # Standard build
 URL_PREFIX=/my_prefix/ npm run build  # Build with URL prefix
 ```
 
+
+This will create the app under `lit/dist/`.
+
 You can then build the docker image:
 
 ```bash
