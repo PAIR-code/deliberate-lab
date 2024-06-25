@@ -2,7 +2,7 @@ import { computed, makeObservable, observable } from "mobx";
 import { FirebaseService } from "./firebase_service";
 import { Service } from "./service";
 import { RouterService } from "./router_service";
-import { Unsubscribe, collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { Timestamp, Unsubscribe, collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { ParticipantProfile, ParticipantProfileBase, QuestionAnswer, StageAnswer, StageKind, Votes, lookupTable } from "@llm-mediation-experiments/utils";
 import { updateStageCallable } from "../shared/callables";
 
@@ -115,6 +115,18 @@ export class ParticipantService extends Service {
     return updateDoc(
       doc(this.sp.firebaseService.firestore, 'experiments', this.experimentId!, 'participants', this.participantId!),
       data,
+    );
+  }
+
+  /** Mark a participant as having finished the experiment
+   * @rights Participant
+   */
+  async markExperimentCompleted() {
+    return updateDoc(
+      doc(this.sp.firebaseService.firestore, 'experiments', this.experimentId!, 'participants', this.participantId!),
+      {
+        completedExperiment: Timestamp.now(),
+      },
     );
   }
 

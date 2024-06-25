@@ -41,9 +41,7 @@ export class Footer extends MobxLitElement {
       this.participantService.profile?.workingOnStageName ?? ""
     );
 
-    if (index === this.experimentService.stageNames.length - 1) {
-      return nothing;
-    }
+    const isLastStage = index === this.experimentService.stageNames.length - 1;
 
     const handleNext = () => {
       const nextStageName = this.experimentService.getNextStageName(
@@ -60,6 +58,11 @@ export class Footer extends MobxLitElement {
             "stage": nextStageName,
           }
         );
+      } else {
+        // TODO: navigate to an end-of-experiment payout page
+        this.participantService.markExperimentCompleted();
+        alert("Experiment completed!");
+
       }
     };
 
@@ -72,7 +75,7 @@ export class Footer extends MobxLitElement {
         ?disabled=${preventNextClick}
         @click=${handleNext}
       >
-        Next stage
+        ${isLastStage ? "End experiment" : "Next stage"} 
       </pr-button>
     `;
   }
