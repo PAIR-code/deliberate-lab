@@ -56,10 +56,7 @@ export const publishParticipantReadyToEndChat = onDocumentWritten(
           participantIds.map((participantId) =>
             app
               .firestore()
-              .collection(
-                `experiments/${experimentId}/participants/${participantId}/chats/${chatId}`,
-              )
-              .doc()
+              .doc(`experiments/${experimentId}/participants/${participantId}/chats/${chatId}`)
               .update({
                 readyToEndChat: false,
               }),
