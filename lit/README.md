@@ -164,8 +164,8 @@ A Dockerfile is included to facilitate deployment.
 You must build the app first. If you intend to deploy it with a url prefix, you must define the `URL_PREFIX` environment variable before building:
 
 ```bash
-npm run build  # Standard build
-URL_PREFIX=/my_prefix/ npm run build  # Build with URL prefix
+npm run build:prod  # Standard build
+URL_PREFIX=/my_prefix/ npm run build:prod  # Build with URL prefix
 ```
 
 You can then build the docker image:

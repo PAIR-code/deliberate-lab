@@ -40,8 +40,11 @@ export class FirebaseService extends Service {
     this.auth = getAuth(this.app);
     this.functions = getFunctions(this.app);
 
-    // TODO: Only register emulators if in dev mode
-    this.registerEmulators();
+    //Only register emulators if in dev mode
+    if (process.env.NODE_ENV === 'development'){
+      this.registerEmulators();
+    }
+
 
     // Set up auth provider and scope
     this.provider = new GoogleAuthProvider();
