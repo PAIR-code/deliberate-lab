@@ -155,3 +155,29 @@ a new experiment (i.e., on the "Create experiment" page).
 Preview components pass in data from (and/or use) participant services
 (ParticipantService, ChatService); these are used to render experiment stage
 pages.
+
+
+## Building and Production Deployment
+
+A Dockerfile is included to facilitate deployment.
+
+You must build the app first. If you intend to deploy it with a url prefix, you must define the `URL_PREFIX` environment variable before building:
+
+```bash
+npm run build  # Standard build
+URL_PREFIX=/my_prefix/ npm run build  # Build with URL prefix
+```
+
+You can then build the docker image:
+
+```bash
+docker build . -t mediator-experiments
+```
+
+Try it out locally:
+
+```bash
+docker run -p 4201:4201 mediator-experiments
+```
+
+
