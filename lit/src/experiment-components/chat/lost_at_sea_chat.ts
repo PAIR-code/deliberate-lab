@@ -49,11 +49,7 @@ export class RankingChat extends MobxLitElement {
         </progress-stage-waiting>
       `;
     }
-
-    const readyToEnd = this.experimentService.getParticipantReadyToEndChat(
-      this.stage?.name!, this.participantService.profile?.publicId!,
-    );
-    const disableInput = !this.participantService.isCurrentStage || readyToEnd;
+    const disableInput = !this.participantService.isCurrentStage;
 
     const numDiscussions = this.stage?.chatConfig.ratingsToDiscuss?.length;
     const showNext =
@@ -89,7 +85,7 @@ export class RankingChat extends MobxLitElement {
 
   private getLabel() {
     const rating = this.chatService.getCurrentRatingIndex() + 1;
-    const numDiscussions = this.stage?.chatConfig.ratingsToDiscuss?.length!;
+    const numDiscussions = this.stage!.chatConfig.ratingsToDiscuss!.length;
 
     if (rating < numDiscussions) {
       return `Discussion ${rating} of ${numDiscussions}`;
@@ -111,13 +107,13 @@ export class RankingChat extends MobxLitElement {
 
   private renderTask() {
     const index = this.chatService.getCurrentRatingIndex();
-    const length = this.stage?.chatConfig.ratingsToDiscuss?.length!;
+    const length = this.stage!.chatConfig.ratingsToDiscuss.length;
 
     const pair = 
       this.stage?.chatConfig.ratingsToDiscuss[Math.min(index, length - 1)];
 
     const readyToEnd = this.experimentService.getParticipantReadyToEndChat(
-      this.stage?.name!, this.participantService.profile?.publicId!,
+      this.stage!.name, this.participantService.profile!.publicId,
     );
 
     if (index >= length) {
@@ -133,8 +129,8 @@ export class RankingChat extends MobxLitElement {
       <div class="panel-item">
         <div class="panel-item-title">${this.getLabel()}</div>
         <div class="pair">
-          ${pair ? this.renderItem(pair?.item1!) : nothing}
-          ${pair ? this.renderItem(pair?.item2!) : nothing}
+          ${pair ? this.renderItem(pair!.item1) : nothing}
+          ${pair ? this.renderItem(pair!.item2) : nothing}
         </div>
         <pr-button
           color="tertiary"
@@ -145,7 +141,8 @@ export class RankingChat extends MobxLitElement {
         >
           Ready to end discussion
         </pr-button>
-        <progress-end-chat .stageName=${this.stage?.name!}></progress-end-chat>
+        <div>You can still participate in the chat. When everyone is ready to end the discussion, the conversation will progress to the next stage.</div>
+        <progress-end-chat .stageName=${this.stage!.name}></progress-end-chat>
       </div>
     `;
   }
