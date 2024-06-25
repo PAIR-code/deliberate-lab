@@ -73,7 +73,8 @@ export function createChatStage(
       chatId: generateId(),
       chatConfig: {
         kind: ChatKind.SimpleChat,
-      }
+      },
+      mediators: [],
     };
   }
 
@@ -84,7 +85,8 @@ export function createChatStage(
     chatConfig: {
       kind: ChatKind.ChatAboutItems,
       ratingsToDiscuss
-    }
+    },
+    mediators: [],
   };
 }
 

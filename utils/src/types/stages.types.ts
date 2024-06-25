@@ -1,6 +1,7 @@
 /** Stages types & default definitions */
 
 import { ChatConfig, PublicChatData } from './chats.types';
+import { MediatorConfig } from './mediator.types';
 import { QuestionAnswer, QuestionConfig } from './questions.types';
 import { Votes } from './votes.types';
 
@@ -62,6 +63,7 @@ export interface GroupChatStageConfig extends BaseStageConfig {
 
   chatId: string;
   chatConfig: ChatConfig;
+  mediators: MediatorConfig[];
 }
 
 export interface VoteForLeaderStageConfig extends BaseStageConfig {
