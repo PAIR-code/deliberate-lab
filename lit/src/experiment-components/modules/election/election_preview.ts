@@ -5,7 +5,6 @@ import "../../progress/progress_stage_waiting";
 
 import '@material/web/radio/radio.js';
 
-import { observable } from "mobx";
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
@@ -52,8 +51,9 @@ export class ElectionPreview extends MobxLitElement {
 
     return html`
       <div class="election-wrapper">
-        ${this.experimentService.getParticipantProfiles().map(profile => 
-        this.renderParticipant(profile))}
+        ${this.experimentService.getParticipantProfiles()
+          .sort((p1, p2) => p1.publicId.localeCompare(p2.publicId))
+          .map(profile => this.renderParticipant(profile))}
       </div>
       <stage-footer .disabled=${disabled}>
         <progress-stage-completed></progress-stage-completed>
@@ -86,7 +86,7 @@ export class ElectionPreview extends MobxLitElement {
       votes[profile.publicId] = getVoteFromValue(value);
 
       this.participantService.updateVoteForLeaderStage(
-        this.participantService.profile?.workingOnStageName!,
+        this.participantService.profile!.workingOnStageName,
         votes
       )
     };
