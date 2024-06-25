@@ -3,6 +3,7 @@
 import { ItemName } from './items.types';
 
 export enum ChatKind {
+  SimpleChat = 'simpleChat',
   ChatAboutItems = 'chatAboutItems',
 }
 
@@ -14,13 +15,17 @@ interface BaseChatConfig {
   kind: ChatKind;
 }
 
+export interface SimpleChatConfig extends BaseChatConfig {
+  kind: ChatKind.SimpleChat;
+}
+
 export interface ChatAboutItemsConfig extends BaseChatConfig {
   kind: ChatKind.ChatAboutItems;
 
   ratingsToDiscuss: { item1: ItemName; item2: ItemName }[];
 }
 
-export type ChatConfig = ChatAboutItemsConfig;
+export type ChatConfig = SimpleChatConfig | ChatAboutItemsConfig;
 
 // ********************************************************************************************* //
 //                                            ANSWERS                                            //
@@ -43,6 +48,10 @@ interface BaseChatPublicData {
   kind: ChatKind;
 }
 
+export interface PublicSimpleChatData extends BaseChatPublicData {
+  kind: ChatKind.SimpleChat;
+}
+
 export interface PublicChatAboutItemsData extends BaseChatPublicData {
   kind: ChatKind.ChatAboutItems;
 
@@ -50,7 +59,7 @@ export interface PublicChatAboutItemsData extends BaseChatPublicData {
   currentRatingIndex: number;
 }
 
-export type PublicChatData = PublicChatAboutItemsData;
+export type PublicChatData = PublicSimpleChatData | PublicChatAboutItemsData;
 
 // ********************************************************************************************* //
 //                                           DEFAULTS                                            //

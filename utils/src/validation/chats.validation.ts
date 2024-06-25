@@ -4,6 +4,14 @@ import { ChatKind } from '../types/chats.types';
 /** Shorthand for strict TypeBox object validation */
 const strict = { additionalProperties: false } as const;
 
+/** Simple chat config */
+export const SimpleChatConfigData = Type.Object(
+  {
+    kind: Type.Literal(ChatKind.SimpleChat),
+  },
+  strict,
+);
+
 /** Chat about items config */
 export const ChatAboutItemsConfigData = Type.Object(
   {

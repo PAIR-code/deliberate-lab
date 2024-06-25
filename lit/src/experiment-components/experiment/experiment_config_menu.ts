@@ -24,6 +24,7 @@ import {
   MODULE_DESCRIPTION_LEADER,
 } from "../../shared/constants";
 import {
+  createChatStage,
   createInfoStage,
   createLostAtSeaModuleStages,
   createProfileStage,
@@ -58,6 +59,11 @@ export class ExperimentConfigMenu extends MobxLitElement {
       this.experimentConfig.setCurrentStageIndexToLast();
     }
 
+    const onAddChatClick = () => {
+      this.experimentConfig.addStage(createChatStage("Simple chat"));
+      this.experimentConfig.setCurrentStageIndexToLast();
+    }
+
     return html`
       <pr-menu name="Add stage">
         <div class="menu-wrapper">
@@ -71,6 +77,9 @@ export class ExperimentConfigMenu extends MobxLitElement {
             </div>
             <div class="menu-item" role="button" @click=${onAddProfileClick}>
               Profile stage
+            </div>
+            <div class="menu-item" role="button" @click=${onAddChatClick}>
+              Simple chat stage
             </div>
           </div>
           <div class="modules">

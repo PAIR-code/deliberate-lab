@@ -32,7 +32,7 @@ export const initializePublicStageData = onDocumentWritten(
         break;
       case StageKind.GroupChat:
         // Initialize the custom chat data (depending on the chat kind)
-        let chatData: PublicChatData | undefined;
+        let chatData: PublicChatData;
 
         switch (data.chatConfig.kind) {
           case ChatKind.ChatAboutItems:
@@ -42,6 +42,10 @@ export const initializePublicStageData = onDocumentWritten(
               ratingsToDiscuss: data.chatConfig.ratingsToDiscuss, // Also publish the config again for convenience
             };
             break;
+          default: // SimpleChat
+            chatData = {
+              kind: ChatKind.SimpleChat,
+            };
         }
 
         // Read the number of participants from the experiment document

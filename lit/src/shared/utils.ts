@@ -66,6 +66,17 @@ export function createChatStage(
   name = "Group chat",
   ratingsToDiscuss: { item1: ItemName; item2: ItemName }[] = []
 ): GroupChatStageConfig {
+  if (ratingsToDiscuss.length === 0) {
+    return {
+      name,
+      kind: StageKind.GroupChat,
+      chatId: generateId(),
+      chatConfig: {
+        kind: ChatKind.SimpleChat,
+      }
+    };
+  }
+
   return {
     name,
     kind: StageKind.GroupChat,
@@ -180,7 +191,18 @@ export function isLostAtSeaModuleStage(stage: StageConfig) {
   // stages for Lost at Sea module stages.
   return (stage.kind === StageKind.TakeSurvey &&
     stage.questions.find(q => q.kind === SurveyQuestionKind.Rating))
-    || stage.kind === StageKind.GroupChat;
+    || (stage.kind === StageKind.GroupChat && stage.chatConfig.kind === ChatKind.ChatAboutItems);
+}
+
+/**
+ * Get ratingsToDiscuss from chatConfig (empty if not ChatAboutItems kind).
+ */
+export function getChatRatingsToDiscuss(stage: GroupChatStageConfig) {
+  if (!stage) {
+    return [];
+  }
+  return stage.chatConfig.kind === ChatKind.ChatAboutItems ?
+    stage.chatConfig.ratingsToDiscuss : [];
 }
 
 /**

@@ -27,11 +27,12 @@ import { TOSConfigService } from "../../services/config/tos_config_service";
 import { AuthService } from "../../services/auth_service";
 import { Pages, RouterService } from "../../services/router_service";
 
-import { ExperimentTemplate, StageConfig, StageKind } from "@llm-mediation-experiments/utils";
+import { ChatKind, ExperimentTemplate, StageConfig, StageKind } from "@llm-mediation-experiments/utils";
 import {
   MODULE_DESCRIPTION_LAS,
   MODULE_DESCRIPTION_LEADER,
   STAGE_DESCRIPTION_CHAT,
+  STAGE_DESCRIPTION_CHAT_SIMPLE,
   STAGE_DESCRIPTION_INFO,
   STAGE_DESCRIPTION_PROFILE,
   STAGE_DESCRIPTION_REVEAL,
@@ -134,6 +135,13 @@ export class ExperimentConfig extends MobxLitElement {
           ${this.renderCurrentStageNameField()}
         `;
       case StageKind.GroupChat:
+        if (currentStage.chatConfig.kind !== ChatKind.ChatAboutItems) {
+          return html`
+            ${this.renderStageInfo(StageKind.GroupChat, STAGE_DESCRIPTION_CHAT)}
+            <div class="error">${STAGE_DESCRIPTION_CHAT_SIMPLE}</div>
+            ${this.renderCurrentStageNameField()}
+          `;
+        }
         return html`
           ${this.renderStageInfo(
             StageKind.GroupChat, STAGE_DESCRIPTION_CHAT)}

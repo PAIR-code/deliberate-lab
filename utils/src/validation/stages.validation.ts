@@ -1,7 +1,7 @@
 import { Type, type Static } from '@sinclair/typebox';
 import { StageKind } from '../types/stages.types';
 import { Vote } from '../types/votes.types';
-import { ChatAboutItemsConfigData } from './chats.validation';
+import { ChatAboutItemsConfigData, SimpleChatConfigData } from './chats.validation';
 import {
   CheckQuestionAnswerData,
   CheckQuestionConfigData,
@@ -71,7 +71,7 @@ export const GroupChatStageConfigData = Type.Object(
     kind: Type.Literal(StageKind.GroupChat),
     name: Type.String({ minLength: 1 }),
     chatId: Type.String({ minLength: 1 }),
-    chatConfig: Type.Union([ChatAboutItemsConfigData]),
+    chatConfig: Type.Union([ChatAboutItemsConfigData, SimpleChatConfigData]),
   },
   strict,
 );

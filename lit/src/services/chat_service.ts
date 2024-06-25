@@ -11,7 +11,7 @@ import { RouterService } from "./router_service";
 import { createChatMediatorPrompt } from "../shared/prompts";
 import { collectSnapshotWithId } from "../shared/utils";
 import { Unsubscribe, collection, doc, onSnapshot, orderBy, query, updateDoc } from "firebase/firestore";
-import { ChatAnswer, Message, MessageKind, StageKind, } from "@llm-mediation-experiments/utils";
+import { ChatAnswer, ChatKind, Message, MessageKind, StageKind, } from "@llm-mediation-experiments/utils";
 import { createMessageCallable } from "../shared/callables";
 
 interface ServiceProvider {
@@ -124,7 +124,10 @@ export class ChatService extends Service {
     const stageData = this.sp.experimentService.getPublicStageData(
       this.chat?.stageName!
     );
-    if (!stageData || stageData.kind !== StageKind.GroupChat) {
+    if (
+      !stageData || stageData.kind !== StageKind.GroupChat ||
+      stageData.chatData.kind !== ChatKind.ChatAboutItems
+    ) {
       return -1;
     }
 

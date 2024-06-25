@@ -16,10 +16,13 @@ import { ExperimentService } from "../../services/experiment_service";
 import { ParticipantService } from "../../services/participant_service";
 
 import {
+    ChatKind,
     GroupChatStageConfig,
     ItemName,
     ITEMS
 } from "@llm-mediation-experiments/utils";
+
+import { getChatRatingsToDiscuss } from "../../shared/utils";
 
 import { styles } from "./lost_at_sea_chat.scss";
 
@@ -35,7 +38,8 @@ export class RankingChat extends MobxLitElement {
   @property() stage: GroupChatStageConfig|null = null;
 
   override render() {
-    if (this.stage === null) {
+    if (this.stage === null ||
+        this.stage.chatConfig.kind !== ChatKind.ChatAboutItems) {
       return nothing;
     }
 
@@ -55,7 +59,7 @@ export class RankingChat extends MobxLitElement {
     );
     const disableInput = !this.participantService.isCurrentStage || readyToEnd;
 
-    const numDiscussions = this.stage?.chatConfig.ratingsToDiscuss?.length;
+    const numDiscussions = getChatRatingsToDiscuss(this.stage!).length;
     const showNext =
       this.chatService.getCurrentRatingIndex() >= numDiscussions;
 
@@ -89,7 +93,7 @@ export class RankingChat extends MobxLitElement {
 
   private getLabel() {
     const rating = this.chatService.getCurrentRatingIndex() + 1;
-    const numDiscussions = this.stage?.chatConfig.ratingsToDiscuss?.length!;
+    const numDiscussions = getChatRatingsToDiscuss(this.stage!).length;
 
     if (rating < numDiscussions) {
       return `Discussion ${rating} of ${numDiscussions}`;
@@ -111,10 +115,8 @@ export class RankingChat extends MobxLitElement {
 
   private renderTask() {
     const index = this.chatService.getCurrentRatingIndex();
-    const length = this.stage?.chatConfig.ratingsToDiscuss?.length!;
-
-    const pair = 
-      this.stage?.chatConfig.ratingsToDiscuss[Math.min(index, length - 1)];
+    const ratings = getChatRatingsToDiscuss(this.stage!);
+    const pair = ratings[Math.min(index, ratings.length - 1)];
 
     const readyToEnd = this.experimentService.getParticipantReadyToEndChat(
       this.stage?.name!, this.participantService.profile?.publicId!,
