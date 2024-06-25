@@ -11,6 +11,7 @@ export interface ParticipantProfileBase {
   name: string | null;
 
   acceptTosTimestamp: UnifiedTimestamp | null;
+  completedExperiment: UnifiedTimestamp | null;
 }
 
 /** Full participant profile document data */
@@ -37,6 +38,7 @@ export const getDefaultProfile = (
   avatarUrl: null,
   name: null,
   acceptTosTimestamp: null,
+  completedExperiment: null,
   workingOnStageName,
 });
 
