@@ -42,7 +42,11 @@ export class TOSPreview extends MobxLitElement {
       this.participantService.updateProfile({ acceptTosTimestamp });
     };
 
+    const descriptionContent = this.stage.description ? html`<div class="description">${this.stage.description}</div>` : '';
+
     return html`
+      ${descriptionContent}
+      
       <div class="tos-wrapper">
         ${unsafeHTML(cleanHTML)}
       </div>

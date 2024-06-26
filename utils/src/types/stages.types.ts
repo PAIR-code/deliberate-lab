@@ -34,6 +34,7 @@ export const ALLOWED_STAGE_PROGRESSION = {
 interface BaseStageConfig {
   kind: StageKind;
   name: string;
+  description?: string;
 }
 
 export interface InfoStageConfig extends BaseStageConfig {
@@ -43,7 +44,6 @@ export interface InfoStageConfig extends BaseStageConfig {
 
 export interface TermsOfServiceStageConfig extends BaseStageConfig {
   kind: StageKind.TermsOfService;
-
   tosLines: string[];
 }
 
@@ -53,13 +53,11 @@ export interface ProfileStageConfig extends BaseStageConfig {
 
 export interface SurveyStageConfig extends BaseStageConfig {
   kind: StageKind.TakeSurvey;
-
   questions: QuestionConfig[];
 }
 
 export interface GroupChatStageConfig extends BaseStageConfig {
   kind: StageKind.GroupChat;
-
   chatId: string;
   chatConfig: ChatConfig;
 }
@@ -70,7 +68,6 @@ export interface VoteForLeaderStageConfig extends BaseStageConfig {
 
 export interface RevealVotedStageConfig extends BaseStageConfig {
   kind: StageKind.RevealVoted;
-
   pendingVoteStageName: string; // Name of the `VoteForLeader` stage that this stage is revealing the results of
 }
 

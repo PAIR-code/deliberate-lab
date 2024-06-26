@@ -28,7 +28,11 @@ export class InfoPreview extends MobxLitElement {
     }
 
     const cleanHTML = sanitizeHtml(this.stage?.infoLines.join('\n\n'));
+    const descriptionContent = this.stage.description ? html`<div class="description">${this.stage.description}</div>` : '';
+
     return html`
+      ${descriptionContent}
+      
       <div class="html-wrapper">
         ${unsafeHTML(cleanHTML)}
       </div>
