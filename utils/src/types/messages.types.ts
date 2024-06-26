@@ -32,6 +32,8 @@ export interface DiscussItemsMessage extends MessageBase {
 
 export interface MediatorMessage extends MessageBase {
   kind: MessageKind.MediatorMessage;
+  name: string;
+  avatar: string;
 }
 
 export type Message = UserMessage | DiscussItemsMessage | MediatorMessage;
@@ -52,5 +54,7 @@ export const getDefaultMediatorMessage = (timestamp: UnifiedTimestamp): Mediator
   uid: uniqueId('message'),
   kind: MessageKind.MediatorMessage,
   timestamp,
+  name: 'LLM Mediator',
+  avatar: '🤖',
   text: 'fakeMessage',
 });

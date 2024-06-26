@@ -1,7 +1,8 @@
 import { Type, type Static } from '@sinclair/typebox';
+import { ChatContext, MediatorKind } from '../types/mediator.types';
 import { StageKind } from '../types/stages.types';
 import { Vote } from '../types/votes.types';
-import { ChatAboutItemsConfigData } from './chats.validation';
+import { ChatAboutItemsConfigData, SimpleChatConfigData } from './chats.validation';
 import {
   CheckQuestionAnswerData,
   CheckQuestionConfigData,
@@ -71,7 +72,29 @@ export const GroupChatStageConfigData = Type.Object(
     kind: Type.Literal(StageKind.GroupChat),
     name: Type.String({ minLength: 1 }),
     chatId: Type.String({ minLength: 1 }),
-    chatConfig: Type.Union([ChatAboutItemsConfigData]),
+    chatConfig: Type.Union([ChatAboutItemsConfigData, SimpleChatConfigData]),
+    mediators: Type.Array(
+      Type.Object(
+        {
+          id: Type.String(),
+          kind: Type.Union([
+            Type.Literal(MediatorKind.Automatic),
+            Type.Literal(MediatorKind.Manual),
+          ]),
+          name: Type.String(),
+          avatar: Type.String(),
+          prompt: Type.String(),
+          model: Type.String(),
+          chatContext: Type.Union([
+            Type.Literal(ChatContext.Message),
+            Type.Literal(ChatContext.Discussion),
+            Type.Literal(ChatContext.All),
+          ]),
+          filterMediatorMessages: Type.Boolean(),
+        },
+        strict
+      )
+    ),
   },
   strict,
 );

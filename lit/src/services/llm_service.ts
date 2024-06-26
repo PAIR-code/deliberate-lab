@@ -8,6 +8,8 @@ import {
   HarmBlockThreshold,
 } from "@google/generative-ai";
 
+import { GEMINI_DEFAULT_MODEL } from "../shared/prompts";
+
 const DEFAULT_FETCH_TIMEOUT = 300 * 1000; // This is the Chrome default
 const MAX_TOKENS_FINISH_REASON = "MAX_TOKENS";
 const QUOTA_ERROR_CODE = 429;
@@ -49,7 +51,7 @@ export class LLMService extends Service {
   async callGemini(
     prompt: string,
     generationConfig: GenerationConfig,
-    modelName = "gemini-1.5-pro-latest"
+    modelName = GEMINI_DEFAULT_MODEL,
   ) {
     const model = this.genAI.getGenerativeModel({
       model: modelName,

@@ -14,8 +14,6 @@ import { core } from "../../core/core";
 import { ExperimentService } from "../../services/experiment_service";
 import { ParticipantService } from "../../services/participant_service";
 
-import { LLM_MEDIATOR_AVATAR } from "../../shared/constants";
-
 import { styles } from "./chat_message.scss";
 
 /** Chat message component */
@@ -75,9 +73,9 @@ export class ChatMessage extends MobxLitElement {
 
     return html`
       <div class=${classes}>
-        <profile-avatar .emoji=${LLM_MEDIATOR_AVATAR}></profile-avatar>
+        <profile-avatar .emoji=${message.avatar}></profile-avatar>
         <div class="content">
-          <div class="label">LLM Mediator</div>
+          <div class="label">${message.name}</div>
           <div class="mediator-bubble">${message.text}</div>
         </div>
       </div>

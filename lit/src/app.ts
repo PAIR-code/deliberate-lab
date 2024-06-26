@@ -1,5 +1,6 @@
 import "./pair-components/button";
 
+import "./experiment-components/chat/basic_chat";
 import "./experiment-components/chat/lost_at_sea_chat";
 import "./experiment-components/experiment/experiment_config";
 import "./experiment-components/experiment/experiment_preview";
@@ -30,6 +31,7 @@ import { Pages, RouterService } from "./services/router_service";
 import { SettingsService } from "./services/settings_service";
 
 import {
+  ChatKind,
   StageKind
 } from "@llm-mediation-experiments/utils";
 import {
@@ -230,8 +232,12 @@ export class App extends MobxLitElement {
         return html`<election-reveal .voteStageName=${electionStage}></election-reveal>`;
       case StageKind.GroupChat:
         this.chatService.updateForCurrentRoute(currentStage.chatId);
-        // Right now, the only kind of chat is the Lost at Sea one
-        return html`<lost-at-sea-chat .stage=${currentStage}></lost-at-sea-chat>`;
+
+        if (currentStage.chatConfig.kind === ChatKind.ChatAboutItems) {
+          return html`<lost-at-sea-chat .stage=${currentStage}></lost-at-sea-chat>`;
+        } else {
+          return html`<basic-chat .stage=${currentStage}></basic-chat>`;
+        }
       default:
         return this.render404("Could not load experiment stage");
     }

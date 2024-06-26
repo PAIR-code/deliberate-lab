@@ -179,6 +179,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
       kind: ChatKind.ChatAboutItems,
       ratingsToDiscuss: INDIVIDUAL_ITEM_PAIRS.map(([i1, i2]) => ({ item1: i1, item2: i2 })),
     },
+    mediators: [],
   },
 
   '07. Post-discussion representative survey': {

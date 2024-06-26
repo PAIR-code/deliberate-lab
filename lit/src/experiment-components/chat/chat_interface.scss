@@ -14,7 +14,7 @@
   border-radius: common.$spacing-medium;
   display: flex;
   flex-direction: column-reverse;
-  height: calc(100vh - 320px);
+  height: common.$chat-height;
   overflow: auto;
 }
 

@@ -5,6 +5,7 @@ import "../../pair-components/textarea";
 import "../../pair-components/tooltip";
 
 import "../info/info_config";
+import "../mediators/mediator_config";
 import "../survey/survey_config";
 import "../tos/tos_config";
 import "./experiment_config_menu";
@@ -19,6 +20,7 @@ import {
   ExperimentConfigService
 } from "../../services/config/experiment_config_service";
 import { InfoConfigService } from "../../services/config/info_config_service";
+import { MediatorConfigService } from "../../services/config/mediator_config_service";
 import {
   SurveyConfigService
 } from "../../services/config/survey_config_service";
@@ -27,11 +29,12 @@ import { TOSConfigService } from "../../services/config/tos_config_service";
 import { AuthService } from "../../services/auth_service";
 import { Pages, RouterService } from "../../services/router_service";
 
-import { ExperimentTemplate, StageConfig, StageKind } from "@llm-mediation-experiments/utils";
+import { ChatKind, ExperimentTemplate, StageConfig, StageKind } from "@llm-mediation-experiments/utils";
 import {
   MODULE_DESCRIPTION_LAS,
   MODULE_DESCRIPTION_LEADER,
   STAGE_DESCRIPTION_CHAT,
+  STAGE_DESCRIPTION_CHAT_SIMPLE,
   STAGE_DESCRIPTION_INFO,
   STAGE_DESCRIPTION_PROFILE,
   STAGE_DESCRIPTION_REVEAL,
@@ -53,6 +56,7 @@ export class ExperimentConfig extends MobxLitElement {
 
   private readonly experimentConfig = core.getService(ExperimentConfigService);
   private readonly infoConfig = core.getService(InfoConfigService);
+  private readonly mediatorConfig = core.getService(MediatorConfigService);
   private readonly tosConfig = core.getService(TOSConfigService);
   private readonly surveyConfig = core.getService(SurveyConfigService);
 
@@ -134,6 +138,16 @@ export class ExperimentConfig extends MobxLitElement {
           ${this.renderCurrentStageNameField()}
         `;
       case StageKind.GroupChat:
+        this.mediatorConfig.reset();
+        this.mediatorConfig.mediators = currentStage.mediators;
+        if (currentStage.chatConfig.kind !== ChatKind.ChatAboutItems) {
+          return html`
+            ${this.renderStageInfo(StageKind.GroupChat, STAGE_DESCRIPTION_CHAT)}
+            <div class="error">${STAGE_DESCRIPTION_CHAT_SIMPLE}</div>
+            ${this.renderCurrentStageNameField()}
+            <mediators-config></mediators-config>
+          `;
+        }
         return html`
           ${this.renderStageInfo(
             StageKind.GroupChat, STAGE_DESCRIPTION_CHAT)}
@@ -143,6 +157,7 @@ export class ExperimentConfig extends MobxLitElement {
           ${isLostAtSeaModuleStage(currentStage) ?
             html`<code>${JSON.stringify(currentStage.chatConfig)}</code>`
             : nothing}
+          <mediators-config></mediators-config>
           `;
       case StageKind.VoteForLeader:
         return html`

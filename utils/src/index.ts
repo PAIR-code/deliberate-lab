@@ -5,6 +5,7 @@ export * from './types/api.types';
 export * from './types/chats.types';
 export * from './types/experiments.types';
 export * from './types/items.types';
+export * from './types/mediator.types';
 export * from './types/messages.types';
 export * from './types/participants.types';
 export * from './types/questions.types';

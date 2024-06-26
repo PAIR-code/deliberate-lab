@@ -11,6 +11,7 @@ export const STAGE_DESCRIPTION_SURVEY =
 export const STAGE_DESCRIPTION_PROFILE =
   "Set profile name and other details";
 export const STAGE_DESCRIPTION_CHAT = "Chat with other participants";
+export const STAGE_DESCRIPTION_CHAT_SIMPLE = "This is a simple chat (no discussion topics)";
 export const STAGE_DESCRIPTION_VOTE = "Choose a participant leader";
 export const STAGE_DESCRIPTION_REVEAL = "Show leader voting results";
 
@@ -26,5 +27,5 @@ export const PROFILE_AVATARS = [
   '🧑🏻','🧑🏼','🧑🏽','🧑🏾','🧑🏿'
 ];
 
-/** LLM mediator avatar. */
-export const LLM_MEDIATOR_AVATAR = '🤖';
+/** LLM mediator avatars. */
+export const LLM_MEDIATOR_AVATARS = ['🤖', '🙋', '👋', '💡', '⭐'];

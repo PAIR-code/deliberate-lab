@@ -32,6 +32,8 @@ export const MediatorMessageData = Type.Object(
   {
     kind: Type.Literal(MessageKind.MediatorMessage),
     text: Type.String({ minLength: 1 }),
+    name: Type.String(),
+    avatar: Type.String(),
   },
   strict,
 );

@@ -3,11 +3,14 @@
  */
 
 import {
+  ChatContext,
   ChatKind,
   GroupChatStageConfig,
   ITEM_NAMES,
   InfoStageConfig,
   ItemName,
+  MediatorConfig,
+  MediatorKind,
   ProfileStageConfig,
   QuestionConfig,
   RatingQuestionConfig,
@@ -25,6 +28,7 @@ import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
 import { v4 as uuidv4 } from "uuid";
 import { Snapshot } from "./types";
+import { GEMINI_DEFAULT_MODEL, PROMPT_INSTRUCTIONS_CHAT_MEDIATOR } from "./prompts";
 
 /** Generate unique id. */
 export function generateId(): string {
@@ -66,6 +70,18 @@ export function createChatStage(
   name = "Group chat",
   ratingsToDiscuss: { item1: ItemName; item2: ItemName }[] = []
 ): GroupChatStageConfig {
+  if (ratingsToDiscuss.length === 0) {
+    return {
+      name,
+      kind: StageKind.GroupChat,
+      chatId: generateId(),
+      chatConfig: {
+        kind: ChatKind.SimpleChat,
+      },
+      mediators: [],
+    };
+  }
+
   return {
     name,
     kind: StageKind.GroupChat,
@@ -73,7 +89,25 @@ export function createChatStage(
     chatConfig: {
       kind: ChatKind.ChatAboutItems,
       ratingsToDiscuss
-    }
+    },
+    mediators: [],
+  };
+}
+
+/** Create default LLM mediator. */
+export function createMediator(
+  name = "LLM Mediator",
+  avatar = "🤖",
+): MediatorConfig {
+  return {
+    id: generateId(),
+    name,
+    avatar,
+    model: GEMINI_DEFAULT_MODEL,
+    prompt: PROMPT_INSTRUCTIONS_CHAT_MEDIATOR,
+    chatContext: ChatContext.All,
+    kind: MediatorKind.Automatic,
+    filterMediatorMessages: true,
   };
 }
 
@@ -180,7 +214,18 @@ export function isLostAtSeaModuleStage(stage: StageConfig) {
   // stages for Lost at Sea module stages.
   return (stage.kind === StageKind.TakeSurvey &&
     stage.questions.find(q => q.kind === SurveyQuestionKind.Rating))
-    || stage.kind === StageKind.GroupChat;
+    || (stage.kind === StageKind.GroupChat && stage.chatConfig.kind === ChatKind.ChatAboutItems);
+}
+
+/**
+ * Get ratingsToDiscuss from chatConfig (empty if not ChatAboutItems kind).
+ */
+export function getChatRatingsToDiscuss(stage: GroupChatStageConfig) {
+  if (!stage) {
+    return [];
+  }
+  return stage.chatConfig.kind === ChatKind.ChatAboutItems ?
+    stage.chatConfig.ratingsToDiscuss : [];
 }
 
 /**

@@ -4,6 +4,8 @@
 
 import { ITEMS, Message, MessageKind } from '@llm-mediation-experiments/utils';
 
+export const GEMINI_DEFAULT_MODEL = "gemini-1.5-pro-latest";
+
 /** Instructions for chat mediator prompt. */
 // TODO: Update placeholder prompt
 export const PROMPT_INSTRUCTIONS_CHAT_MEDIATOR = `
@@ -19,7 +21,7 @@ export const PROMPT_INSTRUCTIONS_CHAT_MEDIATOR = `
 
 /** Create LLM chat mediator prompt. */
 export function createChatMediatorPrompt(
-  messages: Message[], participants: string[]
+  promptInstructions: string, messages: Message[], participants: string[]
 ) {
   const formatMessage = (message: Message) => {
     switch (message.kind) {
@@ -33,7 +35,7 @@ export function createChatMediatorPrompt(
   };
 
   const prompt = `
-    ${PROMPT_INSTRUCTIONS_CHAT_MEDIATOR}
+    ${promptInstructions}
 
     [Participants]
     ${participants.join(',')}

@@ -12,6 +12,7 @@ import {
   ExperimentConfigService
 } from "./services/config/experiment_config_service";
 import { InfoConfigService } from './services/config/info_config_service';
+import { MediatorConfigService } from './services/config/mediator_config_service';
 import { TOSConfigService } from './services/config/tos_config_service';
 import {
   SurveyConfigService
@@ -59,6 +60,9 @@ export function makeServiceProvider(self: Core) {
     },
     get infoConfigService() {
       return self.getService(InfoConfigService);
+    },
+    get mediatorConfigService() {
+      return self.getService(MediatorConfigService);
     },
     get tosConfigService() {
       return self.getService(TOSConfigService);
