@@ -5,7 +5,6 @@ import "../progress/progress_stage_completed";
 
 import * as sanitizeHtml from "sanitize-html";
 
-import { observable } from "mobx";
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
@@ -28,7 +27,7 @@ export class InfoPreview extends MobxLitElement {
     }
 
     const cleanHTML = sanitizeHtml(this.stage?.infoLines.join('\n\n'));
-    const descriptionContent = this.stage.description ? html`<div class="description">${this.stage.description}</div>` : '';
+    const descriptionContent = this.stage.description ? html`<div class="description">${this.stage.description}</div>` : nothing;
 
     return html`
       ${descriptionContent}

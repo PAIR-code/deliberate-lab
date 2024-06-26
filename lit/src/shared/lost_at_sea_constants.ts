@@ -15,7 +15,7 @@ export const LAS_INTRO_HTML = `<h3>Scenario</h3>
   <br/>
   <p>Your payout from this task is dependent on how well the representative does on this task.</p>'`;
 
-export const LAS_INITIAL_TASK_DESCRIPTION = `First, you will complete a task similar to the task that your crew's representative will later complete.`;
+export const LAS_INITIAL_TASK_DESCRIPTION = `First, you will complete a task similar to the task that your crew's representative will later complete. Your performance on this task will not affect your payout; this is so that you get a sense of the task.`;
 
 export const LAS_GROUP_INTRO_DESCRIPTION = `On the next stage, you will review and discuss your answers to the previous task with your crewmembers.`;
 export const LAS_GROUP_INTRO_HTML = `<p>Take this opportunity to gauge the abilities of your crewmembers, as you will later vote for the team representative.</p>
@@ -28,7 +28,7 @@ export const LAS_WTL_SURVEY : QuestionConfig[] = [
     id: 0,
     kind: SurveyQuestionKind.Scale,
     questionText:
-      "Now that you've gauged the abilities of your crewmembers, how willing would you be to serve as the representative and complete this task on behalf of your crew?",
+      "How willing would you be to serve as the representative and complete this task on behalf of your crew?",
     lowerBound: 'I would STRONGLY DISLIKE to be the representative (0/10)',
     upperBound: 'I would STRONGLY LIKE to be the representative (10/10)',
   },

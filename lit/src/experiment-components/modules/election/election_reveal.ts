@@ -41,7 +41,7 @@ export class ElectionReveal extends MobxLitElement {
       this.experimentService.getParticipantsReadyForStage(currentStage);
 
     const description = this.experimentService.stageConfigMap[currentStage].description;
-    const descriptionContent = description ? html`<div class="description">${description}</div>` : '';
+    const descriptionContent = description ? html`<div class="description">${description}</div>` : nothing;
 
     if (notReady.length > 0) {
       return html`

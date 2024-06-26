@@ -53,7 +53,7 @@ export class SurveyPreview extends MobxLitElement {
         question => question.kind === SurveyQuestionKind.Rating).length)
     };
 
-    const descriptionContent = this.stage.description ? html`<div class="description">${this.stage.description}</div>` : '';
+    const descriptionContent = this.stage.description ? html`<div class="description">${this.stage.description}</div>` : nothing;
 
     return html`
       ${descriptionContent}
