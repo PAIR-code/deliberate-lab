@@ -50,7 +50,7 @@ export class SurveyConfig extends MobxLitElement {
       
       <pr-textarea
         label="Stage description"
-        placeholder="Stage description (optional)"
+        placeholder="Stage description"
         variant="outlined"
         .value=${this.surveyConfig.description}
         @input=${handleDescriptionInput}

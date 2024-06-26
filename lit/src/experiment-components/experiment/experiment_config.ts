@@ -247,7 +247,7 @@ export class ExperimentConfig extends MobxLitElement {
     return html`
       <div class="stages-nav">
         <div class=${settingsClasses} role="button" @click=${handleClick}>
-          Settings
+        🛠️&nbsp; Experiment settings
         </div>
         ${this.experimentConfig.stages.map(
           (stage, index) => this.renderStageNavItem(stage, index)

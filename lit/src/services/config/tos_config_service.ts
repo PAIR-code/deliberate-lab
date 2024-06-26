@@ -18,7 +18,7 @@ export class TOSConfigService extends Service {
   }
 
   @computed get description() {
-    return this.stage?.description;
+    return this.stage?.description ?? '';
   }
 
   @computed get content() {

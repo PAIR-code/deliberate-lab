@@ -24,6 +24,7 @@ import {
 import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
 import { v4 as uuidv4 } from "uuid";
+import { LAS_FINAL_SURVEY, LAS_FINAL_SURVEY_DESCRIPTION, LAS_GROUP_INTRO_DESCRIPTION, LAS_GROUP_INTRO_HTML, LAS_INITIAL_TASK_DESCRIPTION, LAS_INTRO_DESCRIPTION, LAS_INTRO_HTML, LAS_LEADER_ELECTION_DESCRIPTION, LAS_LEADER_REVEAL_DESCRIPTION, LAS_LEADER_TASK_DESCRIPTION, LAS_REDO_TASK_DESCRIPTION, LAS_WTL_DESCRIPTION, LAS_WTL_SURVEY } from './lost_at_sea_constants';
 import { Snapshot } from "./types";
 
 /** Generate unique id. */
@@ -33,7 +34,7 @@ export function generateId(): string {
 
 /** Create info stage. */
 export function createInfoStage(
-  name = "Info", description = "Description", content = "Placeholder info"
+  name = "Info", description = "", content = "Placeholder info"
 ): InfoStageConfig {
   const infoLines = [content];
   return { kind: StageKind.Info, name, description, infoLines };
@@ -65,7 +66,7 @@ export function createProfileStage(name = "Set profile"): ProfileStageConfig {
 
 /** Create chat (with ranking discussion) stage. */
 export function createChatStage(
-  name = "Group chat",
+  name = "Group discussion",
   ratingsToDiscuss: { item1: ItemName; item2: ItemName }[] = []
 ): GroupChatStageConfig {
   return {
@@ -115,6 +116,9 @@ export function createRevealVotedStage(
 export function createLostAtSeaModuleStages(numPairs = 5): StageConfig[] {
   const stages: StageConfig[] = [];
 
+  // Add introduction
+  stages.push(createInfoStage("Welcome to the experiment", LAS_INTRO_DESCRIPTION, LAS_INTRO_HTML));
+  
   const middleIndex = Math.ceil(ITEM_NAMES.length / 2);
 
   // Take random items from the first half for the individual tasks.
@@ -130,23 +134,36 @@ export function createLostAtSeaModuleStages(numPairs = 5): StageConfig[] {
     (pair, index) => getRatingQuestionFromPair(pair, index)
   );
 
-  stages.push(createSurveyStage("Individual task", "Complete an individual task.", INDIVIDUAL_QUESTIONS));
+  stages.push(createSurveyStage("Initial survival task", LAS_INITIAL_TASK_DESCRIPTION, INDIVIDUAL_QUESTIONS));
+
+  // Add group chat descriptor
+  stages.push(createInfoStage("Group discussion introduction", LAS_GROUP_INTRO_DESCRIPTION, LAS_GROUP_INTRO_HTML));
+
 
   // Add chat with individual item pairs as discussion
   stages.push(
     createChatStage(
-      "Group chat",
+      "Group discussion",
       INDIVIDUAL_ITEM_PAIRS.map(([i1, i2]) => ({ item1: i1, item2: i2 }))
     )
   );
 
-  stages.push(createSurveyStage("Individual task (updated)", "Redo the task", INDIVIDUAL_QUESTIONS));
+  stages.push(createSurveyStage("Willingness to lead survey", LAS_WTL_DESCRIPTION, LAS_WTL_SURVEY));
+  stages.push(createSurveyStage("Individual task (updated)", LAS_REDO_TASK_DESCRIPTION, INDIVIDUAL_QUESTIONS));
+  stages.push(createVoteForLeaderStage("Representative election", LAS_LEADER_ELECTION_DESCRIPTION));
 
-  // Add leader survey
+
+  // Add leader task
   const LEADER_QUESTIONS: RatingQuestionConfig[] = LEADER_ITEM_PAIRS.map(
     (pair, index) => getRatingQuestionFromPair(pair, index)
   );
 
+  stages.push(createSurveyStage("Leader task", LAS_LEADER_TASK_DESCRIPTION, LEADER_QUESTIONS));
+
+  stages.push(createRevealVotedStage("Representative reveal", LAS_LEADER_REVEAL_DESCRIPTION))
+
+  // Final survey
+  stages.push(createSurveyStage("Final survey", LAS_FINAL_SURVEY_DESCRIPTION, LAS_FINAL_SURVEY));
   stages.push(createSurveyStage("Leader task", "Now, redo the task as if you were the leader.", LEADER_QUESTIONS));
 
   return stages;

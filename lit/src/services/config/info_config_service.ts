@@ -1,8 +1,8 @@
-import { computed, get, observable, makeObservable, toJS } from "mobx";
+import { computed, makeObservable, observable } from "mobx";
 
 import { Service } from "../service";
 
-import { InfoStageConfig, StageKind } from "@llm-mediation-experiments/utils";
+import { InfoStageConfig } from "@llm-mediation-experiments/utils";
 
 /** Manages metadata for info stage config. */
 export class InfoConfigService extends Service {
@@ -18,7 +18,7 @@ export class InfoConfigService extends Service {
   }
 
   @computed get description() {
-    return this.stage?.description;
+    return this.stage?.description ?? '';
   }
 
   @computed get content() {
@@ -36,7 +36,7 @@ export class InfoConfigService extends Service {
       this.stage.description = description;
     }
   }
-  
+
   updateContent(content: string) {
     if (this.stage) {
       this.stage.infoLines = [content];

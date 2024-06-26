@@ -15,7 +15,7 @@ export const STAGE_DESCRIPTION_VOTE = "Choose a participant leader";
 export const STAGE_DESCRIPTION_REVEAL = "Show leader voting results";
 
 export const MODULE_DESCRIPTION_LAS =
-  "Includes one pairwise Lost at Sea task, a chat, another pairwise task, and a final leader task";
+  "An implementation of the Lost at Sea task (Born 2022) with pairwise elements.";
 export const MODULE_DESCRIPTION_LEADER =
   "Includes voting stage and reveal stage for choosing a participant leader";
 

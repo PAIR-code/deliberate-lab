@@ -1,9 +1,8 @@
 import "../../pair-components/textarea";
 
-import { observable } from "mobx";
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "lit/decorators.js";
 
 import { core } from "../../core/core";
 import { TOSConfigService } from "../../services/config/tos_config_service";
@@ -45,7 +44,7 @@ export class TOSConfig extends MobxLitElement {
       
       <pr-textarea
         label="Stage description"
-        placeholder="Stage description (optional)"
+        placeholder="Stage description"
         variant="outlined"
         .value=${this.tosConfig.description}
         @input=${handleDescriptionInput}

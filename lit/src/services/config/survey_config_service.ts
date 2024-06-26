@@ -1,11 +1,11 @@
-import { computed, get, observable, makeObservable, toJS } from "mobx";
+import { computed, makeObservable, observable } from "mobx";
 
 import { Service } from "../service";
 
 import {
-  SurveyStageConfig,
+  QuestionConfig,
   SurveyQuestionKind,
-  QuestionConfig
+  SurveyStageConfig
 } from "@llm-mediation-experiments/utils";
 
 /** Manages metadata for survey stage config. */
@@ -22,7 +22,7 @@ export class SurveyConfigService extends Service {
   }
 
   @computed get description() {
-    return this.stage?.description;
+    return this.stage?.description ?? '';
   }
 
   @computed get questions() {
@@ -40,7 +40,7 @@ export class SurveyConfigService extends Service {
       this.stage.description = description;
     }
   }
-  
+
   addScaleQuestion(
     questionText = "Question", lowerBound = "0/10", upperBound = "10/10"
   ) {
