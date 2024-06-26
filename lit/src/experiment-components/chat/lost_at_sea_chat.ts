@@ -49,7 +49,7 @@ export class RankingChat extends MobxLitElement {
         </progress-stage-waiting>
       `;
     }
-    const disableInput = !this.participantService.isCurrentStage;
+    const hasChatEnded = this.stage.chatConfig.ratingsToDiscuss.length <= this.chatService.getCurrentRatingIndex(); 
 
     const numDiscussions = this.stage?.chatConfig.ratingsToDiscuss?.length;
     const showNext =
@@ -61,7 +61,7 @@ export class RankingChat extends MobxLitElement {
           ${this.renderParticipants()}
           ${this.renderTask()}
         </div>
-        <chat-interface .disableInput=${disableInput}></chat-interface>
+        <chat-interface .disableInput=${hasChatEnded}></chat-interface>
       </div>
       <stage-footer .disabled=${!showNext}>
       </stage-footer>

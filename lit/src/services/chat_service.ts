@@ -121,8 +121,13 @@ export class ChatService extends Service {
   }
 
   getCurrentRatingIndex() {
+    // Default return value when chat is still loading
+    if (!this.chat) {
+      return -1;
+    }
+
     const stageData = this.sp.experimentService.getPublicStageData(
-      this.chat?.stageName!
+      this.chat.stageName
     );
     if (!stageData || stageData.kind !== StageKind.GroupChat) {
       return -1;
