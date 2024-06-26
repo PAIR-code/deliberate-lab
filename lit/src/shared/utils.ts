@@ -3,11 +3,14 @@
  */
 
 import {
+  ChatContext,
   ChatKind,
   GroupChatStageConfig,
   ITEM_NAMES,
   InfoStageConfig,
   ItemName,
+  MediatorConfig,
+  MediatorKind,
   ProfileStageConfig,
   QuestionConfig,
   RatingQuestionConfig,
@@ -25,6 +28,7 @@ import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
 import { v4 as uuidv4 } from "uuid";
 import { Snapshot } from "./types";
+import { GEMINI_DEFAULT_MODEL, PROMPT_INSTRUCTIONS_CHAT_MEDIATOR } from "./prompts";
 
 /** Generate unique id. */
 export function generateId(): string {
@@ -87,6 +91,23 @@ export function createChatStage(
       ratingsToDiscuss
     },
     mediators: [],
+  };
+}
+
+/** Create default LLM mediator. */
+export function createMediator(
+  name = "LLM Mediator",
+  avatar = "🤖",
+): MediatorConfig {
+  return {
+    id: generateId(),
+    name,
+    avatar,
+    model: GEMINI_DEFAULT_MODEL,
+    prompt: PROMPT_INSTRUCTIONS_CHAT_MEDIATOR,
+    chatContext: ChatContext.All,
+    kind: MediatorKind.Automatic,
+    filterMediatorMessages: true,
   };
 }
 

@@ -5,6 +5,7 @@ import "../../pair-components/textarea";
 import "../../pair-components/tooltip";
 
 import "../info/info_config";
+import "../mediators/mediator_config";
 import "../survey/survey_config";
 import "../tos/tos_config";
 import "./experiment_config_menu";
@@ -19,6 +20,7 @@ import {
   ExperimentConfigService
 } from "../../services/config/experiment_config_service";
 import { InfoConfigService } from "../../services/config/info_config_service";
+import { MediatorConfigService } from "../../services/config/mediator_config_service";
 import {
   SurveyConfigService
 } from "../../services/config/survey_config_service";
@@ -54,6 +56,7 @@ export class ExperimentConfig extends MobxLitElement {
 
   private readonly experimentConfig = core.getService(ExperimentConfigService);
   private readonly infoConfig = core.getService(InfoConfigService);
+  private readonly mediatorConfig = core.getService(MediatorConfigService);
   private readonly tosConfig = core.getService(TOSConfigService);
   private readonly surveyConfig = core.getService(SurveyConfigService);
 
@@ -135,11 +138,14 @@ export class ExperimentConfig extends MobxLitElement {
           ${this.renderCurrentStageNameField()}
         `;
       case StageKind.GroupChat:
+        this.mediatorConfig.reset();
+        this.mediatorConfig.mediators = currentStage.mediators;
         if (currentStage.chatConfig.kind !== ChatKind.ChatAboutItems) {
           return html`
             ${this.renderStageInfo(StageKind.GroupChat, STAGE_DESCRIPTION_CHAT)}
             <div class="error">${STAGE_DESCRIPTION_CHAT_SIMPLE}</div>
             ${this.renderCurrentStageNameField()}
+            <mediator-config></mediator-config>
           `;
         }
         return html`
@@ -151,6 +157,7 @@ export class ExperimentConfig extends MobxLitElement {
           ${isLostAtSeaModuleStage(currentStage) ?
             html`<code>${JSON.stringify(currentStage.chatConfig)}</code>`
             : nothing}
+          <mediator-config></mediator-config>
           `;
       case StageKind.VoteForLeader:
         return html`
