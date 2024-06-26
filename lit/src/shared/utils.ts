@@ -33,27 +33,29 @@ export function generateId(): string {
 
 /** Create info stage. */
 export function createInfoStage(
-  name = "Info", content = "Placeholder info"
+  name = "Info", description = "Description", content = "Placeholder info"
 ): InfoStageConfig {
   const infoLines = [content];
-  return { kind: StageKind.Info, name, infoLines };
+  return { kind: StageKind.Info, name, description, infoLines };
 }
 
 /** Create TOS stage. */
 export function createTOSStage(
   name = "Terms of Service",
+  description = "Acknowledge the terms of service to proceed.",
   content = "- Placeholder term 1\n- Placeholder term 2\n- Placeholder term 3",
 ): TermsOfServiceStageConfig {
   const tosLines = [content];
-  return { kind: StageKind.TermsOfService, name, tosLines };
+  return { kind: StageKind.TermsOfService, name, description, tosLines };
 }
 
 /** Create survey stage. */
 export function createSurveyStage(
   name = "Survey",
+  description = "",
   questions: QuestionConfig[] = []
 ): SurveyStageConfig {
-  return { kind: StageKind.TakeSurvey, name, questions };
+  return { kind: StageKind.TakeSurvey, name, description, questions };
 }
 
 /** Create profile stage. */
@@ -79,9 +81,10 @@ export function createChatStage(
 
 /** Create leader vote (election) stage. */
 export function createVoteForLeaderStage(
-  name = "Leader election"
+  name = "Leader election",
+  description = "",
 ): VoteForLeaderStageConfig {
-  return { kind: StageKind.VoteForLeader, name };
+  return { kind: StageKind.VoteForLeader, name, description };
 }
 
 /**
@@ -94,9 +97,10 @@ export function createVoteForLeaderStage(
  * election.
  */
 export function createRevealVotedStage(
-  name = "Reveal"
+  name = "Reveal",
+  description = "",
 ): RevealVotedStageConfig {
-  return { kind: StageKind.RevealVoted, name, pendingVoteStageName: "" };
+  return { kind: StageKind.RevealVoted, name, description, pendingVoteStageName: "" };
 }
 
 /**
@@ -126,7 +130,7 @@ export function createLostAtSeaModuleStages(numPairs = 5): StageConfig[] {
     (pair, index) => getRatingQuestionFromPair(pair, index)
   );
 
-  stages.push(createSurveyStage("Individual task", INDIVIDUAL_QUESTIONS));
+  stages.push(createSurveyStage("Individual task", "Complete an individual task.", INDIVIDUAL_QUESTIONS));
 
   // Add chat with individual item pairs as discussion
   stages.push(
@@ -136,14 +140,14 @@ export function createLostAtSeaModuleStages(numPairs = 5): StageConfig[] {
     )
   );
 
-  stages.push(createSurveyStage("Individual task (updated)", INDIVIDUAL_QUESTIONS));
+  stages.push(createSurveyStage("Individual task (updated)", "Redo the task", INDIVIDUAL_QUESTIONS));
 
   // Add leader survey
   const LEADER_QUESTIONS: RatingQuestionConfig[] = LEADER_ITEM_PAIRS.map(
     (pair, index) => getRatingQuestionFromPair(pair, index)
   );
 
-  stages.push(createSurveyStage("Leader task", LEADER_QUESTIONS));
+  stages.push(createSurveyStage("Leader task", "Now, redo the task as if you were the leader.", LEADER_QUESTIONS));
 
   return stages;
 }

@@ -17,6 +17,10 @@ export class InfoConfigService extends Service {
     return this.stage?.name;
   }
 
+  @computed get description() {
+    return this.stage?.description;
+  }
+
   @computed get content() {
     return this.stage?.infoLines[0];
   }
@@ -27,6 +31,12 @@ export class InfoConfigService extends Service {
     }
   }
 
+  updateDescription(description: string) {
+    if (this.stage) {
+      this.stage.description = description;
+    }
+  }
+  
   updateContent(content: string) {
     if (this.stage) {
       this.stage.infoLines = [content];

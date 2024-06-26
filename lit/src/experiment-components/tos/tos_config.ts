@@ -23,6 +23,11 @@ export class TOSConfig extends MobxLitElement {
       this.tosConfig.updateName(value);
     };
 
+    const handleDescriptionInput = (e: Event) => {
+      const value = (e.target as HTMLTextAreaElement).value;
+      this.tosConfig.updateDescription(value);
+    };
+
     const handleContentInput = (e: Event) => {
       const value = (e.target as HTMLTextAreaElement).value;
       this.tosConfig.updateContent(value);
@@ -37,6 +42,16 @@ export class TOSConfig extends MobxLitElement {
         @input=${handleNameInput}
       >
       </pr-textarea>
+      
+      <pr-textarea
+        label="Stage description"
+        placeholder="Stage description (optional)"
+        variant="outlined"
+        .value=${this.tosConfig.description}
+        @input=${handleDescriptionInput}
+      >
+      </pr-textarea>
+
       <pr-textarea
         label="Content (in Git-Flavored Markdown)"
         placeholder="Add Markdown terms of service here"

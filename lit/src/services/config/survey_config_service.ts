@@ -21,6 +21,10 @@ export class SurveyConfigService extends Service {
     return this.stage?.name;
   }
 
+  @computed get description() {
+    return this.stage?.description;
+  }
+
   @computed get questions() {
     return this.stage?.questions ?? [];
   }
@@ -31,6 +35,12 @@ export class SurveyConfigService extends Service {
     }
   }
 
+  updateDescription(description: string) {
+    if (this.stage) {
+      this.stage.description = description;
+    }
+  }
+  
   addScaleQuestion(
     questionText = "Question", lowerBound = "0/10", upperBound = "10/10"
   ) {

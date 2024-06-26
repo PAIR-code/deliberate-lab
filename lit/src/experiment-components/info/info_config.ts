@@ -22,6 +22,11 @@ export class InfoConfig extends MobxLitElement {
       const value = (e.target as HTMLTextAreaElement).value;
       this.infoConfig.updateName(value);
     };
+    
+    const handleDescriptionInput = (e: Event) => {
+      const value = (e.target as HTMLTextAreaElement).value;
+      this.infoConfig.updateDescription(value);
+    };
 
     const handleContentInput = (e: Event) => {
       const value = (e.target as HTMLTextAreaElement).value;
@@ -37,6 +42,16 @@ export class InfoConfig extends MobxLitElement {
         @input=${handleNameInput}
       >
       </pr-textarea>
+
+      <pr-textarea
+      label="Stage description"
+      placeholder="Stage description (optional)"
+      variant="outlined"
+      .value=${this.infoConfig.description}
+      @input=${handleDescriptionInput}
+      >
+      </pr-textarea>
+
       <pr-textarea
         label="Content (in Git-Flavored Markdown)"
         placeholder="Add Markdown content here"

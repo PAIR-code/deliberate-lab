@@ -29,6 +29,11 @@ export class SurveyConfig extends MobxLitElement {
       this.surveyConfig.updateName(value);
     };
 
+    const handleDescriptionInput = (e: Event) => {
+      const value = (e.target as HTMLTextAreaElement).value;
+      this.surveyConfig.updateDescription(value);
+    };
+
     const addQuestion = () => {
       this.surveyConfig.addScaleQuestion();
     }
@@ -42,6 +47,16 @@ export class SurveyConfig extends MobxLitElement {
         @input=${handleNameInput}
       >
       </pr-textarea>
+      
+      <pr-textarea
+        label="Stage description"
+        placeholder="Stage description (optional)"
+        variant="outlined"
+        .value=${this.surveyConfig.description}
+        @input=${handleDescriptionInput}
+      >
+      </pr-textarea>
+
       ${this.surveyConfig.questions.map(
         (question, index) => this.renderRatingQuestion(question, index))}
 
