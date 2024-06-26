@@ -57,6 +57,8 @@ export class ProfilePreview extends MobxLitElement {
       return "";
     }
 
+    const currentStage = this.routerService.activeRoute.params["stage"];
+
     return html`
       <div class="profile">
         <profile-avatar .emoji=${this.profile.avatarUrl}></profile-avatar>

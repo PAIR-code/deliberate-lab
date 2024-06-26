@@ -34,7 +34,7 @@ export function generateId(): string {
 
 /** Create info stage. */
 export function createInfoStage(
-  name = "Info", description = "", content = "Placeholder info"
+  name = "Info", description = "Info description", content = "Placeholder info"
 ): InfoStageConfig {
   const infoLines = [content];
   return { kind: StageKind.Info, name, description, infoLines };
@@ -42,7 +42,7 @@ export function createInfoStage(
 
 /** Create TOS stage. */
 export function createTOSStage(
-  name = "Terms of Service",
+  name = "Terms of service",
   description = "Acknowledge the terms of service to proceed.",
   content = "- Placeholder term 1\n- Placeholder term 2\n- Placeholder term 3",
 ): TermsOfServiceStageConfig {
@@ -53,7 +53,7 @@ export function createTOSStage(
 /** Create survey stage. */
 export function createSurveyStage(
   name = "Survey",
-  description = "",
+  description = "Survey description",
   questions: QuestionConfig[] = []
 ): SurveyStageConfig {
   return { kind: StageKind.TakeSurvey, name, description, questions };
@@ -61,7 +61,8 @@ export function createSurveyStage(
 
 /** Create profile stage. */
 export function createProfileStage(name = "Set profile"): ProfileStageConfig {
-  return { kind: StageKind.SetProfile, name };
+  // Bug: Experiment can't be created with a profile description.
+  return { kind: StageKind.SetProfile, name};
 }
 
 /** Create chat (with ranking discussion) stage. */
@@ -83,7 +84,7 @@ export function createChatStage(
 /** Create leader vote (election) stage. */
 export function createVoteForLeaderStage(
   name = "Leader election",
-  description = "",
+  description = "Vote for the leader here.",
 ): VoteForLeaderStageConfig {
   return { kind: StageKind.VoteForLeader, name, description };
 }
@@ -99,7 +100,7 @@ export function createVoteForLeaderStage(
  */
 export function createRevealVotedStage(
   name = "Reveal",
-  description = "",
+  description = "This is the outcome of the vote.",
 ): RevealVotedStageConfig {
   return { kind: StageKind.RevealVoted, name, description, pendingVoteStageName: "" };
 }

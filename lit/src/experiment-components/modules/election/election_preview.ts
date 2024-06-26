@@ -39,8 +39,12 @@ export class ElectionPreview extends MobxLitElement {
     const { ready, notReady } =
       this.experimentService.getParticipantsReadyForStage(currentStage);
 
+    const description = this.experimentService.stageConfigMap[currentStage].description;
+    const descriptionContent = description ? html`<div class="description">${description}</div>` : '';
     if (notReady.length > 0) {
       return html`
+        ${descriptionContent}
+
         <progress-stage-waiting .stageName=${currentStage}>
         </progress-stage-waiting>
       `;
@@ -50,6 +54,8 @@ export class ElectionPreview extends MobxLitElement {
       this.experimentService.getParticipantProfiles().length - 1;
 
     return html`
+      ${descriptionContent}
+
       <div class="election-wrapper">
         ${this.experimentService.getParticipantProfiles()
           .sort((p1, p2) => p1.publicId.localeCompare(p2.publicId))
