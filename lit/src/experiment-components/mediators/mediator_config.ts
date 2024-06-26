@@ -6,7 +6,7 @@ import "@material/web/radio/radio.js";
 
 import { observable } from "mobx";
 import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html } from "lit";
+import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
@@ -22,9 +22,9 @@ import { LLM_MEDIATOR_AVATARS } from "../../shared/constants";
 
 import { styles } from "./mediator_config.scss";
 
-/** LLM mediator config */
-@customElement("mediator-config")
-export class MediatorConfigComponent extends MobxLitElement {
+/** LLM mediators config */
+@customElement("mediators-config")
+export class Mediators extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly mediatorConfigService = core.getService(MediatorConfigService);
@@ -53,11 +53,7 @@ export class MediatorConfigComponent extends MobxLitElement {
           ${mediator.name}
         </summary>
         <div class="mediator-config">
-          ${this.renderName(mediator)}
-          ${this.renderModel(mediator)}
-          ${this.renderAvatars(mediator)}
-          ${this.renderKind(mediator)}
-          ${this.renderPrompt(mediator)}
+          <mediator-config .mediator=${mediator}></mediator-config>
           <pr-button color="error" variant="default" @click=${onDelete}>
             Delete mediator
           </pr-button>
@@ -65,11 +61,36 @@ export class MediatorConfigComponent extends MobxLitElement {
       </details>
     `;
   }
+}
+
+/** LLM mediator config */
+@customElement("mediator-config")
+export class Mediator extends MobxLitElement {
+  static override styles: CSSResultGroup = [styles];
+
+  private readonly mediatorConfigService = core.getService(MediatorConfigService);
+
+  @property() mediator: MediatorConfig|null = null;
+  @property() showKind = true;
+
+  override render() {
+    if (this.mediator === null) {
+      return nothing;
+    }
+
+    return html`
+      ${this.renderName(this.mediator)}
+      ${this.renderModel(this.mediator)}
+      ${this.renderAvatars(this.mediator)}
+      ${this.showKind ? this.renderKind(this.mediator) : nothing}
+      ${this.renderPrompt(this.mediator)}
+    `;
+  }
 
   private renderName(mediator: MediatorConfig) {
     const handleNameInput = (e: Event) => {
       const name = (e.target as HTMLTextAreaElement).value;
-      this.mediatorConfigService.updateMediator(mediator.id, {...mediator, name });
+      mediator.name = name;
     };
 
     return html`
@@ -87,7 +108,7 @@ export class MediatorConfigComponent extends MobxLitElement {
   private renderPrompt(mediator: MediatorConfig) {
     const handlePromptInput = (e: Event) => {
       const prompt = (e.target as HTMLTextAreaElement).value;
-      this.mediatorConfigService.updateMediator(mediator.id, {...mediator, prompt });
+      mediator.prompt = prompt;
     };
 
     return html`
@@ -107,14 +128,10 @@ export class MediatorConfigComponent extends MobxLitElement {
       const value = (e.target as HTMLInputElement).value;
       switch (value) {
         case "1":
-          this.mediatorConfigService.updateMediator(
-            mediator.id, {...mediator, model: "gemini-1.5-pro-latest" }
-          );
+          mediator.model = "gemini-1.5-pro-latest";
           return;
         case "2":
-          this.mediatorConfigService.updateMediator(
-            mediator.id, {...mediator, model: "gemini-1.5-flash" }
-          );
+          mediator.model = "gemini-1.5-flash";
           return;
         default:
           return;
@@ -162,14 +179,10 @@ export class MediatorConfigComponent extends MobxLitElement {
       const value = (e.target as HTMLInputElement).value;
       switch (value) {
         case "1":
-          this.mediatorConfigService.updateMediator(
-            mediator.id, {...mediator, kind: MediatorKind.Automatic }
-          );
+          mediator.kind = MediatorKind.Automatic;
           return;
         case "2":
-          this.mediatorConfigService.updateMediator(
-            mediator.id, {...mediator, kind: MediatorKind.Manual }
-          )
+          mediator.kind = MediatorKind.Manual;
         default:
           return;
       }
@@ -215,8 +228,7 @@ export class MediatorConfigComponent extends MobxLitElement {
     const handleAvatarClick = (e: Event) => {
       const value = Number((e.target as HTMLInputElement).value);
       const avatar = LLM_MEDIATOR_AVATARS[value];
-
-      this.mediatorConfigService.updateMediator(mediator.id, {...mediator, avatar });
+      mediator.avatar = avatar;
     };
 
     const renderAvatarRadio = (emoji: string, index: number) => {
@@ -251,6 +263,7 @@ export class MediatorConfigComponent extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "mediator-config": MediatorConfigComponent;
+    "mediators-config": Mediators;
+    "mediator-config": Mediator;
   }
 }

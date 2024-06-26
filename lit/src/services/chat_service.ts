@@ -206,40 +206,39 @@ export class ChatService extends Service {
     // For all automatic mediators, generate messages
     this.mediators.forEach(mediator => {
       if (mediator.kind === MediatorKind.Automatic) {
-        this.sendLLMMediatorMessage(mediator.id, canSend);
+        this.sendLLMMediatorMessage(mediator, canSend);
       }
     })
   }
 
   /** Send LLM-generated mediator message. */
-  async sendLLMMediatorMessage(mediatorId: string, sendCondition: () => boolean) {
-    const mediator = this.mediators.find(mediator => mediator.id === mediatorId);
+  async sendLLMMediatorMessage(
+    mediator: MediatorConfig,
+    sendCondition: () => boolean = () => { return true; }
+  ) {
     const profiles = this.sp.experimentService.getParticipantProfiles();
+    const prompt = createChatMediatorPrompt(
+      mediator.prompt,
+      this.messages,
+      profiles.map(p => p.publicId)
+    );
 
-    if (mediator) {
-      const prompt = createChatMediatorPrompt(
-        mediator.prompt,
-        this.messages,
-        profiles.map(p => p.publicId)
-      );
+    await this.sp.llmService.call(prompt).then(modelResponse => {
+      if (sendCondition()) {
+        let answer = modelResponse.text;
 
-      await this.sp.llmService.call(prompt).then(modelResponse => {
-        if (sendCondition()) {
-          let answer = modelResponse.text;
-
-          // Replace participant IDs with names
-          // TODO: Refactor this logic elsewhere
-          for (const participant of profiles) {
-            const id = `{${participant.publicId!}}`;
-            while (answer.includes(id)) {
-              answer = answer.replace(id, participant.name!);
-            }
+        // Replace participant IDs with names
+        // TODO: Refactor this logic elsewhere
+        for (const participant of profiles) {
+          const id = `{${participant.publicId!}}`;
+          while (answer.includes(id)) {
+            answer = answer.replace(id, participant.name!);
           }
-
-          this.sendMediatorMessage(answer, mediator.name, mediator.avatar);
         }
-      })
-    }
+
+        this.sendMediatorMessage(answer, mediator.name, mediator.avatar);
+      }
+    });
   }
 
   /** Send a message as a mediator.

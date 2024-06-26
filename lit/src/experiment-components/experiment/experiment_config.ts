@@ -145,7 +145,7 @@ export class ExperimentConfig extends MobxLitElement {
             ${this.renderStageInfo(StageKind.GroupChat, STAGE_DESCRIPTION_CHAT)}
             <div class="error">${STAGE_DESCRIPTION_CHAT_SIMPLE}</div>
             ${this.renderCurrentStageNameField()}
-            <mediator-config></mediator-config>
+            <mediators-config></mediators-config>
           `;
         }
         return html`
@@ -157,7 +157,7 @@ export class ExperimentConfig extends MobxLitElement {
           ${isLostAtSeaModuleStage(currentStage) ?
             html`<code>${JSON.stringify(currentStage.chatConfig)}</code>`
             : nothing}
-          <mediator-config></mediator-config>
+          <mediators-config></mediators-config>
           `;
       case StageKind.VoteForLeader:
         return html`
