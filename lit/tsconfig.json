@@ -1,5 +1,10 @@
 {
   "compilerOptions": {
+    "plugins": [
+      {
+        "name": "ts-lit-plugin"
+      }
+    ],
     "outDir": "./dist/",
     "noImplicitAny": true,
     "module": "es6",

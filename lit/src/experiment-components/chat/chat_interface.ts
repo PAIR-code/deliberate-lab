@@ -37,7 +37,7 @@ export class ChatInterface extends MobxLitElement {
     return html`
       <div class="chat-message-wrapper">
         <chat-message
-          .chatMessage=${chatMessage}
+          .chatMessage=${chatMessage}>
         </chat-message>
       </div>
     `;

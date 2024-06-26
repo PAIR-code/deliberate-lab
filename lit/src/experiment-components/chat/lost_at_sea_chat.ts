@@ -60,6 +60,7 @@ export class RankingChat extends MobxLitElement {
         <div class="panel">
           ${this.renderParticipants()}
           ${this.renderTask()}
+          ${this.renderEndDiscussion()}
         </div>
         <chat-interface .disableInput=${hasChatEnded}></chat-interface>
       </div>
@@ -112,9 +113,7 @@ export class RankingChat extends MobxLitElement {
     const pair = 
       this.stage?.chatConfig.ratingsToDiscuss[Math.min(index, length - 1)];
 
-    const readyToEnd = this.experimentService.getParticipantReadyToEndChat(
-      this.stage!.name, this.participantService.profile!.publicId,
-    );
+ 
 
     if (index >= length) {
       return html`
@@ -132,6 +131,19 @@ export class RankingChat extends MobxLitElement {
           ${pair ? this.renderItem(pair!.item1) : nothing}
           ${pair ? this.renderItem(pair!.item2) : nothing}
         </div>
+      </div>
+    `;
+  }
+
+  private renderEndDiscussion() {
+    const index = this.chatService.getCurrentRatingIndex();
+    const length = this.stage!.chatConfig.ratingsToDiscuss.length;
+    const readyToEnd = this.experimentService.getParticipantReadyToEndChat(
+      this.stage!.name, this.participantService.profile!.publicId,
+    );
+
+    return html`
+      <div class="panel-item">
         <pr-button
           color="tertiary"
           variant="tonal"

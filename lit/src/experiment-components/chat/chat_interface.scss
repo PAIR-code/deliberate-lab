@@ -6,6 +6,7 @@
   flex-grow: 1;
   gap: common.$spacing-xl;
   justify-content: end;
+  overflow: hidden; /* Prevent overflow & force children to handle it by scrolling or wrapping */
 }
 
 .chat-content {
@@ -72,7 +73,6 @@
 
 .input-row-wrapper {
   @include common.flex-row-align-center;
-  bottom: common.$footer-height;
   gap: common.$spacing-xl;
   padding: 0 common.$spacing-large;
   position: sticky;

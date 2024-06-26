@@ -22,6 +22,7 @@
     "process": "^0.11.10",
     "sass": "^1.74.1",
     "sass-loader": "^14.1.1",
+    "ts-lit-plugin": "^2.0.2",
     "ts-loader": "^9.5.1",
     "typescript": "^5.4.4",
     "webpack": "^5.91.0",
