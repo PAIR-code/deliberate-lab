@@ -87,6 +87,11 @@ export class ExperimentConfig extends MobxLitElement {
       this.experimentConfig.updateStageName(value);
     }
 
+    const updateCurrentStageDescription = (e: Event) => {
+      const value = (e.target as HTMLTextAreaElement).value;
+      this.experimentConfig.updateStageDescription(value);
+    }
+
     return html`
       <pr-textarea
         label="Stage name"
@@ -94,6 +99,15 @@ export class ExperimentConfig extends MobxLitElement {
         variant="outlined"
         .value=${this.experimentConfig.currentStage?.name ?? ""}
         @input=${updateCurrentStageName}
+      >
+      </pr-textarea>
+      
+      <pr-textarea
+        label="Stage description"
+        placeholder="Stage description"
+        variant="outlined"
+        .value=${this.experimentConfig.currentStage?.description ?? ""}
+        @input=${updateCurrentStageDescription}
       >
       </pr-textarea>
     `;
@@ -339,7 +353,9 @@ export class ExperimentConfig extends MobxLitElement {
 
   private renderBottomActionButtons() {
     const onCreateExperiment = async () => {
-      if (this.experimentConfig.getExperimentErrors().length > 0) {
+      const errors = this.experimentConfig.getExperimentErrors();
+      if (errors.length > 0) {
+        console.log(errors);
         return;
       }
 

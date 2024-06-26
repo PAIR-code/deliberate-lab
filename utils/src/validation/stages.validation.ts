@@ -46,6 +46,7 @@ export const ProfileStageConfigData = Type.Object(
   {
     kind: Type.Literal(StageKind.SetProfile),
     name: Type.String({ minLength: 1 }),
+    description: Type.Optional(Type.String({ minLength: 1})),
   },
   strict,
 );
@@ -73,6 +74,7 @@ export const GroupChatStageConfigData = Type.Object(
   {
     kind: Type.Literal(StageKind.GroupChat),
     name: Type.String({ minLength: 1 }),
+    description: Type.Optional(Type.String({ minLength: 1})),
     chatId: Type.String({ minLength: 1 }),
     chatConfig: Type.Union([ChatAboutItemsConfigData]),
   },
