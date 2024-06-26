@@ -46,7 +46,7 @@ export class ParticipantService extends Service {
   }
 
   isCurrentStage(
-    stageName = this.sp.routerService.activeRoute.params["stage"]
+    stageName: string = this.sp.routerService.activeRoute.params["stage"]
   ) {
     return this.profile?.workingOnStageName === stageName;
   }

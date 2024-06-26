@@ -33,6 +33,7 @@ $bubble-radius-small: common.$spacing-small;
   border-radius: $bubble-radius $bubble-radius $bubble-radius
     $bubble-radius-small;
   color: var(--md-sys-color-on-surface-container);
+  overflow-wrap: anywhere;
 }
 
 .current-user {
@@ -48,6 +49,7 @@ $bubble-radius-small: common.$spacing-small;
     border-radius: $bubble-radius $bubble-radius $bubble-radius-small
       $bubble-radius;
     color: var(--md-sys-color-on-secondary-container);
+    overflow-wrap: anywhere;
   }
 }
 

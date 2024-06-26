@@ -29,7 +29,9 @@ export class Progress extends MobxLitElement {
 
     return html`
       ${this.showAvatars ?
-        completed.map(participant => this.renderAvatar(participant)) :
+        completed
+          .sort((p1, p2) => p1.publicId.localeCompare(p2.publicId))
+          .map(participant => this.renderAvatar(participant)) :
         nothing}
       <div>
         ${completed.length} of ${completed.length + notCompleted.length}

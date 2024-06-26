@@ -28,6 +28,14 @@ export class ProfilePreview extends MobxLitElement {
 
   @property() profile: ParticipantProfileExtended|null = null;
 
+  /** Copy a link to this participant's experiment view to the clipboard */ 
+  async copyParticipantLink() {
+    const link = `${window.location.origin}/#/${this.experimentService.experiment?.id}/${this.profile?.privateId}`;
+
+    await navigator.clipboard.writeText(link);
+    alert("Link copied to clipboard!");
+  }
+
   override render() {
     if (!this.profile) {
       return nothing;
@@ -72,12 +80,22 @@ export class ProfilePreview extends MobxLitElement {
       <div><span>Public ID:</span> ${this.profile.publicId}</div>
       <div><span>Private ID:</span> ${this.profile.privateId}</div>
 
-      <pr-button
-        color="secondary"
-        variant="tonal"
-        @click=${handlePreview}>
-        Preview as participant
-      </pr-button>
+      <div class="row" >
+        <pr-button
+          color="primary"
+          variant="tonal"
+          @click=${handlePreview}>
+          Preview as participant
+        </pr-button>
+
+        <pr-button
+          color="secondary"
+          variant="tonal"
+          @click=${this.copyParticipantLink}
+        >
+          Copy participant link
+        </pr-button>
+      </div>
     `;
   }
 }

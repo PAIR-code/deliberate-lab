@@ -2,8 +2,7 @@ import "../../pair-components/button";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
-import { Ref, createRef, ref } from "lit/directives/ref.js";
+import { customElement, property } from "lit/decorators.js";
 
 import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
@@ -30,6 +29,7 @@ export class Settings extends MobxLitElement {
         ${this.renderColorThemeSection()}
         ${this.renderTextSizeSection()}
         ${this.renderAccountSection()}
+        ${this.renderAppVersionSection()}
       </div>
     `;
   }
@@ -192,6 +192,20 @@ export class Settings extends MobxLitElement {
             Log out
           </pr-button>
         </div>
+      </div>
+    `;
+  }
+
+  private renderAppVersionSection() {
+
+    return html`
+      <div class="section">
+        <h2>Webapp Version</h2>
+        <p><b>Branch:</b> ${GIT_BRANCH}</p>
+        <p><b>Commit:</b> 
+          <a href="https://github.com/PAIR-code/llm-mediation-experiments/commit/${GIT_COMMIT_HASH}" target="_blank">${GIT_VERSION}</a>
+        </p>
+        <p><b>Commit Date:</b> ${new Date(GIT_LAST_COMMIT_DATETIME)}</p>
       </div>
     `;
   }
