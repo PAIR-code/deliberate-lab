@@ -6,7 +6,6 @@ import "../progress/progress_stage_completed";
 import '@material/web/radio/radio.js';
 import '@material/web/slider/slider.js';
 
-import { observable } from "mobx";
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
@@ -86,7 +85,7 @@ export class SurveyPreview extends MobxLitElement {
       };
 
       this.participantService.updateSurveyStage(
-        this.participantService.profile?.workingOnStageName!,
+        this.participantService.profile!.workingOnStageName,
         [answer]
       );
     };
@@ -192,7 +191,7 @@ export class SurveyPreview extends MobxLitElement {
       };
 
       this.participantService.updateSurveyStage(
-        this.participantService.profile?.workingOnStageName!,
+        this.participantService.profile!.workingOnStageName,
         [answer]
       );
     };
@@ -233,7 +232,7 @@ export class SurveyPreview extends MobxLitElement {
       };
 
       this.participantService.updateSurveyStage(
-        this.participantService.profile?.workingOnStageName!,
+        this.participantService.profile!.workingOnStageName,
         [answer]
       );
     };

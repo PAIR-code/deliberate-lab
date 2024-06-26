@@ -70,6 +70,7 @@ export const createExperiment = onCall(async (request) => {
           name: null,
           avatarUrl: null,
           acceptTosTimestamp: null,
+          completedExperiment: null,
         };
 
         // Create the participant document
