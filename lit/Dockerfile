@@ -1,6 +1,6 @@
 FROM caddy:2.7-alpine
 
-# Copy webapp build output
+# Copy build output
 COPY ./dist /usr/share/caddy/html
 
 # Copy Caddy configuration file
