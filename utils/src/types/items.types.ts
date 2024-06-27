@@ -45,77 +45,77 @@ export type ItemName = (typeof ITEM_NAMES)[number];
 export const ITEMS: Record<ItemName, Item> = {
   sextant: {
     name: 'Sextant',
-    imageUrl: IMAGE_HEADER + 'sextant.jpeg',
+    imageUrl: IMAGE_HEADER + 'sextant.png',
     ranking: 15, // Useless without tables and chronometer.
   },
   shavingMirror: {
     name: 'Mirror',
-    imageUrl: IMAGE_HEADER + 'mirror.jpeg',
+    imageUrl: IMAGE_HEADER + 'mirror.png',
     ranking: 1,
   },
   mosquitoNetting: {
     name: 'Mosquito netting',
-    imageUrl: IMAGE_HEADER + 'netting.jpeg',
+    imageUrl: IMAGE_HEADER + 'netting.png',
     ranking: 14,
   },
   waterContainer: {
     name: 'Water (25L)',
-    imageUrl: IMAGE_HEADER + 'water.jpeg',
+    imageUrl: IMAGE_HEADER + 'water.png',
     ranking: 3,
   },
   armyRations: {
     name: 'Case of army rations',
-    imageUrl: IMAGE_HEADER + 'rations.jpeg',
+    imageUrl: IMAGE_HEADER + 'rations.png',
     ranking: 4,
   },
   pacificMaps: {
     name: 'Maps of the Atlantic Ocean',
-    imageUrl: IMAGE_HEADER + 'map.jpeg',
+    imageUrl: IMAGE_HEADER + 'map.png',
     ranking: 13,
   },
   floatingSeatCushion: {
     name: 'Floating seat cushion',
-    imageUrl: IMAGE_HEADER + 'cushion.jpeg',
+    imageUrl: IMAGE_HEADER + 'cushion.png',
     ranking: 9,
   },
   canOilMixture: {
     name: 'Can of oil/petrol (10L)',
-    imageUrl: IMAGE_HEADER + 'oil.jpeg',
+    imageUrl: IMAGE_HEADER + 'oil.png',
     ranking: 2,
   },
   transistorRadio: {
     name: 'Small transistor radio',
-    imageUrl: IMAGE_HEADER + 'radio.jpeg',
+    imageUrl: IMAGE_HEADER + 'radio.png',
     ranking: 12,
   },
   plasticSheeting: {
     name: 'Plastic sheeting',
-    imageUrl: IMAGE_HEADER + 'sheeting.jpeg',
+    imageUrl: IMAGE_HEADER + 'sheeting.png',
     ranking: 5,
   },
   sharkRepellent: {
     name: 'Can of shark repellent',
-    imageUrl: IMAGE_HEADER + 'repellent.jpeg',
+    imageUrl: IMAGE_HEADER + 'repellent.png',
     ranking: 10,
   },
   rubbingAlcohol: {
     name: 'Bottle of rubbing alcohol',
-    imageUrl: IMAGE_HEADER + 'rubbing_alcohol.jpeg',
+    imageUrl: IMAGE_HEADER + 'rubbing_alcohol.png',
     ranking: 11,
   },
   nylonRope: {
     name: 'Nylon rope (15 ft.)',
-    imageUrl: IMAGE_HEADER + 'rope.jpeg',
+    imageUrl: IMAGE_HEADER + 'rope.png',
     ranking: 8,
   },
   chocolateBars: {
     name: 'Chocolate bars (2 boxes)',
-    imageUrl: IMAGE_HEADER + 'chocolate.jpeg',
+    imageUrl: IMAGE_HEADER + 'chocolate.png',
     ranking: 6,
   },
   fishingKit: {
     name: 'A fishing kit & pole',
-    imageUrl: IMAGE_HEADER + 'fishing.jpeg',
+    imageUrl: IMAGE_HEADER + 'fishing.png',
     ranking: 7,
   },
 };
