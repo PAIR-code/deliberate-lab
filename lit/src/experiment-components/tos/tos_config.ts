@@ -1,9 +1,8 @@
 import "../../pair-components/textarea";
 
-import { observable } from "mobx";
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "lit/decorators.js";
 
 import { core } from "../../core/core";
 import { TOSConfigService } from "../../services/config/tos_config_service";
@@ -23,6 +22,11 @@ export class TOSConfig extends MobxLitElement {
       this.tosConfig.updateName(value);
     };
 
+    const handleDescriptionInput = (e: Event) => {
+      const value = (e.target as HTMLTextAreaElement).value;
+      this.tosConfig.updateDescription(value);
+    };
+
     const handleContentInput = (e: Event) => {
       const value = (e.target as HTMLTextAreaElement).value;
       this.tosConfig.updateContent(value);
@@ -37,6 +41,16 @@ export class TOSConfig extends MobxLitElement {
         @input=${handleNameInput}
       >
       </pr-textarea>
+      
+      <pr-textarea
+        label="Stage description"
+        placeholder="Stage description"
+        variant="outlined"
+        .value=${this.tosConfig.description}
+        @input=${handleDescriptionInput}
+      >
+      </pr-textarea>
+
       <pr-textarea
         label="Content (in Git-Flavored Markdown)"
         placeholder="Add Markdown terms of service here"

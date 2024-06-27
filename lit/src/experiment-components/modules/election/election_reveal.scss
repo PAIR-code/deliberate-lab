@@ -7,6 +7,12 @@
   height: 100%;
 }
 
+.description {
+  color: var(--md-sys-color-primary);
+  padding-bottom: common.$spacing-medium;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
 h2 {
   @include typescale.title-medium;
   margin: 0;

@@ -107,6 +107,12 @@ export class ExperimentConfigService extends Service {
       this.stages[stageIndex].name = name;
     }
   }
+  
+  updateStageDescription(description: string, stageIndex = this.currentStageIndex) {
+    if (stageIndex >= 0 && stageIndex < this.stages.length) {
+      this.stages[stageIndex].description = description;
+    }
+  }
 
   addStage(stage: StageConfig) {
     this.stages.push(stage);
@@ -144,7 +150,7 @@ export class ExperimentConfigService extends Service {
   reset() {
     this.name = 'New experiment';
     this.numParticipants = 3;
-    this.stages = [createTOSStage()];
+    this.stages = [createTOSStage(), createProfileStage()];
     this.currentStageIndex = -1;
   }
 }

@@ -5,7 +5,6 @@ import "../../progress/progress_stage_waiting";
 
 import '@material/web/radio/radio.js';
 
-import { observable } from "mobx";
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
@@ -41,8 +40,13 @@ export class ElectionReveal extends MobxLitElement {
     const { ready, notReady } =
       this.experimentService.getParticipantsReadyForStage(currentStage);
 
+    const description = this.experimentService.stageConfigMap[currentStage].description;
+    const descriptionContent = description ? html`<div class="description">${description}</div>` : nothing;
+
     if (notReady.length > 0) {
       return html`
+        ${descriptionContent}
+
         <progress-stage-waiting .stageName=${currentStage}>
         </progress-stage-waiting>
       `;
@@ -56,6 +60,8 @@ export class ElectionReveal extends MobxLitElement {
     }
 
     return html`
+      ${descriptionContent}
+
       <div class="reveal-wrapper">
         <h2>Your elected leader is:</h2>
         <div class="reveal">

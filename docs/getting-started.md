@@ -95,14 +95,6 @@ Basically, the database cannot be externally accessed, and must be interacted wi
 
 A database prototype schema can be found [here on dbdiagrams.io](https://dbdiagram.io/d/Firebase-LLM-Mediation-660d473a03593b6b61123f24) (readonly, change it with your own if you take over the project).
 
-You can seed the database with the default data by running the following command:
-
-```bash
-cd scripts
-npm install  # Run this command only once
-npm run seed-db
-```
-
 ### Cloud Functions
 
 We use Firebase Cloud Functions to run server-side code. The functions are located in the [`functions`](./functions) directory.

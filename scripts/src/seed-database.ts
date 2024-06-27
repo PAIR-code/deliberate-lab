@@ -121,6 +121,7 @@ const L_RATING_QUESTION_CONFIGS: RatingQuestionConfig[] = LEADER_ITEM_PAIRS.map(
 const DEFAULT_STAGES: Record<string, StageConfig> = {
   '01. Agree to the terms of service': {
     name: '01. Agree to the terms of service',
+    description: 'Please agree to the terms of service to continue.',
     kind: StageKind.TermsOfService,
     tosLines: [
       '(These are placeholder terms of service!)',
@@ -137,6 +138,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
 
   '03. Welcome to the experiment': {
     name: '03. Welcome to the experiment',
+    description: 'This experiment should take around 30 minutes.',
     kind: StageKind.Info,
     infoLines: [
       '<h2>Welcome to the experiment!</h2><p>In this task, you are adrift on a private yacht in the North Atlantic with your crewmates. As a consequence of a fire of unknown origin, much of the yacht and its contents have been destroyed. The yacht is now slowly sinking. Your location is unclear because of the destruction of critical navigational equipment and because you and the crew were distracted trying to bring the fire under control. Your best estimate is that you are approximately one thousand miles south-southeast of the nearest land. You have a box of matches in your pocket.</p><br/>',
@@ -147,6 +149,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
 
   '04. Initial survival task': {
     name: '04. Initial survival task',
+    description: 'Here is an example task.',
     kind: StageKind.TakeSurvey,
     questions: [
       ...I_RATING_QUESTION_CONFIGS,
@@ -163,6 +166,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
 
   '05. Group discussion introduction': {
     name: '05. Group discussion introduction',
+    description: 'Here is some context on the discussion.',
     kind: StageKind.Info,
     infoLines: [
       'On the next stage, you will review and discuss your answers to the previous task with your crewmembers.<br/><br/>',
@@ -184,6 +188,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
 
   '07. Post-discussion representative survey': {
     name: '07. Post-discussion representative survey',
+    description: 'Now, vote for the representative.',
     kind: StageKind.TakeSurvey,
     questions: [
       {
@@ -199,6 +204,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
 
   '08. Updated individual survival task introduction': {
     name: '08. Updated individual survival task introduction',
+    description: 'Have you changed your responses?',
     kind: StageKind.Info,
     infoLines: [
       'Now that you have deliberated the item pairs with your crewmates, you have an opportunity to update your initial responses.',
@@ -214,6 +220,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
 
   '10. Representative election': {
     name: '10. Representative election',
+    description: 'Vote for the leader.',
     kind: StageKind.VoteForLeader,
   },
 
@@ -235,6 +242,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
 
   '13. Representative reveal': {
     name: '13. Representative reveal',
+    description: 'The votes are in.',
     kind: StageKind.RevealVoted,
     pendingVoteStageName: '10. Representative election',
   },

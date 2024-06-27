@@ -12,15 +12,15 @@ import { customElement, property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
 import {
-  ItemName,
   ITEMS,
+  ItemName,
+  QuestionConfig,
   RatingQuestionAnswer,
   RatingQuestionConfig,
   ScaleQuestionAnswer,
-  SurveyStageAnswer,
-  SurveyStageConfig,
   SurveyQuestionKind,
-  QuestionConfig
+  SurveyStageAnswer,
+  SurveyStageConfig
 } from "@llm-mediation-experiments/utils";
 
 import { core } from "../../core/core";
@@ -53,7 +53,11 @@ export class SurveyPreview extends MobxLitElement {
         question => question.kind === SurveyQuestionKind.Rating).length)
     };
 
+    const descriptionContent = this.stage.description ? html`<div class="description">${this.stage.description}</div>` : nothing;
+
     return html`
+      ${descriptionContent}
+      
       <div class="questions-wrapper">
         ${this.stage.questions.map(question =>
         this.renderRatingQuestion(question))}

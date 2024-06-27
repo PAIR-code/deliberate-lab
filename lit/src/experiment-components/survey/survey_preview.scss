@@ -7,6 +7,12 @@
   height: 100%;
 }
 
+.description {
+  color: var(--md-sys-color-primary);
+  padding-bottom: common.$spacing-medium;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
 .questions-wrapper {
   @include common.flex-column;
   flex-grow: 1;
@@ -15,11 +21,11 @@
 
 .question {
   @include common.flex-column;
-  gap: common.$spacing-large; 
+  gap: common.$spacing-medium; 
 }
 
 .question-title {
-  @include typescale.title-medium;
+  @include typescale.title-small;
 }
 
 .slider-wrapper {

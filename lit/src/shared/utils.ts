@@ -27,6 +27,7 @@ import {
 import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
 import { v4 as uuidv4 } from "uuid";
+import { LAS_FINAL_SURVEY, LAS_FINAL_SURVEY_DESCRIPTION, LAS_GROUP_INTRO_DESCRIPTION, LAS_GROUP_INTRO_HTML, LAS_INITIAL_TASK_DESCRIPTION, LAS_INTRO_DESCRIPTION, LAS_INTRO_HTML, LAS_LEADER_ELECTION_DESCRIPTION, LAS_LEADER_REVEAL_DESCRIPTION, LAS_LEADER_TASK_DESCRIPTION, LAS_REDO_TASK_DESCRIPTION, LAS_WTL_DESCRIPTION, LAS_WTL_SURVEY } from './lost_at_sea_constants';
 import { Snapshot } from "./types";
 import { GEMINI_DEFAULT_MODEL, PROMPT_INSTRUCTIONS_CHAT_MEDIATOR } from "./prompts";
 
@@ -37,37 +38,40 @@ export function generateId(): string {
 
 /** Create info stage. */
 export function createInfoStage(
-  name = "Info", content = "Placeholder info"
+  name = "Info", description = "Info description", content = "Placeholder info"
 ): InfoStageConfig {
   const infoLines = [content];
-  return { kind: StageKind.Info, name, infoLines };
+  return { kind: StageKind.Info, name, description, infoLines };
 }
 
 /** Create TOS stage. */
 export function createTOSStage(
-  name = "Terms of Service",
+  name = "Terms of service",
+  description = "Acknowledge the terms of service to proceed.",
   content = "- Placeholder term 1\n- Placeholder term 2\n- Placeholder term 3",
 ): TermsOfServiceStageConfig {
   const tosLines = [content];
-  return { kind: StageKind.TermsOfService, name, tosLines };
+  return { kind: StageKind.TermsOfService, name, description, tosLines };
 }
 
 /** Create survey stage. */
 export function createSurveyStage(
   name = "Survey",
+  description = "Survey description",
   questions: QuestionConfig[] = []
 ): SurveyStageConfig {
-  return { kind: StageKind.TakeSurvey, name, questions };
+  return { kind: StageKind.TakeSurvey, name, description, questions };
 }
 
 /** Create profile stage. */
 export function createProfileStage(name = "Set profile"): ProfileStageConfig {
-  return { kind: StageKind.SetProfile, name };
+  // Bug: Experiment can't be created with a profile description.
+  return { kind: StageKind.SetProfile, name};
 }
 
 /** Create chat (with ranking discussion) stage. */
 export function createChatStage(
-  name = "Group chat",
+  name = "Group discussion",
   ratingsToDiscuss: { item1: ItemName; item2: ItemName }[] = []
 ): GroupChatStageConfig {
   if (ratingsToDiscuss.length === 0) {
@@ -113,9 +117,10 @@ export function createMediator(
 
 /** Create leader vote (election) stage. */
 export function createVoteForLeaderStage(
-  name = "Leader election"
+  name = "Leader election",
+  description = "Vote for the leader here.",
 ): VoteForLeaderStageConfig {
-  return { kind: StageKind.VoteForLeader, name };
+  return { kind: StageKind.VoteForLeader, name, description };
 }
 
 /**
@@ -128,9 +133,10 @@ export function createVoteForLeaderStage(
  * election.
  */
 export function createRevealVotedStage(
-  name = "Reveal"
+  name = "Reveal",
+  description = "This is the outcome of the vote.",
 ): RevealVotedStageConfig {
-  return { kind: StageKind.RevealVoted, name, pendingVoteStageName: "" };
+  return { kind: StageKind.RevealVoted, name, description, pendingVoteStageName: "" };
 }
 
 /**
@@ -145,6 +151,9 @@ export function createRevealVotedStage(
 export function createLostAtSeaModuleStages(numPairs = 5): StageConfig[] {
   const stages: StageConfig[] = [];
 
+  // Add introduction
+  stages.push(createInfoStage("Welcome to the experiment", LAS_INTRO_DESCRIPTION, LAS_INTRO_HTML));
+  
   const middleIndex = Math.ceil(ITEM_NAMES.length / 2);
 
   // Take random items from the first half for the individual tasks.
@@ -160,24 +169,37 @@ export function createLostAtSeaModuleStages(numPairs = 5): StageConfig[] {
     (pair, index) => getRatingQuestionFromPair(pair, index)
   );
 
-  stages.push(createSurveyStage("Individual task", INDIVIDUAL_QUESTIONS));
+  stages.push(createSurveyStage("Initial survival task", LAS_INITIAL_TASK_DESCRIPTION, INDIVIDUAL_QUESTIONS));
+
+  // Add group chat descriptor
+  stages.push(createInfoStage("Group discussion introduction", LAS_GROUP_INTRO_DESCRIPTION, LAS_GROUP_INTRO_HTML));
+
 
   // Add chat with individual item pairs as discussion
   stages.push(
     createChatStage(
-      "Group chat",
+      "Group discussion",
       INDIVIDUAL_ITEM_PAIRS.map(([i1, i2]) => ({ item1: i1, item2: i2 }))
     )
   );
 
-  stages.push(createSurveyStage("Individual task (updated)", INDIVIDUAL_QUESTIONS));
+  stages.push(createSurveyStage("Willingness to lead survey", LAS_WTL_DESCRIPTION, LAS_WTL_SURVEY));
+  stages.push(createSurveyStage("Individual task (updated)", LAS_REDO_TASK_DESCRIPTION, INDIVIDUAL_QUESTIONS));
+  stages.push(createVoteForLeaderStage("Representative election", LAS_LEADER_ELECTION_DESCRIPTION));
 
-  // Add leader survey
+
+  // Add leader task
   const LEADER_QUESTIONS: RatingQuestionConfig[] = LEADER_ITEM_PAIRS.map(
     (pair, index) => getRatingQuestionFromPair(pair, index)
   );
 
-  stages.push(createSurveyStage("Leader task", LEADER_QUESTIONS));
+  stages.push(createSurveyStage("Leader task", LAS_LEADER_TASK_DESCRIPTION, LEADER_QUESTIONS));
+
+  stages.push(createRevealVotedStage("Representative reveal", LAS_LEADER_REVEAL_DESCRIPTION))
+
+  // Final survey
+  stages.push(createSurveyStage("Final survey", LAS_FINAL_SURVEY_DESCRIPTION, LAS_FINAL_SURVEY));
+  stages.push(createSurveyStage("Leader task", "Now, redo the task as if you were the leader.", LEADER_QUESTIONS));
 
   return stages;
 }

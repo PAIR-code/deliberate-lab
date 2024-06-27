@@ -6,7 +6,6 @@ import "../progress/progress_stage_completed";
 import "@material/web/checkbox/checkbox.js";
 import * as sanitizeHtml from "sanitize-html";
 
-import { observable } from "mobx";
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
@@ -42,7 +41,11 @@ export class TOSPreview extends MobxLitElement {
       this.participantService.updateProfile({ acceptTosTimestamp });
     };
 
+    const descriptionContent = this.stage.description ? html`<div class="description">${this.stage.description}</div>` : nothing;
+
     return html`
+      ${descriptionContent}
+      
       <div class="tos-wrapper">
         ${unsafeHTML(cleanHTML)}
       </div>
