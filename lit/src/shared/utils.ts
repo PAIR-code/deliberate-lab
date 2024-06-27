@@ -28,7 +28,7 @@ import {
 import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
 import { v4 as uuidv4 } from "uuid";
-import { LAS_FINAL_SURVEY, LAS_FINAL_SURVEY_DESCRIPTION, LAS_GROUP_INTRO_DESCRIPTION, LAS_GROUP_INTRO_HTML, LAS_INITIAL_TASK_DESCRIPTION, LAS_INTRO_DESCRIPTION, LAS_INTRO_HTML, LAS_LEADER_ELECTION_DESCRIPTION, LAS_LEADER_REVEAL_DESCRIPTION, LAS_LEADER_TASK_DESCRIPTION, LAS_REDO_TASK_DESCRIPTION, LAS_WTL_DESCRIPTION, LAS_WTL_SURVEY } from './lost_at_sea_constants';
+import { LAS_FINAL_SURVEY, LAS_FINAL_SURVEY_DESCRIPTION, LAS_GROUP_INTRO_DESCRIPTION, LAS_GROUP_INTRO_INFO_LINES, LAS_INITIAL_TASK_DESCRIPTION, LAS_INTRO_DESCRIPTION, LAS_INTRO_INFO_LINES, LAS_LEADER_ELECTION_DESCRIPTION, LAS_LEADER_REVEAL_DESCRIPTION, LAS_LEADER_TASK_DESCRIPTION, LAS_REDO_TASK_DESCRIPTION, LAS_WTL_DESCRIPTION, LAS_WTL_SURVEY } from './lost_at_sea_constants';
 import { GEMINI_DEFAULT_MODEL, PROMPT_INSTRUCTIONS_CHAT_MEDIATOR } from "./prompts";
 import { Snapshot } from "./types";
 
@@ -39,9 +39,9 @@ export function generateId(): string {
 
 /** Create info stage. */
 export function createInfoStage(
-  name = "Info", description = "Info description", content = "Placeholder info"
+  name = "Info", description = "Info description", content = ["Placeholder info"]
 ): InfoStageConfig {
-  const infoLines = [content];
+  const infoLines = content;
   return { kind: StageKind.Info, name, description, infoLines };
 }
 
@@ -153,7 +153,7 @@ export function createLostAtSeaModuleStages(numPairs = 5): StageConfig[] {
   const stages: StageConfig[] = [];
 
   // Add introduction
-  stages.push(createInfoStage("Welcome to the experiment", LAS_INTRO_DESCRIPTION, LAS_INTRO_HTML));
+  stages.push(createInfoStage("Welcome to the experiment", LAS_INTRO_DESCRIPTION, LAS_INTRO_INFO_LINES));
   
   // Shuffle the items.
   seed(6272023);
@@ -175,7 +175,7 @@ export function createLostAtSeaModuleStages(numPairs = 5): StageConfig[] {
   stages.push(createSurveyStage("Initial survival task", LAS_INITIAL_TASK_DESCRIPTION, INDIVIDUAL_QUESTIONS));
 
   // Add group chat descriptor
-  stages.push(createInfoStage("Group discussion introduction", LAS_GROUP_INTRO_DESCRIPTION, LAS_GROUP_INTRO_HTML));
+  stages.push(createInfoStage("Group discussion introduction", LAS_GROUP_INTRO_DESCRIPTION, LAS_GROUP_INTRO_INFO_LINES));
 
 
   // Add chat with individual item pairs as discussion
@@ -289,12 +289,6 @@ export function convertExperimentStages(stages: StageConfig[]) {
   return stages.map((stage, index) => {
     stage.name = addIndexToStageName(stage.name, index);
 
-    if (stage.kind === StageKind.Info) {
-      stage.infoLines = stage.infoLines.map(
-        info => convertMarkdownToHTML(info)
-      );
-      return stage;
-    }
     if (stage.kind === StageKind.TermsOfService) {
       stage.tosLines = stage.tosLines.map(
         info => convertMarkdownToHTML(info)

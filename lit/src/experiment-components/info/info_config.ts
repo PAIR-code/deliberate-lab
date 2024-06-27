@@ -52,7 +52,7 @@ export class InfoConfig extends MobxLitElement {
       </pr-textarea>
 
       <pr-textarea
-        label="Content (in Git-Flavored Markdown)"
+        label="Content"
         placeholder="Add Markdown content here"
         variant="outlined"
         .value=${this.infoConfig.content}

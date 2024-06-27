@@ -6,21 +6,18 @@ import {
 } from '@llm-mediation-experiments/utils';
 
 export const LAS_INTRO_DESCRIPTION = `This experiment should take an estimated 20-30 minutes.`;
-export const LAS_INTRO_HTML = `<h3>Scenario</h3>
-  <p>In this task, you are adrift on a private yacht in the North Atlantic with your crewmates. As a consequence of a fire of unknown origin, much of the yacht and its contents have been destroyed. The yacht is now slowly sinking. Your location is unclear because of the destruction of critical navigational equipment and because you and the crew were distracted trying to bring the fire under control.</p>
-  <br/>
-  <p>Your best estimate is that you are approximately one thousand miles south-southeast of the nearest land. You have a box of matches in your pocket.</p>
-  <h3>Objective</h3>
-  <p>After deliberating with your crewmates, your role is to elect a representative among the crew who will perform a <i>survival task</i> on behalf of the crew.</p>
-  <br/>
-  <p>Your payout from this task is dependent on how well the representative does on this task.</p>'`;
+export const LAS_INTRO_INFO_LINES = [
+  "⛵️ In this task, you are adrift on a raft in the ocean with your crewmates after your vessel sank.  Your location is unclear because of the destruction of critical navigation equipment. Your best estimate is that you are approximately one thousand miles south-southeast of the nearest land. You have a box of matches in your pocket.",
+  "🗳️ Your goal in today's game is to elect a member of the crew to complete a task, where they will prioritize items that will maximize your chance of survival.",
+  "💸 Your payout from this task is dependent on how well the representative does on this task."
+];
 
 export const LAS_INITIAL_TASK_DESCRIPTION = `First, you will complete a task similar to the task that your crew's representative will later complete. Your performance on this task will not affect your payout; this is so that you get a sense of the task.`;
 
 export const LAS_GROUP_INTRO_DESCRIPTION = `On the next stage, you will review and discuss your answers to the previous task with your crewmembers.`;
-export const LAS_GROUP_INTRO_HTML = `<p>Take this opportunity to gauge the abilities of your crewmembers, as you will later vote for the team representative.</p>
-  <br/>
-  <p>As a reminder, the payoff in this task is <b>only dependent on the representative's performance on the final task</b>.</p>`;
+export const LAS_GROUP_INTRO_INFO_LINES = [
+  "💭 Take this opportunity to gauge the abilities of your crewmembers, as you will later vote for the team representative.",
+  "💸 As a reminder, the payoff in this task is only dependent on the representative's performance on the final task."]
 
 export const LAS_WTL_DESCRIPTION = `After you've gauged the abilities of your crewmembers, please update your response.`;
 export const LAS_WTL_SURVEY : QuestionConfig[] = [

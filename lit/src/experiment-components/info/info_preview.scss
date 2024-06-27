@@ -1,4 +1,5 @@
 @use "../../sass/common";
+@use "../../sass/typescale";
 
 :host {
   @include common.flex-column;
@@ -12,7 +13,12 @@
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
+.info-block {
+  padding-bottom: common.$spacing-large;
+}
+
 .html-wrapper {
+  @include typescale.body-medium;
   @include common.html-preview;
   flex-grow: 1;
   gap: common.$spacing-xl;

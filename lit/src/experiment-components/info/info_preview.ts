@@ -3,12 +3,10 @@ import "../../pair-components/textarea";
 import "../footer/footer";
 import "../progress/progress_stage_completed";
 
-import * as sanitizeHtml from "sanitize-html";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
 import { InfoStageConfig } from "@llm-mediation-experiments/utils";
 
@@ -25,21 +23,28 @@ export class InfoPreview extends MobxLitElement {
     if (!this.stage) {
       return nothing;
     }
-
-    const cleanHTML = sanitizeHtml(this.stage?.infoLines.join('\n\n'));
     const descriptionContent = this.stage.description ? html`<div class="description">${this.stage.description}</div>` : nothing;
 
     return html`
       ${descriptionContent}
       
       <div class="html-wrapper">
-        ${unsafeHTML(cleanHTML)}
+        ${this.stage?.infoLines.map(line => this.renderInfoLine(line))}
       </div>
       <stage-footer>
         <progress-stage-completed></progress-stage-completed>
       </stage-footer>
     `;
   }
+
+  private renderInfoLine(line: string) {
+    return html`
+      <div class="info-block">
+        ${line}
+      </div>
+    `;
+    }
+
 }
 
 declare global {
