@@ -20,10 +20,10 @@ import { ExperimentService } from "../../services/experiment_service";
 import { ParticipantService } from "../../services/participant_service";
 
 import {
-    ChatKind,
-    GroupChatStageConfig,
-    ItemName,
-    ITEMS
+  ChatKind,
+  GroupChatStageConfig,
+  ItemName,
+  ITEMS
 } from "@llm-mediation-experiments/utils";
 
 import { createMediator, getChatRatingsToDiscuss } from "../../shared/utils";
@@ -56,8 +56,10 @@ export class RankingChat extends MobxLitElement {
     const { ready, notReady } =
       this.experimentService.getParticipantsReadyForStage(currentStage);
 
+    const descriptionContent = this.stage.description ? html`<div class="description">${this.stage.description}</div>` : '';
     if (notReady.length > 0) {
       return html`
+        ${descriptionContent}
         <progress-stage-waiting .stageName=${currentStage}>
         </progress-stage-waiting>
       `;
@@ -69,6 +71,7 @@ export class RankingChat extends MobxLitElement {
       this.chatService.getCurrentRatingIndex() >= numDiscussions;
 
     return html`
+      ${descriptionContent}
       <div class="chat-interface-wrapper">
         <div class="panel">
           ${this.renderParticipants()}

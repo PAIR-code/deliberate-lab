@@ -32,14 +32,14 @@ export function createChatMediatorPrompt(
   }, {} as Record<string, string>);
 
   // Create a map of participant indices to names.
-  const formatMessage = (message: Message) => {
+  const formatMessage = (message: Message, index: number) => {
     switch (message.kind) {
       case MessageKind.UserMessage:
-        return `${participantDictionary[message.fromPublicParticipantId]}: ${message.text}`;
+        return `${index}. ${participantDictionary[message.fromPublicParticipantId]}: ${message.text}`;
       case MessageKind.DiscussItemsMessage:
-        return `Discussion topic: ${ITEMS[message.itemPair.item1].name}, ${ITEMS[message.itemPair.item2].name}`;
+        return `${index}. Discussion topic: ${ITEMS[message.itemPair.item1].name}, ${ITEMS[message.itemPair.item2].name}`;
       case MessageKind.MediatorMessage:
-        return `Mediator message: ${message.text}`;
+        return `${index}. Mediator message: ${message.text}`;
       default:
         return '';
     }
@@ -55,7 +55,7 @@ PARTICIPANTS: ${participants.map(p => p.name ?? p.publicId).join(', ')}
 As you moderate, make sure that these participants are all contributing to the conversation.
 
 CHAT HISTORY:
-${truncMessages.map(message => formatMessage(message)).join('\n\n')}
+${truncMessages.map((message, index) => formatMessage(message, index)).join('\n\n')}
   `
   
   const json = `

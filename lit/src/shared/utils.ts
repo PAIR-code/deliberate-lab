@@ -28,7 +28,7 @@ import {
 import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
 import { v4 as uuidv4 } from "uuid";
-import { LAS_FINAL_SURVEY, LAS_FINAL_SURVEY_DESCRIPTION, LAS_GROUP_INTRO_DESCRIPTION, LAS_GROUP_INTRO_INFO_LINES, LAS_INITIAL_TASK_DESCRIPTION, LAS_INTRO_DESCRIPTION, LAS_INTRO_INFO_LINES, LAS_LEADER_ELECTION_DESCRIPTION, LAS_LEADER_REVEAL_DESCRIPTION, LAS_LEADER_TASK_DESCRIPTION, LAS_REDO_TASK_DESCRIPTION, LAS_WTL_DESCRIPTION, LAS_WTL_SURVEY } from './lost_at_sea_constants';
+import { LAS_FINAL_SURVEY, LAS_FINAL_SURVEY_DESCRIPTION, LAS_GROUP_CHAT_DESCRIPTION, LAS_INITIAL_TASK_DESCRIPTION, LAS_INTRO_DESCRIPTION, LAS_INTRO_INFO_LINES, LAS_LEADER_ELECTION_DESCRIPTION, LAS_LEADER_REVEAL_DESCRIPTION, LAS_LEADER_TASK_DESCRIPTION, LAS_REDO_TASK_DESCRIPTION } from './lost_at_sea_constants';
 import { GEMINI_DEFAULT_MODEL, PROMPT_INSTRUCTIONS_CHAT_MEDIATOR } from "./prompts";
 import { Snapshot } from "./types";
 
@@ -73,11 +73,13 @@ export function createProfileStage(name = "Set profile"): ProfileStageConfig {
 /** Create chat (with ranking discussion) stage. */
 export function createChatStage(
   name = "Group discussion",
+  description = "Group discussion description",
   ratingsToDiscuss: { item1: ItemName; item2: ItemName }[] = []
 ): GroupChatStageConfig {
   if (ratingsToDiscuss.length === 0) {
     return {
       name,
+      description,
       kind: StageKind.GroupChat,
       chatId: generateId(),
       chatConfig: {
@@ -89,6 +91,7 @@ export function createChatStage(
 
   return {
     name,
+    description,
     kind: StageKind.GroupChat,
     chatId: generateId(),
     chatConfig: {
@@ -174,22 +177,17 @@ export function createLostAtSeaModuleStages(numPairs = 5): StageConfig[] {
 
   stages.push(createSurveyStage("Initial survival task", LAS_INITIAL_TASK_DESCRIPTION, INDIVIDUAL_QUESTIONS));
 
-  // Add group chat descriptor
-  stages.push(createInfoStage("Group discussion introduction", LAS_GROUP_INTRO_DESCRIPTION, LAS_GROUP_INTRO_INFO_LINES));
-
-
   // Add chat with individual item pairs as discussion
   stages.push(
     createChatStage(
       "Group discussion",
+      LAS_GROUP_CHAT_DESCRIPTION,
       INDIVIDUAL_ITEM_PAIRS.map(([i1, i2]) => ({ item1: i1, item2: i2 }))
     )
   );
 
-  stages.push(createSurveyStage("Willingness to lead survey", LAS_WTL_DESCRIPTION, LAS_WTL_SURVEY));
-  stages.push(createSurveyStage("Individual task (updated)", LAS_REDO_TASK_DESCRIPTION, INDIVIDUAL_QUESTIONS));
+  stages.push(createSurveyStage("Updated individual task", LAS_REDO_TASK_DESCRIPTION, INDIVIDUAL_QUESTIONS));
   stages.push(createVoteForLeaderStage("Representative election", LAS_LEADER_ELECTION_DESCRIPTION));
-
 
   // Add leader task
   const LEADER_QUESTIONS: RatingQuestionConfig[] = LEADER_ITEM_PAIRS.map(
@@ -202,7 +200,6 @@ export function createLostAtSeaModuleStages(numPairs = 5): StageConfig[] {
 
   // Final survey
   stages.push(createSurveyStage("Final survey", LAS_FINAL_SURVEY_DESCRIPTION, LAS_FINAL_SURVEY));
-  stages.push(createSurveyStage("Leader task", "Now, redo the task as if you were the leader.", LEADER_QUESTIONS));
 
   return stages;
 }
