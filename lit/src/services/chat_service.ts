@@ -1,18 +1,18 @@
-import { observable, makeObservable, computed } from "mobx";
 import { Timestamp } from "firebase/firestore";
+import { computed, makeObservable, observable } from "mobx";
 
-import { Service } from "./service";
 import { ExperimentService } from "./experiment_service";
 import { FirebaseService } from "./firebase_service";
 import { LLMService } from "./llm_service";
 import { ParticipantService } from "./participant_service";
 import { RouterService } from "./router_service";
+import { Service } from "./service";
 
+import { ChatAnswer, ChatKind, MediatorConfig, MediatorKind, Message, MessageKind, StageKind, } from "@llm-mediation-experiments/utils";
+import { Unsubscribe, collection, doc, onSnapshot, orderBy, query, updateDoc } from "firebase/firestore";
+import { createMessageCallable } from "../shared/callables";
 import { createChatMediatorPrompt } from "../shared/prompts";
 import { collectSnapshotWithId } from "../shared/utils";
-import { Unsubscribe, collection, doc, onSnapshot, orderBy, query, updateDoc } from "firebase/firestore";
-import { ChatAnswer, ChatKind, MediatorConfig, MediatorKind, Message, MessageKind, StageKind, } from "@llm-mediation-experiments/utils";
-import { createMessageCallable } from "../shared/callables";
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
@@ -199,7 +199,7 @@ export class ChatService extends Service {
       uid: '',
       timestamp: Timestamp.now(),
       kind: MessageKind.UserMessage,
-      fromPublicParticipantId: this.sp.participantService.profile?.publicId!,
+      fromPublicParticipantId: this.sp.participantService.profile?.name!,
       text,
     });
 
@@ -225,22 +225,24 @@ export class ChatService extends Service {
     const prompt = createChatMediatorPrompt(
       mediator.prompt,
       this.messages,
-      profiles.map(p => p.publicId)
+      profiles.map(p => p.name ?? p.publicId)
     );
 
     await this.sp.llmService.call(prompt).then(modelResponse => {
-      if (sendCondition()) {
-        let answer = modelResponse.text;
-
-        // Replace participant IDs with names
-        // TODO: Refactor this logic elsewhere
-        for (const participant of profiles) {
-          const id = `{${participant.publicId!}}`;
-          while (answer.includes(id)) {
-            answer = answer.replace(id, participant.name!);
-          }
+      let answer = modelResponse.text;
+      let sendMessage = false;
+      try {
+        const parsedResponse = JSON.parse(modelResponse.text);
+        if ("shouldRespond" in parsedResponse && "response" in parsedResponse) {
+          sendMessage = true;
+          answer = parsedResponse.response;
         }
+      } catch (error) {
+        console.log("Invalid JSON: " + modelResponse);
+        sendMessage = false;
+      }
 
+      if (sendMessage) {
         this.sendMediatorMessage(answer, mediator.name, mediator.avatar);
       }
     });
