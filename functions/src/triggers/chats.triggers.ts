@@ -68,7 +68,7 @@ export const publishParticipantReadyToEndChat = onDocumentWritten(
         const messageData: Omit<DiscussItemsMessage, 'uid'> = {
           kind: MessageKind.DiscussItemsMessage,
           itemPair,
-          text: `Discussion ${current + 1} of ${total}`,
+          text: `Discussion ${current + 2} of ${total}`,
           timestamp: Timestamp.now(),
         };
 

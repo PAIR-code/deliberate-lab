@@ -124,6 +124,7 @@ export class RankingChat extends MobxLitElement {
   private renderTask() {
     const index = this.chatService.getCurrentRatingIndex();
     const ratings = getChatRatingsToDiscuss(this.stage!);
+    const length = getChatRatingsToDiscuss(this.stage!).length;
     const pair = ratings[Math.min(index, ratings.length - 1)];
 
  
