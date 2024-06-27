@@ -47,9 +47,6 @@ npm run start
 
 View the app at [`http://localhost:4201/`](http://localhost:4201/).
 
-(There is also a deprecated version of the frontend in `webapp/`,
-written in Angular.)
-
 ## Firebase
 
 This project uses Firebase as its backend. The configuration can be found in the [`.firebaserc`](./.firebaserc) and [`firebase.json`](./firebase.json) files.

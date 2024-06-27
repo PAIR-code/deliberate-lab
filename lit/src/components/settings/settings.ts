@@ -200,7 +200,7 @@ export class Settings extends MobxLitElement {
 
     return html`
       <div class="section">
-        <h2>Webapp Version</h2>
+        <h2>App version</h2>
         <p><b>Branch:</b> ${GIT_BRANCH}</p>
         <p><b>Commit:</b> 
           <a href="https://github.com/PAIR-code/llm-mediation-experiments/commit/${GIT_COMMIT_HASH}" target="_blank">${GIT_VERSION}</a>

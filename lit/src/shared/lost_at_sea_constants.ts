@@ -14,10 +14,7 @@ export const LAS_INTRO_INFO_LINES = [
 
 export const LAS_INITIAL_TASK_DESCRIPTION = `First, you will complete a task similar to the task that your crew's representative will later complete. Your performance on this task will not affect your payout; this is so that you get a sense of the task.`;
 
-export const LAS_GROUP_INTRO_DESCRIPTION = `On the next stage, you will review and discuss your answers to the previous task with your crewmembers.`;
-export const LAS_GROUP_INTRO_INFO_LINES = [
-  "💭 Take this opportunity to gauge the abilities of your crewmembers, as you will later vote for the team representative.",
-  "💸 As a reminder, the payoff in this task is only dependent on the representative's performance on the final task."]
+export const LAS_GROUP_CHAT_DESCRIPTION = "Discuss your responses to the previous task with your teammates. Take this opportunity to gauge the abilities of your crewmembers, as you will later vote for a representative whose performance will determine your payout.";
 
 export const LAS_WTL_DESCRIPTION = `After you've gauged the abilities of your crewmembers, please update your response.`;
 export const LAS_WTL_SURVEY : QuestionConfig[] = [
@@ -33,11 +30,11 @@ export const LAS_WTL_SURVEY : QuestionConfig[] = [
 
 export const LAS_REDO_TASK_DESCRIPTION = `Have your opinions on the ordering of the items pairs changed following the discussion with crewmates? Now, please update your initial responses.`;
 
-export const LAS_LEADER_ELECTION_DESCRIPTION = `Now, please vote for a representative amongst your crewmates. This representative will complete a similar task on behalf of your crew. Your payout will depend on your representative's score on the next task.`;
+export const LAS_LEADER_ELECTION_DESCRIPTION = `Please vote for a representative amongst your crewmates. This representative will complete a similar task on behalf of your crew. Your payout will depend on your representative's score on the next task.`;
 
-export const LAS_LEADER_TASK_DESCRIPTION = `While we tally the votes, please complete this task <b>as if you were the representative</b>. If you are chosen as the representative, your performance on this task will determine the payout of your crew.`;
+export const LAS_LEADER_TASK_DESCRIPTION = `While we tally the votes, please complete this task as if you were the representative. If you are chosen as the representative, your performance on this task will determine the payout of your crew! As in the initial task, your task is to choose the item that will better help your crew to survive on the raft.`;
 
-export const LAS_LEADER_REVEAL_DESCRIPTION = `We've tallied your votes!`;
+export const LAS_LEADER_REVEAL_DESCRIPTION = "";
 
 export const LAS_FINAL_SURVEY_DESCRIPTION = `Thanks for participating. Please complete this final survey.`;
 

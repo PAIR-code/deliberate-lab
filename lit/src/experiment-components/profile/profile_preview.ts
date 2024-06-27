@@ -30,7 +30,8 @@ export class ProfilePreview extends MobxLitElement {
 
   /** Copy a link to this participant's experiment view to the clipboard */ 
   async copyParticipantLink() {
-    const link = `${window.location.origin}/#/${this.experimentService.experiment?.id}/${this.profile?.privateId}`;
+    const basePath = window.location.href.substring(0, window.location.href.indexOf('/#'));
+    const link = `${basePath}/#/${this.experimentService.experiment?.id}/${this.profile?.privateId}`;
 
     await navigator.clipboard.writeText(link);
     alert("Link copied to clipboard!");

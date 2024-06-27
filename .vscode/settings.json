@@ -6,7 +6,7 @@
         {
           "name": "frontend",
           // Wait 5 seconds to make sure that utils types have been built
-          "commands": ["cd webapp && sleep 5 && npm run start"],
+          "commands": ["cd lit && sleep 5 && npm run start"],
           "icon": "🌐"
         }
       ]
@@ -53,7 +53,7 @@
     "source.organizeImports": "explicit"
   },
   "eslint.workingDirectories": [
-    "./webapp",
+    "./lit",
     "./functions",
     "./utils",
     "./scripts"

@@ -379,12 +379,15 @@ export class ExperimentConfig extends MobxLitElement {
       const { name, stages, numberOfParticipants } =
         this.experimentConfig.getExperiment();
 
-      await this.experimenterService.createExperiment(
+      const experiment = await this.experimenterService.createExperiment(
         name, stages, numberOfParticipants
       );
 
       this.experimentConfig.reset();
-      this.routerService.navigate(Pages.HOME);
+      this.routerService.navigate(
+        Pages.EXPERIMENT,
+        { "experiment": experiment.id }
+      );
     }
 
     const onCreateTemplate = async () => {

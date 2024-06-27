@@ -1,16 +1,12 @@
 /** Endpoints for interactions with experiments */
 
-import { MessageKind } from '@llm-mediation-experiments/utils';
 import {
-  ChatAnswer,
-  ExperimentCreationData,
+  ChatAnswer, ChatKind,
+  DiscussItemsMessage, ExperimentCreationData,
   ExperimentDeletionData,
-  GroupChatStageConfig,
-  ParticipantProfile,
+  GroupChatStageConfig, MessageKind, ParticipantProfile,
   StageKind,
-  participantPublicId,
-  ChatKind,
-  DiscussItemsMessage,
+  participantPublicId
 } from '@llm-mediation-experiments/utils';
 import { Value } from '@sinclair/typebox/value';
 import { Timestamp } from 'firebase-admin/firestore';
@@ -95,7 +91,7 @@ export const createExperiment = onCall(async (request) => {
             const messageData: Omit<DiscussItemsMessage, 'uid'> = {
               kind: MessageKind.DiscussItemsMessage,
               itemPair: firstPair,
-              text: `Discussion 0 of ${chat.chatConfig.ratingsToDiscuss.length}`,
+              text: `Discussion 1 of ${chat.chatConfig.ratingsToDiscuss.length}`,
               timestamp: Timestamp.now(),
             };
 
