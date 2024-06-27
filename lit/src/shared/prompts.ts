@@ -2,7 +2,7 @@
  * Types, constants, and functions for LLM prompts.
  */
 
-import { ITEMS, Message, MessageKind } from '@llm-mediation-experiments/utils';
+import { ITEMS, Message, MessageKind, ParticipantProfile } from '@llm-mediation-experiments/utils';
 
 export const GEMINI_DEFAULT_MODEL = "gemini-1.5-pro-latest";
 
@@ -10,17 +10,20 @@ export const GEMINI_DEFAULT_MODEL = "gemini-1.5-pro-latest";
 // TODO: Update placeholder prompt
 export const PROMPT_INSTRUCTIONS_CHAT_MEDIATOR = `
 You are the moderator for a group chat where the participants are deciding which items will be useful while lost at sea. Your goal is to make sure that for each discussion topic, participants in the following conversation speak for an equal amount of time, and that participants are polite to one another. 
-Be succinct yet creative with your responses to drive the conversation towards a positive and productive outcome.
+Be succinct yet creative with your responses to drive the conversation towards a positive and productive outcome, and provide constructive feedback and examples when relevant.
 `;
 
 /** Create LLM chat mediator prompt. */
 export function createChatMediatorPrompt(
-  promptInstructions: string, messages: Message[], participants: string[], addJsonConstraint : boolean = true
+  promptInstructions: string, messages: Message[], participants: ParticipantProfile[], addJsonConstraint : boolean = true, nMaxMessages = 5
 ) {
-  const participantDictionary: { [key: string]: string } = {};
-  participants.forEach((name, index) => {
-      participantDictionary[`participant-${index}`] = name;
-  });
+  // Make a deep copy of the last n messages.
+  const truncMessages : Message[] = JSON.parse(JSON.stringify(messages.slice(-1 * nMaxMessages)));
+
+  const participantDictionary = participants.reduce((acc, p) => {
+    acc[p.publicId] = p.name ?? p.publicId;
+    return acc;
+  }, {} as Record<string, string>);
 
   // Create a map of participant indices to names.
   const formatMessage = (message: Message) => {
@@ -41,14 +44,14 @@ export function createChatMediatorPrompt(
 
 Every so often, a "Discussion topic" notification will indicate that the conversation has moved on to a different topic.
 You may see a 'Mediator message', which is something that you have already said in the conversation.
-
+The messages are in sequential order, so the last messages are the ones most recent to the conversation.
 
 PARTICIPANTS:
-${participants.join(',')}
+${participants.map(p => p.name ?? p.publicId).join(',')}
 
 
 CHAT HISTORY:
-${messages.map(message => formatMessage(message)).join('\n')}
+${truncMessages.map(message => formatMessage(message)).join('\n\n')}
   `
   
   const json = `

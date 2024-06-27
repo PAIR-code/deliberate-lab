@@ -199,7 +199,7 @@ export class ChatService extends Service {
       uid: '',
       timestamp: Timestamp.now(),
       kind: MessageKind.UserMessage,
-      fromPublicParticipantId: this.sp.participantService.profile?.name!,
+      fromPublicParticipantId: this.sp.participantService.profile?.publicId!,
       text,
     });
 
@@ -225,7 +225,7 @@ export class ChatService extends Service {
     const prompt = createChatMediatorPrompt(
       mediator.prompt,
       this.messages,
-      profiles.map(p => p.name ?? p.publicId)
+      profiles,
     );
 
     await this.sp.llmService.call(prompt).then(modelResponse => {
