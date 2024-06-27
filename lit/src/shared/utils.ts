@@ -22,14 +22,15 @@ import {
   TermsOfServiceStageConfig,
   VoteForLeaderStageConfig,
   choices,
-  pairs
+  pairs,
+  seed
 } from '@llm-mediation-experiments/utils';
 import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
 import { v4 as uuidv4 } from "uuid";
 import { LAS_FINAL_SURVEY, LAS_FINAL_SURVEY_DESCRIPTION, LAS_GROUP_INTRO_DESCRIPTION, LAS_GROUP_INTRO_HTML, LAS_INITIAL_TASK_DESCRIPTION, LAS_INTRO_DESCRIPTION, LAS_INTRO_HTML, LAS_LEADER_ELECTION_DESCRIPTION, LAS_LEADER_REVEAL_DESCRIPTION, LAS_LEADER_TASK_DESCRIPTION, LAS_REDO_TASK_DESCRIPTION, LAS_WTL_DESCRIPTION, LAS_WTL_SURVEY } from './lost_at_sea_constants';
-import { Snapshot } from "./types";
 import { GEMINI_DEFAULT_MODEL, PROMPT_INSTRUCTIONS_CHAT_MEDIATOR } from "./prompts";
+import { Snapshot } from "./types";
 
 /** Generate unique id. */
 export function generateId(): string {
@@ -154,6 +155,8 @@ export function createLostAtSeaModuleStages(numPairs = 5): StageConfig[] {
   // Add introduction
   stages.push(createInfoStage("Welcome to the experiment", LAS_INTRO_DESCRIPTION, LAS_INTRO_HTML));
   
+  // Shuffle the items.
+  seed(6272023);
   const middleIndex = Math.ceil(ITEM_NAMES.length / 2);
 
   // Take random items from the first half for the individual tasks.

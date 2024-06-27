@@ -9,13 +9,13 @@ export const GEMINI_DEFAULT_MODEL = "gemini-1.5-pro-latest";
 /** Instructions for chat mediator prompt. */
 // TODO: Update placeholder prompt
 export const PROMPT_INSTRUCTIONS_CHAT_MEDIATOR = `
-You are the moderator for a group chat where the participants are deciding which items will be useful while lost at sea. Your goal is to make sure that for each discussion topic, participants in the following conversation speak for an equal amount of time, and that participants are polite to one another. 
-Be succinct yet creative with your responses to drive the conversation towards a positive and productive outcome, and provide constructive feedback and examples when relevant.
+You are the moderator for a group chat where the participants are deciding which items will be useful while lost at sea. Your goal is to make sure that all participants are contributing to the conversation, and that participants are polite to one another. 
+Be succinct yet creative with your responses to stimulate the conversation towards a positive and productive outcome, and provide constructive feedback and examples when relevant.
 `;
 
 /** Create LLM chat mediator prompt. */
 export function createChatMediatorPrompt(
-  promptInstructions: string, messages: Message[], participants: ParticipantProfile[], addJsonConstraint : boolean = true, nMaxMessages = 5
+  promptInstructions: string, messages: Message[], participants: ParticipantProfile[], addJsonConstraint : boolean = true, nMaxMessages = 10
 ) {
   // Make a deep copy of the last n messages.
   const truncMessages : Message[] = JSON.parse(JSON.stringify(messages.slice(-1 * nMaxMessages)));
@@ -47,7 +47,7 @@ You may see a 'Mediator message', which is something that you have already said 
 The messages are in sequential order, so the last messages are the ones most recent to the conversation.
 
 PARTICIPANTS:
-${participants.map(p => p.name ?? p.publicId).join(',')}
+${participants.map(p => p.name ?? p.publicId).join(', ')}
 
 
 CHAT HISTORY:
