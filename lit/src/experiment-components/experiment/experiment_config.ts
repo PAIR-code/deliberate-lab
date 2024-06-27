@@ -278,9 +278,11 @@ export class ExperimentConfig extends MobxLitElement {
         <div class=${settingsClasses} role="button" @click=${handleClick}>
         🛠️&nbsp; Experiment settings
         </div>
+        <div class="scroll-menu">
         ${this.experimentConfig.stages.map(
           (stage, index) => this.renderStageNavItem(stage, index)
         )}
+        </div>
       </div>
     `;
   }

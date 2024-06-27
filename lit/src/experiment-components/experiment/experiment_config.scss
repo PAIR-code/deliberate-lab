@@ -43,6 +43,10 @@ code {
   top: 0;
 }
 
+.scroll-menu {
+  overflow: auto;
+}
+
 .template-item {
   @include common.flex-column;
   border: 1px solid transparent;
