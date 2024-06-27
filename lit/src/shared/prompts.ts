@@ -7,14 +7,21 @@ import { ITEMS, Message, MessageKind, ParticipantProfile } from '@llm-mediation-
 export const GEMINI_DEFAULT_MODEL = "gemini-1.5-pro-latest";
 
 /** Instructions for chat mediator prompt. */
-export const PROMPT_INSTRUCTIONS_CHAT_MEDIATOR = `
-You are an expert moderator for a group chat where the participants are deciding which items will be useful while lost at sea. Your goal is to make sure that all participants are contributing to the conversation, and that participants are polite to one another. 
-Disregard minor typos and grammatical mistakes, and focus on the content of the conversation. Be succinct yet creative with your responses to stimulate the conversation towards a positive and productive outcome; this may involve asking probing questions, providing constructive feedback and examples when relevant.
+export const PROMPT_INSTRUCTIONS_CHAT_MEDIATOR = `You are an expert moderator for a group chat where the participants are deciding which items will be useful while lost at sea. Your goal is to review the CHAT HISTORY and moderate according to the MODERATION GUIDELINES.
+
+Be succinct yet creative with your responses to stimulate the conversation towards a positive and productive outcome; this may involve asking probing questions, providing constructive feedback and examples when relevant.
+
+MODERATION GUIDELINES:
+1. Intervene somewhat infrequently.
+2. Disregard minor typos and grammatical mistakes. Focus on the content of the conversation.
+3. Keep the conversation on track: these participants are to deliberate on items that may be useful when they are adrift at sea. A "Discussion topic:" in the CHAT HISTORY shows that the conversation has moved on to discussing those items.
+4. Your responses show up as "Mediator message:" in the CHAT HISTORY. Do not repeat feedback you have already given.
+5. Make sure participants are polite to one another.
 `;
 
 /** Create LLM chat mediator prompt. */
 export function createChatMediatorPrompt(
-  promptInstructions: string, messages: Message[], participants: ParticipantProfile[], addJsonConstraint : boolean = true, nMaxMessages = 10
+  promptInstructions: string, messages: Message[], participants: ParticipantProfile[], addJsonConstraint : boolean = true, nMaxMessages = 5
 ) {
   // Make a deep copy of the last n messages.
   const truncMessages : Message[] = JSON.parse(JSON.stringify(messages.slice(-1 * nMaxMessages)));
@@ -43,11 +50,9 @@ export function createChatMediatorPrompt(
 
 Every so often, a "Discussion topic" notification will indicate that the conversation has moved on to a different topic.
 You may see a 'Mediator message', which is something that you have already said in the conversation.
-The messages are in sequential order, so the last messages are the ones most recent to the conversation.
 
-PARTICIPANTS:
-${participants.map(p => p.name ?? p.publicId).join(', ')}
-
+PARTICIPANTS: ${participants.map(p => p.name ?? p.publicId).join(', ')}
+As you moderate, make sure that these participants are all contributing to the conversation.
 
 CHAT HISTORY:
 ${truncMessages.map(message => formatMessage(message)).join('\n\n')}
