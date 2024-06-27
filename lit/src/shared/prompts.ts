@@ -2,29 +2,51 @@
  * Types, constants, and functions for LLM prompts.
  */
 
-import { ITEMS, Message, MessageKind, ParticipantProfile } from '@llm-mediation-experiments/utils';
+import { ITEMS, Message, MessageKind, ParticipantProfile, UnifiedTimestamp } from '@llm-mediation-experiments/utils';
 
 export const GEMINI_DEFAULT_MODEL = "gemini-1.5-pro-latest";
 
+export const MEDIATOR_NAME = "Mediator";
+export const ALL_PARTICIPANTS = "all participants";
+
 /** Instructions for chat mediator prompt. */
-export const PROMPT_INSTRUCTIONS_CHAT_MEDIATOR = `You are an expert moderator for a group chat where the participants are deciding which items will be useful while lost at sea. Your goal is to review the CHAT HISTORY and moderate according to the MODERATION GUIDELINES.
+export const PROMPT_INSTRUCTIONS_CHAT_MEDIATOR = `
+You are an expert mediator (${MEDIATOR_NAME}) facilitating a group chat where participants discuss essential items crucial for survival when lost at sea. "Discussion topic" messages in the chat history indicate the specific pair of items participants are comparing and evaluating.
 
-Be succinct yet creative with your responses to stimulate the conversation towards a positive and productive outcome; this may involve asking probing questions, providing constructive feedback and examples when relevant.
-
-MODERATION GUIDELINES:
-1. Intervene somewhat infrequently.
-2. Disregard minor typos and grammatical mistakes. Focus on the content of the conversation.
-3. Keep the conversation on track: these participants are to deliberate on items that may be useful when they are adrift at sea. A "Discussion topic:" in the CHAT HISTORY shows that the conversation has moved on to discussing those items.
-4. Your responses show up as "Mediator message:" in the CHAT HISTORY. Do not repeat feedback you have already given.
-5. Make sure participants are polite to one another.
+MEDIATION GUIDELINES:
+1. Clarify Messages: Ensure clear communication by asking for clarification if any message is unclear or ambiguous.
+2. Maintain Respect: Ensure a respectful atmosphere; intervene if the conversation becomes heated or disrespectful.
+3. Facilitate Turn-Taking: Ensure all participants have equal opportunities to speak and express their views.
+4. Encourage Constructive Feedback: Prompt participants to provide solutions and constructive feedback rather than focusing solely on problems.
+5. Summarize Key Points: Periodically summarize discussion points to ensure mutual understanding and agreement.
+6. Encourage Consensus and Move On: Guide the conversation towards alignment where possible. When participants seem to agree on which item is more important or if the conversation has reached a standstill, explicitly tell participants to consider moving to the next topic.
 `;
 
 /** Create LLM chat mediator prompt. */
 export function createChatMediatorPrompt(
-  promptInstructions: string, messages: Message[], participants: ParticipantProfile[], addJsonConstraint : boolean = true, nMaxMessages = 5
-) {
+  promptInstructions: string,
+  messages: Message[],
+  participants: ParticipantProfile[],
+  mediatorIdentity: string = "Mediator", // The name of the mediator.
+  nMaxMessages = 5,
+  addJsonConstraint : boolean = true,
+  clearPreviousHistoryOnNewDiscussionItems: boolean = true
+) { 
   // Make a deep copy of the last n messages.
-  const truncMessages : Message[] = JSON.parse(JSON.stringify(messages.slice(-1 * nMaxMessages)));
+  let truncMessages : Message[] = JSON.parse(JSON.stringify(messages.slice(-1 * nMaxMessages)));
+
+  // Returns messages starting from the last discussion item message, otherwise all messages.
+  const getLatestDiscussionItems = (curMessages: Message[] ) => {
+    const lastIndex = curMessages.map(m => m.kind).lastIndexOf(MessageKind.DiscussItemsMessage);
+    if (lastIndex === -1) {
+      return curMessages;
+    }
+    return curMessages.slice(lastIndex);
+  };
+
+  if (clearPreviousHistoryOnNewDiscussionItems) {
+    truncMessages = getLatestDiscussionItems(truncMessages);
+  }
 
   const participantDictionary = participants.reduce((acc, p) => {
     acc[p.publicId] = p.name ?? p.publicId;
@@ -35,34 +57,39 @@ export function createChatMediatorPrompt(
   const formatMessage = (message: Message, index: number) => {
     switch (message.kind) {
       case MessageKind.UserMessage:
-        return `${index}. ${participantDictionary[message.fromPublicParticipantId]}: ${message.text}`;
+        return `[${formatTimestamp(message.timestamp)}] ${participantDictionary[message.fromPublicParticipantId]}: ${message.text}`;
       case MessageKind.DiscussItemsMessage:
-        return `${index}. Discussion topic: ${ITEMS[message.itemPair.item1].name}, ${ITEMS[message.itemPair.item2].name}`;
+        return `[${formatTimestamp(message.timestamp)}] Discussion topic: ${ITEMS[message.itemPair.item1].name}, ${ITEMS[message.itemPair.item2].name}`;
       case MessageKind.MediatorMessage:
-        return `${index}. Mediator message: ${message.text}`;
+        // TODO: This assumes one mediator in the conversation, itself.
+        return `[${formatTimestamp(message.timestamp)}] ${mediatorIdentity}: ${message.text}`;
       default:
         return '';
     }
   };
 
-  const prompt = `
-    ${promptInstructions}
+  const getParticipantsString = () => {
+    return participants.map(p => `${p.name ?? p.publicId} (${p.pronouns})`).join(', ');
+  };
 
-Every so often, a "Discussion topic" notification will indicate that the conversation has moved on to a different topic.
-You may see a 'Mediator message', which is something that you have already said in the conversation.
+  // Clarify participants.
+  if (promptInstructions.includes(ALL_PARTICIPANTS)){
+    promptInstructions = promptInstructions.replace(ALL_PARTICIPANTS, `${ALL_PARTICIPANTS} (${getParticipantsString()})`);
+  } else {
+    promptInstructions = promptInstructions += `\n\nPARTICIPANTS: ${getParticipantsString()}\n\n`;
+  }
 
-PARTICIPANTS: ${participants.map(p => p.name ?? p.publicId).join(', ')}
-As you moderate, make sure that these participants are all contributing to the conversation.
+  const prompt = `${promptInstructions}
 
-CHAT HISTORY:
-${truncMessages.map((message, index) => formatMessage(message, index)).join('\n\n')}
+CONVERSATION HISTORY WITH TIMESTAMPS:
+${truncMessages.map((message, index) => formatMessage(message, index)).join('\n')}
   `
   
   const json = `
 
 INSTRUCTIONS:
 Fill out the following JSON response:
-  1. Do you want to intervene with a message? ("true" or false")
+  1. Do you (${MEDIATOR_NAME}) want to add a message to the chat? ("true" or false")
   2. If yes, what would you like to say?
   3. Why do you want to say that?
 
@@ -79,4 +106,22 @@ EXAMPLE OUTPUT:
   const nonJson = `What would you like to say?`
 
   return addJsonConstraint ? prompt + json : prompt + nonJson;
+}
+
+function convertTimestampToDate(timestamp: UnifiedTimestamp): Date {
+  const milliseconds = timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000;
+  return new Date(milliseconds);
+}
+
+function formatTimestamp(timestamp: UnifiedTimestamp): string {
+  const date = convertTimestampToDate(timestamp);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
