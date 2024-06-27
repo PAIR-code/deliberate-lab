@@ -1,5 +1,6 @@
 /** Endpoints for interactions with experiments */
 
+import { MessageKind } from '@llm-mediation-experiments/utils';
 import {
   ChatAnswer,
   ExperimentCreationData,
@@ -8,6 +9,8 @@ import {
   ParticipantProfile,
   StageKind,
   participantPublicId,
+  ChatKind,
+  DiscussItemsMessage,
 } from '@llm-mediation-experiments/utils';
 import { Value } from '@sinclair/typebox/value';
 import { Timestamp } from 'firebase-admin/firestore';
@@ -84,6 +87,24 @@ export const createExperiment = onCall(async (request) => {
             stageName: chat.name,
           };
           transaction.set(participant.collection('chats').doc(chat.chatId), chatData);
+
+          // If the chat is a chat about items, create an initial DiscussItemsMessage to mention the first pair
+          if (chat.chatConfig.kind === ChatKind.ChatAboutItems) {
+            const firstPair = chat.chatConfig.ratingsToDiscuss[0];
+            // Create the message
+            const messageData: Omit<DiscussItemsMessage, 'uid'> = {
+              kind: MessageKind.DiscussItemsMessage,
+              itemPair: firstPair,
+              text: `Discussion 0 of ${chat.chatConfig.ratingsToDiscuss.length}`,
+              timestamp: Timestamp.now(),
+            };
+
+            // Write it to this participant's chat collection
+            transaction.set(
+              participant.collection('chats').doc(chat.chatId).collection('messages').doc(),
+              messageData,
+            );
+          }
         });
       });
     });

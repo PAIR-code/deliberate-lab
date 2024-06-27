@@ -1,9 +1,11 @@
 import {
   ChatAnswer,
   ChatKind,
+  DiscussItemsMessage,
   Experiment,
   ExperimentTemplate,
   ITEM_NAMES,
+  MessageKind,
   RatingQuestionConfig,
   StageConfig,
   StageKind,
@@ -80,6 +82,24 @@ const seedDatabase = async () => {
           };
 
           transaction.set(chat, data);
+
+          // If the chat is about items, create an initial DiscussItemsMessage to mention the first pair
+          if (stage.chatConfig.kind === ChatKind.ChatAboutItems) {
+            const firstPair = stage.chatConfig.ratingsToDiscuss[0];
+            // Create the message
+            const messageData: Omit<DiscussItemsMessage, 'uid'> = {
+              kind: MessageKind.DiscussItemsMessage,
+              itemPair: firstPair,
+              text: `Discussion 0 of ${stage.chatConfig.ratingsToDiscuss.length}`,
+              timestamp: Timestamp.now(),
+            };
+
+            // Write it to this participant's chat collection
+            transaction.set(
+              participant.collection('chats').doc(stage.chatId).collection('messages').doc(),
+              messageData,
+            );
+          }
         }
       });
     });
