@@ -63,7 +63,7 @@ export class ElectionReveal extends MobxLitElement {
       ${descriptionContent}
 
       <div class="reveal-wrapper">
-        <h2>Your elected leader is:</h2>
+        <h2>The winner of the election is::</h2>
         <div class="reveal">
           <profile-avatar .emoji=${leader.avatarUrl} .square=${true}>
           </profile-avatar>

@@ -34,7 +34,7 @@ export const LAS_LEADER_ELECTION_DESCRIPTION = `Please vote for a representative
 
 export const LAS_LEADER_TASK_DESCRIPTION = `While we tally the votes, please complete this task as if you were the representative. If you are chosen as the representative, your performance on this task will determine the payout of your crew! As in the initial task, your task is to choose the item that will better help your crew to survive on the raft.`;
 
-export const LAS_LEADER_REVEAL_DESCRIPTION = "This is the outcome of the leader election.";
+export const LAS_LEADER_REVEAL_DESCRIPTION = "This is the outcome of the representative election.";
 
 export const LAS_FINAL_SURVEY_DESCRIPTION = `Thanks for participating. Please complete this final survey.`;
 

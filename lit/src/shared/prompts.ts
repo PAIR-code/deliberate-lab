@@ -28,12 +28,18 @@ export function createChatMediatorPrompt(
   messages: Message[],
   participants: ParticipantProfile[],
   mediatorIdentity: string = "Mediator", // The name of the mediator.
-  nMaxMessages = 5,
+  nMaxMessages: number | null = null,
   addJsonConstraint : boolean = true,
   clearPreviousHistoryOnNewDiscussionItems: boolean = true
 ) { 
+
   // Make a deep copy of the last n messages.
-  let truncMessages : Message[] = JSON.parse(JSON.stringify(messages.slice(-1 * nMaxMessages)));
+  let truncMessages: Message[] = [];
+  if (nMaxMessages) {
+    truncMessages = JSON.parse(JSON.stringify(messages.slice(-1 * nMaxMessages)));
+  } else {
+    truncMessages = JSON.parse(JSON.stringify(messages));
+  }
 
   // Returns messages starting from the last discussion item message, otherwise all messages.
   const getLatestDiscussionItems = (curMessages: Message[] ) => {

@@ -194,7 +194,7 @@ export function createLostAtSeaModuleStages(numPairs = 5): StageConfig[] {
     (pair, index) => getRatingQuestionFromPair(pair, index)
   );
 
-  stages.push(createSurveyStage("Leader task", LAS_LEADER_TASK_DESCRIPTION, LEADER_QUESTIONS));
+  stages.push(createSurveyStage("Representative task", LAS_LEADER_TASK_DESCRIPTION, LEADER_QUESTIONS));
 
   stages.push(createRevealVotedStage("Representative reveal", LAS_LEADER_REVEAL_DESCRIPTION))
 
