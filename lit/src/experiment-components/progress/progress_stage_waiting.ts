@@ -7,8 +7,8 @@ import { customElement, property } from "lit/decorators.js";
 import { core } from "../../core/core";
 import { ExperimentService } from "../../services/experiment_service";
 
-import { styles } from "./progress_stage_waiting.scss";
 import { ParticipantProfile } from "@llm-mediation-experiments/utils";
+import { styles } from "./progress_stage_waiting.scss";
 
 /** Progress component: Shows how many participants are ready to begin stage */
 @customElement("progress-stage-waiting")
@@ -51,6 +51,7 @@ export class Progress extends MobxLitElement {
           <profile-avatar .emoji=${participant.avatarUrl}></profile-avatar>
           <div>
             ${participant.name ?? participant.publicId}
+            <br/>
             (${participant.pronouns})
           </div>
         </div>
