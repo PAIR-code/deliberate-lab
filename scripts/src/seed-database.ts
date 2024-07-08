@@ -161,9 +161,9 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     description: 'This experiment should take around 30 minutes.',
     kind: StageKind.Info,
     infoLines: [
-      '<h2>Welcome to the experiment!</h2><p>In this task, you are adrift on a private yacht in the North Atlantic with your crewmates. As a consequence of a fire of unknown origin, much of the yacht and its contents have been destroyed. The yacht is now slowly sinking. Your location is unclear because of the destruction of critical navigational equipment and because you and the crew were distracted trying to bring the fire under control. Your best estimate is that you are approximately one thousand miles south-southeast of the nearest land. You have a box of matches in your pocket.</p><br/>',
-      '<h2>How the game is scored:</h2><p>The task is to compare pairs of items depending on how useful they may be to your survival in this scenario. However, your answers are not what matters. You will work with your crewmates to elect a <b>representative</b>, who will complete this task on your behalf. <i>Your payout from this task is dependent on how well the representative does on this task.</i>',
-      '<h2>The next activity:</h2><p>On the next screen, you will complete an example of this task.</p>',
+      '## Welcome to the experiment!\nIn this task, you are adrift on a private yacht in the North Atlantic with your crewmates. As a consequence of a fire of unknown origin, much of the yacht and its contents have been destroyed. The yacht is now slowly sinking. Your location is unclear because of the destruction of critical navigational equipment and because you and the crew were distracted trying to bring the fire under control. Your best estimate is that you are approximately one thousand miles south-southeast of the nearest land. You have a box of matches in your pocket.\n',
+      '## How the game is scored:\nThe task is to compare pairs of items depending on how useful they may be to your survival in this scenario. However, your answers are not what matters. You will work with your crewmates to elect a **representative**, who will complete this task on your behalf. *Your payout from this task is dependent on how well the representative does on this task.*',
+      '## The next activity:\nOn the next screen, you will complete an example of this task.',
     ],
   },
 
@@ -250,7 +250,7 @@ const DEFAULT_STAGES: Record<string, StageConfig> = {
     infoLines: [
       "As we calculate the outcome of the election, please take this time to complete the representative's task.",
       'This is a similar task as before, but with different items.',
-      'If you are elected the representative, <b>your performance on this task will determine the payoffs of you and your crewmembers.</b>',
+      'If you are elected the representative, **your performance on this task will determine the payoffs of you and your crewmembers.**',
     ],
   },
 

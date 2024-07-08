@@ -11,6 +11,8 @@ import { customElement, property } from "lit/decorators.js";
 import { InfoStageConfig } from "@llm-mediation-experiments/utils";
 
 import { styles } from "./info_preview.scss";
+import { convertMarkdownToHTML } from "../../shared/utils";
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
 /** Info preview */
 @customElement("info-preview")
@@ -40,7 +42,7 @@ export class InfoPreview extends MobxLitElement {
   private renderInfoLine(line: string) {
     return html`
       <div class="info-block">
-        ${line}
+        ${unsafeHTML(convertMarkdownToHTML(line))}
       </div>
     `;
     }
