@@ -29,7 +29,7 @@ export class Settings extends MobxLitElement {
         ${this.renderColorThemeSection()}
         ${this.renderTextSizeSection()}
         ${this.renderAccountSection()}
-        ${this.renderAppVersionSection()}
+        ${this.authService.isExperimenter ? this.renderAppVersionSection() : nothing}
       </div>
     `;
   }
