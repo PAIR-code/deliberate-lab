@@ -67,3 +67,5 @@ export const checkUnionErrorOnPath = (
 // Variants
 export const checkConfigDataUnionOnPath = (data: unknown, path: string) =>
   checkUnionErrorOnPath(data, path, CONFIG_DATA);
+
+// TODO: add more union validation variants if needed when something goes wrong

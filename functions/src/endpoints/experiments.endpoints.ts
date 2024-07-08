@@ -119,9 +119,7 @@ export const createExperiment = onCall(async (request) => {
   }
 
   // There was an error: try to extract more information
-  const errors = [...Value.Errors(ExperimentCreationData, data)];
-
-  for (const error of errors) {
+  for (const error of Value.Errors(ExperimentCreationData, data)) {
     if (isUnionError(error)) {
       const nested = checkConfigDataUnionOnPath(data, error.path);
       prettyPrintErrors(nested);
