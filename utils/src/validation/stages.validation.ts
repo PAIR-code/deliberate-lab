@@ -1,4 +1,4 @@
-import { Type, type Static } from '@sinclair/typebox';
+import { TObject, Type, type Static } from '@sinclair/typebox';
 import { ChatContext, MediatorKind } from '../types/mediator.types';
 import { StageKind } from '../types/stages.types';
 import { Vote } from '../types/votes.types';
@@ -25,7 +25,7 @@ export const InfoConfigData = Type.Object(
   {
     kind: Type.Literal(StageKind.Info),
     name: Type.String({ minLength: 1 }),
-    description: Type.Optional(Type.String({ minLength: 1})),
+    description: Type.Optional(Type.String({ minLength: 1 })),
     infoLines: Type.Array(Type.String({ minLength: 1 })),
   },
   strict,
@@ -36,7 +36,7 @@ export const TermsOfServiceConfigData = Type.Object(
   {
     kind: Type.Literal(StageKind.TermsOfService),
     name: Type.String({ minLength: 1 }),
-    description: Type.Optional(Type.String({ minLength: 1})),
+    description: Type.Optional(Type.String({ minLength: 1 })),
     tosLines: Type.Array(Type.String({ minLength: 1 })),
   },
   strict,
@@ -47,7 +47,7 @@ export const ProfileStageConfigData = Type.Object(
   {
     kind: Type.Literal(StageKind.SetProfile),
     name: Type.String({ minLength: 1 }),
-    description: Type.Optional(Type.String({ minLength: 1})),
+    description: Type.Optional(Type.String({ minLength: 1 })),
   },
   strict,
 );
@@ -57,7 +57,7 @@ export const SurveyStageConfigData = Type.Object(
   {
     kind: Type.Literal(StageKind.TakeSurvey),
     name: Type.String({ minLength: 1 }),
-    description: Type.Optional(Type.String({ minLength: 1})),
+    description: Type.Optional(Type.String({ minLength: 1 })),
     questions: Type.Array(
       Type.Union([
         TextQuestionConfigData,
@@ -75,7 +75,7 @@ export const GroupChatStageConfigData = Type.Object(
   {
     kind: Type.Literal(StageKind.GroupChat),
     name: Type.String({ minLength: 1 }),
-    description: Type.Optional(Type.String({ minLength: 1})),
+    description: Type.Optional(Type.String({ minLength: 1 })),
     chatId: Type.String({ minLength: 1 }),
     chatConfig: Type.Union([ChatAboutItemsConfigData, SimpleChatConfigData]),
     mediators: Type.Array(
@@ -97,8 +97,8 @@ export const GroupChatStageConfigData = Type.Object(
           ]),
           filterMediatorMessages: Type.Boolean(),
         },
-        strict
-      )
+        strict,
+      ),
     ),
   },
   strict,
@@ -109,7 +109,7 @@ export const VoteForLeaderConfigData = Type.Object(
   {
     kind: Type.Literal(StageKind.VoteForLeader),
     name: Type.String({ minLength: 1 }),
-    description: Type.Optional(Type.String({ minLength: 1})),
+    description: Type.Optional(Type.String({ minLength: 1 })),
   },
   strict,
 );
@@ -119,11 +119,24 @@ export const RevealVotedConfigData = Type.Object(
   {
     kind: Type.Literal(StageKind.RevealVoted),
     name: Type.String({ minLength: 1 }),
-    description: Type.Optional(Type.String({ minLength: 1})),
+    description: Type.Optional(Type.String({ minLength: 1 })),
     pendingVoteStageName: Type.String({ minLength: 1 }),
   },
   strict,
 );
+
+export const CONFIG_DATA = {
+  [StageKind.Info]: InfoConfigData,
+  [StageKind.TermsOfService]: TermsOfServiceConfigData,
+  [StageKind.SetProfile]: ProfileStageConfigData,
+  [StageKind.TakeSurvey]: SurveyStageConfigData,
+  [StageKind.GroupChat]: GroupChatStageConfigData,
+  [StageKind.VoteForLeader]: VoteForLeaderConfigData,
+  [StageKind.RevealVoted]: RevealVotedConfigData,
+};
+
+/** Access wrapper for calls without type errors when analyzing typebox validation backtrace */
+export const getConfigData = (kind: unknown) => CONFIG_DATA[kind as StageKind] as TObject;
 
 // ********************************************************************************************* //
 //                                              ANSWERS                                          //

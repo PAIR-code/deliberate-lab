@@ -1,12 +1,16 @@
 /** Endpoints for interactions with experiments */
 
 import {
-  ChatAnswer, ChatKind,
-  DiscussItemsMessage, ExperimentCreationData,
+  ChatAnswer,
+  ChatKind,
+  DiscussItemsMessage,
+  ExperimentCreationData,
   ExperimentDeletionData,
-  GroupChatStageConfig, MessageKind, ParticipantProfile,
+  GroupChatStageConfig,
+  MessageKind,
+  ParticipantProfile,
+  participantPublicId,
   StageKind,
-  participantPublicId
 } from '@llm-mediation-experiments/utils';
 import { Value } from '@sinclair/typebox/value';
 import { Timestamp } from 'firebase-admin/firestore';
@@ -14,6 +18,12 @@ import * as functions from 'firebase-functions';
 import { onCall } from 'firebase-functions/v2/https';
 import { app } from '../app';
 import { AuthGuard } from '../utils/auth-guard';
+import {
+  checkConfigDataUnionOnPath,
+  isUnionError,
+  prettyPrintError,
+  prettyPrintErrors,
+} from '../utils/validation';
 
 const DEFAULT_PARTICIPANT_COUNT = 3;
 
@@ -106,6 +116,16 @@ export const createExperiment = onCall(async (request) => {
     });
 
     return { id: document.id };
+  }
+
+  // There was an error: try to extract more information
+  for (const error of Value.Errors(ExperimentCreationData, data)) {
+    if (isUnionError(error)) {
+      const nested = checkConfigDataUnionOnPath(data, error.path);
+      prettyPrintErrors(nested);
+    } else {
+      prettyPrintError(error);
+    }
   }
 
   throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
