@@ -65,6 +65,8 @@ export class Header extends MobxLitElement {
       return "Settings";
     } else if (activePage === Pages.EXPERIMENT) {
       return "My Experiment";
+    } else if (activePage === Pages.EXPERIMENT_GROUP) {
+      return "Experiment group: " + this.routerService.activeRoute.params["experiment_group"];  
     } else if (activePage === Pages.EXPERIMENT_CREATE) {
       return "New experiment";
     } else if (activePage === Pages.PARTICIPANT) {

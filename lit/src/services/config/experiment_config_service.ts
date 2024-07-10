@@ -4,7 +4,7 @@ import { computed, makeObservable, observable, toJS } from "mobx";
 import { FirebaseService } from "../firebase_service";
 import { Service } from "../service";
 
-import { StageConfig, StageKind } from "@llm-mediation-experiments/utils";
+import { randstr, StageConfig, StageKind } from "@llm-mediation-experiments/utils";
 import {
   collectSnapshotWithId,
   convertExperimentStages,
@@ -26,6 +26,11 @@ export class ExperimentConfigService extends Service {
 
   @observable name = 'New experiment';
   @observable numParticipants = 3;
+
+  // Experiment group parameters.
+  @observable isGroup = false;
+  @observable group = "";
+
   @observable stages: StageConfig[] = [createTOSStage(), createProfileStage()];
   @observable currentStageIndex = -1;
   @observable map: Map<string, StageConfig> = new Map();
@@ -49,8 +54,17 @@ export class ExperimentConfigService extends Service {
   // Converts and returns data required for experiment creation
   // (note that this adjusts some stage data, e.g., adds numbering to stages)
   getExperiment() {
+    if (this.isGroup) {
+      return {
+        name: toJS(this.group + '_' + randstr(6)),
+        group: toJS(this.group),
+        stages: convertExperimentStages(toJS(this.stages)),
+        numberOfParticipants: toJS(this.numParticipants),
+      };
+    }
     return {
       name: toJS(this.name),
+      group: toJS(''),
       stages: convertExperimentStages(toJS(this.stages)),
       numberOfParticipants: toJS(this.numParticipants),
     };
@@ -65,6 +79,10 @@ export class ExperimentConfigService extends Service {
     }
     if (this.stages.length === 0) {
       errors.push("Experiment needs at least one stage");
+    }
+    const alphanumRegex = /[^a-zA-Z0-9_-]/;
+    if (this.group && alphanumRegex.test(this.group)) {
+      errors.push("Experiment group prefix can only contain letters, numbers, -, or _.");
     }
     if (this.numParticipants <= 0) {
       errors.push("Experiments needs more than 0 participants");
@@ -96,6 +114,14 @@ export class ExperimentConfigService extends Service {
 
   updateNumParticipants(num: number) {
     this.numParticipants = num;
+  }
+
+  updateIsExperimentGroup(checkbox: boolean) {
+    this.isGroup = checkbox;
+  }
+
+  updateGroupName(name: string) {
+    this.group = name;
   }
 
   updateStages(stages: StageConfig[]) {
@@ -152,5 +178,7 @@ export class ExperimentConfigService extends Service {
     this.numParticipants = 3;
     this.stages = [createTOSStage(), createProfileStage()];
     this.currentStageIndex = -1;
+    this.isGroup = false;
+    this.group = '';
   }
 }

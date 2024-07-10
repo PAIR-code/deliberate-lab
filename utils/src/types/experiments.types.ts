@@ -4,10 +4,11 @@ import { UnifiedTimestamp } from './api.types';
 import { ParticipantProfile } from './participants.types';
 import { StageConfig } from './stages.types';
 
+
 /** Experiment metadata */
 export interface Experiment {
   id: string;
-
+  group?: string;
   name: string;
   date: UnifiedTimestamp;
   numberOfParticipants: number;

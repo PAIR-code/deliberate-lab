@@ -1,12 +1,12 @@
-import { CacheMap, Experiment, ExperimentTemplate, ExperimentTemplateExtended, StageConfig, lookupTable } from "@llm-mediation-experiments/utils";
+import { Experiment, ExperimentTemplate, ExperimentTemplateExtended, StageConfig, lookupTable } from "@llm-mediation-experiments/utils";
 import { Unsubscribe, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot } from "firebase/firestore";
 import { computed, makeObservable, observable } from "mobx";
 import { createExperimentCallable, deleteExperimentCallable } from "../shared/callables";
 import { collectSnapshotWithId } from "../shared/utils";
 
-import { Service } from "./service";
 import { FirebaseService } from "./firebase_service";
 import { RouterService } from "./router_service";
+import { Service } from "./service";
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
@@ -39,6 +39,33 @@ export class ExperimenterService extends Service {
   @computed get isLoading() {
     return this.areExperimentsLoading || this.areTemplatesLoading;
   }
+
+  getUngroupedExperiments() {
+    return this.experiments.filter(experiment => !experiment.group);
+  }
+
+  getGroupedExperiments() {
+    return this.experiments.filter(experiment => experiment.group);
+  }
+
+  getExperimentsInGroup(group: string) {
+    return this.experiments.filter(experiment => experiment.group === group);
+  }
+
+  getGroupedExperimentsMap() {
+    const groupMap = new Map<string, Experiment[]>();
+
+    this.getGroupedExperiments().forEach(experiment => {
+      const group = experiment.group!;
+      if (!groupMap.has(group)) {
+        groupMap.set(group, []);
+      }
+      groupMap.get(group)!.push(experiment);
+    });
+  
+    return groupMap;
+  }
+
 
   subscribe() {
     // Subscribe to all experiment documents
@@ -109,12 +136,12 @@ export class ExperimenterService extends Service {
   /** Create an experiment.
    * @rights Experimenter
    */
-  async createExperiment(name: string, stages: StageConfig[], numberOfParticipants?: number) {
+  async createExperiment(name: string, stages: StageConfig[], numberOfParticipants?: number, group?: string) {
     return createExperimentCallable(
       this.sp.firebaseService.functions,
       {
       type: 'experiments',
-      metadata: { name, numberOfParticipants },
+      metadata: { name, group, numberOfParticipants },
       stages,
     });
   }

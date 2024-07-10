@@ -9,6 +9,7 @@ export interface SimpleResponse<T> {
 
 export interface CreationResponse {
   id: string;
+  group: string;
 }
 
 // Helper for Timestamp (make it work between admin & sdk)

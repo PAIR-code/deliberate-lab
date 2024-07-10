@@ -11,6 +11,7 @@ import "./experiment-components/profile/profile_config";
 import "./experiment-components/survey/survey_preview";
 import "./experiment-components/tos/tos_preview";
 
+import "./components/experiment_group/experiment_group";
 import "./components/header/header";
 import "./components/home/home";
 import "./components/login/login";
@@ -66,6 +67,8 @@ export class App extends MobxLitElement {
         return html`<settings-page .showAccount=${true}></settings-page>`;
       case Pages.EXPERIMENT:
         return this.renderExperiment();
+      case Pages.EXPERIMENT_GROUP:
+        return html`<experiment-group-page></experiment-group-page>`;
       case Pages.EXPERIMENT_CREATE:
         return html`<experiment-config></experiment-config>`;
       case Pages.PARTICIPANT:

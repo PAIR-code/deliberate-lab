@@ -4,20 +4,18 @@ import "../../pair-components/tooltip";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
-import { customElement, state } from "lit/decorators.js";
+import { customElement } from "lit/decorators.js";
 
 import { Experiment, ExperimentTemplate } from '@llm-mediation-experiments/utils';
 
 import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
-import { FirebaseService } from "../../services/firebase_service";
-import { Pages, RouterService } from "../../services/router_service";
 import { ExperimentConfigService } from "../../services/config/experiment_config_service";
+import { Pages, RouterService } from "../../services/router_service";
 
-import { StageKind } from "@llm-mediation-experiments/utils";
 
-import { styles } from "./home.scss";
 import { ExperimenterService } from "../../services/experimenter_service";
+import { styles } from "./home.scss";
 
 /** Home page component */
 @customElement("home-page")
@@ -34,14 +32,24 @@ export class Home extends MobxLitElement {
       return html`<div>403: Participants do not have access</div>`;
     }
 
+    const ungroupedExperiments = this.experimenterService.getUngroupedExperiments();
+    const groupedExperiments = this.experimenterService.getGroupedExperimentsMap();
     return html`
-      <h2>Experiments</h2>
+      <h2>Experiments (Ungrouped)</h2>
       <div class="cards-wrapper">
-        ${this.experimenterService.experiments.length === 0 ?
+        ${ungroupedExperiments.length === 0 ?
           html`<div class="label">No experiments yet</div>` : nothing}
-        ${this.experimenterService.experiments.map(
+        ${ungroupedExperiments.map(
           experiment => this.renderExperimentCard(experiment)
         )}
+      </div>
+      <h2>Experiment groups</h2>
+      <div class="cards-wrapper">
+        ${groupedExperiments.size === 0 ?
+          html`<div class="label">No experiment groups yet</div>` : nothing}
+            ${Array.from(groupedExperiments.entries()).map(
+      ([group, experiments]) => this.renderExperimentGroupCard(group, experiments)
+    )}
       </div>
       <h2>Templates</h2>
       <div class="cards-wrapper">
@@ -54,6 +62,40 @@ export class Home extends MobxLitElement {
     `;
   }
 
+  private renderExperimentGroupCard(group: string, experiments: Experiment[]) {
+    const handleClick = () => {
+      this.routerService.navigate(
+        Pages.EXPERIMENT_GROUP,
+        { "experiment_group": group }
+      );
+    }
+
+    const handleDelete = () => {
+      experiments.forEach(experiment => {
+        this.experimenterService.deleteExperiment(experiment.id);
+      });
+    };
+
+    return html`
+      <div class="card">
+        <h3>${group}</h3>
+        <p class="label">${experiments.length} experiments</p>
+        <div class="action-buttons">
+          <pr-button variant="default" @click=${handleClick}>
+            View group
+          </pr-button>
+          <pr-tooltip text="Delete experiments in group" position="BOTTOM_END">
+            <pr-icon-button
+              icon="delete"
+              color="error"
+              variant="default"
+              @click=${handleDelete}>
+            </pr-icon-button>
+          </pr-tooltip>
+        </div>
+      </div>
+    `;
+  }
   private renderExperimentCard(experiment: Experiment) {
     const handleClick = () => {
       this.routerService.navigate(
