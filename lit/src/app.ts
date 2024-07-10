@@ -11,7 +11,7 @@ import "./experiment-components/profile/profile_config";
 import "./experiment-components/survey/survey_preview";
 import "./experiment-components/tos/tos_preview";
 
-import "./experiment-components/experiment_group/experiment_group";
+import "./components/experiment_group/experiment_group";
 import "./components/header/header";
 import "./components/home/home";
 import "./components/login/login";
