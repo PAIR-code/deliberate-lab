@@ -26,7 +26,6 @@ export class ExperimentGroup extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
   private readonly experimenterService = core.getService(ExperimenterService);
   private readonly experimentConfig = core.getService(ExperimentConfigService);
-
   override render() {
     if (!this.authService.isExperimenter) {
       return html`<div>403: Participants do not have access</div>`;
@@ -35,6 +34,16 @@ export class ExperimentGroup extends MobxLitElement {
     const group = this.routerService.activeRoute.params["experiment_group"];
     const experiments = this.experimenterService.getExperimentsInGroup(group);
     return html`
+      <div class="top-bar">
+      <div class="stat">
+        ${experiments.length} experiments
+      </div>
+
+        <div class="right">
+          ${this.renderDelete(experiments)}
+        </div>
+      </div>
+
       <div class="cards-wrapper">
         ${experiments.length === 0 ?
           html`<div class="label">No experiments yet</div>` : nothing}
@@ -43,6 +52,24 @@ export class ExperimentGroup extends MobxLitElement {
         )}
       </div>
     `;
+  }
+  private renderDelete(experiments: Experiment[]) {
+    const onDelete = () => {
+      experiments.forEach(experiment => {
+        this.experimenterService.deleteExperiment(experiment.id);
+      });
+    };
+    return html`
+    <pr-tooltip text="Delete group" position="BOTTOM_END">
+      <pr-icon-button
+        icon="delete"
+        color="error"
+        variant="tonal"
+        @click=${onDelete}
+      >
+      </pr-icon-button>
+    </pr-tooltip>
+  `;
   }
 
   private renderExperimentCard(experiment: Experiment) {

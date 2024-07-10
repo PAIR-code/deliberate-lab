@@ -7,6 +7,24 @@
   gap: common.$spacing-xl;
 }
 
+.top-bar {
+  @include common.flex-row-align-center;
+  flex-wrap: wrap;
+  gap: common.$spacing-medium;
+  justify-content: space-between;
+
+  .left,
+  .right {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-medium;
+  }
+}
+
+.stat {
+  @include typescale.body-medium;
+  color: var(--md-sys-color-outline);
+}
+
 h2 {
   @include typescale.label-medium;
   color: var(--md-sys-color-secondary);
