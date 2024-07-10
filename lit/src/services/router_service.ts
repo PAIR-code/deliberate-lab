@@ -33,6 +33,11 @@ export class RouterService extends Service {
       path: "/:experiment",
     },
     {
+      name: Pages.EXPERIMENT_GROUP,
+      path: "/:experiment_group",
+    },
+
+    {
       name: Pages.EXPERIMENT_CREATE,
       path: "/new_experiment",
     },
@@ -119,6 +124,7 @@ export enum Pages {
   HOME = "HOME",
   SETTINGS = "SETTINGS",
   EXPERIMENT = "EXPERIMENT",
+  EXPERIMENT_GROUP = "EXPERIMENT_GROUP",
   EXPERIMENT_CREATE = "EXPERIMENT_CREATE",
   PARTICIPANT = "PARTICIPANT",
   PARTICIPANT_STAGE = "PARTICIPANT_STAGE",

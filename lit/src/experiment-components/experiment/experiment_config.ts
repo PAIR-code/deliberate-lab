@@ -64,6 +64,8 @@ export class ExperimentConfig extends MobxLitElement {
   private readonly experimenterService = core.getService(ExperimenterService);
   private readonly routerService = core.getService(RouterService);
 
+  private numExperiments = 1;
+
   override render() {
     if (!this.authService.isExperimenter) {
       return html`<div>Sorry, participants cannot create experiments!</div>`;
@@ -239,12 +241,29 @@ export class ExperimentConfig extends MobxLitElement {
       this.experimentConfig.updateNumParticipants(num);
     };
 
+    const handleCheckbox = (e: Event) => {
+      const checked = Boolean((e.target as HTMLInputElement).checked);
+      this.experimentConfig.updateIsExperimentGroup(checked);
+    };
+
+    const handleGroupName = (e: Event) => {
+      const value = (e.target as HTMLTextAreaElement).value;
+      this.experimentConfig.updateGroupName(value);
+    }
+
+    const handleGroupNum = (e: Event) => {
+      const num = Number((e.target as HTMLTextAreaElement).value);
+      this.numExperiments = num;
+    };
+
+
     return html`
       <pr-textarea
         label="Experiment name"
         placeholder="Name of experiment"
         variant="outlined"
         .value=${this.experimentConfig.name}
+        .disabled=${this.experimentConfig.isGroup}
         @input=${handleName}
       >
       </pr-textarea>
@@ -259,6 +278,40 @@ export class ExperimentConfig extends MobxLitElement {
           @input=${handleNum}
         />
       </div>
+      <i>The experiment group options allow you to create a group of experiments with the same configuration.</i>
+      <div class="checkbox-input">
+        <label for="isExperimentGroup">Create a group of experiments</label>
+        <input
+          type="checkbox"
+          id="isExperimentGroup"
+          name="isExperimentGroup"
+          .checked=${this.experimentConfig.isGroup}
+          @change=${handleCheckbox}
+        />
+      </div>
+      ${this.experimentConfig.isGroup
+        ? html`
+              <pr-textarea
+                label="Experiment group name"
+                placeholder="Prefix of the experiment names (alphanumeric)"
+                variant="outlined"
+                .value=${this.experimentConfig.group}
+                @input=${handleGroupName}
+              >
+              </pr-textarea>
+              <div class="number-input">
+                  <label for="num">Number of experiments</label>
+                  <input
+                    type="number"
+                    id="numExperiments"
+                    name="numExperiments"
+                    min="1"
+                    .value=${this.numExperiments}
+                    @input=${handleGroupNum}
+                  />
+                </div>
+          `
+        : ''}
     `;
   }
 
@@ -369,6 +422,31 @@ export class ExperimentConfig extends MobxLitElement {
   }
 
   private renderBottomActionButtons() {
+    const createSingleExperiment = async (shouldNavigate: boolean = false) => {
+      const { name, stages, numberOfParticipants, group } =
+        this.experimentConfig.getExperiment();
+
+      const experiment = await this.experimenterService.createExperiment(
+        name, stages, numberOfParticipants, group
+      );
+
+      this.experimentConfig.reset();
+      
+      if (shouldNavigate) {
+        if (group) {
+          this.routerService.navigate(
+            Pages.EXPERIMENT_GROUP,
+            { "experiment_group": group}
+          );
+        } else {
+          this.routerService.navigate(
+            Pages.EXPERIMENT,
+            { "experiment": experiment.id }
+          );
+        }
+      }
+    }
+
     const onCreateExperiment = async () => {
       const errors = this.experimentConfig.getExperimentErrors();
       if (errors.length > 0) {
@@ -376,18 +454,10 @@ export class ExperimentConfig extends MobxLitElement {
         return;
       }
 
-      const { name, stages, numberOfParticipants } =
-        this.experimentConfig.getExperiment();
-
-      const experiment = await this.experimenterService.createExperiment(
-        name, stages, numberOfParticipants
-      );
-
-      this.experimentConfig.reset();
-      this.routerService.navigate(
-        Pages.EXPERIMENT,
-        { "experiment": experiment.id }
-      );
+      for (let i =0; i < this.numExperiments; i++) {
+       let shouldNavigate = (i == this.numExperiments - 1);
+       createSingleExperiment(shouldNavigate);
+      }
     }
 
     const onCreateTemplate = async () => {
