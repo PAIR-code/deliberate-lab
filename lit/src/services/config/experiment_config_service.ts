@@ -4,7 +4,7 @@ import { computed, makeObservable, observable, toJS } from "mobx";
 import { FirebaseService } from "../firebase_service";
 import { Service } from "../service";
 
-import { randstr, StageConfig, StageKind } from "@llm-mediation-experiments/utils";
+import { randstr, StageConfig, StageKind, validateStageConfigs } from "@llm-mediation-experiments/utils";
 import {
   collectSnapshotWithId,
   convertExperimentStages,
@@ -71,8 +71,7 @@ export class ExperimentConfigService extends Service {
   }
 
   getExperimentErrors() {
-    // TODO: Check more comprehensively (i.e., all stage fields must be filled)
-    const errors: string[] = [];
+    const errors: string[] = validateStageConfigs(this.stages);
 
     if (this.name.length === 0) {
       errors.push("Experiment name cannot be empty");
@@ -80,14 +79,15 @@ export class ExperimentConfigService extends Service {
     if (this.stages.length === 0) {
       errors.push("Experiment needs at least one stage");
     }
+
     const alphanumRegex = /[^a-zA-Z0-9_-]/;
     if (this.group && alphanumRegex.test(this.group)) {
-      errors.push("Experiment group prefix can only contain letters, numbers, -, or _.");
+      errors.push("Only alphanumeric characters, underscores (_), and hyphens (-) are allowed.");
     }
     if (this.numParticipants <= 0) {
       errors.push("Experiments needs more than 0 participants");
     }
-
+    
     return errors;
   }
 
