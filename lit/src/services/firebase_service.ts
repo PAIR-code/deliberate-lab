@@ -48,8 +48,6 @@ export class FirebaseService extends Service {
 
     // Set up auth provider and scope
     this.provider = new GoogleAuthProvider();
-    this.provider.addScope('https://www.googleapis.com/auth/drive.file');
-    this.provider.addScope('https://www.googleapis.com/auth/spreadsheets');
   }
 
   app: FirebaseApp;
