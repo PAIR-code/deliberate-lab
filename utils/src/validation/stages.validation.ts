@@ -222,6 +222,15 @@ export function validateStageConfigs(stages: StageConfig[]): string[] {
         // No additional required fields
         break;
 
+      case StageKind.VoteForLeader:
+        break;
+
+      case StageKind.RevealVoted:
+        break;
+      
+      case StageKind.GroupChat:
+        break;
+        
       case StageKind.TakeSurvey:
         if (!stage.questions || !Array.isArray(stage.questions) || stage.questions.length === 0) {
           baseErrors.push("Survey stages must include at least one question.");

@@ -73,17 +73,25 @@ export class ExperimentConfigService extends Service {
   getExperimentErrors() {
     const errors: string[] = validateStageConfigs(this.stages);
 
-    if (this.name.length === 0) {
-      errors.push("Experiment name cannot be empty");
+    if (this.isGroup) {
+      if (this.group.length === 0) {
+        errors.push("Experiment group name cannot be empty");
+      }
+
+      const alphanumRegex = /[^a-zA-Z0-9_-]/;
+      if (alphanumRegex.test(this.group)) {
+        errors.push("Only alphanumeric characters, underscores (_), and hyphens (-) are allowed.");
+      }
+    } else {
+      if (this.name.length === 0) {
+        errors.push("Experiment name cannot be empty");
+      }
     }
+
     if (this.stages.length === 0) {
       errors.push("Experiment needs at least one stage");
     }
 
-    const alphanumRegex = /[^a-zA-Z0-9_-]/;
-    if (this.group && alphanumRegex.test(this.group)) {
-      errors.push("Only alphanumeric characters, underscores (_), and hyphens (-) are allowed.");
-    }
     if (this.numParticipants <= 0) {
       errors.push("Experiments needs more than 0 participants");
     }

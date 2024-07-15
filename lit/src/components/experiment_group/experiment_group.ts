@@ -58,6 +58,10 @@ export class ExperimentGroup extends MobxLitElement {
       experiments.forEach(experiment => {
         this.experimenterService.deleteExperiment(experiment.id);
       });
+
+      this.routerService.navigate(
+        Pages.HOME,
+      );
     };
     return html`
     <pr-tooltip text="Delete group" position="BOTTOM_END">
@@ -82,6 +86,7 @@ export class ExperimentGroup extends MobxLitElement {
 
     const handleDelete = () => {
       this.experimenterService.deleteExperiment(experiment.id);
+      
     };
 
     return html`
