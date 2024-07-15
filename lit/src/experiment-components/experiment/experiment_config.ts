@@ -198,7 +198,8 @@ export class ExperimentConfig extends MobxLitElement {
 
   private renderDeleteCurrentStage() {
     if (!this.experimentConfig.currentStage ||
-      this.experimentConfig.currentStage.kind === StageKind.TermsOfService) {
+      this.experimentConfig.currentStage.kind === StageKind.TermsOfService ||
+      this.experimentConfig.currentStage.implicit) {
       return nothing;
     }
 
