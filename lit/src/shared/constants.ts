@@ -12,13 +12,12 @@ export const STAGE_DESCRIPTION_PROFILE =
   "Set profile name and other details";
 export const STAGE_DESCRIPTION_CHAT = "Chat with other participants";
 export const STAGE_DESCRIPTION_CHAT_SIMPLE = "This is a simple chat (no discussion topics)";
-export const STAGE_DESCRIPTION_VOTE = "Choose a participant leader";
-export const STAGE_DESCRIPTION_REVEAL = "Show leader voting results";
+export const STAGE_DESCRIPTION_VOTE = "Vote for a participant leader";
+export const STAGE_DESCRIPTION_REVEAL =
+  "Show stage results. This stage is implicitly added based on other stages.";
 
-export const MODULE_DESCRIPTION_LAS =
+export const GAME_DESCRIPTION_LAS =
   "An implementation of the Lost at Sea task (Born 2022) with pairwise elements.";
-export const MODULE_DESCRIPTION_LEADER =
-  "Includes voting stage and reveal stage for choosing a participant leader";
 
 /** Profile avatars. */
 export const PROFILE_AVATARS = [

@@ -14,7 +14,7 @@ import {
   ProfileStageConfig,
   QuestionConfig,
   RatingQuestionConfig,
-  RevealVotedStageConfig,
+  RevealStageConfig,
   StageConfig,
   StageKind,
   SurveyQuestionKind,
@@ -128,19 +128,13 @@ export function createVoteForLeaderStage(
 }
 
 /**
- * Create leader reveal stage.
- * NOTE: This currently does not assign the VoteForLeader stage to
- * the RevealVoted stage; rather, this is assigned in `convertExperimentStages`
- * with the assumption that there is only one VoteForLeader stage.
- *
- * TODO: Make this an implicit "Reveal" stage for all stages, not just leader
- * election.
+ * Create implicit reveal stage.
  */
-export function createRevealVotedStage(
+export function createRevealStage(
   name = "Reveal",
-  description = "This is the outcome of the vote.",
-): RevealVotedStageConfig {
-  return { kind: StageKind.RevealVoted, name, description, pendingVoteStageName: "" };
+  description = "This shows results from other stages, e.g., leader election.",
+): RevealStageConfig {
+  return { kind: StageKind.Reveal, name, description, stagesToReveal: [] };
 }
 
 /**
@@ -196,7 +190,7 @@ export function createLostAtSeaModuleStages(numPairs = 5): StageConfig[] {
 
   stages.push(createSurveyStage("Representative task", LAS_LEADER_TASK_DESCRIPTION, LEADER_QUESTIONS));
 
-  stages.push(createRevealVotedStage("Representative reveal", LAS_LEADER_REVEAL_DESCRIPTION))
+  stages.push(createRevealStage("Representative reveal", LAS_LEADER_REVEAL_DESCRIPTION))
 
   // Final survey
   stages.push(createSurveyStage("Final survey", LAS_FINAL_SURVEY_DESCRIPTION, LAS_FINAL_SURVEY));
@@ -292,11 +286,9 @@ export function convertExperimentStages(stages: StageConfig[]) {
       );
       return stage;
     }
-    if (stage.kind === StageKind.RevealVoted) {
-      // NOTE: This assumes there is only one VoteForLeader stage
-      // and that it is ordered before the reveal stage.
+    if (stage.kind === StageKind.Reveal) {
       const voteIndex = findStageKind(stages, StageKind.VoteForLeader);
-      stage.pendingVoteStageName = stages[voteIndex]?.name;
+      stage.stagesToReveal.push(stages[voteIndex]?.name);
       return stage;
     }
     return stage;

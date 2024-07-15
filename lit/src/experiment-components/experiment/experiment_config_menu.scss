@@ -11,7 +11,7 @@
   gap: common.$spacing-medium;
   padding: common.$spacing-medium;
 
-  .modules,
+  .games,
   .stages {
     @include common.flex-column;
     gap: common.$spacing-small;
@@ -41,11 +41,11 @@
   }
 }
 
-.module-title {
+.game-title {
   @include typescale.title-small;
 }
 
-.module-info {
+.game-info {
   color: var(--md-sys-color-outline);
   font-style: italic;
 }

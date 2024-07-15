@@ -230,8 +230,8 @@ export class App extends MobxLitElement {
         return html`<profile-config></profile-config>`;
       case StageKind.VoteForLeader:
         return html`<election-preview .answer=${answer}></election-preview>`;
-      case StageKind.RevealVoted:
-        const electionStage = currentStage.pendingVoteStageName;
+      case StageKind.Reveal:
+        const electionStage = currentStage.stagesToReveal[0];
         return html`<election-reveal .voteStageName=${electionStage}></election-reveal>`;
       case StageKind.GroupChat:
         this.chatService.updateForCurrentRoute(currentStage.chatId);

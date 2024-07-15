@@ -31,8 +31,7 @@ import { Pages, RouterService } from "../../services/router_service";
 
 import { ChatKind, ExperimentTemplate, StageConfig, StageKind } from "@llm-mediation-experiments/utils";
 import {
-  MODULE_DESCRIPTION_LAS,
-  MODULE_DESCRIPTION_LEADER,
+  GAME_DESCRIPTION_LAS,
   STAGE_DESCRIPTION_CHAT,
   STAGE_DESCRIPTION_CHAT_SIMPLE,
   STAGE_DESCRIPTION_INFO,
@@ -144,7 +143,7 @@ export class ExperimentConfig extends MobxLitElement {
           ${this.renderStageInfo(
             StageKind.TakeSurvey, STAGE_DESCRIPTION_SURVEY)}
           ${isLostAtSeaModuleStage(currentStage) ? this.renderStageInfo(
-            "lostAtSeaGame", MODULE_DESCRIPTION_LAS, true) : nothing}
+            "lostAtSeaGame", GAME_DESCRIPTION_LAS, true) : nothing}
           <survey-config></survey-config>
         `;
       case StageKind.SetProfile:
@@ -168,7 +167,7 @@ export class ExperimentConfig extends MobxLitElement {
           ${this.renderStageInfo(
             StageKind.GroupChat, STAGE_DESCRIPTION_CHAT)}
           ${isLostAtSeaModuleStage(currentStage) ? this.renderStageInfo(
-            "lostAtSeaGame", MODULE_DESCRIPTION_LAS, true) : nothing}
+            "lostAtSeaGame", GAME_DESCRIPTION_LAS, true) : nothing}
           ${this.renderCurrentStageNameField()}
           ${isLostAtSeaModuleStage(currentStage) ?
             html`<code>${JSON.stringify(currentStage.chatConfig)}</code>`
@@ -179,16 +178,12 @@ export class ExperimentConfig extends MobxLitElement {
         return html`
           ${this.renderStageInfo(
             StageKind.VoteForLeader, STAGE_DESCRIPTION_VOTE)}
-          ${this.renderStageInfo(
-            "leaderModule", MODULE_DESCRIPTION_LEADER, true)}
           ${this.renderCurrentStageNameField()}
         `;
-      case StageKind.RevealVoted:
+      case StageKind.Reveal:
         return html`
           ${this.renderStageInfo(
-            StageKind.RevealVoted, STAGE_DESCRIPTION_REVEAL)}
-          ${this.renderStageInfo(
-            "leaderModule", MODULE_DESCRIPTION_LEADER, true)}
+            StageKind.Reveal, STAGE_DESCRIPTION_REVEAL)}
           ${this.renderCurrentStageNameField()}
         `;
       default:
@@ -216,10 +211,10 @@ export class ExperimentConfig extends MobxLitElement {
     `;
   }
 
-  private renderStageInfo(chip: string, content: string, isModule = false) {
+  private renderStageInfo(chip: string, content: string, isGame = false) {
     const chipClasses = classMap({
       "stage-chip": true,
-      "tertiary": isModule
+      "tertiary": isGame
     });
 
     return html`

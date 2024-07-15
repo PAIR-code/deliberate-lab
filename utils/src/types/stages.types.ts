@@ -11,9 +11,8 @@ export enum StageKind {
   SetProfile = 'setProfile',
   GroupChat = 'groupChat',
   VoteForLeader = 'voteForLeader',
-  RevealVoted = 'leaderReveal',
+  Reveal = 'reveal',
   TakeSurvey = 'takeSurvey',
-  // RankItems = 'rankItems',
 }
 
 // ********************************************************************************************* //
@@ -27,9 +26,8 @@ export const ALLOWED_STAGE_PROGRESSION = {
   [StageKind.SetProfile]: false,
   [StageKind.GroupChat]: false,
   [StageKind.VoteForLeader]: true,
-  [StageKind.RevealVoted]: false,
+  [StageKind.Reveal]: false,
   [StageKind.TakeSurvey]: true,
-  // [StageKind.RankItems]: false,
 } as const;
 
 export interface BaseStageConfig {
@@ -68,9 +66,9 @@ export interface VoteForLeaderStageConfig extends BaseStageConfig {
   kind: StageKind.VoteForLeader;
 }
 
-export interface RevealVotedStageConfig extends BaseStageConfig {
-  kind: StageKind.RevealVoted;
-  pendingVoteStageName: string; // Name of the `VoteForLeader` stage that this stage is revealing the results of
+export interface RevealStageConfig extends BaseStageConfig {
+  kind: StageKind.Reveal;
+  stagesToReveal: string[]; // Names of stages to reveal results for
 }
 
 export type StageConfig =
@@ -80,7 +78,7 @@ export type StageConfig =
   | SurveyStageConfig
   | GroupChatStageConfig
   | VoteForLeaderStageConfig
-  | RevealVotedStageConfig;
+  | RevealStageConfig;
 
 // ********************************************************************************************* //
 //                                           ANSWERS                                             //
@@ -168,10 +166,10 @@ export const getDefaultSurveyConfig = (): SurveyStageConfig => {
   };
 };
 
-export const getDefaultLeaderRevealConfig = (): RevealVotedStageConfig => {
+export const getDefaultRevealConfig = (): RevealStageConfig => {
   return {
-    kind: StageKind.RevealVoted,
-    name: 'Reveal voted leader',
-    pendingVoteStageName: '',
+    kind: StageKind.Reveal,
+    name: 'Reveal stage results',
+    stagesToReveal: [],
   };
 };

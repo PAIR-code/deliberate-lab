@@ -115,13 +115,13 @@ export const VoteForLeaderConfigData = Type.Object(
   strict,
 );
 
-/** Reveal leader after vote stage config */
-export const RevealVotedConfigData = Type.Object(
+/** Reveal stage results config */
+export const RevealConfigData = Type.Object(
   {
-    kind: Type.Literal(StageKind.RevealVoted),
+    kind: Type.Literal(StageKind.Reveal),
     name: Type.String({ minLength: 1 }),
     description: Type.Optional(Type.String({ minLength: 1 })),
-    pendingVoteStageName: Type.String({ minLength: 1 }),
+    stagesToReveal: Type.Array(Type.String({ minLength: 1 })),
   },
   strict,
 );
@@ -133,7 +133,7 @@ export const CONFIG_DATA = {
   [StageKind.TakeSurvey]: SurveyStageConfigData,
   [StageKind.GroupChat]: GroupChatStageConfigData,
   [StageKind.VoteForLeader]: VoteForLeaderConfigData,
-  [StageKind.RevealVoted]: RevealVotedConfigData,
+  [StageKind.Reveal]: RevealConfigData,
 };
 
 /** Access wrapper for calls without type errors when analyzing typebox validation backtrace */

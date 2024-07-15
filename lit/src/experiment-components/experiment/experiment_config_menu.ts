@@ -20,15 +20,14 @@ import {
 
 import { StageKind } from "@llm-mediation-experiments/utils";
 import {
-  MODULE_DESCRIPTION_LAS,
-  MODULE_DESCRIPTION_LEADER,
+  GAME_DESCRIPTION_LAS,
 } from "../../shared/constants";
 import {
   createChatStage,
   createInfoStage,
   createLostAtSeaModuleStages,
   createProfileStage,
-  createRevealVotedStage,
+  createRevealStage,
   createSurveyStage,
   createVoteForLeaderStage,
   isLostAtSeaModuleStage,
@@ -81,37 +80,36 @@ export class ExperimentConfigMenu extends MobxLitElement {
             <div class="menu-item" role="button" @click=${onAddChatClick}>
               Simple chat stage
             </div>
+            ${this.renderLeaderStage()}
           </div>
-          <div class="modules">
-            <div class="category tertiary">Modules</div>
-              ${this.renderLeaderModule()}
-              ${this.renderLostAtSeaModule()}
+          <div class="games">
+            <div class="category tertiary">Games</div>
+              ${this.renderLostAtSeaGame()}
             </div>
         </div>
       </pr-menu>
     `;
   }
 
-  private renderLeaderModule() {
+  private renderLeaderStage() {
     if (this.experimentConfig.hasStageKind(StageKind.VoteForLeader)) {
       return nothing;
     }
 
     const onAddLeaderClick = () => {
       this.experimentConfig.addStage(createVoteForLeaderStage());
-      this.experimentConfig.addStage(createRevealVotedStage());
+      this.experimentConfig.addStage(createRevealStage());
       this.experimentConfig.setCurrentStageIndexToLast();
     }
 
     return html`
       <div class="menu-item" role="button" @click=${onAddLeaderClick}>
-        <div class="module-title">🗳️ Participant election</div>
-        <div class="module-info">${MODULE_DESCRIPTION_LEADER}</div>
+        🗳️ Participant election
       </div>
     `;
   }
 
-  private renderLostAtSeaModule() {
+  private renderLostAtSeaGame() {
     if (this.experimentConfig.stages.find(stage => isLostAtSeaModuleStage(stage))) {
       return nothing;
     }
@@ -127,8 +125,8 @@ export class ExperimentConfigMenu extends MobxLitElement {
 
     return html`
       <div class="menu-item" role="button" @click=${onAddLostAtSeaClick}>
-        <div class="module-title">🌊 Lost at Sea</div>
-        <div class="module-info">${MODULE_DESCRIPTION_LAS}
+        <div class="game-title">🌊 Lost at Sea</div>
+        <div class="game-info">${GAME_DESCRIPTION_LAS}
       </div>
     `;
   }
