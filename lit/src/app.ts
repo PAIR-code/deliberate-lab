@@ -33,6 +33,7 @@ import { SettingsService } from "./services/settings_service";
 
 import {
   ChatKind,
+  StageConfig,
   StageKind
 } from "@llm-mediation-experiments/utils";
 import {
@@ -231,8 +232,10 @@ export class App extends MobxLitElement {
       case StageKind.VoteForLeader:
         return html`<election-preview .answer=${answer}></election-preview>`;
       case StageKind.Reveal:
-        const electionStage = currentStage.stagesToReveal[0];
-        return html`<election-reveal .voteStageName=${electionStage}></election-reveal>`;
+        return html`
+          <div class="stage-wrapper">
+            ${currentStage.stagesToReveal.map(stage => this.renderStageReveal(stage))}
+          </div>`;
       case StageKind.GroupChat:
         this.chatService.updateForCurrentRoute(currentStage.chatId);
 
@@ -243,6 +246,22 @@ export class App extends MobxLitElement {
         }
       default:
         return this.render404("Could not load experiment stage");
+    }
+  }
+
+  private renderStageReveal(stageName: string) {
+    const stage = this.experimentService.stageConfigMap[stageName];
+    if (stage === undefined || !stage.reveal) {
+      return nothing;
+    }
+
+    switch (stage.kind) {
+      case StageKind.VoteForLeader:
+        return html`<election-reveal .voteStageName=${stage.name}></election-reveal`;
+      case StageKind.TakeSurvey:
+        return html`<div>Survey results for ${stage.name} coming soon</div>`;
+      default:
+        return nothing;
     }
   }
 

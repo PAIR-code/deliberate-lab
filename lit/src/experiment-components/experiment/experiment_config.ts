@@ -10,6 +10,8 @@ import "../survey/survey_config";
 import "../tos/tos_config";
 import "./experiment_config_menu";
 
+import "@material/web/checkbox/checkbox.js";
+
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
 import { customElement } from "lit/decorators.js";
@@ -43,6 +45,7 @@ import {
 } from "../../shared/constants";
 import { LAS_ID } from "../../shared/lost_at_sea_constants";
 import {
+  generateId,
   isLostAtSeaGameStage
 } from "../../shared/utils";
 
@@ -119,6 +122,26 @@ export class ExperimentConfig extends MobxLitElement {
     `;
   }
 
+  private renderCurrentStageRevealField() {
+    const updateCurrentStageReveal = (e: Event) => {
+      const checked = Boolean((e.target as HTMLInputElement).checked);
+      this.experimentConfig.updateStageReveal(checked);
+    };
+
+    // TODO: Replace generated id with actual stage id (once field is added)
+    const id = `${generateId()}-reveal`;
+    return html`
+      <div class="checkbox-input">
+        <md-checkbox id=${id} touch-target="wrapper"
+          .checked=${this.experimentConfig.currentStage?.reveal}
+          @change=${updateCurrentStageReveal}
+        />
+        </md-checkbox>
+        <label for=${id}>Show results in reveal stage</label>
+      </div>
+    `;
+  }
+
   private renderCurrentStage() {
     const currentStage = this.experimentConfig.currentStage;
     switch (currentStage?.kind) {
@@ -146,6 +169,8 @@ export class ExperimentConfig extends MobxLitElement {
           ${this.renderStageInfo(
             StageKind.TakeSurvey, STAGE_DESCRIPTION_SURVEY)}
           ${this.renderGameInfo(currentStage.game)}
+          ${isLostAtSeaGameStage(currentStage) ?
+            this.renderCurrentStageRevealField() : nothing}
           <survey-config></survey-config>
         `;
       case StageKind.SetProfile:
@@ -289,14 +314,12 @@ export class ExperimentConfig extends MobxLitElement {
       </div>
       <i>The experiment group options allow you to create a group of experiments with the same configuration.</i>
       <div class="checkbox-input">
-        <label for="isExperimentGroup">Create a group of experiments</label>
-        <input
-          type="checkbox"
-          id="isExperimentGroup"
-          name="isExperimentGroup"
+        <md-checkbox id="isExperimentGroup" touch-target="wrapper"
           .checked=${this.experimentConfig.isGroup}
           @change=${handleCheckbox}
         />
+        </md-checkbox>
+        <label for="isExperimentGroup">Create a group of experiments</label>
       </div>
       ${this.experimentConfig.isGroup
         ? html`

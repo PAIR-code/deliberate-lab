@@ -148,6 +148,12 @@ export class ExperimentConfigService extends Service {
     }
   }
 
+  updateStageReveal(showReveal: boolean, stageIndex = this.currentStageIndex) {
+    if (stageIndex >= 0 && stageIndex < this.stages.length) {
+      this.stages[stageIndex].reveal = showReveal;
+    }
+  }
+
   addStage(stage: StageConfig) {
     this.stages.push(stage);
   }

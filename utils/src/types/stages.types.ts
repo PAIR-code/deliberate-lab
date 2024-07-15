@@ -34,6 +34,7 @@ export interface BaseStageConfig {
   kind: StageKind;
   name: string;
   implicit?: boolean; // true if stage is implicitly added based on other stages
+  reveal?: boolean; // true if should display results for this stage
   game?: string; // ID of game, if part of one
   description?: string;
 }

@@ -59,9 +59,10 @@ export function createTOSStage(
 export function createSurveyStage(
   name = "Survey",
   description = "Survey description",
-  questions: QuestionConfig[] = []
+  questions: QuestionConfig[] = [],
+  reveal = false
 ): SurveyStageConfig {
-  return { kind: StageKind.TakeSurvey, name, description, questions };
+  return { kind: StageKind.TakeSurvey, name, description, questions, reveal };
 }
 
 /** Create profile stage. */
@@ -124,7 +125,7 @@ export function createVoteForLeaderStage(
   name = "Leader election",
   description = "Vote for the leader here.",
 ): VoteForLeaderStageConfig {
-  return { kind: StageKind.VoteForLeader, name, description };
+  return { kind: StageKind.VoteForLeader, reveal: true, name, description };
 }
 
 /**
@@ -190,7 +191,7 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
     (pair, index) => getRatingQuestionFromPair(pair, index)
   );
 
-  stages.push(createSurveyStage("Representative task", LAS_LEADER_TASK_DESCRIPTION, LEADER_QUESTIONS));
+  stages.push(createSurveyStage("Representative task", LAS_LEADER_TASK_DESCRIPTION, LEADER_QUESTIONS, true));
 
   stages.push(createRevealStage("Representative reveal", LAS_LEADER_REVEAL_DESCRIPTION))
 
@@ -285,8 +286,11 @@ export function convertExperimentStages(stages: StageConfig[]) {
       return stage;
     }
     if (stage.kind === StageKind.Reveal) {
-      const voteIndex = findStageKind(stages, StageKind.VoteForLeader);
-      stage.stagesToReveal.push(stages[voteIndex]?.name);
+      stages.forEach(s => {
+        if (s.reveal) {
+          stage.stagesToReveal.push(s.name);
+        }
+      });
       return stage;
     }
     return stage;
