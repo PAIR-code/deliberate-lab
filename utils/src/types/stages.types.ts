@@ -32,7 +32,7 @@ export const ALLOWED_STAGE_PROGRESSION = {
   // [StageKind.RankItems]: false,
 } as const;
 
-interface BaseStageConfig {
+export interface BaseStageConfig {
   kind: StageKind;
   name: string;
   description?: string;
