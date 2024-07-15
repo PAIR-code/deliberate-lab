@@ -26,6 +26,8 @@ export const InfoConfigData = Type.Object(
   {
     kind: Type.Literal(StageKind.Info),
     name: Type.String({ minLength: 1 }),
+    implicit: Type.Optional(Type.Boolean()),
+    game: Type.Optional(Type.String({ minLength: 1 })),
     description: Type.Optional(Type.String({ minLength: 1 })),
     infoLines: Type.Array(Type.String({ minLength: 1 })),
   },
@@ -37,6 +39,8 @@ export const TermsOfServiceConfigData = Type.Object(
   {
     kind: Type.Literal(StageKind.TermsOfService),
     name: Type.String({ minLength: 1 }),
+    implicit: Type.Optional(Type.Boolean()),
+    game: Type.Optional(Type.String({ minLength: 1 })),
     description: Type.Optional(Type.String({ minLength: 1 })),
     tosLines: Type.Array(Type.String({ minLength: 1 })),
   },
@@ -48,6 +52,8 @@ export const ProfileStageConfigData = Type.Object(
   {
     kind: Type.Literal(StageKind.SetProfile),
     name: Type.String({ minLength: 1 }),
+    implicit: Type.Optional(Type.Boolean()),
+    game: Type.Optional(Type.String({ minLength: 1 })),
     description: Type.Optional(Type.String({ minLength: 1 })),
   },
   strict,
@@ -58,6 +64,8 @@ export const SurveyStageConfigData = Type.Object(
   {
     kind: Type.Literal(StageKind.TakeSurvey),
     name: Type.String({ minLength: 1 }),
+    implicit: Type.Optional(Type.Boolean()),
+    game: Type.Optional(Type.String({ minLength: 1 })),
     description: Type.Optional(Type.String({ minLength: 1 })),
     questions: Type.Array(
       Type.Union([
@@ -76,6 +84,8 @@ export const GroupChatStageConfigData = Type.Object(
   {
     kind: Type.Literal(StageKind.GroupChat),
     name: Type.String({ minLength: 1 }),
+    implicit: Type.Optional(Type.Boolean()),
+    game: Type.Optional(Type.String({ minLength: 1 })),
     description: Type.Optional(Type.String({ minLength: 1 })),
     chatId: Type.String({ minLength: 1 }),
     chatConfig: Type.Union([ChatAboutItemsConfigData, SimpleChatConfigData]),
@@ -110,6 +120,8 @@ export const VoteForLeaderConfigData = Type.Object(
   {
     kind: Type.Literal(StageKind.VoteForLeader),
     name: Type.String({ minLength: 1 }),
+    implicit: Type.Optional(Type.Boolean()),
+    game: Type.Optional(Type.String({ minLength: 1 })),
     description: Type.Optional(Type.String({ minLength: 1 })),
   },
   strict,
@@ -120,6 +132,8 @@ export const RevealConfigData = Type.Object(
   {
     kind: Type.Literal(StageKind.Reveal),
     name: Type.String({ minLength: 1 }),
+    implicit: Type.Literal(true),
+    game: Type.Optional(Type.String({ minLength: 1 })),
     description: Type.Optional(Type.String({ minLength: 1 })),
     stagesToReveal: Type.Array(Type.String({ minLength: 1 })),
   },

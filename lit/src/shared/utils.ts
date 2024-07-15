@@ -28,7 +28,7 @@ import {
 import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
 import { v4 as uuidv4 } from "uuid";
-import { LAS_FINAL_SURVEY, LAS_FINAL_SURVEY_DESCRIPTION, LAS_GROUP_CHAT_DESCRIPTION, LAS_INITIAL_TASK_DESCRIPTION, LAS_INTRO_DESCRIPTION, LAS_INTRO_INFO_LINES, LAS_LEADER_ELECTION_DESCRIPTION, LAS_LEADER_REVEAL_DESCRIPTION, LAS_LEADER_TASK_DESCRIPTION, LAS_REDO_TASK_DESCRIPTION } from './lost_at_sea_constants';
+import { LAS_ID, LAS_FINAL_SURVEY, LAS_FINAL_SURVEY_DESCRIPTION, LAS_GROUP_CHAT_DESCRIPTION, LAS_INITIAL_TASK_DESCRIPTION, LAS_INTRO_DESCRIPTION, LAS_INTRO_INFO_LINES, LAS_LEADER_ELECTION_DESCRIPTION, LAS_LEADER_REVEAL_DESCRIPTION, LAS_LEADER_TASK_DESCRIPTION, LAS_REDO_TASK_DESCRIPTION } from './lost_at_sea_constants';
 import { GEMINI_DEFAULT_MODEL, PROMPT_INSTRUCTIONS_CHAT_MEDIATOR } from "./prompts";
 import { Snapshot } from "./types";
 
@@ -134,11 +134,13 @@ export function createRevealStage(
   name = "Reveal",
   description = "This shows results from other stages, e.g., leader election.",
 ): RevealStageConfig {
-  return { kind: StageKind.Reveal, name, description, stagesToReveal: [] };
+  return {
+    kind: StageKind.Reveal, implicit: true, name, description, stagesToReveal: []
+  };
 }
 
 /**
- * Create Lost at Sea game module stages.
+ * Create Lost at Sea game stages.
  *
  * This includes:
  *   2 individual tasks with the same randomly-generated item pairs
@@ -146,7 +148,7 @@ export function createRevealStage(
  *   1 leader task with different randomly-generated item pairs
  */
 
-export function createLostAtSeaModuleStages(numPairs = 5): StageConfig[] {
+export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
   const stages: StageConfig[] = [];
 
   // Add introduction
@@ -195,6 +197,7 @@ export function createLostAtSeaModuleStages(numPairs = 5): StageConfig[] {
   // Final survey
   stages.push(createSurveyStage("Final survey", LAS_FINAL_SURVEY_DESCRIPTION, LAS_FINAL_SURVEY));
 
+  stages.forEach(stage => { stage.game = LAS_ID; });
   return stages;
 }
 
@@ -222,15 +225,10 @@ export function getRatingQuestionFromPair(
 
 
 /**
- * Check if stage is part of the LostAtSea module.
- * TODO: Use more robust logic, e.g., add a moduleType field to track this.
+ * Check if stage is part of the LostAtSea game.
  */
-export function isLostAtSeaModuleStage(stage: StageConfig) {
-  // This relies on the fact that we only allow RatingQuestions and Chat
-  // stages for Lost at Sea module stages.
-  return (stage.kind === StageKind.TakeSurvey &&
-    stage.questions.find(q => q.kind === SurveyQuestionKind.Rating))
-    || (stage.kind === StageKind.GroupChat && stage.chatConfig.kind === ChatKind.ChatAboutItems);
+export function isLostAtSeaGameStage(stage: StageConfig) {
+  return stage.game === LAS_ID;
 }
 
 /**

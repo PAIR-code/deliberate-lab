@@ -41,8 +41,9 @@ import {
   STAGE_DESCRIPTION_TOS,
   STAGE_DESCRIPTION_VOTE,
 } from "../../shared/constants";
+import { LAS_ID } from "../../shared/lost_at_sea_constants";
 import {
-  isLostAtSeaModuleStage
+  isLostAtSeaGameStage
 } from "../../shared/utils";
 
 import { ExperimenterService } from "../../services/experimenter_service";
@@ -126,6 +127,7 @@ export class ExperimentConfig extends MobxLitElement {
         this.infoConfig.stage = currentStage;
         return html`
           ${this.renderStageInfo(StageKind.Info, STAGE_DESCRIPTION_INFO)}
+          ${this.renderGameInfo(currentStage.game)}
           <info-config></info-config>
         `;
       case StageKind.TermsOfService:
@@ -134,6 +136,7 @@ export class ExperimentConfig extends MobxLitElement {
         return html`
           ${this.renderStageInfo(
             StageKind.TermsOfService, STAGE_DESCRIPTION_TOS)}
+          ${this.renderGameInfo(currentStage.game)}
           <tos-config></tos-config>
         `;
       case StageKind.TakeSurvey:
@@ -142,14 +145,14 @@ export class ExperimentConfig extends MobxLitElement {
         return html`
           ${this.renderStageInfo(
             StageKind.TakeSurvey, STAGE_DESCRIPTION_SURVEY)}
-          ${isLostAtSeaModuleStage(currentStage) ? this.renderStageInfo(
-            "lostAtSeaGame", GAME_DESCRIPTION_LAS, true) : nothing}
+          ${this.renderGameInfo(currentStage.game)}
           <survey-config></survey-config>
         `;
       case StageKind.SetProfile:
         return html`
           ${this.renderStageInfo(
             StageKind.SetProfile, STAGE_DESCRIPTION_PROFILE)}
+          ${this.renderGameInfo(currentStage.game)}
           ${this.renderCurrentStageNameField()}
         `;
       case StageKind.GroupChat:
@@ -158,6 +161,7 @@ export class ExperimentConfig extends MobxLitElement {
         if (currentStage.chatConfig.kind !== ChatKind.ChatAboutItems) {
           return html`
             ${this.renderStageInfo(StageKind.GroupChat, STAGE_DESCRIPTION_CHAT)}
+            ${this.renderGameInfo(currentStage.game)}
             <div class="error">${STAGE_DESCRIPTION_CHAT_SIMPLE}</div>
             ${this.renderCurrentStageNameField()}
             <mediators-config></mediators-config>
@@ -166,24 +170,25 @@ export class ExperimentConfig extends MobxLitElement {
         return html`
           ${this.renderStageInfo(
             StageKind.GroupChat, STAGE_DESCRIPTION_CHAT)}
-          ${isLostAtSeaModuleStage(currentStage) ? this.renderStageInfo(
-            "lostAtSeaGame", GAME_DESCRIPTION_LAS, true) : nothing}
+          ${this.renderGameInfo(currentStage.game)}
           ${this.renderCurrentStageNameField()}
-          ${isLostAtSeaModuleStage(currentStage) ?
+          ${isLostAtSeaGameStage(currentStage) ?
             html`<code>${JSON.stringify(currentStage.chatConfig)}</code>`
             : nothing}
-          <mediators-config></mediators-config>
+            <mediators-config></mediators-config>
           `;
       case StageKind.VoteForLeader:
         return html`
           ${this.renderStageInfo(
             StageKind.VoteForLeader, STAGE_DESCRIPTION_VOTE)}
+          ${this.renderGameInfo(currentStage.game)}
           ${this.renderCurrentStageNameField()}
         `;
       case StageKind.Reveal:
         return html`
           ${this.renderStageInfo(
             StageKind.Reveal, STAGE_DESCRIPTION_REVEAL)}
+          ${this.renderGameInfo(currentStage.game)}
           ${this.renderCurrentStageNameField()}
         `;
       default:
@@ -211,18 +216,26 @@ export class ExperimentConfig extends MobxLitElement {
     `;
   }
 
-  private renderStageInfo(chip: string, content: string, isGame = false) {
-    const chipClasses = classMap({
-      "stage-chip": true,
-      "tertiary": isGame
-    });
-
+  private renderStageInfo(chip: string, content: string) {
     return html`
       <div class="stage-info">
-        <div class=${chipClasses}>${chip}</div>
+        <div class="stage-chip">${chip}</div>
         <div class="stage-description">${content}</div>
       </div>
     `;
+  }
+
+  private renderGameInfo(game: string|undefined) {
+    if (game === LAS_ID) {
+      return html`
+        <div class="stage-info">
+          <div class="stage-chip tertiary">${game}</div>
+          <div class="stage-description">${GAME_DESCRIPTION_LAS}</div>
+        </div>
+      `;
+    }
+
+    return nothing;
   }
 
   private renderMetadata() {

@@ -33,6 +33,8 @@ export const ALLOWED_STAGE_PROGRESSION = {
 export interface BaseStageConfig {
   kind: StageKind;
   name: string;
+  implicit?: boolean; // true if stage is implicitly added based on other stages
+  game?: string; // ID of game, if part of one
   description?: string;
 }
 
@@ -68,6 +70,7 @@ export interface VoteForLeaderStageConfig extends BaseStageConfig {
 
 export interface RevealStageConfig extends BaseStageConfig {
   kind: StageKind.Reveal;
+  implicit: true;
   stagesToReveal: string[]; // Names of stages to reveal results for
 }
 
@@ -169,6 +172,7 @@ export const getDefaultSurveyConfig = (): SurveyStageConfig => {
 export const getDefaultRevealConfig = (): RevealStageConfig => {
   return {
     kind: StageKind.Reveal,
+    implicit: true,
     name: 'Reveal stage results',
     stagesToReveal: [],
   };

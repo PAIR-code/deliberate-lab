@@ -25,12 +25,12 @@ import {
 import {
   createChatStage,
   createInfoStage,
-  createLostAtSeaModuleStages,
+  createLostAtSeaGameStages,
   createProfileStage,
   createRevealStage,
   createSurveyStage,
   createVoteForLeaderStage,
-  isLostAtSeaModuleStage,
+  isLostAtSeaGameStage,
 } from "../../shared/utils";
 
 import { styles } from "./experiment_config_menu.scss";
@@ -110,12 +110,12 @@ export class ExperimentConfigMenu extends MobxLitElement {
   }
 
   private renderLostAtSeaGame() {
-    if (this.experimentConfig.stages.find(stage => isLostAtSeaModuleStage(stage))) {
+    if (this.experimentConfig.stages.find(stage => isLostAtSeaGameStage(stage))) {
       return nothing;
     }
 
     const onAddLostAtSeaClick = () => {
-      const lostAtSeaStages = createLostAtSeaModuleStages();
+      const lostAtSeaStages = createLostAtSeaGameStages();
       lostAtSeaStages.forEach(stage => {
         this.experimentConfig.addStage(stage);
       });
