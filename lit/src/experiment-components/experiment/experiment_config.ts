@@ -293,7 +293,7 @@ export class ExperimentConfig extends MobxLitElement {
         ? html`
               <pr-textarea
                 label="Experiment group name"
-                placeholder="Prefix of the experiment names (alphanumeric)"
+                placeholder="Prefix of the experiment group"
                 variant="outlined"
                 .value=${this.experimentConfig.group}
                 @input=${handleGroupName}
@@ -329,7 +329,7 @@ export class ExperimentConfig extends MobxLitElement {
     return html`
       <div class="stages-nav">
         <div class=${settingsClasses} role="button" @click=${handleClick}>
-        🛠️&nbsp; Experiment settings
+          🛠️&nbsp; Experiment ${this.experimentConfig.isGroup ? 'group' : ''} settings
         </div>
         <div class="scroll-menu">
         ${this.experimentConfig.stages.map(
@@ -488,7 +488,7 @@ export class ExperimentConfig extends MobxLitElement {
         </pr-button>
         <pr-tooltip text=${tooltipText} position="TOP_END">
           <pr-button @click=${onCreateExperiment}>
-            Create experiment
+            ${this.experimentConfig.isGroup ? 'Create experiment group' : 'Create experiment'}
           </pr-button>
         </pr-tooltip>
       </div>

@@ -1,6 +1,7 @@
 import { TObject, Type, type Static } from '@sinclair/typebox';
 import { ChatContext, MediatorKind } from '../types/mediator.types';
-import { StageKind } from '../types/stages.types';
+import { SurveyQuestionKind } from '../types/questions.types';
+import { BaseStageConfig, StageConfig, StageKind } from '../types/stages.types';
 import { Vote } from '../types/votes.types';
 import { ChatAboutItemsConfigData, SimpleChatConfigData } from './chats.validation';
 import {
@@ -138,6 +139,7 @@ export const CONFIG_DATA = {
 /** Access wrapper for calls without type errors when analyzing typebox validation backtrace */
 export const getConfigData = (kind: unknown) => CONFIG_DATA[kind as StageKind] as TObject;
 
+
 // ********************************************************************************************* //
 //                                              ANSWERS                                          //
 // ********************************************************************************************* //
@@ -188,3 +190,79 @@ export const StageAnswerData = Type.Object(
 );
 
 export type StageAnswerData = Static<typeof StageAnswerData>;
+
+
+// ********************************************************************************************* //
+//                                          STAGE CREATION                                       //
+// ********************************************************************************************* //
+
+/** This function validates front-end editable fields in stage creation. */
+export function validateStageConfigs(stages: StageConfig[]): string[] {
+  const errors: string[] = [];
+
+  stages.forEach((stage, index) => {
+    const baseErrors = validateBaseStageConfig(stage, index);
+
+    switch (stage.kind) {
+      case StageKind.Info:
+        if (!stage.infoLines || !Array.isArray(stage.infoLines) ||
+        (stage.infoLines.length === 1 && stage.infoLines[0] === "")) {
+          baseErrors.push("Info fields must be nonempty.");
+        }
+        break;
+
+      case StageKind.TermsOfService:
+        if (!stage.tosLines || !Array.isArray(stage.tosLines) ||
+        (stage.tosLines.length === 1 && stage.tosLines[0] === "")) {
+          baseErrors.push("Terms of service content must be nonempty.");
+        }
+        break;
+
+      case StageKind.SetProfile:
+        // No additional required fields
+        break;
+
+      case StageKind.TakeSurvey:
+        if (!stage.questions || !Array.isArray(stage.questions) || stage.questions.length === 0) {
+          baseErrors.push("Survey stages must include at least one question.");
+        }
+
+        stage.questions.forEach(question => {
+          if (!question.questionText) {
+            baseErrors.push("Question text is required.");
+          }
+
+          switch(question.kind) {
+            case SurveyQuestionKind.Scale:
+              if (!question.upperBound || !question.lowerBound) {
+                baseErrors.push("Bounds text is required.");
+              }
+              break;
+            default:
+              break;
+          }
+        });
+
+        break;
+
+      default:
+        baseErrors.push("Unknown stage kind.");
+    }
+
+    if (baseErrors.length > 0) {
+      errors.push(`${baseErrors.join(' ')}`);
+    }
+  });
+
+  return errors;
+}
+
+function validateBaseStageConfig(stage: BaseStageConfig, index: number): string[] {
+  const errors: string[] = [];
+
+  if (!stage.name || typeof stage.name !== 'string') {
+    errors.push("Stage name is required.");
+  }
+
+  return errors;
+}
