@@ -20,18 +20,15 @@ import {
 
 import { StageKind } from "@llm-mediation-experiments/utils";
 import {
-  GAME_DESCRIPTION_LAS,
-} from "../../shared/constants";
-import {
   createChatStage,
   createInfoStage,
-  createLostAtSeaGameStages,
   createProfileStage,
   createRevealStage,
   createSurveyStage,
   createVoteForLeaderStage,
-  isLostAtSeaGameStage,
 } from "../../shared/utils";
+import { LAS_DESCRIPTION } from "../../shared/lost_at_sea/constants";
+import { createLostAtSeaGameStages, isLostAtSeaGameStage } from "../../shared/lost_at_sea/utils";
 
 import { styles } from "./experiment_config_menu.scss";
 
@@ -126,7 +123,7 @@ export class ExperimentConfigMenu extends MobxLitElement {
     return html`
       <div class="menu-item" role="button" @click=${onAddLostAtSeaClick}>
         <div class="game-title">🌊 Lost at Sea</div>
-        <div class="game-info">${GAME_DESCRIPTION_LAS}
+        <div class="game-info">${LAS_DESCRIPTION}
       </div>
     `;
   }

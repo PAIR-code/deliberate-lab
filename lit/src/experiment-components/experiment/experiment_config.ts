@@ -33,7 +33,6 @@ import { Pages, RouterService } from "../../services/router_service";
 
 import { ChatKind, ExperimentTemplate, StageConfig, StageKind } from "@llm-mediation-experiments/utils";
 import {
-  GAME_DESCRIPTION_LAS,
   STAGE_DESCRIPTION_CHAT,
   STAGE_DESCRIPTION_CHAT_SIMPLE,
   STAGE_DESCRIPTION_INFO,
@@ -43,11 +42,9 @@ import {
   STAGE_DESCRIPTION_TOS,
   STAGE_DESCRIPTION_VOTE,
 } from "../../shared/constants";
-import { LAS_ID } from "../../shared/lost_at_sea_constants";
-import {
-  generateId,
-  isLostAtSeaGameStage
-} from "../../shared/utils";
+import { generateId } from "../../shared/utils";
+import { LAS_ID, LAS_DESCRIPTION } from "../../shared/lost_at_sea/constants";
+import { isLostAtSeaGameStage } from "../../shared/lost_at_sea/utils";
 
 import { ExperimenterService } from "../../services/experimenter_service";
 import { styles } from "./experiment_config.scss";
@@ -256,7 +253,7 @@ export class ExperimentConfig extends MobxLitElement {
       return html`
         <div class="stage-info">
           <div class="stage-chip tertiary">${game}</div>
-          <div class="stage-description">${GAME_DESCRIPTION_LAS}</div>
+          <div class="stage-description">${LAS_DESCRIPTION}</div>
         </div>
       `;
     }

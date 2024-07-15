@@ -6,6 +6,8 @@ import {
 } from '@llm-mediation-experiments/utils';
 
 export const LAS_ID = 'lostAtSea';
+export const LAS_DESCRIPTION =
+  "An implementation of the Lost at Sea task (Born 2022) with pairwise elements.";
 
 export const LAS_INTRO_DESCRIPTION = `This experiment should take an estimated 20-30 minutes.`;
 export const LAS_INTRO_INFO_LINES = [
