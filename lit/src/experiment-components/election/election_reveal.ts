@@ -1,7 +1,7 @@
-import "../../footer/footer";
-import "../../profile/profile_avatar";
-import "../../progress/progress_stage_completed";
-import "../../progress/progress_stage_waiting";
+import "../footer/footer";
+import "../profile/profile_avatar";
+import "../progress/progress_stage_completed";
+import "../progress/progress_stage_waiting";
 
 import '@material/web/radio/radio.js';
 
@@ -13,9 +13,9 @@ import {
   StageKind,
 } from "@llm-mediation-experiments/utils";
 
-import { core } from "../../../core/core";
-import { ExperimentService } from "../../../services/experiment_service";
-import { RouterService } from "../../../services/router_service";
+import { core } from "../../core/core";
+import { ExperimentService } from "../../services/experiment_service";
+import { RouterService } from "../../services/router_service";
 
 import { styles } from "./election_reveal.scss";
 

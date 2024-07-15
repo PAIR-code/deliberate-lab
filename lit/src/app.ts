@@ -2,11 +2,11 @@ import "./pair-components/button";
 
 import "./experiment-components/chat/basic_chat";
 import "./experiment-components/chat/lost_at_sea_chat";
+import "./experiment-components/election/election_preview";
+import "./experiment-components/election/election_reveal";
 import "./experiment-components/experiment/experiment_config";
 import "./experiment-components/experiment/experiment_preview";
 import "./experiment-components/info/info_preview";
-import "./experiment-components/modules/election/election_preview";
-import "./experiment-components/modules/election/election_reveal";
 import "./experiment-components/profile/profile_config";
 import "./experiment-components/survey/survey_preview";
 import "./experiment-components/tos/tos_preview";

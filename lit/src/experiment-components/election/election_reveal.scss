@@ -1,5 +1,5 @@
-@use "../../../sass/common";
-@use "../../../sass/typescale";
+@use "../../sass/common";
+@use "../../sass/typescale";
 
 :host {
   @include common.flex-column;
