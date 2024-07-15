@@ -4,6 +4,7 @@
 
 import {
   ITEM_NAMES,
+  ITEMS,
   ItemName,
   QuestionConfig,
   RatingQuestionConfig,
@@ -75,7 +76,7 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
 
   stages.push(createSurveyStage("Representative task", LAS_LEADER_TASK_DESCRIPTION, LEADER_QUESTIONS, true));
 
-  stages.push(createRevealStage("Representative reveal", LAS_LEADER_REVEAL_DESCRIPTION))
+  stages.push(createRevealStage("Reveal", LAS_LEADER_REVEAL_DESCRIPTION))
 
   // Final survey
   stages.push(createSurveyStage("Final survey", LAS_FINAL_SURVEY_DESCRIPTION, LAS_FINAL_SURVEY));
@@ -106,6 +107,22 @@ export function getRatingQuestionFromPair(
   };
 }
 
+/**
+ * Get Lost at Sea item item pair ranking answer.
+ */
+export function getLostAtSeaPairAnswer(item1: ItemName, item2: ItemName) {
+  const ranking1 = getLostAtSeaItemRanking(item1);
+  const ranking2 = getLostAtSeaItemRanking(item2);
+
+  return (ranking1 < ranking2) ? item1 : item2;
+}
+
+/**
+ * Get Lost at Sea item ranking.
+ */
+export function getLostAtSeaItemRanking(item: ItemName) {
+  return ITEMS[item].ranking;
+}
 
 /**
  * Check if stage is part of the LostAtSea game.

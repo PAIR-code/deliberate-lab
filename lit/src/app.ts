@@ -6,6 +6,7 @@ import "./experiment-components/election/election_preview";
 import "./experiment-components/election/election_reveal";
 import "./experiment-components/experiment/experiment_config";
 import "./experiment-components/experiment/experiment_preview";
+import "./experiment-components/games/lost_at_sea/las_result";
 import "./experiment-components/info/info_preview";
 import "./experiment-components/profile/profile_config";
 import "./experiment-components/survey/survey_preview";
@@ -259,7 +260,8 @@ export class App extends MobxLitElement {
       case StageKind.VoteForLeader:
         return html`<election-reveal .voteStageName=${stage.name}></election-reveal`;
       case StageKind.TakeSurvey:
-        return html`<div>Survey results for ${stage.name} coming soon</div>`;
+        const answer = this.participantService.stageAnswers[stage.name];
+        return html`<las-survey-results .stage=${stage} .answer=${answer}></las-survey-results>`;
       default:
         return nothing;
     }
