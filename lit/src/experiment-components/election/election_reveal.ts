@@ -1,4 +1,3 @@
-import "../footer/footer";
 import "../profile/profile_avatar";
 import "../progress/progress_stage_completed";
 import "../progress/progress_stage_waiting";
@@ -40,13 +39,8 @@ export class ElectionReveal extends MobxLitElement {
     const { ready, notReady } =
       this.experimentService.getParticipantsReadyForStage(currentStage);
 
-    const description = this.experimentService.stageConfigMap[currentStage].description;
-    const descriptionContent = description ? html`<div class="description">${description}</div>` : nothing;
-
     if (notReady.length > 0) {
       return html`
-        ${descriptionContent}
-
         <progress-stage-waiting .stageId=${currentStage}>
         </progress-stage-waiting>
       `;
@@ -60,8 +54,6 @@ export class ElectionReveal extends MobxLitElement {
     }
 
     return html`
-      ${descriptionContent}
-
       <div class="reveal-wrapper">
         <h2>The winner of the election is:</h2>
         <div class="reveal">
@@ -73,9 +65,6 @@ export class ElectionReveal extends MobxLitElement {
           </div>
         </div>
       </div>
-      <stage-footer>
-        <progress-stage-completed></progress-stage-completed>
-      </stage-footer>
     `;
   }
 }

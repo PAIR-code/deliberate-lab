@@ -3,12 +3,11 @@ import "./pair-components/button";
 import "./experiment-components/chat/basic_chat";
 import "./experiment-components/chat/lost_at_sea_chat";
 import "./experiment-components/election/election_preview";
-import "./experiment-components/election/election_reveal";
 import "./experiment-components/experiment/experiment_config";
 import "./experiment-components/experiment/experiment_preview";
-import "./experiment-components/games/lost_at_sea/las_result";
 import "./experiment-components/info/info_preview";
 import "./experiment-components/profile/profile_config";
+import "./experiment-components/reveal/reveal_preview";
 import "./experiment-components/survey/survey_preview";
 import "./experiment-components/tos/tos_preview";
 
@@ -231,10 +230,7 @@ export class App extends MobxLitElement {
       case StageKind.VoteForLeader:
         return html`<election-preview .answer=${answer}></election-preview>`;
       case StageKind.Reveal:
-        return html`
-          <div class="stage-wrapper">
-            ${currentStage.stagesToReveal.map(stage => this.renderStageReveal(stage))}
-          </div>`;
+        return html`<reveal-preview .stage=${currentStage}></reveal-preview>`;
       case StageKind.GroupChat:
         this.chatService.updateForCurrentRoute(currentStage.chatId);
 
@@ -245,23 +241,6 @@ export class App extends MobxLitElement {
         }
       default:
         return this.render404("Could not load experiment stage");
-    }
-  }
-
-  private renderStageReveal(stageId: string) {
-    const stage = this.experimentService.stageConfigMap[stageId];
-    if (stage === undefined || !stage.reveal) {
-      return nothing;
-    }
-
-    switch (stage.kind) {
-      case StageKind.VoteForLeader:
-        return html`<election-reveal .voteStageId=${stage.id}></election-reveal`;
-      case StageKind.TakeSurvey:
-        const answer = this.participantService.stageAnswers[stage.id];
-        return html`<las-survey-results .stage=${stage} .answer=${answer}></las-survey-results>`;
-      default:
-        return nothing;
     }
   }
 

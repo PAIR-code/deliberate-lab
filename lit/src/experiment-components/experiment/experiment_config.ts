@@ -6,6 +6,7 @@ import "../../pair-components/tooltip";
 
 import "../info/info_config";
 import "../mediators/mediator_config";
+import "../reveal/reveal_config";
 import "../survey/survey_config";
 import "../tos/tos_config";
 import "./experiment_config_menu";
@@ -23,6 +24,7 @@ import {
 } from "../../services/config/experiment_config_service";
 import { InfoConfigService } from "../../services/config/info_config_service";
 import { MediatorConfigService } from "../../services/config/mediator_config_service";
+import { RevealConfigService } from "../../services/config/reveal_config_service";
 import {
   SurveyConfigService
 } from "../../services/config/survey_config_service";
@@ -57,8 +59,9 @@ export class ExperimentConfig extends MobxLitElement {
   private readonly experimentConfig = core.getService(ExperimentConfigService);
   private readonly infoConfig = core.getService(InfoConfigService);
   private readonly mediatorConfig = core.getService(MediatorConfigService);
-  private readonly tosConfig = core.getService(TOSConfigService);
+  private readonly revealConfig = core.getService(RevealConfigService);
   private readonly surveyConfig = core.getService(SurveyConfigService);
+  private readonly tosConfig = core.getService(TOSConfigService);
 
   private readonly authService = core.getService(AuthService);
   private readonly experimenterService = core.getService(ExperimenterService);
@@ -119,26 +122,6 @@ export class ExperimentConfig extends MobxLitElement {
     `;
   }
 
-  private renderCurrentStageRevealField() {
-    const updateCurrentStageReveal = (e: Event) => {
-      const checked = Boolean((e.target as HTMLInputElement).checked);
-      this.experimentConfig.updateStageReveal(checked);
-    };
-
-    // TODO: Replace generated id with actual stage id (once field is added)
-    const id = `${generateId()}-reveal`;
-    return html`
-      <div class="checkbox-input">
-        <md-checkbox id=${id} touch-target="wrapper"
-          .checked=${this.experimentConfig.currentStage?.reveal}
-          @change=${updateCurrentStageReveal}
-        />
-        </md-checkbox>
-        <label for=${id}>Show results in reveal stage</label>
-      </div>
-    `;
-  }
-
   private renderCurrentStage() {
     const currentStage = this.experimentConfig.currentStage;
     switch (currentStage?.kind) {
@@ -166,8 +149,6 @@ export class ExperimentConfig extends MobxLitElement {
           ${this.renderStageInfo(
             StageKind.TakeSurvey, STAGE_DESCRIPTION_SURVEY)}
           ${this.renderGameInfo(currentStage.game)}
-          ${isLostAtSeaGameStage(currentStage) ?
-            this.renderCurrentStageRevealField() : nothing}
           <survey-config></survey-config>
         `;
       case StageKind.SetProfile:
@@ -207,11 +188,14 @@ export class ExperimentConfig extends MobxLitElement {
           ${this.renderCurrentStageNameField()}
         `;
       case StageKind.Reveal:
+        this.revealConfig.reset();
+        this.revealConfig.stage = currentStage;
         return html`
           ${this.renderStageInfo(
             StageKind.Reveal, STAGE_DESCRIPTION_REVEAL)}
           ${this.renderGameInfo(currentStage.game)}
           ${this.renderCurrentStageNameField()}
+          <reveal-config></reveal-config>
         `;
       default:
         return this.renderMetadata();
@@ -220,8 +204,7 @@ export class ExperimentConfig extends MobxLitElement {
 
   private renderDeleteCurrentStage() {
     if (!this.experimentConfig.currentStage ||
-      this.experimentConfig.currentStage.kind === StageKind.TermsOfService ||
-      this.experimentConfig.currentStage.implicit) {
+      this.experimentConfig.currentStage.kind === StageKind.TermsOfService) {
       return nothing;
     }
 

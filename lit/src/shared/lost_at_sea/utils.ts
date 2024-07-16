@@ -67,16 +67,24 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
   );
 
   stages.push(createSurveyStage("Updated individual task", LAS_REDO_TASK_DESCRIPTION, INDIVIDUAL_QUESTIONS));
-  stages.push(createVoteForLeaderStage("Representative election", LAS_LEADER_ELECTION_DESCRIPTION));
+  const election = createVoteForLeaderStage("Representative election", LAS_LEADER_ELECTION_DESCRIPTION);
+  stages.push(election);
 
   // Add leader task
   const LEADER_QUESTIONS: RatingQuestionConfig[] = LEADER_ITEM_PAIRS.map(
     (pair, index) => getRatingQuestionFromPair(pair, index)
   );
 
-  stages.push(createSurveyStage("Representative task", LAS_LEADER_TASK_DESCRIPTION, LEADER_QUESTIONS, true));
+  const leaderSurvey = createSurveyStage("Representative task", LAS_LEADER_TASK_DESCRIPTION, LEADER_QUESTIONS);
+  stages.push(leaderSurvey);
 
-  stages.push(createRevealStage("Reveal", LAS_LEADER_REVEAL_DESCRIPTION))
+  stages.push(
+    createRevealStage(
+      "Reveal",
+      LAS_LEADER_REVEAL_DESCRIPTION,
+      [election.id, leaderSurvey.id]
+    )
+  );
 
   // Final survey
   stages.push(createSurveyStage("Final survey", LAS_FINAL_SURVEY_DESCRIPTION, LAS_FINAL_SURVEY));

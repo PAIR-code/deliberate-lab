@@ -35,8 +35,7 @@ export interface BaseStageConfig {
   id: string;
   kind: StageKind;
   name: string;
-  implicit?: boolean; // true if stage is implicitly added based on other stages
-  reveal?: boolean; // true if should display results for this stage
+  composite?: boolean; // true if stage uses data from other stages (e.g., reveal)
   game?: string; // ID of game, if part of one
   description?: string;
 }
@@ -73,7 +72,7 @@ export interface VoteForLeaderStageConfig extends BaseStageConfig {
 
 export interface RevealStageConfig extends BaseStageConfig {
   kind: StageKind.Reveal;
-  implicit: true;
+  composite: true;
   stagesToReveal: string[]; // Names of stages to reveal results for
 }
 

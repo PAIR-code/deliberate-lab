@@ -55,9 +55,8 @@ export function createSurveyStage(
   name = "Survey",
   description = "Survey description",
   questions: QuestionConfig[] = [],
-  reveal = false
 ): SurveyStageConfig {
-  return { id: generateId(), kind: StageKind.TakeSurvey, name, description, questions, reveal };
+  return { id: generateId(), kind: StageKind.TakeSurvey, name, description, questions };
 }
 
 /** Create profile stage. */
@@ -122,18 +121,19 @@ export function createVoteForLeaderStage(
   name = "Leader election",
   description = "Vote for the leader here.",
 ): VoteForLeaderStageConfig {
-  return { id: generateId(), kind: StageKind.VoteForLeader, reveal: true, name, description };
+  return { id: generateId(), kind: StageKind.VoteForLeader, name, description };
 }
 
 /**
- * Create implicit reveal stage.
+ * Create composite reveal stage.
  */
 export function createRevealStage(
   name = "Reveal",
   description = "This shows results from other stages, e.g., leader election.",
+  stagesToReveal: string [] = []
 ): RevealStageConfig {
   return {
-    id: generateId(), kind: StageKind.Reveal, implicit: true, name, description, stagesToReveal: []
+    id: generateId(), kind: StageKind.Reveal, composite: true, name, description, stagesToReveal
   };
 }
 
@@ -171,7 +171,6 @@ export function convertMarkdownToHTML(markdown: string, sanitize = true) {
 
 /**
  *  Adjust experiment stages to Firebase format (e.g., HTML instead of .md)
- *  and add numbering to stages.
  */
 export function convertExperimentStages(stages: StageConfig[]) {
   return stages.map((stage, index) => {
@@ -179,14 +178,6 @@ export function convertExperimentStages(stages: StageConfig[]) {
       stage.tosLines = stage.tosLines.map(
         info => convertMarkdownToHTML(info)
       );
-      return stage;
-    }
-    if (stage.kind === StageKind.Reveal) {
-      stages.forEach(s => {
-        if (s.reveal) {
-          stage.stagesToReveal.push(s.name);
-        }
-      });
       return stage;
     }
     return stage;

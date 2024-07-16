@@ -97,6 +97,10 @@ export class ExperimentConfigService extends Service {
     return errors;
   }
 
+  getStage(stageId: string) {
+    return this.stages.find(stage => stage.id === stageId);
+  }
+
   setCurrentStageIndex(index: number) {
     this.currentStageIndex = index;
   }
@@ -143,12 +147,6 @@ export class ExperimentConfigService extends Service {
   updateStageDescription(description: string, stageIndex = this.currentStageIndex) {
     if (stageIndex >= 0 && stageIndex < this.stages.length) {
       this.stages[stageIndex].description = description;
-    }
-  }
-
-  updateStageReveal(showReveal: boolean, stageIndex = this.currentStageIndex) {
-    if (stageIndex >= 0 && stageIndex < this.stages.length) {
-      this.stages[stageIndex].reveal = showReveal;
     }
   }
 

@@ -4,7 +4,6 @@
 :host {
   @include common.flex-column;
   gap: common.$spacing-xl;
-  height: 100%;
 }
 
 .description {
