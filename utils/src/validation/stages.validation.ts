@@ -24,8 +24,11 @@ const strict = { additionalProperties: false } as const;
 /** Info stage config */
 export const InfoConfigData = Type.Object(
   {
+    id: Type.String({ minLength: 1 }),
     kind: Type.Literal(StageKind.Info),
     name: Type.String({ minLength: 1 }),
+    composite: Type.Optional(Type.Boolean()),
+    game: Type.Optional(Type.String({ minLength: 1 })),
     description: Type.Optional(Type.String({ minLength: 1 })),
     infoLines: Type.Array(Type.String({ minLength: 1 })),
   },
@@ -35,8 +38,11 @@ export const InfoConfigData = Type.Object(
 /** Terms of service stage config */
 export const TermsOfServiceConfigData = Type.Object(
   {
+    id: Type.String({ minLength: 1 }),
     kind: Type.Literal(StageKind.TermsOfService),
     name: Type.String({ minLength: 1 }),
+    composite: Type.Optional(Type.Boolean()),
+    game: Type.Optional(Type.String({ minLength: 1 })),
     description: Type.Optional(Type.String({ minLength: 1 })),
     tosLines: Type.Array(Type.String({ minLength: 1 })),
   },
@@ -46,8 +52,11 @@ export const TermsOfServiceConfigData = Type.Object(
 /** Profile stage config */
 export const ProfileStageConfigData = Type.Object(
   {
+    id: Type.String({ minLength: 1 }),
     kind: Type.Literal(StageKind.SetProfile),
     name: Type.String({ minLength: 1 }),
+    composite: Type.Optional(Type.Boolean()),
+    game: Type.Optional(Type.String({ minLength: 1 })),
     description: Type.Optional(Type.String({ minLength: 1 })),
   },
   strict,
@@ -56,8 +65,11 @@ export const ProfileStageConfigData = Type.Object(
 /** Survey stage config */
 export const SurveyStageConfigData = Type.Object(
   {
+    id: Type.String({ minLength: 1 }),
     kind: Type.Literal(StageKind.TakeSurvey),
     name: Type.String({ minLength: 1 }),
+    composite: Type.Optional(Type.Boolean()),
+    game: Type.Optional(Type.String({ minLength: 1 })),
     description: Type.Optional(Type.String({ minLength: 1 })),
     questions: Type.Array(
       Type.Union([
@@ -74,8 +86,11 @@ export const SurveyStageConfigData = Type.Object(
 /** Group chat stage config */
 export const GroupChatStageConfigData = Type.Object(
   {
+    id: Type.String({ minLength: 1 }),
     kind: Type.Literal(StageKind.GroupChat),
     name: Type.String({ minLength: 1 }),
+    composite: Type.Optional(Type.Boolean()),
+    game: Type.Optional(Type.String({ minLength: 1 })),
     description: Type.Optional(Type.String({ minLength: 1 })),
     chatId: Type.String({ minLength: 1 }),
     chatConfig: Type.Union([ChatAboutItemsConfigData, SimpleChatConfigData]),
@@ -108,20 +123,26 @@ export const GroupChatStageConfigData = Type.Object(
 /** Vote for leader stage config */
 export const VoteForLeaderConfigData = Type.Object(
   {
+    id: Type.String({ minLength: 1 }),
     kind: Type.Literal(StageKind.VoteForLeader),
     name: Type.String({ minLength: 1 }),
+    composite: Type.Optional(Type.Boolean()),
+    game: Type.Optional(Type.String({ minLength: 1 })),
     description: Type.Optional(Type.String({ minLength: 1 })),
   },
   strict,
 );
 
-/** Reveal leader after vote stage config */
-export const RevealVotedConfigData = Type.Object(
+/** Reveal stage results config */
+export const RevealConfigData = Type.Object(
   {
-    kind: Type.Literal(StageKind.RevealVoted),
+    id: Type.String({ minLength: 1 }),
+    kind: Type.Literal(StageKind.Reveal),
     name: Type.String({ minLength: 1 }),
+    composite: Type.Literal(true),
+    game: Type.Optional(Type.String({ minLength: 1 })),
     description: Type.Optional(Type.String({ minLength: 1 })),
-    pendingVoteStageName: Type.String({ minLength: 1 }),
+    stagesToReveal: Type.Array(Type.String({ minLength: 1 })),
   },
   strict,
 );
@@ -133,7 +154,7 @@ export const CONFIG_DATA = {
   [StageKind.TakeSurvey]: SurveyStageConfigData,
   [StageKind.GroupChat]: GroupChatStageConfigData,
   [StageKind.VoteForLeader]: VoteForLeaderConfigData,
-  [StageKind.RevealVoted]: RevealVotedConfigData,
+  [StageKind.Reveal]: RevealConfigData,
 };
 
 /** Access wrapper for calls without type errors when analyzing typebox validation backtrace */
@@ -183,7 +204,7 @@ export const StageAnswerData = Type.Object(
   {
     experimentId: Type.String({ minLength: 1 }),
     participantId: Type.String({ minLength: 1 }),
-    stageName: Type.String({ minLength: 1 }),
+    stageId: Type.String({ minLength: 1 }),
     stage: Type.Union([SurveyStageAnswerData, VoteForLeaderStageAnswerData]),
   },
   strict,
@@ -225,7 +246,7 @@ export function validateStageConfigs(stages: StageConfig[]): string[] {
       case StageKind.VoteForLeader:
         break;
 
-      case StageKind.RevealVoted:
+      case StageKind.Reveal:
         break;
       
       case StageKind.GroupChat:

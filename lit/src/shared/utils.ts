@@ -6,7 +6,6 @@ import {
   ChatContext,
   ChatKind,
   GroupChatStageConfig,
-  ITEM_NAMES,
   InfoStageConfig,
   ItemName,
   MediatorConfig,
@@ -14,21 +13,17 @@ import {
   ProfileStageConfig,
   QuestionConfig,
   RatingQuestionConfig,
-  RevealVotedStageConfig,
+  RevealStageConfig,
   StageConfig,
   StageKind,
   SurveyQuestionKind,
   SurveyStageConfig,
   TermsOfServiceStageConfig,
   VoteForLeaderStageConfig,
-  choices,
-  pairs,
-  seed
 } from '@llm-mediation-experiments/utils';
 import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
 import { v4 as uuidv4 } from "uuid";
-import { LAS_FINAL_SURVEY, LAS_FINAL_SURVEY_DESCRIPTION, LAS_GROUP_CHAT_DESCRIPTION, LAS_INITIAL_TASK_DESCRIPTION, LAS_INTRO_DESCRIPTION, LAS_INTRO_INFO_LINES, LAS_LEADER_ELECTION_DESCRIPTION, LAS_LEADER_REVEAL_DESCRIPTION, LAS_LEADER_TASK_DESCRIPTION, LAS_REDO_TASK_DESCRIPTION } from './lost_at_sea_constants';
 import { GEMINI_DEFAULT_MODEL, PROMPT_INSTRUCTIONS_CHAT_MEDIATOR } from "./prompts";
 import { Snapshot } from "./types";
 
@@ -42,7 +37,7 @@ export function createInfoStage(
   name = "Info", description = "Info description", content = ["Placeholder info"]
 ): InfoStageConfig {
   const infoLines = content;
-  return { kind: StageKind.Info, name, description, infoLines };
+  return { id: generateId(), kind: StageKind.Info, name, description, infoLines };
 }
 
 /** Create TOS stage. */
@@ -52,22 +47,22 @@ export function createTOSStage(
   content = "- Placeholder term 1\n- Placeholder term 2\n- Placeholder term 3",
 ): TermsOfServiceStageConfig {
   const tosLines = [content];
-  return { kind: StageKind.TermsOfService, name, description, tosLines };
+  return { id: generateId(), kind: StageKind.TermsOfService, name, description, tosLines };
 }
 
 /** Create survey stage. */
 export function createSurveyStage(
   name = "Survey",
   description = "Survey description",
-  questions: QuestionConfig[] = []
+  questions: QuestionConfig[] = [],
 ): SurveyStageConfig {
-  return { kind: StageKind.TakeSurvey, name, description, questions };
+  return { id: generateId(), kind: StageKind.TakeSurvey, name, description, questions };
 }
 
 /** Create profile stage. */
 export function createProfileStage(name = "Set profile"): ProfileStageConfig {
   // Bug: Experiment can't be created with a profile description.
-  return { kind: StageKind.SetProfile, name};
+  return { id: generateId(), kind: StageKind.SetProfile, name};
 }
 
 /** Create chat (with ranking discussion) stage. */
@@ -78,6 +73,7 @@ export function createChatStage(
 ): GroupChatStageConfig {
   if (ratingsToDiscuss.length === 0) {
     return {
+      id: generateId(),
       name,
       description,
       kind: StageKind.GroupChat,
@@ -90,6 +86,7 @@ export function createChatStage(
   }
 
   return {
+    id: generateId(),
     name,
     description,
     kind: StageKind.GroupChat,
@@ -124,119 +121,20 @@ export function createVoteForLeaderStage(
   name = "Leader election",
   description = "Vote for the leader here.",
 ): VoteForLeaderStageConfig {
-  return { kind: StageKind.VoteForLeader, name, description };
+  return { id: generateId(), kind: StageKind.VoteForLeader, name, description };
 }
 
 /**
- * Create leader reveal stage.
- * NOTE: This currently does not assign the VoteForLeader stage to
- * the RevealVoted stage; rather, this is assigned in `convertExperimentStages`
- * with the assumption that there is only one VoteForLeader stage.
- *
- * TODO: Make this an implicit "Reveal" stage for all stages, not just leader
- * election.
+ * Create composite reveal stage.
  */
-export function createRevealVotedStage(
+export function createRevealStage(
   name = "Reveal",
-  description = "This is the outcome of the vote.",
-): RevealVotedStageConfig {
-  return { kind: StageKind.RevealVoted, name, description, pendingVoteStageName: "" };
-}
-
-/**
- * Create Lost at Sea game module stages.
- *
- * This includes:
- *   2 individual tasks with the same randomly-generated item pairs
- *   1 chat discussion based around those item pairs
- *   1 leader task with different randomly-generated item pairs
- */
-
-export function createLostAtSeaModuleStages(numPairs = 5): StageConfig[] {
-  const stages: StageConfig[] = [];
-
-  // Add introduction
-  stages.push(createInfoStage("Welcome to the experiment", LAS_INTRO_DESCRIPTION, LAS_INTRO_INFO_LINES));
-  
-  // Shuffle the items.
-  seed(6272023);
-  const middleIndex = Math.ceil(ITEM_NAMES.length / 2);
-
-  // Take random items from the first half for the individual tasks.
-  const INDIVIDUAL_ITEM_NAMES = ITEM_NAMES.slice(0, middleIndex);
-  const INDIVIDUAL_ITEM_PAIRS = choices(pairs(INDIVIDUAL_ITEM_NAMES), numPairs);
-
-  // Take random items from the second half for the leader tasks.
-  const LEADER_ITEM_NAMES = ITEM_NAMES.slice(middleIndex);
-  const LEADER_ITEM_PAIRS = choices(pairs(LEADER_ITEM_NAMES), numPairs);
-
-  // Add individual surveys
-  const INDIVIDUAL_QUESTIONS: RatingQuestionConfig[] = INDIVIDUAL_ITEM_PAIRS.map(
-    (pair, index) => getRatingQuestionFromPair(pair, index)
-  );
-
-  stages.push(createSurveyStage("Initial survival task", LAS_INITIAL_TASK_DESCRIPTION, INDIVIDUAL_QUESTIONS));
-
-  // Add chat with individual item pairs as discussion
-  stages.push(
-    createChatStage(
-      "Group discussion",
-      LAS_GROUP_CHAT_DESCRIPTION,
-      INDIVIDUAL_ITEM_PAIRS.map(([i1, i2]) => ({ item1: i1, item2: i2 }))
-    )
-  );
-
-  stages.push(createSurveyStage("Updated individual task", LAS_REDO_TASK_DESCRIPTION, INDIVIDUAL_QUESTIONS));
-  stages.push(createVoteForLeaderStage("Representative election", LAS_LEADER_ELECTION_DESCRIPTION));
-
-  // Add leader task
-  const LEADER_QUESTIONS: RatingQuestionConfig[] = LEADER_ITEM_PAIRS.map(
-    (pair, index) => getRatingQuestionFromPair(pair, index)
-  );
-
-  stages.push(createSurveyStage("Representative task", LAS_LEADER_TASK_DESCRIPTION, LEADER_QUESTIONS));
-
-  stages.push(createRevealVotedStage("Representative reveal", LAS_LEADER_REVEAL_DESCRIPTION))
-
-  // Final survey
-  stages.push(createSurveyStage("Final survey", LAS_FINAL_SURVEY_DESCRIPTION, LAS_FINAL_SURVEY));
-
-  return stages;
-}
-
-/**
- * Uses item pair to create survey RatingQuestion.
- */
-export function getRatingQuestionFromPair(
-  pair: [string, string],
-  id: number,
-  questionText = "Choose the item that would be more helpful to your survival",
-): RatingQuestionConfig {
-
-  const [one, two] = pair;
-  const item1: ItemName = (one as ItemName);
-  const item2: ItemName = (two as ItemName);
-
+  description = "This shows results from other stages, e.g., leader election.",
+  stagesToReveal: string [] = []
+): RevealStageConfig {
   return {
-    id,
-    kind: SurveyQuestionKind.Rating,
-    questionText,
-    item1,
-    item2,
+    id: generateId(), kind: StageKind.Reveal, composite: true, name, description, stagesToReveal
   };
-}
-
-
-/**
- * Check if stage is part of the LostAtSea module.
- * TODO: Use more robust logic, e.g., add a moduleType field to track this.
- */
-export function isLostAtSeaModuleStage(stage: StageConfig) {
-  // This relies on the fact that we only allow RatingQuestions and Chat
-  // stages for Lost at Sea module stages.
-  return (stage.kind === StageKind.TakeSurvey &&
-    stage.questions.find(q => q.kind === SurveyQuestionKind.Rating))
-    || (stage.kind === StageKind.GroupChat && stage.chatConfig.kind === ChatKind.ChatAboutItems);
 }
 
 /**
@@ -273,53 +171,17 @@ export function convertMarkdownToHTML(markdown: string, sanitize = true) {
 
 /**
  *  Adjust experiment stages to Firebase format (e.g., HTML instead of .md)
- *  and add numbering to stages.
  */
 export function convertExperimentStages(stages: StageConfig[]) {
-  const addIndexToStageName = (name: string, index: number) => {
-    if (index + 1 < 10) {
-      return `0${index + 1}. ${name}`;
-    }
-    return `${index + 1}. ${name}`;
-  };
-
   return stages.map((stage, index) => {
-    stage.name = addIndexToStageName(stage.name, index);
-
     if (stage.kind === StageKind.TermsOfService) {
       stage.tosLines = stage.tosLines.map(
         info => convertMarkdownToHTML(info)
       );
       return stage;
     }
-    if (stage.kind === StageKind.RevealVoted) {
-      // NOTE: This assumes there is only one VoteForLeader stage
-      // and that it is ordered before the reveal stage.
-      const voteIndex = findStageKind(stages, StageKind.VoteForLeader);
-      stage.pendingVoteStageName = stages[voteIndex]?.name;
-      return stage;
-    }
     return stage;
   })
-}
-
-/**
- * Adjust template stages to experiment stage format
- * (e.g., strip stage numbers)
- */
-export function convertTemplateStages(stages: StageConfig[]) {
-  const stripNumbersFromTitle = (name: string) => {
-    const titleParts = name.split('. ');
-    if (titleParts.length > 1) {
-      return `${titleParts[1]}`;
-    }
-    return `Untitled stage`;
-  };
-
-  return stages.map((stage) => {
-    stage.name = stripNumbersFromTitle(stage.name);
-    return stage;
-  });
 }
 
 /**

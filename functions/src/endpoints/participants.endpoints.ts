@@ -17,11 +17,11 @@ export const updateStage = onCall(async (request) => {
   const { data } = request;
 
   if (Value.Check(StageAnswerData, data)) {
-    const { experimentId, participantId, stageName, stage } = data;
+    const { experimentId, participantId, stageId, stage } = data;
 
     const answerDoc = app
       .firestore()
-      .doc(`experiments/${experimentId}/participants/${participantId}/stages/${stageName}`);
+      .doc(`experiments/${experimentId}/participants/${participantId}/stages/${stageId}`);
 
     // Validation & merging answers
     switch (stage.kind) {
@@ -32,7 +32,7 @@ export const updateStage = onCall(async (request) => {
         break;
 
       case StageKind.TakeSurvey:
-        await validateSurveyAnswers(experimentId, stageName, stage.answers);
+        await validateSurveyAnswers(experimentId, stageId, stage.answers);
 
         // Prepare data to merge individual answers into the firestore document
         const data = {
@@ -52,10 +52,10 @@ export const updateStage = onCall(async (request) => {
 /** Helper function to validate a survey stage's answers against its related config */
 const validateSurveyAnswers = async (
   experimentId: string,
-  stageName: string,
+  stageId: string,
   answers: Record<number, QuestionAnswer>,
 ) => {
-  const configDoc = app.firestore().doc(`experiments/${experimentId}/stages/${stageName}`);
+  const configDoc = app.firestore().doc(`experiments/${experimentId}/stages/${stageId}`);
   const data = (await configDoc.get()).data() as SurveyStageConfig | undefined;
 
   if (!data) throw new functions.https.HttpsError('invalid-argument', 'Invalid answers');

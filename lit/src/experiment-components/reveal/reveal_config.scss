@@ -2,8 +2,19 @@
 @use "../../sass/typescale";
 
 :host {
-  @include common.default;
   @include common.flex-column;
+  gap: common.$spacing-large;
+  height: 100%;
+}
+
+.title-wrapper {
+  @include common.flex-row-align-center;
+  justify-content: space-between;
+}
+
+.title {
+  @include typescale.title-small;
+  width: max-content;
 }
 
 .menu-wrapper {
@@ -11,7 +22,6 @@
   gap: common.$spacing-medium;
   padding: common.$spacing-medium;
 
-  .games,
   .stages {
     @include common.flex-column;
     gap: common.$spacing-small;
@@ -31,21 +41,18 @@
   }
 }
 
-.category {
-  @include typescale.label-small;
-  color: var(--md-sys-color-primary);
-  text-transform: uppercase;
-
-  &.tertiary {
-    color: var(--md-sys-color-tertiary);
-  }
+.checkbox-input {
+  @include common.flex-row-align-center;
 }
 
-.game-title {
-  @include typescale.title-small;
+.reveal-stage {
+  @include common.flex-row-align-center;
+  background: var(--md-sys-color-surface);
+  border-radius: common.$spacing-medium;
+  justify-content: space-between;
+  padding: common.$spacing-medium;
 }
 
-.game-info {
-  color: var(--md-sys-color-outline);
-  font-style: italic;
+.buttons {
+  @include common.flex-row-align-center;
 }

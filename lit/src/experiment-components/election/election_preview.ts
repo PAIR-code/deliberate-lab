@@ -1,7 +1,7 @@
-import "../../footer/footer";
-import "../../profile/profile_avatar";
-import "../../progress/progress_stage_completed";
-import "../../progress/progress_stage_waiting";
+import "../footer/footer";
+import "../profile/profile_avatar";
+import "../progress/progress_stage_completed";
+import "../progress/progress_stage_waiting";
 
 import '@material/web/radio/radio.js';
 
@@ -16,10 +16,10 @@ import {
   Votes
 } from "@llm-mediation-experiments/utils";
 
-import { core } from "../../../core/core";
-import { ExperimentService } from "../../../services/experiment_service";
-import { ParticipantService } from "../../../services/participant_service";
-import { RouterService } from "../../../services/router_service";
+import { core } from "../../core/core";
+import { ExperimentService } from "../../services/experiment_service";
+import { ParticipantService } from "../../services/participant_service";
+import { RouterService } from "../../services/router_service";
 
 import { styles } from "./election_preview.scss";
 
@@ -45,7 +45,7 @@ export class ElectionPreview extends MobxLitElement {
       return html`
         ${descriptionContent}
 
-        <progress-stage-waiting .stageName=${currentStage}>
+        <progress-stage-waiting .stageId=${currentStage}>
         </progress-stage-waiting>
       `;
     }
@@ -92,7 +92,7 @@ export class ElectionPreview extends MobxLitElement {
       votes[profile.publicId] = getVoteFromValue(value);
 
       this.participantService.updateVoteForLeaderStage(
-        this.participantService.profile!.workingOnStageName,
+        this.participantService.profile!.currentStageId,
         votes
       )
     };

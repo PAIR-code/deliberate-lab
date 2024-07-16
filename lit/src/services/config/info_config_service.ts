@@ -22,7 +22,7 @@ export class InfoConfigService extends Service {
   }
 
   @computed get content() {
-    return this.stage?.infoLines[0];
+    return this.stage?.infoLines.join('\n\n');
   }
 
   updateName(name: string) {
@@ -39,7 +39,7 @@ export class InfoConfigService extends Service {
 
   updateContent(content: string) {
     if (this.stage) {
-      this.stage.infoLines = [content];
+      this.stage.infoLines = content.split('\n');
     }
   }
 

@@ -2,12 +2,12 @@ import "./pair-components/button";
 
 import "./experiment-components/chat/basic_chat";
 import "./experiment-components/chat/lost_at_sea_chat";
+import "./experiment-components/election/election_preview";
 import "./experiment-components/experiment/experiment_config";
 import "./experiment-components/experiment/experiment_preview";
 import "./experiment-components/info/info_preview";
-import "./experiment-components/modules/election/election_preview";
-import "./experiment-components/modules/election/election_reveal";
 import "./experiment-components/profile/profile_config";
+import "./experiment-components/reveal/reveal_preview";
 import "./experiment-components/survey/survey_preview";
 import "./experiment-components/tos/tos_preview";
 
@@ -33,6 +33,7 @@ import { SettingsService } from "./services/settings_service";
 
 import {
   ChatKind,
+  StageConfig,
   StageKind
 } from "@llm-mediation-experiments/utils";
 import {
@@ -130,7 +131,7 @@ export class App extends MobxLitElement {
         {
           "experiment": this.participantService.experimentId!,
           "participant": this.participantService.participantId!,
-          "stage": this.participantService.profile?.workingOnStageName!,
+          "stage": this.participantService.profile?.currentStageId!,
         }
       );
     };
@@ -176,21 +177,19 @@ export class App extends MobxLitElement {
       return this.render404(`Could not find participant ID`)
     }
 
-    const stageName = this.routerService.activeRoute.params["stage"];
-    const currentStage = this.experimentService.getStage(stageName);
+    const stageId = this.routerService.activeRoute.params["stage"];
+    const currentStage = this.experimentService.getStage(stageId);
 
     if (currentStage === undefined) {
-      return this.render404(`Could not find experiment stage "${stageName}""`);
+      return this.render404(`Could not find experiment stage "${stageId}""`);
     }
 
-    const isLockedStage = (stageName: string) => {
-      const currentStageIndex = this.experimentService.stageNames.findIndex(
-        (name) => stageName === name
-      )
-      const workingOnStageIndex = this.experimentService.stageNames.findIndex(
-        (name) => this.participantService.profile?.workingOnStageName === name
+    const isLockedStage = (stageId: string) => {
+      const stageIndex = this.experimentService.getStageIndex(stageId);
+      const currentStageIndex = this.experimentService.getStageIndex(
+        this.participantService.profile?.currentStageId!
       );
-      return currentStageIndex > workingOnStageIndex;
+      return stageIndex > currentStageIndex;
     }
 
     const navigateToCurrentStage = () => {
@@ -198,12 +197,12 @@ export class App extends MobxLitElement {
         {
           "experiment": this.participantService.experimentId!,
           "participant": this.participantService.participantId!,
-          "stage": this.participantService.profile?.workingOnStageName!,
+          "stage": this.participantService.profile?.currentStageId!,
         }
       );
     }
 
-    if (isLockedStage(stageName)) {
+    if (isLockedStage(stageId)) {
       return html`
         <div class="error-wrapper">
           ${this.render403("This stage is not yet available")}
@@ -214,7 +213,7 @@ export class App extends MobxLitElement {
       `;
     }
 
-    const answer = this.participantService.stageAnswers[currentStage.name];
+    const answer = this.participantService.stageAnswers[currentStage.id];
 
     switch (currentStage.kind) {
       case StageKind.Info:
@@ -230,9 +229,8 @@ export class App extends MobxLitElement {
         return html`<profile-config></profile-config>`;
       case StageKind.VoteForLeader:
         return html`<election-preview .answer=${answer}></election-preview>`;
-      case StageKind.RevealVoted:
-        const electionStage = currentStage.pendingVoteStageName;
-        return html`<election-reveal .voteStageName=${electionStage}></election-reveal>`;
+      case StageKind.Reveal:
+        return html`<reveal-preview .stage=${currentStage}></reveal-preview>`;
       case StageKind.GroupChat:
         this.chatService.updateForCurrentRoute(currentStage.chatId);
 

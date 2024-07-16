@@ -99,9 +99,9 @@ export class SideNav extends MobxLitElement {
 
     return html`
       ${this.renderParticipantItem(experiment!, participantId)}
-      ${this.experimentService.stageNames.map(
-        (stage: string, index: number) => this.renderStageItem(
-          experimentId!, participantId!, stage, index
+      ${this.experimentService.stageIds.map(
+        (stageId: string, index: number) => this.renderStageItem(
+          experimentId!, participantId!, stageId, index
         )
       )}
     `;
@@ -182,14 +182,14 @@ export class SideNav extends MobxLitElement {
   private renderStageItem(
     experimentId: string,
     participantId: string,
-    stage: string,
+    stageId: string,
     index: number,
   ) {
     const navItemClasses = classMap({
       "nav-item": true,
       selected:
         this.routerService.activePage === Pages.PARTICIPANT_STAGE &&
-        this.routerService.activeRoute.params["stage"] === stage,
+        this.routerService.activeRoute.params["stage"] === stageId,
     });
 
     const handleClick = (_e: Event) => {
@@ -197,25 +197,27 @@ export class SideNav extends MobxLitElement {
         {
           "experiment": experimentId,
           "participant": participantId,
-          "stage": stage
+          "stage": stageId
         }
       );
     };
 
-    const lockedStage = index > this.experimentService.stageNames.indexOf(
-      this.participantService.profile?.workingOnStageName!
+    const lockedStage = index > this.experimentService.getStageIndex(
+      this.participantService.profile?.currentStageId!
     );
+
+    const stageName = this.experimentService.getStageName(stageId, true);
 
     if (lockedStage) {
       return html`
-        <div class="nav-item no-hover">${stage}</div>
+        <div class="nav-item no-hover">${stageName}</div>
       `;
     }
 
     return html`
       <div class=${navItemClasses} role="button" @click=${handleClick}>
-        ${stage}
-        ${this.renderActiveStageChip(stage)}
+        ${stageName}
+        ${this.renderActiveStageChip(stageId)}
       </div>
     `;
   }

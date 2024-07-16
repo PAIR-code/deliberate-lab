@@ -52,7 +52,7 @@ export class RankingChat extends MobxLitElement {
       return nothing;
     }
 
-    const currentStage = this.stage.name!;
+    const currentStage = this.stage.id!;
     const { ready, notReady } =
       this.experimentService.getParticipantsReadyForStage(currentStage);
 
@@ -60,7 +60,7 @@ export class RankingChat extends MobxLitElement {
     if (notReady.length > 0) {
       return html`
         ${descriptionContent}
-        <progress-stage-waiting .stageName=${currentStage}>
+        <progress-stage-waiting .stageId=${currentStage}>
         </progress-stage-waiting>
       `;
     }
@@ -171,7 +171,7 @@ export class RankingChat extends MobxLitElement {
           Ready to end discussion
         </pr-button>
         <div>You can still participate in the chat. When everyone is ready to end the discussion, the conversation will progress to the next stage.</div>
-        <progress-end-chat .stageName=${this.stage!.name}></progress-end-chat>
+        <progress-end-chat .stageId=${this.stage!.id}></progress-end-chat>
       </div>
     `;
   }

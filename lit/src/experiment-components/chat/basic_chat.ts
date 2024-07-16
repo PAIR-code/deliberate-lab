@@ -27,13 +27,13 @@ export class BasicChat extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
 
   override render() {
-    const currentStage = this.chatService.chat?.stageName ?? "";
+    const currentStage = this.chatService.chat?.stageId ?? "";
     const { ready, notReady } =
       this.experimentService.getParticipantsReadyForStage(currentStage);
 
     if (notReady.length > 0) {
       return html`
-        <progress-stage-waiting .stageName=${currentStage}>
+        <progress-stage-waiting .stageId=${currentStage}>
         </progress-stage-waiting>
       `;
     }
@@ -53,7 +53,7 @@ export class BasicChat extends MobxLitElement {
         >
           Ready to end discussion
         </pr-button>
-        <progress-end-chat .stageName=${currentStage}></progress-end-chat>
+        <progress-end-chat .stageId=${currentStage}></progress-end-chat>
       </stage-footer>
     `;
   }

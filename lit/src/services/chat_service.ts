@@ -139,7 +139,7 @@ export class ChatService extends Service {
     }
 
     const stageData = this.sp.experimentService.getPublicStageData(
-      this.chat.stageName
+      this.chat.stageId
     );
     if (
       !stageData || stageData.kind !== StageKind.GroupChat ||

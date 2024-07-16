@@ -5,11 +5,17 @@ import {
   SurveyQuestionKind,
 } from '@llm-mediation-experiments/utils';
 
-export const LAS_INTRO_DESCRIPTION = `This experiment should take an estimated 20-30 minutes.`;
+export const LAS_ID = 'lostAtSea';
+export const LAS_DESCRIPTION =
+  "An implementation of the Lost at Sea task (Born 2022) with pairwise elements.";
+
+export const LAS_INTRO_DESCRIPTION = `This experiment should take an estimated X minutes.`;
 export const LAS_INTRO_INFO_LINES = [
-  "⛵️ In this task, you are adrift on a raft in the ocean with your crewmates after your vessel sank.  Your location is unclear because of the destruction of critical navigation equipment. Your best estimate is that you are approximately one thousand miles south-southeast of the nearest land. You have a box of matches in your pocket.",
-  "🗳️ Your goal in today's game is to elect a member of the crew to complete a task, where they will prioritize items that will maximize your chance of survival.",
-  "💸 Your payout from this task is dependent on how well the representative does on this task."
+  "You will receive a fixed fee of $x for your participation. The experiment also gives you the opportunity to earn a $x bonus, based on your decisions. We will explain precisely how your bonus is determined later.",
+  "At the end of the experiment, you will be redirected to a waiting page. This waiting time is part of the experiment and has been factored into your payment. **You will not be approved for the payout if you do not remain on this waiting page for the full requested duration**.",
+  "During this waiting time, you may be invited to continue the experiment by completing two additional parts, Part 2 and Part 3. These parts will be played in *groups of four*, and should take an estimated additional  x minutes. In these parts, you will have the opportunity to earn a $x bonus, based on your decisions and the decisions of other participants. One of these parts will be randomly selected to determine your bonus. Additionally, you will receive a fixed fee of $x for completing Parts 2 and 3.",
+  "To sum up:\n\n* You’ll complete a first part *individually*, and then wait to see if you are selected to take part in the next part of the experiment.\n* You need to wait the full amount of time to get your payoff for Part 1, even though you are not selected or choose to leave the experiment.\n* If you receive an invitation, you can then start the rest of the experiment, that is played in *groups of 4*",
+  "Please click “Next stage” to proceed."
 ];
 
 export const LAS_INITIAL_TASK_DESCRIPTION = `First, you will complete a task similar to the task that your crew's representative will later complete. Your performance on this task will not affect your payout; this is so that you get a sense of the task.`;

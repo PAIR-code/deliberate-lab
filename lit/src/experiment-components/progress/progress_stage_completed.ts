@@ -21,11 +21,11 @@ export class Progress extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   @property() showAvatars = true;
-  @property() stageName = this.routerService.activeRoute.params["stage"];
+  @property() stageId = this.routerService.activeRoute.params["stage"];
 
   override render() {
     const { completed, notCompleted } =
-      this.experimentService.getParticipantsCompletedStage(this.stageName);
+      this.experimentService.getParticipantsCompletedStage(this.stageId);
 
     return html`
       ${this.showAvatars ?

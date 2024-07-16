@@ -120,31 +120,30 @@ The other services are stage-specific, managing relevant stage configs
 correspond to `*_config.ts` components, all found under
 `src/experiment-components` (see next section).
 
-### Experiment Stages and Modules
+### Experiment Stages and Games
 
 Experiment components (including configurations and previews)
 are organized under `src/experiment-components`.
 
 Standalone stage components (e.g., `survey`, which is used across tasks)
-are at the top level of the experiment directory, while any closely
-associated stage components (e.g., for a specific game or task) are clustered
-under the `modules` subdirectory.
+are at the top level of the experiment directory, while any
+associated stage components (e.g., for a specific game) are clustered
+under the `games` subdirectory.
 
-For example, `src/experiment-components/info` (not a module)
+For example, `src/experiment-components/info` (not specific to a game)
 contains info components, which can be flexibly used across many types
 of experiments:
 
 - `info_config`: Used during experiment configuration
 - `info_preview`: Shown to users during experiment
 
-while components for `voteForLeader` and `leaderReveal` stages
-might be organized under a `leader` module
-(since they are intended to be used together in the same experiments).
+while components specific to the Lost at Sea game (e.g., pair item scoring)
+might be organized under a `lost_at_sea` module.
 
 This is to help with eventual organization across multiple types of
 experiments: rather than specifying many individual stages
 in an experiment config, an experimenter might initially select a few
-top-level modules (`leader`, `game1` vs. `game2`) alongside standalone
+top-level modules (`game1` vs. `game2`) alongside standalone
 stages (`info`, `survey`).
 
 #### Config vs. Preview Components
@@ -161,13 +160,13 @@ pages.
 
 A Dockerfile is included to facilitate deployment.
 
-You must build the app first. If you intend to deploy it with a url prefix, you must define the `URL_PREFIX` environment variable before building:
+You must build the app first. If you intend to deploy it with a url prefix,
+you must define the `URL_PREFIX` environment variable before building:
 
 ```bash
 npm run build:prod  # Standard build
 URL_PREFIX=/my_prefix/ npm run build:prod  # Build with URL prefix
 ```
-
 
 This will create the app under `lit/dist/`.
 
@@ -182,5 +181,3 @@ Try it out locally:
 ```bash
 docker run -p 4201:4201 mediator-experiments
 ```
-
-

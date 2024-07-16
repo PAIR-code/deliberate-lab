@@ -38,31 +38,37 @@ export class Footer extends MobxLitElement {
 
   private renderNextStageButton() {
     const index = this.experimentService.getStageIndex(
-      this.participantService.profile?.workingOnStageName ?? ""
+      this.participantService.profile?.currentStageId ?? ""
     );
 
-    const isLastStage = index === this.experimentService.stageNames.length - 1;
+    const isLastStage = index === this.experimentService.stageIds.length - 1;
 
     const handleNext = () => {
-      const nextStageName = this.experimentService.getNextStageName(
-        this.participantService.profile?.workingOnStageName ?? ""
+      const nextStageId = this.experimentService.getNextStageId(
+        this.participantService.profile?.currentStageId ?? ""
       );
 
-      if (nextStageName !== null) {
-        this.participantService.updateWorkingOnStageName(nextStageName);
+      if (nextStageId !== null) {
+        this.participantService.updateCurrentStageId(nextStageId);
         this.routerService.navigate(
           Pages.PARTICIPANT_STAGE,
           {
             "experiment": this.participantService.experimentId!,
             "participant": this.participantService.participantId!,
-            "stage": nextStageName,
+            "stage": nextStageId,
           }
         );
       } else {
         // TODO: navigate to an end-of-experiment payout page
         this.participantService.markExperimentCompleted();
         alert("Experiment completed!");
-
+        this.routerService.navigate(
+          Pages.PARTICIPANT,
+          {
+            "experiment": this.participantService.experimentId!,
+            "participant": this.participantService.participantId!,
+          }
+        )
       }
     };
 
