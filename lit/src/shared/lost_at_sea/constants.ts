@@ -21,13 +21,13 @@ export const LAS_INTRO_INFO_LINES = [
 export const LAS_INITIAL_TASK_DESCRIPTION = "";
 
 export const LAS_INITIAL_TASK_INTRO_INFO_LINES = [
-  "###Imagine the following scenario:",
+  "# Imagine the following scenario:",
   "You have chartered a yacht with three friends for a holiday trip across the Atlantic Ocean. None of you have sailing experience, so you hired an experienced skipper and a two-person crew.",
   "In the middle of the Atlantic a fierce fire breaks out in the ship's galley. The skipper and crew have been lost whilst trying to fight the blaze. Much of the yacht is destroyed and is slowly sinking.",
   "Vital navigational and radio equipment are damaged, and your location is unclear. Your best estimate is that you are many hundreds of miles from the nearest landfall.",
   "*You and your friends have managed to save 10 items, undamaged and intact after the fire. In addition, you have salvaged a four-man rubber life craft and a box of matches*.",
   "*Your task*:  You are asked to **evaluate these 10 items in terms of their importance for your survival, as you wait to be rescued**. The computer will randomly generate pairs of items, and you will select which of the two is the most useful in your situation.",
-  "###Payment:",
+  "# Payment:",
   "Your answers will be compared to a panel of experts' solutions. If a question from Part 1 is randomly selected to determine your payment at the end of the study, you will earn $x if your answer is correct, and $0 otherwise.",
   "Please click “Next stage” to proceed."
 ];

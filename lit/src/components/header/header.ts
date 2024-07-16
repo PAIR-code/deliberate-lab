@@ -1,5 +1,6 @@
 import "../../pair-components/button";
 import "../../pair-components/icon_button";
+import "../../pair-components/info_popup";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
@@ -86,7 +87,17 @@ export class Header extends MobxLitElement {
     if (activePage === Pages.HOME) {
       return this.renderCreateExperimentButton();
     }
-
+    if (activePage === Pages.PARTICIPANT_STAGE) {
+      const stageName = this.routerService.activeRoute.params["stage"];
+      const currentStage = this.experimentService.getStage(stageName);
+      if (currentStage && currentStage.popupText) {
+        return html`
+          <info-popup .popupText=${currentStage.popupText}></info-popup>
+        `;
+      } else {
+        return nothing;
+      }
+    }
     return nothing;
   }
 

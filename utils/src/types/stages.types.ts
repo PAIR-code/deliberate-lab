@@ -38,6 +38,7 @@ export interface BaseStageConfig {
   composite?: boolean; // true if stage uses data from other stages (e.g., reveal)
   game?: string; // ID of game, if part of one
   description?: string;
+  popupText?: string;
 }
 
 export interface InfoStageConfig extends BaseStageConfig {
