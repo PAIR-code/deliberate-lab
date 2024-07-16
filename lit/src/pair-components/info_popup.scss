@@ -1,12 +1,15 @@
+@use "../sass/colors";
+@use "../sass/common";
+
 .modal {
   display: none; /* Hidden by default */
   position: fixed;
-  z-index: 99;
+  z-index: 2;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
 }
 
 .modal-content {
@@ -16,8 +19,8 @@
   top: 15%;
   transform: translateY(-20%);
   border-radius: 10px;
-  background-color: var(--md-sys-color-on-surface);
-  color: var(--md-sys-color-surface);
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
   padding: 20px;
   border: 1px solid var(--md-sys-color-outline);
   width: var(--pr-text-area-width, 60%);
@@ -26,7 +29,7 @@
 
 
 .close {
-  color: #aaa;
+  color: var(--md-sys-color-outline);
   float: right;
   font-size: 28px;
   font-weight: bold;

@@ -38,11 +38,11 @@ export class InfoPopupComponent extends LitElement {
 
   override render() {
     return html`
-    <pr-icon-button icon="info" @click=${this.handleButtonClick}>info</pr-icon-button>
+    <pr-icon-button color="secondary" variant="default" icon="info" @click=${this.handleButtonClick}>info</pr-icon-button>
 
     <div class="modal" style=${this.showModal ? 'display: block;' : 'display: none;'} @click=${this.handleOutsideClick}>
       <div class="modal-content">
-        <span class="close" @click=${this.handleCloseClick}>&times;</span>
+        <pr-icon-button color="neutral" class="close" variant="default" icon="close" @click=${this.handleCloseClick}></pr-icon-button>
         ${unsafeHTML(convertMarkdownToHTML(this.popupText))}
       </div>
     </div>
