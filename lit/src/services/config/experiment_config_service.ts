@@ -143,10 +143,16 @@ export class ExperimentConfigService extends Service {
       this.stages[stageIndex].name = name;
     }
   }
-  
+   
   updateStageDescription(description: string, stageIndex = this.currentStageIndex) {
     if (stageIndex >= 0 && stageIndex < this.stages.length) {
       this.stages[stageIndex].description = description;
+    }
+  }
+
+  updateStagePopupText(popupText: string, stageIndex = this.currentStageIndex) {
+    if (stageIndex >= 0 && stageIndex < this.stages.length) {
+      this.stages[stageIndex].popupText = popupText;
     }
   }
 

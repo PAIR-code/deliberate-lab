@@ -27,6 +27,12 @@ export class InfoConfig extends MobxLitElement {
       this.infoConfig.updateDescription(value);
     };
 
+    const handlePopupTextInput = (e: Event) => {
+      const value = (e.target as HTMLTextAreaElement).value;
+      this.infoConfig.updatePopupText(value);
+    };
+
+
     const handleContentInput = (e: Event) => {
       const value = (e.target as HTMLTextAreaElement).value;
       this.infoConfig.updateContent(value);
@@ -50,6 +56,16 @@ export class InfoConfig extends MobxLitElement {
       @input=${handleDescriptionInput}
       >
       </pr-textarea>
+
+      <pr-textarea
+      label="Info icon pop-up text"
+      placeholder="Info icon pop-up text"
+      variant="outlined"
+      .value=${this.infoConfig.popupText}
+      @input=${handlePopupTextInput}
+      >
+      </pr-textarea>
+
 
       <pr-textarea
         label="Content"

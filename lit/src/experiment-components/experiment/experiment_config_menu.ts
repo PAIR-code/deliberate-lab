@@ -18,7 +18,7 @@ import {
 } from "../../services/config/experiment_config_service";
 
 
-import { StageKind } from "@llm-mediation-experiments/utils";
+import { StageConfig, StageKind } from "@llm-mediation-experiments/utils";
 import {
   createChatStage,
   createInfoStage,
@@ -113,7 +113,7 @@ export class ExperimentConfigMenu extends MobxLitElement {
 
     const onAddLostAtSeaClick = () => {
       const lostAtSeaStages = createLostAtSeaGameStages();
-      lostAtSeaStages.forEach(stage => {
+      lostAtSeaStages.forEach((stage: StageConfig) => {
         this.experimentConfig.addStage(stage);
       });
 

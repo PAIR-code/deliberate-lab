@@ -20,11 +20,11 @@ import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
 import { v4 as uuidv4 } from "uuid";
 
-import { LAS_ID, LAS_FINAL_SURVEY, LAS_FINAL_SURVEY_DESCRIPTION, LAS_GROUP_CHAT_DESCRIPTION, LAS_INITIAL_TASK_DESCRIPTION, LAS_INTRO_DESCRIPTION, LAS_INTRO_INFO_LINES, LAS_LEADER_ELECTION_DESCRIPTION, LAS_LEADER_REVEAL_DESCRIPTION, LAS_LEADER_TASK_DESCRIPTION, LAS_REDO_TASK_DESCRIPTION } from './constants';
+import { LAS_ID, LAS_FINAL_SURVEY, LAS_FINAL_SURVEY_DESCRIPTION, LAS_GROUP_CHAT_DESCRIPTION, LAS_INITIAL_TASK_INTRO_INFO_LINES, LAS_INTRO_DESCRIPTION, LAS_INTRO_INFO_LINES, LAS_LEADER_ELECTION_DESCRIPTION, LAS_LEADER_REVEAL_DESCRIPTION, LAS_LEADER_TASK_DESCRIPTION, LAS_REDO_TASK_DESCRIPTION, LAS_SCENARIO_REMINDER, LAS_WTL_DESCRIPTION, LAS_WTL_SURVEY } from './constants';
 import { createSurveyStage, createChatStage, createVoteForLeaderStage, createRevealStage, createInfoStage } from "../utils";
 
 /**
- * Create Lost at Sea game stages.
+ * Create Lost at Sea game module stages.
  *
  * This includes:
  *   2 individual tasks with the same randomly-generated item pairs
@@ -36,8 +36,16 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
   const stages: StageConfig[] = [];
 
   // Add introduction
-  stages.push(createInfoStage("Welcome to the experiment", LAS_INTRO_DESCRIPTION, LAS_INTRO_INFO_LINES));
+  stages.push(createInfoStage({
+    name: "Welcome to the experiment",
+    description: LAS_INTRO_DESCRIPTION,
+    infoLines: LAS_INTRO_INFO_LINES}));
   
+  stages.push(createInfoStage({
+    name: "Individual survival task instructions",
+    description: "",
+    infoLines: LAS_INITIAL_TASK_INTRO_INFO_LINES}));
+
   // Shuffle the items.
   seed(6272023);
   const middleIndex = Math.ceil(ITEM_NAMES.length / 2);
@@ -55,7 +63,17 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
     (pair, index) => getRatingQuestionFromPair(pair, index)
   );
 
-  stages.push(createSurveyStage("Initial survival task", LAS_INITIAL_TASK_DESCRIPTION, INDIVIDUAL_QUESTIONS));
+  stages.push(createSurveyStage({
+    name: "Initial survival task", 
+    questions: INDIVIDUAL_QUESTIONS,
+    popupText: LAS_SCENARIO_REMINDER,
+  }));
+
+  stages.push(createSurveyStage({
+    name: "Willingness to lead survey",
+    description: LAS_WTL_DESCRIPTION,
+    questions: LAS_WTL_SURVEY
+  }));
 
   // Add chat with individual item pairs as discussion
   stages.push(
@@ -66,28 +84,44 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
     )
   );
 
-  stages.push(createSurveyStage("Updated individual task", LAS_REDO_TASK_DESCRIPTION, INDIVIDUAL_QUESTIONS));
-  const election = createVoteForLeaderStage("Representative election", LAS_LEADER_ELECTION_DESCRIPTION);
-  stages.push(election);
+  stages.push(createSurveyStage({
+    name: "Updated individual task",
+    description: LAS_REDO_TASK_DESCRIPTION,
+    popupText: LAS_SCENARIO_REMINDER,
+    questions: INDIVIDUAL_QUESTIONS
+  }));
+
+  const leaderElection = createVoteForLeaderStage({
+    name: "Representative election",
+    description: LAS_LEADER_ELECTION_DESCRIPTION
+  });
+  stages.push(leaderElection);
 
   // Add leader task
   const LEADER_QUESTIONS: RatingQuestionConfig[] = LEADER_ITEM_PAIRS.map(
     (pair, index) => getRatingQuestionFromPair(pair, index)
   );
 
-  const leaderSurvey = createSurveyStage("Representative task", LAS_LEADER_TASK_DESCRIPTION, LEADER_QUESTIONS);
+  const leaderSurvey = createSurveyStage({
+    name: "Representative task",
+    description: LAS_LEADER_TASK_DESCRIPTION,
+    popupText: LAS_SCENARIO_REMINDER,
+    questions: LEADER_QUESTIONS
+  });
   stages.push(leaderSurvey);
 
-  stages.push(
-    createRevealStage(
-      "Reveal",
-      LAS_LEADER_REVEAL_DESCRIPTION,
-      [election.id, leaderSurvey.id]
-    )
-  );
+  stages.push(createRevealStage({
+    name: "Representative reveal",
+    description: LAS_LEADER_REVEAL_DESCRIPTION,
+    stagesToReveal: [leaderElection.id, leaderSurvey.id],
+  }))
 
   // Final survey
-  stages.push(createSurveyStage("Final survey", LAS_FINAL_SURVEY_DESCRIPTION, LAS_FINAL_SURVEY));
+  stages.push(createSurveyStage({
+    name: "Final survey",
+    description: LAS_FINAL_SURVEY_DESCRIPTION,
+    questions: LAS_FINAL_SURVEY
+  }));
 
   stages.forEach(stage => { stage.game = LAS_ID; });
   return stages;

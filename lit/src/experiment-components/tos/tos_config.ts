@@ -27,6 +27,11 @@ export class TOSConfig extends MobxLitElement {
       this.tosConfig.updateDescription(value);
     };
 
+    const handlePopupText = (e: Event) => {
+      const value = (e.target as HTMLTextAreaElement).value;
+      this.tosConfig.updatePopupText(value);
+    };
+
     const handleContentInput = (e: Event) => {
       const value = (e.target as HTMLTextAreaElement).value;
       this.tosConfig.updateContent(value);
@@ -50,7 +55,16 @@ export class TOSConfig extends MobxLitElement {
         @input=${handleDescriptionInput}
       >
       </pr-textarea>
-
+ 
+      <pr-textarea
+        label="Info icon pop-up text"
+        placeholder="Info icon pop-up text (markdown supported)"
+        variant="outlined"
+        .value=${this.tosConfig.popupText}
+        @input=${handlePopupText}
+      >
+      </pr-textarea>
+      
       <pr-textarea
         label="Content (in Git-Flavored Markdown)"
         placeholder="Add Markdown terms of service here"
