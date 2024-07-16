@@ -56,11 +56,3 @@ const winner = (a: string, b: string, scores: Record<string, number>) => {
   // Tie, choose randomly
   return Math.random() > 0.5 ? a : b;
 };
-
-// ********************************************************************************************* //
-//                                           DEFAULTS                                            //
-// ********************************************************************************************* //
-
-export const getDefaultVotesConfig = (): Votes => {
-  return {};
-};

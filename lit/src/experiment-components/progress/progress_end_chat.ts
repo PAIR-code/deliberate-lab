@@ -18,12 +18,12 @@ export class Progress extends MobxLitElement {
 
   private readonly experimentService = core.getService(ExperimentService);
 
-  @property() stageName = "";
+  @property() stageId = "";
   @property() showAvatars = true;
 
   override render() {
     const { ready, notReady } =
-      this.experimentService.getParticipantsReadyToEndChat(this.stageName);
+      this.experimentService.getParticipantsReadyToEndChat(this.stageId);
 
     return html`
       ${this.showAvatars ?

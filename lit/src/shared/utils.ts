@@ -37,7 +37,7 @@ export function createInfoStage(
   name = "Info", description = "Info description", content = ["Placeholder info"]
 ): InfoStageConfig {
   const infoLines = content;
-  return { kind: StageKind.Info, name, description, infoLines };
+  return { id: generateId(), kind: StageKind.Info, name, description, infoLines };
 }
 
 /** Create TOS stage. */
@@ -47,7 +47,7 @@ export function createTOSStage(
   content = "- Placeholder term 1\n- Placeholder term 2\n- Placeholder term 3",
 ): TermsOfServiceStageConfig {
   const tosLines = [content];
-  return { kind: StageKind.TermsOfService, name, description, tosLines };
+  return { id: generateId(), kind: StageKind.TermsOfService, name, description, tosLines };
 }
 
 /** Create survey stage. */
@@ -57,13 +57,13 @@ export function createSurveyStage(
   questions: QuestionConfig[] = [],
   reveal = false
 ): SurveyStageConfig {
-  return { kind: StageKind.TakeSurvey, name, description, questions, reveal };
+  return { id: generateId(), kind: StageKind.TakeSurvey, name, description, questions, reveal };
 }
 
 /** Create profile stage. */
 export function createProfileStage(name = "Set profile"): ProfileStageConfig {
   // Bug: Experiment can't be created with a profile description.
-  return { kind: StageKind.SetProfile, name};
+  return { id: generateId(), kind: StageKind.SetProfile, name};
 }
 
 /** Create chat (with ranking discussion) stage. */
@@ -74,6 +74,7 @@ export function createChatStage(
 ): GroupChatStageConfig {
   if (ratingsToDiscuss.length === 0) {
     return {
+      id: generateId(),
       name,
       description,
       kind: StageKind.GroupChat,
@@ -86,6 +87,7 @@ export function createChatStage(
   }
 
   return {
+    id: generateId(),
     name,
     description,
     kind: StageKind.GroupChat,
@@ -120,7 +122,7 @@ export function createVoteForLeaderStage(
   name = "Leader election",
   description = "Vote for the leader here.",
 ): VoteForLeaderStageConfig {
-  return { kind: StageKind.VoteForLeader, reveal: true, name, description };
+  return { id: generateId(), kind: StageKind.VoteForLeader, reveal: true, name, description };
 }
 
 /**
@@ -131,7 +133,7 @@ export function createRevealStage(
   description = "This shows results from other stages, e.g., leader election.",
 ): RevealStageConfig {
   return {
-    kind: StageKind.Reveal, implicit: true, name, description, stagesToReveal: []
+    id: generateId(), kind: StageKind.Reveal, implicit: true, name, description, stagesToReveal: []
   };
 }
 
@@ -172,16 +174,7 @@ export function convertMarkdownToHTML(markdown: string, sanitize = true) {
  *  and add numbering to stages.
  */
 export function convertExperimentStages(stages: StageConfig[]) {
-  const addIndexToStageName = (name: string, index: number) => {
-    if (index + 1 < 10) {
-      return `0${index + 1}. ${name}`;
-    }
-    return `${index + 1}. ${name}`;
-  };
-
   return stages.map((stage, index) => {
-    stage.name = addIndexToStageName(stage.name, index);
-
     if (stage.kind === StageKind.TermsOfService) {
       stage.tosLines = stage.tosLines.map(
         info => convertMarkdownToHTML(info)
@@ -198,25 +191,6 @@ export function convertExperimentStages(stages: StageConfig[]) {
     }
     return stage;
   })
-}
-
-/**
- * Adjust template stages to experiment stage format
- * (e.g., strip stage numbers)
- */
-export function convertTemplateStages(stages: StageConfig[]) {
-  const stripNumbersFromTitle = (name: string) => {
-    const titleParts = name.split('. ');
-    if (titleParts.length > 1) {
-      return `${titleParts[1]}`;
-    }
-    return `Untitled stage`;
-  };
-
-  return stages.map((stage) => {
-    stage.name = stripNumbersFromTitle(stage.name);
-    return stage;
-  });
 }
 
 /**

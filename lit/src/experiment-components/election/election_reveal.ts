@@ -27,10 +27,10 @@ export class ElectionReveal extends MobxLitElement {
   private readonly experimentService = core.getService(ExperimentService);
   private readonly routerService = core.getService(RouterService);
 
-  @property() voteStageName = "";
+  @property() voteStageId = "";
 
   override render() {
-    const stage = this.experimentService.publicStageDataMap[this.voteStageName];
+    const stage = this.experimentService.publicStageDataMap[this.voteStageId];
 
     if (stage?.kind !== StageKind.VoteForLeader) {
       return nothing;
@@ -47,7 +47,7 @@ export class ElectionReveal extends MobxLitElement {
       return html`
         ${descriptionContent}
 
-        <progress-stage-waiting .stageName=${currentStage}>
+        <progress-stage-waiting .stageId=${currentStage}>
         </progress-stage-waiting>
       `;
     }

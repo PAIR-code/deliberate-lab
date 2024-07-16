@@ -46,9 +46,9 @@ export class ParticipantService extends Service {
   }
 
   isCurrentStage(
-    stageName: string = this.sp.routerService.activeRoute.params["stage"]
+    stageId: string = this.sp.routerService.activeRoute.params["stage"]
   ) {
-    return this.profile?.workingOnStageName === stageName;
+    return this.profile?.currentStageId === stageId;
   }
 
   updateForCurrentRoute() {
@@ -130,14 +130,14 @@ export class ParticipantService extends Service {
     );
   }
 
-  /** Update this participant's `workingOnStageName`
+  /** Update this participant's `currentStageId`
    * @rights Participant
    */
-  async updateWorkingOnStageName(stageName: string) {
+  async updateCurrentStageId(stageId: string) {
     return updateDoc(
       doc(this.sp.firebaseService.firestore, 'experiments', this.experimentId!, 'participants', this.participantId!),
       {
-        workingOnStageName: stageName,
+        currentStageId: stageId,
       },
     );
   }
@@ -145,13 +145,13 @@ export class ParticipantService extends Service {
   /** Update a survey stage for this participant
    * @rights Participant
    */
-  async updateSurveyStage(stageName: string, answers: QuestionAnswer[]) {
+  async updateSurveyStage(stageId: string, answers: QuestionAnswer[]) {
     return updateStageCallable(
       this.sp.firebaseService.functions,
       {
       experimentId: this.experimentId!,
       participantId: this.participantId!,
-      stageName,
+      stageId,
       stage: {
         kind: StageKind.TakeSurvey,
         answers: lookupTable(answers, 'id'),
@@ -162,13 +162,13 @@ export class ParticipantService extends Service {
   /** Update a vote for leader stage for this participant
    * @rights Participant
    */
-  async updateVoteForLeaderStage(stageName: string, votes: Votes) {
+  async updateVoteForLeaderStage(stageId: string, votes: Votes) {
     return updateStageCallable(
       this.sp.firebaseService.functions,
       {
       experimentId: this.experimentId!,
       participantId: this.participantId!,
-      stageName,
+      stageId,
       stage: {
         kind: StageKind.VoteForLeader,
         votes,

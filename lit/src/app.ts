@@ -132,7 +132,7 @@ export class App extends MobxLitElement {
         {
           "experiment": this.participantService.experimentId!,
           "participant": this.participantService.participantId!,
-          "stage": this.participantService.profile?.workingOnStageName!,
+          "stage": this.participantService.profile?.currentStageId!,
         }
       );
     };
@@ -178,21 +178,19 @@ export class App extends MobxLitElement {
       return this.render404(`Could not find participant ID`)
     }
 
-    const stageName = this.routerService.activeRoute.params["stage"];
-    const currentStage = this.experimentService.getStage(stageName);
+    const stageId = this.routerService.activeRoute.params["stage"];
+    const currentStage = this.experimentService.getStage(stageId);
 
     if (currentStage === undefined) {
-      return this.render404(`Could not find experiment stage "${stageName}""`);
+      return this.render404(`Could not find experiment stage "${stageId}""`);
     }
 
-    const isLockedStage = (stageName: string) => {
-      const currentStageIndex = this.experimentService.stageNames.findIndex(
-        (name) => stageName === name
-      )
-      const workingOnStageIndex = this.experimentService.stageNames.findIndex(
-        (name) => this.participantService.profile?.workingOnStageName === name
+    const isLockedStage = (stageId: string) => {
+      const stageIndex = this.experimentService.getStageIndex(stageId);
+      const currentStageIndex = this.experimentService.getStageIndex(
+        this.participantService.profile?.currentStageId!
       );
-      return currentStageIndex > workingOnStageIndex;
+      return stageIndex > currentStageIndex;
     }
 
     const navigateToCurrentStage = () => {
@@ -200,12 +198,12 @@ export class App extends MobxLitElement {
         {
           "experiment": this.participantService.experimentId!,
           "participant": this.participantService.participantId!,
-          "stage": this.participantService.profile?.workingOnStageName!,
+          "stage": this.participantService.profile?.currentStageId!,
         }
       );
     }
 
-    if (isLockedStage(stageName)) {
+    if (isLockedStage(stageId)) {
       return html`
         <div class="error-wrapper">
           ${this.render403("This stage is not yet available")}
@@ -216,7 +214,7 @@ export class App extends MobxLitElement {
       `;
     }
 
-    const answer = this.participantService.stageAnswers[currentStage.name];
+    const answer = this.participantService.stageAnswers[currentStage.id];
 
     switch (currentStage.kind) {
       case StageKind.Info:
@@ -250,17 +248,17 @@ export class App extends MobxLitElement {
     }
   }
 
-  private renderStageReveal(stageName: string) {
-    const stage = this.experimentService.stageConfigMap[stageName];
+  private renderStageReveal(stageId: string) {
+    const stage = this.experimentService.stageConfigMap[stageId];
     if (stage === undefined || !stage.reveal) {
       return nothing;
     }
 
     switch (stage.kind) {
       case StageKind.VoteForLeader:
-        return html`<election-reveal .voteStageName=${stage.name}></election-reveal`;
+        return html`<election-reveal .voteStageId=${stage.id}></election-reveal`;
       case StageKind.TakeSurvey:
-        const answer = this.participantService.stageAnswers[stage.name];
+        const answer = this.participantService.stageAnswers[stage.id];
         return html`<las-survey-results .stage=${stage} .answer=${answer}></las-survey-results>`;
       default:
         return nothing;

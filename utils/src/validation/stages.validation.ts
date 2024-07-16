@@ -24,6 +24,7 @@ const strict = { additionalProperties: false } as const;
 /** Info stage config */
 export const InfoConfigData = Type.Object(
   {
+    id: Type.String({ minLength: 1 }),
     kind: Type.Literal(StageKind.Info),
     name: Type.String({ minLength: 1 }),
     implicit: Type.Optional(Type.Boolean()),
@@ -38,6 +39,7 @@ export const InfoConfigData = Type.Object(
 /** Terms of service stage config */
 export const TermsOfServiceConfigData = Type.Object(
   {
+    id: Type.String({ minLength: 1 }),
     kind: Type.Literal(StageKind.TermsOfService),
     name: Type.String({ minLength: 1 }),
     implicit: Type.Optional(Type.Boolean()),
@@ -52,6 +54,7 @@ export const TermsOfServiceConfigData = Type.Object(
 /** Profile stage config */
 export const ProfileStageConfigData = Type.Object(
   {
+    id: Type.String({ minLength: 1 }),
     kind: Type.Literal(StageKind.SetProfile),
     name: Type.String({ minLength: 1 }),
     implicit: Type.Optional(Type.Boolean()),
@@ -65,6 +68,7 @@ export const ProfileStageConfigData = Type.Object(
 /** Survey stage config */
 export const SurveyStageConfigData = Type.Object(
   {
+    id: Type.String({ minLength: 1 }),
     kind: Type.Literal(StageKind.TakeSurvey),
     name: Type.String({ minLength: 1 }),
     implicit: Type.Optional(Type.Boolean()),
@@ -86,6 +90,7 @@ export const SurveyStageConfigData = Type.Object(
 /** Group chat stage config */
 export const GroupChatStageConfigData = Type.Object(
   {
+    id: Type.String({ minLength: 1 }),
     kind: Type.Literal(StageKind.GroupChat),
     name: Type.String({ minLength: 1 }),
     implicit: Type.Optional(Type.Boolean()),
@@ -123,6 +128,7 @@ export const GroupChatStageConfigData = Type.Object(
 /** Vote for leader stage config */
 export const VoteForLeaderConfigData = Type.Object(
   {
+    id: Type.String({ minLength: 1 }),
     kind: Type.Literal(StageKind.VoteForLeader),
     name: Type.String({ minLength: 1 }),
     implicit: Type.Optional(Type.Boolean()),
@@ -136,6 +142,7 @@ export const VoteForLeaderConfigData = Type.Object(
 /** Reveal stage results config */
 export const RevealConfigData = Type.Object(
   {
+    id: Type.String({ minLength: 1 }),
     kind: Type.Literal(StageKind.Reveal),
     name: Type.String({ minLength: 1 }),
     implicit: Type.Literal(true),
@@ -204,7 +211,7 @@ export const StageAnswerData = Type.Object(
   {
     experimentId: Type.String({ minLength: 1 }),
     participantId: Type.String({ minLength: 1 }),
-    stageName: Type.String({ minLength: 1 }),
+    stageId: Type.String({ minLength: 1 }),
     stage: Type.Union([SurveyStageAnswerData, VoteForLeaderStageAnswerData]),
   },
   strict,

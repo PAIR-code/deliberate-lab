@@ -8,7 +8,6 @@ import { randstr, StageConfig, StageKind, validateStageConfigs } from "@llm-medi
 import {
   collectSnapshotWithId,
   convertExperimentStages,
-  convertTemplateStages,
   createProfileStage,
   createTOSStage
 } from "../../shared/utils";
@@ -33,7 +32,6 @@ export class ExperimentConfigService extends Service {
 
   @observable stages: StageConfig[] = [createTOSStage(), createProfileStage()];
   @observable currentStageIndex = -1;
-  @observable map: Map<string, StageConfig> = new Map();
 
   // Loads template as current config
   loadTemplate(templateId: string, name = "New experiment") {
@@ -46,7 +44,7 @@ export class ExperimentConfigService extends Service {
 
     getDocs(templateCollection).then(stagesDocs => {
       const stages = (collectSnapshotWithId(stagesDocs, 'name') as StageConfig[]);
-      this.stages = convertTemplateStages(stages);
+      this.stages = stages;
       this.name = name;
     });
   }
@@ -65,7 +63,7 @@ export class ExperimentConfigService extends Service {
     return {
       name: toJS(this.name),
       group: toJS(''),
-      stages: convertExperimentStages(toJS(this.stages)),
+      stages: toJS(this.stages),
       numberOfParticipants: toJS(this.numParticipants),
     };
   }

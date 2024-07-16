@@ -51,13 +51,14 @@ export const createExperiment = onCall(async (request) => {
               date: Timestamp.now(),
               group: group,
               numberOfParticipants,
+              stageIds: data.stages.map(stage => stage.id),
             }
           : {}),
       });
 
       // Create the stages
       for (const stage of data.stages) {
-        transaction.set(document.collection('stages').doc(stage.name), stage);
+        transaction.set(document.collection('stages').doc(stage.id), stage);
       }
 
       // Nothing more to do if this was a template
@@ -67,15 +68,14 @@ export const createExperiment = onCall(async (request) => {
       const chats: GroupChatStageConfig[] = data.stages.filter(
         (stage): stage is GroupChatStageConfig => stage.kind === StageKind.GroupChat,
       );
-      const workingOnStageName = data.stages[0].name;
+      const currentStageId = data.stages[0].id;
 
       // Create all participants
       Array.from({ length: numberOfParticipants }).forEach((_, i) => {
         const participant = document.collection('participants').doc();
         const participantData: ParticipantProfile = {
           publicId: participantPublicId(i),
-
-          workingOnStageName,
+          currentStageId,
           pronouns: null,
           name: null,
           avatarUrl: null,
@@ -91,7 +91,7 @@ export const createExperiment = onCall(async (request) => {
           const chatData: ChatAnswer = {
             participantPublicId: participantData.publicId,
             readyToEndChat: false,
-            stageName: chat.name,
+            stageId: chat.id,
           };
           transaction.set(participant.collection('chats').doc(chat.chatId), chatData);
 

@@ -30,7 +30,9 @@ export const ALLOWED_STAGE_PROGRESSION = {
   [StageKind.TakeSurvey]: true,
 } as const;
 
+
 export interface BaseStageConfig {
+  id: string;
   kind: StageKind;
   name: string;
   implicit?: boolean; // true if stage is implicitly added based on other stages
@@ -134,47 +136,3 @@ export interface VoteForLeaderStagePublicData extends BasePublicStageData {
 
 // NOTE: some stages do not have public stage data
 export type PublicStageData = GroupChatStagePublicData | VoteForLeaderStagePublicData;
-
-// ********************************************************************************************* //
-//                                         DEFAULTS                                              //
-// ********************************************************************************************* //
-
-export const getDefaultInfoConfig = (): InfoStageConfig => {
-  return {
-    kind: StageKind.Info,
-    name: 'Information',
-    infoLines: [],
-  };
-};
-
-export const getDefaultTosConfig = (): TermsOfServiceStageConfig => {
-  return {
-    kind: StageKind.TermsOfService,
-    name: 'Accept TOS',
-    tosLines: [],
-  };
-};
-
-export const getDefaultUserProfileConfig = (): ProfileStageConfig => {
-  return {
-    kind: StageKind.SetProfile,
-    name: 'Set profile',
-  };
-};
-
-export const getDefaultSurveyConfig = (): SurveyStageConfig => {
-  return {
-    kind: StageKind.TakeSurvey,
-    name: 'Take survey',
-    questions: [],
-  };
-};
-
-export const getDefaultRevealConfig = (): RevealStageConfig => {
-  return {
-    kind: StageKind.Reveal,
-    implicit: true,
-    name: 'Reveal stage results',
-    stagesToReveal: [],
-  };
-};

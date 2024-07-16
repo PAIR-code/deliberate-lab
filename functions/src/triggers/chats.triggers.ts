@@ -16,12 +16,12 @@ export const publishParticipantReadyToEndChat = onDocumentWritten(
     const data = event.data?.after.data() as ChatAnswer | undefined;
     if (!data) return;
 
-    const { participantPublicId, readyToEndChat, stageName } = data;
+    const { participantPublicId, readyToEndChat, stageId } = data;
     const { experimentId, chatId } = event.params;
 
     const publicChatData = app
       .firestore()
-      .doc(`experiments/${experimentId}/publicStageData/${stageName}`);
+      .doc(`experiments/${experimentId}/publicStageData/${stageId}`);
 
     await publicChatData.update({
       [`readyToEndChat.${participantPublicId}`]: readyToEndChat,

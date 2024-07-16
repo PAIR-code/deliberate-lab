@@ -89,7 +89,7 @@ export class SurveyPreview extends MobxLitElement {
       };
 
       this.participantService.updateSurveyStage(
-        this.participantService.profile!.workingOnStageName,
+        this.participantService.profile!.currentStageId,
         [answer]
       );
     };
@@ -195,7 +195,7 @@ export class SurveyPreview extends MobxLitElement {
       };
 
       this.participantService.updateSurveyStage(
-        this.participantService.profile!.workingOnStageName,
+        this.participantService.profile!.currentStageId,
         [answer]
       );
     };
@@ -236,7 +236,7 @@ export class SurveyPreview extends MobxLitElement {
       };
 
       this.participantService.updateSurveyStage(
-        this.participantService.profile!.workingOnStageName,
+        this.participantService.profile!.currentStageId,
         [answer]
       );
     };

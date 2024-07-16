@@ -45,7 +45,7 @@ export class ElectionPreview extends MobxLitElement {
       return html`
         ${descriptionContent}
 
-        <progress-stage-waiting .stageName=${currentStage}>
+        <progress-stage-waiting .stageId=${currentStage}>
         </progress-stage-waiting>
       `;
     }
@@ -92,7 +92,7 @@ export class ElectionPreview extends MobxLitElement {
       votes[profile.publicId] = getVoteFromValue(value);
 
       this.participantService.updateVoteForLeaderStage(
-        this.participantService.profile!.workingOnStageName,
+        this.participantService.profile!.currentStageId,
         votes
       )
     };
