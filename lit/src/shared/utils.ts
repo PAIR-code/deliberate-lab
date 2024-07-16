@@ -11,7 +11,6 @@ import {
   MediatorConfig,
   MediatorKind,
   ProfileStageConfig,
-  QuestionConfig,
   RatingQuestionConfig,
   RevealStageConfig,
   StageConfig,
@@ -34,29 +33,44 @@ export function generateId(): string {
 
 /** Create info stage. */
 export function createInfoStage(
-  name = "Info", description = "Info description", content = ["Placeholder info"]
+  config : Partial<InfoStageConfig> = {}
 ): InfoStageConfig {
-  const infoLines = content;
-  return { id: generateId(), kind: StageKind.Info, name, description, infoLines };
+  return {
+    id: generateId(),
+    kind: StageKind.Info,
+    name: config.name ?? "Info",
+    description: config.description ?? "Info description",
+    popupText: config.popupText ?? "",
+    infoLines: config.infoLines ?? ["Placeholder info"]
+  };
 }
 
 /** Create TOS stage. */
 export function createTOSStage(
-  name = "Terms of service",
-  description = "Acknowledge the terms of service to proceed.",
-  content = "- Placeholder term 1\n- Placeholder term 2\n- Placeholder term 3",
+  config : Partial<TermsOfServiceStageConfig> = {}
 ): TermsOfServiceStageConfig {
-  const tosLines = [content];
-  return { id: generateId(), kind: StageKind.TermsOfService, name, description, tosLines };
+  return {
+    id: generateId(),
+    kind: StageKind.TermsOfService,
+    name: config.name ?? "Terms of service",
+    description: config.description ?? "Acknowledge the terms of service to proceed.",
+    popupText: config.popupText ?? "",
+    tosLines : config.tosLines ?? ["- Placeholder term 1\n- Placeholder term 2\n- Placeholder term 3"],
+  }
 }
 
 /** Create survey stage. */
 export function createSurveyStage(
-  name = "Survey",
-  description = "Survey description",
-  questions: QuestionConfig[] = [],
+  config: Partial<SurveyStageConfig> = {}
 ): SurveyStageConfig {
-  return { id: generateId(), kind: StageKind.TakeSurvey, name, description, questions };
+  return {
+    id: generateId(),
+    kind: StageKind.TakeSurvey,
+    name: config.name ?? "Survey",
+    description: config.description ?? "Survey description",
+    popupText: config.popupText ?? "",
+    questions: config.questions ?? [],
+  };
 }
 
 /** Create profile stage. */
@@ -118,22 +132,31 @@ export function createMediator(
 
 /** Create leader vote (election) stage. */
 export function createVoteForLeaderStage(
-  name = "Leader election",
-  description = "Vote for the leader here.",
+  config: Partial<VoteForLeaderStageConfig> = {}
 ): VoteForLeaderStageConfig {
-  return { id: generateId(), kind: StageKind.VoteForLeader, name, description };
+  return {
+    id: generateId(),
+    kind: StageKind.VoteForLeader,
+    name: config.name ?? "Leader election",
+    description: config.description ?? "Vote for the leader here.",
+    popupText: config.popupText ?? "",
+  };
 }
 
 /**
  * Create composite reveal stage.
  */
 export function createRevealStage(
-  name = "Reveal",
-  description = "This shows results from other stages, e.g., leader election.",
-  stagesToReveal: string [] = []
+  config: Partial<RevealStageConfig> = {},
 ): RevealStageConfig {
   return {
-    id: generateId(), kind: StageKind.Reveal, composite: true, name, description, stagesToReveal
+    id: generateId(),
+    kind: StageKind.Reveal,
+    composite: true,
+    name: config.name ?? "Leader reveal", 
+    description: config.description ?? "This is the outcome of the vote.",
+    popupText: config.popupText ?? "",
+    stagesToReveal: config.stagesToReveal ?? []
   };
 }
 

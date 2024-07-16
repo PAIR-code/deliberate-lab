@@ -18,8 +18,6 @@ export const LAS_INTRO_INFO_LINES = [
   "Please click “Next stage” to proceed."
 ];
 
-export const LAS_INITIAL_TASK_DESCRIPTION = "";
-
 export const LAS_INITIAL_TASK_INTRO_INFO_LINES = [
   "# Imagine the following scenario:",
   "You have chartered a yacht with three friends for a holiday trip across the Atlantic Ocean. None of you have sailing experience, so you hired an experienced skipper and a two-person crew.",
