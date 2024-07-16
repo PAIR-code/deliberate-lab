@@ -29,7 +29,7 @@ export const InfoConfigData = Type.Object(
     name: Type.String({ minLength: 1 }),
     composite: Type.Optional(Type.Boolean()),
     game: Type.Optional(Type.String({ minLength: 1 })),
-    description: Type.Optional(Type.String({ minLength: 1 })),
+    description: Type.Optional(Type.String()),
     infoLines: Type.Array(Type.String({ minLength: 1 })),
   },
   strict,
@@ -43,7 +43,7 @@ export const TermsOfServiceConfigData = Type.Object(
     name: Type.String({ minLength: 1 }),
     composite: Type.Optional(Type.Boolean()),
     game: Type.Optional(Type.String({ minLength: 1 })),
-    description: Type.Optional(Type.String({ minLength: 1 })),
+    description: Type.Optional(Type.String()),
     tosLines: Type.Array(Type.String({ minLength: 1 })),
   },
   strict,
@@ -57,7 +57,7 @@ export const ProfileStageConfigData = Type.Object(
     name: Type.String({ minLength: 1 }),
     composite: Type.Optional(Type.Boolean()),
     game: Type.Optional(Type.String({ minLength: 1 })),
-    description: Type.Optional(Type.String({ minLength: 1 })),
+    description: Type.Optional(Type.String()),
   },
   strict,
 );
@@ -70,7 +70,7 @@ export const SurveyStageConfigData = Type.Object(
     name: Type.String({ minLength: 1 }),
     composite: Type.Optional(Type.Boolean()),
     game: Type.Optional(Type.String({ minLength: 1 })),
-    description: Type.Optional(Type.String({ minLength: 1 })),
+    description: Type.Optional(Type.String()),
     questions: Type.Array(
       Type.Union([
         TextQuestionConfigData,
@@ -91,7 +91,7 @@ export const GroupChatStageConfigData = Type.Object(
     name: Type.String({ minLength: 1 }),
     composite: Type.Optional(Type.Boolean()),
     game: Type.Optional(Type.String({ minLength: 1 })),
-    description: Type.Optional(Type.String({ minLength: 1 })),
+    description: Type.Optional(Type.String()),
     chatId: Type.String({ minLength: 1 }),
     chatConfig: Type.Union([ChatAboutItemsConfigData, SimpleChatConfigData]),
     mediators: Type.Array(
@@ -128,7 +128,7 @@ export const VoteForLeaderConfigData = Type.Object(
     name: Type.String({ minLength: 1 }),
     composite: Type.Optional(Type.Boolean()),
     game: Type.Optional(Type.String({ minLength: 1 })),
-    description: Type.Optional(Type.String({ minLength: 1 })),
+    description: Type.Optional(Type.String()),
   },
   strict,
 );
@@ -141,8 +141,8 @@ export const RevealConfigData = Type.Object(
     name: Type.String({ minLength: 1 }),
     composite: Type.Literal(true),
     game: Type.Optional(Type.String({ minLength: 1 })),
-    description: Type.Optional(Type.String({ minLength: 1 })),
     stagesToReveal: Type.Array(Type.String({ minLength: 1 })),
+    description: Type.Optional(Type.String()),
   },
   strict,
 );
