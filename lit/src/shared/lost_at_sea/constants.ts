@@ -20,15 +20,15 @@ export const LAS_INTRO_INFO_LINES = [
 
 export const LAS_INITIAL_TASK_INTRO_INFO_LINES = [
   "# Imagine the following scenario:",
-  "You have chartered a yacht with three friends for a holiday trip across the Atlantic Ocean. None of you have sailing experience, so you hired an experienced skipper and a two-person crew.",
-  "In the middle of the Atlantic a fierce fire breaks out in the ship's galley. The skipper and crew have been lost whilst trying to fight the blaze. Much of the yacht is destroyed and is slowly sinking.",
-  "Vital navigational and radio equipment are damaged, and your location is unclear. Your best estimate is that you are many hundreds of miles from the nearest landfall.",
+  "You have chartered a yacht with three friends for a holiday trip across the Atlantic Ocean. None of you have sailing experience, so you hired an experienced skipper and a two-person crew. In the middle of the Atlantic a fierce fire breaks out in the ship's galley. The skipper and crew have been lost whilst trying to fight the blaze. Much of the yacht is destroyed and is slowly sinking. Vital navigational and radio equipment are damaged, and your location is unclear. Your best estimate is that you are many hundreds of miles from the nearest landfall.",
   "*You and your friends have managed to save 10 items, undamaged and intact after the fire. In addition, you have salvaged a four-man rubber life craft and a box of matches*.",
   "*Your task*:  You are asked to **evaluate these 10 items in terms of their importance for your survival, as you wait to be rescued**. The computer will randomly generate pairs of items, and you will select which of the two is the most useful in your situation.",
-  "# Payment:",
+  "\n\n#Payment:",
   "Your answers will be compared to a panel of experts' solutions. If a question from Part 1 is randomly selected to determine your payment at the end of the study, you will earn $x if your answer is correct, and $0 otherwise.",
   "Please click “Next stage” to proceed."
 ];
+
+export const LAS_SCENARIO_REMINDER = "You and three friends are on a yacht trip across the Atlantic. A fire breaks out, and the skipper and crew are lost. The yacht is sinking, and your location is unclear.\nYou have saved 10 items, a life raft, and a box of matches.\n\nEvaluate the relative importance of items in each presented pair by selecting the one you believe is most useful. You can earn $X per correct answer if that question is drawn to determine your payoff.";
 
 export const LAS_WTL_DESCRIPTION = "Thank you for completing the task.\n\nNow, imagine that you are no longer alone but part of a group of four people. Your group must elect a leader whose role is to answer on behalf of the group the same types of questions you have just seen. In this scenario, the leader is the only one who chooses the most useful items for survival from pairs, and their answers determine the payment for each member of the group.\n\nHow interested would you be in taking on the leader’s role described above? Please choose a number from 1 to 10, with 1 meaning that you would very much like to become the leader, and 10 meaning not at all.";
 

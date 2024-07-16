@@ -20,7 +20,7 @@ import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
 import { v4 as uuidv4 } from "uuid";
 
-import { LAS_ID, LAS_FINAL_SURVEY, LAS_FINAL_SURVEY_DESCRIPTION, LAS_GROUP_CHAT_DESCRIPTION, LAS_INITIAL_TASK_INTRO_INFO_LINES, LAS_INTRO_DESCRIPTION, LAS_INTRO_INFO_LINES, LAS_LEADER_ELECTION_DESCRIPTION, LAS_LEADER_REVEAL_DESCRIPTION, LAS_LEADER_TASK_DESCRIPTION, LAS_REDO_TASK_DESCRIPTION, LAS_WTL_DESCRIPTION, LAS_WTL_SURVEY } from './constants';
+import { LAS_ID, LAS_FINAL_SURVEY, LAS_FINAL_SURVEY_DESCRIPTION, LAS_GROUP_CHAT_DESCRIPTION, LAS_INITIAL_TASK_INTRO_INFO_LINES, LAS_INTRO_DESCRIPTION, LAS_INTRO_INFO_LINES, LAS_LEADER_ELECTION_DESCRIPTION, LAS_LEADER_REVEAL_DESCRIPTION, LAS_LEADER_TASK_DESCRIPTION, LAS_REDO_TASK_DESCRIPTION, LAS_SCENARIO_REMINDER, LAS_WTL_DESCRIPTION, LAS_WTL_SURVEY } from './constants';
 import { createSurveyStage, createChatStage, createVoteForLeaderStage, createRevealStage, createInfoStage } from "../utils";
 
 /**
@@ -65,7 +65,8 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
 
   stages.push(createSurveyStage({
     name: "Initial survival task", 
-    questions: INDIVIDUAL_QUESTIONS
+    questions: INDIVIDUAL_QUESTIONS,
+    popupText: LAS_SCENARIO_REMINDER,
   }));
 
   stages.push(createSurveyStage({
@@ -86,6 +87,7 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
   stages.push(createSurveyStage({
     name: "Updated individual task",
     description: LAS_REDO_TASK_DESCRIPTION,
+    popupText: LAS_SCENARIO_REMINDER,
     questions: INDIVIDUAL_QUESTIONS
   }));
 
@@ -103,6 +105,7 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
   const leaderSurvey = createSurveyStage({
     name: "Representative task",
     description: LAS_LEADER_TASK_DESCRIPTION,
+    popupText: LAS_SCENARIO_REMINDER,
     questions: LEADER_QUESTIONS
   });
   stages.push(leaderSurvey);

@@ -24,6 +24,10 @@ export class SurveyConfigService extends Service {
   @computed get description() {
     return this.stage?.description ?? '';
   }
+  
+  @computed get popupText() {
+    return this.stage?.popupText ?? '';
+  }
 
   @computed get questions() {
     return this.stage?.questions ?? [];
@@ -38,6 +42,12 @@ export class SurveyConfigService extends Service {
   updateDescription(description: string) {
     if (this.stage) {
       this.stage.description = description;
+    }
+  }
+  
+  updatePopupText(popupText: string) {
+    if (this.stage) {
+      this.stage.popupText = popupText;
     }
   }
 

@@ -21,6 +21,10 @@ export class InfoConfigService extends Service {
     return this.stage?.description ?? '';
   }
 
+  @computed get popupText() {
+    return this.stage?.popupText ?? '';
+  }
+
   @computed get content() {
     return this.stage?.infoLines.join('\n\n');
   }
@@ -34,6 +38,12 @@ export class InfoConfigService extends Service {
   updateDescription(description: string) {
     if (this.stage) {
       this.stage.description = description;
+    }
+  }
+ 
+  updatePopupText(popupText: string) {
+    if (this.stage) {
+      this.stage.popupText = popupText;
     }
   }
 

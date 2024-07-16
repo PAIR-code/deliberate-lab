@@ -33,6 +33,11 @@ export class SurveyConfig extends MobxLitElement {
       const value = (e.target as HTMLTextAreaElement).value;
       this.surveyConfig.updateDescription(value);
     };
+    
+    const handlePopupText = (e: Event) => {
+      const value = (e.target as HTMLTextAreaElement).value;
+      this.surveyConfig.updatePopupText(value);
+    };
 
     const addQuestion = () => {
       this.surveyConfig.addScaleQuestion();
@@ -54,6 +59,15 @@ export class SurveyConfig extends MobxLitElement {
         variant="outlined"
         .value=${this.surveyConfig.description}
         @input=${handleDescriptionInput}
+      >
+      </pr-textarea>
+ 
+      <pr-textarea
+        label="Info icon pop-up text"
+        placeholder="Info icon pop-up text (markdown supported)"
+        variant="outlined"
+        .value=${this.surveyConfig.popupText}
+        @input=${handlePopupText}
       >
       </pr-textarea>
 

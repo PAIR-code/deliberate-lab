@@ -101,6 +101,11 @@ export class ExperimentConfig extends MobxLitElement {
       this.experimentConfig.updateStageDescription(value);
     }
 
+    const updateCurrentStagePopupText = (e: Event) => {
+      const value = (e.target as HTMLTextAreaElement).value;
+      this.experimentConfig.updateStagePopupText(value);
+    }
+
     return html`
       <pr-textarea
         label="Stage name"
@@ -117,6 +122,15 @@ export class ExperimentConfig extends MobxLitElement {
         variant="outlined"
         .value=${this.experimentConfig.currentStage?.description ?? ""}
         @input=${updateCurrentStageDescription}
+      >
+      </pr-textarea>
+      
+      <pr-textarea
+        label="Info icon pop-up text"
+        placeholder="Info icon pop-up text (markdown supported)"
+        variant="outlined"
+        .value=${this.experimentConfig.currentStage?.popupText ?? ""}
+        @input=${updateCurrentStagePopupText}
       >
       </pr-textarea>
     `;

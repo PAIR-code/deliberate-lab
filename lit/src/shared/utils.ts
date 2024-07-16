@@ -67,7 +67,7 @@ export function createSurveyStage(
     id: generateId(),
     kind: StageKind.TakeSurvey,
     name: config.name ?? "Survey",
-    description: config.description ?? "Survey description",
+    description: config.description ?? "",
     popupText: config.popupText ?? "",
     questions: config.questions ?? [],
   };
@@ -198,7 +198,7 @@ export function convertMarkdownToHTML(markdown: string, sanitize = true) {
 export function convertExperimentStages(stages: StageConfig[]) {
   return stages.map((stage, index) => {
     if (stage.kind === StageKind.TermsOfService) {
-      stage.tosLines = stage.tosLines.map(
+        stage.tosLines = stage.tosLines.map(
         info => convertMarkdownToHTML(info)
       );
       return stage;

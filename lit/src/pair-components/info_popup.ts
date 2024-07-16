@@ -6,6 +6,8 @@ import { html, LitElement } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { styles } from "./info_popup.scss";
 
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
+import { convertMarkdownToHTML } from "./../shared/utils";
 
 /**
  * Renders a info popup component.
@@ -41,7 +43,7 @@ export class InfoPopupComponent extends LitElement {
     <div class="modal" style=${this.showModal ? 'display: block;' : 'display: none;'} @click=${this.handleOutsideClick}>
       <div class="modal-content">
         <span class="close" @click=${this.handleCloseClick}>&times;</span>
-        <p>${this.popupText}</p>
+        ${unsafeHTML(convertMarkdownToHTML(this.popupText))}
       </div>
     </div>
     `;
