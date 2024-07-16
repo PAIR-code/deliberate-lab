@@ -75,7 +75,10 @@ export class ProfilePreview extends MobxLitElement {
         </div>
       </div>
 
-      <div><span>Current stage:</span> ${this.profile.workingOnStageName}</div>
+      <div>
+        <span>Current stage:</span>
+        ${this.experimentService.getStageName(this.profile.currentStageId, true)}
+      </div>
       <div>
         <span>Terms of Service:</span> ${formatDate()}</div>
       <div><span>Public ID:</span> ${this.profile.publicId}</div>

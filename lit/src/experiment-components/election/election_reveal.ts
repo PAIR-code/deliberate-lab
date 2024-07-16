@@ -1,7 +1,6 @@
-import "../../footer/footer";
-import "../../profile/profile_avatar";
-import "../../progress/progress_stage_completed";
-import "../../progress/progress_stage_waiting";
+import "../profile/profile_avatar";
+import "../progress/progress_stage_completed";
+import "../progress/progress_stage_waiting";
 
 import '@material/web/radio/radio.js';
 
@@ -13,9 +12,9 @@ import {
   StageKind,
 } from "@llm-mediation-experiments/utils";
 
-import { core } from "../../../core/core";
-import { ExperimentService } from "../../../services/experiment_service";
-import { RouterService } from "../../../services/router_service";
+import { core } from "../../core/core";
+import { ExperimentService } from "../../services/experiment_service";
+import { RouterService } from "../../services/router_service";
 
 import { styles } from "./election_reveal.scss";
 
@@ -27,10 +26,10 @@ export class ElectionReveal extends MobxLitElement {
   private readonly experimentService = core.getService(ExperimentService);
   private readonly routerService = core.getService(RouterService);
 
-  @property() voteStageName = "";
+  @property() voteStageId = "";
 
   override render() {
-    const stage = this.experimentService.publicStageDataMap[this.voteStageName];
+    const stage = this.experimentService.publicStageDataMap[this.voteStageId];
 
     if (stage?.kind !== StageKind.VoteForLeader) {
       return nothing;
@@ -40,14 +39,9 @@ export class ElectionReveal extends MobxLitElement {
     const { ready, notReady } =
       this.experimentService.getParticipantsReadyForStage(currentStage);
 
-    const description = this.experimentService.stageConfigMap[currentStage].description;
-    const descriptionContent = description ? html`<div class="description">${description}</div>` : nothing;
-
     if (notReady.length > 0) {
       return html`
-        ${descriptionContent}
-
-        <progress-stage-waiting .stageName=${currentStage}>
+        <progress-stage-waiting .stageId=${currentStage}>
         </progress-stage-waiting>
       `;
     }
@@ -60,8 +54,6 @@ export class ElectionReveal extends MobxLitElement {
     }
 
     return html`
-      ${descriptionContent}
-
       <div class="reveal-wrapper">
         <h2>The winner of the election is:</h2>
         <div class="reveal">
@@ -73,9 +65,6 @@ export class ElectionReveal extends MobxLitElement {
           </div>
         </div>
       </div>
-      <stage-footer>
-        <progress-stage-completed></progress-stage-completed>
-      </stage-footer>
     `;
   }
 }

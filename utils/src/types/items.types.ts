@@ -119,14 +119,3 @@ export const ITEMS: Record<ItemName, Item> = {
     ranking: 7,
   },
 };
-
-// ********************************************************************************************* //
-//                                           DEFAULTS                                            //
-// ********************************************************************************************* //
-
-export const getDefaultItemPair = (): ItemPair => {
-  return {
-    item1: 'sextant',
-    item2: 'shavingMirror',
-  };
-};

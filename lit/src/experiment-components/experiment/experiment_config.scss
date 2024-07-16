@@ -124,6 +124,10 @@ code {
   @include common.number-input;
 }
 
+.checkbox-input {
+  @include common.flex-row-align-center;
+}
+
 .buttons-wrapper {
   @include common.flex-row-align-center;
   gap: common.$spacing-medium;

@@ -45,7 +45,6 @@ export class ExperimentService extends Service {
 
   @observable stageConfigMap: Record<string, StageConfig> = {};
   @observable publicStageDataMap: Record<string, PublicStageData | undefined> = {};
-  @observable stageNames: string[] = [];
 
   // Experimenter-accessible participant details (e.g., including private ID).
   // For participant access to profiles, use getParticipantProfile(s)
@@ -125,8 +124,6 @@ export class ExperimentService extends Service {
         this.stageConfigMap[doc.id] = data;
       });
 
-      // Load the stage names
-      this.stageNames = Object.keys(this.stageConfigMap);
       this.isConfigLoading = false;
 
       // Load participants
@@ -152,42 +149,56 @@ export class ExperimentService extends Service {
 
     // Reset stage configs
     this.stageConfigMap = {};
-    this.stageNames = [];
+    this.publicStageDataMap = {};
+    this.experiment = undefined;
   }
 
-  getStage(stageName: string) {
-    return this.stageConfigMap[stageName];
+  @computed get stageIds(): string[] {
+    return this.experiment?.stageIds ?? [];
   }
 
-  getStageIndex(stageName: string) {
-    return this.stageNames.indexOf(stageName);
+  getStage(stageId: string) {
+    return this.stageConfigMap[stageId];
   }
 
-  getNextStageName(stageName: string) {
-    const currentIndex = this.stageNames.indexOf(stageName);
-    if (currentIndex >= 0 && currentIndex < this.stageNames.length - 1) {
-      return this.stageNames[currentIndex + 1];
+  getStageName(stageId: string, withNumber = false) {
+    if (this.isLoading) {
+      return "Loading...";
+    }
+
+    const stageNumber = withNumber ? `${this.getStageIndex(stageId) + 1}. ` : '';
+    return `${stageNumber}${this.stageConfigMap[stageId].name}`;
+  }
+
+  getStageIndex(stageId: string) {
+    return this.stageIds.indexOf(stageId);
+  }
+
+  getNextStageId(stageId: string) {
+    const currentIndex = this.getStageIndex(stageId);
+    if (currentIndex >= 0 && currentIndex < this.stageIds.length - 1) {
+      return this.stageIds[currentIndex + 1];
     }
     return null;
   }
 
-  getPublicStageData(stageName: string) {
-    return this.publicStageDataMap[stageName];
+  getPublicStageData(stageId: string) {
+    return this.publicStageDataMap[stageId];
   }
 
   // Returns lists of participants who are/aren't past the given stage
-  getParticipantsCompletedStage(stageName: string) {
+  getParticipantsCompletedStage(stageId: string) {
     const completed: ParticipantProfile[] = [];
     const notCompleted: ParticipantProfile[] = [];
 
-    const stageIndex = this.getStageIndex(stageName);
+    const stageIndex = this.getStageIndex(stageId);
 
     if (stageIndex === -1) {
       return { completed, notCompleted };
     }
 
     this.getParticipantProfiles().forEach((participant) => {
-      const index = this.getStageIndex(participant.workingOnStageName);
+      const index = this.getStageIndex(participant.currentStageId);
       if (index >= 0 && index > stageIndex) {
         completed.push(participant);
       } else {
@@ -199,17 +210,17 @@ export class ExperimentService extends Service {
   }
 
   // Returns lists of participants who have/haven't reached the given stage
-  getParticipantsReadyForStage(stageName: string) {
+  getParticipantsReadyForStage(stageId: string) {
     const ready: ParticipantProfile[] = [];
     const notReady: ParticipantProfile[] = [];
 
-    const stageIndex = this.getStageIndex(stageName);
+    const stageIndex = this.getStageIndex(stageId);
     if (stageIndex === -1) {
       return { ready, notReady };
     }
 
     this.getParticipantProfiles().forEach((participant) => {
-      const index = this.getStageIndex(participant.workingOnStageName);
+      const index = this.getStageIndex(participant.currentStageId);
       if (index >= 0 && index >= stageIndex) {
         ready.push(participant);
       } else {
@@ -221,8 +232,8 @@ export class ExperimentService extends Service {
   }
 
   // Returns whether or not given participant is ready to end chat
-  getParticipantReadyToEndChat(stageName: string, publicId: string) {
-    const stage = this.publicStageDataMap[stageName];
+  getParticipantReadyToEndChat(stageId: string, publicId: string) {
+    const stage = this.publicStageDataMap[stageId];
     if (!stage || stage.kind !== StageKind.GroupChat) {
       return false;
     }
@@ -231,11 +242,11 @@ export class ExperimentService extends Service {
   }
 
   // Returns lists of participants who are/aren't ready to end chat
-  getParticipantsReadyToEndChat(stageName: string) {
+  getParticipantsReadyToEndChat(stageId: string) {
     const ready: ParticipantProfile[] = [];
     const notReady: ParticipantProfile[] = [];
 
-    const stage = this.publicStageDataMap[stageName];
+    const stage = this.publicStageDataMap[stageId];
 
     if (!stage || stage.kind !== StageKind.GroupChat) {
       return { ready, notReady };
@@ -265,8 +276,8 @@ export class ExperimentService extends Service {
     return this.experiment?.participants[publicId];
   }
 
-  isReadyToEndChat(stageName: string, publicId: string) {
-    const stage = this.publicStageDataMap[stageName];
+  isReadyToEndChat(stageId: string, publicId: string) {
+    const stage = this.publicStageDataMap[stageId];
     if (!stage || stage.kind !== StageKind.GroupChat) {
       return false;
     }
@@ -275,15 +286,14 @@ export class ExperimentService extends Service {
   }
 
   /** Build a signal that tracks whether every participant has at least reached the given stage */
-  everyoneReachedStage(targetStage: string): boolean {
+  everyoneReachedStage(targetStageId: string): boolean {
     const participants = this.experiment?.participants;
-    const stages = this.stageNames;
-    const targetIndex = stages.indexOf(targetStage);
+    const targetIndex = this.getStageIndex(targetStageId);
 
     if (!participants || targetIndex === -1) return false;
 
     return Object.values(participants).every(
-      (participant) => stages.indexOf(participant.workingOnStageName) >= targetIndex,
+      (participant) => this.getStageIndex(participant.currentStageId) >= targetIndex,
     );
   }
 

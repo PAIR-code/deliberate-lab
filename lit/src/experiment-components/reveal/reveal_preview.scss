@@ -1,0 +1,19 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-xl;
+  height: 100%;
+}
+
+.description {
+  color: var(--md-sys-color-primary);
+  padding-bottom: common.$spacing-medium;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.stages-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-xxl;
+}

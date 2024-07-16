@@ -16,8 +16,6 @@ import { ExperimenterService } from "../../services/experimenter_service";
 import { Pages, RouterService } from "../../services/router_service";
 import { ExperimentConfigService } from "../../services/config/experiment_config_service";
 
-import { convertTemplateStages } from "../../shared/utils";
-
 import { styles } from "./experiment_preview.scss";
 
 /** Experiment preview */
@@ -94,8 +92,8 @@ export class ExperimentPreview extends MobxLitElement {
     const onFork = () => {
       const name = this.experimentService.experiment?.name!;
       const num = this.experimentService.experiment?.numberOfParticipants!;
-      const stages = convertTemplateStages(
-        Object.values(this.experimentService.stageConfigMap)
+      const stages = this.experimentService.stageIds.map(stageId =>
+        this.experimentService.stageConfigMap[stageId]
       );
 
       this.experimentConfig.updateName(name);

@@ -100,3 +100,8 @@ main {
   @include common.flex-column;
   gap: common.$spacing-medium;
 }
+
+.stage-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}

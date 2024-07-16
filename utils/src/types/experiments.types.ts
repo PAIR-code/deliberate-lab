@@ -13,6 +13,9 @@ export interface Experiment {
   date: UnifiedTimestamp;
   numberOfParticipants: number;
 
+  // Ordered list of stage IDs
+  stageIds: string[];
+
   // Readonly participant public id => participant profile map
   participants: Record<string, ParticipantProfile>;
 }

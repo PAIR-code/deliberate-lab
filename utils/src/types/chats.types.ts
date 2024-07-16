@@ -37,7 +37,7 @@ export interface ChatAnswer {
 
   // Indexes (facilitate automated actions)
   participantPublicId: string;
-  stageName: string;
+  stageId: string;
 }
 
 // ********************************************************************************************* //
@@ -60,14 +60,3 @@ export interface PublicChatAboutItemsData extends BaseChatPublicData {
 }
 
 export type PublicChatData = PublicSimpleChatData | PublicChatAboutItemsData;
-
-// ********************************************************************************************* //
-//                                           DEFAULTS                                            //
-// ********************************************************************************************* //
-
-export const getDefaultChatAboutItemsConfig = (): ChatAboutItemsConfig => {
-  return {
-    kind: ChatKind.ChatAboutItems,
-    ratingsToDiscuss: [],
-  };
-};

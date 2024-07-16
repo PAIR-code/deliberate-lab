@@ -17,13 +17,13 @@ export class Progress extends MobxLitElement {
 
   private readonly experimentService = core.getService(ExperimentService);
 
-  @property() stageName = "";
+  @property() stageId = "";
   @property() showReadyAvatars = true;
   @property() showWaitingAvatars = false;
 
   override render() {
     const { ready, notReady } =
-      this.experimentService.getParticipantsReadyForStage(this.stageName);
+      this.experimentService.getParticipantsReadyForStage(this.stageId);
 
     return html`
       <div class="status">

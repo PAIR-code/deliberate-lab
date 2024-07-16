@@ -6,9 +6,12 @@ import "../../pair-components/tooltip";
 
 import "../info/info_config";
 import "../mediators/mediator_config";
+import "../reveal/reveal_config";
 import "../survey/survey_config";
 import "../tos/tos_config";
 import "./experiment_config_menu";
+
+import "@material/web/checkbox/checkbox.js";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
@@ -21,6 +24,7 @@ import {
 } from "../../services/config/experiment_config_service";
 import { InfoConfigService } from "../../services/config/info_config_service";
 import { MediatorConfigService } from "../../services/config/mediator_config_service";
+import { RevealConfigService } from "../../services/config/reveal_config_service";
 import {
   SurveyConfigService
 } from "../../services/config/survey_config_service";
@@ -31,8 +35,6 @@ import { Pages, RouterService } from "../../services/router_service";
 
 import { ChatKind, ExperimentTemplate, StageConfig, StageKind } from "@llm-mediation-experiments/utils";
 import {
-  MODULE_DESCRIPTION_LAS,
-  MODULE_DESCRIPTION_LEADER,
   STAGE_DESCRIPTION_CHAT,
   STAGE_DESCRIPTION_CHAT_SIMPLE,
   STAGE_DESCRIPTION_INFO,
@@ -42,9 +44,9 @@ import {
   STAGE_DESCRIPTION_TOS,
   STAGE_DESCRIPTION_VOTE,
 } from "../../shared/constants";
-import {
-  isLostAtSeaModuleStage
-} from "../../shared/utils";
+import { generateId } from "../../shared/utils";
+import { LAS_ID, LAS_DESCRIPTION } from "../../shared/lost_at_sea/constants";
+import { isLostAtSeaGameStage } from "../../shared/lost_at_sea/utils";
 
 import { ExperimenterService } from "../../services/experimenter_service";
 import { styles } from "./experiment_config.scss";
@@ -57,8 +59,9 @@ export class ExperimentConfig extends MobxLitElement {
   private readonly experimentConfig = core.getService(ExperimentConfigService);
   private readonly infoConfig = core.getService(InfoConfigService);
   private readonly mediatorConfig = core.getService(MediatorConfigService);
-  private readonly tosConfig = core.getService(TOSConfigService);
+  private readonly revealConfig = core.getService(RevealConfigService);
   private readonly surveyConfig = core.getService(SurveyConfigService);
+  private readonly tosConfig = core.getService(TOSConfigService);
 
   private readonly authService = core.getService(AuthService);
   private readonly experimenterService = core.getService(ExperimenterService);
@@ -127,6 +130,7 @@ export class ExperimentConfig extends MobxLitElement {
         this.infoConfig.stage = currentStage;
         return html`
           ${this.renderStageInfo(StageKind.Info, STAGE_DESCRIPTION_INFO)}
+          ${this.renderGameInfo(currentStage.game)}
           <info-config></info-config>
         `;
       case StageKind.TermsOfService:
@@ -135,6 +139,7 @@ export class ExperimentConfig extends MobxLitElement {
         return html`
           ${this.renderStageInfo(
             StageKind.TermsOfService, STAGE_DESCRIPTION_TOS)}
+          ${this.renderGameInfo(currentStage.game)}
           <tos-config></tos-config>
         `;
       case StageKind.TakeSurvey:
@@ -143,14 +148,14 @@ export class ExperimentConfig extends MobxLitElement {
         return html`
           ${this.renderStageInfo(
             StageKind.TakeSurvey, STAGE_DESCRIPTION_SURVEY)}
-          ${isLostAtSeaModuleStage(currentStage) ? this.renderStageInfo(
-            "lostAtSeaGame", MODULE_DESCRIPTION_LAS, true) : nothing}
+          ${this.renderGameInfo(currentStage.game)}
           <survey-config></survey-config>
         `;
       case StageKind.SetProfile:
         return html`
           ${this.renderStageInfo(
             StageKind.SetProfile, STAGE_DESCRIPTION_PROFILE)}
+          ${this.renderGameInfo(currentStage.game)}
           ${this.renderCurrentStageNameField()}
         `;
       case StageKind.GroupChat:
@@ -159,6 +164,7 @@ export class ExperimentConfig extends MobxLitElement {
         if (currentStage.chatConfig.kind !== ChatKind.ChatAboutItems) {
           return html`
             ${this.renderStageInfo(StageKind.GroupChat, STAGE_DESCRIPTION_CHAT)}
+            ${this.renderGameInfo(currentStage.game)}
             <div class="error">${STAGE_DESCRIPTION_CHAT_SIMPLE}</div>
             ${this.renderCurrentStageNameField()}
             <mediators-config></mediators-config>
@@ -167,29 +173,29 @@ export class ExperimentConfig extends MobxLitElement {
         return html`
           ${this.renderStageInfo(
             StageKind.GroupChat, STAGE_DESCRIPTION_CHAT)}
-          ${isLostAtSeaModuleStage(currentStage) ? this.renderStageInfo(
-            "lostAtSeaGame", MODULE_DESCRIPTION_LAS, true) : nothing}
+          ${this.renderGameInfo(currentStage.game)}
           ${this.renderCurrentStageNameField()}
-          ${isLostAtSeaModuleStage(currentStage) ?
+          ${isLostAtSeaGameStage(currentStage) ?
             html`<code>${JSON.stringify(currentStage.chatConfig)}</code>`
             : nothing}
-          <mediators-config></mediators-config>
+            <mediators-config></mediators-config>
           `;
       case StageKind.VoteForLeader:
         return html`
           ${this.renderStageInfo(
             StageKind.VoteForLeader, STAGE_DESCRIPTION_VOTE)}
-          ${this.renderStageInfo(
-            "leaderModule", MODULE_DESCRIPTION_LEADER, true)}
+          ${this.renderGameInfo(currentStage.game)}
           ${this.renderCurrentStageNameField()}
         `;
-      case StageKind.RevealVoted:
+      case StageKind.Reveal:
+        this.revealConfig.reset();
+        this.revealConfig.stage = currentStage;
         return html`
           ${this.renderStageInfo(
-            StageKind.RevealVoted, STAGE_DESCRIPTION_REVEAL)}
-          ${this.renderStageInfo(
-            "leaderModule", MODULE_DESCRIPTION_LEADER, true)}
+            StageKind.Reveal, STAGE_DESCRIPTION_REVEAL)}
+          ${this.renderGameInfo(currentStage.game)}
           ${this.renderCurrentStageNameField()}
+          <reveal-config></reveal-config>
         `;
       default:
         return this.renderMetadata();
@@ -216,18 +222,26 @@ export class ExperimentConfig extends MobxLitElement {
     `;
   }
 
-  private renderStageInfo(chip: string, content: string, isModule = false) {
-    const chipClasses = classMap({
-      "stage-chip": true,
-      "tertiary": isModule
-    });
-
+  private renderStageInfo(chip: string, content: string) {
     return html`
       <div class="stage-info">
-        <div class=${chipClasses}>${chip}</div>
+        <div class="stage-chip">${chip}</div>
         <div class="stage-description">${content}</div>
       </div>
     `;
+  }
+
+  private renderGameInfo(game: string|undefined) {
+    if (game === LAS_ID) {
+      return html`
+        <div class="stage-info">
+          <div class="stage-chip tertiary">${game}</div>
+          <div class="stage-description">${LAS_DESCRIPTION}</div>
+        </div>
+      `;
+    }
+
+    return nothing;
   }
 
   private renderMetadata() {
@@ -280,14 +294,12 @@ export class ExperimentConfig extends MobxLitElement {
       </div>
       <i>The experiment group options allow you to create a group of experiments with the same configuration.</i>
       <div class="checkbox-input">
-        <label for="isExperimentGroup">Create a group of experiments</label>
-        <input
-          type="checkbox"
-          id="isExperimentGroup"
-          name="isExperimentGroup"
+        <md-checkbox id="isExperimentGroup" touch-target="wrapper"
           .checked=${this.experimentConfig.isGroup}
           @change=${handleCheckbox}
         />
+        </md-checkbox>
+        <label for="isExperimentGroup">Create a group of experiments</label>
       </div>
       ${this.experimentConfig.isGroup
         ? html`

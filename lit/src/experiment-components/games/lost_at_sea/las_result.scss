@@ -1,0 +1,59 @@
+@use "../../../sass/common";
+@use "../../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+h2 {
+  @include typescale.title-medium;
+  margin: 0;
+}
+
+.img-wrapper {
+  @include common.flex-row-align-center;
+  aspect-ratio: 1 / 1;
+  background: var(--md-sys-color-surface);
+  border-radius: common.$spacing-medium;
+  overflow: hidden;
+  width: 100px;
+
+  img {
+    height: auto;
+    width: 100%;
+  }
+}
+
+.table {
+  @include common.flex-column;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: common.$spacing-medium;
+  overflow: hidden;
+}
+
+.table-head {
+  background: var(--md-sys-color-secondary-container);
+  border-bottom: 1px solid var(--md-sys-color-outline);
+}
+
+.table-row {
+  @include common.flex-row;
+
+  &:nth-of-type(2n) {
+    background: var(--md-sys-color-surface-container-high);
+  }
+}
+
+.table-cell {
+  @include common.flex-row-align-center;
+  border-right: 1px solid var(--md-sys-color-outline);
+  gap: common.$spacing-small;
+  padding: common.$spacing-small common.$spacing-medium;
+  width: 100%;
+  word-break: break-all;
+
+  &:last-of-type {
+    border-right: none;
+  }
+}

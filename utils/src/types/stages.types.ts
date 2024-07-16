@@ -11,9 +11,8 @@ export enum StageKind {
   SetProfile = 'setProfile',
   GroupChat = 'groupChat',
   VoteForLeader = 'voteForLeader',
-  RevealVoted = 'leaderReveal',
+  Reveal = 'reveal',
   TakeSurvey = 'takeSurvey',
-  // RankItems = 'rankItems',
 }
 
 // ********************************************************************************************* //
@@ -27,14 +26,17 @@ export const ALLOWED_STAGE_PROGRESSION = {
   [StageKind.SetProfile]: false,
   [StageKind.GroupChat]: false,
   [StageKind.VoteForLeader]: true,
-  [StageKind.RevealVoted]: false,
+  [StageKind.Reveal]: false,
   [StageKind.TakeSurvey]: true,
-  // [StageKind.RankItems]: false,
 } as const;
 
+
 export interface BaseStageConfig {
+  id: string;
   kind: StageKind;
   name: string;
+  composite?: boolean; // true if stage uses data from other stages (e.g., reveal)
+  game?: string; // ID of game, if part of one
   description?: string;
 }
 
@@ -68,9 +70,10 @@ export interface VoteForLeaderStageConfig extends BaseStageConfig {
   kind: StageKind.VoteForLeader;
 }
 
-export interface RevealVotedStageConfig extends BaseStageConfig {
-  kind: StageKind.RevealVoted;
-  pendingVoteStageName: string; // Name of the `VoteForLeader` stage that this stage is revealing the results of
+export interface RevealStageConfig extends BaseStageConfig {
+  kind: StageKind.Reveal;
+  composite: true;
+  stagesToReveal: string[]; // Names of stages to reveal results for
 }
 
 export type StageConfig =
@@ -80,7 +83,7 @@ export type StageConfig =
   | SurveyStageConfig
   | GroupChatStageConfig
   | VoteForLeaderStageConfig
-  | RevealVotedStageConfig;
+  | RevealStageConfig;
 
 // ********************************************************************************************* //
 //                                           ANSWERS                                             //
@@ -132,46 +135,3 @@ export interface VoteForLeaderStagePublicData extends BasePublicStageData {
 
 // NOTE: some stages do not have public stage data
 export type PublicStageData = GroupChatStagePublicData | VoteForLeaderStagePublicData;
-
-// ********************************************************************************************* //
-//                                         DEFAULTS                                              //
-// ********************************************************************************************* //
-
-export const getDefaultInfoConfig = (): InfoStageConfig => {
-  return {
-    kind: StageKind.Info,
-    name: 'Information',
-    infoLines: [],
-  };
-};
-
-export const getDefaultTosConfig = (): TermsOfServiceStageConfig => {
-  return {
-    kind: StageKind.TermsOfService,
-    name: 'Accept TOS',
-    tosLines: [],
-  };
-};
-
-export const getDefaultUserProfileConfig = (): ProfileStageConfig => {
-  return {
-    kind: StageKind.SetProfile,
-    name: 'Set profile',
-  };
-};
-
-export const getDefaultSurveyConfig = (): SurveyStageConfig => {
-  return {
-    kind: StageKind.TakeSurvey,
-    name: 'Take survey',
-    questions: [],
-  };
-};
-
-export const getDefaultLeaderRevealConfig = (): RevealVotedStageConfig => {
-  return {
-    kind: StageKind.RevealVoted,
-    name: 'Reveal voted leader',
-    pendingVoteStageName: '',
-  };
-};

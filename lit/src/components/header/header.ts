@@ -7,6 +7,7 @@ import { customElement } from "lit/decorators.js";
 
 import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
+import { ExperimentService } from "../../services/experiment_service";
 import { Pages, RouterService } from "../../services/router_service";
 
 import { styles } from "./header.scss";
@@ -17,6 +18,7 @@ export class Header extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly authService = core.getService(AuthService);
+  private readonly experimentService = core.getService(ExperimentService);
   private readonly routerService = core.getService(RouterService);
 
   override render() {
@@ -72,7 +74,9 @@ export class Header extends MobxLitElement {
     } else if (activePage === Pages.PARTICIPANT) {
       return "Welcome, participant!";
     } else if (activePage === Pages.PARTICIPANT_STAGE) {
-      return this.routerService.activeRoute.params["stage"];
+      return this.experimentService.getStageName(
+        this.routerService.activeRoute.params["stage"], true
+      );
     }
     return "";
   }

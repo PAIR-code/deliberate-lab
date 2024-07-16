@@ -5,6 +5,10 @@ import {
   SurveyQuestionKind,
 } from '@llm-mediation-experiments/utils';
 
+export const LAS_ID = 'lostAtSea';
+export const LAS_DESCRIPTION =
+  "An implementation of the Lost at Sea task (Born 2022) with pairwise elements.";
+
 export const LAS_INTRO_DESCRIPTION = `This experiment should take an estimated 20-30 minutes.`;
 export const LAS_INTRO_INFO_LINES = [
   "⛵️ In this task, you are adrift on a raft in the ocean with your crewmates after your vessel sank.  Your location is unclear because of the destruction of critical navigation equipment. Your best estimate is that you are approximately one thousand miles south-southeast of the nearest land. You have a box of matches in your pocket.",
