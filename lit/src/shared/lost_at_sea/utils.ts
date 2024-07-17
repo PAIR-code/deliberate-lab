@@ -6,6 +6,8 @@ import {
   ITEM_NAMES,
   ITEMS,
   ItemName,
+  PayoutBundleStrategy,
+  PayoutItemKind,
   QuestionConfig,
   RatingQuestionConfig,
   RevealStageConfig,
@@ -21,7 +23,7 @@ import { gfm, gfmHtml } from "micromark-extension-gfm";
 import { v4 as uuidv4 } from "uuid";
 
 import { LAS_ID, LAS_FINAL_SURVEY, LAS_FINAL_SURVEY_DESCRIPTION, LAS_GROUP_CHAT_DESCRIPTION, LAS_INITIAL_TASK_INTRO_INFO_LINES, LAS_INTRO_DESCRIPTION, LAS_INTRO_INFO_LINES, LAS_LEADER_ELECTION_DESCRIPTION, LAS_LEADER_REVEAL_DESCRIPTION, LAS_LEADER_TASK_DESCRIPTION, LAS_REDO_TASK_DESCRIPTION, LAS_SCENARIO_REMINDER, LAS_WTL_DESCRIPTION, LAS_WTL_SURVEY } from './constants';
-import { createSurveyStage, createChatStage, createVoteForLeaderStage, createRevealStage, createInfoStage } from "../utils";
+import { createSurveyStage, createChatStage, createVoteForLeaderStage, createPayoutStage, createRevealStage, createInfoStage } from "../utils";
 
 /**
  * Create Lost at Sea game module stages.
@@ -63,11 +65,12 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
     (pair, index) => getRatingQuestionFromPair(pair, index)
   );
 
-  stages.push(createSurveyStage({
+  const initialTask = createSurveyStage({
     name: "Initial survival task", 
     questions: INDIVIDUAL_QUESTIONS,
     popupText: LAS_SCENARIO_REMINDER,
-  }));
+  });
+  stages.push(initialTask);
 
   stages.push(createSurveyStage({
     name: "Willingness to lead survey",
@@ -84,12 +87,13 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
     )
   );
 
-  stages.push(createSurveyStage({
+  const redoTask = createSurveyStage({
     name: "Updated individual task",
     description: LAS_REDO_TASK_DESCRIPTION,
     popupText: LAS_SCENARIO_REMINDER,
     questions: INDIVIDUAL_QUESTIONS
-  }));
+  });
+  stages.push(redoTask);
 
   const leaderElection = createVoteForLeaderStage({
     name: "Representative election",
@@ -102,19 +106,58 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
     (pair, index) => getRatingQuestionFromPair(pair, index)
   );
 
-  const leaderSurvey = createSurveyStage({
+  const leaderTask = createSurveyStage({
     name: "Representative task",
     description: LAS_LEADER_TASK_DESCRIPTION,
     popupText: LAS_SCENARIO_REMINDER,
     questions: LEADER_QUESTIONS
   });
-  stages.push(leaderSurvey);
+  stages.push(leaderTask);
 
   stages.push(createRevealStage({
     name: "Representative reveal",
     description: LAS_LEADER_REVEAL_DESCRIPTION,
-    stagesToReveal: [leaderElection.id, leaderSurvey.id],
+    stagesToReveal: [leaderElection.id, leaderTask.id],
   }))
+
+  // Add payout
+  stages.push(createPayoutStage({
+    name: "Final payoff",
+    payouts: [
+      {
+        name: "Part 1 payoff",
+        strategy: PayoutBundleStrategy.AddPayoutItems,
+        payoutItems: [{
+          kind: PayoutItemKind.RatingSurvey,
+          surveyStageId: initialTask.id,
+          surveyQuestionIds: getRandomRatingQuestionIds(initialTask),
+          currencyAmountPerQuestion: 0,
+          fixedCurrencyAmount: 0,
+        }]
+      },
+      {
+        name: "Parts 2 and 3 payoff",
+        strategy: PayoutBundleStrategy.ChoosePayoutItem,
+        payoutItems: [
+          {
+            kind: PayoutItemKind.RatingSurvey,
+            surveyStageId: redoTask.id,
+            surveyQuestionIds: getRandomRatingQuestionIds(redoTask),
+            currencyAmountPerQuestion: 0,
+            fixedCurrencyAmount: 0,
+          },
+          {
+            kind: PayoutItemKind.RatingSurvey,
+            surveyStageId: leaderTask.id,
+            surveyQuestionIds: getRandomRatingQuestionIds(leaderTask),
+            leaderStageId: leaderElection.id,
+            currencyAmountPerQuestion: 0,
+            fixedCurrencyAmount: 0,
+          }
+        ]
+      },
+    ],
+  }));
 
   // Final survey
   stages.push(createSurveyStage({
