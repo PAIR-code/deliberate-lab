@@ -1,6 +1,7 @@
 import {
   ChatKind,
   Experiment,
+  ParticipantProfile,
   PublicChatData,
   PublicStageData,
   StageAnswer,
@@ -93,9 +94,19 @@ export const publishStageData = onDocumentWritten(
           .get();
         const publicData = publicDoc.data() as VoteForLeaderStagePublicData;
 
+        // Get the participant's public ID
+        const participantDoc = await app
+          .firestore()
+          .doc(
+            `experiments/${experimentId}/participants/${participantId}`,
+          )
+          .get();
+        const participantPublicId
+          = (participantDoc.data() as ParticipantProfile).publicId;
+
         // Compute the updated votes
         const newVotes = publicData.participantvotes;
-        newVotes[participantId] = data.votes;
+        newVotes[participantPublicId] = data.votes;
 
         // Compute the new leader with these votes
         const currentLeader = chooseLeader(allVoteScores(newVotes));
