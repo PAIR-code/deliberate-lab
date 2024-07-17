@@ -6,6 +6,7 @@ import "../../pair-components/tooltip";
 
 import "../info/info_config";
 import "../mediators/mediator_config";
+import "../payout/payout_config";
 import "../reveal/reveal_config";
 import "../survey/survey_config";
 import "../tos/tos_config";
@@ -24,6 +25,7 @@ import {
 } from "../../services/config/experiment_config_service";
 import { InfoConfigService } from "../../services/config/info_config_service";
 import { MediatorConfigService } from "../../services/config/mediator_config_service";
+import { PayoutConfigService } from "../../services/config/payout_config_service";
 import { RevealConfigService } from "../../services/config/reveal_config_service";
 import {
   SurveyConfigService
@@ -38,6 +40,7 @@ import {
   STAGE_DESCRIPTION_CHAT,
   STAGE_DESCRIPTION_CHAT_SIMPLE,
   STAGE_DESCRIPTION_INFO,
+  STAGE_DESCRIPTION_PAYOUT,
   STAGE_DESCRIPTION_PROFILE,
   STAGE_DESCRIPTION_REVEAL,
   STAGE_DESCRIPTION_SURVEY,
@@ -59,6 +62,7 @@ export class ExperimentConfig extends MobxLitElement {
   private readonly experimentConfig = core.getService(ExperimentConfigService);
   private readonly infoConfig = core.getService(InfoConfigService);
   private readonly mediatorConfig = core.getService(MediatorConfigService);
+  private readonly payoutConfig = core.getService(PayoutConfigService);
   private readonly revealConfig = core.getService(RevealConfigService);
   private readonly surveyConfig = core.getService(SurveyConfigService);
   private readonly tosConfig = core.getService(TOSConfigService);
@@ -200,6 +204,15 @@ export class ExperimentConfig extends MobxLitElement {
             StageKind.VoteForLeader, STAGE_DESCRIPTION_VOTE)}
           ${this.renderGameInfo(currentStage.game)}
           ${this.renderCurrentStageNameField()}
+        `;
+      case StageKind.Payout:
+        this.payoutConfig.reset();
+        this.payoutConfig.stage = currentStage;
+        return html`
+          ${this.renderStageInfo(StageKind.Payout, STAGE_DESCRIPTION_PAYOUT)}
+          ${this.renderGameInfo(currentStage.game)}
+          ${this.renderCurrentStageNameField()}
+          <payout-config></payout-config>
         `;
       case StageKind.Reveal:
         this.revealConfig.reset();

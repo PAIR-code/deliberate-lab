@@ -172,3 +172,50 @@ export function getLostAtSeaItemRanking(item: ItemName) {
 export function isLostAtSeaGameStage(stage: StageConfig) {
   return stage.game === LAS_ID;
 }
+
+/**
+ * Check if stage is a LostAtSea rating survey
+ */
+export function isLostAtSeaSurvey(stage: StageConfig) {
+  if (stage.kind !== StageKind.TakeSurvey) {
+     return false;
+  }
+  for (const question of stage.questions) {
+    if (question.kind === SurveyQuestionKind.Rating) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Return LostAtSea survey stages from given list of stages.
+ */
+export function getLostAtSeaSurveyStages(stages: StageConfig[]) {
+  return stages.filter(stage => isLostAtSeaSurvey(stage));
+}
+
+/**
+ * Return rating question IDs from LostAtSea survey stage.
+ */
+export function getRatingQuestionIds(stage: StageConfig) {
+  if (stage.kind === StageKind.TakeSurvey) {
+    return stage.questions.filter(
+      question => question.kind === SurveyQuestionKind.Rating
+    ).map(question => question.id);
+  }
+  return [];
+}
+
+/**
+ * Return list of random rating question IDs from LostAtSea survey stage.
+ * NOTE: This currently only returns 1 random question.
+ */
+export function getRandomRatingQuestionIds(stage: StageConfig) {
+  const ids = getRatingQuestionIds(stage);
+  if (ids.length === 0) {
+    return [];
+  } else {
+    return [ids[Math.floor(Math.random() * ids.length)]];
+  }
+}

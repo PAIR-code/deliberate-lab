@@ -2,6 +2,7 @@ import { Type, type Static } from '@sinclair/typebox';
 import {
   GroupChatStageConfigData,
   InfoConfigData,
+  PayoutConfigData,
   ProfileStageConfigData,
   RevealConfigData,
   SurveyStageConfigData,
@@ -52,6 +53,7 @@ export const ExperimentCreationData = Type.Object(
         SurveyStageConfigData,
         GroupChatStageConfigData,
         VoteForLeaderConfigData,
+        PayoutConfigData,
         RevealConfigData,
       ]),
     ),

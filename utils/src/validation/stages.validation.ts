@@ -1,5 +1,6 @@
 import { TObject, Type, type Static } from '@sinclair/typebox';
 import { ChatContext, MediatorKind } from '../types/mediator.types';
+import { PayoutCurrency } from '../types/payout.types';
 import { SurveyQuestionKind } from '../types/questions.types';
 import { BaseStageConfig, StageConfig, StageKind } from '../types/stages.types';
 import { Vote } from '../types/votes.types';
@@ -14,6 +15,7 @@ import {
   TextQuestionAnswerData,
   TextQuestionConfigData,
 } from './questions.validation';
+import { PayoutBundleData } from './payout.validation';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = { additionalProperties: false } as const;
@@ -139,6 +141,25 @@ export const VoteForLeaderConfigData = Type.Object(
   strict,
 );
 
+/** Payout stage config */
+export const PayoutConfigData = Type.Object(
+  {
+    id: Type.String({ minLength: 1 }),
+    kind: Type.Literal(StageKind.Payout),
+    name: Type.String({ minLength: 1 }),
+    composite: Type.Literal(true),
+    game: Type.Optional(Type.String({ minLength: 1})),
+    payouts: Type.Array(PayoutBundleData),
+    currency: Type.Union([
+      Type.Literal(PayoutCurrency.USD),
+      Type.Literal(PayoutCurrency.EUR),
+    ]),
+    description: Type.Optional(Type.String()),
+    popupText: Type.Optional(Type.String()),
+  },
+  strict,
+);
+
 /** Reveal stage results config */
 export const RevealConfigData = Type.Object(
   {
@@ -161,6 +182,7 @@ export const CONFIG_DATA = {
   [StageKind.TakeSurvey]: SurveyStageConfigData,
   [StageKind.GroupChat]: GroupChatStageConfigData,
   [StageKind.VoteForLeader]: VoteForLeaderConfigData,
+  [StageKind.Payout]: PayoutConfigData,
   [StageKind.Reveal]: RevealConfigData,
 };
 
@@ -251,6 +273,9 @@ export function validateStageConfigs(stages: StageConfig[]): string[] {
         break;
 
       case StageKind.VoteForLeader:
+        break;
+
+      case StageKind.Payout:
         break;
 
       case StageKind.Reveal:

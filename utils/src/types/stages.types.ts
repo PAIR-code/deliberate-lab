@@ -2,6 +2,7 @@
 
 import { ChatConfig, PublicChatData } from './chats.types';
 import { MediatorConfig } from './mediator.types';
+import { PayoutBundle, PayoutCurrency } from './payout.types';
 import { QuestionAnswer, QuestionConfig } from './questions.types';
 import { Votes } from './votes.types';
 
@@ -11,6 +12,7 @@ export enum StageKind {
   SetProfile = 'setProfile',
   GroupChat = 'groupChat',
   VoteForLeader = 'voteForLeader',
+  Payout = 'payout',
   Reveal = 'reveal',
   TakeSurvey = 'takeSurvey',
 }
@@ -26,6 +28,7 @@ export const ALLOWED_STAGE_PROGRESSION = {
   [StageKind.SetProfile]: false,
   [StageKind.GroupChat]: false,
   [StageKind.VoteForLeader]: true,
+  [StageKind.Payout]: false,
   [StageKind.Reveal]: false,
   [StageKind.TakeSurvey]: true,
 } as const;
@@ -71,6 +74,13 @@ export interface VoteForLeaderStageConfig extends BaseStageConfig {
   kind: StageKind.VoteForLeader;
 }
 
+export interface PayoutStageConfig extends BaseStageConfig {
+  kind: StageKind.Payout;
+  composite: true;
+  currency: PayoutCurrency;
+  payouts: PayoutBundle[];
+}
+
 export interface RevealStageConfig extends BaseStageConfig {
   kind: StageKind.Reveal;
   composite: true;
@@ -84,6 +94,7 @@ export type StageConfig =
   | SurveyStageConfig
   | GroupChatStageConfig
   | VoteForLeaderStageConfig
+  | PayoutStageConfig
   | RevealStageConfig;
 
 // ********************************************************************************************* //
