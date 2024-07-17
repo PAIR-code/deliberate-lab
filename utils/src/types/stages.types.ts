@@ -145,5 +145,10 @@ export interface VoteForLeaderStagePublicData extends BasePublicStageData {
   currentLeader: string | null; // Updated automatically after each vote
 }
 
+export interface TakeSurveyStagePublicData extends BasePublicStageData {
+  kind: StageKind.TakeSurvey;
+  participantAnswers: Record<string, Record<number, QuestionAnswer>>; // Participant public id => survey answer
+}
+
 // NOTE: some stages do not have public stage data
-export type PublicStageData = GroupChatStagePublicData | VoteForLeaderStagePublicData;
+export type PublicStageData = GroupChatStagePublicData | VoteForLeaderStagePublicData | TakeSurveyStagePublicData;

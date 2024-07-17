@@ -31,6 +31,12 @@ export const initializePublicStageData = onDocumentWritten(
           currentLeader: null,
         };
         break;
+      case StageKind.TakeSurvey:
+        publicData = {
+          kind: data.kind,
+          participantAnswers: {},
+        };
+        break;
       case StageKind.GroupChat:
         // Initialize the custom chat data (depending on the chat kind)
         let chatData: PublicChatData;
@@ -119,7 +125,29 @@ export const publishStageData = onDocumentWritten(
 
         break;
       case StageKind.TakeSurvey:
-        // Nothing to publish
+        const surveyParticipantDoc = await app
+          .firestore()
+          .doc(
+            `experiments/${experimentId}/participants/${participantId}`,
+          )
+          .get();
+        const surveyParticipantPublicId
+          = (surveyParticipantDoc.data() as ParticipantProfile).publicId;
+
+        const surveyDoc = await app
+          .firestore()
+          .doc(`experiments/${experimentId}/publicStageData/${stageName}`)
+          .get();
+        const surveyData = surveyDoc.data() as TakeSurveyStagePublicData;
+
+        const newAnswers = surveyData.participantAnswers;
+
+        newAnswers[surveyParticipantPublicId] = data.answers;
+        console.log(data.answers);
+
+        await surveyDoc.ref.update({
+          participantAnswers: newAnswers,
+        })
         break;
     }
   },
