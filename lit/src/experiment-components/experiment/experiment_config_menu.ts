@@ -22,6 +22,7 @@ import { StageConfig, StageKind } from "@llm-mediation-experiments/utils";
 import {
   createChatStage,
   createInfoStage,
+  createPayoutStage,
   createProfileStage,
   createRevealStage,
   createSurveyStage,
@@ -43,22 +44,27 @@ export class ExperimentConfigMenu extends MobxLitElement {
     const onAddInfoClick = () => {
       this.experimentConfig.addStage(createInfoStage());
       this.experimentConfig.setCurrentStageIndexToLast();
-    }
+    };
 
     const onAddSurveyClick = () => {
       this.experimentConfig.addStage(createSurveyStage());
       this.experimentConfig.setCurrentStageIndexToLast();
-    }
+    };
 
     const onAddProfileClick = () => {
       this.experimentConfig.addStage(createProfileStage());
       this.experimentConfig.setCurrentStageIndexToLast();
-    }
+    };
 
     const onAddChatClick = () => {
       this.experimentConfig.addStage(createChatStage("Simple chat"));
       this.experimentConfig.setCurrentStageIndexToLast();
-    }
+    };
+
+    const onAddPayoutClick = () => {
+      this.experimentConfig.addStage(createPayoutStage({ description: "Hello world" }));
+      this.experimentConfig.setCurrentStageIndexToLast();
+    };
 
     return html`
       <pr-menu name="Add stage">
@@ -78,6 +84,9 @@ export class ExperimentConfigMenu extends MobxLitElement {
               Simple chat stage
             </div>
             ${this.renderLeaderStage()}
+            <div class="menu-item" role="button" @click=${onAddPayoutClick}>
+              Payout stage
+            </div>
           </div>
           <div class="games">
             <div class="category tertiary">Games</div>
@@ -101,7 +110,7 @@ export class ExperimentConfigMenu extends MobxLitElement {
 
     return html`
       <div class="menu-item" role="button" @click=${onAddLeaderClick}>
-        🗳️ Participant election
+        Participant election
       </div>
     `;
   }

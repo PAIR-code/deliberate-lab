@@ -6,6 +6,9 @@ import {
   ITEM_NAMES,
   ITEMS,
   ItemName,
+  PayoutBundleStrategy,
+  PayoutItemKind,
+  PayoutItemStrategy,
   QuestionConfig,
   RatingQuestionConfig,
   RevealStageConfig,
@@ -21,7 +24,7 @@ import { gfm, gfmHtml } from "micromark-extension-gfm";
 import { v4 as uuidv4 } from "uuid";
 
 import { LAS_ID, LAS_FINAL_SURVEY, LAS_FINAL_SURVEY_DESCRIPTION, LAS_GROUP_CHAT_DESCRIPTION, LAS_INITIAL_TASK_INTRO_INFO_LINES, LAS_INTRO_DESCRIPTION, LAS_INTRO_INFO_LINES, LAS_LEADER_ELECTION_DESCRIPTION, LAS_LEADER_REVEAL_DESCRIPTION, LAS_LEADER_TASK_DESCRIPTION, LAS_REDO_TASK_DESCRIPTION, LAS_SCENARIO_REMINDER, LAS_WTL_DESCRIPTION, LAS_WTL_SURVEY } from './constants';
-import { createSurveyStage, createChatStage, createVoteForLeaderStage, createRevealStage, createInfoStage } from "../utils";
+import { createSurveyStage, createChatStage, createVoteForLeaderStage, createPayoutStage, createRevealStage, createInfoStage } from "../utils";
 
 /**
  * Create Lost at Sea game module stages.
@@ -63,11 +66,12 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
     (pair, index) => getRatingQuestionFromPair(pair, index)
   );
 
-  stages.push(createSurveyStage({
+  const initialTask = createSurveyStage({
     name: "Initial survival task", 
     questions: INDIVIDUAL_QUESTIONS,
     popupText: LAS_SCENARIO_REMINDER,
-  }));
+  });
+  stages.push(initialTask);
 
   stages.push(createSurveyStage({
     name: "Willingness to lead survey",
@@ -84,12 +88,13 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
     )
   );
 
-  stages.push(createSurveyStage({
+  const redoTask = createSurveyStage({
     name: "Updated individual task",
     description: LAS_REDO_TASK_DESCRIPTION,
     popupText: LAS_SCENARIO_REMINDER,
     questions: INDIVIDUAL_QUESTIONS
-  }));
+  });
+  stages.push(redoTask);
 
   const leaderElection = createVoteForLeaderStage({
     name: "Representative election",
@@ -102,19 +107,58 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
     (pair, index) => getRatingQuestionFromPair(pair, index)
   );
 
-  const leaderSurvey = createSurveyStage({
+  const leaderTask = createSurveyStage({
     name: "Representative task",
     description: LAS_LEADER_TASK_DESCRIPTION,
     popupText: LAS_SCENARIO_REMINDER,
     questions: LEADER_QUESTIONS
   });
-  stages.push(leaderSurvey);
+  stages.push(leaderTask);
 
   stages.push(createRevealStage({
     name: "Representative reveal",
     description: LAS_LEADER_REVEAL_DESCRIPTION,
-    stagesToReveal: [leaderElection.id, leaderSurvey.id],
+    stagesToReveal: [leaderElection.id, leaderTask.id],
   }))
+
+  // Add payout
+  stages.push(createPayoutStage({
+    name: "Final payoff",
+    payouts: [
+      {
+        name: "Part 1 payoff",
+        strategy: PayoutBundleStrategy.AddPayoutItems,
+        payoutItems: [{
+          kind: PayoutItemKind.RatingSurvey,
+          strategy: PayoutItemStrategy.ChooseOne,
+          surveyStageId: initialTask.id,
+          currencyAmountPerQuestion: 0,
+          fixedCurrencyAmount: 0,
+        }]
+      },
+      {
+        name: "Parts 2 and 3 payoff",
+        strategy: PayoutBundleStrategy.ChoosePayoutItem,
+        payoutItems: [
+          {
+            kind: PayoutItemKind.RatingSurvey,
+            strategy: PayoutItemStrategy.ChooseOne,
+            surveyStageId: redoTask.id,
+            currencyAmountPerQuestion: 0,
+            fixedCurrencyAmount: 0,
+          },
+          {
+            kind: PayoutItemKind.RatingSurvey,
+            strategy: PayoutItemStrategy.ChooseOne,
+            surveyStageId: leaderTask.id,
+            leaderStageId: leaderElection.id,
+            currencyAmountPerQuestion: 0,
+            fixedCurrencyAmount: 0,
+          }
+        ]
+      },
+    ],
+  }));
 
   // Final survey
   stages.push(createSurveyStage({
@@ -150,25 +194,30 @@ export function getRatingQuestionFromPair(
 }
 
 /**
- * Get Lost at Sea item item pair ranking answer.
- */
-export function getLostAtSeaPairAnswer(item1: ItemName, item2: ItemName) {
-  const ranking1 = getLostAtSeaItemRanking(item1);
-  const ranking2 = getLostAtSeaItemRanking(item2);
-
-  return (ranking1 < ranking2) ? item1 : item2;
-}
-
-/**
- * Get Lost at Sea item ranking.
- */
-export function getLostAtSeaItemRanking(item: ItemName) {
-  return ITEMS[item].ranking;
-}
-
-/**
  * Check if stage is part of the LostAtSea game.
  */
 export function isLostAtSeaGameStage(stage: StageConfig) {
   return stage.game === LAS_ID;
+}
+
+/**
+ * Check if stage is a LostAtSea survey
+ */
+export function isLostAtSeaSurveyStage(stage: StageConfig) {
+  if (stage.kind !== StageKind.TakeSurvey) {
+     return false;
+  }
+  for (const question of stage.questions) {
+    if (question.kind === SurveyQuestionKind.Rating) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Return LostAtSea survey stages from given list of stages.
+ */
+export function getLostAtSeaSurveyStages(stages: StageConfig[]) {
+  return stages.filter(stage => isLostAtSeaSurveyStage(stage));
 }

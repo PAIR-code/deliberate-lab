@@ -1,6 +1,7 @@
 import {
   ChatKind,
   Experiment,
+  ParticipantProfile,
   PublicChatData,
   PublicStageData,
   StageAnswer,
@@ -28,6 +29,12 @@ export const initializePublicStageData = onDocumentWritten(
           kind: data.kind,
           participantvotes: {},
           currentLeader: null,
+        };
+        break;
+      case StageKind.TakeSurvey:
+        publicData = {
+          kind: data.kind,
+          participantAnswers: {},
         };
         break;
       case StageKind.GroupChat:
@@ -93,9 +100,19 @@ export const publishStageData = onDocumentWritten(
           .get();
         const publicData = publicDoc.data() as VoteForLeaderStagePublicData;
 
+        // Get the participant's public ID
+        const participantDoc = await app
+          .firestore()
+          .doc(
+            `experiments/${experimentId}/participants/${participantId}`,
+          )
+          .get();
+        const participantPublicId
+          = (participantDoc.data() as ParticipantProfile).publicId;
+
         // Compute the updated votes
         const newVotes = publicData.participantvotes;
-        newVotes[participantId] = data.votes;
+        newVotes[participantPublicId] = data.votes;
 
         // Compute the new leader with these votes
         const currentLeader = chooseLeader(allVoteScores(newVotes));
@@ -108,7 +125,29 @@ export const publishStageData = onDocumentWritten(
 
         break;
       case StageKind.TakeSurvey:
-        // Nothing to publish
+        const surveyParticipantDoc = await app
+          .firestore()
+          .doc(
+            `experiments/${experimentId}/participants/${participantId}`,
+          )
+          .get();
+        const surveyParticipantPublicId
+          = (surveyParticipantDoc.data() as ParticipantProfile).publicId;
+
+        const surveyDoc = await app
+          .firestore()
+          .doc(`experiments/${experimentId}/publicStageData/${stageName}`)
+          .get();
+        const surveyData = surveyDoc.data() as TakeSurveyStagePublicData;
+
+        const newAnswers = surveyData.participantAnswers;
+
+        newAnswers[surveyParticipantPublicId] = data.answers;
+        console.log(data.answers);
+
+        await surveyDoc.ref.update({
+          participantAnswers: newAnswers,
+        })
         break;
     }
   },

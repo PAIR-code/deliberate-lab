@@ -1,0 +1,140 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  flex-grow: 1;
+  gap: common.$spacing-large;
+}
+
+.title-wrapper {
+  @include common.flex-row-align-center;
+  justify-content: space-between;
+}
+
+.title {
+  @include typescale.title-medium;
+  width: max-content;
+}
+
+.menu-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+
+  .stages {
+    @include common.flex-column;
+    gap: common.$spacing-small;
+  }
+}
+
+.menu-item {
+  @include common.flex-column;
+  border: 1px solid transparent;
+  border-radius: common.$spacing-medium;
+  cursor: pointer;
+  padding: common.$spacing-medium;
+
+  &:focus,
+  &:hover {
+    border-color: var(--md-sys-color-outline-variant);
+  }
+}
+
+.checkbox-input {
+  @include common.flex-row-align-center;
+}
+
+.payouts-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+.header {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+  justify-content: space-between;
+}
+
+.payout-bundle {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface);
+  border-radius: common.$spacing-medium;
+  gap: common.$spacing-large;
+  padding: common.$spacing-xl;
+}
+
+.payout-item {
+  @include common.flex-column;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: common.$spacing-medium;
+  gap: common.$spacing-large;
+  padding: common.$spacing-medium;
+}
+
+pr-textarea {
+  width: 100%;
+}
+
+.number-input {
+  @include common.number-input;
+
+  label {
+    color: var(--md-sys-color-tertiary);
+  }
+
+  .input-wrapper {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-small;
+  }
+}
+
+.buttons {
+  @include common.flex-row-align-center;
+  justify-content: end;
+  gap: common.$spacing-small;
+}
+
+.options-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.options-title {
+  @include typescale.label-small;
+  color: var(--md-sys-color-primary);
+}
+
+.options {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-medium;
+
+  &.col {
+    @include common.flex-column;
+  }
+}
+
+.option {
+  border-radius: common.$spacing-medium;
+  cursor: pointer;
+  padding: common.$spacing-small common.$spacing-medium;
+  width: max-content;
+
+  &.selected {
+    background: var(--md-sys-color-primary-container);
+    border: 1px solid var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary-container);
+  }
+}
+
+.payout-item {
+  .options-title {
+    color: var(--md-sys-color-on-tertiary-container);
+  }
+  .option.selected {
+    background: var(--md-sys-color-tertiary-container);
+    border: 1px solid var(--md-sys-color-tertiary);
+    color: var(--md-sys-color-on-tertiary-container);
+  }
+}

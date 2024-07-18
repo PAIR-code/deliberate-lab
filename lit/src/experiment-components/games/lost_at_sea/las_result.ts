@@ -6,6 +6,7 @@ import { customElement, property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
 import {
+  getLostAtSeaPairAnswer,
   ITEMS,
   ItemName,
   QuestionAnswer,
@@ -15,7 +16,6 @@ import {
   SurveyStageConfig,
   SurveyQuestionKind,
 } from "@llm-mediation-experiments/utils";
-import { getLostAtSeaPairAnswer } from "../../../shared/lost_at_sea/utils";
 
 import { styles } from "./las_result.scss";
 

@@ -13,6 +13,7 @@ export const STAGE_DESCRIPTION_PROFILE =
 export const STAGE_DESCRIPTION_CHAT = "Chat with other participants";
 export const STAGE_DESCRIPTION_CHAT_SIMPLE = "This is a simple chat (no discussion topics)";
 export const STAGE_DESCRIPTION_VOTE = "Vote for a participant leader";
+export const STAGE_DESCRIPTION_PAYOUT = "View payouts for this experiment";
 export const STAGE_DESCRIPTION_REVEAL =
   "Show stage results. This stage is implicitly added based on other stages. To delete this stage, adjust reveal settings in relevant stages.";
 

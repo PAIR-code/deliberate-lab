@@ -10,6 +10,8 @@ import {
   ItemName,
   MediatorConfig,
   MediatorKind,
+  PayoutCurrency,
+  PayoutStageConfig,
   ProfileStageConfig,
   RatingQuestionConfig,
   RevealStageConfig,
@@ -144,6 +146,24 @@ export function createVoteForLeaderStage(
 }
 
 /**
+ * Create composite payout stage.
+ */
+export function createPayoutStage(
+  config: Partial<PayoutStageConfig> = {},
+): PayoutStageConfig {
+  return {
+    id: generateId(),
+    kind: StageKind.Payout,
+    composite: true,
+    name: config.name ?? "Payout",
+    description: config.description ?? "",
+    popupText: config.popupText ?? "",
+    payouts: config.payouts ?? [],
+    currency: config.currency ?? PayoutCurrency.USD,
+  }
+}
+
+/**
  * Create composite reveal stage.
  */
 export function createRevealStage(
@@ -173,12 +193,16 @@ export function getChatRatingsToDiscuss(stage: GroupChatStageConfig) {
 
 /**
  * Find index of specific stage kind.
- * NOTE: Currently used to assign VoteForLeader stage to Reveal stage
- * (as stage names are not guaranteed to be unique, and we currenly
- * only allow one VoteForLeader stage)
  */
 export function findStageKind(stages: StageConfig[], kind: StageKind) {
   return stages.findIndex(stage => stage.kind === kind);
+}
+
+/**
+ * Return election survey stages from given list of stages.
+ */
+export function getElectionStages(stages: StageConfig[]) {
+  return stages.filter(stage => stage.kind === StageKind.VoteForLeader);
 }
 
 /** Use micromark to convert Git-flavored markdown to HTML. */

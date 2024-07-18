@@ -6,6 +6,7 @@ import "./experiment-components/election/election_preview";
 import "./experiment-components/experiment/experiment_config";
 import "./experiment-components/experiment/experiment_preview";
 import "./experiment-components/info/info_preview";
+import "./experiment-components/payout/payout_preview";
 import "./experiment-components/profile/profile_config";
 import "./experiment-components/reveal/reveal_preview";
 import "./experiment-components/survey/survey_preview";
@@ -229,6 +230,8 @@ export class App extends MobxLitElement {
         return html`<profile-config></profile-config>`;
       case StageKind.VoteForLeader:
         return html`<election-preview .answer=${answer}></election-preview>`;
+      case StageKind.Payout:
+        return html`<payout-preview .stage=${currentStage}></payout-preview>`;
       case StageKind.Reveal:
         return html`<reveal-preview .stage=${currentStage}></reveal-preview>`;
       case StageKind.GroupChat:
