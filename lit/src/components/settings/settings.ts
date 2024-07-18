@@ -197,6 +197,9 @@ export class Settings extends MobxLitElement {
   }
 
   private renderAppVersionSection() {
+    if (!this.showAccount) {
+      return nothing;
+    }
 
     return html`
       <div class="section">

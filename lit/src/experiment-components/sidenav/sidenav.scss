@@ -4,33 +4,16 @@
 
 :host {
   @include common.flex-column;
-  flex-shrink: 0;
-}
-
-.nav-wrapper {
-  @include common.flex-column;
-  background: var(--md-sys-color-surface);
-  border-right: 1px solid var(--md-sys-color-outline-variant-high);
+  border-right: 1px solid var(--md-sys-color-outline-variant);
   flex-shrink: 0;
   gap: common.$spacing-small;
-  height: 100%;
   width: common.$sidenav-width;
-
-  &.closed {
-    width: common.$sidenav-closed-width;
-  }
 }
 
 @include common.viewport-small {
   :host {
     display: none;
   }
-}
-
-.experiment-nav{
-  @include common.flex-column;
-  gap: common.$spacing-small;
-  margin-left: calc(common.$spacing-xxl * 1.5);
 }
 
 .empty-message {
@@ -57,6 +40,7 @@
   @include common.nav-item;
 
   &.primary {
+    @include typescale.title-medium;
     color: var(--md-sys-color-primary);
   }
 

@@ -26,24 +26,7 @@ code {
 }
 
 .stages-wrapper {
-  @include common.flex-row;
-  border: 1px solid var(--md-sys-color-outline);
-  border-radius: common.$spacing-medium;
-  height: 600px;
-  max-height: calc(100vh - 400px);
-  overflow: hidden;
-}
-
-.stages-nav {
   @include common.flex-column;
-  min-width: common.$sidenav-width;
-  height: max-content;
-  max-height: 100%;
-  position: sticky;
-  top: 0;
-}
-
-.scroll-menu {
   overflow: auto;
 }
 
@@ -65,29 +48,8 @@ code {
   }
 }
 
-.nav-item {
-  @include common.nav-item;
-  border-radius: common.$spacing-medium;
-  height: calc(common.$spacing-large * 2
-    + var(--md-sys-typescale-body-small-line-height));
-  justify-content: space-between;
-
-  &.main-nav {
-    border-radius: 0;
-  }
-
-  .label {
-    max-width: 200px;
-  }
-
-  .buttons {
-    @include common.flex-row-align-center;
-  }
-}
-
 .current-stage {
   @include common.flex-column;
-  border-left: 1px solid var(--md-sys-color-outline);
   gap: common.$spacing-xxl;
   overflow: auto;
   padding: common.$sidenav-padding;
@@ -134,7 +96,9 @@ code {
   justify-content: end;
 
   &.bottom {
+    border-top: 1px solid var(--md-sys-color-outline-variant);
     margin-bottom: 0;
     margin-top: auto;
+    padding-top: common.$spacing-large;
   }
 }

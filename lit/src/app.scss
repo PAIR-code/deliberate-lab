@@ -57,30 +57,12 @@ main {
   @include common.flex-row;
 }
 
-.banner {
-  @include common.flex-row-align-center;
-  background: var(--md-sys-color-tertiary-container);
-  color: var(--md-sys-color-on-tertiary-container);
-  gap: common.$spacing-small;
-  justify-content: space-between;
-  max-width: common.$main-content-max-width;
-  padding: common.$spacing-medium;
-  position: sticky;
-  top: 0;
-  width: 100%;
-  z-index: 1;
-}
-
 .content-wrapper {
   @include common.flex-column;
   align-items: center;
   background: var(--md-sys-color-surface-variant);
   flex-grow: 1;
   overflow: auto;
-
-  &:has(page-header) {
-    padding-top: calc(common.$header-height + common.$sidenav-padding);
-  }
 }
 
 .content {
@@ -90,18 +72,20 @@ main {
   padding: common.$main-content-padding;
 }
 
-@include common.viewport-small {
-  .content:has(page-header) {
-    padding-top: common.$header-height;
-  }
+.participant-content-wrapper {
+  @include common.flex-row;
+  flex-grow: 1;
+  overflow: auto;
+  width: 100%;
+}
+
+.participant-content {
+  flex-grow: 1;
+  overflow: auto;
+  padding: common.$spacing-large;
 }
 
 .error-wrapper {
   @include common.flex-column;
   gap: common.$spacing-medium;
-}
-
-.stage-wrapper {
-  @include common.flex-column;
-  gap: common.$spacing-large;
 }

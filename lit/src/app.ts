@@ -4,11 +4,13 @@ import "./experiment-components/chat/basic_chat";
 import "./experiment-components/chat/lost_at_sea_chat";
 import "./experiment-components/election/election_preview";
 import "./experiment-components/experiment/experiment_config";
+import "./experiment-components/experiment/experiment_config_sidenav";
 import "./experiment-components/experiment/experiment_preview";
 import "./experiment-components/info/info_preview";
 import "./experiment-components/payout/payout_preview";
 import "./experiment-components/profile/profile_config";
 import "./experiment-components/reveal/reveal_preview";
+import "./experiment-components/sidenav/sidenav";
 import "./experiment-components/survey/survey_preview";
 import "./experiment-components/tos/tos_preview";
 
@@ -20,7 +22,7 @@ import "./components/settings/settings";
 import "./components/sidenav/sidenav";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html, nothing } from "lit";
+import { CSSResultGroup, html, nothing, TemplateResult } from "lit";
 import { customElement } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
@@ -64,21 +66,39 @@ export class App extends MobxLitElement {
   private renderPageContent() {
     switch(this.routerService.activePage) {
       case Pages.HOME:
-        return html`<home-page></home-page>`;
+        return html`
+          <div class="content">
+            <home-page></home-page>
+          </div>
+        `;
       case Pages.SETTINGS:
-        return html`<settings-page .showAccount=${true}></settings-page>`;
+        return html`
+          <div class="content">
+            <settings-page .showAccount=${true}></settings-page>
+          </div>
+        `;
       case Pages.EXPERIMENT:
         return this.renderExperiment();
       case Pages.EXPERIMENT_GROUP:
-        return html`<experiment-group-page></experiment-group-page>`;
+        return html`
+          <div class="content">
+            <experiment-group-page></experiment-group-page>
+          </div>`;
       case Pages.EXPERIMENT_CREATE:
-        return html`<experiment-config></experiment-config>`;
+        return html`
+          <div class="participant-content-wrapper">
+            <experiment-config-sidenav></experiment-config-sidenav>
+            <div class="participant-content">
+              <experiment-config></experiment-config>
+            </div>
+          </div
+        `;
       case Pages.PARTICIPANT:
-        return this.renderParticipant();
+        return this.renderParticipantView(this.renderParticipant());
       case Pages.PARTICIPANT_STAGE:
-        return this.renderParticipantStage();
+        return this.renderParticipantView(this.renderParticipantStage());
       case Pages.PARTICIPANT_SETTINGS:
-        return this.renderParticipantSettings();
+        return this.renderParticipantView(this.renderParticipantSettings());
       default:
         return this.render404();
     }
@@ -107,7 +127,22 @@ export class App extends MobxLitElement {
       return html`<div>Could not load experiment</div>`;
     }
 
-    return html`<experiment-preview></experiment-preview>`;
+    return html`
+      <div class="content">
+        <experiment-preview></experiment-preview>
+      </div>
+    `;
+  }
+
+  private renderParticipantView(content: TemplateResult<1>) {
+    return html`
+      <div class="participant-content-wrapper">
+        <participant-sidenav></participant-sidenav>
+        <div class="participant-content">
+          ${content}
+        </div>
+      </div>
+    `;
   }
 
   private renderParticipant() {
@@ -247,41 +282,6 @@ export class App extends MobxLitElement {
     }
   }
 
-  private renderAuthBanner() {
-    if (!this.authService.isExperimenter
-      || !this.routerService.isParticipantPage) {
-      return nothing;
-    }
-
-    const handlePreviewOff = () => {
-      this.routerService.navigate(
-        Pages.EXPERIMENT,
-        { "experiment": this.routerService.activeRoute.params["experiment"] }
-      );
-    };
-
-    const participantName = this.participantService.profile?.name;
-
-    return html`
-      <div class="banner">
-        <div>
-          You are previewing as
-          ${participantName ? `${participantName} / ` : 'Participant '}
-          ${this.participantService.profile?.publicId}.
-        </div>
-        <pr-button
-          color="tertiary"
-          padding="small"
-          size="small"
-          variant="default"
-          @click=${handlePreviewOff}
-        >
-          Exit preview
-        </pr-button>
-      </div>
-    `;
-  }
-
   override render() {
     const isMode = (mode: ColorMode) => {
       return this.settingsService.colorMode === mode;
@@ -324,10 +324,7 @@ export class App extends MobxLitElement {
           <sidenav-menu></sidenav-menu>
           <div class="content-wrapper">
             <page-header></page-header>
-            ${this.renderAuthBanner()}
-            <div class="content">
-              ${this.renderPageContent()}
-            </div>
+            ${this.renderPageContent()}
           </div>
         </main>
       </div>

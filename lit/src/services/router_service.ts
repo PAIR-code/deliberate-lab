@@ -34,7 +34,7 @@ export class RouterService extends Service {
     },
     {
       name: Pages.EXPERIMENT_GROUP,
-      path: "/:experiment_group",
+      path: "/group/:experiment_group",
     },
 
     {
@@ -61,6 +61,8 @@ export class RouterService extends Service {
   @observable isHandlingRouteChange = false;
   @observable hasNavigated = false; // True if navigated at least once in app
 
+  @observable isExperimenterNavOpen = false;
+
   private getPage(route: Route): Pages | undefined {
     if (!route) return undefined;
     return route.name as Pages;
@@ -86,6 +88,10 @@ export class RouterService extends Service {
 
   private handlerRouteChange(routeChange: RouteChange) {
     this.activeRoute = routeChange.route;
+  }
+
+  setExperimenterNav(isOpen: boolean) {
+    this.isExperimenterNavOpen = isOpen;
   }
 
   navigate(page: Pages, params: { [key: string]: string } = {}) {
@@ -140,6 +146,7 @@ export interface NavItem {
   icon: string;
   isExperimenterPage: boolean;
   isParticipantPage: boolean;
+  isPrimaryPage: boolean;
 }
 
 /**
@@ -152,6 +159,15 @@ export const NAV_ITEMS: NavItem[] = [
     icon: "home",
     isExperimenterPage: true,
     isParticipantPage: false,
+    isPrimaryPage: true,
+  },
+  {
+    page: Pages.EXPERIMENT_CREATE,
+    title: "New experiment",
+    icon: "science",
+    isExperimenterPage: true,
+    isParticipantPage: false,
+    isPrimaryPage: false,
   },
   {
     page: Pages.SETTINGS,
@@ -159,6 +175,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: "settings",
     isExperimenterPage: true,
     isParticipantPage: false,
+    isPrimaryPage: false,
   },
   {
     page: Pages.PARTICIPANT_SETTINGS,
@@ -166,5 +183,6 @@ export const NAV_ITEMS: NavItem[] = [
     icon: "manage_accounts",
     isExperimenterPage: false,
     isParticipantPage: true,
+    isPrimaryPage: false,
   }
 ];

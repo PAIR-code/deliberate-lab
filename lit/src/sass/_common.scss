@@ -88,7 +88,6 @@
   border-radius: $spacing-large;
   color: var(--md-sys-color-on-surface);
   gap: $spacing-medium;
-  min-height: 200px;
   padding: $spacing-large;
 }
 
@@ -166,11 +165,12 @@ $spacing-large: 12px;
 $spacing-xl: 16px;
 $spacing-xxl: 24px;
 
-$header-height: 44px;
+$header-height: 60px;
 $footer-height: 60px;
 $chat-height: calc(100vh - 320px);
 $main-content-max-width: 1500px;
 $main-content-padding: $spacing-xl;
 $sidenav-padding: $spacing-large;
 $sidenav-width: 300px;
+$sidenav-closed-width: 72px;
 $panel-width: 240px;

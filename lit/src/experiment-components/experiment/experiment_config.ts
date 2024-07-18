@@ -1,6 +1,5 @@
 import "../../pair-components/button";
 import "../../pair-components/icon_button";
-import "../../pair-components/menu";
 import "../../pair-components/textarea";
 import "../../pair-components/tooltip";
 
@@ -10,7 +9,6 @@ import "../payout/payout_config";
 import "../reveal/reveal_config";
 import "../survey/survey_config";
 import "../tos/tos_config";
-import "./experiment_config_menu";
 
 import "@material/web/checkbox/checkbox.js";
 
@@ -79,12 +77,9 @@ export class ExperimentConfig extends MobxLitElement {
     }
 
     return html`
-      ${this.renderTopActionButtons()}
       <div class="stages-wrapper">
-        ${this.renderNav()}
         <div class="current-stage">
           ${this.renderCurrentStage()}
-          ${this.renderDeleteCurrentStage()}
         </div>
       </div>
       ${this.experimentConfig.getExperimentErrors().map(error =>
@@ -229,26 +224,6 @@ export class ExperimentConfig extends MobxLitElement {
     }
   }
 
-  private renderDeleteCurrentStage() {
-    if (!this.experimentConfig.currentStage ||
-      this.experimentConfig.currentStage.kind === StageKind.TermsOfService) {
-      return nothing;
-    }
-
-    const handleDelete = () => {
-      this.experimentConfig.deleteStage(
-        this.experimentConfig.currentStageIndex);
-    };
-
-    return html`
-      <div class="buttons-wrapper bottom">
-        <pr-button color="error" variant="default" @click=${handleDelete}>
-          Delete stage
-        </pr-button>
-      </div>
-    `;
-  }
-
   private renderStageInfo(chip: string, content: string) {
     return html`
       <div class="stage-info">
@@ -351,112 +326,6 @@ export class ExperimentConfig extends MobxLitElement {
                 </div>
           `
         : ''}
-    `;
-  }
-
-  private renderNav() {
-    const settingsClasses = classMap({
-      "nav-item": true,
-      "main-nav": true,
-      "selected": this.experimentConfig.currentStage === null
-    });
-
-    const handleClick = () => {
-      this.experimentConfig.setCurrentStageIndex(-1);
-    };
-
-    return html`
-      <div class="stages-nav">
-        <div class=${settingsClasses} role="button" @click=${handleClick}>
-          🛠️&nbsp; Experiment ${this.experimentConfig.isGroup ? 'group' : ''} settings
-        </div>
-        <div class="scroll-menu">
-        ${this.experimentConfig.stages.map(
-          (stage, index) => this.renderStageNavItem(stage, index)
-        )}
-        </div>
-      </div>
-    `;
-  }
-
-  private renderStageNavItem(stage: StageConfig, index: number) {
-    const classes = classMap({
-      "nav-item": true,
-      "main-nav": true,
-      "selected": this.experimentConfig.currentStageIndex === index
-    });
-
-    const handleClick = () => {
-      this.experimentConfig.setCurrentStageIndex(index);
-    };
-
-    const handleMoveUp = (e: Event) => {
-      this.experimentConfig.moveStageUp(index);
-      e.stopPropagation();
-    }
-
-    const handleMoveDown = (e: Event) => {
-      this.experimentConfig.moveStageDown(index);
-      e.stopPropagation();
-    }
-
-    return html`
-      <div class=${classes} role="button" @click=${handleClick}>
-        <div class="label">
-          ${index + 1}. ${stage.name}
-        </div>
-        <div class="buttons">
-          <pr-icon-button
-            color="neutral"
-            icon="arrow_upward"
-            padding="small"
-            size="small"
-            variant="default"
-            ?disabled=${index === 0}
-            @click=${handleMoveUp}
-          >
-          </pr-icon-button>
-          <pr-icon-button
-            color="neutral"
-            icon="arrow_downward"
-            padding="small"
-            size="small"
-            variant="default"
-            ?disabled=${index === this.experimentConfig.stages.length - 1}
-            @click=${handleMoveDown}
-          >
-          </pr-icon-button>
-        </div>
-      </div>
-    `;
-  }
-
-  private renderTemplateItem(template: ExperimentTemplate) {
-    const onClick = () => {
-      this.experimentConfig.loadTemplate(template.id, template.name);
-    };
-
-    return html`
-      <div class="template-item" role="button" @click=${onClick}>
-        <div>${template.name}</div>
-        <div class="subtitle">${template.id}</div>
-      </div>
-    `;
-  }
-
-  private renderTopActionButtons() {
-    return html`
-      <div class="buttons-wrapper">
-        <pr-menu color="secondary" name="Load template">
-          <div class="menu-wrapper">
-            ${this.experimenterService.templates.length === 0 ?
-              html`<div>No templates yet</div>` : nothing}
-            ${this.experimenterService.templates.map(
-              template => this.renderTemplateItem(template))}
-          </div>
-        </pr-menu>
-        <experiment-config-menu></experiment-config-menu>
-      </div>
     `;
   }
 
