@@ -59,16 +59,12 @@ export class ExperimentConfigSidenav extends MobxLitElement {
     };
 
     return html`
-      <div class="stages-nav">
-        <div class=${settingsClasses} role="button" @click=${handleClick}>
-          🛠️&nbsp; Experiment ${this.experimentConfig.isGroup ? 'group' : ''} settings
-        </div>
-        <div class="scroll-menu">
-        ${this.experimentConfig.stages.map(
-          (stage, index) => this.renderStageNavItem(stage, index)
-        )}
-        </div>
+      <div class=${settingsClasses} role="button" @click=${handleClick}>
+        🛠️&nbsp; Experiment ${this.experimentConfig.isGroup ? 'group' : ''} settings
       </div>
+      ${this.experimentConfig.stages.map(
+        (stage, index) => this.renderStageNavItem(stage, index)
+      )}
     `;
   }
 

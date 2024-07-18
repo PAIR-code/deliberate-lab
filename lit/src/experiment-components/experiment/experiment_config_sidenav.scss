@@ -7,27 +7,13 @@
   border-right: 1px solid var(--md-sys-color-outline-variant);
   flex-shrink: 0;
   gap: common.$spacing-large;
-  width: calc(common.$sidenav-width * 1.2);
-}
-
-.stages-nav {
-  @include common.flex-column;
-  min-width: common.$sidenav-width;
-  height: max-content;
-  max-height: 100%;
-  position: sticky;
-  top: 0;
-}
-
-.scroll-menu {
   overflow: auto;
+  width: calc(common.$sidenav-width * 1.2);
 }
 
 .nav-item {
   @include common.nav-item;
   border-radius: common.$spacing-medium;
-  height: calc(common.$spacing-large * 2
-    + var(--md-sys-typescale-body-small-line-height));
   justify-content: space-between;
 
   &.main-nav {
