@@ -61,6 +61,8 @@ export class RouterService extends Service {
   @observable isHandlingRouteChange = false;
   @observable hasNavigated = false; // True if navigated at least once in app
 
+  @observable isExperimenterNavOpen = false;
+
   private getPage(route: Route): Pages | undefined {
     if (!route) return undefined;
     return route.name as Pages;
@@ -86,6 +88,10 @@ export class RouterService extends Service {
 
   private handlerRouteChange(routeChange: RouteChange) {
     this.activeRoute = routeChange.route;
+  }
+
+  setExperimenterNav(isOpen: boolean) {
+    this.isExperimenterNavOpen = isOpen;
   }
 
   navigate(page: Pages, params: { [key: string]: string } = {}) {

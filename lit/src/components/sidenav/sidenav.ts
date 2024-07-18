@@ -40,36 +40,61 @@ export class SideNav extends MobxLitElement {
       this.routerService.navigate(Pages.HOME);
     }
 
+    const navClasses = classMap({
+      "nav-wrapper": true,
+      "closed": !this.routerService.isExperimenterNavOpen,
+    });
+
+    const toggleNav = () => {
+      this.routerService.setExperimenterNav(
+        !this.routerService.isExperimenterNavOpen
+      );
+    };
+
     if (this.routerService.isParticipantPage) {
       return html`
-        <div class="top">
-          ${this.renderParticipantNav()}
-        </div>
-        <div class="bottom">
-          ${NAV_ITEMS.filter(
-            (navItem) => navItem.isParticipantPage
-          ).map((navItem) => this.renderNavItem(navItem))}
-          <div class="nav-item" role="button" @click=${routeToHome}>
-            <pr-icon class="icon" icon="logout"></pr-icon>
-            <div>Log out</div>
+        <div class=${navClasses}>
+          <div class="top">
+            <div class="menu-icon" role="button" @click=${toggleNav}>
+              <pr-icon class="icon" color="secondary" icon="menu"></pr-icon>
+            </div>
+            ${this.renderParticipantNav()}
+          </div>
+          <div class="bottom">
+            ${NAV_ITEMS.filter(
+              (navItem) => navItem.isParticipantPage
+            ).map((navItem) => this.renderNavItem(navItem))}
+            <div class="nav-item" role="button" @click=${routeToHome}>
+              <pr-icon class="icon" icon="logout"></pr-icon>
+              <div>Log out</div>
+            </div>
           </div>
         </div>
       `;
     }
 
     return html`
-      <div class="top">
-        ${this.renderExperimenterNav()}
-      </div>
-      <div class="bottom">
-        ${NAV_ITEMS.filter(
-          (navItem) => navItem.isExperimenterPage
-        ).map((navItem) => this.renderNavItem(navItem))}
+      <div class=${navClasses}>
+        <div class="top">
+          <div class="menu-icon" role="button" @click=${toggleNav}>
+            <pr-icon class="icon" color="secondary" icon="menu"></pr-icon>
+          </div>
+          ${this.renderExperimenterNav()}
+        </div>
+        <div class="bottom">
+          ${NAV_ITEMS.filter(
+            (navItem) => navItem.isExperimenterPage
+          ).map((navItem) => this.renderNavItem(navItem))}
+        </div>
       </div>
     `;
   }
 
   private renderExperimenterNav() {
+    if (!this.routerService.isExperimenterNavOpen) {
+      return nothing;
+    }
+
     if (this.experimentService.isLoading) {
       return html`<div class="empty-message">Loading...</div>`;
     }
@@ -84,6 +109,10 @@ export class SideNav extends MobxLitElement {
   }
 
   private renderParticipantNav() {
+    if (!this.routerService.isExperimenterNavOpen) {
+      return nothing;
+    }
+
     if (this.experimentService.isLoading || this.participantService.isLoading) {
       return html`<div class="empty-message">Loading...</div>`;
     }
@@ -255,7 +284,7 @@ export class SideNav extends MobxLitElement {
     return html`
       <div class=${navItemClasses} role="button" @click=${handleNavItemClicked}>
         <pr-icon class="icon" icon=${navItem.icon}></pr-icon>
-        ${navItem.title}
+        ${this.routerService.isExperimenterNavOpen ? navItem.title : ''}
       </div>
     `;
   }
