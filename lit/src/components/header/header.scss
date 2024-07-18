@@ -4,14 +4,9 @@
 
 :host {
   background: var(--md-sys-color-surface-variant);
-  box-sizing: border-box;
-  display: flex;
-  justify-content: center;
-  left: common.$sidenav-width;
-  padding-top: common.$sidenav-padding;
-  position: fixed;
-  right: 0;
+  position: sticky;
   top: 0;
+  width: 100%;
   z-index: 1;
 }
 
@@ -21,16 +16,22 @@
   }
 }
 
+.banner {
+  @include common.flex-row-align-center;
+  background: var(--md-sys-color-tertiary-container);
+  color: var(--md-sys-color-on-tertiary-container);
+  gap: common.$spacing-small;
+  justify-content: space-between;
+  padding: common.$spacing-medium;
+}
+
 .header {
   @include common.flex-row-align-center;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   box-sizing: border-box;
   gap: common.$spacing-medium;
-  height: common.$header-height;
   justify-content: space-between;
-  max-width: common.$main-content-max-width;
-  padding: 0 common.$main-content-padding;
-  width: 100%;
+  padding: common.$spacing-large common.$main-content-padding;
 
   .left,
   .right {

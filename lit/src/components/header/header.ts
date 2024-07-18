@@ -9,6 +9,7 @@ import { customElement } from "lit/decorators.js";
 import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
 import { ExperimentService } from "../../services/experiment_service";
+import { ParticipantService } from "../../services/participant_service";
 import { Pages, RouterService } from "../../services/router_service";
 
 import { styles } from "./header.scss";
@@ -20,10 +21,12 @@ export class Header extends MobxLitElement {
 
   private readonly authService = core.getService(AuthService);
   private readonly experimentService = core.getService(ExperimentService);
+  private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
   override render() {
     return html`
+      ${this.renderAuthBanner()}
       <div class="header">
         <div class="left">
           ${this.renderBackButton()}
@@ -32,6 +35,41 @@ export class Header extends MobxLitElement {
         <div class="right">
           ${this.renderActions()}
         </div>
+      </div>
+    `;
+  }
+
+  private renderAuthBanner() {
+    if (!this.authService.isExperimenter
+      || !this.routerService.isParticipantPage) {
+      return nothing;
+    }
+
+    const handlePreviewOff = () => {
+      this.routerService.navigate(
+        Pages.EXPERIMENT,
+        { "experiment": this.routerService.activeRoute.params["experiment"] }
+      );
+    };
+
+    const participantName = this.participantService.profile?.name;
+
+    return html`
+      <div class="banner">
+        <div>
+          You are previewing as
+          ${participantName ? `${participantName} / ` : 'Participant '}
+          ${this.participantService.profile?.publicId}.
+        </div>
+        <pr-button
+          color="tertiary"
+          padding="small"
+          size="small"
+          variant="default"
+          @click=${handlePreviewOff}
+        >
+          Exit preview
+        </pr-button>
       </div>
     `;
   }

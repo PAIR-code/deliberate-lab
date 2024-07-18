@@ -247,41 +247,6 @@ export class App extends MobxLitElement {
     }
   }
 
-  private renderAuthBanner() {
-    if (!this.authService.isExperimenter
-      || !this.routerService.isParticipantPage) {
-      return nothing;
-    }
-
-    const handlePreviewOff = () => {
-      this.routerService.navigate(
-        Pages.EXPERIMENT,
-        { "experiment": this.routerService.activeRoute.params["experiment"] }
-      );
-    };
-
-    const participantName = this.participantService.profile?.name;
-
-    return html`
-      <div class="banner">
-        <div>
-          You are previewing as
-          ${participantName ? `${participantName} / ` : 'Participant '}
-          ${this.participantService.profile?.publicId}.
-        </div>
-        <pr-button
-          color="tertiary"
-          padding="small"
-          size="small"
-          variant="default"
-          @click=${handlePreviewOff}
-        >
-          Exit preview
-        </pr-button>
-      </div>
-    `;
-  }
-
   override render() {
     const isMode = (mode: ColorMode) => {
       return this.settingsService.colorMode === mode;
@@ -324,7 +289,6 @@ export class App extends MobxLitElement {
           <sidenav-menu></sidenav-menu>
           <div class="content-wrapper">
             <page-header></page-header>
-            ${this.renderAuthBanner()}
             <div class="content">
               ${this.renderPageContent()}
             </div>
