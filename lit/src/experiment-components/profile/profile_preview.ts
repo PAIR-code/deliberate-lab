@@ -55,6 +55,7 @@ export class ProfilePreview extends MobxLitElement {
             "participant": this.profile.privateId
           }
         );
+        this.routerService.setExperimenterNav(false);
       }
     };
 

@@ -12,7 +12,6 @@ import { Experiment } from "@llm-mediation-experiments/utils";
 import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
 import { ExperimentService } from "../../services/experiment_service";
-import { ExperimenterService } from "../../services/experimenter_service";
 import { FirebaseService } from "../../services/firebase_service";
 import { ParticipantService } from "../../services/participant_service";
 import {
@@ -24,13 +23,12 @@ import {
 
 import { styles } from "./sidenav.scss";
 
-/** Sidenav menu component */
-@customElement("sidenav-menu")
+/** Participant sidenav menu component */
+@customElement("participant-sidenav")
 export class SideNav extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
   private readonly authService = core.getService(AuthService);
   private readonly experimentService = core.getService(ExperimentService);
-  private readonly experimenterService = core.getService(ExperimenterService);
   private readonly firebaseService = core.getService(FirebaseService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
@@ -40,67 +38,62 @@ export class SideNav extends MobxLitElement {
       this.routerService.navigate(Pages.HOME);
     }
 
-    const navClasses = classMap({
-      "nav-wrapper": true,
-      "closed": !this.routerService.isExperimenterNavOpen,
-    });
-
-    const toggleNav = () => {
-      this.routerService.setExperimenterNav(
-        !this.routerService.isExperimenterNavOpen
-      );
-    };
-
-    if (!this.authService.isExperimenter) {
+    if (!this.routerService.isParticipantPage) {
       return nothing;
     }
 
     return html`
-      <div class=${navClasses}>
-        <div class="top">
-          <div class="menu-icon" role="button" @click=${toggleNav}>
-            <pr-icon class="icon" color="secondary" icon="menu"></pr-icon>
-          </div>
-          ${this.renderExperimenterNav()}
-        </div>
-        <div class="bottom">
-          ${NAV_ITEMS.filter(
-            (navItem) => navItem.isExperimenterPage
-          ).map((navItem) => this.renderNavItem(navItem))}
+      <div class="top">
+        ${this.renderParticipantNav()}
+      </div>
+      <div class="bottom">
+        ${NAV_ITEMS.filter(
+          (navItem) => navItem.isParticipantPage
+        ).map((navItem) => this.renderNavItem(navItem))}
+        <div class="nav-item" role="button" @click=${routeToHome}>
+          <pr-icon class="icon" icon="logout"></pr-icon>
+          <div>Log out</div>
         </div>
       </div>
     `;
   }
 
-  private renderExperimenterNav() {
-    if (!this.routerService.isExperimenterNavOpen) {
-      return nothing;
-    }
-
-    if (this.experimentService.isLoading) {
+  private renderParticipantNav() {
+    if (this.experimentService.isLoading || this.participantService.isLoading) {
       return html`<div class="empty-message">Loading...</div>`;
     }
 
-    const experiments = this.experimenterService.experiments;
+    if (this.participantService.profile === undefined) {
+      return nothing;
+    }
+
+    const routeParams = this.routerService.activeRoute.params;
+    const experimentId = routeParams["experiment"];
+    const participantId = routeParams["participant"];
+    const experiment = this.experimentService.experiment;
 
     return html`
-      ${experiments.length === 0 ?
-        html`<div class="empty-message">No experiments yet.</div>` : nothing}
-      ${experiments.map(experiment => this.renderExperimentItem(experiment))}
+      ${this.renderParticipantItem(experiment!, participantId)}
+      ${this.experimentService.stageIds.map(
+        (stageId: string, index: number) => this.renderStageItem(
+          experimentId!, participantId!, stageId, index
+        )
+      )}
     `;
   }
 
-  private renderExperimentItem(experiment: Experiment, backArrow = false) {
+  private renderParticipantItem(experiment: Experiment, participantId: string) {
     const navItemClasses = classMap({
       "nav-item": true,
       "primary": true,
-      selected: this.routerService.activePage === Pages.EXPERIMENT
+      selected: this.routerService.activePage === Pages.PARTICIPANT
         && experiment.id === this.experimentService.id,
     });
 
     const handleClick = (_e: Event) => {
       this.routerService.navigate(
-        Pages.EXPERIMENT, { "experiment": experiment.id }
+        Pages.PARTICIPANT,
+        { "experiment": experiment.id, "participant": participantId }
       );
     }
 
@@ -192,7 +185,7 @@ export class SideNav extends MobxLitElement {
     return html`
       <div class=${navItemClasses} role="button" @click=${handleNavItemClicked}>
         <pr-icon class="icon" icon=${navItem.icon}></pr-icon>
-        ${this.routerService.isExperimenterNavOpen ? navItem.title : ''}
+        ${navItem.title}
       </div>
     `;
   }
@@ -200,6 +193,6 @@ export class SideNav extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "sidenav-menu": SideNav;
+    "participant-sidenav": SideNav;
   }
 }

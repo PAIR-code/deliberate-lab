@@ -9,6 +9,7 @@ import "./experiment-components/info/info_preview";
 import "./experiment-components/payout/payout_preview";
 import "./experiment-components/profile/profile_config";
 import "./experiment-components/reveal/reveal_preview";
+import "./experiment-components/sidenav/sidenav";
 import "./experiment-components/survey/survey_preview";
 import "./experiment-components/tos/tos_preview";
 
@@ -20,7 +21,7 @@ import "./components/settings/settings";
 import "./components/sidenav/sidenav";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html, nothing } from "lit";
+import { CSSResultGroup, html, nothing, TemplateResult } from "lit";
 import { customElement } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
@@ -64,21 +65,36 @@ export class App extends MobxLitElement {
   private renderPageContent() {
     switch(this.routerService.activePage) {
       case Pages.HOME:
-        return html`<home-page></home-page>`;
+        return html`
+          <div class="content">
+            <home-page></home-page>
+          </div>
+        `;
       case Pages.SETTINGS:
-        return html`<settings-page .showAccount=${true}></settings-page>`;
+        return html`
+          <div class="content">
+            <settings-page .showAccount=${true}></settings-page>
+          </div>
+        `;
       case Pages.EXPERIMENT:
         return this.renderExperiment();
       case Pages.EXPERIMENT_GROUP:
-        return html`<experiment-group-page></experiment-group-page>`;
+        return html`
+          <div class="content">
+            <experiment-group-page></experiment-group-page>
+          </div>`;
       case Pages.EXPERIMENT_CREATE:
-        return html`<experiment-config></experiment-config>`;
+        return html`
+          <div class="content">
+            <experiment-config></experiment-config>
+          </div
+        `;
       case Pages.PARTICIPANT:
-        return this.renderParticipant();
+        return this.renderParticipantView(this.renderParticipant());
       case Pages.PARTICIPANT_STAGE:
-        return this.renderParticipantStage();
+        return this.renderParticipantView(this.renderParticipantStage());
       case Pages.PARTICIPANT_SETTINGS:
-        return this.renderParticipantSettings();
+        return this.renderParticipantView(this.renderParticipantSettings());
       default:
         return this.render404();
     }
@@ -107,7 +123,22 @@ export class App extends MobxLitElement {
       return html`<div>Could not load experiment</div>`;
     }
 
-    return html`<experiment-preview></experiment-preview>`;
+    return html`
+      <div class="content">
+        <experiment-preview></experiment-preview>
+      </div>
+    `;
+  }
+
+  private renderParticipantView(content: TemplateResult<1>) {
+    return html`
+      <div class="participant-content-wrapper">
+        <participant-sidenav></participant-sidenav>
+        <div class="participant-content">
+          ${content}
+        </div>
+      </div>
+    `;
   }
 
   private renderParticipant() {
@@ -289,9 +320,7 @@ export class App extends MobxLitElement {
           <sidenav-menu></sidenav-menu>
           <div class="content-wrapper">
             <page-header></page-header>
-            <div class="content">
-              ${this.renderPageContent()}
-            </div>
+            ${this.renderPageContent()}
           </div>
         </main>
       </div>

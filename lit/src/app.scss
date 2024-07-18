@@ -72,12 +72,20 @@ main {
   padding: common.$main-content-padding;
 }
 
+.participant-content-wrapper {
+  @include common.flex-row;
+  flex-grow: 1;
+  overflow: auto;
+  width: 100%;
+}
+
+.participant-content {
+  flex-grow: 1;
+  overflow: auto;
+  padding: common.$spacing-large;
+}
+
 .error-wrapper {
   @include common.flex-column;
   gap: common.$spacing-medium;
-}
-
-.stage-wrapper {
-  @include common.flex-column;
-  gap: common.$spacing-large;
 }

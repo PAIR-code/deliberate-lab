@@ -50,6 +50,7 @@ export class Header extends MobxLitElement {
         Pages.EXPERIMENT,
         { "experiment": this.routerService.activeRoute.params["experiment"] }
       );
+      this.routerService.setExperimenterNav(true);
     };
 
     const participantName = this.participantService.profile?.name;
