@@ -167,7 +167,7 @@ export class ExperimentService extends Service {
     }
 
     const stageNumber = withNumber ? `${this.getStageIndex(stageId) + 1}. ` : '';
-    return `${stageNumber}${this.stageConfigMap[stageId].name}`;
+    return `${stageNumber}${this.stageConfigMap[stageId]?.name}`;
   }
 
   getStageIndex(stageId: string) {
