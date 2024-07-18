@@ -1,6 +1,9 @@
 import "../../pair-components/button";
 import "../../pair-components/icon_button";
 import "../../pair-components/info_popup";
+import "../../pair-components/menu";
+
+import "../../experiment-components/experiment/experiment_config_menu";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
@@ -9,8 +12,14 @@ import { customElement } from "lit/decorators.js";
 import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
 import { ExperimentService } from "../../services/experiment_service";
+import {
+  ExperimentConfigService
+} from "../../services/config/experiment_config_service";
+import { ExperimenterService } from "../../services/experimenter_service";
 import { ParticipantService } from "../../services/participant_service";
 import { Pages, RouterService } from "../../services/router_service";
+
+import { ExperimentTemplate } from "@llm-mediation-experiments/utils";
 
 import { styles } from "./header.scss";
 
@@ -21,6 +30,8 @@ export class Header extends MobxLitElement {
 
   private readonly authService = core.getService(AuthService);
   private readonly experimentService = core.getService(ExperimentService);
+  private readonly experimentConfig = core.getService(ExperimentConfigService);
+  private readonly experimenterService = core.getService(ExperimenterService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
@@ -136,6 +147,8 @@ export class Header extends MobxLitElement {
       } else {
         return nothing;
       }
+    } else if (activePage === Pages.EXPERIMENT_CREATE) {
+      return this.renderExperimentConfigButtons();
     }
     return nothing;
   }
@@ -153,6 +166,33 @@ export class Header extends MobxLitElement {
       <pr-button padding="small" variant="tonal" @click=${handleClick}>
         Create experiment
       </pr-button>
+    `;
+  }
+
+  private renderExperimentConfigTemplateItem(template: ExperimentTemplate) {
+    const onClick = () => {
+      this.experimentConfig.loadTemplate(template.id, template.name);
+    };
+
+    return html`
+      <div class="template-item" role="button" @click=${onClick}>
+        <div>${template.name}</div>
+        <div class="subtitle">${template.id}</div>
+      </div>
+    `;
+  }
+
+  private renderExperimentConfigButtons() {
+    return html`
+      <pr-menu color="secondary" name="Load template">
+        <div class="menu-wrapper">
+          ${this.experimenterService.templates.length === 0 ?
+            html`<div>No templates yet</div>` : nothing}
+          ${this.experimenterService.templates.map(
+            template => this.renderExperimentConfigTemplateItem(template))}
+        </div>
+      </pr-menu>
+      <experiment-config-menu></experiment-config-menu>
     `;
   }
 }

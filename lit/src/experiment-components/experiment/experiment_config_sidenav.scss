@@ -1,0 +1,49 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.default;
+  @include common.flex-column;
+  border-right: 1px solid var(--md-sys-color-outline-variant);
+  flex-shrink: 0;
+  gap: common.$spacing-large;
+  width: calc(common.$sidenav-width * 1.2);
+}
+
+.stages-nav {
+  @include common.flex-column;
+  min-width: common.$sidenav-width;
+  height: max-content;
+  max-height: 100%;
+  position: sticky;
+  top: 0;
+}
+
+.scroll-menu {
+  overflow: auto;
+}
+
+.nav-item {
+  @include common.nav-item;
+  border-radius: common.$spacing-medium;
+  height: calc(common.$spacing-large * 2
+    + var(--md-sys-typescale-body-small-line-height));
+  justify-content: space-between;
+
+  &.main-nav {
+    border-radius: 0;
+  }
+
+  .label {
+    max-width: 200px;
+  }
+
+  .buttons {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-small;
+  }
+}
+
+.icon-wrapper {
+  width: common.$spacing-xxl;
+}

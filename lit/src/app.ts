@@ -4,6 +4,7 @@ import "./experiment-components/chat/basic_chat";
 import "./experiment-components/chat/lost_at_sea_chat";
 import "./experiment-components/election/election_preview";
 import "./experiment-components/experiment/experiment_config";
+import "./experiment-components/experiment/experiment_config_sidenav";
 import "./experiment-components/experiment/experiment_preview";
 import "./experiment-components/info/info_preview";
 import "./experiment-components/payout/payout_preview";
@@ -85,8 +86,11 @@ export class App extends MobxLitElement {
           </div>`;
       case Pages.EXPERIMENT_CREATE:
         return html`
-          <div class="content">
-            <experiment-config></experiment-config>
+          <div class="participant-content-wrapper">
+            <experiment-config-sidenav></experiment-config-sidenav>
+            <div class="participant-content">
+              <experiment-config></experiment-config>
+            </div>
           </div
         `;
       case Pages.PARTICIPANT:
