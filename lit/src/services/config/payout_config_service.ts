@@ -8,6 +8,7 @@ import {
   PayoutCurrency,
   PayoutItem,
   PayoutItemKind,
+  PayoutItemStrategy,
   PayoutStageConfig
 } from "@llm-mediation-experiments/utils";
 
@@ -52,16 +53,15 @@ export class PayoutConfigService extends Service {
 
   addRatingSurveyPayoutItemToBundle(
     bundleIndex: number,
-    surveyStageId: string,
-    surveyQuestionIds: number[],
+    surveyStageId: string
   ) {
     const payouts = this.stage?.payouts;
     if (payouts && bundleIndex >= 0 && bundleIndex < payouts.length) {
       this.stage!.payouts[bundleIndex].payoutItems.push({
         kind: PayoutItemKind.RatingSurvey,
+        strategy: PayoutItemStrategy.AddAll,
         fixedCurrencyAmount: 0,
         surveyStageId,
-        surveyQuestionIds,
         currencyAmountPerQuestion: 0,
       });
     }

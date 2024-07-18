@@ -119,3 +119,20 @@ export const ITEMS: Record<ItemName, Item> = {
     ranking: 7,
   },
 };
+
+/**
+ * Get Lost at Sea item item pair ranking answer.
+ */
+export function getLostAtSeaPairAnswer(item1: ItemName, item2: ItemName) {
+  const ranking1 = getLostAtSeaItemRanking(item1);
+  const ranking2 = getLostAtSeaItemRanking(item2);
+
+  return (ranking1 < ranking2) ? item1 : item2;
+}
+
+/**
+ * Get Lost at Sea item ranking.
+ */
+export function getLostAtSeaItemRanking(item: ItemName) {
+  return ITEMS[item].ranking;
+}

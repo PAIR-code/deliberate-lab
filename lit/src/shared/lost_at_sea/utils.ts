@@ -8,6 +8,7 @@ import {
   ItemName,
   PayoutBundleStrategy,
   PayoutItemKind,
+  PayoutItemStrategy,
   QuestionConfig,
   RatingQuestionConfig,
   RevealStageConfig,
@@ -129,8 +130,8 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
         strategy: PayoutBundleStrategy.AddPayoutItems,
         payoutItems: [{
           kind: PayoutItemKind.RatingSurvey,
+          strategy: PayoutItemStrategy.ChooseOne,
           surveyStageId: initialTask.id,
-          surveyQuestionIds: getRandomRatingQuestionIds(initialTask),
           currencyAmountPerQuestion: 0,
           fixedCurrencyAmount: 0,
         }]
@@ -141,15 +142,15 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
         payoutItems: [
           {
             kind: PayoutItemKind.RatingSurvey,
+            strategy: PayoutItemStrategy.ChooseOne,
             surveyStageId: redoTask.id,
-            surveyQuestionIds: getRandomRatingQuestionIds(redoTask),
             currencyAmountPerQuestion: 0,
             fixedCurrencyAmount: 0,
           },
           {
             kind: PayoutItemKind.RatingSurvey,
+            strategy: PayoutItemStrategy.ChooseOne,
             surveyStageId: leaderTask.id,
-            surveyQuestionIds: getRandomRatingQuestionIds(leaderTask),
             leaderStageId: leaderElection.id,
             currencyAmountPerQuestion: 0,
             fixedCurrencyAmount: 0,
@@ -193,23 +194,6 @@ export function getRatingQuestionFromPair(
 }
 
 /**
- * Get Lost at Sea item item pair ranking answer.
- */
-export function getLostAtSeaPairAnswer(item1: ItemName, item2: ItemName) {
-  const ranking1 = getLostAtSeaItemRanking(item1);
-  const ranking2 = getLostAtSeaItemRanking(item2);
-
-  return (ranking1 < ranking2) ? item1 : item2;
-}
-
-/**
- * Get Lost at Sea item ranking.
- */
-export function getLostAtSeaItemRanking(item: ItemName) {
-  return ITEMS[item].ranking;
-}
-
-/**
  * Check if stage is part of the LostAtSea game.
  */
 export function isLostAtSeaGameStage(stage: StageConfig) {
@@ -236,29 +220,4 @@ export function isLostAtSeaSurvey(stage: StageConfig) {
  */
 export function getLostAtSeaSurveyStages(stages: StageConfig[]) {
   return stages.filter(stage => isLostAtSeaSurvey(stage));
-}
-
-/**
- * Return rating question IDs from LostAtSea survey stage.
- */
-export function getRatingQuestionIds(stage: StageConfig) {
-  if (stage.kind === StageKind.TakeSurvey) {
-    return stage.questions.filter(
-      question => question.kind === SurveyQuestionKind.Rating
-    ).map(question => question.id);
-  }
-  return [];
-}
-
-/**
- * Return list of random rating question IDs from LostAtSea survey stage.
- * NOTE: This currently only returns 1 random question.
- */
-export function getRandomRatingQuestionIds(stage: StageConfig) {
-  const ids = getRatingQuestionIds(stage);
-  if (ids.length === 0) {
-    return [];
-  } else {
-    return [ids[Math.floor(Math.random() * ids.length)]];
-  }
 }

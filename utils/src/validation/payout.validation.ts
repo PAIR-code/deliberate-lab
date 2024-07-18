@@ -1,5 +1,9 @@
 import { Type } from '@sinclair/typebox';
-import { PayoutBundleStrategy, PayoutItemKind } from '../types/payout.types';
+import {
+  PayoutBundleStrategy,
+  PayoutItemKind,
+  PayoutItemStrategy
+} from '../types/payout.types';
 
 /** Shorthand for strict TypeBox object validation */
 const strict =  { additionalProperties: false } as const;
@@ -8,9 +12,12 @@ const strict =  { additionalProperties: false } as const;
 export const RatingSurveyPayoutItemData = Type.Object(
   {
     kind: Type.Literal(PayoutItemKind.RatingSurvey),
+    strategy: Type.Union([
+      Type.Literal(PayoutItemStrategy.AddAll),
+      Type.Literal(PayoutItemStrategy.ChooseOne)
+    ]),
     fixedCurrencyAmount: Type.Number(),
     surveyStageId: Type.String({ minLength: 1 }),
-    surveyQuestionIds: Type.Array(Type.Number()),
     currencyAmountPerQuestion: Type.Number(),
     leaderStageId: Type.Optional(Type.String()),
   },
@@ -30,6 +37,38 @@ export const PayoutBundleData = Type.Object(
         RatingSurveyPayoutItemData,
       ]),
     ),
+  },
+  strict
+);
+
+/** Scoring question */
+export const ScoringQuestionData = Type.Object(
+  {
+    id: Type.Number(),
+    questionText: Type.String(),
+    questionOptions: Type.Array(Type.String()),
+    answer: Type.String(),
+  },
+  strict
+);
+
+/** Scoring item */
+export const ScoringItemData = Type.Object(
+  {
+    fixedCurrencyAmount: Type.Number(),
+    surveyStageId: Type.String({ minLength: 1 }),
+    currencyAmountPerQuestion: Type.Number(),
+    leaderStageId: Type.Optional(Type.String()),
+    questions: Type.Array(ScoringQuestionData),
+  },
+  strict
+);
+
+/** Scoring bundle */
+export const ScoringBundleData = Type.Object(
+  {
+    name: Type.String(),
+    scoringItems: Type.Array(ScoringItemData),
   },
   strict
 );

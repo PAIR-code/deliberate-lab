@@ -15,7 +15,7 @@ import {
   TextQuestionAnswerData,
   TextQuestionConfigData,
 } from './questions.validation';
-import { PayoutBundleData } from './payout.validation';
+import { PayoutBundleData, ScoringBundleData } from './payout.validation';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = { additionalProperties: false } as const;
@@ -150,6 +150,7 @@ export const PayoutConfigData = Type.Object(
     composite: Type.Literal(true),
     game: Type.Optional(Type.String({ minLength: 1})),
     payouts: Type.Array(PayoutBundleData),
+    scoring: Type.Optional(Type.Array(ScoringBundleData)),
     currency: Type.Union([
       Type.Literal(PayoutCurrency.USD),
       Type.Literal(PayoutCurrency.EUR),

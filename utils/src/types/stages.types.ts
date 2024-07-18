@@ -2,7 +2,7 @@
 
 import { ChatConfig, PublicChatData } from './chats.types';
 import { MediatorConfig } from './mediator.types';
-import { PayoutBundle, PayoutCurrency } from './payout.types';
+import { PayoutBundle, PayoutCurrency, ScoringBundle } from './payout.types';
 import { QuestionAnswer, QuestionConfig } from './questions.types';
 import { Votes } from './votes.types';
 
@@ -79,6 +79,7 @@ export interface PayoutStageConfig extends BaseStageConfig {
   composite: true;
   currency: PayoutCurrency;
   payouts: PayoutBundle[];
+  scoring?: ScoringBundle[]; // automatically defined during experiment creation
 }
 
 export interface RevealStageConfig extends BaseStageConfig {
@@ -151,4 +152,7 @@ export interface SurveyStagePublicData extends BasePublicStageData {
 }
 
 // NOTE: some stages do not have public stage data
-export type PublicStageData = GroupChatStagePublicData | VoteForLeaderStagePublicData | SurveyStagePublicData;
+export type PublicStageData =
+  GroupChatStagePublicData
+  | VoteForLeaderStagePublicData
+  | SurveyStagePublicData;

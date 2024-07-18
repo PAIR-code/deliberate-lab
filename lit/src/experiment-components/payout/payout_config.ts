@@ -12,6 +12,7 @@ import {
   PayoutBundleStrategy,
   PayoutCurrency,
   PayoutItem,
+  PayoutItemStrategy,
   StageConfig
 } from "@llm-mediation-experiments/utils";
 
@@ -20,7 +21,7 @@ import { ExperimentConfigService } from "../../services/config/experiment_config
 import { PayoutConfigService } from "../../services/config/payout_config_service";
 
 import { getElectionStages } from "../../shared/utils";
-import { getLostAtSeaSurveyStages, getRatingQuestionIds, getRandomRatingQuestionIds } from "../../shared/lost_at_sea/utils";
+  import { getLostAtSeaSurveyStages } from "../../shared/lost_at_sea/utils";
 
 import { styles } from "./payout_config.scss";
 
@@ -106,7 +107,7 @@ export class PayoutConfig extends MobxLitElement {
       if (surveys.length === 0) return;
 
       this.payoutConfig.addRatingSurveyPayoutItemToBundle(
-        index, surveys[0].id, getRatingQuestionIds(surveys[0]),
+        index, surveys[0].id,
       );
     };
 
@@ -251,16 +252,10 @@ export class PayoutConfig extends MobxLitElement {
     const surveyStage = this.experimentConfig.getStage(payoutItem.surveyStageId);
     if (!surveyStage) return;
 
-    const updateSurveyQuestionIds = (allQuestions: boolean) => {
-      if (allQuestions) {
-        this.payoutConfig.updatePayoutItem(
-          bundleIndex, itemIndex, { surveyQuestionIds: getRatingQuestionIds(surveyStage) }
-        );
-      } else {
-        this.payoutConfig.updatePayoutItem(
-          bundleIndex, itemIndex, { surveyQuestionIds: getRandomRatingQuestionIds(surveyStage) }
-        );
-      }
+    const updateStrategy = (strategy: PayoutItemStrategy) => {
+      this.payoutConfig.updatePayoutItem(
+        bundleIndex, itemIndex, { strategy }
+      );
     };
 
     return html`
@@ -269,15 +264,15 @@ export class PayoutConfig extends MobxLitElement {
         <div class="options">
           <div
             role="button"
-            class="option ${payoutItem.surveyQuestionIds.length > 1 ? 'selected': ''}"
-            @click=${() => {updateSurveyQuestionIds(true)}}
+            class="option ${payoutItem.strategy === PayoutItemStrategy.AddAll ? 'selected': ''}"
+            @click=${() => {updateStrategy(PayoutItemStrategy.AddAll)}}
           >
             Use all questions
           </div>
           <div
             role="button"
-            class="option ${payoutItem.surveyQuestionIds.length === 1 ? 'selected' : ''}"
-            @click=${() => {updateSurveyQuestionIds(false)}}
+            class="option ${payoutItem.strategy === PayoutItemStrategy.ChooseOne ? 'selected' : ''}"
+            @click=${() => {updateStrategy(PayoutItemStrategy.ChooseOne)}}
           >
             Randomly select one question
           </div>

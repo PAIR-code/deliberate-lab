@@ -6,11 +6,18 @@ import {
   DiscussItemsMessage,
   ExperimentCreationData,
   ExperimentDeletionData,
+  getLostAtSeaPairAnswer,
   GroupChatStageConfig,
   MessageKind,
   ParticipantProfile,
   participantPublicId,
+  PayoutBundle,
+  PayoutBundleStrategy,
+  PayoutItem,
+  PayoutItemStrategy,
   StageKind,
+  SurveyStageConfig,
+  SurveyQuestionKind,
 } from '@llm-mediation-experiments/utils';
 import { Value } from '@sinclair/typebox/value';
 import { Timestamp } from 'firebase-admin/firestore';
@@ -58,6 +65,52 @@ export const createExperiment = onCall(async (request) => {
 
       // Create the stages
       for (const stage of data.stages) {
+        // If payout stage, use payout config to generate scoring config
+        if (stage.kind === StageKind.Payout) {
+          const getScoringQuestion = (question: RatingQuestionConfig) => {
+            return {
+              id: question.id,
+              questionText: question.questionText,
+              questionOptions: [question.item1, question.item2],
+              answer: getLostAtSeaPairAnswer(question.item1, question.item2),
+            };
+          };
+
+          const getScoringItem =  (payoutItem: PayoutItem) => {
+            // To define scoring questions, convert survey stage questions
+            const surveyStage = (data.stages).find(stage => stage.id === payoutItem.surveyStageId);
+            let questions = surveyStage.questions.filter(
+              question => question.kind === SurveyQuestionKind.Rating
+            );
+
+            // If strategy is "choose one," only use one question
+            if (payoutItem.strategy === PayoutItemStrategy.ChooseOne) {
+              questions = [questions[Math.floor(Math.random() * questions.length)]];
+            }
+            return {
+              fixedCurrencyAmount: payoutItem.fixedCurrencyAmount,
+              currencyAmountPerQuestion: payoutItem.currencyAmountPerQuestion,
+              questions: questions.map(question => getScoringQuestion(question)),
+              surveyStageId: payoutItem.surveyStageId,
+              leaderStageId: payoutItem.leaderStageId ?? '',
+            };
+          };
+
+          const getScoringBundle = (payoutBundle: PayoutBundle) => {
+            const payoutItems = payoutBundle.payoutItems;
+            // If strategy is "choose one," only use one payout item
+            const items = payoutBundle.strategy === PayoutBundleStrategy.AddPayoutItems ?
+            payoutItems : [payoutItems[Math.floor(Math.random() * payoutItems.length)]];
+            return {
+              name: payoutBundle.name,
+              scoringItems: items.map(item => getScoringItem(item)),
+            }
+          };
+
+          stage.scoring = stage.payouts.map(payout => getScoringBundle(payout));
+        }
+
+        // Set stage
         transaction.set(document.collection('stages').doc(stage.id), stage);
       }
 
