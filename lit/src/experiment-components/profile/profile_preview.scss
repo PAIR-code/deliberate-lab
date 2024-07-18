@@ -29,6 +29,8 @@ span {
 
 .row {
   @include common.flex-row;
+  flex-wrap: wrap;
   gap: common.$spacing-medium;
+  justify-content: end;
 }
 

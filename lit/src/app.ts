@@ -14,9 +14,9 @@ import "./experiment-components/sidenav/sidenav";
 import "./experiment-components/survey/survey_preview";
 import "./experiment-components/tos/tos_preview";
 
-import "./components/experiment_group/experiment_group";
 import "./components/header/header";
-import "./components/home/home";
+import "./components/landing/experiment_group";
+import "./components/landing/experiment_landing";
 import "./components/login/login";
 import "./components/settings/settings";
 import "./components/sidenav/sidenav";
@@ -68,7 +68,7 @@ export class App extends MobxLitElement {
       case Pages.HOME:
         return html`
           <div class="content">
-            <home-page></home-page>
+            <experiment-landing-page></experiment-landing-page>
           </div>
         `;
       case Pages.SETTINGS:

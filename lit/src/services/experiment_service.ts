@@ -13,7 +13,7 @@ import { FirebaseService } from "./firebase_service";
 import { RouterService } from "./router_service";
 
 import { Snapshot } from "../shared/types";
-import {
+  import {
   Experiment,
   lookupTable,
   Message,

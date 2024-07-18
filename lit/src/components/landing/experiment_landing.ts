@@ -2,6 +2,8 @@ import "../../pair-components/button";
 import "../../pair-components/icon_button";
 import "../../pair-components/tooltip";
 
+import "./experiment_card";
+
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
 import { customElement } from "lit/decorators.js";
@@ -15,11 +17,11 @@ import { Pages, RouterService } from "../../services/router_service";
 
 
 import { ExperimenterService } from "../../services/experimenter_service";
-import { styles } from "./home.scss";
+import { styles } from "./experiment_landing.scss";
 
-/** Home page component */
-@customElement("home-page")
-export class Home extends MobxLitElement {
+/** Experiment landing component */
+@customElement("experiment-landing-page")
+export class ExperimentLanding extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly authService = core.getService(AuthService);
@@ -40,7 +42,7 @@ export class Home extends MobxLitElement {
         ${ungroupedExperiments.length === 0 ?
           html`<div class="label">No experiments yet</div>` : nothing}
         ${ungroupedExperiments.map(
-          experiment => this.renderExperimentCard(experiment)
+          experiment => html`<experiment-card .experiment=${experiment}></experiment-card>`
         )}
       </div>
       <h2>Experiment groups</h2>
@@ -81,43 +83,10 @@ export class Home extends MobxLitElement {
         <h3>${group}</h3>
         <p class="label">${experiments.length} experiments</p>
         <div class="action-buttons">
-          <pr-button variant="default" @click=${handleClick}>
+          <pr-button color="secondary" variant="tonal" @click=${handleClick}>
             View group
           </pr-button>
           <pr-tooltip text="Delete experiments in group" position="BOTTOM_END">
-            <pr-icon-button
-              icon="delete"
-              color="error"
-              variant="default"
-              @click=${handleDelete}>
-            </pr-icon-button>
-          </pr-tooltip>
-        </div>
-      </div>
-    `;
-  }
-  private renderExperimentCard(experiment: Experiment) {
-    const handleClick = () => {
-      this.routerService.navigate(
-        Pages.EXPERIMENT,
-        { "experiment": experiment.id }
-      );
-    }
-
-    const handleDelete = () => {
-      this.experimenterService.deleteExperiment(experiment.id);
-    };
-
-    return html`
-      <div class="card">
-        <h3>${experiment.name}</h3>
-        <p class="label">${experiment.numberOfParticipants} participants</p>
-        <p class="label">ID: ${experiment.id}</p>
-        <div class="action-buttons">
-          <pr-button variant="default" @click=${handleClick}>
-            View experiment
-          </pr-button>
-          <pr-tooltip text="Delete experiment" position="BOTTOM_END">
             <pr-icon-button
               icon="delete"
               color="error"
@@ -164,6 +133,6 @@ export class Home extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "home-page": Home;
+    "experiment-landing-page": ExperimentLanding;
   }
 }

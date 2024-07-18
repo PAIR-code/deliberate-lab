@@ -1,4 +1,5 @@
-import "../../pair-components/button";
+import "../../pair-components/icon_button";
+import "../../pair-components/tooltip";
 
 import "./profile_avatar";
 
@@ -85,21 +86,24 @@ export class ProfilePreview extends MobxLitElement {
       <div><span>Public ID:</span> ${this.profile.publicId}</div>
       <div><span>Private ID:</span> ${this.profile.privateId}</div>
 
-      <div class="row" >
-        <pr-button
-          color="primary"
-          variant="tonal"
-          @click=${handlePreview}>
-          Preview as participant
-        </pr-button>
-
-        <pr-button
-          color="secondary"
-          variant="tonal"
-          @click=${this.copyParticipantLink}
-        >
-          Copy participant link
-        </pr-button>
+      <div class="row">
+        <pr-tooltip text="Preview as participant" position="TOP_END">
+          <pr-icon-button
+            icon="visibility"
+            color="primary"
+            variant="default"
+            @click=${handlePreview}>
+          </pr-button>
+        </pr-tooltip>
+        <pr-tooltip text="Copy participant link" position="TOP_END">
+          <pr-icon-button
+            icon="content_copy"
+            color="secondary"
+            variant="default"
+            @click=${this.copyParticipantLink}
+          >
+          </pr-icon-button>
+        </pr-tooltip>
       </div>
     `;
   }

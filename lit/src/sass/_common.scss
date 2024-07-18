@@ -89,6 +89,7 @@
   color: var(--md-sys-color-on-surface);
   gap: $spacing-medium;
   padding: $spacing-large;
+  width: 300px;
 }
 
 @mixin nav-item {
