@@ -201,9 +201,9 @@ export function isLostAtSeaGameStage(stage: StageConfig) {
 }
 
 /**
- * Check if stage is a LostAtSea rating survey
+ * Check if stage is a LostAtSea survey
  */
-export function isLostAtSeaSurvey(stage: StageConfig) {
+export function isLostAtSeaSurveyStage(stage: StageConfig) {
   if (stage.kind !== StageKind.TakeSurvey) {
      return false;
   }
@@ -219,5 +219,5 @@ export function isLostAtSeaSurvey(stage: StageConfig) {
  * Return LostAtSea survey stages from given list of stages.
  */
 export function getLostAtSeaSurveyStages(stages: StageConfig[]) {
-  return stages.filter(stage => isLostAtSeaSurvey(stage));
+  return stages.filter(stage => isLostAtSeaSurveyStage(stage));
 }
