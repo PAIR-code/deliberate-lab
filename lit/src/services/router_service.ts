@@ -34,7 +34,7 @@ export class RouterService extends Service {
     },
     {
       name: Pages.EXPERIMENT_GROUP,
-      path: "/:experiment_group",
+      path: "/group/:experiment_group",
     },
 
     {
