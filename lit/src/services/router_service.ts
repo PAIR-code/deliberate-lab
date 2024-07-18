@@ -146,6 +146,7 @@ export interface NavItem {
   icon: string;
   isExperimenterPage: boolean;
   isParticipantPage: boolean;
+  isPrimaryPage: boolean;
 }
 
 /**
@@ -158,6 +159,15 @@ export const NAV_ITEMS: NavItem[] = [
     icon: "home",
     isExperimenterPage: true,
     isParticipantPage: false,
+    isPrimaryPage: true,
+  },
+  {
+    page: Pages.EXPERIMENT_CREATE,
+    title: "New experiment",
+    icon: "science",
+    isExperimenterPage: true,
+    isParticipantPage: false,
+    isPrimaryPage: false,
   },
   {
     page: Pages.SETTINGS,
@@ -165,6 +175,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: "settings",
     isExperimenterPage: true,
     isParticipantPage: false,
+    isPrimaryPage: false,
   },
   {
     page: Pages.PARTICIPANT_SETTINGS,
@@ -172,5 +183,6 @@ export const NAV_ITEMS: NavItem[] = [
     icon: "manage_accounts",
     isExperimenterPage: false,
     isParticipantPage: true,
+    isPrimaryPage: false,
   }
 ];

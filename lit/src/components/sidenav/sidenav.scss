@@ -27,6 +27,12 @@
   }
 }
 
+.experiment-nav{
+  @include common.flex-column;
+  gap: common.$spacing-small;
+  margin-left: calc(common.$spacing-xxl * 1.5);
+}
+
 .empty-message {
   color: var(--md-sys-color-outline);
   font-style: italic;

@@ -61,11 +61,16 @@ export class SideNav extends MobxLitElement {
           <div class="menu-icon" role="button" @click=${toggleNav}>
             <pr-icon class="icon" color="secondary" icon="menu"></pr-icon>
           </div>
-          ${this.renderExperimenterNav()}
+          ${NAV_ITEMS.filter(
+            (navItem) => navItem.isExperimenterPage && navItem.isPrimaryPage
+          ).map((navItem) => this.renderNavItem(navItem))}
+          <div class="experiment-nav">
+            ${this.renderExperimenterNav()}
+          </div>
         </div>
         <div class="bottom">
           ${NAV_ITEMS.filter(
-            (navItem) => navItem.isExperimenterPage
+            (navItem) => navItem.isExperimenterPage && !navItem.isPrimaryPage
           ).map((navItem) => this.renderNavItem(navItem))}
         </div>
       </div>
