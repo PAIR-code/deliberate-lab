@@ -49,6 +49,9 @@ export const ExperimentCreationData = Type.Object(
     metadata: Type.Object(
       {
         name: Type.String({ minLength: 1 }),
+        publicName: Type.String({ minLength: 1 }),
+        description: Type.String(),
+        tags: Type.Array(Type.String()),
         group: Type.Optional(Type.String()),
         numberOfParticipants: Type.Optional(Type.Number({ minimum: 1 })),
       },
