@@ -82,6 +82,29 @@
   }
 }
 
+@mixin chip {
+  background: var(--md-sys-color-surface-container);
+  border-radius: $spacing-medium;
+  color: var(--md-sys-color-on-surface);
+  padding: $spacing-xs $spacing-small;
+
+  &.primary {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+  }
+
+
+  &.secondary {
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+  }
+
+  &.tertiary {
+    background: var(--md-sys-color-tertiary-container);
+    color: var(--md-sys-color-on-tertiary-container);
+  }
+}
+
 @mixin info-card {
   @include flex-column;
   background: var(--md-sys-color-surface);

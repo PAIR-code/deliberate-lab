@@ -78,6 +78,7 @@ export class ExperimentCard extends MobxLitElement {
         ${this.authService.canEdit ? this.renderDeleteButton() : nothing}
       </div>
       <p>${this.experiment.numberOfParticipants} participants</p>
+      ${this.renderGroup()}
       <div class="action-buttons">
         <div class="label">
           <div>${this.experiment.author.displayName}</div>
@@ -107,6 +108,30 @@ export class ExperimentCard extends MobxLitElement {
             style="width: calc(100% * .5 * ${participantProgressRatio()})"
           >
           </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderGroup() {
+    if (!this.experiment || !this.experiment.group) {
+      return nothing;
+    }
+
+    const navigateToGroup = () => {
+      if (this.experiment!.group) {
+        this.routerService.navigate(
+          Pages.EXPERIMENT_GROUP,
+          { "experiment_group": this.experiment!.group }
+        );
+        this.authService.setEditPermissions(false);
+      }
+    };
+
+    return html`
+      <div class="field">Group:
+        <div class="chip secondary" role="button" @click=${navigateToGroup}>
+          ${this.experiment.group}
         </div>
       </div>
     `;

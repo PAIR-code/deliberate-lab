@@ -39,9 +39,12 @@ export class ExperimentPreview extends MobxLitElement {
 
     return html`
       <div class="top-bar">
-        <div class="stat">
-          ${this.experimentService.experiment?.numberOfParticipants}
-          participants
+        <div class="left">
+          <div class="stat">
+            ${this.experimentService.experiment?.numberOfParticipants}
+            participants
+          </div>
+          ${this.renderGroup()}
         </div>
         <div class="right">
           ${this.renderFork()}
@@ -60,6 +63,31 @@ export class ExperimentPreview extends MobxLitElement {
       <div class="profile-wrapper">
         ${this.experimentService.privateParticipants.map(participant =>
           html`<profile-preview .profile=${participant}></profile-preview>`)}
+      </div>
+    `;
+  }
+
+  private renderGroup() {
+    if (!this.experimentService.experiment || !this.experimentService.experiment.group) {
+      return nothing;
+    }
+
+    const navigateToGroup = () => {
+      if (this.experimentService.experiment!.group) {
+        this.routerService.navigate(
+          Pages.EXPERIMENT_GROUP,
+          { "experiment_group": this.experimentService.experiment!.group }
+        );
+        this.authService.setEditPermissions(false);
+      }
+    };
+
+    return html`
+      <div class="stat small">
+        <div>Group:</div>
+        <div class="chip" role="button" @click=${navigateToGroup}>
+          ${this.experimentService.experiment.group}
+        </div>
       </div>
     `;
   }
