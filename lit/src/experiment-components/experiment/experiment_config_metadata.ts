@@ -32,6 +32,36 @@ export class ExperimentConfig extends MobxLitElement {
       return nothing;
     }
 
+    return html`
+      ${this.renderGroupToggle()}
+      ${this.renderNameFields()}
+      ${this.renderNumParticipantsField()}
+      ${this.renderGroupConfig()}
+    `;
+  }
+
+  private renderNumParticipantsField() {
+    const handleNum = (e: Event) => {
+      const num = Number((e.target as HTMLTextAreaElement).value);
+      this.experimentConfig.updateNumParticipants(num);
+    };
+
+    return html`
+      <div class="number-input">
+        <label for="num">Number of participants</label>
+        <input
+          type="number"
+          id="num"
+          name="numParticipants"
+          min="0"
+          .value=${this.experimentConfig.numParticipants}
+          @input=${handleNum}
+        />
+      </div>
+    `;
+  }
+
+  private renderNameFields() {
     const handleName = (e: Event) => {
       const value = (e.target as HTMLTextAreaElement).value;
       this.experimentConfig.updateName(value);
@@ -40,16 +70,6 @@ export class ExperimentConfig extends MobxLitElement {
     const handlePublicName = (e: Event) => {
       const value = (e.target as HTMLTextAreaElement).value;
       this.experimentConfig.updatePublicName(value);
-    }
-
-    const handleNum = (e: Event) => {
-      const num = Number((e.target as HTMLTextAreaElement).value);
-      this.experimentConfig.updateNumParticipants(num);
-    };
-
-    const handleGroupCheckbox = (e: Event) => {
-      const checked = Boolean((e.target as HTMLInputElement).checked);
-      this.experimentConfig.updateIsExperimentGroup(checked);
     };
 
     const getExperimentNameLabel = () => {
@@ -60,18 +80,6 @@ export class ExperimentConfig extends MobxLitElement {
     }
 
     return html`
-      <div class="checkbox-input-container">
-        <div class="checkbox-input">
-          <md-checkbox id="isExperimentGroup" touch-target="wrapper"
-            .checked=${this.experimentConfig.isGroup}
-            @change=${handleGroupCheckbox}
-          ></md-checkbox>
-          <label for="isExperimentGroup">
-            <div>Create a group of experiments</div>
-            <div class="subtitle">The experiment group options allow you to create a group of experiments with the same configuration.</div>
-          </label>
-        </div>
-      </div>
       <pr-textarea
         label=${getExperimentNameLabel()}
         placeholder=${getExperimentNameLabel()}
@@ -88,18 +96,28 @@ export class ExperimentConfig extends MobxLitElement {
         @input=${handlePublicName}
       >
       </pr-textarea>
-      <div class="number-input">
-        <label for="num">Number of participants</label>
-        <input
-          type="number"
-          id="num"
-          name="numParticipants"
-          min="0"
-          .value=${this.experimentConfig.numParticipants}
-          @input=${handleNum}
-        />
+    `;
+  }
+
+  private renderGroupToggle() {
+    const handleGroupCheckbox = (e: Event) => {
+      const checked = Boolean((e.target as HTMLInputElement).checked);
+      this.experimentConfig.updateIsExperimentGroup(checked);
+    };
+
+    return html`
+      <div class="checkbox-input-container">
+        <div class="checkbox-input">
+          <md-checkbox id="isExperimentGroup" touch-target="wrapper"
+            .checked=${this.experimentConfig.isGroup}
+            @change=${handleGroupCheckbox}
+          ></md-checkbox>
+          <label for="isExperimentGroup">
+            <div>Create a group of experiments</div>
+            <div class="subtitle">The experiment group options allow you to create a group of experiments with the same configuration.</div>
+          </label>
+        </div>
       </div>
-      ${this.renderGroupConfig()}
     `;
   }
 
