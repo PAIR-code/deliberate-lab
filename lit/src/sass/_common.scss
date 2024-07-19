@@ -90,6 +90,31 @@
   gap: $spacing-medium;
   padding: $spacing-large;
   width: 300px;
+
+  .progress-bar {
+    @include progress-bar;
+  }
+}
+
+@mixin progress-bar {
+  @include flex-row;
+  background: var(--md-sys-color-surface-container-highest);
+  border-radius: $spacing-large;
+  height: $spacing-small;
+  overflow: hidden;
+
+  .progress {
+    border-radius: 0;
+
+    &.in-progress {
+      background: var(--md-sys-color-progress);
+    }
+
+    &.completed {
+      background: var(--md-sys-color-success);
+      width: 100%;
+    }
+  }
 }
 
 @mixin nav-item {

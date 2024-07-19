@@ -43,6 +43,35 @@ export class ExperimentCard extends MobxLitElement {
       this.experimenterService.deleteExperiment(this.experiment!.id);
     };
 
+    const participantCompletedCount = () => {
+      let numCompleted = 0;
+      for (const participant of Object.values(this.experiment!.participants)) {
+        if (participant.completedExperiment) {
+          numCompleted += 1;
+        }
+      }
+      return numCompleted;
+    }
+
+    const participantProgressCount = () => {
+      // Only counts if started and NOT completed
+      let numStarted = 0;
+      for (const participant of Object.values(this.experiment!.participants)) {
+        if (participant.acceptTosTimestamp && !participant.completedExperiment) {
+          numStarted += 1;
+        }
+      }
+      return numStarted;
+    }
+
+    const participantProgressRatio = () => {
+      return participantProgressCount() / this.experiment!.numberOfParticipants;
+    }
+
+    const participantCompletedRatio = () => {
+      return participantCompletedCount() / this.experiment!.numberOfParticipants;
+    }
+
     return html`
       <div class="header">
         <div>
@@ -72,6 +101,23 @@ export class ExperimentCard extends MobxLitElement {
             @click=${handleDelete}>
           </pr-icon-button>
         </pr-tooltip>
+      </div>
+      <pr-tooltip
+        text="${participantCompletedCount()} completed, ${participantProgressCount()} in progress"
+        position="BOTTOM_START"
+      >
+        <div class="progress-bar">
+          <div
+            class="progress completed"
+            style="width: calc(100% * ${participantCompletedRatio()})"
+          >
+          </div>
+          <div
+            class="progress in-progress"
+            style="width: calc(100% * .5 * ${participantProgressRatio()})"
+          >
+          </div>
+        </div>
       </div>
     `;
   }
