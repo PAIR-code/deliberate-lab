@@ -21,6 +21,10 @@ code {
   overflow-wrap: anywhere;
 }
 
+md-checkbox {
+  flex-shrink: 0;
+}
+
 .error {
   color: var(--md-sys-color-error);
 }
