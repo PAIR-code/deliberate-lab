@@ -5,7 +5,7 @@ import "../../pair-components/tooltip";
 import "../profile/profile_preview";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html } from "lit";
+import { CSSResultGroup, html, nothing } from "lit";
 import { customElement } from "lit/decorators.js";
 
 import { core } from "../../core/core";
@@ -65,9 +65,14 @@ export class ExperimentPreview extends MobxLitElement {
   }
 
   private renderDelete() {
+    if (!this.authService.canEdit) {
+      return nothing;
+    }
+
     const onDelete = () => {
       this.experimenterService.deleteExperiment(this.experimentService.id!);
       this.routerService.navigate(Pages.HOME);
+      this.authService.setEditPermissions(false);
     };
 
     return html`
@@ -75,7 +80,7 @@ export class ExperimentPreview extends MobxLitElement {
         <pr-icon-button
           icon="delete"
           color="error"
-          variant="tonal"
+          variant="default"
           @click=${onDelete}
         >
         </pr-icon-button>

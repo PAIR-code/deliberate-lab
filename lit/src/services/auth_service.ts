@@ -46,6 +46,7 @@ export class AuthService extends Service {
 
   @observable user: User|null|undefined = undefined;
   @observable isExperimenter: boolean|null = null;
+  @observable canEdit = false;
 
   @computed get userId() {
     return this.user?.uid;
@@ -57,6 +58,10 @@ export class AuthService extends Service {
 
   @computed get authenticated() {
     return this.initialAuthCheck && this.user !== null;
+  }
+
+  setEditPermissions(canEdit: boolean) {
+    this.canEdit = !this.isExperimenter ? false : canEdit;
   }
 
   signInWithGoogle() {

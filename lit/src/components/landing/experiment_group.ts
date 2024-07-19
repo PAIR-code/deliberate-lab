@@ -57,6 +57,10 @@ export class ExperimentGroup extends MobxLitElement {
     `;
   }
   private renderDelete(experiments: Experiment[]) {
+    if (!this.authService.canEdit) {
+      return nothing;
+    }
+
     const onDelete = () => {
       experiments.forEach(experiment => {
         this.experimenterService.deleteExperiment(experiment.id);
@@ -65,13 +69,14 @@ export class ExperimentGroup extends MobxLitElement {
       this.routerService.navigate(
         Pages.HOME,
       );
+      this.authService.setEditPermissions(false);
     };
     return html`
     <pr-tooltip text="Delete group" position="BOTTOM_END">
       <pr-icon-button
         icon="delete"
         color="error"
-        variant="tonal"
+        variant="default"
         @click=${onDelete}
       >
       </pr-icon-button>

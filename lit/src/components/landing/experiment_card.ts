@@ -37,11 +37,8 @@ export class ExperimentCard extends MobxLitElement {
         Pages.EXPERIMENT,
         { "experiment": this.experiment!.id }
       );
+      this.authService.setEditPermissions(false);
     }
-
-    const handleDelete = () => {
-      this.experimenterService.deleteExperiment(this.experiment!.id);
-    };
 
     const participantCompletedCount = () => {
       let numCompleted = 0;
@@ -78,14 +75,7 @@ export class ExperimentCard extends MobxLitElement {
           <h3>${this.experiment.name}</h3>
           <div class="label"><small>${this.experiment.id}</small></div>
         </div>
-        <pr-tooltip text="View experiment" position="TOP_END">
-          <pr-icon-button
-            icon="arrow_forward"
-            color="secondary"
-            variant="tonal"
-            @click=${handleClick}>
-          </pr-icon-button>
-        </pr-tooltip>
+        ${this.authService.canEdit ? this.renderDeleteButton() : nothing}
       </div>
       <p>${this.experiment.numberOfParticipants} participants</p>
       <div class="action-buttons">
@@ -93,12 +83,12 @@ export class ExperimentCard extends MobxLitElement {
           <div>${this.experiment.author.displayName}</div>
           <small>${convertUnifiedTimestampToDate(this.experiment.date)}</small>
         </div>
-        <pr-tooltip text="Delete experiment" position="TOP_END">
+        <pr-tooltip text="View experiment" position="TOP_END">
           <pr-icon-button
-            icon="delete"
-            color="error"
+            icon="arrow_forward"
+            color="secondary"
             variant="default"
-            @click=${handleDelete}>
+            @click=${handleClick}>
           </pr-icon-button>
         </pr-tooltip>
       </div>
@@ -119,6 +109,23 @@ export class ExperimentCard extends MobxLitElement {
           </div>
         </div>
       </div>
+    `;
+  }
+
+  private renderDeleteButton() {
+    const handleDelete = () => {
+      this.experimenterService.deleteExperiment(this.experiment!.id);
+    };
+
+    return html`
+      <pr-tooltip text="Delete experiment" position="TOP_END">
+        <pr-icon-button
+          icon="delete"
+          color="error"
+          variant="default"
+          @click=${handleDelete}>
+        </pr-icon-button>
+      </pr-tooltip>
     `;
   }
 }
