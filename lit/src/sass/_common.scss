@@ -86,6 +86,7 @@
   background: var(--md-sys-color-surface-container);
   border-radius: $spacing-medium;
   color: var(--md-sys-color-on-surface);
+  height: max-content;
   padding: $spacing-xs $spacing-small;
 
   &.primary {
