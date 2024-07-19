@@ -56,6 +56,9 @@ export class ExperimentPreview extends MobxLitElement {
         </div>
       </div>
       <div class="row">
+        ${this.experimentService.experiment?.description}
+      </div>
+      <div class="row">
         <pr-button
           color="tertiary"
           variant="tonal"

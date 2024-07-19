@@ -44,12 +44,13 @@ export class ExperimentConfig extends MobxLitElement {
 
   private renderCreateTemplateButton() {
     const onCreateTemplate = async () => {
-      const { name, publicName, stages, numberOfParticipants } =
+      const { name, publicName, description, stages, numberOfParticipants } =
         this.experimentConfig.getExperiment();
 
       await this.experimenterService.createTemplate(
         {
           name,
+          description,
           publicName,
         }, stages
       );
@@ -68,11 +69,12 @@ export class ExperimentConfig extends MobxLitElement {
     const createExperiments = async () => {
       const experiments = this.experimentConfig.getExperiments() || [];
       for (let i = 0; i < experiments.length; i++) {
-        const { name, publicName, stages, numberOfParticipants, group } = experiments[i];
+        const { name, publicName, description, stages, numberOfParticipants, group } = experiments[i];
         const experiment = await this.experimenterService.createExperiment(
           {
             name,
             publicName,
+            description,
             numberOfParticipants,
             group,
           },

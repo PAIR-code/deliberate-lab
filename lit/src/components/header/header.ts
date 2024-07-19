@@ -206,7 +206,7 @@ export class Header extends MobxLitElement {
 
   private renderExperimentConfigTemplateItem(template: ExperimentTemplate) {
     const onClick = () => {
-      this.experimentConfig.loadTemplate(template.id, template.name);
+      this.experimentConfig.loadTemplate(template.id, template);
     };
 
     return html`

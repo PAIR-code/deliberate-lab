@@ -79,6 +79,7 @@ export class ExperimentCard extends MobxLitElement {
       </div>
       <p>${this.experiment.numberOfParticipants} participants</p>
       ${this.renderGroup()}
+      <p class="label">${this.experiment.description}</p>
       <div class="action-buttons">
         <div class="label">
           <div>${this.experiment.author.displayName}</div>

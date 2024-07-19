@@ -4,7 +4,7 @@ import { computed, makeObservable, observable, toJS } from "mobx";
 import { FirebaseService } from "../firebase_service";
 import { Service } from "../service";
 
-import { randstr, StageConfig, StageKind, validateStageConfigs } from "@llm-mediation-experiments/utils";
+import { ExperimentTemplate, randstr, StageConfig, StageKind, validateStageConfigs } from "@llm-mediation-experiments/utils";
 import {
   collectSnapshotWithId,
   convertExperimentStages,
@@ -26,6 +26,7 @@ export class ExperimentConfigService extends Service {
 
   @observable name = 'Untitled';
   @observable publicName = 'Experiment';
+  @observable description = '';
   @observable numParticipants = 3;
 
   // Experiment group parameters.
@@ -39,7 +40,7 @@ export class ExperimentConfigService extends Service {
   @observable currentStageIndex = -1;
 
   // Loads template as current config
-  loadTemplate(templateId: string, name = "New experiment") {
+  loadTemplate(templateId: string, template: Partial<ExperimentTemplate>) {
     const templateCollection = collection(
       this.sp.firebaseService.firestore,
       'templates',
@@ -50,7 +51,9 @@ export class ExperimentConfigService extends Service {
     getDocs(templateCollection).then(stagesDocs => {
       const stages = (collectSnapshotWithId(stagesDocs, 'name') as StageConfig[]);
       this.stages = stages;
-      this.name = name;
+      this.name = template.name ?? 'Untitled';
+      this.publicName = template.publicName ?? 'Experiment';
+      this.description = template.description ?? '';
     });
   }
 
@@ -60,6 +63,7 @@ export class ExperimentConfigService extends Service {
       experiments.push({
         name: toJS(this.name + '_' + randstr(6)),
         publicName: toJS(this.publicName),
+        description: toJS(this.description),
         group: toJS(this.name),
         stages: convertExperimentStages(toJS(stages)),
         numberOfParticipants: toJS(this.numParticipants),
@@ -75,6 +79,7 @@ export class ExperimentConfigService extends Service {
         {
           name: toJS(this.name),
           publicName: toJS(this.publicName),
+          description: toJS(this.description),
           group: toJS(''),
           stages: toJS(this.stages),
           numberOfParticipants: toJS(this.numParticipants),
@@ -94,6 +99,7 @@ export class ExperimentConfigService extends Service {
       experiments.push({
         name: toJS(this.name + '_lobby'),
         publicName: toJS(this.publicName),
+        description: toJS(this.description),
         group: toJS(this.name),
         stages: convertExperimentStages(toJS(preStages)),
         numberOfParticipants: toJS(this.numParticipants),
@@ -114,6 +120,7 @@ export class ExperimentConfigService extends Service {
       return {
         name: toJS(this.name + '_' + randstr(6)),
         publicName: toJS(this.publicName),
+        description: toJS(this.description),
         group: toJS(this.name),
         stages: convertExperimentStages(toJS(this.stages)),
         numberOfParticipants: toJS(this.numParticipants),
@@ -122,6 +129,7 @@ export class ExperimentConfigService extends Service {
     return {
       name: toJS(this.name),
       publicName: toJS(this.publicName),
+      description: toJS(this.description),
       group: toJS(''),
       stages: toJS(this.stages),
       numberOfParticipants: toJS(this.numParticipants),
@@ -222,6 +230,10 @@ export class ExperimentConfigService extends Service {
     this.numExperiments = num;
   }
 
+  updateDescription(description: string) {
+    this.description = description;
+  }
+
   updateStages(stages: StageConfig[]) {
     this.stages = stages;
   }
@@ -280,6 +292,7 @@ export class ExperimentConfigService extends Service {
   reset() {
     this.name = 'Untitled';
     this.publicName = 'Experiment';
+    this.description = '';
     this.numParticipants = 3;
     this.stages = [createTOSStage(), createProfileStage()];
     this.currentStageIndex = -1;

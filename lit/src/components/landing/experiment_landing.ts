@@ -108,7 +108,7 @@ export class ExperimentLanding extends MobxLitElement {
 
   private renderTemplateCard(template: ExperimentTemplate) {
     const handleClick = () => {
-      this.experimentConfig.loadTemplate(template.id, template.name);
+      this.experimentConfig.loadTemplate(template.id, template);
       this.routerService.navigate(Pages.EXPERIMENT_CREATE);
     }
 
@@ -116,6 +116,7 @@ export class ExperimentLanding extends MobxLitElement {
       <div class="card">
         <h3>${template.name}</h3>
         <p class="label">ID: ${template.id}</p>
+        <p>${template.description}</p>
         <div class="action-buttons">
           <pr-button variant="default" @click=${handleClick}>
             Use template

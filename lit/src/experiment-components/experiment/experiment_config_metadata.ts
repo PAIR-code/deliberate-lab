@@ -35,8 +35,27 @@ export class ExperimentConfig extends MobxLitElement {
     return html`
       ${this.renderGroupToggle()}
       ${this.renderNameFields()}
+      ${this.renderDescriptionField()}
       ${this.renderNumParticipantsField()}
       ${this.renderGroupConfig()}
+    `;
+  }
+
+  private renderDescriptionField() {
+    const handleDescription = (e: Event) => {
+      const value = (e.target as HTMLTextAreaElement).value;
+      this.experimentConfig.updateDescription(value);
+    }
+
+    return html`
+      <pr-textarea
+        label="Private experiment description"
+        placeholder="This description is only visible to experimenters"
+        variant="outlined"
+        .value=${this.experimentConfig.description}
+        @input=${handleDescription}
+      >
+      </pr-textarea>
     `;
   }
 
@@ -81,19 +100,19 @@ export class ExperimentConfig extends MobxLitElement {
 
     return html`
       <pr-textarea
-        label=${getExperimentNameLabel()}
-        placeholder=${getExperimentNameLabel()}
-        variant="outlined"
-        .value=${this.experimentConfig.name}
-        @input=${handleName}
-      >
-      </pr-textarea>
-      <pr-textarea
         label="Public experiment name (visible to participants)"
         placeholder="Public experiment name"
         variant="outlined"
         .value=${this.experimentConfig.publicName}
         @input=${handlePublicName}
+      >
+      </pr-textarea>
+      <pr-textarea
+        label=${getExperimentNameLabel()}
+        placeholder=${getExperimentNameLabel()}
+        variant="outlined"
+        .value=${this.experimentConfig.name}
+        @input=${handleName}
       >
       </pr-textarea>
     `;
