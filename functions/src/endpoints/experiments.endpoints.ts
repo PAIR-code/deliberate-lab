@@ -6,18 +6,17 @@ import {
   DiscussItemsMessage,
   ExperimentCreationData,
   ExperimentDeletionData,
-  getLostAtSeaPairAnswer,
   GroupChatStageConfig,
   MessageKind,
   ParticipantProfile,
-  participantPublicId,
   PayoutBundle,
   PayoutBundleStrategy,
   PayoutItem,
   PayoutItemStrategy,
   StageKind,
-  SurveyStageConfig,
   SurveyQuestionKind,
+  getLostAtSeaPairAnswer,
+  participantPublicId
 } from '@llm-mediation-experiments/utils';
 import { Value } from '@sinclair/typebox/value';
 import { Timestamp } from 'firebase-admin/firestore';
@@ -55,11 +54,11 @@ export const createExperiment = onCall(async (request) => {
         name,
         ...(data.type === 'experiments'
           ? {
-              date: Timestamp.now(),
-              group: group,
-              numberOfParticipants,
-              stageIds: data.stages.map(stage => stage.id),
-            }
+            date: Timestamp.now(),
+            group: group,
+            numberOfParticipants,
+            stageIds: data.stages.map(stage => stage.id),
+          }
           : {}),
       });
 
@@ -76,7 +75,7 @@ export const createExperiment = onCall(async (request) => {
             };
           };
 
-          const getScoringItem =  (payoutItem: PayoutItem) => {
+          const getScoringItem = (payoutItem: PayoutItem) => {
             // To define scoring questions, convert survey stage questions
             const surveyStage = (data.stages).find(stage => stage.id === payoutItem.surveyStageId);
             let questions = surveyStage.questions.filter(
@@ -100,7 +99,7 @@ export const createExperiment = onCall(async (request) => {
             const payoutItems = payoutBundle.payoutItems;
             // If strategy is "choose one," only use one payout item
             const items = payoutBundle.strategy === PayoutBundleStrategy.AddPayoutItems ?
-            payoutItems : [payoutItems[Math.floor(Math.random() * payoutItems.length)]];
+              payoutItems : [payoutItems[Math.floor(Math.random() * payoutItems.length)]];
             return {
               name: payoutBundle.name,
               scoringItems: items.map(item => getScoringItem(item)),
@@ -200,4 +199,58 @@ export const deleteExperiment = onCall(async (request) => {
   }
 
   throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
+});
+
+export const createParticipant = onCall(async (request) => {
+  await AuthGuard.isExperimenter(request);
+
+  const { data } = request;
+
+  // Validate the incoming data
+  if (!data.experimentId) {
+    throw new functions.https.HttpsError('invalid-argument', 'Experiment ID is required');
+  }
+
+  const experimentRef = app.firestore().doc(`experiments/${data.experimentId}`);
+
+  await app.firestore().runTransaction(async (transaction) => {
+    const experimentDoc = await transaction.get(experimentRef);
+    if (!experimentDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Experiment not found');
+    }
+
+    const experimentData = experimentDoc.data();
+    if (!experimentData) {
+      throw new functions.https.HttpsError('internal', 'Experiment data is missing');
+    }
+
+    const currentStageId = experimentData.stageIds ? experimentData.stageIds[0] : null;
+    if (!currentStageId) {
+      throw new functions.https.HttpsError('internal', 'Experiment stages are missing');
+    }
+
+    // Create a new participant document
+    const participantRef = experimentRef.collection('participants').doc();
+    const participantData: ParticipantProfile = {
+      publicId: participantPublicId(experimentData.numberOfParticipants),
+      currentStageId,
+      pronouns: null,
+      name: null,
+      avatarUrl: null,
+      acceptTosTimestamp: null,
+      completedExperiment: null,
+    };
+
+    // Increment the number of participants in the experiment metadata
+    transaction.update(experimentRef, {
+      numberOfParticipants: experimentData.numberOfParticipants + 1,
+    });
+
+    transaction.set(participantRef, participantData);
+
+    // TODO: Add chat stages.
+    // TODO: Validate and don't allow adding new participants if experiment has started.
+  });
+
+  return { success: true };
 });

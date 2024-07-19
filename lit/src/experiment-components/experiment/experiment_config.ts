@@ -15,7 +15,6 @@ import "@material/web/checkbox/checkbox.js";
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
 import { customElement } from "lit/decorators.js";
-import { classMap } from "lit/directives/class-map.js";
 
 import { core } from "../../core/core";
 import {
@@ -33,7 +32,7 @@ import { TOSConfigService } from "../../services/config/tos_config_service";
 import { AuthService } from "../../services/auth_service";
 import { Pages, RouterService } from "../../services/router_service";
 
-import { ChatKind, ExperimentTemplate, StageConfig, StageKind } from "@llm-mediation-experiments/utils";
+import { ChatKind, StageKind } from "@llm-mediation-experiments/utils";
 import {
   STAGE_DESCRIPTION_CHAT,
   STAGE_DESCRIPTION_CHAT_SIMPLE,
@@ -45,8 +44,7 @@ import {
   STAGE_DESCRIPTION_TOS,
   STAGE_DESCRIPTION_VOTE,
 } from "../../shared/constants";
-import { generateId } from "../../shared/utils";
-import { LAS_ID, LAS_DESCRIPTION } from "../../shared/lost_at_sea/constants";
+import { LAS_DESCRIPTION, LAS_ID } from "../../shared/lost_at_sea/constants";
 import { isLostAtSeaGameStage } from "../../shared/lost_at_sea/utils";
 
 import { ExperimenterService } from "../../services/experimenter_service";
@@ -69,8 +67,6 @@ export class ExperimentConfig extends MobxLitElement {
   private readonly experimenterService = core.getService(ExperimenterService);
   private readonly routerService = core.getService(RouterService);
 
-  private numExperiments = 1;
-
   override render() {
     if (!this.authService.isExperimenter) {
       return html`<div>Sorry, participants cannot create experiments!</div>`;
@@ -83,8 +79,8 @@ export class ExperimentConfig extends MobxLitElement {
         </div>
       </div>
       ${this.experimentConfig.getExperimentErrors().map(error =>
-        html`<div class="error">Error: ${error}</div>`
-      )}
+      html`<div class="error">Error: ${error}</div>`
+    )}
       ${this.renderBottomActionButtons()}
     `;
   }
@@ -151,7 +147,7 @@ export class ExperimentConfig extends MobxLitElement {
         this.tosConfig.stage = currentStage;
         return html`
           ${this.renderStageInfo(
-            StageKind.TermsOfService, STAGE_DESCRIPTION_TOS)}
+          StageKind.TermsOfService, STAGE_DESCRIPTION_TOS)}
           ${this.renderGameInfo(currentStage.game)}
           <tos-config></tos-config>
         `;
@@ -160,14 +156,14 @@ export class ExperimentConfig extends MobxLitElement {
         this.surveyConfig.stage = currentStage;
         return html`
           ${this.renderStageInfo(
-            StageKind.TakeSurvey, STAGE_DESCRIPTION_SURVEY)}
+          StageKind.TakeSurvey, STAGE_DESCRIPTION_SURVEY)}
           ${this.renderGameInfo(currentStage.game)}
           <survey-config></survey-config>
         `;
       case StageKind.SetProfile:
         return html`
           ${this.renderStageInfo(
-            StageKind.SetProfile, STAGE_DESCRIPTION_PROFILE)}
+          StageKind.SetProfile, STAGE_DESCRIPTION_PROFILE)}
           ${this.renderGameInfo(currentStage.game)}
           ${this.renderCurrentStageNameField()}
         `;
@@ -185,7 +181,7 @@ export class ExperimentConfig extends MobxLitElement {
         }
         return html`
           ${this.renderStageInfo(
-            StageKind.GroupChat, STAGE_DESCRIPTION_CHAT)}
+          StageKind.GroupChat, STAGE_DESCRIPTION_CHAT)}
           ${this.renderGameInfo(currentStage.game)}
           ${this.renderCurrentStageNameField()}
           ${isLostAtSeaGameStage(currentStage) ?
@@ -196,7 +192,7 @@ export class ExperimentConfig extends MobxLitElement {
       case StageKind.VoteForLeader:
         return html`
           ${this.renderStageInfo(
-            StageKind.VoteForLeader, STAGE_DESCRIPTION_VOTE)}
+          StageKind.VoteForLeader, STAGE_DESCRIPTION_VOTE)}
           ${this.renderGameInfo(currentStage.game)}
           ${this.renderCurrentStageNameField()}
         `;
@@ -214,7 +210,7 @@ export class ExperimentConfig extends MobxLitElement {
         this.revealConfig.stage = currentStage;
         return html`
           ${this.renderStageInfo(
-            StageKind.Reveal, STAGE_DESCRIPTION_REVEAL)}
+          StageKind.Reveal, STAGE_DESCRIPTION_REVEAL)}
           ${this.renderGameInfo(currentStage.game)}
           ${this.renderCurrentStageNameField()}
           <reveal-config></reveal-config>
@@ -233,7 +229,7 @@ export class ExperimentConfig extends MobxLitElement {
     `;
   }
 
-  private renderGameInfo(game: string|undefined) {
+  private renderGameInfo(game: string | undefined) {
     if (game === LAS_ID) {
       return html`
         <div class="stage-info">
@@ -257,9 +253,14 @@ export class ExperimentConfig extends MobxLitElement {
       this.experimentConfig.updateNumParticipants(num);
     };
 
-    const handleCheckbox = (e: Event) => {
+    const handleGroupCheckbox = (e: Event) => {
       const checked = Boolean((e.target as HTMLInputElement).checked);
       this.experimentConfig.updateIsExperimentGroup(checked);
+    };
+
+    const handleMultiPartCheckbox = (e: Event) => {
+      const checked = Boolean((e.target as HTMLInputElement).checked);
+      this.experimentConfig.updateIsMultiPart(checked);
     };
 
     const handleGroupName = (e: Event) => {
@@ -269,7 +270,7 @@ export class ExperimentConfig extends MobxLitElement {
 
     const handleGroupNum = (e: Event) => {
       const num = Number((e.target as HTMLTextAreaElement).value);
-      this.numExperiments = num;
+      this.experimentConfig.updateNumExperiments(num);
     };
 
 
@@ -294,65 +295,89 @@ export class ExperimentConfig extends MobxLitElement {
           @input=${handleNum}
         />
       </div>
-      <i>The experiment group options allow you to create a group of experiments with the same configuration.</i>
-      <div class="checkbox-input">
-        <md-checkbox id="isExperimentGroup" touch-target="wrapper"
-          .checked=${this.experimentConfig.isGroup}
-          @change=${handleCheckbox}
-        />
-        </md-checkbox>
-        <label for="isExperimentGroup">Create a group of experiments</label>
+
+      <div class="checkbox-input-container">
+        <div class="checkbox-input">
+          <md-checkbox id="isExperimentGroup" touch-target="wrapper"
+            .checked=${this.experimentConfig.isGroup}
+            @change=${handleGroupCheckbox}
+          ></md-checkbox>
+          <label for="isExperimentGroup">
+            <div>Create a group of experiments</div>
+            <div class="subtitle">The experiment group options allow you to create a group of experiments with the same configuration.</div>
+          </label>
+        </div>
       </div>
+
       ${this.experimentConfig.isGroup
         ? html`
-              <pr-textarea
-                label="Experiment group name"
-                placeholder="Prefix of the experiment group"
-                variant="outlined"
-                .value=${this.experimentConfig.group}
-                @input=${handleGroupName}
-              >
-              </pr-textarea>
-              <div class="number-input">
-                  <label for="num">Number of experiments</label>
-                  <input
-                    type="number"
-                    id="numExperiments"
-                    name="numExperiments"
-                    min="1"
-                    .value=${this.numExperiments}
-                    @input=${handleGroupNum}
-                  />
+              <div class="group-container">
+                <pr-textarea
+                  label="Experiment group name"
+                  placeholder="Prefix of the experiment group"
+                  variant="outlined"
+                  .value=${this.experimentConfig.group}
+                  @input=${handleGroupName}
+                >
+                </pr-textarea>
+                <div class="number-input">
+                    <label for="num">Number of experiments</label>
+                    <input
+                      type="number"
+                      id="numExperiments"
+                      name="numExperiments"
+                      min="1"
+                      .value=${this.experimentConfig.numExperiments}
+                      @input=${handleGroupNum}
+                    />
+                  </div>
+              </div>
+
+                <div class="checkbox-input">
+                  <md-checkbox id="isExperimentGroup" touch-target="wrapper"
+                    .checked=${this.experimentConfig.isMultiPart}
+                    @change=${handleMultiPartCheckbox}
+                  ></md-checkbox>
+                  <label for="isExperimentGroup">
+                    <div>Create a muti-part experiment</div>
+                    <div class="subtitle">
+                        This will add a "lobby" stage; move the stage to divide your experiment into two parts. A lobby experiment will be created for the first part. You can redirect people to the second experiment.
+                    </div>
+                  </label>
                 </div>
+              </div>
           `
         : ''}
     `;
   }
 
   private renderBottomActionButtons() {
-    const createSingleExperiment = async (shouldNavigate: boolean = false) => {
-      const { name, stages, numberOfParticipants, group } =
-        this.experimentConfig.getExperiment();
+    const createExperiments = async () => {
+      const experiments = this.experimentConfig.getExperiments() || [];
+      for (let i = 0; i < experiments.length; i++) {
+        const { name, stages, numberOfParticipants, group } = experiments[i];
 
-      const experiment = await this.experimenterService.createExperiment(
-        name, stages, numberOfParticipants, group
-      );
+        const experiment = await this.experimenterService.createExperiment(
+          name, stages, numberOfParticipants, group
+        );
 
-      this.experimentConfig.reset();
-      
-      if (shouldNavigate) {
-        if (group) {
-          this.routerService.navigate(
-            Pages.EXPERIMENT_GROUP,
-            { "experiment_group": group}
-          );
-        } else {
-          this.routerService.navigate(
-            Pages.EXPERIMENT,
-            { "experiment": experiment.id }
-          );
+        // Navigate if this is the last created experiment.
+        if (i === experiments.length - 1) {
+          if (group) {
+            this.routerService.navigate(
+              Pages.EXPERIMENT_GROUP,
+              { "experiment_group": group }
+            );
+          } else {
+            this.routerService.navigate(
+              Pages.EXPERIMENT,
+              { "experiment": experiment.id }
+            );
+          }
         }
       }
+
+      this.experimentConfig.reset();
     }
 
     const onCreateExperiment = async () => {
@@ -361,11 +386,7 @@ export class ExperimentConfig extends MobxLitElement {
         console.log(errors);
         return;
       }
-
-      for (let i =0; i < this.numExperiments; i++) {
-       let shouldNavigate = (i == this.numExperiments - 1);
-       createSingleExperiment(shouldNavigate);
-      }
+      createExperiments();
     }
 
     const onCreateTemplate = async () => {

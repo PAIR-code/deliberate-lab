@@ -20,7 +20,7 @@
 }
 
 .html-wrapper {
-  @include typescale.body-medium;
+  @include typescale.body-small;
   @include common.html-preview;
   flex-grow: 1;
   gap: common.$spacing-xl;

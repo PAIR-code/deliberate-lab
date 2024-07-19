@@ -12,11 +12,11 @@
   /* body - medium */
   --md-sys-typescale-body-medium-font-family-name: "Inter";
   --md-sys-typescale-body-medium-font-family-style: Regular;
-  --md-sys-typescale-body-medium-font-weight: 300;
+  --md-sys-typescale-body-medium-font-weight: 500;
   /* body - small */
   --md-sys-typescale-body-small-font-family-name: "Inter";
   --md-sys-typescale-body-small-font-family-style: Regular;
-  --md-sys-typescale-body-small-font-weight: 200;
+  --md-sys-typescale-body-small-font-weight: 400;
   /* label - large */
   --md-sys-typescale-label-large-font-family-name: "Inter";
   --md-sys-typescale-label-large-font-family-style: Medium;
@@ -24,11 +24,11 @@
   /* label - medium */
   --md-sys-typescale-label-medium-font-family-name: "Inter";
   --md-sys-typescale-label-medium-font-family-style: Medium;
-  --md-sys-typescale-label-medium-font-weight: 300;
+  --md-sys-typescale-label-medium-font-weight: 500;
   /* label - small */
   --md-sys-typescale-label-small-font-family-name: "Inter";
   --md-sys-typescale-label-small-font-family-style: Medium;
-  --md-sys-typescale-label-small-font-weight: 200;
+  --md-sys-typescale-label-small-font-weight: 500;
   /* title - large */
   --md-sys-typescale-title-large-font-family-name: "Inter";
   --md-sys-typescale-title-large-font-family-style: Regular;
@@ -36,13 +36,12 @@
   /* title - medium */
   --md-sys-typescale-title-medium-font-family-name: "Inter";
   --md-sys-typescale-title-medium-font-family-style: Medium;
-  --md-sys-typescale-title-medium-font-weight: 300;
+  --md-sys-typescale-title-medium-font-weight: 500;
   /* title - small */
   --md-sys-typescale-title-small-font-family-name: "Inter";
   --md-sys-typescale-title-small-font-family-style: Medium;
-  --md-sys-typescale-title-small-font-weight: 200;
+  --md-sys-typescale-title-small-font-weight: 500;
 }
-
 /** App-level mixin for small font sizes. */
 @mixin app-small {
   /* body - large */

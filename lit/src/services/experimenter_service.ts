@@ -1,7 +1,7 @@
 import { Experiment, ExperimentTemplate, ExperimentTemplateExtended, StageConfig, lookupTable } from "@llm-mediation-experiments/utils";
 import { Unsubscribe, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot } from "firebase/firestore";
 import { computed, makeObservable, observable } from "mobx";
-import { createExperimentCallable, deleteExperimentCallable } from "../shared/callables";
+import { createExperimentCallable, createParticipantCallable, deleteExperimentCallable } from "../shared/callables";
 import { collectSnapshotWithId } from "../shared/utils";
 
 import { FirebaseService } from "./firebase_service";
@@ -62,7 +62,7 @@ export class ExperimenterService extends Service {
       }
       groupMap.get(group)!.push(experiment);
     });
-  
+
     return groupMap;
   }
 
@@ -97,25 +97,25 @@ export class ExperimenterService extends Service {
     ); */
   }
 
-  private loadExperimentTemplate (
+  private loadExperimentTemplate(
     templateId: string,
-   ) {
-  const template: {
+  ) {
+    const template: {
       value: ExperimentTemplateExtended | undefined
     } = { value: undefined };
 
-  const templateDoc = getDoc(doc(this.sp.firebaseService.firestore, 'templates', templateId)); // The template metadata
-  const stagesDocs = getDocs(collection(this.sp.firebaseService.firestore, 'templates', templateId, 'stages')); // The actual config for every stage
+    const templateDoc = getDoc(doc(this.sp.firebaseService.firestore, 'templates', templateId)); // The template metadata
+    const stagesDocs = getDocs(collection(this.sp.firebaseService.firestore, 'templates', templateId, 'stages')); // The actual config for every stage
 
-  Promise.all([templateDoc, stagesDocs]).then(([templateDoc, stagesDocs]) => {
-    template.value = ({
-      id: templateId,
-      name: templateDoc.data()!['name'],
-      stageMap: lookupTable(collectSnapshotWithId(stagesDocs, 'name'), 'name'),
+    Promise.all([templateDoc, stagesDocs]).then(([templateDoc, stagesDocs]) => {
+      template.value = ({
+        id: templateId,
+        name: templateDoc.data()!['name'],
+        stageMap: lookupTable(collectSnapshotWithId(stagesDocs, 'name'), 'name'),
+      });
     });
-  });
 
-  return template;
+    return template;
   }
 
   getExperiment(experimentId: string) {
@@ -140,10 +140,10 @@ export class ExperimenterService extends Service {
     return createExperimentCallable(
       this.sp.firebaseService.functions,
       {
-      type: 'experiments',
-      metadata: { name, group, numberOfParticipants },
-      stages,
-    });
+        type: 'experiments',
+        metadata: { name, group, numberOfParticipants },
+        stages,
+      });
   }
 
   /** Create an experiment template.
@@ -153,9 +153,18 @@ export class ExperimenterService extends Service {
     return createExperimentCallable(
       this.sp.firebaseService.functions,
       {
-      type: 'templates',
-      metadata: { name },
-      stages,
+        type: 'templates',
+        metadata: { name },
+        stages,
+      });
+  }
+
+  /** Adds a participant.
+   * @rights Experimenter
+   */
+  async createParticipant(experimentId: string) {
+    return createParticipantCallable(this.sp.firebaseService.functions, {
+      experimentId: experimentId,
     });
   }
 

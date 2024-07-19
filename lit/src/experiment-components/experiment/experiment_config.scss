@@ -88,6 +88,24 @@ code {
 
 .checkbox-input {
   @include common.flex-row-align-center;
+
+  label {
+    @include common.flex-column;
+    gap: common.$spacing-small;
+  }
+}
+
+.subtitle {
+  font-style: italic;
+}
+
+.group-container {
+  margin-left: 50px;
+}
+
+.group-container>* {
+  margin-bottom: 8px;
+  /* Spacing between elements. */
 }
 
 .buttons-wrapper {

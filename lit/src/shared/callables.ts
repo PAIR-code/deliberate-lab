@@ -5,6 +5,7 @@ import {
   CreationResponse,
   ExperimentCreationData,
   ExperimentDeletionData,
+  ParticipantCreationData,
   MessageData,
   SimpleResponse,
   StageAnswerData,
@@ -21,6 +22,12 @@ export const createMessageCallable = async (functions: Functions, message: Messa
 /** Generic endpoint to create experiments or experiment templates */
 export const createExperimentCallable = async (functions: Functions, experiment: ExperimentCreationData) => {
   const { data } = await httpsCallable<ExperimentCreationData, CreationResponse>(functions, 'createExperiment')(experiment);
+  return data;
+}
+
+/** Generic endpoint to create a participant. */
+export const createParticipantCallable = async (functions: Functions, participant: ParticipantCreationData) => {
+  const { data } = await httpsCallable<ParticipantCreationData, never>(functions, 'createParticipant')(participant);
   return data;
 }
 

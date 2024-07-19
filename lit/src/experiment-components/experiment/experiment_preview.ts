@@ -5,16 +5,15 @@ import "../../pair-components/tooltip";
 import "../profile/profile_preview";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html, nothing } from "lit";
-import { customElement, state } from "lit/decorators.js";
-import { classMap } from "lit/directives/class-map.js";
+import { CSSResultGroup, html } from "lit";
+import { customElement } from "lit/decorators.js";
 
 import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
+import { ExperimentConfigService } from "../../services/config/experiment_config_service";
 import { ExperimentService } from "../../services/experiment_service";
 import { ExperimenterService } from "../../services/experimenter_service";
 import { Pages, RouterService } from "../../services/router_service";
-import { ExperimentConfigService } from "../../services/config/experiment_config_service";
 
 import { styles } from "./experiment_preview.scss";
 
@@ -34,6 +33,10 @@ export class ExperimentPreview extends MobxLitElement {
       return html`<div>403: Participants cannot access this page</div>`;
     }
 
+    const addParticipant = () => {
+      this.experimenterService.createParticipant(this.experimentService.id!);
+    };
+
     return html`
       <div class="top-bar">
         <div class="stat">
@@ -46,8 +49,18 @@ export class ExperimentPreview extends MobxLitElement {
           ${this.renderDelete()}
         </div>
       </div>
+ 
+      <div class="row" >
+        <pr-button
+          color="tertiary"
+          variant="tonal"
+          @click=${addParticipant}>
+          Add participant
+        </pr-button>
+      </div>
+
       ${this.experimentService.privateParticipants.map(participant =>
-        html`<profile-preview .profile=${participant}></profile-preview>`)}
+      html`<profile-preview .profile=${participant}></profile-preview>`)}
     `;
   }
 
