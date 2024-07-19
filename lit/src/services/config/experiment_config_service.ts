@@ -33,7 +33,7 @@ export class ExperimentConfigService extends Service {
   @observable numExperiments = 1;
 
   @observable isMultiPart = false;
-  private dividerStageId = "";
+  @observable dividerStageId = "";
 
   @observable stages: StageConfig[] = [createTOSStage(), createProfileStage()];
   @observable currentStageIndex = -1;
@@ -105,8 +105,6 @@ export class ExperimentConfigService extends Service {
     }
 
   }
-
-
 
   // Converts and returns data required for experiment creation
   // (note that this adjusts some stage data, e.g., adds numbering to stages)
