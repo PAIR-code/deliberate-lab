@@ -24,13 +24,12 @@ export class ExperimentConfigService extends Service {
     makeObservable(this);
   }
 
-  @observable name = 'Untitled experiment';
+  @observable name = 'Untitled';
   @observable publicName = 'Experiment';
   @observable numParticipants = 3;
 
   // Experiment group parameters.
   @observable isGroup = false;
-  @observable group = "";
   @observable numExperiments = 1;
 
   @observable isMultiPart = false;
@@ -59,9 +58,9 @@ export class ExperimentConfigService extends Service {
     const experiments = [];
     for (let i = 0; i < numExperiments; i++) {
       experiments.push({
-        name: toJS(this.group + '_' + randstr(6)),
+        name: toJS(this.name + '_' + randstr(6)),
         publicName: toJS(this.publicName),
-        group: toJS(this.group),
+        group: toJS(this.name),
         stages: convertExperimentStages(toJS(stages)),
         numberOfParticipants: toJS(this.numParticipants),
       });
@@ -93,9 +92,9 @@ export class ExperimentConfigService extends Service {
       const experiments = [];
       // Create one lobby.
       experiments.push({
-        name: toJS(this.group + '_lobby'),
+        name: toJS(this.name + '_lobby'),
         publicName: toJS(this.publicName),
-        group: toJS(this.group),
+        group: toJS(this.name),
         stages: convertExperimentStages(toJS(preStages)),
         numberOfParticipants: toJS(this.numParticipants),
       });
@@ -115,9 +114,9 @@ export class ExperimentConfigService extends Service {
 
     if (this.isGroup) {
       return {
-        name: toJS(this.group + '_' + randstr(6)),
+        name: toJS(this.name + '_' + randstr(6)),
         publicName: toJS(this.publicName),
-        group: toJS(this.group),
+        group: toJS(this.name),
         stages: convertExperimentStages(toJS(this.stages)),
         numberOfParticipants: toJS(this.numParticipants),
       };
@@ -135,12 +134,12 @@ export class ExperimentConfigService extends Service {
     const errors: string[] = validateStageConfigs(this.stages);
 
     if (this.isGroup) {
-      if (this.group.length === 0) {
+      if (this.name.length === 0) {
         errors.push("Experiment group name cannot be empty");
       }
 
       const alphanumRegex = /[^a-zA-Z0-9_-]/;
-      if (alphanumRegex.test(this.group)) {
+      if (alphanumRegex.test(this.name)) {
         errors.push("Only alphanumeric characters, underscores (_), and hyphens (-) are allowed.");
       }
     } else {
@@ -221,11 +220,6 @@ export class ExperimentConfigService extends Service {
     }
   }
 
-
-  updateGroupName(name: string) {
-    this.group = name;
-  }
-
   updateNumExperiments(num: number) {
     this.numExperiments = num;
   }
@@ -286,13 +280,12 @@ export class ExperimentConfigService extends Service {
   }
 
   reset() {
-    this.name = 'Untitled experiment';
+    this.name = 'Untitled';
     this.publicName = 'Experiment';
     this.numParticipants = 3;
     this.stages = [createTOSStage(), createProfileStage()];
     this.currentStageIndex = -1;
     this.isGroup = false;
     this.isMultiPart = false;
-    this.group = '';
   }
 }

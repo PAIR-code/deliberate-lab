@@ -24,11 +24,7 @@ md-checkbox {
 }
 
 .subtitle {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
   font-style: italic;
-}
-
-.group-container {
-  @include common.flex-column;
-  gap: common.$spacing-large;
-  margin-left: calc(common.$spacing-xxl * 2);
 }

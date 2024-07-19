@@ -52,13 +52,31 @@ export class ExperimentConfig extends MobxLitElement {
       this.experimentConfig.updateIsExperimentGroup(checked);
     };
 
+    const getExperimentNameLabel = () => {
+      if (this.experimentConfig.isGroup) {
+        return "Private experiment group prefix";
+      }
+      return "Private experiment name";
+    }
+
     return html`
+      <div class="checkbox-input-container">
+        <div class="checkbox-input">
+          <md-checkbox id="isExperimentGroup" touch-target="wrapper"
+            .checked=${this.experimentConfig.isGroup}
+            @change=${handleGroupCheckbox}
+          ></md-checkbox>
+          <label for="isExperimentGroup">
+            <div>Create a group of experiments</div>
+            <div class="subtitle">The experiment group options allow you to create a group of experiments with the same configuration.</div>
+          </label>
+        </div>
+      </div>
       <pr-textarea
-        label="Private experiment name (visible to experimenters)"
-        placeholder="Private experiment name"
+        label=${getExperimentNameLabel()}
+        placeholder=${getExperimentNameLabel()}
         variant="outlined"
         .value=${this.experimentConfig.name}
-        .disabled=${this.experimentConfig.isGroup}
         @input=${handleName}
       >
       </pr-textarea>
@@ -81,18 +99,6 @@ export class ExperimentConfig extends MobxLitElement {
           @input=${handleNum}
         />
       </div>
-      <div class="checkbox-input-container">
-        <div class="checkbox-input">
-          <md-checkbox id="isExperimentGroup" touch-target="wrapper"
-            .checked=${this.experimentConfig.isGroup}
-            @change=${handleGroupCheckbox}
-          ></md-checkbox>
-          <label for="isExperimentGroup">
-            <div>Create a group of experiments</div>
-            <div class="subtitle">The experiment group options allow you to create a group of experiments with the same configuration.</div>
-          </label>
-        </div>
-      </div>
       ${this.renderGroupConfig()}
     `;
   }
@@ -100,11 +106,6 @@ export class ExperimentConfig extends MobxLitElement {
   private renderGroupConfig() {
     if (!this.experimentConfig.isGroup) {
       return nothing;
-    }
-
-    const handleGroupName = (e: Event) => {
-      const value = (e.target as HTMLTextAreaElement).value;
-      this.experimentConfig.updateGroupName(value);
     }
 
     const handleGroupNum = (e: Event) => {
@@ -118,38 +119,28 @@ export class ExperimentConfig extends MobxLitElement {
     };
 
     return html`
-      <div class="group-container">
-        <pr-textarea
-          label="Experiment group name"
-          placeholder="Prefix of the experiment group"
-          variant="outlined"
-          .value=${this.experimentConfig.group}
-          @input=${handleGroupName}
-        >
-        </pr-textarea>
-        <div class="number-input">
-          <label for="num">Number of experiments</label>
-          <input
-            type="number"
-            id="numExperiments"
-            name="numExperiments"
-            min="1"
-            .value=${this.experimentConfig.numExperiments}
-            @input=${handleGroupNum}
-          />
-        </div>
-        <div class="checkbox-input">
-          <md-checkbox id="isExperimentGroup" touch-target="wrapper"
-            .checked=${this.experimentConfig.isMultiPart}
-            @change=${handleMultiPartCheckbox}
-          ></md-checkbox>
-          <label for="isExperimentGroup">
-            <div>Create a muti-part experiment</div>
-            <div class="subtitle">
-                This will add a "lobby" stage; move the stage to divide your experiment into two parts. A lobby experiment will be created for the first part. You can redirect people to the second experiment.
-            </div>
-          </label>
-        </div>
+      <div class="number-input">
+        <label for="num">Number of experiments</label>
+        <input
+          type="number"
+          id="numExperiments"
+          name="numExperiments"
+          min="1"
+          .value=${this.experimentConfig.numExperiments}
+          @input=${handleGroupNum}
+        />
+      </div>
+      <div class="checkbox-input">
+        <md-checkbox id="isExperimentGroup" touch-target="wrapper"
+          .checked=${this.experimentConfig.isMultiPart}
+          @change=${handleMultiPartCheckbox}
+        ></md-checkbox>
+        <label for="isExperimentGroup">
+          <div>Create a muti-part experiment</div>
+          <div class="subtitle">
+            This will add a "lobby" stage; move the stage to divide your experiment into two parts. A lobby experiment will be created for the first part. You can redirect people to the second experiment.
+          </div>
+        </label>
       </div>
     `;
   }
