@@ -14,6 +14,17 @@ import {
 const strict = { additionalProperties: false } as const;
 
 /** Generic experiment or template deletion data */
+export const ParticipantCreationData = Type.Object(
+  {
+    // Discriminate between experiment and template
+    experimentId: Type.String({ minLength: 1 }),
+  },
+  strict,
+);
+
+export type ParticipantCreationData = Static<typeof ParticipantCreationData>;
+
+/** Generic experiment or template deletion data */
 export const ExperimentDeletionData = Type.Object(
   {
     // Discriminate between experiment and template
