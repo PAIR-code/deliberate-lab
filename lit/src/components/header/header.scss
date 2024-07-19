@@ -23,6 +23,12 @@
   gap: common.$spacing-small;
   justify-content: space-between;
   padding: common.$spacing-medium;
+
+  .left,
+  .right {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-medium;
+  }
 }
 
 .header {

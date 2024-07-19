@@ -2,6 +2,7 @@ import "../../pair-components/button";
 import "../../pair-components/icon_button";
 import "../../pair-components/info_popup";
 import "../../pair-components/menu";
+import "../../pair-components/tooltip";
 
 import "../../experiment-components/experiment/experiment_config_menu";
 
@@ -86,20 +87,24 @@ export class Header extends MobxLitElement {
 
     return html`
       <div class="banner">
-        <div>
-          You are previewing as
-          ${participantName ? `${participantName} / ` : 'Participant '}
-          ${this.participantService.profile?.publicId}.
+        <div class="left">
+          <pr-tooltip text="Exit preview" position="BOTTOM_START">
+            <pr-icon-button
+              icon="arrow_back"
+              color="tertiary"
+              padding="small"
+              size="small"
+              variant="default"
+              @click=${handlePreviewOff}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
+          <div>
+            You are previewing as
+            ${participantName ? `${participantName} / ` : 'Participant '}
+            ${this.participantService.profile?.publicId}.
+          </div>
         </div>
-        <pr-button
-          color="tertiary"
-          padding="small"
-          size="small"
-          variant="default"
-          @click=${handlePreviewOff}
-        >
-          Exit preview
-        </pr-button>
       </div>
     `;
   }
