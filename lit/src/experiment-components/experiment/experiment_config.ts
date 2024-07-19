@@ -302,10 +302,10 @@ export class ExperimentConfig extends MobxLitElement {
             .checked=${this.experimentConfig.isGroup}
             @change=${handleGroupCheckbox}
           ></md-checkbox>
-          <label for="isExperimentGroup">Create a group of experiments</label>
-        </div>
-        <div class="checkbox-subtitle">
-          The experiment group options allow you to create a group of experiments with the same configuration.
+          <label for="isExperimentGroup">
+            <div>Create a group of experiments</div>
+            <div class="subtitle">The experiment group options allow you to create a group of experiments with the same configuration.</div>
+          </label>
         </div>
       </div>
 
@@ -333,16 +333,17 @@ export class ExperimentConfig extends MobxLitElement {
                   </div>
               </div>
 
-              <div class="checkbox-input-container">
                 <div class="checkbox-input">
                   <md-checkbox id="isExperimentGroup" touch-target="wrapper"
                     .checked=${this.experimentConfig.isMultiPart}
                     @change=${handleMultiPartCheckbox}
                   ></md-checkbox>
-                  <label for="isExperimentGroup">Create a muti-part experiment</label>
-                </div>
-                <div class="checkbox-subtitle">
-                  This will add a "lobby" stage; move the stage to divide your experiment into two parts. A lobby experiment will be created for the first part. You can redirect people to the second experiment.
+                  <label for="isExperimentGroup">
+                    <div>Create a muti-part experiment</div>
+                    <div class="subtitle">
+                        This will add a "lobby" stage; move the stage to divide your experiment into two parts. A lobby experiment will be created for the first part. You can redirect people to the second experiment.
+                    </div>
+                  </label>
                 </div>
               </div>
           `
