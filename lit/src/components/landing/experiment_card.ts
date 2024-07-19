@@ -7,6 +7,7 @@ import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 import { Experiment } from '@llm-mediation-experiments/utils';
+import { convertUnifiedTimestampToDate } from '../../shared/utils';
 
 import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
@@ -43,13 +44,26 @@ export class ExperimentCard extends MobxLitElement {
     };
 
     return html`
-      <h3>${this.experiment.name}</h3>
-      <p class="label">${this.experiment.numberOfParticipants} participants</p>
-      <p class="label">ID: ${this.experiment.id}</p>
+      <div class="header">
+        <div>
+          <h3>${this.experiment.name}</h3>
+          <div class="label"><small>${this.experiment.id}</small></div>
+        </div>
+        <pr-tooltip text="View experiment" position="TOP_END">
+          <pr-icon-button
+            icon="arrow_forward"
+            color="secondary"
+            variant="tonal"
+            @click=${handleClick}>
+          </pr-icon-button>
+        </pr-tooltip>
+      </div>
+      <p>${this.experiment.numberOfParticipants} participants</p>
       <div class="action-buttons">
-        <pr-button color="secondary" variant="tonal" @click=${handleClick}>
-          View experiment
-        </pr-button>
+        <div class="label">
+          <div>${this.experiment.author.displayName}</div>
+          <small>${convertUnifiedTimestampToDate(this.experiment.date)}</small>
+        </div>
         <pr-tooltip text="Delete experiment" position="TOP_END">
           <pr-icon-button
             icon="delete"

@@ -13,7 +13,8 @@ import { ExperimentService } from "../../services/experiment_service";
 import { ParticipantService } from "../../services/participant_service";
 import { Pages, RouterService } from "../../services/router_service";
 
-import { ParticipantProfileExtended } from "@llm-mediation-experiments/utils";
+import { ParticipantProfileExtended, UnifiedTimestamp } from "@llm-mediation-experiments/utils";
+import { convertUnifiedTimestampToDate } from "../../shared/utils";
 
 import { styles } from "./profile_preview.scss";
 
@@ -60,10 +61,9 @@ export class ProfilePreview extends MobxLitElement {
       }
     };
 
-    const formatDate = () => {
-      const timestamp = this.profile?.acceptTosTimestamp;
+    const formatDate = (timestamp: UnifiedTimestamp|null) => {
       if (timestamp) {
-        return new Date(timestamp.seconds * 1000);
+        return convertUnifiedTimestampToDate(timestamp);
       }
       return "";
     }
@@ -82,7 +82,13 @@ export class ProfilePreview extends MobxLitElement {
         ${this.experimentService.getStageName(this.profile.currentStageId, true)}
       </div>
       <div>
-        <span>Terms of Service:</span> ${formatDate()}</div>
+        <span>Accepted TOS:</span>
+        ${formatDate(this.profile?.acceptTosTimestamp)}
+      </div>
+      <div>
+        <span>Completed:</span>
+        ${formatDate(this.profile?.completedExperiment)}
+      </div>
       <div><span>Public ID:</span> ${this.profile.publicId}</div>
       <div><span>Private ID:</span> ${this.profile.privateId}</div>
 
