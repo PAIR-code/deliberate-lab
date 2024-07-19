@@ -119,6 +119,8 @@ export class ExperimentConfig extends MobxLitElement {
     };
 
     return html`
+      <div class="divider"></div>
+      <h2>Group-specific settings</h2>
       <div class="number-input">
         <label for="num">Number of experiments</label>
         <input

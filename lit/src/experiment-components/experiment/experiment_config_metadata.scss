@@ -6,6 +6,15 @@
   gap: common.$spacing-large;
 }
 
+h2 {
+  @include typescale.title-medium;
+  margin: 0;
+}
+
+.divider {
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
 md-checkbox {
   flex-shrink: 0;
 }
