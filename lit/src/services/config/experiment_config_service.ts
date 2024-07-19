@@ -24,7 +24,8 @@ export class ExperimentConfigService extends Service {
     makeObservable(this);
   }
 
-  @observable name = 'New experiment';
+  @observable name = 'Untitled experiment';
+  @observable publicName = 'Experiment';
   @observable numParticipants = 3;
 
   // Experiment group parameters.
@@ -59,6 +60,7 @@ export class ExperimentConfigService extends Service {
     for (let i = 0; i < numExperiments; i++) {
       experiments.push({
         name: toJS(this.group + '_' + randstr(6)),
+        publicName: toJS(this.publicName),
         group: toJS(this.group),
         stages: convertExperimentStages(toJS(stages)),
         numberOfParticipants: toJS(this.numParticipants),
@@ -73,6 +75,7 @@ export class ExperimentConfigService extends Service {
       return [
         {
           name: toJS(this.name),
+          publicName: toJS(this.publicName),
           group: toJS(''),
           stages: toJS(this.stages),
           numberOfParticipants: toJS(this.numParticipants),
@@ -91,6 +94,7 @@ export class ExperimentConfigService extends Service {
       // Create one lobby.
       experiments.push({
         name: toJS(this.group + '_lobby'),
+        publicName: toJS(this.publicName),
         group: toJS(this.group),
         stages: convertExperimentStages(toJS(preStages)),
         numberOfParticipants: toJS(this.numParticipants),
@@ -112,6 +116,7 @@ export class ExperimentConfigService extends Service {
     if (this.isGroup) {
       return {
         name: toJS(this.group + '_' + randstr(6)),
+        publicName: toJS(this.publicName),
         group: toJS(this.group),
         stages: convertExperimentStages(toJS(this.stages)),
         numberOfParticipants: toJS(this.numParticipants),
@@ -119,6 +124,7 @@ export class ExperimentConfigService extends Service {
     }
     return {
       name: toJS(this.name),
+      publicName: toJS(this.publicName),
       group: toJS(''),
       stages: toJS(this.stages),
       numberOfParticipants: toJS(this.numParticipants),
@@ -180,9 +186,14 @@ export class ExperimentConfigService extends Service {
     return this.stages[this.currentStageIndex];
   }
 
-  // Update experiment name
+  // Update private experiment name
   updateName(name: string) {
     this.name = name;
+  }
+
+  // Update public experiment name
+  updatePublicName(name: string) {
+    this.publicName = name;
   }
 
   updateNumParticipants(num: number) {
@@ -275,7 +286,8 @@ export class ExperimentConfigService extends Service {
   }
 
   reset() {
-    this.name = 'New experiment';
+    this.name = 'Untitled experiment';
+    this.publicName = 'Experiment';
     this.numParticipants = 3;
     this.stages = [createTOSStage(), createProfileStage()];
     this.currentStageIndex = -1;

@@ -44,6 +44,9 @@ export class ExperimentPreview extends MobxLitElement {
             ${this.experimentService.experiment?.numberOfParticipants}
             participants
           </div>
+          <div class="stat small">
+            Public name: ${this.experimentService.experiment?.publicName}
+          </div>
           ${this.renderGroup()}
         </div>
         <div class="right">

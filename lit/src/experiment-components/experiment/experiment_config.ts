@@ -248,6 +248,11 @@ export class ExperimentConfig extends MobxLitElement {
       this.experimentConfig.updateName(value);
     };
 
+    const handlePublicName = (e: Event) => {
+      const value = (e.target as HTMLTextAreaElement).value;
+      this.experimentConfig.updatePublicName(value);
+    }
+
     const handleNum = (e: Event) => {
       const num = Number((e.target as HTMLTextAreaElement).value);
       this.experimentConfig.updateNumParticipants(num);
@@ -276,12 +281,20 @@ export class ExperimentConfig extends MobxLitElement {
 
     return html`
       <pr-textarea
-        label="Experiment name"
-        placeholder="Name of experiment"
+        label="Private experiment name (visible to experimenters)"
+        placeholder="Private experiment name"
         variant="outlined"
         .value=${this.experimentConfig.name}
         .disabled=${this.experimentConfig.isGroup}
         @input=${handleName}
+      >
+      </pr-textarea>
+      <pr-textarea
+        label="Public experiment name (visible to participants)"
+        placeholder="Public experiment name"
+        variant="outlined"
+        .value=${this.experimentConfig.publicName}
+        @input=${handlePublicName}
       >
       </pr-textarea>
       <div class="number-input">
@@ -355,10 +368,11 @@ export class ExperimentConfig extends MobxLitElement {
     const createExperiments = async () => {
       const experiments = this.experimentConfig.getExperiments() || [];
       for (let i = 0; i < experiments.length; i++) {
-        const { name, stages, numberOfParticipants, group } = experiments[i];
+        const { name, publicName, stages, numberOfParticipants, group } = experiments[i];
         const experiment = await this.experimenterService.createExperiment(
           {
             name,
+            publicName,
             numberOfParticipants,
             group,
           },
@@ -394,12 +408,13 @@ export class ExperimentConfig extends MobxLitElement {
     }
 
     const onCreateTemplate = async () => {
-      const { name, stages, numberOfParticipants } =
+      const { name, publicName, stages, numberOfParticipants } =
         this.experimentConfig.getExperiment();
 
       await this.experimenterService.createTemplate(
         {
-          name
+          name,
+          publicName,
         }, stages
       );
 

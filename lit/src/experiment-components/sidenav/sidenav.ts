@@ -103,7 +103,7 @@ export class SideNav extends MobxLitElement {
           class=${navItemClasses}
           role="button"
           @click=${handleClick}>
-          ${experiment.name}
+          ${experiment.publicName}
         </div>
       </div>
     `;
