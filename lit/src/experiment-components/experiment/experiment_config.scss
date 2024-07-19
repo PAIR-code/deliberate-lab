@@ -21,10 +21,6 @@ code {
   overflow-wrap: anywhere;
 }
 
-md-checkbox {
-  flex-shrink: 0;
-}
-
 .error {
   color: var(--md-sys-color-error);
 }
@@ -67,17 +63,7 @@ md-checkbox {
 
 .stage-chip {
   @include typescale.label-small;
-  background: var(--md-sys-color-primary-container);
-  border-radius: common.$spacing-small;
-  color: var(--md-sys-color-on-secondary-container);
-  height: max-content;
-  padding: common.$spacing-small common.$spacing-medium;
-  width: max-content;
-
-  &.tertiary {
-    background: var(--md-sys-color-tertiary-container);
-    color: var(--md-sys-color-on-tertiary-container);
-  }
+  @include common.chip;
 }
 
 .stage-description {
@@ -86,30 +72,8 @@ md-checkbox {
   font-style: italic;
 }
 
-.number-input {
-  @include common.number-input;
-}
-
-.checkbox-input {
-  @include common.flex-row-align-center;
-
-  label {
-    @include common.flex-column;
-    gap: common.$spacing-small;
-  }
-}
-
 .subtitle {
   font-style: italic;
-}
-
-.group-container {
-  margin-left: 50px;
-}
-
-.group-container>* {
-  margin-bottom: 8px;
-  /* Spacing between elements. */
 }
 
 .buttons-wrapper {
