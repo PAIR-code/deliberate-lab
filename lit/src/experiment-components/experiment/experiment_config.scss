@@ -116,11 +116,9 @@ md-checkbox {
   @include common.flex-row-align-center;
   gap: common.$spacing-medium;
   justify-content: end;
+}
 
-  &.bottom {
-    border-top: 1px solid var(--md-sys-color-outline-variant);
-    margin-bottom: 0;
-    margin-top: auto;
-    padding-top: common.$spacing-large;
-  }
+experiment-config-actions {
+  margin-bottom: 0;
+  margin-top: auto;
 }

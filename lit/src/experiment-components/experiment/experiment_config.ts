@@ -10,6 +10,8 @@ import "../reveal/reveal_config";
 import "../survey/survey_config";
 import "../tos/tos_config";
 
+import "./experiment_config_actions";
+
 import "@material/web/checkbox/checkbox.js";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
@@ -79,9 +81,9 @@ export class ExperimentConfig extends MobxLitElement {
         </div>
       </div>
       ${this.experimentConfig.getExperimentErrors().map(error =>
-      html`<div class="error">Error: ${error}</div>`
-    )}
-      ${this.renderBottomActionButtons()}
+        html`<div class="error">Error: ${error}</div>`
+      )}
+      <experiment-config-actions></experiment-config-actions>
     `;
   }
 
@@ -361,87 +363,6 @@ export class ExperimentConfig extends MobxLitElement {
               </div>
           `
         : ''}
-    `;
-  }
-
-  private renderBottomActionButtons() {
-    const createExperiments = async () => {
-      const experiments = this.experimentConfig.getExperiments() || [];
-      for (let i = 0; i < experiments.length; i++) {
-        const { name, publicName, stages, numberOfParticipants, group } = experiments[i];
-        const experiment = await this.experimenterService.createExperiment(
-          {
-            name,
-            publicName,
-            numberOfParticipants,
-            group,
-          },
-          stages
-        );
-
-        // Navigate if this is the last created experiment.
-        if (i === experiments.length - 1) {
-          if (group) {
-            this.routerService.navigate(
-              Pages.EXPERIMENT_GROUP,
-              { "experiment_group": group }
-            );
-          } else {
-            this.routerService.navigate(
-              Pages.EXPERIMENT,
-              { "experiment": experiment.id }
-            );
-          }
-        }
-      }
-
-      this.experimentConfig.reset();
-    }
-
-    const onCreateExperiment = async () => {
-      const errors = this.experimentConfig.getExperimentErrors();
-      if (errors.length > 0) {
-        console.log(errors);
-        return;
-      }
-      createExperiments();
-    }
-
-    const onCreateTemplate = async () => {
-      const { name, publicName, stages, numberOfParticipants } =
-        this.experimentConfig.getExperiment();
-
-      await this.experimenterService.createTemplate(
-        {
-          name,
-          publicName,
-        }, stages
-      );
-
-      this.experimentConfig.reset();
-    }
-
-    const onClear = () => {
-      this.experimentConfig.reset();
-    }
-
-    const hasErrors = this.experimentConfig.getExperimentErrors().length > 0;
-    const tooltipText = hasErrors ? "Resolve errors to create experiment" : "";
-
-    return html`
-      <div class="buttons-wrapper bottom">
-        <pr-button variant="default" @click=${onClear}>
-          Clear
-        </pr-button>
-        <pr-button variant="tonal" @click=${onCreateTemplate}>
-          Create template
-        </pr-button>
-        <pr-tooltip text=${tooltipText} position="TOP_END">
-          <pr-button @click=${onCreateExperiment}>
-            ${this.experimentConfig.isGroup ? 'Create experiment group' : 'Create experiment'}
-          </pr-button>
-        </pr-tooltip>
-      </div>
     `;
   }
 }
