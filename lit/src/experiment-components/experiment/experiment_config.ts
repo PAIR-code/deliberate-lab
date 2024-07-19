@@ -356,9 +356,13 @@ export class ExperimentConfig extends MobxLitElement {
       const experiments = this.experimentConfig.getExperiments() || [];
       for (let i = 0; i < experiments.length; i++) {
         const { name, stages, numberOfParticipants, group } = experiments[i];
-
         const experiment = await this.experimenterService.createExperiment(
-          name, stages, numberOfParticipants, group
+          {
+            name,
+            numberOfParticipants,
+            group,
+          },
+          stages
         );
 
         // Navigate if this is the last created experiment.
@@ -394,7 +398,9 @@ export class ExperimentConfig extends MobxLitElement {
         this.experimentConfig.getExperiment();
 
       await this.experimenterService.createTemplate(
-        name, stages
+        {
+          name
+        }, stages
       );
 
       this.experimentConfig.reset();

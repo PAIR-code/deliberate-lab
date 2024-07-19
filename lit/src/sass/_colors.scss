@@ -1,8 +1,10 @@
 /* Global colors (not specific to palette). */
 @mixin global {
-  --md-sys-color-avatar-woman: #FBA9D6;
-  --md-sys-color-avatar-man: #AECBFA;
-  --md-sys-color-avatar-person: #D7AEFB;
+  --md-sys-color-avatar-woman: #FBA9D6; // pink200
+  --md-sys-color-avatar-man: #AECBFA; // blue200
+  --md-sys-color-avatar-person: #D7AEFB; // purple200
+  --md-sys-color-progress: #FDE293; // yellow200
+  --md-sys-color-success: #A8DAB5; // green200
 }
 
 /* Kamino reference definitions. */

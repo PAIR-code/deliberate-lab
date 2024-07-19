@@ -2,6 +2,8 @@ import "../../pair-components/button";
 import "../../pair-components/icon_button";
 import "../../pair-components/tooltip";
 
+import "./experiment_card";
+
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
 import { customElement } from "lit/decorators.js";
@@ -25,7 +27,7 @@ export class ExperimentGroup extends MobxLitElement {
   private readonly authService = core.getService(AuthService);
   private readonly routerService = core.getService(RouterService);
   private readonly experimenterService = core.getService(ExperimenterService);
-  private readonly experimentConfig = core.getService(ExperimentConfigService);
+
   override render() {
     if (!this.authService.isExperimenter) {
       return html`<div>403: Participants do not have access</div>`;
@@ -33,11 +35,12 @@ export class ExperimentGroup extends MobxLitElement {
 
     const group = this.routerService.activeRoute.params["experiment_group"];
     const experiments = this.experimenterService.getExperimentsInGroup(group);
+
     return html`
       <div class="top-bar">
-      <div class="stat">
-        ${experiments.length} experiments
-      </div>
+        <div class="stat">
+          ${experiments.length} experiments
+        </div>
 
         <div class="right">
           ${this.renderDelete(experiments)}
@@ -48,7 +51,7 @@ export class ExperimentGroup extends MobxLitElement {
         ${experiments.length === 0 ?
           html`<div class="label">No experiments yet</div>` : nothing}
         ${experiments.map(
-          experiment => this.renderExperimentCard(experiment)
+          experiment => html`<experiment-card .experiment=${experiment}></experiment-card>`
         )}
       </div>
     `;
@@ -75,42 +78,6 @@ export class ExperimentGroup extends MobxLitElement {
     </pr-tooltip>
   `;
   }
-
-  private renderExperimentCard(experiment: Experiment) {
-    const handleClick = () => {
-      this.routerService.navigate(
-        Pages.EXPERIMENT,
-        { "experiment": experiment.id }
-      );
-    }
-
-    const handleDelete = () => {
-      this.experimenterService.deleteExperiment(experiment.id);
-      
-    };
-
-    return html`
-      <div class="card">
-        <h3>${experiment.name}</h3>
-        <p class="label">${experiment.numberOfParticipants} participants</p>
-        <p class="label">ID: ${experiment.id}</p>
-        <div class="action-buttons">
-          <pr-button variant="default" @click=${handleClick}>
-            View experiment
-          </pr-button>
-          <pr-tooltip text="Delete experiment" position="BOTTOM_END">
-            <pr-icon-button
-              icon="delete"
-              color="error"
-              variant="default"
-              @click=${handleDelete}>
-            </pr-icon-button>
-          </pr-tooltip>
-        </div>
-      </div>
-    `;
-  }
-
 }
 
 declare global {

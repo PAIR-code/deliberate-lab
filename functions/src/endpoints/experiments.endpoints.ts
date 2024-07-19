@@ -45,13 +45,18 @@ export const createExperiment = onCall(async (request) => {
 
     await app.firestore().runTransaction(async (transaction) => {
       let { numberOfParticipants } = data.metadata;
-      const { name, group } = data.metadata;
+      const { name, publicName, description, tags, group } = data.metadata;
 
       numberOfParticipants = numberOfParticipants ?? DEFAULT_PARTICIPANT_COUNT;
 
       // Create the metadata document
       transaction.set(document, {
         name,
+        publicName,
+        description,
+        tags,
+        author: { uid: request.auth?.uid, displayName: request.auth?.token?.name ?? '' },
+        starred: {},
         ...(data.type === 'experiments'
           ? {
             date: Timestamp.now(),

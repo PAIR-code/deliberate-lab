@@ -49,8 +49,7 @@ export class ExperimentPreview extends MobxLitElement {
           ${this.renderDelete()}
         </div>
       </div>
- 
-      <div class="row" >
+      <div class="row">
         <pr-button
           color="tertiary"
           variant="tonal"
@@ -58,9 +57,10 @@ export class ExperimentPreview extends MobxLitElement {
           Add participant
         </pr-button>
       </div>
-
-      ${this.experimentService.privateParticipants.map(participant =>
-      html`<profile-preview .profile=${participant}></profile-preview>`)}
+      <div class="profile-wrapper">
+        ${this.experimentService.privateParticipants.map(participant =>
+          html`<profile-preview .profile=${participant}></profile-preview>`)}
+      </div>
     `;
   }
 

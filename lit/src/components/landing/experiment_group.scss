@@ -62,15 +62,9 @@ p {
 }
 
 .cards-wrapper {
-  display: grid;
+  @include common.flex-row;
+  flex-wrap: wrap;
   gap: common.$spacing-large;
-  grid-template-columns: repeat(2, 1fr);
-}
-
-@include common.viewport-small {
-  .cards-wrapper {
-    grid-template-columns: repeat(1, 1fr);
-  }
 }
 
 .card {

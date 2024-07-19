@@ -20,6 +20,7 @@ import {
   SurveyQuestionKind,
   SurveyStageConfig,
   TermsOfServiceStageConfig,
+  UnifiedTimestamp,
   VoteForLeaderStageConfig,
 } from '@llm-mediation-experiments/utils';
 import { micromark } from "micromark";
@@ -229,6 +230,14 @@ export function convertExperimentStages(stages: StageConfig[]) {
     }
     return stage;
   })
+}
+
+/**
+ * Converts UnifiedTimestamp to previewable date.
+ */
+export function convertUnifiedTimestampToDate(timestamp: UnifiedTimestamp) {
+  const date = new Date(timestamp.seconds * 1000);
+  return `${date.toDateString()} (${date.getHours()}:${date.getMinutes()})`;
 }
 
 /**

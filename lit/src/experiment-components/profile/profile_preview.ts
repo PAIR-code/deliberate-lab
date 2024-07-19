@@ -1,4 +1,5 @@
-import "../../pair-components/button";
+import "../../pair-components/icon_button";
+import "../../pair-components/tooltip";
 
 import "./profile_avatar";
 
@@ -12,7 +13,8 @@ import { ExperimentService } from "../../services/experiment_service";
 import { ParticipantService } from "../../services/participant_service";
 import { Pages, RouterService } from "../../services/router_service";
 
-import { ParticipantProfileExtended } from "@llm-mediation-experiments/utils";
+import { ParticipantProfileExtended, UnifiedTimestamp } from "@llm-mediation-experiments/utils";
+import { convertUnifiedTimestampToDate } from "../../shared/utils";
 
 import { styles } from "./profile_preview.scss";
 
@@ -59,10 +61,9 @@ export class ProfilePreview extends MobxLitElement {
       }
     };
 
-    const formatDate = () => {
-      const timestamp = this.profile?.acceptTosTimestamp;
+    const formatDate = (timestamp: UnifiedTimestamp|null) => {
       if (timestamp) {
-        return new Date(timestamp.seconds * 1000);
+        return convertUnifiedTimestampToDate(timestamp);
       }
       return "";
     }
@@ -81,25 +82,34 @@ export class ProfilePreview extends MobxLitElement {
         ${this.experimentService.getStageName(this.profile.currentStageId, true)}
       </div>
       <div>
-        <span>Terms of Service:</span> ${formatDate()}</div>
+        <span>Accepted TOS:</span>
+        ${formatDate(this.profile?.acceptTosTimestamp)}
+      </div>
+      <div>
+        <span>Completed:</span>
+        ${formatDate(this.profile?.completedExperiment)}
+      </div>
       <div><span>Public ID:</span> ${this.profile.publicId}</div>
       <div><span>Private ID:</span> ${this.profile.privateId}</div>
 
-      <div class="row" >
-        <pr-button
-          color="primary"
-          variant="tonal"
-          @click=${handlePreview}>
-          Preview as participant
-        </pr-button>
-
-        <pr-button
-          color="secondary"
-          variant="tonal"
-          @click=${this.copyParticipantLink}
-        >
-          Copy participant link
-        </pr-button>
+      <div class="row">
+        <pr-tooltip text="Preview as participant" position="TOP_END">
+          <pr-icon-button
+            icon="visibility"
+            color="primary"
+            variant="default"
+            @click=${handlePreview}>
+          </pr-button>
+        </pr-tooltip>
+        <pr-tooltip text="Copy participant link" position="TOP_END">
+          <pr-icon-button
+            icon="content_copy"
+            color="secondary"
+            variant="default"
+            @click=${this.copyParticipantLink}
+          >
+          </pr-icon-button>
+        </pr-tooltip>
       </div>
     `;
   }

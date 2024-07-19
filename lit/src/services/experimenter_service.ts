@@ -111,6 +111,10 @@ export class ExperimenterService extends Service {
       template.value = ({
         id: templateId,
         name: templateDoc.data()!['name'],
+        publicName: templateDoc.data()!['publicName'],
+        description: templateDoc.data()!['description'],
+        author: templateDoc.data()!['author'],
+        tags: templateDoc.data()!['tags'],
         stageMap: lookupTable(collectSnapshotWithId(stagesDocs, 'name'), 'name'),
       });
     });
@@ -136,27 +140,43 @@ export class ExperimenterService extends Service {
   /** Create an experiment.
    * @rights Experimenter
    */
-  async createExperiment(name: string, stages: StageConfig[], numberOfParticipants?: number, group?: string) {
+  async createExperiment(experiment: Partial<Experiment>, stages: StageConfig[]) {
+    const name = experiment.name ?? '';
+    const publicName = experiment.publicName ?? 'Experiment';
+    const description = experiment.description ?? '';
+    const tags = experiment.tags ?? [];
+    const group = experiment.group ?? '';
+    const numberOfParticipants = experiment.numberOfParticipants ?? 1;
+
     return createExperimentCallable(
       this.sp.firebaseService.functions,
       {
         type: 'experiments',
-        metadata: { name, group, numberOfParticipants },
+        metadata: { name, publicName, description, tags, group, numberOfParticipants },
         stages,
-      });
+      }
+    );
   }
 
   /** Create an experiment template.
    * @rights Experimenter
    */
-  async createTemplate(name: string, stages: StageConfig[]) {
+  async createTemplate(experiment: Partial<Experiment>, stages: StageConfig[]) {
+    const name = experiment.name ?? '';
+    const publicName = experiment.publicName ?? 'Experiment';
+    const description = experiment.description ?? '';
+    const tags = experiment.tags ?? [];
+    const group = experiment.group ?? '';
+    const numberOfParticipants = experiment.numberOfParticipants ?? 1;
+
     return createExperimentCallable(
       this.sp.firebaseService.functions,
       {
         type: 'templates',
-        metadata: { name },
+        metadata: { name, publicName, description, tags, group, numberOfParticipants },
         stages,
-      });
+      }
+    );
   }
 
   /** Adds a participant.
