@@ -86,8 +86,27 @@ code {
   @include common.number-input;
 }
 
+.checkbox-input-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 .checkbox-input {
   @include common.flex-row-align-center;
+}
+
+.checkbox-subtitle {
+  font-style: italic;
+  margin-left: 50px;
+  margin-top: -10px;
+}
+
+.group-container {
+  margin-left: 50px;
+}
+.group-container > * {
+  margin-bottom: 8px; /* Spacing between elements. */
 }
 
 .buttons-wrapper {

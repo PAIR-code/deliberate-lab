@@ -8,6 +8,7 @@ import { randstr, StageConfig, StageKind, validateStageConfigs } from "@llm-medi
 import {
   collectSnapshotWithId,
   convertExperimentStages,
+  createInfoStage,
   createProfileStage,
   createTOSStage
 } from "../../shared/utils";
@@ -29,6 +30,10 @@ export class ExperimentConfigService extends Service {
   // Experiment group parameters.
   @observable isGroup = false;
   @observable group = "";
+  @observable numExperiments = 1;
+
+  @observable isMultiPart = false;
+  private dividerStageId = "";
 
   @observable stages: StageConfig[] = [createTOSStage(), createProfileStage()];
   @observable currentStageIndex = -1;
@@ -49,9 +54,61 @@ export class ExperimentConfigService extends Service {
     });
   }
 
+  getMultiExperiments(numExperiments: number, stages: StageConfig[]) {
+    const experiments = [];
+    for (let i = 0; i < numExperiments; i++) {
+      experiments.push({
+        name: toJS(this.group + '_' + randstr(6)),
+        group: toJS(this.group),
+        stages: convertExperimentStages(toJS(stages)),
+        numberOfParticipants: toJS(this.numParticipants),
+      });
+    }
+    return experiments;
+  }
+
+  getExperiments() {
+    // Single experiment.
+    if (!this.isGroup) {
+      return [
+        {
+          name: toJS(this.name),
+          group: toJS(''),
+          stages: toJS(this.stages),
+          numberOfParticipants: toJS(this.numParticipants),
+        }
+      ];
+    }
+
+    const dividerIndex: number = this.stages.findIndex(stage => stage.id === this.dividerStageId);
+    if (!this.isMultiPart || dividerIndex == -1) {
+      return this.getMultiExperiments(this.numExperiments, this.stages);
+    } else {
+      const preStages = this.stages.slice(0, dividerIndex + 1);
+      const postStages = this.stages.slice(dividerIndex + 1);
+
+      const experiments = [];
+      // Create one lobby.
+      experiments.push({
+        name: toJS(this.group + '_lobby'),
+        group: toJS(this.group),
+        stages: convertExperimentStages(toJS(preStages)),
+        numberOfParticipants: toJS(this.numParticipants),
+      });
+
+      // Create multiExperiments.
+      experiments.push(...this.getMultiExperiments(this.numExperiments, postStages));
+      return experiments;
+    }
+
+  }
+
+
+
   // Converts and returns data required for experiment creation
   // (note that this adjusts some stage data, e.g., adds numbering to stages)
-  getExperiment() {
+  getExperiment(experimentType = "default") {
+
     if (this.isGroup) {
       return {
         name: toJS(this.group + '_' + randstr(6)),
@@ -93,7 +150,13 @@ export class ExperimentConfigService extends Service {
     if (this.numParticipants <= 0) {
       errors.push("Experiments needs more than 0 participants");
     }
-    
+
+    if (this.isMultiPart) {
+      const dividerIndex = this.stages.findIndex(stage => stage.id === this.dividerStageId);
+      if (dividerIndex !== -1 && dividerIndex == this.stages.length - 1) {
+        errors.push("Divider stage cannot be the last stage.");
+      }
+    }
     return errors;
   }
 
@@ -111,7 +174,7 @@ export class ExperimentConfigService extends Service {
 
   @computed get currentStage() {
     if (this.currentStageIndex < 0 ||
-        this.currentStageIndex >= this.stages.length) {
+      this.currentStageIndex >= this.stages.length) {
       return null;
     }
     return this.stages[this.currentStageIndex];
@@ -130,8 +193,30 @@ export class ExperimentConfigService extends Service {
     this.isGroup = checkbox;
   }
 
+  updateIsMultiPart(checkbox: boolean) {
+    this.isMultiPart = checkbox;
+    if (checkbox) {
+      const dividerStage = createInfoStage({
+        name: 'Lobby',
+        description: 'Wait to be redirected.'
+      });
+      this.dividerStageId = dividerStage.id;
+      this.addStage(dividerStage);
+    } else {
+      const dividerIndex = this.stages.findIndex(stage => stage.id === this.dividerStageId);
+      if (dividerIndex !== -1) {
+        this.deleteStage(dividerIndex);
+      }
+    }
+  }
+
+
   updateGroupName(name: string) {
     this.group = name;
+  }
+
+  updateNumExperiments(num: number) {
+    this.numExperiments = num;
   }
 
   updateStages(stages: StageConfig[]) {
@@ -143,7 +228,7 @@ export class ExperimentConfigService extends Service {
       this.stages[stageIndex].name = name;
     }
   }
-   
+
   updateStageDescription(description: string, stageIndex = this.currentStageIndex) {
     if (stageIndex >= 0 && stageIndex < this.stages.length) {
       this.stages[stageIndex].description = description;
@@ -195,6 +280,7 @@ export class ExperimentConfigService extends Service {
     this.stages = [createTOSStage(), createProfileStage()];
     this.currentStageIndex = -1;
     this.isGroup = false;
+    this.isMultiPart = false;
     this.group = '';
   }
 }
