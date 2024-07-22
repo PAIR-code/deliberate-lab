@@ -9,6 +9,7 @@ import {
   GroupChatStageConfig,
   MessageKind,
   ParticipantProfile,
+  ParticipantProfileExtended,
   PayoutBundle,
   PayoutBundleStrategy,
   PayoutItem,
@@ -207,8 +208,6 @@ export const deleteExperiment = onCall(async (request) => {
 });
 
 export const createParticipant = onCall(async (request) => {
-  await AuthGuard.isExperimenter(request);
-
   const { data } = request;
 
   // Validate the incoming data
@@ -217,7 +216,7 @@ export const createParticipant = onCall(async (request) => {
   }
 
   const experimentRef = app.firestore().doc(`experiments/${data.experimentId}`);
-
+  let newParticipantData: ParticipantProfileExtended | null = null;
   await app.firestore().runTransaction(async (transaction) => {
     const experimentDoc = await transaction.get(experimentRef);
     if (!experimentDoc.exists) {
@@ -252,10 +251,17 @@ export const createParticipant = onCall(async (request) => {
     });
 
     transaction.set(participantRef, participantData);
-
+    // Retrieve the new participant data
+    newParticipantData = {
+      ...participantData,
+      privateId: participantRef.id,
+    } as ParticipantProfileExtended;
     // TODO: Add chat stages.
     // TODO: Validate and don't allow adding new participants if experiment has started.
   });
-
-  return { success: true };
+  if (newParticipantData) {
+    return { success: true, participant: newParticipantData };
+  } else {
+    throw new functions.https.HttpsError('internal', 'Failed to retrieve the new participant data');
+  }
 });

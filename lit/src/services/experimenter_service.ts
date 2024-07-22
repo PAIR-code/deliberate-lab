@@ -1,4 +1,4 @@
-import { Experiment, ExperimentTemplate, ExperimentTemplateExtended, StageConfig, lookupTable } from "@llm-mediation-experiments/utils";
+import { Experiment, ExperimentTemplate, ExperimentTemplateExtended, ParticipantProfileExtended, StageConfig, lookupTable } from "@llm-mediation-experiments/utils";
 import { Unsubscribe, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot } from "firebase/firestore";
 import { computed, makeObservable, observable } from "mobx";
 import { createExperimentCallable, createParticipantCallable, deleteExperimentCallable } from "../shared/callables";
@@ -11,6 +11,11 @@ import { Service } from "./service";
 interface ServiceProvider {
   firebaseService: FirebaseService;
   routerService: RouterService;
+}
+
+interface CreateParticipantResponse {
+  success: boolean;
+  participant: ParticipantProfileExtended
 }
 
 /** Handle experimenter-related data:
@@ -180,9 +185,8 @@ export class ExperimenterService extends Service {
   }
 
   /** Adds a participant.
-   * @rights Experimenter
    */
-  async createParticipant(experimentId: string) {
+  async createParticipant(experimentId: string): Promise<CreateParticipantResponse> {
     return createParticipantCallable(this.sp.firebaseService.functions, {
       experimentId: experimentId,
     });

@@ -12,7 +12,6 @@ import { Experiment } from '@llm-mediation-experiments/utils';
 
 import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
-import { ExperimentConfigService } from "../../services/config/experiment_config_service";
 import { Pages, RouterService } from "../../services/router_service";
 
 
@@ -49,7 +48,7 @@ export class ExperimentGroup extends MobxLitElement {
 
       <div class="cards-wrapper">
         ${experiments.length === 0 ?
-          html`<div class="label">No experiments yet</div>` : nothing}
+        html`<div class="label">No experiments yet</div>` : nothing}
         ${experiments.map(
           experiment => html`<experiment-card .experiment=${experiment}></experiment-card>`
         )}

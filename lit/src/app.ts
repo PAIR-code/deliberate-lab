@@ -36,7 +36,6 @@ import { SettingsService } from "./services/settings_service";
 
 import {
   ChatKind,
-  StageConfig,
   StageKind
 } from "@llm-mediation-experiments/utils";
 import {
@@ -64,7 +63,7 @@ export class App extends MobxLitElement {
   }
 
   private renderPageContent() {
-    switch(this.routerService.activePage) {
+    switch (this.routerService.activePage) {
       case Pages.HOME:
         return html`
           <div class="content">
@@ -113,10 +112,6 @@ export class App extends MobxLitElement {
   }
 
   private renderExperiment() {
-    if (!this.authService.isExperimenter) {
-      return this.render403();
-    }
-
     this.experimentService.updateForCurrentRoute();
 
     if (this.experimentService.isLoading) {
@@ -305,14 +300,15 @@ export class App extends MobxLitElement {
       "size--large": isSize(TextSize.LARGE),
     });
 
-    if (!this.authService.authenticated && !this.routerService.isParticipantPage) {
+    if (!this.authService.authenticated && !this.routerService.isParticipantPage
+      && this.routerService.activeRoute.params["experiment"] === undefined) {
       // Render login screen if relevant after initial auth check
       return html`
         <div class=${classes}>
           <div class="content">
             ${this.authService.initialAuthCheck ?
-              html`<login-page></login-page>` :
-              nothing}
+          html`<login-page></login-page>` :
+          nothing}
           </div>
         </div>
       `;

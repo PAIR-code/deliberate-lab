@@ -13,6 +13,7 @@ import { AuthService } from "../../services/auth_service";
 import { ExperimentConfigService } from "../../services/config/experiment_config_service";
 import { ExperimentService } from "../../services/experiment_service";
 import { ExperimenterService } from "../../services/experimenter_service";
+import { ParticipantService } from "../../services/participant_service";
 import { Pages, RouterService } from "../../services/router_service";
 
 import { styles } from "./experiment_preview.scss";
@@ -25,17 +26,54 @@ export class ExperimentPreview extends MobxLitElement {
   private readonly authService = core.getService(AuthService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly experimenterService = core.getService(ExperimenterService);
+  private readonly participantService = core.getService(ParticipantService);
+
   private readonly routerService = core.getService(RouterService);
   private readonly experimentConfig = core.getService(ExperimentConfigService);
 
   override render() {
-    if (!this.authService.isExperimenter) {
-      return html`<div>403: Participants cannot access this page</div>`;
-    }
-
-    const addParticipant = () => {
-      this.experimenterService.createParticipant(this.experimentService.id!);
+    const addParticipant = async () => {
+      try {
+        const response = await this.experimenterService.createParticipant(this.experimentService.id!);
+        return response.participant;
+      } catch (error) {
+        console.error('Error creating participant:', error);
+        throw error;
+      }
     };
+
+    const joinExperiment = async () => {
+      // Create the participant.
+      const participant = await Promise.all([addParticipant()]);
+
+      this.participantService.setParticipant(
+        this.experimentService.id,
+        participant[0].privateId
+      );
+
+      // Redirect.
+      this.routerService.navigate(
+        Pages.PARTICIPANT,
+        {
+          "experiment": this.experimentService.id!,
+          "participant": participant[0].privateId
+        }
+      );
+      this.routerService.setExperimenterNav(false);
+    };
+
+    if (!this.authService.isExperimenter) {
+      return html`
+      <div class="row">
+        <pr-button
+          color="tertiary"
+          variant="tonal"
+          @click=${joinExperiment}>
+          Join experiment
+        </pr-button>
+      </div>
+      `;
+    }
 
     return html`
       <div class="top-bar">
@@ -68,7 +106,7 @@ export class ExperimentPreview extends MobxLitElement {
       </div>
       <div class="profile-wrapper">
         ${this.experimentService.privateParticipants.map(participant =>
-          html`<profile-preview .profile=${participant}></profile-preview>`)}
+      html`<profile-preview .profile=${participant}></profile-preview>`)}
       </div>
     `;
   }
