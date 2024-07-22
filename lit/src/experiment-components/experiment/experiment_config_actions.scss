@@ -1,0 +1,9 @@
+@use "../../sass/common";
+
+:host {
+  @include common.flex-row-align-center;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  gap: common.$spacing-medium;
+  justify-content: end;
+  padding-top: common.$spacing-large;
+}

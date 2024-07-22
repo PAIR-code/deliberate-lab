@@ -22,15 +22,23 @@
   }
 
   .label {
-    max-width: 200px;
+    @include common.flex-row-align-center;
+    flex-wrap: wrap;
+    gap: common.$spacing-small;
   }
 
   .buttons {
     @include common.flex-row-align-center;
+    flex-shrink: 0;
     gap: common.$spacing-small;
   }
 }
 
 .icon-wrapper {
   width: common.$spacing-xxl;
+}
+
+.chip {
+  @include typescale.label-small;
+  @include common.chip;
 }

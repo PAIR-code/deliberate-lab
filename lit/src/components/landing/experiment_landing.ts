@@ -70,13 +70,8 @@ export class ExperimentLanding extends MobxLitElement {
         Pages.EXPERIMENT_GROUP,
         { "experiment_group": group }
       );
+      this.authService.setEditPermissions(false);
     }
-
-    const handleDelete = () => {
-      experiments.forEach(experiment => {
-        this.experimenterService.deleteExperiment(experiment.id);
-      });
-    };
 
     return html`
       <div class="card">
@@ -86,47 +81,66 @@ export class ExperimentLanding extends MobxLitElement {
           <pr-button color="secondary" variant="tonal" @click=${handleClick}>
             View group
           </pr-button>
-          <pr-tooltip text="Delete experiments in group" position="BOTTOM_END">
-            <pr-icon-button
-              icon="delete"
-              color="error"
-              variant="default"
-              @click=${handleDelete}>
-            </pr-icon-button>
-          </pr-tooltip>
+          ${this.authService.canEdit ? this.renderDeleteGroupButton(experiments) : nothing}
         </div>
       </div>
     `;
   }
 
+  private renderDeleteGroupButton(experiments: Experiment[]) {
+    const handleDelete = () => {
+      experiments.forEach(experiment => {
+        this.experimenterService.deleteExperiment(experiment.id);
+      });
+    };
+
+    return html`
+      <pr-tooltip text="Delete experiments in group" position="BOTTOM_END">
+        <pr-icon-button
+          icon="delete"
+          color="error"
+          variant="default"
+          @click=${handleDelete}>
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
+  }
+
   private renderTemplateCard(template: ExperimentTemplate) {
     const handleClick = () => {
-      this.experimentConfig.loadTemplate(template.id, template.name);
+      this.experimentConfig.loadTemplate(template.id, template);
       this.routerService.navigate(Pages.EXPERIMENT_CREATE);
     }
-
-    const handleDelete = () => {
-      this.experimenterService.deleteTemplate(template.id);
-    };
 
     return html`
       <div class="card">
         <h3>${template.name}</h3>
         <p class="label">ID: ${template.id}</p>
+        <p>${template.description}</p>
         <div class="action-buttons">
           <pr-button variant="default" @click=${handleClick}>
             Use template
           </pr-button>
-          <pr-tooltip text="Delete template" position="BOTTOM_END">
-            <pr-icon-button
-              icon="delete"
-              color="error"
-              variant="default"
-              @click=${handleDelete}>
-            </pr-icon-button>
-          </pr-tooltip>
+          ${this.authService.canEdit ? this.renderDeleteTemplate(template) : nothing}
         </div>
       </div>
+    `;
+  }
+
+  private renderDeleteTemplate(template: ExperimentTemplate) {
+    const handleDelete = () => {
+      this.experimenterService.deleteTemplate(template.id);
+    };
+
+    return html`
+      <pr-tooltip text="Delete template" position="BOTTOM_END">
+        <pr-icon-button
+          icon="delete"
+          color="error"
+          variant="default"
+          @click=${handleDelete}>
+        </pr-icon-button>
+      </pr-tooltip>
     `;
   }
 }

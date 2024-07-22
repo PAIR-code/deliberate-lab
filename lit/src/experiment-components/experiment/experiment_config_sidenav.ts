@@ -92,7 +92,9 @@ export class ExperimentConfigSidenav extends MobxLitElement {
     return html`
       <div class=${classes} role="button" @click=${handleClick}>
         <div class="label">
-          ${index + 1}. ${stage.name}
+          <div>${index + 1}. ${stage.name}</div>
+          ${this.experimentConfig.dividerStageId === stage.id ?
+            html`<div class="chip tertiary">lobby stage</div>` : nothing}
         </div>
         <div class="buttons">
           <pr-icon-button

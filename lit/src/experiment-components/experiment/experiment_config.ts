@@ -10,7 +10,8 @@ import "../reveal/reveal_config";
 import "../survey/survey_config";
 import "../tos/tos_config";
 
-import "@material/web/checkbox/checkbox.js";
+import "./experiment_config_actions";
+import "./experiment_config_metadata";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
@@ -79,9 +80,9 @@ export class ExperimentConfig extends MobxLitElement {
         </div>
       </div>
       ${this.experimentConfig.getExperimentErrors().map(error =>
-      html`<div class="error">Error: ${error}</div>`
-    )}
-      ${this.renderBottomActionButtons()}
+        html`<div class="error">Error: ${error}</div>`
+      )}
+      <experiment-config-actions></experiment-config-actions>
     `;
   }
 
@@ -216,14 +217,14 @@ export class ExperimentConfig extends MobxLitElement {
           <reveal-config></reveal-config>
         `;
       default:
-        return this.renderMetadata();
+        return html`<experiment-config-metadata></experiment-config-metadata>`;
     }
   }
 
   private renderStageInfo(chip: string, content: string) {
     return html`
       <div class="stage-info">
-        <div class="stage-chip">${chip}</div>
+        <div class="stage-chip primary">${chip}</div>
         <div class="stage-description">${content}</div>
       </div>
     `;
@@ -240,194 +241,6 @@ export class ExperimentConfig extends MobxLitElement {
     }
 
     return nothing;
-  }
-
-  private renderMetadata() {
-    const handleName = (e: Event) => {
-      const value = (e.target as HTMLTextAreaElement).value;
-      this.experimentConfig.updateName(value);
-    };
-
-    const handleNum = (e: Event) => {
-      const num = Number((e.target as HTMLTextAreaElement).value);
-      this.experimentConfig.updateNumParticipants(num);
-    };
-
-    const handleGroupCheckbox = (e: Event) => {
-      const checked = Boolean((e.target as HTMLInputElement).checked);
-      this.experimentConfig.updateIsExperimentGroup(checked);
-    };
-
-    const handleMultiPartCheckbox = (e: Event) => {
-      const checked = Boolean((e.target as HTMLInputElement).checked);
-      this.experimentConfig.updateIsMultiPart(checked);
-    };
-
-    const handleGroupName = (e: Event) => {
-      const value = (e.target as HTMLTextAreaElement).value;
-      this.experimentConfig.updateGroupName(value);
-    }
-
-    const handleGroupNum = (e: Event) => {
-      const num = Number((e.target as HTMLTextAreaElement).value);
-      this.experimentConfig.updateNumExperiments(num);
-    };
-
-
-    return html`
-      <pr-textarea
-        label="Experiment name"
-        placeholder="Name of experiment"
-        variant="outlined"
-        .value=${this.experimentConfig.name}
-        .disabled=${this.experimentConfig.isGroup}
-        @input=${handleName}
-      >
-      </pr-textarea>
-      <div class="number-input">
-        <label for="num">Number of participants</label>
-        <input
-          type="number"
-          id="num"
-          name="numParticipants"
-          min="0"
-          .value=${this.experimentConfig.numParticipants}
-          @input=${handleNum}
-        />
-      </div>
-
-      <div class="checkbox-input-container">
-        <div class="checkbox-input">
-          <md-checkbox id="isExperimentGroup" touch-target="wrapper"
-            .checked=${this.experimentConfig.isGroup}
-            @change=${handleGroupCheckbox}
-          ></md-checkbox>
-          <label for="isExperimentGroup">
-            <div>Create a group of experiments</div>
-            <div class="subtitle">The experiment group options allow you to create a group of experiments with the same configuration.</div>
-          </label>
-        </div>
-      </div>
-
-      ${this.experimentConfig.isGroup
-        ? html`
-              <div class="group-container">
-                <pr-textarea
-                  label="Experiment group name"
-                  placeholder="Prefix of the experiment group"
-                  variant="outlined"
-                  .value=${this.experimentConfig.group}
-                  @input=${handleGroupName}
-                >
-                </pr-textarea>
-                <div class="number-input">
-                    <label for="num">Number of experiments</label>
-                    <input
-                      type="number"
-                      id="numExperiments"
-                      name="numExperiments"
-                      min="1"
-                      .value=${this.experimentConfig.numExperiments}
-                      @input=${handleGroupNum}
-                    />
-                  </div>
-              </div>
-
-                <div class="checkbox-input">
-                  <md-checkbox id="isExperimentGroup" touch-target="wrapper"
-                    .checked=${this.experimentConfig.isMultiPart}
-                    @change=${handleMultiPartCheckbox}
-                  ></md-checkbox>
-                  <label for="isExperimentGroup">
-                    <div>Create a muti-part experiment</div>
-                    <div class="subtitle">
-                        This will add a "lobby" stage; move the stage to divide your experiment into two parts. A lobby experiment will be created for the first part. You can redirect people to the second experiment.
-                    </div>
-                  </label>
-                </div>
-              </div>
-          `
-        : ''}
-    `;
-  }
-
-  private renderBottomActionButtons() {
-    const createExperiments = async () => {
-      const experiments = this.experimentConfig.getExperiments() || [];
-      for (let i = 0; i < experiments.length; i++) {
-        const { name, stages, numberOfParticipants, group } = experiments[i];
-        const experiment = await this.experimenterService.createExperiment(
-          {
-            name,
-            numberOfParticipants,
-            group,
-          },
-          stages
-        );
-
-        // Navigate if this is the last created experiment.
-        if (i === experiments.length - 1) {
-          if (group) {
-            this.routerService.navigate(
-              Pages.EXPERIMENT_GROUP,
-              { "experiment_group": group }
-            );
-          } else {
-            this.routerService.navigate(
-              Pages.EXPERIMENT,
-              { "experiment": experiment.id }
-            );
-          }
-        }
-      }
-
-      this.experimentConfig.reset();
-    }
-
-    const onCreateExperiment = async () => {
-      const errors = this.experimentConfig.getExperimentErrors();
-      if (errors.length > 0) {
-        console.log(errors);
-        return;
-      }
-      createExperiments();
-    }
-
-    const onCreateTemplate = async () => {
-      const { name, stages, numberOfParticipants } =
-        this.experimentConfig.getExperiment();
-
-      await this.experimenterService.createTemplate(
-        {
-          name
-        }, stages
-      );
-
-      this.experimentConfig.reset();
-    }
-
-    const onClear = () => {
-      this.experimentConfig.reset();
-    }
-
-    const hasErrors = this.experimentConfig.getExperimentErrors().length > 0;
-    const tooltipText = hasErrors ? "Resolve errors to create experiment" : "";
-
-    return html`
-      <div class="buttons-wrapper bottom">
-        <pr-button variant="default" @click=${onClear}>
-          Clear
-        </pr-button>
-        <pr-button variant="tonal" @click=${onCreateTemplate}>
-          Create template
-        </pr-button>
-        <pr-tooltip text=${tooltipText} position="TOP_END">
-          <pr-button @click=${onCreateExperiment}>
-            ${this.experimentConfig.isGroup ? 'Create experiment group' : 'Create experiment'}
-          </pr-button>
-        </pr-tooltip>
-      </div>
-    `;
   }
 }
 

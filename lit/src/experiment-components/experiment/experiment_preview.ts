@@ -5,7 +5,7 @@ import "../../pair-components/tooltip";
 import "../profile/profile_preview";
 
 import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html } from "lit";
+import { CSSResultGroup, html, nothing } from "lit";
 import { customElement } from "lit/decorators.js";
 
 import { core } from "../../core/core";
@@ -39,15 +39,24 @@ export class ExperimentPreview extends MobxLitElement {
 
     return html`
       <div class="top-bar">
-        <div class="stat">
-          ${this.experimentService.experiment?.numberOfParticipants}
-          participants
+        <div class="left">
+          <div class="stat">
+            ${this.experimentService.experiment?.numberOfParticipants}
+            participants
+          </div>
+          <div class="stat small">
+            Public name: ${this.experimentService.experiment?.publicName}
+          </div>
+          ${this.renderGroup()}
         </div>
         <div class="right">
           ${this.renderFork()}
           ${this.renderDownload()}
           ${this.renderDelete()}
         </div>
+      </div>
+      <div class="row">
+        ${this.experimentService.experiment?.description}
       </div>
       <div class="row">
         <pr-button
@@ -64,10 +73,40 @@ export class ExperimentPreview extends MobxLitElement {
     `;
   }
 
+  private renderGroup() {
+    if (!this.experimentService.experiment || !this.experimentService.experiment.group) {
+      return nothing;
+    }
+
+    const navigateToGroup = () => {
+      if (this.experimentService.experiment!.group) {
+        this.routerService.navigate(
+          Pages.EXPERIMENT_GROUP,
+          { "experiment_group": this.experimentService.experiment!.group }
+        );
+        this.authService.setEditPermissions(false);
+      }
+    };
+
+    return html`
+      <div class="stat small">
+        <div>Group:</div>
+        <div class="chip" role="button" @click=${navigateToGroup}>
+          ${this.experimentService.experiment.group}
+        </div>
+      </div>
+    `;
+  }
+
   private renderDelete() {
+    if (!this.authService.canEdit) {
+      return nothing;
+    }
+
     const onDelete = () => {
       this.experimenterService.deleteExperiment(this.experimentService.id!);
       this.routerService.navigate(Pages.HOME);
+      this.authService.setEditPermissions(false);
     };
 
     return html`
@@ -75,7 +114,7 @@ export class ExperimentPreview extends MobxLitElement {
         <pr-icon-button
           icon="delete"
           color="error"
-          variant="tonal"
+          variant="default"
           @click=${onDelete}
         >
         </pr-icon-button>

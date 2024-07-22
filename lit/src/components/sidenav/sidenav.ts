@@ -99,8 +99,7 @@ export class SideNav extends MobxLitElement {
     const navItemClasses = classMap({
       "nav-item": true,
       "primary": true,
-      selected: this.routerService.activePage === Pages.EXPERIMENT
-        && experiment.id === this.experimentService.id,
+      selected: experiment.id === this.experimentService.id,
     });
 
     const handleClick = (_e: Event) => {

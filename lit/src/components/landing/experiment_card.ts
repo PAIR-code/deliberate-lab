@@ -37,11 +37,8 @@ export class ExperimentCard extends MobxLitElement {
         Pages.EXPERIMENT,
         { "experiment": this.experiment!.id }
       );
+      this.authService.setEditPermissions(false);
     }
-
-    const handleDelete = () => {
-      this.experimenterService.deleteExperiment(this.experiment!.id);
-    };
 
     const participantCompletedCount = () => {
       let numCompleted = 0;
@@ -78,27 +75,22 @@ export class ExperimentCard extends MobxLitElement {
           <h3>${this.experiment.name}</h3>
           <div class="label"><small>${this.experiment.id}</small></div>
         </div>
-        <pr-tooltip text="View experiment" position="TOP_END">
-          <pr-icon-button
-            icon="arrow_forward"
-            color="secondary"
-            variant="tonal"
-            @click=${handleClick}>
-          </pr-icon-button>
-        </pr-tooltip>
+        ${this.authService.canEdit ? this.renderDeleteButton() : nothing}
       </div>
       <p>${this.experiment.numberOfParticipants} participants</p>
+      ${this.renderGroup()}
+      <p class="label">${this.experiment.description}</p>
       <div class="action-buttons">
         <div class="label">
           <div>${this.experiment.author.displayName}</div>
           <small>${convertUnifiedTimestampToDate(this.experiment.date)}</small>
         </div>
-        <pr-tooltip text="Delete experiment" position="TOP_END">
+        <pr-tooltip text="View experiment" position="TOP_END">
           <pr-icon-button
-            icon="delete"
-            color="error"
+            icon="arrow_forward"
+            color="secondary"
             variant="default"
-            @click=${handleDelete}>
+            @click=${handleClick}>
           </pr-icon-button>
         </pr-tooltip>
       </div>
@@ -119,6 +111,47 @@ export class ExperimentCard extends MobxLitElement {
           </div>
         </div>
       </div>
+    `;
+  }
+
+  private renderGroup() {
+    if (!this.experiment || !this.experiment.group) {
+      return nothing;
+    }
+
+    const navigateToGroup = () => {
+      if (this.experiment!.group) {
+        this.routerService.navigate(
+          Pages.EXPERIMENT_GROUP,
+          { "experiment_group": this.experiment!.group }
+        );
+        this.authService.setEditPermissions(false);
+      }
+    };
+
+    return html`
+      <div class="field">Group:
+        <div class="chip secondary" role="button" @click=${navigateToGroup}>
+          ${this.experiment.group}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderDeleteButton() {
+    const handleDelete = () => {
+      this.experimenterService.deleteExperiment(this.experiment!.id);
+    };
+
+    return html`
+      <pr-tooltip text="Delete experiment" position="TOP_END">
+        <pr-icon-button
+          icon="delete"
+          color="error"
+          variant="default"
+          @click=${handleDelete}>
+        </pr-icon-button>
+      </pr-tooltip>
     `;
   }
 }

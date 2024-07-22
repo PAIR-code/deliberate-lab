@@ -1,0 +1,39 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+h2 {
+  @include typescale.title-medium;
+  margin: 0;
+}
+
+.divider {
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+md-checkbox {
+  flex-shrink: 0;
+}
+
+.number-input {
+  @include common.number-input;
+}
+
+.checkbox-input {
+  @include common.flex-row-align-center;
+
+  label {
+    @include common.flex-column;
+    gap: common.$spacing-small;
+  }
+}
+
+.subtitle {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
+  font-style: italic;
+}

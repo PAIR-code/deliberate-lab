@@ -2,6 +2,7 @@ import "../../pair-components/button";
 import "../../pair-components/icon_button";
 import "../../pair-components/info_popup";
 import "../../pair-components/menu";
+import "../../pair-components/tooltip";
 
 import "../../experiment-components/experiment/experiment_config_menu";
 
@@ -50,6 +51,23 @@ export class Header extends MobxLitElement {
     `;
   }
 
+  private renderEditPermissions() {
+    const toggleEdit = () => {
+      this.authService.setEditPermissions(!this.authService.canEdit);
+    };
+
+    return html`
+      <pr-tooltip text="Toggle edit permissions" position="BOTTOM_END">
+        <pr-icon-button
+          icon=${this.authService.canEdit ? 'edit_off' : 'edit'}
+          color="primary"
+          variant="default"
+          @click=${toggleEdit}>
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
+  }
+
   private renderAuthBanner() {
     if (!this.authService.isExperimenter
       || !this.routerService.isParticipantPage) {
@@ -61,6 +79,7 @@ export class Header extends MobxLitElement {
         Pages.EXPERIMENT,
         { "experiment": this.routerService.activeRoute.params["experiment"] }
       );
+      this.authService.setEditPermissions(false);
       this.routerService.setExperimenterNav(true);
     };
 
@@ -68,20 +87,24 @@ export class Header extends MobxLitElement {
 
     return html`
       <div class="banner">
-        <div>
-          You are previewing as
-          ${participantName ? `${participantName} / ` : 'Participant '}
-          ${this.participantService.profile?.publicId}.
+        <div class="left">
+          <pr-tooltip text="Exit preview" position="BOTTOM_START">
+            <pr-icon-button
+              icon="arrow_back"
+              color="tertiary"
+              padding="small"
+              size="small"
+              variant="default"
+              @click=${handlePreviewOff}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
+          <div>
+            You are previewing as
+            ${participantName ? `${participantName} / ` : 'Participant '}
+            ${this.participantService.profile?.publicId}.
+          </div>
         </div>
-        <pr-button
-          color="tertiary"
-          padding="small"
-          size="small"
-          variant="default"
-          @click=${handlePreviewOff}
-        >
-          Exit preview
-        </pr-button>
       </div>
     `;
   }
@@ -96,6 +119,7 @@ export class Header extends MobxLitElement {
 
     const handleClick = () => {
       this.routerService.navigate(Pages.HOME);
+      this.authService.setEditPermissions(false);
     }
 
     return html`
@@ -111,46 +135,57 @@ export class Header extends MobxLitElement {
   private renderTitle() {
     const activePage = this.routerService.activePage;
 
-    if (activePage === Pages.HOME) {
-      return "Home";
-    } else if (activePage === Pages.SETTINGS
-      || activePage === Pages.PARTICIPANT_SETTINGS) {
-      return "Settings";
-    } else if (activePage === Pages.EXPERIMENT) {
-      return this.experimentService.experiment?.name ?? "Experiment";
-    } else if (activePage === Pages.EXPERIMENT_GROUP) {
-      return "Experiment group: " + this.routerService.activeRoute.params["experiment_group"];  
-    } else if (activePage === Pages.EXPERIMENT_CREATE) {
-      return "New experiment";
-    } else if (activePage === Pages.PARTICIPANT) {
-      return "Welcome, participant!";
-    } else if (activePage === Pages.PARTICIPANT_STAGE) {
-      return this.experimentService.getStageName(
-        this.routerService.activeRoute.params["stage"], true
-      );
+    switch (activePage) {
+      case Pages.HOME:
+        return "Home";
+      case Pages.SETTINGS:
+        return "Settings";
+      case Pages.PARTICIPANT_SETTINGS:
+        return "Settings";
+      case Pages.EXPERIMENT:
+        return this.experimentService.experiment?.name ?? "Experiment";
+      case Pages.EXPERIMENT_GROUP:
+        return "Experiment group: " + this.routerService.activeRoute.params["experiment_group"];
+      case Pages.EXPERIMENT_CREATE:
+        return "New experiment";
+      case Pages.PARTICIPANT:
+        return "Welcome, participant!";
+      case Pages.PARTICIPANT_STAGE:
+        return this.experimentService.getStageName(
+          this.routerService.activeRoute.params["stage"], true
+        );
+      default:
+        return "";
     }
-    return "";
   }
 
   private renderActions() {
     const activePage = this.routerService.activePage;
-    if (activePage === Pages.HOME) {
-      return this.renderCreateExperimentButton();
-    }
-    if (activePage === Pages.PARTICIPANT_STAGE) {
-      const stageName = this.routerService.activeRoute.params["stage"];
-      const currentStage = this.experimentService.getStage(stageName);
-      if (currentStage && currentStage.popupText) {
+
+    switch (activePage) {
+      case Pages.HOME:
         return html`
-          <info-popup .popupText=${currentStage.popupText}></info-popup>
+          ${this.renderCreateExperimentButton()}
+          ${this.renderEditPermissions()}
         `;
-      } else {
+      case Pages.EXPERIMENT_GROUP:
+        return this.renderEditPermissions();
+      case Pages.EXPERIMENT:
+        return this.renderEditPermissions();
+      case Pages.PARTICIPANT_STAGE:
+        const stageName = this.routerService.activeRoute.params["stage"];
+        const currentStage = this.experimentService.getStage(stageName);
+        if (currentStage && currentStage.popupText) {
+          return html`
+            <info-popup .popupText=${currentStage.popupText}></info-popup>
+          `;
+        }
         return nothing;
-      }
-    } else if (activePage === Pages.EXPERIMENT_CREATE) {
-      return this.renderExperimentConfigButtons();
+      case Pages.EXPERIMENT_CREATE:
+        return this.renderExperimentConfigButtons();
+      default:
+        return nothing;
     }
-    return nothing;
   }
 
   private renderCreateExperimentButton() {
@@ -171,7 +206,7 @@ export class Header extends MobxLitElement {
 
   private renderExperimentConfigTemplateItem(template: ExperimentTemplate) {
     const onClick = () => {
-      this.experimentConfig.loadTemplate(template.id, template.name);
+      this.experimentConfig.loadTemplate(template.id, template);
     };
 
     return html`
