@@ -1,4 +1,6 @@
+import "../../pair-components/button";
 import "../../pair-components/icon_button";
+import "../../pair-components/menu";
 import "../../pair-components/tooltip";
 
 import "./profile_avatar";
@@ -13,7 +15,7 @@ import { ExperimentService } from "../../services/experiment_service";
 import { ParticipantService } from "../../services/participant_service";
 import { Pages, RouterService } from "../../services/router_service";
 
-import { ParticipantProfileExtended, UnifiedTimestamp } from "@llm-mediation-experiments/utils";
+import { Experiment, ParticipantProfileExtended, UnifiedTimestamp } from "@llm-mediation-experiments/utils";
 import { convertUnifiedTimestampToDate } from "../../shared/utils";
 
 import { styles } from "./profile_preview.scss";
@@ -28,9 +30,10 @@ export class ProfilePreview extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
-  @property() profile: ParticipantProfileExtended|null = null;
+  @property() profile: ParticipantProfileExtended | null = null;
+  @property() availableTransferExperiments: Experiment[] = [];
 
-  /** Copy a link to this participant's experiment view to the clipboard */ 
+  /** Copy a link to this participant's experiment view to the clipboard */
   async copyParticipantLink() {
     const basePath = window.location.href.substring(0, window.location.href.indexOf('/#'));
     const link = `${basePath}/#/${this.experimentService.experiment?.id}/${this.profile?.privateId}`;
@@ -39,7 +42,29 @@ export class ProfilePreview extends MobxLitElement {
     alert("Link copied to clipboard!");
   }
 
+  private renderTransferMenu() {
+    const onAddExperimentClick = () => {
+      //this.experimentConfig.addStage(createPayoutStage({ description: "Hello world" }));
+      //this.experimentConfig.setCurrentStageIndexToLast();
+    };
+
+    if (this.availableTransferExperiments.length > 0) {
+      return html`
+      <pr-menu name="Transfer">
+        <div class="menu-wrapper">
+          ${this.availableTransferExperiments.map(e => html`
+            <div class="menu-item" role="button" @click=${console.log("Trasfer")}>
+              <div>${e.name}</div>
+            </div>
+          `)}
+        </div>
+      </pr-menu>
+      `;
+    }
+    return '';
+  }
   override render() {
+    console.log(this.availableTransferExperiments)
     if (!this.profile) {
       return nothing;
     }
@@ -61,12 +86,14 @@ export class ProfilePreview extends MobxLitElement {
       }
     };
 
-    const formatDate = (timestamp: UnifiedTimestamp|null) => {
+    const formatDate = (timestamp: UnifiedTimestamp | null) => {
       if (timestamp) {
         return convertUnifiedTimestampToDate(timestamp);
       }
       return "";
     }
+
+    const transferMenu = this.renderTransferMenu();
 
     return html`
       <div class="profile">
@@ -93,6 +120,7 @@ export class ProfilePreview extends MobxLitElement {
       <div><span>Private ID:</span> ${this.profile.privateId}</div>
 
       <div class="row">
+        ${transferMenu}
         <pr-tooltip text="Preview as participant" position="TOP_END">
           <pr-icon-button
             icon="visibility"
