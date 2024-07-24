@@ -228,20 +228,20 @@ export const createParticipant = onCall(async (request) => {
       throw new functions.https.HttpsError('internal', 'Experiment data is missing');
     }
 
-    const currentStageId = experimentData.stageIds ? experimentData.stageIds[0] : null;
+    let currentStageId = experimentData.stageIds ? experimentData.stageIds[0] : null;
     if (!currentStageId) {
       throw new functions.https.HttpsError('internal', 'Experiment stages are missing');
     }
 
     // Create a new participant document
     const participantRef = experimentRef.collection('participants').doc();
-    const participantData: ParticipantProfile = data.participantData || {
+    const participantData: ParticipantProfile = {
       publicId: participantPublicId(experimentData.numberOfParticipants),
-      currentStageId: currentStageId,
-      pronouns: null,
-      name: null,
-      avatarUrl: null,
-      acceptTosTimestamp: null,
+      currentStageId: data.participantData!.currentStageId || null,
+      pronouns: data.participantData!.pronouns || null,
+      name: data.participantData!.name || null,
+      avatarUrl: data.participantData!.avatarUrl || null,
+      acceptTosTimestamp: data.participantData!.acceptTosTimestamp || null,
       completedExperiment: null
     };
 

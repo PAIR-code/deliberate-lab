@@ -46,8 +46,8 @@ export class ProfilePreview extends MobxLitElement {
 
   async onClickTransferParticipant(e: Experiment) {
     try {
-      const response = await this.experimenterService.createParticipant(e.id!, this.profile);
-      return response.participant;
+      const response1 = await this.experimenterService.createParticipant(e.id!, this.profile);
+      const response2 = await this.experimenterService.deleteParticipant(this.experimentService.id!, this.profile!.privateId);
     } catch (error) {
       console.error('Error creating participant:', error);
       throw error;

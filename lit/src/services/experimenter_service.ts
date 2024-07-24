@@ -1,7 +1,7 @@
 import { Experiment, ExperimentTemplate, ExperimentTemplateExtended, ParticipantProfile, ParticipantProfileExtended, StageConfig, lookupTable } from "@llm-mediation-experiments/utils";
 import { Unsubscribe, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot } from "firebase/firestore";
 import { computed, makeObservable, observable } from "mobx";
-import { createExperimentCallable, createParticipantCallable, deleteExperimentCallable } from "../shared/callables";
+import { createExperimentCallable, createParticipantCallable, deleteExperimentCallable, deleteParticipantCallable } from "../shared/callables";
 import { collectSnapshotWithId } from "../shared/utils";
 
 import { FirebaseService } from "./firebase_service";
@@ -192,6 +192,14 @@ export class ExperimenterService extends Service {
     return createParticipantCallable(this.sp.firebaseService.functions, {
       experimentId: experimentId,
       participantData: participantData,
+    });
+  }
+
+  /** Deletes a participant. */
+  async deleteParticipant(experimentId: string, participantId: string) {
+    return deleteParticipantCallable(this.sp.firebaseService.functions, {
+      experimentId: experimentId,
+      participantId: participantId,
     });
   }
 
