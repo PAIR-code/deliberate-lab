@@ -24,7 +24,7 @@ export class ExperimentConfigService extends Service {
     makeObservable(this);
   }
 
-  @observable name = 'Untitled';
+  @observable name = '';
   @observable publicName = 'Experiment';
   @observable description = '';
   @observable numParticipants = 3;
@@ -61,7 +61,7 @@ export class ExperimentConfigService extends Service {
     const experiments = [];
     for (let i = 0; i < numExperiments; i++) {
       experiments.push({
-        name: toJS(this.name + '_' + randstr(6)),
+        name: toJS(this.name + '_' + (i + 1)),
         publicName: toJS(this.publicName),
         description: toJS(this.description),
         group: toJS(this.name),
@@ -106,7 +106,7 @@ export class ExperimentConfigService extends Service {
       });
 
       // Create multiExperiments.
-      experiments.push(...this.getMultiExperiments(this.numExperiments, postStages));
+      experiments.push(...this.getMultiExperiments(this.numExperiments, this.stages));
       return experiments;
     }
 
@@ -290,7 +290,7 @@ export class ExperimentConfigService extends Service {
   }
 
   reset() {
-    this.name = 'Untitled';
+    this.name = '';
     this.publicName = 'Experiment';
     this.description = '';
     this.numParticipants = 3;

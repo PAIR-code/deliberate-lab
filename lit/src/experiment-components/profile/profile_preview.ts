@@ -12,6 +12,7 @@ import { customElement, property } from "lit/decorators.js";
 import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
 import { ExperimentService } from "../../services/experiment_service";
+import { ExperimenterService } from "../../services/experimenter_service";
 import { ParticipantService } from "../../services/participant_service";
 import { Pages, RouterService } from "../../services/router_service";
 
@@ -27,6 +28,7 @@ export class ProfilePreview extends MobxLitElement {
 
   private readonly authService = core.getService(AuthService);
   private readonly experimentService = core.getService(ExperimentService);
+  private readonly experimenterService = core.getService(ExperimenterService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
@@ -42,18 +44,23 @@ export class ProfilePreview extends MobxLitElement {
     alert("Link copied to clipboard!");
   }
 
-  private renderTransferMenu() {
-    const onAddExperimentClick = () => {
-      //this.experimentConfig.addStage(createPayoutStage({ description: "Hello world" }));
-      //this.experimentConfig.setCurrentStageIndexToLast();
-    };
+  async onClickTransferParticipant(e: Experiment) {
+    try {
+      const response = await this.experimenterService.createParticipant(e.id!, this.profile);
+      return response.participant;
+    } catch (error) {
+      console.error('Error creating participant:', error);
+      throw error;
+    }
+  }
 
+  private renderTransferMenu() {
     if (this.availableTransferExperiments.length > 0) {
       return html`
       <pr-menu name="Transfer">
         <div class="menu-wrapper">
           ${this.availableTransferExperiments.map(e => html`
-            <div class="menu-item" role="button" @click=${console.log("Trasfer")}>
+            <div class="menu-item" role="button" @click=${() => this.onClickTransferParticipant(e)}>
               <div>${e.name}</div>
             </div>
           `)}
@@ -63,6 +70,7 @@ export class ProfilePreview extends MobxLitElement {
     }
     return '';
   }
+
   override render() {
     console.log(this.availableTransferExperiments)
     if (!this.profile) {
@@ -93,8 +101,6 @@ export class ProfilePreview extends MobxLitElement {
       return "";
     }
 
-    const transferMenu = this.renderTransferMenu();
-
     return html`
       <div class="profile">
         <profile-avatar .emoji=${this.profile.avatarUrl}></profile-avatar>
@@ -120,7 +126,7 @@ export class ProfilePreview extends MobxLitElement {
       <div><span>Private ID:</span> ${this.profile.privateId}</div>
 
       <div class="row">
-        ${transferMenu}
+        ${this.renderTransferMenu()}
         <pr-tooltip text="Preview as participant" position="TOP_END">
           <pr-icon-button
             icon="visibility"

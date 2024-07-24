@@ -1,4 +1,4 @@
-import { Experiment, ExperimentTemplate, ExperimentTemplateExtended, ParticipantProfileExtended, StageConfig, lookupTable } from "@llm-mediation-experiments/utils";
+import { Experiment, ExperimentTemplate, ExperimentTemplateExtended, ParticipantProfile, ParticipantProfileExtended, StageConfig, lookupTable } from "@llm-mediation-experiments/utils";
 import { Unsubscribe, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot } from "firebase/firestore";
 import { computed, makeObservable, observable } from "mobx";
 import { createExperimentCallable, createParticipantCallable, deleteExperimentCallable } from "../shared/callables";
@@ -54,6 +54,8 @@ export class ExperimenterService extends Service {
   }
 
   getExperimentsInGroup(group: string) {
+    if (group == '') return [];
+
     return this.experiments.filter(experiment => experiment.group === group);
   }
 
@@ -186,9 +188,10 @@ export class ExperimenterService extends Service {
 
   /** Adds a participant.
    */
-  async createParticipant(experimentId: string): Promise<CreateParticipantResponse> {
+  async createParticipant(experimentId: string, participantData: ParticipantProfile | null = null): Promise<CreateParticipantResponse> {
     return createParticipantCallable(this.sp.firebaseService.functions, {
       experimentId: experimentId,
+      participantData: participantData,
     });
   }
 

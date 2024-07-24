@@ -235,14 +235,14 @@ export const createParticipant = onCall(async (request) => {
 
     // Create a new participant document
     const participantRef = experimentRef.collection('participants').doc();
-    const participantData: ParticipantProfile = {
+    const participantData: ParticipantProfile = data.participantData || {
       publicId: participantPublicId(experimentData.numberOfParticipants),
-      currentStageId,
+      currentStageId: currentStageId,
       pronouns: null,
       name: null,
       avatarUrl: null,
       acceptTosTimestamp: null,
-      completedExperiment: null,
+      completedExperiment: null
     };
 
     // Increment the number of participants in the experiment metadata
@@ -264,4 +264,53 @@ export const createParticipant = onCall(async (request) => {
   } else {
     throw new functions.https.HttpsError('internal', 'Failed to retrieve the new participant data');
   }
+});
+
+/** Function to delete a participant from an experiment */
+export const deleteParticipant = onCall(async (request) => {
+  await AuthGuard.isExperimenter(request);
+
+  const { data } = request;
+
+  // Validate the incoming data
+  if (!data.experimentId || !data.participantId) {
+    throw new functions.https.HttpsError('invalid-argument', 'Experiment ID and Participant ID are required');
+  }
+
+  const experimentRef = app.firestore().doc(`experiments/${data.experimentId}`);
+  const participantRef = experimentRef.collection('participants').doc(data.participantId);
+
+  await app.firestore().runTransaction(async (transaction) => {
+    const experimentDoc = await transaction.get(experimentRef);
+    const participantDoc = await transaction.get(participantRef);
+
+    if (!experimentDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Experiment not found');
+    }
+
+    if (!participantDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Participant not found');
+    }
+
+    const experimentData = experimentDoc.data();
+    if (!experimentData) {
+      throw new functions.https.HttpsError('internal', 'Experiment data is missing');
+    }
+
+    // Decrement the number of participants in the experiment metadata
+    transaction.update(experimentRef, {
+      numberOfParticipants: experimentData.numberOfParticipants - 1,
+    });
+
+    // Delete the participant document
+    transaction.delete(participantRef);
+
+    // Delete the chat documents associated with the participant
+    const chatsSnapshot = await participantRef.collection('chats').get();
+    chatsSnapshot.forEach(chatDoc => {
+      transaction.delete(chatDoc.ref);
+    });
+  });
+
+  return { success: true };
 });
