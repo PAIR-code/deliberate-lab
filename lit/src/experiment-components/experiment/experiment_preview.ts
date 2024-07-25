@@ -13,6 +13,7 @@ import { AuthService } from "../../services/auth_service";
 import { ExperimentConfigService } from "../../services/config/experiment_config_service";
 import { ExperimentService } from "../../services/experiment_service";
 import { ExperimenterService } from "../../services/experimenter_service";
+import { ParticipantService } from "../../services/participant_service";
 import { Pages, RouterService } from "../../services/router_service";
 
 import { styles } from "./experiment_preview.scss";
@@ -25,17 +26,64 @@ export class ExperimentPreview extends MobxLitElement {
   private readonly authService = core.getService(AuthService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly experimenterService = core.getService(ExperimenterService);
+  private readonly participantService = core.getService(ParticipantService);
+
   private readonly routerService = core.getService(RouterService);
   private readonly experimentConfig = core.getService(ExperimentConfigService);
 
+  /** Copy a link to this participant's experiment view to the clipboard */
+  async copyExperimentLink() {
+    const basePath = window.location.href.substring(0, window.location.href.indexOf('/#'));
+    const link = `${basePath}/#/${this.experimentService.experiment?.id}/`;
+
+    await navigator.clipboard.writeText(link);
+    alert("Link copied to clipboard!");
+  }
+
   override render() {
+    const joinExperiment = () => {
+      this.experimentService.join();
+    };
+
     if (!this.authService.isExperimenter) {
-      return html`<div>403: Participants cannot access this page</div>`;
+      if (this.experimentService.experiment?.isLobby) {
+        return html`
+          <div class="row">
+            <pr-button
+              color="tertiary"
+              variant="tonal"
+              @click=${joinExperiment}>
+              Join experiment
+            </pr-button>
+          </div>
+        `;
+      } else {
+        return nothing;
+      }
     }
 
     const addParticipant = () => {
       this.experimenterService.createParticipant(this.experimentService.id!);
     };
+
+    const getTransferableExperiments = () => {
+      // Only allow transferring from the lobby.
+      if (!this.experimentService.experiment?.isLobby) {
+        return [];
+      }
+      // Ony fetch other, non-lobby experiments.
+      return this.experimenterService.getExperimentsInGroup(group)
+        .filter(experiment => !experiment.isLobby);
+    };
+
+    const group = this.experimentService.experiment?.group!;
+    const participants = this.experimentService.privateParticipants;
+    const currentParticipants = participants.filter(
+      participant => !participant.transferConfig
+    );
+    const transferredParticipants = participants.filter(
+      participant => participant.transferConfig
+    );
 
     return html`
       <div class="top-bar">
@@ -50,6 +98,7 @@ export class ExperimentPreview extends MobxLitElement {
           ${this.renderGroup()}
         </div>
         <div class="right">
+          ${this.renderShare()}
           ${this.renderFork()}
           ${this.renderDownload()}
           ${this.renderDelete()}
@@ -58,6 +107,7 @@ export class ExperimentPreview extends MobxLitElement {
       <div class="row">
         ${this.experimentService.experiment?.description}
       </div>
+      
       <div class="row">
         <pr-button
           color="tertiary"
@@ -66,9 +116,24 @@ export class ExperimentPreview extends MobxLitElement {
           Add participant
         </pr-button>
       </div>
+
+      <h2>${currentParticipants.length} current participants</h2>
       <div class="profile-wrapper">
-        ${this.experimentService.privateParticipants.map(participant =>
-          html`<profile-preview .profile=${participant}></profile-preview>`)}
+        ${currentParticipants.map(participant =>
+        html`
+          <profile-preview
+            .profile=${participant}
+            .availableTransferExperiments=${getTransferableExperiments()}>
+          </profile-preview>
+        `)}
+      </div>
+
+      <h2>${transferredParticipants.length} transferred participants</h2>
+      <div class="profile-wrapper">
+        ${transferredParticipants.map(participant =>
+        html`
+          <profile-preview .profile=${participant}></profile-preview>
+        `)}
       </div>
     `;
   }
@@ -134,6 +199,34 @@ export class ExperimentPreview extends MobxLitElement {
           color="secondary"
           variant="tonal"
           @click=${onDownload}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
+  }
+
+  private renderShare() {
+    const onFork = () => {
+      const name = this.experimentService.experiment?.name!;
+      const num = this.experimentService.experiment?.numberOfParticipants!;
+      const stages = this.experimentService.stageIds.map(stageId =>
+        this.experimentService.stageConfigMap[stageId]
+      );
+
+      this.experimentConfig.updateName(name);
+      this.experimentConfig.updateNumParticipants(num);
+      this.experimentConfig.updateStages(stages);
+
+      this.routerService.navigate(Pages.EXPERIMENT_CREATE);
+    };
+
+    return html`
+      <pr-tooltip text="Copy link to join experiment" position="BOTTOM_END">
+        <pr-icon-button
+          icon="share"
+          color="primary"
+          variant="tonal"
+          @click=${this.copyExperimentLink}
         >
         </pr-icon-button>
       </pr-tooltip>

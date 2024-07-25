@@ -20,6 +20,7 @@ export interface Experiment {
   tags: string[];
   author: Experimenter;
   starred: Record<string, boolean>; // maps from experimenter ID to isStarred
+  isLobby: boolean; // true if lobby experiment
   date: UnifiedTimestamp;
   numberOfParticipants: number;
 

@@ -1,4 +1,6 @@
+import "../../pair-components/button";
 import "../../pair-components/icon_button";
+import "../../pair-components/menu";
 import "../../pair-components/tooltip";
 
 import "./profile_avatar";
@@ -10,10 +12,11 @@ import { customElement, property } from "lit/decorators.js";
 import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
 import { ExperimentService } from "../../services/experiment_service";
+import { ExperimenterService } from "../../services/experimenter_service";
 import { ParticipantService } from "../../services/participant_service";
 import { Pages, RouterService } from "../../services/router_service";
 
-import { ParticipantProfileExtended, UnifiedTimestamp } from "@llm-mediation-experiments/utils";
+import { Experiment, ParticipantProfileExtended, UnifiedTimestamp } from "@llm-mediation-experiments/utils";
 import { convertUnifiedTimestampToDate } from "../../shared/utils";
 
 import { styles } from "./profile_preview.scss";
@@ -25,12 +28,14 @@ export class ProfilePreview extends MobxLitElement {
 
   private readonly authService = core.getService(AuthService);
   private readonly experimentService = core.getService(ExperimentService);
+  private readonly experimenterService = core.getService(ExperimenterService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
-  @property() profile: ParticipantProfileExtended|null = null;
+  @property() profile: ParticipantProfileExtended | null = null;
+  @property() availableTransferExperiments: Experiment[] = [];
 
-  /** Copy a link to this participant's experiment view to the clipboard */ 
+  /** Copy a link to this participant's experiment view to the clipboard */
   async copyParticipantLink() {
     const basePath = window.location.href.substring(0, window.location.href.indexOf('/#'));
     const link = `${basePath}/#/${this.experimentService.experiment?.id}/${this.profile?.privateId}`;
@@ -39,7 +44,63 @@ export class ProfilePreview extends MobxLitElement {
     alert("Link copied to clipboard!");
   }
 
+  private renderTransferExperimentItem(experiment: Experiment) {
+    const onTransferClick = () => {
+      this.experimenterService.transferParticipant(
+        this.experimentService.id!, experiment!.id, this.profile!
+      );
+    };
+
+    return html`
+      <div class="menu-item" role="button" @click=${onTransferClick}>
+        <div>${experiment.name}</div>
+      </div>
+    `;
+  }
+
+  private renderTransferMenu() {
+    if (!this.profile?.transferConfig &&
+        this.availableTransferExperiments.length > 0
+    ) {
+      return html`
+      <pr-menu name="Transfer">
+        <div class="menu-wrapper">
+          ${this.availableTransferExperiments.map(experiment =>
+            this.renderTransferExperimentItem(experiment))}
+        </div>
+      </pr-menu>
+      `;
+    }
+    return nothing;
+  }
+
+  renderDeleteButton() {
+    if (!this.authService.canEdit) {
+      return nothing;
+    }
+
+    const onDelete = () => {
+      this.experimenterService.deleteParticipant(
+        this.experimentService.id ?? '',
+        this.profile?.privateId ?? '',
+      );
+    };
+
+    return html`
+      <pr-tooltip text="Delete participant" position="BOTTOM_END">
+        <pr-icon-button
+          icon="delete"
+          color="error"
+          variant="default"
+          @click=${onDelete}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
+  }
+
   override render() {
+    console.log(this.availableTransferExperiments)
     if (!this.profile) {
       return nothing;
     }
@@ -61,7 +122,7 @@ export class ProfilePreview extends MobxLitElement {
       }
     };
 
-    const formatDate = (timestamp: UnifiedTimestamp|null) => {
+    const formatDate = (timestamp: UnifiedTimestamp | null) => {
       if (timestamp) {
         return convertUnifiedTimestampToDate(timestamp);
       }
@@ -75,6 +136,7 @@ export class ProfilePreview extends MobxLitElement {
           <div class="title">${this.profile.name ?? this.profile.publicId}</div>
           <div class="subtitle">${this.profile.pronouns}</div>
         </div>
+        ${this.renderDeleteButton()}
       </div>
 
       <div>
@@ -93,6 +155,7 @@ export class ProfilePreview extends MobxLitElement {
       <div><span>Private ID:</span> ${this.profile.privateId}</div>
 
       <div class="row">
+        ${this.renderTransferMenu()}
         <pr-tooltip text="Preview as participant" position="TOP_END">
           <pr-icon-button
             icon="visibility"

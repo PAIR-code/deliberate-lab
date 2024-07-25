@@ -18,11 +18,25 @@ export const ParticipantCreationData = Type.Object(
   {
     // Discriminate between experiment and template
     experimentId: Type.String({ minLength: 1 }),
+    participantData: Type.Optional(Type.Any()),
   },
   strict,
 );
 
 export type ParticipantCreationData = Static<typeof ParticipantCreationData>;
+
+/** Participant deletion data */
+export const ParticipantDeletionData = Type.Object(
+  {
+    // ID of the experiment the participant belongs to
+    experimentId: Type.String({ minLength: 1 }),
+    // ID of the participant to be deleted
+    participantId: Type.String({ minLength: 1 }),
+  },
+  strict,
+);
+
+export type ParticipantDeletionData = Static<typeof ParticipantDeletionData>;
 
 /** Generic experiment or template deletion data */
 export const ExperimentDeletionData = Type.Object(
@@ -53,6 +67,7 @@ export const ExperimentCreationData = Type.Object(
         description: Type.String(),
         tags: Type.Array(Type.String()),
         group: Type.Optional(Type.String()),
+        isLobby: Type.Boolean(),
         numberOfParticipants: Type.Optional(Type.Number({ minimum: 1 })),
       },
       strict,

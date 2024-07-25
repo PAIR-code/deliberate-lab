@@ -18,11 +18,18 @@ export interface ParticipantProfileBase {
 export interface ParticipantProfile extends ParticipantProfileBase {
   publicId: string; // Public identifier for the participant inside an experiment
   currentStageId: string;
+  transferConfig: ExperimentTransferConfig|null;
 }
 
 /** For experimenters to be aware of the private ID */
 export interface ParticipantProfileExtended extends ParticipantProfile {
   privateId: string;
+}
+
+/** Experiment transfer config. */
+export interface ExperimentTransferConfig {
+  experimentId: string;
+  participantId: string;
 }
 
 export const participantPublicId = (index: number) => `participant-${index}`;

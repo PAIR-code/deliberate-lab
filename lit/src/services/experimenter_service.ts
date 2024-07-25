@@ -1,7 +1,7 @@
-import { Experiment, ExperimentTemplate, ExperimentTemplateExtended, StageConfig, lookupTable } from "@llm-mediation-experiments/utils";
-import { Unsubscribe, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot } from "firebase/firestore";
+import { Experiment, ExperimentTemplate, ExperimentTemplateExtended, ParticipantProfile, ParticipantProfileExtended, StageConfig, lookupTable } from "@llm-mediation-experiments/utils";
+import { Unsubscribe, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, updateDoc } from "firebase/firestore";
 import { computed, makeObservable, observable } from "mobx";
-import { createExperimentCallable, createParticipantCallable, deleteExperimentCallable } from "../shared/callables";
+import { createExperimentCallable, createParticipantCallable, deleteExperimentCallable, deleteParticipantCallable } from "../shared/callables";
 import { collectSnapshotWithId } from "../shared/utils";
 
 import { FirebaseService } from "./firebase_service";
@@ -13,11 +13,17 @@ interface ServiceProvider {
   routerService: RouterService;
 }
 
-/** Handle experimenter-related data:
+interface CreateParticipantResponse {
+  success: boolean;
+  participant: ParticipantProfileExtended
+}
+
+/** Handle experimenter-related actions:
  * - List experiments
  * - List templates
  * - List experiment users
  * - Create experiments and templates
+ * - Create, delete, and transfer participants
  */
 export class ExperimenterService extends Service {
   constructor(private readonly sp: ServiceProvider) {
@@ -49,6 +55,8 @@ export class ExperimenterService extends Service {
   }
 
   getExperimentsInGroup(group: string) {
+    if (group == '') return [];
+
     return this.experiments.filter(experiment => experiment.group === group);
   }
 
@@ -146,13 +154,14 @@ export class ExperimenterService extends Service {
     const description = experiment.description ?? '';
     const tags = experiment.tags ?? [];
     const group = experiment.group ?? '';
+    const isLobby = experiment.isLobby ?? false;
     const numberOfParticipants = experiment.numberOfParticipants ?? 1;
 
     return createExperimentCallable(
       this.sp.firebaseService.functions,
       {
         type: 'experiments',
-        metadata: { name, publicName, description, tags, group, numberOfParticipants },
+        metadata: { name, publicName, description, tags, group, isLobby, numberOfParticipants },
         stages,
       }
     );
@@ -167,25 +176,63 @@ export class ExperimenterService extends Service {
     const description = experiment.description ?? '';
     const tags = experiment.tags ?? [];
     const group = experiment.group ?? '';
+    const isLobby = experiment.isLobby ?? false;
     const numberOfParticipants = experiment.numberOfParticipants ?? 1;
 
     return createExperimentCallable(
       this.sp.firebaseService.functions,
       {
         type: 'templates',
-        metadata: { name, publicName, description, tags, group, numberOfParticipants },
+        metadata: { name, publicName, description, tags, group, isLobby, numberOfParticipants },
         stages,
       }
     );
   }
 
   /** Adds a participant.
-   * @rights Experimenter
    */
-  async createParticipant(experimentId: string) {
+  async createParticipant(experimentId: string, participantData: ParticipantProfile | null = null): Promise<CreateParticipantResponse> {
     return createParticipantCallable(this.sp.firebaseService.functions, {
       experimentId: experimentId,
+      participantData: participantData,
     });
+  }
+
+  /** Deletes a participant. */
+  async deleteParticipant(experimentId: string, participantId: string) {
+    return deleteParticipantCallable(this.sp.firebaseService.functions, {
+      experimentId: experimentId,
+      participantId: participantId,
+    });
+  }
+
+  /** Transfers a participant. */
+  async transferParticipant(
+    currentExperimentId: string,
+    newExperimentId: string,
+    participant: ParticipantProfileExtended
+  ) {
+    try {
+      const response = await this.createParticipant(newExperimentId, participant);
+      const transferConfig = {
+        experimentId: newExperimentId,
+        participantId: response.participant.privateId,
+      };
+
+      return updateDoc(
+        doc(
+          this.sp.firebaseService.firestore,
+          'experiments',
+          currentExperimentId,
+          'participants',
+          participant.privateId
+        ),
+        {...participant, transferConfig }
+      );
+    } catch (error) {
+      console.error('Error creating participant for transfer: ', error);
+      throw error;
+    }
   }
 
   /** Delete an experiment.

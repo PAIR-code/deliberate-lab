@@ -12,10 +12,10 @@ import { customElement } from "lit/decorators.js";
 
 import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
-import { ExperimentService } from "../../services/experiment_service";
 import {
   ExperimentConfigService
 } from "../../services/config/experiment_config_service";
+import { ExperimentService } from "../../services/experiment_service";
 import { ExperimenterService } from "../../services/experimenter_service";
 import { ParticipantService } from "../../services/participant_service";
 import { Pages, RouterService } from "../../services/router_service";
@@ -143,7 +143,12 @@ export class Header extends MobxLitElement {
       case Pages.PARTICIPANT_SETTINGS:
         return "Settings";
       case Pages.EXPERIMENT:
-        return this.experimentService.experiment?.name ?? "Experiment";
+        const experiment = this.experimentService.experiment; 
+        if (!this.authService.isExperimenter) {
+          return experiment?.publicName ?? "Experiment";
+        }
+        return experiment ? `${experiment.publicName} (${experiment.name})` : "Experiment";
+
       case Pages.EXPERIMENT_GROUP:
         return "Experiment group: " + this.routerService.activeRoute.params["experiment_group"];
       case Pages.EXPERIMENT_CREATE:

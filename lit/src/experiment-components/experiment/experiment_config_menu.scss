@@ -8,14 +8,8 @@
 
 .menu-wrapper {
   @include common.flex-column;
-  gap: common.$spacing-medium;
-  padding: common.$spacing-medium;
-
-  .games,
-  .stages {
-    @include common.flex-column;
-    gap: common.$spacing-small;
-  }
+  gap: common.$spacing-small;
+  padding: common.$spacing-small;
 }
 
 .menu-item {
@@ -23,7 +17,6 @@
   border: 1px solid transparent;
   border-radius: common.$spacing-medium;
   cursor: pointer;
-  padding: common.$spacing-medium;
 
   &:focus,
   &:hover {

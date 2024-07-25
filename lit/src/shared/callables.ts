@@ -6,6 +6,7 @@ import {
   ExperimentCreationData,
   ExperimentDeletionData,
   ParticipantCreationData,
+  ParticipantDeletionData,
   MessageData,
   SimpleResponse,
   StageAnswerData,
@@ -28,6 +29,12 @@ export const createExperimentCallable = async (functions: Functions, experiment:
 /** Generic endpoint to create a participant. */
 export const createParticipantCallable = async (functions: Functions, participant: ParticipantCreationData) => {
   const { data } = await httpsCallable<ParticipantCreationData, never>(functions, 'createParticipant')(participant);
+  return data;
+}
+
+/** Generic endpoint to delete a participant */
+export const deleteParticipantCallable = async (functions: Functions, participant: ParticipantDeletionData) => {
+  const { data } = await httpsCallable<ParticipantDeletionData, SimpleResponse<string>>(functions, 'deleteParticipant')(participant);
   return data;
 }
 

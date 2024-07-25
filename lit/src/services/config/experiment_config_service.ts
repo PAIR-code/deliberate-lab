@@ -1,7 +1,9 @@
 import { collection, getDocs } from "firebase/firestore";
 import { computed, makeObservable, observable, toJS } from "mobx";
 
+import { ExperimenterService } from "../experimenter_service";
 import { FirebaseService } from "../firebase_service";
+import { Pages, RouterService } from "../router_service";
 import { Service } from "../service";
 
 import { ExperimentTemplate, randstr, StageConfig, StageKind, validateStageConfigs } from "@llm-mediation-experiments/utils";
@@ -14,7 +16,9 @@ import {
 } from "../../shared/utils";
 
 interface ServiceProvider {
+  experimenterService: ExperimenterService;
   firebaseService: FirebaseService;
+  routerService: RouterService;
 }
 
 /** Manages metadata for new experiment config. */
@@ -24,7 +28,7 @@ export class ExperimentConfigService extends Service {
     makeObservable(this);
   }
 
-  @observable name = 'Untitled';
+  @observable name = '';
   @observable publicName = 'Experiment';
   @observable description = '';
   @observable numParticipants = 3;
@@ -61,11 +65,12 @@ export class ExperimentConfigService extends Service {
     const experiments = [];
     for (let i = 0; i < numExperiments; i++) {
       experiments.push({
-        name: toJS(this.name + '_' + randstr(6)),
+        name: toJS(this.name + '_' + (i + 1)),
         publicName: toJS(this.publicName),
         description: toJS(this.description),
         group: toJS(this.name),
         stages: convertExperimentStages(toJS(stages)),
+        isLobby: false,
         numberOfParticipants: toJS(this.numParticipants),
       });
     }
@@ -82,6 +87,7 @@ export class ExperimentConfigService extends Service {
           description: toJS(this.description),
           group: toJS(''),
           stages: toJS(this.stages),
+          isLobby: false,
           numberOfParticipants: toJS(this.numParticipants),
         }
       ];
@@ -102,6 +108,7 @@ export class ExperimentConfigService extends Service {
         description: toJS(this.description),
         group: toJS(this.name),
         stages: convertExperimentStages(toJS(preStages)),
+        isLobby: true,
         numberOfParticipants: toJS(this.numParticipants),
       });
 
@@ -290,7 +297,7 @@ export class ExperimentConfigService extends Service {
   }
 
   reset() {
-    this.name = 'Untitled';
+    this.name = '';
     this.publicName = 'Experiment';
     this.description = '';
     this.numParticipants = 3;
@@ -298,5 +305,54 @@ export class ExperimentConfigService extends Service {
     this.currentStageIndex = -1;
     this.isGroup = false;
     this.isMultiPart = false;
+  }
+
+  async createTemplate() {
+    const { name, publicName, description, stages, numberOfParticipants } =
+      this.getExperiment();
+
+    await this.sp.experimenterService.createTemplate(
+      {
+        name,
+        description,
+        publicName,
+      }, stages
+    );
+  }
+
+  async createExperiments() {
+    const experiments = this.getExperiments();
+    let experimentId = '';
+    let groupId = '';
+
+    for (let i = 0; i < experiments.length; i++) {
+      const { name, publicName, description, stages, isLobby, numberOfParticipants, group } = experiments[i];
+      const experiment = await this.sp.experimenterService.createExperiment(
+        {
+          name,
+          publicName,
+          description,
+          isLobby,
+          numberOfParticipants,
+          group,
+        },
+        stages
+      );
+      experimentId = experiment.id;
+      groupId = group;
+    }
+
+    // Navigate to the last created experiment (or group)
+    if (groupId) {
+      this.sp.routerService.navigate(
+        Pages.EXPERIMENT_GROUP,
+        { "experiment_group": groupId }
+      );
+    } else {
+      this.sp.routerService.navigate(
+        Pages.EXPERIMENT,
+        { "experiment": experimentId }
+      );
+    }
   }
 }
