@@ -45,7 +45,7 @@ export const createExperiment = onCall(async (request) => {
     const document = app.firestore().collection(data.type).doc();
 
     await app.firestore().runTransaction(async (transaction) => {
-      const { name, publicName, description, tags, isLobby, group, numberOfParticipants, numberOfMaxParticipants } = data.metadata;
+      const { name, publicName, description, tags, isLobby, group, numberOfParticipants, numberOfMaxParticipants, waitForAllToStart } = data.metadata;
 
       // Create the metadata document
       transaction.set(document, {
@@ -57,6 +57,7 @@ export const createExperiment = onCall(async (request) => {
         starred: {},
         isLobby,
         numberOfMaxParticipants,
+        waitForAllToStart,
         ...(data.type === 'experiments'
           ? {
             date: Timestamp.now(),

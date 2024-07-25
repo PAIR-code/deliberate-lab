@@ -35,6 +35,7 @@ export class ExperimentConfigService extends Service {
 
   @observable hasMaxNumParticipants = false;
   @observable numMaxParticipants?: number = undefined;
+  @observable waitForAllToStart = false;
 
   // Experiment group parameters.
   @observable isGroup = false;
@@ -76,6 +77,7 @@ export class ExperimentConfigService extends Service {
         isLobby: false,
         numberOfParticipants: toJS(this.numParticipants),
         numberOfMaxParticipants: toJS(this.getNumMaxParticipants()),
+        waitForAllToStart: this.waitForAllToStart,
       });
     }
     return experiments;
@@ -94,6 +96,7 @@ export class ExperimentConfigService extends Service {
           isLobby: false,
           numberOfParticipants: toJS(this.numParticipants),
           numberOfMaxParticipants: toJS(this.getNumMaxParticipants()),
+          waitForAllToStart: this.waitForAllToStart,
         }
       ];
     }
@@ -117,6 +120,7 @@ export class ExperimentConfigService extends Service {
         numberOfParticipants: toJS(this.numParticipants),
         // No limit of participants to lobby.
         numberOfMaxParticipants: toJS(0),
+        waitForAllToStart: false,
       });
 
       // Create multiExperiments.
@@ -138,6 +142,7 @@ export class ExperimentConfigService extends Service {
         group: toJS(this.name),
         stages: convertExperimentStages(toJS(this.stages)),
         numberOfParticipants: toJS(this.numParticipants),
+        waitForAllToStart: this.waitForAllToStart
       };
     }
     return {
@@ -147,6 +152,7 @@ export class ExperimentConfigService extends Service {
       group: toJS(''),
       stages: toJS(this.stages),
       numberOfParticipants: toJS(this.numParticipants),
+      waitForAllToStart: this.waitForAllToStart
     };
   }
 
@@ -235,10 +241,15 @@ export class ExperimentConfigService extends Service {
   resetHasMaxNumParticipants() {
     this.hasMaxNumParticipants = false;
     this.numMaxParticipants = undefined;
+    this.waitForAllToStart = false;
   }
 
   updateHasMaxNumParticipants(checkbox: boolean) {
     this.hasMaxNumParticipants = checkbox;
+  }
+
+  updateWaitForAllToStart(checkbox: boolean) {
+    this.waitForAllToStart = checkbox;
   }
 
   updateIsExperimentGroup(checkbox: boolean) {
@@ -356,7 +367,7 @@ export class ExperimentConfigService extends Service {
     let groupId = '';
 
     for (let i = 0; i < experiments.length; i++) {
-      const { name, publicName, description, stages, isLobby, numberOfParticipants, numberOfMaxParticipants, group } = experiments[i];
+      const { name, publicName, description, stages, isLobby, numberOfParticipants, numberOfMaxParticipants, group, waitForAllToStart } = experiments[i];
       const experiment = await this.sp.experimenterService.createExperiment(
         {
           name,
@@ -365,6 +376,7 @@ export class ExperimentConfigService extends Service {
           isLobby,
           numberOfParticipants,
           numberOfMaxParticipants,
+          waitForAllToStart,
           group,
         },
         stages

@@ -1,4 +1,4 @@
-import { computed, observable, makeObservable } from "mobx";
+import { computed, makeObservable, observable } from "mobx";
 
 import {
   collection,
@@ -8,13 +8,12 @@ import {
   Unsubscribe,
 } from 'firebase/firestore';
 
-import { Service } from "./service";
 import { ExperimenterService } from "./experimenter_service";
 import { FirebaseService } from "./firebase_service";
 import { Pages, RouterService } from "./router_service";
+import { Service } from "./service";
 
-import { Snapshot } from "../shared/types";
-  import {
+import {
   Experiment,
   lookupTable,
   Message,
@@ -25,9 +24,8 @@ import { Snapshot } from "../shared/types";
   StageConfig,
   StageKind
 } from "@llm-mediation-experiments/utils";
-import { collectSnapshotWithId, excludeName } from "../shared/utils";
-import { deleteExperimentCallable } from "../shared/callables";
 import { downloadJsonFile } from "../shared/file_utils";
+import { collectSnapshotWithId, excludeName } from "../shared/utils";
 
 interface ServiceProvider {
   experimenterService: ExperimenterService;
@@ -297,6 +295,12 @@ export class ExperimentService extends Service {
     }
   }
 
+  canStartExperiment() {
+    if (!this.experiment?.waitForAllToStart || !this.experiment?.numberOfMaxParticipants) {
+      return true;
+    }
+    return (this.experiment?.numberOfParticipants! == this.experiment?.numberOfMaxParticipants!);
+  }
   /** Build a signal that tracks whether every participant has at least reached the given stage */
   everyoneReachedStage(targetStageId: string): boolean {
     const participants = this.experiment?.participants;

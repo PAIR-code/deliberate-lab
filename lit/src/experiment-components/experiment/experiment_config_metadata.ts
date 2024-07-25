@@ -38,7 +38,6 @@ export class ExperimentConfig extends MobxLitElement {
       ${this.renderDescriptionField()}
       ${this.renderGroupConfig()}
       ${this.renderConstrainParticipantsToggle()}
-      ${this.renderNumMaxParticipantsField()}
     `;
   }
 
@@ -61,10 +60,6 @@ export class ExperimentConfig extends MobxLitElement {
   }
 
   private renderNumMaxParticipantsField() {
-    if (!this.experimentConfig.hasMaxNumParticipants) {
-      return;
-    }
-
     const handleNum = (e: Event) => {
       const num = Number((e.target as HTMLTextAreaElement).value);
       this.experimentConfig.updateNumMaxParticipants(num);
@@ -145,7 +140,7 @@ export class ExperimentConfig extends MobxLitElement {
       </div>
     `;
   }
-  
+   
   private renderConstrainParticipantsToggle() {
     const handleConstrainToggle = (e: Event) => {
       const checked = Boolean((e.target as HTMLInputElement).checked);
@@ -164,6 +159,33 @@ export class ExperimentConfig extends MobxLitElement {
           ></md-checkbox>
           <label for="constrainMaxParticipants">
             <div>Limit the number of participants</div>
+          </label>
+        </div>
+      </div>
+    
+      ${this.experimentConfig.hasMaxNumParticipants ? 
+        html`
+          ${this.renderNumMaxParticipantsField()}
+          ${this.renderWaitForAllToStartToggle()}
+        `: ''}
+    `;
+  }
+
+  private renderWaitForAllToStartToggle() {
+    const handleStartToggle = (e: Event) => {
+      const checked = Boolean((e.target as HTMLInputElement).checked);
+      this.experimentConfig.updateWaitForAllToStart(checked);
+    };
+
+    return html`
+      <div class="checkbox-input-container">
+        <div class="checkbox-input">
+          <md-checkbox id="waitForAll" touch-target="wrapper"
+            .checked=${this.experimentConfig.waitForAllToStart}
+            @change=${handleStartToggle}
+          ></md-checkbox>
+          <label for="waitForAll">
+            <div>Wait for all participants to join before allowing the experiment to start</div>
           </label>
         </div>
       </div>
