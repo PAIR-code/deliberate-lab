@@ -237,11 +237,11 @@ export const createParticipant = onCall(async (request) => {
     const participantRef = experimentRef.collection('participants').doc();
     const participantData: ParticipantProfile = {
       publicId: participantPublicId(experimentData.numberOfParticipants),
-      currentStageId: data.participantData!.currentStageId || null,
-      pronouns: data.participantData!.pronouns || null,
-      name: data.participantData!.name || null,
-      avatarUrl: data.participantData!.avatarUrl || null,
-      acceptTosTimestamp: data.participantData!.acceptTosTimestamp || null,
+      currentStageId: data.participantData?.currentStageId ?? currentStageId,
+      pronouns: data.participantData?.pronouns ?? null,
+      name: data.participantData?.name ?? null,
+      avatarUrl: data.participantData?.avatarUrl ?? null,
+      acceptTosTimestamp: data.participantData?.acceptTosTimestamp ?? null,
       completedExperiment: null
     };
 
