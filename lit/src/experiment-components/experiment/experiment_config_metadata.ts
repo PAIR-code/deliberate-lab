@@ -10,9 +10,9 @@ import { CSSResultGroup, html, nothing } from "lit";
 import { customElement } from "lit/decorators.js";
 
 import { core } from "../../core/core";
-import { ExperimentConfigService } from "../../services/config/experiment_config_service";
 import { AuthService } from "../../services/auth_service";
-import { Pages, RouterService } from "../../services/router_service";
+import { ExperimentConfigService } from "../../services/config/experiment_config_service";
+import { RouterService } from "../../services/router_service";
 
 import { ExperimenterService } from "../../services/experimenter_service";
 import { styles } from "./experiment_config_metadata.scss";
@@ -36,8 +36,9 @@ export class ExperimentConfig extends MobxLitElement {
       ${this.renderGroupToggle()}
       ${this.renderNameFields()}
       ${this.renderDescriptionField()}
-      ${this.renderNumParticipantsField()}
       ${this.renderGroupConfig()}
+      ${this.renderConstrainParticipantsToggle()}
+      ${this.renderNumMaxParticipantsField()}
     `;
   }
 
@@ -59,21 +60,26 @@ export class ExperimentConfig extends MobxLitElement {
     `;
   }
 
-  private renderNumParticipantsField() {
+  private renderNumMaxParticipantsField() {
+    if (!this.experimentConfig.hasMaxNumParticipants) {
+      return;
+    }
+
     const handleNum = (e: Event) => {
       const num = Number((e.target as HTMLTextAreaElement).value);
-      this.experimentConfig.updateNumParticipants(num);
+      this.experimentConfig.updateNumMaxParticipants(num);
     };
 
     return html`
       <div class="number-input">
-        <label for="num">Number of participants</label>
+        <label for="num">Maximum number of participants</label>
         <input
           type="number"
           id="num"
           name="numParticipants"
           min="0"
-          .value=${this.experimentConfig.numParticipants}
+          placeholder="Leave this blank if there is no threshold"
+          .value=${this.experimentConfig.numMaxParticipants}
           @input=${handleNum}
         />
       </div>
@@ -134,6 +140,30 @@ export class ExperimentConfig extends MobxLitElement {
           <label for="isExperimentGroup">
             <div>Create a group of experiments</div>
             <div class="subtitle">The experiment group options allow you to create a group of experiments with the same configuration.</div>
+          </label>
+        </div>
+      </div>
+    `;
+  }
+  
+  private renderConstrainParticipantsToggle() {
+    const handleConstrainToggle = (e: Event) => {
+      const checked = Boolean((e.target as HTMLInputElement).checked);
+      this.experimentConfig.updateHasMaxNumParticipants(checked);
+      if (!checked) {
+        this.experimentConfig.resetHasMaxNumParticipants();
+      }
+    };
+
+    return html`
+      <div class="checkbox-input-container">
+        <div class="checkbox-input">
+          <md-checkbox id="constrainMaxParticipants" touch-target="wrapper"
+            .checked=${this.experimentConfig.hasMaxNumParticipants}
+            @change=${handleConstrainToggle}
+          ></md-checkbox>
+          <label for="constrainMaxParticipants">
+            <div>Limit the number of participants</div>
           </label>
         </div>
       </div>

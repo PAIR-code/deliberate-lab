@@ -31,7 +31,10 @@ export class ExperimentConfigService extends Service {
   @observable name = '';
   @observable publicName = 'Experiment';
   @observable description = '';
-  @observable numParticipants = 3;
+  @observable numParticipants = 0;
+
+  @observable hasMaxNumParticipants = false;
+  @observable numMaxParticipants?: number = undefined;
 
   // Experiment group parameters.
   @observable isGroup = false;
@@ -72,6 +75,7 @@ export class ExperimentConfigService extends Service {
         stages: convertExperimentStages(toJS(stages)),
         isLobby: false,
         numberOfParticipants: toJS(this.numParticipants),
+        numberOfMaxParticipants: toJS(this.getNumMaxParticipants()),
       });
     }
     return experiments;
@@ -89,6 +93,7 @@ export class ExperimentConfigService extends Service {
           stages: toJS(this.stages),
           isLobby: false,
           numberOfParticipants: toJS(this.numParticipants),
+          numberOfMaxParticipants: toJS(this.getNumMaxParticipants()),
         }
       ];
     }
@@ -110,6 +115,8 @@ export class ExperimentConfigService extends Service {
         stages: convertExperimentStages(toJS(preStages)),
         isLobby: true,
         numberOfParticipants: toJS(this.numParticipants),
+        // No limit of participants to lobby.
+        numberOfMaxParticipants: toJS(0),
       });
 
       // Create multiExperiments.
@@ -165,16 +172,17 @@ export class ExperimentConfigService extends Service {
       errors.push("Experiment needs at least one stage");
     }
 
-    if (this.numParticipants <= 0) {
-      errors.push("Experiments needs more than 0 participants");
-    }
-
     if (this.isMultiPart) {
       const dividerIndex = this.stages.findIndex(stage => stage.id === this.dividerStageId);
       if (dividerIndex !== -1 && dividerIndex == this.stages.length - 1) {
         errors.push("Divider stage cannot be the last stage.");
       }
     }
+
+    if (this.hasMaxNumParticipants && !this.numMaxParticipants) {
+      errors.push("If limiting the number of participants, provide the maximum number of participants threshold.");
+    }
+
     return errors;
   }
 
@@ -197,6 +205,14 @@ export class ExperimentConfigService extends Service {
     }
     return this.stages[this.currentStageIndex];
   }
+  
+  getNumMaxParticipants() {
+    if (!this.hasMaxNumParticipants) {
+      return 0;
+    } else {
+      return this.numMaxParticipants;
+    }
+  }
 
   // Update private experiment name
   updateName(name: string) {
@@ -210,6 +226,19 @@ export class ExperimentConfigService extends Service {
 
   updateNumParticipants(num: number) {
     this.numParticipants = num;
+  }
+
+  updateNumMaxParticipants(num: number) {
+    this.numMaxParticipants = num;
+  }
+
+  resetHasMaxNumParticipants() {
+    this.hasMaxNumParticipants = false;
+    this.numMaxParticipants = undefined;
+  }
+
+  updateHasMaxNumParticipants(checkbox: boolean) {
+    this.hasMaxNumParticipants = checkbox;
   }
 
   updateIsExperimentGroup(checkbox: boolean) {
@@ -300,7 +329,8 @@ export class ExperimentConfigService extends Service {
     this.name = '';
     this.publicName = 'Experiment';
     this.description = '';
-    this.numParticipants = 3;
+    this.numParticipants = 0;
+    this.resetHasMaxNumParticipants();
     this.stages = [createTOSStage(), createProfileStage()];
     this.currentStageIndex = -1;
     this.isGroup = false;
@@ -326,7 +356,7 @@ export class ExperimentConfigService extends Service {
     let groupId = '';
 
     for (let i = 0; i < experiments.length; i++) {
-      const { name, publicName, description, stages, isLobby, numberOfParticipants, group } = experiments[i];
+      const { name, publicName, description, stages, isLobby, numberOfParticipants, numberOfMaxParticipants, group } = experiments[i];
       const experiment = await this.sp.experimenterService.createExperiment(
         {
           name,
@@ -334,6 +364,7 @@ export class ExperimentConfigService extends Service {
           description,
           isLobby,
           numberOfParticipants,
+          numberOfMaxParticipants,
           group,
         },
         stages

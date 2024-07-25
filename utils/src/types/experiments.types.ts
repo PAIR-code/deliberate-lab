@@ -23,6 +23,7 @@ export interface Experiment {
   isLobby: boolean; // true if lobby experiment
   date: UnifiedTimestamp;
   numberOfParticipants: number;
+  numberOfMaxParticipants: number;
 
   // Ordered list of stage IDs
   stageIds: string[];

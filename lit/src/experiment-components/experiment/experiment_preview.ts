@@ -49,6 +49,7 @@ export class ExperimentPreview extends MobxLitElement {
     // Nuance: Add feature where, if experiment is in a group with a lobby, disallow joining
     // directly.
     if (!this.authService.isExperimenter) {
+      if (this.experimentService.canAddParticipant()) {
         return html`
           <div class="row">
             <pr-button
@@ -59,6 +60,9 @@ export class ExperimentPreview extends MobxLitElement {
             </pr-button>
           </div>
         `;
+      } else {
+        return `Unable to join this experiment. Reach out to your administrator if you think this is in error.`;
+      }
     }
 
     const getTransferableExperiments = () => {
@@ -87,7 +91,10 @@ export class ExperimentPreview extends MobxLitElement {
           <div class="stat small">
             Public experiment name: ${experiment?.publicName} <br/>
             Author: ${experiment?.author.displayName} <br/>
-            Create time: ${convertUnifiedTimestampToDate(experiment?.date!)}
+            Create time: ${convertUnifiedTimestampToDate(experiment?.date!)} <br/>
+            ${experiment?.numberOfMaxParticipants ? html`
+            Maximum number of participants: ${experiment?.numberOfMaxParticipants} <br/>
+            ` : ''}
           </div>
           ${this.renderGroup()}
         </div>
@@ -159,7 +166,11 @@ export class ExperimentPreview extends MobxLitElement {
     }
 
     const onAddParticipant = () => {
-      this.experimenterService.createParticipant(this.experimentService.id!);
+      if (this.experimentService.canAddParticipant()) {
+        this.experimenterService.createParticipant(this.experimentService.id!);
+      } else {
+        alert('Number of maximum participants has been reached for this experiment.')
+      }
     };
 
     return html`
