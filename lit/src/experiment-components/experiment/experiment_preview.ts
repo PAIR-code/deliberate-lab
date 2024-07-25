@@ -46,8 +46,9 @@ export class ExperimentPreview extends MobxLitElement {
       this.experimentService.join();
     };
 
+    // Nuance: Add feature where, if experiment is in a group with a lobby, disallow joining
+    // directly.
     if (!this.authService.isExperimenter) {
-      if (this.experimentService.experiment?.isLobby) {
         return html`
           <div class="row">
             <pr-button
@@ -58,9 +59,6 @@ export class ExperimentPreview extends MobxLitElement {
             </pr-button>
           </div>
         `;
-      } else {
-        return nothing;
-      }
     }
 
     const getTransferableExperiments = () => {
