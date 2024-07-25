@@ -44,14 +44,18 @@ export class ProfilePreview extends MobxLitElement {
     alert("Link copied to clipboard!");
   }
 
-  async onClickTransferParticipant(e: Experiment) {
-    try {
-      const response1 = await this.experimenterService.createParticipant(e.id!, this.profile);
-      const response2 = await this.experimenterService.deleteParticipant(this.experimentService.id!, this.profile!.privateId);
-    } catch (error) {
-      console.error('Error creating participant:', error);
-      throw error;
-    }
+  private renderTransferExperimentItem(experiment: Experiment) {
+    const onTransferClick = () => {
+      this.experimenterService.transferParticipant(
+        this.experimentService.id!, experiment!.id, this.profile!
+      );
+    };
+
+    return html`
+      <div class="menu-item" role="button" @click=${onTransferClick}>
+        <div>${experiment.name}</div>
+      </div>
+    `;
   }
 
   private renderTransferMenu() {
@@ -59,11 +63,8 @@ export class ProfilePreview extends MobxLitElement {
       return html`
       <pr-menu name="Transfer">
         <div class="menu-wrapper">
-          ${this.availableTransferExperiments.map(e => html`
-            <div class="menu-item" role="button" @click=${() => this.onClickTransferParticipant(e)}>
-              <div>${e.name}</div>
-            </div>
-          `)}
+          ${this.availableTransferExperiments.map(experiment =>
+            this.renderTransferExperimentItem(experiment))}
         </div>
       </pr-menu>
       `;

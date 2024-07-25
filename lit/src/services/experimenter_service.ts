@@ -23,7 +23,7 @@ interface CreateParticipantResponse {
  * - List templates
  * - List experiment users
  * - Create experiments and templates
- * - Create and delete participants
+ * - Create, delete, and transfer participants
  */
 export class ExperimenterService extends Service {
   constructor(private readonly sp: ServiceProvider) {
@@ -202,6 +202,21 @@ export class ExperimenterService extends Service {
       experimentId: experimentId,
       participantId: participantId,
     });
+  }
+
+  /** Transfers a participant. */
+  async transferParticipant(
+    currentExperimentId: string,
+    newExperimentId: string,
+    participant: ParticipantProfileExtended
+  ) {
+    try {
+      await this.createParticipant(newExperimentId, participant);
+      await this.deleteParticipant(currentExperimentId, participant.privateId);
+    } catch (error) {
+      console.error('Error transferring participant: ', error);
+      throw error;
+    }
   }
 
   /** Delete an experiment.
