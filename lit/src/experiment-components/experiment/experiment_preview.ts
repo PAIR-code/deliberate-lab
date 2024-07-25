@@ -63,19 +63,16 @@ export class ExperimentPreview extends MobxLitElement {
     }
 
     const getTransferableExperiments = () => {
-      const group = this.experimentService.experiment?.group!;
-      const currentExperimentName = this.experimentService.experiment?.name;
-      if (!currentExperimentName?.endsWith('lobby')) {
+      // Only allow transferring from the lobby.
+      if (!this.experimentService.experiment?.isLobby) {
         return [];
       }
-      // Only allow transferring from the lobby.
       // Ony fetch other, non-lobby experiments.
-      const experiments = this.experimenterService.getExperimentsInGroup(group)
-        .filter(experiment => experiment.name !== currentExperimentName
-          && !experiment.name.endsWith('lobby'));
-
-      return experiments;
+      return this.experimenterService.getExperimentsInGroup(group)
+        .filter(experiment => !experiment.isLobby);
     };
+
+    const group = this.experimentService.experiment?.group!;
 
     return html`
       <div class="top-bar">

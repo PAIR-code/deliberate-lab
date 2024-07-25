@@ -44,17 +44,7 @@ export class ExperimentConfig extends MobxLitElement {
 
   private renderCreateTemplateButton() {
     const onCreateTemplate = async () => {
-      const { name, publicName, description, stages, numberOfParticipants } =
-        this.experimentConfig.getExperiment();
-
-      await this.experimenterService.createTemplate(
-        {
-          name,
-          description,
-          publicName,
-        }, stages
-      );
-
+      this.experimentConfig.createTemplate();
       this.experimentConfig.reset();
     };
 
@@ -67,36 +57,7 @@ export class ExperimentConfig extends MobxLitElement {
 
   private renderCreateExperimentButton() {
     const createExperiments = async () => {
-      const experiments = this.experimentConfig.getExperiments() || [];
-      for (let i = 0; i < experiments.length; i++) {
-        const { name, publicName, description, stages, numberOfParticipants, group } = experiments[i];
-        const experiment = await this.experimenterService.createExperiment(
-          {
-            name,
-            publicName,
-            description,
-            numberOfParticipants,
-            group,
-          },
-          stages
-        );
-
-        // Navigate if this is the last created experiment.
-        if (i === experiments.length - 1) {
-          if (group) {
-            this.routerService.navigate(
-              Pages.EXPERIMENT_GROUP,
-              { "experiment_group": group }
-            );
-          } else {
-            this.routerService.navigate(
-              Pages.EXPERIMENT,
-              { "experiment": experiment.id }
-            );
-          }
-        }
-      }
-
+      this.experimentConfig.createExperiments();
       this.experimentConfig.reset();
     };
 

@@ -154,13 +154,14 @@ export class ExperimenterService extends Service {
     const description = experiment.description ?? '';
     const tags = experiment.tags ?? [];
     const group = experiment.group ?? '';
+    const isLobby = experiment.isLobby ?? false;
     const numberOfParticipants = experiment.numberOfParticipants ?? 1;
 
     return createExperimentCallable(
       this.sp.firebaseService.functions,
       {
         type: 'experiments',
-        metadata: { name, publicName, description, tags, group, numberOfParticipants },
+        metadata: { name, publicName, description, tags, group, isLobby, numberOfParticipants },
         stages,
       }
     );
@@ -175,13 +176,14 @@ export class ExperimenterService extends Service {
     const description = experiment.description ?? '';
     const tags = experiment.tags ?? [];
     const group = experiment.group ?? '';
+    const isLobby = experiment.isLobby ?? false;
     const numberOfParticipants = experiment.numberOfParticipants ?? 1;
 
     return createExperimentCallable(
       this.sp.firebaseService.functions,
       {
         type: 'templates',
-        metadata: { name, publicName, description, tags, group, numberOfParticipants },
+        metadata: { name, publicName, description, tags, group, isLobby, numberOfParticipants },
         stages,
       }
     );
