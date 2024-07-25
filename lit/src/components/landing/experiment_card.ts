@@ -84,6 +84,29 @@ export class ExperimentCard extends MobxLitElement {
       }
     }
 
+    const renderParticipantProgressBar = () =>  {
+      if (!this.experiment!.numberOfParticipants) {
+        return;
+      }
+      
+      return html`<pr-tooltip
+            text="${participantCompletedCount()} completed, ${participantProgressCount()} in progress"
+            position="BOTTOM_START"
+          >
+            <div class="progress-bar">
+              <div
+                class="progress completed"
+                style="width: calc(100% * ${participantCompletedRatio()})"
+              >
+              </div>
+              <div
+                class="progress in-progress"
+                style="width: calc(100% * .5 * ${participantProgressRatio()})"
+              >
+              </div>
+            </div>`;
+    }
+
     return html`
       <div class="header">
         <div>
@@ -106,23 +129,8 @@ export class ExperimentCard extends MobxLitElement {
       ${this.renderGroup()}
       <p class="label">${this.experiment.description}</p>
       ${renderGroupMetadata()}
-      <pr-tooltip
-        text="${participantCompletedCount()} completed, ${participantProgressCount()} in progress"
-        position="BOTTOM_START"
-      >
-        <div class="progress-bar">
-          <div
-            class="progress completed"
-            style="width: calc(100% * ${participantCompletedRatio()})"
-          >
-          </div>
-          <div
-            class="progress in-progress"
-            style="width: calc(100% * .5 * ${participantProgressRatio()})"
-          >
-          </div>
-        </div>
-      </div>
+      ${renderParticipantProgressBar()}
+     </div>
     `;
   }
 
