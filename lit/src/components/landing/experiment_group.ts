@@ -9,6 +9,7 @@ import { CSSResultGroup, html, nothing } from "lit";
 import { customElement } from "lit/decorators.js";
 
 import { Experiment } from '@llm-mediation-experiments/utils';
+import { convertUnifiedTimestampToDate } from '../../shared/utils';
 
 import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
@@ -37,10 +38,17 @@ export class ExperimentGroup extends MobxLitElement {
 
     return html`
       <div class="top-bar">
-        <div class="stat">
-          ${experiments.length} experiments
+        <div class="left">
+          <div class="stat">
+            ${experiments.length} experiments
+          </div>
+          <div class="stat small">
+            Author: ${experiments[0].author.displayName}
+          </div>
+          <div class="stat small">
+            Create time: ${convertUnifiedTimestampToDate(experiments[0].date)}
+          </div>
         </div>
-
         <div class="right">
           ${this.renderDelete(experiments)}
         </div>
@@ -50,7 +58,7 @@ export class ExperimentGroup extends MobxLitElement {
         ${experiments.length === 0 ?
         html`<div class="label">No experiments yet</div>` : nothing}
         ${experiments.map(
-          experiment => html`<experiment-card .experiment=${experiment}></experiment-card>`
+          experiment => html`<experiment-card .experiment=${experiment} .showGroup=${false}></experiment-card>`
         )}
       </div>
     `;

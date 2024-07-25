@@ -289,6 +289,14 @@ export class ExperimentService extends Service {
     return stage.readyToEndChat[publicId];
   }
 
+  canAddParticipant() {
+    if (this.experiment?.numberOfMaxParticipants! === 0) {
+      return true;
+    } else {
+      return (this.experiment?.numberOfParticipants! < this.experiment?.numberOfMaxParticipants!);
+    }
+  }
+
   /** Build a signal that tracks whether every participant has at least reached the given stage */
   everyoneReachedStage(targetStageId: string): boolean {
     const participants = this.experiment?.participants;

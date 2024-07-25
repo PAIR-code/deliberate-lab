@@ -9,6 +9,7 @@ import { CSSResultGroup, html, nothing } from "lit";
 import { customElement } from "lit/decorators.js";
 
 import { Experiment, ExperimentTemplate } from '@llm-mediation-experiments/utils';
+import { convertUnifiedTimestampToDate } from '../../shared/utils';
 
 import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
@@ -75,13 +76,31 @@ export class ExperimentLanding extends MobxLitElement {
 
     return html`
       <div class="card">
-        <h3>${group}</h3>
-        <p class="label">${experiments.length} experiments</p>
-        <div class="action-buttons">
-          <pr-button color="secondary" variant="tonal" @click=${handleClick}>
-            View group
-          </pr-button>
+        <div class="header">
+          <div>
+            <h3>${group}</h3>
+          </div>
+
+          <div>
+            <pr-tooltip text="View group" position="TOP_END">
+              <pr-icon-button
+                icon="arrow_forward"
+                color="secondary"
+                variant="default"
+                @click=${handleClick}>
+              </pr-icon-button>
+            </pr-tooltip>
+          </div>
+
           ${this.authService.canEdit ? this.renderDeleteGroupButton(experiments) : nothing}
+        </div>
+
+        <div>
+          <p>${experiments.length} experiments</p>
+          <div class="label">
+            <div>${experiments[0].author.displayName}</div>
+            <small>${convertUnifiedTimestampToDate(experiments[0].date)}</small>
+          </div>
         </div>
       </div>
     `;

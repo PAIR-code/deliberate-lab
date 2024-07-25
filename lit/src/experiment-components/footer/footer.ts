@@ -1,6 +1,5 @@
 import "../../pair-components/button";
 
-import { observable } from "mobx";
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
@@ -94,6 +93,7 @@ export class Footer extends MobxLitElement {
     if (isLastStage && this.experimentService.experiment?.isLobby) {
       // If transfer experiment has been assigned
       if (this.participantService.profile?.transferConfig) {
+        alert('You have been routed to a new experiment!');
         return html`
           <pr-button
             variant=${this.disabled ? "default" : "tonal"}

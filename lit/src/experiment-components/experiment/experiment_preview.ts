@@ -7,6 +7,7 @@ import "../profile/profile_preview";
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
 import { customElement } from "lit/decorators.js";
+import { convertUnifiedTimestampToDate } from '../../shared/utils';
 
 import { core } from "../../core/core";
 import { AuthService } from "../../services/auth_service";
@@ -45,8 +46,10 @@ export class ExperimentPreview extends MobxLitElement {
       this.experimentService.join();
     };
 
+    // Nuance: Add feature where, if experiment is in a group with a lobby, disallow joining
+    // directly.
     if (!this.authService.isExperimenter) {
-      if (this.experimentService.experiment?.isLobby) {
+      if (this.experimentService.canAddParticipant()) {
         return html`
           <div class="row">
             <pr-button
@@ -58,13 +61,9 @@ export class ExperimentPreview extends MobxLitElement {
           </div>
         `;
       } else {
-        return nothing;
+        return `Unable to join this experiment. Reach out to your administrator if you think this is in error.`;
       }
     }
-
-    const addParticipant = () => {
-      this.experimenterService.createParticipant(this.experimentService.id!);
-    };
 
     const getTransferableExperiments = () => {
       // Only allow transferring from the lobby.
@@ -85,15 +84,17 @@ export class ExperimentPreview extends MobxLitElement {
       participant => participant.transferConfig
     );
 
+    const experiment = this.experimentService.experiment;
     return html`
       <div class="top-bar">
         <div class="left">
-          <div class="stat">
-            ${this.experimentService.experiment?.numberOfParticipants}
-            participants
-          </div>
           <div class="stat small">
-            Public name: ${this.experimentService.experiment?.publicName}
+            Public experiment name: ${experiment?.publicName} <br/>
+            Author: ${experiment?.author.displayName} <br/>
+            Create time: ${convertUnifiedTimestampToDate(experiment?.date!)} <br/>
+            ${experiment?.numberOfMaxParticipants ? html`
+            Maximum number of participants: ${experiment?.numberOfMaxParticipants} <br/>
+            ` : ''}
           </div>
           ${this.renderGroup()}
         </div>
@@ -101,22 +102,14 @@ export class ExperimentPreview extends MobxLitElement {
           ${this.renderShare()}
           ${this.renderFork()}
           ${this.renderDownload()}
+          ${this.renderAddParticipant()}
           ${this.renderDelete()}
         </div>
       </div>
       <div class="row">
-        ${this.experimentService.experiment?.description}
+        ${experiment?.description}
       </div>
-      
-      <div class="row">
-        <pr-button
-          color="tertiary"
-          variant="tonal"
-          @click=${addParticipant}>
-          Add participant
-        </pr-button>
-      </div>
-
+     
       <h2>${currentParticipants.length} current participants</h2>
       <div class="profile-wrapper">
         ${currentParticipants.map(participant =>
@@ -128,13 +121,17 @@ export class ExperimentPreview extends MobxLitElement {
         `)}
       </div>
 
-      <h2>${transferredParticipants.length} transferred participants</h2>
-      <div class="profile-wrapper">
-        ${transferredParticipants.map(participant =>
+      ${transferredParticipants.length > 0 ? 
         html`
-          <profile-preview .profile=${participant}></profile-preview>
-        `)}
-      </div>
+          <h2>${transferredParticipants.length} transferred participants</h2>
+          <div class="profile-wrapper">
+            ${transferredParticipants.map(participant => html`
+              <profile-preview .profile=${participant}></profile-preview>
+            `)}
+          </div>
+        ` 
+        : ''
+      }
     `;
   }
 
@@ -162,6 +159,33 @@ export class ExperimentPreview extends MobxLitElement {
       </div>
     `;
   }
+
+  private renderAddParticipant() {
+    if (!this.authService.canEdit) {
+      return nothing;
+    }
+
+    const onAddParticipant = () => {
+      if (this.experimentService.canAddParticipant()) {
+        this.experimenterService.createParticipant(this.experimentService.id!);
+      } else {
+        alert('Number of maximum participants has been reached for this experiment.')
+      }
+    };
+
+    return html`
+      <pr-tooltip text="Add participant" position="BOTTOM_END">
+        <pr-icon-button
+          icon="person_add"
+          color="success"
+          variant="default"
+          @click=${onAddParticipant}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
+  }
+
 
   private renderDelete() {
     if (!this.authService.canEdit) {

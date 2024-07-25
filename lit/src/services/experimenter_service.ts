@@ -47,7 +47,10 @@ export class ExperimenterService extends Service {
   }
 
   getUngroupedExperiments() {
-    return this.experiments.filter(experiment => !experiment.group);
+    // Sort by experiment creation time.
+    return this.experiments
+      .filter(experiment => !experiment.group)
+      .sort((a, b) => a.date.toDate().getTime() - b.date.toDate().getTime());
   }
 
   getGroupedExperiments() {
@@ -57,7 +60,15 @@ export class ExperimenterService extends Service {
   getExperimentsInGroup(group: string) {
     if (group == '') return [];
 
-    return this.experiments.filter(experiment => experiment.group === group);
+    return this.experiments
+      .filter(experiment => experiment.group === group)
+      .sort((a, b) => {
+        // Prioritized lobbies.
+        if (a.isLobby && !b.isLobby) return -1;
+        if (!a.isLobby && b.isLobby) return 1;
+        // Sort by name.
+        return a.name.localeCompare(b.name);
+      });
   }
 
   getGroupedExperimentsMap() {
@@ -71,7 +82,16 @@ export class ExperimenterService extends Service {
       groupMap.get(group)!.push(experiment);
     });
 
-    return groupMap;
+    // Sort by ascending time.
+    const sortedGroupMap = new Map(
+      Array.from(groupMap.entries()).sort((a, b) => {
+        const dateA = a[1][0].date.toDate().getTime();
+        const dateB = b[1][0].date.toDate().getTime();
+        return dateA - dateB;
+      })
+    );
+
+    return sortedGroupMap;
   }
 
 
@@ -155,13 +175,14 @@ export class ExperimenterService extends Service {
     const tags = experiment.tags ?? [];
     const group = experiment.group ?? '';
     const isLobby = experiment.isLobby ?? false;
-    const numberOfParticipants = experiment.numberOfParticipants ?? 1;
+    const numberOfParticipants = experiment.numberOfParticipants ?? 0;
+    const numberOfMaxParticipants = experiment.numberOfMaxParticipants ?? 0;
 
     return createExperimentCallable(
       this.sp.firebaseService.functions,
       {
         type: 'experiments',
-        metadata: { name, publicName, description, tags, group, isLobby, numberOfParticipants },
+        metadata: { name, publicName, description, tags, group, isLobby, numberOfParticipants, numberOfMaxParticipants },
         stages,
       }
     );
@@ -177,13 +198,14 @@ export class ExperimenterService extends Service {
     const tags = experiment.tags ?? [];
     const group = experiment.group ?? '';
     const isLobby = experiment.isLobby ?? false;
-    const numberOfParticipants = experiment.numberOfParticipants ?? 1;
+    const numberOfParticipants = experiment.numberOfParticipants ?? 0;
+    const numberOfMaxParticipants = experiment.numberOfMaxParticipants ?? 0;
 
     return createExperimentCallable(
       this.sp.firebaseService.functions,
       {
         type: 'templates',
-        metadata: { name, publicName, description, tags, group, isLobby, numberOfParticipants },
+        metadata: { name, publicName, description, tags, group, isLobby, numberOfParticipants, numberOfMaxParticipants},
         stages,
       }
     );

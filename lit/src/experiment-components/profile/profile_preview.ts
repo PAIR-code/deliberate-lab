@@ -136,7 +136,6 @@ export class ProfilePreview extends MobxLitElement {
           <div class="title">${this.profile.name ?? this.profile.publicId}</div>
           <div class="subtitle">${this.profile.pronouns}</div>
         </div>
-        ${this.renderDeleteButton()}
       </div>
 
       <div>
@@ -173,6 +172,7 @@ export class ProfilePreview extends MobxLitElement {
           >
           </pr-icon-button>
         </pr-tooltip>
+        ${this.renderDeleteButton()}
       </div>
     `;
   }

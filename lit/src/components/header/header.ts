@@ -52,6 +52,10 @@ export class Header extends MobxLitElement {
   }
 
   private renderEditPermissions() {
+    if (!this.authService.isExperimenter) {
+      return nothing;
+    }
+
     const toggleEdit = () => {
       this.authService.setEditPermissions(!this.authService.canEdit);
     };

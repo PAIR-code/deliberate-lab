@@ -34,8 +34,6 @@ import {
   prettyPrintErrors,
 } from '../utils/validation';
 
-const DEFAULT_PARTICIPANT_COUNT = 3;
-
 /** Generic endpoint to create either experiments or experiment templates */
 export const createExperiment = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
@@ -47,10 +45,7 @@ export const createExperiment = onCall(async (request) => {
     const document = app.firestore().collection(data.type).doc();
 
     await app.firestore().runTransaction(async (transaction) => {
-      let { numberOfParticipants } = data.metadata;
-      const { name, publicName, description, tags, isLobby, group } = data.metadata;
-
-      numberOfParticipants = numberOfParticipants ?? DEFAULT_PARTICIPANT_COUNT;
+      const { name, publicName, description, tags, isLobby, group, numberOfParticipants, numberOfMaxParticipants } = data.metadata;
 
       // Create the metadata document
       transaction.set(document, {
@@ -61,6 +56,7 @@ export const createExperiment = onCall(async (request) => {
         author: { uid: request.auth?.uid, displayName: request.auth?.token?.name ?? '' },
         starred: {},
         isLobby,
+        numberOfMaxParticipants,
         ...(data.type === 'experiments'
           ? {
             date: Timestamp.now(),

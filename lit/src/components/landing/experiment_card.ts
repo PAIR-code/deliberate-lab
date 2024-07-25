@@ -22,6 +22,8 @@ export class ExperimentCard extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   @property() experiment: Experiment|null = null;
+  // Whether to show properties that are the same across the group.
+  @property() showGroup: boolean = true;
 
   private readonly authService = core.getService(AuthService);
   private readonly routerService = core.getService(RouterService);
@@ -69,31 +71,41 @@ export class ExperimentCard extends MobxLitElement {
       return participantCompletedCount() / this.experiment!.numberOfParticipants;
     }
 
+    const renderGroupMetadata = () => {
+      if (this.showGroup) {
+        return html`
+        <div class="action-buttons">
+          
+        <div class="label">
+          <div>${this.experiment!.author.displayName}</div>
+          <small>${convertUnifiedTimestampToDate(this.experiment!.date)}</small>
+        </div>
+      </div>`;
+      }
+    }
+
     return html`
       <div class="header">
         <div>
           <h3>${this.experiment.name}</h3>
           <div class="label"><small>${this.experiment.id}</small></div>
         </div>
+        <div>
+          <pr-tooltip text="View experiment" position="TOP_END">
+            <pr-icon-button
+              icon="arrow_forward"
+              color="secondary"
+              variant="default"
+              @click=${handleClick}>
+            </pr-icon-button>
+          </pr-tooltip>
+        </div>
         ${this.authService.canEdit ? this.renderDeleteButton() : nothing}
       </div>
       <p>${this.experiment.numberOfParticipants} participants</p>
       ${this.renderGroup()}
       <p class="label">${this.experiment.description}</p>
-      <div class="action-buttons">
-        <div class="label">
-          <div>${this.experiment.author.displayName}</div>
-          <small>${convertUnifiedTimestampToDate(this.experiment.date)}</small>
-        </div>
-        <pr-tooltip text="View experiment" position="TOP_END">
-          <pr-icon-button
-            icon="arrow_forward"
-            color="secondary"
-            variant="default"
-            @click=${handleClick}>
-          </pr-icon-button>
-        </pr-tooltip>
-      </div>
+      ${renderGroupMetadata()}
       <pr-tooltip
         text="${participantCompletedCount()} completed, ${participantProgressCount()} in progress"
         position="BOTTOM_START"
@@ -115,7 +127,7 @@ export class ExperimentCard extends MobxLitElement {
   }
 
   private renderGroup() {
-    if (!this.experiment || !this.experiment.group) {
+    if (!this.experiment || !this.experiment.group || !this.showGroup) {
       return nothing;
     }
 
