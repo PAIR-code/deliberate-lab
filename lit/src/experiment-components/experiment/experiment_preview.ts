@@ -41,26 +41,30 @@ export class ExperimentPreview extends MobxLitElement {
   }
 
   override render() {
-    const addParticipant = () => {
-      this.experimenterService.createParticipant(this.experimentService.id!);
-    };
-
     const joinExperiment = () => {
       this.experimentService.join();
     };
 
     if (!this.authService.isExperimenter) {
-      return html`
-      <div class="row">
-        <pr-button
-          color="tertiary"
-          variant="tonal"
-          @click=${joinExperiment}>
-          Join experiment
-        </pr-button>
-      </div>
-      `;
+      if (this.experimentService.experiment?.isLobby) {
+        return html`
+          <div class="row">
+            <pr-button
+              color="tertiary"
+              variant="tonal"
+              @click=${joinExperiment}>
+              Join experiment
+            </pr-button>
+          </div>
+        `;
+      } else {
+        return nothing;
+      }
     }
+
+    const addParticipant = () => {
+      this.experimenterService.createParticipant(this.experimentService.id!);
+    };
 
     const getTransferableExperiments = () => {
       // Only allow transferring from the lobby.
