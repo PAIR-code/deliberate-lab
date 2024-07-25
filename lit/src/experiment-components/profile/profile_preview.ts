@@ -59,7 +59,9 @@ export class ProfilePreview extends MobxLitElement {
   }
 
   private renderTransferMenu() {
-    if (this.availableTransferExperiments.length > 0) {
+    if (!this.profile?.transferConfig &&
+        this.availableTransferExperiments.length > 0
+    ) {
       return html`
       <pr-menu name="Transfer">
         <div class="menu-wrapper">
@@ -69,7 +71,7 @@ export class ProfilePreview extends MobxLitElement {
       </pr-menu>
       `;
     }
-    return '';
+    return nothing;
   }
 
   override render() {

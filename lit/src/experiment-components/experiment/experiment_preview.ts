@@ -77,6 +77,13 @@ export class ExperimentPreview extends MobxLitElement {
     };
 
     const group = this.experimentService.experiment?.group!;
+    const participants = this.experimentService.privateParticipants;
+    const currentParticipants = participants.filter(
+      participant => !participant.transferConfig
+    );
+    const transferredParticipants = participants.filter(
+      participant => participant.transferConfig
+    );
 
     return html`
       <div class="top-bar">
@@ -109,9 +116,24 @@ export class ExperimentPreview extends MobxLitElement {
           Add participant
         </pr-button>
       </div>
+
+      <h2>${currentParticipants.length} current participants</h2>
       <div class="profile-wrapper">
-        ${this.experimentService.privateParticipants.map(participant =>
-      html`<profile-preview .profile=${participant} .availableTransferExperiments=${getTransferableExperiments()}></profile-preview>`)}
+        ${currentParticipants.map(participant =>
+        html`
+          <profile-preview
+            .profile=${participant}
+            .availableTransferExperiments=${getTransferableExperiments()}>
+          </profile-preview>
+        `)}
+      </div>
+
+      <h2>${transferredParticipants.length} transferred participants</h2>
+      <div class="profile-wrapper">
+        ${transferredParticipants.map(participant =>
+        html`
+          <profile-preview .profile=${participant}></profile-preview>
+        `)}
       </div>
     `;
   }

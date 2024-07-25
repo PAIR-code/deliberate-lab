@@ -1,5 +1,5 @@
 import { Experiment, ExperimentTemplate, ExperimentTemplateExtended, ParticipantProfile, ParticipantProfileExtended, StageConfig, lookupTable } from "@llm-mediation-experiments/utils";
-import { Unsubscribe, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot } from "firebase/firestore";
+import { Unsubscribe, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, updateDoc } from "firebase/firestore";
 import { computed, makeObservable, observable } from "mobx";
 import { createExperimentCallable, createParticipantCallable, deleteExperimentCallable, deleteParticipantCallable } from "../shared/callables";
 import { collectSnapshotWithId } from "../shared/utils";
@@ -213,10 +213,24 @@ export class ExperimenterService extends Service {
     participant: ParticipantProfileExtended
   ) {
     try {
-      await this.createParticipant(newExperimentId, participant);
-      await this.deleteParticipant(currentExperimentId, participant.privateId);
+      const response = await this.createParticipant(newExperimentId, participant);
+      const transferConfig = {
+        experimentId: newExperimentId,
+        participantId: response.participant.privateId,
+      };
+
+      return updateDoc(
+        doc(
+          this.sp.firebaseService.firestore,
+          'experiments',
+          currentExperimentId,
+          'participants',
+          participant.privateId
+        ),
+        {...participant, transferConfig }
+      );
     } catch (error) {
-      console.error('Error transferring participant: ', error);
+      console.error('Error creating participant for transfer: ', error);
       throw error;
     }
   }

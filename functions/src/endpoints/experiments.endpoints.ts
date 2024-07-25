@@ -142,6 +142,7 @@ export const createExperiment = onCall(async (request) => {
           avatarUrl: null,
           acceptTosTimestamp: null,
           completedExperiment: null,
+          transferConfig: null,
         };
 
         // Create the participant document
@@ -245,7 +246,8 @@ export const createParticipant = onCall(async (request) => {
       name: data.participantData?.name ?? null,
       avatarUrl: data.participantData?.avatarUrl ?? null,
       acceptTosTimestamp: data.participantData?.acceptTosTimestamp ?? null,
-      completedExperiment: null
+      completedExperiment: null,
+      transferConfig: null,
     };
 
     // Increment the number of participants in the experiment metadata
