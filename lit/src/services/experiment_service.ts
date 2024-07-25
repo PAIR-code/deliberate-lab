@@ -9,8 +9,9 @@ import {
 } from 'firebase/firestore';
 
 import { Service } from "./service";
+import { ExperimenterService } from "./experimenter_service";
 import { FirebaseService } from "./firebase_service";
-import { RouterService } from "./router_service";
+import { Pages, RouterService } from "./router_service";
 
 import { Snapshot } from "../shared/types";
   import {
@@ -29,11 +30,14 @@ import { deleteExperimentCallable } from "../shared/callables";
 import { downloadJsonFile } from "../shared/file_utils";
 
 interface ServiceProvider {
+  experimenterService: ExperimenterService;
   firebaseService: FirebaseService;
   routerService: RouterService;
 }
 
-/** Manages state for current experiment. */
+/** Manages state for current experiment.
+  * This includes adding, transferring, and deleting participants.
+  */
 export class ExperimentService extends Service {
   constructor(private readonly sp: ServiceProvider) {
     super();
@@ -408,10 +412,38 @@ export class ExperimentService extends Service {
   //                                           MUTATIONS                                         //
   // ******************************************************************************************* //
 
+
+  /**
+   * Join the current experiment as a participant.
+   */
+  async join() {
+    if (!this.id) {
+      return;
+    }
+
+    try {
+      const response = await this.sp.experimenterService.createParticipant(this.id!);
+      const participant = response.participant;
+
+      // Navigate to page for created participant
+      this.sp.routerService.navigate(
+        Pages.PARTICIPANT,
+        {
+          "experiment": this.id!,
+          "participant": participant.privateId
+        }
+      );
+      this.sp.routerService.setExperimenterNav(false);
+    } catch (error) {
+      console.log('Error creating participant for: ', error);
+      throw error;
+    }
+  }
+
   /** Delete the experiment..
    * @rights Experimenter
    */
   async delete() {
-    return deleteExperimentCallable(this.sp.firebaseService.functions, { type: 'experiments', id: this.id! });
+    return this.sp.experimenterService.deleteExperiment(this.id!);
   }
 }

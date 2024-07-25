@@ -1,4 +1,6 @@
-/** Endpoints for interactions with experiments */
+/** Endpoints for interactions with experiments, including
+  * creating/deleting experiments and participants.
+  */
 
 import {
   ChatAnswer,

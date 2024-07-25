@@ -41,34 +41,12 @@ export class ExperimentPreview extends MobxLitElement {
   }
 
   override render() {
-    const addParticipant = async () => {
-      try {
-        const response = await this.experimenterService.createParticipant(this.experimentService.id!);
-        return response.participant;
-      } catch (error) {
-        console.error('Error creating participant:', error);
-        throw error;
-      }
+    const addParticipant = () => {
+      this.experimenterService.createParticipant(this.experimentService.id!);
     };
 
-    const joinExperiment = async () => {
-      // Create the participant.
-      const participant = await Promise.all([addParticipant()]);
-
-      this.participantService.setParticipant(
-        this.experimentService.id,
-        participant[0].privateId
-      );
-
-      // Redirect.
-      this.routerService.navigate(
-        Pages.PARTICIPANT,
-        {
-          "experiment": this.experimentService.id!,
-          "participant": participant[0].privateId
-        }
-      );
-      this.routerService.setExperimenterNav(false);
+    const joinExperiment = () => {
+      this.experimentService.join();
     };
 
     if (!this.authService.isExperimenter) {

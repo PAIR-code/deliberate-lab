@@ -18,11 +18,12 @@ interface CreateParticipantResponse {
   participant: ParticipantProfileExtended
 }
 
-/** Handle experimenter-related data:
+/** Handle experimenter-related actions:
  * - List experiments
  * - List templates
  * - List experiment users
  * - Create experiments and templates
+ * - Create and delete participants
  */
 export class ExperimenterService extends Service {
   constructor(private readonly sp: ServiceProvider) {

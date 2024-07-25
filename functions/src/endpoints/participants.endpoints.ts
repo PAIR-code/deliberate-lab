@@ -1,4 +1,4 @@
-/** Endpoints for interactions with participants */
+/** Endpoints for participanting in experiments */
 
 import {
   QuestionAnswer,
