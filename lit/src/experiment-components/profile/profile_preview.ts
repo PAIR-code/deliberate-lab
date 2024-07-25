@@ -44,31 +44,59 @@ export class ProfilePreview extends MobxLitElement {
     alert("Link copied to clipboard!");
   }
 
-  async onClickTransferParticipant(e: Experiment) {
-    try {
-      const response1 = await this.experimenterService.createParticipant(e.id!, this.profile);
-      const response2 = await this.experimenterService.deleteParticipant(this.experimentService.id!, this.profile!.privateId);
-    } catch (error) {
-      console.error('Error creating participant:', error);
-      throw error;
-    }
+  private renderTransferExperimentItem(experiment: Experiment) {
+    const onTransferClick = () => {
+      this.experimenterService.transferParticipant(
+        this.experimentService.id!, experiment!.id, this.profile!
+      );
+    };
+
+    return html`
+      <div class="menu-item" role="button" @click=${onTransferClick}>
+        <div>${experiment.name}</div>
+      </div>
+    `;
   }
 
   private renderTransferMenu() {
-    if (this.availableTransferExperiments.length > 0) {
+    if (!this.profile?.transferConfig &&
+        this.availableTransferExperiments.length > 0
+    ) {
       return html`
       <pr-menu name="Transfer">
         <div class="menu-wrapper">
-          ${this.availableTransferExperiments.map(e => html`
-            <div class="menu-item" role="button" @click=${() => this.onClickTransferParticipant(e)}>
-              <div>${e.name}</div>
-            </div>
-          `)}
+          ${this.availableTransferExperiments.map(experiment =>
+            this.renderTransferExperimentItem(experiment))}
         </div>
       </pr-menu>
       `;
     }
-    return '';
+    return nothing;
+  }
+
+  renderDeleteButton() {
+    if (!this.authService.canEdit) {
+      return nothing;
+    }
+
+    const onDelete = () => {
+      this.experimenterService.deleteParticipant(
+        this.experimentService.id ?? '',
+        this.profile?.privateId ?? '',
+      );
+    };
+
+    return html`
+      <pr-tooltip text="Delete participant" position="BOTTOM_END">
+        <pr-icon-button
+          icon="delete"
+          color="error"
+          variant="default"
+          @click=${onDelete}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
   }
 
   override render() {
@@ -108,6 +136,7 @@ export class ProfilePreview extends MobxLitElement {
           <div class="title">${this.profile.name ?? this.profile.publicId}</div>
           <div class="subtitle">${this.profile.pronouns}</div>
         </div>
+        ${this.renderDeleteButton()}
       </div>
 
       <div>

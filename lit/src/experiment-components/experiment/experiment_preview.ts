@@ -41,63 +41,49 @@ export class ExperimentPreview extends MobxLitElement {
   }
 
   override render() {
-    const addParticipant = async () => {
-      try {
-        const response = await this.experimenterService.createParticipant(this.experimentService.id!);
-        return response.participant;
-      } catch (error) {
-        console.error('Error creating participant:', error);
-        throw error;
-      }
-    };
-
-    const joinExperiment = async () => {
-      // Create the participant.
-      const participant = await Promise.all([addParticipant()]);
-
-      this.participantService.setParticipant(
-        this.experimentService.id,
-        participant[0].privateId
-      );
-
-      // Redirect.
-      this.routerService.navigate(
-        Pages.PARTICIPANT,
-        {
-          "experiment": this.experimentService.id!,
-          "participant": participant[0].privateId
-        }
-      );
-      this.routerService.setExperimenterNav(false);
+    const joinExperiment = () => {
+      this.experimentService.join();
     };
 
     if (!this.authService.isExperimenter) {
-      return html`
-      <div class="row">
-        <pr-button
-          color="tertiary"
-          variant="tonal"
-          @click=${joinExperiment}>
-          Join experiment
-        </pr-button>
-      </div>
-      `;
+      if (this.experimentService.experiment?.isLobby) {
+        return html`
+          <div class="row">
+            <pr-button
+              color="tertiary"
+              variant="tonal"
+              @click=${joinExperiment}>
+              Join experiment
+            </pr-button>
+          </div>
+        `;
+      } else {
+        return nothing;
+      }
     }
 
+    const addParticipant = () => {
+      this.experimenterService.createParticipant(this.experimentService.id!);
+    };
+
     const getTransferableExperiments = () => {
-      const group = this.experimentService.experiment?.group!;
-      const currentExperimentName = this.experimentService.experiment?.name;
-      if (!currentExperimentName?.endsWith('lobby')) {
+      // Only allow transferring from the lobby.
+      if (!this.experimentService.experiment?.isLobby) {
         return [];
       }
-      // Only allow transferring from the lobby.
       // Ony fetch other, non-lobby experiments.
-      const experiments = this.experimenterService.getExperimentsInGroup(group)
-        .filter(experiment => experiment.name !== currentExperimentName
-          && !experiment.name.endsWith('lobby'));
-
-      return experiments;
+      return this.experimenterService.getExperimentsInGroup(group)
+        .filter(experiment => !experiment.isLobby);
     };
+
+    const group = this.experimentService.experiment?.group!;
+    const participants = this.experimentService.privateParticipants;
+    const currentParticipants = participants.filter(
+      participant => !participant.transferConfig
+    );
+    const transferredParticipants = participants.filter(
+      participant => participant.transferConfig
+    );
 
     return html`
       <div class="top-bar">
@@ -130,9 +116,24 @@ export class ExperimentPreview extends MobxLitElement {
           Add participant
         </pr-button>
       </div>
+
+      <h2>${currentParticipants.length} current participants</h2>
       <div class="profile-wrapper">
-        ${this.experimentService.privateParticipants.map(participant =>
-      html`<profile-preview .profile=${participant} .availableTransferExperiments=${getTransferableExperiments()}></profile-preview>`)}
+        ${currentParticipants.map(participant =>
+        html`
+          <profile-preview
+            .profile=${participant}
+            .availableTransferExperiments=${getTransferableExperiments()}>
+          </profile-preview>
+        `)}
+      </div>
+
+      <h2>${transferredParticipants.length} transferred participants</h2>
+      <div class="profile-wrapper">
+        ${transferredParticipants.map(participant =>
+        html`
+          <profile-preview .profile=${participant}></profile-preview>
+        `)}
       </div>
     `;
   }

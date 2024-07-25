@@ -67,6 +67,7 @@ export const ExperimentCreationData = Type.Object(
         description: Type.String(),
         tags: Type.Array(Type.String()),
         group: Type.Optional(Type.String()),
+        isLobby: Type.Boolean(),
         numberOfParticipants: Type.Optional(Type.Number({ minimum: 1 })),
       },
       strict,

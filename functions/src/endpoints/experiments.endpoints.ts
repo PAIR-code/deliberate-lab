@@ -1,4 +1,6 @@
-/** Endpoints for interactions with experiments */
+/** Endpoints for interactions with experiments, including
+  * creating/deleting experiments and participants.
+  */
 
 import {
   ChatAnswer,
@@ -46,7 +48,7 @@ export const createExperiment = onCall(async (request) => {
 
     await app.firestore().runTransaction(async (transaction) => {
       let { numberOfParticipants } = data.metadata;
-      const { name, publicName, description, tags, group } = data.metadata;
+      const { name, publicName, description, tags, isLobby, group } = data.metadata;
 
       numberOfParticipants = numberOfParticipants ?? DEFAULT_PARTICIPANT_COUNT;
 
@@ -58,6 +60,7 @@ export const createExperiment = onCall(async (request) => {
         tags,
         author: { uid: request.auth?.uid, displayName: request.auth?.token?.name ?? '' },
         starred: {},
+        isLobby,
         ...(data.type === 'experiments'
           ? {
             date: Timestamp.now(),
@@ -139,6 +142,7 @@ export const createExperiment = onCall(async (request) => {
           avatarUrl: null,
           acceptTosTimestamp: null,
           completedExperiment: null,
+          transferConfig: null,
         };
 
         // Create the participant document
@@ -237,12 +241,13 @@ export const createParticipant = onCall(async (request) => {
     const participantRef = experimentRef.collection('participants').doc();
     const participantData: ParticipantProfile = {
       publicId: participantPublicId(experimentData.numberOfParticipants),
-      currentStageId: data.participantData!.currentStageId || null,
-      pronouns: data.participantData!.pronouns || null,
-      name: data.participantData!.name || null,
-      avatarUrl: data.participantData!.avatarUrl || null,
-      acceptTosTimestamp: data.participantData!.acceptTosTimestamp || null,
-      completedExperiment: null
+      currentStageId: currentStageId,
+      pronouns: data.participantData?.pronouns ?? null,
+      name: data.participantData?.name ?? null,
+      avatarUrl: data.participantData?.avatarUrl ?? null,
+      acceptTosTimestamp: data.participantData?.acceptTosTimestamp ?? null,
+      completedExperiment: null,
+      transferConfig: null,
     };
 
     // Increment the number of participants in the experiment metadata
