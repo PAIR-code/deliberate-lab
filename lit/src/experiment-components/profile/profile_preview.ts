@@ -74,6 +74,31 @@ export class ProfilePreview extends MobxLitElement {
     return nothing;
   }
 
+  renderDeleteButton() {
+    if (!this.authService.canEdit) {
+      return nothing;
+    }
+
+    const onDelete = () => {
+      this.experimenterService.deleteParticipant(
+        this.experimentService.id ?? '',
+        this.profile?.privateId ?? '',
+      );
+    };
+
+    return html`
+      <pr-tooltip text="Delete participant" position="BOTTOM_END">
+        <pr-icon-button
+          icon="delete"
+          color="error"
+          variant="default"
+          @click=${onDelete}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
+  }
+
   override render() {
     console.log(this.availableTransferExperiments)
     if (!this.profile) {
@@ -111,6 +136,7 @@ export class ProfilePreview extends MobxLitElement {
           <div class="title">${this.profile.name ?? this.profile.publicId}</div>
           <div class="subtitle">${this.profile.pronouns}</div>
         </div>
+        ${this.renderDeleteButton()}
       </div>
 
       <div>
