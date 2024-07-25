@@ -241,7 +241,7 @@ export const createParticipant = onCall(async (request) => {
     const participantRef = experimentRef.collection('participants').doc();
     const participantData: ParticipantProfile = {
       publicId: participantPublicId(experimentData.numberOfParticipants),
-      currentStageId: data.participantData?.currentStageId ?? currentStageId,
+      currentStageId: currentStageId,
       pronouns: data.participantData?.pronouns ?? null,
       name: data.participantData?.name ?? null,
       avatarUrl: data.participantData?.avatarUrl ?? null,
