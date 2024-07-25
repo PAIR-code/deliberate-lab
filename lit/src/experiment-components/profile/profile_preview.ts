@@ -114,8 +114,8 @@ export class ProfilePreview extends MobxLitElement {
         this.routerService.navigate(
           Pages.PARTICIPANT,
           {
-            "experiment": this.experimentService.id,
-            "participant": this.profile.privateId
+            "experiment": this.profile.transferConfig ? this.profile.transferConfig.experimentId : this.experimentService.id,
+            "participant": this.profile.transferConfig ? this.profile.transferConfig.participantId : this.profile.privateId,
           }
         );
         this.routerService.setExperimenterNav(false);
@@ -137,22 +137,30 @@ export class ProfilePreview extends MobxLitElement {
           <div class="subtitle">${this.profile.pronouns}</div>
         </div>
       </div>
-
-      <div>
-        <span>Current stage:</span>
-        ${this.experimentService.getStageName(this.profile.currentStageId, true)}
-      </div>
-      <div>
-        <span>Accepted TOS:</span>
-        ${formatDate(this.profile?.acceptTosTimestamp)}
-      </div>
-      <div>
-        <span>Completed:</span>
-        ${formatDate(this.profile?.completedExperiment)}
-      </div>
-      <div><span>Public ID:</span> ${this.profile.publicId}</div>
-      <div><span>Private ID:</span> ${this.profile.privateId}</div>
-
+      ${this.profile.transferConfig ?
+        html`
+          <div>
+            <span>Transferred to:</span>
+            ${this.experimenterService.getExperiment(this.profile.transferConfig.experimentId)!.name}
+          </div>
+        `
+        : html`
+          <div>
+            <span>Current stage:</span>
+            ${this.experimentService.getStageName(this.profile.currentStageId, true)}
+          </div>
+          <div>
+            <span>Accepted TOS:</span>
+            ${formatDate(this.profile?.acceptTosTimestamp)}
+          </div>
+          <div>
+            <span>Completed:</span>
+            ${formatDate(this.profile?.completedExperiment)}
+          </div>
+          <div><span>Public ID:</span> ${this.profile.publicId}</div>
+          <div><span>Private ID:</span> ${this.profile.privateId}</div>
+        `
+      }
       <div class="row">
         ${this.renderTransferMenu()}
         <pr-tooltip text="Preview as participant" position="TOP_END">
