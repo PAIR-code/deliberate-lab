@@ -75,6 +75,39 @@ export class Footer extends MobxLitElement {
     const preventNextClick = this.disabled ||
       !this.participantService.isCurrentStage();
 
+    const handleTransfer = () => {
+      const transferConfig = this.participantService.profile?.transferConfig;
+      if (!transferConfig) {
+        return;
+      }
+
+      this.routerService.navigate(
+        Pages.PARTICIPANT,
+        {
+          "experiment": transferConfig.experimentId,
+          "participant": transferConfig.participantId,
+        }
+      );
+    }
+
+    // If completed lobby experiment, render link to transfer experiment
+    if (isLastStage && this.experimentService.experiment?.isLobby) {
+      // If transfer experiment has been assigned
+      if (this.participantService.profile?.transferConfig) {
+        return html`
+          <pr-button
+            variant=${this.disabled ? "default" : "tonal"}
+            ?disabled=${preventNextClick}
+            @click=${handleTransfer}
+          >
+            Go to new experiment
+          </pr-button>
+        `;
+      } else {
+        return nothing;
+      }
+    }
+
     return html`
       <pr-button
         variant=${this.disabled ? "default" : "tonal"}
