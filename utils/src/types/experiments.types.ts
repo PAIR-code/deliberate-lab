@@ -24,6 +24,7 @@ export interface Experiment {
   date: UnifiedTimestamp;
   numberOfParticipants: number;
   numberOfMaxParticipants: number;
+  waitForAllToStart: boolean;
 
   // Ordered list of stage IDs
   stageIds: string[];

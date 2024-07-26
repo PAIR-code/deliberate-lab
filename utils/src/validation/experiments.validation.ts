@@ -70,6 +70,7 @@ export const ExperimentCreationData = Type.Object(
         isLobby: Type.Boolean(),
         numberOfParticipants: Type.Optional(Type.Number({ minimum: 0 })),
         numberOfMaxParticipants: Type.Optional(Type.Number({ minimum: 0 })),
+        waitForAllToStart: Type.Boolean(),
       },
       strict,
     ),

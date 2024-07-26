@@ -105,6 +105,27 @@ export class ProfilePreview extends MobxLitElement {
       return nothing;
     }
 
+    const handleFuturePreview = () => {
+      if (!this.profile?.transferConfig) {
+        return;
+      }
+
+      if (this.profile && this.experimentService.id) {
+        this.participantService.setParticipant(
+          this.experimentService.id,
+          this.profile.privateId
+        );
+        this.routerService.navigate(
+          Pages.PARTICIPANT,
+          {
+            "experiment": this.profile.transferConfig.experimentId,
+            "participant": this.profile.transferConfig.participantId,
+          }
+        );
+        this.routerService.setExperimenterNav(false);
+      }
+    };
+
     const handlePreview = () => {
       if (this.profile && this.experimentService.id) {
         this.participantService.setParticipant(
@@ -115,7 +136,7 @@ export class ProfilePreview extends MobxLitElement {
           Pages.PARTICIPANT,
           {
             "experiment": this.experimentService.id,
-            "participant": this.profile.privateId
+            "participant": this.profile.privateId,
           }
         );
         this.routerService.setExperimenterNav(false);
@@ -137,30 +158,46 @@ export class ProfilePreview extends MobxLitElement {
           <div class="subtitle">${this.profile.pronouns}</div>
         </div>
       </div>
-
-      <div>
-        <span>Current stage:</span>
-        ${this.experimentService.getStageName(this.profile.currentStageId, true)}
-      </div>
-      <div>
-        <span>Accepted TOS:</span>
-        ${formatDate(this.profile?.acceptTosTimestamp)}
-      </div>
-      <div>
-        <span>Completed:</span>
-        ${formatDate(this.profile?.completedExperiment)}
-      </div>
-      <div><span>Public ID:</span> ${this.profile.publicId}</div>
-      <div><span>Private ID:</span> ${this.profile.privateId}</div>
-
+      ${this.profile.transferConfig ?
+        html`
+          <div>
+            <span>Transferred to:</span>
+            ${this.experimenterService.getExperiment(this.profile.transferConfig.experimentId)!.name}
+          </div>
+        `
+        : html`
+          <div>
+            <span>Current stage:</span>
+            ${this.experimentService.getStageName(this.profile.currentStageId, true)}
+          </div>
+          <div>
+            <span>Accepted TOS:</span>
+            ${formatDate(this.profile?.acceptTosTimestamp)}
+          </div>
+          <div>
+            <span>Completed:</span>
+            ${formatDate(this.profile?.completedExperiment)}
+          </div>
+          <div><span>Public ID:</span> ${this.profile.publicId}</div>
+          <div><span>Private ID:</span> ${this.profile.privateId}</div>
+        `
+      }
       <div class="row">
         ${this.renderTransferMenu()}
-        <pr-tooltip text="Preview as participant" position="TOP_END">
+        <pr-tooltip text="Preview lobby as participant" position="TOP_END">
           <pr-icon-button
             icon="visibility"
             color="primary"
             variant="default"
             @click=${handlePreview}>
+          </pr-button>
+        </pr-tooltip>
+        <pr-tooltip text="Preview transfer as participant" position="TOP_END">
+          <pr-icon-button
+            icon="mystery"
+            color="primary"
+            variant="default"
+            @click=${handleFuturePreview}>
           </pr-button>
         </pr-tooltip>
         <pr-tooltip text="Copy participant link" position="TOP_END">

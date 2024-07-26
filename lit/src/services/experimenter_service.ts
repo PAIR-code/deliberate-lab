@@ -177,12 +177,13 @@ export class ExperimenterService extends Service {
     const isLobby = experiment.isLobby ?? false;
     const numberOfParticipants = experiment.numberOfParticipants ?? 0;
     const numberOfMaxParticipants = experiment.numberOfMaxParticipants ?? 0;
+    const waitForAllToStart = experiment.waitForAllToStart ?? false;
 
     return createExperimentCallable(
       this.sp.firebaseService.functions,
       {
         type: 'experiments',
-        metadata: { name, publicName, description, tags, group, isLobby, numberOfParticipants, numberOfMaxParticipants },
+        metadata: { name, publicName, description, tags, group, isLobby, numberOfParticipants, numberOfMaxParticipants, waitForAllToStart},
         stages,
       }
     );
@@ -200,12 +201,13 @@ export class ExperimenterService extends Service {
     const isLobby = experiment.isLobby ?? false;
     const numberOfParticipants = experiment.numberOfParticipants ?? 0;
     const numberOfMaxParticipants = experiment.numberOfMaxParticipants ?? 0;
+    const waitForAllToStart = experiment.waitForAllToStart ?? false;
 
     return createExperimentCallable(
       this.sp.firebaseService.functions,
       {
         type: 'templates',
-        metadata: { name, publicName, description, tags, group, isLobby, numberOfParticipants, numberOfMaxParticipants},
+        metadata: { name, publicName, description, tags, group, isLobby, numberOfParticipants, numberOfMaxParticipants, waitForAllToStart},
         stages,
       }
     );

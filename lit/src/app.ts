@@ -167,9 +167,13 @@ export class App extends MobxLitElement {
       );
     };
 
-    return html`
-      <pr-button @click=${routeToStage}>Start experiment</pr-button>
-    `;
+    if (this.experimentService.canStartExperiment()) {
+      return html`
+        <pr-button @click=${routeToStage}>Start experiment</pr-button>
+      `;
+    } else {
+      return html`Waiting for other participants to join before the experiment can begin.`;
+    }
   }
 
   private renderParticipantSettings() {
