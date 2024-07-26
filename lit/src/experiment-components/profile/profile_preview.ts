@@ -105,6 +105,27 @@ export class ProfilePreview extends MobxLitElement {
       return nothing;
     }
 
+    const handleFuturePreview = () => {
+      if (!this.profile?.transferConfig) {
+        return;
+      }
+
+      if (this.profile && this.experimentService.id) {
+        this.participantService.setParticipant(
+          this.experimentService.id,
+          this.profile.privateId
+        );
+        this.routerService.navigate(
+          Pages.PARTICIPANT,
+          {
+            "experiment": this.profile.transferConfig.experimentId,
+            "participant": this.profile.transferConfig.participantId,
+          }
+        );
+        this.routerService.setExperimenterNav(false);
+      }
+    };
+
     const handlePreview = () => {
       if (this.profile && this.experimentService.id) {
         this.participantService.setParticipant(
@@ -114,8 +135,8 @@ export class ProfilePreview extends MobxLitElement {
         this.routerService.navigate(
           Pages.PARTICIPANT,
           {
-            "experiment": this.profile.transferConfig ? this.profile.transferConfig.experimentId : this.experimentService.id,
-            "participant": this.profile.transferConfig ? this.profile.transferConfig.participantId : this.profile.privateId,
+            "experiment": this.experimentService.id,
+            "participant": this.profile.privateId,
           }
         );
         this.routerService.setExperimenterNav(false);
@@ -163,12 +184,20 @@ export class ProfilePreview extends MobxLitElement {
       }
       <div class="row">
         ${this.renderTransferMenu()}
-        <pr-tooltip text="Preview as participant" position="TOP_END">
+        <pr-tooltip text="Preview lobby as participant" position="TOP_END">
           <pr-icon-button
             icon="visibility"
             color="primary"
             variant="default"
             @click=${handlePreview}>
+          </pr-button>
+        </pr-tooltip>
+        <pr-tooltip text="Preview transfer as participant" position="TOP_END">
+          <pr-icon-button
+            icon="mystery"
+            color="primary"
+            variant="default"
+            @click=${handleFuturePreview}>
           </pr-button>
         </pr-tooltip>
         <pr-tooltip text="Copy participant link" position="TOP_END">
