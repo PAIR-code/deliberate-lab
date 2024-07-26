@@ -50,7 +50,7 @@ export class RevealPreview extends MobxLitElement {
     switch (stage.kind) {
       case StageKind.VoteForLeader:
         return html`<election-reveal .voteStageId=${stage.id}></election-reveal`;
-      case StageKind.TakeSurvey:
+      case StageKind.LostAtSeaSurvey:
         const answer = this.participantService.stageAnswers[stage.id];
         return html`<las-survey-results .stage=${stage} .answer=${answer}></las-survey-results>`;
       default:

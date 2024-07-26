@@ -41,6 +41,15 @@ export const updateStage = onCall(async (request) => {
         };
         await answerDoc.set(data, { merge: true });
         break;
+
+      case StageKind.LostAtSeaSurvey:
+        // Prepare data to merge individual answers into the firestore document
+        const lostAtSeaData = {
+          kind: StageKind.LostAtSeaSurvey,
+          answers: stage.answers,
+        };
+        await answerDoc.set(lostAtSeaData, { merge: true });
+        break;
     }
 
     return { data: 'success' };

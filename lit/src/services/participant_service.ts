@@ -3,7 +3,7 @@ import { FirebaseService } from "./firebase_service";
 import { Service } from "./service";
 import { RouterService } from "./router_service";
 import { Timestamp, Unsubscribe, collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
-import { ParticipantProfile, ParticipantProfileBase, QuestionAnswer, StageAnswer, StageKind, Votes, lookupTable } from "@llm-mediation-experiments/utils";
+import { LostAtSeaQuestionAnswer, ParticipantProfile, ParticipantProfileBase, QuestionAnswer, StageAnswer, StageKind, Votes, lookupTable } from "@llm-mediation-experiments/utils";
 import { updateStageCallable } from "../shared/callables";
 
 
@@ -149,14 +149,33 @@ export class ParticipantService extends Service {
     return updateStageCallable(
       this.sp.firebaseService.functions,
       {
-      experimentId: this.experimentId!,
-      participantId: this.participantId!,
-      stageId,
-      stage: {
-        kind: StageKind.TakeSurvey,
-        answers: lookupTable(answers, 'id'),
-      },
-    });
+        experimentId: this.experimentId!,
+        participantId: this.participantId!,
+        stageId,
+        stage: {
+          kind: StageKind.TakeSurvey,
+          answers: lookupTable(answers, 'id'),
+        },
+      }
+    );
+  }
+
+  /** Update a Lost at Sea survey stage for this participant
+   * @rights Participant
+   */
+  async updateLostAtSeaSurveyStage(stageId: string, answers: LostAtSeaQuestionAnswer[]) {
+    return updateStageCallable(
+      this.sp.firebaseService.functions,
+      {
+        experimentId: this.experimentId!,
+        participantId: this.participantId!,
+        stageId,
+        stage: {
+          kind: StageKind.LostAtSeaSurvey,
+          answers: lookupTable(answers, 'id'),
+        }
+      }
+    );
   }
 
   /** Update a vote for leader stage for this participant

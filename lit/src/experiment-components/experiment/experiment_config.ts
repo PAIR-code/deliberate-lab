@@ -161,6 +161,13 @@ export class ExperimentConfig extends MobxLitElement {
           ${this.renderGameInfo(currentStage.game)}
           <survey-config></survey-config>
         `;
+      case StageKind.LostAtSeaSurvey:
+        return html`
+          ${this.renderStageInfo(StageKind.LostAtSeaSurvey, STAGE_DESCRIPTION_INFO)}
+          ${this.renderGameInfo(currentStage.game)}
+          ${this.renderCurrentStageNameField()}
+          <code>${JSON.stringify(currentStage.questions)}</code>
+        `;
       case StageKind.SetProfile:
         return html`
           ${this.renderStageInfo(

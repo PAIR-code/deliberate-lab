@@ -71,21 +71,10 @@ export class SurveyConfig extends MobxLitElement {
       >
       </pr-textarea>
 
-      ${this.surveyConfig.questions.map(
-        (question, index) => this.renderRatingQuestion(question, index))}
-
       <pr-button @click=${addQuestion}>Add scale question</pr-button>
       ${this.surveyConfig.questions.map(
         (question, index) => this.renderScaleQuestion(question, index))}
     `;
-  }
-
-  // Used for Lost at Sea game stages only.
-  private renderRatingQuestion(question: QuestionConfig, index: number) {
-    if (question.kind !== SurveyQuestionKind.Rating) {
-      return nothing;
-    }
-    return html`${JSON.stringify(question)}`;
   }
 
   private renderScaleQuestion(question: QuestionConfig, index: number) {

@@ -72,7 +72,7 @@ export const createExperiment = onCall(async (request) => {
       for (const stage of data.stages) {
         // If payout stage, use payout config to generate scoring config
         if (stage.kind === StageKind.Payout) {
-          const getScoringQuestion = (question: RatingQuestionConfig) => {
+          const getScoringQuestion = (question: LostAtSeaQuestionConfig) => {
             return {
               id: question.id,
               questionText: question.questionText,
@@ -82,11 +82,10 @@ export const createExperiment = onCall(async (request) => {
           };
 
           const getScoringItem = (payoutItem: PayoutItem) => {
-            // To define scoring questions, convert survey stage questions
-            const surveyStage = (data.stages).find(stage => stage.id === payoutItem.surveyStageId);
-            let questions = surveyStage.questions.filter(
-              question => question.kind === SurveyQuestionKind.Rating
-            );
+            // To define scoring questions, convert Lost at Sea stage questions
+            // (Add other payout item types later)
+            const stage = (data.stages).find(stage => stage.id === payoutItem.surveyStageId);
+            let questions = stage.questions;
 
             // If strategy is "choose one," only use one question
             if (payoutItem.strategy === PayoutItemStrategy.ChooseOne) {

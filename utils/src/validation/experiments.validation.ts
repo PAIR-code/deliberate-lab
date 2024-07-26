@@ -6,6 +6,7 @@ import {
   ProfileStageConfigData,
   RevealConfigData,
   SurveyStageConfigData,
+  LostAtSeaSurveyStageConfigData,
   TermsOfServiceConfigData,
   VoteForLeaderConfigData,
 } from './stages.validation';
@@ -82,6 +83,7 @@ export const ExperimentCreationData = Type.Object(
         TermsOfServiceConfigData,
         ProfileStageConfigData,
         SurveyStageConfigData,
+        LostAtSeaSurveyStageConfigData,
         GroupChatStageConfigData,
         VoteForLeaderConfigData,
         PayoutConfigData,

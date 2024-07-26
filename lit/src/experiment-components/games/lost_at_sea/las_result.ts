@@ -9,11 +9,10 @@ import {
   getLostAtSeaPairAnswer,
   ITEMS,
   ItemName,
-  QuestionAnswer,
-  QuestionConfig,
-  RatingQuestionAnswer,
-  SurveyStageAnswer,
-  SurveyStageConfig,
+  LostAtSeaQuestion,
+  LostAtSeaQuestionAnswer,
+  LostAtSeaSurveyStageAnswer,
+  LostAtSeaSurveyStageConfig,
   SurveyQuestionKind,
 } from "@llm-mediation-experiments/utils";
 
@@ -24,8 +23,8 @@ import { styles } from "./las_result.scss";
 export class SurveyResult extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  @property() stage: SurveyStageConfig|null = null;
-  @property() answer: SurveyStageAnswer|null = null;
+  @property() stage: LostAtSeaSurveyStageConfig|null = null;
+  @property() answer: LostAtSeaSurveyStageAnswer|null = null;
 
   override render() {
     if (!this.answer || !this.stage) {
@@ -48,18 +47,14 @@ export class SurveyResult extends MobxLitElement {
             </div>
           </div>
         </div>
-        ${this.stage.questions.map(question => this.renderRatingQuestion(question))}
+        ${this.stage.questions.map(question => this.renderQuestion(question))}
       </div>
     `;
   }
 
-  private renderRatingQuestion(question: QuestionConfig) {
-    if (question.kind !== SurveyQuestionKind.Rating) {
-      return nothing;
-    }
-
+  private renderQuestion(question: LostAtSeaQuestion) {
     const participantAnswer =
-      this.answer?.answers[question.id] as RatingQuestionAnswer;
+      this.answer?.answers[question.id] as LostAtSeaQuestionAnswer;
 
     const gameAnswer = getLostAtSeaPairAnswer(question.item1, question.item2);
 

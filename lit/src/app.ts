@@ -7,6 +7,7 @@ import "./experiment-components/experiment/experiment_config";
 import "./experiment-components/experiment/experiment_config_sidenav";
 import "./experiment-components/experiment/experiment_preview";
 import "./experiment-components/info/info_preview";
+import "./experiment-components/games/lost_at_sea/las_survey_preview";
 import "./experiment-components/payout/payout_preview";
 import "./experiment-components/profile/profile_config";
 import "./experiment-components/reveal/reveal_preview";
@@ -259,6 +260,10 @@ export class App extends MobxLitElement {
         return html`
           <survey-preview .stage=${currentStage} .answer=${answer}>
           </survey-preview>
+        `;
+      case StageKind.LostAtSeaSurvey:
+        return html`
+          <las-survey-preview .stage=${currentStage} .answer=${answer}></las-survey-preview>    
         `;
       case StageKind.SetProfile:
         return html`<profile-config></profile-config>`;

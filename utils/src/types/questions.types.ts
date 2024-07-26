@@ -1,11 +1,8 @@
 /** Survey question types */
 
-import { ItemName } from './items.types';
-
 export enum SurveyQuestionKind {
   Text = 'TextQuestion',
   Check = 'CheckQuestion',
-  Rating = 'RatingQuestion',
   Scale = 'ScaleQuestion',
 }
 
@@ -27,13 +24,6 @@ export interface CheckQuestionConfig extends BaseQuestionConfig {
   kind: SurveyQuestionKind.Check;
 }
 
-export interface RatingQuestionConfig extends BaseQuestionConfig {
-  kind: SurveyQuestionKind.Rating;
-
-  item1: ItemName;
-  item2: ItemName;
-}
-
 export interface ScaleQuestionConfig extends BaseQuestionConfig {
   kind: SurveyQuestionKind.Scale;
 
@@ -44,7 +34,6 @@ export interface ScaleQuestionConfig extends BaseQuestionConfig {
 export type QuestionConfig =
   | TextQuestionConfig
   | CheckQuestionConfig
-  | RatingQuestionConfig
   | ScaleQuestionConfig;
 
 // ********************************************************************************************* //
@@ -68,13 +57,6 @@ export interface CheckQuestionAnswer extends BaseQuestionAnswer {
   checkMark: boolean;
 }
 
-export interface RatingQuestionAnswer extends BaseQuestionAnswer {
-  kind: SurveyQuestionKind.Rating;
-
-  choice: ItemName;
-  confidence: number; // Confidence in the choice, from 0.5 to 1
-}
-
 export interface ScaleQuestionAnswer extends BaseQuestionAnswer {
   kind: SurveyQuestionKind.Scale;
 
@@ -84,5 +66,4 @@ export interface ScaleQuestionAnswer extends BaseQuestionAnswer {
 export type QuestionAnswer =
   | TextQuestionAnswer
   | CheckQuestionAnswer
-  | RatingQuestionAnswer
   | ScaleQuestionAnswer;

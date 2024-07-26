@@ -1,6 +1,6 @@
 /** Chat between participants and mediators */
 
-import { ItemName } from './items.types';
+import { ItemName } from './lost_at_sea.types';
 
 export enum ChatKind {
   SimpleChat = 'simpleChat',

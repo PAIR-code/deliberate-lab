@@ -1,6 +1,20 @@
-/** Item types. Items are shown to users, who need to choose and rate the most useful one */
+/** Lost at Sea types and utils. */
 
-/** Item displayed to the user. The name must be unique */
+export interface LostAtSeaQuestion {
+  id: number; // Note that the question id is not related to the question's position in the survey
+  questionText: string;
+  item1: ItemName;
+  item2: ItemName;
+}
+
+/** Lost at Sea question answer. */
+export interface LostAtSeaQuestionAnswer {
+  id: number;
+  choice: ItemName;
+  confidence: number; // confidence in the choice (from 0 to 1)
+}
+
+/** Item displayed to the user (who rank the most useful one). */
 export interface Item {
   name: string; // unique
   imageUrl: string;

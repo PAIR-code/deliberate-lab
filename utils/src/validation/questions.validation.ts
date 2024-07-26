@@ -1,6 +1,6 @@
 import { Type } from '@sinclair/typebox';
 import { SurveyQuestionKind } from '../types/questions.types';
-import { ItemData } from './items.validation';
+import { ItemData } from './lost_at_sea.validation';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = { additionalProperties: false } as const;
@@ -29,10 +29,9 @@ export const CheckQuestionConfigData = Type.Object(
   strict,
 );
 
-/** Rating question config */
-export const RatingQuestionConfigData = Type.Object(
+/** Lost at Sea question data */
+export const LostAtSeaQuestionData = Type.Object(
   {
-    kind: Type.Literal(SurveyQuestionKind.Rating),
     id: Type.Number(),
     questionText: Type.String({ minLength: 1 }),
     item1: ItemData,
@@ -77,10 +76,9 @@ export const CheckQuestionAnswerData = Type.Object(
   strict,
 );
 
-/** Rating question answer data */
-export const RatingQuestionAnswerData = Type.Object(
+/** Lost at Sea question answer data */
+export const LostAtSeaQuestionAnswerData = Type.Object(
   {
-    kind: Type.Literal(SurveyQuestionKind.Rating),
     id: Type.Number(),
     choice: ItemData,
     confidence: Type.Number({ minimum: 0.5, maximum: 1 }),

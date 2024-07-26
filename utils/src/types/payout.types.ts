@@ -12,7 +12,7 @@ export enum PayoutBundleStrategy {
 }
 
 // Add other PayoutItem types later
-export type PayoutItem = RatingSurveyPayoutItem;
+export type PayoutItem = LostAtSeaSurveyPayoutItem;
 
 export enum PayoutCurrency {
   USD = 'USD', // US dollar
@@ -20,7 +20,7 @@ export enum PayoutCurrency {
 }
 
 export enum PayoutItemKind {
-  RatingSurvey = 'RatingSurvey',
+  LostAtSeaSurvey = 'LostAtSeaSurvey',
 }
 
 export interface BasePayoutItem {
@@ -37,10 +37,10 @@ export enum PayoutItemStrategy {
   ChooseOne = 'ChooseOne', // randomly choose one question to score
 }
 
-export interface RatingSurveyPayoutItem extends BasePayoutItem {
-  kind: PayoutItemKind.RatingSurvey;
+export interface LostAtSeaSurveyPayoutItem extends BasePayoutItem {
+  kind: PayoutItemKind.LostAtSeaSurvey;
   strategy: PayoutItemStrategy;
-  surveyStageId: string; // stage ID of survey with ranting questions
+  surveyStageId: string; // stage ID of Lost at Sea survey
   currencyAmountPerQuestion: number; // e.g., 2 for $2 per survey question
   leaderStageId?: string; // stage ID for leader if using leader answers
 }

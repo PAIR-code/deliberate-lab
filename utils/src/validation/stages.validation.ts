@@ -6,10 +6,10 @@ import { BaseStageConfig, StageConfig, StageKind } from '../types/stages.types';
 import { Vote } from '../types/votes.types';
 import { ChatAboutItemsConfigData, SimpleChatConfigData } from './chats.validation';
 import {
+  LostAtSeaQuestionData,
+  LostAtSeaQuestionAnswerData,
   CheckQuestionAnswerData,
   CheckQuestionConfigData,
-  RatingQuestionAnswerData,
-  RatingQuestionConfigData,
   ScaleQuestionAnswerData,
   ScaleQuestionConfigData,
   TextQuestionAnswerData,
@@ -81,10 +81,24 @@ export const SurveyStageConfigData = Type.Object(
       Type.Union([
         TextQuestionConfigData,
         CheckQuestionConfigData,
-        RatingQuestionConfigData,
         ScaleQuestionConfigData,
       ]),
     ),
+  },
+  strict,
+);
+
+/** Lost at Sea survey stage config */
+export const LostAtSeaSurveyStageConfigData = Type.Object(
+  {
+    id: Type.String({ minLength: 1 }),
+    kind: Type.Literal(StageKind.LostAtSeaSurvey),
+    name: Type.String({ minLength: 1 }),
+    composite: Type.Optional(Type.Boolean()),
+    game: Type.Optional(Type.String({ minLength: 1 })),
+    description: Type.Optional(Type.String()),
+    popupText: Type.Optional(Type.String()),
+    questions: Type.Array(LostAtSeaQuestionData),
   },
   strict,
 );
@@ -181,6 +195,7 @@ export const CONFIG_DATA = {
   [StageKind.TermsOfService]: TermsOfServiceConfigData,
   [StageKind.SetProfile]: ProfileStageConfigData,
   [StageKind.TakeSurvey]: SurveyStageConfigData,
+  [StageKind.LostAtSeaSurvey]: LostAtSeaSurveyStageConfigData,
   [StageKind.GroupChat]: GroupChatStageConfigData,
   [StageKind.VoteForLeader]: VoteForLeaderConfigData,
   [StageKind.Payout]: PayoutConfigData,
@@ -204,10 +219,21 @@ export const SurveyStageAnswerData = Type.Object(
       Type.Union([
         TextQuestionAnswerData,
         CheckQuestionAnswerData,
-        RatingQuestionAnswerData,
         ScaleQuestionAnswerData,
       ]),
     ),
+  },
+  strict,
+);
+
+/** Lost at Sea survey stage answer data */
+export const LostAtSeaSurveyStageAnswerData = Type.Object(
+  {
+    kind: Type.Literal(StageKind.LostAtSeaSurvey),
+    answers: Type.Record(
+      Type.Number({ minimum: 0 }),
+      LostAtSeaQuestionAnswerData,
+    )
   },
   strict,
 );
@@ -235,7 +261,7 @@ export const StageAnswerData = Type.Object(
     experimentId: Type.String({ minLength: 1 }),
     participantId: Type.String({ minLength: 1 }),
     stageId: Type.String({ minLength: 1 }),
-    stage: Type.Union([SurveyStageAnswerData, VoteForLeaderStageAnswerData]),
+    stage: Type.Union([SurveyStageAnswerData, LostAtSeaSurveyStageAnswerData, VoteForLeaderStageAnswerData]),
   },
   strict,
 );
@@ -306,6 +332,9 @@ export function validateStageConfigs(stages: StageConfig[]): string[] {
           }
         });
 
+        break;
+
+      case StageKind.LostAtSeaSurvey:
         break;
 
       default:

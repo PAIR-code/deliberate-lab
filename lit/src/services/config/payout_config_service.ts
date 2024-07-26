@@ -58,7 +58,7 @@ export class PayoutConfigService extends Service {
     const payouts = this.stage?.payouts;
     if (payouts && bundleIndex >= 0 && bundleIndex < payouts.length) {
       this.stage!.payouts[bundleIndex].payoutItems.push({
-        kind: PayoutItemKind.RatingSurvey,
+        kind: PayoutItemKind.LostAtSeaSurvey,
         strategy: PayoutItemStrategy.AddAll,
         fixedCurrencyAmount: 0,
         surveyStageId,
