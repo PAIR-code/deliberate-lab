@@ -10,6 +10,8 @@ import {
   LostAtSeaQuestionAnswerData,
   CheckQuestionAnswerData,
   CheckQuestionConfigData,
+  MultipleChoiceQuestionAnswerData,
+  MultipleChoiceQuestionConfigData,
   ScaleQuestionAnswerData,
   ScaleQuestionConfigData,
   TextQuestionAnswerData,
@@ -81,6 +83,7 @@ export const SurveyStageConfigData = Type.Object(
       Type.Union([
         TextQuestionConfigData,
         CheckQuestionConfigData,
+        MultipleChoiceQuestionConfigData,
         ScaleQuestionConfigData,
       ]),
     ),
@@ -219,6 +222,7 @@ export const SurveyStageAnswerData = Type.Object(
       Type.Union([
         TextQuestionAnswerData,
         CheckQuestionAnswerData,
+        MultipleChoiceQuestionAnswerData,
         ScaleQuestionAnswerData,
       ]),
     ),

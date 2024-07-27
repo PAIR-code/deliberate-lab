@@ -29,6 +29,20 @@ export const CheckQuestionConfigData = Type.Object(
   strict,
 );
 
+/** Multiple choice question config */
+export const MultipleChoiceQuestionConfigData = Type.Object(
+  {
+    kind: Type.Literal(SurveyQuestionKind.MultipleChoice),
+    id: Type.Number(),
+    questionText: Type.String({ minLength: 1 }),
+    options: Type.Array(Type.Object({
+      id: Type.Number(),
+      text: Type.String({ minLength: 1 }),
+    })),
+  },
+  strict,
+)
+
 /** Lost at Sea question data */
 export const LostAtSeaQuestionData = Type.Object(
   {
@@ -75,6 +89,15 @@ export const CheckQuestionAnswerData = Type.Object(
   },
   strict,
 );
+
+/** Multiple choice question answer data */
+export const MultipleChoiceQuestionAnswerData = Type.Object (
+  {
+    kind: Type.Literal(SurveyQuestionKind.MultipleChoice),
+    id: Type.Number(),
+    choice: Type.Number(),
+  }
+)
 
 /** Lost at Sea question answer data */
 export const LostAtSeaQuestionAnswerData = Type.Object(

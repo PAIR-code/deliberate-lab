@@ -3,6 +3,7 @@
 export enum SurveyQuestionKind {
   Text = 'TextQuestion',
   Check = 'CheckQuestion',
+  MultipleChoice = 'MultipleChoiceQuestion',
   Scale = 'ScaleQuestion',
 }
 
@@ -24,6 +25,16 @@ export interface CheckQuestionConfig extends BaseQuestionConfig {
   kind: SurveyQuestionKind.Check;
 }
 
+export interface MultipleChoiceQuestionConfig extends BaseQuestionConfig {
+  kind: SurveyQuestionKind.MultipleChoice;
+  options: MultipleChoiceItem[];
+}
+
+export interface MultipleChoiceItem {
+  id: number;
+  text: string;
+}
+
 export interface ScaleQuestionConfig extends BaseQuestionConfig {
   kind: SurveyQuestionKind.Scale;
 
@@ -34,6 +45,7 @@ export interface ScaleQuestionConfig extends BaseQuestionConfig {
 export type QuestionConfig =
   | TextQuestionConfig
   | CheckQuestionConfig
+  | MultipleChoiceQuestionConfig
   | ScaleQuestionConfig;
 
 // ********************************************************************************************* //
@@ -57,6 +69,11 @@ export interface CheckQuestionAnswer extends BaseQuestionAnswer {
   checkMark: boolean;
 }
 
+export interface MultipleChoiceQuestionAnswer extends BaseQuestionAnswer {
+  kind: SurveyQuestionKind.MultipleChoice;
+  choice: number; // ID of MultipleChoiceItem chosen
+}
+
 export interface ScaleQuestionAnswer extends BaseQuestionAnswer {
   kind: SurveyQuestionKind.Scale;
 
@@ -66,4 +83,5 @@ export interface ScaleQuestionAnswer extends BaseQuestionAnswer {
 export type QuestionAnswer =
   | TextQuestionAnswer
   | CheckQuestionAnswer
+  | MultipleChoiceQuestionAnswer
   | ScaleQuestionAnswer;
