@@ -44,6 +44,13 @@ export class SurveyPreview extends MobxLitElement {
       return nothing;
     }
 
+    const questionsComplete = () => {
+      const answerMap = this.answer?.answers;
+      const answerList = answerMap ? Object.values(answerMap) : [];
+
+      return answerList.length === this.stage?.questions.length;
+    }
+
     const descriptionContent = this.stage.description ? html`<div class="description">${this.stage.description}</div>` : nothing;
 
     return html`
@@ -53,7 +60,7 @@ export class SurveyPreview extends MobxLitElement {
         ${this.stage.questions.map(question =>
         this.renderQuestion(question))}
       </div>
-      <stage-footer>
+      <stage-footer .disabled=${!questionsComplete()}>
         <progress-stage-completed></progress-stage-completed>
       </stage-footer>
     `;
