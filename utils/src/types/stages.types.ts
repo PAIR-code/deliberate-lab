@@ -59,7 +59,7 @@ export interface LostAtSeaSurveyStageConfig extends BaseStageConfig {
 
 export interface GroupChatStageConfig extends BaseStageConfig {
   kind: StageKind.GroupChat;
-  chatId: string;
+  chatId: string; // TODO: remove field as no longer used
   chatConfig: ChatConfig;
   mediators: MediatorConfig[];
 }

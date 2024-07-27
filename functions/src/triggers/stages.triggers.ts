@@ -1,6 +1,8 @@
 import {
   ChatKind,
+  DiscussItemsMessage,
   Experiment,
+  MessageKind,
   ParticipantProfile,
   PublicChatData,
   PublicStageData,
@@ -11,6 +13,7 @@ import {
   allVoteScores,
   chooseLeader,
 } from '@llm-mediation-experiments/utils';
+import { Timestamp } from 'firebase-admin/firestore';
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { app } from '../app';
 
@@ -46,7 +49,7 @@ export const initializePublicStageData = onDocumentWritten(
             chatData = {
               kind: ChatKind.ChatAboutItems,
               currentRatingIndex: 0,
-              ratingsToDiscuss: data.chatConfig.ratingsToDiscuss, // Also publish the config again for convenience
+              ratingsToDiscuss: data.chatConfig.ratingsToDiscuss,
             };
             break;
           default: // SimpleChat
@@ -79,6 +82,28 @@ export const initializePublicStageData = onDocumentWritten(
       .doc(`experiments/${event.params.experimentId}/publicStageData/${event.params.stageId}`);
 
     publicStageData.set(publicData);
+
+    // If stage is Lost at Sea chat, create initial DiscussItemsMessage
+    if (data.kind === StageKind.GroupChat && data.chatConfig.kind === ChatKind.ChatAboutItems) {
+        const ratingsToDiscuss = data.chatConfig.ratingsToDiscuss;
+        // Create the message
+        const messageData: Omit<DiscussItemsMessage, 'uid'> = {
+        kind: MessageKind.DiscussItemsMessage,
+        itemPair: ratingsToDiscuss[0],
+        text: `Discussion 1 of ${ratingsToDiscuss.length}`,
+        timestamp: Timestamp.now(),
+      };
+
+      await app.firestore().runTransaction(async (transaction) => {
+        const stageMessageData = await app
+          .firestore()
+          .collection(
+            `experiments/${event.params.experimentId}/publicStageData/${event.params.stageId}/messages`
+          );
+
+        transaction.set(stageMessageData.doc(), messageData);
+      });
+    }
   },
 );
 

@@ -274,7 +274,7 @@ export class App extends MobxLitElement {
       case StageKind.Reveal:
         return html`<reveal-preview .stage=${currentStage}></reveal-preview>`;
       case StageKind.GroupChat:
-        this.chatService.updateForCurrentRoute(currentStage.chatId);
+        this.chatService.updateForCurrentRoute();
 
         if (currentStage.chatConfig.kind === ChatKind.ChatAboutItems) {
           return html`<lost-at-sea-chat .stage=${currentStage}></lost-at-sea-chat>`;

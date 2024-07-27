@@ -43,12 +43,13 @@ export const message = onCall(async (request) => {
 
     // Create all messages in transaction
     await app.firestore().runTransaction(async (transaction) => {
-      participants.docs.forEach((participant) => {
-        transaction.set(participant.ref.collection(`chats/${data.chatId}/messages`).doc(), {
-          ...data.message,
-          timestamp,
-        });
-      });
+      const publicStageData = await app
+        .firestore()
+        .collection(
+          `experiments/${data.experimentId}/publicStageData/${data.stageId}/messages`
+        );
+
+      transaction.set(publicStageData.doc(), { ...data.message, timestamp });
     });
 
     return { data: 'success' };

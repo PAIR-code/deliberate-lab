@@ -41,7 +41,7 @@ export const MediatorMessageData = Type.Object(
 export const MessageData = Type.Object(
   {
     experimentId: Type.String({ minLength: 1 }),
-    chatId: Type.String({ minLength: 1 }),
+    stageId: Type.String({ minLength: 1 }),
     message: Type.Union([UserMessageData, DiscussItemsMessageData, MediatorMessageData]),
   },
   strict,

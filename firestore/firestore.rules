@@ -64,6 +64,11 @@ service cloud.firestore {
       match /publicStageData/{stageId} {
         allow read: if true;
         allow write: if false; // Public readonly for everyone. Computed through firestore triggers
+
+        match /messages/{messageId} {
+          allow read: if true;
+          allow write: if false; // Write as participant through cloud functions
+        }
       }
 
       // Participant rules
