@@ -11,7 +11,7 @@ export interface LostAtSeaQuestion {
 export interface LostAtSeaQuestionAnswer {
   id: number;
   choice: ItemName;
-  confidence: number; // confidence in the choice (from 0 to 1)
+  confidence?: number; // confidence in the choice (from 0 to 10)
 }
 
 /** Item displayed to the user (who rank the most useful one). */

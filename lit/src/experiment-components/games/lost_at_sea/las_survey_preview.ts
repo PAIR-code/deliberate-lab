@@ -4,7 +4,6 @@ import "../../footer/footer";
 import "../../progress/progress_stage_completed";
 
 import '@material/web/radio/radio.js';
-import '@material/web/slider/slider.js';
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
@@ -44,7 +43,17 @@ export class SurveyPreview extends MobxLitElement {
       const answerMap = this.answer?.answers;
       const answerList = answerMap ? Object.values(answerMap) : [];
 
-      return answerList.length === this.stage?.questions.length;
+      if (answerList.length != this.stage?.questions.length) {
+        return false;
+      };
+
+      // Confirm that user has selected confidence for each question
+      for (const answer of answerList) {
+        if (!answer.confidence) {
+          return false;
+        }
+      }
+      return true;
     };
 
     const descriptionContent = this.stage.description ? html`<div class="description">${this.stage.description}</div>` : nothing;
@@ -68,10 +77,14 @@ export class SurveyPreview extends MobxLitElement {
         return;
       }
 
-      const answer: LostAtSeaQuestionAnswer = {
+      const confidence = this.getQuestionConfidence(question);
+      const answer: LostAtSeaQuestionAnswer = confidence ? {
         id: question.id,
         choice,
         confidence: this.getQuestionConfidence(question),
+      } : {
+        id: question.id,
+        choice
       };
 
       this.participantService.updateLostAtSeaSurveyStage(
@@ -139,7 +152,7 @@ export class SurveyPreview extends MobxLitElement {
             </div>
           </div>
         </div>
-        ${this.renderConfidence(question)}
+        ${this.renderConfidenceScale(question)}
       </div>
     `;
   }
@@ -151,7 +164,7 @@ export class SurveyPreview extends MobxLitElement {
       return questionAnswer.choice;
     }
 
-    return null;
+    return undefined;
   }
 
   private getQuestionConfidence(question: LostAtSeaQuestion) {
@@ -161,12 +174,42 @@ export class SurveyPreview extends MobxLitElement {
       return questionAnswer.confidence;
     }
 
-    return .5;
+    return undefined;
   }
 
-  private renderConfidence(question: LostAtSeaQuestion) {
-    const onChange = (e: Event) => {
-      const confidence = parseFloat((e.target as HTMLInputElement).value);
+  private renderConfidenceScale(question: LostAtSeaQuestion) {
+    const scale = [...Array(11).keys()];
+
+    return html`
+      <div class="confidence-question">
+        <div class="title">How confident are you that your answer is correct?</div>
+        <div class="confidence-scale labels">
+          <div>Not confident</div>
+          <div>Very confident</div>
+        </div>
+        <div class="confidence-scale values">
+          ${scale.map(num => this.renderConfidenceRadioButton(question, num))}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderConfidenceRadioButton(question: LostAtSeaQuestion, value: number) {
+    const name = `${question.id}-confidence`;
+    const id = `${question.id}-confidence-${value}`;
+
+    const isConfidenceChoiceMatch = (value: number) => {
+      const questionAnswer = this.answer?.answers[question.id];
+
+      if (questionAnswer) {
+        return questionAnswer.confidence === value;
+      }
+      return false;
+    };
+
+    const handleConfidenceClick = (e: Event) => {
+      const confidence = Number((e.target as HTMLInputElement).value);
+
       const choice = this.getQuestionChoice(question);
 
       if (!choice) {
@@ -185,24 +228,19 @@ export class SurveyPreview extends MobxLitElement {
       );
     };
 
-    const disableSlider = !this.participantService.isCurrentStage()
-      || this.getQuestionChoice(question) === null;
-
     return html`
-      <div class="slider-wrapper">
-        <div>Not confident</div>
-        <md-slider
-          step=".1"
-          ticks
-          min="0"
-          max="1"
-          value=${this.getQuestionConfidence(question)}
-          labeled
-          ?disabled=${disableSlider}
-          @change=${onChange}
+      <div class="confidence-button">
+        <md-radio
+          id=${id}
+          name=${name}
+          value=${value}
+          aria-label=${value}
+          ?checked=${isConfidenceChoiceMatch(value)}
+          ?disabled=${!this.participantService.isCurrentStage() || !this.answer?.answers[question.id]}
+          @change=${handleConfidenceClick}
         >
-        </md-slider>
-        <div>Very confident</div>
+        </md-radio>
+        <label for=${id}>${value}</label>
       </div>
     `;
   }

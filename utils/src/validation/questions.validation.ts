@@ -104,7 +104,7 @@ export const LostAtSeaQuestionAnswerData = Type.Object(
   {
     id: Type.Number(),
     choice: ItemData,
-    confidence: Type.Number({ minimum: 0.5, maximum: 1 }),
+    confidence: Type.Optional(Type.Number({ minimum: 0, maximum: 10 })),
   },
   strict,
 );

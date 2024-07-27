@@ -25,12 +25,7 @@
 }
 
 .question-title {
-  @include typescale.title-small;
-}
-
-.slider-wrapper {
-  @include common.flex-row-align-center;
-  gap: common.$spacing-medium;
+  @include typescale.title-medium;
 }
 
 .question-wrapper {
@@ -78,4 +73,29 @@
 .radio-button {
   @include common.flex-row;
   gap: common.$spacing-large;
+}
+
+.confidence-question {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.confidence-scale {
+  @include common.flex-row;
+  gap: common.$spacing-large;
+  max-width: 500px;
+
+  &.values {
+    justify-content: space-around;
+  }
+
+  &.labels {
+    @include typescale.label-small;
+    justify-content: space-between;
+  }
+}
+
+.confidence-button {
+  @include common.flex-column-align-center;
+  gap: common.$spacing-small;
 }
