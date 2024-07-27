@@ -42,3 +42,23 @@
   @include common.flex-row;
   gap: common.$spacing-large;
 }
+
+.scale {
+  @include common.flex-row;
+  gap: common.$spacing-large;
+  max-width: 500px;
+
+  &.values {
+    justify-content: space-around;
+  }
+
+  &.labels {
+    @include typescale.label-small;
+    justify-content: space-between;
+  }
+}
+
+.scale-button {
+  @include common.flex-column-align-center;
+  gap: common.$spacing-small;
+}

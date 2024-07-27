@@ -4,7 +4,6 @@ import "../footer/footer";
 import "../progress/progress_stage_completed";
 
 import '@material/web/radio/radio.js';
-import '@material/web/slider/slider.js';
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
@@ -123,7 +122,36 @@ export class SurveyPreview extends MobxLitElement {
   }
 
   private renderScaleQuestion(question: ScaleQuestionConfig) {
-    const onChange = (e: Event) => {
+    const scale = [...Array(10).keys()].map(n => n + 1);
+
+    return html`
+      <div class="question">
+        <div class="question-title">${question.questionText}</div>
+        <div class="scale labels">
+          <div>${question.lowerBound}</div>
+          <div>${question.upperBound}</div>
+        </div>
+        <div class="scale values">
+          ${scale.map(num => this.renderScaleRadioButton(question, num))}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderScaleRadioButton(question: ScaleQuestionConfig, value: number) {
+    const name = `${question.id}`;
+    const id = `${question.id}-${value}`;
+
+    const isScaleChoiceMatch = (score: number) => {
+      const questionAnswer = this.answer?.answers[question.id];
+
+      if (questionAnswer && questionAnswer.kind === SurveyQuestionKind.Scale) {
+        return questionAnswer.score === score;
+      }
+      return false;
+    };
+
+    const handleScaleClick = (e: Event) => {
       const score = Number((e.target as HTMLInputElement).value);
       const answer: ScaleQuestionAnswer = {
         id: question.id,
@@ -137,34 +165,19 @@ export class SurveyPreview extends MobxLitElement {
       );
     };
 
-    const getValue = () => {
-      const questionAnswer = this.answer?.answers[question.id];
-
-      if (questionAnswer && questionAnswer.kind === SurveyQuestionKind.Scale) {
-        return questionAnswer.score;
-      }
-
-      return 5;
-    }
-
     return html`
-      <div class="question">
-        <div class="question-title">${question.questionText}</div>
-        <div class="slider-wrapper">
-          <div>${question.lowerBound}</div>
-          <md-slider
-            step="1"
-            ticks
-            min="0"
-            max="10"
-            value=${getValue()}
-            labeled
-            ?disabled=${!this.participantService.isCurrentStage()}
-            @change=${onChange}
-          >
-          </md-slider>
-          <div>${question.upperBound}</div>
-        </div>
+      <div class="scale-button">
+        <md-radio
+          id=${id}
+          name=${name}
+          value=${value}
+          aria-label=${value}
+          ?checked=${isScaleChoiceMatch(value)}
+          ?disabled=${!this.participantService.isCurrentStage()}
+          @change=${handleScaleClick}
+        >
+        </md-radio>
+        <label for=${id}>${value}</label>
       </div>
     `;
   }
