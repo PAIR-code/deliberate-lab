@@ -32,7 +32,7 @@ export const LAS_SCENARIO_REMINDER = "You and three friends are on a yacht trip 
 
 export const LAS_WTL_DESCRIPTION = "Thank you for completing the task.\n\nNow, imagine that you are no longer alone but part of a group of four people. Your group must elect a leader whose role is to answer on behalf of the group the same types of questions you have just seen. In this scenario, the leader is the only one who chooses the most useful items for survival from pairs, and their answers determine the payment for each member of the group.\n\nHow interested would you be in taking on the leader’s role described above? Please choose a number from 1 to 10, with 1 meaning that you would very much like to become the leader, and 10 meaning not at all.";
 
-export const LAS_WTL_SURVEY : QuestionConfig[] = [
+export const LAS_WTL_SURVEY: QuestionConfig[] = [
   {
     id: 0,
     kind: SurveyQuestionKind.Scale,
@@ -43,6 +43,33 @@ export const LAS_WTL_SURVEY : QuestionConfig[] = [
   },
 ];
 
+export const LAS_PE_DESCRIPTION = "Before you start the chat discussion, we would like you to guess how well you did in Part 1 compared to the other 3 members of your group. Please indicate your answer by clicking on one of the options below. If you think you earned the highest number of good answers in your group, click on the first option. If you think you earned the second highest number of good answers, click on the second option, and so on.";
+
+export const LAS_PE_SURVEY: QuestionConfig[] = [
+  {
+    id: 0,
+    kind: SurveyQuestionKind.MultipleChoice,
+    questionText: "How well do you think you did compared to the other members of your group?",
+    options: [
+      {
+        id: 0,
+        text: "My score was the best",
+      },
+      {
+        id: 1,
+        text: "My score was the second best",
+      },
+      {
+        id: 2,
+        text: "My score was the third best",
+      },
+      {
+        id: 3,
+        text: "My score was the fourth best",
+      }
+    ]
+  }
+];
 
 export const LAS_GROUP_CHAT_DESCRIPTION = "Discuss your responses to the previous task with your teammates. Take this opportunity to gauge the abilities of your crewmembers, as you will later vote for a representative whose performance will determine your payout.";
 

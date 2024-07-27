@@ -15,7 +15,11 @@ import {
   ITEMS,
   ItemName,
   QuestionConfig,
+  MultipleChoiceItem,
+  MultipleChoiceQuestionConfig,
+  MultipleChoiceQuestionAnswer,
   ScaleQuestionAnswer,
+  ScaleQuestionConfig,
   SurveyQuestionKind,
   SurveyStageAnswer,
   SurveyStageConfig
@@ -48,7 +52,7 @@ export class SurveyPreview extends MobxLitElement {
       
       <div class="questions-wrapper">
         ${this.stage.questions.map(question =>
-        this.renderScaleQuestion(question))}
+        this.renderQuestion(question))}
       </div>
       <stage-footer>
         <progress-stage-completed></progress-stage-completed>
@@ -56,11 +60,69 @@ export class SurveyPreview extends MobxLitElement {
     `;
   }
 
-  private renderScaleQuestion(question: QuestionConfig) {
-    if (question.kind !== SurveyQuestionKind.Scale) {
-      return nothing;
+  private renderQuestion(question: QuestionConfig) {
+    switch (question.kind) {
+      case SurveyQuestionKind.MultipleChoice:
+        return this.renderMultipleChoiceQuestion(question);
+      case SurveyQuestionKind.Scale:
+        return this.renderScaleQuestion(question);
+      default:
+        return nothing;
     }
+  }
 
+  private renderMultipleChoiceQuestion(question: MultipleChoiceQuestionConfig) {
+    return html`
+      <div class="radio-question">
+        <div class="title">${question.questionText}</div>
+        ${question.options.map(option => this.renderRadioButton(option, question.id))}
+      </div>
+    `;
+  }
+
+  private isMultipleChoiceMatch(questionId: number, choiceId: number) {
+    const questionAnswer = this.answer?.answers[questionId];
+
+    if (questionAnswer && questionAnswer.kind === SurveyQuestionKind.MultipleChoice) {
+      return questionAnswer.choice === choiceId;
+    }
+    return false;
+  }
+
+  private renderRadioButton(choice: MultipleChoiceItem, questionId: number) {
+    const id = `${questionId}-${choice.id}`;
+
+    const handleMultipleChoiceClick = (e: Event) => {
+      const choice = Number((e.target as HTMLInputElement).value);
+      const answer: MultipleChoiceQuestionAnswer = {
+        id: questionId,
+        kind: SurveyQuestionKind.MultipleChoice,
+        choice
+      }
+      this.participantService.updateSurveyStage(
+        this.participantService.profile!.currentStageId,
+        [answer]
+      );
+    };
+
+    return html`
+      <div class="radio-button">
+        <md-radio
+          id=${id}
+          name=${questionId}
+          value=${choice.id}
+          aria-label=${choice.text}
+          ?checked=${this.isMultipleChoiceMatch(questionId, choice.id)}
+          ?disabled=${!this.participantService.isCurrentStage()}
+          @change=${handleMultipleChoiceClick}
+        >
+        </md-radio>
+        <label for=${id}>${choice.text}</label>
+      </div>
+    `;
+  }
+
+  private renderScaleQuestion(question: ScaleQuestionConfig) {
     const onChange = (e: Event) => {
       const score = Number((e.target as HTMLInputElement).value);
       const answer: ScaleQuestionAnswer = {

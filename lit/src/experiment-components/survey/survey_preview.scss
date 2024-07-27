@@ -33,6 +33,11 @@
   gap: common.$spacing-medium;
 }
 
+.radio-question {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
 .radio-button {
   @include common.flex-row;
   gap: common.$spacing-large;

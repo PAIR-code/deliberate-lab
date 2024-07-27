@@ -24,7 +24,24 @@ import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
 import { v4 as uuidv4 } from "uuid";
 
-import { LAS_ID, LAS_FINAL_SURVEY, LAS_FINAL_SURVEY_DESCRIPTION, LAS_GROUP_CHAT_DESCRIPTION, LAS_INITIAL_TASK_INTRO_INFO_LINES, LAS_INTRO_DESCRIPTION, LAS_INTRO_INFO_LINES, LAS_LEADER_ELECTION_DESCRIPTION, LAS_LEADER_REVEAL_DESCRIPTION, LAS_LEADER_TASK_DESCRIPTION, LAS_REDO_TASK_DESCRIPTION, LAS_SCENARIO_REMINDER, LAS_WTL_DESCRIPTION, LAS_WTL_SURVEY } from './constants';
+import {
+  LAS_ID,
+  LAS_FINAL_SURVEY,
+  LAS_FINAL_SURVEY_DESCRIPTION,
+  LAS_GROUP_CHAT_DESCRIPTION,
+  LAS_INITIAL_TASK_INTRO_INFO_LINES,
+  LAS_INTRO_DESCRIPTION,
+  LAS_INTRO_INFO_LINES,
+  LAS_LEADER_ELECTION_DESCRIPTION,
+  LAS_LEADER_REVEAL_DESCRIPTION,
+  LAS_LEADER_TASK_DESCRIPTION,
+  LAS_PE_DESCRIPTION,
+  LAS_PE_SURVEY,
+  LAS_REDO_TASK_DESCRIPTION,
+  LAS_SCENARIO_REMINDER,
+  LAS_WTL_DESCRIPTION,
+  LAS_WTL_SURVEY
+} from './constants';
 import { createSurveyStage, createChatStage, createVoteForLeaderStage, createPayoutStage, createRevealStage, createInfoStage, generateId } from "../utils";
 
 /**
@@ -79,6 +96,15 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
     description: LAS_WTL_DESCRIPTION,
     questions: LAS_WTL_SURVEY
   }));
+
+  // Performance estimation multiple choice
+  stages.push(
+    createSurveyStage({
+      name: "Performance estimation",
+      description: LAS_PE_DESCRIPTION,
+      questions: LAS_PE_SURVEY
+    })
+  )
 
   // Add chat with individual item pairs as discussion
   stages.push(
