@@ -95,28 +95,30 @@ export class ExperimentConfig extends MobxLitElement {
 
     const getExperimentNameLabel = () => {
       if (this.experimentConfig.isGroup) {
-        return "Private experiment group prefix";
+        return "Experiment group name (private)*";
       }
-      return "Private experiment name";
+      return "Experiment name (private)*";
     }
 
     return html`
       <pr-textarea
-        label="Public experiment name (visible to participants)"
+        label=${getExperimentNameLabel()}
+        placeholder="Internal experiment name"}
+        variant="outlined"
+        class="required"
+        .value=${this.experimentConfig.name}
+        @input=${handleName}
+      >
+      </pr-textarea>
+      <pr-textarea
+        label="Public-facing experiment name (visible to participants)"
         placeholder="Public experiment name"
         variant="outlined"
         .value=${this.experimentConfig.publicName}
         @input=${handlePublicName}
       >
       </pr-textarea>
-      <pr-textarea
-        label=${getExperimentNameLabel()}
-        placeholder=${getExperimentNameLabel()}
-        variant="outlined"
-        .value=${this.experimentConfig.name}
-        @input=${handleName}
-      >
-      </pr-textarea>
+
     `;
   }
 

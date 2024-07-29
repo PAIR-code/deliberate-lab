@@ -3,57 +3,53 @@
  */
 
 import {
-  ITEM_NAMES,
-  ITEMS,
   ItemName,
+  LostAtSeaQuestion,
+  LostAtSeaSurveyStageConfig,
   PayoutBundleStrategy,
   PayoutItemKind,
   PayoutItemStrategy,
-  QuestionConfig,
-  LostAtSeaSurveyStageConfig,
-  LostAtSeaQuestion,
-  RevealStageConfig,
   StageConfig,
-  StageKind,
-  SurveyQuestionKind,
-  choices,
-  pairs,
-  seed
+  StageKind
 } from '@llm-mediation-experiments/utils';
-import { micromark } from "micromark";
-import { gfm, gfmHtml } from "micromark-extension-gfm";
-import { v4 as uuidv4 } from "uuid";
 
+import { createChatStage, createInfoStage, createPayoutStage, createProfileStage, createRevealStage, createSurveyStage, createTOSStage, createVoteForLeaderStage, generateId } from "../utils";
 import {
-  LAS_ID,
+  ITEMS_SET_1,
+  ITEMS_SET_2,
   LAS_FINAL_SURVEY,
   LAS_FINAL_SURVEY_DESCRIPTION,
   LAS_GROUP_CHAT_DESCRIPTION,
+  LAS_GROUP_DISCUSSION_INSTRUCTIONS,
+  LAS_ID,
   LAS_INITIAL_TASK_INTRO_INFO_LINES,
   LAS_INTRO_DESCRIPTION,
   LAS_INTRO_INFO_LINES,
   LAS_LEADER_ELECTION_DESCRIPTION,
+  LAS_LEADER_ELECTION_INSTRUCTIONS,
+  LAS_LEADER_REMINDER,
   LAS_LEADER_REVEAL_DESCRIPTION,
-  LAS_LEADER_TASK_DESCRIPTION,
+  LAS_PART_3_INSTRUCTIONS,
+  LAS_PE2_SURVEY,
   LAS_PE_DESCRIPTION,
   LAS_PE_SURVEY,
-  LAS_REDO_TASK_DESCRIPTION,
   LAS_SCENARIO_REMINDER,
+  LAS_SECOND_PART_INTRO_INFO_LINES,
+  LAS_UPDATE_INSTRUCTIONS,
+  LAS_WAIT_INFO_LINES,
+  LAS_WTL_2_DESCRIPTION,
+  LAS_WTL_2_SURVEY,
   LAS_WTL_DESCRIPTION,
   LAS_WTL_SURVEY
 } from './constants';
-import { createSurveyStage, createChatStage, createVoteForLeaderStage, createPayoutStage, createRevealStage, createInfoStage, generateId } from "../utils";
 
-/**
- * Create Lost at Sea game module stages.
- *
- * This includes:
- *   2 individual tasks with the same randomly-generated item pairs
- *   1 chat discussion based around those item pairs
- *   1 leader task with different randomly-generated item pairs
- */
+// Define shared variables at the top level
+let initialTaskId: string;
+let redoTaskId: string;
+let leaderElectionId: string;
+let leaderTaskId: string;
 
-export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
+function getIntroStages(): StageConfig[] {
   const stages: StageConfig[] = [];
 
   // Add introduction
@@ -61,26 +57,23 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
     name: "Welcome to the experiment",
     description: LAS_INTRO_DESCRIPTION,
     infoLines: LAS_INTRO_INFO_LINES}));
+  stages.push(createTOSStage());
+  stages.push(createProfileStage());
   
+  return stages;
+}
+
+function getPart1Stages(): StageConfig[] {
+  const stages: StageConfig[] = [];
+
+  // Part 1 instructions.
   stages.push(createInfoStage({
-    name: "Individual survival task instructions",
+    name: "Part 1 instructions",
     description: "",
     infoLines: LAS_INITIAL_TASK_INTRO_INFO_LINES}));
-
-  // Shuffle the items.
-  seed(6272023);
-  const middleIndex = Math.ceil(ITEM_NAMES.length / 2);
-
-  // Take random items from the first half for the individual tasks.
-  const INDIVIDUAL_ITEM_NAMES = ITEM_NAMES.slice(0, middleIndex);
-  const INDIVIDUAL_ITEM_PAIRS = choices(pairs(INDIVIDUAL_ITEM_NAMES), numPairs);
-
-  // Take random items from the second half for the leader tasks.
-  const LEADER_ITEM_NAMES = ITEM_NAMES.slice(middleIndex);
-  const LEADER_ITEM_PAIRS = choices(pairs(LEADER_ITEM_NAMES), numPairs);
-
-  // Add individual surveys
-  const INDIVIDUAL_QUESTIONS: LostAtSeaQuestion[] = INDIVIDUAL_ITEM_PAIRS.map(
+ 
+  // Individual task.
+  const INDIVIDUAL_QUESTIONS: LostAtSeaQuestion[] = ITEMS_SET_1.map(
     (pair, index) => getQuestionFromPair(pair, index)
   );
 
@@ -90,13 +83,33 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
     popupText: LAS_SCENARIO_REMINDER,
   });
   stages.push(initialTask);
+  initialTaskId = initialTask.id;
 
+  // Hypothetical willingness to lead.
   stages.push(createSurveyStage({
     name: "Willingness to lead survey",
     description: LAS_WTL_DESCRIPTION,
     questions: LAS_WTL_SURVEY
   }));
 
+  // Wait stage.
+  stages.push(createInfoStage({
+    name: 'Lobby',
+    description: 'Wait to be redirected.',
+    infoLines: LAS_WAIT_INFO_LINES
+  }));
+
+  return stages;
+}
+
+function getPart2PreElectionStages(): StageConfig[] {
+  const stages: StageConfig[] = [];
+
+  stages.push(createInfoStage({
+    name: 'Part 2 instructions',
+    infoLines: LAS_SECOND_PART_INTRO_INFO_LINES
+  }));
+  
   // Performance estimation multiple choice
   stages.push(
     createSurveyStage({
@@ -106,47 +119,101 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
     })
   )
 
+  stages.push(createInfoStage({
+    name: 'Group discussion instructions',
+    infoLines: LAS_GROUP_DISCUSSION_INSTRUCTIONS
+  }));
+
   // Add chat with individual item pairs as discussion
   stages.push(
     createChatStage(
       "Group discussion",
       LAS_GROUP_CHAT_DESCRIPTION,
-      INDIVIDUAL_ITEM_PAIRS.map(([i1, i2]) => ({ item1: i1, item2: i2 }))
+      ITEMS_SET_1.map(([i1, i2]) => ({ item1: i1, item2: i2 }))
     )
   );
+ 
+  stages.push(createInfoStage({
+    name: 'Update instructions',
+    infoLines: LAS_UPDATE_INSTRUCTIONS
+  }));
 
+   // Individual task.
+   const INDIVIDUAL_QUESTIONS: LostAtSeaQuestion[] = ITEMS_SET_1.map(
+    (pair, index) => getQuestionFromPair(pair, index)
+  );
   const redoTask = createLostAtSeaSurveyStage({
-    name: "Updated individual task",
-    description: LAS_REDO_TASK_DESCRIPTION,
+    name: "Updated survival task", 
+    questions: INDIVIDUAL_QUESTIONS,
     popupText: LAS_SCENARIO_REMINDER,
-    questions: INDIVIDUAL_QUESTIONS
   });
   stages.push(redoTask);
+  redoTaskId = redoTask.id;
+ 
+  stages.push(
+    createSurveyStage({
+      name: "Update performance estimation",
+      description: "",
+      questions: LAS_PE2_SURVEY
+    })
+  );
+  
+
+  return stages;
+}
+
+function getPart2PostElectionAndPart3Stages(): StageConfig[] {
+  const stages: StageConfig[] = [];
+ 
+  stages.push(createInfoStage({
+    name: 'Election instructions',
+    infoLines: LAS_LEADER_ELECTION_INSTRUCTIONS
+  }));
+
+  // Hypothetical willingness to lead.
+  stages.push(createSurveyStage({
+    name: "Willingness to lead update",
+    description: LAS_WTL_2_DESCRIPTION,
+    questions: LAS_WTL_2_SURVEY,
+    popupText: LAS_LEADER_REMINDER
+  }));
 
   const leaderElection = createVoteForLeaderStage({
     name: "Representative election",
     description: LAS_LEADER_ELECTION_DESCRIPTION
   });
   stages.push(leaderElection);
+  leaderElectionId = leaderElection.id;
 
-  // Add leader task
-  const LEADER_QUESTIONS: LostAtSeaQuestion[] = LEADER_ITEM_PAIRS.map(
+  // PART 3
+  stages.push(createInfoStage({
+    name: 'Part 3 instructions',
+    infoLines: LAS_PART_3_INSTRUCTIONS
+  }));
+
+  // Individual task.
+  const INDIVIDUAL_QUESTIONS: LostAtSeaQuestion[] = ITEMS_SET_2.map(
     (pair, index) => getQuestionFromPair(pair, index)
   );
-
   const leaderTask = createLostAtSeaSurveyStage({
-    name: "Representative task",
-    description: LAS_LEADER_TASK_DESCRIPTION,
+    name: "Leader task", 
+    questions: INDIVIDUAL_QUESTIONS,
     popupText: LAS_SCENARIO_REMINDER,
-    questions: LEADER_QUESTIONS
   });
   stages.push(leaderTask);
+  leaderTaskId = leaderTask.id;
 
   stages.push(createRevealStage({
     name: "Representative reveal",
     description: LAS_LEADER_REVEAL_DESCRIPTION,
-    stagesToReveal: [leaderElection.id, leaderTask.id],
-  }))
+    stagesToReveal: [leaderElectionId, leaderTaskId],
+  }));
+
+  return stages;
+}
+
+export function getFinalStages(): StageConfig[] {
+  const stages: StageConfig[] = [];
 
   // Add payout
   stages.push(createPayoutStage({
@@ -158,7 +225,7 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
         payoutItems: [{
           kind: PayoutItemKind.LostAtSeaSurvey,
           strategy: PayoutItemStrategy.ChooseOne,
-          surveyStageId: initialTask.id,
+          surveyStageId: initialTaskId,
           currencyAmountPerQuestion: 0,
           fixedCurrencyAmount: 0,
         }]
@@ -170,15 +237,15 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
           {
             kind: PayoutItemKind.LostAtSeaSurvey,
             strategy: PayoutItemStrategy.ChooseOne,
-            surveyStageId: redoTask.id,
+            surveyStageId: redoTaskId,
             currencyAmountPerQuestion: 0,
             fixedCurrencyAmount: 0,
           },
           {
             kind: PayoutItemKind.LostAtSeaSurvey,
             strategy: PayoutItemStrategy.ChooseOne,
-            surveyStageId: leaderTask.id,
-            leaderStageId: leaderElection.id,
+            surveyStageId: leaderTaskId,
+            leaderStageId: leaderElectionId,
             currencyAmountPerQuestion: 0,
             fixedCurrencyAmount: 0,
           }
@@ -193,6 +260,17 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
     description: LAS_FINAL_SURVEY_DESCRIPTION,
     questions: LAS_FINAL_SURVEY
   }));
+
+  return stages;
+}
+
+export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
+  const stages: StageConfig[] = [];
+  stages.push(...getIntroStages());
+  stages.push(...getPart1Stages());
+  stages.push(...getPart2PreElectionStages());
+  stages.push(...getPart2PostElectionAndPart3Stages());
+  //stages.push(...getFinalStages());
 
   stages.forEach(stage => { stage.game = LAS_ID; });
   return stages;
