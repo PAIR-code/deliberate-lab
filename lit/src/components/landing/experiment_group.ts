@@ -48,6 +48,13 @@ export class ExperimentGroup extends MobxLitElement {
           <div class="stat small">
             Create time: ${convertUnifiedTimestampToDate(experiments[0].date)}
           </div>
+          ${experiments[0].prolificRedirectCode ?
+            html`
+            <div class="stat small">
+              Prolific redirect code: ${experiments[0].prolificRedirectCode}
+            </div>
+            ` : ''
+          }
         </div>
         <div class="right">
           ${this.renderDelete(experiments)}

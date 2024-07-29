@@ -45,7 +45,7 @@ export const createExperiment = onCall(async (request) => {
     const document = app.firestore().collection(data.type).doc();
 
     await app.firestore().runTransaction(async (transaction) => {
-      const { name, publicName, description, tags, isLobby, group, numberOfParticipants, numberOfMaxParticipants, waitForAllToStart } = data.metadata;
+      const { name, publicName, description, tags, isLobby, group, numberOfParticipants, numberOfMaxParticipants, waitForAllToStart, prolificRedirectCode } = data.metadata;
 
       // Create the metadata document
       transaction.set(document, {
@@ -58,6 +58,7 @@ export const createExperiment = onCall(async (request) => {
         isLobby,
         numberOfMaxParticipants,
         waitForAllToStart,
+        prolificRedirectCode,
         ...(data.type === 'experiments'
           ? {
             date: Timestamp.now(),
@@ -72,7 +73,7 @@ export const createExperiment = onCall(async (request) => {
       for (const stage of data.stages) {
         // If payout stage, use payout config to generate scoring config
         if (stage.kind === StageKind.Payout) {
-          const getScoringQuestion = (question: LostAtSeaQuestionConfig) => {
+          const getScoringQuestion = (question: RatingQuestionConfig) => {
             return {
               id: question.id,
               questionText: question.questionText,
@@ -82,10 +83,11 @@ export const createExperiment = onCall(async (request) => {
           };
 
           const getScoringItem = (payoutItem: PayoutItem) => {
-            // To define scoring questions, convert Lost at Sea stage questions
-            // (Add other payout item types later)
-            const stage = (data.stages).find(stage => stage.id === payoutItem.surveyStageId);
-            let questions = stage.questions;
+            // To define scoring questions, convert survey stage questions
+            const surveyStage = (data.stages).find(stage => stage.id === payoutItem.surveyStageId);
+            let questions = surveyStage.questions.filter(
+              question => question.kind === SurveyQuestionKind.Rating
+            );
 
             // If strategy is "choose one," only use one question
             if (payoutItem.strategy === PayoutItemStrategy.ChooseOne) {
@@ -121,6 +123,10 @@ export const createExperiment = onCall(async (request) => {
       // Nothing more to do if this was a template
       if (data.type === 'templates') return;
 
+      // Extract chats in order to pre-create the participant chat documents
+      const chats: GroupChatStageConfig[] = data.stages.filter(
+        (stage): stage is GroupChatStageConfig => stage.kind === StageKind.GroupChat,
+      );
       const currentStageId = data.stages[0].id;
 
       // Create all participants
@@ -139,6 +145,34 @@ export const createExperiment = onCall(async (request) => {
 
         // Create the participant document
         transaction.set(participant, participantData);
+
+        // Create the chat documents
+        chats.forEach((chat) => {
+          const chatData: ChatAnswer = {
+            participantPublicId: participantData.publicId,
+            readyToEndChat: false,
+            stageId: chat.id,
+          };
+          transaction.set(participant.collection('chats').doc(chat.chatId), chatData);
+
+          // If the chat is a chat about items, create an initial DiscussItemsMessage to mention the first pair
+          if (chat.chatConfig.kind === ChatKind.ChatAboutItems) {
+            const firstPair = chat.chatConfig.ratingsToDiscuss[0];
+            // Create the message
+            const messageData: Omit<DiscussItemsMessage, 'uid'> = {
+              kind: MessageKind.DiscussItemsMessage,
+              itemPair: firstPair,
+              text: `Discussion 1 of ${chat.chatConfig.ratingsToDiscuss.length}`,
+              timestamp: Timestamp.now(),
+            };
+
+            // Write it to this participant's chat collection
+            transaction.set(
+              participant.collection('chats').doc(chat.chatId).collection('messages').doc(),
+              messageData,
+            );
+          }
+        });
       });
     });
 

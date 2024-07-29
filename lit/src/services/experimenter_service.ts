@@ -178,12 +178,13 @@ export class ExperimenterService extends Service {
     const numberOfParticipants = experiment.numberOfParticipants ?? 0;
     const numberOfMaxParticipants = experiment.numberOfMaxParticipants ?? 0;
     const waitForAllToStart = experiment.waitForAllToStart ?? false;
+    const prolificRedirectCode = experiment.prolificRedirectCode ?? '';
 
     return createExperimentCallable(
       this.sp.firebaseService.functions,
       {
         type: 'experiments',
-        metadata: { name, publicName, description, tags, group, isLobby, numberOfParticipants, numberOfMaxParticipants, waitForAllToStart},
+        metadata: { name, publicName, description, tags, group, isLobby, numberOfParticipants, numberOfMaxParticipants, waitForAllToStart, prolificRedirectCode},
         stages,
       }
     );
@@ -202,12 +203,13 @@ export class ExperimenterService extends Service {
     const numberOfParticipants = experiment.numberOfParticipants ?? 0;
     const numberOfMaxParticipants = experiment.numberOfMaxParticipants ?? 0;
     const waitForAllToStart = experiment.waitForAllToStart ?? false;
+    const prolificRedirectCode = experiment.prolificRedirectCode ?? '';
 
     return createExperimentCallable(
       this.sp.firebaseService.functions,
       {
         type: 'templates',
-        metadata: { name, publicName, description, tags, group, isLobby, numberOfParticipants, numberOfMaxParticipants, waitForAllToStart},
+        metadata: { name, publicName, description, tags, group, isLobby, numberOfParticipants, numberOfMaxParticipants, waitForAllToStart, prolificRedirectCode},
         stages,
       }
     );

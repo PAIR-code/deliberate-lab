@@ -25,6 +25,7 @@ export interface Experiment {
   numberOfParticipants: number;
   numberOfMaxParticipants: number;
   waitForAllToStart: boolean;
+  prolificRedirectCode?: string; // If specified, will handle Prolific routing.
 
   // Ordered list of stage IDs
   stageIds: string[];
