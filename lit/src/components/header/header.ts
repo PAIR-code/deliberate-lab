@@ -150,8 +150,10 @@ export class Header extends MobxLitElement {
         const experiment = this.experimentService.experiment; 
         if (!this.authService.isExperimenter) {
           return experiment?.publicName ?? "Experiment";
+        } else if (experiment && experiment.publicName) {
+          return `${experiment.publicName} (${experiment.name})`;
         }
-        return experiment ? `${experiment.publicName} (${experiment.name})` : "Experiment";
+        return "Experiment";
 
       case Pages.EXPERIMENT_GROUP:
         return "Experiment group: " + this.routerService.activeRoute.params["experiment_group"];
