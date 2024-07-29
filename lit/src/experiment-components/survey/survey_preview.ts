@@ -28,6 +28,7 @@ import {
 
 import { core } from "../../core/core";
 import { ParticipantService } from "../../services/participant_service";
+import { SurveyService } from "../../services/survey_service";
 
 import { styles } from "./survey_preview.scss";
 
@@ -37,6 +38,7 @@ export class SurveyPreview extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly participantService = core.getService(ParticipantService);
+  private readonly surveyService = core.getService(SurveyService);
 
   @property() stage: SurveyStageConfig|null = null;
   @property() answer: SurveyStageAnswer|null = null;
@@ -50,16 +52,15 @@ export class SurveyPreview extends MobxLitElement {
       const answerMap = this.answer?.answers;
       const answerList = answerMap ? Object.values(answerMap) : [];
 
-      if (answerList.length !== this.stage?.questions.length) {
+      // Confirm all non-text questions are written to backend
+      if (
+        answerList.length <
+        this.stage!.questions.length - this.surveyService.getNumTextAnswers()
+      ) {
         return false;
       }
-      for (const answer of answerList.filter(answer => answer.kind === SurveyQuestionKind.Text)) {
-        const textAnswer = (answer as TextQuestionAnswer);
-        if (textAnswer.answerText === '') {
-          return false;
-        }
-      }
-      return true;
+      // Confirm that all text answers are completed on frontend
+      return this.surveyService.isAllTextAnswersValid();
     }
 
     const descriptionContent = this.stage.description ? html`<div class="description">${this.stage.description}</div>` : nothing;
@@ -93,25 +94,16 @@ export class SurveyPreview extends MobxLitElement {
   private renderTextQuestion(question: TextQuestionConfig) {
     const handleTextChange = (e: Event) => {
       const answerText = (e.target as HTMLInputElement).value ?? '';
-      const answer: TextQuestionAnswer = {
-        id: question.id,
-        kind: SurveyQuestionKind.Text,
-        answerText
-      }
-      this.participantService.updateSurveyStage(
-        this.participantService.profile!.currentStageId,
-        [answer]
-      );
+      this.surveyService.updateTextAnswer(question.id, answerText);
     };
 
-    const answer = (this.answer?.answers[question.id]) as TextQuestionAnswer;
     return html`
       <div class="question">
         <div class="question-title">${question.questionText}</div>
         <pr-textarea
           variant="outlined"
           placeholder="Type your response"
-          .value=${answer?.answerText ?? ''}
+          .value=${this.surveyService.textAnswers[question.id]}
           ?disabled=${!this.participantService.isCurrentStage()}
           @change=${handleTextChange}
         >

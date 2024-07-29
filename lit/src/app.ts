@@ -34,6 +34,7 @@ import { ExperimentService } from "./services/experiment_service";
 import { ParticipantService } from "./services/participant_service";
 import { Pages, RouterService } from "./services/router_service";
 import { SettingsService } from "./services/settings_service";
+import { SurveyService } from "./services/survey_service";
 
 import {
   ChatKind,
@@ -58,6 +59,7 @@ export class App extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
   private readonly settingsService = core.getService(SettingsService);
+  private readonly surveyService = core.getService(SurveyService);
 
   override connectedCallback() {
     super.connectedCallback();
@@ -257,6 +259,7 @@ export class App extends MobxLitElement {
       case StageKind.TermsOfService:
         return html`<tos-preview .stage=${currentStage}></tos-preview>`;
       case StageKind.TakeSurvey:
+        this.surveyService.updateForCurrentRoute();
         return html`
           <survey-preview .stage=${currentStage} .answer=${answer}>
           </survey-preview>
