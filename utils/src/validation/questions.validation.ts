@@ -75,7 +75,7 @@ export const TextQuestionAnswerData = Type.Object(
   {
     kind: Type.Literal(SurveyQuestionKind.Text),
     id: Type.Number(),
-    answerText: Type.String({ minLength: 1 }),
+    answerText: Type.String(),
   },
   strict,
 );

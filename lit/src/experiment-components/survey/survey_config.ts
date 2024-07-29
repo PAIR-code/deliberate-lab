@@ -13,7 +13,8 @@ import {
   QuestionConfig,
   MultipleChoiceQuestionConfig,
   ScaleQuestionConfig,
-  SurveyQuestionKind
+  SurveyQuestionKind,
+  TextQuestionConfig,
 } from "@llm-mediation-experiments/utils";
 
 import { styles } from "./survey_config.scss";
@@ -85,15 +86,31 @@ export class SurveyConfig extends MobxLitElement {
         return this.renderMultipleChoiceQuestion(question, index);
       case SurveyQuestionKind.Scale:
         return this.renderScaleQuestion(question, index);
+      case SurveyQuestionKind.Text:
+        return this.renderTextQuestion(question, index);
       default:
         return nothing;
     }
   }
 
+  private renderTextQuestion(question: TextQuestionConfig, index: number) {
+    return html`
+      <div class="question">
+        <h3>Question ${index + 1} of ${this.surveyConfig.questions.length}</h3>
+        <code>${JSON.stringify(question)}</code>
+      </div>
+    `;
+  }
+
   private renderMultipleChoiceQuestion(
     question: MultipleChoiceQuestionConfig, index: number
   ) {
-    return html`<code>${JSON.stringify(question)}</code>`;
+    return html`
+      <div class="question">
+        <h3>Question ${index + 1} of ${this.surveyConfig.questions.length}</h3>
+        <code>${JSON.stringify(question)}</code>
+      </div>
+    `;
   }
 
   private renderScaleQuestion(question: ScaleQuestionConfig, index: number) {

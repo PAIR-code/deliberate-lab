@@ -192,6 +192,11 @@ export const LAS_FINAL_SURVEY_DESCRIPTION = `Thanks for participating. Please co
 export const LAS_FINAL_SURVEY :QuestionConfig[] = [
   {
     id: 0,
+    kind: SurveyQuestionKind.Text,
+    questionText: 'Consider the survival task performed in this study. Did you have any prior knowledge or experience in the domain of survival that could have helped you solve the task? If yes, please share specific memories or experiences that explain your answer.',
+  },
+  {
+    id: 1,
     kind: SurveyQuestionKind.Scale,
     questionText: 'Rate how happy you were with the final outcome.',
     lowerBound: 'I was very disappointed (0/10)',
