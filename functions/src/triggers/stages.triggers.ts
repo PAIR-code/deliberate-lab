@@ -40,6 +40,12 @@ export const initializePublicStageData = onDocumentWritten(
           participantAnswers: {},
         };
         break;
+      case StageKind.LostAtSeaSurvey:
+        publicData = {
+          kind: data.kind,
+          participantAnswers: {},
+        };
+        break;
       case StageKind.GroupChat:
         // Initialize the custom chat data (depending on the chat kind)
         let chatData: PublicChatData;
@@ -177,6 +183,30 @@ export const publishStageData = onDocumentWritten(
 
         await surveyDoc.ref.update({
           participantAnswers: newAnswers,
+        })
+        break;
+      case StageKind.LostAtSeaSurvey:
+        const lasSurveyParticipantDoc = await app
+          .firestore()
+          .doc(
+            `experiments/${experimentId}/participants/${participantId}`,
+          )
+          .get();
+        const lasSurveyParticipantPublicId
+          = (lasSurveyParticipantDoc.data() as ParticipantProfile).publicId;
+
+        const lasSurveyDoc = await app
+          .firestore()
+          .doc(`experiments/${experimentId}/publicStageData/${stageId}`)
+          .get();
+        const lasSurveyData = lasSurveyDoc.data() as LostAtSeaSurveyStagePublicData;
+
+        const lasNewAnswers = lasSurveyData.participantAnswers;
+
+        lasNewAnswers[lasSurveyParticipantPublicId] = data.answers;
+
+        await lasSurveyDoc.ref.update({
+          participantAnswers: lasNewAnswers,
         })
         break;
       case StageKind.GroupChat:
