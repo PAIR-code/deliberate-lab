@@ -121,9 +121,14 @@ export interface VoteForLeaderStageAnswer extends BaseStageAnswer {
   votes: Votes;
 }
 
+export interface ChatStageAnswer {
+  kind: StageKind.GroupChat;
+  readyToEndChat: boolean;
+}
+
 // NOTE: profile & TOS stages do not have "answers", as the results are stored directly in the participant profile.
 // NOTE: answer documents are lazily created in firestore. They may not exist before the participant submits their answers for the first time.
-export type StageAnswer = LostAtSeaSurveyStageAnswer | SurveyStageAnswer | VoteForLeaderStageAnswer;
+export type StageAnswer = LostAtSeaSurveyStageAnswer | SurveyStageAnswer | VoteForLeaderStageAnswer | ChatStageAnswer;
 
 // ********************************************************************************************* //
 //                                        PUBLIC DATA                                            //

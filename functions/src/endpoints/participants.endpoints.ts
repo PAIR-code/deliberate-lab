@@ -50,6 +50,14 @@ export const updateStage = onCall(async (request) => {
         };
         await answerDoc.set(lostAtSeaData, { merge: true });
         break;
+
+      case StageKind.GroupChat:
+        const chatData = {
+          kind: StageKind.GroupChat,
+          readyToEndChat: stage.readyToEndChat,
+        };
+        await answerDoc.set(chatData, { merge: true });
+        break;
     }
 
     return { data: 'success' };

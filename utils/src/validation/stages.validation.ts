@@ -259,13 +259,21 @@ export const VoteForLeaderStageAnswerData = Type.Object(
   strict,
 );
 
+/** Chat answer data */
+export const ChatAnswerData = Type.Object(
+  {
+    kind: Type.Literal(StageKind.GroupChat),
+    readyToEndChat: Type.Boolean(),
+  }
+)
+
 /** Stage answer data */
 export const StageAnswerData = Type.Object(
   {
     experimentId: Type.String({ minLength: 1 }),
     participantId: Type.String({ minLength: 1 }),
     stageId: Type.String({ minLength: 1 }),
-    stage: Type.Union([SurveyStageAnswerData, LostAtSeaSurveyStageAnswerData, VoteForLeaderStageAnswerData]),
+    stage: Type.Union([SurveyStageAnswerData, LostAtSeaSurveyStageAnswerData, VoteForLeaderStageAnswerData, ChatAnswerData]),
   },
   strict,
 );

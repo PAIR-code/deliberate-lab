@@ -38,7 +38,10 @@ export class BasicChat extends MobxLitElement {
       `;
     }
 
-    const readyToEnd = false; // TODO: Fix readyToEndChat functionality
+    const readyToEnd = this.experimentService.isReadyToEndChat(
+      currentStage,
+      this.participantService.profile!.publicId,
+    );
     const disableInput = !this.participantService.isCurrentStage || readyToEnd;
 
     return html`

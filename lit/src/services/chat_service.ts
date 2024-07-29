@@ -10,7 +10,7 @@ import { Service } from "./service";
 
 import { ChatKind, MediatorConfig, MediatorKind, Message, MessageKind, StageKind, } from "@llm-mediation-experiments/utils";
 import { Unsubscribe, collection, doc, onSnapshot, orderBy, query, updateDoc } from "firebase/firestore";
-import { createMessageCallable } from "../shared/callables";
+import { createMessageCallable, updateStageCallable } from "../shared/callables";
 import { createChatMediatorPrompt } from "../shared/prompts";
 import { collectSnapshotWithId } from "../shared/utils";
 
@@ -136,22 +136,18 @@ export class ChatService extends Service {
    * @rights Participant
    */
   async markReadyToEndChat(readyToEndChat: boolean) {
-    // TODO: Fix readyToEndChat functionality
-    /*
-    return updateDoc(
-      doc(
-        this.sp.firebaseService.firestore,
-        'experiments',
-        this.experimentId!,
-        'participants',
-        this.participantId!,
-        'chats',
-        this.stageId!,
-      ),
+    return updateStageCallable(
+      this.sp.firebaseService.functions,
       {
-        readyToEndChat,
-      },
-    ); */
+        experimentId: this.experimentId!,
+        participantId: this.participantId!,
+        stageId: this.stageId!,
+        stage: {
+          kind: StageKind.GroupChat,
+          readyToEndChat,
+        }
+      }
+    )
   }
 
   /** Send a message as a participant.

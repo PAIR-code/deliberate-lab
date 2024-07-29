@@ -67,7 +67,7 @@ service cloud.firestore {
 
         match /messages/{messageId} {
           allow read: if true;
-          allow write: if false; // Write as participant through cloud functions
+          allow write: if false; // Write through cloud functions, triggers
         }
       }
 
