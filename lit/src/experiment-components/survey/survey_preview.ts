@@ -21,7 +21,9 @@ import {
   ScaleQuestionConfig,
   SurveyQuestionKind,
   SurveyStageAnswer,
-  SurveyStageConfig
+  SurveyStageConfig,
+  TextQuestionAnswer,
+  TextQuestionConfig
 } from "@llm-mediation-experiments/utils";
 
 import { core } from "../../core/core";
@@ -48,7 +50,16 @@ export class SurveyPreview extends MobxLitElement {
       const answerMap = this.answer?.answers;
       const answerList = answerMap ? Object.values(answerMap) : [];
 
-      return answerList.length === this.stage?.questions.length;
+      if (answerList.length !== this.stage?.questions.length) {
+        return false;
+      }
+      for (const answer of answerList.filter(answer => answer.kind === SurveyQuestionKind.Text)) {
+        const textAnswer = (answer as TextQuestionAnswer);
+        if (textAnswer.answerText === '') {
+          return false;
+        }
+      }
+      return true;
     }
 
     const descriptionContent = this.stage.description ? html`<div class="description">${this.stage.description}</div>` : nothing;
@@ -72,9 +83,41 @@ export class SurveyPreview extends MobxLitElement {
         return this.renderMultipleChoiceQuestion(question);
       case SurveyQuestionKind.Scale:
         return this.renderScaleQuestion(question);
+      case SurveyQuestionKind.Text:
+        return this.renderTextQuestion(question);
       default:
         return nothing;
     }
+  }
+
+  private renderTextQuestion(question: TextQuestionConfig) {
+    const handleTextChange = (e: Event) => {
+      const answerText = (e.target as HTMLInputElement).value ?? '';
+      const answer: TextQuestionAnswer = {
+        id: question.id,
+        kind: SurveyQuestionKind.Text,
+        answerText
+      }
+      this.participantService.updateSurveyStage(
+        this.participantService.profile!.currentStageId,
+        [answer]
+      );
+    };
+
+    const answer = (this.answer?.answers[question.id]) as TextQuestionAnswer;
+    return html`
+      <div class="question">
+        <div class="question-title">${question.questionText}</div>
+        <pr-textarea
+          variant="outlined"
+          placeholder="Type your response"
+          .value=${answer?.answerText ?? ''}
+          ?disabled=${!this.participantService.isCurrentStage()}
+          @change=${handleTextChange}
+        >
+        </pr-textarea>
+      </div>
+    `;
   }
 
   private renderMultipleChoiceQuestion(question: MultipleChoiceQuestionConfig) {
