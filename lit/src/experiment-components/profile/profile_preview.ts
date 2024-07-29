@@ -100,7 +100,6 @@ export class ProfilePreview extends MobxLitElement {
   }
 
   override render() {
-    console.log(this.availableTransferExperiments)
     if (!this.profile) {
       return nothing;
     }
@@ -192,14 +191,15 @@ export class ProfilePreview extends MobxLitElement {
             @click=${handlePreview}>
           </pr-button>
         </pr-tooltip>
-        <pr-tooltip text="Preview transfer as participant" position="TOP_END">
+        ${this.profile.transferConfig ? 
+          html`<pr-tooltip text="Preview transfer as participant" position="TOP_END">
           <pr-icon-button
             icon="mystery"
             color="primary"
             variant="default"
             @click=${handleFuturePreview}>
           </pr-button>
-        </pr-tooltip>
+        </pr-tooltip>` : ''}
         <pr-tooltip text="Copy participant link" position="TOP_END">
           <pr-icon-button
             icon="content_copy"

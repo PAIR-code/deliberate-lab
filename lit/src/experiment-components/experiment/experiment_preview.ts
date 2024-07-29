@@ -89,8 +89,8 @@ export class ExperimentPreview extends MobxLitElement {
       <div class="top-bar">
         <div class="left">
           <div class="stat small">
-            Public experiment name: ${experiment?.publicName} <br/>
-            Author: ${experiment?.author.displayName} <br/>
+            ${experiment?.publicName ? `Public experiment name: ${experiment?.publicName} <br/>` : ''}
+            ${experiment?.author && experiment?.author.displayName ? `Author: ${experiment?.author.displayName} <br/>` : ''}
             Create time: ${convertUnifiedTimestampToDate(experiment?.date!)} <br/>
             ${experiment?.numberOfMaxParticipants ? html`
             Maximum number of participants: ${experiment?.numberOfMaxParticipants} <br/>

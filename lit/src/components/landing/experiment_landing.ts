@@ -98,7 +98,7 @@ export class ExperimentLanding extends MobxLitElement {
         <div>
           <p>${experiments.length} experiments</p>
           <div class="label">
-            <div>${experiments[0].author.displayName}</div>
+            <div>${experiments[0].author?.displayName ?? ''}</div>
             <small>${convertUnifiedTimestampToDate(experiments[0].date)}</small>
           </div>
         </div>

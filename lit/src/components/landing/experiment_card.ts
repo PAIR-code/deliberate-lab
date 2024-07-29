@@ -77,7 +77,7 @@ export class ExperimentCard extends MobxLitElement {
         <div class="action-buttons">
           
         <div class="label">
-          <div>${this.experiment!.author.displayName}</div>
+          <div>${this.experiment!.author?.displayName ?? ''}</div>
           <small>${convertUnifiedTimestampToDate(this.experiment!.date)}</small>
         </div>
       </div>`;
