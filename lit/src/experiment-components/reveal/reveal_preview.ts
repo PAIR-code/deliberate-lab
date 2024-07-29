@@ -8,8 +8,10 @@ import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 import {
+  LostAtSeaSurveyStagePublicData,
   RevealStageConfig,
-  StageKind
+  StageKind,
+  VoteForLeaderStagePublicData,
 } from "@llm-mediation-experiments/utils";
 
 import { core } from "../../core/core";
@@ -50,9 +52,28 @@ export class RevealPreview extends MobxLitElement {
     switch (stage.kind) {
       case StageKind.VoteForLeader:
         return html`<election-reveal .voteStageId=${stage.id}></election-reveal`;
-      case StageKind.TakeSurvey:
+      case StageKind.LostAtSeaSurvey:
         const answer = this.participantService.stageAnswers[stage.id];
-        return html`<las-survey-results .stage=${stage} .answer=${answer}></las-survey-results>`;
+
+        // Temporary implementation: Use first election stage to determine
+        // leader answer
+
+        const electionData = Object.values(this.experimentService.publicStageDataMap)
+          .find(data => data?.kind === StageKind.VoteForLeader);
+        const leaderId = electionData ?
+          (electionData as VoteForLeaderStagePublicData).currentLeader ?? '' : '';
+
+        const lasStage = (this.experimentService.publicStageDataMap[stage.id] as LostAtSeaSurveyStagePublicData);
+        console.log(JSON.stringify(lasStage.participantAnswers[leaderId]));
+        const leaderAnswer = leaderId !== '' ? lasStage?.participantAnswers[leaderId] ?? null : null;
+
+        return html`
+          <las-survey-results
+            .stage=${stage}
+            .answer=${answer}
+            .leaderAnswer=${leaderAnswer}
+            >
+          </las-survey-results>`;
       default:
         return nothing;
     }

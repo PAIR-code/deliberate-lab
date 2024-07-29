@@ -1,6 +1,6 @@
 import { Type } from '@sinclair/typebox';
 import { SurveyQuestionKind } from '../types/questions.types';
-import { ItemData } from './items.validation';
+import { ItemData } from './lost_at_sea.validation';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = { additionalProperties: false } as const;
@@ -29,10 +29,23 @@ export const CheckQuestionConfigData = Type.Object(
   strict,
 );
 
-/** Rating question config */
-export const RatingQuestionConfigData = Type.Object(
+/** Multiple choice question config */
+export const MultipleChoiceQuestionConfigData = Type.Object(
   {
-    kind: Type.Literal(SurveyQuestionKind.Rating),
+    kind: Type.Literal(SurveyQuestionKind.MultipleChoice),
+    id: Type.Number(),
+    questionText: Type.String({ minLength: 1 }),
+    options: Type.Array(Type.Object({
+      id: Type.Number(),
+      text: Type.String({ minLength: 1 }),
+    })),
+  },
+  strict,
+)
+
+/** Lost at Sea question data */
+export const LostAtSeaQuestionData = Type.Object(
+  {
     id: Type.Number(),
     questionText: Type.String({ minLength: 1 }),
     item1: ItemData,
@@ -77,13 +90,21 @@ export const CheckQuestionAnswerData = Type.Object(
   strict,
 );
 
-/** Rating question answer data */
-export const RatingQuestionAnswerData = Type.Object(
+/** Multiple choice question answer data */
+export const MultipleChoiceQuestionAnswerData = Type.Object (
   {
-    kind: Type.Literal(SurveyQuestionKind.Rating),
+    kind: Type.Literal(SurveyQuestionKind.MultipleChoice),
+    id: Type.Number(),
+    choice: Type.Number(),
+  }
+)
+
+/** Lost at Sea question answer data */
+export const LostAtSeaQuestionAnswerData = Type.Object(
+  {
     id: Type.Number(),
     choice: ItemData,
-    confidence: Type.Number({ minimum: 0.5, maximum: 1 }),
+    confidence: Type.Optional(Type.Number({ minimum: 0, maximum: 10 })),
   },
   strict,
 );

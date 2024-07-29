@@ -6,7 +6,6 @@ export * from './endpoints/messages.endpoints';
 export * from './endpoints/participants.endpoints';
 
 // Firestore triggers
-export * from './triggers/chats.triggers';
 export * from './triggers/experiments.triggers';
 export * from './triggers/stages.triggers';
 

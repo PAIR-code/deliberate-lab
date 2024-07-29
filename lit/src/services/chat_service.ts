@@ -8,9 +8,9 @@ import { ParticipantService } from "./participant_service";
 import { RouterService } from "./router_service";
 import { Service } from "./service";
 
-import { ChatAnswer, ChatKind, MediatorConfig, MediatorKind, Message, MessageKind, StageKind, } from "@llm-mediation-experiments/utils";
+import { ChatKind, MediatorConfig, MediatorKind, Message, MessageKind, StageKind, } from "@llm-mediation-experiments/utils";
 import { Unsubscribe, collection, doc, onSnapshot, orderBy, query, updateDoc } from "firebase/firestore";
-import { createMessageCallable } from "../shared/callables";
+import { createMessageCallable, updateStageCallable } from "../shared/callables";
 import { createChatMediatorPrompt } from "../shared/prompts";
 import { collectSnapshotWithId } from "../shared/utils";
 
@@ -31,30 +31,27 @@ export class ChatService extends Service {
 
   @observable experimentId: string | null = null;
   @observable participantId: string | null = null;
-  @observable chatId: string | null = null;
+  @observable stageId: string | null = null;
 
-  @observable chat: ChatAnswer | undefined = undefined;
   @observable mediators: MediatorConfig[] = [];
   @observable messages: Message[] = [];
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
-  @observable isConfigLoading = false;
   @observable areMessagesLoading = false;
 
   @computed get isLoading() {
-    return this.isConfigLoading || this.areMessagesLoading;
+    return this.areMessagesLoading;
   }
 
   set isLoading(value: boolean) {
-    this.isConfigLoading = value;
     this.areMessagesLoading = value;
   }
 
-  setChat(experimentId: string | null, participantId: string | null, chatId: string | null) {
+  setChat(experimentId: string | null, participantId: string | null, stageId: string | null) {
     this.experimentId = experimentId;
     this.participantId = participantId;
-    this.chatId = chatId;
+    this.stageId = stageId;
     this.isLoading = true;
     this.loadChatData();
   }
@@ -64,16 +61,16 @@ export class ChatService extends Service {
     console.log('mediators', this.mediators);
   }
 
-  updateForCurrentRoute(chatId: string) {
+  updateForCurrentRoute() {
     const eid = this.sp.routerService.activeRoute.params["experiment"];
     const pid = this.sp.routerService.activeRoute.params["participant"];
-    const stageName = this.sp.routerService.activeRoute.params["stage"];
+    const stageId = this.sp.routerService.activeRoute.params["stage"];
 
     if (eid !== this.experimentId || pid !== this.participantId
-      || chatId !== this.chatId) {
-      this.setChat(eid, pid, chatId);
+      || stageId !== this.stageId) {
+      this.setChat(eid, pid, stageId);
 
-      const stage = this.sp.experimentService.getStage(stageName);
+      const stage = this.sp.experimentService.getStage(stageId);
       if (stage?.kind === StageKind.GroupChat) {
         this.setMediators(stage.mediators)
       }
@@ -83,21 +80,10 @@ export class ChatService extends Service {
   loadChatData() {
     this.unsubscribeAll();
 
-    if (this.experimentId === null || this.participantId === null || this.chatId === null) {
+    if (this.experimentId === null || this.participantId === null || this.stageId === null) {
       this.isLoading = false;
       return;
     }
-
-    // Subscribe to the participant chat config
-    this.unsubscribe.push(
-      onSnapshot(
-        doc(this.sp.firebaseService.firestore, 'experiments', this.experimentId, 'participants', this.participantId, 'chats', this.chatId),
-        (doc) => {
-          this.chat = doc.data() as ChatAnswer;
-          this.isConfigLoading = false;
-        },
-      ),
-    );
 
     // Subscribe to the chat messages
     this.unsubscribe.push(
@@ -107,10 +93,8 @@ export class ChatService extends Service {
             this.sp.firebaseService.firestore,
             'experiments',
             this.experimentId,
-            'participants',
-            this.participantId,
-            'chats',
-            this.chatId,
+            'publicStageData',
+            this.stageId,
             'messages',
           ),
           orderBy('timestamp', 'desc'),
@@ -127,19 +111,12 @@ export class ChatService extends Service {
   unsubscribeAll() {
     this.unsubscribe.forEach((unsubscribe) => unsubscribe());
     this.unsubscribe = [];
-
-    this.chat = undefined;
     this.messages = [];
   }
 
   getCurrentRatingIndex() {
-    // Default return value when chat is still loading
-    if (!this.chat) {
-      return -1;
-    }
-
     const stageData = this.sp.experimentService.getPublicStageData(
-      this.chat.stageId
+      this.stageId!
     );
     if (
       !stageData || stageData.kind !== StageKind.GroupChat ||
@@ -159,20 +136,18 @@ export class ChatService extends Service {
    * @rights Participant
    */
   async markReadyToEndChat(readyToEndChat: boolean) {
-    return updateDoc(
-      doc(
-        this.sp.firebaseService.firestore,
-        'experiments',
-        this.experimentId!,
-        'participants',
-        this.participantId!,
-        'chats',
-        this.chatId!,
-      ),
+    return updateStageCallable(
+      this.sp.firebaseService.functions,
       {
-        readyToEndChat,
-      },
-    );
+        experimentId: this.experimentId!,
+        participantId: this.participantId!,
+        stageId: this.stageId!,
+        stage: {
+          kind: StageKind.GroupChat,
+          readyToEndChat,
+        }
+      }
+    )
   }
 
   /** Send a message as a participant.
@@ -184,7 +159,7 @@ export class ChatService extends Service {
     createMessageCallable(
       this.sp.firebaseService.functions,
       {
-      chatId: this.chatId!,
+      stageId: this.stageId!,
       experimentId: this.experimentId!,
       message: {
         kind: MessageKind.UserMessage,
@@ -255,7 +230,7 @@ export class ChatService extends Service {
     return createMessageCallable(
       this.sp.firebaseService.functions,
       {
-      chatId: this.chatId!,
+      stageId: this.stageId!,
       experimentId: this.experimentId!,
       message: {
         kind: MessageKind.MediatorMessage,

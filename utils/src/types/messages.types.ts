@@ -2,7 +2,7 @@
 
 import { uniqueId } from '../utils/algebraic.utils';
 import { UnifiedTimestamp } from './api.types';
-import { ItemPair } from './items.types';
+import { ItemPair } from './lost_at_sea.types';
 
 export enum MessageKind {
   UserMessage = 'userMessage',

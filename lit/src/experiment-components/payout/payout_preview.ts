@@ -10,16 +10,15 @@ import { customElement, property } from "lit/decorators.js";
 import {
   ItemName,
   ITEMS,
+  LostAtSeaSurveyStageAnswer,
+  LostAtSeaQuestionAnswer,
   PayoutCurrency,
   PayoutStageConfig,
-  QuestionAnswer,
-  RatingQuestionAnswer,
   ScoringBundle,
   ScoringItem,
   ScoringQuestion,
   StageKind,
-  SurveyStageAnswer,
-  SurveyStagePublicData,
+  LostAtSeaSurveyStagePublicData,
   VoteForLeaderStagePublicData,
 } from "@llm-mediation-experiments/utils";
 
@@ -81,22 +80,22 @@ export class PayoutPreview extends MobxLitElement {
 
     if (item.leaderStageId && item.leaderStageId.length > 0) {
       const leaderPublicId = (this.experimentService.publicStageDataMap[item.leaderStageId] as VoteForLeaderStagePublicData).currentLeader ?? '';
-      const leaderAnswers = (this.experimentService.publicStageDataMap[item.surveyStageId] as SurveyStagePublicData).participantAnswers[leaderPublicId];
+      const leaderAnswers = (this.experimentService.publicStageDataMap[item.surveyStageId] as LostAtSeaSurveyStagePublicData).participantAnswers[leaderPublicId];
 
       return item.questions.map((question) => {
         return {
           ...question,
           leaderPublicId,
-          userAnswer: (leaderAnswers[question.id] as RatingQuestionAnswer).choice,
+          userAnswer: (leaderAnswers[question.id] as LostAtSeaQuestionAnswer).choice,
         };
       });
     }
 
-    const userAnswers = (this.participantService.stageAnswers[item.surveyStageId] as SurveyStageAnswer).answers;
+    const userAnswers = (this.participantService.stageAnswers[item.surveyStageId] as LostAtSeaSurveyStageAnswer).answers;
     return item.questions.map((question) => {
       return {
         ...question,
-        userAnswer: (userAnswers[question.id] as RatingQuestionAnswer).choice,
+        userAnswer: (userAnswers[question.id] as LostAtSeaQuestionAnswer).choice,
       };
     });
   }

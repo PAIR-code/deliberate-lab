@@ -4,7 +4,6 @@ import "../footer/footer";
 import "../progress/progress_stage_completed";
 
 import '@material/web/radio/radio.js';
-import '@material/web/slider/slider.js';
 
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
@@ -15,9 +14,11 @@ import {
   ITEMS,
   ItemName,
   QuestionConfig,
-  RatingQuestionAnswer,
-  RatingQuestionConfig,
+  MultipleChoiceItem,
+  MultipleChoiceQuestionConfig,
+  MultipleChoiceQuestionAnswer,
   ScaleQuestionAnswer,
+  ScaleQuestionConfig,
   SurveyQuestionKind,
   SurveyStageAnswer,
   SurveyStageConfig
@@ -43,15 +44,12 @@ export class SurveyPreview extends MobxLitElement {
       return nothing;
     }
 
-    const ratingsComplete = () => {
+    const questionsComplete = () => {
       const answerMap = this.answer?.answers;
       const answerList = answerMap ? Object.values(answerMap) : [];
 
-      return (answerList.filter(
-        answer => answer.kind === SurveyQuestionKind.Rating).length) ===
-        (this.stage?.questions.filter(
-        question => question.kind === SurveyQuestionKind.Rating).length)
-    };
+      return answerList.length === this.stage?.questions.length;
+    }
 
     const descriptionContent = this.stage.description ? html`<div class="description">${this.stage.description}</div>` : nothing;
 
@@ -60,174 +58,107 @@ export class SurveyPreview extends MobxLitElement {
       
       <div class="questions-wrapper">
         ${this.stage.questions.map(question =>
-        this.renderRatingQuestion(question))}
-        ${this.stage.questions.map(question =>
-        this.renderScaleQuestion(question))}
+        this.renderQuestion(question))}
       </div>
-      <stage-footer .disabled=${!ratingsComplete()}>
+      <stage-footer .disabled=${!questionsComplete()}>
         <progress-stage-completed></progress-stage-completed>
       </stage-footer>
     `;
   }
 
-  private renderRatingQuestion(question: QuestionConfig) {
-    if (question.kind !== SurveyQuestionKind.Rating) {
-      return nothing;
+  private renderQuestion(question: QuestionConfig) {
+    switch (question.kind) {
+      case SurveyQuestionKind.MultipleChoice:
+        return this.renderMultipleChoiceQuestion(question);
+      case SurveyQuestionKind.Scale:
+        return this.renderScaleQuestion(question);
+      default:
+        return nothing;
     }
+  }
 
-    const onSelect = (choice: ItemName) => {
-      // If disabled
-      if (!this.participantService.isCurrentStage()) {
-        return;
+  private renderMultipleChoiceQuestion(question: MultipleChoiceQuestionConfig) {
+    return html`
+      <div class="radio-question">
+        <div class="title">${question.questionText}</div>
+        ${question.options.map(option => this.renderRadioButton(option, question.id))}
+      </div>
+    `;
+  }
+
+  private isMultipleChoiceMatch(questionId: number, choiceId: number) {
+    const questionAnswer = this.answer?.answers[questionId];
+
+    if (questionAnswer && questionAnswer.kind === SurveyQuestionKind.MultipleChoice) {
+      return questionAnswer.choice === choiceId;
+    }
+    return false;
+  }
+
+  private renderRadioButton(choice: MultipleChoiceItem, questionId: number) {
+    const id = `${questionId}-${choice.id}`;
+
+    const handleMultipleChoiceClick = (e: Event) => {
+      const choice = Number((e.target as HTMLInputElement).value);
+      const answer: MultipleChoiceQuestionAnswer = {
+        id: questionId,
+        kind: SurveyQuestionKind.MultipleChoice,
+        choice
       }
-
-      const answer: RatingQuestionAnswer = {
-        id: question.id,
-        kind: SurveyQuestionKind.Rating,
-        choice,
-        confidence: this.getRatingQuestionConfidence(question),
-      };
-
       this.participantService.updateSurveyStage(
         this.participantService.profile!.currentStageId,
         [answer]
       );
     };
 
-    const isMatch = (item: string) => {
-      const questionAnswer = this.answer?.answers[question.id];
+    return html`
+      <div class="radio-button">
+        <md-radio
+          id=${id}
+          name=${questionId}
+          value=${choice.id}
+          aria-label=${choice.text}
+          ?checked=${this.isMultipleChoiceMatch(questionId, choice.id)}
+          ?disabled=${!this.participantService.isCurrentStage()}
+          @change=${handleMultipleChoiceClick}
+        >
+        </md-radio>
+        <label for=${id}>${choice.text}</label>
+      </div>
+    `;
+  }
 
-      if (questionAnswer && questionAnswer.kind === SurveyQuestionKind.Rating) {
-        return questionAnswer.choice === item;
-      }
-
-      return false;
-    }
-
-    const getClassMap = (item: string) => {
-      return classMap({
-        "ranking-question": true,
-        "selected": isMatch(item),
-        "disabled": !this.participantService.isCurrentStage()
-      });
-    }
+  private renderScaleQuestion(question: ScaleQuestionConfig) {
+    const scale = [...Array(10).keys()].map(n => n + 1);
 
     return html`
       <div class="question">
         <div class="question-title">${question.questionText}</div>
-        <div class="ranking-question-wrapper">
-          <div class=${getClassMap(question.item1)}
-            @click=${() => { onSelect(question.item1); }}
-          >
-            <div class="img-wrapper">
-              <img src=${ITEMS[question.item1].imageUrl} />
-            </div>
-            <div class="radio-button">
-              <md-radio
-                id="${question.id}-1"
-                name=${question.id}
-                value="1"
-                aria-label=${ITEMS[question.item1].name}
-                ?checked=${isMatch(question.item1)}
-                ?disabled=${!this.participantService.isCurrentStage()}>
-              </md-radio>
-              <label for="1">${ITEMS[question.item1].name}</label>
-            </div>
-          </div>
-          <div class=${getClassMap(question.item2)}
-              @click=${() => { onSelect(question.item2); }}
-            >
-            <div class="img-wrapper">
-              <img src=${ITEMS[question.item2].imageUrl} />
-            </div>
-            <div class="radio-button">
-              <md-radio
-                id="${question.id}-2"
-                name=${question.id}
-                value="2"
-                aria-label=${ITEMS[question.item2].name}
-                ?checked=${isMatch(question.item2)}
-                ?disabled=${!this.participantService.isCurrentStage()}>
-              </md-radio>
-              <label for="2">${ITEMS[question.item2].name}</label>
-            </div>
-          </div>
+        <div class="scale labels">
+          <div>${question.lowerBound}</div>
+          <div>${question.upperBound}</div>
         </div>
-        ${this.renderRatingConfidence(question)}
+        <div class="scale values">
+          ${scale.map(num => this.renderScaleRadioButton(question, num))}
+        </div>
       </div>
     `;
   }
 
-  private getRatingQuestionChoice(question: RatingQuestionConfig) {
-    const questionAnswer = this.answer?.answers[question.id];
+  private renderScaleRadioButton(question: ScaleQuestionConfig, value: number) {
+    const name = `${question.id}`;
+    const id = `${question.id}-${value}`;
 
-    if (questionAnswer && questionAnswer.kind === SurveyQuestionKind.Rating) {
-      return questionAnswer.choice;
-    }
+    const isScaleChoiceMatch = (score: number) => {
+      const questionAnswer = this.answer?.answers[question.id];
 
-    return null;
-  }
-
-  private getRatingQuestionConfidence(question: RatingQuestionConfig) {
-    const questionAnswer = this.answer?.answers[question.id];
-
-    if (questionAnswer && questionAnswer.kind === SurveyQuestionKind.Rating) {
-      return questionAnswer.confidence;
-    }
-
-    return .5;
-  }
-
-  private renderRatingConfidence(question: RatingQuestionConfig) {
-    const onChange = (e: Event) => {
-      const confidence = parseFloat((e.target as HTMLInputElement).value);
-      const choice = this.getRatingQuestionChoice(question);
-
-      if (!choice) {
-        return;
+      if (questionAnswer && questionAnswer.kind === SurveyQuestionKind.Scale) {
+        return questionAnswer.score === score;
       }
-
-      const answer: RatingQuestionAnswer = {
-        id: question.id,
-        kind: SurveyQuestionKind.Rating,
-        choice,
-        confidence,
-      };
-
-      this.participantService.updateSurveyStage(
-        this.participantService.profile!.currentStageId,
-        [answer]
-      );
+      return false;
     };
 
-    const disableSlider = !this.participantService.isCurrentStage()
-      || this.getRatingQuestionChoice(question) === null;
-
-    return html`
-      <div class="slider-wrapper">
-        <div>Not confident</div>
-        <md-slider
-          step=".1"
-          ticks
-          min="0"
-          max="1"
-          value=${this.getRatingQuestionConfidence(question)}
-          labeled
-          ?disabled=${disableSlider}
-          @change=${onChange}
-        >
-        </md-slider>
-        <div>Very confident</div>
-      </div>
-    `;
-  }
-
-  private renderScaleQuestion(question: QuestionConfig) {
-    if (question.kind !== SurveyQuestionKind.Scale) {
-      return nothing;
-    }
-
-    const onChange = (e: Event) => {
+    const handleScaleClick = (e: Event) => {
       const score = Number((e.target as HTMLInputElement).value);
       const answer: ScaleQuestionAnswer = {
         id: question.id,
@@ -241,34 +172,19 @@ export class SurveyPreview extends MobxLitElement {
       );
     };
 
-    const getValue = () => {
-      const questionAnswer = this.answer?.answers[question.id];
-
-      if (questionAnswer && questionAnswer.kind === SurveyQuestionKind.Scale) {
-        return questionAnswer.score;
-      }
-
-      return 5;
-    }
-
     return html`
-      <div class="question">
-        <div class="question-title">${question.questionText}</div>
-        <div class="slider-wrapper">
-          <div>${question.lowerBound}</div>
-          <md-slider
-            step="1"
-            ticks
-            min="0"
-            max="10"
-            value=${getValue()}
-            labeled
-            ?disabled=${!this.participantService.isCurrentStage()}
-            @change=${onChange}
-          >
-          </md-slider>
-          <div>${question.upperBound}</div>
-        </div>
+      <div class="scale-button">
+        <md-radio
+          id=${id}
+          name=${name}
+          value=${value}
+          aria-label=${value}
+          ?checked=${isScaleChoiceMatch(value)}
+          ?disabled=${!this.participantService.isCurrentStage()}
+          @change=${handleScaleClick}
+        >
+        </md-radio>
+        <label for=${id}>${value}</label>
       </div>
     `;
   }

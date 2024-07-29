@@ -9,11 +9,10 @@ import {
   getLostAtSeaPairAnswer,
   ITEMS,
   ItemName,
-  QuestionAnswer,
-  QuestionConfig,
-  RatingQuestionAnswer,
-  SurveyStageAnswer,
-  SurveyStageConfig,
+  LostAtSeaQuestion,
+  LostAtSeaQuestionAnswer,
+  LostAtSeaSurveyStageAnswer,
+  LostAtSeaSurveyStageConfig,
   SurveyQuestionKind,
 } from "@llm-mediation-experiments/utils";
 
@@ -24,8 +23,9 @@ import { styles } from "./las_result.scss";
 export class SurveyResult extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  @property() stage: SurveyStageConfig|null = null;
-  @property() answer: SurveyStageAnswer|null = null;
+  @property() stage: LostAtSeaSurveyStageConfig|null = null;
+  @property() answer: LostAtSeaSurveyStageAnswer|null = null;
+  @property() leaderAnswer: Record<string, LostAtSeaQuestionAnswer>|null = null;
 
   override render() {
     if (!this.answer || !this.stage) {
@@ -46,30 +46,27 @@ export class SurveyResult extends MobxLitElement {
             <div class="table-cell">
               You chose
             </div>
+            ${this.leaderAnswer ? html`<div class="table-cell">Your elected leader chose</div>` : nothing}
           </div>
         </div>
-        ${this.stage.questions.map(question => this.renderRatingQuestion(question))}
+        ${this.stage.questions.map(question => this.renderQuestion(question))}
       </div>
     `;
   }
 
-  private renderRatingQuestion(question: QuestionConfig) {
-    if (question.kind !== SurveyQuestionKind.Rating) {
-      return nothing;
+  private renderIcon(correctAnswer: ItemName, selectedAnswer: ItemName) {
+    if (correctAnswer === selectedAnswer) {
+      return html`<pr-icon color="success" icon="check_circle"></pr-icon>`;
+    } else {
+      return html`<pr-icon color="error" icon="cancel"></pr-icon>`;
     }
+  }
 
+  private renderQuestion(question: LostAtSeaQuestion) {
     const participantAnswer =
-      this.answer?.answers[question.id] as RatingQuestionAnswer;
+      this.answer?.answers[question.id] as LostAtSeaQuestionAnswer;
 
     const gameAnswer = getLostAtSeaPairAnswer(question.item1, question.item2);
-
-    const renderIcon = () => {
-      if (gameAnswer === participantAnswer.choice) {
-        return html`<pr-icon color="success" icon="check_circle"></pr-icon>`;
-      } else {
-        return html`<pr-icon color="error" icon="cancel"></pr-icon>`;
-      }
-    };
 
     return html`
       <div class="table-row">
@@ -80,9 +77,23 @@ export class SurveyResult extends MobxLitElement {
           ${ITEMS[question.item2].name}
         </div>
         <div class="table-cell">
-          ${renderIcon()}
+          ${this.renderIcon(gameAnswer, participantAnswer.choice)}
           <div>${ITEMS[participantAnswer.choice].name}</div>
         </div>
+        ${this.renderLeaderAnswer(gameAnswer, question)}
+      </div>
+    `;
+  }
+
+  private renderLeaderAnswer(gameAnswer: ItemName, question: LostAtSeaQuestion) {
+    if (!this.leaderAnswer) return nothing;
+
+    const leaderAnswer = this.leaderAnswer[question.id] as LostAtSeaQuestionAnswer;
+
+    return html`
+      <div class="table-cell">
+        ${this.renderIcon(gameAnswer, leaderAnswer.choice)}
+        <div>${ITEMS[leaderAnswer.choice].name}</div>
       </div>
     `;
   }

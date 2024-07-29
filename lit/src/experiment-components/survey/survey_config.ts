@@ -11,6 +11,8 @@ import {
 
 import {
   QuestionConfig,
+  MultipleChoiceQuestionConfig,
+  ScaleQuestionConfig,
   SurveyQuestionKind
 } from "@llm-mediation-experiments/utils";
 
@@ -71,28 +73,30 @@ export class SurveyConfig extends MobxLitElement {
       >
       </pr-textarea>
 
-      ${this.surveyConfig.questions.map(
-        (question, index) => this.renderRatingQuestion(question, index))}
-
       <pr-button @click=${addQuestion}>Add scale question</pr-button>
       ${this.surveyConfig.questions.map(
-        (question, index) => this.renderScaleQuestion(question, index))}
+        (question, index) => this.renderQuestion(question, index))}
     `;
   }
 
-  // Used for Lost at Sea game stages only.
-  private renderRatingQuestion(question: QuestionConfig, index: number) {
-    if (question.kind !== SurveyQuestionKind.Rating) {
-      return nothing;
+  private renderQuestion(question: QuestionConfig, index: number) {
+    switch (question.kind) {
+      case SurveyQuestionKind.MultipleChoice:
+        return this.renderMultipleChoiceQuestion(question, index);
+      case SurveyQuestionKind.Scale:
+        return this.renderScaleQuestion(question, index);
+      default:
+        return nothing;
     }
-    return html`${JSON.stringify(question)}`;
   }
 
-  private renderScaleQuestion(question: QuestionConfig, index: number) {
-    if (question.kind !== SurveyQuestionKind.Scale) {
-      return nothing;
-    }
+  private renderMultipleChoiceQuestion(
+    question: MultipleChoiceQuestionConfig, index: number
+  ) {
+    return html`<code>${JSON.stringify(question)}</code>`;
+  }
 
+  private renderScaleQuestion(question: ScaleQuestionConfig, index: number) {
     const updateQuestionTitle = (e: Event) => {
       const value = (e.target as HTMLTextAreaElement).value;
       this.surveyConfig.updateScaleQuestion(

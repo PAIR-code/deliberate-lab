@@ -86,6 +86,7 @@
 
 .input-row {
   @include common.flex-row-align-center;
+  flex-grow: 1;
   gap: common.$spacing-xl;
   width: -webkit-fill-available;
   max-width: common.$main-content-max-width;

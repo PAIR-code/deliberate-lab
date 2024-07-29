@@ -10,7 +10,8 @@ import {
   PayoutItemKind,
   PayoutItemStrategy,
   QuestionConfig,
-  RatingQuestionConfig,
+  LostAtSeaSurveyStageConfig,
+  LostAtSeaQuestion,
   RevealStageConfig,
   StageConfig,
   StageKind,
@@ -23,8 +24,25 @@ import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
 import { v4 as uuidv4 } from "uuid";
 
-import { LAS_ID, LAS_FINAL_SURVEY, LAS_FINAL_SURVEY_DESCRIPTION, LAS_GROUP_CHAT_DESCRIPTION, LAS_INITIAL_TASK_INTRO_INFO_LINES, LAS_INTRO_DESCRIPTION, LAS_INTRO_INFO_LINES, LAS_LEADER_ELECTION_DESCRIPTION, LAS_LEADER_REVEAL_DESCRIPTION, LAS_LEADER_TASK_DESCRIPTION, LAS_REDO_TASK_DESCRIPTION, LAS_SCENARIO_REMINDER, LAS_WTL_DESCRIPTION, LAS_WTL_SURVEY } from './constants';
-import { createSurveyStage, createChatStage, createVoteForLeaderStage, createPayoutStage, createRevealStage, createInfoStage } from "../utils";
+import {
+  LAS_ID,
+  LAS_FINAL_SURVEY,
+  LAS_FINAL_SURVEY_DESCRIPTION,
+  LAS_GROUP_CHAT_DESCRIPTION,
+  LAS_INITIAL_TASK_INTRO_INFO_LINES,
+  LAS_INTRO_DESCRIPTION,
+  LAS_INTRO_INFO_LINES,
+  LAS_LEADER_ELECTION_DESCRIPTION,
+  LAS_LEADER_REVEAL_DESCRIPTION,
+  LAS_LEADER_TASK_DESCRIPTION,
+  LAS_PE_DESCRIPTION,
+  LAS_PE_SURVEY,
+  LAS_REDO_TASK_DESCRIPTION,
+  LAS_SCENARIO_REMINDER,
+  LAS_WTL_DESCRIPTION,
+  LAS_WTL_SURVEY
+} from './constants';
+import { createSurveyStage, createChatStage, createVoteForLeaderStage, createPayoutStage, createRevealStage, createInfoStage, generateId } from "../utils";
 
 /**
  * Create Lost at Sea game module stages.
@@ -62,11 +80,11 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
   const LEADER_ITEM_PAIRS = choices(pairs(LEADER_ITEM_NAMES), numPairs);
 
   // Add individual surveys
-  const INDIVIDUAL_QUESTIONS: RatingQuestionConfig[] = INDIVIDUAL_ITEM_PAIRS.map(
-    (pair, index) => getRatingQuestionFromPair(pair, index)
+  const INDIVIDUAL_QUESTIONS: LostAtSeaQuestion[] = INDIVIDUAL_ITEM_PAIRS.map(
+    (pair, index) => getQuestionFromPair(pair, index)
   );
 
-  const initialTask = createSurveyStage({
+  const initialTask = createLostAtSeaSurveyStage({
     name: "Initial survival task", 
     questions: INDIVIDUAL_QUESTIONS,
     popupText: LAS_SCENARIO_REMINDER,
@@ -79,6 +97,15 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
     questions: LAS_WTL_SURVEY
   }));
 
+  // Performance estimation multiple choice
+  stages.push(
+    createSurveyStage({
+      name: "Performance estimation",
+      description: LAS_PE_DESCRIPTION,
+      questions: LAS_PE_SURVEY
+    })
+  )
+
   // Add chat with individual item pairs as discussion
   stages.push(
     createChatStage(
@@ -88,7 +115,7 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
     )
   );
 
-  const redoTask = createSurveyStage({
+  const redoTask = createLostAtSeaSurveyStage({
     name: "Updated individual task",
     description: LAS_REDO_TASK_DESCRIPTION,
     popupText: LAS_SCENARIO_REMINDER,
@@ -103,11 +130,11 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
   stages.push(leaderElection);
 
   // Add leader task
-  const LEADER_QUESTIONS: RatingQuestionConfig[] = LEADER_ITEM_PAIRS.map(
-    (pair, index) => getRatingQuestionFromPair(pair, index)
+  const LEADER_QUESTIONS: LostAtSeaQuestion[] = LEADER_ITEM_PAIRS.map(
+    (pair, index) => getQuestionFromPair(pair, index)
   );
 
-  const leaderTask = createSurveyStage({
+  const leaderTask = createLostAtSeaSurveyStage({
     name: "Representative task",
     description: LAS_LEADER_TASK_DESCRIPTION,
     popupText: LAS_SCENARIO_REMINDER,
@@ -129,7 +156,7 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
         name: "Part 1 payoff",
         strategy: PayoutBundleStrategy.AddPayoutItems,
         payoutItems: [{
-          kind: PayoutItemKind.RatingSurvey,
+          kind: PayoutItemKind.LostAtSeaSurvey,
           strategy: PayoutItemStrategy.ChooseOne,
           surveyStageId: initialTask.id,
           currencyAmountPerQuestion: 0,
@@ -141,14 +168,14 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
         strategy: PayoutBundleStrategy.ChoosePayoutItem,
         payoutItems: [
           {
-            kind: PayoutItemKind.RatingSurvey,
+            kind: PayoutItemKind.LostAtSeaSurvey,
             strategy: PayoutItemStrategy.ChooseOne,
             surveyStageId: redoTask.id,
             currencyAmountPerQuestion: 0,
             fixedCurrencyAmount: 0,
           },
           {
-            kind: PayoutItemKind.RatingSurvey,
+            kind: PayoutItemKind.LostAtSeaSurvey,
             strategy: PayoutItemStrategy.ChooseOne,
             surveyStageId: leaderTask.id,
             leaderStageId: leaderElection.id,
@@ -171,14 +198,28 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
   return stages;
 }
 
+/** Create Lost at Sea survey stage. */
+export function createLostAtSeaSurveyStage(
+  config: Partial<LostAtSeaSurveyStageConfig> = {}
+): LostAtSeaSurveyStageConfig {
+  return {
+    id: generateId(),
+    kind: StageKind.LostAtSeaSurvey,
+    name: config.name ?? "Survey",
+    description: config.description ?? "",
+    popupText: config.popupText ?? "",
+    questions: config.questions ?? [],
+  };
+}
+
 /**
- * Uses item pair to create survey RatingQuestion.
+ * Uses item pair to create Lost at Sea question.
  */
-export function getRatingQuestionFromPair(
+export function getQuestionFromPair(
   pair: [string, string],
   id: number,
   questionText = "Choose the item that would be more helpful to your survival",
-): RatingQuestionConfig {
+): LostAtSeaQuestion {
 
   const [one, two] = pair;
   const item1: ItemName = (one as ItemName);
@@ -186,7 +227,6 @@ export function getRatingQuestionFromPair(
 
   return {
     id,
-    kind: SurveyQuestionKind.Rating,
     questionText,
     item1,
     item2,
@@ -201,23 +241,8 @@ export function isLostAtSeaGameStage(stage: StageConfig) {
 }
 
 /**
- * Check if stage is a LostAtSea survey
- */
-export function isLostAtSeaSurveyStage(stage: StageConfig) {
-  if (stage.kind !== StageKind.TakeSurvey) {
-     return false;
-  }
-  for (const question of stage.questions) {
-    if (question.kind === SurveyQuestionKind.Rating) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
  * Return LostAtSea survey stages from given list of stages.
  */
 export function getLostAtSeaSurveyStages(stages: StageConfig[]) {
-  return stages.filter(stage => isLostAtSeaSurveyStage(stage));
+  return stages.filter(stage => stage.kind === StageKind.LostAtSeaSurvey);
 }

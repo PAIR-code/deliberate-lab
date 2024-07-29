@@ -8,10 +8,10 @@ import {
 /** Shorthand for strict TypeBox object validation */
 const strict =  { additionalProperties: false } as const;
 
-/** Rating survey payout item */
-export const RatingSurveyPayoutItemData = Type.Object(
+/** Lost at Sea survey payout item */
+export const LostAtSeaSurveyPayoutItemData = Type.Object(
   {
-    kind: Type.Literal(PayoutItemKind.RatingSurvey),
+    kind: Type.Literal(PayoutItemKind.LostAtSeaSurvey),
     strategy: Type.Union([
       Type.Literal(PayoutItemStrategy.AddAll),
       Type.Literal(PayoutItemStrategy.ChooseOne)
@@ -34,7 +34,7 @@ export const PayoutBundleData = Type.Object(
     ]),
     payoutItems: Type.Array(
       Type.Union([
-        RatingSurveyPayoutItemData,
+        LostAtSeaSurveyPayoutItemData,
       ]),
     ),
   },

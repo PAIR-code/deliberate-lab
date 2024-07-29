@@ -13,7 +13,6 @@ import {
   PayoutCurrency,
   PayoutStageConfig,
   ProfileStageConfig,
-  RatingQuestionConfig,
   RevealStageConfig,
   StageConfig,
   StageKind,

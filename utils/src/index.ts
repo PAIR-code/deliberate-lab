@@ -4,7 +4,7 @@
 export * from './types/api.types';
 export * from './types/chats.types';
 export * from './types/experiments.types';
-export * from './types/items.types';
+export * from './types/lost_at_sea.types';
 export * from './types/mediator.types';
 export * from './types/messages.types';
 export * from './types/participants.types';
@@ -23,7 +23,7 @@ export * from './utils/string.utils';
 // Validation (peer dependency: @sinclair/typebox)
 export * from './validation/chats.validation';
 export * from './validation/experiments.validation';
-export * from './validation/items.validation';
+export * from './validation/lost_at_sea.validation';
 export * from './validation/messages.validation';
 export * from './validation/participants.validation';
 export * from './validation/payout.validation';
