@@ -7,6 +7,7 @@ import { InitializationService } from "./services/initialization_service";
 import { LLMService } from "./services/llm_service";
 import { RouterService } from "./services/router_service";
 import { SettingsService } from "./services/settings_service";
+import { SurveyService } from "./services/survey_service";
 
 import {
   ExperimentConfigService
@@ -55,6 +56,9 @@ export function makeServiceProvider(self: Core) {
     },
     get chatService() {
       return self.getService(ChatService);
+    },
+    get surveyService() {
+      return self.getService(SurveyService);
     },
     get experimentConfigService() {
       return self.getService(ExperimentConfigService);

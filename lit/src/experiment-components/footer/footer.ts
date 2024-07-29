@@ -8,6 +8,7 @@ import { core } from "../../core/core";
 import { ExperimentService } from "../../services/experiment_service";
 import { ParticipantService } from "../../services/participant_service";
 import { Pages, RouterService } from "../../services/router_service";
+import { SurveyService } from "../../services/survey_service";
 
 import { styles } from "./footer.scss";
 
@@ -19,6 +20,7 @@ export class Footer extends MobxLitElement {
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
+  private readonly surveyService = core.getService(SurveyService);
 
   @property() disabled = false;
 
@@ -42,7 +44,12 @@ export class Footer extends MobxLitElement {
 
     const isLastStage = index === this.experimentService.stageIds.length - 1;
 
-    const handleNext = () => {
+    const handleNext = async () => {
+      // If survey stage, save relevant text answers
+      if (this.surveyService.stageId === this.participantService.profile?.currentStageId) {
+        await this.surveyService.saveTextAnswers();
+      }
+
       const nextStageId = this.experimentService.getNextStageId(
         this.participantService.profile?.currentStageId ?? ""
       );
