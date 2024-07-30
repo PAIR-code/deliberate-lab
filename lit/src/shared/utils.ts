@@ -19,13 +19,16 @@ import {
   SurveyStageConfig,
   TermsOfServiceStageConfig,
   UnifiedTimestamp,
-  VoteForLeaderStageConfig
+  VoteForLeaderStageConfig,
 } from '@llm-mediation-experiments/utils';
-import { micromark } from "micromark";
-import { gfm, gfmHtml } from "micromark-extension-gfm";
-import { v4 as uuidv4 } from "uuid";
-import { GEMINI_DEFAULT_MODEL, PROMPT_INSTRUCTIONS_CHAT_MEDIATOR } from "./prompts";
-import { Snapshot } from "./types";
+import {micromark} from 'micromark';
+import {gfm, gfmHtml} from 'micromark-extension-gfm';
+import {v4 as uuidv4} from 'uuid';
+import {
+  GEMINI_DEFAULT_MODEL,
+  PROMPT_INSTRUCTIONS_CHAT_MEDIATOR,
+} from './prompts';
+import {Snapshot} from './types';
 
 /** Generate unique id. */
 export function generateId(): string {
@@ -34,30 +37,33 @@ export function generateId(): string {
 
 /** Create info stage. */
 export function createInfoStage(
-  config : Partial<InfoStageConfig> = {}
+  config: Partial<InfoStageConfig> = {}
 ): InfoStageConfig {
   return {
     id: generateId(),
     kind: StageKind.Info,
-    name: config.name ?? "Info",
-    description: config.description ?? "",
-    popupText: config.popupText ?? "",
-    infoLines: config.infoLines ?? ["Placeholder info"]
+    name: config.name ?? 'Info',
+    description: config.description ?? '',
+    popupText: config.popupText ?? '',
+    infoLines: config.infoLines ?? ['Placeholder info'],
   };
 }
 
 /** Create TOS stage. */
 export function createTOSStage(
-  config : Partial<TermsOfServiceStageConfig> = {}
+  config: Partial<TermsOfServiceStageConfig> = {}
 ): TermsOfServiceStageConfig {
   return {
     id: generateId(),
     kind: StageKind.TermsOfService,
-    name: config.name ?? "Terms of service",
-    description: config.description ?? "Acknowledge the terms of service to proceed.",
-    popupText: config.popupText ?? "",
-    tosLines : config.tosLines ?? ["- Placeholder term 1\n- Placeholder term 2\n- Placeholder term 3"],
-  }
+    name: config.name ?? 'Terms of service',
+    description:
+      config.description ?? 'Acknowledge the terms of service to proceed.',
+    popupText: config.popupText ?? '',
+    tosLines: config.tosLines ?? [
+      '- Placeholder term 1\n- Placeholder term 2\n- Placeholder term 3',
+    ],
+  };
 }
 
 /** Create survey stage. */
@@ -67,24 +73,25 @@ export function createSurveyStage(
   return {
     id: generateId(),
     kind: StageKind.TakeSurvey,
-    name: config.name ?? "Survey",
-    description: config.description ?? "",
-    popupText: config.popupText ?? "",
+    name: config.name ?? 'Survey',
+    description: config.description ?? '',
+    popupText: config.popupText ?? '',
     questions: config.questions ?? [],
   };
 }
 
 /** Create profile stage. */
-export function createProfileStage(name = "Set profile"): ProfileStageConfig {
+export function createProfileStage(name = 'Set profile'): ProfileStageConfig {
   // Bug: Experiment can't be created with a profile description.
-  return { id: generateId(), kind: StageKind.SetProfile, name};
+  return {id: generateId(), kind: StageKind.SetProfile, name};
 }
 
 /** Create chat (with ranking discussion) stage. */
 export function createChatStage(
-  name = "Group discussion",
-  description = "Group discussion description",
-  ratingsToDiscuss: { item1: ItemName; item2: ItemName }[] = []
+  name = 'Group discussion',
+  description = 'Group discussion description',
+  ratingsToDiscuss: {item1: ItemName; item2: ItemName}[] = [],
+  popupText = ''
 ): GroupChatStageConfig {
   if (ratingsToDiscuss.length === 0) {
     return {
@@ -97,6 +104,7 @@ export function createChatStage(
         kind: ChatKind.SimpleChat,
       },
       mediators: [],
+      popupText,
     };
   }
 
@@ -108,16 +116,17 @@ export function createChatStage(
     chatId: generateId(),
     chatConfig: {
       kind: ChatKind.ChatAboutItems,
-      ratingsToDiscuss
+      ratingsToDiscuss,
     },
     mediators: [],
+    popupText,
   };
 }
 
 /** Create default LLM mediator. */
 export function createMediator(
-  name = "LLM Mediator",
-  avatar = "🤖",
+  name = 'LLM Mediator',
+  avatar = '🤖'
 ): MediatorConfig {
   return {
     id: generateId(),
@@ -138,9 +147,9 @@ export function createVoteForLeaderStage(
   return {
     id: generateId(),
     kind: StageKind.VoteForLeader,
-    name: config.name ?? "Leader election",
-    description: config.description ?? "Vote for the leader here.",
-    popupText: config.popupText ?? "",
+    name: config.name ?? 'Leader election',
+    description: config.description ?? 'Vote for the leader here.',
+    popupText: config.popupText ?? '',
   };
 }
 
@@ -148,34 +157,34 @@ export function createVoteForLeaderStage(
  * Create composite payout stage.
  */
 export function createPayoutStage(
-  config: Partial<PayoutStageConfig> = {},
+  config: Partial<PayoutStageConfig> = {}
 ): PayoutStageConfig {
   return {
     id: generateId(),
     kind: StageKind.Payout,
     composite: true,
-    name: config.name ?? "Payout",
-    description: config.description ?? "",
-    popupText: config.popupText ?? "",
+    name: config.name ?? 'Payout',
+    description: config.description ?? '',
+    popupText: config.popupText ?? '',
     payouts: config.payouts ?? [],
     currency: config.currency ?? PayoutCurrency.USD,
-  }
+  };
 }
 
 /**
  * Create composite reveal stage.
  */
 export function createRevealStage(
-  config: Partial<RevealStageConfig> = {},
+  config: Partial<RevealStageConfig> = {}
 ): RevealStageConfig {
   return {
     id: generateId(),
     kind: StageKind.Reveal,
     composite: true,
-    name: config.name ?? "Leader reveal", 
-    description: config.description ?? "This is the outcome of the vote.",
-    popupText: config.popupText ?? "",
-    stagesToReveal: config.stagesToReveal ?? []
+    name: config.name ?? 'Leader reveal',
+    description: config.description ?? 'This is the outcome of the vote.',
+    popupText: config.popupText ?? '',
+    stagesToReveal: config.stagesToReveal ?? [],
   };
 }
 
@@ -186,22 +195,23 @@ export function getChatRatingsToDiscuss(stage: GroupChatStageConfig) {
   if (!stage) {
     return [];
   }
-  return stage.chatConfig.kind === ChatKind.ChatAboutItems ?
-    stage.chatConfig.ratingsToDiscuss : [];
+  return stage.chatConfig.kind === ChatKind.ChatAboutItems
+    ? stage.chatConfig.ratingsToDiscuss
+    : [];
 }
 
 /**
  * Find index of specific stage kind.
  */
 export function findStageKind(stages: StageConfig[], kind: StageKind) {
-  return stages.findIndex(stage => stage.kind === kind);
+  return stages.findIndex((stage) => stage.kind === kind);
 }
 
 /**
  * Return election survey stages from given list of stages.
  */
 export function getElectionStages(stages: StageConfig[]) {
-  return stages.filter(stage => stage.kind === StageKind.VoteForLeader);
+  return stages.filter((stage) => stage.kind === StageKind.VoteForLeader);
 }
 
 /** Use micromark to convert Git-flavored markdown to HTML. */
@@ -221,13 +231,13 @@ export function convertMarkdownToHTML(markdown: string, sanitize = true) {
 export function convertExperimentStages(stages: StageConfig[]) {
   return stages.map((stage, index) => {
     if (stage.kind === StageKind.TermsOfService) {
-        stage.tosLines = stage.tosLines.map(
-        info => convertMarkdownToHTML(info)
+      stage.tosLines = stage.tosLines.map((info) =>
+        convertMarkdownToHTML(info)
       );
       return stage;
     }
     return stage;
-  })
+  });
 }
 
 /**
@@ -243,12 +253,12 @@ export function convertUnifiedTimestampToDate(timestamp: UnifiedTimestamp) {
  * including the document Firestore ID within the field with the given key.
  */
 export function collectSnapshotWithId<T>(snapshot: Snapshot, idKey: keyof T) {
-  return snapshot.docs.map((doc) => ({ [idKey]: doc.id, ...doc.data() }) as T);
+  return snapshot.docs.map((doc) => ({[idKey]: doc.id, ...doc.data()} as T));
 }
 
 /** Helper to cleanup experiment data from redundant stage names */
-export function excludeName<T extends { name: string }>(obj: T) {
+export function excludeName<T extends {name: string}>(obj: T) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { name, ...rest } = obj;
+  const {name, ...rest} = obj;
   return rest;
 }

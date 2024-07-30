@@ -158,8 +158,9 @@ function getPart2PreElectionStages(): StageConfig[] {
   stages.push(
     createChatStage(
       'Group discussion',
-      LAS_GROUP_CHAT_DESCRIPTION,
-      ITEMS_SET_2.map(([i1, i2]) => ({item1: i1, item2: i2}))
+      '',
+      ITEMS_SET_1.map(([i1, i2]) => ({item1: i1, item2: i2})),
+      LAS_GROUP_CHAT_DESCRIPTION + '\n\n' + LAS_SCENARIO_REMINDER
     )
   );
 
