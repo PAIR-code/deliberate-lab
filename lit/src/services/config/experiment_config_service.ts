@@ -124,7 +124,7 @@ export class ExperimentConfigService extends Service {
       });
 
       // Create multiExperiments.
-      experiments.push(...this.getMultiExperiments(this.numExperiments, postStages));
+      experiments.push(...this.getMultiExperiments(this.numExperiments, this.stages));
       return experiments;
     }
 

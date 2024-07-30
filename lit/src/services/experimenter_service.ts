@@ -1,15 +1,17 @@
-import { Experiment, ExperimentTemplate, ExperimentTemplateExtended, ParticipantProfile, ParticipantProfileExtended, StageConfig, lookupTable } from "@llm-mediation-experiments/utils";
+import { Experiment, ExperimentTemplate, ExperimentTemplateExtended, ParticipantProfile, ParticipantProfileExtended, StageAnswer, StageConfig, lookupTable } from "@llm-mediation-experiments/utils";
 import { Unsubscribe, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, updateDoc } from "firebase/firestore";
 import { computed, makeObservable, observable } from "mobx";
-import { createExperimentCallable, createParticipantCallable, deleteExperimentCallable, deleteParticipantCallable } from "../shared/callables";
+import { createExperimentCallable, createParticipantCallable, deleteExperimentCallable, deleteParticipantCallable, updateStageCallable } from "../shared/callables";
 import { collectSnapshotWithId } from "../shared/utils";
 
 import { FirebaseService } from "./firebase_service";
+import { ParticipantService } from "./participant_service";
 import { RouterService } from "./router_service";
 import { Service } from "./service";
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
+  participantService: ParticipantService;
   routerService: RouterService;
 }
 
@@ -215,18 +217,23 @@ export class ExperimenterService extends Service {
 
   /** Adds a participant.
    */
-  async createParticipant(experimentId: string, participantData: ParticipantProfile | null = null): Promise<CreateParticipantResponse> {
+  async createParticipant(
+    experimentId: string,
+    participantData: ParticipantProfile | null = null,
+    isTransfer = false
+  ): Promise<CreateParticipantResponse> {
     return createParticipantCallable(this.sp.firebaseService.functions, {
-      experimentId: experimentId,
-      participantData: participantData,
+      experimentId,
+      participantData,
+      isTransfer,
     });
   }
 
   /** Deletes a participant. */
   async deleteParticipant(experimentId: string, participantId: string) {
     return deleteParticipantCallable(this.sp.firebaseService.functions, {
-      experimentId: experimentId,
-      participantId: participantId,
+      experimentId,
+      participantId,
     });
   }
 
@@ -237,7 +244,12 @@ export class ExperimenterService extends Service {
     participant: ParticipantProfileExtended
   ) {
     try {
-      const response = await this.createParticipant(newExperimentId, participant);
+      // Create transfer participant in new experiment
+      const response = await this.createParticipant(
+        newExperimentId, participant, true
+      );
+
+      // Mark participant as transferred in old experiment
       const transferConfig = {
         experimentId: newExperimentId,
         participantId: response.participant.privateId,
