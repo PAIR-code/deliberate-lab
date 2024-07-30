@@ -28,11 +28,11 @@ export const LAS_INTRO_INFO_LINES = [
 ];
 
 export const LAS_INITIAL_TASK_INTRO_INFO_LINES = [
-  '# Imagine the following scenario:',
+  '## Imagine the following scenario:',
   "You have chartered a yacht with three friends for a holiday trip across the Atlantic Ocean. None of you have sailing experience, so you hired an experienced skipper and a two-person crew. In the middle of the Atlantic a fierce fire breaks out in the ship's galley. The skipper and crew have been lost whilst trying to fight the blaze. Much of the yacht is destroyed and is slowly sinking. Vital navigational and radio equipment are damaged, and your location is unclear. Your best estimate is that you are many hundreds of miles from the nearest landfall.",
   '*You and your friends have managed to save 10 items, undamaged and intact after the fire. In addition, you have salvaged a four-man rubber life craft and a box of matches*.',
-  '*Your task*:  You are asked to **evaluate these 10 items in terms of their importance for your survival, as you wait to be rescued**. The computer will randomly generate pairs of items, and you will select which of the two is the most useful in your situation.',
-  '\n\n# Payment:',
+  '## Your task:  You are asked to **evaluate these 10 items in terms of their importance for your survival, as you wait to be rescued**. The computer will randomly generate pairs of items, and you will select which of the two is the most useful in your situation.',
+  '## Payment:',
   "Your answers will be compared to a panel of experts' solutions. If a question from Part 1 is randomly selected to determine your payment at the end of the study, you will earn $x if your answer is correct, and $0 otherwise.",
   'Please click “Next stage” to proceed.',
 ];
@@ -157,8 +157,8 @@ export const LAS_LEADER_ELECTION_INSTRUCTIONS = [
   'You are now about to elect a group leader who will play a role in the next part of the experiment (Part 3). In Part 3, the same task as in Part 1 will be played, with different pairs of items.',
   "\n\nFor each question, the leader will be responsible for submitting the final answer on behalf of the group. The leader's answers will be evaluated in the same manner as in Parts 1 and 2 and will determine the payoff for all group members. Therefore, if a question from Part 3 is selected to determine your final payoff, it will be the leader's answer that counts.",
   '\n\nBelow is an overview of the election process.',
-  '\n\n**Step 1: Indicating interest** - You will first be asked to indicate how much you want to become the group leader on a scale from 1 to 10.',
-  '**Step 2: Ranking your teammates** - You will rank your three teammates, with your preferred leader at position 1, the second most preferred leader at position 2, and the third most preferred leader at position 3. You cannot vote for yourself.',
+  '\n\n1. **Indicating interest** - You will first be asked to indicate how much you want to become the group leader on a scale from 1 to 10.',
+  '2. **Ranking your teammates** - You will rank your three teammates, with your preferred leader at position 1, the second most preferred leader at position 2, and the third most preferred leader at position 3. You cannot vote for yourself.',
   '\n\nWe will use your answers to these two questions to select the leader:',
   '- The two group members who express the most interest in becoming the leader will be selected as candidates for the election. If several group members choose the same number, the computer will randomly determine the order of these group members.',
   '- The highest-ranked candidate among the two will be elected as leader. If both candidates tie, the decision will be made randomly.',
