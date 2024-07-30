@@ -283,12 +283,12 @@ export class ExperimenterService extends Service {
   async createParticipant(
     experimentId: string,
     participantData: Partial<ParticipantProfile> | null = null,
-    isTransfer = false
+    lobbyExperimentId: string | undefined = undefined // if participant is a transfer
   ): Promise<CreateParticipantResponse> {
     return createParticipantCallable(this.sp.firebaseService.functions, {
       experimentId,
       participantData,
-      isTransfer,
+      lobbyExperimentId,
     });
   }
 
@@ -309,7 +309,7 @@ export class ExperimenterService extends Service {
     try {
       // Create transfer participant in new experiment
       const response = await this.createParticipant(
-        newExperimentId, participant, true
+        newExperimentId, participant, currentExperimentId
       );
 
       // Mark participant as transferred in old experiment

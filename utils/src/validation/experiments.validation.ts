@@ -20,7 +20,7 @@ export const ParticipantCreationData = Type.Object(
     // Discriminate between experiment and template
     experimentId: Type.String({ minLength: 1 }),
     participantData: Type.Optional(Type.Any()),
-    isTransfer: Type.Boolean(),
+    lobbyExperimentId: Type.Optional(Type.String()),
   },
   strict,
 );
