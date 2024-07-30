@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
+import CopyWebpackPlugin from 'copy-webpack-plugin';
+import {GitRevisionPlugin} from 'git-revision-webpack-plugin';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
 import * as path from 'path';
 import * as webpack from 'webpack';
-import CopyWebpackPlugin from 'copy-webpack-plugin';
-import HtmlWebpackPlugin from 'html-webpack-plugin';
-import { GitRevisionPlugin } from 'git-revision-webpack-plugin';
 
-console.log('URL_PREFIX:', process.env.URL_PREFIX);
 const gitRevisionPlugin = new GitRevisionPlugin({branch: true});
 
 const config: webpack.Configuration = {
@@ -75,10 +74,12 @@ const config: webpack.Configuration = {
     }),
     new webpack.DefinePlugin({
       'process.env.URL_PREFIX': process.env.URL_PREFIX ?? "'/'",
-      'GIT_VERSION': JSON.stringify(gitRevisionPlugin.version()),
-      'GIT_COMMIT_HASH': JSON.stringify(gitRevisionPlugin.commithash()),
-      'GIT_BRANCH': JSON.stringify(gitRevisionPlugin.branch()),
-      'GIT_LAST_COMMIT_DATETIME': JSON.stringify(gitRevisionPlugin.lastcommitdatetime()),
+      GIT_VERSION: JSON.stringify(gitRevisionPlugin.version()),
+      GIT_COMMIT_HASH: JSON.stringify(gitRevisionPlugin.commithash()),
+      GIT_BRANCH: JSON.stringify(gitRevisionPlugin.branch()),
+      GIT_LAST_COMMIT_DATETIME: JSON.stringify(
+        gitRevisionPlugin.lastcommitdatetime()
+      ),
     }),
   ],
   resolve: {
