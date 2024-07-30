@@ -44,6 +44,7 @@ import {
   LAS_PE2_SURVEY,
   LAS_PE_DESCRIPTION,
   LAS_PE_SURVEY,
+  LAS_REVEAL_INFO,
   LAS_SCENARIO_REMINDER,
   LAS_SECOND_PART_INTRO_INFO_LINES,
   LAS_TOS,
@@ -243,9 +244,10 @@ function getPart2PostElectionAndPart3Stages(): StageConfig[] {
 
   stages.push(
     createRevealStage({
-      name: 'Representative reveal',
+      name: 'Results reveal',
       description: LAS_LEADER_REVEAL_DESCRIPTION,
       stagesToReveal: [leaderElectionId, leaderTaskId],
+      popupText: LAS_REVEAL_INFO,
     })
   );
 
