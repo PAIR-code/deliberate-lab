@@ -16,6 +16,7 @@ import {
   PayoutBundleStrategy,
   PayoutItem,
   PayoutItemStrategy,
+  StageAnswer,
   StageKind,
   SurveyQuestionKind,
   getLostAtSeaPairAnswer,
@@ -205,7 +206,7 @@ export const createParticipant = onCall(async (request) => {
       }
 
       // If transfer participant, advance past the current (lobby) stage
-      if (data.isTransfer && experimentData.stageIds) {
+      if (data.lobbyExperimentId && experimentData.stageIds) {
         const currentIndex = experimentData.stageIds.findIndex(id => id === currentId);
         return experimentData.stageIds[currentIndex + 1];
       }
@@ -213,7 +214,10 @@ export const createParticipant = onCall(async (request) => {
     };
 
     // Create a new participant document
-    const participantRef = experimentRef.collection('participants').doc();
+    const participantRef = data.participantData?.privateId ?
+      experimentRef.collection('participants').doc(data.participantData.privateId) :
+      experimentRef.collection('participants').doc();
+
     const participantData: ParticipantProfile = {
       publicId: participantPublicId(experimentData.numberOfParticipants),
       currentStageId: getCurrentStageId(),
@@ -237,7 +241,29 @@ export const createParticipant = onCall(async (request) => {
       privateId: participantRef.id,
     } as ParticipantProfileExtended;
 
-    // TODO: If transfer participant, copy private/public answers from lobby experiment
+    // If transfer participant, copy private/public answers from lobby experiment
+    if (data.lobbyExperimentId) {
+      const answerStageIds = (
+        await app.firestore().collection(`experiments/${data.lobbyExperimentId}/participants/${participantRef.id}/stages`).get()
+      ).docs.map((doc) => doc.id);
+
+      for (const id of answerStageIds) {
+        const doc = await app
+          .firestore()
+          .doc(`experiments/${data.lobbyExperimentId}/participants/${participantRef.id}/stages/${id}`)
+          .get();
+
+        const ref = await app
+          .firestore()
+          .doc(
+            `experiments/${data.experimentId}/participants/${participantRef.id}/stages/${id}`
+          );
+        transaction.set(ref, (doc.data() as StageAnswer));
+      }
+
+      // TODO: Also copy over publicStageData for given publicId
+    }
+
     // TODO: Validate and don't allow adding new participants if experiment has started.
   });
   if (newParticipantData) {
