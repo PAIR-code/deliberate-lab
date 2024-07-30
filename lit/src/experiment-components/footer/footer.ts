@@ -21,18 +21,27 @@ export class Footer extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
-  @property() disabled = true; // Initially disabled
+  @property() disabled = false;
   // TODO: Make this parameterized.
   @state() private timeRemaining = 5 * 60; // Set initial countdown time to 5 minutes (300 seconds)
 
   private countdownInterval: number | undefined;
 
+  isOnLastStage() {
+    const index = this.experimentService.getStageIndex(
+      this.participantService.profile?.currentStageId ?? ''
+    );
+
+    return index === this.experimentService.stageIds.length - 1;
+  }
   connectedCallback() {
     super.connectedCallback();
     if (
       this.experimentService.experiment?.isLobby &&
-      !this.participantService.profile?.transferConfig
+      !this.participantService.profile?.transferConfig &&
+      this.isOnLastStage()
     ) {
+      this.disabled = true;
       this.startCountdown();
     } else {
       this.disabled = false; // Enable the button if it's not a lobby experiment
@@ -101,11 +110,7 @@ export class Footer extends MobxLitElement {
   }
 
   private renderNextStageButton() {
-    const index = this.experimentService.getStageIndex(
-      this.participantService.profile?.currentStageId ?? ''
-    );
-
-    const isLastStage = index === this.experimentService.stageIds.length - 1;
+    const isLastStage = this.isOnLastStage();
 
     const handleNext = () => {
       const nextStageId = this.experimentService.getNextStageId(
