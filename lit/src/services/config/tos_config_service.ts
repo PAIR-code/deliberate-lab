@@ -1,8 +1,8 @@
-import { computed, makeObservable, observable } from "mobx";
+import {computed, makeObservable, observable} from 'mobx';
 
-import { Service } from "../service";
+import {Service} from '../service';
 
-import { TermsOfServiceStageConfig } from "@llm-mediation-experiments/utils";
+import {TermsOfServiceStageConfig} from '@llm-mediation-experiments/utils';
 
 /** Manages metadata for TOS stage config. */
 export class TOSConfigService extends Service {
@@ -11,7 +11,7 @@ export class TOSConfigService extends Service {
     makeObservable(this);
   }
 
-  @observable stage: TermsOfServiceStageConfig|null = null;
+  @observable stage: TermsOfServiceStageConfig | null = null;
 
   @computed get name() {
     return this.stage?.name;
@@ -26,7 +26,7 @@ export class TOSConfigService extends Service {
   }
 
   @computed get content() {
-    return this.stage?.tosLines[0];
+    return this.stage?.tosLines.join('\n\n');
   }
 
   updateName(name: string) {
@@ -40,16 +40,16 @@ export class TOSConfigService extends Service {
       this.stage.description = description;
     }
   }
- 
+
   updatePopupText(popupText: string) {
     if (this.stage) {
       this.stage.popupText = popupText;
     }
   }
-  
+
   updateContent(content: string) {
     if (this.stage) {
-      this.stage.tosLines = [content];
+      this.stage.tosLines = content.split('\n');
     }
   }
 

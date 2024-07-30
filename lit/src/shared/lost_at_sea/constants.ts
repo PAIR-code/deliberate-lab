@@ -10,6 +10,14 @@ export const LAS_ID = 'lostAtSea';
 export const LAS_DESCRIPTION =
   "An implementation of the Lost at Sea task (Born 2022) with pairwise elements.";
 
+export const LAS_TOS = [
+    "Thank you for participating in this study.",
+    "This research is conducted by the Paris School of Economics and has been approved by their institutional review board for ethical standards.",
+    "The study will take approximately X minutes, and you will be financially compensated for your time. Detailed instructions about the compensation will be provided in the relevant sections.",
+    "By participating, you agree that your responses, including basic demographic information, will be saved. No identifiable personal data will be collected. All data will be anonymized and used solely for scientific research. Your data will not be shared with third parties.",
+    "By clicking 'Next,' you accept these terms and proceed with the study."
+  ];
+
 export const LAS_INTRO_DESCRIPTION = `This experiment should take an estimated X minutes.`;
 export const LAS_INTRO_INFO_LINES = [
   "You will receive a fixed fee of $x for your participation. The experiment also gives you the opportunity to earn a $x bonus, based on your decisions. We will explain precisely how your bonus is determined later.",

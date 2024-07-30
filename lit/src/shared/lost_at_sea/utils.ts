@@ -46,6 +46,7 @@ import {
   LAS_PE_SURVEY,
   LAS_SCENARIO_REMINDER,
   LAS_SECOND_PART_INTRO_INFO_LINES,
+  LAS_TOS,
   LAS_UPDATE_INSTRUCTIONS,
   LAS_WAIT_INFO_LINES,
   LAS_WTL_2_DESCRIPTION,
@@ -71,7 +72,11 @@ function getIntroStages(): StageConfig[] {
       infoLines: LAS_INTRO_INFO_LINES,
     })
   );
-  stages.push(createTOSStage());
+  stages.push(
+    createTOSStage({
+      tosLines: LAS_TOS,
+    })
+  );
   stages.push(createProfileStage());
 
   return stages;
