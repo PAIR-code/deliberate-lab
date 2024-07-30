@@ -141,6 +141,7 @@ export const createExperiment = onCall(async (request) => {
           acceptTosTimestamp: null,
           completedExperiment: null,
           transferConfig: null,
+          prolificId: null,
         };
 
         // Create the participant document
@@ -246,6 +247,7 @@ export const createParticipant = onCall(async (request) => {
       acceptTosTimestamp: data.participantData?.acceptTosTimestamp ?? null,
       completedExperiment: null,
       transferConfig: null,
+      prolificId: data.participantData?.prolificId ?? data.prolificId ?? null,
     };
 
     // Increment the number of participants in the experiment metadata

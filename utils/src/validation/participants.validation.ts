@@ -10,6 +10,7 @@ export const ProfileAndTOS = Type.Object(
     pronouns: Type.String({ minLength: 1 }),
     avatarUrl: Type.String({ minLength: 1 }),
     acceptTosTimestamp: Type.String(),
+    prolificId: Type.Optional(Type.String()),
     ...PROGRESSION,
   },
   { additionalProperties: false },
