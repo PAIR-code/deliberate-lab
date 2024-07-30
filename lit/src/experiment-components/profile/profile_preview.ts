@@ -199,6 +199,11 @@ export class ProfilePreview extends MobxLitElement {
                   this.profile.transferConfig.experimentId
                 )!.name}
               </div>
+              ${this.profile.prolificId
+                ? html`<div>
+                    <span>🌅 Prolific ID:</span> ${this.profile.prolificId}
+                  </div>`
+                : ''}
             `
           : html`
               <div>

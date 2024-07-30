@@ -36,6 +36,7 @@ export class Footer extends MobxLitElement {
       this.startCountdown();
     } else {
       this.disabled = false; // Enable the button if it's not a lobby experiment
+      this.clearCountdown();
     }
   }
 
@@ -45,6 +46,7 @@ export class Footer extends MobxLitElement {
   }
 
   handleTimedOut() {
+    this.clearCountdown();
     alert('Time is up, the experiment has ended!');
     this.redirectEndExperiment();
   }
@@ -56,7 +58,6 @@ export class Footer extends MobxLitElement {
         this.timeRemaining -= 1;
       } else {
         this.disabled = false; // Enable the button when countdown reaches zero
-        this.clearCountdown();
         this.handleTimedOut();
       }
     }, 1000);
@@ -144,12 +145,10 @@ export class Footer extends MobxLitElement {
     if (isLastStage && this.experimentService.experiment?.isLobby) {
       // If transfer experiment has been assigned
       if (this.participantService.profile?.transferConfig) {
+        alert("You've been transferred to a new experiment!");
+        this.clearCountdown();
         return html`
-          <pr-button
-            variant=${this.disabled ? 'default' : 'tonal'}
-            ?disabled=${preventNextClick}
-            @click=${handleTransfer}
-          >
+          <pr-button variant="tonal" } @click=${handleTransfer}>
             Go to new experiment
           </pr-button>
         `;
