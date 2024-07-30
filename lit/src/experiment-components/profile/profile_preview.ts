@@ -187,8 +187,8 @@ export class ProfilePreview extends MobxLitElement {
         <div class="right">
           <div class="title">${this.profile.name ?? this.profile.publicId}</div>
           <div class="subtitle">${this.profile.pronouns}</div>
-          ${this.renderStatusChip(curStageName)}
         </div>
+        ${this.renderStatusChip(curStageName)}
       </div>
       ${
         this.profile.transferConfig
