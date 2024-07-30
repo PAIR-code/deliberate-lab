@@ -1,18 +1,19 @@
-import "../../pair-components/button";
+import '../../pair-components/button';
 
-import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {CSSResultGroup, html} from 'lit';
+import {customElement, property, state} from 'lit/decorators.js';
 
-import { core } from "../../core/core";
-import { ExperimentService } from "../../services/experiment_service";
-import { ParticipantService } from "../../services/participant_service";
-import { Pages, RouterService } from "../../services/router_service";
+import {core} from '../../core/core';
+import {ExperimentService} from '../../services/experiment_service';
+import {ParticipantService} from '../../services/participant_service';
+import {Pages, RouterService} from '../../services/router_service';
 
-import { styles } from "./footer.scss";
+import {PROLIFIC_COMPLETION_URL_PREFIX} from '../../shared/constants';
+import {styles} from './footer.scss';
 
 /** Experiment stage footer */
-@customElement("stage-footer")
+@customElement('stage-footer')
 export class Footer extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -70,66 +71,59 @@ export class Footer extends MobxLitElement {
         <div class="left">
           <slot></slot>
         </div>
-        <div class="right">
-          ${this.renderNextStageButton()}
-        </div>
+        <div class="right">${this.renderNextStageButton()}</div>
       </div>
     `;
   }
 
   private renderNextStageButton() {
     const index = this.experimentService.getStageIndex(
-      this.participantService.profile?.currentStageId ?? ""
+      this.participantService.profile?.currentStageId ?? ''
     );
 
     const isLastStage = index === this.experimentService.stageIds.length - 1;
 
     const handleNext = () => {
       const nextStageId = this.experimentService.getNextStageId(
-        this.participantService.profile?.currentStageId ?? ""
+        this.participantService.profile?.currentStageId ?? ''
       );
 
       if (nextStageId !== null) {
         this.participantService.updateCurrentStageId(nextStageId);
-        this.routerService.navigate(
-          Pages.PARTICIPANT_STAGE,
-          {
-            "experiment": this.participantService.experimentId!,
-            "participant": this.participantService.participantId!,
-            "stage": nextStageId,
-          }
-        );
+        this.routerService.navigate(Pages.PARTICIPANT_STAGE, {
+          experiment: this.participantService.experimentId!,
+          participant: this.participantService.participantId!,
+          stage: nextStageId,
+        });
       } else {
-        // TODO: navigate to an end-of-experiment payout page
         this.participantService.markExperimentCompleted();
-        alert("Experiment completed!");
-        this.routerService.navigate(
-          Pages.PARTICIPANT,
-          {
-            "experiment": this.participantService.experimentId!,
-            "participant": this.participantService.participantId!,
-          }
-        )
+        alert('Experiment completed!');
+
+        if (this.experimentService.experiment?.prolificRedirectCode) {
+          // Navigate to Prolific with completion code.
+          window.location.href =
+            PROLIFIC_COMPLETION_URL_PREFIX +
+            this.experimentService.experiment?.prolificRedirectCode;
+        } else {
+          // TODO: navigate to an end-of-experiment payout page
+          this.routerService.navigate(Pages.HOME);
+        }
       }
     };
 
-    const preventNextClick = this.disabled ||
-      !this.participantService.isCurrentStage();
+    const preventNextClick =
+      this.disabled || !this.participantService.isCurrentStage();
 
     const handleTransfer = () => {
       const transferConfig = this.participantService.profile?.transferConfig;
       if (!transferConfig) {
         return;
       }
-
-      this.routerService.navigate(
-        Pages.PARTICIPANT,
-        {
-          "experiment": transferConfig.experimentId,
-          "participant": transferConfig.participantId,
-        }
-      );
-    }
+      this.routerService.navigate(Pages.PARTICIPANT, {
+        experiment: transferConfig.experimentId,
+        participant: transferConfig.participantId,
+      });
+    };
 
     // If completed lobby experiment, render link to transfer experiment
     if (isLastStage && this.experimentService.experiment?.isLobby) {
@@ -138,7 +132,7 @@ export class Footer extends MobxLitElement {
         alert('You have been routed to a new experiment!');
         return html`
           <pr-button
-            variant=${this.disabled ? "default" : "tonal"}
+            variant=${this.disabled ? 'default' : 'tonal'}
             ?disabled=${preventNextClick}
             @click=${handleTransfer}
           >
@@ -146,26 +140,28 @@ export class Footer extends MobxLitElement {
           </pr-button>
         `;
       } else {
-          return html`
-            <pr-button
-              variant=${this.disabled ? "default" : "tonal"}
-              ?disabled=${preventNextClick}
-              @click=${handleNext}
-            >
-              ${isLastStage ? "End experiment" : "Next stage"} 
-              ${this.experimentService.experiment?.isLobby && this.disabled ? ` (${this.formatTime(this.timeRemaining)})` : ""}
-            </pr-button>
-          `;
+        return html`
+          <pr-button
+            variant=${this.disabled ? 'default' : 'tonal'}
+            ?disabled=${preventNextClick}
+            @click=${handleNext}
+          >
+            ${isLastStage ? 'End experiment' : 'Next stage'}
+            ${this.experimentService.experiment?.isLobby && this.disabled
+              ? ` (${this.formatTime(this.timeRemaining)})`
+              : ''}
+          </pr-button>
+        `;
       }
     }
 
     return html`
       <pr-button
-        variant=${this.disabled ? "default" : "tonal"}
+        variant=${this.disabled ? 'default' : 'tonal'}
         ?disabled=${preventNextClick}
         @click=${handleNext}
       >
-        ${isLastStage ? "End experiment" : "Next stage"} 
+        ${isLastStage ? 'End experiment' : 'Next stage'}
       </pr-button>
     `;
   }
@@ -173,6 +169,6 @@ export class Footer extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "stage-footer": Footer;
+    'stage-footer': Footer;
   }
 }
