@@ -92,16 +92,9 @@ export class ExperimentPreview extends MobxLitElement {
         return [];
       }
       // Ony fetch other, non-lobby experiments.
-<<<<<<< HEAD
       return this.experimenterService
         .getExperimentsInGroup(group)
         .filter((experiment) => !experiment.isLobby);
-=======
-      return this.experimenterService.getExperimentsInGroup(group)
-        .filter(experiment => !experiment.isLobby && (experiment.numberOfMaxParticipants ?
-          experiment.numberOfParticipants < experiment.numberOfMaxParticipants : true)
-        );
->>>>>>> f9fcefb (Don't show full experiments in transfer lobby.)
     };
 
     const group = this.experimentService.experiment?.group!;
