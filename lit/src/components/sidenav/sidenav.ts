@@ -1,31 +1,31 @@
-import "../../pair-components/icon";
-import "../../pair-components/icon_button";
-import "../../pair-components/tooltip";
+import '../../pair-components/icon';
+import '../../pair-components/icon_button';
+import '../../pair-components/tooltip';
 
-import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html, nothing } from "lit";
-import { customElement } from "lit/decorators.js";
-import { classMap } from "lit/directives/class-map.js";
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {CSSResultGroup, html, nothing} from 'lit';
+import {customElement} from 'lit/decorators.js';
+import {classMap} from 'lit/directives/class-map.js';
 
-import { Experiment } from "@llm-mediation-experiments/utils";
+import {Experiment} from '@llm-mediation-experiments/utils';
 
-import { core } from "../../core/core";
-import { AuthService } from "../../services/auth_service";
-import { ExperimentService } from "../../services/experiment_service";
-import { ExperimenterService } from "../../services/experimenter_service";
-import { FirebaseService } from "../../services/firebase_service";
-import { ParticipantService } from "../../services/participant_service";
+import {core} from '../../core/core';
+import {AuthService} from '../../services/auth_service';
+import {ExperimentService} from '../../services/experiment_service';
+import {ExperimenterService} from '../../services/experimenter_service';
+import {FirebaseService} from '../../services/firebase_service';
+import {ParticipantService} from '../../services/participant_service';
 import {
   NAV_ITEMS,
   NavItem,
   Pages,
   RouterService,
-} from "../../services/router_service";
+} from '../../services/router_service';
 
-import { styles } from "./sidenav.scss";
+import {styles} from './sidenav.scss';
 
 /** Sidenav menu component */
-@customElement("sidenav-menu")
+@customElement('sidenav-menu')
 export class SideNav extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
   private readonly authService = core.getService(AuthService);
@@ -38,11 +38,11 @@ export class SideNav extends MobxLitElement {
   override render() {
     const routeToHome = () => {
       this.routerService.navigate(Pages.HOME);
-    }
+    };
 
     const navClasses = classMap({
-      "nav-wrapper": true,
-      "closed": !this.routerService.isExperimenterNavOpen,
+      'nav-wrapper': true,
+      closed: !this.routerService.isExperimenterNavOpen,
     });
 
     const toggleNav = () => {
@@ -64,9 +64,7 @@ export class SideNav extends MobxLitElement {
           ${NAV_ITEMS.filter(
             (navItem) => navItem.isExperimenterPage && navItem.isPrimaryPage
           ).map((navItem) => this.renderNavItem(navItem))}
-          <div class="experiment-nav">
-            ${this.renderExperimenterNav()}
-          </div>
+          <div class="experiment-nav">${this.renderExperimenterNav()}</div>
         </div>
         <div class="bottom">
           ${NAV_ITEMS.filter(
@@ -89,31 +87,29 @@ export class SideNav extends MobxLitElement {
     const experiments = this.experimenterService.experiments;
 
     return html`
-      ${experiments.length === 0 ?
-        html`<div class="empty-message">No experiments yet.</div>` : nothing}
-      ${experiments.map(experiment => this.renderExperimentItem(experiment))}
+      ${experiments.length === 0
+        ? html`<div class="empty-message">No experiments yet.</div>`
+        : nothing}
+      ${experiments.map((experiment) => this.renderExperimentItem(experiment))}
     `;
   }
 
   private renderExperimentItem(experiment: Experiment, backArrow = false) {
     const navItemClasses = classMap({
-      "nav-item": true,
-      "primary": true,
+      'nav-item': true,
+      primary: true,
       selected: experiment.id === this.experimentService.id,
     });
 
     const handleClick = (_e: Event) => {
-      this.routerService.navigate(
-        Pages.EXPERIMENT, { "experiment": experiment.id }
-      );
-    }
+      this.routerService.navigate(Pages.EXPERIMENT, {
+        experiment: experiment.id,
+      });
+    };
 
     return html`
       <div class="nav-item-wrapper">
-        <div
-          class=${navItemClasses}
-          role="button"
-          @click=${handleClick}>
+        <div class=${navItemClasses} role="button" @click=${handleClick}>
           ${experiment.name}
         </div>
       </div>
@@ -124,46 +120,46 @@ export class SideNav extends MobxLitElement {
     experimentId: string,
     participantId: string,
     stageId: string,
-    index: number,
+    index: number
   ) {
     const navItemClasses = classMap({
-      "nav-item": true,
+      'nav-item': true,
       selected:
         this.routerService.activePage === Pages.PARTICIPANT_STAGE &&
-        this.routerService.activeRoute.params["stage"] === stageId,
+        this.routerService.activeRoute.params['stage'] === stageId,
     });
 
     const handleClick = (_e: Event) => {
-      this.routerService.navigate(Pages.PARTICIPANT_STAGE,
-        {
-          "experiment": experimentId,
-          "participant": participantId,
-          "stage": stageId
-        }
-      );
+      this.routerService.navigate(Pages.PARTICIPANT_STAGE, {
+        experiment: experimentId,
+        participant: participantId,
+        stage: stageId,
+      });
     };
 
-    const lockedStage = index > this.experimentService.getStageIndex(
-      this.participantService.profile?.currentStageId!
-    );
+    const lockedStage =
+      index >
+      this.experimentService.getStageIndex(
+        this.participantService.profile?.currentStageId!
+      );
 
     const stageName = this.experimentService.getStageName(stageId, true);
 
     if (lockedStage) {
-      return html`
-        <div class="nav-item no-hover">${stageName}</div>
-      `;
+      return html` <div class="nav-item no-hover">${stageName}</div> `;
     }
 
     return html`
       <div class=${navItemClasses} role="button" @click=${handleClick}>
-        ${stageName}
-        ${this.renderActiveStageChip(stageId)}
+        ${stageName} ${this.renderActiveStageChip(stageId)}
       </div>
     `;
   }
 
   private renderActiveStageChip(stage: string) {
+    if (this.participantService.profile?.completedExperiment) {
+      return html`<pr-icon color="success" icon="check_circle"></pr-icon>`;
+    }
     if (!this.participantService.isCurrentStage(stage)) {
       return html`<pr-icon color="success" icon="check_circle"></pr-icon>`;
     }
@@ -172,22 +168,20 @@ export class SideNav extends MobxLitElement {
 
   private renderNavItem(navItem: NavItem) {
     const navItemClasses = classMap({
-      "nav-item": true,
+      'nav-item': true,
       selected: this.routerService.activePage === navItem.page,
     });
 
     const handleNavItemClicked = (_e: Event) => {
       if (navItem.isParticipantPage) {
         const routeParams = this.routerService.activeRoute.params;
-        const experimentId = routeParams["experiment"];
-        const participantId = routeParams["participant"];
+        const experimentId = routeParams['experiment'];
+        const participantId = routeParams['participant'];
 
-        this.routerService.navigate(navItem.page,
-          {
-            "experiment": experimentId,
-            "participant": participantId,
-          }
-        );
+        this.routerService.navigate(navItem.page, {
+          experiment: experimentId,
+          participant: participantId,
+        });
       } else {
         this.routerService.navigate(navItem.page);
       }
@@ -204,6 +198,6 @@ export class SideNav extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "sidenav-menu": SideNav;
+    'sidenav-menu': SideNav;
   }
 }
