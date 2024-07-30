@@ -1,26 +1,26 @@
-import "../../pair-components/button";
-import "../../pair-components/icon_button";
-import "../../pair-components/menu";
-import "../../pair-components/textarea";
-import "../../pair-components/tooltip";
+import '../../pair-components/button';
+import '../../pair-components/icon_button';
+import '../../pair-components/menu';
+import '../../pair-components/textarea';
+import '../../pair-components/tooltip';
 
-import "../info/info_config";
-import "../survey/survey_config";
-import "../tos/tos_config";
+import '../info/info_config';
+import '../survey/survey_config';
+import '../tos/tos_config';
 
-import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html, nothing } from "lit";
-import { customElement } from "lit/decorators.js";
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {CSSResultGroup, html, nothing} from 'lit';
+import {customElement} from 'lit/decorators.js';
 
-import { core } from "../../core/core";
+import {core} from '../../core/core';
+import {ExperimentConfigService} from '../../services/config/experiment_config_service';
+
+import {StageConfig, StageKind} from '@llm-mediation-experiments/utils';
+import {LAS_DESCRIPTION} from '../../shared/lost_at_sea/constants';
 import {
-  ExperimentConfigService
-} from "../../services/config/experiment_config_service";
-
-
-import { StageConfig, StageKind } from "@llm-mediation-experiments/utils";
-import { LAS_DESCRIPTION } from "../../shared/lost_at_sea/constants";
-import { createLostAtSeaGameStages, isLostAtSeaGameStage } from "../../shared/lost_at_sea/utils";
+  createLostAtSeaGameStages,
+  isLostAtSeaGameStage,
+} from '../../shared/lost_at_sea/utils';
 import {
   createChatStage,
   createInfoStage,
@@ -29,12 +29,12 @@ import {
   createRevealStage,
   createSurveyStage,
   createVoteForLeaderStage,
-} from "../../shared/utils";
+} from '../../shared/utils';
 
-import { styles } from "./experiment_config_menu.scss";
+import {styles} from './experiment_config_menu.scss';
 
 /** Experiment config dropdown menu for adding stages. */
-@customElement("experiment-config-menu")
+@customElement('experiment-config-menu')
 export class ExperimentConfigMenu extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -57,12 +57,14 @@ export class ExperimentConfigMenu extends MobxLitElement {
     };
 
     const onAddChatClick = () => {
-      this.experimentConfig.addStage(createChatStage("Simple chat"));
+      this.experimentConfig.addStage(createChatStage('Simple chat'));
       this.experimentConfig.setCurrentStageIndexToLast();
     };
 
     const onAddPayoutClick = () => {
-      this.experimentConfig.addStage(createPayoutStage({ description: "Hello world" }));
+      this.experimentConfig.addStage(
+        createPayoutStage({description: 'Hello world'})
+      );
       this.experimentConfig.setCurrentStageIndexToLast();
     };
 
@@ -90,8 +92,8 @@ export class ExperimentConfigMenu extends MobxLitElement {
           </div>
           <div class="games">
             <div class="category tertiary">Games</div>
-              ${this.renderLostAtSeaGame()}
-            </div>
+            ${this.renderLostAtSeaGame()}
+          </div>
         </div>
       </pr-menu>
     `;
@@ -106,7 +108,7 @@ export class ExperimentConfigMenu extends MobxLitElement {
       this.experimentConfig.addStage(createVoteForLeaderStage());
       this.experimentConfig.addStage(createRevealStage());
       this.experimentConfig.setCurrentStageIndexToLast();
-    }
+    };
 
     return html`
       <div class="menu-item" role="button" @click=${onAddLeaderClick}>
@@ -116,34 +118,39 @@ export class ExperimentConfigMenu extends MobxLitElement {
   }
 
   private renderLostAtSeaGame() {
-    if (this.experimentConfig.stages.find(stage => isLostAtSeaGameStage(stage))) {
+    if (
+      this.experimentConfig.stages.find((stage) => isLostAtSeaGameStage(stage))
+    ) {
       return nothing;
     }
 
     const onAddLostAtSeaClick = () => {
       // Load metadata. Todo: Reframe this as "Load game" instead of "Add stages."
-      this.experimentConfig.publicName = "🌊 Adrift in the Atlantic";
+      this.experimentConfig.publicName = '🌊 Adrift in the Atlantic';
       this.experimentConfig.isGroup = true;
+
       this.experimentConfig.hasMaxNumParticipants = true;
       this.experimentConfig.waitForAllToStart = true;
       this.experimentConfig.numMaxParticipants = 4;
 
+      this.experimentConfig.isGroup = true;
+      this.experimentConfig.numExperiments = 2;
 
       this.experimentConfig.stages = [];
       const lostAtSeaStages = createLostAtSeaGameStages();
       lostAtSeaStages.forEach((stage: StageConfig) => {
         this.experimentConfig.addStage(stage);
-        if (stage.name === "Lobby") {
+        if (stage.name === 'Lobby') {
           this.experimentConfig.dividerStageId = stage.id;
           this.experimentConfig.isMultiPart = true;
         }
       });
-    }
+    };
 
     return html`
       <div class="menu-item" role="button" @click=${onAddLostAtSeaClick}>
         <div class="game-title">🌊 Lost at Sea</div>
-        <div class="game-info">${LAS_DESCRIPTION}
+        <div class="game-info">${LAS_DESCRIPTION}</div>
       </div>
     `;
   }
@@ -151,6 +158,6 @@ export class ExperimentConfigMenu extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "experiment-config-menu": ExperimentConfigMenu;
+    'experiment-config-menu': ExperimentConfigMenu;
   }
 }
