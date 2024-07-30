@@ -26,12 +26,14 @@ import {
 } from '../shared/callables';
 import {collectSnapshotWithId} from '../shared/utils';
 
-import {FirebaseService} from './firebase_service';
-import {RouterService} from './router_service';
-import {Service} from './service';
+import { FirebaseService } from "./firebase_service";
+import { ParticipantService } from "./participant_service";
+import { RouterService } from "./router_service";
+import { Service } from "./service";
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
+  participantService: ParticipantService;
   routerService: RouterService;
 }
 
@@ -280,19 +282,21 @@ export class ExperimenterService extends Service {
    */
   async createParticipant(
     experimentId: string,
-    participantData: Partial<ParticipantProfile> | null = null
+    participantData: Partial<ParticipantProfile> | null = null,
+    isTransfer = false
   ): Promise<CreateParticipantResponse> {
     return createParticipantCallable(this.sp.firebaseService.functions, {
-      experimentId: experimentId,
-      participantData: participantData,
+      experimentId,
+      participantData,
+      isTransfer,
     });
   }
 
   /** Deletes a participant. */
   async deleteParticipant(experimentId: string, participantId: string) {
     return deleteParticipantCallable(this.sp.firebaseService.functions, {
-      experimentId: experimentId,
-      participantId: participantId,
+      experimentId,
+      participantId,
     });
   }
 
@@ -303,10 +307,12 @@ export class ExperimenterService extends Service {
     participant: ParticipantProfileExtended
   ) {
     try {
+      // Create transfer participant in new experiment
       const response = await this.createParticipant(
-        newExperimentId,
-        participant
+        newExperimentId, participant, true
       );
+
+      // Mark participant as transferred in old experiment
       const transferConfig = {
         experimentId: newExperimentId,
         participantId: response.participant.privateId,

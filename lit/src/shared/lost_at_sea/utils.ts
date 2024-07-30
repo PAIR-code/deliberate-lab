@@ -270,7 +270,7 @@ export function createLostAtSeaGameStages(numPairs = 5): StageConfig[] {
   stages.push(...getPart1Stages());
   stages.push(...getPart2PreElectionStages());
   stages.push(...getPart2PostElectionAndPart3Stages());
-  //stages.push(...getFinalStages());
+  stages.push(...getFinalStages());
 
   stages.forEach(stage => { stage.game = LAS_ID; });
   return stages;

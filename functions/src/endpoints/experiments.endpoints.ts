@@ -231,16 +231,27 @@ export const createParticipant = onCall(async (request) => {
       throw new functions.https.HttpsError('internal', 'Experiment data is missing');
     }
 
-    let currentStageId = experimentData.stageIds ? experimentData.stageIds[0] : null;
-    if (!currentStageId) {
-      throw new functions.https.HttpsError('internal', 'Experiment stages are missing');
-    }
+    const getCurrentStageId = () => {
+      const firstId = experimentData.stageIds ? experimentData.stageIds[0] : null;
+      const currentId = data.participantData?.currentStageId ?? firstId;
+
+      if (!currentId) {
+        throw new functions.https.HttpsError('internal', 'Experiment stages are missing');
+      }
+
+      // If transfer participant, advance past the current (lobby) stage
+      if (data.isTransfer && experimentData.stageIds) {
+        const currentIndex = experimentData.stageIds.findIndex(id => id === currentId);
+        return experimentData.stageIds[currentIndex + 1];
+      }
+      return currentId;
+    };
 
     // Create a new participant document
     const participantRef = experimentRef.collection('participants').doc();
     const participantData: ParticipantProfile = {
       publicId: participantPublicId(experimentData.numberOfParticipants),
-      currentStageId: currentStageId,
+      currentStageId: getCurrentStageId(),
       pronouns: data.participantData?.pronouns ?? null,
       name: data.participantData?.name ?? null,
       avatarUrl: data.participantData?.avatarUrl ?? null,
@@ -261,7 +272,8 @@ export const createParticipant = onCall(async (request) => {
       ...participantData,
       privateId: participantRef.id,
     } as ParticipantProfileExtended;
-    // TODO: Add chat stages.
+
+    // TODO: If transfer participant, copy private/public answers from lobby experiment
     // TODO: Validate and don't allow adding new participants if experiment has started.
   });
   if (newParticipantData) {
