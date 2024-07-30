@@ -16,6 +16,7 @@ import {
   PayoutBundleStrategy,
   PayoutItem,
   PayoutItemStrategy,
+  StageAnswer,
   StageKind,
   SurveyQuestionKind,
   getLostAtSeaPairAnswer,
@@ -196,16 +197,30 @@ export const createParticipant = onCall(async (request) => {
       throw new functions.https.HttpsError('internal', 'Experiment data is missing');
     }
 
-    let currentStageId = experimentData.stageIds ? experimentData.stageIds[0] : null;
-    if (!currentStageId) {
-      throw new functions.https.HttpsError('internal', 'Experiment stages are missing');
-    }
+    const getCurrentStageId = () => {
+      const firstId = experimentData.stageIds ? experimentData.stageIds[0] : null;
+      const currentId = data.participantData?.currentStageId ?? firstId;
+
+      if (!currentId) {
+        throw new functions.https.HttpsError('internal', 'Experiment stages are missing');
+      }
+
+      // If transfer participant, advance past the current (lobby) stage
+      if (data.lobbyExperimentId && experimentData.stageIds) {
+        const currentIndex = experimentData.stageIds.findIndex(id => id === currentId);
+        return experimentData.stageIds[currentIndex + 1];
+      }
+      return currentId;
+    };
 
     // Create a new participant document
-    const participantRef = experimentRef.collection('participants').doc();
+    const participantRef = data.participantData?.privateId ?
+      experimentRef.collection('participants').doc(data.participantData.privateId) :
+      experimentRef.collection('participants').doc();
+
     const participantData: ParticipantProfile = {
       publicId: participantPublicId(experimentData.numberOfParticipants),
-      currentStageId: currentStageId,
+      currentStageId: getCurrentStageId(),
       pronouns: data.participantData?.pronouns ?? null,
       name: data.participantData?.name ?? null,
       avatarUrl: data.participantData?.avatarUrl ?? null,
@@ -225,7 +240,30 @@ export const createParticipant = onCall(async (request) => {
       ...participantData,
       privateId: participantRef.id,
     } as ParticipantProfileExtended;
-    // TODO: Add chat stages.
+
+    // If transfer participant, copy private/public answers from lobby experiment
+    if (data.lobbyExperimentId) {
+      const answerStageIds = (
+        await app.firestore().collection(`experiments/${data.lobbyExperimentId}/participants/${participantRef.id}/stages`).get()
+      ).docs.map((doc) => doc.id);
+
+      for (const id of answerStageIds) {
+        const doc = await app
+          .firestore()
+          .doc(`experiments/${data.lobbyExperimentId}/participants/${participantRef.id}/stages/${id}`)
+          .get();
+
+        const ref = await app
+          .firestore()
+          .doc(
+            `experiments/${data.experimentId}/participants/${participantRef.id}/stages/${id}`
+          );
+        transaction.set(ref, (doc.data() as StageAnswer));
+      }
+
+      // TODO: Also copy over publicStageData for given publicId
+    }
+
     // TODO: Validate and don't allow adding new participants if experiment has started.
   });
   if (newParticipantData) {

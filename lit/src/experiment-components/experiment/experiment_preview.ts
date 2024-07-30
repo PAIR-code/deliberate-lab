@@ -72,7 +72,9 @@ export class ExperimentPreview extends MobxLitElement {
       }
       // Ony fetch other, non-lobby experiments.
       return this.experimenterService.getExperimentsInGroup(group)
-        .filter(experiment => !experiment.isLobby);
+        .filter(experiment => !experiment.isLobby && (experiment.numberOfMaxParticipants ?
+          experiment.numberOfParticipants < experiment.numberOfMaxParticipants : true)
+        );
     };
 
     const group = this.experimentService.experiment?.group!;
@@ -89,8 +91,8 @@ export class ExperimentPreview extends MobxLitElement {
       <div class="top-bar">
         <div class="left">
           <div class="stat small">
-            ${experiment?.publicName ? `Public experiment name: ${experiment?.publicName} <br/>` : ''}
-            ${experiment?.author && experiment?.author.displayName ? `Author: ${experiment?.author.displayName} <br/>` : ''}
+            ${experiment?.publicName ? html`Public experiment name: ${experiment?.publicName} <br/>` : ''}
+            ${experiment?.author && experiment?.author.displayName ? html`Author: ${experiment?.author.displayName} <br/>` : ''}
             Create time: ${convertUnifiedTimestampToDate(experiment?.date!)} <br/>
             ${experiment?.numberOfMaxParticipants ? html`
             Maximum number of participants: ${experiment?.numberOfMaxParticipants} <br/>

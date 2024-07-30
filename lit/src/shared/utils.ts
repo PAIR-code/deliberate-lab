@@ -16,11 +16,10 @@ import {
   RevealStageConfig,
   StageConfig,
   StageKind,
-  SurveyQuestionKind,
   SurveyStageConfig,
   TermsOfServiceStageConfig,
   UnifiedTimestamp,
-  VoteForLeaderStageConfig,
+  VoteForLeaderStageConfig
 } from '@llm-mediation-experiments/utils';
 import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
@@ -41,7 +40,7 @@ export function createInfoStage(
     id: generateId(),
     kind: StageKind.Info,
     name: config.name ?? "Info",
-    description: config.description ?? "Info description",
+    description: config.description ?? "",
     popupText: config.popupText ?? "",
     infoLines: config.infoLines ?? ["Placeholder info"]
   };

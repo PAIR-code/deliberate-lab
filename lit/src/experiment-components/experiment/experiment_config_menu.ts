@@ -19,6 +19,8 @@ import {
 
 
 import { StageConfig, StageKind } from "@llm-mediation-experiments/utils";
+import { LAS_DESCRIPTION } from "../../shared/lost_at_sea/constants";
+import { createLostAtSeaGameStages, isLostAtSeaGameStage } from "../../shared/lost_at_sea/utils";
 import {
   createChatStage,
   createInfoStage,
@@ -28,8 +30,6 @@ import {
   createSurveyStage,
   createVoteForLeaderStage,
 } from "../../shared/utils";
-import { LAS_DESCRIPTION } from "../../shared/lost_at_sea/constants";
-import { createLostAtSeaGameStages, isLostAtSeaGameStage } from "../../shared/lost_at_sea/utils";
 
 import { styles } from "./experiment_config_menu.scss";
 
@@ -121,12 +121,23 @@ export class ExperimentConfigMenu extends MobxLitElement {
     }
 
     const onAddLostAtSeaClick = () => {
+      // Load metadata. Todo: Reframe this as "Load game" instead of "Add stages."
+      this.experimentConfig.publicName = "🌊 Adrift in the Atlantic";
+      this.experimentConfig.isGroup = true;
+      this.experimentConfig.hasMaxNumParticipants = true;
+      this.experimentConfig.waitForAllToStart = true;
+      this.experimentConfig.numMaxParticipants = 4;
+
+
+      this.experimentConfig.stages = [];
       const lostAtSeaStages = createLostAtSeaGameStages();
       lostAtSeaStages.forEach((stage: StageConfig) => {
         this.experimentConfig.addStage(stage);
+        if (stage.name === "Lobby") {
+          this.experimentConfig.dividerStageId = stage.id;
+          this.experimentConfig.isMultiPart = true;
+        }
       });
-
-      this.experimentConfig.setCurrentStageIndexToLast();
     }
 
     return html`
