@@ -94,7 +94,6 @@
     color: var(--md-sys-color-on-primary-container);
   }
 
-
   &.secondary {
     background: var(--md-sys-color-secondary-container);
     color: var(--md-sys-color-on-secondary-container);
@@ -103,6 +102,16 @@
   &.tertiary {
     background: var(--md-sys-color-tertiary-container);
     color: var(--md-sys-color-on-tertiary-container);
+  }
+
+  &.success {
+    background: var(--md-sys-color-success);
+    color: #222; // TODO: Add on-success color
+  }
+
+  &.progress {
+    background: var(--md-sys-color-progress);
+    color: #222; // TODO: Add on-progress color
   }
 }
 

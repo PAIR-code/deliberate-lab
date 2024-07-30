@@ -1,19 +1,19 @@
-import "../../pair-components/tooltip";
-import "../profile/profile_avatar";
+import '../../pair-components/tooltip';
+import '../profile/profile_avatar';
 
-import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {CSSResultGroup, html, nothing} from 'lit';
+import {customElement, property} from 'lit/decorators.js';
 
-import { core } from "../../core/core";
-import { ExperimentService } from "../../services/experiment_service";
-import { RouterService } from "../../services/router_service";
+import {core} from '../../core/core';
+import {ExperimentService} from '../../services/experiment_service';
+import {RouterService} from '../../services/router_service';
 
-import { styles } from "./progress_end_chat.scss";
-import { ParticipantProfile } from "@llm-mediation-experiments/utils";
+import {ParticipantProfile} from '@llm-mediation-experiments/utils';
+import {styles} from './progress_end_chat.scss';
 
 /** Progress component: Shows how many participants completed the stage */
-@customElement("progress-stage-completed")
+@customElement('progress-stage-completed')
 export class Progress extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -21,29 +21,34 @@ export class Progress extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   @property() showAvatars = true;
-  @property() stageId = this.routerService.activeRoute.params["stage"];
+  @property() stageId = this.routerService.activeRoute.params['stage'];
 
   override render() {
-    const { completed, notCompleted } =
+    // Don't render participant progress for the lobby.
+    if (this.experimentService.experiment?.isLobby) {
+      return;
+    }
+
+    const {completed, notCompleted} =
       this.experimentService.getParticipantsCompletedStage(this.stageId);
 
-    return html`
-      ${this.showAvatars ?
-        completed
+    return html` ${this.showAvatars
+      ? completed
           .sort((p1, p2) => p1.publicId.localeCompare(p2.publicId))
-          .map(participant => this.renderAvatar(participant)) :
-        nothing}
-      <div>
-        ${completed.length} of ${completed.length + notCompleted.length}
-        participants completed this stage
-      </div>
-    `;
+          .map((participant) => this.renderAvatar(participant))
+      : nothing}
+    ${this.experimentService.experiment?.isLobby!
+      ? ''
+      : html`<div>
+          ${completed.length} of ${completed.length + notCompleted.length}
+          participants completed this stage
+        </div>`}`;
   }
 
   private renderAvatar(participant: ParticipantProfile) {
     const label = `
       ${participant.name ?? participant.publicId}
-      ${participant.pronouns ? `(${participant.pronouns})` : ""}
+      ${participant.pronouns ? `(${participant.pronouns})` : ''}
     `;
 
     return html`
@@ -57,6 +62,6 @@ export class Progress extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "progress-stage-completed": Progress;
+    'progress-stage-completed': Progress;
   }
 }

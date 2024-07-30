@@ -1,26 +1,27 @@
-import "../../pair-components/button";
-import "../../pair-components/icon_button";
-import "../../pair-components/tooltip";
+import '../../pair-components/button';
+import '../../pair-components/icon_button';
+import '../../pair-components/tooltip';
 
-import "../profile/profile_preview";
+import '../profile/profile_preview';
 
-import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html, nothing } from "lit";
-import { customElement } from "lit/decorators.js";
-import { convertUnifiedTimestampToDate } from '../../shared/utils';
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {ParticipantProfile} from '@llm-mediation-experiments/utils';
+import {CSSResultGroup, html, nothing} from 'lit';
+import {customElement} from 'lit/decorators.js';
+import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
-import { core } from "../../core/core";
-import { AuthService } from "../../services/auth_service";
-import { ExperimentConfigService } from "../../services/config/experiment_config_service";
-import { ExperimentService } from "../../services/experiment_service";
-import { ExperimenterService } from "../../services/experimenter_service";
-import { ParticipantService } from "../../services/participant_service";
-import { Pages, RouterService } from "../../services/router_service";
+import {core} from '../../core/core';
+import {AuthService} from '../../services/auth_service';
+import {ExperimentConfigService} from '../../services/config/experiment_config_service';
+import {ExperimentService} from '../../services/experiment_service';
+import {ExperimenterService} from '../../services/experimenter_service';
+import {ParticipantService} from '../../services/participant_service';
+import {Pages, RouterService} from '../../services/router_service';
 
-import { styles } from "./experiment_preview.scss";
+import {styles} from './experiment_preview.scss';
 
 /** Experiment preview */
-@customElement("experiment-preview")
+@customElement('experiment-preview')
 export class ExperimentPreview extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -34,16 +35,35 @@ export class ExperimentPreview extends MobxLitElement {
 
   /** Copy a link to this participant's experiment view to the clipboard */
   async copyExperimentLink() {
-    const basePath = window.location.href.substring(0, window.location.href.indexOf('/#'));
+    const basePath = window.location.href.substring(
+      0,
+      window.location.href.indexOf('/#')
+    );
     const link = `${basePath}/#/${this.experimentService.experiment?.id}/`;
 
     await navigator.clipboard.writeText(link);
-    alert("Link copied to clipboard!");
+    alert('Link copied to clipboard!');
   }
 
   override render() {
     const joinExperiment = () => {
-      this.experimentService.join();
+      const prolificIdMatch = window.location.href.match(
+        /[?&]PROLIFIC_PID=([^&]+)/
+      );
+      const participantProfile: Partial<ParticipantProfile> = {};
+      participantProfile.prolificId = prolificIdMatch
+        ? prolificIdMatch[1]
+        : null;
+
+      if (
+        this.experimentService.experiment?.prolificRedirectCode &&
+        !prolificIdMatch
+      ) {
+        console.log(
+          'Warning: Participant joining a Prolific experiment without a Prolific code.'
+        );
+      }
+      this.experimentService.join(participantProfile);
     };
 
     // Nuance: Add feature where, if experiment is in a group with a lobby, disallow joining
@@ -55,7 +75,8 @@ export class ExperimentPreview extends MobxLitElement {
             <pr-button
               color="tertiary"
               variant="tonal"
-              @click=${joinExperiment}>
+              @click=${joinExperiment}
+            >
               Join experiment
             </pr-button>
           </div>
@@ -71,83 +92,113 @@ export class ExperimentPreview extends MobxLitElement {
         return [];
       }
       // Ony fetch other, non-lobby experiments.
-      return this.experimenterService.getExperimentsInGroup(group)
-        .filter(experiment => !experiment.isLobby && (experiment.numberOfMaxParticipants ?
-          experiment.numberOfParticipants < experiment.numberOfMaxParticipants : true)
-        );
+      return this.experimenterService
+        .getExperimentsInGroup(group)
+        .filter((experiment) => !experiment.isLobby);
     };
 
     const group = this.experimentService.experiment?.group!;
     const participants = this.experimentService.privateParticipants;
     const currentParticipants = participants.filter(
-      participant => !participant.transferConfig
+      (participant) =>
+        !participant.transferConfig && !participant.completedExperiment
     );
     const transferredParticipants = participants.filter(
-      participant => participant.transferConfig
+      (participant) => participant.transferConfig
     );
-
+    const timedOutParticipants = participants.filter(
+      (participant) =>
+        participant.completedExperiment && !participant.transferConfig
+    );
     const experiment = this.experimentService.experiment;
     return html`
       <div class="top-bar">
         <div class="left">
           <div class="stat small">
-            ${experiment?.publicName ? html`Public experiment name: ${experiment?.publicName} <br/>` : ''}
-            ${experiment?.author && experiment?.author.displayName ? html`Author: ${experiment?.author.displayName} <br/>` : ''}
-            Create time: ${convertUnifiedTimestampToDate(experiment?.date!)} <br/>
-            ${experiment?.numberOfMaxParticipants ? html`
-            Maximum number of participants: ${experiment?.numberOfMaxParticipants} <br/>
-            ` : ''}
+            ${experiment?.publicName
+              ? html`Public experiment name: ${experiment?.publicName} <br />`
+              : ''}
+            ${experiment?.author && experiment?.author.displayName
+              ? html`Author: ${experiment?.author.displayName} <br />`
+              : ''}
+            Create time: ${convertUnifiedTimestampToDate(experiment?.date!)}
+            <br />
+            ${experiment?.numberOfMaxParticipants
+              ? html`
+                  Maximum number of participants:
+                  ${experiment?.numberOfMaxParticipants} <br />
+                `
+              : ''}
+            ${experiment?.prolificRedirectCode
+              ? html`
+                  Prolific redirect code: ${experiment?.prolificRedirectCode}
+                  <br />
+                `
+              : ''}
           </div>
           ${this.renderGroup()}
         </div>
         <div class="right">
-          ${this.renderShare()}
-          ${this.renderFork()}
-          ${this.renderDownload()}
-          ${this.renderAddParticipant()}
-          ${this.renderDelete()}
+          ${this.renderShare()} ${this.renderFork()} ${this.renderDownload()}
+          ${this.renderAddParticipant()} ${this.renderDelete()}
         </div>
       </div>
-      <div class="row">
-        ${experiment?.description}
-      </div>
-     
+      <div class="row">${experiment?.description}</div>
+
       <h2>${currentParticipants.length} current participants</h2>
       <div class="profile-wrapper">
-        ${currentParticipants.map(participant =>
-        html`
-          <profile-preview
-            .profile=${participant}
-            .availableTransferExperiments=${getTransferableExperiments()}>
-          </profile-preview>
-        `)}
+        ${currentParticipants.map(
+          (participant) =>
+            html`
+              <profile-preview
+                .profile=${participant}
+                .availableTransferExperiments=${getTransferableExperiments()}
+              >
+              </profile-preview>
+            `
+        )}
       </div>
 
-      ${transferredParticipants.length > 0 ? 
-        html`
-          <h2>${transferredParticipants.length} transferred participants</h2>
-          <div class="profile-wrapper">
-            ${transferredParticipants.map(participant => html`
-              <profile-preview .profile=${participant}></profile-preview>
-            `)}
-          </div>
-        ` 
-        : ''
-      }
+      ${transferredParticipants.length > 0
+        ? html`
+            <h2>${transferredParticipants.length} transferred participants</h2>
+            <div class="profile-wrapper">
+              ${transferredParticipants.map(
+                (participant) => html`
+                  <profile-preview .profile=${participant}></profile-preview>
+                `
+              )}
+            </div>
+          `
+        : ''}
+      ${timedOutParticipants.length > 0
+        ? html`
+            <h2>${timedOutParticipants.length} timed out participants</h2>
+            <div class="profile-wrapper">
+              ${timedOutParticipants.map(
+                (participant) => html`
+                  <profile-preview .profile=${participant}></profile-preview>
+                `
+              )}
+            </div>
+          `
+        : ''}
     `;
   }
 
   private renderGroup() {
-    if (!this.experimentService.experiment || !this.experimentService.experiment.group) {
+    if (
+      !this.experimentService.experiment ||
+      !this.experimentService.experiment.group
+    ) {
       return nothing;
     }
 
     const navigateToGroup = () => {
       if (this.experimentService.experiment!.group) {
-        this.routerService.navigate(
-          Pages.EXPERIMENT_GROUP,
-          { "experiment_group": this.experimentService.experiment!.group }
-        );
+        this.routerService.navigate(Pages.EXPERIMENT_GROUP, {
+          experiment_group: this.experimentService.experiment!.group,
+        });
         this.authService.setEditPermissions(false);
       }
     };
@@ -168,10 +219,13 @@ export class ExperimentPreview extends MobxLitElement {
     }
 
     const onAddParticipant = () => {
+      // Can't add Prolific IDs this way.
       if (this.experimentService.canAddParticipant()) {
         this.experimenterService.createParticipant(this.experimentService.id!);
       } else {
-        alert('Number of maximum participants has been reached for this experiment.')
+        alert(
+          'Number of maximum participants has been reached for this experiment.'
+        );
       }
     };
 
@@ -187,7 +241,6 @@ export class ExperimentPreview extends MobxLitElement {
       </pr-tooltip>
     `;
   }
-
 
   private renderDelete() {
     if (!this.authService.canEdit) {
@@ -235,8 +288,8 @@ export class ExperimentPreview extends MobxLitElement {
     const onFork = () => {
       const name = this.experimentService.experiment?.name!;
       const num = this.experimentService.experiment?.numberOfParticipants!;
-      const stages = this.experimentService.stageIds.map(stageId =>
-        this.experimentService.stageConfigMap[stageId]
+      const stages = this.experimentService.stageIds.map(
+        (stageId) => this.experimentService.stageConfigMap[stageId]
       );
 
       this.experimentConfig.updateName(name);
@@ -263,8 +316,8 @@ export class ExperimentPreview extends MobxLitElement {
     const onFork = () => {
       const name = this.experimentService.experiment?.name!;
       const num = this.experimentService.experiment?.numberOfParticipants!;
-      const stages = this.experimentService.stageIds.map(stageId =>
-        this.experimentService.stageConfigMap[stageId]
+      const stages = this.experimentService.stageIds.map(
+        (stageId) => this.experimentService.stageConfigMap[stageId]
       );
 
       this.experimentConfig.updateName(name);
@@ -290,6 +343,6 @@ export class ExperimentPreview extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "experiment-preview": ExperimentPreview;
+    'experiment-preview': ExperimentPreview;
   }
 }

@@ -12,13 +12,15 @@ export interface ParticipantProfileBase {
 
   acceptTosTimestamp: UnifiedTimestamp | null;
   completedExperiment: UnifiedTimestamp | null;
+
+  prolificId: string | null;
 }
 
 /** Full participant profile document data */
 export interface ParticipantProfile extends ParticipantProfileBase {
   publicId: string; // Public identifier for the participant inside an experiment
   currentStageId: string;
-  transferConfig: ExperimentTransferConfig|null;
+  transferConfig: ExperimentTransferConfig | null;
 }
 
 /** For experimenters to be aware of the private ID */

@@ -91,9 +91,9 @@ export const initializePublicStageData = onDocumentWritten(
 
     // If stage is Lost at Sea chat, create initial DiscussItemsMessage
     if (data.kind === StageKind.GroupChat && data.chatConfig.kind === ChatKind.ChatAboutItems) {
-        const ratingsToDiscuss = data.chatConfig.ratingsToDiscuss;
-        // Create the message
-        const messageData: Omit<DiscussItemsMessage, 'uid'> = {
+      const ratingsToDiscuss = data.chatConfig.ratingsToDiscuss;
+      // Create the message
+      const messageData: Omit<DiscussItemsMessage, 'uid'> = {
         kind: MessageKind.DiscussItemsMessage,
         itemPair: ratingsToDiscuss[0],
         text: `Discussion 1 of ${ratingsToDiscuss.length}`,
@@ -104,7 +104,7 @@ export const initializePublicStageData = onDocumentWritten(
         const stageMessageData = await app
           .firestore()
           .collection(
-            `experiments/${event.params.experimentId}/publicStageData/${event.params.stageId}/messages`
+            `experiments/${event.params.experimentId}/publicStageData/${event.params.stageId}/messages`,
           );
 
         transaction.set(stageMessageData.doc(), messageData);
@@ -125,12 +125,9 @@ export const publishStageData = onDocumentWritten(
     // Get the current participant's public ID
     const participantDoc = await app
       .firestore()
-      .doc(
-        `experiments/${experimentId}/participants/${participantId}`,
-      )
+      .doc(`experiments/${experimentId}/participants/${participantId}`)
       .get();
-    const participantPublicId
-      = (participantDoc.data() as ParticipantProfile).publicId;
+    const participantPublicId = (participantDoc.data() as ParticipantProfile).publicId;
 
     // All participant IDs
     const participantIds = (
@@ -163,12 +160,10 @@ export const publishStageData = onDocumentWritten(
       case StageKind.TakeSurvey:
         const surveyParticipantDoc = await app
           .firestore()
-          .doc(
-            `experiments/${experimentId}/participants/${participantId}`,
-          )
+          .doc(`experiments/${experimentId}/participants/${participantId}`)
           .get();
-        const surveyParticipantPublicId
-          = (surveyParticipantDoc.data() as ParticipantProfile).publicId;
+        const surveyParticipantPublicId = (surveyParticipantDoc.data() as ParticipantProfile)
+          .publicId;
 
         const surveyDoc = await app
           .firestore()
@@ -179,21 +174,18 @@ export const publishStageData = onDocumentWritten(
         const newAnswers = surveyData.participantAnswers;
 
         newAnswers[surveyParticipantPublicId] = data.answers;
-        console.log(data.answers);
 
         await surveyDoc.ref.update({
           participantAnswers: newAnswers,
-        })
+        });
         break;
       case StageKind.LostAtSeaSurvey:
         const lasSurveyParticipantDoc = await app
           .firestore()
-          .doc(
-            `experiments/${experimentId}/participants/${participantId}`,
-          )
+          .doc(`experiments/${experimentId}/participants/${participantId}`)
           .get();
-        const lasSurveyParticipantPublicId
-          = (lasSurveyParticipantDoc.data() as ParticipantProfile).publicId;
+        const lasSurveyParticipantPublicId = (lasSurveyParticipantDoc.data() as ParticipantProfile)
+          .publicId;
 
         const lasSurveyDoc = await app
           .firestore()
@@ -207,7 +199,7 @@ export const publishStageData = onDocumentWritten(
 
         await lasSurveyDoc.ref.update({
           participantAnswers: lasNewAnswers,
-        })
+        });
         break;
       case StageKind.GroupChat:
         const publicChatData = app
@@ -225,7 +217,8 @@ export const publishStageData = onDocumentWritten(
         const docData = (await publicChatData.get()).data() as GroupChatStagePublicData;
         const readys = Object.values(docData?.readyToEndChat ?? {});
 
-        if (docData &&
+        if (
+          docData &&
           docData['chatData'].kind === ChatKind.ChatAboutItems &&
           readys.length === participantIds.length &&
           readys.every((r) => r)
@@ -261,9 +254,7 @@ export const publishStageData = onDocumentWritten(
 
           app
             .firestore()
-            .collection(
-              `experiments/${experimentId}/publicStageData/${stageId}/messages`,
-            )
+            .collection(`experiments/${experimentId}/publicStageData/${stageId}/messages`)
             .doc()
             .create(messageData);
         } // end conditionally resetting readyToEndChat for group chat

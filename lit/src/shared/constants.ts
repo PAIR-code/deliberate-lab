@@ -1,3 +1,4 @@
+export const PROLIFIC_COMPLETION_URL_PREFIX = 'https://app.prolific.com/submissions/complete?cc='
 /** Firebase constants. */
 export const FIREBASE_LOCAL_HOST_PORT_FIRESTORE = 8080;
 export const FIREBASE_LOCAL_HOST_PORT_AUTH = 9099;

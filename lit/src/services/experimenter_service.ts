@@ -1,8 +1,30 @@
-import { Experiment, ExperimentTemplate, ExperimentTemplateExtended, ParticipantProfile, ParticipantProfileExtended, StageAnswer, StageConfig, lookupTable } from "@llm-mediation-experiments/utils";
-import { Unsubscribe, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, updateDoc } from "firebase/firestore";
-import { computed, makeObservable, observable } from "mobx";
-import { createExperimentCallable, createParticipantCallable, deleteExperimentCallable, deleteParticipantCallable, updateStageCallable } from "../shared/callables";
-import { collectSnapshotWithId } from "../shared/utils";
+import {
+  Experiment,
+  ExperimentTemplate,
+  ExperimentTemplateExtended,
+  ParticipantProfile,
+  ParticipantProfileExtended,
+  StageConfig,
+  lookupTable,
+} from '@llm-mediation-experiments/utils';
+import {
+  Unsubscribe,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+  updateDoc,
+} from 'firebase/firestore';
+import {computed, makeObservable, observable} from 'mobx';
+import {
+  createExperimentCallable,
+  createParticipantCallable,
+  deleteExperimentCallable,
+  deleteParticipantCallable,
+} from '../shared/callables';
+import {collectSnapshotWithId} from '../shared/utils';
 
 import { FirebaseService } from "./firebase_service";
 import { ParticipantService } from "./participant_service";
@@ -17,7 +39,7 @@ interface ServiceProvider {
 
 interface CreateParticipantResponse {
   success: boolean;
-  participant: ParticipantProfileExtended
+  participant: ParticipantProfileExtended;
 }
 
 /** Handle experimenter-related actions:
@@ -51,19 +73,19 @@ export class ExperimenterService extends Service {
   getUngroupedExperiments() {
     // Sort by experiment creation time.
     return this.experiments
-      .filter(experiment => !experiment.group)
+      .filter((experiment) => !experiment.group)
       .sort((a, b) => a.date.toDate().getTime() - b.date.toDate().getTime());
   }
 
   getGroupedExperiments() {
-    return this.experiments.filter(experiment => experiment.group);
+    return this.experiments.filter((experiment) => experiment.group);
   }
 
   getExperimentsInGroup(group: string) {
     if (group == '') return [];
 
     return this.experiments
-      .filter(experiment => experiment.group === group)
+      .filter((experiment) => experiment.group === group)
       .sort((a, b) => {
         // Prioritized lobbies.
         if (a.isLobby && !b.isLobby) return -1;
@@ -76,7 +98,7 @@ export class ExperimenterService extends Service {
   getGroupedExperimentsMap() {
     const groupMap = new Map<string, Experiment[]>();
 
-    this.getGroupedExperiments().forEach(experiment => {
+    this.getGroupedExperiments().forEach((experiment) => {
       const group = experiment.group!;
       if (!groupMap.has(group)) {
         groupMap.set(group, []);
@@ -96,27 +118,35 @@ export class ExperimenterService extends Service {
     return sortedGroupMap;
   }
 
-
   subscribe() {
     // Subscribe to all experiment documents
     this.unsubscribe.push(
-      onSnapshot(collection(this.sp.firebaseService.firestore, 'experiments'), (snapshot) => {
-        this.experiments = collectSnapshotWithId<Experiment>(snapshot, 'id');
-        this.areExperimentsLoading = false;
-      }),
+      onSnapshot(
+        collection(this.sp.firebaseService.firestore, 'experiments'),
+        (snapshot) => {
+          this.experiments = collectSnapshotWithId<Experiment>(snapshot, 'id');
+          this.areExperimentsLoading = false;
+        }
+      )
     );
 
     // Subscribe to all experiment template documents
     this.unsubscribe.push(
-      onSnapshot(collection(this.sp.firebaseService.firestore, 'templates'), (snapshot) => {
-        this.templates = collectSnapshotWithId<ExperimentTemplate>(snapshot, 'id');
-        this.areTemplatesLoading = false;
-      }),
+      onSnapshot(
+        collection(this.sp.firebaseService.firestore, 'templates'),
+        (snapshot) => {
+          this.templates = collectSnapshotWithId<ExperimentTemplate>(
+            snapshot,
+            'id'
+          );
+          this.areTemplatesLoading = false;
+        }
+      )
     );
   }
 
   unsubscribeAll() {
-    this.unsubscribe.forEach(unsubscribe => unsubscribe());
+    this.unsubscribe.forEach((unsubscribe) => unsubscribe());
     this.unsubscribe = [];
 
     // Reset observables
@@ -127,26 +157,36 @@ export class ExperimenterService extends Service {
     ); */
   }
 
-  private loadExperimentTemplate(
-    templateId: string,
-  ) {
+  private loadExperimentTemplate(templateId: string) {
     const template: {
-      value: ExperimentTemplateExtended | undefined
-    } = { value: undefined };
+      value: ExperimentTemplateExtended | undefined;
+    } = {value: undefined};
 
-    const templateDoc = getDoc(doc(this.sp.firebaseService.firestore, 'templates', templateId)); // The template metadata
-    const stagesDocs = getDocs(collection(this.sp.firebaseService.firestore, 'templates', templateId, 'stages')); // The actual config for every stage
+    const templateDoc = getDoc(
+      doc(this.sp.firebaseService.firestore, 'templates', templateId)
+    ); // The template metadata
+    const stagesDocs = getDocs(
+      collection(
+        this.sp.firebaseService.firestore,
+        'templates',
+        templateId,
+        'stages'
+      )
+    ); // The actual config for every stage
 
     Promise.all([templateDoc, stagesDocs]).then(([templateDoc, stagesDocs]) => {
-      template.value = ({
+      template.value = {
         id: templateId,
         name: templateDoc.data()!['name'],
         publicName: templateDoc.data()!['publicName'],
         description: templateDoc.data()!['description'],
         author: templateDoc.data()!['author'],
         tags: templateDoc.data()!['tags'],
-        stageMap: lookupTable(collectSnapshotWithId(stagesDocs, 'name'), 'name'),
-      });
+        stageMap: lookupTable(
+          collectSnapshotWithId(stagesDocs, 'name'),
+          'name'
+        ),
+      };
     });
 
     return template;
@@ -164,13 +204,18 @@ export class ExperimenterService extends Service {
    * @rights Experimenter
    */
   async deleteTemplate(templateId: string) {
-    return deleteDoc(doc(this.sp.firebaseService.firestore, 'templates', templateId));
+    return deleteDoc(
+      doc(this.sp.firebaseService.firestore, 'templates', templateId)
+    );
   }
 
   /** Create an experiment.
    * @rights Experimenter
    */
-  async createExperiment(experiment: Partial<Experiment>, stages: StageConfig[]) {
+  async createExperiment(
+    experiment: Partial<Experiment>,
+    stages: StageConfig[]
+  ) {
     const name = experiment.name ?? '';
     const publicName = experiment.publicName ?? 'Experiment';
     const description = experiment.description ?? '';
@@ -180,15 +225,24 @@ export class ExperimenterService extends Service {
     const numberOfParticipants = experiment.numberOfParticipants ?? 0;
     const numberOfMaxParticipants = experiment.numberOfMaxParticipants ?? 0;
     const waitForAllToStart = experiment.waitForAllToStart ?? false;
+    const prolificRedirectCode = experiment.prolificRedirectCode ?? '';
 
-    return createExperimentCallable(
-      this.sp.firebaseService.functions,
-      {
-        type: 'experiments',
-        metadata: { name, publicName, description, tags, group, isLobby, numberOfParticipants, numberOfMaxParticipants, waitForAllToStart},
-        stages,
-      }
-    );
+    return createExperimentCallable(this.sp.firebaseService.functions, {
+      type: 'experiments',
+      metadata: {
+        name,
+        publicName,
+        description,
+        tags,
+        group,
+        isLobby,
+        numberOfParticipants,
+        numberOfMaxParticipants,
+        waitForAllToStart,
+        prolificRedirectCode,
+      },
+      stages,
+    });
   }
 
   /** Create an experiment template.
@@ -204,22 +258,31 @@ export class ExperimenterService extends Service {
     const numberOfParticipants = experiment.numberOfParticipants ?? 0;
     const numberOfMaxParticipants = experiment.numberOfMaxParticipants ?? 0;
     const waitForAllToStart = experiment.waitForAllToStart ?? false;
+    const prolificRedirectCode = experiment.prolificRedirectCode ?? '';
 
-    return createExperimentCallable(
-      this.sp.firebaseService.functions,
-      {
-        type: 'templates',
-        metadata: { name, publicName, description, tags, group, isLobby, numberOfParticipants, numberOfMaxParticipants, waitForAllToStart},
-        stages,
-      }
-    );
+    return createExperimentCallable(this.sp.firebaseService.functions, {
+      type: 'templates',
+      metadata: {
+        name,
+        publicName,
+        description,
+        tags,
+        group,
+        isLobby,
+        numberOfParticipants,
+        numberOfMaxParticipants,
+        waitForAllToStart,
+        prolificRedirectCode,
+      },
+      stages,
+    });
   }
 
   /** Adds a participant.
    */
   async createParticipant(
     experimentId: string,
-    participantData: ParticipantProfile | null = null,
+    participantData: Partial<ParticipantProfile> | null = null,
     lobbyExperimentId: string | undefined = undefined // if participant is a transfer
   ): Promise<CreateParticipantResponse> {
     return createParticipantCallable(this.sp.firebaseService.functions, {
@@ -263,7 +326,7 @@ export class ExperimenterService extends Service {
           'participants',
           participant.privateId
         ),
-        {...participant, transferConfig }
+        {...participant, transferConfig}
       );
     } catch (error) {
       console.error('Error creating participant for transfer: ', error);

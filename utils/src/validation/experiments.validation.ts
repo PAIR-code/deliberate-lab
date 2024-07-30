@@ -2,11 +2,11 @@ import { Type, type Static } from '@sinclair/typebox';
 import {
   GroupChatStageConfigData,
   InfoConfigData,
+  LostAtSeaSurveyStageConfigData,
   PayoutConfigData,
   ProfileStageConfigData,
   RevealConfigData,
   SurveyStageConfigData,
-  LostAtSeaSurveyStageConfigData,
   TermsOfServiceConfigData,
   VoteForLeaderConfigData,
 } from './stages.validation';
@@ -73,6 +73,7 @@ export const ExperimentCreationData = Type.Object(
         numberOfParticipants: Type.Optional(Type.Number({ minimum: 0 })),
         numberOfMaxParticipants: Type.Optional(Type.Number({ minimum: 0 })),
         waitForAllToStart: Type.Boolean(),
+        prolificRedirectCode: Type.Optional(Type.String()),
       },
       strict,
     ),

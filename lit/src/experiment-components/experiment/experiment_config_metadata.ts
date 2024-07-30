@@ -36,8 +36,9 @@ export class ExperimentConfig extends MobxLitElement {
       ${this.renderGroupToggle()}
       ${this.renderNameFields()}
       ${this.renderDescriptionField()}
-      ${this.renderGroupConfig()}
+      ${this.renderProlificLogic()}
       ${this.renderConstrainParticipantsToggle()}
+      ${this.renderGroupConfig()}
     `;
   }
 
@@ -171,6 +172,49 @@ export class ExperimentConfig extends MobxLitElement {
           ${this.renderWaitForAllToStartToggle()}
         `: ''}
     `;
+  }
+
+  private renderProlificLogic() {
+    const handleIsProlific = (e: Event) => {
+      const checked = Boolean((e.target as HTMLInputElement).checked);
+      this.experimentConfig.updateIsProlific(checked);
+    };
+
+    return html`
+      <div class="checkbox-input-container">
+        <div class="checkbox-input">
+          <md-checkbox id="isProlific" touch-target="wrapper"
+            .checked=${this.experimentConfig.isProlific}
+            @change=${handleIsProlific}
+          ></md-checkbox>
+          <label for="waitForAll">
+            <div>${this.experimentConfig.isGroup ? 'These experiments are' : 'This experiment is'} hosted on Prolific 🌅</div>
+          </label>
+        </div>
+      </div>
+
+      ${this.experimentConfig.isProlific ?
+      html`
+      ${this.renderProlificCodeField()}` : ''}
+    `;
+  }
+
+  private renderProlificCodeField() {
+      const handleCode = (e: Event) => {
+        const value = (e.target as HTMLTextAreaElement).value;
+        this.experimentConfig.updateProlificRedirectCode(value);
+      }
+  
+      return html`
+        <pr-textarea
+          label="Prolific completion code"
+          placeholder="This code will redirect participants to Prolific"
+          variant="outlined"
+          .value=${this.experimentConfig.prolificRedirectCode}
+          @input=${handleCode}
+        >
+        </pr-textarea>
+      `;
   }
 
   private renderWaitForAllToStartToggle() {
