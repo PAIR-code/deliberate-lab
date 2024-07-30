@@ -24,6 +24,11 @@ export class Progress extends MobxLitElement {
   @property() stageId = this.routerService.activeRoute.params['stage'];
 
   override render() {
+    // Don't render participant progress for the lobby.
+    if (this.experimentService.experiment?.isLobby) {
+      return;
+    }
+
     const {completed, notCompleted} =
       this.experimentService.getParticipantsCompletedStage(this.stageId);
 

@@ -56,7 +56,7 @@ export class ExperimentPreview extends MobxLitElement {
         : null;
 
       if (
-        this.experimentService.experiment.prolificRedirectCode &&
+        this.experimentService.experiment?.prolificRedirectCode &&
         !prolificIdMatch
       ) {
         console.log(
@@ -100,12 +100,16 @@ export class ExperimentPreview extends MobxLitElement {
     const group = this.experimentService.experiment?.group!;
     const participants = this.experimentService.privateParticipants;
     const currentParticipants = participants.filter(
-      (participant) => !participant.transferConfig
+      (participant) =>
+        !participant.transferConfig && !participant.completedExperiment
     );
     const transferredParticipants = participants.filter(
       (participant) => participant.transferConfig
     );
-
+    const timedOutParticipants = participants.filter(
+      (participant) =>
+        participant.completedExperiment && !participant.transferConfig
+    );
     const experiment = this.experimentService.experiment;
     return html`
       <div class="top-bar">
@@ -160,6 +164,18 @@ export class ExperimentPreview extends MobxLitElement {
             <h2>${transferredParticipants.length} transferred participants</h2>
             <div class="profile-wrapper">
               ${transferredParticipants.map(
+                (participant) => html`
+                  <profile-preview .profile=${participant}></profile-preview>
+                `
+              )}
+            </div>
+          `
+        : ''}
+      ${timedOutParticipants.length > 0
+        ? html`
+            <h2>${timedOutParticipants.length} timed out participants</h2>
+            <div class="profile-wrapper">
+              ${timedOutParticipants.map(
                 (participant) => html`
                   <profile-preview .profile=${participant}></profile-preview>
                 `

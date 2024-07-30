@@ -110,6 +110,29 @@ export class ProfilePreview extends MobxLitElement {
     `;
   }
 
+  renderStatusChip(curStageName: string) {
+    let color = 'secondary';
+    let text = 'in progress';
+
+    if (this.profile?.completedExperiment) {
+      if (this.experimentService.experiment?.isLobby) {
+        if (this.profile?.transferConfig) {
+          color = 'success';
+          text = 'completed';
+        } else {
+          color = 'tertiary';
+          text = 'timed out';
+        }
+      }
+    } else {
+      if (curStageName.indexOf('Lobby') !== -1) {
+        color = 'progress';
+        text = 'ready to transfer';
+      }
+    }
+
+    return html`<div class="chip ${color}">${text}</div>`;
+  }
   override render() {
     if (!this.profile) {
       return nothing;
@@ -153,6 +176,10 @@ export class ProfilePreview extends MobxLitElement {
       }
       return '';
     };
+    const curStageName = this.experimentService.getStageName(
+      this.profile.currentStageId,
+      true
+    );
 
     return html`
       <div class="profile">
@@ -160,6 +187,7 @@ export class ProfilePreview extends MobxLitElement {
         <div class="right">
           <div class="title">${this.profile.name ?? this.profile.publicId}</div>
           <div class="subtitle">${this.profile.pronouns}</div>
+          ${this.renderStatusChip(curStageName)}
         </div>
       </div>
       ${
@@ -175,10 +203,7 @@ export class ProfilePreview extends MobxLitElement {
           : html`
               <div>
                 <span>Current stage:</span>
-                ${this.experimentService.getStageName(
-                  this.profile.currentStageId,
-                  true
-                )}
+                ${curStageName}
               </div>
               <div>
                 <span>Accepted TOS:</span>

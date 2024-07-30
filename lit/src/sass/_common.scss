@@ -104,6 +104,16 @@
     background: var(--md-sys-color-tertiary-container);
     color: var(--md-sys-color-on-tertiary-container);
   }
+
+  &.success {
+    background: var(--md-sys-color-success);
+    color: var(--md-sys-color-inverse-primary);
+  }
+
+  &.progress {
+    background: var(--md-sys-color-progress);
+    color: var(--md-sys-color-inverse-primary);
+  }
 }
 
 @mixin info-card {

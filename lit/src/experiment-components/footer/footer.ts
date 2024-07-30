@@ -22,13 +22,17 @@ export class Footer extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   @property() disabled = true; // Initially disabled
+  // TODO: Make this parameterized.
   @state() private timeRemaining = 5 * 60; // Set initial countdown time to 5 minutes (300 seconds)
 
   private countdownInterval: number | undefined;
 
   connectedCallback() {
     super.connectedCallback();
-    if (this.experimentService.experiment?.isLobby) {
+    if (
+      this.experimentService.experiment?.isLobby &&
+      !this.participantService.profile?.transferConfig
+    ) {
       this.startCountdown();
     } else {
       this.disabled = false; // Enable the button if it's not a lobby experiment
@@ -40,6 +44,11 @@ export class Footer extends MobxLitElement {
     this.clearCountdown();
   }
 
+  handleTimedOut() {
+    alert('Time is up, the experiment has ended!');
+    this.redirectEndExperiment();
+  }
+
   startCountdown() {
     this.clearCountdown(); // Ensure no previous intervals are running
     this.countdownInterval = window.setInterval(() => {
@@ -48,6 +57,7 @@ export class Footer extends MobxLitElement {
       } else {
         this.disabled = false; // Enable the button when countdown reaches zero
         this.clearCountdown();
+        this.handleTimedOut();
       }
     }, 1000);
   }
@@ -65,6 +75,19 @@ export class Footer extends MobxLitElement {
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   }
 
+  redirectEndExperiment() {
+    this.participantService.markExperimentCompleted();
+
+    if (this.experimentService.experiment?.prolificRedirectCode) {
+      // Navigate to Prolific with completion code.
+      window.location.href =
+        PROLIFIC_COMPLETION_URL_PREFIX +
+        this.experimentService.experiment?.prolificRedirectCode;
+    } else {
+      // TODO: navigate to an end-of-experiment payout page
+      this.routerService.navigate(Pages.HOME);
+    }
+  }
   override render() {
     return html`
       <div class="footer">
@@ -96,18 +119,8 @@ export class Footer extends MobxLitElement {
           stage: nextStageId,
         });
       } else {
-        this.participantService.markExperimentCompleted();
         alert('Experiment completed!');
-
-        if (this.experimentService.experiment?.prolificRedirectCode) {
-          // Navigate to Prolific with completion code.
-          window.location.href =
-            PROLIFIC_COMPLETION_URL_PREFIX +
-            this.experimentService.experiment?.prolificRedirectCode;
-        } else {
-          // TODO: navigate to an end-of-experiment payout page
-          this.routerService.navigate(Pages.HOME);
-        }
+        this.redirectEndExperiment();
       }
     };
 
@@ -119,6 +132,8 @@ export class Footer extends MobxLitElement {
       if (!transferConfig) {
         return;
       }
+
+      this.participantService.markExperimentCompleted();
       this.routerService.navigate(Pages.PARTICIPANT, {
         experiment: transferConfig.experimentId,
         participant: transferConfig.participantId,
@@ -129,7 +144,6 @@ export class Footer extends MobxLitElement {
     if (isLastStage && this.experimentService.experiment?.isLobby) {
       // If transfer experiment has been assigned
       if (this.participantService.profile?.transferConfig) {
-        alert('You have been routed to a new experiment!');
         return html`
           <pr-button
             variant=${this.disabled ? 'default' : 'tonal'}
