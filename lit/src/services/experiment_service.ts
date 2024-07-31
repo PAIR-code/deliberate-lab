@@ -16,16 +16,24 @@ import {Service} from './service';
 import {
   Experiment,
   lookupTable,
+  LostAtSeaSurveyStagePublicData,
+  LostAtSeaQuestionAnswer,
   Message,
   ParticipantProfile,
   ParticipantProfileExtended,
+  PayoutCurrency,
+  PayoutStageConfig,
   PublicStageData,
+  ScoringBundle,
+  ScoringItem,
   StageAnswer,
   StageConfig,
   StageKind,
+  VoteForLeaderStagePublicData,
 } from '@llm-mediation-experiments/utils';
 import {downloadJsonFile} from '../shared/file_utils';
 import {collectSnapshotWithId} from '../shared/utils';
+import {AnswerItem} from '../shared/types';
 
 interface ServiceProvider {
   experimenterService: ExperimenterService;
@@ -363,6 +371,81 @@ export class ExperimentService extends Service {
     );
   }
 
+  /** Calculate experiment payouts for current payout stage.
+    * Return currency, payout map from participant public ID to value.
+    */
+  getPayouts(stage: PayoutStageConfig) {
+    const payouts: Record<string, number> = {}; // participant ID, amount
+    this.privateParticipants.forEach((participant) => {
+      const getAnswerItems = (item: ScoringItem): AnswerItem[] => {
+        // Use leader's answers if indicated, else current participant's answers
+        if (item.leaderStageId && item.leaderStageId.length > 0) {
+          const leaderPublicId = (this.publicStageDataMap[item.leaderStageId] as VoteForLeaderStagePublicData).currentLeader ?? '';
+          const leaderAnswers = (this.publicStageDataMap[item.surveyStageId] as LostAtSeaSurveyStagePublicData).participantAnswers[leaderPublicId];
+
+          if (!leaderAnswers) return [];
+
+          return item.questions.map((question) => {
+            return {
+              ...question,
+              leaderPublicId,
+              userAnswer: (leaderAnswers[question.id] as LostAtSeaQuestionAnswer).choice,
+            };
+          });
+        }
+
+        const userAnswers = (this.publicStageDataMap[item.surveyStageId] as LostAtSeaSurveyStagePublicData).participantAnswers[participant.publicId];
+        if (!userAnswers) return [];
+        return item.questions.map((question) => {
+          return {
+            ...question,
+            userAnswer: (userAnswers[question.id] as LostAtSeaQuestionAnswer).choice,
+          };
+        });
+      };
+
+      // Calculate score for bundle
+      const getBundleScore = (bundle: ScoringBundle) => {
+        let score = 0;
+        bundle.scoringItems.forEach((item) => {
+          // Calculate score for item
+          const answerItems: AnswerItem[] = getAnswerItems(item);
+
+          if (answerItems.length === 0) {
+            return item.fixedCurrencyAmount;
+          }
+
+          const numCorrect = () => {
+            let count = 0;
+            answerItems.forEach(answer => {
+              if (answer.userAnswer === answer.answer) {
+                count += 1;
+              }
+            });
+            return count;
+          };
+          score += item.fixedCurrencyAmount + item.currencyAmountPerQuestion * numCorrect();
+        });
+        return score;
+      };
+
+      // Add up all bundles to get total score
+      const getTotalScore = () => {
+        let score = 0;
+        const scoring: ScoringBundle[] = stage.scoring ?? [];
+        scoring.forEach((bundle) => {
+          score += getBundleScore(bundle);
+        });
+        return score;
+      };
+
+      // Assign payout for participant
+      payouts[participant.publicId] = getTotalScore();
+    });
+
+    return { currency: stage.currency, payouts };
+  }
+
   /** Download experiment as a single JSON file */
   async downloadExperiment() {
     if (!this.experiment) {
@@ -403,6 +486,14 @@ export class ExperimentService extends Service {
         chats[config.id] = messages.docs.map((doc) => (doc.data() as Message));
       }
     })
+
+    // Get payout answers per stage
+    const payouts: Record<string, { currency: PayoutCurrency, payouts: Record<string, number> }> = {};
+    configs.forEach((config) => {
+      if (config.kind === StageKind.Payout) {
+        payouts[config.id] = this.getPayouts(config);
+      }
+    });
 
     // Get stage answers per participant.
     const stageAnswers = await Promise.all(
@@ -446,7 +537,8 @@ export class ExperimentService extends Service {
       ...this.experiment,
       participants,
       stages,
-      chats
+      chats,
+      payouts,
     };
 
     downloadJsonFile(data, `${this.experiment.name}.json`);

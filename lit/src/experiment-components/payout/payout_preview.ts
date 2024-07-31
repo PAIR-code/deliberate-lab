@@ -21,17 +21,13 @@ import {
   LostAtSeaSurveyStagePublicData,
   VoteForLeaderStagePublicData,
 } from "@llm-mediation-experiments/utils";
+import { AnswerItem } from "../../shared/types";
 
 import { core } from "../../core/core";
 import { ExperimentService } from "../../services/experiment_service";
 import { ParticipantService } from "../../services/participant_service";
 
 import { styles } from "./payout_preview.scss";
-
-interface AnswerItem extends ScoringQuestion {
-  leaderPublicId?: string; // leader public ID if used
-  userAnswer: string;
-}
 
 /** Payout preview */
 @customElement("payout-preview")
