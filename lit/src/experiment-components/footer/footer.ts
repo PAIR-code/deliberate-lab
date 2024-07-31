@@ -1,4 +1,4 @@
-import '../../pair-components/button';
+import '../../experiment-components/popup/transfer_popup';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html} from 'lit';
@@ -26,7 +26,7 @@ export class Footer extends MobxLitElement {
   @property() disabled = false;
   // TODO: Make this parameterized.
   @state() private timeRemaining = 5 * 60; // Set initial countdown time to 5 minutes (300 seconds)
-
+  @state() private showTransferPopup = false;
   private countdownInterval: number | undefined;
 
   isOnLastStage() {
@@ -104,6 +104,20 @@ export class Footer extends MobxLitElement {
     }
   }
 
+  private handleTransfer() {
+    this.showTransferPopup = false;
+    const transferConfig = this.participantService.profile?.transferConfig;
+    if (!transferConfig) {
+      return;
+    }
+
+    this.participantService.markExperimentCompleted();
+    this.routerService.navigate(Pages.PARTICIPANT, {
+      experiment: transferConfig.experimentId,
+      participant: transferConfig.participantId,
+    });
+  }
+
   override render() {
     return html`
       <div class="footer">
@@ -112,6 +126,10 @@ export class Footer extends MobxLitElement {
         </div>
         <div class="right">${this.renderNextStageButton()}</div>
       </div>
+      <transfer-popup
+        .open=${this.showTransferPopup}
+        @confirm-transfer=${this.handleTransfer}
+      ></transfer-popup>
     `;
   }
 
@@ -147,30 +165,13 @@ export class Footer extends MobxLitElement {
     const preventNextClick =
       this.disabled || !this.participantService.isCurrentStage();
 
-    const handleTransfer = () => {
-      const transferConfig = this.participantService.profile?.transferConfig;
-      if (!transferConfig) {
-        return;
-      }
-
-      this.participantService.markExperimentCompleted();
-      this.routerService.navigate(Pages.PARTICIPANT, {
-        experiment: transferConfig.experimentId,
-        participant: transferConfig.participantId,
-      });
-    };
-
     // If completed lobby experiment, render link to transfer experiment
     if (isLastStage && this.experimentService.experiment?.isLobby) {
       // If transfer experiment has been assigned
       if (this.participantService.profile?.transferConfig) {
-        alert("You've been transferred to a new experiment!");
         this.clearCountdown();
-        return html`
-          <pr-button variant="tonal" } @click=${handleTransfer}>
-            Go to new experiment
-          </pr-button>
-        `;
+        this.showTransferPopup = true;
+        return null;
       } else {
         return html`
           <pr-button

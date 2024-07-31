@@ -42,6 +42,7 @@ import {
   LAS_LEADER_REVEAL_DESCRIPTION,
   LAS_PART_3_INSTRUCTIONS,
   LAS_PAYMENT_INSTRUCTIONS,
+  LAS_PAYMENT_INSTRUCTIONS_ALL,
   LAS_PE2_SURVEY,
   LAS_PE_DESCRIPTION,
   LAS_PE_SURVEY,
@@ -261,7 +262,7 @@ export function getFinalStages(): StageConfig[] {
   stages.push(
     createInfoStage({
       name: 'Payment breakdown',
-      infoLines: LAS_PAYMENT_INSTRUCTIONS,
+      infoLines: LAS_PAYMENT_INSTRUCTIONS_ALL,
     })
   );
 
@@ -269,6 +270,7 @@ export function getFinalStages(): StageConfig[] {
   stages.push(
     createPayoutStage({
       name: 'Final payoff',
+      popupText: LAS_PAYMENT_INSTRUCTIONS.join('\n'),
       payouts: [
         {
           name: 'Part 1 payoff',
@@ -279,7 +281,7 @@ export function getFinalStages(): StageConfig[] {
               strategy: PayoutItemStrategy.ChooseOne,
               surveyStageId: initialTaskId,
               currencyAmountPerQuestion: 2,
-              fixedCurrencyAmount: 0,
+              fixedCurrencyAmount: 3,
             },
           ],
         },

@@ -208,12 +208,15 @@ export const LAS_REVEAL_INFO = `An explanation of the results can be found [here
 
 export const LAS_PAYMENT_INSTRUCTIONS = [
   '## Part 1 Payment:',
-  'Your payment for Part 1 includes a fixed fee of £3 and a bonus. The bonus is determined by randomly selecting one question from Part 1. If your answer to this question is correct, you earn £2; otherwise, you earn £0. Below, you can see which question was selected and whether you received the bonus.',
+  'Your payment for Part 1 includes a fixed fee of £3 and a bonus. The bonus is determined by randomly selecting one question from Part 1. If your answer to this question is correct, you earn £2; otherwise, you earn £0.',
   '\n\n## Payment for Parts 2 and 3:',
   'Your payment for Parts 2 and 3 includes a fixed fee of £6 and a bonus. The bonus is determined by randomly selecting either Part 2 or Part 3.',
   '* If Part 2 is selected: One question is randomly chosen from Part 2. You earn £2 if your answer is correct, and £0 otherwise.',
   '* If Part 3 is selected: One question is randomly chosen from Part 3, with only the leader’s answer counting. You earn £2 if the leader’s answer is correct, and £0 otherwise.',
-  'Below, you can see which part and question were selected and whether you received the bonus.'
+];
+export const LAS_PAYMENT_INSTRUCTIONS_ALL = [
+  ...LAS_PAYMENT_INSTRUCTIONS,
+  'On the next page, you can see which part and question were selected and whether you received the bonus.',
 ];
 
 export const LAS_FINAL_SURVEY: QuestionConfig[] = [

@@ -115,10 +115,7 @@ export class ExperimentPreview extends MobxLitElement {
     const completedParticipants = participants.filter(
       (participant) =>
         participant.completedExperiment &&
-        !(
-          this.experimentService.experiment?.isLobby &&
-          !participant.transferConfig
-        )
+        !this.experimentService.experiment?.isLobby
     );
 
     const experiment = this.experimentService.experiment;
