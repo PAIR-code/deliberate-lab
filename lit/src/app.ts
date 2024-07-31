@@ -9,6 +9,7 @@ import './experiment-components/experiment/experiment_config_sidenav';
 import './experiment-components/experiment/experiment_preview';
 import './experiment-components/games/lost_at_sea/las_survey_preview';
 import './experiment-components/info/info_preview';
+import './experiment-components/mediators/mediator_chat_panel';
 import './experiment-components/payout/payout_preview';
 import './experiment-components/profile/profile_config';
 import './experiment-components/reveal/reveal_preview';
@@ -328,6 +329,7 @@ export class App extends MobxLitElement {
       <div class=${classes}>
         <main>
           <sidenav-menu></sidenav-menu>
+          <mediator-chat-panel></mediator-chat-panel>
           <div class="content-wrapper">
             <page-header></page-header>
             ${this.renderPageContent()}

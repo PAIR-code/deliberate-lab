@@ -3,7 +3,6 @@ import "../../pair-components/icon_button";
 import "../../pair-components/tooltip";
 
 import "../footer/footer";
-import "../mediators/mediator_config";
 import "../profile/profile_avatar";
 import "../progress/progress_end_chat";
 import "../progress/progress_stage_waiting";
@@ -26,7 +25,7 @@ import {
   ITEMS
 } from "@llm-mediation-experiments/utils";
 
-import { createMediator, getChatRatingsToDiscuss } from "../../shared/utils";
+  import { getChatRatingsToDiscuss } from "../../shared/utils";
 
 import { styles } from "./lost_at_sea_chat.scss";
 
@@ -43,8 +42,6 @@ export class RankingChat extends MobxLitElement {
   @property() stage: GroupChatStageConfig|null = null;
 
   @state() value = "";
-  @state() mediator = createMediator();
-  @state() showMediationPanel = false;
 
   override render() {
     if (this.stage === null ||
@@ -77,9 +74,7 @@ export class RankingChat extends MobxLitElement {
           ${this.renderParticipants()}
           ${this.renderTask()}
           ${this.renderEndDiscussion()}
-          ${this.renderMediationButton()}
         </div>
-        ${this.renderMediationPanel()}
         <chat-interface .disableInput=${hasChatEnded}></chat-interface>
       </div>
       <stage-footer .disabled=${!showNext}>
@@ -172,98 +167,6 @@ export class RankingChat extends MobxLitElement {
         </pr-button>
         <div>You can still participate in the chat. When everyone is ready to end the discussion, the conversation will progress to the next stage.</div>
         <progress-end-chat .stageId=${this.stage!.id}></progress-end-chat>
-      </div>
-    `;
-  }
-
-  private renderMediationButton() {
-    if (!this.authService.isExperimenter) {
-      return nothing;
-    }
-
-    const onClick = () => {
-      this.showMediationPanel = !this.showMediationPanel;
-    }
-
-    return html`
-      <div class="panel-item">
-        <div class="panel-item-title">Mediation</div>
-        <pr-button variant="tonal" @click=${onClick}>
-          ${this.showMediationPanel ? "Hide" : "Show"} mediation panel
-        </pr-button>
-        <div>This option is visible only to experimenters!</div>
-      </div>
-    `;
-  }
-
-  private renderMediationPanel() {
-    if (!this.authService.isExperimenter || !this.showMediationPanel) {
-      return nothing;
-    }
-
-    const onSendLLMMessage = () => {
-      this.chatService.sendLLMMediatorMessage(this.mediator);
-    };
-
-    return html`
-      <div class="mediation-panel-wrapper">
-        <div class="mediation-panel">
-          <mediator-config .mediator=${this.mediator} .showKind=${false}>
-          </mediator-config>
-          <pr-button @click=${onSendLLMMessage}>
-            Send LLM-generated message
-          </pr-button>
-        </div>
-        ${this.renderMediationInput()}
-      </div>
-    `;
-  }
-
-  private renderMediationInput() {
-    const sendUserInput = () => {
-      this.chatService.sendMediatorMessage(
-        this.value,
-        this.mediator.name,
-        this.mediator.avatar
-      );
-      this.value = "";
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.key === "Enter") {
-        sendUserInput();
-        e.stopPropagation();
-      }
-    };
-
-    const handleInput = (e: Event) => {
-      this.value = (e.target as HTMLTextAreaElement).value;
-    };
-
-    return html`
-      <div class="mediation-input">
-        <pr-textarea
-          size="small"
-          placeholder="Send message"
-          .value=${this.value}
-          @keyup=${handleKeyUp}
-          @input=${handleInput}
-        >
-        </pr-textarea>
-        <pr-tooltip
-          text="Send mediator message"
-          color="secondary"
-          variant="outlined"
-          position="TOP_RIGHT"
-        >
-          <pr-icon-button
-            icon="send"
-            color="secondary"
-            variant="tonal"
-            @click=${sendUserInput}
-          >
-          </pr-icon-button>
-        </pr-tooltip>
       </div>
     `;
   }
