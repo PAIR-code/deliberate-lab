@@ -21,17 +21,13 @@ import {
   LostAtSeaSurveyStagePublicData,
   VoteForLeaderStagePublicData,
 } from "@llm-mediation-experiments/utils";
+import { AnswerItem } from "../../shared/types";
 
 import { core } from "../../core/core";
 import { ExperimentService } from "../../services/experiment_service";
 import { ParticipantService } from "../../services/participant_service";
 
 import { styles } from "./payout_preview.scss";
-
-interface AnswerItem extends ScoringQuestion {
-  leaderPublicId?: string; // leader public ID if used
-  userAnswer: string;
-}
 
 /** Payout preview */
 @customElement("payout-preview")
@@ -56,9 +52,30 @@ export class PayoutPreview extends MobxLitElement {
       <div class="stages-wrapper">
         ${scoring.map(bundle => this.renderScoringBundle(bundle))}
       </div>
+      ${this.renderTotalPayout()}
       <stage-footer .disabled=${!this.participantService.isCurrentStage()}>
         <progress-stage-completed></progress-stage-completed>
       </stage-footer>
+    `;
+  }
+
+  private renderTotalPayout() {
+    if (!this.stage) {
+      return nothing;
+    }
+
+    const { currency, payouts } = this.experimentService.getPayouts(this.stage);
+    const id = this.participantService.profile?.publicId ?? '';
+
+    if (!payouts || !payouts[id]) {
+      return nothing;
+    }
+
+    return html`
+      <div class="total">
+        Total payout:
+        <div class="chip">${this.renderAmount(payouts[id])}</div>
+      </div>
     `;
   }
 
@@ -112,15 +129,24 @@ export class PayoutPreview extends MobxLitElement {
       return count;
     };
 
+    const renderFixedAmount = () => {
+      if (item.fixedCurrencyAmount === 0) {
+        return nothing;
+      }
+      return html`
+        <div class="chip secondary">
+          ${this.renderAmount(item.fixedCurrencyAmount)}
+        </div>
+        fixed +
+      `;
+    }
+
     return html`
       <div class="scoring-item">
         <h3>${this.experimentService.getStageName(item.surveyStageId)}</h3>
         ${answerItems.map(answerItem => this.renderAnswerItem(answerItem))}
         <div class="amount-wrapper">
-          <div class="chip secondary">
-            ${this.renderAmount(item.fixedCurrencyAmount)}
-          </div>
-          fixed +
+          ${renderFixedAmount()}
           <div class="chip secondary">
             ${this.renderAmount(item.currencyAmountPerQuestion)}
           </div>

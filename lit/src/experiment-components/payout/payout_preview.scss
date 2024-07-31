@@ -24,6 +24,12 @@ h3 {
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
+.total {
+  @include common.flex-row-align-center;
+  @include typescale.body-large;
+  gap: common.$spacing-medium;
+}
+
 .stages-wrapper {
   @include common.flex-column;
   gap: common.$spacing-xl;
