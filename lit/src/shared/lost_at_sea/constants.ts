@@ -206,6 +206,16 @@ export const LAS_LEADER_REVEAL_DESCRIPTION =
 export const LAS_FINAL_SURVEY_DESCRIPTION = `Thanks for participating. Please complete this final survey.`;
 export const LAS_REVEAL_INFO = `An explanation of the results can be found [here](https://raw.githubusercontent.com/PAIR-code/llm-mediation-experiments/main/lit/src/assets/lost_at_sea_answers.pdf).`;
 
+export const LAS_PAYMENT_INSTRUCTIONS = [
+  '## Part 1 Payment:',
+  'Your payment for Part 1 includes a fixed fee of £3 and a bonus. The bonus is determined by randomly selecting one question from Part 1. If your answer to this question is correct, you earn £2; otherwise, you earn £0. Below, you can see which question was selected and whether you received the bonus.',
+  '\n\n## Payment for Parts 2 and 3:',
+  'Your payment for Parts 2 and 3 includes a fixed fee of £6 and a bonus. The bonus is determined by randomly selecting either Part 2 or Part 3.',
+  '* If Part 2 is selected: One question is randomly chosen from Part 2. You earn £2 if your answer is correct, and £0 otherwise.',
+  '* If Part 3 is selected: One question is randomly chosen from Part 3, with only the leader’s answer counting. You earn £2 if the leader’s answer is correct, and £0 otherwise.',
+  'Below, you can see which part and question were selected and whether you received the bonus.'
+];
+
 export const LAS_FINAL_SURVEY: QuestionConfig[] = [
   {
     id: 0,
@@ -215,10 +225,50 @@ export const LAS_FINAL_SURVEY: QuestionConfig[] = [
   },
   {
     id: 1,
+    kind: SurveyQuestionKind.Text,
+    questionText:
+      'During the experiment, you were asked to rank the members of your group based on who you believed should become the group leader. Can you explain the reasons behind your ranking? Please provide specific and concrete arguments for your choices.',
+  },
+  {
+    id: 2,
+    kind: SurveyQuestionKind.Text,
+    questionText:
+      'Do you have previous experience of leadership activities? If yes, please share specific memories or experiences that explain your answer.',
+  },
+  {
+    id: 3,
     kind: SurveyQuestionKind.Scale,
-    questionText: 'Rate how happy you were with the final outcome.',
-    lowerBound: 'I was very disappointed (0/10)',
-    upperBound: 'I was very happy (10/10)',
+    questionText:
+      'In general, how willing or unwilling are you to take risks on a scale from 0 to 10?',
+    lowerBound: 'Completely unwilling to take risks',
+    upperBound: 'Very willing to take risks',
+  },
+  {
+    id: 4,
+    kind: SurveyQuestionKind.Scale,
+    questionText:
+      'Consider the survival task performed in this study. On average, do you think that men are better at such tasks, that men and women are equally good, or that women are better?',
+    lowerBound: 'Men are better',
+    upperBound: 'Women are better',
+  },
+  {
+    id: 5,
+    kind: SurveyQuestionKind.Scale,
+    questionText:
+      'On average, do you think that men are better leaders, that men and women are equally good leaders, or that women are better leaders.',
+    lowerBound: 'Men are better',
+    upperBound: 'Women are better',
+  },
+  {
+    id: 6,
+    kind: SurveyQuestionKind.Text,
+    questionText:
+      'Would you like to share any more context about your reasoning in this task?',
+  },
+  {
+    id: 7,
+    kind: SurveyQuestionKind.Text,
+    questionText: 'Would you like to share any feedback about the task?',
   },
 ];
 

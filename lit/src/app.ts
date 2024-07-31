@@ -91,11 +91,15 @@ export class App extends MobxLitElement {
       case Pages.PARTICIPANT:
         return this.renderParticipantView(this.renderParticipant());
       case Pages.PARTICIPANT_STAGE:
-        return html` <attention-check-popup
-            waitSeconds="120"
-            popupSeconds="60"
-          ></attention-check-popup>
-          ${this.renderParticipantView(this.renderParticipantStage())}`;
+        // TODO: Ignore this for experimenters, and allow experimenters to add this.
+        if (false) {
+          return html` <attention-check-popup
+              waitSeconds="120"
+              popupSeconds="60"
+            ></attention-check-popup>
+            ${this.renderParticipantView(this.renderParticipantStage())}`;
+        }
+        return this.renderParticipantView(this.renderParticipantStage());
       case Pages.PARTICIPANT_SETTINGS:
         return this.renderParticipantView(this.renderParticipantSettings());
       default:

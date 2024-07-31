@@ -41,6 +41,7 @@ import {
   LAS_LEADER_REMINDER,
   LAS_LEADER_REVEAL_DESCRIPTION,
   LAS_PART_3_INSTRUCTIONS,
+  LAS_PAYMENT_INSTRUCTIONS,
   LAS_PE2_SURVEY,
   LAS_PE_DESCRIPTION,
   LAS_PE_SURVEY,
@@ -257,6 +258,13 @@ function getPart2PostElectionAndPart3Stages(): StageConfig[] {
 export function getFinalStages(): StageConfig[] {
   const stages: StageConfig[] = [];
 
+  stages.push(
+    createInfoStage({
+      name: 'Payment breakdown',
+      infoLines: LAS_PAYMENT_INSTRUCTIONS,
+    })
+  );
+
   // Add payout
   stages.push(
     createPayoutStage({
@@ -267,13 +275,11 @@ export function getFinalStages(): StageConfig[] {
           strategy: PayoutBundleStrategy.AddPayoutItems,
           payoutItems: [
             {
-              // Receive 1 dollar for each correct answer, and
-              // 10 dollars for making it to part 2.
               kind: PayoutItemKind.LostAtSeaSurvey,
               strategy: PayoutItemStrategy.ChooseOne,
               surveyStageId: initialTaskId,
-              currencyAmountPerQuestion: 1,
-              fixedCurrencyAmount: 10,
+              currencyAmountPerQuestion: 2,
+              fixedCurrencyAmount: 0,
             },
           ],
         },
@@ -286,7 +292,7 @@ export function getFinalStages(): StageConfig[] {
               strategy: PayoutItemStrategy.ChooseOne,
               surveyStageId: redoTaskId,
               currencyAmountPerQuestion: 2,
-              fixedCurrencyAmount: 0,
+              fixedCurrencyAmount: 6,
             },
             {
               kind: PayoutItemKind.LostAtSeaSurvey,
@@ -294,7 +300,7 @@ export function getFinalStages(): StageConfig[] {
               surveyStageId: leaderTaskId,
               leaderStageId: leaderElectionId,
               currencyAmountPerQuestion: 2,
-              fixedCurrencyAmount: 0,
+              fixedCurrencyAmount: 6,
             },
           ],
         },
