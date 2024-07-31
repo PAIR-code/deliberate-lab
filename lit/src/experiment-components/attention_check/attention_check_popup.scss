@@ -1,0 +1,26 @@
+.attention-check-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--md-sys-color-suface);
+}
+
+.attention-check-content {
+  background-color: var(--md-sys-color-error);
+  color: var(--md-sys-color-on-error);
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.attention-check-content pr-button {
+  margin-top: 20px;
+}
