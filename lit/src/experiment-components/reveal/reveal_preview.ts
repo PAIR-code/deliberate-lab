@@ -2,6 +2,7 @@ import '../election/election_reveal';
 import '../footer/footer';
 import '../games/lost_at_sea/las_result';
 import '../progress/progress_stage_completed';
+import "../progress/progress_stage_waiting";
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -31,6 +32,20 @@ export class RevealPreview extends MobxLitElement {
   @property() stage: RevealStageConfig | null = null;
 
   override render() {
+    if (!this.stage) {
+      return nothing;
+    }
+
+    const { ready, notReady } =
+      this.experimentService.getParticipantsReadyForStage(this.stage.id);
+
+    if (notReady.length > 0) {
+      return html`
+        <progress-stage-waiting .stageId=${this.stage.id}>
+        </progress-stage-waiting>
+      `;
+    }
+
     return html`
       <div class="description">${this.stage?.description}</div>
 
