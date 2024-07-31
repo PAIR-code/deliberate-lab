@@ -44,8 +44,10 @@ import {
   LAS_PE2_SURVEY,
   LAS_PE_DESCRIPTION,
   LAS_PE_SURVEY,
+  LAS_REVEAL_INFO,
   LAS_SCENARIO_REMINDER,
   LAS_SECOND_PART_INTRO_INFO_LINES,
+  LAS_TOS,
   LAS_UPDATE_INSTRUCTIONS,
   LAS_WAIT_INFO_LINES,
   LAS_WTL_2_DESCRIPTION,
@@ -71,7 +73,11 @@ function getIntroStages(): StageConfig[] {
       infoLines: LAS_INTRO_INFO_LINES,
     })
   );
-  stages.push(createTOSStage());
+  stages.push(
+    createTOSStage({
+      tosLines: LAS_TOS,
+    })
+  );
   stages.push(createProfileStage());
 
   return stages;
@@ -153,8 +159,9 @@ function getPart2PreElectionStages(): StageConfig[] {
   stages.push(
     createChatStage(
       'Group discussion',
-      LAS_GROUP_CHAT_DESCRIPTION,
-      ITEMS_SET_2.map(([i1, i2]) => ({item1: i1, item2: i2}))
+      '',
+      ITEMS_SET_1.map(([i1, i2]) => ({item1: i1, item2: i2})),
+      LAS_GROUP_CHAT_DESCRIPTION + '\n\n' + LAS_SCENARIO_REMINDER
     )
   );
 
@@ -237,9 +244,10 @@ function getPart2PostElectionAndPart3Stages(): StageConfig[] {
 
   stages.push(
     createRevealStage({
-      name: 'Representative reveal',
+      name: 'Results reveal',
       description: LAS_LEADER_REVEAL_DESCRIPTION,
       stagesToReveal: [leaderElectionId, leaderTaskId],
+      popupText: LAS_REVEAL_INFO,
     })
   );
 

@@ -28,7 +28,7 @@ export class InfoPopupComponent extends LitElement {
 
   private handleCloseClick() {
     this.showModal = false;
-  }
+}
 
   private handleOutsideClick(e: MouseEvent) {
     if ((e.target as HTMLElement).classList.contains('modal')) {

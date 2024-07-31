@@ -8,6 +8,7 @@ import {core} from '../../core/core';
 import {ExperimentService} from '../../services/experiment_service';
 import {ParticipantService} from '../../services/participant_service';
 import {Pages, RouterService} from '../../services/router_service';
+import {SurveyService} from '../../services/survey_service';
 
 import {PROLIFIC_COMPLETION_URL_PREFIX} from '../../shared/constants';
 import {styles} from './footer.scss';
@@ -20,6 +21,7 @@ export class Footer extends MobxLitElement {
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
+  private readonly surveyService = core.getService(SurveyService);
 
   @property() disabled = false;
   // TODO: Make this parameterized.
@@ -34,18 +36,19 @@ export class Footer extends MobxLitElement {
 
     return index === this.experimentService.stageIds.length - 1;
   }
-  connectedCallback() {
-    super.connectedCallback();
-    if (
+
+  isOnLobbyStageWithoutTransfer() {
+    return (
       this.experimentService.experiment?.isLobby &&
       !this.participantService.profile?.transferConfig &&
       this.isOnLastStage()
-    ) {
-      this.disabled = true;
+    );
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    if (this.isOnLobbyStageWithoutTransfer()) {
       this.startCountdown();
-    } else {
-      this.disabled = false; // Enable the button if it's not a lobby experiment
-      this.clearCountdown();
     }
   }
 
@@ -62,6 +65,7 @@ export class Footer extends MobxLitElement {
 
   startCountdown() {
     this.clearCountdown(); // Ensure no previous intervals are running
+    this.disabled = true;
     this.countdownInterval = window.setInterval(() => {
       if (this.timeRemaining > 0) {
         this.timeRemaining -= 1;
@@ -73,6 +77,7 @@ export class Footer extends MobxLitElement {
   }
 
   clearCountdown() {
+    this.disabled = false;
     if (this.countdownInterval !== undefined) {
       window.clearInterval(this.countdownInterval);
       this.countdownInterval = undefined;
@@ -98,6 +103,7 @@ export class Footer extends MobxLitElement {
       this.routerService.navigate(Pages.HOME);
     }
   }
+
   override render() {
     return html`
       <div class="footer">
@@ -112,7 +118,15 @@ export class Footer extends MobxLitElement {
   private renderNextStageButton() {
     const isLastStage = this.isOnLastStage();
 
-    const handleNext = () => {
+    const handleNext = async () => {
+      // If survey stage, save relevant text answers
+      if (
+        this.surveyService.stageId ===
+        this.participantService.profile?.currentStageId
+      ) {
+        await this.surveyService.saveTextAnswers();
+      }
+
       const nextStageId = this.experimentService.getNextStageId(
         this.participantService.profile?.currentStageId ?? ''
       );

@@ -123,6 +123,9 @@ export class ProfilePreview extends MobxLitElement {
           color = 'tertiary';
           text = 'timed out';
         }
+      } else {
+        color = 'success';
+        text = 'completed';
       }
     } else {
       if (curStageName.indexOf('Lobby') !== -1) {
