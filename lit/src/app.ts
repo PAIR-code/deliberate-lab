@@ -9,6 +9,7 @@ import './experiment-components/experiment/experiment_config_sidenav';
 import './experiment-components/experiment/experiment_preview';
 import './experiment-components/games/lost_at_sea/las_survey_preview';
 import './experiment-components/info/info_preview';
+import './experiment-components/mediators/mediator_chat_panel';
 import './experiment-components/payout/payout_preview';
 import './experiment-components/profile/profile_config';
 import './experiment-components/reveal/reveal_preview';
@@ -91,11 +92,15 @@ export class App extends MobxLitElement {
       case Pages.PARTICIPANT:
         return this.renderParticipantView(this.renderParticipant());
       case Pages.PARTICIPANT_STAGE:
-        return html` <attention-check-popup
-            waitSeconds="120"
-            popupSeconds="60"
-          ></attention-check-popup>
-          ${this.renderParticipantView(this.renderParticipantStage())}`;
+        // TODO: Ignore this for experimenters, and allow experimenters to add this.
+        if (false) {
+          return html` <attention-check-popup
+              waitSeconds="120"
+              popupSeconds="60"
+            ></attention-check-popup>
+            ${this.renderParticipantView(this.renderParticipantStage())}`;
+        }
+        return this.renderParticipantView(this.renderParticipantStage());
       case Pages.PARTICIPANT_SETTINGS:
         return this.renderParticipantView(this.renderParticipantSettings());
       default:
@@ -328,6 +333,7 @@ export class App extends MobxLitElement {
       <div class=${classes}>
         <main>
           <sidenav-menu></sidenav-menu>
+          <mediator-chat-panel></mediator-chat-panel>
           <div class="content-wrapper">
             <page-header></page-header>
             ${this.renderPageContent()}
