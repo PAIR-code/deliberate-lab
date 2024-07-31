@@ -1,10 +1,10 @@
 /** Stages types & default definitions */
 
 import { ChatConfig, PublicChatData } from './chats.types';
+import { LostAtSeaQuestion, LostAtSeaQuestionAnswer } from './lost_at_sea.types';
 import { MediatorConfig } from './mediator.types';
 import { PayoutBundle, PayoutCurrency, ScoringBundle } from './payout.types';
 import { QuestionAnswer, QuestionConfig } from './questions.types';
-import { LostAtSeaQuestion, LostAtSeaQuestionAnswer } from './lost_at_sea.types';
 import { Votes } from './votes.types';
 
 export enum StageKind {
@@ -128,7 +128,11 @@ export interface ChatStageAnswer {
 
 // NOTE: profile & TOS stages do not have "answers", as the results are stored directly in the participant profile.
 // NOTE: answer documents are lazily created in firestore. They may not exist before the participant submits their answers for the first time.
-export type StageAnswer = LostAtSeaSurveyStageAnswer | SurveyStageAnswer | VoteForLeaderStageAnswer | ChatStageAnswer;
+export type StageAnswer =
+  | LostAtSeaSurveyStageAnswer
+  | SurveyStageAnswer
+  | VoteForLeaderStageAnswer
+  | ChatStageAnswer;
 
 // ********************************************************************************************* //
 //                                        PUBLIC DATA                                            //
@@ -165,7 +169,7 @@ export interface LostAtSeaSurveyStagePublicData extends BasePublicStageData {
 
 // NOTE: some stages do not have public stage data
 export type PublicStageData =
-  GroupChatStagePublicData
+  | GroupChatStagePublicData
   | VoteForLeaderStagePublicData
   | SurveyStagePublicData
   | LostAtSeaSurveyStagePublicData;

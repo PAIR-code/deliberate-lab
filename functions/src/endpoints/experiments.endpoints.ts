@@ -1,6 +1,6 @@
 /** Endpoints for interactions with experiments, including
-  * creating/deleting experiments and participants.
-  */
+ * creating/deleting experiments and participants.
+ */
 
 import {
   ChatAnswer,
@@ -20,7 +20,7 @@ import {
   StageKind,
   SurveyQuestionKind,
   getLostAtSeaPairAnswer,
-  participantPublicId
+  participantPublicId,
 } from '@llm-mediation-experiments/utils';
 import { Value } from '@sinclair/typebox/value';
 import { Timestamp } from 'firebase-admin/firestore';
@@ -46,7 +46,18 @@ export const createExperiment = onCall(async (request) => {
     const document = app.firestore().collection(data.type).doc();
 
     await app.firestore().runTransaction(async (transaction) => {
-      const { name, publicName, description, tags, isLobby, group, numberOfParticipants, numberOfMaxParticipants, waitForAllToStart, prolificRedirectCode } = data.metadata;
+      const {
+        name,
+        publicName,
+        description,
+        tags,
+        isLobby,
+        group,
+        numberOfParticipants,
+        numberOfMaxParticipants,
+        waitForAllToStart,
+        prolificRedirectCode,
+      } = data.metadata;
 
       // Create the metadata document
       transaction.set(document, {
@@ -62,11 +73,11 @@ export const createExperiment = onCall(async (request) => {
         prolificRedirectCode,
         ...(data.type === 'experiments'
           ? {
-            date: Timestamp.now(),
-            group: group,
-            numberOfParticipants,
-            stageIds: data.stages.map(stage => stage.id),
-          }
+              date: Timestamp.now(),
+              group: group,
+              numberOfParticipants,
+              stageIds: data.stages.map((stage) => stage.id),
+            }
           : {}),
       });
 
@@ -85,9 +96,9 @@ export const createExperiment = onCall(async (request) => {
 
           const getScoringItem = (payoutItem: PayoutItem) => {
             // To define scoring questions, convert survey stage questions
-            const surveyStage = (data.stages).find(stage => stage.id === payoutItem.surveyStageId);
+            const surveyStage = data.stages.find((stage) => stage.id === payoutItem.surveyStageId);
             let questions = surveyStage.questions.filter(
-              question => question.kind === SurveyQuestionKind.Rating
+              (question) => question.kind === SurveyQuestionKind.Rating,
             );
 
             // If strategy is "choose one," only use one question
@@ -97,7 +108,7 @@ export const createExperiment = onCall(async (request) => {
             return {
               fixedCurrencyAmount: payoutItem.fixedCurrencyAmount,
               currencyAmountPerQuestion: payoutItem.currencyAmountPerQuestion,
-              questions: questions.map(question => getScoringQuestion(question)),
+              questions: questions.map((question) => getScoringQuestion(question)),
               surveyStageId: payoutItem.surveyStageId,
               leaderStageId: payoutItem.leaderStageId ?? '',
             };
@@ -106,15 +117,17 @@ export const createExperiment = onCall(async (request) => {
           const getScoringBundle = (payoutBundle: PayoutBundle) => {
             const payoutItems = payoutBundle.payoutItems;
             // If strategy is "choose one," only use one payout item
-            const items = payoutBundle.strategy === PayoutBundleStrategy.AddPayoutItems ?
-              payoutItems : [payoutItems[Math.floor(Math.random() * payoutItems.length)]];
+            const items =
+              payoutBundle.strategy === PayoutBundleStrategy.AddPayoutItems
+                ? payoutItems
+                : [payoutItems[Math.floor(Math.random() * payoutItems.length)]];
             return {
               name: payoutBundle.name,
-              scoringItems: items.map(item => getScoringItem(item)),
-            }
+              scoringItems: items.map((item) => getScoringItem(item)),
+            };
           };
 
-          stage.scoring = stage.payouts.map(payout => getScoringBundle(payout));
+          stage.scoring = stage.payouts.map((payout) => getScoringBundle(payout));
         }
 
         // Set stage
@@ -242,16 +255,16 @@ export const createParticipant = onCall(async (request) => {
 
       // If transfer participant, advance past the current (lobby) stage
       if (data.lobbyExperimentId && experimentData.stageIds) {
-        const currentIndex = experimentData.stageIds.findIndex(id => id === currentId);
+        const currentIndex = experimentData.stageIds.findIndex((id) => id === currentId);
         return experimentData.stageIds[currentIndex + 1];
       }
       return currentId;
     };
 
     // Create a new participant document
-    const participantRef = data.participantData?.privateId ?
-      experimentRef.collection('participants').doc(data.participantData.privateId) :
-      experimentRef.collection('participants').doc();
+    const participantRef = data.participantData?.privateId
+      ? experimentRef.collection('participants').doc(data.participantData.privateId)
+      : experimentRef.collection('participants').doc();
 
     const participantData: ParticipantProfile = {
       publicId: participantPublicId(experimentData.numberOfParticipants),
@@ -280,21 +293,26 @@ export const createParticipant = onCall(async (request) => {
     // If transfer participant, copy private/public answers from lobby experiment
     if (data.lobbyExperimentId) {
       const answerStageIds = (
-        await app.firestore().collection(`experiments/${data.lobbyExperimentId}/participants/${participantRef.id}/stages`).get()
+        await app
+          .firestore()
+          .collection(
+            `experiments/${data.lobbyExperimentId}/participants/${participantRef.id}/stages`,
+          )
+          .get()
       ).docs.map((doc) => doc.id);
 
       for (const id of answerStageIds) {
         const doc = await app
           .firestore()
-          .doc(`experiments/${data.lobbyExperimentId}/participants/${participantRef.id}/stages/${id}`)
+          .doc(
+            `experiments/${data.lobbyExperimentId}/participants/${participantRef.id}/stages/${id}`,
+          )
           .get();
 
         const ref = await app
           .firestore()
-          .doc(
-            `experiments/${data.experimentId}/participants/${participantRef.id}/stages/${id}`
-          );
-        transaction.set(ref, (doc.data() as StageAnswer));
+          .doc(`experiments/${data.experimentId}/participants/${participantRef.id}/stages/${id}`);
+        transaction.set(ref, doc.data() as StageAnswer);
       }
 
       // TODO: Also copy over publicStageData for given publicId
@@ -317,7 +335,10 @@ export const deleteParticipant = onCall(async (request) => {
 
   // Validate the incoming data
   if (!data.experimentId || !data.participantId) {
-    throw new functions.https.HttpsError('invalid-argument', 'Experiment ID and Participant ID are required');
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Experiment ID and Participant ID are required',
+    );
   }
 
   const experimentRef = app.firestore().doc(`experiments/${data.experimentId}`);
@@ -350,7 +371,7 @@ export const deleteParticipant = onCall(async (request) => {
 
     // Delete the chat documents associated with the participant
     const chatsSnapshot = await participantRef.collection('chats').get();
-    chatsSnapshot.forEach(chatDoc => {
+    chatsSnapshot.forEach((chatDoc) => {
       transaction.delete(chatDoc.ref);
     });
   });

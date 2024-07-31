@@ -1,55 +1,49 @@
-import "./pair-components/button";
+import './pair-components/button';
 
-import "./experiment-components/chat/basic_chat";
-import "./experiment-components/chat/lost_at_sea_chat";
-import "./experiment-components/election/election_preview";
-import "./experiment-components/experiment/experiment_config";
-import "./experiment-components/experiment/experiment_config_sidenav";
-import "./experiment-components/experiment/experiment_preview";
-import "./experiment-components/info/info_preview";
-import "./experiment-components/games/lost_at_sea/las_survey_preview";
-import "./experiment-components/payout/payout_preview";
-import "./experiment-components/profile/profile_config";
-import "./experiment-components/reveal/reveal_preview";
-import "./experiment-components/sidenav/sidenav";
-import "./experiment-components/survey/survey_preview";
-import "./experiment-components/tos/tos_preview";
+import './experiment-components/attention_check/attention_check_popup';
+import './experiment-components/chat/basic_chat';
+import './experiment-components/chat/lost_at_sea_chat';
+import './experiment-components/election/election_preview';
+import './experiment-components/experiment/experiment_config';
+import './experiment-components/experiment/experiment_config_sidenav';
+import './experiment-components/experiment/experiment_preview';
+import './experiment-components/games/lost_at_sea/las_survey_preview';
+import './experiment-components/info/info_preview';
+import './experiment-components/payout/payout_preview';
+import './experiment-components/profile/profile_config';
+import './experiment-components/reveal/reveal_preview';
+import './experiment-components/sidenav/sidenav';
+import './experiment-components/survey/survey_preview';
+import './experiment-components/tos/tos_preview';
 
-import "./components/header/header";
-import "./components/landing/experiment_group";
-import "./components/landing/experiment_landing";
-import "./components/login/login";
-import "./components/settings/settings";
-import "./components/sidenav/sidenav";
+import './components/header/header';
+import './components/landing/experiment_group';
+import './components/landing/experiment_landing';
+import './components/login/login';
+import './components/settings/settings';
+import './components/sidenav/sidenav';
 
-import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html, nothing, TemplateResult } from "lit";
-import { customElement } from "lit/decorators.js";
-import { classMap } from "lit/directives/class-map.js";
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
+import {customElement} from 'lit/decorators.js';
+import {classMap} from 'lit/directives/class-map.js';
 
-import { core } from "./core/core";
-import { AuthService } from "./services/auth_service";
-import { ChatService } from "./services/chat_service";
-import { ExperimentService } from "./services/experiment_service";
-import { ParticipantService } from "./services/participant_service";
-import { Pages, RouterService } from "./services/router_service";
-import { SettingsService } from "./services/settings_service";
-import { SurveyService } from "./services/survey_service";
+import {core} from './core/core';
+import {AuthService} from './services/auth_service';
+import {ChatService} from './services/chat_service';
+import {ExperimentService} from './services/experiment_service';
+import {ParticipantService} from './services/participant_service';
+import {Pages, RouterService} from './services/router_service';
+import {SettingsService} from './services/settings_service';
+import {SurveyService} from './services/survey_service';
 
-import {
-  ChatKind,
-  StageKind
-} from "@llm-mediation-experiments/utils";
-import {
-  ColorMode,
-  ColorTheme,
-  TextSize
-} from "./shared/types";
+import {ChatKind, StageKind} from '@llm-mediation-experiments/utils';
+import {ColorMode, ColorTheme, TextSize} from './shared/types';
 
-import { styles } from "./app.scss";
+import {styles} from './app.scss';
 
 /** App main component. */
-@customElement("llm-mediation-app")
+@customElement('llm-mediation-app')
 export class App extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -82,10 +76,9 @@ export class App extends MobxLitElement {
       case Pages.EXPERIMENT:
         return this.renderExperiment();
       case Pages.EXPERIMENT_GROUP:
-        return html`
-          <div class="content">
-            <experiment-group-page></experiment-group-page>
-          </div>`;
+        return html` <div class="content">
+          <experiment-group-page></experiment-group-page>
+        </div>`;
       case Pages.EXPERIMENT_CREATE:
         return html`
           <div class="participant-content-wrapper">
@@ -98,7 +91,11 @@ export class App extends MobxLitElement {
       case Pages.PARTICIPANT:
         return this.renderParticipantView(this.renderParticipant());
       case Pages.PARTICIPANT_STAGE:
-        return this.renderParticipantView(this.renderParticipantStage());
+        return html` <attention-check-popup
+            waitSeconds="120"
+            popupSeconds="60"
+          ></attention-check-popup>
+          ${this.renderParticipantView(this.renderParticipantStage())}`;
       case Pages.PARTICIPANT_SETTINGS:
         return this.renderParticipantView(this.renderParticipantSettings());
       default:
@@ -106,11 +103,11 @@ export class App extends MobxLitElement {
     }
   }
 
-  private render404(message = "Page not found") {
+  private render404(message = 'Page not found') {
     return html`<div>404: ${message}</div>`;
   }
 
-  private render403(message = "Participants do not have access") {
+  private render403(message = 'Participants do not have access') {
     return html`<div>403: ${message}</div>`;
   }
 
@@ -136,9 +133,7 @@ export class App extends MobxLitElement {
     return html`
       <div class="participant-content-wrapper">
         <participant-sidenav></participant-sidenav>
-        <div class="participant-content">
-          ${content}
-        </div>
+        <div class="participant-content">${content}</div>
       </div>
     `;
   }
@@ -156,18 +151,15 @@ export class App extends MobxLitElement {
     }
 
     if (this.participantService.profile === undefined) {
-      return this.render404(`Could not find participant ID`)
+      return this.render404(`Could not find participant ID`);
     }
 
     const routeToStage = () => {
-      this.routerService.navigate(
-        Pages.PARTICIPANT_STAGE,
-        {
-          "experiment": this.participantService.experimentId!,
-          "participant": this.participantService.participantId!,
-          "stage": this.participantService.profile?.currentStageId!,
-        }
-      );
+      this.routerService.navigate(Pages.PARTICIPANT_STAGE, {
+        experiment: this.participantService.experimentId!,
+        participant: this.participantService.participantId!,
+        stage: this.participantService.profile?.currentStageId!,
+      });
     };
 
     if (this.experimentService.canStartExperiment()) {
@@ -175,7 +167,8 @@ export class App extends MobxLitElement {
         <pr-button @click=${routeToStage}>Start experiment</pr-button>
       `;
     } else {
-      return html`Waiting for other participants to join before the experiment can begin.`;
+      return html`Waiting for other participants to join before the experiment
+      can begin.`;
     }
   }
 
@@ -192,11 +185,10 @@ export class App extends MobxLitElement {
     }
 
     if (this.participantService.profile === undefined) {
-      return this.render404(`Could not find participant ID`)
+      return this.render404(`Could not find participant ID`);
     }
 
     return html`<settings-page></settings-page>`;
-
   }
 
   private renderParticipantStage() {
@@ -212,10 +204,10 @@ export class App extends MobxLitElement {
     }
 
     if (this.participantService.profile === undefined) {
-      return this.render404(`Could not find participant ID`)
+      return this.render404(`Could not find participant ID`);
     }
 
-    const stageId = this.routerService.activeRoute.params["stage"];
+    const stageId = this.routerService.activeRoute.params['stage'];
     const currentStage = this.experimentService.getStage(stageId);
 
     if (currentStage === undefined) {
@@ -228,22 +220,20 @@ export class App extends MobxLitElement {
         this.participantService.profile?.currentStageId!
       );
       return stageIndex > currentStageIndex;
-    }
+    };
 
     const navigateToCurrentStage = () => {
-      this.routerService.navigate(Pages.PARTICIPANT_STAGE,
-        {
-          "experiment": this.participantService.experimentId!,
-          "participant": this.participantService.participantId!,
-          "stage": this.participantService.profile?.currentStageId!,
-        }
-      );
-    }
+      this.routerService.navigate(Pages.PARTICIPANT_STAGE, {
+        experiment: this.participantService.experimentId!,
+        participant: this.participantService.participantId!,
+        stage: this.participantService.profile?.currentStageId!,
+      });
+    };
 
     if (isLockedStage(stageId)) {
       return html`
         <div class="error-wrapper">
-          ${this.render403("This stage is not yet available")}
+          ${this.render403('This stage is not yet available')}
           <pr-button @click=${navigateToCurrentStage}>
             Go to current stage
           </pr-button>
@@ -266,7 +256,10 @@ export class App extends MobxLitElement {
         `;
       case StageKind.LostAtSeaSurvey:
         return html`
-          <las-survey-preview .stage=${currentStage} .answer=${answer}></las-survey-preview>    
+          <las-survey-preview
+            .stage=${currentStage}
+            .answer=${answer}
+          ></las-survey-preview>
         `;
       case StageKind.SetProfile:
         return html`<profile-config></profile-config>`;
@@ -280,19 +273,21 @@ export class App extends MobxLitElement {
         this.chatService.updateForCurrentRoute();
 
         if (currentStage.chatConfig.kind === ChatKind.ChatAboutItems) {
-          return html`<lost-at-sea-chat .stage=${currentStage}></lost-at-sea-chat>`;
+          return html`<lost-at-sea-chat
+            .stage=${currentStage}
+          ></lost-at-sea-chat>`;
         } else {
           return html`<basic-chat .stage=${currentStage}></basic-chat>`;
         }
       default:
-        return this.render404("Could not load experiment stage");
+        return this.render404('Could not load experiment stage');
     }
   }
 
   override render() {
     const isMode = (mode: ColorMode) => {
       return this.settingsService.colorMode === mode;
-    }
+    };
 
     const isTheme = (theme: ColorTheme) => {
       return this.settingsService.colorTheme === theme;
@@ -303,24 +298,27 @@ export class App extends MobxLitElement {
     };
 
     const classes = classMap({
-      "app-wrapper": true,
-      "mode--dark": isMode(ColorMode.DARK),
-      "mode--light": isMode(ColorMode.LIGHT),
-      "mode--default": isMode(ColorMode.DEFAULT),
-      "size--small": isSize(TextSize.SMALL),
-      "size--medium": isSize(TextSize.MEDIUM),
-      "size--large": isSize(TextSize.LARGE),
+      'app-wrapper': true,
+      'mode--dark': isMode(ColorMode.DARK),
+      'mode--light': isMode(ColorMode.LIGHT),
+      'mode--default': isMode(ColorMode.DEFAULT),
+      'size--small': isSize(TextSize.SMALL),
+      'size--medium': isSize(TextSize.MEDIUM),
+      'size--large': isSize(TextSize.LARGE),
     });
 
-    if (!this.authService.authenticated && !this.routerService.isParticipantPage
-      && this.routerService.activeRoute.params["experiment"] === undefined) {
+    if (
+      !this.authService.authenticated &&
+      !this.routerService.isParticipantPage &&
+      this.routerService.activeRoute.params['experiment'] === undefined
+    ) {
       // Render login screen if relevant after initial auth check
       return html`
         <div class=${classes}>
           <div class="content">
-            ${this.authService.initialAuthCheck ?
-          html`<login-page></login-page>` :
-          nothing}
+            ${this.authService.initialAuthCheck
+              ? html`<login-page></login-page>`
+              : nothing}
           </div>
         </div>
       `;
@@ -342,6 +340,6 @@ export class App extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "llm-mediation-app": App;
+    'llm-mediation-app': App;
   }
 }
