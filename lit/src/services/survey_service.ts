@@ -61,7 +61,7 @@ export class SurveyService extends Service {
       for (const question of stage.questions.filter(question => question.kind === SurveyQuestionKind.Text)) {
         this.textAnswers[question.id] = answer ? (
           answer.answers[question.id] as TextQuestionAnswer
-        ).answerText ?? '' : '';
+        )?.answerText ?? '' : '';
       }
     }
     this.areAnswersLoading = false;
