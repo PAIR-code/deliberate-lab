@@ -1,3 +1,5 @@
+import "../../pair-components/icon";
+
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
@@ -111,14 +113,21 @@ export class AttentionCheckPopup extends MobxLitElement {
     if (!this.showAttentionCheck) {
       return nothing;
     }
+
     return html`
-      <div class="attention-check-popup">
-        <div class="attention-check-content">
-          Are you still there?
-          <div>
-            <small>Time remaining until experiment ends: ${this.countdown} seconds</sma..L
+      <div class="attention-check-overlay">
+        <div class="attention-check-popup">
+          <div class="title">
+            <pr-icon icon="warning" color="error"></pr-icon>
+            <div>Are you still there?</div>
           </div>
-          <pr-button color="tertiary" variant="tonal" @click=${this.handleAttentionCheckResponse}>YES</pr-button>
+          <div class="content">
+            <div>Time remaining until experiment ends:</div>
+            <div class="time">${this.countdown} seconds</div>
+          </div>
+          <pr-button color="secondary" variant="tonal" @click=${this.handleAttentionCheckResponse}>
+            Yes, continue experiment
+          </pr-button>
         </div>
       </div>
     `;
