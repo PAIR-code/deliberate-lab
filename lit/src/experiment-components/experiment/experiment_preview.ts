@@ -108,8 +108,19 @@ export class ExperimentPreview extends MobxLitElement {
     );
     const timedOutParticipants = participants.filter(
       (participant) =>
-        participant.completedExperiment && !participant.transferConfig
+        this.experimentService.experiment?.isLobby &&
+        participant.completedExperiment &&
+        !participant.transferConfig
     );
+    const completedParticipants = participants.filter(
+      (participant) =>
+        participant.completedExperiment &&
+        !(
+          this.experimentService.experiment?.isLobby &&
+          !participant.transferConfig
+        )
+    );
+
     const experiment = this.experimentService.experiment;
     return html`
       <div class="top-bar">
@@ -145,20 +156,33 @@ export class ExperimentPreview extends MobxLitElement {
       </div>
       <div class="row">${experiment?.description}</div>
 
-      <h2>${currentParticipants.length} current participants</h2>
-      <div class="profile-wrapper">
-        ${currentParticipants.map(
-          (participant) =>
-            html`
-              <profile-preview
-                .profile=${participant}
-                .availableTransferExperiments=${getTransferableExperiments()}
-              >
-              </profile-preview>
-            `
-        )}
-      </div>
-
+      ${currentParticipants.length > 0
+        ? html`<h2>${currentParticipants.length} current participants</h2>
+            <div class="profile-wrapper">
+              ${currentParticipants.map(
+                (participant) =>
+                  html`
+                    <profile-preview
+                      .profile=${participant}
+                      .availableTransferExperiments=${getTransferableExperiments()}
+                    >
+                    </profile-preview>
+                  `
+              )}
+            </div>`
+        : ''}
+      ${completedParticipants.length > 0
+        ? html`
+            <h2>${completedParticipants.length} completed participants</h2>
+            <div class="profile-wrapper">
+              ${completedParticipants.map(
+                (participant) => html`
+                  <profile-preview .profile=${participant}></profile-preview>
+                `
+              )}
+            </div>
+          `
+        : ''}
       ${transferredParticipants.length > 0
         ? html`
             <h2>${transferredParticipants.length} transferred participants</h2>

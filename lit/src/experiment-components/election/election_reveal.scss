@@ -7,7 +7,8 @@
 }
 
 .description {
-  color: var(--md-sys-color-primary);
+  @include typescale.title-small;
+  color: var(--md-sys-color-secondary);
   padding-bottom: common.$spacing-medium;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
