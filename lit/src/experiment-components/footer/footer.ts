@@ -175,7 +175,8 @@ export class Footer extends MobxLitElement {
     };
 
     const preventNextClick =
-      this.disabled || !this.participantService.isCurrentStage();
+      this.disabled || !this.participantService.isCurrentStage() ||
+      this.participantService.profile?.completedExperiment;
 
     // If completed lobby experiment, render link to transfer experiment
     if (isLastStage && this.experimentService.experiment?.isLobby) {
