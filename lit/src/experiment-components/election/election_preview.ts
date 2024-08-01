@@ -1,30 +1,31 @@
-import "../footer/footer";
-import "../profile/profile_avatar";
-import "../progress/progress_stage_completed";
-import "../progress/progress_stage_waiting";
+import '../footer/footer';
+import '../profile/profile_avatar';
+import '../progress/progress_stage_completed';
+import '../progress/progress_stage_waiting';
 
 import '@material/web/radio/radio.js';
 
-import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {CSSResultGroup, html, nothing} from 'lit';
+import {customElement, property} from 'lit/decorators.js';
 
 import {
   ParticipantProfile,
   Vote,
   VoteForLeaderStageAnswer,
-  Votes
-} from "@llm-mediation-experiments/utils";
+  Votes,
+} from '@llm-mediation-experiments/utils';
 
-import { core } from "../../core/core";
-import { ExperimentService } from "../../services/experiment_service";
-import { ParticipantService } from "../../services/participant_service";
-import { RouterService } from "../../services/router_service";
-
-import { styles } from "./election_preview.scss";
+import {unsafeHTML} from 'lit/directives/unsafe-html.js';
+import {core} from '../../core/core';
+import {ExperimentService} from '../../services/experiment_service';
+import {ParticipantService} from '../../services/participant_service';
+import {RouterService} from '../../services/router_service';
+import {convertMarkdownToHTML} from '../../shared/utils';
+import {styles} from './election_preview.scss';
 
 /** Election preview */
-@customElement("election-preview")
+@customElement('election-preview')
 export class ElectionPreview extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -32,15 +33,20 @@ export class ElectionPreview extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
-  @property() answer: VoteForLeaderStageAnswer|null = null;
+  @property() answer: VoteForLeaderStageAnswer | null = null;
 
   override render() {
-    const currentStage = this.routerService.activeRoute.params["stage"];
-    const { ready, notReady } =
+    const currentStage = this.routerService.activeRoute.params['stage'];
+    const {ready, notReady} =
       this.experimentService.getParticipantsReadyForStage(currentStage);
 
-    const description = this.experimentService.stageConfigMap[currentStage].description;
-    const descriptionContent = description ? html`<div class="description">${description}</div>` : nothing;
+    const description =
+      this.experimentService.stageConfigMap[currentStage].description;
+    const descriptionContent = description
+      ? html`<div class="description">
+          ${unsafeHTML(convertMarkdownToHTML(description))}
+        </div>`
+      : nothing;
     if (notReady.length > 0) {
       return html`
         ${descriptionContent}
@@ -50,16 +56,18 @@ export class ElectionPreview extends MobxLitElement {
       `;
     }
 
-    const disabled = Object.keys(this.answer?.votes ?? []).length <
+    const disabled =
+      Object.keys(this.answer?.votes ?? []).length <
       this.experimentService.getParticipantProfiles().length - 1;
 
     return html`
       ${descriptionContent}
 
       <div class="election-wrapper">
-        ${this.experimentService.getParticipantProfiles()
+        ${this.experimentService
+          .getParticipantProfiles()
           .sort((p1, p2) => p1.publicId.localeCompare(p2.publicId))
-          .map(profile => this.renderParticipant(profile))}
+          .map((profile) => this.renderParticipant(profile))}
       </div>
       <stage-footer .disabled=${disabled}>
         <progress-stage-completed></progress-stage-completed>
@@ -74,11 +82,11 @@ export class ElectionPreview extends MobxLitElement {
 
     const getVoteFromValue = (value: string) => {
       switch (value) {
-        case "0":
+        case '0':
           return Vote.Positive;
-        case "1":
+        case '1':
           return Vote.Neutral;
-        case "2":
+        case '2':
           return Vote.Negative;
         default:
           return Vote.NotRated;
@@ -94,7 +102,7 @@ export class ElectionPreview extends MobxLitElement {
       this.participantService.updateVoteForLeaderStage(
         this.participantService.profile!.currentStageId,
         votes
-      )
+      );
     };
 
     return html`
@@ -114,7 +122,7 @@ export class ElectionPreview extends MobxLitElement {
               name=${profile.publicId}
               value="0"
               aria-label="positive"
-              ?checked=${this.answer?.votes[profile.publicId] === "positive"}
+              ?checked=${this.answer?.votes[profile.publicId] === 'positive'}
               ?disabled=${!this.participantService.isCurrentStage()}
               @change=${handleClick}
             >
@@ -127,7 +135,7 @@ export class ElectionPreview extends MobxLitElement {
               name=${profile.publicId}
               value="1"
               aria-label="neutral"
-              ?checked=${this.answer?.votes[profile.publicId] === "neutral"}
+              ?checked=${this.answer?.votes[profile.publicId] === 'neutral'}
               ?disabled=${!this.participantService.isCurrentStage()}
               @change=${handleClick}
             >
@@ -140,7 +148,7 @@ export class ElectionPreview extends MobxLitElement {
               name=${profile.publicId}
               value="2"
               aria-label="negative"
-              ?checked=${this.answer?.votes[profile.publicId] === "negative"}
+              ?checked=${this.answer?.votes[profile.publicId] === 'negative'}
               ?disabled=${!this.participantService.isCurrentStage()}
               @change=${handleClick}
             >
@@ -153,7 +161,7 @@ export class ElectionPreview extends MobxLitElement {
               name=${profile.publicId}
               value="3"
               aria-label="no rating"
-              ?checked=${this.answer?.votes[profile.publicId] === "not-rated"}
+              ?checked=${this.answer?.votes[profile.publicId] === 'not-rated'}
               ?disabled=${!this.participantService.isCurrentStage()}
               @change=${handleClick}
             >
@@ -168,6 +176,6 @@ export class ElectionPreview extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "election-preview": ElectionPreview;
+    'election-preview': ElectionPreview;
   }
 }

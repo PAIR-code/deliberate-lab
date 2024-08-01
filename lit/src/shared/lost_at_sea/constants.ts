@@ -41,7 +41,7 @@ export const LAS_SCENARIO_REMINDER =
   'Here is a reminder of the scenario:\n\nYou and three friends are on a yacht trip across the Atlantic. A fire breaks out, and the skipper and crew are lost. The yacht is sinking, and your location is unclear.\nYou have saved 10 items, a life raft, and a box of matches.\n\nEvaluate the relative importance of items in each presented pair by selecting the one you believe is most useful. You can earn $X per correct answer if that question is drawn to determine your payoff.';
 
 export const LAS_WTL_DESCRIPTION =
-  'Thank you for completing the task.\n\nNow, imagine that you are no longer alone but part of a group of four people. Your group must elect a leader whose role is to answer on behalf of the group the same types of questions you have just seen. In this scenario, the leader is the only one who chooses the most useful items for survival from pairs, and their answers determine the payment for each member of the group.\n\nHow interested would you be in taking on the leader’s role described above? Please choose a number from 1 to 10, with 1 meaning that you would very much like to become the leader, and 10 meaning not at all.';
+  'Thank you for completing the task.\n\nNow, imagine that you are no longer alone but part of a group of four people. Your group must elect a leader whose role is to answer on behalf of the group the same types of questions you have just seen. In this scenario, the leader is the only one who chooses the most useful items for survival from pairs, and their answers determine the payment for each member of the group.';
 
 export const LAS_WTL_SURVEY: QuestionConfig[] = [
   {
@@ -122,7 +122,7 @@ export const LAS_GROUP_DISCUSSION_INSTRUCTIONS = [
 
 export const LAS_UPDATE_INSTRUCTIONS = [
   'You are now given a chance to update the choices you previously made in Part 1. You can choose to update your previous answers or provide the same answers again.',
-  "\n\nIf a question from Part 2 is selected to determine your final payoff, the answers you give below will be evaluated in the same way as in Part 1. Your answers will be compared to a panel of experts' solutions, and you will earn $X if your answer is correct, and $0 otherwise.",
+  "\n\nIf a question from Part 2 is selected to determine your final payoff, the answers you give on the next screen will be evaluated in the same way as in Part 1. Your answers will be compared to a panel of experts' solutions, and you will earn $X if your answer is correct, and $0 otherwise.",
   '\n\n*Please note that Part 1 and Part 2 of the experiment are independent. Changing answers here will not impact the answers you provided in Part 1.*',
 ];
 

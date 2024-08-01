@@ -27,7 +27,6 @@ import {
 import {
   ITEMS_SET_1,
   ITEMS_SET_2,
-  ITEMS_SET_3,
   LAS_FINAL_SURVEY,
   LAS_FINAL_SURVEY_DESCRIPTION,
   LAS_GROUP_CHAT_DESCRIPTION,
@@ -175,7 +174,7 @@ function getPart2PreElectionStages(): StageConfig[] {
   );
 
   // Individual task.
-  const INDIVIDUAL_QUESTIONS: LostAtSeaQuestion[] = ITEMS_SET_3.map(
+  const INDIVIDUAL_QUESTIONS: LostAtSeaQuestion[] = ITEMS_SET_1.map(
     (pair, index) => getQuestionFromPair(pair, index)
   );
   const redoTask = createLostAtSeaSurveyStage({
@@ -232,13 +231,12 @@ function getPart2PostElectionAndPart3Stages(): StageConfig[] {
     })
   );
 
-  // Individual task.
-  const INDIVIDUAL_QUESTIONS: LostAtSeaQuestion[] = ITEMS_SET_2.map(
-    (pair, index) => getQuestionFromPair(pair, index)
+  const LEADER_QUESTIONS: LostAtSeaQuestion[] = ITEMS_SET_2.map((pair, index) =>
+    getQuestionFromPair(pair, index)
   );
   const leaderTask = createLostAtSeaSurveyStage({
     name: 'Leader task',
-    questions: INDIVIDUAL_QUESTIONS,
+    questions: LEADER_QUESTIONS,
     popupText: LAS_SCENARIO_REMINDER,
   });
   stages.push(leaderTask);
