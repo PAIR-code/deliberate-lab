@@ -103,7 +103,7 @@ export class SurveyPreview extends MobxLitElement {
         <pr-textarea
           variant="outlined"
           placeholder="Type your response"
-          .value=${this.surveyService.textAnswers[question.id]}
+          .value=${this.surveyService.getTextAnswer(question.id)}
           ?disabled=${!this.participantService.isCurrentStage()}
           @change=${handleTextChange}
         >
