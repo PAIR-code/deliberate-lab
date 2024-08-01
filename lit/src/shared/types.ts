@@ -1,4 +1,5 @@
 import { DocumentData, QuerySnapshot } from 'firebase/firestore';
+import { ScoringQuestion } from '@llm-mediation-experiments/utils';
 
 /**
  * Generic wrapper type for constructors, used in the DI system.
@@ -37,4 +38,10 @@ export enum TextSize {
 export interface ModelResponse {
   score?: number;
   text: string;
+}
+
+/** Answer item used to calculate payout. */
+export interface AnswerItem extends ScoringQuestion {
+  leaderPublicId?: string; // leader public ID if used
+  userAnswer: string;
 }
