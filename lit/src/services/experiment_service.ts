@@ -16,16 +16,24 @@ import {Service} from './service';
 import {
   Experiment,
   lookupTable,
+  LostAtSeaSurveyStagePublicData,
+  LostAtSeaQuestionAnswer,
   Message,
   ParticipantProfile,
   ParticipantProfileExtended,
+  PayoutCurrency,
+  PayoutStageConfig,
   PublicStageData,
+  ScoringBundle,
+  ScoringItem,
   StageAnswer,
   StageConfig,
   StageKind,
+  VoteForLeaderStagePublicData,
 } from '@llm-mediation-experiments/utils';
 import {downloadJsonFile} from '../shared/file_utils';
-import {collectSnapshotWithId, excludeName} from '../shared/utils';
+import {collectSnapshotWithId} from '../shared/utils';
+import {AnswerItem} from '../shared/types';
 
 interface ServiceProvider {
   experimenterService: ExperimenterService;
@@ -363,6 +371,81 @@ export class ExperimentService extends Service {
     );
   }
 
+  /** Calculate experiment payouts for current payout stage.
+    * Return currency, payout map from participant public ID to value.
+    */
+  getPayouts(stage: PayoutStageConfig) {
+    const payouts: Record<string, number> = {}; // participant ID, amount
+    this.privateParticipants.forEach((participant) => {
+      const getAnswerItems = (item: ScoringItem): AnswerItem[] => {
+        // Use leader's answers if indicated, else current participant's answers
+        if (item.leaderStageId && item.leaderStageId.length > 0) {
+          const leaderPublicId = (this.publicStageDataMap[item.leaderStageId] as VoteForLeaderStagePublicData).currentLeader ?? '';
+          const leaderAnswers = (this.publicStageDataMap[item.surveyStageId] as LostAtSeaSurveyStagePublicData).participantAnswers[leaderPublicId];
+
+          if (!leaderAnswers) return [];
+
+          return item.questions.map((question) => {
+            return {
+              ...question,
+              leaderPublicId,
+              userAnswer: (leaderAnswers[question.id] as LostAtSeaQuestionAnswer).choice,
+            };
+          });
+        }
+
+        const userAnswers = (this.publicStageDataMap[item.surveyStageId] as LostAtSeaSurveyStagePublicData).participantAnswers[participant.publicId];
+        if (!userAnswers) return [];
+        return item.questions.map((question) => {
+          return {
+            ...question,
+            userAnswer: (userAnswers[question.id] as LostAtSeaQuestionAnswer).choice,
+          };
+        });
+      };
+
+      // Calculate score for bundle
+      const getBundleScore = (bundle: ScoringBundle) => {
+        let score = 0;
+        bundle.scoringItems.forEach((item) => {
+          // Calculate score for item
+          const answerItems: AnswerItem[] = getAnswerItems(item);
+
+          if (answerItems.length === 0) {
+            return item.fixedCurrencyAmount;
+          }
+
+          const numCorrect = () => {
+            let count = 0;
+            answerItems.forEach(answer => {
+              if (answer.userAnswer === answer.answer) {
+                count += 1;
+              }
+            });
+            return count;
+          };
+          score += item.fixedCurrencyAmount + item.currencyAmountPerQuestion * numCorrect();
+        });
+        return score;
+      };
+
+      // Add up all bundles to get total score
+      const getTotalScore = () => {
+        let score = 0;
+        const scoring: ScoringBundle[] = stage.scoring ?? [];
+        scoring.forEach((bundle) => {
+          score += getBundleScore(bundle);
+        });
+        return score;
+      };
+
+      // Assign payout for participant
+      payouts[participant.publicId] = getTotalScore();
+    });
+
+    return { currency: stage.currency, payouts };
+  }
+
   /** Download experiment as a single JSON file */
   async downloadExperiment() {
     if (!this.experiment) {
@@ -380,11 +463,37 @@ export class ExperimentService extends Service {
         collection(
           this.sp.firebaseService.firestore,
           'experiments',
-          this.experiment.id,
+          experimentId,
           'publicStageData'
         )
       )
-    ).docs.map((doc) => ({...(doc.data() as PublicStageData), name: doc.id}));
+    ).docs.map((doc) => ({...(doc.data() as PublicStageData), id: doc.id}));
+
+    // Get chat answers per stage
+    const chats: Record<string, Message[]> = {};
+    configs.forEach(async (config) => {
+      if (config.kind === StageKind.GroupChat) {
+        const messages = await getDocs(
+          collection(
+            this.sp.firebaseService.firestore,
+            'experiments',
+            experimentId,
+            'publicStageData',
+            config.id,
+            'messages'
+          )
+        );
+        chats[config.id] = messages.docs.map((doc) => (doc.data() as Message));
+      }
+    })
+
+    // Get payout answers per stage
+    const payouts: Record<string, { currency: PayoutCurrency, payouts: Record<string, number> }> = {};
+    configs.forEach((config) => {
+      if (config.kind === StageKind.Payout) {
+        payouts[config.id] = this.getPayouts(config);
+      }
+    });
 
     // Get stage answers per participant.
     const stageAnswers = await Promise.all(
@@ -400,76 +509,36 @@ export class ExperimentService extends Service {
               'stages'
             )
           )
-        ).docs.map((doc) => ({...(doc.data() as StageAnswer), name: doc.id}));
+        ).docs.map((doc) => ({...(doc.data() as StageAnswer), id: doc.id}));
       })
     );
 
-    // Get chat data.
-    // TODO: Technically, there are as many chat copies as there are participants
-    // but because we do not change them, we will only download the first copy of
-    // each chat here
-
-    const chats = await getDocs(
-      collection(
-        this.sp.firebaseService.firestore,
-        'experiments',
-        experimentId,
-        'participants',
-        participants[0].privateId,
-        'chats'
-      )
-    );
-
-    const chatMessages = await Promise.all(
-      chats.docs.map((doc) =>
-        getDocs(
-          collection(
-            this.sp.firebaseService.firestore,
-            'experiments',
-            experimentId,
-            'participants',
-            participants[0].privateId,
-            'chats',
-            doc.id,
-            'messages'
-          )
-        )
-      )
-    );
-
     // Lookups
-    const publicData = lookupTable(stagePublicData, 'name');
+    const publicData = lookupTable(stagePublicData, 'id');
     const answersLookup = stageAnswers.reduce((acc, stageAnswers, index) => {
       const participantId = participants[index].publicId;
 
       stageAnswers.forEach((stageAnswer) => {
-        if (!acc[stageAnswer.name]) acc[stageAnswer.name] = {};
+        if (!acc[stageAnswer.id]) acc[stageAnswer.id] = {};
 
-        acc[stageAnswer.name][participantId] = excludeName(
-          stageAnswer
-        ) as StageAnswer;
+        acc[stageAnswer.id][participantId] = (stageAnswer as StageAnswer);
       });
       return acc;
     }, {} as Record<string, Record<string, StageAnswer>>);
 
+    const stages: Record<string, { config: StageConfig, public: PublicStageData, answers: Record<string, StageAnswer> }> = {};
+    configs.forEach((config) => {
+      const stagePublicData = publicData[config.id];
+      const answers = answersLookup[config.id];
+      stages[config.id] = {config, public: stagePublicData, answers};
+    });
+
     const data = {
       ...this.experiment,
       participants,
-
-      stages: configs.map((config) => {
-        const stagePublicData = publicData[config.name];
-        const cleanedPublicData = stagePublicData
-          ? excludeName(stagePublicData)
-          : undefined;
-        const answers = answersLookup[config.name];
-        return {config, public: cleanedPublicData, answers};
-      }),
-
-      chats: chatMessages.reduce((acc, chat, index) => {
-        const messages = chat.docs.map((doc) => doc.data() as Message);
-        acc[`chat-${index}`] = messages;
-        return acc;
-      }, {} as Record<string, Message[]>),
+      stages,
+      chats,
+      payouts,
     };
 
     downloadJsonFile(data, `${this.experiment.name}.json`);
