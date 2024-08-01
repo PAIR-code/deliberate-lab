@@ -259,5 +259,5 @@ export function convertUnifiedTimestampToDate(timestamp: UnifiedTimestamp) {
  * including the document Firestore ID within the field with the given key.
  */
 export function collectSnapshotWithId<T>(snapshot: Snapshot, idKey: keyof T) {
-  return snapshot.docs.map((doc) => ({ [idKey]: doc.id, ...doc.data() }) as T);
+  return snapshot.docs.map((doc) => ({[idKey]: doc.id, ...doc.data()} as T));
 }

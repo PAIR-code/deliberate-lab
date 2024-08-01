@@ -7,13 +7,11 @@ import '../progress/progress_stage_waiting';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property, state} from 'lit/decorators.js';
+import {customElement, property} from 'lit/decorators.js';
 
 import {
   ParticipantProfile,
-  Vote,
   VoteForLeaderStageAnswer,
-  Votes,
 } from '@llm-mediation-experiments/utils';
 
 import {unsafeHTML} from 'lit/directives/unsafe-html.js';
@@ -61,15 +59,15 @@ export class ElectionPreview extends MobxLitElement {
       `;
     }
 
-    const disabled = (this.answer?.rankings ?? []).length <
+    const disabled =
+      (this.answer?.rankings ?? []).length <
       this.experimentService.getParticipantProfiles().length - 1;
 
     return html`
       ${descriptionContent}
 
       <div class="election-wrapper">
-        ${this.renderStartZone()}
-        ${this.renderEndZone()}
+        ${this.renderStartZone()} ${this.renderEndZone()}
       </div>
       <stage-footer .disabled=${disabled}>
         <progress-stage-completed></progress-stage-completed>
@@ -83,7 +81,12 @@ export class ElectionPreview extends MobxLitElement {
         ${this.experimentService
           .getParticipantProfiles()
           .sort((p1, p2) => p1.publicId.localeCompare(p2.publicId))
-          .filter((profile) => !(this.answer?.rankings ?? []).find(id => id === profile.publicId))
+          .filter(
+            (profile) =>
+              !(this.answer?.rankings ?? []).find(
+                (id) => id === profile.publicId
+              )
+          )
           .map((profile) => this.renderDraggableParticipant(profile))}
       </div>
     `;
@@ -112,17 +115,17 @@ export class ElectionPreview extends MobxLitElement {
     }
 
     const onDragStart = (event: DragEvent) => {
-      let target = (event.target as HTMLElement);
+      let target = event.target as HTMLElement;
       target.style.opacity = '.25';
 
       if (event.dataTransfer) {
-        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.effectAllowed = 'move';
         event.dataTransfer.setData('text/plain', profile.publicId);
       }
     };
 
     const onDragEnd = (event: DragEvent) => {
-      let target = (event.target as HTMLElement);
+      let target = event.target as HTMLElement;
       target.style.opacity = '';
     };
 
@@ -140,7 +143,7 @@ export class ElectionPreview extends MobxLitElement {
 
   private renderDragZone(index: number, fillSpace = false) {
     const onDragEnter = (event: DragEvent) => {
-      const target = (event.target as HTMLElement);
+      const target = event.target as HTMLElement;
       if (target && event.dataTransfer) {
         event.preventDefault();
         event.dataTransfer.dropEffect = 'move';
@@ -149,14 +152,14 @@ export class ElectionPreview extends MobxLitElement {
     };
 
     const onDragLeave = (event: DragEvent) => {
-      const target = (event.target as HTMLElement);
+      const target = event.target as HTMLElement;
       if (target) {
         target.classList.remove('drag-over');
       }
     };
 
     const onDrop = (event: DragEvent) => {
-      const target = (event.target as HTMLElement);
+      const target = event.target as HTMLElement;
       if (target && event.dataTransfer) {
         event.preventDefault();
         target.classList.remove('drag-over');
@@ -168,14 +171,16 @@ export class ElectionPreview extends MobxLitElement {
         // Create new rankings (using answerIndex to slot participant in)
         let rankings = [...currentRankings];
 
-        const existingIndex = currentRankings.findIndex(id => id === participantId);
+        const existingIndex = currentRankings.findIndex(
+          (id) => id === participantId
+        );
         let newIndex = index;
 
         if (existingIndex >= 0) {
           // Remove participant from current ranking spot
           rankings = [
             ...rankings.slice(0, existingIndex),
-            ...rankings.slice(existingIndex + 1)
+            ...rankings.slice(existingIndex + 1),
           ];
           if (existingIndex <= newIndex) {
             newIndex -= 1; // Adjust index because participant was removed
@@ -184,13 +189,9 @@ export class ElectionPreview extends MobxLitElement {
         rankings = [
           ...rankings.slice(0, newIndex),
           participantId,
-          ...rankings.slice(newIndex)
+          ...rankings.slice(newIndex),
         ];
-
-        this.participantService.updateVoteForLeaderStage(
-          stageId,
-          rankings
-        );
+        this.participantService.updateVoteForLeaderStage(stageId, rankings);
       }
     };
 
@@ -199,13 +200,13 @@ export class ElectionPreview extends MobxLitElement {
     };
 
     return html`
-      <div class="drag-zone ${fillSpace ? 'fill' : ''}"
+      <div
+        class="drag-zone ${fillSpace ? 'fill' : ''}"
         .ondragover=${onDragOver}
         .ondragenter=${onDragEnter}
         .ondragleave=${onDragLeave}
         .ondrop=${onDrop}
-      >
-      </div>
+      ></div>
     `;
   }
 
@@ -217,26 +218,26 @@ export class ElectionPreview extends MobxLitElement {
     const onCancel = () => {
       const stageId = this.routerService.activeRoute.params['stage'];
       const rankings = this.answer?.rankings ?? [];
-      const index = rankings.findIndex(id => id === profile.publicId);
+      const index = rankings.findIndex((id) => id === profile.publicId);
 
-      this.participantService.updateVoteForLeaderStage(
-        stageId,
-        [...rankings.slice(0, index), ...rankings.slice(index + 1)]
-      );
+      this.participantService.updateVoteForLeaderStage(stageId, [
+        ...rankings.slice(0, index),
+        ...rankings.slice(index + 1),
+      ]);
     };
 
     const onDragStart = (event: DragEvent) => {
-      let target = (event.target as HTMLElement);
+      let target = event.target as HTMLElement;
       target.style.opacity = '.25';
 
       if (event.dataTransfer) {
-        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.effectAllowed = 'move';
         event.dataTransfer.setData('text/plain', profile.publicId);
       }
     };
 
     const onDragEnd = (event: DragEvent) => {
-      let target = (event.target as HTMLElement);
+      let target = event.target as HTMLElement;
       target.style.opacity = '';
     };
 
@@ -271,12 +272,15 @@ export class ElectionPreview extends MobxLitElement {
           </div>
         </div>
         ${this.answer?.rankings.map((publicId: string, index: number) => {
-          const participant = this.experimentService.getParticipantProfiles()
-            .find(profile => profile.publicId === publicId);
+          const participant = this.experimentService
+            .getParticipantProfiles()
+            .find((profile) => profile.publicId === publicId);
 
-          return participant ? this.renderRankedParticipant(participant, index) : nothing;
+          return participant
+            ? this.renderRankedParticipant(participant, index)
+            : nothing;
         })}
-      ${this.renderDragZone((this.answer?.rankings ?? []).length, true)}
+        ${this.renderDragZone((this.answer?.rankings ?? []).length, true)}
       </div>
     `;
   }

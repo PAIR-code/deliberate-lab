@@ -10,6 +10,7 @@ import {
   StageConfig,
   StageKind,
   VoteForLeaderStagePublicData,
+  getCondorcetElectionWinner,
 } from '@llm-mediation-experiments/utils';
 import { Timestamp } from 'firebase-admin/firestore';
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
@@ -141,12 +142,11 @@ export const publishStageData = onDocumentWritten(
           .get();
         const publicData = publicDoc.data() as VoteForLeaderStagePublicData;
 
-        // TODO: Compute the new leader with these rankings
-        const currentLeader = participantPublicId; // Temporarily set current participant to leader
-
-        // Participant rankings
+        // Update participant rankings
         const participantRankings = publicData.participantRankings;
         participantRankings[participantPublicId] = data.rankings;
+
+        const currentLeader = getCondorcetElectionWinner(participantRankings);
 
         // Update the public data
         await publicDoc.ref.update({

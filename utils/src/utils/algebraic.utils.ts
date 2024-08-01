@@ -70,3 +70,56 @@ let _uniqueId = 0;
 export const uniqueId = (prefix?: string) => {
   return prefix ? `${prefix}${_uniqueId++}` : `${_uniqueId++}`;
 };
+
+/**
+ * Runs a Condorcet election on a set of rankings.
+ */
+export function getCondorcetElectionWinner(rankings: Record<string, string[]>) {
+  const participants = Object.keys(rankings);
+  const wins: Record<string, number> = {};
+
+  // Initialize win counts
+  participants.forEach((participant) => {
+    wins[participant] = 0;
+  });
+
+  // Compare each participant against each other
+  for (let i = 0; i < participants.length; i++) {
+    for (let j = i + 1; j < participants.length; j++) {
+      const p1 = participants[i];
+      const p2 = participants[j];
+
+      let p1Wins = 0;
+      let p2Wins = 0;
+
+      // Determine the winner in each ranking
+      participants.forEach((participant) => {
+        const ranking = rankings[participant];
+        if (ranking.indexOf(p1) < ranking.indexOf(p2)) {
+          p1Wins++;
+        } else {
+          p2Wins++;
+        }
+      });
+
+      // Update the win counts
+      if (p1Wins > p2Wins) {
+        wins[p1]++;
+      } else {
+        wins[p2]++;
+      }
+    }
+  }
+
+  // Find the participant with the most wins
+  let winner = null;
+  let maxWins = -1;
+  for (const participant in wins) {
+    if (wins[participant] > maxWins) {
+      maxWins = wins[participant];
+      winner = participant;
+    }
+  }
+
+  return winner;
+}
