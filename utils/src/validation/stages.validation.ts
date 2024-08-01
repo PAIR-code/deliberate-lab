@@ -3,7 +3,6 @@ import { ChatContext, MediatorKind } from '../types/mediator.types';
 import { PayoutCurrency } from '../types/payout.types';
 import { SurveyQuestionKind } from '../types/questions.types';
 import { BaseStageConfig, StageConfig, StageKind } from '../types/stages.types';
-import { Vote } from '../types/votes.types';
 import { ChatAboutItemsConfigData, SimpleChatConfigData } from './chats.validation';
 import {
   LostAtSeaQuestionData,
@@ -246,15 +245,7 @@ export const LostAtSeaSurveyStageAnswerData = Type.Object(
 export const VoteForLeaderStageAnswerData = Type.Object(
   {
     kind: Type.Literal(StageKind.VoteForLeader),
-    votes: Type.Record(
-      Type.String({ minLength: 1 }),
-      Type.Union([
-        Type.Literal(Vote.Positive),
-        Type.Literal(Vote.Neutral),
-        Type.Literal(Vote.Negative),
-        Type.Literal(Vote.NotRated),
-      ]),
-    ),
+    rankings: Type.Array(Type.String()),
   },
   strict,
 );

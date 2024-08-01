@@ -5,7 +5,6 @@ import { LostAtSeaQuestion, LostAtSeaQuestionAnswer } from './lost_at_sea.types'
 import { MediatorConfig } from './mediator.types';
 import { PayoutBundle, PayoutCurrency, ScoringBundle } from './payout.types';
 import { QuestionAnswer, QuestionConfig } from './questions.types';
-import { Votes } from './votes.types';
 
 export enum StageKind {
   Info = 'info',
@@ -118,7 +117,8 @@ export interface LostAtSeaSurveyStageAnswer extends BaseStageAnswer {
 export interface VoteForLeaderStageAnswer extends BaseStageAnswer {
   kind: StageKind.VoteForLeader;
 
-  votes: Votes;
+  // Ordered list of preferred participant leaders (by public IDs)
+  rankings: string[];
 }
 
 export interface ChatStageAnswer {
@@ -153,7 +153,7 @@ export interface GroupChatStagePublicData extends BasePublicStageData {
 export interface VoteForLeaderStagePublicData extends BasePublicStageData {
   kind: StageKind.VoteForLeader;
 
-  participantvotes: Record<string, Votes>; // Participant public id => votes of this participant
+  participantRankings: Record<string, string[]>; // Participant public id => ordered rankings
   currentLeader: string | null; // Updated automatically after each vote
 }
 

@@ -10,8 +10,6 @@ import {
   StageConfig,
   StageKind,
   VoteForLeaderStagePublicData,
-  allVoteScores,
-  chooseLeader,
 } from '@llm-mediation-experiments/utils';
 import { Timestamp } from 'firebase-admin/firestore';
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
@@ -30,7 +28,7 @@ export const initializePublicStageData = onDocumentWritten(
       case StageKind.VoteForLeader:
         publicData = {
           kind: data.kind,
-          participantvotes: {},
+          participantRankings: {},
           currentLeader: null,
         };
         break;
@@ -143,16 +141,16 @@ export const publishStageData = onDocumentWritten(
           .get();
         const publicData = publicDoc.data() as VoteForLeaderStagePublicData;
 
-        // Compute the updated votes
-        const newVotes = publicData.participantvotes;
-        newVotes[participantPublicId] = data.votes;
+        // TODO: Compute the new leader with these rankings
+        const currentLeader = participantPublicId; // Temporarily set current participant to leader
 
-        // Compute the new leader with these votes
-        const currentLeader = chooseLeader(allVoteScores(newVotes));
+        // Participant rankings
+        const participantRankings = publicData.participantRankings;
+        participantRankings[participantPublicId] = data.rankings;
 
         // Update the public data
         await publicDoc.ref.update({
-          participantvotes: newVotes,
+          participantRankings,
           currentLeader,
         });
 
