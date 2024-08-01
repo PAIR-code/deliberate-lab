@@ -34,7 +34,11 @@ export class ExperimentConfig extends MobxLitElement {
     }
 
     return html`
-      <pr-button variant="default" @click=${onClear}>
+      <pr-button
+        variant="default"
+        @click=${onClear}
+        ?disabled=${this.experimentConfig.isLoading}
+      >
         Clear
       </pr-button>
       ${this.renderCreateTemplateButton()}
@@ -49,7 +53,11 @@ export class ExperimentConfig extends MobxLitElement {
     };
 
     return html`
-      <pr-button variant="tonal" @click=${onCreateTemplate}>
+      <pr-button
+        variant="tonal"
+        ?disabled=${this.experimentConfig.isLoading}
+        @click=${onCreateTemplate}
+      >
         Create template
       </pr-button>
     `;
@@ -75,7 +83,7 @@ export class ExperimentConfig extends MobxLitElement {
 
     return html`
       <pr-tooltip text=${tooltipText} position="TOP_END">
-        <pr-button @click=${onCreateExperiment}>
+        <pr-button @click=${onCreateExperiment} ?disabled=${this.experimentConfig.isLoading}>
           ${this.experimentConfig.isGroup ? 'Create experiment group' : 'Create experiment'}
         </pr-button>
       </pr-tooltip>
