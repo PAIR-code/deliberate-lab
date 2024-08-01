@@ -113,10 +113,17 @@ export class ElectionPreview extends MobxLitElement {
 
     const onDragStart = (event: DragEvent) => {
       let target = (event.target as HTMLElement);
+      target.style.opacity = '.25';
+
       if (event.dataTransfer) {
         event.dataTransfer.effectAllowed = "move";
         event.dataTransfer.setData('text/plain', profile.publicId);
       }
+    };
+
+    const onDragEnd = (event: DragEvent) => {
+      let target = (event.target as HTMLElement);
+      target.style.opacity = '';
     };
 
     return html`
@@ -124,13 +131,85 @@ export class ElectionPreview extends MobxLitElement {
         class="draggable"
         draggable="true"
         .ondragstart=${onDragStart}
+        .ondragend=${onDragEnd}
       >
         ${this.renderParticipant(profile)}
       </div>
     `;
   }
 
-  private renderRankedParticipant(profile: ParticipantProfile) {
+  private renderDragZone(index: number, fillSpace = false) {
+    const onDragEnter = (event: DragEvent) => {
+      const target = (event.target as HTMLElement);
+      if (target && event.dataTransfer) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        target.classList.add('drag-over');
+      }
+    };
+
+    const onDragLeave = (event: DragEvent) => {
+      const target = (event.target as HTMLElement);
+      if (target) {
+        target.classList.remove('drag-over');
+      }
+    };
+
+    const onDrop = (event: DragEvent) => {
+      const target = (event.target as HTMLElement);
+      if (target && event.dataTransfer) {
+        event.preventDefault();
+        target.classList.remove('drag-over');
+
+        const stageId = this.routerService.activeRoute.params['stage'];
+        const currentRankings = this.answer?.rankings ?? [];
+        const participantId = event.dataTransfer.getData('text/plain');
+
+        // Create new rankings (using answerIndex to slot participant in)
+        let rankings = [...currentRankings];
+
+        const existingIndex = currentRankings.findIndex(id => id === participantId);
+        let newIndex = index;
+
+        if (existingIndex >= 0) {
+          // Remove participant from current ranking spot
+          rankings = [
+            ...rankings.slice(0, existingIndex),
+            ...rankings.slice(existingIndex + 1)
+          ];
+          if (existingIndex <= newIndex) {
+            newIndex -= 1; // Adjust index because participant was removed
+          }
+        }
+        rankings = [
+          ...rankings.slice(0, newIndex),
+          participantId,
+          ...rankings.slice(newIndex)
+        ];
+
+        this.participantService.updateVoteForLeaderStage(
+          stageId,
+          rankings
+        );
+      }
+    };
+
+    const onDragOver = (event: DragEvent) => {
+      event.preventDefault();
+    };
+
+    return html`
+      <div class="drag-zone ${fillSpace ? 'fill' : ''}"
+        .ondragover=${onDragOver}
+        .ondragenter=${onDragEnter}
+        .ondragleave=${onDragLeave}
+        .ondrop=${onDrop}
+      >
+      </div>
+    `;
+  }
+
+  private renderRankedParticipant(profile: ParticipantProfile, index: number) {
     if (profile.publicId === this.participantService.profile?.publicId) {
       return nothing;
     }
@@ -146,8 +225,29 @@ export class ElectionPreview extends MobxLitElement {
       );
     };
 
+    const onDragStart = (event: DragEvent) => {
+      let target = (event.target as HTMLElement);
+      target.style.opacity = '.25';
+
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData('text/plain', profile.publicId);
+      }
+    };
+
+    const onDragEnd = (event: DragEvent) => {
+      let target = (event.target as HTMLElement);
+      target.style.opacity = '';
+    };
+
     return html`
-      <div class="ranked">
+      ${this.renderDragZone(index)}
+      <div
+        class="ranked"
+        draggable="true"
+        .ondragstart=${onDragStart}
+        .ondragend=${onDragEnd}
+      >
         ${this.renderParticipant(profile)}
         <pr-icon-button
           icon="close"
@@ -161,48 +261,21 @@ export class ElectionPreview extends MobxLitElement {
   }
 
   private renderEndZone() {
-    const onDragEnter = (event: DragEvent) => {
-      const target = (event.target as HTMLElement);
-      if (target && event.dataTransfer) {
-        event.preventDefault();
-        event.dataTransfer.dropEffect = 'move';
-      }
-    }
-
-    const onDrop = (event: DragEvent) => {
-      const target = (event.target as HTMLElement);
-      if (target && event.dataTransfer) {
-        event.preventDefault();
-        const stageId = this.routerService.activeRoute.params['stage'];
-        this.participantService.updateVoteForLeaderStage(
-          stageId,
-          [...this.answer?.rankings ?? [], event.dataTransfer.getData('text/plain')]
-        );
-      }
-    };
-
-    const onDragOver = (event: DragEvent) => {
-      event.preventDefault();
-    };
-
     return html`
-      <div class="end-zone"
-        .ondragover=${onDragOver}
-        .ondragenter=${onDragEnter}
-        .ondrop=${onDrop}
-      >
+      <div class="end-zone">
         <div class="zone-header">
           <div class="title">Leader rankings</div>
           <div class="subtitle">
             Drag and drop to rank participants (with most preferred at top)
           </div>
         </div>
-        ${this.answer?.rankings.map((publicId: string) => {
+        ${this.answer?.rankings.map((publicId: string, index: number) => {
           const participant = this.experimentService.getParticipantProfiles()
             .find(profile => profile.publicId === publicId);
 
-          return participant ? this.renderRankedParticipant(participant) : nothing;
+          return participant ? this.renderRankedParticipant(participant, index) : nothing;
         })}
+      ${this.renderDragZone((this.answer?.rankings ?? []).length, true)}
       </div>
     `;
   }

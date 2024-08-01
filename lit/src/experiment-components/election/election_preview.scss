@@ -30,6 +30,7 @@
   border-radius: common.$spacing-medium;
   gap: common.$spacing-medium;
   justify-content: space-between;
+  overflow: hidden;
   padding: common.$spacing-medium;
 }
 
@@ -71,10 +72,22 @@
 
 .end-zone {
   @include common.flex-column;
-  gap: common.$spacing-xl;
   background: var(--md-sys-color-surface);
   border: 1px dashed var(--md-sys-color-outline);
   border-radius: common.$spacing-medium;
   min-height: 200px;
   padding: common.$spacing-xl;
+}
+
+.drag-zone{
+  padding: common.$spacing-medium;
+
+  &.drag-over {
+    height: 80px;
+    transition: height .25s ease-out;
+  }
+
+  &.fill {
+    flex-grow: 1;
+  }
 }
