@@ -129,7 +129,7 @@ export class ElectionPreview extends MobxLitElement {
     return html`
       <div
         class="draggable"
-        draggable="true"
+        draggable=${this.participantService.isCurrentStage()}
         .ondragstart=${onDragStart}
         .ondragend=${onDragEnd}
       >
@@ -244,7 +244,7 @@ export class ElectionPreview extends MobxLitElement {
       ${this.renderDragZone(index)}
       <div
         class="ranked"
-        draggable="true"
+        draggable=${this.participantService.isCurrentStage()}
         .ondragstart=${onDragStart}
         .ondragend=${onDragEnd}
       >
@@ -253,6 +253,7 @@ export class ElectionPreview extends MobxLitElement {
           icon="close"
           color="neutral"
           variant="default"
+          ?disabled=${!this.participantService.isCurrentStage()}
           @click=${onCancel}
         >
         </pr-icon-button>
