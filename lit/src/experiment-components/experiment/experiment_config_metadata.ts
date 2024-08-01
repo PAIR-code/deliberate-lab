@@ -146,7 +146,8 @@ export class ExperimentConfig extends MobxLitElement {
           <label for="isExperimentGroup">
             <div>Create experiment group</div>
             <div class="subtitle">
-              Create a group of experiments with identical settings.
+              Create a group of experiments with identical settings, and/or
+              enables multi-part "lobbies".
             </div>
           </label>
         </div>

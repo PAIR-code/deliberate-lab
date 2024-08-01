@@ -26,6 +26,7 @@ import {
 } from '../shared/callables';
 import {collectSnapshotWithId} from '../shared/utils';
 
+import {ParticipantConfig} from '@llm-mediation-experiments/utils';
 import {FirebaseService} from './firebase_service';
 import {ParticipantService} from './participant_service';
 import {RouterService} from './router_service';
@@ -209,6 +210,11 @@ export class ExperimenterService extends Service {
     );
   }
 
+  private getDefaultParticipantConfig(): ParticipantConfig {
+    return {
+      waitForAllToStart: false,
+    };
+  }
   /** Create an experiment.
    * @rights Experimenter
    */
@@ -223,10 +229,10 @@ export class ExperimenterService extends Service {
     const group = experiment.group ?? '';
     const isLobby = experiment.isLobby ?? false;
     const numberOfParticipants = experiment.numberOfParticipants ?? 0;
-    const numberOfMaxParticipants = experiment.numberOfMaxParticipants ?? 0;
-    const waitForAllToStart = experiment.waitForAllToStart ?? false;
     const prolificRedirectCode = experiment.prolificRedirectCode ?? '';
-    const attentionCheckParams = experiment.attentionCheckParams ?? {};
+    const attentionCheckConfig = experiment.attentionCheckConfig ?? {};
+    const participantConfig =
+      experiment.participantConfig ?? this.getDefaultParticipantConfig();
 
     return createExperimentCallable(this.sp.firebaseService.functions, {
       type: 'experiments',
@@ -238,10 +244,9 @@ export class ExperimenterService extends Service {
         group,
         isLobby,
         numberOfParticipants,
-        numberOfMaxParticipants,
-        waitForAllToStart,
         prolificRedirectCode,
-        attentionCheckParams,
+        attentionCheckConfig,
+        participantConfig,
       },
       stages,
     });
@@ -258,10 +263,10 @@ export class ExperimenterService extends Service {
     const group = experiment.group ?? '';
     const isLobby = experiment.isLobby ?? false;
     const numberOfParticipants = experiment.numberOfParticipants ?? 0;
-    const numberOfMaxParticipants = experiment.numberOfMaxParticipants ?? 0;
-    const waitForAllToStart = experiment.waitForAllToStart ?? false;
     const prolificRedirectCode = experiment.prolificRedirectCode ?? '';
-    const attentionCheckParams = experiment.attentionCheckParams ?? {};
+    const attentionCheckConfig = experiment.attentionCheckConfig ?? {};
+    const participantConfig =
+      experiment.participantConfig ?? this.getDefaultParticipantConfig();
 
     return createExperimentCallable(this.sp.firebaseService.functions, {
       type: 'templates',
@@ -273,10 +278,9 @@ export class ExperimenterService extends Service {
         group,
         isLobby,
         numberOfParticipants,
-        numberOfMaxParticipants,
-        waitForAllToStart,
         prolificRedirectCode,
-        attentionCheckParams,
+        attentionCheckConfig,
+        participantConfig,
       },
       stages,
     });

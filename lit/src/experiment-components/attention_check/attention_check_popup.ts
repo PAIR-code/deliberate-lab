@@ -103,7 +103,7 @@ export class AttentionCheckPopup extends MobxLitElement {
 
     if (this.experimentService.experiment?.prolificRedirectCode) {
       const redirectCode =
-        this.experimentService.experiment?.attentionCheckParams!
+        this.experimentService.experiment?.attentionCheckConfig!
           .prolificAttentionFailRedirectCode ??
         this.experimentService.experiment?.prolificRedirectCode;
       // Navigate to Prolific with completion code.

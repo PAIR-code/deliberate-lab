@@ -54,10 +54,9 @@ export const createExperiment = onCall(async (request) => {
         isLobby,
         group,
         numberOfParticipants,
-        numberOfMaxParticipants,
-        waitForAllToStart,
         prolificRedirectCode,
-        attentionCheckParams,
+        attentionCheckConfig,
+        participantConfig,
       } = data.metadata;
 
       // Create the metadata document
@@ -69,10 +68,9 @@ export const createExperiment = onCall(async (request) => {
         author: { uid: request.auth?.uid, displayName: request.auth?.token?.name ?? '' },
         starred: {},
         isLobby,
-        numberOfMaxParticipants,
-        waitForAllToStart,
         prolificRedirectCode,
-        attentionCheckParams,
+        attentionCheckConfig,
+        participantConfig,
         ...(data.type === 'experiments'
           ? {
               date: Timestamp.now(),

@@ -10,7 +10,12 @@ export interface Experimenter {
   displayName: string;
 }
 
-export interface AttentionCheckParams {
+export interface ParticipantConfig {
+  numberOfMaxParticipants?: number;
+  waitForAllToStart: boolean;
+}
+
+export interface AttentionCheckConfig {
   waitSeconds?: number;
   popupSeconds?: number;
   prolificAttentionFailRedirectCode?: string;
@@ -29,10 +34,9 @@ export interface Experiment {
   isLobby: boolean; // true if lobby experiment
   date: UnifiedTimestamp;
   numberOfParticipants: number;
-  numberOfMaxParticipants: number;
-  waitForAllToStart: boolean;
+  participantConfig: ParticipantConfig;
   prolificRedirectCode?: string; // If specified, will handle Prolific routing.
-  attentionCheckParams?: AttentionCheckParams;
+  attentionCheckConfig?: AttentionCheckConfig;
   // Ordered list of stage IDs
   stageIds: string[];
 

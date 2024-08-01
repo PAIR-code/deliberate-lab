@@ -16,8 +16,8 @@ import {Service} from './service';
 import {
   Experiment,
   lookupTable,
-  LostAtSeaSurveyStagePublicData,
   LostAtSeaQuestionAnswer,
+  LostAtSeaSurveyStagePublicData,
   Message,
   ParticipantProfile,
   ParticipantProfileExtended,
@@ -32,8 +32,8 @@ import {
   VoteForLeaderStagePublicData,
 } from '@llm-mediation-experiments/utils';
 import {downloadJsonFile} from '../shared/file_utils';
-import {collectSnapshotWithId} from '../shared/utils';
 import {AnswerItem} from '../shared/types';
+import {collectSnapshotWithId} from '../shared/utils';
 
 interface ServiceProvider {
   experimenterService: ExperimenterService;
@@ -336,26 +336,26 @@ export class ExperimentService extends Service {
   }
 
   canAddParticipant() {
-    if (this.experiment?.numberOfMaxParticipants! === 0) {
+    if (!this.experiment?.participantConfig.numberOfMaxParticipants) {
       return true;
     } else {
       return (
         this.experiment?.numberOfParticipants! <
-        this.experiment?.numberOfMaxParticipants!
+        this.experiment?.participantConfig.numberOfMaxParticipants!
       );
     }
   }
 
   canStartExperiment() {
     if (
-      !this.experiment?.waitForAllToStart ||
-      !this.experiment?.numberOfMaxParticipants
+      !this.experiment?.participantConfig.waitForAllToStart ||
+      !this.experiment?.participantConfig.numberOfMaxParticipants
     ) {
       return true;
     }
     return (
       this.experiment?.numberOfParticipants! ==
-      this.experiment?.numberOfMaxParticipants!
+      this.experiment?.participantConfig.numberOfMaxParticipants!
     );
   }
   /** Build a signal that tracks whether every participant has at least reached the given stage */
@@ -372,16 +372,25 @@ export class ExperimentService extends Service {
   }
 
   /** Calculate experiment payouts for current payout stage.
-    * Return currency, payout map from participant public ID to value.
-    */
+   * Return currency, payout map from participant public ID to value.
+   */
   getPayouts(stage: PayoutStageConfig) {
     const payouts: Record<string, number> = {}; // participant ID, amount
     this.privateParticipants.forEach((participant) => {
       const getAnswerItems = (item: ScoringItem): AnswerItem[] => {
         // Use leader's answers if indicated, else current participant's answers
         if (item.leaderStageId && item.leaderStageId.length > 0) {
-          const leaderPublicId = (this.publicStageDataMap[item.leaderStageId] as VoteForLeaderStagePublicData).currentLeader ?? '';
-          const leaderAnswers = (this.publicStageDataMap[item.surveyStageId] as LostAtSeaSurveyStagePublicData).participantAnswers[leaderPublicId];
+          const leaderPublicId =
+            (
+              this.publicStageDataMap[
+                item.leaderStageId
+              ] as VoteForLeaderStagePublicData
+            ).currentLeader ?? '';
+          const leaderAnswers = (
+            this.publicStageDataMap[
+              item.surveyStageId
+            ] as LostAtSeaSurveyStagePublicData
+          ).participantAnswers[leaderPublicId];
 
           if (!leaderAnswers) return [];
 
@@ -389,17 +398,24 @@ export class ExperimentService extends Service {
             return {
               ...question,
               leaderPublicId,
-              userAnswer: (leaderAnswers[question.id] as LostAtSeaQuestionAnswer).choice,
+              userAnswer: (
+                leaderAnswers[question.id] as LostAtSeaQuestionAnswer
+              ).choice,
             };
           });
         }
 
-        const userAnswers = (this.publicStageDataMap[item.surveyStageId] as LostAtSeaSurveyStagePublicData).participantAnswers[participant.publicId];
+        const userAnswers = (
+          this.publicStageDataMap[
+            item.surveyStageId
+          ] as LostAtSeaSurveyStagePublicData
+        ).participantAnswers[participant.publicId];
         if (!userAnswers) return [];
         return item.questions.map((question) => {
           return {
             ...question,
-            userAnswer: (userAnswers[question.id] as LostAtSeaQuestionAnswer).choice,
+            userAnswer: (userAnswers[question.id] as LostAtSeaQuestionAnswer)
+              .choice,
           };
         });
       };
@@ -417,14 +433,16 @@ export class ExperimentService extends Service {
 
           const numCorrect = () => {
             let count = 0;
-            answerItems.forEach(answer => {
+            answerItems.forEach((answer) => {
               if (answer.userAnswer === answer.answer) {
                 count += 1;
               }
             });
             return count;
           };
-          score += item.fixedCurrencyAmount + item.currencyAmountPerQuestion * numCorrect();
+          score +=
+            item.fixedCurrencyAmount +
+            item.currencyAmountPerQuestion * numCorrect();
         });
         return score;
       };
@@ -443,7 +461,7 @@ export class ExperimentService extends Service {
       payouts[participant.publicId] = getTotalScore();
     });
 
-    return { currency: stage.currency, payouts };
+    return {currency: stage.currency, payouts};
   }
 
   /** Download experiment as a single JSON file */
@@ -483,12 +501,15 @@ export class ExperimentService extends Service {
             'messages'
           )
         );
-        chats[config.id] = messages.docs.map((doc) => (doc.data() as Message));
+        chats[config.id] = messages.docs.map((doc) => doc.data() as Message);
       }
-    })
+    });
 
     // Get payout answers per stage
-    const payouts: Record<string, { currency: PayoutCurrency, payouts: Record<string, number> }> = {};
+    const payouts: Record<
+      string,
+      {currency: PayoutCurrency; payouts: Record<string, number>}
+    > = {};
     configs.forEach((config) => {
       if (config.kind === StageKind.Payout) {
         payouts[config.id] = this.getPayouts(config);
@@ -521,12 +542,19 @@ export class ExperimentService extends Service {
       stageAnswers.forEach((stageAnswer) => {
         if (!acc[stageAnswer.id]) acc[stageAnswer.id] = {};
 
-        acc[stageAnswer.id][participantId] = (stageAnswer as StageAnswer);
+        acc[stageAnswer.id][participantId] = stageAnswer as StageAnswer;
       });
       return acc;
     }, {} as Record<string, Record<string, StageAnswer>>);
 
-    const stages: Record<string, { config: StageConfig, public: PublicStageData, answers: Record<string, StageAnswer> }> = {};
+    const stages: Record<
+      string,
+      {
+        config: StageConfig;
+        public: PublicStageData;
+        answers: Record<string, StageAnswer>;
+      }
+    > = {};
     configs.forEach((config) => {
       const stagePublicData = publicData[config.id];
       const answers = answersLookup[config.id];

@@ -4,22 +4,22 @@ import '../../pair-components/tooltip';
 
 import '../profile/profile_preview';
 
-import { MobxLitElement } from '@adobe/lit-mobx';
-import { ParticipantProfile } from '@llm-mediation-experiments/utils';
-import { CSSResultGroup, html, nothing } from 'lit';
-import { customElement } from 'lit/decorators.js';
-import { convertUnifiedTimestampToDate } from '../../shared/utils';
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {ParticipantProfile} from '@llm-mediation-experiments/utils';
+import {CSSResultGroup, html, nothing} from 'lit';
+import {customElement} from 'lit/decorators.js';
+import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
-import { core } from '../../core/core';
-import { AuthService } from '../../services/auth_service';
-import { ExperimentConfigService } from '../../services/config/experiment_config_service';
-import { ExperimentService } from '../../services/experiment_service';
-import { ExperimenterService } from '../../services/experimenter_service';
-import { ParticipantService } from '../../services/participant_service';
-import { Pages, RouterService } from '../../services/router_service';
+import {core} from '../../core/core';
+import {AuthService} from '../../services/auth_service';
+import {ExperimentConfigService} from '../../services/config/experiment_config_service';
+import {ExperimentService} from '../../services/experiment_service';
+import {ExperimenterService} from '../../services/experimenter_service';
+import {ParticipantService} from '../../services/participant_service';
+import {Pages, RouterService} from '../../services/router_service';
 
-import { PARTICIPANT_COMPLETION_TYPE } from '@llm-mediation-experiments/utils';
-import { styles } from './experiment_preview.scss';
+import {PARTICIPANT_COMPLETION_TYPE} from '@llm-mediation-experiments/utils';
+import {styles} from './experiment_preview.scss';
 
 /** Experiment preview */
 @customElement('experiment-preview')
@@ -137,36 +137,41 @@ export class ExperimentPreview extends MobxLitElement {
               : ''}
             Create time: ${convertUnifiedTimestampToDate(experiment?.date!)}
             <br />
-            ${experiment?.numberOfMaxParticipants
+            ${experiment?.participantConfig
               ? html`
                   Maximum number of participants:
-                  ${experiment?.numberOfMaxParticipants} <br />
+                  ${experiment?.participantConfig.numberOfMaxParticipants ??
+                  'unrestricted'}
+                  <br />
+                  Wait for all to start:
+                  ${experiment?.participantConfig.waitForAllToStart}
+                  <br />
                 `
               : ''}
             ${experiment?.prolificRedirectCode
               ? html`
                   Prolific redirect code: ${experiment?.prolificRedirectCode}
-                  ${experiment.attentionCheckParams
+                  ${experiment.attentionCheckConfig
                     ?.prolificAttentionFailRedirectCode
                     ? html`, failed redirect code:
-                      ${experiment.attentionCheckParams
+                      ${experiment.attentionCheckConfig
                         ?.prolificAttentionFailRedirectCode}`
                     : ''}
                   <br />
                 `
               : ''}
-            ${experiment?.attentionCheckParams
-              ? html`${experiment.attentionCheckParams.waitSeconds
+            ${experiment?.attentionCheckConfig
+              ? html`${experiment.attentionCheckConfig.waitSeconds
                   ? html`
                       Attention check parameters:
-                      ${experiment.attentionCheckParams.waitSeconds !==
+                      ${experiment.attentionCheckConfig.waitSeconds !==
                       undefined
-                        ? html`${experiment.attentionCheckParams.waitSeconds}
+                        ? html`${experiment.attentionCheckConfig.waitSeconds}
                           seconds wait, `
                         : ''}
-                      ${experiment.attentionCheckParams.popupSeconds !==
+                      ${experiment.attentionCheckConfig.popupSeconds !==
                       undefined
-                        ? html`${experiment.attentionCheckParams.popupSeconds}
+                        ? html`${experiment.attentionCheckConfig.popupSeconds}
                             popup seconds<br />`
                         : ''}
                     `
