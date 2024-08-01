@@ -59,8 +59,13 @@ const AttentionCheckConfigSchema = Type.Object({
   prolificAttentionFailRedirectCode: Type.Optional(Type.String()),
 });
 
+const LobbyConfigSchema = Type.Object({
+  waitSeconds: Type.Optional(Type.Number()),
+  isLobby: Type.Boolean(),
+});
+
 const ParticipantConfigSchema = Type.Object({
-  numberOfMaxParticipants: Type.Optional(Type.Number({ minimum: 1 })),
+  numberOfMaxParticipants: Type.Optional(Type.Number()),
   waitForAllToStart: Type.Boolean(),
 });
 
@@ -80,10 +85,10 @@ export const ExperimentCreationData = Type.Object(
         description: Type.String(),
         tags: Type.Array(Type.String()),
         group: Type.Optional(Type.String()),
-        isLobby: Type.Boolean(),
         numberOfParticipants: Type.Optional(Type.Number({ minimum: 0 })),
         prolificRedirectCode: Type.Optional(Type.String()),
         attentionCheckConfig: Type.Optional(AttentionCheckConfigSchema),
+        lobbyConfig: LobbyConfigSchema,
         participantConfig: ParticipantConfigSchema,
       },
       strict,

@@ -168,7 +168,7 @@ export class ProfilePreview extends MobxLitElement {
             text = 'undefined';
         }
       } else {
-        if (this.experimentService.experiment?.isLobby) {
+        if (this.experimentService.experiment?.lobbyConfig.isLobby) {
           if (
             this.profile?.completionType ===
               PARTICIPANT_COMPLETION_TYPE.SUCCESS ||

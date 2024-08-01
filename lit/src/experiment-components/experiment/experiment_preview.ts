@@ -89,13 +89,13 @@ export class ExperimentPreview extends MobxLitElement {
 
     const getTransferableExperiments = () => {
       // Only allow transferring from the lobby.
-      if (!this.experimentService.experiment?.isLobby) {
+      if (!this.experimentService.experiment?.lobbyConfig.isLobby) {
         return [];
       }
       // Ony fetch other, non-lobby experiments.
       return this.experimenterService
         .getExperimentsInGroup(group)
-        .filter((experiment) => !experiment.isLobby);
+        .filter((experiment) => !experiment.lobbyConfig.isLobby);
     };
 
     const group = this.experimentService.experiment?.group!;
@@ -105,23 +105,27 @@ export class ExperimentPreview extends MobxLitElement {
         !participant.transferConfig && !participant.completedExperiment
     );
     const transferredParticipants = participants.filter(
-      (participant) => participant.transferConfig
+      (participant) =>
+        (participant.completionType &&
+          participant.completionType === PARTICIPANT_COMPLETION_TYPE.SUCCESS) ||
+        (!participant.completionType && participant.transferConfig)
     );
     const failedParticipants = participants.filter(
       (participant) =>
         (participant.completionType &&
           participant.completionType !== PARTICIPANT_COMPLETION_TYPE.SUCCESS) ||
         (!participant.completionType &&
-          this.experimentService.experiment?.isLobby &&
+          this.experimentService.experiment?.lobbyConfig.isLobby &&
           participant.completedExperiment &&
           !participant.transferConfig)
     );
     const completedParticipants = participants.filter(
       (participant) =>
-        participant.completionType === PARTICIPANT_COMPLETION_TYPE.SUCCESS ||
+        (participant.completionType === PARTICIPANT_COMPLETION_TYPE.SUCCESS &&
+          !this.experimentService.experiment?.lobbyConfig.isLobby) ||
         (!participant.completionType &&
           participant.completedExperiment &&
-          !this.experimentService.experiment?.isLobby)
+          !this.experimentService.experiment?.lobbyConfig.isLobby)
     );
 
     const experiment = this.experimentService.experiment;
@@ -140,8 +144,9 @@ export class ExperimentPreview extends MobxLitElement {
             ${experiment?.participantConfig
               ? html`
                   Maximum number of participants:
-                  ${experiment?.participantConfig.numberOfMaxParticipants ??
-                  'unrestricted'}
+                  ${experiment?.participantConfig.numberOfMaxParticipants! > 0
+                    ? experiment?.participantConfig.numberOfMaxParticipants
+                    : 'unrestricted'}
                   <br />
                   Wait for all to start:
                   ${experiment?.participantConfig.waitForAllToStart}
@@ -176,6 +181,13 @@ export class ExperimentPreview extends MobxLitElement {
                         : ''}
                     `
                   : ''}`
+              : ''}
+            ${experiment?.lobbyConfig.isLobby
+              ? html`<br />This experiment is a lobby.
+                  ${experiment?.lobbyConfig.waitSeconds
+                    ? html`Participants will wait up to
+                      ${experiment?.lobbyConfig.waitSeconds} seconds.`
+                    : 'Participants will wait in the lobby indefinitely.'}`
               : ''}
           </div>
           ${this.renderGroup()}

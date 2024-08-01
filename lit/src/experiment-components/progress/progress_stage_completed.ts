@@ -25,7 +25,7 @@ export class Progress extends MobxLitElement {
 
   override render() {
     // Don't render participant progress for the lobby.
-    if (this.experimentService.experiment?.isLobby) {
+    if (this.experimentService.experiment?.lobbyConfig.isLobby) {
       return;
     }
 
@@ -37,7 +37,7 @@ export class Progress extends MobxLitElement {
           .sort((p1, p2) => p1.publicId.localeCompare(p2.publicId))
           .map((participant) => this.renderAvatar(participant))
       : nothing}
-    ${this.experimentService.experiment?.isLobby!
+    ${this.experimentService.experiment?.lobbyConfig.isLobby!
       ? ''
       : html`<div>
           ${completed.length} of ${completed.length + notCompleted.length}

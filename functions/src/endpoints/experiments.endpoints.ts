@@ -51,11 +51,11 @@ export const createExperiment = onCall(async (request) => {
         publicName,
         description,
         tags,
-        isLobby,
         group,
         numberOfParticipants,
         prolificRedirectCode,
         attentionCheckConfig,
+        lobbyConfig,
         participantConfig,
       } = data.metadata;
 
@@ -67,9 +67,9 @@ export const createExperiment = onCall(async (request) => {
         tags,
         author: { uid: request.auth?.uid, displayName: request.auth?.token?.name ?? '' },
         starred: {},
-        isLobby,
         prolificRedirectCode,
         attentionCheckConfig,
+        lobbyConfig,
         participantConfig,
         ...(data.type === 'experiments'
           ? {

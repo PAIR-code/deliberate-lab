@@ -50,14 +50,16 @@ export class ExperimentConfigService extends Service {
   @observable isGroup = false;
   @observable numExperiments = 1;
 
-  @observable isMultiPart = false;
-  @observable dividerStageId = '';
-
   // Attention check config.
   @observable hasAttentionCheck = false;
   @observable waitSeconds?: number = undefined;
   @observable popupSeconds?: number = undefined;
   @observable prolificAttentionFailRedirectCode?: string = undefined;
+
+  // Lobby config.
+  @observable isMultiPart = false;
+  @observable dividerStageId = '';
+  @observable lobbyWaitSeconds?: number = undefined;
 
   @observable stages: StageConfig[] = [createTOSStage(), createProfileStage()];
   @observable currentStageIndex = -1;
@@ -84,8 +86,8 @@ export class ExperimentConfigService extends Service {
 
   getParticipantConfig(): ParticipantConfig {
     return {
-      numberOfMaxParticipants: this.numMaxParticipants,
-      waitForAllToStart: this.waitForAllToStart,
+      numberOfMaxParticipants: this.numMaxParticipants ?? 0,
+      waitForAllToStart: this.waitForAllToStart ?? 0,
     };
   }
 
@@ -116,13 +118,13 @@ export class ExperimentConfigService extends Service {
         description: toJS(this.description),
         group: toJS(this.name),
         stages: convertExperimentStages(toJS(stages)),
-        isLobby: false,
         numberOfParticipants: toJS(this.numParticipants),
         prolificRedirectCode: this.isProlific
           ? toJS(this.prolificRedirectCode)
           : '',
         attentionCheckConfig: this.getAttentionCheckConfig(),
         participantConfig: this.getParticipantConfig(),
+        lobbyConfig: {isLobby: false, waitSeconds: 0},
       });
     }
     return experiments;
@@ -138,13 +140,13 @@ export class ExperimentConfigService extends Service {
           description: toJS(this.description),
           group: toJS(''),
           stages: toJS(this.stages),
-          isLobby: false,
           numberOfParticipants: toJS(this.numParticipants),
           prolificRedirectCode: this.isProlific
             ? toJS(this.prolificRedirectCode)
             : '',
           attentionCheckConfig: this.getAttentionCheckConfig() || {},
-        participantConfig: this.getParticipantConfig(),
+          lobbyConfig: {isLobby: false, waitSeconds: 0},
+          participantConfig: this.getParticipantConfig(),
         },
       ];
     }
@@ -166,16 +168,20 @@ export class ExperimentConfigService extends Service {
         description: toJS(this.description),
         group: toJS(this.name),
         stages: convertExperimentStages(toJS(preStages)),
-        isLobby: true,
         numberOfParticipants: toJS(this.numParticipants),
         prolificRedirectCode: this.isProlific
           ? toJS(this.prolificRedirectCode)
           : '',
         attentionCheckConfig: this.getAttentionCheckConfig(),
+        lobbyConfig: {
+          isLobby: true,
+          waitSeconds: this.lobbyWaitSeconds ?? 0,
+        },
         participantConfig: {
           // No max number of participants in the lobby.
           waitForAllToStart: false,
-        }
+          numberOfMaxParticipants: 0,
+        },
       });
 
       // Create multiExperiments.
@@ -197,7 +203,15 @@ export class ExperimentConfigService extends Service {
         group: toJS(this.name),
         stages: convertExperimentStages(toJS(this.stages)),
         numberOfParticipants: toJS(this.numParticipants),
-        waitForAllToStart: this.waitForAllToStart,
+        lobbyConfig: {
+          isLobby: false,
+          waitSeconds: 0,
+        },
+
+        participantConfig: {
+          numberOfMaxParticipants: this.numMaxParticipants ?? 0,
+          waitForAllToStart: this.waitForAllToStart ?? 0,
+        },
         prolificRedirectCode: this.isProlific
           ? toJS(this.prolificRedirectCode)
           : '',
@@ -211,11 +225,18 @@ export class ExperimentConfigService extends Service {
       group: toJS(''),
       stages: toJS(this.stages),
       numberOfParticipants: toJS(this.numParticipants),
-      waitForAllToStart: this.waitForAllToStart,
+      participantConfig: {
+        numberOfMaxParticipants: this.numMaxParticipants ?? 0,
+        waitForAllToStart: this.waitForAllToStart,
+      },
       prolificRedirectCode: this.isProlific
         ? toJS(this.prolificRedirectCode)
         : '',
       attentionCheckConfig: this.getAttentionCheckConfig(),
+      lobbyConfig: {
+        isLobby: false,
+        waitSeconds: 0,
+      },
     };
   }
 
@@ -328,7 +349,7 @@ export class ExperimentConfigService extends Service {
 
   resetHasMaxNumParticipants() {
     this.hasMaxNumParticipants = false;
-    this.numMaxParticipants = undefined;
+    this.numMaxParticipants = 0;
     this.waitForAllToStart = false;
   }
 
@@ -497,11 +518,11 @@ export class ExperimentConfigService extends Service {
         publicName,
         description,
         stages,
-        isLobby,
         numberOfParticipants,
         group,
         prolificRedirectCode,
         attentionCheckConfig,
+        lobbyConfig,
         participantConfig,
       } = experiments[i];
       const experiment = await this.sp.experimenterService.createExperiment(
@@ -509,11 +530,11 @@ export class ExperimentConfigService extends Service {
           name,
           publicName,
           description,
-          isLobby,
           numberOfParticipants,
           group,
           prolificRedirectCode,
           attentionCheckConfig,
+          lobbyConfig,
           participantConfig,
         },
         stages
