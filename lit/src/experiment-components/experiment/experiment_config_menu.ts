@@ -105,8 +105,11 @@ export class ExperimentConfigMenu extends MobxLitElement {
     }
 
     const onAddLeaderClick = () => {
-      this.experimentConfig.addStage(createVoteForLeaderStage());
-      this.experimentConfig.addStage(createRevealStage());
+      const voteStage = createVoteForLeaderStage();
+      this.experimentConfig.addStage(voteStage);
+      this.experimentConfig.addStage(
+        createRevealStage({stagesToReveal: [voteStage.id]})
+      );
       this.experimentConfig.setCurrentStageIndexToLast();
     };
 

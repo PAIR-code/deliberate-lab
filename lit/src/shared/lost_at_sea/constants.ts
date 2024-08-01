@@ -18,7 +18,7 @@ export const LAS_TOS = [
   "By clicking 'Next,' you accept these terms and proceed with the study.",
 ];
 
-export const LAS_INTRO_DESCRIPTION = `This experiment should take an estimated X minutes.`;
+export const LAS_INTRO_DESCRIPTION = `This experiment is part of a research project that explores human decisions in various online environments. You will complete different tasks, and answer questions. You may also interact with others during the experiment.`;
 export const LAS_INTRO_INFO_LINES = [
   'You will receive a fixed fee of $x for your participation. The experiment also gives you the opportunity to earn a $x bonus, based on your decisions. We will explain precisely how your bonus is determined later.',
   'At the end of the experiment, you will be redirected to a waiting page. This waiting time is part of the experiment and has been factored into your payment. **You will not be approved for the payout if you do not remain on this waiting page for the full requested duration**.',
@@ -117,6 +117,7 @@ export const LAS_GROUP_DISCUSSION_INSTRUCTIONS = [
   '\n\n## Purpose of the Discussion:',
   '* **Debate Object Utility:** The goal is to debate the usefulness of the items using the most relevant and well-developed arguments possible. The more arguments you gather, the more useful it will be for Part 3, where different pairs of the same items will be evaluated. Whoever the leader is, knowing the best arguments will help them make the best decisions in Part 3.',
   '* **Gauge Abilities:** You can see this discussion as an opportunity to assess the abilities of your team members, as you will later vote for a representative whose performance will determine your payout.',
+  '\n\n*Remember, you do not need to agree on which item is most useful; the goal is to present and discuss the strongest arguments for each item.*',
   '\n\nPlease keep these guidelines in mind as you engage in the discussion. Your active participation and thoughtful contributions are crucial for the success of the experiment.',
 ];
 
@@ -194,7 +195,7 @@ export const LAS_PART_3_INSTRUCTIONS = [
 ];
 
 export const LAS_GROUP_CHAT_DESCRIPTION =
-  'Discuss your responses to the previous task with your teammates. Take this opportunity to gauge the abilities of your crewmembers, as you will later vote for a representative whose performance will determine your payout.';
+  'Discuss your responses to the previous task with your teammates. Take this opportunity to gauge the abilities of your crewmembers, as you will later vote for a representative whose performance will determine your payout.\n\n*Remember, you do not need to agree on which item is most useful; the goal is to present and discuss the strongest arguments for each item.*';
 
 export const LAS_REDO_TASK_DESCRIPTION = `Have your opinions on the ordering of the items pairs changed following the discussion with crewmates? Now, please update your initial responses.`;
 

@@ -6,7 +6,6 @@ import {
   QuestionAnswer,
   StageAnswer,
   StageKind,
-  Votes,
   lookupTable,
 } from '@llm-mediation-experiments/utils';
 import {
@@ -228,14 +227,14 @@ export class ParticipantService extends Service {
   /** Update a vote for leader stage for this participant
    * @rights Participant
    */
-  async updateVoteForLeaderStage(stageId: string, votes: Votes) {
+  async updateVoteForLeaderStage(stageId: string, rankings: string[]) {
     return updateStageCallable(this.sp.firebaseService.functions, {
       experimentId: this.experimentId!,
       participantId: this.participantId!,
       stageId,
       stage: {
         kind: StageKind.VoteForLeader,
-        votes,
+        rankings,
       },
     });
   }
