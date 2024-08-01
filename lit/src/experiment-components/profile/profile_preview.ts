@@ -23,6 +23,7 @@ import {
 } from '@llm-mediation-experiments/utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
+import {PARTICIPANT_COMPLETION_TYPE} from '@llm-mediation-experiments/utils';
 import {styles} from './profile_preview.scss';
 
 /** Full participant profile preview */
@@ -116,7 +117,11 @@ export class ProfilePreview extends MobxLitElement {
 
     if (this.profile?.completedExperiment) {
       if (this.experimentService.experiment?.isLobby) {
-        if (this.profile?.transferConfig) {
+        if (
+          this.profile?.completionType ===
+            PARTICIPANT_COMPLETION_TYPE.SUCCESS ||
+          this.profile?.transferConfig
+        ) {
           color = 'success';
           text = 'completed';
         } else {

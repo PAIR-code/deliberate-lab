@@ -10,6 +10,7 @@ import {ParticipantService} from '../../services/participant_service';
 import {Pages, RouterService} from '../../services/router_service';
 import {SurveyService} from '../../services/survey_service';
 
+import {PARTICIPANT_COMPLETION_TYPE} from '@llm-mediation-experiments/utils';
 import {PROLIFIC_COMPLETION_URL_PREFIX} from '../../shared/constants';
 import {styles} from './footer.scss';
 
@@ -60,7 +61,7 @@ export class Footer extends MobxLitElement {
   handleTimedOut() {
     this.clearCountdown();
     alert('Time is up, the experiment has ended!');
-    this.redirectEndExperiment();
+    this.redirectEndExperiment(PARTICIPANT_COMPLETION_TYPE.LOBBY_TIMEOUT);
   }
 
   startCountdown() {
@@ -90,8 +91,10 @@ export class Footer extends MobxLitElement {
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   }
 
-  redirectEndExperiment() {
-    this.participantService.markExperimentCompleted();
+  redirectEndExperiment(
+    completionType: PARTICIPANT_COMPLETION_TYPE = PARTICIPANT_COMPLETION_TYPE.SUCCESS
+  ) {
+    this.participantService.markExperimentCompleted(completionType);
 
     if (this.experimentService.experiment?.prolificRedirectCode) {
       // Navigate to Prolific with completion code.
