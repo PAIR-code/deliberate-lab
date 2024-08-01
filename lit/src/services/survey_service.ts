@@ -85,13 +85,13 @@ export class SurveyService extends Service {
   }
 
   async saveTextAnswers() {
-    for (const key in Object.keys(this.textAnswers)) {
+    for (const key of Object.keys(this.textAnswers)) {
       const id = Number(key);
       const answer: TextQuestionAnswer = {
         id,
         kind: SurveyQuestionKind.Text,
         answerText: this.textAnswers[id] ?? '',
-      }
+      };
       await this.sp.participantService.updateSurveyStage(
         this.sp.participantService.profile!.currentStageId,
         [answer]
