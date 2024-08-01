@@ -1,24 +1,24 @@
-import "../../pair-components/button";
-import "../../pair-components/icon_button";
-import "../../pair-components/textarea";
-import "../../pair-components/tooltip";
+import '../../pair-components/button';
+import '../../pair-components/icon_button';
+import '../../pair-components/textarea';
+import '../../pair-components/tooltip';
 
-import "@material/web/checkbox/checkbox.js";
+import '@material/web/checkbox/checkbox.js';
 
-import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html, nothing } from "lit";
-import { customElement } from "lit/decorators.js";
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {CSSResultGroup, html, nothing} from 'lit';
+import {customElement} from 'lit/decorators.js';
 
-import { core } from "../../core/core";
-import { AuthService } from "../../services/auth_service";
-import { ExperimentConfigService } from "../../services/config/experiment_config_service";
-import { RouterService } from "../../services/router_service";
+import {core} from '../../core/core';
+import {AuthService} from '../../services/auth_service';
+import {ExperimentConfigService} from '../../services/config/experiment_config_service';
+import {RouterService} from '../../services/router_service';
 
-import { ExperimenterService } from "../../services/experimenter_service";
-import { styles } from "./experiment_config_metadata.scss";
+import {ExperimenterService} from '../../services/experimenter_service';
+import {styles} from './experiment_config_metadata.scss';
 
 /** Metadata for experiment config page */
-@customElement("experiment-config-metadata")
+@customElement('experiment-config-metadata')
 export class ExperimentConfig extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -33,24 +33,27 @@ export class ExperimentConfig extends MobxLitElement {
     }
 
     return html`
-      ${this.renderGroupToggle()}
-      ${this.renderNameFields()}
-      ${this.renderDescriptionField()}
-      ${this.renderProlificLogic()}
-      ${this.renderConstrainParticipantsToggle()}
-      ${this.renderGroupConfig()}
+      ${this.renderExperimentDetailFields()} ${this.renderGroupToggle()}
+      ${this.renderConstrainParticipantsToggle()} ${this.renderProlificLogic()}
     `;
   }
 
+  private renderExperimentDetailFields() {
+    return html`
+      <h2>📕 Metadata</h2>
+      ${this.renderNameFields()} ${this.renderDescriptionField()}
+      <div class="divider"></div>
+    `;
+  }
   private renderDescriptionField() {
     const handleDescription = (e: Event) => {
       const value = (e.target as HTMLTextAreaElement).value;
       this.experimentConfig.updateDescription(value);
-    }
+    };
 
     return html`
       <pr-textarea
-        label="Private experiment description"
+        label="Internal experiment description"
         placeholder="This description is only visible to experimenters"
         variant="outlined"
         .value=${this.experimentConfig.description}
@@ -67,12 +70,12 @@ export class ExperimentConfig extends MobxLitElement {
     };
 
     return html`
-      <div class="number-input">
-        <label for="num">Maximum number of participants</label>
+      <div class="number-input tab">
+        <label for="num">Maximum participants</label>
         <input
           type="number"
           id="num"
-          name="numParticipants"
+          njkime="numParticipants"
           min="0"
           placeholder="Leave this blank if there is no threshold"
           .value=${this.experimentConfig.numMaxParticipants}
@@ -95,30 +98,30 @@ export class ExperimentConfig extends MobxLitElement {
 
     const getExperimentNameLabel = () => {
       if (this.experimentConfig.isGroup) {
-        return "Experiment group name (private)*";
+        return 'Internal experiment group name*';
       }
-      return "Experiment name (private)*";
-    }
+      return 'Internal experiment name*';
+    };
 
     return html`
       <pr-textarea
-        label=${getExperimentNameLabel()}
-        placeholder="Internal experiment name"}
-        variant="outlined"
-        class="required"
-        .value=${this.experimentConfig.name}
-        @input=${handleName}
-      >
-      </pr-textarea>
-      <pr-textarea
-        label="Public-facing experiment name (visible to participants)"
+        label="Public experiment name (visible to participants)"
         placeholder="Public experiment name"
         variant="outlined"
         .value=${this.experimentConfig.publicName}
         @input=${handlePublicName}
       >
       </pr-textarea>
-
+      <pr-textarea
+        label=${getExperimentNameLabel()}
+        placeholder="Internal experiment name"
+        }
+        variant="outlined"
+        class="required"
+        .value=${this.experimentConfig.name}
+        @input=${handleName}
+      >
+      </pr-textarea>
     `;
   }
 
@@ -129,21 +132,29 @@ export class ExperimentConfig extends MobxLitElement {
     };
 
     return html`
+      <h2>📚 Experiment group configuration</h2>
+
       <div class="checkbox-input-container">
         <div class="checkbox-input">
-          <md-checkbox id="isExperimentGroup" touch-target="wrapper"
+          <md-checkbox
+            id="isExperimentGroup"
+            touch-target="wrapper"
             .checked=${this.experimentConfig.isGroup}
             @change=${handleGroupCheckbox}
           ></md-checkbox>
           <label for="isExperimentGroup">
-            <div>Create a group of experiments</div>
-            <div class="subtitle">The experiment group options allow you to create a group of experiments with the same configuration.</div>
+            <div>Create experiment group</div>
+            <div class="subtitle">
+              Create a group of experiments with identical settings.
+            </div>
           </label>
         </div>
       </div>
+      ${this.experimentConfig.isGroup ? this.renderGroupConfig() : ''}
+      <div class="divider"></div>
     `;
   }
-   
+
   private renderConstrainParticipantsToggle() {
     const handleConstrainToggle = (e: Event) => {
       const checked = Boolean((e.target as HTMLInputElement).checked);
@@ -154,23 +165,32 @@ export class ExperimentConfig extends MobxLitElement {
     };
 
     return html`
+      <h2>👥 Participant management</h2>
       <div class="checkbox-input-container">
         <div class="checkbox-input">
-          <md-checkbox id="constrainMaxParticipants" touch-target="wrapper"
+          <md-checkbox
+            id="constrainMaxParticipants"
+            touch-target="wrapper"
             .checked=${this.experimentConfig.hasMaxNumParticipants}
             @change=${handleConstrainToggle}
           ></md-checkbox>
           <label for="constrainMaxParticipants">
-            <div>Limit the number of participants</div>
+            <div>Limit participant enrollment</div>
+            <div class="subtitle">
+              Restrict the total number of participants for the experiment.
+            </div>
           </label>
         </div>
       </div>
-    
-      ${this.experimentConfig.hasMaxNumParticipants ? 
-        html`
-          ${this.renderNumMaxParticipantsField()}
-          ${this.renderWaitForAllToStartToggle()}
-        `: ''}
+
+      ${this.experimentConfig.hasMaxNumParticipants
+        ? html`
+            ${this.renderNumMaxParticipantsField()}
+            ${this.renderWaitForAllToStartToggle()}
+          `
+        : ''}
+
+      <div class="divider"></div>
     `;
   }
 
@@ -181,40 +201,49 @@ export class ExperimentConfig extends MobxLitElement {
     };
 
     return html`
+      <h2>🌅 Prolific integration</h2>
       <div class="checkbox-input-container">
         <div class="checkbox-input">
-          <md-checkbox id="isProlific" touch-target="wrapper"
+          <md-checkbox
+            id="isProlific"
+            touch-target="wrapper"
             .checked=${this.experimentConfig.isProlific}
             @change=${handleIsProlific}
           ></md-checkbox>
           <label for="waitForAll">
-            <div>${this.experimentConfig.isGroup ? 'These experiments are' : 'This experiment is'} hosted on Prolific 🌅</div>
+            <div>
+              Host on Prolific
+              <div class="subtitle">
+                Enable integration with Prolific for this experiment.
+              </div>
+            </div>
           </label>
         </div>
       </div>
 
-      ${this.experimentConfig.isProlific ?
-      html`
-      ${this.renderProlificCodeField()}` : ''}
+      ${this.experimentConfig.isProlific
+        ? html` ${this.renderProlificCodeField()}`
+        : ''}
+      <div class="divider"></div>
     `;
   }
 
   private renderProlificCodeField() {
-      const handleCode = (e: Event) => {
-        const value = (e.target as HTMLTextAreaElement).value;
-        this.experimentConfig.updateProlificRedirectCode(value);
-      }
-  
-      return html`
-        <pr-textarea
-          label="Prolific completion code"
-          placeholder="This code will redirect participants to Prolific"
-          variant="outlined"
-          .value=${this.experimentConfig.prolificRedirectCode}
-          @input=${handleCode}
-        >
-        </pr-textarea>
-      `;
+    const handleCode = (e: Event) => {
+      const value = (e.target as HTMLTextAreaElement).value;
+      this.experimentConfig.updateProlificRedirectCode(value);
+    };
+
+    return html`
+      <pr-textarea
+        label="Prolific completion code"
+        placeholder="This code will redirect participants to Prolific"
+        variant="outlined"
+        .value=${this.experimentConfig.prolificRedirectCode}
+        @input=${handleCode}
+      >
+      </pr-textarea>
+    `;
   }
 
   private renderWaitForAllToStartToggle() {
@@ -226,12 +255,18 @@ export class ExperimentConfig extends MobxLitElement {
     return html`
       <div class="checkbox-input-container">
         <div class="checkbox-input">
-          <md-checkbox id="waitForAll" touch-target="wrapper"
+          <md-checkbox
+            id="waitForAll"
+            touch-target="wrapper"
             .checked=${this.experimentConfig.waitForAllToStart}
             @change=${handleStartToggle}
           ></md-checkbox>
           <label for="waitForAll">
-            <div>Wait for all participants to join before allowing the experiment to start</div>
+            <div>Wait for full enrollment</div>
+            <div class="subtitle">
+              Ensure the experiment starts only when all participants have
+              joined.
+            </div>
           </label>
         </div>
       </div>
@@ -239,10 +274,6 @@ export class ExperimentConfig extends MobxLitElement {
   }
 
   private renderGroupConfig() {
-    if (!this.experimentConfig.isGroup) {
-      return nothing;
-    }
-
     const handleGroupNum = (e: Event) => {
       const num = Number((e.target as HTMLTextAreaElement).value);
       this.experimentConfig.updateNumExperiments(num);
@@ -254,10 +285,8 @@ export class ExperimentConfig extends MobxLitElement {
     };
 
     return html`
-      <div class="divider"></div>
-      <h2>Group-specific settings</h2>
-      <div class="number-input">
-        <label for="num">Number of experiments</label>
+      <div class="number-input tab">
+        <label for="num">Number of experiments in group</label>
         <input
           type="number"
           id="numExperiments"
@@ -268,14 +297,17 @@ export class ExperimentConfig extends MobxLitElement {
         />
       </div>
       <div class="checkbox-input">
-        <md-checkbox id="isExperimentGroup" touch-target="wrapper"
+        <md-checkbox
+          id="isExperimentGroup"
+          touch-target="wrapper"
           .checked=${this.experimentConfig.isMultiPart}
           @change=${handleMultiPartCheckbox}
         ></md-checkbox>
         <label for="isExperimentGroup">
-          <div>Create a muti-part experiment</div>
+          <div>Create muti-part experiment</div>
           <div class="subtitle">
-            This will add a "lobby" stage; move the stage to divide your experiment into two parts. A lobby experiment will be created for the first part. You can redirect people to the second experiment.
+            Add a "lobby" stage to divide your experiment into two parts. You
+            can redirect people to the second part of the experiment.
           </div>
         </label>
       </div>
@@ -285,6 +317,6 @@ export class ExperimentConfig extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "experiment-config-metadata": ExperimentConfig;
+    'experiment-config-metadata': ExperimentConfig;
   }
 }
