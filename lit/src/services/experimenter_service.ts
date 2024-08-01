@@ -26,10 +26,10 @@ import {
 } from '../shared/callables';
 import {collectSnapshotWithId} from '../shared/utils';
 
-import { FirebaseService } from "./firebase_service";
-import { ParticipantService } from "./participant_service";
-import { RouterService } from "./router_service";
-import { Service } from "./service";
+import {FirebaseService} from './firebase_service';
+import {ParticipantService} from './participant_service';
+import {RouterService} from './router_service';
+import {Service} from './service';
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
@@ -226,6 +226,7 @@ export class ExperimenterService extends Service {
     const numberOfMaxParticipants = experiment.numberOfMaxParticipants ?? 0;
     const waitForAllToStart = experiment.waitForAllToStart ?? false;
     const prolificRedirectCode = experiment.prolificRedirectCode ?? '';
+    const attentionCheckParams = experiment.attentionCheckParams ?? {};
 
     return createExperimentCallable(this.sp.firebaseService.functions, {
       type: 'experiments',
@@ -240,6 +241,7 @@ export class ExperimenterService extends Service {
         numberOfMaxParticipants,
         waitForAllToStart,
         prolificRedirectCode,
+        attentionCheckParams,
       },
       stages,
     });
@@ -259,6 +261,7 @@ export class ExperimenterService extends Service {
     const numberOfMaxParticipants = experiment.numberOfMaxParticipants ?? 0;
     const waitForAllToStart = experiment.waitForAllToStart ?? false;
     const prolificRedirectCode = experiment.prolificRedirectCode ?? '';
+    const attentionCheckParams = experiment.attentionCheckParams ?? {};
 
     return createExperimentCallable(this.sp.firebaseService.functions, {
       type: 'templates',
@@ -273,6 +276,7 @@ export class ExperimenterService extends Service {
         numberOfMaxParticipants,
         waitForAllToStart,
         prolificRedirectCode,
+        attentionCheckParams,
       },
       stages,
     });
@@ -309,7 +313,9 @@ export class ExperimenterService extends Service {
     try {
       // Create transfer participant in new experiment
       const response = await this.createParticipant(
-        newExperimentId, participant, currentExperimentId
+        newExperimentId,
+        participant,
+        currentExperimentId
       );
 
       // Mark participant as transferred in old experiment

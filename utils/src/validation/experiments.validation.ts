@@ -53,6 +53,11 @@ export const ExperimentDeletionData = Type.Object(
 
 export type ExperimentDeletionData = Static<typeof ExperimentDeletionData>;
 
+const AttentionCheckParamsSchema = Type.Object({
+  waitSeconds: Type.Optional(Type.Number({ minimum: 0 })),
+  popupSeconds: Type.Optional(Type.Number({ minimum: 0 })),
+  prolificAttentionFailRedirectCode: Type.Optional(Type.String()),
+});
 /**
  * Generic experiment or template creation data
  */
@@ -74,6 +79,7 @@ export const ExperimentCreationData = Type.Object(
         numberOfMaxParticipants: Type.Optional(Type.Number({ minimum: 0 })),
         waitForAllToStart: Type.Boolean(),
         prolificRedirectCode: Type.Optional(Type.String()),
+        attentionCheckParams: Type.Optional(AttentionCheckParamsSchema),
       },
       strict,
     ),

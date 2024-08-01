@@ -1,6 +1,7 @@
-import "../../pair-components/icon";
+import '../../pair-components/icon';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
+import {PARTICIPANT_COMPLETION_TYPE} from '@llm-mediation-experiments/utils';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 import {core} from '../../core/core';
@@ -96,13 +97,17 @@ export class AttentionCheckPopup extends MobxLitElement {
   private handleFailedAttentionCheck = () => {
     this.showAttentionCheck = false;
     alert('Attention check failed.');
-    this.participantService.markExperimentCompleted();
+    this.participantService.markExperimentCompleted(
+      PARTICIPANT_COMPLETION_TYPE.ATTENTION_TIMEOUT
+    );
 
     if (this.experimentService.experiment?.prolificRedirectCode) {
-      // Navigate to Prolific with completion code.
-      window.location.href =
-        PROLIFIC_COMPLETION_URL_PREFIX +
+      const redirectCode =
+        this.experimentService.experiment?.attentionCheckParams!
+          .prolificAttentionFailRedirectCode ??
         this.experimentService.experiment?.prolificRedirectCode;
+      // Navigate to Prolific with completion code.
+      window.location.href = PROLIFIC_COMPLETION_URL_PREFIX + redirectCode;
     } else {
       // TODO: navigate to an end-of-experiment payout page
       this.routerService.navigate(Pages.HOME);
@@ -125,7 +130,11 @@ export class AttentionCheckPopup extends MobxLitElement {
             <div>Time remaining until experiment ends:</div>
             <div class="time">${this.countdown} seconds</div>
           </div>
-          <pr-button color="secondary" variant="tonal" @click=${this.handleAttentionCheckResponse}>
+          <pr-button
+            color="secondary"
+            variant="tonal"
+            @click=${this.handleAttentionCheckResponse}
+          >
             Yes, continue experiment
           </pr-button>
         </div>

@@ -18,6 +18,7 @@ import {ExperimenterService} from '../../services/experimenter_service';
 import {ParticipantService} from '../../services/participant_service';
 import {Pages, RouterService} from '../../services/router_service';
 
+import {PARTICIPANT_COMPLETION_TYPE} from '@llm-mediation-experiments/utils';
 import {styles} from './experiment_preview.scss';
 
 /** Experiment preview */
@@ -108,14 +109,21 @@ export class ExperimentPreview extends MobxLitElement {
     );
     const timedOutParticipants = participants.filter(
       (participant) =>
-        this.experimentService.experiment?.isLobby &&
-        participant.completedExperiment &&
-        !participant.transferConfig
+        participant.completionType ===
+          PARTICIPANT_COMPLETION_TYPE.ATTENTION_TIMEOUT ||
+        participant.completionType ===
+          PARTICIPANT_COMPLETION_TYPE.LOBBY_TIMEOUT ||
+        (!participant.completionType &&
+          this.experimentService.experiment?.isLobby &&
+          participant.completedExperiment &&
+          !participant.transferConfig)
     );
     const completedParticipants = participants.filter(
       (participant) =>
-        participant.completedExperiment &&
-        !this.experimentService.experiment?.isLobby
+        participant.completionType === PARTICIPANT_COMPLETION_TYPE.SUCCESS ||
+        (!participant.completionType &&
+          participant.completedExperiment &&
+          !this.experimentService.experiment?.isLobby)
     );
 
     const experiment = this.experimentService.experiment;
@@ -140,8 +148,31 @@ export class ExperimentPreview extends MobxLitElement {
             ${experiment?.prolificRedirectCode
               ? html`
                   Prolific redirect code: ${experiment?.prolificRedirectCode}
+                  ${experiment.attentionCheckParams
+                    ?.prolificAttentionFailRedirectCode
+                    ? html`, failed redirect code:
+                      ${experiment.attentionCheckParams
+                        ?.prolificAttentionFailRedirectCode}`
+                    : ''}
                   <br />
                 `
+              : ''}
+            ${experiment?.attentionCheckParams
+              ? html`${experiment.attentionCheckParams.waitSeconds
+                  ? html`
+                      Attention check parameters:
+                      ${experiment.attentionCheckParams.waitSeconds !==
+                      undefined
+                        ? html`${experiment.attentionCheckParams.waitSeconds}
+                          seconds wait, `
+                        : ''}
+                      ${experiment.attentionCheckParams.popupSeconds !==
+                      undefined
+                        ? html`${experiment.attentionCheckParams.popupSeconds}
+                            popup seconds<br />`
+                        : ''}
+                    `
+                  : ''}`
               : ''}
           </div>
           ${this.renderGroup()}

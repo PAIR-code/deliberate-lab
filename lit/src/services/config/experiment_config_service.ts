@@ -1,19 +1,26 @@
-import { collection, getDocs } from "firebase/firestore";
-import { computed, makeObservable, observable, toJS } from "mobx";
+import {collection, getDocs} from 'firebase/firestore';
+import {computed, makeObservable, observable, toJS} from 'mobx';
 
-import { ExperimenterService } from "../experimenter_service";
-import { FirebaseService } from "../firebase_service";
-import { Pages, RouterService } from "../router_service";
-import { Service } from "../service";
+import {ExperimenterService} from '../experimenter_service';
+import {FirebaseService} from '../firebase_service';
+import {Pages, RouterService} from '../router_service';
+import {Service} from '../service';
 
-import { ExperimentTemplate, randstr, StageConfig, StageKind, validateStageConfigs } from "@llm-mediation-experiments/utils";
+import {
+  AttentionCheckParams,
+  ExperimentTemplate,
+  randstr,
+  StageConfig,
+  StageKind,
+  validateStageConfigs,
+} from '@llm-mediation-experiments/utils';
 import {
   collectSnapshotWithId,
   convertExperimentStages,
   createInfoStage,
   createProfileStage,
-  createTOSStage
-} from "../../shared/utils";
+  createTOSStage,
+} from '../../shared/utils';
 
 interface ServiceProvider {
   experimenterService: ExperimenterService;
@@ -42,16 +49,36 @@ export class ExperimentConfigService extends Service {
   @observable numExperiments = 1;
 
   @observable isMultiPart = false;
-  @observable dividerStageId = "";
+  @observable dividerStageId = '';
+
+  // Attention check params.
+  @observable hasAttentionCheck = false;
+  @observable waitSeconds?: number = undefined;
+  @observable popupSeconds?: number = undefined;
+  @observable prolificAttentionFailRedirectCode?: string = undefined;
 
   @observable stages: StageConfig[] = [createTOSStage(), createProfileStage()];
   @observable currentStageIndex = -1;
 
-
   // Prolific config.
   @observable isProlific = false;
-  @observable prolificRedirectCode = "";
+  @observable prolificRedirectCode = '';
 
+  getAttentionCheckParams(): AttentionCheckParams | undefined {
+    if (
+      this.waitSeconds ||
+      this.popupSeconds ||
+      this.prolificAttentionFailRedirectCode
+    ) {
+      return {
+        waitSeconds: this.waitSeconds,
+        popupSeconds: this.popupSeconds,
+        prolificAttentionFailRedirectCode:
+          this.prolificAttentionFailRedirectCode,
+      };
+    }
+    return undefined;
+  }
   // Loads template as current config
   loadTemplate(templateId: string, template: Partial<ExperimentTemplate>) {
     const templateCollection = collection(
@@ -61,8 +88,8 @@ export class ExperimentConfigService extends Service {
       'stages'
     );
 
-    getDocs(templateCollection).then(stagesDocs => {
-      const stages = (collectSnapshotWithId(stagesDocs, 'name') as StageConfig[]);
+    getDocs(templateCollection).then((stagesDocs) => {
+      const stages = collectSnapshotWithId(stagesDocs, 'name') as StageConfig[];
       this.stages = stages;
       this.name = template.name ?? 'Untitled';
       this.publicName = template.publicName ?? 'Experiment';
@@ -83,7 +110,10 @@ export class ExperimentConfigService extends Service {
         numberOfParticipants: toJS(this.numParticipants),
         numberOfMaxParticipants: toJS(this.getNumMaxParticipants()),
         waitForAllToStart: this.waitForAllToStart,
-        prolificRedirectCode: this.isProlific ? toJS(this.prolificRedirectCode) : '',
+        prolificRedirectCode: this.isProlific
+          ? toJS(this.prolificRedirectCode)
+          : '',
+        attentionCheckParams: this.getAttentionCheckParams(),
       });
     }
     return experiments;
@@ -103,12 +133,17 @@ export class ExperimentConfigService extends Service {
           numberOfParticipants: toJS(this.numParticipants),
           numberOfMaxParticipants: toJS(this.getNumMaxParticipants()),
           waitForAllToStart: this.waitForAllToStart,
-          prolificRedirectCode: this.isProlific ? toJS(this.prolificRedirectCode) : '',
-        }
+          prolificRedirectCode: this.isProlific
+            ? toJS(this.prolificRedirectCode)
+            : '',
+          attentionCheckParams: this.getAttentionCheckParams() || {},
+        },
       ];
     }
 
-    const dividerIndex: number = this.stages.findIndex(stage => stage.id === this.dividerStageId);
+    const dividerIndex: number = this.stages.findIndex(
+      (stage) => stage.id === this.dividerStageId
+    );
     if (!this.isMultiPart || dividerIndex == -1) {
       return this.getMultiExperiments(this.numExperiments, this.stages);
     } else {
@@ -128,20 +163,23 @@ export class ExperimentConfigService extends Service {
         // No limit of participants to lobby.
         numberOfMaxParticipants: toJS(0),
         waitForAllToStart: false,
-        prolificRedirectCode: this.isProlific ? toJS(this.prolificRedirectCode) : '',
+        prolificRedirectCode: this.isProlific
+          ? toJS(this.prolificRedirectCode)
+          : '',
+        attentionCheckParams: this.getAttentionCheckParams(),
       });
 
       // Create multiExperiments.
-      experiments.push(...this.getMultiExperiments(this.numExperiments, this.stages));
+      experiments.push(
+        ...this.getMultiExperiments(this.numExperiments, this.stages)
+      );
       return experiments;
     }
-
   }
 
   // Converts and returns data required for experiment creation
   // (note that this adjusts some stage data, e.g., adds numbering to stages)
-  getExperiment(experimentType = "default") {
-
+  getExperiment(experimentType = 'default') {
     if (this.isGroup) {
       return {
         name: toJS(this.name + '_' + randstr(6)),
@@ -151,7 +189,10 @@ export class ExperimentConfigService extends Service {
         stages: convertExperimentStages(toJS(this.stages)),
         numberOfParticipants: toJS(this.numParticipants),
         waitForAllToStart: this.waitForAllToStart,
-        prolificRedirectCode: this.isProlific ? toJS(this.prolificRedirectCode) : '',
+        prolificRedirectCode: this.isProlific
+          ? toJS(this.prolificRedirectCode)
+          : '',
+        attentionCheckParams: this.getAttentionCheckParams(),
       };
     }
     return {
@@ -162,7 +203,10 @@ export class ExperimentConfigService extends Service {
       stages: toJS(this.stages),
       numberOfParticipants: toJS(this.numParticipants),
       waitForAllToStart: this.waitForAllToStart,
-      prolificRedirectCode: this.isProlific ? toJS(this.prolificRedirectCode) : '',
+      prolificRedirectCode: this.isProlific
+        ? toJS(this.prolificRedirectCode)
+        : '',
+      attentionCheckParams: this.getAttentionCheckParams(),
     };
   }
 
@@ -171,39 +215,62 @@ export class ExperimentConfigService extends Service {
 
     if (this.isGroup) {
       if (this.name.length === 0) {
-        errors.push("Experiment group name cannot be empty");
+        errors.push('Experiment group name cannot be empty');
       }
 
       const alphanumRegex = /[^a-zA-Z0-9_-]/;
       if (alphanumRegex.test(this.name)) {
-        errors.push("Only alphanumeric characters, underscores (_), and hyphens (-) are allowed.");
+        errors.push(
+          'Only alphanumeric characters, underscores (_), and hyphens (-) are allowed.'
+        );
       }
     } else {
       if (this.name.length === 0) {
-        errors.push("Experiment name cannot be empty");
+        errors.push('Internal experiment name cannot be empty');
       }
     }
 
     if (this.stages.length === 0) {
-      errors.push("Experiment needs at least one stage");
+      errors.push('Experiment needs at least one stage');
     }
 
     if (this.isMultiPart) {
-      const dividerIndex = this.stages.findIndex(stage => stage.id === this.dividerStageId);
+      const dividerIndex = this.stages.findIndex(
+        (stage) => stage.id === this.dividerStageId
+      );
       if (dividerIndex !== -1 && dividerIndex == this.stages.length - 1) {
-        errors.push("Divider stage cannot be the last stage.");
+        errors.push('Divider stage cannot be the last stage.');
       }
     }
 
+    if (this.isProlific && !this.prolificRedirectCode) {
+      errors.push('A prolific redirect code must be provided.');
+    }
     if (this.hasMaxNumParticipants && !this.numMaxParticipants) {
-      errors.push("If limiting the number of participants, provide the maximum number of participants threshold.");
+      errors.push(
+        'If limiting the number of participants, provide the maximum number of participants threshold.'
+      );
+    }
+
+    if (this.hasAttentionCheck && !this.waitSeconds) {
+      errors.push(
+        'The amount of time before an attention check must be provided if attention checks are enabled.'
+      );
+    }
+    if (
+      (this.popupSeconds && !this.waitSeconds) ||
+      (this.waitSeconds && !this.popupSeconds)
+    ) {
+      errors.push(
+        'Both a wait time and a popup display time must be provided if attention checks are enabled.'
+      );
     }
 
     return errors;
   }
 
   getStage(stageId: string) {
-    return this.stages.find(stage => stage.id === stageId);
+    return this.stages.find((stage) => stage.id === stageId);
   }
 
   setCurrentStageIndex(index: number) {
@@ -215,13 +282,15 @@ export class ExperimentConfigService extends Service {
   }
 
   @computed get currentStage() {
-    if (this.currentStageIndex < 0 ||
-      this.currentStageIndex >= this.stages.length) {
+    if (
+      this.currentStageIndex < 0 ||
+      this.currentStageIndex >= this.stages.length
+    ) {
       return null;
     }
     return this.stages[this.currentStageIndex];
   }
-  
+
   getNumMaxParticipants() {
     if (!this.hasMaxNumParticipants) {
       return 0;
@@ -262,9 +331,9 @@ export class ExperimentConfigService extends Service {
     this.isProlific = checkbox;
     if (!checkbox) {
       this.prolificRedirectCode = '';
+      this.prolificAttentionFailRedirectCode = undefined;
     }
   }
-
 
   updateProlificRedirectCode(code: string) {
     this.prolificRedirectCode = code;
@@ -283,16 +352,37 @@ export class ExperimentConfigService extends Service {
     if (checkbox) {
       const dividerStage = createInfoStage({
         name: 'Lobby',
-        description: 'Wait to be redirected.'
+        description: 'Wait to be redirected.',
       });
       this.dividerStageId = dividerStage.id;
       this.addStage(dividerStage);
     } else {
-      const dividerIndex = this.stages.findIndex(stage => stage.id === this.dividerStageId);
+      const dividerIndex = this.stages.findIndex(
+        (stage) => stage.id === this.dividerStageId
+      );
       if (dividerIndex !== -1) {
         this.deleteStage(dividerIndex);
       }
     }
+  }
+
+  updateWaitSeconds(num: number) {
+    this.waitSeconds = num;
+  }
+
+  updatePopupSeconds(num: number) {
+    this.popupSeconds = num;
+  }
+
+  updateProlificFailCode(code: string) {
+    this.prolificAttentionFailRedirectCode = code;
+  }
+
+  resetAttentionCheck() {
+    this.hasAttentionCheck = false;
+    this.waitSeconds = undefined;
+    this.popupSeconds = undefined;
+    this.prolificAttentionFailRedirectCode = undefined;
   }
 
   updateNumExperiments(num: number) {
@@ -313,7 +403,10 @@ export class ExperimentConfigService extends Service {
     }
   }
 
-  updateStageDescription(description: string, stageIndex = this.currentStageIndex) {
+  updateStageDescription(
+    description: string,
+    stageIndex = this.currentStageIndex
+  ) {
     if (stageIndex >= 0 && stageIndex < this.stages.length) {
       this.stages[stageIndex].description = description;
     }
@@ -332,12 +425,12 @@ export class ExperimentConfigService extends Service {
   deleteStage(index: number) {
     this.stages = [
       ...this.stages.slice(0, index),
-      ...this.stages.slice(index + 1)
+      ...this.stages.slice(index + 1),
     ];
   }
 
   hasStageKind(kind: StageKind) {
-    return this.stages.findIndex(stage => stage.kind === kind) !== -1;
+    return this.stages.findIndex((stage) => stage.kind === kind) !== -1;
   }
 
   moveStageUp(index: number) {
@@ -345,7 +438,7 @@ export class ExperimentConfigService extends Service {
       ...this.stages.slice(0, index - 1),
       ...this.stages.slice(index, index + 1),
       ...this.stages.slice(index - 1, index),
-      ...this.stages.slice(index + 1)
+      ...this.stages.slice(index + 1),
     ];
   }
 
@@ -354,7 +447,7 @@ export class ExperimentConfigService extends Service {
       ...this.stages.slice(0, index),
       ...this.stages.slice(index + 1, index + 2),
       ...this.stages.slice(index, index + 1),
-      ...this.stages.slice(index + 2)
+      ...this.stages.slice(index + 2),
     ];
   }
 
@@ -371,7 +464,7 @@ export class ExperimentConfigService extends Service {
   }
 
   async createTemplate() {
-    const { name, publicName, description, stages, numberOfParticipants } =
+    const {name, publicName, description, stages, numberOfParticipants} =
       this.getExperiment();
 
     await this.sp.experimenterService.createTemplate(
@@ -379,7 +472,8 @@ export class ExperimentConfigService extends Service {
         name,
         description,
         publicName,
-      }, stages
+      },
+      stages
     );
   }
 
@@ -389,7 +483,19 @@ export class ExperimentConfigService extends Service {
     let groupId = '';
 
     for (let i = 0; i < experiments.length; i++) {
-      const { name, publicName, description, stages, isLobby, numberOfParticipants, numberOfMaxParticipants, group, waitForAllToStart, prolificRedirectCode } = experiments[i];
+      const {
+        name,
+        publicName,
+        description,
+        stages,
+        isLobby,
+        numberOfParticipants,
+        numberOfMaxParticipants,
+        group,
+        waitForAllToStart,
+        prolificRedirectCode,
+        attentionCheckParams,
+      } = experiments[i];
       const experiment = await this.sp.experimenterService.createExperiment(
         {
           name,
@@ -401,6 +507,7 @@ export class ExperimentConfigService extends Service {
           waitForAllToStart,
           group,
           prolificRedirectCode,
+          attentionCheckParams,
         },
         stages
       );
@@ -410,15 +517,13 @@ export class ExperimentConfigService extends Service {
 
     // Navigate to the last created experiment (or group)
     if (groupId) {
-      this.sp.routerService.navigate(
-        Pages.EXPERIMENT_GROUP,
-        { "experiment_group": groupId }
-      );
+      this.sp.routerService.navigate(Pages.EXPERIMENT_GROUP, {
+        experiment_group: groupId,
+      });
     } else {
-      this.sp.routerService.navigate(
-        Pages.EXPERIMENT,
-        { "experiment": experimentId }
-      );
+      this.sp.routerService.navigate(Pages.EXPERIMENT, {
+        experiment: experimentId,
+      });
     }
   }
 }

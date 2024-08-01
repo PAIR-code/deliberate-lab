@@ -35,6 +35,7 @@ export class ExperimentConfig extends MobxLitElement {
     return html`
       ${this.renderExperimentDetailFields()} ${this.renderGroupToggle()}
       ${this.renderConstrainParticipantsToggle()} ${this.renderProlificLogic()}
+      ${this.renderAttentionCheckToggle()}
     `;
   }
 
@@ -227,6 +228,102 @@ export class ExperimentConfig extends MobxLitElement {
       <div class="divider"></div>
     `;
   }
+  private renderAttentionCheckToggle() {
+    const handleAddAttentionCheck = (e: Event) => {
+      const checked = Boolean((e.target as HTMLInputElement).checked);
+      if (!checked) {
+        this.experimentConfig.resetAttentionCheck();
+      } else {
+        this.experimentConfig.hasAttentionCheck = checked;
+        this.experimentConfig.waitSeconds = 5 * 60;
+        this.experimentConfig.popupSeconds = 60;
+        this.experimentConfig.prolificAttentionFailRedirectCode = '';
+      }
+    };
+
+    const handleWaitSeconds = (e: Event) => {
+      const num = Number((e.target as HTMLTextAreaElement).value);
+      this.experimentConfig.updateWaitSeconds(num);
+    };
+
+    const handlePopupSeconds = (e: Event) => {
+      const num = Number((e.target as HTMLTextAreaElement).value);
+      this.experimentConfig.updatePopupSeconds(num);
+    };
+
+    const handleProlificFailure = (e: Event) => {
+      const value = (e.target as HTMLTextAreaElement).value;
+      this.experimentConfig.updateProlificFailCode(value);
+    };
+
+    return html`
+      <h2>👀 Attention check parameters</h2>
+      <div class="checkbox-input-container">
+        <div class="checkbox-input">
+          <md-checkbox
+            id="hasAttentionCheck"
+            touch-target="wrapper"
+            .checked=${this.experimentConfig.hasAttentionCheck}
+            @change=${handleAddAttentionCheck}
+          ></md-checkbox>
+          <label for="hasAttentionCheck">
+            <div>
+              Enable attention checks
+              <div class="subtitle">
+                Times out the participant from the experiment if the attention
+                check prompt is not clicked within the given time.
+              </div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      ${this.experimentConfig.hasAttentionCheck
+        ? html`
+            <div class="number-input tab">
+              <label for="num"
+                >Wait time (in seconds) before attention check popup</label
+              >
+              <input
+                type="number"
+                id="waitSeconds"
+                name="waitSeconds"
+                min="1"
+                .value=${this.experimentConfig.waitSeconds}
+                @input=${handleWaitSeconds}
+              />
+            </div>
+
+            <div class="number-input tab">
+              <label for="num">Popup display time (in seconds)</label>
+              <input
+                type="number"
+                id="popupSeconds"
+                name="popupSeconds"
+                min="1"
+                .value=${this.experimentConfig.popupSeconds}
+                @input=${handlePopupSeconds}
+              />
+            </div>
+            ${this.experimentConfig.isProlific
+              ? html`
+                  <pr-textarea
+                    class="tab"
+                    label="Prolific failure code (optional)"
+                    placeholder="This code will be sent to Prolific if the attention check fails"
+                    variant="outlined"
+                    .value=${this.experimentConfig
+                      .prolificAttentionFailRedirectCode}
+                    @input=${handleProlificFailure}
+                  >
+                  </pr-textarea>
+                `
+              : ''}
+          `
+        : ''}
+      <div class="divider"></div>
+    `;
+  }
 
   private renderProlificCodeField() {
     const handleCode = (e: Event) => {
@@ -236,6 +333,7 @@ export class ExperimentConfig extends MobxLitElement {
 
     return html`
       <pr-textarea
+        class="tab"
         label="Prolific completion code"
         placeholder="This code will redirect participants to Prolific"
         variant="outlined"

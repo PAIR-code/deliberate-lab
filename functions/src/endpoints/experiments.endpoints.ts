@@ -57,6 +57,7 @@ export const createExperiment = onCall(async (request) => {
         numberOfMaxParticipants,
         waitForAllToStart,
         prolificRedirectCode,
+        attentionCheckParams,
       } = data.metadata;
 
       // Create the metadata document
@@ -71,6 +72,7 @@ export const createExperiment = onCall(async (request) => {
         numberOfMaxParticipants,
         waitForAllToStart,
         prolificRedirectCode,
+        attentionCheckParams,
         ...(data.type === 'experiments'
           ? {
               date: Timestamp.now(),

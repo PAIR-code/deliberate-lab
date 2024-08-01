@@ -10,6 +10,12 @@ export interface Experimenter {
   displayName: string;
 }
 
+export interface AttentionCheckParams {
+  waitSeconds?: number;
+  popupSeconds?: number;
+  prolificAttentionFailRedirectCode?: string;
+}
+
 /** Experiment metadata */
 export interface Experiment {
   id: string;
@@ -26,7 +32,7 @@ export interface Experiment {
   numberOfMaxParticipants: number;
   waitForAllToStart: boolean;
   prolificRedirectCode?: string; // If specified, will handle Prolific routing.
-
+  attentionCheckParams?: AttentionCheckParams;
   // Ordered list of stage IDs
   stageIds: string[];
 
