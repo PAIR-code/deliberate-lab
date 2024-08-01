@@ -94,7 +94,7 @@ export class App extends MobxLitElement {
       case Pages.PARTICIPANT_STAGE:
         if (
           !this.authService.isExperimenter &&
-          this.experimentService.experiment?.attentionCheckParams
+          this.experimentService.experiment?.attentionCheckParams?.waitSeconds
         ) {
           return html` <attention-check-popup
               waitSeconds=${this.experimentService.experiment

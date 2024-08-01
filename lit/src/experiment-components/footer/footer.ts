@@ -129,6 +129,8 @@ export class Footer extends MobxLitElement {
         </div>
         <div class="right">${this.renderNextStageButton()}</div>
       </div>
+
+      <!-- Popup listener -->
       <transfer-popup
         .open=${this.showTransferPopup}
         @confirm-transfer=${this.handleTransfer}
@@ -138,6 +140,13 @@ export class Footer extends MobxLitElement {
 
   private renderNextStageButton() {
     const isLastStage = this.isOnLastStage();
+    if (
+      this.participantService.profile?.completionType ===
+      PARTICIPANT_COMPLETION_TYPE.BOOTED_OUT
+    ) {
+      alert('You have been removed from this experiment.');
+      this.routerService.navigate(Pages.HOME);
+    }
 
     const handleNext = async () => {
       // If survey stage, save relevant text answers

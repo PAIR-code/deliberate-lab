@@ -4,22 +4,22 @@ import '../../pair-components/tooltip';
 
 import '../profile/profile_preview';
 
-import {MobxLitElement} from '@adobe/lit-mobx';
-import {ParticipantProfile} from '@llm-mediation-experiments/utils';
-import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement} from 'lit/decorators.js';
-import {convertUnifiedTimestampToDate} from '../../shared/utils';
+import { MobxLitElement } from '@adobe/lit-mobx';
+import { ParticipantProfile } from '@llm-mediation-experiments/utils';
+import { CSSResultGroup, html, nothing } from 'lit';
+import { customElement } from 'lit/decorators.js';
+import { convertUnifiedTimestampToDate } from '../../shared/utils';
 
-import {core} from '../../core/core';
-import {AuthService} from '../../services/auth_service';
-import {ExperimentConfigService} from '../../services/config/experiment_config_service';
-import {ExperimentService} from '../../services/experiment_service';
-import {ExperimenterService} from '../../services/experimenter_service';
-import {ParticipantService} from '../../services/participant_service';
-import {Pages, RouterService} from '../../services/router_service';
+import { core } from '../../core/core';
+import { AuthService } from '../../services/auth_service';
+import { ExperimentConfigService } from '../../services/config/experiment_config_service';
+import { ExperimentService } from '../../services/experiment_service';
+import { ExperimenterService } from '../../services/experimenter_service';
+import { ParticipantService } from '../../services/participant_service';
+import { Pages, RouterService } from '../../services/router_service';
 
-import {PARTICIPANT_COMPLETION_TYPE} from '@llm-mediation-experiments/utils';
-import {styles} from './experiment_preview.scss';
+import { PARTICIPANT_COMPLETION_TYPE } from '@llm-mediation-experiments/utils';
+import { styles } from './experiment_preview.scss';
 
 /** Experiment preview */
 @customElement('experiment-preview')
@@ -107,12 +107,10 @@ export class ExperimentPreview extends MobxLitElement {
     const transferredParticipants = participants.filter(
       (participant) => participant.transferConfig
     );
-    const timedOutParticipants = participants.filter(
+    const failedParticipants = participants.filter(
       (participant) =>
-        participant.completionType ===
-          PARTICIPANT_COMPLETION_TYPE.ATTENTION_TIMEOUT ||
-        participant.completionType ===
-          PARTICIPANT_COMPLETION_TYPE.LOBBY_TIMEOUT ||
+        (participant.completionType &&
+          participant.completionType !== PARTICIPANT_COMPLETION_TYPE.SUCCESS) ||
         (!participant.completionType &&
           this.experimentService.experiment?.isLobby &&
           participant.completedExperiment &&
@@ -223,11 +221,11 @@ export class ExperimentPreview extends MobxLitElement {
             </div>
           `
         : ''}
-      ${timedOutParticipants.length > 0
+      ${failedParticipants.length > 0
         ? html`
-            <h2>${timedOutParticipants.length} timed out participants</h2>
+            <h2>${failedParticipants.length} failed participants</h2>
             <div class="profile-wrapper">
-              ${timedOutParticipants.map(
+              ${failedParticipants.map(
                 (participant) => html`
                   <profile-preview .profile=${participant}></profile-preview>
                 `

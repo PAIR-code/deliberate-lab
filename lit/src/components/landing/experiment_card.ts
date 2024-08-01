@@ -55,14 +55,12 @@ export class ExperimentCard extends MobxLitElement {
       return numCompleted;
     };
 
-    const participantTimeoutCount = () => {
+    const participantFailedCount = () => {
       let numCompleted = 0;
       for (const participant of Object.values(this.experiment!.participants)) {
         if (
-          participant.completionType ===
-            PARTICIPANT_COMPLETION_TYPE.LOBBY_TIMEOUT ||
-          participant.completionType ===
-            PARTICIPANT_COMPLETION_TYPE.ATTENTION_TIMEOUT
+          participant.completionType &&
+          !(participant.completionType === PARTICIPANT_COMPLETION_TYPE.SUCCESS)
         ) {
           numCompleted += 1;
         }
@@ -92,8 +90,8 @@ export class ExperimentCard extends MobxLitElement {
       return participantSuccessCount() / this.experiment!.numberOfParticipants;
     };
 
-    const participantTimeoutRatio = () => {
-      return participantTimeoutCount() / this.experiment!.numberOfParticipants;
+    const participantFailedRatio = () => {
+      return participantFailedCount() / this.experiment!.numberOfParticipants;
     };
 
     const renderGroupMetadata = () => {
@@ -115,8 +113,8 @@ export class ExperimentCard extends MobxLitElement {
       }
 
       return html`<pr-tooltip
-        text="${participantSuccessCount()} completed, ${participantTimeoutCount()
-          ? `, ${participantTimeoutCount()} timed out, `
+        text="${participantSuccessCount()} completed, ${participantFailedCount()
+          ? `, ${participantFailedCount()} timed out, `
           : ''}${participantProgressCount()} in progress"
         position="BOTTOM_START"
       >
@@ -127,7 +125,7 @@ export class ExperimentCard extends MobxLitElement {
           ></div>
           <div
             class="progress timeout"
-            style="width: calc(100% * ${participantTimeoutRatio()})"
+            style="width: calc(100% * ${participantFailedRatio()})"
           ></div>
 
           <div

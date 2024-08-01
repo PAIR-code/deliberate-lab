@@ -10,6 +10,8 @@ export enum PARTICIPANT_COMPLETION_TYPE {
   LOBBY_TIMEOUT = 'LOBBY_FAIL',
   // Failed to clear the attention check within the designated time.
   ATTENTION_TIMEOUT = 'ATTENTION_FAIL',
+  // Booted from the experiment.
+  BOOTED_OUT = 'BOOTED_OUT',
 }
 
 /** Profile data that is modifiable by the participant */
