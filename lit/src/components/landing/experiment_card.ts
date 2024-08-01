@@ -1,27 +1,28 @@
-import "../../pair-components/button";
-import "../../pair-components/icon_button";
-import "../../pair-components/tooltip";
+import '../../pair-components/button';
+import '../../pair-components/icon_button';
+import '../../pair-components/tooltip';
 
-import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {CSSResultGroup, html, nothing} from 'lit';
+import {customElement, property} from 'lit/decorators.js';
 
-import { Experiment } from '@llm-mediation-experiments/utils';
-import { convertUnifiedTimestampToDate } from '../../shared/utils';
+import {Experiment} from '@llm-mediation-experiments/utils';
+import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
-import { core } from "../../core/core";
-import { AuthService } from "../../services/auth_service";
-import { ExperimenterService } from "../../services/experimenter_service";
-import { Pages, RouterService } from "../../services/router_service";
+import {core} from '../../core/core';
+import {AuthService} from '../../services/auth_service';
+import {ExperimenterService} from '../../services/experimenter_service';
+import {Pages, RouterService} from '../../services/router_service';
 
-import { styles } from "./experiment_card.scss";
+import {PARTICIPANT_COMPLETION_TYPE} from '@llm-mediation-experiments/utils';
+import {styles} from './experiment_card.scss';
 
 /** Experiment card component */
-@customElement("experiment-card")
+@customElement('experiment-card')
 export class ExperimentCard extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  @property() experiment: Experiment|null = null;
+  @property() experiment: Experiment | null = null;
   // Whether to show properties that are the same across the group.
   @property() showGroup: boolean = true;
 
@@ -35,77 +36,104 @@ export class ExperimentCard extends MobxLitElement {
     }
 
     const handleClick = () => {
-      this.routerService.navigate(
-        Pages.EXPERIMENT,
-        { "experiment": this.experiment!.id }
-      );
+      this.routerService.navigate(Pages.EXPERIMENT, {
+        experiment: this.experiment!.id,
+      });
       this.authService.setEditPermissions(false);
-    }
+    };
 
-    const participantCompletedCount = () => {
+    const participantSuccessCount = () => {
       let numCompleted = 0;
       for (const participant of Object.values(this.experiment!.participants)) {
-        if (participant.completedExperiment) {
+        if (
+          participant.completionType === PARTICIPANT_COMPLETION_TYPE.SUCCESS ||
+          (participant.completedExperiment && !participant.completionType)
+        ) {
           numCompleted += 1;
         }
       }
       return numCompleted;
-    }
+    };
+
+    const participantFailedCount = () => {
+      let numCompleted = 0;
+      for (const participant of Object.values(this.experiment!.participants)) {
+        if (
+          participant.completionType &&
+          !(participant.completionType === PARTICIPANT_COMPLETION_TYPE.SUCCESS)
+        ) {
+          numCompleted += 1;
+        }
+      }
+      return numCompleted;
+    };
 
     const participantProgressCount = () => {
       // Only counts if started and NOT completed
       let numStarted = 0;
       for (const participant of Object.values(this.experiment!.participants)) {
-        if (participant.acceptTosTimestamp && !participant.completedExperiment) {
+        if (
+          participant.acceptTosTimestamp &&
+          !participant.completedExperiment
+        ) {
           numStarted += 1;
         }
       }
       return numStarted;
-    }
+    };
 
     const participantProgressRatio = () => {
       return participantProgressCount() / this.experiment!.numberOfParticipants;
-    }
+    };
 
-    const participantCompletedRatio = () => {
-      return participantCompletedCount() / this.experiment!.numberOfParticipants;
-    }
+    const participantSuccessRatio = () => {
+      return participantSuccessCount() / this.experiment!.numberOfParticipants;
+    };
+
+    const participantFailedRatio = () => {
+      return participantFailedCount() / this.experiment!.numberOfParticipants;
+    };
 
     const renderGroupMetadata = () => {
       if (this.showGroup) {
-        return html`
-        <div class="action-buttons">
-          
-        <div class="label">
-          <div>${this.experiment!.author?.displayName ?? ''}</div>
-          <small>${convertUnifiedTimestampToDate(this.experiment!.date)}</small>
-        </div>
-      </div>`;
+        return html` <div class="action-buttons">
+          <div class="label">
+            <div>${this.experiment!.author?.displayName ?? ''}</div>
+            <small
+              >${convertUnifiedTimestampToDate(this.experiment!.date)}</small
+            >
+          </div>
+        </div>`;
       }
-    }
+    };
 
-    const renderParticipantProgressBar = () =>  {
+    const renderParticipantProgressBar = () => {
       if (!this.experiment!.numberOfParticipants) {
         return;
       }
-      
+
       return html`<pr-tooltip
-            text="${participantCompletedCount()} completed, ${participantProgressCount()} in progress"
-            position="BOTTOM_START"
-          >
-            <div class="progress-bar">
-              <div
-                class="progress completed"
-                style="width: calc(100% * ${participantCompletedRatio()})"
-              >
-              </div>
-              <div
-                class="progress in-progress"
-                style="width: calc(100% * .5 * ${participantProgressRatio()})"
-              >
-              </div>
-            </div>`;
-    }
+        text="${participantSuccessCount()} completed, ${participantFailedCount()
+          ? `, ${participantFailedCount()} timed out, `
+          : ''}${participantProgressCount()} in progress"
+        position="BOTTOM_START"
+      >
+        <div class="progress-bar">
+          <div
+            class="progress completed"
+            style="width: calc(100% * ${participantSuccessRatio()})"
+          ></div>
+          <div
+            class="progress timeout"
+            style="width: calc(100% * ${participantFailedRatio()})"
+          ></div>
+
+          <div
+            class="progress in-progress"
+            style="width: calc(100% * .5 * ${participantProgressRatio()})"
+          ></div></div
+      ></pr-tooltip>`;
+    };
 
     return html`
       <div class="header">
@@ -141,16 +169,16 @@ export class ExperimentCard extends MobxLitElement {
 
     const navigateToGroup = () => {
       if (this.experiment!.group) {
-        this.routerService.navigate(
-          Pages.EXPERIMENT_GROUP,
-          { "experiment_group": this.experiment!.group }
-        );
+        this.routerService.navigate(Pages.EXPERIMENT_GROUP, {
+          experiment_group: this.experiment!.group,
+        });
         this.authService.setEditPermissions(false);
       }
     };
 
     return html`
-      <div class="field">Group:
+      <div class="field">
+        Group:
         <div class="chip secondary" role="button" @click=${navigateToGroup}>
           ${this.experiment.group}
         </div>
@@ -169,7 +197,8 @@ export class ExperimentCard extends MobxLitElement {
           icon="delete"
           color="error"
           variant="default"
-          @click=${handleDelete}>
+          @click=${handleDelete}
+        >
         </pr-icon-button>
       </pr-tooltip>
     `;
@@ -178,6 +207,6 @@ export class ExperimentCard extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "experiment-card": ExperimentCard;
+    'experiment-card': ExperimentCard;
   }
 }

@@ -2,7 +2,7 @@ import '../election/election_reveal';
 import '../footer/footer';
 import '../games/lost_at_sea/las_result';
 import '../progress/progress_stage_completed';
-import "../progress/progress_stage_waiting";
+import '../progress/progress_stage_waiting';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -19,8 +19,9 @@ import {core} from '../../core/core';
 import {ExperimentService} from '../../services/experiment_service';
 import {ParticipantService} from '../../services/participant_service';
 
+import {unsafeHTML} from 'lit/directives/unsafe-html.js';
+import {convertMarkdownToHTML} from '../../shared/utils';
 import {styles} from './reveal_preview.scss';
-
 /** Reveal preview */
 @customElement('reveal-preview')
 export class RevealPreview extends MobxLitElement {
@@ -36,7 +37,7 @@ export class RevealPreview extends MobxLitElement {
       return nothing;
     }
 
-    const { ready, notReady } =
+    const {ready, notReady} =
       this.experimentService.getParticipantsReadyForStage(this.stage.id);
 
     if (notReady.length > 0) {
@@ -47,7 +48,9 @@ export class RevealPreview extends MobxLitElement {
     }
 
     return html`
-      <div class="description">${this.stage?.description}</div>
+      <div class="description">
+        ${unsafeHTML(convertMarkdownToHTML(this.stage?.description!))}
+      </div>
 
       <div class="stages-wrapper">
         ${this.stage?.stagesToReveal.map((stage) =>

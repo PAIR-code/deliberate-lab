@@ -31,7 +31,9 @@ export class SurveyService extends Service {
   @observable experimentId: string | null = null;
   @observable participantId: string | null = null;
   @observable stageId = '';
-  @observable textAnswers: Record<number, string> = {};
+
+  // Map of stage ID to map of text answers
+  @observable textAnswersMap: Record<string, Record<number, string>> = {};
 
   // Loading
   @observable areAnswersLoading = false;
@@ -55,24 +57,27 @@ export class SurveyService extends Service {
   loadSurveyAnswers() {
     const stage = (this.sp.experimentService.getStage(this.stageId) as SurveyStageConfig);
     const answer = (this.sp.participantService.stageAnswers[this.stageId] as SurveyStageAnswer);
-    this.textAnswers = {};
+
+    const textAnswers: Record<number, string> = {};
 
     if (stage) {
       for (const question of stage.questions.filter(question => question.kind === SurveyQuestionKind.Text)) {
-        this.textAnswers[question.id] = answer ? (
+        textAnswers[question.id] = answer ? (
           answer.answers[question.id] as TextQuestionAnswer
         )?.answerText ?? '' : '';
       }
     }
+
+    this.textAnswersMap[stage.id] = textAnswers;
     this.areAnswersLoading = false;
   }
 
   updateTextAnswer(id: number, answer: string) {
-    this.textAnswers[id] = answer;
+    this.textAnswersMap[this.stageId][id] = answer;
   }
 
   isAllTextAnswersValid() {
-    for (const answer of Object.values(this.textAnswers)) {
+    for (const answer of Object.values(this.textAnswersMap[this.stageId])) {
       if (answer === '') {
         return false;
       }
@@ -81,17 +86,21 @@ export class SurveyService extends Service {
   }
 
   getNumTextAnswers() {
-    return Object.keys(this.textAnswers).length;
+    return Object.keys(this.textAnswersMap[this.stageId]).length;
+  }
+
+  getTextAnswer(questionId: number) {
+    return this.textAnswersMap[this.stageId][questionId];
   }
 
   async saveTextAnswers() {
-    for (const key in Object.keys(this.textAnswers)) {
+    for (const key of Object.keys(this.textAnswersMap[this.stageId])) {
       const id = Number(key);
       const answer: TextQuestionAnswer = {
         id,
         kind: SurveyQuestionKind.Text,
-        answerText: this.textAnswers[id] ?? '',
-      }
+        answerText: this.textAnswersMap[this.stageId][id] ?? '',
+      };
       await this.sp.participantService.updateSurveyStage(
         this.sp.participantService.profile!.currentStageId,
         [answer]

@@ -23,6 +23,7 @@ import {
 } from '@llm-mediation-experiments/utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
+import {PARTICIPANT_COMPLETION_TYPE} from '@llm-mediation-experiments/utils';
 import {styles} from './profile_preview.scss';
 
 /** Full participant profile preview */
@@ -85,6 +86,35 @@ export class ProfilePreview extends MobxLitElement {
     return nothing;
   }
 
+  renderBootButton() {
+    if (this.profile?.completedExperiment) {
+      return nothing;
+    }
+
+    const onBoot = () => {
+      this.participantService.setParticipant(
+        this.experimentService.id!,
+        this.profile?.privateId!
+      );
+      this.participantService.markExperimentCompleted(
+        PARTICIPANT_COMPLETION_TYPE.BOOTED_OUT
+      );
+      alert;
+    };
+
+    return html`
+      <pr-tooltip text="Kick participant out" position="BOTTOM_END">
+        <pr-icon-button
+          icon="block"
+          color="error"
+          variant="default"
+          @click=${onBoot}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
+  }
+
   renderDeleteButton() {
     if (!this.authService.canEdit) {
       return nothing;
@@ -115,17 +145,45 @@ export class ProfilePreview extends MobxLitElement {
     let text = 'in progress';
 
     if (this.profile?.completedExperiment) {
-      if (this.experimentService.experiment?.isLobby) {
-        if (this.profile?.transferConfig) {
-          color = 'success';
-          text = 'completed';
-        } else {
-          color = 'tertiary';
-          text = 'timed out';
+      if (this.profile?.completionType) {
+        switch (this.profile?.completionType) {
+          case PARTICIPANT_COMPLETION_TYPE.SUCCESS:
+            color = 'success';
+            text = 'completed';
+            break;
+          case PARTICIPANT_COMPLETION_TYPE.ATTENTION_TIMEOUT:
+            color = 'tertiary';
+            text = 'failed attention';
+            break;
+          case PARTICIPANT_COMPLETION_TYPE.LOBBY_TIMEOUT:
+            color = 'tertiary';
+            text = 'lobby timeout';
+            break;
+          case PARTICIPANT_COMPLETION_TYPE.BOOTED_OUT:
+            color = 'tertiary';
+            text = 'booted out';
+            break;
+          default:
+            color = 'secondary';
+            text = 'undefined';
         }
       } else {
-        color = 'success';
-        text = 'completed';
+        if (this.experimentService.experiment?.isLobby) {
+          if (
+            this.profile?.completionType ===
+              PARTICIPANT_COMPLETION_TYPE.SUCCESS ||
+            this.profile?.transferConfig
+          ) {
+            color = 'success';
+            text = 'completed';
+          } else {
+            color = 'tertiary';
+            text = 'timed out';
+          }
+        } else {
+          color = 'success';
+          text = 'completed';
+        }
       }
     } else {
       if (curStageName.indexOf('Lobby') !== -1) {
@@ -261,6 +319,7 @@ export class ProfilePreview extends MobxLitElement {
           >
           </pr-icon-button>
         </pr-tooltip>
+        ${this.renderBootButton()}
         ${this.renderDeleteButton()}
       </div>
     `;

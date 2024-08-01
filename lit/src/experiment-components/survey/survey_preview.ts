@@ -1,47 +1,44 @@
-import "../../pair-components/textarea";
+import '../../pair-components/textarea';
 
-import "../footer/footer";
-import "../progress/progress_stage_completed";
+import '../footer/footer';
+import '../progress/progress_stage_completed';
 
 import '@material/web/radio/radio.js';
 
-import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
-import { classMap } from "lit/directives/class-map.js";
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {CSSResultGroup, html, nothing} from 'lit';
+import {customElement, property} from 'lit/decorators.js';
 
 import {
-  ITEMS,
-  ItemName,
-  QuestionConfig,
   MultipleChoiceItem,
-  MultipleChoiceQuestionConfig,
   MultipleChoiceQuestionAnswer,
+  MultipleChoiceQuestionConfig,
+  QuestionConfig,
   ScaleQuestionAnswer,
   ScaleQuestionConfig,
   SurveyQuestionKind,
   SurveyStageAnswer,
   SurveyStageConfig,
-  TextQuestionAnswer,
-  TextQuestionConfig
-} from "@llm-mediation-experiments/utils";
+  TextQuestionConfig,
+} from '@llm-mediation-experiments/utils';
 
-import { core } from "../../core/core";
-import { ParticipantService } from "../../services/participant_service";
-import { SurveyService } from "../../services/survey_service";
-
-import { styles } from "./survey_preview.scss";
+import {unsafeHTML} from 'lit/directives/unsafe-html.js';
+import {core} from '../../core/core';
+import {ParticipantService} from '../../services/participant_service';
+import {SurveyService} from '../../services/survey_service';
+import {convertMarkdownToHTML} from '../../shared/utils';
+import {styles} from './survey_preview.scss';
 
 /** Survey preview */
-@customElement("survey-preview")
+@customElement('survey-preview')
 export class SurveyPreview extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly participantService = core.getService(ParticipantService);
   private readonly surveyService = core.getService(SurveyService);
 
-  @property() stage: SurveyStageConfig|null = null;
-  @property() answer: SurveyStageAnswer|null = null;
+  @property() stage: SurveyStageConfig | null = null;
+  @property() answer: SurveyStageAnswer | null = null;
 
   override render() {
     if (!this.stage) {
@@ -61,16 +58,19 @@ export class SurveyPreview extends MobxLitElement {
       }
       // Confirm that all text answers are completed on frontend
       return this.surveyService.isAllTextAnswersValid();
-    }
+    };
 
-    const descriptionContent = this.stage.description ? html`<div class="description">${this.stage.description}</div>` : nothing;
+    const descriptionContent = this.stage.description
+      ? html`<div class="description">
+          ${unsafeHTML(convertMarkdownToHTML(this.stage.description))}
+        </div>`
+      : nothing;
 
     return html`
       ${descriptionContent}
-      
+
       <div class="questions-wrapper">
-        ${this.stage.questions.map(question =>
-        this.renderQuestion(question))}
+        ${this.stage.questions.map((question) => this.renderQuestion(question))}
       </div>
       <stage-footer .disabled=${!questionsComplete()}>
         <progress-stage-completed></progress-stage-completed>
@@ -103,7 +103,7 @@ export class SurveyPreview extends MobxLitElement {
         <pr-textarea
           variant="outlined"
           placeholder="Type your response"
-          .value=${this.surveyService.textAnswers[question.id]}
+          .value=${this.surveyService.getTextAnswer(question.id)}
           ?disabled=${!this.participantService.isCurrentStage()}
           @change=${handleTextChange}
         >
@@ -116,7 +116,9 @@ export class SurveyPreview extends MobxLitElement {
     return html`
       <div class="radio-question">
         <div class="title">${question.questionText}</div>
-        ${question.options.map(option => this.renderRadioButton(option, question.id))}
+        ${question.options.map((option) =>
+          this.renderRadioButton(option, question.id)
+        )}
       </div>
     `;
   }
@@ -124,7 +126,10 @@ export class SurveyPreview extends MobxLitElement {
   private isMultipleChoiceMatch(questionId: number, choiceId: number) {
     const questionAnswer = this.answer?.answers[questionId];
 
-    if (questionAnswer && questionAnswer.kind === SurveyQuestionKind.MultipleChoice) {
+    if (
+      questionAnswer &&
+      questionAnswer.kind === SurveyQuestionKind.MultipleChoice
+    ) {
       return questionAnswer.choice === choiceId;
     }
     return false;
@@ -138,8 +143,8 @@ export class SurveyPreview extends MobxLitElement {
       const answer: MultipleChoiceQuestionAnswer = {
         id: questionId,
         kind: SurveyQuestionKind.MultipleChoice,
-        choice
-      }
+        choice,
+      };
       this.participantService.updateSurveyStage(
         this.participantService.profile!.currentStageId,
         [answer]
@@ -164,7 +169,7 @@ export class SurveyPreview extends MobxLitElement {
   }
 
   private renderScaleQuestion(question: ScaleQuestionConfig) {
-    const scale = [...Array(10).keys()].map(n => n + 1);
+    const scale = [...Array(10).keys()].map((n) => n + 1);
 
     return html`
       <div class="question">
@@ -174,7 +179,7 @@ export class SurveyPreview extends MobxLitElement {
           <div>${question.upperBound}</div>
         </div>
         <div class="scale values">
-          ${scale.map(num => this.renderScaleRadioButton(question, num))}
+          ${scale.map((num) => this.renderScaleRadioButton(question, num))}
         </div>
       </div>
     `;
@@ -198,7 +203,7 @@ export class SurveyPreview extends MobxLitElement {
       const answer: ScaleQuestionAnswer = {
         id: question.id,
         kind: SurveyQuestionKind.Scale,
-        score
+        score,
       };
 
       this.participantService.updateSurveyStage(
@@ -227,6 +232,6 @@ export class SurveyPreview extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "survey-preview": SurveyPreview;
+    'survey-preview': SurveyPreview;
   }
 }

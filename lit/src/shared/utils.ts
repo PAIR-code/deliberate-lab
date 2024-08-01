@@ -215,7 +215,13 @@ export function getElectionStages(stages: StageConfig[]) {
 }
 
 /** Use micromark to convert Git-flavored markdown to HTML. */
-export function convertMarkdownToHTML(markdown: string, sanitize = true) {
+export function convertMarkdownToHTML(
+  markdown: string | null,
+  sanitize = true
+) {
+  if (!markdown) {
+    return '';
+  }
   const html = micromark(markdown, {
     allowDangerousHtml: !sanitize,
     extensions: [gfm()],

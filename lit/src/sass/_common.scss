@@ -143,6 +143,11 @@
       background: var(--md-sys-color-progress);
     }
 
+    &.timeout {
+      background: var(--md-sys-color-error);
+      width: 100%;
+    }
+
     &.completed {
       background: var(--md-sys-color-success);
       width: 100%;

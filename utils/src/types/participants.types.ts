@@ -4,6 +4,16 @@
 
 import { UnifiedTimestamp } from './api.types';
 
+export enum PARTICIPANT_COMPLETION_TYPE {
+  SUCCESS = 'SUCCESS',
+  // Failed to transfer to a lobby within the designated time.
+  LOBBY_TIMEOUT = 'LOBBY_FAIL',
+  // Failed to clear the attention check within the designated time.
+  ATTENTION_TIMEOUT = 'ATTENTION_FAIL',
+  // Booted from the experiment.
+  BOOTED_OUT = 'BOOTED_OUT',
+}
+
 /** Profile data that is modifiable by the participant */
 export interface ParticipantProfileBase {
   pronouns: string | null;
@@ -12,7 +22,7 @@ export interface ParticipantProfileBase {
 
   acceptTosTimestamp: UnifiedTimestamp | null;
   completedExperiment: UnifiedTimestamp | null;
-
+  completionType: PARTICIPANT_COMPLETION_TYPE | null;
   prolificId: string | null;
 }
 

@@ -27,7 +27,6 @@ import {
 import {
   ITEMS_SET_1,
   ITEMS_SET_2,
-  ITEMS_SET_3,
   LAS_FINAL_SURVEY,
   LAS_FINAL_SURVEY_DESCRIPTION,
   LAS_GROUP_CHAT_DESCRIPTION,
@@ -42,6 +41,7 @@ import {
   LAS_LEADER_REVEAL_DESCRIPTION,
   LAS_PART_3_INSTRUCTIONS,
   LAS_PAYMENT_INSTRUCTIONS,
+  LAS_PAYMENT_INSTRUCTIONS_ALL,
   LAS_PE2_SURVEY,
   LAS_PE_DESCRIPTION,
   LAS_PE_SURVEY,
@@ -174,7 +174,7 @@ function getPart2PreElectionStages(): StageConfig[] {
   );
 
   // Individual task.
-  const INDIVIDUAL_QUESTIONS: LostAtSeaQuestion[] = ITEMS_SET_3.map(
+  const INDIVIDUAL_QUESTIONS: LostAtSeaQuestion[] = ITEMS_SET_1.map(
     (pair, index) => getQuestionFromPair(pair, index)
   );
   const redoTask = createLostAtSeaSurveyStage({
@@ -231,13 +231,12 @@ function getPart2PostElectionAndPart3Stages(): StageConfig[] {
     })
   );
 
-  // Individual task.
-  const INDIVIDUAL_QUESTIONS: LostAtSeaQuestion[] = ITEMS_SET_2.map(
-    (pair, index) => getQuestionFromPair(pair, index)
+  const LEADER_QUESTIONS: LostAtSeaQuestion[] = ITEMS_SET_2.map((pair, index) =>
+    getQuestionFromPair(pair, index)
   );
   const leaderTask = createLostAtSeaSurveyStage({
     name: 'Leader task',
-    questions: INDIVIDUAL_QUESTIONS,
+    questions: LEADER_QUESTIONS,
     popupText: LAS_SCENARIO_REMINDER,
   });
   stages.push(leaderTask);
@@ -261,7 +260,7 @@ export function getFinalStages(): StageConfig[] {
   stages.push(
     createInfoStage({
       name: 'Payment breakdown',
-      infoLines: LAS_PAYMENT_INSTRUCTIONS,
+      infoLines: LAS_PAYMENT_INSTRUCTIONS_ALL,
     })
   );
 
@@ -269,6 +268,7 @@ export function getFinalStages(): StageConfig[] {
   stages.push(
     createPayoutStage({
       name: 'Final payoff',
+      popupText: LAS_PAYMENT_INSTRUCTIONS.join('\n'),
       payouts: [
         {
           name: 'Part 1 payoff',
@@ -279,7 +279,7 @@ export function getFinalStages(): StageConfig[] {
               strategy: PayoutItemStrategy.ChooseOne,
               surveyStageId: initialTaskId,
               currencyAmountPerQuestion: 2,
-              fixedCurrencyAmount: 0,
+              fixedCurrencyAmount: 3,
             },
           ],
         },

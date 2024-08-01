@@ -1,31 +1,29 @@
-import "../../pair-components/button";
-import "../../pair-components/icon_button";
-import "../../pair-components/info_popup";
-import "../../pair-components/menu";
-import "../../pair-components/tooltip";
+import '../../pair-components/button';
+import '../../pair-components/icon_button';
+import '../../pair-components/info_popup';
+import '../../pair-components/menu';
+import '../../pair-components/tooltip';
 
-import "../../experiment-components/experiment/experiment_config_menu";
+import '../../experiment-components/experiment/experiment_config_menu';
 
-import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html, nothing } from "lit";
-import { customElement } from "lit/decorators.js";
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {CSSResultGroup, html, nothing} from 'lit';
+import {customElement} from 'lit/decorators.js';
 
-import { core } from "../../core/core";
-import { AuthService } from "../../services/auth_service";
-import {
-  ExperimentConfigService
-} from "../../services/config/experiment_config_service";
-import { ExperimentService } from "../../services/experiment_service";
-import { ExperimenterService } from "../../services/experimenter_service";
-import { ParticipantService } from "../../services/participant_service";
-import { Pages, RouterService } from "../../services/router_service";
+import {core} from '../../core/core';
+import {AuthService} from '../../services/auth_service';
+import {ExperimentConfigService} from '../../services/config/experiment_config_service';
+import {ExperimentService} from '../../services/experiment_service';
+import {ExperimenterService} from '../../services/experimenter_service';
+import {ParticipantService} from '../../services/participant_service';
+import {Pages, RouterService} from '../../services/router_service';
 
-import { ExperimentTemplate } from "@llm-mediation-experiments/utils";
+import {ExperimentTemplate} from '@llm-mediation-experiments/utils';
 
-import { styles } from "./header.scss";
+import {styles} from './header.scss';
 
 /** Header component for app pages */
-@customElement("page-header")
+@customElement('page-header')
 export class Header extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -44,9 +42,7 @@ export class Header extends MobxLitElement {
           ${this.renderBackButton()}
           <h1>${this.renderTitle()}</h1>
         </div>
-        <div class="right">
-          ${this.renderActions()}
-        </div>
+        <div class="right">${this.renderActions()}</div>
       </div>
     `;
   }
@@ -66,23 +62,25 @@ export class Header extends MobxLitElement {
           icon=${this.authService.canEdit ? 'edit_off' : 'edit'}
           color="primary"
           variant="default"
-          @click=${toggleEdit}>
+          @click=${toggleEdit}
+        >
         </pr-icon-button>
       </pr-tooltip>
     `;
   }
 
   private renderAuthBanner() {
-    if (!this.authService.isExperimenter
-      || !this.routerService.isParticipantPage) {
+    if (
+      !this.authService.isExperimenter ||
+      !this.routerService.isParticipantPage
+    ) {
       return nothing;
     }
 
     const handlePreviewOff = () => {
-      this.routerService.navigate(
-        Pages.EXPERIMENT,
-        { "experiment": this.routerService.activeRoute.params["experiment"] }
-      );
+      this.routerService.navigate(Pages.EXPERIMENT, {
+        experiment: this.routerService.activeRoute.params['experiment'],
+      });
       this.authService.setEditPermissions(false);
       this.routerService.setExperimenterNav(true);
     };
@@ -106,7 +104,8 @@ export class Header extends MobxLitElement {
           <div>
             You are previewing as
             ${participantName ? `${participantName} / ` : 'Participant '}
-            ${this.participantService.profile?.publicId}.
+            ${this.participantService.profile?.publicId} (attention checks are
+            disabled in experimenter mode).
           </div>
         </div>
       </div>
@@ -124,14 +123,15 @@ export class Header extends MobxLitElement {
     const handleClick = () => {
       this.routerService.navigate(Pages.HOME);
       this.authService.setEditPermissions(false);
-    }
+    };
 
     return html`
       <pr-icon-button
         color="neutral"
         icon="arrow_back"
         variant="default"
-        @click=${handleClick}>
+        @click=${handleClick}
+      >
       </pr-icon-button>
     `;
   }
@@ -141,32 +141,36 @@ export class Header extends MobxLitElement {
 
     switch (activePage) {
       case Pages.HOME:
-        return "Home";
+        return 'Home';
       case Pages.SETTINGS:
-        return "Settings";
+        return 'Settings';
       case Pages.PARTICIPANT_SETTINGS:
-        return "Settings";
+        return 'Settings';
       case Pages.EXPERIMENT:
-        const experiment = this.experimentService.experiment; 
+        const experiment = this.experimentService.experiment;
         if (!this.authService.isExperimenter) {
-          return experiment?.publicName ?? "Experiment";
+          return experiment?.publicName ?? 'Experiment';
         } else if (experiment && experiment.publicName) {
           return `${experiment.publicName} (${experiment.name})`;
         }
-        return "Experiment";
+        return 'Experiment';
 
       case Pages.EXPERIMENT_GROUP:
-        return "Experiment group: " + this.routerService.activeRoute.params["experiment_group"];
+        return (
+          'Experiment group: ' +
+          this.routerService.activeRoute.params['experiment_group']
+        );
       case Pages.EXPERIMENT_CREATE:
-        return "New experiment";
+        return 'New experiment';
       case Pages.PARTICIPANT:
-        return "Welcome, participant!";
+        return 'Welcome, participant!';
       case Pages.PARTICIPANT_STAGE:
         return this.experimentService.getStageName(
-          this.routerService.activeRoute.params["stage"], true
+          this.routerService.activeRoute.params['stage'],
+          true
         );
       default:
-        return "";
+        return '';
     }
   }
 
@@ -176,15 +180,14 @@ export class Header extends MobxLitElement {
     switch (activePage) {
       case Pages.HOME:
         return html`
-          ${this.renderCreateExperimentButton()}
-          ${this.renderEditPermissions()}
+          ${this.renderCreateExperimentButton()} ${this.renderEditPermissions()}
         `;
       case Pages.EXPERIMENT_GROUP:
         return this.renderEditPermissions();
       case Pages.EXPERIMENT:
         return this.renderEditPermissions();
       case Pages.PARTICIPANT_STAGE:
-        const stageName = this.routerService.activeRoute.params["stage"];
+        const stageName = this.routerService.activeRoute.params['stage'];
         const currentStage = this.experimentService.getStage(stageName);
         if (currentStage && currentStage.popupText) {
           return html`
@@ -206,7 +209,7 @@ export class Header extends MobxLitElement {
 
     const handleClick = () => {
       this.routerService.navigate(Pages.EXPERIMENT_CREATE);
-    }
+    };
 
     return html`
       <pr-button padding="small" variant="tonal" @click=${handleClick}>
@@ -232,10 +235,12 @@ export class Header extends MobxLitElement {
     return html`
       <pr-menu color="secondary" name="Load template">
         <div class="menu-wrapper">
-          ${this.experimenterService.templates.length === 0 ?
-            html`<div>No templates yet</div>` : nothing}
-          ${this.experimenterService.templates.map(
-            template => this.renderExperimentConfigTemplateItem(template))}
+          ${this.experimenterService.templates.length === 0
+            ? html`<div>No templates yet</div>`
+            : nothing}
+          ${this.experimenterService.templates.map((template) =>
+            this.renderExperimentConfigTemplateItem(template)
+          )}
         </div>
       </pr-menu>
       <experiment-config-menu></experiment-config-menu>
@@ -245,6 +250,6 @@ export class Header extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "page-header": Header;
+    'page-header': Header;
   }
 }

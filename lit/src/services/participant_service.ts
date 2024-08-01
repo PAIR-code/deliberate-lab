@@ -1,11 +1,27 @@
-import { computed, makeObservable, observable } from "mobx";
-import { FirebaseService } from "./firebase_service";
-import { Service } from "./service";
-import { RouterService } from "./router_service";
-import { Timestamp, Unsubscribe, collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
-import { LostAtSeaQuestionAnswer, ParticipantProfile, ParticipantProfileBase, QuestionAnswer, StageAnswer, StageKind, Votes, lookupTable } from "@llm-mediation-experiments/utils";
-import { updateStageCallable } from "../shared/callables";
-
+import {
+  LostAtSeaQuestionAnswer,
+  PARTICIPANT_COMPLETION_TYPE,
+  ParticipantProfile,
+  ParticipantProfileBase,
+  QuestionAnswer,
+  StageAnswer,
+  StageKind,
+  Votes,
+  lookupTable,
+} from '@llm-mediation-experiments/utils';
+import {
+  Timestamp,
+  Unsubscribe,
+  collection,
+  doc,
+  onSnapshot,
+  updateDoc,
+} from 'firebase/firestore';
+import {computed, makeObservable, observable} from 'mobx';
+import {updateStageCallable} from '../shared/callables';
+import {FirebaseService} from './firebase_service';
+import {RouterService} from './router_service';
+import {Service} from './service';
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
@@ -46,14 +62,14 @@ export class ParticipantService extends Service {
   }
 
   isCurrentStage(
-    stageId: string = this.sp.routerService.activeRoute.params["stage"]
+    stageId: string = this.sp.routerService.activeRoute.params['stage']
   ) {
     return this.profile?.currentStageId === stageId;
   }
 
   updateForCurrentRoute() {
-    const eid = this.sp.routerService.activeRoute.params["experiment"];
-    const pid = this.sp.routerService.activeRoute.params["participant"];
+    const eid = this.sp.routerService.activeRoute.params['experiment'];
+    const pid = this.sp.routerService.activeRoute.params['participant'];
     if (eid !== this.experimentId || pid !== this.participantId) {
       this.setParticipant(eid, pid);
     }
@@ -62,7 +78,7 @@ export class ParticipantService extends Service {
   loadParticipantData() {
     this.unsubscribeAll();
 
-    if(this.experimentId === null || this.participantId === null) {
+    if (this.experimentId === null || this.participantId === null) {
       this.isLoading = false;
       return;
     }
@@ -70,18 +86,31 @@ export class ParticipantService extends Service {
     // Subscribe to the participant profile
     this.unsubscribe.push(
       onSnapshot(
-        doc(this.sp.firebaseService.firestore, 'experiments', this.experimentId, 'participants', this.participantId),
+        doc(
+          this.sp.firebaseService.firestore,
+          'experiments',
+          this.experimentId,
+          'participants',
+          this.participantId
+        ),
         (doc) => {
           this.profile = doc.data() as ParticipantProfile;
           this.isProfileLoading = false;
-        },
-      ),
+        }
+      )
     );
 
     // Subscribe to the stage answers
     this.unsubscribe.push(
       onSnapshot(
-        collection(this.sp.firebaseService.firestore, 'experiments', this.experimentId, 'participants', this.participantId, 'stages'),
+        collection(
+          this.sp.firebaseService.firestore,
+          'experiments',
+          this.experimentId,
+          'participants',
+          this.participantId,
+          'stages'
+        ),
         (snapshot) => {
           let changedDocs = snapshot.docChanges().map((change) => change.doc);
           if (changedDocs.length === 0) changedDocs = snapshot.docs;
@@ -91,8 +120,8 @@ export class ParticipantService extends Service {
             this.stageAnswers[doc.id] = doc.data() as StageAnswer;
           });
           this.areAnswersLoading = false;
-        },
-      ),
+        }
+      )
     );
   }
 
@@ -103,7 +132,7 @@ export class ParticipantService extends Service {
     this.profile = undefined;
     this.stageAnswers = {};
   }
-  
+
   // ******************************************************************************************* //
   //                                          MUTATIONS                                          //
   // ******************************************************************************************* //
@@ -113,20 +142,35 @@ export class ParticipantService extends Service {
    */
   async updateProfile(data: Partial<ParticipantProfileBase>) {
     return updateDoc(
-      doc(this.sp.firebaseService.firestore, 'experiments', this.experimentId!, 'participants', this.participantId!),
-      data,
+      doc(
+        this.sp.firebaseService.firestore,
+        'experiments',
+        this.experimentId!,
+        'participants',
+        this.participantId!
+      ),
+      data
     );
   }
 
   /** Mark a participant as having finished the experiment
    * @rights Participant
    */
-  async markExperimentCompleted() {
+  async markExperimentCompleted(
+    completionType: PARTICIPANT_COMPLETION_TYPE | null = null
+  ) {
     return updateDoc(
-      doc(this.sp.firebaseService.firestore, 'experiments', this.experimentId!, 'participants', this.participantId!),
+      doc(
+        this.sp.firebaseService.firestore,
+        'experiments',
+        this.experimentId!,
+        'participants',
+        this.participantId!
+      ),
       {
         completedExperiment: Timestamp.now(),
-      },
+        completionType: completionType ?? PARTICIPANT_COMPLETION_TYPE.SUCCESS,
+      }
     );
   }
 
@@ -135,10 +179,16 @@ export class ParticipantService extends Service {
    */
   async updateCurrentStageId(stageId: string) {
     return updateDoc(
-      doc(this.sp.firebaseService.firestore, 'experiments', this.experimentId!, 'participants', this.participantId!),
+      doc(
+        this.sp.firebaseService.firestore,
+        'experiments',
+        this.experimentId!,
+        'participants',
+        this.participantId!
+      ),
       {
         currentStageId: stageId,
-      },
+      }
     );
   }
 
@@ -146,45 +196,40 @@ export class ParticipantService extends Service {
    * @rights Participant
    */
   async updateSurveyStage(stageId: string, answers: QuestionAnswer[]) {
-    return updateStageCallable(
-      this.sp.firebaseService.functions,
-      {
-        experimentId: this.experimentId!,
-        participantId: this.participantId!,
-        stageId,
-        stage: {
-          kind: StageKind.TakeSurvey,
-          answers: lookupTable(answers, 'id'),
-        },
-      }
-    );
+    return updateStageCallable(this.sp.firebaseService.functions, {
+      experimentId: this.experimentId!,
+      participantId: this.participantId!,
+      stageId,
+      stage: {
+        kind: StageKind.TakeSurvey,
+        answers: lookupTable(answers, 'id'),
+      },
+    });
   }
 
   /** Update a Lost at Sea survey stage for this participant
    * @rights Participant
    */
-  async updateLostAtSeaSurveyStage(stageId: string, answers: LostAtSeaQuestionAnswer[]) {
-    return updateStageCallable(
-      this.sp.firebaseService.functions,
-      {
-        experimentId: this.experimentId!,
-        participantId: this.participantId!,
-        stageId,
-        stage: {
-          kind: StageKind.LostAtSeaSurvey,
-          answers: lookupTable(answers, 'id'),
-        }
-      }
-    );
+  async updateLostAtSeaSurveyStage(
+    stageId: string,
+    answers: LostAtSeaQuestionAnswer[]
+  ) {
+    return updateStageCallable(this.sp.firebaseService.functions, {
+      experimentId: this.experimentId!,
+      participantId: this.participantId!,
+      stageId,
+      stage: {
+        kind: StageKind.LostAtSeaSurvey,
+        answers: lookupTable(answers, 'id'),
+      },
+    });
   }
 
   /** Update a vote for leader stage for this participant
    * @rights Participant
    */
   async updateVoteForLeaderStage(stageId: string, votes: Votes) {
-    return updateStageCallable(
-      this.sp.firebaseService.functions,
-      {
+    return updateStageCallable(this.sp.firebaseService.functions, {
       experimentId: this.experimentId!,
       participantId: this.participantId!,
       stageId,

@@ -1,14 +1,14 @@
-import "../../../pair-components/textarea";
+import '../../../pair-components/textarea';
 
-import "../../footer/footer";
-import "../../progress/progress_stage_completed";
+import '../../footer/footer';
+import '../../progress/progress_stage_completed';
 
 import '@material/web/radio/radio.js';
 
-import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
-import { classMap } from "lit/directives/class-map.js";
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {CSSResultGroup, html, nothing} from 'lit';
+import {customElement, property} from 'lit/decorators.js';
+import {classMap} from 'lit/directives/class-map.js';
 
 import {
   ITEMS,
@@ -17,22 +17,23 @@ import {
   LostAtSeaQuestionAnswer,
   LostAtSeaSurveyStageAnswer,
   LostAtSeaSurveyStageConfig,
-} from "@llm-mediation-experiments/utils";
+} from '@llm-mediation-experiments/utils';
 
-import { core } from "../../../core/core";
-import { ParticipantService } from "../../../services/participant_service";
-
-import { styles } from "./las_survey_preview.scss";
+import {unsafeHTML} from 'lit/directives/unsafe-html.js';
+import {core} from '../../../core/core';
+import {ParticipantService} from '../../../services/participant_service';
+import {convertMarkdownToHTML} from '../../../shared/utils';
+import {styles} from './las_survey_preview.scss';
 
 /** Lost at Sea survey preview */
-@customElement("las-survey-preview")
+@customElement('las-survey-preview')
 export class SurveyPreview extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly participantService = core.getService(ParticipantService);
 
-  @property() stage: LostAtSeaSurveyStageConfig|null = null;
-  @property() answer: LostAtSeaSurveyStageAnswer|null = null;
+  @property() stage: LostAtSeaSurveyStageConfig | null = null;
+  @property() answer: LostAtSeaSurveyStageAnswer | null = null;
 
   override render() {
     if (!this.stage) {
@@ -45,7 +46,7 @@ export class SurveyPreview extends MobxLitElement {
 
       if (answerList.length != this.stage?.questions.length) {
         return false;
-      };
+      }
 
       // Confirm that user has selected confidence for each question
       for (const answer of answerList) {
@@ -56,13 +57,17 @@ export class SurveyPreview extends MobxLitElement {
       return true;
     };
 
-    const descriptionContent = this.stage.description ? html`<div class="description">${this.stage.description}</div>` : nothing;
+    const descriptionContent = this.stage.description
+      ? html`<div class="description">
+          ${unsafeHTML(convertMarkdownToHTML(this.stage.description))}
+        </div>`
+      : nothing;
 
     return html`
       ${descriptionContent}
-      
+
       <div class="questions-wrapper">
-        ${this.stage.questions.map(question => this.renderQuestion(question))}
+        ${this.stage.questions.map((question) => this.renderQuestion(question))}
       </div>
       <stage-footer .disabled=${!ratingsComplete()}>
         <progress-stage-completed></progress-stage-completed>
@@ -78,14 +83,16 @@ export class SurveyPreview extends MobxLitElement {
       }
 
       const confidence = this.getQuestionConfidence(question);
-      const answer: LostAtSeaQuestionAnswer = confidence ? {
-        id: question.id,
-        choice,
-        confidence: this.getQuestionConfidence(question),
-      } : {
-        id: question.id,
-        choice
-      };
+      const answer: LostAtSeaQuestionAnswer = confidence
+        ? {
+            id: question.id,
+            choice,
+            confidence: this.getQuestionConfidence(question),
+          }
+        : {
+            id: question.id,
+            choice,
+          };
 
       this.participantService.updateLostAtSeaSurveyStage(
         this.participantService.profile!.currentStageId,
@@ -101,22 +108,25 @@ export class SurveyPreview extends MobxLitElement {
       }
 
       return false;
-    }
+    };
 
     const getClassMap = (item: string) => {
       return classMap({
-        "question": true,
-        "selected": isMatch(item),
-        "disabled": !this.participantService.isCurrentStage()
+        question: true,
+        selected: isMatch(item),
+        disabled: !this.participantService.isCurrentStage(),
       });
-    }
+    };
 
     return html`
       <div class="survey-question">
         <div class="question-title">${question.questionText}</div>
         <div class="question-wrapper">
-          <div class=${getClassMap(question.item1)}
-            @click=${() => { onSelect(question.item1); }}
+          <div
+            class=${getClassMap(question.item1)}
+            @click=${() => {
+              onSelect(question.item1);
+            }}
           >
             <div class="img-wrapper">
               <img src=${ITEMS[question.item1].imageUrl} />
@@ -128,14 +138,18 @@ export class SurveyPreview extends MobxLitElement {
                 value="1"
                 aria-label=${ITEMS[question.item1].name}
                 ?checked=${isMatch(question.item1)}
-                ?disabled=${!this.participantService.isCurrentStage()}>
+                ?disabled=${!this.participantService.isCurrentStage()}
+              >
               </md-radio>
               <label for="1">${ITEMS[question.item1].name}</label>
             </div>
           </div>
-          <div class=${getClassMap(question.item2)}
-              @click=${() => { onSelect(question.item2); }}
-            >
+          <div
+            class=${getClassMap(question.item2)}
+            @click=${() => {
+              onSelect(question.item2);
+            }}
+          >
             <div class="img-wrapper">
               <img src=${ITEMS[question.item2].imageUrl} />
             </div>
@@ -146,7 +160,8 @@ export class SurveyPreview extends MobxLitElement {
                 value="2"
                 aria-label=${ITEMS[question.item2].name}
                 ?checked=${isMatch(question.item2)}
-                ?disabled=${!this.participantService.isCurrentStage()}>
+                ?disabled=${!this.participantService.isCurrentStage()}
+              >
               </md-radio>
               <label for="2">${ITEMS[question.item2].name}</label>
             </div>
@@ -182,19 +197,24 @@ export class SurveyPreview extends MobxLitElement {
 
     return html`
       <div class="confidence-question">
-        <div class="title">How confident are you that your answer is correct?</div>
+        <div class="title">
+          How confident are you that your answer is correct?
+        </div>
         <div class="confidence-scale labels">
           <div>Not confident</div>
           <div>Very confident</div>
         </div>
         <div class="confidence-scale values">
-          ${scale.map(num => this.renderConfidenceRadioButton(question, num))}
+          ${scale.map((num) => this.renderConfidenceRadioButton(question, num))}
         </div>
       </div>
     `;
   }
 
-  private renderConfidenceRadioButton(question: LostAtSeaQuestion, value: number) {
+  private renderConfidenceRadioButton(
+    question: LostAtSeaQuestion,
+    value: number
+  ) {
     const name = `${question.id}-confidence`;
     const id = `${question.id}-confidence-${value}`;
 
@@ -236,7 +256,8 @@ export class SurveyPreview extends MobxLitElement {
           value=${value}
           aria-label=${value}
           ?checked=${isConfidenceChoiceMatch(value)}
-          ?disabled=${!this.participantService.isCurrentStage() || !this.answer?.answers[question.id]}
+          ?disabled=${!this.participantService.isCurrentStage() ||
+          !this.answer?.answers[question.id]}
           @change=${handleConfidenceClick}
         >
         </md-radio>
@@ -248,6 +269,6 @@ export class SurveyPreview extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "las-survey-preview": SurveyPreview;
+    'las-survey-preview': SurveyPreview;
   }
 }

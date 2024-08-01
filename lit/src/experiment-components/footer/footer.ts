@@ -1,4 +1,4 @@
-import '../../pair-components/button';
+import '../../experiment-components/popup/transfer_popup';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html} from 'lit';
@@ -10,6 +10,7 @@ import {ParticipantService} from '../../services/participant_service';
 import {Pages, RouterService} from '../../services/router_service';
 import {SurveyService} from '../../services/survey_service';
 
+import {PARTICIPANT_COMPLETION_TYPE} from '@llm-mediation-experiments/utils';
 import {PROLIFIC_COMPLETION_URL_PREFIX} from '../../shared/constants';
 import {styles} from './footer.scss';
 
@@ -26,7 +27,7 @@ export class Footer extends MobxLitElement {
   @property() disabled = false;
   // TODO: Make this parameterized.
   @state() private timeRemaining = 5 * 60; // Set initial countdown time to 5 minutes (300 seconds)
-
+  @state() private showTransferPopup = false;
   private countdownInterval: number | undefined;
 
   isOnLastStage() {
@@ -60,7 +61,7 @@ export class Footer extends MobxLitElement {
   handleTimedOut() {
     this.clearCountdown();
     alert('Time is up, the experiment has ended!');
-    this.redirectEndExperiment();
+    this.redirectEndExperiment(PARTICIPANT_COMPLETION_TYPE.LOBBY_TIMEOUT);
   }
 
   startCountdown() {
@@ -90,8 +91,10 @@ export class Footer extends MobxLitElement {
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   }
 
-  redirectEndExperiment() {
-    this.participantService.markExperimentCompleted();
+  redirectEndExperiment(
+    completionType: PARTICIPANT_COMPLETION_TYPE = PARTICIPANT_COMPLETION_TYPE.SUCCESS
+  ) {
+    this.participantService.markExperimentCompleted(completionType);
 
     if (this.experimentService.experiment?.prolificRedirectCode) {
       // Navigate to Prolific with completion code.
@@ -104,6 +107,20 @@ export class Footer extends MobxLitElement {
     }
   }
 
+  private handleTransfer() {
+    this.showTransferPopup = false;
+    const transferConfig = this.participantService.profile?.transferConfig;
+    if (!transferConfig) {
+      return;
+    }
+
+    this.participantService.markExperimentCompleted();
+    this.routerService.navigate(Pages.PARTICIPANT, {
+      experiment: transferConfig.experimentId,
+      participant: transferConfig.participantId,
+    });
+  }
+
   override render() {
     return html`
       <div class="footer">
@@ -112,11 +129,24 @@ export class Footer extends MobxLitElement {
         </div>
         <div class="right">${this.renderNextStageButton()}</div>
       </div>
+
+      <!-- Popup listener -->
+      <transfer-popup
+        .open=${this.showTransferPopup}
+        @confirm-transfer=${this.handleTransfer}
+      ></transfer-popup>
     `;
   }
 
   private renderNextStageButton() {
     const isLastStage = this.isOnLastStage();
+    if (
+      this.participantService.profile?.completionType ===
+      PARTICIPANT_COMPLETION_TYPE.BOOTED_OUT
+    ) {
+      alert('You have been removed from this experiment.');
+      this.routerService.navigate(Pages.HOME);
+    }
 
     const handleNext = async () => {
       // If survey stage, save relevant text answers
@@ -145,32 +175,16 @@ export class Footer extends MobxLitElement {
     };
 
     const preventNextClick =
-      this.disabled || !this.participantService.isCurrentStage();
-
-    const handleTransfer = () => {
-      const transferConfig = this.participantService.profile?.transferConfig;
-      if (!transferConfig) {
-        return;
-      }
-
-      this.participantService.markExperimentCompleted();
-      this.routerService.navigate(Pages.PARTICIPANT, {
-        experiment: transferConfig.experimentId,
-        participant: transferConfig.participantId,
-      });
-    };
+      this.disabled || !this.participantService.isCurrentStage() ||
+      this.participantService.profile?.completedExperiment;
 
     // If completed lobby experiment, render link to transfer experiment
     if (isLastStage && this.experimentService.experiment?.isLobby) {
       // If transfer experiment has been assigned
       if (this.participantService.profile?.transferConfig) {
-        alert("You've been transferred to a new experiment!");
         this.clearCountdown();
-        return html`
-          <pr-button variant="tonal" } @click=${handleTransfer}>
-            Go to new experiment
-          </pr-button>
-        `;
+        this.showTransferPopup = true;
+        return null;
       } else {
         return html`
           <pr-button
