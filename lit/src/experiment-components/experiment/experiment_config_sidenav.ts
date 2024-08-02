@@ -44,6 +44,10 @@ export class ExperimentConfigSidenav extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   override render() {
+    if (this.experimentConfig.isLoading) {
+      return nothing;
+    }
+
     return this.renderNav();
   }
 
