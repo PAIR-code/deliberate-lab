@@ -60,10 +60,11 @@ export class ElectionPreview extends MobxLitElement {
       `;
     }
 
+    const numActiveProfiles = this.experimentService
+      .getParticipantProfiles()
+      .filter((profile) => !profile.completedExperiment).length;
     const disabled =
-      (this.answer?.rankings ?? []).length <
-      this.experimentService.getParticipantProfiles().length - 1;
-
+      (this.answer?.rankings ?? []).length < numActiveProfiles - 1;
     return html`
       ${descriptionContent}
 
@@ -124,7 +125,10 @@ export class ElectionPreview extends MobxLitElement {
   }
 
   private renderDraggableParticipant(profile: ParticipantProfile) {
-    if (profile.publicId === this.participantService.profile?.publicId) {
+    if (
+      profile.publicId === this.participantService.profile?.publicId ||
+      profile.completedExperiment
+    ) {
       return nothing;
     }
 
