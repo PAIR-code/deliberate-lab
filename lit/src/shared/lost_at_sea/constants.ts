@@ -13,17 +13,17 @@ export const LAS_DESCRIPTION =
 export const LAS_TOS = [
   'Thank you for participating in this study.',
   'This research is conducted by the Paris School of Economics and has been approved by their institutional review board for ethical standards.',
-  'The study will take approximately X minutes, and you will be financially compensated for your time. Detailed instructions about the compensation will be provided in the relevant sections.',
+  'The study will take approximately 15 minutes, with an additional 30 minutes if you are selected for the second found. Detailed instructions about the compensation will be provided in the relevant sections.',
   'By participating, you agree that your responses, including basic demographic information, will be saved. No identifiable personal data will be collected. All data will be anonymized and used solely for scientific research. Your data will not be shared with third parties.',
   "By clicking 'Next,' you accept these terms and proceed with the study.",
 ];
 
-export const LAS_INTRO_DESCRIPTION = `This experiment is part of a research project that explores human decisions in various online environments. You will complete different tasks, and answer questions. You may also interact with others during the experiment.`;
+export const LAS_INTRO_DESCRIPTION = `This experiment is part of a research project that explores human decisions in various online environments.\n\nYou will complete different tasks and answer questions. You may also interact with others during the experiment.`;
 export const LAS_INTRO_INFO_LINES = [
-  'You will receive a fixed fee of $x for your participation. The experiment also gives you the opportunity to earn a $x bonus, based on your decisions. We will explain precisely how your bonus is determined later.',
+  'You will receive a fixed fee of $3 for your participation, with an opportunity to earn a bonus. We will explain precisely how your bonus is determined later.',
   'At the end of the experiment, you will be redirected to a waiting page. This waiting time is part of the experiment and has been factored into your payment. **You will not be approved for the payout if you do not remain on this waiting page for the full requested duration**.',
-  'During this waiting time, you may be invited to continue the experiment by completing two additional parts, Part 2 and Part 3. These parts will be played in *groups of four*, and should take an estimated additional  x minutes. In these parts, you will have the opportunity to earn a $x bonus, based on your decisions and the decisions of other participants. One of these parts will be randomly selected to determine your bonus. Additionally, you will receive a fixed fee of $x for completing Parts 2 and 3.',
-  'To sum up:\n\n* You’ll complete a first part *individually*, and then wait to see if you are selected to take part in the next part of the experiment.\n* You need to wait the full amount of time to get your payoff for Part 1, even though you are not selected or choose to leave the experiment.\n* If you receive an invitation, you can then start the rest of the experiment, that is played in *groups of 4*',
+  'During this waiting time, you may be invited to continue the experiment by completing two additional parts, Part 2 and Part 3. These parts will be played in *groups of four*, and should take an estimated additional 30 minutes. In these parts, you will have the opportunity to earn a $2 bonus, based on your decisions and the decisions of other participants. One of these parts will be randomly selected to determine your bonus. Additionally, you will receive a fixed fee of $6 for completing Parts 2 and 3.',
+  'To sum up:\n\n* You’ll complete a first part *individually*, and then wait to see if you are selected to take part in the next part of the experiment.\n* You need to wait the full amount of time to get your payoff for Part 1, even though you are not selected or choose to leave the experiment.\n* If you receive an invitation, you can then start the rest of the experiment, that is played in *groups of 4 participants*.',
   'Please click “Next stage” to proceed.',
 ];
 
@@ -31,14 +31,15 @@ export const LAS_INITIAL_TASK_INTRO_INFO_LINES = [
   '## Imagine the following scenario:',
   "You have chartered a yacht with three friends for a holiday trip across the Atlantic Ocean. None of you have sailing experience, so you hired an experienced skipper and a two-person crew. In the middle of the Atlantic a fierce fire breaks out in the ship's galley. The skipper and crew have been lost whilst trying to fight the blaze. Much of the yacht is destroyed and is slowly sinking. Vital navigational and radio equipment are damaged, and your location is unclear. Your best estimate is that you are many hundreds of miles from the nearest landfall.",
   '*You and your friends have managed to save 10 items, undamaged and intact after the fire. In addition, you have salvaged a four-man rubber life craft and a box of matches*.',
-  '## Your task:  You are asked to **evaluate these 10 items in terms of their importance for your survival, as you wait to be rescued**. The computer will randomly generate pairs of items, and you will select which of the two is the most useful in your situation.',
+  '## Your task:',
+  'You are asked to **evaluate these 10 items in terms of their importance for your survival, as you wait to be rescued**. The computer will randomly generate pairs of items, and you will select which of the two is the most useful in your situation.',
   '## Payment:',
-  "Your answers will be compared to a panel of experts' solutions. If a question from Part 1 is randomly selected to determine your payment at the end of the study, you will earn $x if your answer is correct, and $0 otherwise.",
+  "Your answers will be compared to a panel of experts' solutions. If a question from Part 1 is randomly selected to determine your payment at the end of the study, you will later receive a $2 bonus if your answer is correct, and $0 otherwise.",
   'Please click “Next stage” to proceed.',
 ];
 
 export const LAS_SCENARIO_REMINDER =
-  'Here is a reminder of the scenario:\n\nYou and three friends are on a yacht trip across the Atlantic. A fire breaks out, and the skipper and crew are lost. The yacht is sinking, and your location is unclear.\nYou have saved 10 items, a life raft, and a box of matches.\n\nEvaluate the relative importance of items in each presented pair by selecting the one you believe is most useful. You can earn $X per correct answer if that question is drawn to determine your payoff.';
+  'Here is a reminder of the scenario:\n\nYou and three friends are on a yacht trip across the Atlantic. A fire breaks out, and the skipper and crew are lost. The yacht is sinking, and your location is unclear.\nYou have saved 10 items, a life raft, and a box of matches.\n\nEvaluate the relative importance of items in each presented pair by selecting the one you believe is most useful. You can earn $2 per correct answer if that question is drawn to determine your payoff.';
 
 export const LAS_WTL_DESCRIPTION =
   'Thank you for completing the task.\n\nNow, imagine that you are no longer alone but part of a group of four people. Your group must elect a leader whose role is to answer on behalf of the group the same types of questions you have just seen. In this scenario, the leader is the only one who chooses the most useful items for survival from pairs, and their answers determine the payment for each member of the group.';
@@ -55,7 +56,7 @@ export const LAS_WTL_SURVEY: QuestionConfig[] = [
 ];
 
 export const LAS_WAIT_INFO_LINES = [
-  'Please wait on this page for x minutes. If you leave this page before the time is up, you will not be approved for the payout.',
+  'Please wait on this page for 15 minutes. **There may be attention checks to make sure that you are waiting.** If you leave this page before the time is up, you will not be approved for the payout.',
   'A link may appear offering you the option to continue with the experiment.',
   'Thank you for your patience.',
 ];
@@ -72,7 +73,7 @@ export const LAS_SECOND_PART_INTRO_INFO_LINES = [
   'Your group will engage in a free-form chat discussion to evaluate the relative importance of the different items you’ve already seen in Part 1, based on their importance for group survival. More details about the chat will be given later.',
   '\n\n## Opportunity to update your individual answer',
   'After the chat ends, you will have the chance to revise the individual answers you provided in Part 1 of the experiment. You can choose to update your previous answers or to keep them the same.',
-  "\n\nIf a question from Part 2 is selected to determine your final payoff, your answers will be evaluated in the same way as in Part 1. Your answers will be compared to a panel of experts' solutions, and you will earn $X if your answer is correct, and $0 otherwise.",
+  "\n\nIf a question from Part 2 is selected to determine your final payoff, your answers will be evaluated in the same way as in Part 1. Your answers will be compared to a panel of experts' solutions, and you will earn $2 if your answer is correct, and $0 otherwise.",
   '\n\nPlease note that Part 1 and Part 2 of the experiment are independent. Changing answers here will not impact the answers you provided in Part 1.',
   '\n\n## Election of a group leader for Part 3',
   "After the chat, and after you’ve had the chance to update your individual answers, you will be asked to elect a group leader who will play a crucial role in Part 3 of the experiment. In Part 3, your group will repeat the same task as in Part 1, but with different pairs of items. The leader’s answers regarding the most important items for survival will determine the team's final payoff.",
@@ -123,7 +124,7 @@ export const LAS_GROUP_DISCUSSION_INSTRUCTIONS = [
 
 export const LAS_UPDATE_INSTRUCTIONS = [
   'You are now given a chance to update the choices you previously made in Part 1. You can choose to update your previous answers or provide the same answers again.',
-  "\n\nIf a question from Part 2 is selected to determine your final payoff, the answers you give on the next screen will be evaluated in the same way as in Part 1. Your answers will be compared to a panel of experts' solutions, and you will earn $X if your answer is correct, and $0 otherwise.",
+  "\n\nIf a question from Part 2 is selected to determine your final payoff, the answers you give on the next screen will be evaluated in the same way as in Part 1. Your answers will be compared to a panel of experts' solutions, and you will earn $2 if your answer is correct, and $0 otherwise.",
   '\n\n*Please note that Part 1 and Part 2 of the experiment are independent. Changing answers here will not impact the answers you provided in Part 1.*',
 ];
 
@@ -209,11 +210,11 @@ export const LAS_REVEAL_INFO = `An explanation of the results can be found [here
 
 export const LAS_PAYMENT_INSTRUCTIONS = [
   '## Part 1 Payment:',
-  'Your payment for Part 1 includes a fixed fee of £3 and a bonus. The bonus is determined by randomly selecting one question from Part 1. If your answer to this question is correct, you earn £2; otherwise, you earn £0.',
+  'Your payment for Part 1 includes a fixed fee of $3 and a bonus. The bonus is determined by randomly selecting one question from Part 1. If your answer to this question is correct, you earn $2; otherwise, you earn $0.',
   '\n\n## Payment for Parts 2 and 3:',
-  'Your payment for Parts 2 and 3 includes a fixed fee of £6 and a bonus. The bonus is determined by randomly selecting either Part 2 or Part 3.',
-  '* If Part 2 is selected: One question is randomly chosen from Part 2. You earn £2 if your answer is correct, and £0 otherwise.',
-  '* If Part 3 is selected: One question is randomly chosen from Part 3, with only the leader’s answer counting. You earn £2 if the leader’s answer is correct, and £0 otherwise.',
+  'Your payment for Parts 2 and 3 includes a fixed fee of $6 and a bonus. The bonus is determined by randomly selecting either Part 2 or Part 3.',
+  '* If Part 2 is selected: One question is randomly chosen from Part 2. You earn $2 if your answer is correct, and $0 otherwise.',
+  '* If Part 3 is selected: One question is randomly chosen from Part 3, with only the leader’s answer counting. You earn $2 if the leader’s answer is correct, and $0 otherwise.',
 ];
 export const LAS_PAYMENT_INSTRUCTIONS_ALL = [
   ...LAS_PAYMENT_INSTRUCTIONS,

@@ -54,7 +54,7 @@ export class ExperimentConfigService extends Service {
   @observable hasAttentionCheck = false;
   @observable waitSeconds?: number = undefined;
   @observable popupSeconds?: number = undefined;
-  @observable prolificAttentionFailRedirectCode?: string = undefined;
+  @observable prolificAttentionFailRedirectCode?: string = '';
 
   // Lobby config.
   @observable isMultiPart = false;
@@ -78,7 +78,7 @@ export class ExperimentConfigService extends Service {
         waitSeconds: this.waitSeconds,
         popupSeconds: this.popupSeconds,
         prolificAttentionFailRedirectCode:
-          this.prolificAttentionFailRedirectCode,
+          this.prolificAttentionFailRedirectCode || '',
       };
     }
     return undefined;

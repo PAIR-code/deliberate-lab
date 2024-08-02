@@ -41,12 +41,14 @@ export class AttentionCheckPopup extends MobxLitElement {
     super.connectedCallback();
     this.resetAttentionCheck();
     window.addEventListener('click', this.resetAttentionCheck);
+    window.addEventListener('mousemove', this.resetAttentionCheck);
     window.addEventListener('keydown', this.resetAttentionCheck);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     window.removeEventListener('click', this.resetAttentionCheck);
+    window.addEventListener('mousemove', this.resetAttentionCheck);
     window.removeEventListener('keydown', this.resetAttentionCheck);
     this.clearAttentionCheckTimeouts();
   }
