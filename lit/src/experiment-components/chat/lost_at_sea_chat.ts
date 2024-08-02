@@ -16,8 +16,9 @@ import {customElement, property, state} from 'lit/decorators.js';
 import {
   ChatKind,
   GroupChatStageConfig,
-  ItemName,
   ITEMS,
+  ItemName,
+  PARTICIPANT_COMPLETION_TYPE,
 } from '@llm-mediation-experiments/utils';
 import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 import {core} from '../../core/core';
@@ -100,7 +101,11 @@ export class RankingChat extends MobxLitElement {
           (p) =>
             html`
               <div class="profile">
-                <profile-avatar .emoji=${p.avatarUrl}></profile-avatar>
+                <profile-avatar
+                  .emoji=${p.avatarUrl}
+                  .disabled=${p.completedExperiment &&
+                  p.completionType! !== PARTICIPANT_COMPLETION_TYPE.SUCCESS}
+                ></profile-avatar>
                 <div>${p.name} (${p.pronouns})</div>
               </div>
             `

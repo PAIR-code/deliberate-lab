@@ -319,8 +319,6 @@ export const createParticipant = onCall(async (request) => {
 
       // TODO: Also copy over publicStageData for given publicId
     }
-
-    // TODO: Validate and don't allow adding new participants if experiment has started.
   });
   if (newParticipantData) {
     return { success: true, participant: newParticipantData };

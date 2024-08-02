@@ -146,6 +146,8 @@ export class ExperimentConfigMenu extends MobxLitElement {
         if (stage.name === 'Lobby') {
           this.experimentConfig.dividerStageId = stage.id;
           this.experimentConfig.isMultiPart = true;
+          this.experimentConfig.lobbyWaitSeconds =
+            this.experimentConfig.lobbyWaitSeconds ?? 15 * 60;
         }
       });
     };

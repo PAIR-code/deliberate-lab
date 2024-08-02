@@ -11,6 +11,7 @@ import {RouterService} from '../../services/router_service';
 
 import {ParticipantProfile} from '@llm-mediation-experiments/utils';
 import {styles} from './progress_end_chat.scss';
+import {PARTICIPANT_COMPLETION_TYPE} from '@llm-mediation-experiments/utils';
 
 /** Progress component: Shows how many participants completed the stage */
 @customElement('progress-stage-completed')
@@ -46,14 +47,24 @@ export class Progress extends MobxLitElement {
   }
 
   private renderAvatar(participant: ParticipantProfile) {
-    const label = `
+    const inactiveLabel = 'This participant is no longer active.';
+    const participantLabel = `
       ${participant.name ?? participant.publicId}
       ${participant.pronouns ? `(${participant.pronouns})` : ''}
     `;
 
     return html`
-      <pr-tooltip text=${label}>
-        <profile-avatar .emoji=${participant.avatarUrl} .small=${true}>
+      <pr-tooltip
+        text=${participant.completedExperiment &&
+        participant.completionType !== PARTICIPANT_COMPLETION_TYPE.SUCCESS
+          ? inactiveLabel
+          : participantLabel}
+      >
+        <profile-avatar
+          .emoji=${participant.avatarUrl}
+          .small=${true}
+          .disabled=${participant.completedExperiment}
+        >
         </profile-avatar>
       </pr-tooltip>
     `;
