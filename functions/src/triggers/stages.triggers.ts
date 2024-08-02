@@ -231,14 +231,23 @@ export const publishStageData = onDocumentWritten(
 
           // 3. Reset all participants' readyToEndChat (for new discussion)
           await Promise.all(
-            participantIds.map((participantId) =>
-              app
+            participantIds.map(async (participantId) => {
+              const participantDoc = await app
                 .firestore()
-                .doc(`experiments/${experimentId}/participants/${participantId}/stages/${stageId}`)
-                .update({
-                  readyToEndChat: false,
-                }),
-            ),
+                .doc(`experiments/${experimentId}/participants/${participantId}`)
+                .get();
+              const participantData = participantDoc.data() as ParticipantProfile;
+              if (!participantData.completedExperiment) {
+                await app
+                  .firestore()
+                  .doc(
+                    `experiments/${experimentId}/participants/${participantId}/stages/${stageId}`,
+                  )
+                  .update({
+                    readyToEndChat: false,
+                  });
+              }
+            }),
           );
 
           // 4. Publish a message about the new pair to the chat

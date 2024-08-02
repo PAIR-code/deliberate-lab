@@ -293,7 +293,7 @@ export class ProfilePreview extends MobxLitElement {
       }
       <div class="row">
         ${this.renderTransferMenu()}
-        <pr-tooltip text="Preview lobby as participant" position="TOP_END">
+        <pr-tooltip text="Preview as participant" position="TOP_END">
           <pr-icon-button
             icon="visibility"
             color="primary"
