@@ -18,6 +18,10 @@
   overflow: hidden;
   user-select: none;
 
+  &.disabled {
+    opacity:.3; 
+  }
+
   &.small {
     @include typescale.title-small;
     height: common.$spacing-xxl;

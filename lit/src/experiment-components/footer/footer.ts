@@ -25,8 +25,7 @@ export class Footer extends MobxLitElement {
   private readonly surveyService = core.getService(SurveyService);
 
   @property() disabled = false;
-  // TODO: Make this parameterized.
-  @state() private timeRemaining = 5 * 60; // Set initial countdown time to 5 minutes (300 seconds)
+  @state() private timeRemaining: number = 10;
   @state() private showTransferPopup = false;
   private countdownInterval: number | undefined;
 
@@ -38,17 +37,21 @@ export class Footer extends MobxLitElement {
     return index === this.experimentService.stageIds.length - 1;
   }
 
-  isOnLobbyStageWithoutTransfer() {
+  addLobbyListener() {
     return (
-      this.experimentService.experiment?.isLobby &&
+      this.experimentService.experiment?.lobbyConfig.isLobby &&
       !this.participantService.profile?.transferConfig &&
-      this.isOnLastStage()
+      this.isOnLastStage() &&
+      this.experimentService.experiment?.lobbyConfig.waitSeconds! >= 0
     );
   }
 
   connectedCallback() {
     super.connectedCallback();
-    if (this.isOnLobbyStageWithoutTransfer()) {
+    if (this.addLobbyListener()) {
+      this.timeRemaining =
+        this.experimentService.experiment?.lobbyConfig.waitSeconds!;
+
       this.startCountdown();
     }
   }
@@ -60,11 +63,14 @@ export class Footer extends MobxLitElement {
 
   handleTimedOut() {
     this.clearCountdown();
-    alert('Time is up, the experiment has ended!');
+    alert('Thanks for waiting in the lobby. The experiment has ended.');
     this.redirectEndExperiment(PARTICIPANT_COMPLETION_TYPE.LOBBY_TIMEOUT);
   }
 
   startCountdown() {
+    if (!this.experimentService.experiment?.lobbyConfig.waitSeconds) {
+      return;
+    }
     this.clearCountdown(); // Ensure no previous intervals are running
     this.disabled = true;
     this.countdownInterval = window.setInterval(() => {
@@ -95,6 +101,11 @@ export class Footer extends MobxLitElement {
     completionType: PARTICIPANT_COMPLETION_TYPE = PARTICIPANT_COMPLETION_TYPE.SUCCESS
   ) {
     this.participantService.markExperimentCompleted(completionType);
+    if (completionType !== PARTICIPANT_COMPLETION_TYPE.SUCCESS) {
+      this.experimentService.markParticipantCompleted(
+        this.participantService.participantId!
+      );
+    }
 
     if (this.experimentService.experiment?.prolificRedirectCode) {
       // Navigate to Prolific with completion code.
@@ -175,11 +186,12 @@ export class Footer extends MobxLitElement {
     };
 
     const preventNextClick =
-      this.disabled || !this.participantService.isCurrentStage() ||
+      this.disabled ||
+      !this.participantService.isCurrentStage() ||
       this.participantService.profile?.completedExperiment;
 
     // If completed lobby experiment, render link to transfer experiment
-    if (isLastStage && this.experimentService.experiment?.isLobby) {
+    if (isLastStage && this.experimentService.experiment?.lobbyConfig.isLobby) {
       // If transfer experiment has been assigned
       if (this.participantService.profile?.transferConfig) {
         this.clearCountdown();
@@ -187,13 +199,10 @@ export class Footer extends MobxLitElement {
         return null;
       } else {
         return html`
-          <pr-button
-            variant=${this.disabled ? 'default' : 'tonal'}
-            ?disabled=${preventNextClick}
-            @click=${handleNext}
-          >
+          <pr-button variant="tonal" ?disabled=${true} @click=${handleNext}>
             ${isLastStage ? 'End experiment' : 'Next stage'}
-            ${this.experimentService.experiment?.isLobby && this.disabled
+            ${this.experimentService.experiment?.lobbyConfig.isLobby &&
+            this.disabled
               ? ` (${this.formatTime(this.timeRemaining)})`
               : ''}
           </pr-button>

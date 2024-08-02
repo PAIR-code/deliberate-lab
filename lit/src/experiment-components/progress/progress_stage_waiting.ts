@@ -1,28 +1,32 @@
-import "../profile/profile_avatar";
+import '../../pair-components/tooltip';
+import '../profile/profile_avatar';
 
-import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {CSSResultGroup, html, nothing} from 'lit';
+import {customElement, property} from 'lit/decorators.js';
 
-import { core } from "../../core/core";
-import { ExperimentService } from "../../services/experiment_service";
+import {core} from '../../core/core';
+import {ExperimentService} from '../../services/experiment_service';
 
-import { ParticipantProfile } from "@llm-mediation-experiments/utils";
-import { styles } from "./progress_stage_waiting.scss";
+import {
+  PARTICIPANT_COMPLETION_TYPE,
+  ParticipantProfile,
+} from '@llm-mediation-experiments/utils';
+import {styles} from './progress_stage_waiting.scss';
 
 /** Progress component: Shows how many participants are ready to begin stage */
-@customElement("progress-stage-waiting")
+@customElement('progress-stage-waiting')
 export class Progress extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly experimentService = core.getService(ExperimentService);
 
-  @property() stageId = "";
+  @property() stageId = '';
   @property() showReadyAvatars = true;
   @property() showWaitingAvatars = false;
 
   override render() {
-    const { ready, notReady } =
+    const {ready, notReady} =
       this.experimentService.getParticipantsReadyForStage(this.stageId);
 
     return html`
@@ -46,21 +50,33 @@ export class Progress extends MobxLitElement {
 
   private renderParticipants(participants: ParticipantProfile[]) {
     const renderParticipant = (participant: ParticipantProfile) => {
-      return html`
+      const isDisabled =
+        participant.completedExperiment &&
+        participant.completionType !== PARTICIPANT_COMPLETION_TYPE.SUCCESS;
+      const participantHtml = html`
         <div class="participant">
-          <profile-avatar .emoji=${participant.avatarUrl}></profile-avatar>
+          <profile-avatar
+            .emoji=${participant.avatarUrl}
+            .disabled=${isDisabled}
+          ></profile-avatar>
           <div>
             ${participant.name ?? participant.publicId}
-            <br/>
+            <br />
             (${participant.pronouns})
           </div>
         </div>
       `;
+      return isDisabled
+        ? html`<pr-tooltip
+            text="This participant is no longer in the experiment."
+            >${participantHtml}</pr-tooltip
+          >`
+        : participantHtml;
     };
 
     return html`
       <div class="participants-wrapper">
-        ${participants.map(p => renderParticipant(p))}
+        ${participants.map((p) => renderParticipant(p))}
       </div>
     `;
   }
@@ -68,6 +84,6 @@ export class Progress extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "progress-stage-waiting": Progress;
+    'progress-stage-waiting': Progress;
   }
 }

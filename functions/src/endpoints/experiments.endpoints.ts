@@ -51,13 +51,12 @@ export const createExperiment = onCall(async (request) => {
         publicName,
         description,
         tags,
-        isLobby,
         group,
         numberOfParticipants,
-        numberOfMaxParticipants,
-        waitForAllToStart,
         prolificRedirectCode,
-        attentionCheckParams,
+        attentionCheckConfig,
+        lobbyConfig,
+        participantConfig,
       } = data.metadata;
 
       // Create the metadata document
@@ -68,11 +67,10 @@ export const createExperiment = onCall(async (request) => {
         tags,
         author: { uid: request.auth?.uid, displayName: request.auth?.token?.name ?? '' },
         starred: {},
-        isLobby,
-        numberOfMaxParticipants,
-        waitForAllToStart,
         prolificRedirectCode,
-        attentionCheckParams,
+        attentionCheckConfig,
+        lobbyConfig,
+        participantConfig,
         ...(data.type === 'experiments'
           ? {
               date: Timestamp.now(),
@@ -321,8 +319,6 @@ export const createParticipant = onCall(async (request) => {
 
       // TODO: Also copy over publicStageData for given publicId
     }
-
-    // TODO: Validate and don't allow adding new participants if experiment has started.
   });
   if (newParticipantData) {
     return { success: true, participant: newParticipantData };

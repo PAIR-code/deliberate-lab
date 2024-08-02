@@ -1,4 +1,4 @@
-import {computed, makeObservable, observable} from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 
 import {
   collection,
@@ -8,17 +8,19 @@ import {
   Unsubscribe,
 } from 'firebase/firestore';
 
-import {ExperimenterService} from './experimenter_service';
-import {FirebaseService} from './firebase_service';
-import {Pages, RouterService} from './router_service';
-import {Service} from './service';
+import { updateStageCallable } from '../shared/callables';
+import { ExperimenterService } from './experimenter_service';
+import { FirebaseService } from './firebase_service';
+import { Pages, RouterService } from './router_service';
+import { Service } from './service';
 
 import {
   Experiment,
   lookupTable,
-  LostAtSeaSurveyStagePublicData,
   LostAtSeaQuestionAnswer,
+  LostAtSeaSurveyStagePublicData,
   Message,
+  PARTICIPANT_COMPLETION_TYPE,
   ParticipantProfile,
   ParticipantProfileExtended,
   PayoutCurrency,
@@ -31,9 +33,9 @@ import {
   StageKind,
   VoteForLeaderStagePublicData,
 } from '@llm-mediation-experiments/utils';
-import {downloadJsonFile} from '../shared/file_utils';
-import {collectSnapshotWithId} from '../shared/utils';
-import {AnswerItem} from '../shared/types';
+import { downloadJsonFile } from '../shared/file_utils';
+import { AnswerItem } from '../shared/types';
+import { collectSnapshotWithId } from '../shared/utils';
 
 interface ServiceProvider {
   experimenterService: ExperimenterService;
@@ -205,6 +207,13 @@ export class ExperimentService extends Service {
     return this.experiment?.stageIds ?? [];
   }
 
+  private isInactive(participant: ParticipantProfile) {
+    return (
+      participant.completedExperiment &&
+      participant.completionType !== PARTICIPANT_COMPLETION_TYPE.SUCCESS
+    );
+  }
+
   getStage(stageId: string) {
     return this.stageConfigMap[stageId];
   }
@@ -271,7 +280,7 @@ export class ExperimentService extends Service {
 
     this.getParticipantProfiles().forEach((participant) => {
       const index = this.getStageIndex(participant.currentStageId);
-      if (index >= 0 && index >= stageIndex) {
+      if ((index >= 0 && index >= stageIndex) || this.isInactive(participant)) {
         ready.push(participant);
       } else {
         notReady.push(participant);
@@ -308,7 +317,7 @@ export class ExperimentService extends Service {
         return;
       }
 
-      if (stage.readyToEndChat[publicId]) {
+      if (this.isInactive(participant) || stage.readyToEndChat[publicId]) {
         ready.push(participant);
       } else {
         notReady.push(participant);
@@ -335,29 +344,56 @@ export class ExperimentService extends Service {
     return stage.readyToEndChat[publicId];
   }
 
+  async markParticipantReadyToEndChat(
+    readyToEndChat: boolean,
+    participantId: string,
+    stageId: string
+  ) {
+    return updateStageCallable(this.sp.firebaseService.functions, {
+      experimentId: this.experiment?.id!,
+      participantId: participantId,
+      stageId: stageId,
+      stage: {
+        kind: StageKind.GroupChat,
+        readyToEndChat,
+      },
+    });
+  }
+
+  markParticipantCompleted(publicId: string) {
+    // Mark the participant as completed in any chats.
+    for (const stageId of Object.keys(this.publicStageDataMap)) {
+      const stage = this.publicStageDataMap[stageId];
+      if (stage && stage!.kind === StageKind.GroupChat) {
+        this.markParticipantReadyToEndChat(true, publicId, stageId);
+      }
+    }
+  }
+
   canAddParticipant() {
-    if (this.experiment?.numberOfMaxParticipants! === 0) {
+    if (!this.experiment?.participantConfig.numberOfMaxParticipants) {
       return true;
     } else {
       return (
         this.experiment?.numberOfParticipants! <
-        this.experiment?.numberOfMaxParticipants!
+        this.experiment?.participantConfig.numberOfMaxParticipants!
       );
     }
   }
 
   canStartExperiment() {
     if (
-      !this.experiment?.waitForAllToStart ||
-      !this.experiment?.numberOfMaxParticipants
+      !this.experiment?.participantConfig.waitForAllToStart ||
+      !this.experiment?.participantConfig.numberOfMaxParticipants
     ) {
       return true;
     }
     return (
       this.experiment?.numberOfParticipants! ==
-      this.experiment?.numberOfMaxParticipants!
+      this.experiment?.participantConfig.numberOfMaxParticipants!
     );
   }
+
   /** Build a signal that tracks whether every participant has at least reached the given stage */
   everyoneReachedStage(targetStageId: string): boolean {
     const participants = this.experiment?.participants;
@@ -367,21 +403,31 @@ export class ExperimentService extends Service {
 
     return Object.values(participants).every(
       (participant) =>
-        this.getStageIndex(participant.currentStageId) >= targetIndex
+        this.getStageIndex(participant.currentStageId) >= targetIndex ||
+        this.isInactive(participant)
     );
   }
 
   /** Calculate experiment payouts for current payout stage.
-    * Return currency, payout map from participant public ID to value.
-    */
+   * Return currency, payout map from participant public ID to value.
+   */
   getPayouts(stage: PayoutStageConfig) {
     const payouts: Record<string, number> = {}; // participant ID, amount
     this.privateParticipants.forEach((participant) => {
       const getAnswerItems = (item: ScoringItem): AnswerItem[] => {
         // Use leader's answers if indicated, else current participant's answers
         if (item.leaderStageId && item.leaderStageId.length > 0) {
-          const leaderPublicId = (this.publicStageDataMap[item.leaderStageId] as VoteForLeaderStagePublicData).currentLeader ?? '';
-          const leaderAnswers = (this.publicStageDataMap[item.surveyStageId] as LostAtSeaSurveyStagePublicData).participantAnswers[leaderPublicId];
+          const leaderPublicId =
+            (
+              this.publicStageDataMap[
+                item.leaderStageId
+              ] as VoteForLeaderStagePublicData
+            ).currentLeader ?? '';
+          const leaderAnswers = (
+            this.publicStageDataMap[
+              item.surveyStageId
+            ] as LostAtSeaSurveyStagePublicData
+          ).participantAnswers[leaderPublicId];
 
           if (!leaderAnswers) return [];
 
@@ -389,17 +435,24 @@ export class ExperimentService extends Service {
             return {
               ...question,
               leaderPublicId,
-              userAnswer: (leaderAnswers[question.id] as LostAtSeaQuestionAnswer).choice,
+              userAnswer: (
+                leaderAnswers[question.id] as LostAtSeaQuestionAnswer
+              ).choice,
             };
           });
         }
 
-        const userAnswers = (this.publicStageDataMap[item.surveyStageId] as LostAtSeaSurveyStagePublicData).participantAnswers[participant.publicId];
+        const userAnswers = (
+          this.publicStageDataMap[
+            item.surveyStageId
+          ] as LostAtSeaSurveyStagePublicData
+        ).participantAnswers[participant.publicId];
         if (!userAnswers) return [];
         return item.questions.map((question) => {
           return {
             ...question,
-            userAnswer: (userAnswers[question.id] as LostAtSeaQuestionAnswer).choice,
+            userAnswer: (userAnswers[question.id] as LostAtSeaQuestionAnswer)
+              .choice,
           };
         });
       };
@@ -417,14 +470,16 @@ export class ExperimentService extends Service {
 
           const numCorrect = () => {
             let count = 0;
-            answerItems.forEach(answer => {
+            answerItems.forEach((answer) => {
               if (answer.userAnswer === answer.answer) {
                 count += 1;
               }
             });
             return count;
           };
-          score += item.fixedCurrencyAmount + item.currencyAmountPerQuestion * numCorrect();
+          score +=
+            item.fixedCurrencyAmount +
+            item.currencyAmountPerQuestion * numCorrect();
         });
         return score;
       };
@@ -443,7 +498,7 @@ export class ExperimentService extends Service {
       payouts[participant.publicId] = getTotalScore();
     });
 
-    return { currency: stage.currency, payouts };
+    return {currency: stage.currency, payouts};
   }
 
   /** Download experiment as a single JSON file */
@@ -483,12 +538,15 @@ export class ExperimentService extends Service {
             'messages'
           )
         );
-        chats[config.id] = messages.docs.map((doc) => (doc.data() as Message));
+        chats[config.id] = messages.docs.map((doc) => doc.data() as Message);
       }
-    })
+    });
 
     // Get payout answers per stage
-    const payouts: Record<string, { currency: PayoutCurrency, payouts: Record<string, number> }> = {};
+    const payouts: Record<
+      string,
+      {currency: PayoutCurrency; payouts: Record<string, number>}
+    > = {};
     configs.forEach((config) => {
       if (config.kind === StageKind.Payout) {
         payouts[config.id] = this.getPayouts(config);
@@ -521,12 +579,19 @@ export class ExperimentService extends Service {
       stageAnswers.forEach((stageAnswer) => {
         if (!acc[stageAnswer.id]) acc[stageAnswer.id] = {};
 
-        acc[stageAnswer.id][participantId] = (stageAnswer as StageAnswer);
+        acc[stageAnswer.id][participantId] = stageAnswer as StageAnswer;
       });
       return acc;
     }, {} as Record<string, Record<string, StageAnswer>>);
 
-    const stages: Record<string, { config: StageConfig, public: PublicStageData, answers: Record<string, StageAnswer> }> = {};
+    const stages: Record<
+      string,
+      {
+        config: StageConfig;
+        public: PublicStageData;
+        answers: Record<string, StageAnswer>;
+      }
+    > = {};
     configs.forEach((config) => {
       const stagePublicData = publicData[config.id];
       const answers = answersLookup[config.id];

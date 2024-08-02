@@ -4,22 +4,22 @@ import '../../pair-components/tooltip';
 
 import '../profile/profile_preview';
 
-import { MobxLitElement } from '@adobe/lit-mobx';
-import { ParticipantProfile } from '@llm-mediation-experiments/utils';
-import { CSSResultGroup, html, nothing } from 'lit';
-import { customElement } from 'lit/decorators.js';
-import { convertUnifiedTimestampToDate } from '../../shared/utils';
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {ParticipantProfile} from '@llm-mediation-experiments/utils';
+import {CSSResultGroup, html, nothing} from 'lit';
+import {customElement} from 'lit/decorators.js';
+import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
-import { core } from '../../core/core';
-import { AuthService } from '../../services/auth_service';
-import { ExperimentConfigService } from '../../services/config/experiment_config_service';
-import { ExperimentService } from '../../services/experiment_service';
-import { ExperimenterService } from '../../services/experimenter_service';
-import { ParticipantService } from '../../services/participant_service';
-import { Pages, RouterService } from '../../services/router_service';
+import {core} from '../../core/core';
+import {AuthService} from '../../services/auth_service';
+import {ExperimentConfigService} from '../../services/config/experiment_config_service';
+import {ExperimentService} from '../../services/experiment_service';
+import {ExperimenterService} from '../../services/experimenter_service';
+import {ParticipantService} from '../../services/participant_service';
+import {Pages, RouterService} from '../../services/router_service';
 
-import { PARTICIPANT_COMPLETION_TYPE } from '@llm-mediation-experiments/utils';
-import { styles } from './experiment_preview.scss';
+import {PARTICIPANT_COMPLETION_TYPE} from '@llm-mediation-experiments/utils';
+import {styles} from './experiment_preview.scss';
 
 /** Experiment preview */
 @customElement('experiment-preview')
@@ -89,13 +89,13 @@ export class ExperimentPreview extends MobxLitElement {
 
     const getTransferableExperiments = () => {
       // Only allow transferring from the lobby.
-      if (!this.experimentService.experiment?.isLobby) {
+      if (!this.experimentService.experiment?.lobbyConfig.isLobby) {
         return [];
       }
       // Ony fetch other, non-lobby experiments.
       return this.experimenterService
         .getExperimentsInGroup(group)
-        .filter((experiment) => !experiment.isLobby);
+        .filter((experiment) => !experiment.lobbyConfig.isLobby);
     };
 
     const group = this.experimentService.experiment?.group!;
@@ -104,25 +104,36 @@ export class ExperimentPreview extends MobxLitElement {
       (participant) =>
         !participant.transferConfig && !participant.completedExperiment
     );
-    const transferredParticipants = participants.filter(
-      (participant) => participant.transferConfig
-    );
+
+    const transferredParticipants = this.experimentService.experiment
+      ?.lobbyConfig.isLobby
+      ? participants.filter(
+          (participant) =>
+            (participant.completionType &&
+              participant.completionType ===
+                PARTICIPANT_COMPLETION_TYPE.SUCCESS) ||
+            (!participant.completionType && participant.transferConfig)
+        )
+      : [];
+
     const failedParticipants = participants.filter(
       (participant) =>
         (participant.completionType &&
           participant.completionType !== PARTICIPANT_COMPLETION_TYPE.SUCCESS) ||
         (!participant.completionType &&
-          this.experimentService.experiment?.isLobby &&
+          this.experimentService.experiment?.lobbyConfig.isLobby &&
           participant.completedExperiment &&
           !participant.transferConfig)
     );
-    const completedParticipants = participants.filter(
-      (participant) =>
-        participant.completionType === PARTICIPANT_COMPLETION_TYPE.SUCCESS ||
-        (!participant.completionType &&
-          participant.completedExperiment &&
-          !this.experimentService.experiment?.isLobby)
-    );
+    const completedParticipants = this.experimentService.experiment?.lobbyConfig
+      .isLobby
+      ? []
+      : participants.filter(
+          (participant) =>
+            participant.completionType ===
+              PARTICIPANT_COMPLETION_TYPE.SUCCESS ||
+            (!participant.completionType && participant.completedExperiment)
+        );
 
     const experiment = this.experimentService.experiment;
     return html`
@@ -137,40 +148,55 @@ export class ExperimentPreview extends MobxLitElement {
               : ''}
             Create time: ${convertUnifiedTimestampToDate(experiment?.date!)}
             <br />
-            ${experiment?.numberOfMaxParticipants
+
+            Number of participants: ${experiment?.numberOfParticipants}<br />
+            ${experiment?.participantConfig
               ? html`
                   Maximum number of participants:
-                  ${experiment?.numberOfMaxParticipants} <br />
+                  ${experiment?.participantConfig.numberOfMaxParticipants! > 0
+                    ? experiment?.participantConfig.numberOfMaxParticipants
+                    : 'unrestricted'}
+                  <br />
+                  Wait for all to start:
+                  ${experiment?.participantConfig.waitForAllToStart}
+                  <br />
                 `
               : ''}
             ${experiment?.prolificRedirectCode
               ? html`
                   Prolific redirect code: ${experiment?.prolificRedirectCode}
-                  ${experiment.attentionCheckParams
+                  ${experiment.attentionCheckConfig
                     ?.prolificAttentionFailRedirectCode
                     ? html`, failed redirect code:
-                      ${experiment.attentionCheckParams
+                      ${experiment.attentionCheckConfig
                         ?.prolificAttentionFailRedirectCode}`
                     : ''}
                   <br />
                 `
               : ''}
-            ${experiment?.attentionCheckParams
-              ? html`${experiment.attentionCheckParams.waitSeconds
+            ${experiment?.attentionCheckConfig
+              ? html`${experiment.attentionCheckConfig.waitSeconds
                   ? html`
                       Attention check parameters:
-                      ${experiment.attentionCheckParams.waitSeconds !==
+                      ${experiment.attentionCheckConfig.waitSeconds !==
                       undefined
-                        ? html`${experiment.attentionCheckParams.waitSeconds}
+                        ? html`${experiment.attentionCheckConfig.waitSeconds}
                           seconds wait, `
                         : ''}
-                      ${experiment.attentionCheckParams.popupSeconds !==
+                      ${experiment.attentionCheckConfig.popupSeconds !==
                       undefined
-                        ? html`${experiment.attentionCheckParams.popupSeconds}
+                        ? html`${experiment.attentionCheckConfig.popupSeconds}
                             popup seconds<br />`
                         : ''}
                     `
                   : ''}`
+              : ''}
+            ${experiment?.lobbyConfig.isLobby
+              ? html`<br />This experiment is a lobby.
+                  ${experiment?.lobbyConfig.waitSeconds
+                    ? html`Participants will wait up to
+                      ${experiment?.lobbyConfig.waitSeconds} seconds.`
+                    : 'Participants will wait in the lobby indefinitely.'}`
               : ''}
           </div>
           ${this.renderGroup()}

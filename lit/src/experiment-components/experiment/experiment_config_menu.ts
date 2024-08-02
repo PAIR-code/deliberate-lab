@@ -146,9 +146,16 @@ export class ExperimentConfigMenu extends MobxLitElement {
         if (stage.name === 'Lobby') {
           this.experimentConfig.dividerStageId = stage.id;
           this.experimentConfig.isMultiPart = true;
+          this.experimentConfig.lobbyWaitSeconds =
+            this.experimentConfig.lobbyWaitSeconds ?? 15 * 60; // 15 minutes.
         }
       });
     };
+
+    // Attention check.
+    this.experimentConfig.hasAttentionCheck = true;
+    this.experimentConfig.waitSeconds = 90; // 90 second attention check.
+    this.experimentConfig.popupSeconds = 30; // 30 second popup.
 
     return html`
       <div class="menu-item" role="button" @click=${onAddLostAtSeaClick}>

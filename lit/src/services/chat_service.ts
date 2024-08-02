@@ -1,18 +1,31 @@
-import { Timestamp } from "firebase/firestore";
-import { computed, makeObservable, observable } from "mobx";
+import {Timestamp} from 'firebase/firestore';
+import {computed, makeObservable, observable} from 'mobx';
 
-import { ExperimentService } from "./experiment_service";
-import { FirebaseService } from "./firebase_service";
-import { LLMService } from "./llm_service";
-import { ParticipantService } from "./participant_service";
-import { RouterService } from "./router_service";
-import { Service } from "./service";
+import {ExperimentService} from './experiment_service';
+import {FirebaseService} from './firebase_service';
+import {LLMService} from './llm_service';
+import {ParticipantService} from './participant_service';
+import {RouterService} from './router_service';
+import {Service} from './service';
 
-import { ChatKind, MediatorConfig, MediatorKind, Message, MessageKind, StageKind, } from "@llm-mediation-experiments/utils";
-import { Unsubscribe, collection, doc, onSnapshot, orderBy, query, updateDoc } from "firebase/firestore";
-import { createMessageCallable, updateStageCallable } from "../shared/callables";
-import { createChatMediatorPrompt } from "../shared/prompts";
-import { collectSnapshotWithId } from "../shared/utils";
+import {
+  ChatKind,
+  MediatorConfig,
+  MediatorKind,
+  Message,
+  MessageKind,
+  StageKind,
+} from '@llm-mediation-experiments/utils';
+import {
+  Unsubscribe,
+  collection,
+  onSnapshot,
+  orderBy,
+  query,
+} from 'firebase/firestore';
+import {createMessageCallable, updateStageCallable} from '../shared/callables';
+import {createChatMediatorPrompt} from '../shared/prompts';
+import {collectSnapshotWithId} from '../shared/utils';
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
@@ -27,7 +40,6 @@ export class ChatService extends Service {
     super();
     makeObservable(this);
   }
-
 
   @observable experimentId: string | null = null;
   @observable participantId: string | null = null;
@@ -48,7 +60,11 @@ export class ChatService extends Service {
     this.areMessagesLoading = value;
   }
 
-  setChat(experimentId: string | null, participantId: string | null, stageId: string | null) {
+  setChat(
+    experimentId: string | null,
+    participantId: string | null,
+    stageId: string | null
+  ) {
     this.experimentId = experimentId;
     this.participantId = participantId;
     this.stageId = stageId;
@@ -62,17 +78,20 @@ export class ChatService extends Service {
   }
 
   updateForCurrentRoute() {
-    const eid = this.sp.routerService.activeRoute.params["experiment"];
-    const pid = this.sp.routerService.activeRoute.params["participant"];
-    const stageId = this.sp.routerService.activeRoute.params["stage"];
+    const eid = this.sp.routerService.activeRoute.params['experiment'];
+    const pid = this.sp.routerService.activeRoute.params['participant'];
+    const stageId = this.sp.routerService.activeRoute.params['stage'];
 
-    if (eid !== this.experimentId || pid !== this.participantId
-      || stageId !== this.stageId) {
+    if (
+      eid !== this.experimentId ||
+      pid !== this.participantId ||
+      stageId !== this.stageId
+    ) {
       this.setChat(eid, pid, stageId);
 
       const stage = this.sp.experimentService.getStage(stageId);
       if (stage?.kind === StageKind.GroupChat) {
-        this.setMediators(stage.mediators)
+        this.setMediators(stage.mediators);
       }
     }
   }
@@ -80,7 +99,11 @@ export class ChatService extends Service {
   loadChatData() {
     this.unsubscribeAll();
 
-    if (this.experimentId === null || this.participantId === null || this.stageId === null) {
+    if (
+      this.experimentId === null ||
+      this.participantId === null ||
+      this.stageId === null
+    ) {
       this.isLoading = false;
       return;
     }
@@ -95,16 +118,19 @@ export class ChatService extends Service {
             this.experimentId,
             'publicStageData',
             this.stageId,
-            'messages',
+            'messages'
           ),
-          orderBy('timestamp', 'desc'),
+          orderBy('timestamp', 'desc')
         ),
         (snapshot) => {
           // Note that Firestore will send incremental updates. The full list of messages can be reconstructed easily from the snapshot.
-          this.messages = collectSnapshotWithId<Message>(snapshot, 'uid').reverse();
+          this.messages = collectSnapshotWithId<Message>(
+            snapshot,
+            'uid'
+          ).reverse();
           this.areMessagesLoading = false;
-        },
-      ),
+        }
+      )
     );
   }
 
@@ -119,7 +145,8 @@ export class ChatService extends Service {
       this.stageId!
     );
     if (
-      !stageData || stageData.kind !== StageKind.GroupChat ||
+      !stageData ||
+      stageData.kind !== StageKind.GroupChat ||
       stageData.chatData.kind !== ChatKind.ChatAboutItems
     ) {
       return -1;
@@ -136,18 +163,15 @@ export class ChatService extends Service {
    * @rights Participant
    */
   async markReadyToEndChat(readyToEndChat: boolean) {
-    return updateStageCallable(
-      this.sp.firebaseService.functions,
-      {
-        experimentId: this.experimentId!,
-        participantId: this.participantId!,
-        stageId: this.stageId!,
-        stage: {
-          kind: StageKind.GroupChat,
-          readyToEndChat,
-        }
-      }
-    )
+    return updateStageCallable(this.sp.firebaseService.functions, {
+      experimentId: this.experimentId!,
+      participantId: this.participantId!,
+      stageId: this.stageId!,
+      stage: {
+        kind: StageKind.GroupChat,
+        readyToEndChat,
+      },
+    });
   }
 
   /** Send a message as a participant.
@@ -156,9 +180,7 @@ export class ChatService extends Service {
   async sendUserMessage(text: string) {
     const messages = this.messages;
 
-    createMessageCallable(
-      this.sp.firebaseService.functions,
-      {
+    createMessageCallable(this.sp.firebaseService.functions, {
       stageId: this.stageId!,
       experimentId: this.experimentId!,
       message: {
@@ -181,39 +203,41 @@ export class ChatService extends Service {
     // Only send LLM message if no new messages have been sent
     const canSend = () => {
       return this.messages.length <= messages.length;
-    }
+    };
 
     // For all automatic mediators, generate messages
-    this.mediators.forEach(mediator => {
+    this.mediators.forEach((mediator) => {
       if (mediator.kind === MediatorKind.Automatic) {
         this.sendLLMMediatorMessage(mediator, canSend);
       }
-    })
+    });
   }
 
   /** Send LLM-generated mediator message. */
   async sendLLMMediatorMessage(
     mediator: MediatorConfig,
-    sendCondition: () => boolean = () => { return true; }
+    sendCondition: () => boolean = () => {
+      return true;
+    }
   ) {
     const profiles = this.sp.experimentService.getParticipantProfiles();
     const prompt = createChatMediatorPrompt(
       mediator.prompt,
       this.messages,
-      profiles,
+      profiles
     );
 
-    await this.sp.llmService.call(prompt).then(modelResponse => {
+    await this.sp.llmService.call(prompt).then((modelResponse) => {
       let answer = modelResponse.text;
       let sendMessage = false;
       try {
         const parsedResponse = JSON.parse(modelResponse.text);
-        if ("shouldRespond" in parsedResponse && "response" in parsedResponse) {
+        if ('shouldRespond' in parsedResponse && 'response' in parsedResponse) {
           sendMessage = true;
           answer = parsedResponse.response;
         }
       } catch (error) {
-        console.log("Invalid JSON: " + modelResponse);
+        console.log('Invalid JSON: ' + modelResponse);
         sendMessage = false;
       }
 
@@ -226,19 +250,20 @@ export class ChatService extends Service {
   /** Send a message as a mediator.
    * @rights Experimenter
    */
-  async sendMediatorMessage(text: string, name = "LLM Mediator", avatar = "🤖") {
-    return createMessageCallable(
-      this.sp.firebaseService.functions,
-      {
+  async sendMediatorMessage(
+    text: string,
+    name = 'LLM Mediator',
+    avatar = '🤖'
+  ) {
+    return createMessageCallable(this.sp.firebaseService.functions, {
       stageId: this.stageId!,
       experimentId: this.experimentId!,
       message: {
         kind: MessageKind.MediatorMessage,
         text,
         name,
-        avatar
+        avatar,
       },
     });
   }
-
 }

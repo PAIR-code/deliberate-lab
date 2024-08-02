@@ -146,7 +146,8 @@ export class ExperimentConfig extends MobxLitElement {
           <label for="isExperimentGroup">
             <div>Create experiment group</div>
             <div class="subtitle">
-              Create a group of experiments with identical settings.
+              Create a group of experiments with identical settings, and/or
+              enables multi-part "lobbies".
             </div>
           </label>
         </div>
@@ -372,6 +373,11 @@ export class ExperimentConfig extends MobxLitElement {
   }
 
   private renderGroupConfig() {
+    const handleLobbyWaitSeconds = (e: Event) => {
+      const num = Number((e.target as HTMLTextAreaElement).value);
+      this.experimentConfig.lobbyWaitSeconds = num;
+    };
+
     const handleGroupNum = (e: Event) => {
       const num = Number((e.target as HTMLTextAreaElement).value);
       this.experimentConfig.updateNumExperiments(num);
@@ -380,6 +386,9 @@ export class ExperimentConfig extends MobxLitElement {
     const handleMultiPartCheckbox = (e: Event) => {
       const checked = Boolean((e.target as HTMLInputElement).checked);
       this.experimentConfig.updateIsMultiPart(checked);
+      if (!checked) {
+        this.experimentConfig.lobbyWaitSeconds = 0;
+      }
     };
 
     return html`
@@ -409,6 +418,23 @@ export class ExperimentConfig extends MobxLitElement {
           </div>
         </label>
       </div>
+      ${this.experimentConfig.isMultiPart
+        ? html`<div class="number-input tab">
+            <label for="num"
+              >Wait time (in seconds) for participants to wait in the
+              lobby</label
+            >
+            <input
+              type="number"
+              id="lobbyWaitSeconds"
+              name="lobbyWaitSeconds"
+              min="1"
+              placeholder="If unspecified, participants can wait in the lobby indefinitely"
+              .value=${this.experimentConfig.lobbyWaitSeconds}
+              @input=${handleLobbyWaitSeconds}
+            />
+          </div>`
+        : ''}
     `;
   }
 }

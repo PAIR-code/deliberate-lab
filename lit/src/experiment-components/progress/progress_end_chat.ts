@@ -9,6 +9,7 @@ import {ParticipantProfile} from '@llm-mediation-experiments/utils';
 import {core} from '../../core/core';
 import {ExperimentService} from '../../services/experiment_service';
 
+import {PARTICIPANT_COMPLETION_TYPE} from '@llm-mediation-experiments/utils';
 import {styles} from './progress_end_chat.scss';
 
 /** Progress component: Shows how many participants are ready to end chat */
@@ -44,10 +45,17 @@ export class Progress extends MobxLitElement {
       ${participant.name ?? participant.publicId}
       ${participant.pronouns ? `(${participant.pronouns})` : ''}
     `;
+    const isDisabled =
+      participant.completedExperiment &&
+      participant.completionType !== PARTICIPANT_COMPLETION_TYPE.SUCCESS;
 
     return html`
-      <pr-tooltip text=${label}>
-        <profile-avatar .emoji=${participant.avatarUrl} .small=${true}>
+      <pr-tooltip text=${isDisabled ? '' : label}>
+        <profile-avatar
+          .emoji=${participant.avatarUrl}
+          .small=${true}
+          .disabled=${isDisabled}
+        >
         </profile-avatar>
       </pr-tooltip>
     `;

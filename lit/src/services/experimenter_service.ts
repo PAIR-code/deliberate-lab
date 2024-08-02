@@ -2,6 +2,8 @@ import {
   Experiment,
   ExperimentTemplate,
   ExperimentTemplateExtended,
+  LobbyConfig,
+  ParticipantConfig,
   ParticipantProfile,
   ParticipantProfileExtended,
   StageConfig,
@@ -88,8 +90,8 @@ export class ExperimenterService extends Service {
       .filter((experiment) => experiment.group === group)
       .sort((a, b) => {
         // Prioritized lobbies.
-        if (a.isLobby && !b.isLobby) return -1;
-        if (!a.isLobby && b.isLobby) return 1;
+        if (a.lobbyConfig.isLobby && !b.lobbyConfig.isLobby) return -1;
+        if (!a.lobbyConfig.isLobby && b.lobbyConfig.isLobby) return 1;
         // Sort by name.
         return a.name.localeCompare(b.name);
       });
@@ -209,6 +211,19 @@ export class ExperimenterService extends Service {
     );
   }
 
+  private getDefaultLobbyConfig(): LobbyConfig {
+    return {
+      isLobby: false,
+    };
+  }
+
+  private getDefaultParticipantConfig(): ParticipantConfig {
+    return {
+      waitForAllToStart: false,
+      numberOfMaxParticipants: 0,
+    };
+  }
+
   /** Create an experiment.
    * @rights Experimenter
    */
@@ -221,12 +236,12 @@ export class ExperimenterService extends Service {
     const description = experiment.description ?? '';
     const tags = experiment.tags ?? [];
     const group = experiment.group ?? '';
-    const isLobby = experiment.isLobby ?? false;
     const numberOfParticipants = experiment.numberOfParticipants ?? 0;
-    const numberOfMaxParticipants = experiment.numberOfMaxParticipants ?? 0;
-    const waitForAllToStart = experiment.waitForAllToStart ?? false;
     const prolificRedirectCode = experiment.prolificRedirectCode ?? '';
-    const attentionCheckParams = experiment.attentionCheckParams ?? {};
+    const attentionCheckConfig = experiment.attentionCheckConfig ?? {};
+    const lobbyConfig = experiment.lobbyConfig ?? this.getDefaultLobbyConfig();
+    const participantConfig =
+      experiment.participantConfig ?? this.getDefaultParticipantConfig();
 
     return createExperimentCallable(this.sp.firebaseService.functions, {
       type: 'experiments',
@@ -236,12 +251,11 @@ export class ExperimenterService extends Service {
         description,
         tags,
         group,
-        isLobby,
         numberOfParticipants,
-        numberOfMaxParticipants,
-        waitForAllToStart,
         prolificRedirectCode,
-        attentionCheckParams,
+        attentionCheckConfig,
+        lobbyConfig,
+        participantConfig,
       },
       stages,
     });
@@ -256,12 +270,12 @@ export class ExperimenterService extends Service {
     const description = experiment.description ?? '';
     const tags = experiment.tags ?? [];
     const group = experiment.group ?? '';
-    const isLobby = experiment.isLobby ?? false;
     const numberOfParticipants = experiment.numberOfParticipants ?? 0;
-    const numberOfMaxParticipants = experiment.numberOfMaxParticipants ?? 0;
-    const waitForAllToStart = experiment.waitForAllToStart ?? false;
     const prolificRedirectCode = experiment.prolificRedirectCode ?? '';
-    const attentionCheckParams = experiment.attentionCheckParams ?? {};
+    const attentionCheckConfig = experiment.attentionCheckConfig ?? {};
+    const lobbyConfig = experiment.lobbyConfig ?? this.getDefaultLobbyConfig();
+    const participantConfig =
+      experiment.participantConfig ?? this.getDefaultParticipantConfig();
 
     return createExperimentCallable(this.sp.firebaseService.functions, {
       type: 'templates',
@@ -271,12 +285,11 @@ export class ExperimenterService extends Service {
         description,
         tags,
         group,
-        isLobby,
         numberOfParticipants,
-        numberOfMaxParticipants,
-        waitForAllToStart,
         prolificRedirectCode,
-        attentionCheckParams,
+        attentionCheckConfig,
+        lobbyConfig,
+        participantConfig,
       },
       stages,
     });

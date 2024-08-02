@@ -59,7 +59,7 @@ export class ExperimentCard extends MobxLitElement {
       let numCompleted = 0;
       for (const participant of Object.values(this.experiment!.participants)) {
         if (
-          participant.completionType &&
+          participant.completedExperiment &&
           !(participant.completionType === PARTICIPANT_COMPLETION_TYPE.SUCCESS)
         ) {
           numCompleted += 1;
@@ -82,16 +82,21 @@ export class ExperimentCard extends MobxLitElement {
       return numStarted;
     };
 
+    const getMaxParticipants = () => {
+      const numMax =
+        this.experiment!.participantConfig.numberOfMaxParticipants || 0;
+      return numMax > 0 ? numMax : this.experiment!.numberOfParticipants;
+    };
     const participantProgressRatio = () => {
-      return participantProgressCount() / this.experiment!.numberOfParticipants;
+      return participantProgressCount() / getMaxParticipants();
     };
 
     const participantSuccessRatio = () => {
-      return participantSuccessCount() / this.experiment!.numberOfParticipants;
+      return participantSuccessCount() / getMaxParticipants();
     };
 
     const participantFailedRatio = () => {
-      return participantFailedCount() / this.experiment!.numberOfParticipants;
+      return participantFailedCount() / getMaxParticipants();
     };
 
     const renderGroupMetadata = () => {
@@ -111,10 +116,9 @@ export class ExperimentCard extends MobxLitElement {
       if (!this.experiment!.numberOfParticipants) {
         return;
       }
-
       return html`<pr-tooltip
         text="${participantSuccessCount()} completed, ${participantFailedCount()
-          ? `, ${participantFailedCount()} timed out, `
+          ? `${participantFailedCount()} timed out, `
           : ''}${participantProgressCount()} in progress"
         position="BOTTOM_START"
       >
@@ -130,7 +134,7 @@ export class ExperimentCard extends MobxLitElement {
 
           <div
             class="progress in-progress"
-            style="width: calc(100% * .5 * ${participantProgressRatio()})"
+            style="width: calc(100% * ${participantProgressRatio()})"
           ></div></div
       ></pr-tooltip>`;
     };

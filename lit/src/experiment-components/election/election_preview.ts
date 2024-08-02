@@ -14,6 +14,7 @@ import {
   VoteForLeaderStageAnswer,
 } from '@llm-mediation-experiments/utils';
 
+import {PARTICIPANT_COMPLETION_TYPE} from '@llm-mediation-experiments/utils';
 import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 import {core} from '../../core/core';
 import {ExperimentService} from '../../services/experiment_service';
@@ -59,10 +60,11 @@ export class ElectionPreview extends MobxLitElement {
       `;
     }
 
+    const numActiveProfiles = this.experimentService
+      .getParticipantProfiles()
+      .filter((profile) => !profile.completedExperiment).length;
     const disabled =
-      (this.answer?.rankings ?? []).length <
-      this.experimentService.getParticipantProfiles().length - 1;
-
+      (this.answer?.rankings ?? []).length < numActiveProfiles - 1;
     return html`
       ${descriptionContent}
 
@@ -97,20 +99,36 @@ export class ElectionPreview extends MobxLitElement {
       return nothing;
     }
 
+    const isDisabled =
+      profile.completedExperiment &&
+      profile.completionType !== PARTICIPANT_COMPLETION_TYPE.SUCCESS;
+
     return html`
       <div class="participant">
-        <profile-avatar .emoji=${profile.avatarUrl} .square=${true}>
+        <profile-avatar
+          .emoji=${profile.avatarUrl}
+          .square=${true}
+          .disabled=${isDisabled}
+        >
         </profile-avatar>
         <div class="right">
           <div class="title">${profile.name}</div>
           <div class="subtitle">(${profile.pronouns})</div>
+          ${isDisabled
+            ? html`<div class="subtitle error">
+                Votes for this participant will not count.
+              </div>`
+            : ''}
         </div>
       </div>
     `;
   }
 
   private renderDraggableParticipant(profile: ParticipantProfile) {
-    if (profile.publicId === this.participantService.profile?.publicId) {
+    if (
+      profile.publicId === this.participantService.profile?.publicId ||
+      profile.completedExperiment
+    ) {
       return nothing;
     }
 

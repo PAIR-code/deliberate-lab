@@ -99,6 +99,9 @@ export class ProfilePreview extends MobxLitElement {
       this.participantService.markExperimentCompleted(
         PARTICIPANT_COMPLETION_TYPE.BOOTED_OUT
       );
+      this.experimentService.markParticipantCompleted(
+        this.participantService.participantId!
+      );
       alert;
     };
 
@@ -168,7 +171,7 @@ export class ProfilePreview extends MobxLitElement {
             text = 'undefined';
         }
       } else {
-        if (this.experimentService.experiment?.isLobby) {
+        if (this.experimentService.experiment?.lobbyConfig.isLobby) {
           if (
             this.profile?.completionType ===
               PARTICIPANT_COMPLETION_TYPE.SUCCESS ||
@@ -290,7 +293,7 @@ export class ProfilePreview extends MobxLitElement {
       }
       <div class="row">
         ${this.renderTransferMenu()}
-        <pr-tooltip text="Preview lobby as participant" position="TOP_END">
+        <pr-tooltip text="Preview as participant" position="TOP_END">
           <pr-icon-button
             icon="visibility"
             color="primary"

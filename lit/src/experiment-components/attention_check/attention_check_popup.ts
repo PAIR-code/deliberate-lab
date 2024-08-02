@@ -41,12 +41,14 @@ export class AttentionCheckPopup extends MobxLitElement {
     super.connectedCallback();
     this.resetAttentionCheck();
     window.addEventListener('click', this.resetAttentionCheck);
+    window.addEventListener('mousemove', this.resetAttentionCheck);
     window.addEventListener('keydown', this.resetAttentionCheck);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     window.removeEventListener('click', this.resetAttentionCheck);
+    window.addEventListener('mousemove', this.resetAttentionCheck);
     window.removeEventListener('keydown', this.resetAttentionCheck);
     this.clearAttentionCheckTimeouts();
   }
@@ -100,10 +102,13 @@ export class AttentionCheckPopup extends MobxLitElement {
     this.participantService.markExperimentCompleted(
       PARTICIPANT_COMPLETION_TYPE.ATTENTION_TIMEOUT
     );
+    this.experimentService.markParticipantCompleted(
+      this.participantService.participantId!
+    );
 
     if (this.experimentService.experiment?.prolificRedirectCode) {
       const redirectCode =
-        this.experimentService.experiment?.attentionCheckParams!
+        this.experimentService.experiment?.attentionCheckConfig!
           .prolificAttentionFailRedirectCode ??
         this.experimentService.experiment?.prolificRedirectCode;
       // Navigate to Prolific with completion code.

@@ -235,7 +235,7 @@ function getPart2PostElectionAndPart3Stages(): StageConfig[] {
     getQuestionFromPair(pair, index)
   );
   const leaderTask = createLostAtSeaSurveyStage({
-    name: 'Leader task',
+    name: 'Representative task',
     questions: LEADER_QUESTIONS,
     popupText: LAS_SCENARIO_REMINDER,
   });
