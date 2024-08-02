@@ -162,6 +162,10 @@ export class ProfilePreview extends MobxLitElement {
             color = 'tertiary';
             text = 'lobby timeout';
             break;
+          case PARTICIPANT_COMPLETION_TYPE.LOBBY_DECLINED:
+            color = 'tertiary';
+            text = 'declined transfer';
+            break;
           case PARTICIPANT_COMPLETION_TYPE.BOOTED_OUT:
             color = 'tertiary';
             text = 'booted out';
@@ -255,7 +259,8 @@ export class ProfilePreview extends MobxLitElement {
         ${this.renderStatusChip(curStageName)}
       </div>
       ${
-        this.profile.transferConfig
+        this.profile.transferConfig &&
+        !PARTICIPANT_COMPLETION_TYPE.LOBBY_DECLINED
           ? html`
               <div>
                 <span>Transferred to:</span>
@@ -302,7 +307,11 @@ export class ProfilePreview extends MobxLitElement {
           </pr-button>
         </pr-tooltip>
         ${
-          this.profile.transferConfig
+          this.profile.transferConfig &&
+          !(
+            this.profile.completionType ===
+            PARTICIPANT_COMPLETION_TYPE.LOBBY_DECLINED
+          )
             ? html`<pr-tooltip text="Preview transfer as participant" position="TOP_END">
           <pr-icon-button
             icon="mystery"

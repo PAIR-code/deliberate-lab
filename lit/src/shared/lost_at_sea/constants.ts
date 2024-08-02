@@ -25,6 +25,7 @@ export const LAS_INTRO_INFO_LINES = [
   'At the end of the experiment, you will be redirected to a waiting page. This waiting time is part of the experiment and has been factored into your payment. **You will not be approved for the payout if you do not remain on this waiting page for the full requested duration**.',
   'During this waiting time, you may be invited to continue the experiment by completing two additional parts, Part 2 and Part 3. These parts will be played in *groups of four*, and should take an estimated additional 30 minutes. In these parts, you will have the opportunity to earn a £2 bonus, based on your decisions and the decisions of other participants. One of these parts will be randomly selected to determine your bonus. Additionally, you will receive a fixed fee of £6 for completing Parts 2 and 3.',
   'To sum up:\n\n* You’ll complete a first part *individually*, and then wait to see if you are selected to take part in the next part of the experiment.\n* You need to wait the full amount of time to get your payoff for Part 1, even though you are not selected or choose to leave the experiment.\n* If you receive an invitation, you can then start the rest of the experiment, that is played in *groups of 4 participants*.',
+  '**Note: These payment will be translated into the currency of your specification when they are paid out to you on the Prolific platform. Please allow us 24-48 hours to process the payments.**',
   'Please click “Next stage” to proceed.',
 ];
 
@@ -57,8 +58,8 @@ export const LAS_WTL_SURVEY: QuestionConfig[] = [
 ];
 
 export const LAS_WAIT_INFO_LINES = [
-  'Please wait on this page for 15 minutes. **There may be attention checks to make sure that you are waiting.** If you leave this page before the time is up, you will not be approved for the payout.',
-  'A link may appear offering you the option to continue with the experiment.',
+  'Please wait on this page for 10 minutes. There may be attention checks to make sure that you are waiting. If you leave this page before the time is up, you will not be approved for the payout.',
+  'A link may appear offering you the option to continue to parts 2 and 3 of the experiment. These additional parts will take an estimated *45 minutes*. If you complete these additional parts, you wil earn an additional **£6 fixed fee, as well as up to a £2 bonus**.',
   'Thank you for your patience.',
 ];
 
@@ -216,6 +217,7 @@ export const LAS_PAYMENT_INSTRUCTIONS = [
   'Your payment for Parts 2 and 3 includes a fixed fee of £6 and a bonus. The bonus is determined by randomly selecting either Part 2 or Part 3.',
   '* If Part 2 is selected: One question is randomly chosen from Part 2. You earn £2 if your answer is correct, and £0 otherwise.',
   '* If Part 3 is selected: One question is randomly chosen from Part 3, with only the leader’s answer counting. You earn £2 if the leader’s answer is correct, and £0 otherwise.',
+  '**Note: These payment will be translated into the currency of your specification when they are paid out to you on the Prolific platform. Please allow us 24-48 hours to process the payments.**',
 ];
 export const LAS_PAYMENT_INSTRUCTIONS_ALL = [
   ...LAS_PAYMENT_INSTRUCTIONS,

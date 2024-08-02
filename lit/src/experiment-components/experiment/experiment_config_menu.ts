@@ -147,7 +147,7 @@ export class ExperimentConfigMenu extends MobxLitElement {
           this.experimentConfig.dividerStageId = stage.id;
           this.experimentConfig.isMultiPart = true;
           this.experimentConfig.lobbyWaitSeconds =
-            this.experimentConfig.lobbyWaitSeconds ?? 15 * 60; // 15 minutes.
+            this.experimentConfig.lobbyWaitSeconds ?? 10 * 60; // 10 minutes.
         }
       });
     };

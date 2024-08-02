@@ -8,6 +8,8 @@ export enum PARTICIPANT_COMPLETION_TYPE {
   SUCCESS = 'SUCCESS',
   // Failed to transfer to a lobby within the designated time.
   LOBBY_TIMEOUT = 'LOBBY_FAIL',
+  // Declined to be transferred to a new experiment.
+  LOBBY_DECLINED = 'LOBBY_DECLINED',
   // Failed to clear the attention check within the designated time.
   ATTENTION_TIMEOUT = 'ATTENTION_FAIL',
   // Booted from the experiment.

@@ -1,4 +1,4 @@
-import { computed, makeObservable, observable } from 'mobx';
+import {computed, makeObservable, observable} from 'mobx';
 
 import {
   collection,
@@ -8,11 +8,11 @@ import {
   Unsubscribe,
 } from 'firebase/firestore';
 
-import { updateStageCallable } from '../shared/callables';
-import { ExperimenterService } from './experimenter_service';
-import { FirebaseService } from './firebase_service';
-import { Pages, RouterService } from './router_service';
-import { Service } from './service';
+import {updateStageCallable} from '../shared/callables';
+import {ExperimenterService} from './experimenter_service';
+import {FirebaseService} from './firebase_service';
+import {Pages, RouterService} from './router_service';
+import {Service} from './service';
 
 import {
   Experiment,
@@ -33,9 +33,9 @@ import {
   StageKind,
   VoteForLeaderStagePublicData,
 } from '@llm-mediation-experiments/utils';
-import { downloadJsonFile } from '../shared/file_utils';
-import { AnswerItem } from '../shared/types';
-import { collectSnapshotWithId } from '../shared/utils';
+import {downloadJsonFile} from '../shared/file_utils';
+import {AnswerItem} from '../shared/types';
+import {collectSnapshotWithId} from '../shared/utils';
 
 interface ServiceProvider {
   experimenterService: ExperimenterService;
@@ -638,6 +638,14 @@ export class ExperimentService extends Service {
       console.log('Error creating participant for: ', error);
       throw error;
     }
+  }
+
+  async deleteParticipant(experimentId: string, participantId: string) {
+    const response = await this.sp.experimenterService.deleteParticipant(
+      experimentId,
+      participantId
+    );
+    return response;
   }
 
   /** Delete the experiment..

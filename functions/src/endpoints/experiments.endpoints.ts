@@ -329,8 +329,6 @@ export const createParticipant = onCall(async (request) => {
 
 /** Function to delete a participant from an experiment */
 export const deleteParticipant = onCall(async (request) => {
-  await AuthGuard.isExperimenter(request);
-
   const { data } = request;
 
   // Validate the incoming data

@@ -118,20 +118,6 @@ export class Footer extends MobxLitElement {
     }
   }
 
-  private handleTransfer() {
-    this.showTransferPopup = false;
-    const transferConfig = this.participantService.profile?.transferConfig;
-    if (!transferConfig) {
-      return;
-    }
-
-    this.participantService.markExperimentCompleted();
-    this.routerService.navigate(Pages.PARTICIPANT, {
-      experiment: transferConfig.experimentId,
-      participant: transferConfig.participantId,
-    });
-  }
-
   override render() {
     return html`
       <div class="footer">
@@ -142,10 +128,7 @@ export class Footer extends MobxLitElement {
       </div>
 
       <!-- Popup listener -->
-      <transfer-popup
-        .open=${this.showTransferPopup}
-        @confirm-transfer=${this.handleTransfer}
-      ></transfer-popup>
+      <transfer-popup .open=${this.showTransferPopup}></transfer-popup>
     `;
   }
 
