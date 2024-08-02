@@ -73,6 +73,10 @@ export class ExperimentConfig extends MobxLitElement {
       return html`<div>Sorry, participants cannot create experiments!</div>`;
     }
 
+    if (this.experimentConfig.isLoading) {
+      return html`<div>Loading...</div>`;
+    }
+
     return html`
       <div class="stages-wrapper">
         <div class="current-stage">

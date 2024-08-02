@@ -68,6 +68,10 @@ export class ExperimentConfigService extends Service {
   @observable isProlific = false;
   @observable prolificRedirectCode = '';
 
+
+  // Loading (if writing experiment, template to Firebase)
+  @observable isLoading = false;
+
   getAttentionCheckConfig(): AttentionCheckConfig | undefined {
     if (
       this.waitSeconds ||
@@ -494,6 +498,7 @@ export class ExperimentConfigService extends Service {
   }
 
   async createTemplate() {
+    this.isLoading = true;
     const {name, publicName, description, stages, numberOfParticipants} =
       this.getExperiment();
 
@@ -505,9 +510,11 @@ export class ExperimentConfigService extends Service {
       },
       stages
     );
+    this.isLoading = false;
   }
 
   async createExperiments() {
+    this.isLoading = true;
     const experiments = this.getExperiments();
     let experimentId = '';
     let groupId = '';
@@ -542,6 +549,8 @@ export class ExperimentConfigService extends Service {
       experimentId = experiment.id;
       groupId = group;
     }
+
+    this.isLoading = false;
 
     // Navigate to the last created experiment (or group)
     if (groupId) {
