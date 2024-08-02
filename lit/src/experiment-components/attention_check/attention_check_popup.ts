@@ -100,6 +100,9 @@ export class AttentionCheckPopup extends MobxLitElement {
     this.participantService.markExperimentCompleted(
       PARTICIPANT_COMPLETION_TYPE.ATTENTION_TIMEOUT
     );
+    this.experimentService.markParticipantCompleted(
+      this.participantService.participantId!
+    );
 
     if (this.experimentService.experiment?.prolificRedirectCode) {
       const redirectCode =

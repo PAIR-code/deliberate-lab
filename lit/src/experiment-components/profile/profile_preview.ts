@@ -99,6 +99,9 @@ export class ProfilePreview extends MobxLitElement {
       this.participantService.markExperimentCompleted(
         PARTICIPANT_COMPLETION_TYPE.BOOTED_OUT
       );
+      this.experimentService.markParticipantCompleted(
+        this.participantService.participantId!
+      );
       alert;
     };
 

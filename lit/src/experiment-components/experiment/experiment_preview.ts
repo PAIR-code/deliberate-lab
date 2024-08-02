@@ -104,12 +104,18 @@ export class ExperimentPreview extends MobxLitElement {
       (participant) =>
         !participant.transferConfig && !participant.completedExperiment
     );
-    const transferredParticipants = participants.filter(
-      (participant) =>
-        (participant.completionType &&
-          participant.completionType === PARTICIPANT_COMPLETION_TYPE.SUCCESS) ||
-        (!participant.completionType && participant.transferConfig)
-    );
+
+    const transferredParticipants = this.experimentService.experiment
+      ?.lobbyConfig.isLobby
+      ? participants.filter(
+          (participant) =>
+            (participant.completionType &&
+              participant.completionType ===
+                PARTICIPANT_COMPLETION_TYPE.SUCCESS) ||
+            (!participant.completionType && participant.transferConfig)
+        )
+      : [];
+
     const failedParticipants = participants.filter(
       (participant) =>
         (participant.completionType &&
@@ -119,14 +125,15 @@ export class ExperimentPreview extends MobxLitElement {
           participant.completedExperiment &&
           !participant.transferConfig)
     );
-    const completedParticipants = participants.filter(
-      (participant) =>
-        (participant.completionType === PARTICIPANT_COMPLETION_TYPE.SUCCESS &&
-          !this.experimentService.experiment?.lobbyConfig.isLobby) ||
-        (!participant.completionType &&
-          participant.completedExperiment &&
-          !this.experimentService.experiment?.lobbyConfig.isLobby)
-    );
+    const completedParticipants = this.experimentService.experiment?.lobbyConfig
+      .isLobby
+      ? []
+      : participants.filter(
+          (participant) =>
+            participant.completionType ===
+              PARTICIPANT_COMPLETION_TYPE.SUCCESS ||
+            (!participant.completionType && participant.completedExperiment)
+        );
 
     const experiment = this.experimentService.experiment;
     return html`
@@ -141,6 +148,8 @@ export class ExperimentPreview extends MobxLitElement {
               : ''}
             Create time: ${convertUnifiedTimestampToDate(experiment?.date!)}
             <br />
+
+            Number of participants: ${experiment?.numberOfParticipants}<br />
             ${experiment?.participantConfig
               ? html`
                   Maximum number of participants:

@@ -101,6 +101,11 @@ export class Footer extends MobxLitElement {
     completionType: PARTICIPANT_COMPLETION_TYPE = PARTICIPANT_COMPLETION_TYPE.SUCCESS
   ) {
     this.participantService.markExperimentCompleted(completionType);
+    if (completionType !== PARTICIPANT_COMPLETION_TYPE.SUCCESS) {
+      this.experimentService.markParticipantCompleted(
+        this.participantService.participantId!
+      );
+    }
 
     if (this.experimentService.experiment?.prolificRedirectCode) {
       // Navigate to Prolific with completion code.

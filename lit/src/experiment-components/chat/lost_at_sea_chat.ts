@@ -166,7 +166,7 @@ export class RankingChat extends MobxLitElement {
     const index = this.chatService.getCurrentRatingIndex();
     const length = getChatRatingsToDiscuss(this.stage!).length;
     const readyToEnd = this.experimentService.getParticipantReadyToEndChat(
-      this.stage!.name,
+      this.stage!.id,
       this.participantService.profile!.publicId
     );
 

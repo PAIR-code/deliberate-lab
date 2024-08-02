@@ -1,4 +1,4 @@
-import {computed, makeObservable, observable} from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 
 import {
   collection,
@@ -8,10 +8,11 @@ import {
   Unsubscribe,
 } from 'firebase/firestore';
 
-import {ExperimenterService} from './experimenter_service';
-import {FirebaseService} from './firebase_service';
-import {Pages, RouterService} from './router_service';
-import {Service} from './service';
+import { updateStageCallable } from '../shared/callables';
+import { ExperimenterService } from './experimenter_service';
+import { FirebaseService } from './firebase_service';
+import { Pages, RouterService } from './router_service';
+import { Service } from './service';
 
 import {
   Experiment,
@@ -19,6 +20,7 @@ import {
   LostAtSeaQuestionAnswer,
   LostAtSeaSurveyStagePublicData,
   Message,
+  PARTICIPANT_COMPLETION_TYPE,
   ParticipantProfile,
   ParticipantProfileExtended,
   PayoutCurrency,
@@ -31,9 +33,9 @@ import {
   StageKind,
   VoteForLeaderStagePublicData,
 } from '@llm-mediation-experiments/utils';
-import {downloadJsonFile} from '../shared/file_utils';
-import {AnswerItem} from '../shared/types';
-import {collectSnapshotWithId} from '../shared/utils';
+import { downloadJsonFile } from '../shared/file_utils';
+import { AnswerItem } from '../shared/types';
+import { collectSnapshotWithId } from '../shared/utils';
 
 interface ServiceProvider {
   experimenterService: ExperimenterService;
@@ -205,6 +207,13 @@ export class ExperimentService extends Service {
     return this.experiment?.stageIds ?? [];
   }
 
+  private isInactive(participant: ParticipantProfile) {
+    return (
+      participant.completedExperiment &&
+      participant.completionType !== PARTICIPANT_COMPLETION_TYPE.SUCCESS
+    );
+  }
+
   getStage(stageId: string) {
     return this.stageConfigMap[stageId];
   }
@@ -271,7 +280,7 @@ export class ExperimentService extends Service {
 
     this.getParticipantProfiles().forEach((participant) => {
       const index = this.getStageIndex(participant.currentStageId);
-      if (index >= 0 && index >= stageIndex) {
+      if ((index >= 0 && index >= stageIndex) || this.isInactive(participant)) {
         ready.push(participant);
       } else {
         notReady.push(participant);
@@ -308,7 +317,7 @@ export class ExperimentService extends Service {
         return;
       }
 
-      if (stage.readyToEndChat[publicId]) {
+      if (this.isInactive(participant) || stage.readyToEndChat[publicId]) {
         ready.push(participant);
       } else {
         notReady.push(participant);
@@ -335,6 +344,32 @@ export class ExperimentService extends Service {
     return stage.readyToEndChat[publicId];
   }
 
+  async markParticipantReadyToEndChat(
+    readyToEndChat: boolean,
+    participantId: string,
+    stageId: string
+  ) {
+    return updateStageCallable(this.sp.firebaseService.functions, {
+      experimentId: this.experiment?.id!,
+      participantId: participantId,
+      stageId: stageId,
+      stage: {
+        kind: StageKind.GroupChat,
+        readyToEndChat,
+      },
+    });
+  }
+
+  markParticipantCompleted(publicId: string) {
+    // Mark the participant as completed in any chats.
+    for (const stageId of Object.keys(this.publicStageDataMap)) {
+      const stage = this.publicStageDataMap[stageId];
+      if (stage && stage!.kind === StageKind.GroupChat) {
+        this.markParticipantReadyToEndChat(true, publicId, stageId);
+      }
+    }
+  }
+
   canAddParticipant() {
     if (!this.experiment?.participantConfig.numberOfMaxParticipants) {
       return true;
@@ -358,6 +393,7 @@ export class ExperimentService extends Service {
       this.experiment?.participantConfig.numberOfMaxParticipants!
     );
   }
+
   /** Build a signal that tracks whether every participant has at least reached the given stage */
   everyoneReachedStage(targetStageId: string): boolean {
     const participants = this.experiment?.participants;
@@ -367,7 +403,8 @@ export class ExperimentService extends Service {
 
     return Object.values(participants).every(
       (participant) =>
-        this.getStageIndex(participant.currentStageId) >= targetIndex
+        this.getStageIndex(participant.currentStageId) >= targetIndex ||
+        this.isInactive(participant)
     );
   }
 
