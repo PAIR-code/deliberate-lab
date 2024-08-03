@@ -7,6 +7,7 @@ import {
   LostAtSeaQuestion,
   LostAtSeaSurveyStageConfig,
   PayoutBundleStrategy,
+  PayoutCurrency,
   PayoutItemKind,
   PayoutItemStrategy,
   StageConfig,
@@ -268,6 +269,7 @@ export function getFinalStages(): StageConfig[] {
   stages.push(
     createPayoutStage({
       name: 'Final payoff',
+      currency: PayoutCurrency.EUR,
       popupText: LAS_PAYMENT_INSTRUCTIONS.join('\n'),
       payouts: [
         {
