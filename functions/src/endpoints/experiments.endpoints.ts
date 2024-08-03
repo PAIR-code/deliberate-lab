@@ -140,10 +140,6 @@ export const createExperiment = onCall(async (request) => {
       // Nothing more to do if this was a template
       if (data.type === 'templates') return;
 
-      // Extract chats in order to pre-create the participant chat documents
-      const chats: GroupChatStageConfig[] = data.stages.filter(
-        (stage): stage is GroupChatStageConfig => stage.kind === StageKind.GroupChat,
-      );
       const currentStageId = data.stages[0].id;
 
       // Create all participants
@@ -164,34 +160,6 @@ export const createExperiment = onCall(async (request) => {
 
         // Create the participant document
         transaction.set(participant, participantData);
-
-        // Create the chat documents
-        chats.forEach((chat) => {
-          const chatData: ChatAnswer = {
-            participantPublicId: participantData.publicId,
-            readyToEndChat: false,
-            stageId: chat.id,
-          };
-          transaction.set(participant.collection('chats').doc(chat.chatId), chatData);
-
-          // If the chat is a chat about items, create an initial DiscussItemsMessage to mention the first pair
-          if (chat.chatConfig.kind === ChatKind.ChatAboutItems) {
-            const firstPair = chat.chatConfig.ratingsToDiscuss[0];
-            // Create the message
-            const messageData: Omit<DiscussItemsMessage, 'uid'> = {
-              kind: MessageKind.DiscussItemsMessage,
-              itemPair: firstPair,
-              text: `Discussion 1 of ${chat.chatConfig.ratingsToDiscuss.length}`,
-              timestamp: Timestamp.now(),
-            };
-
-            // Write it to this participant's chat collection
-            transaction.set(
-              participant.collection('chats').doc(chat.chatId).collection('messages').doc(),
-              messageData,
-            );
-          }
-        });
       });
     });
 
