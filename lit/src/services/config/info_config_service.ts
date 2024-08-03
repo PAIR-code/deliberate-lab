@@ -49,7 +49,7 @@ export class InfoConfigService extends Service {
 
   updateContent(content: string) {
     if (this.stage) {
-      this.stage.infoLines = content.split('\n');
+      this.stage.infoLines = [content];
     }
   }
 
