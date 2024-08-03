@@ -41,6 +41,10 @@ import {
   LAS_LEADER_REMINDER,
   LAS_LEADER_REVEAL_DESCRIPTION,
   LAS_PART_3_INSTRUCTIONS,
+  LAS_PAYMENT_PART_1_DESCRIPTION,
+  LAS_PAYMENT_PARTS_2_AND_3_DESCRIPTION,
+  LAS_PAYMENT_PART_2_DESCRIPTION,
+  LAS_PAYMENT_PART_3_DESCRIPTION,
   LAS_PAYMENT_INSTRUCTIONS,
   LAS_PAYMENT_INSTRUCTIONS_ALL,
   LAS_PE2_SURVEY,
@@ -274,9 +278,12 @@ export function getFinalStages(): StageConfig[] {
       payouts: [
         {
           name: 'Part 1 payoff',
+          description: LAS_PAYMENT_PART_1_DESCRIPTION,
           strategy: PayoutBundleStrategy.AddPayoutItems,
           payoutItems: [
             {
+              name: 'Part 1',
+              description: '',
               kind: PayoutItemKind.LostAtSeaSurvey,
               strategy: PayoutItemStrategy.ChooseOne,
               surveyStageId: initialTaskId,
@@ -287,9 +294,12 @@ export function getFinalStages(): StageConfig[] {
         },
         {
           name: 'Parts 2 and 3 payoff',
+          description: LAS_PAYMENT_PARTS_2_AND_3_DESCRIPTION,
           strategy: PayoutBundleStrategy.ChoosePayoutItem,
           payoutItems: [
             {
+              name: 'Part 2',
+              description: LAS_PAYMENT_PART_2_DESCRIPTION,
               kind: PayoutItemKind.LostAtSeaSurvey,
               strategy: PayoutItemStrategy.ChooseOne,
               surveyStageId: redoTaskId,
@@ -297,6 +307,8 @@ export function getFinalStages(): StageConfig[] {
               fixedCurrencyAmount: 6,
             },
             {
+              name: 'Part 3',
+              description: LAS_PAYMENT_PART_3_DESCRIPTION,
               kind: PayoutItemKind.LostAtSeaSurvey,
               strategy: PayoutItemStrategy.ChooseOne,
               surveyStageId: leaderTaskId,

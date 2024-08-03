@@ -106,6 +106,8 @@ export const createExperiment = onCall(async (request) => {
               questions = [questions[Math.floor(Math.random() * questions.length)]];
             }
             return {
+              name: payoutItem.name,
+              description: payoutItem.description,
               fixedCurrencyAmount: payoutItem.fixedCurrencyAmount,
               currencyAmountPerQuestion: payoutItem.currencyAmountPerQuestion,
               questions: questions.map((question) => getScoringQuestion(question)),
@@ -123,6 +125,7 @@ export const createExperiment = onCall(async (request) => {
                 : [payoutItems[Math.floor(Math.random() * payoutItems.length)]];
             return {
               name: payoutBundle.name,
+              description: payoutBundle.description,
               scoringItems: items.map((item) => getScoringItem(item)),
             };
           };

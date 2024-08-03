@@ -210,14 +210,22 @@ export const LAS_LEADER_REVEAL_DESCRIPTION =
 export const LAS_FINAL_SURVEY_DESCRIPTION = `Thanks for participating. Please complete this final survey.`;
 export const LAS_REVEAL_INFO = `An explanation of the results can be found [here](https://raw.githubusercontent.com/PAIR-code/llm-mediation-experiments/main/lit/src/assets/lost_at_sea_answers.pdf).`;
 
+export const LAS_PAYMENT_PART_1_DESCRIPTION = `Your payment for Part 1 includes a fixed fee of £3 and a bonus. The bonus is determined by randomly selecting one question from Part 1. If your answer to this question is correct, you earn £2; otherwise, you earn £0.`;
+
+export const LAS_PAYMENT_PARTS_2_AND_3_DESCRIPTION = `Your payment for Parts 2 and 3 includes a fixed fee of £6 and a bonus. The bonus is determined by randomly selecting either Part 2 or Part 3.`;
+
+export const LAS_PAYMENT_PART_2_DESCRIPTION = `One question is randomly chosen from Part 2. You earn £2 if your answer is correct, and £0 otherwise.`;
+
+export const LAS_PAYMENT_PART_3_DESCRIPTION = `One question is randomly chosen from Part 3, with only the leader’s answer counting. You earn £2 if the leader’s answer is correct, and £0 otherwise.`;
+
 export const LAS_PAYMENT_INSTRUCTIONS = [
   '## Part 1 Payment:',
-  'Your payment for Part 1 includes a fixed fee of £3 and a bonus. The bonus is determined by randomly selecting one question from Part 1. If your answer to this question is correct, you earn £2; otherwise, you earn £0.',
+  LAS_PAYMENT_PART_1_DESCRIPTION,
   '\n\n## Payment for Parts 2 and 3:',
-  'Your payment for Parts 2 and 3 includes a fixed fee of £6 and a bonus. The bonus is determined by randomly selecting either Part 2 or Part 3.',
-  '* If Part 2 is selected: One question is randomly chosen from Part 2. You earn £2 if your answer is correct, and £0 otherwise.',
-  '* If Part 3 is selected: One question is randomly chosen from Part 3, with only the leader’s answer counting. You earn £2 if the leader’s answer is correct, and £0 otherwise.',
-  '**Note: These payment will be translated into the currency of your specification when they are paid out to you on the Prolific platform. Please allow us 24-48 hours to process the payments.**',
+  LAS_PAYMENT_PARTS_2_AND_3_DESCRIPTION,
+  `* If Part 2 is selected: ${LAS_PAYMENT_PART_2_DESCRIPTION}`,
+  `* If Part 3 is selected: ${LAS_PAYMENT_PART_3_DESCRIPTION}`,
+  '**Note: These payments will be translated into the currency of your specification when they are paid out to you on the Prolific platform. Please allow us 24-48 hours to process the payments.**',
 ];
 export const LAS_PAYMENT_INSTRUCTIONS_ALL = [
   ...LAS_PAYMENT_INSTRUCTIONS,

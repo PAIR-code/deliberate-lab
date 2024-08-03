@@ -102,8 +102,13 @@ export class PayoutConfig extends MobxLitElement {
     };
 
     const updatePayoutBundleName = (e: Event) => {
-      const value = (e.target as HTMLTextAreaElement).value;
-      this.payoutConfig.updatePayoutBundle(index, {name: value});
+      const name = (e.target as HTMLTextAreaElement).value;
+      this.payoutConfig.updatePayoutBundle(index, {name});
+    };
+
+    const updatePayoutBundleDescription = (e: Event) => {
+      const description = (e.target as HTMLTextAreaElement).value;
+      this.payoutConfig.updatePayoutBundle(index, {description});
     };
 
     const handleStrategy = (strategy: PayoutBundleStrategy) => {
@@ -159,6 +164,12 @@ export class PayoutConfig extends MobxLitElement {
             </pr-icon-button>
           </div>
         </div>
+        <pr-textarea
+          placeholder="Payout group description"
+          .value=${payoutBundle.description ?? ''}
+          @input=${updatePayoutBundleDescription}
+        >
+        </pr-textarea>
         <div class="options-wrapper">
           <div class="options-title">Payout strategy</div>
           <div class="options col">
@@ -215,13 +226,30 @@ export class PayoutConfig extends MobxLitElement {
       this.payoutConfig.removePayoutItem(bundleIndex, itemIndex);
     };
 
+    const updatePayoutItemName = (e: Event) => {
+      const name = (e.target as HTMLTextAreaElement).value;
+      this.payoutConfig.updatePayoutItem(bundleIndex, itemIndex, {
+        name,
+      });
+    };
+
+    const updatePayoutItemDescription = (e: Event) => {
+      const description = (e.target as HTMLTextAreaElement).value;
+      this.payoutConfig.updatePayoutItem(bundleIndex, itemIndex, {
+        description,
+      });
+    };
+
     return html`
       <div class="payout-item">
         <div class="header">
-          <div>
-            Payout item:
-            ${this.experimentConfig.getStage(payoutItem.surveyStageId)!.name}
-          </div>
+          <pr-textarea
+            placeholder=${`Payout item: ${this.experimentConfig.getStage(payoutItem.surveyStageId)!.name}`}
+            size="medium"
+            .value=${payoutItem.name ?? ''}
+            @input=${updatePayoutItemName}
+          >
+          </pr-textarea>
           <pr-icon-button
             color="neutral"
             icon="close"
@@ -232,6 +260,12 @@ export class PayoutConfig extends MobxLitElement {
           >
           </pr-icon-button>
         </div>
+        <pr-textarea
+          placeholder="Payout item description"
+          .value=${payoutItem.description ?? ''}
+          @input=${updatePayoutItemDescription}
+        >
+        </pr-textarea>
         ${this.renderSurveyStageOptions(payoutItem, itemIndex, bundleIndex)}
         ${this.renderSurveyQuestionOptions(payoutItem, itemIndex, bundleIndex)}
         ${this.renderSurveyAmountOptions(payoutItem, itemIndex, bundleIndex)}
