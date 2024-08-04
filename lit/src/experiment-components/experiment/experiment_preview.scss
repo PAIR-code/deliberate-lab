@@ -13,7 +13,8 @@ h2 {
 }
 
 .top-bar {
-  @include common.flex-row-align-center;
+  @include common.flex-row;
+  align-items: start;
   flex-wrap: wrap;
   gap: common.$spacing-medium;
   justify-content: space-between;
