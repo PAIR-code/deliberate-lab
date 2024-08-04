@@ -21,6 +21,7 @@ import {
   createInfoStage,
   createProfileStage,
   createTOSStage,
+  generateId,
 } from '../../shared/utils';
 
 interface ServiceProvider {
@@ -141,14 +142,14 @@ export class ExperimentConfigService extends Service {
     });
   }
 
-  getMultiExperiments(numExperiments: number, stages: StageConfig[]) {
+  getMultiExperiments(groupId: string, numExperiments: number, stages: StageConfig[]) {
     const experiments = [];
     for (let i = 0; i < numExperiments; i++) {
       experiments.push({
         name: toJS(this.name + '_' + (i + 1)),
         publicName: toJS(this.publicName),
         description: toJS(this.description),
-        group: toJS(this.name),
+        group: groupId,
         stages: convertExperimentStages(toJS(stages)),
         numberOfParticipants: toJS(this.numParticipants),
         prolificRedirectCode: this.isProlific
@@ -183,11 +184,13 @@ export class ExperimentConfigService extends Service {
       ];
     }
 
+    const groupId = generateId(); // This must be unique to the group
     const dividerIndex: number = this.stages.findIndex(
       (stage) => stage.id === this.dividerStageId
     );
+
     if (!this.isMultiPart || dividerIndex == -1) {
-      return this.getMultiExperiments(this.numExperiments, this.stages);
+      return this.getMultiExperiments(groupId, this.numExperiments, this.stages);
     } else {
       const preStages = this.stages.slice(0, dividerIndex + 1);
       const postStages = this.stages.slice(dividerIndex + 1);
@@ -198,7 +201,7 @@ export class ExperimentConfigService extends Service {
         name: toJS(this.name + '_lobby'),
         publicName: toJS(this.publicName),
         description: toJS(this.description),
-        group: toJS(this.name),
+        group: groupId,
         stages: convertExperimentStages(toJS(preStages)),
         numberOfParticipants: toJS(this.numParticipants),
         prolificRedirectCode: this.isProlific
@@ -218,7 +221,7 @@ export class ExperimentConfigService extends Service {
 
       // Create multiExperiments.
       experiments.push(
-        ...this.getMultiExperiments(this.numExperiments, this.stages)
+        ...this.getMultiExperiments(groupId, this.numExperiments, this.stages)
       );
       return experiments;
     }

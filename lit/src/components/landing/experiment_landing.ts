@@ -74,14 +74,16 @@ export class ExperimentLanding extends MobxLitElement {
       this.authService.setEditPermissions(false);
     }
 
+    const displayName = experiments.length > 0 ? experiments[0].name.split('_')[0] : '';
+
     return html`
       <div class="card">
         <div class="header">
-          <div>
-            <h3>${group}</h3>
+          <div class="left">
+            <h3>${displayName}</h3>
+            <div class="subtitle">${group}</div>
           </div>
-
-          <div>
+          <div class="right">
             <pr-tooltip text="View group" position="TOP_END">
               <pr-icon-button
                 icon="arrow_forward"
