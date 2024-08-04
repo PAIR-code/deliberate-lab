@@ -1,6 +1,7 @@
 import { Core } from "./core/core";
 import { AuthService } from "./services/auth_service";
 import { ChatService } from "./services/chat_service";
+import { DataService } from "./services/data_service";
 import { ExperimentService } from "./services/experiment_service";
 import { FirebaseService } from "./services/firebase_service";
 import { InitializationService } from "./services/initialization_service";
@@ -41,6 +42,9 @@ export function makeServiceProvider(self: Core) {
     },
     get authService() {
       return self.getService(AuthService);
+    },
+    get dataService() {
+      return self.getService(DataService);
     },
     get settingsService() {
       return self.getService(SettingsService);

@@ -204,6 +204,7 @@ export class ExperimentPreview extends MobxLitElement {
         <div class="right">
           ${this.renderShare()} ${this.renderFork()} ${this.renderDownload()}
           ${this.renderAddParticipant()} ${this.renderDelete()}
+          ${this.renderData()}
         </div>
       </div>
       <div class="row">${experiment?.description}</div>
@@ -339,6 +340,24 @@ export class ExperimentPreview extends MobxLitElement {
         >
         </pr-icon-button>
       </pr-tooltip>
+    `;
+  }
+
+  private renderData() {
+    const onClick = () => {
+      this.routerService.navigate(
+        Pages.DATA_EXPERIMENT,
+        { "experiment": this.experimentService.id! }
+      );
+    };
+
+    return html`
+      <pr-button color="tertiary" variant="tonal" @click=${onClick}>
+        <div class="pr-button-inner">
+          <pr-icon icon="analytics" color="tertiary" variant="default"></pr-icon>
+          <div>Data analysis</div>
+        </div>
+      </pr-button>
     `;
   }
 

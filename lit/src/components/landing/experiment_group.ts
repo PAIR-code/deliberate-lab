@@ -58,7 +58,10 @@ export class ExperimentGroup extends MobxLitElement {
               `
             : ''}
         </div>
-        <div class="right">${this.renderDelete(experiments)}</div>
+        <div class="right">
+          ${this.renderDelete(experiments)}
+          ${this.renderData(group)}
+        </div>
       </div>
 
       <div class="cards-wrapper">
@@ -75,6 +78,25 @@ export class ExperimentGroup extends MobxLitElement {
       </div>
     `;
   }
+
+  private renderData(groupId: string) {
+    const onClick = () => {
+      this.routerService.navigate(
+        Pages.DATA_EXPERIMENT_GROUP,
+        { "experiment_group": groupId }
+      );
+    };
+
+    return html`
+      <pr-button color="tertiary" variant="tonal" @click=${onClick}>
+        <div class="pr-button-inner">
+          <pr-icon icon="analytics" color="tertiary" variant="default"></pr-icon>
+          <div>Data analysis</div>
+        </div>
+      </pr-button>
+    `;
+  }
+
   private renderDelete(experiments: Experiment[]) {
     if (!this.authService.canEdit) {
       return nothing;

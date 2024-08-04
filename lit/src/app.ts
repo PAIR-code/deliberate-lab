@@ -128,7 +128,6 @@ export class App extends MobxLitElement {
   }
 
   private renderDataPage() {
-    // TODO: Update data service for current route
     return html`
       <div class="content">
         <data-landing></data-landing>

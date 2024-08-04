@@ -82,3 +82,8 @@ p {
 .card {
   @include common.info-card;
 }
+
+.pr-button-inner {
+  @include common.flex-row;
+  gap: common.$spacing-small;
+}
