@@ -226,6 +226,7 @@ export class Header extends MobxLitElement {
     return html`
       <div class="template-item" role="button" @click=${onClick}>
         <div>${template.name}</div>
+        <div class="subtitle">${template.publicName}</div>
         <div class="subtitle">${template.id}</div>
       </div>
     `;

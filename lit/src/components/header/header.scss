@@ -69,3 +69,29 @@ h1 {
     color: var(--md-sys-color-secondary);
   }
 }
+
+.menu-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+}
+
+.template-item {
+  @include common.flex-column;
+  border: 1px solid transparent;
+  border-radius: common.$spacing-medium;
+  cursor: pointer;
+  gap: common.$spacing-small;
+  padding: common.$spacing-medium;
+
+  &:focus,
+  &:hover {
+    background: var(--md-sys-color-surface-container);
+    border-color: var(--md-sys-color-outline-variant);
+  }
+}
+
+.subtitle {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
+}

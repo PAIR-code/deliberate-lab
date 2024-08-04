@@ -73,21 +73,23 @@ export class ExperimentConfigMenu extends MobxLitElement {
         <div class="menu-wrapper">
           <div class="stages">
             <div class="category">Stages</div>
-            <div class="menu-item" role="button" @click=${onAddInfoClick}>
-              Info stage
-            </div>
-            <div class="menu-item" role="button" @click=${onAddSurveyClick}>
-              Survey stage
-            </div>
-            <div class="menu-item" role="button" @click=${onAddProfileClick}>
-              Profile stage
-            </div>
-            <div class="menu-item" role="button" @click=${onAddChatClick}>
-              Simple chat stage
-            </div>
-            ${this.renderLeaderStage()}
-            <div class="menu-item" role="button" @click=${onAddPayoutClick}>
-              Payout stage
+            <div class="chip-wrapper">
+              <div class="menu-item" role="button" @click=${onAddInfoClick}>
+                Info stage
+              </div>
+              <div class="menu-item" role="button" @click=${onAddSurveyClick}>
+                Survey stage
+              </div>
+              <div class="menu-item" role="button" @click=${onAddProfileClick}>
+                Profile stage
+              </div>
+              <div class="menu-item" role="button" @click=${onAddChatClick}>
+                Simple chat stage
+              </div>
+              ${this.renderLeaderStage()}
+              <div class="menu-item" role="button" @click=${onAddPayoutClick}>
+                Payout stage
+              </div>
             </div>
           </div>
           <div class="games">
