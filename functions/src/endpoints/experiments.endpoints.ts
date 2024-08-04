@@ -341,12 +341,6 @@ export const deleteParticipant = onCall(async (request) => {
 
     // Delete the participant document
     transaction.delete(participantRef);
-
-    // Delete the chat documents associated with the participant
-    const chatsSnapshot = await participantRef.collection('chats').get();
-    chatsSnapshot.forEach((chatDoc) => {
-      transaction.delete(chatDoc.ref);
-    });
   });
 
   return { success: true };
