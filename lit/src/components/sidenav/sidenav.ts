@@ -108,10 +108,15 @@ export class SideNav extends MobxLitElement {
       );
     };
 
+    const navItemClasses = classMap({
+      'nav-item': true,
+      selected: groupId === this.routerService.activeRoute.params['experiment_group'],
+    });
+
     return html`
       <details>
         <summary>
-          <div class="nav-item" role="button" @click=${handleClick}>
+          <div class=${navItemClasses} role="button" @click=${handleClick}>
             <div>${groupName}</div>
             <pr-icon icon="arrow_drop_down" color="neutral"></pr-icon>
           </div>
