@@ -1,0 +1,9 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+  height: 100%;
+  width: 100%;
+}

@@ -3,6 +3,7 @@ import './pair-components/button';
 import './experiment-components/attention_check/attention_check_popup';
 import './experiment-components/chat/basic_chat';
 import './experiment-components/chat/lost_at_sea_chat';
+import './experiment-components/data/data_landing';
 import './experiment-components/election/election_preview';
 import './experiment-components/experiment/experiment_config';
 import './experiment-components/experiment/experiment_config_sidenav';
@@ -74,6 +75,10 @@ export class App extends MobxLitElement {
             <settings-page .showAccount=${true}></settings-page>
           </div>
         `;
+      case Pages.DATA_EXPERIMENT:
+        return this.renderDataPage();
+      case Pages.DATA_EXPERIMENT_GROUP:
+        return this.renderDataPage();
       case Pages.EXPERIMENT:
         return this.renderExperiment();
       case Pages.EXPERIMENT_GROUP:
@@ -120,6 +125,15 @@ export class App extends MobxLitElement {
 
   private render403(message = 'Participants do not have access') {
     return html`<div>403: ${message}</div>`;
+  }
+
+  private renderDataPage() {
+    // TODO: Update data service for current route
+    return html`
+      <div class="content">
+        <data-landing></data-landing>
+      </div>
+    `;
   }
 
   private renderExperiment() {

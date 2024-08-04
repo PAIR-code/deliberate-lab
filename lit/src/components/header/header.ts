@@ -146,6 +146,10 @@ export class Header extends MobxLitElement {
         return 'Settings';
       case Pages.PARTICIPANT_SETTINGS:
         return 'Settings';
+      case Pages.DATA_EXPERIMENT:
+        return 'Data analysis: Experiment';
+      case Pages.DATA_EXPERIMENT_GROUP:
+        return 'Data analysis: Experiment group';
       case Pages.EXPERIMENT:
         const experiment = this.experimentService.experiment;
         if (!this.authService.isExperimenter) {
