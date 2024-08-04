@@ -391,13 +391,12 @@ export class ExperimentPreview extends MobxLitElement {
   private renderFork() {
     const onFork = () => {
       const name = this.experimentService.experiment?.name!;
-      const num = this.experimentService.experiment?.numberOfParticipants!;
       const stages = this.experimentService.stageIds.map(
         (stageId) => this.experimentService.stageConfigMap[stageId]
       );
 
       this.experimentConfig.updateName(name);
-      this.experimentConfig.updateNumParticipants(num);
+      this.experimentConfig.updateNumParticipants(0);
       this.experimentConfig.updateStages(stages);
 
       this.routerService.navigate(Pages.EXPERIMENT_CREATE);
