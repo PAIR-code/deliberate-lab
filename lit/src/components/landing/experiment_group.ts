@@ -35,6 +35,10 @@ export class ExperimentGroup extends MobxLitElement {
     const group = this.routerService.activeRoute.params['experiment_group'];
     const experiments = this.experimenterService.getExperimentsInGroup(group);
 
+    if (experiments.length === 0) {
+      return nothing;
+    }
+
     return html`
       <div class="top-bar">
         <div class="left">
