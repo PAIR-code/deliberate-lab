@@ -131,7 +131,7 @@ export class ExperimentConfigService extends Service {
       this.popupSeconds = template.attentionCheckConfig?.popupSeconds ?? 0;
       this.prolificAttentionFailRedirectCode = template.attentionCheckConfig?.prolificAttentionFailRedirectCode ?? '';
       // Participant config
-      this.hasMaxNumParticipants = template.participantConfig ? true : false;
+      this.hasMaxNumParticipants = (template.participantConfig?.numberOfMaxParticipants ?? 0) > 0;
       this.numMaxParticipants = template.participantConfig?.numberOfMaxParticipants ?? 0;
       this.waitForAllToStart = template.participantConfig?.waitForAllToStart ?? false;
       // Lobby config
