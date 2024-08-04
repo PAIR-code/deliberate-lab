@@ -103,6 +103,11 @@
   padding: common.$sidenav-padding;
 }
 
+details {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
 summary {
   @include common.flex-row;
   cursor: pointer;
