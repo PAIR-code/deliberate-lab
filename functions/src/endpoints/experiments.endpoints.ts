@@ -57,9 +57,16 @@ export const createExperiment = onCall(async (request) => {
         attentionCheckConfig,
         lobbyConfig,
         participantConfig,
+        isGroup,
+        numExperiments,
+        isMultiPart,
+        dividerStageId,
+        lobbyWaitSeconds,
       } = data.metadata;
 
       // Create the metadata document
+      const stageIds = data.stages.map((stage) => stage.id);
+
       transaction.set(document, {
         name,
         publicName,
@@ -67,18 +74,15 @@ export const createExperiment = onCall(async (request) => {
         tags,
         author: { uid: request.auth?.uid, displayName: request.auth?.token?.name ?? '' },
         starred: {},
+        numberOfParticipants,
+        participantConfig,
         prolificRedirectCode,
         attentionCheckConfig,
-        lobbyConfig,
-        participantConfig,
+        stageIds,
         ...(data.type === 'experiments'
-          ? {
-              date: Timestamp.now(),
-              group: group,
-              numberOfParticipants,
-              stageIds: data.stages.map((stage) => stage.id),
-            }
-          : {}),
+          ? { date: Timestamp.now(), group, lobbyConfig }
+          : { isGroup, numExperiments, isMultiPart, dividerStageId, lobbyWaitSeconds }
+        ),
       });
 
       // Create the stages

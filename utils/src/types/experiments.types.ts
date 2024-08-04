@@ -57,6 +57,25 @@ export interface ExperimentTemplate {
   description: string;
   tags: string[];
   author: Experimenter;
+  starred: Record<string, boolean>; // maps from experimenter ID to isStarred
+  numberOfParticipants: number;
+  participantConfig: ParticipantConfig;
+
+  // Group
+  isGroup: boolean;
+  numExperiments: number;
+
+  // Lobby
+  isMultiPart: boolean; // has lobby
+  dividerStageId: string; // lobby stage
+  lobbyWaitSeconds: number;
+
+  // Prolific settings
+  prolificRedirectCode?: string; // If specified, will handle Prolific routing.
+  attentionCheckConfig?: AttentionCheckConfig;
+
+  // Ordered list of stage IDs
+  stageIds: string[];
 }
 
 /** An experiment template with all its stages preloaded */

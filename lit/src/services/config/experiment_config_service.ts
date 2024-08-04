@@ -105,11 +105,39 @@ export class ExperimentConfigService extends Service {
     );
 
     getDocs(templateCollection).then((stagesDocs) => {
+      // Set stages in order
       const stages = collectSnapshotWithId(stagesDocs, 'name') as StageConfig[];
-      this.stages = stages;
-      this.name = template.name ?? 'Untitled';
+      const stageIds = template.stageIds ?? [];
+        this.stages = [];
+      stageIds.forEach((id) => {
+        const stage = stages.find((stage) => stage.id === id);
+        if (stage) {
+          this.stages.push(stage);
+        }
+      });
+
+      this.name = ''; // Experimenters should explicitly choose a name
       this.publicName = template.publicName ?? 'Experiment';
       this.description = template.description ?? '';
+      this.numParticipants = template.numberOfParticipants ?? 0;
+      // Group
+      this.isGroup = template.isGroup ?? false;
+      this.numExperiments = template.numExperiments ?? 0;
+      // Prolific redirect code
+      this.isProlific = template.prolificRedirectCode ? true : false;
+      this.prolificRedirectCode = template.prolificRedirectCode ?? '';
+      // Attention Check config
+      this.waitSeconds = template.attentionCheckConfig?.waitSeconds ?? 0;
+      this.popupSeconds = template.attentionCheckConfig?.popupSeconds ?? 0;
+      this.prolificAttentionFailRedirectCode = template.attentionCheckConfig?.prolificAttentionFailRedirectCode ?? '';
+      // Participant config
+      this.hasMaxNumParticipants = template.participantConfig ? true : false;
+      this.numMaxParticipants = template.participantConfig?.numberOfMaxParticipants ?? 0;
+      this.waitForAllToStart = template.participantConfig?.waitForAllToStart ?? false;
+      // Lobby config
+      this.isMultiPart = template.isMultiPart ?? false;
+      this.dividerStageId = template.dividerStageId ?? '';
+      this.lobbyWaitSeconds = template.lobbyWaitSeconds ?? 0;
     });
   }
 
@@ -499,16 +527,28 @@ export class ExperimentConfigService extends Service {
 
   async createTemplate() {
     this.isLoading = true;
-    const {name, publicName, description, stages, numberOfParticipants} =
-      this.getExperiment();
 
     await this.sp.experimenterService.createTemplate(
       {
-        name,
-        description,
-        publicName,
+        name: toJS(this.name),
+        publicName: toJS(this.publicName),
+        description: toJS(this.description),
+        numberOfParticipants: toJS(this.numParticipants),
+        participantConfig: {
+          numberOfMaxParticipants: this.numMaxParticipants ?? 0,
+          waitForAllToStart: this.waitForAllToStart,
+        },
+        prolificRedirectCode: this.isProlific
+          ? toJS(this.prolificRedirectCode)
+          : '',
+        attentionCheckConfig: this.getAttentionCheckConfig(),
+        isGroup: this.isGroup,
+        numExperiments: this.numExperiments,
+        isMultiPart: this.isMultiPart,
+        dividerStageId: this.dividerStageId,
+        lobbyWaitSeconds: this.lobbyWaitSeconds,
       },
-      stages
+      toJS(this.stages)
     );
     this.isLoading = false;
   }
