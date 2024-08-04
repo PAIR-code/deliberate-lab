@@ -3,7 +3,15 @@
 
 :host {
   @include common.flex-column;
+  flex-grow: 1;
   gap: common.$spacing-large;
-  height: 100%;
-  width: 100%;
+  overflow: auto;
+}
+
+.code-container {
+  background: var(--md-sys-color-surface);
+  border-radius: common.$spacing-medium;
+  max-height: 100px;
+  overflow: auto;
+  padding: common.$spacing-xl;
 }

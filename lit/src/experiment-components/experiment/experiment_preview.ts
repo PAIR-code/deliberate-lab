@@ -202,7 +202,7 @@ export class ExperimentPreview extends MobxLitElement {
           ${this.renderGroup()}
         </div>
         <div class="right">
-          ${this.renderShare()} ${this.renderFork()} ${this.renderDownload()}
+          ${this.renderShare()} ${this.renderFork()}
           ${this.renderAddParticipant()} ${this.renderDelete()}
           ${this.renderData()}
         </div>
@@ -358,24 +358,6 @@ export class ExperimentPreview extends MobxLitElement {
           <div>Data analysis</div>
         </div>
       </pr-button>
-    `;
-  }
-
-  private renderDownload() {
-    const onDownload = () => {
-      this.experimentService.downloadExperiment();
-    };
-
-    return html`
-      <pr-tooltip text="Download experiment JSON" position="BOTTOM_END">
-        <pr-icon-button
-          icon="download"
-          color="secondary"
-          variant="tonal"
-          @click=${onDownload}
-        >
-        </pr-icon-button>
-      </pr-tooltip>
     `;
   }
 

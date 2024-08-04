@@ -27,6 +27,32 @@ export class Data extends MobxLitElement {
     return html`
       ${this.dataService.groupId ? html`<div>Group: ${this.dataService.groupId}</div>` : nothing}
       ${this.dataService.experimentId ? html`<div>Experiment: ${this.dataService.experimentId}</div>` : nothing}
+      ${this.renderDownload()}
+      <div class="code-container">
+        <code>
+          ${this.dataService.isLoading ? 'Loading...' :
+          JSON.stringify(this.dataService.experimentData)}
+        </code>
+      </div>
+    `;
+  }
+
+  private renderDownload() {
+    const onDownload = () => {
+      this.dataService.download();
+    };
+
+    return html`
+      <pr-tooltip text="Download experiment JSON" position="BOTTOM_START">
+        <pr-icon-button
+          icon="download"
+          color="secondary"
+          variant="tonal"
+          ?disabled=${this.dataService.isLoading}
+          @click=${onDownload}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
     `;
   }
 }
