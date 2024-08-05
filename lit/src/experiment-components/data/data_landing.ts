@@ -32,6 +32,9 @@ export class Data extends MobxLitElement {
     return html`
       ${this.dataService.groupId ? html`<div>Group: ${this.dataService.groupId}</div>` : nothing}
       ${this.dataService.experimentId ? html`<div>Experiment: ${this.dataService.experimentId}</div>` : nothing}
+      <div class="error">
+        Warning: Experiment data does not automatically update. Refresh the page for the latest experiment data!
+      </div>
       ${this.renderDownloadZone()}
       <div class="code-container">
         <code>
