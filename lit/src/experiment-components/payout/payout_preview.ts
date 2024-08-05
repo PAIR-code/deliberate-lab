@@ -86,6 +86,7 @@ export class PayoutPreview extends MobxLitElement {
     return html`
       <div class="scoring-bundle">
         <h2>${bundle.name}</h2>
+        ${bundle.description ? html`<div class="scoring-description">${bundle.description}</div>` : nothing}
         ${bundle.scoringItems.map((item) => this.renderScoringItem(item))}
       </div>
     `;
@@ -163,7 +164,8 @@ export class PayoutPreview extends MobxLitElement {
 
     return html`
       <div class="scoring-item">
-        <h3>${this.experimentService.getStageName(item.surveyStageId)}</h3>
+        <h3>${item.name ?? this.experimentService.getStageName(item.surveyStageId)}</h3>
+        ${item.description ? html`<div class="scoring-description">${item.description}</div>` : nothing}
         ${answerItems.map((answerItem) => this.renderAnswerItem(answerItem))}
         <div class="amount-wrapper">
           ${renderFixedAmount()}

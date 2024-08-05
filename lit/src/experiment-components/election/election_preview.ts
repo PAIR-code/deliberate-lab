@@ -14,7 +14,12 @@ import {
   VoteForLeaderStageAnswer,
 } from '@llm-mediation-experiments/utils';
 
-import {PARTICIPANT_COMPLETION_TYPE} from '@llm-mediation-experiments/utils';
+import {
+  PARTICIPANT_COMPLETION_TYPE,
+  PublicStageData,
+  ScaleQuestionAnswer,
+  SurveyStagePublicData,
+} from '@llm-mediation-experiments/utils';
 import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 import {core} from '../../core/core';
 import {ExperimentService} from '../../services/experiment_service';
@@ -33,6 +38,60 @@ export class ElectionPreview extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   @property() answer: VoteForLeaderStageAnswer | null = null;
+
+  // TODO: Apply this only to Lost at Sea game.
+  // Bonus if we don't hardcode the name of the "WTL update" stage.
+  private filterRankingsToTopCandidates(rankings: string[]): string[] {
+    const surveyId = this.getWTLSurveyId();
+    if (!surveyId) return rankings;
+
+    const mapWtl: {[participantPublicId: string]: number} = {};
+
+    const stageData: SurveyStagePublicData = this.experimentService
+      .publicStageDataMap[surveyId] as SurveyStagePublicData;
+    const wtlResponses = stageData.participantAnswers;
+
+    for (const participantPublicId in wtlResponses) {
+      if (wtlResponses.hasOwnProperty(participantPublicId)) {
+        const answer = wtlResponses[
+          participantPublicId
+        ][0] as ScaleQuestionAnswer;
+        mapWtl[participantPublicId] = answer.score;
+      }
+    }
+
+    // Get the top two scores in mapWtl values
+    const scores = Object.values(mapWtl).sort((a, b) => b - a);
+    const topTwoScores = scores.slice(0, 2);
+
+    // Get a list of all participants where score is in the top two
+    const topCandidates = Object.keys(mapWtl).filter((participantPublicId) =>
+      topTwoScores.includes(mapWtl[participantPublicId])
+    );
+
+    // Filter rankings to only contain participants in that list
+    return rankings.filter((rank) => topCandidates.includes(rank));
+  }
+
+  private getWTLSurveyId(): string {
+    const stageDataMap: Record<string, PublicStageData | undefined> =
+      this.experimentService.publicStageDataMap;
+
+    if (!stageDataMap) {
+      return '';
+    }
+
+    const stageKeys = Object.keys(stageDataMap);
+
+    for (const stageId of stageKeys) {
+      const name = this.experimentService.getStageName(stageId);
+      if (name && name.includes('Willingness to lead update')) {
+        return stageId;
+      }
+    }
+
+    return '';
+  }
 
   override render() {
     const currentStage = this.routerService.activeRoute.params['stage'];
@@ -209,6 +268,8 @@ export class ElectionPreview extends MobxLitElement {
           participantId,
           ...rankings.slice(newIndex),
         ];
+        // Filter rankings.
+        rankings = this.filterRankingsToTopCandidates(rankings);
         this.participantService.updateVoteForLeaderStage(stageId, rankings);
       }
     };
@@ -237,6 +298,10 @@ export class ElectionPreview extends MobxLitElement {
       const stageId = this.routerService.activeRoute.params['stage'];
       const rankings = this.answer?.rankings ?? [];
       const index = rankings.findIndex((id) => id === profile.publicId);
+
+      if (index === -1) {
+        return;
+      }
 
       this.participantService.updateVoteForLeaderStage(stageId, [
         ...rankings.slice(0, index),

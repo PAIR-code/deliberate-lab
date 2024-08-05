@@ -102,3 +102,24 @@
   overflow: auto;
   padding: common.$sidenav-padding;
 }
+
+details {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
+summary {
+  @include common.flex-row;
+  cursor: pointer;
+  gap: common.$spacing-small;
+
+  .nav-item {
+    justify-content: space-between;
+  }
+}
+
+.experiment-list {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+  margin-left: common.$spacing-xl;
+}

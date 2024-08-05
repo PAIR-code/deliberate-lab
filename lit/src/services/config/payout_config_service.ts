@@ -58,6 +58,8 @@ export class PayoutConfigService extends Service {
     const payouts = this.stage?.payouts;
     if (payouts && bundleIndex >= 0 && bundleIndex < payouts.length) {
       this.stage!.payouts[bundleIndex].payoutItems.push({
+        name: "",
+        description: "",
         kind: PayoutItemKind.LostAtSeaSurvey,
         strategy: PayoutItemStrategy.AddAll,
         fixedCurrencyAmount: 0,
@@ -97,6 +99,7 @@ export class PayoutConfigService extends Service {
   addPayoutBundle() {
     this.stage!.payouts.push({
       name: "",
+      description: "",
       strategy: PayoutBundleStrategy.AddPayoutItems,
       payoutItems: [],
     });

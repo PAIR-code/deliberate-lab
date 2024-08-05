@@ -11,6 +11,8 @@ const strict =  { additionalProperties: false } as const;
 /** Lost at Sea survey payout item */
 export const LostAtSeaSurveyPayoutItemData = Type.Object(
   {
+    name: Type.String(),
+    description: Type.String(),
     kind: Type.Literal(PayoutItemKind.LostAtSeaSurvey),
     strategy: Type.Union([
       Type.Literal(PayoutItemStrategy.AddAll),
@@ -28,6 +30,7 @@ export const LostAtSeaSurveyPayoutItemData = Type.Object(
 export const PayoutBundleData = Type.Object(
   {
     name: Type.String(),
+    description: Type.String(),
     strategy: Type.Union([
       Type.Literal(PayoutBundleStrategy.AddPayoutItems),
       Type.Literal(PayoutBundleStrategy.ChoosePayoutItem),
@@ -55,6 +58,8 @@ export const ScoringQuestionData = Type.Object(
 /** Scoring item */
 export const ScoringItemData = Type.Object(
   {
+    name: Type.String(),
+    description: Type.String(),
     fixedCurrencyAmount: Type.Number(),
     surveyStageId: Type.String({ minLength: 1 }),
     currencyAmountPerQuestion: Type.Number(),
@@ -68,6 +73,7 @@ export const ScoringItemData = Type.Object(
 export const ScoringBundleData = Type.Object(
   {
     name: Type.String(),
+    description: Type.String(),
     scoringItems: Type.Array(ScoringItemData),
   },
   strict

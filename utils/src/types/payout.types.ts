@@ -2,6 +2,7 @@
 
 export interface PayoutBundle {
   name: string;
+  description: string;
   strategy: PayoutBundleStrategy;
   payoutItems: PayoutItem[];
 }
@@ -25,6 +26,8 @@ export enum PayoutItemKind {
 
 export interface BasePayoutItem {
   kind: PayoutItemKind;
+  name: string;
+  description: string,
   fixedCurrencyAmount: number; // fixed payout added to this item
 }
 
@@ -47,10 +50,13 @@ export interface LostAtSeaSurveyPayoutItem extends BasePayoutItem {
 
 export interface ScoringBundle {
   name: string;
+  description: string;
   scoringItems: ScoringItem[];
 }
 
 export interface ScoringItem {
+  name: string;
+  description: string;
   fixedCurrencyAmount: number; // fixed payout added to this item
   currencyAmountPerQuestion: number;
   questions: ScoringQuestion[];

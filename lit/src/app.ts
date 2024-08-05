@@ -77,9 +77,11 @@ export class App extends MobxLitElement {
       case Pages.EXPERIMENT:
         return this.renderExperiment();
       case Pages.EXPERIMENT_GROUP:
-        return html` <div class="content">
-          <experiment-group-page></experiment-group-page>
-        </div>`;
+        return html`
+          <div class="content">
+            <experiment-group-page></experiment-group-page>
+          </div>
+        `;
       case Pages.EXPERIMENT_CREATE:
         return html`
           <div class="participant-content-wrapper">

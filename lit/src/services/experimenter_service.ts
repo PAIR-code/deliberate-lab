@@ -184,6 +184,17 @@ export class ExperimenterService extends Service {
         description: templateDoc.data()!['description'],
         author: templateDoc.data()!['author'],
         tags: templateDoc.data()!['tags'],
+        starred: templateDoc.data()!['starred'],
+        numberOfParticipants: templateDoc.data()!['numberOfParticipants'],
+        participantConfig: templateDoc.data()!['participantConfig'],
+        isGroup: templateDoc.data()!['isGroup'],
+        numExperiments: templateDoc.data()!['numExperiments'],
+        isMultiPart: templateDoc.data()!['isMultiPart'],
+        dividerStageId: templateDoc.data()!['dividerStageId'],
+        lobbyWaitSeconds: templateDoc.data()!['lobbyWaitSeconds'],
+        prolificRedirectCode: templateDoc.data()!['prolificRedirectCode'],
+        attentionCheckConfig: templateDoc.data()!['attentionCheckConfig'],
+        stageIds: templateDoc.data()!['stageIds'],
         stageMap: lookupTable(
           collectSnapshotWithId(stagesDocs, 'name'),
           'name'
@@ -264,16 +275,19 @@ export class ExperimenterService extends Service {
   /** Create an experiment template.
    * @rights Experimenter
    */
-  async createTemplate(experiment: Partial<Experiment>, stages: StageConfig[]) {
+  async createTemplate(experiment: Partial<ExperimentTemplate>, stages: StageConfig[]) {
     const name = experiment.name ?? '';
     const publicName = experiment.publicName ?? 'Experiment';
     const description = experiment.description ?? '';
     const tags = experiment.tags ?? [];
-    const group = experiment.group ?? '';
     const numberOfParticipants = experiment.numberOfParticipants ?? 0;
     const prolificRedirectCode = experiment.prolificRedirectCode ?? '';
     const attentionCheckConfig = experiment.attentionCheckConfig ?? {};
-    const lobbyConfig = experiment.lobbyConfig ?? this.getDefaultLobbyConfig();
+    const isGroup = experiment.isGroup ?? false;
+    const numExperiments = experiment.numExperiments ?? 0;
+    const isMultiPart = experiment.isMultiPart ?? false;
+    const dividerStageId = experiment.dividerStageId ?? '';
+    const lobbyWaitSeconds = experiment.lobbyWaitSeconds ?? 0;
     const participantConfig =
       experiment.participantConfig ?? this.getDefaultParticipantConfig();
 
@@ -284,12 +298,15 @@ export class ExperimenterService extends Service {
         publicName,
         description,
         tags,
-        group,
         numberOfParticipants,
         prolificRedirectCode,
         attentionCheckConfig,
-        lobbyConfig,
         participantConfig,
+        isGroup,
+        numExperiments,
+        isMultiPart,
+        dividerStageId,
+        lobbyWaitSeconds,
       },
       stages,
     });

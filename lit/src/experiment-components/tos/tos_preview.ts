@@ -50,7 +50,9 @@ export class TOSPreview extends MobxLitElement {
     return html`
       ${descriptionContent}
 
-      <div class="tos-wrapper">${unsafeHTML(cleanHTML)}</div>
+      <div class="tos-wrapper">
+        ${this.stage?.tosLines.map((line) => this.renderTosLine(line))}
+      </div>
       <div class="ack-wrapper">
         <label class="checkbox-wrapper">
           <md-checkbox
@@ -72,6 +74,12 @@ export class TOSPreview extends MobxLitElement {
       <stage-footer .disabled=${timestamp === null}>
         <progress-stage-completed></progress-stage-completed>
       </stage-footer>
+    `;
+  }
+
+  private renderTosLine(line: string) {
+    return html`
+      <div class="tos-block">${unsafeHTML(convertMarkdownToHTML(line))}</div>
     `;
   }
 }

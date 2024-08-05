@@ -57,9 +57,16 @@ export const createExperiment = onCall(async (request) => {
         attentionCheckConfig,
         lobbyConfig,
         participantConfig,
+        isGroup,
+        numExperiments,
+        isMultiPart,
+        dividerStageId,
+        lobbyWaitSeconds,
       } = data.metadata;
 
       // Create the metadata document
+      const stageIds = data.stages.map((stage) => stage.id);
+
       transaction.set(document, {
         name,
         publicName,
@@ -67,18 +74,15 @@ export const createExperiment = onCall(async (request) => {
         tags,
         author: { uid: request.auth?.uid, displayName: request.auth?.token?.name ?? '' },
         starred: {},
+        numberOfParticipants,
+        participantConfig,
         prolificRedirectCode,
         attentionCheckConfig,
-        lobbyConfig,
-        participantConfig,
+        stageIds,
         ...(data.type === 'experiments'
-          ? {
-              date: Timestamp.now(),
-              group: group,
-              numberOfParticipants,
-              stageIds: data.stages.map((stage) => stage.id),
-            }
-          : {}),
+          ? { date: Timestamp.now(), group, lobbyConfig }
+          : { isGroup, numExperiments, isMultiPart, dividerStageId, lobbyWaitSeconds }
+        ),
       });
 
       // Create the stages
@@ -106,6 +110,8 @@ export const createExperiment = onCall(async (request) => {
               questions = [questions[Math.floor(Math.random() * questions.length)]];
             }
             return {
+              name: payoutItem.name,
+              description: payoutItem.description,
               fixedCurrencyAmount: payoutItem.fixedCurrencyAmount,
               currencyAmountPerQuestion: payoutItem.currencyAmountPerQuestion,
               questions: questions.map((question) => getScoringQuestion(question)),
@@ -123,6 +129,7 @@ export const createExperiment = onCall(async (request) => {
                 : [payoutItems[Math.floor(Math.random() * payoutItems.length)]];
             return {
               name: payoutBundle.name,
+              description: payoutBundle.description,
               scoringItems: items.map((item) => getScoringItem(item)),
             };
           };
@@ -137,10 +144,6 @@ export const createExperiment = onCall(async (request) => {
       // Nothing more to do if this was a template
       if (data.type === 'templates') return;
 
-      // Extract chats in order to pre-create the participant chat documents
-      const chats: GroupChatStageConfig[] = data.stages.filter(
-        (stage): stage is GroupChatStageConfig => stage.kind === StageKind.GroupChat,
-      );
       const currentStageId = data.stages[0].id;
 
       // Create all participants
@@ -161,34 +164,6 @@ export const createExperiment = onCall(async (request) => {
 
         // Create the participant document
         transaction.set(participant, participantData);
-
-        // Create the chat documents
-        chats.forEach((chat) => {
-          const chatData: ChatAnswer = {
-            participantPublicId: participantData.publicId,
-            readyToEndChat: false,
-            stageId: chat.id,
-          };
-          transaction.set(participant.collection('chats').doc(chat.chatId), chatData);
-
-          // If the chat is a chat about items, create an initial DiscussItemsMessage to mention the first pair
-          if (chat.chatConfig.kind === ChatKind.ChatAboutItems) {
-            const firstPair = chat.chatConfig.ratingsToDiscuss[0];
-            // Create the message
-            const messageData: Omit<DiscussItemsMessage, 'uid'> = {
-              kind: MessageKind.DiscussItemsMessage,
-              itemPair: firstPair,
-              text: `Discussion 1 of ${chat.chatConfig.ratingsToDiscuss.length}`,
-              timestamp: Timestamp.now(),
-            };
-
-            // Write it to this participant's chat collection
-            transaction.set(
-              participant.collection('chats').doc(chat.chatId).collection('messages').doc(),
-              messageData,
-            );
-          }
-        });
       });
     });
 
@@ -329,8 +304,6 @@ export const createParticipant = onCall(async (request) => {
 
 /** Function to delete a participant from an experiment */
 export const deleteParticipant = onCall(async (request) => {
-  await AuthGuard.isExperimenter(request);
-
   const { data } = request;
 
   // Validate the incoming data
@@ -368,12 +341,6 @@ export const deleteParticipant = onCall(async (request) => {
 
     // Delete the participant document
     transaction.delete(participantRef);
-
-    // Delete the chat documents associated with the participant
-    const chatsSnapshot = await participantRef.collection('chats').get();
-    chatsSnapshot.forEach((chatDoc) => {
-      transaction.delete(chatDoc.ref);
-    });
   });
 
   return { success: true };

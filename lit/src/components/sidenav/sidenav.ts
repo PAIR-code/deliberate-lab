@@ -84,13 +84,47 @@ export class SideNav extends MobxLitElement {
       return html`<div class="empty-message">Loading...</div>`;
     }
 
-    const experiments = this.experimenterService.experiments;
+    const ungroupedExperiments = this.experimenterService.getUngroupedExperiments();
+    const groupedExperiments = this.experimenterService.getGroupedExperimentsMap();
+
+    if (ungroupedExperiments.length + groupedExperiments.size === 0) {
+      return html`<div class="empty-message">No experiments yet</div>`;
+    }
 
     return html`
-      ${experiments.length === 0
-        ? html`<div class="empty-message">No experiments yet.</div>`
-        : nothing}
-      ${experiments.map((experiment) => this.renderExperimentItem(experiment))}
+      ${Array.from(groupedExperiments.entries()).map(
+        ([group, experiments]) => this.renderGroupExperiment(group, experiments))
+      }
+      ${ungroupedExperiments.map((experiment) => this.renderExperimentItem(experiment))}
+    `;
+  }
+
+  private renderGroupExperiment(groupId: string, experiments: Experiment[]) {
+    const groupName = experiments.length > 0 ? experiments[0].name.split('_')[0] : groupId;
+
+    const handleClick = (_e: Event) => {
+      this.routerService.navigate(
+        Pages.EXPERIMENT_GROUP, { "experiment_group": groupId }
+      );
+    };
+
+    const navItemClasses = classMap({
+      'nav-item': true,
+      selected: groupId === this.routerService.activeRoute.params['experiment_group'],
+    });
+
+    return html`
+      <details>
+        <summary>
+          <div class=${navItemClasses} role="button" @click=${handleClick}>
+            <div>${groupName}</div>
+            <pr-icon icon="arrow_drop_down" color="neutral"></pr-icon>
+          </div>
+        </summary>
+        <div class="experiment-list">
+        ${experiments.map((experiment) => this.renderExperimentItem(experiment))}
+        </div>
+      </details>
     `;
   }
 
