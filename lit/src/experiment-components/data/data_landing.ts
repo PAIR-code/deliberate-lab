@@ -76,6 +76,19 @@ export class Data extends MobxLitElement {
               <div class="subtitle">Includes calculated payouts</div>
             </div>
           </label>
+          <label class="inner-button">
+            <md-checkbox
+              touch-target="wrapper"
+              aria-label="Download chat history CSV"
+              ?checked=${this.dataService.isDownloadChatCSV}
+              ?disabled=${this.dataService.isLoading}
+              @click=${() => { this.dataService.toggleDownloadChatCSV() }}
+            >
+            </md-checkbox>
+            <div class="checkbox-text">
+              <div>Chat history CSV</div>
+            </div>
+          </label>
         </div>
         <div class="action-buttons">
           <pr-button

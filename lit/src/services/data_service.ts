@@ -10,6 +10,7 @@ import {
   Experiment,
   lookupTable,
   Message,
+  MessageKind,
   ParticipantProfileExtended,
   PayoutCurrency,
   PublicStageData,
@@ -45,6 +46,7 @@ export class DataService extends Service {
   // Download options
   @observable isDownloadExperimentJSON = true;
   @observable isDownloadParticipantCSV = true;
+  @observable isDownloadChatCSV = true;
 
   @computed get isLoading() {
     return this.sp.experimenterService.isLoading || this.isDataLoading;
@@ -89,6 +91,9 @@ export class DataService extends Service {
     if (this.isDownloadParticipantCSV) {
       num += 1;
     }
+    if (this.isDownloadChatCSV) {
+      num += 1;
+    }
 
     return num;
   }
@@ -117,6 +122,58 @@ export class DataService extends Service {
         downloadJSON(data, `experiment_${data.experiment.id}.json`);
       });
     }
+  }
+
+  toggleDownloadChatCSV() {
+    this.isDownloadChatCSV = !this.isDownloadChatCSV;
+  }
+
+  downloadChatCSV() {
+    const headers: string[] = [
+      'Timestamp',
+      'Message Type',
+      'User',
+      'Text',
+    ];
+
+    this.experimentData.forEach((data) => {
+      Object.keys(data.chats).forEach((chatId) => {
+        const stage = data.chats[chatId];
+
+        // Use unique private participant ID
+        const getParticipantPrivateId = (publicId: string) => {
+          return Object.values(data.participants).find(
+            participant => participant.publicId === publicId
+          )?.privateId ?? '';
+        };
+
+        // Get message name based on type
+        const getMessageName = (message: Message) => {
+          switch (message.kind) {
+            case MessageKind.UserMessage:
+              return getParticipantPrivateId(message.fromPublicParticipantId);
+            case MessageKind.MediatorMessage:
+              return message.name;
+            default:
+              return '';
+          }
+        };
+
+        const messages: string[][] = stage.map(message =>
+          [
+            convertUnifiedTimestampToDate(message.timestamp),
+            message.kind,
+            getMessageName(message),
+            message.text
+          ]
+        );
+
+        downloadCSV(
+          [headers, ...messages],
+          `${this.getFilePrefix()}_experiment_${data.experiment.id}_chat_${chatId}.csv`
+        );
+      })
+    })
   }
 
   toggleDownloadParticipantCSV() {
@@ -187,6 +244,9 @@ export class DataService extends Service {
     }
     if (this.isDownloadParticipantCSV) {
       this.downloadParticipantCSV();
+    }
+    if (this.isDownloadChatCSV) {
+      this.downloadChatCSV();
     }
   }
 
