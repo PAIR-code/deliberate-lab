@@ -146,6 +146,12 @@ export const publishStageData = onDocumentWritten(
         const participantRankings = publicData.participantRankings;
         participantRankings[participantPublicId] = data.rankings;
 
+        // TODO: When determining current leader,
+        // only use participants whose scores are in the top two
+        // for willingness to lead (WTL).
+        //
+        // Determine top two scores from WTL, then filter participantRankings
+        // by participants who have those scores.
         const currentLeader = getCondorcetElectionWinner(participantRankings);
 
         // Update the public data
