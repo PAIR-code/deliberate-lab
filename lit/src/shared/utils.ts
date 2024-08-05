@@ -8,18 +8,25 @@ import {
   GroupChatStageConfig,
   InfoStageConfig,
   ItemName,
+  LostAtSeaSurveyStagePublicData,
+  LostAtSeaQuestionAnswer,
   MediatorConfig,
   MediatorKind,
+  ParticipantProfileExtended,
   PayoutCurrency,
   PayoutStageConfig,
   ProfileStageConfig,
+  PublicStageData,
   RevealStageConfig,
+  ScoringBundle,
+  ScoringItem,
   StageConfig,
   StageKind,
   SurveyStageConfig,
   TermsOfServiceStageConfig,
   UnifiedTimestamp,
   VoteForLeaderStageConfig,
+  VoteForLeaderStagePublicData,
 } from '@llm-mediation-experiments/utils';
 import {micromark} from 'micromark';
 import {gfm, gfmHtml} from 'micromark-extension-gfm';
@@ -28,7 +35,7 @@ import {
   GEMINI_DEFAULT_MODEL,
   PROMPT_INSTRUCTIONS_CHAT_MEDIATOR,
 } from './prompts';
-import {Snapshot} from './types';
+import {AnswerItem, PayoutBreakdownItem, PayoutData, Snapshot} from './types';
 
 /** Generate unique id. */
 export function generateId(): string {
@@ -246,12 +253,111 @@ export function convertExperimentStages(stages: StageConfig[]) {
   });
 }
 
+/** Calculate experiment payouts for current payout stage.
+ * Return currency, payout map from participant public ID to value.
+ */
+export function getPayouts(
+  stage: PayoutStageConfig,
+  privateParticipants: ParticipantProfileExtended[],
+  publicStageDataMap: Record<string, PublicStageData | undefined>
+): PayoutData {
+  const payouts: Record<string, number> = {}; // participant ID, amount
+  const payoutBreakdown: Record<string, PayoutBreakdownItem[]> = {}; // participant ID, scoring breakdown
+  privateParticipants.forEach((participant) => {
+    const getAnswerItems = (item: ScoringItem): AnswerItem[] => {
+      // Use leader's answers if indicated, else current participant's answers
+      if (item.leaderStageId && item.leaderStageId.length > 0) {
+        const leaderPublicId =
+          (
+            publicStageDataMap[
+              item.leaderStageId
+            ] as VoteForLeaderStagePublicData
+          ).currentLeader ?? '';
+        const leaderAnswers = (
+          publicStageDataMap[
+            item.surveyStageId
+          ] as LostAtSeaSurveyStagePublicData
+        ).participantAnswers[leaderPublicId];
+
+        if (!leaderAnswers) return [];
+
+        return item.questions.map((question) => {
+          return {
+            ...question,
+            leaderPublicId,
+            userAnswer: (
+              leaderAnswers[question.id] as LostAtSeaQuestionAnswer
+            ).choice,
+          };
+        });
+      }
+
+      const userAnswers = (
+        publicStageDataMap[
+          item.surveyStageId
+        ] as LostAtSeaSurveyStagePublicData
+      ).participantAnswers[participant.publicId];
+      if (!userAnswers) return [];
+      return item.questions.map((question) => {
+        return {
+          ...question,
+          userAnswer: (userAnswers[question.id] as LostAtSeaQuestionAnswer)
+            .choice,
+        };
+      });
+    };
+
+    // Calculate score for bundle
+    const getBundleScore = (bundle: ScoringBundle) => {
+      let score = 0;
+      bundle.scoringItems.forEach((item) => {
+        // Calculate score for item
+        const answerItems: AnswerItem[] = getAnswerItems(item);
+
+        if (answerItems.length === 0) {
+          return item.fixedCurrencyAmount;
+        }
+
+        const numCorrect = () => {
+          let count = 0;
+          answerItems.forEach((answer) => {
+            if (answer.userAnswer === answer.answer) {
+              count += 1;
+            }
+          });
+          return count;
+        };
+        score +=
+          item.fixedCurrencyAmount +
+          item.currencyAmountPerQuestion * numCorrect();
+      });
+      return score;
+    };
+
+    // Assign payout for participant
+    let totalScore = 0;
+    let breakdowns: PayoutBreakdownItem[] = [];
+    const scoring: ScoringBundle[] = stage.scoring ?? [];
+    scoring.forEach((bundle) => {
+      // Combine all bundles to get total score
+      const score = getBundleScore(bundle);
+      breakdowns.push({ name: bundle.name, score });
+      totalScore += score;
+    });
+
+    payouts[participant.publicId] = totalScore;
+    payoutBreakdown[participant.publicId] = breakdowns;
+  });
+
+  return {currency: stage.currency, payouts, payoutBreakdown};
+}
+
 /**
  * Converts UnifiedTimestamp to previewable date.
  */
 export function convertUnifiedTimestampToDate(timestamp: UnifiedTimestamp) {
   const date = new Date(timestamp.seconds * 1000);
-  return `${date.toDateString()} (${date.getHours()}:${date.getMinutes()})`;
+  return `${date.toDateString()} (${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')})`;
 }
 
 /**

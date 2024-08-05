@@ -13,7 +13,8 @@ h2 {
 }
 
 .top-bar {
-  @include common.flex-row-align-center;
+  @include common.flex-row;
+  align-items: start;
   flex-wrap: wrap;
   gap: common.$spacing-medium;
   justify-content: space-between;
@@ -50,4 +51,9 @@ h2 {
   @include common.flex-row;
   flex-wrap: wrap;
   gap: common.$spacing-large;
+}
+
+.pr-button-inner {
+  @include common.flex-row;
+  gap: common.$spacing-small;
 }

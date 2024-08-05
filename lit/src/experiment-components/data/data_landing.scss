@@ -1,0 +1,62 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  flex-grow: 1;
+  gap: common.$spacing-large;
+  overflow: auto;
+}
+
+h2 {
+  @include typescale.title-medium;
+  margin: 0;
+}
+
+.error {
+  @include typescale.label-medium;
+  color: var(--md-sys-color-error);
+}
+
+.code-container {
+  background: var(--md-sys-color-surface);
+  border-radius: common.$spacing-medium;
+  max-height: 100px;
+  overflow: auto;
+  padding: common.$spacing-xl;
+}
+
+.download-zone {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface-container-high);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: common.$spacing-medium;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-xl;
+}
+
+.options-wrapper {
+  @include common.flex-row-align-center;
+  flex-wrap: wrap;
+  gap: common.$spacing-medium;
+}
+
+.action-buttons {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  justify-content: end;
+}
+
+.inner-button {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+}
+
+.checkbox-text {
+  @include common.flex-column;
+}
+
+.subtitle {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
+}

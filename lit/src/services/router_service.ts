@@ -29,6 +29,14 @@ export class RouterService extends Service {
       path: "/settings",
     },
     {
+      name: Pages.DATA_EXPERIMENT,
+      path: "/data/:experiment",
+    },
+    {
+      name: Pages.DATA_EXPERIMENT_GROUP,
+      path: "/data/group/:experiment_group",
+    },
+    {
       name: Pages.EXPERIMENT,
       path: "/:experiment",
     },
@@ -129,6 +137,8 @@ export type RouteChange = router5.SubscribeState;
 export enum Pages {
   HOME = "HOME",
   SETTINGS = "SETTINGS",
+  DATA_EXPERIMENT = "DATA_EXPERIMENT",
+  DATA_EXPERIMENT_GROUP = "DATA_EXPERIMENT_GROUP",
   EXPERIMENT = "EXPERIMENT",
   EXPERIMENT_GROUP = "EXPERIMENT_GROUP",
   EXPERIMENT_CREATE = "EXPERIMENT_CREATE",

@@ -12,6 +12,7 @@ import {customElement} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth_service';
+import {DataService} from '../../services/data_service';
 import {ExperimentConfigService} from '../../services/config/experiment_config_service';
 import {ExperimentService} from '../../services/experiment_service';
 import {ExperimenterService} from '../../services/experimenter_service';
@@ -28,6 +29,7 @@ export class Header extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly authService = core.getService(AuthService);
+  private readonly dataService = core.getService(DataService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly experimentConfig = core.getService(ExperimentConfigService);
   private readonly experimenterService = core.getService(ExperimenterService);
@@ -115,13 +117,24 @@ export class Header extends MobxLitElement {
   private renderBackButton() {
     if (
       this.routerService.activePage !== Pages.EXPERIMENT_CREATE &&
-      this.routerService.activePage !== Pages.EXPERIMENT
+      this.routerService.activePage !== Pages.EXPERIMENT &&
+      this.routerService.activePage !== Pages.DATA_EXPERIMENT &&
+      this.routerService.activePage !== Pages.DATA_EXPERIMENT_GROUP
     ) {
       return nothing;
     }
 
     const handleClick = () => {
-      this.routerService.navigate(Pages.HOME);
+      switch (this.routerService.activePage) {
+        case Pages.DATA_EXPERIMENT:
+          this.routerService.navigate(Pages.EXPERIMENT, { 'experiment': this.dataService.experimentId ?? '' });
+          break;
+        case Pages.DATA_EXPERIMENT_GROUP:
+          this.routerService.navigate(Pages.EXPERIMENT_GROUP, { 'experiment_group': this.dataService.groupId ?? '' });
+          break;
+        default:
+          this.routerService.navigate(Pages.HOME);
+      }
       this.authService.setEditPermissions(false);
     };
 
@@ -146,6 +159,10 @@ export class Header extends MobxLitElement {
         return 'Settings';
       case Pages.PARTICIPANT_SETTINGS:
         return 'Settings';
+      case Pages.DATA_EXPERIMENT:
+        return `Data analysis: ${this.dataService.experimentId}`;
+      case Pages.DATA_EXPERIMENT_GROUP:
+        return `Data analysis: ${this.dataService.groupId}`;
       case Pages.EXPERIMENT:
         const experiment = this.experimentService.experiment;
         if (!this.authService.isExperimenter) {

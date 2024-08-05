@@ -1,5 +1,14 @@
 import { DocumentData, QuerySnapshot } from 'firebase/firestore';
-import { ScoringQuestion } from '@llm-mediation-experiments/utils';
+import {
+  Experiment,
+  Message,
+  ParticipantProfileExtended,
+  PayoutCurrency,
+  PublicStageData,
+  ScoringQuestion,
+  StageAnswer,
+  StageConfig
+} from '@llm-mediation-experiments/utils';
 
 /**
  * Generic wrapper type for constructors, used in the DI system.
@@ -44,4 +53,33 @@ export interface ModelResponse {
 export interface AnswerItem extends ScoringQuestion {
   leaderPublicId?: string; // leader public ID if used
   userAnswer: string;
+}
+
+/** Experiment data. */
+export interface ExperimentData {
+  experiment: Experiment;
+  participants: Record<string, ParticipantProfileExtended>; // private ID to profile
+  stages: Record<string, ExperimentDataStage>; // stage ID to stage data
+  chats: Record<string, Message[]>; // stage ID to chat history
+  payouts: Record<string, PayoutData>; // stage ID to payout data
+}
+
+/** Payout data. */
+export interface PayoutData {
+  currency: PayoutCurrency,
+  payouts: Record<string, number>
+  payoutBreakdown: Record<string, PayoutBreakdownItem[]>
+}
+
+/** Payout breakdown data. */
+export interface PayoutBreakdownItem {
+  name: string;
+  score: number;
+}
+
+/** Experiment data stage. */
+export interface ExperimentDataStage {
+  config: StageConfig;
+  publicData: PublicStageData;
+  answers: Record<string, StageAnswer>;
 }

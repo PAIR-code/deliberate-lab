@@ -1,31 +1,9 @@
 /**
- * Functions to help convert experiments to JSON files.
+ * Functions for data downloads.
  */
 
-export const createJsonFile = (data: object, filename: string) => {
-  const fileMetadata = {
-    name: filename,
-    mimeType: 'application/json',
-  };
-
-  const fileContent = JSON.stringify(data);
-  const blob = new Blob([fileContent], { type: 'application/json' });
-
-  const formData = new FormData();
-  formData.append(
-    'metadata',
-    new Blob([JSON.stringify(fileMetadata)], { type: 'application/json' }),
-  );
-  formData.append('file', blob);
-
-  return formData;
-};
-
-/** Helper method to make the user download some data as a JSON file */
-export const downloadJsonFile = (data: object, filename: string) => {
-  const jsonData = JSON.stringify(data, null, 2);
-
-  const blob = new Blob([jsonData], { type: 'application/json' });
+/** Download blob (helper function for file downloads) */
+export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
 
   const link = document.createElement('a');
@@ -37,4 +15,22 @@ export const downloadJsonFile = (data: object, filename: string) => {
   // Clean up the URL and remove the link after the download
   document.body.removeChild(link);
   window.URL.revokeObjectURL(url);
-};
+}
+
+/** Download data as a CSV */
+export function downloadCSV(data: string[][], filename: string) {
+  const csvData = data.map((line: string[]) => line.map(
+    line => JSON.stringify(line))
+    .join(',')).join('\n');
+
+  const blob = new Blob([csvData], { type: 'application/csv' });
+  downloadBlob(blob, filename);
+}
+
+/** Download data as a JSON file */
+export function downloadJSON(data: object, filename: string) {
+  const jsonData = JSON.stringify(data, null, 2);
+
+  const blob = new Blob([jsonData], { type: 'application/json' });
+  downloadBlob(blob, filename);
+}
