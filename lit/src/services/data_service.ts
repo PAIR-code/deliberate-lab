@@ -192,22 +192,39 @@ export class DataService extends Service {
       'Completion Type',
       'Current Stage',
       'Transfer Experiment ID',
-      'Payout',
+      'Total Payout',
     ];
 
     const participantDataList: string[][] = [];
     // For each participant, match data to headers
     this.experimentData.forEach((data) => {
+      // Add header columns for payout breakdowns
+      const payouts: PayoutData[] = Object.values(data.payouts);
+      payouts.forEach((stage) => {
+        const breakdowns = Object.values(stage.payoutBreakdown);
+        if (breakdowns.length > 0) {
+          breakdowns[0].forEach(breakdown => headers.push(breakdown.name));
+        }
+      });
+
       Object.values(data.participants).forEach((participant) => {
         // Calculate payouts for current participant
-        const totalPayouts = () => {
+        const payoutColumns = () => {
+          if (data.experiment.lobbyConfig?.isLobby) {
+            return [];
+          }
+
           let total = 0;
-          Object.values(data.payouts).forEach((stage) => {
+          const breakdowns: string[] = [];
+          payouts.forEach((stage) => {
             if (stage.payouts[participant.publicId]) {
               total += stage.payouts[participant.publicId];
+              stage.payoutBreakdown[participant.publicId].forEach(breakdown => {
+                breakdowns.push(breakdown.score.toString());
+              });
             }
           });
-          return total;
+          return [total.toString(), ...breakdowns];
         };
 
         // If transfer config is set, ignore for now and
@@ -227,7 +244,7 @@ export class DataService extends Service {
             participant.completionType ?? '',
             participant.currentStageId ?? '',
             data.experiment.lobbyConfig?.isLobby ? '' : data.experiment.id,
-            data.experiment.lobbyConfig?.isLobby ? '' : totalPayouts().toString(),
+            ...payoutColumns()
           ]);
         }
       });

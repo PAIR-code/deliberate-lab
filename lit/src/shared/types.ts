@@ -68,6 +68,13 @@ export interface ExperimentData {
 export interface PayoutData {
   currency: PayoutCurrency,
   payouts: Record<string, number>
+  payoutBreakdown: Record<string, PayoutBreakdownItem[]>
+}
+
+/** Payout breakdown data. */
+export interface PayoutBreakdownItem {
+  name: string;
+  score: number;
 }
 
 /** Experiment data stage. */

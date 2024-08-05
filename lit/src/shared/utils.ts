@@ -35,7 +35,7 @@ import {
   GEMINI_DEFAULT_MODEL,
   PROMPT_INSTRUCTIONS_CHAT_MEDIATOR,
 } from './prompts';
-import {AnswerItem, PayoutData, Snapshot} from './types';
+import {AnswerItem, PayoutBreakdownItem, PayoutData, Snapshot} from './types';
 
 /** Generate unique id. */
 export function generateId(): string {
@@ -262,6 +262,7 @@ export function getPayouts(
   publicStageDataMap: Record<string, PublicStageData | undefined>
 ): PayoutData {
   const payouts: Record<string, number> = {}; // participant ID, amount
+  const payoutBreakdown: Record<string, PayoutBreakdownItem[]> = {}; // participant ID, scoring breakdown
   privateParticipants.forEach((participant) => {
     const getAnswerItems = (item: ScoringItem): AnswerItem[] => {
       // Use leader's answers if indicated, else current participant's answers
@@ -333,21 +334,22 @@ export function getPayouts(
       return score;
     };
 
-    // Add up all bundles to get total score
-    const getTotalScore = () => {
-      let score = 0;
-      const scoring: ScoringBundle[] = stage.scoring ?? [];
-      scoring.forEach((bundle) => {
-        score += getBundleScore(bundle);
-      });
-      return score;
-    };
-
     // Assign payout for participant
-    payouts[participant.publicId] = getTotalScore();
+    let totalScore = 0;
+    let breakdowns: PayoutBreakdownItem[] = [];
+    const scoring: ScoringBundle[] = stage.scoring ?? [];
+    scoring.forEach((bundle) => {
+      // Combine all bundles to get total score
+      const score = getBundleScore(bundle);
+      breakdowns.push({ name: bundle.name, score });
+      totalScore += score;
+    });
+
+    payouts[participant.publicId] = totalScore;
+    payoutBreakdown[participant.publicId] = breakdowns;
   });
 
-  return {currency: stage.currency, payouts};
+  return {currency: stage.currency, payouts, payoutBreakdown};
 }
 
 /**
