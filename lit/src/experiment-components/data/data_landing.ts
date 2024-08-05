@@ -1,6 +1,11 @@
+import '../../pair-components/button';
+import '../../pair-components/icon';
+
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
+
+import '@material/web/checkbox/checkbox.js';
 
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth_service';
@@ -27,7 +32,7 @@ export class Data extends MobxLitElement {
     return html`
       ${this.dataService.groupId ? html`<div>Group: ${this.dataService.groupId}</div>` : nothing}
       ${this.dataService.experimentId ? html`<div>Experiment: ${this.dataService.experimentId}</div>` : nothing}
-      ${this.renderDownload()}
+      ${this.renderDownloadZone()}
       <div class="code-container">
         <code>
           ${this.dataService.isLoading ? 'Loading...' :
@@ -37,22 +42,41 @@ export class Data extends MobxLitElement {
     `;
   }
 
-  private renderDownload() {
+  private renderDownloadZone() {
     const onDownload = () => {
       this.dataService.download();
     };
 
     return html`
-      <pr-tooltip text="Download experiment JSON" position="BOTTOM_START">
-        <pr-icon-button
-          icon="download"
-          color="secondary"
-          variant="tonal"
-          ?disabled=${this.dataService.isLoading}
-          @click=${onDownload}
-        >
-        </pr-icon-button>
-      </pr-tooltip>
+      <div class="download-zone">
+        <h2>File options</h2>
+        <div class="options-wrapper">
+          <label class="inner-button">
+            <md-checkbox
+              touch-target="wrapper"
+              aria-label="Download experiment JSON"
+              ?checked=${this.dataService.isDownloadExperimentJSON}
+              ?disabled=${this.dataService.isLoading}
+              @click=${() => { this.dataService.toggleDownloadExperimentJSON() }}
+            >
+            </md-checkbox>
+            Experiment JSON
+          </label>
+        </div>
+        <div class="action-buttons">
+          <pr-button
+            color="secondary"
+            variant="tonal"
+            ?disabled=${this.dataService.numDownloads() === 0}
+            @click=${onDownload}
+          >
+            <div class="inner-button">
+              <pr-icon color="secondary" icon="download"></pr-icon>
+              <div>Download ${this.dataService.numDownloads()} files</div>
+            </div>
+          </pr-button>
+        </div>
+      </div>
     `;
   }
 }

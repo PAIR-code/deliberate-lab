@@ -42,6 +42,8 @@ export class DataService extends Service {
 
   @observable experimentData: ExperimentData[] = [];
 
+  @observable isDownloadExperimentJSON = true;
+
   @computed get isLoading() {
     return this.sp.experimenterService.isLoading || this.isDataLoading;
   }
@@ -77,7 +79,20 @@ export class DataService extends Service {
     }
   }
 
-  download() {
+  numDownloads() {
+    let num = 0;
+    if (this.isDownloadExperimentJSON) {
+      num += 1;
+    }
+
+    return num;
+  }
+
+  toggleDownloadExperimentJSON() {
+    this.isDownloadExperimentJSON = !this.isDownloadExperimentJSON;
+  }
+
+  downloadExperimentJSON() {
     if (this.groupId) {
       downloadJsonFile(
         { groupId: this.groupId, experiments: this.experimentData},
@@ -87,6 +102,12 @@ export class DataService extends Service {
       this.experimentData.forEach((data) => {
         downloadJsonFile(data, `experiment_${data.experiment.id}.json`);
       });
+    }
+  }
+
+  download() {
+    if (this.isDownloadExperimentJSON) {
+      this.downloadExperimentJSON()
     }
   }
 
