@@ -203,17 +203,21 @@ export class DataService extends Service {
     ];
 
     const participantDataList: string[][] = [];
+    // Add header columns for payout breakdowns
+    const nonLobbyExperiment = this.experimentData.find(
+      data => !data.experiment.lobbyConfig?.isLobby
+    );
+    const payouts: PayoutData[] = nonLobbyExperiment ? Object.values(nonLobbyExperiment.payouts) : [];
+
+    payouts.forEach((stage) => {
+      const breakdowns = Object.values(stage.payoutBreakdown);
+      if (breakdowns.length > 0) {
+        breakdowns[0].forEach(breakdown => headers.push(breakdown.name));
+      }
+    });
+
     // For each participant, match data to headers
     this.experimentData.forEach((data) => {
-      // Add header columns for payout breakdowns
-      const payouts: PayoutData[] = Object.values(data.payouts);
-      payouts.forEach((stage) => {
-        const breakdowns = Object.values(stage.payoutBreakdown);
-        if (breakdowns.length > 0) {
-          breakdowns[0].forEach(breakdown => headers.push(breakdown.name));
-        }
-      });
-
       Object.values(data.participants).forEach((participant) => {
         // Calculate payouts for current participant
         const payoutColumns = () => {
