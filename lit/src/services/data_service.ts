@@ -132,7 +132,10 @@ export class DataService extends Service {
     const headers: string[] = [
       'Timestamp',
       'Message Type',
-      'User',
+      'User ID',
+      'User Name',
+      'User Pronouns',
+      'User Avatar',
       'Text',
     ];
 
@@ -147,8 +150,8 @@ export class DataService extends Service {
           )?.privateId ?? '';
         };
 
-        // Get message name based on type
-        const getMessageName = (message: Message) => {
+        // Get message ID based on type
+        const getMessageID = (message: Message) => {
           switch (message.kind) {
             case MessageKind.UserMessage:
               return getParticipantPrivateId(message.fromPublicParticipantId);
@@ -159,14 +162,18 @@ export class DataService extends Service {
           }
         };
 
-        const messages: string[][] = stage.map(message =>
-          [
+        const messages: string[][] = stage.map(message => {
+          const id = getMessageID(message);
+          return [
             convertUnifiedTimestampToDate(message.timestamp),
             message.kind,
-            getMessageName(message),
+            id,
+            message.kind === MessageKind.UserMessage ? data.participants[id].name ?? '' : '',
+            message.kind === MessageKind.UserMessage ? data.participants[id].pronouns ?? '' : '',
+            message.kind === MessageKind.UserMessage ? data.participants[id].avatarUrl ?? '' : '',
             message.text
-          ]
-        );
+          ];
+        });
 
         downloadCSV(
           [headers, ...messages],
