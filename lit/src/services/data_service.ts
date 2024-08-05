@@ -17,8 +17,8 @@ import {
   StageConfig,
   StageKind
 } from "@llm-mediation-experiments/utils";
-import {downloadJsonFile} from '../shared/file_utils';
-import {getPayouts} from "../shared/utils";
+import {downloadCSV, downloadJSON} from '../shared/file_utils';
+import {convertUnifiedTimestampToDate, getPayouts} from "../shared/utils";
 import {ExperimentData, ExperimentDataStage, PayoutData} from "../shared/types";
 
 interface ServiceProvider {
@@ -42,7 +42,9 @@ export class DataService extends Service {
 
   @observable experimentData: ExperimentData[] = [];
 
+  // Download options
   @observable isDownloadExperimentJSON = true;
+  @observable isDownloadParticipantCSV = true;
 
   @computed get isLoading() {
     return this.sp.experimenterService.isLoading || this.isDataLoading;
@@ -84,8 +86,20 @@ export class DataService extends Service {
     if (this.isDownloadExperimentJSON) {
       num += 1;
     }
+    if (this.isDownloadParticipantCSV) {
+      num += 1;
+    }
 
     return num;
+  }
+
+  getFilePrefix() {
+    if (this.groupId) {
+      return `experiment_group_${this.groupId}`;
+    } else if (this.experimentId) {
+      return `experiment_${this.experimentId}`;
+    }
+    return '';
   }
 
   toggleDownloadExperimentJSON() {
@@ -94,20 +108,85 @@ export class DataService extends Service {
 
   downloadExperimentJSON() {
     if (this.groupId) {
-      downloadJsonFile(
+      downloadJSON(
         { groupId: this.groupId, experiments: this.experimentData},
-        `experiment_group_${this.groupId}.json`
+        `${this.getFilePrefix()}.json`
       );
     } else if (this.experimentId) {
       this.experimentData.forEach((data) => {
-        downloadJsonFile(data, `experiment_${data.experiment.id}.json`);
+        downloadJSON(data, `experiment_${data.experiment.id}.json`);
       });
     }
   }
 
+  toggleDownloadParticipantCSV() {
+    this.isDownloadParticipantCSV = !this.isDownloadParticipantCSV;
+  }
+
+  downloadParticipantCSV() {
+    const headers: string[] = [
+      'Participant ID', // private ID
+      'Prolific ID',
+      'Name',
+      'Avatar',
+      'Pronouns',
+      'Accepted Terms of Service',
+      'Completed Experiment?',
+      'Completion Type',
+      'Current Stage',
+      'Transfer Experiment ID',
+      'Payout',
+    ];
+
+    const participantDataList: string[][] = [];
+    // For each participant, match data to headers
+    this.experimentData.forEach((data) => {
+      Object.values(data.participants).forEach((participant) => {
+        // Calculate payouts for current participant
+        const totalPayouts = () => {
+          let total = 0;
+          Object.values(data.payouts).forEach((stage) => {
+            if (stage.payouts[participant.publicId]) {
+              total += stage.payouts[participant.publicId];
+            }
+          });
+          return total;
+        };
+
+        // If transfer config is set, ignore for now and
+        // add participant when reached in transfer experiment data object
+        //
+        // NOTE: This means that if you download only the lobby experiment,
+        // transferred participants will not be included.
+        if (participant.transferConfig === null) {
+          participantDataList.push([
+            participant.privateId,
+            participant.prolificId ?? '',
+            participant.name ?? '',
+            participant.avatarUrl ?? '',
+            participant.pronouns ?? '',
+            participant.acceptTosTimestamp ? convertUnifiedTimestampToDate(participant.acceptTosTimestamp) : '',
+            participant.completedExperiment ? convertUnifiedTimestampToDate(participant.completedExperiment) : '',
+            participant.completionType ?? '',
+            participant.currentStageId ?? '',
+            data.experiment.lobbyConfig?.isLobby ? '' : data.experiment.id,
+            data.experiment.lobbyConfig?.isLobby ? '' : totalPayouts().toString(),
+          ]);
+        }
+      });
+    });
+    downloadCSV(
+      [headers, ...participantDataList],
+      `${this.getFilePrefix()}_participants_payouts.csv`
+    );
+  }
+
   download() {
     if (this.isDownloadExperimentJSON) {
-      this.downloadExperimentJSON()
+      this.downloadExperimentJSON();
+    }
+    if (this.isDownloadParticipantCSV) {
+      this.downloadParticipantCSV();
     }
   }
 

@@ -60,7 +60,21 @@ export class Data extends MobxLitElement {
               @click=${() => { this.dataService.toggleDownloadExperimentJSON() }}
             >
             </md-checkbox>
-            Experiment JSON
+            <div class="checkbox-text"><div>Experiment JSON</div></div>
+          </label>
+          <label class="inner-button">
+            <md-checkbox
+              touch-target="wrapper"
+              aria-label="Download participant CSV"
+              ?checked=${this.dataService.isDownloadParticipantCSV}
+              ?disabled=${this.dataService.isLoading}
+              @click=${() => { this.dataService.toggleDownloadParticipantCSV() }}
+            >
+            </md-checkbox>
+            <div class="checkbox-text">
+              <div>Participant CSV</div>
+              <div class="subtitle">Includes calculated payouts</div>
+            </div>
           </label>
         </div>
         <div class="action-buttons">
