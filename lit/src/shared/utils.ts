@@ -355,7 +355,7 @@ export function getPayouts(
  */
 export function convertUnifiedTimestampToDate(timestamp: UnifiedTimestamp) {
   const date = new Date(timestamp.seconds * 1000);
-  return `${date.toDateString()} (${date.getHours()}:${date.getMinutes()})`;
+  return `${date.toDateString()} (${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')})`;
 }
 
 /**
