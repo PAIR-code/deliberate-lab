@@ -95,7 +95,13 @@ export class ExperimentPreview extends MobxLitElement {
       // Ony fetch other, non-lobby experiments.
       return this.experimenterService
         .getExperimentsInGroup(group)
-        .filter((experiment) => !experiment.lobbyConfig.isLobby);
+        .filter((experiment) => !experiment.lobbyConfig.isLobby)
+        .filter(
+          (experiment) =>
+            !experiment.participantConfig.numberOfMaxParticipants ||
+            experiment.numberOfParticipants <
+              experiment.participantConfig.numberOfMaxParticipants
+        );
     };
 
     const group = this.experimentService.experiment?.group!;
@@ -345,16 +351,19 @@ export class ExperimentPreview extends MobxLitElement {
 
   private renderData() {
     const onClick = () => {
-      this.routerService.navigate(
-        Pages.DATA_EXPERIMENT,
-        { "experiment": this.experimentService.id! }
-      );
+      this.routerService.navigate(Pages.DATA_EXPERIMENT, {
+        experiment: this.experimentService.id!,
+      });
     };
 
     return html`
       <pr-button color="tertiary" variant="tonal" @click=${onClick}>
         <div class="pr-button-inner">
-          <pr-icon icon="analytics" color="tertiary" variant="default"></pr-icon>
+          <pr-icon
+            icon="analytics"
+            color="tertiary"
+            variant="default"
+          ></pr-icon>
           <div>Data analysis</div>
         </div>
       </pr-button>

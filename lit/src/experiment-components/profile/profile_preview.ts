@@ -260,7 +260,8 @@ export class ProfilePreview extends MobxLitElement {
       </div>
       ${
         this.profile.transferConfig &&
-        !PARTICIPANT_COMPLETION_TYPE.LOBBY_DECLINED
+        this.profile.completionType !==
+          PARTICIPANT_COMPLETION_TYPE.LOBBY_DECLINED
           ? html`
               <div>
                 <span>Transferred to:</span>
