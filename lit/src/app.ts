@@ -9,6 +9,7 @@ import './experiment-components/experiment/experiment_config';
 import './experiment-components/experiment/experiment_config_sidenav';
 import './experiment-components/experiment/experiment_preview';
 import './experiment-components/games/lost_at_sea/las_survey_preview';
+import './experiment-components/games/lost_at_sea/wtl_preview';
 import './experiment-components/info/info_preview';
 import './experiment-components/mediators/mediator_chat_panel';
 import './experiment-components/payout/payout_preview';
@@ -284,6 +285,10 @@ export class App extends MobxLitElement {
             .stage=${currentStage}
             .answer=${answer}
           ></las-survey-preview>
+        `;
+      case StageKind.WTLSurvey:
+        return html`
+          <wtl-preview .stage=${currentStage} .answer=${answer}></wtl-preview>
         `;
       case StageKind.SetProfile:
         return html`<profile-config></profile-config>`;

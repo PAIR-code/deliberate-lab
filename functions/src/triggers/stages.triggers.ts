@@ -10,6 +10,7 @@ import {
   StageConfig,
   StageKind,
   VoteForLeaderStagePublicData,
+  WTLSurveyStagePublicData,
   getCondorcetElectionWinner,
 } from '@llm-mediation-experiments/utils';
 import { Timestamp } from 'firebase-admin/firestore';
@@ -43,6 +44,12 @@ export const initializePublicStageData = onDocumentWritten(
         publicData = {
           kind: data.kind,
           participantAnswers: {},
+        };
+        break;
+      case StageKind.WTLSurvey:
+        publicData = {
+          kind: data.kind,
+          participantScores: {},
         };
         break;
       case StageKind.GroupChat:
@@ -160,6 +167,19 @@ export const publishStageData = onDocumentWritten(
           currentLeader,
         });
 
+        break;
+      case StageKind.WTLSurvey:
+        // Map participants to their willing to lead scores
+        const wtlPublicDoc = await app
+          .firestore()
+          .doc(`experiments/${experimentId}/publicStageData/${stageId}`)
+          .get();
+        const wtlPublicData = wtlPublicDoc.data() as WTLSurveyStagePublicData;
+
+        const participantScores = wtlPublicData.participantScores;
+        participantScores[participantPublicId] = data.score;
+
+        await wtlPublicDoc.ref.update({ participantScores });
         break;
       case StageKind.TakeSurvey:
         const surveyParticipantDoc = await app

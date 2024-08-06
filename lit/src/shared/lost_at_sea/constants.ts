@@ -174,16 +174,9 @@ export const LAS_LEADER_ELECTION_INSTRUCTIONS = [
 export const LAS_WTL_2_DESCRIPTION =
   'Please indicate your willingness to become the group leader.';
 
-export const LAS_WTL_2_SURVEY: QuestionConfig[] = [
-  {
-    id: 0,
-    kind: SurveyQuestionKind.Scale,
-    questionText:
-      'How much would you like to become the group leader in Part 3?',
-    lowerBound: 'Not at all',
-    upperBound: 'Very much',
-  },
-];
+export const LAS_WTL_2_QUESTION_TEXT = 'How much would you like to become the group leader in Part 3?';
+export const LAS_WTL_2_LOWER_BOUND = 'Not at all';
+export const LAS_WTL_2_UPPER_BOUND = 'Very much';
 
 export const LAS_LEADER_REMINDER =
   'Your group must elect a leader whose role is to answer on behalf of the group the same types of questions you have just seen. In this scenario, the leader is the only one who chooses the most useful items for survival from pairs, and their answers determine the payment for each member of the group.';

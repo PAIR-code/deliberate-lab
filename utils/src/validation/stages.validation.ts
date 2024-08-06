@@ -90,6 +90,23 @@ export const SurveyStageConfigData = Type.Object(
   strict,
 );
 
+/** Willingness to lead survey stage config */
+export const WTLSurveyStageConfigData = Type.Object(
+  {
+    id: Type.String({ minLength: 1 }),
+    kind: Type.Literal(StageKind.WTLSurvey),
+    name: Type.String({ minLength: 1 }),
+    composite: Type.Optional(Type.Boolean()),
+    game: Type.Optional(Type.String({ minLength: 1 })),
+    description: Type.Optional(Type.String()),
+    popupText: Type.Optional(Type.String()),
+    questionText: Type.String(),
+    lowerBound: Type.String(),
+    upperBound: Type.String(),
+  },
+  strict,
+);
+
 /** Lost at Sea survey stage config */
 export const LostAtSeaSurveyStageConfigData = Type.Object(
   {
@@ -198,6 +215,7 @@ export const CONFIG_DATA = {
   [StageKind.SetProfile]: ProfileStageConfigData,
   [StageKind.TakeSurvey]: SurveyStageConfigData,
   [StageKind.LostAtSeaSurvey]: LostAtSeaSurveyStageConfigData,
+  [StageKind.WTLSurvey]: WTLSurveyStageConfigData,
   [StageKind.GroupChat]: GroupChatStageConfigData,
   [StageKind.VoteForLeader]: VoteForLeaderConfigData,
   [StageKind.Payout]: PayoutConfigData,
@@ -241,6 +259,15 @@ export const LostAtSeaSurveyStageAnswerData = Type.Object(
   strict,
 );
 
+/** Willingness to lead survey stage answer data */
+export const WTLSurveyStageAnswerData = Type.Object(
+  {
+    kind: Type.Literal(StageKind.WTLSurvey),
+    score: Type.Number(),
+  },
+  strict,
+);
+
 /** Vote for leader stage answer data */
 export const VoteForLeaderStageAnswerData = Type.Object(
   {
@@ -264,7 +291,7 @@ export const StageAnswerData = Type.Object(
     experimentId: Type.String({ minLength: 1 }),
     participantId: Type.String({ minLength: 1 }),
     stageId: Type.String({ minLength: 1 }),
-    stage: Type.Union([SurveyStageAnswerData, LostAtSeaSurveyStageAnswerData, VoteForLeaderStageAnswerData, ChatAnswerData]),
+    stage: Type.Union([SurveyStageAnswerData, LostAtSeaSurveyStageAnswerData, WTLSurveyStageAnswerData, VoteForLeaderStageAnswerData, ChatAnswerData]),
   },
   strict,
 );
@@ -338,6 +365,9 @@ export function validateStageConfigs(stages: StageConfig[]): string[] {
         break;
 
       case StageKind.LostAtSeaSurvey:
+        break;
+
+      case StageKind.WTLSurvey:
         break;
 
       default:
