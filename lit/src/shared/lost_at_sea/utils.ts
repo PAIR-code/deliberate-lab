@@ -12,6 +12,7 @@ import {
   PayoutItemStrategy,
   StageConfig,
   StageKind,
+  WTLSurveyStageConfig
 } from '@llm-mediation-experiments/utils';
 
 import {
@@ -57,7 +58,9 @@ import {
   LAS_UPDATE_INSTRUCTIONS,
   LAS_WAIT_INFO_LINES,
   LAS_WTL_2_DESCRIPTION,
-  LAS_WTL_2_SURVEY,
+  LAS_WTL_2_QUESTION_TEXT,
+  LAS_WTL_2_LOWER_BOUND,
+  LAS_WTL_2_UPPER_BOUND,
   LAS_WTL_DESCRIPTION,
   LAS_WTL_SURVEY,
 } from './constants';
@@ -213,11 +216,13 @@ function getPart2PostElectionAndPart3Stages(): StageConfig[] {
 
   // Hypothetical willingness to lead.
   stages.push(
-    createSurveyStage({
+    createWTLSurveyStage({
       name: 'Willingness to lead update',
       description: LAS_WTL_2_DESCRIPTION,
-      questions: LAS_WTL_2_SURVEY,
       popupText: LAS_LEADER_REMINDER,
+      questionText: LAS_WTL_2_QUESTION_TEXT,
+      lowerBound: LAS_WTL_2_LOWER_BOUND,
+      upperBound: LAS_WTL_2_UPPER_BOUND,
     })
   );
 
@@ -359,6 +364,22 @@ export function createLostAtSeaSurveyStage(
     description: config.description ?? '',
     popupText: config.popupText ?? '',
     questions: config.questions ?? [],
+  };
+}
+
+/** Create willingness to lead (WTL) survey stage. */
+export function createWTLSurveyStage(
+  config: Partial<WTLSurveyStageConfig> = {}
+): WTLSurveyStageConfig {
+  return {
+    id: generateId(),
+    kind: StageKind.WTLSurvey,
+    name: config.name ?? 'Willingness to lead',
+    description: config.description ?? '',
+    popupText: config.popupText ?? '',
+    questionText: config.questionText ?? 'How willing are you to be the leader?',
+    lowerBound: config.lowerBound ?? 'Not willing',
+    upperBound: config.upperBound ?? 'Very willing',
   };
 }
 

@@ -33,8 +33,6 @@ export class TOSPreview extends MobxLitElement {
       return nothing;
     }
 
-    const cleanHTML = sanitizeHtml(this.stage?.tosLines.join('\n\n'));
-
     const timestamp = this.participantService.profile?.acceptTosTimestamp;
     const handleTOSClick = () => {
       const acceptTosTimestamp = timestamp ? null : Timestamp.now();

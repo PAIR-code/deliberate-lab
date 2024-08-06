@@ -206,6 +206,24 @@ export class ParticipantService extends Service {
     });
   }
 
+  /** Update a WTL survey stage for this participant
+   *  @rights Participants
+   */
+  async updateWTLSurveyStage(
+    stageId: string,
+    score: number
+  ) {
+    return updateStageCallable(this.sp.firebaseService.functions, {
+      experimentId: this.experimentId!,
+      participantId: this.participantId!,
+      stageId,
+      stage: {
+        kind: StageKind.WTLSurvey,
+        score
+      }
+    });
+  }
+
   /** Update a Lost at Sea survey stage for this participant
    * @rights Participant
    */

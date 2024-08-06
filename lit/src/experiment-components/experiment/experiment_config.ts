@@ -172,6 +172,12 @@ export class ExperimentConfig extends MobxLitElement {
           ${this.renderCurrentStageNameField()}
           <code>${JSON.stringify(currentStage.questions)}</code>
         `;
+      case StageKind.WTLSurvey:
+        return html`
+          ${this.renderStageInfo(StageKind.WTLSurvey, '')}
+          ${this.renderGameInfo(currentStage.game)}
+          ${this.renderCurrentStageNameField()}
+        `;
       case StageKind.SetProfile:
         return html`
           ${this.renderStageInfo(

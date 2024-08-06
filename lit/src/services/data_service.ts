@@ -1,10 +1,17 @@
-import { computed, makeObservable, observable } from "mobx";
-import { collection, doc, getDoc, getDocs, orderBy, query } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  orderBy,
+  query,
+} from 'firebase/firestore';
+import {computed, makeObservable, observable} from 'mobx';
 
-import { Service } from "./service";
-import { ExperimenterService } from "./experimenter_service";
-import { FirebaseService } from "./firebase_service";
-import { RouterService } from "./router_service";
+import {ExperimenterService} from './experimenter_service';
+import {FirebaseService} from './firebase_service';
+import {RouterService} from './router_service';
+import {Service} from './service';
 
 import {
   Experiment,
@@ -12,15 +19,14 @@ import {
   Message,
   MessageKind,
   ParticipantProfileExtended,
-  PayoutCurrency,
   PublicStageData,
   StageAnswer,
   StageConfig,
-  StageKind
-} from "@llm-mediation-experiments/utils";
+  StageKind,
+} from '@llm-mediation-experiments/utils';
 import {downloadCSV, downloadJSON} from '../shared/file_utils';
-import {convertUnifiedTimestampToDate, getPayouts} from "../shared/utils";
-import {ExperimentData, ExperimentDataStage, PayoutData} from "../shared/types";
+import {ExperimentData, ExperimentDataStage, PayoutData} from '../shared/types';
+import {convertUnifiedTimestampToDate, getPayouts} from '../shared/utils';
 
 interface ServiceProvider {
   experimenterService: ExperimenterService;
@@ -38,8 +44,8 @@ export class DataService extends Service {
   // Loading
   @observable isDataLoading = false;
 
-  @observable experimentId: string|null = null; // null if experiment group
-  @observable groupId: string|null = null; // null if single experiment
+  @observable experimentId: string | null = null; // null if experiment group
+  @observable groupId: string | null = null; // null if single experiment
 
   @observable experimentData: ExperimentData[] = [];
 
@@ -53,8 +59,8 @@ export class DataService extends Service {
   }
 
   updateForCurrentRoute() {
-    const experiment = this.sp.routerService.activeRoute.params["experiment"];
-    const group = this.sp.routerService.activeRoute.params["experiment_group"];
+    const experiment = this.sp.routerService.activeRoute.params['experiment'];
+    const group = this.sp.routerService.activeRoute.params['experiment_group'];
 
     if (this.sp.experimenterService.isLoading) {
       return;
@@ -114,7 +120,7 @@ export class DataService extends Service {
   downloadExperimentJSON() {
     if (this.groupId) {
       downloadJSON(
-        { groupId: this.groupId, experiments: this.experimentData},
+        {groupId: this.groupId, experiments: this.experimentData},
         `${this.getFilePrefix()}.json`
       );
     } else if (this.experimentId) {
@@ -145,9 +151,11 @@ export class DataService extends Service {
 
         // Use unique private participant ID
         const getParticipantPrivateId = (publicId: string) => {
-          return Object.values(data.participants).find(
-            participant => participant.publicId === publicId
-          )?.privateId ?? '';
+          return (
+            Object.values(data.participants).find(
+              (participant) => participant.publicId === publicId
+            )?.privateId ?? ''
+          );
         };
 
         // Get message ID based on type
@@ -162,25 +170,33 @@ export class DataService extends Service {
           }
         };
 
-        const messages: string[][] = stage.map(message => {
+        const messages: string[][] = stage.map((message) => {
           const id = getMessageID(message);
           return [
             convertUnifiedTimestampToDate(message.timestamp),
             message.kind,
             id,
-            message.kind === MessageKind.UserMessage ? data.participants[id].name ?? '' : '',
-            message.kind === MessageKind.UserMessage ? data.participants[id].pronouns ?? '' : '',
-            message.kind === MessageKind.UserMessage ? data.participants[id].avatarUrl ?? '' : '',
-            message.text
+            message.kind === MessageKind.UserMessage
+              ? data.participants[id].name ?? ''
+              : '',
+            message.kind === MessageKind.UserMessage
+              ? data.participants[id].pronouns ?? ''
+              : '',
+            message.kind === MessageKind.UserMessage
+              ? data.participants[id].avatarUrl ?? ''
+              : '',
+            message.text,
           ];
         });
 
         downloadCSV(
           [headers, ...messages],
-          `${this.getFilePrefix()}_experiment_${data.experiment.id}_chat_${chatId}.csv`
+          `${this.getFilePrefix()}_experiment_${
+            data.experiment.id
+          }_chat_${chatId}.csv`
         );
-      })
-    })
+      });
+    });
   }
 
   toggleDownloadParticipantCSV() {
@@ -205,14 +221,16 @@ export class DataService extends Service {
     const participantDataList: string[][] = [];
     // Add header columns for payout breakdowns
     const nonLobbyExperiment = this.experimentData.find(
-      data => !data.experiment.lobbyConfig?.isLobby
+      (data) => !data.experiment.lobbyConfig?.isLobby
     );
-    const payouts: PayoutData[] = nonLobbyExperiment ? Object.values(nonLobbyExperiment.payouts) : [];
+    const payouts: PayoutData[] = nonLobbyExperiment
+      ? Object.values(nonLobbyExperiment.payouts)
+      : [];
 
     payouts.forEach((stage) => {
       const breakdowns = Object.values(stage.payoutBreakdown);
       if (breakdowns.length > 0) {
-        breakdowns[0].forEach(breakdown => headers.push(breakdown.name));
+        breakdowns[0].forEach((breakdown) => headers.push(breakdown.name));
       }
     });
 
@@ -230,9 +248,11 @@ export class DataService extends Service {
           payouts.forEach((stage) => {
             if (stage.payouts[participant.publicId]) {
               total += stage.payouts[participant.publicId];
-              stage.payoutBreakdown[participant.publicId].forEach(breakdown => {
-                breakdowns.push(breakdown.score.toString());
-              });
+              stage.payoutBreakdown[participant.publicId].forEach(
+                (breakdown) => {
+                  breakdowns.push(breakdown.score.toString());
+                }
+              );
             }
           });
           return [total.toString(), ...breakdowns];
@@ -250,12 +270,16 @@ export class DataService extends Service {
             participant.name ?? '',
             participant.avatarUrl ?? '',
             participant.pronouns ?? '',
-            participant.acceptTosTimestamp ? convertUnifiedTimestampToDate(participant.acceptTosTimestamp) : '',
-            participant.completedExperiment ? convertUnifiedTimestampToDate(participant.completedExperiment) : '',
+            participant.acceptTosTimestamp
+              ? convertUnifiedTimestampToDate(participant.acceptTosTimestamp)
+              : '',
+            participant.completedExperiment
+              ? convertUnifiedTimestampToDate(participant.completedExperiment)
+              : '',
             participant.completionType ?? '',
             participant.currentStageId ?? '',
             data.experiment.lobbyConfig?.isLobby ? '' : data.experiment.id,
-            ...payoutColumns()
+            ...payoutColumns(),
           ]);
         }
       });
@@ -279,7 +303,8 @@ export class DataService extends Service {
   }
 
   async loadGroup(groupId: string = this.groupId ?? '') {
-    const experiments = this.sp.experimenterService.getExperimentsInGroup(groupId);
+    const experiments =
+      this.sp.experimenterService.getExperimentsInGroup(groupId);
     for (const experiment of experiments) {
       await this.loadExperiment(experiment.id);
     }
@@ -293,13 +318,9 @@ export class DataService extends Service {
       id: experimentId,
       ...(
         await getDoc(
-          doc(
-            this.sp.firebaseService.firestore,
-            'experiments',
-            experimentId
-          )
+          doc(this.sp.firebaseService.firestore, 'experiments', experimentId)
         )
-      ).data()
+      ).data(),
     } as Experiment;
 
     const participants: ParticipantProfileExtended[] = (
@@ -311,7 +332,10 @@ export class DataService extends Service {
           'participants'
         )
       )
-    ).docs.map((doc) => ({...doc.data(), privateId: doc.id} as ParticipantProfileExtended));
+    ).docs.map(
+      (doc) =>
+        ({...doc.data(), privateId: doc.id} as ParticipantProfileExtended)
+    );
     const participantMap = lookupTable(participants, 'privateId');
 
     const configs: StageConfig[] = (
@@ -323,7 +347,7 @@ export class DataService extends Service {
           'stages'
         )
       )
-    ).docs.map((doc) => (doc.data() as StageConfig));
+    ).docs.map((doc) => doc.data() as StageConfig);
 
     // Get public stage data
     const stagePublicData = (
@@ -363,7 +387,11 @@ export class DataService extends Service {
     const payouts: Record<string, PayoutData> = {};
     configs.forEach((config) => {
       if (config.kind === StageKind.Payout) {
-        payouts[config.id] = getPayouts(config, participants, publicStageDataMap);
+        payouts[config.id] = getPayouts(
+          config,
+          participants,
+          publicStageDataMap
+        );
       }
     });
 

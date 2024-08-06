@@ -25,7 +25,8 @@ export const LAS_INTRO_INFO_LINES = [
   'At the end of the experiment, you will be redirected to a waiting page. This waiting time is part of the experiment and has been factored into your payment. **You will not be approved for the payout if you do not remain on this waiting page for the full requested duration**.',
   'During this waiting time, you may be invited to continue the experiment by completing two additional parts, Part 2 and Part 3. These parts will be played in *groups of four*, and should take an estimated additional 30 minutes. In these parts, you will have the opportunity to earn a £2 bonus, based on your decisions and the decisions of other participants. One of these parts will be randomly selected to determine your bonus. Additionally, you will receive a fixed fee of £6 for completing Parts 2 and 3.',
   'To sum up:\n\n* You’ll complete a first part *individually*, and then wait to see if you are selected to take part in the next part of the experiment.\n* You need to wait the full amount of time to get your payoff for Part 1, even though you are not selected or choose to leave the experiment.\n* If you receive an invitation, you can then start the rest of the experiment, that is played in *groups of 4 participants*.',
-  '**Note: These payment will be translated into the currency of your specification when they are paid out to you on the Prolific platform. Please allow us 24-48 hours to process the payments.**',
+  '💸 These payments will be translated into the currency of your specification when they are paid out to you on the Prolific platform. **Please allow us 24-48 hours to process the payments.**',
+  '‼️ If you experience technical difficulties during the study, **please message the experiment administrators on Prolific as soon as possible.**',
   'Please click “Next stage” to proceed.',
 ];
 
@@ -174,16 +175,10 @@ export const LAS_LEADER_ELECTION_INSTRUCTIONS = [
 export const LAS_WTL_2_DESCRIPTION =
   'Please indicate your willingness to become the group leader.';
 
-export const LAS_WTL_2_SURVEY: QuestionConfig[] = [
-  {
-    id: 0,
-    kind: SurveyQuestionKind.Scale,
-    questionText:
-      'How much would you like to become the group leader in Part 3?',
-    lowerBound: 'Not at all',
-    upperBound: 'Very much',
-  },
-];
+export const LAS_WTL_2_QUESTION_TEXT =
+  'How much would you like to become the group leader in Part 3?';
+export const LAS_WTL_2_LOWER_BOUND = 'Not at all';
+export const LAS_WTL_2_UPPER_BOUND = 'Very much';
 
 export const LAS_LEADER_REMINDER =
   'Your group must elect a leader whose role is to answer on behalf of the group the same types of questions you have just seen. In this scenario, the leader is the only one who chooses the most useful items for survival from pairs, and their answers determine the payment for each member of the group.';

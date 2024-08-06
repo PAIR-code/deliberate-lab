@@ -51,6 +51,13 @@ export const updateStage = onCall(async (request) => {
         await answerDoc.set(lostAtSeaData, { merge: true });
         break;
 
+      case StageKind.WTLSurvey:
+        const wtlData = {
+          kind: StageKind.WTLSurvey,
+          score: stage.score,
+        };
+        await answerDoc.set(wtlData, { merge: true });
+        break;
       case StageKind.GroupChat:
         const chatData = {
           kind: StageKind.GroupChat,

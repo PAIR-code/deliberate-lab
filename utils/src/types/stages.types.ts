@@ -16,6 +16,7 @@ export enum StageKind {
   Reveal = 'reveal',
   TakeSurvey = 'survey',
   LostAtSeaSurvey = 'lostAtSeaSurvey',
+  WTLSurvey = 'wtlSurvey', // willingness to lead
 }
 
 // ********************************************************************************************* //
@@ -56,6 +57,14 @@ export interface LostAtSeaSurveyStageConfig extends BaseStageConfig {
   questions: LostAtSeaQuestion[];
 }
 
+/** Willingness to Lead surevy. */
+export interface WTLSurveyStageConfig extends BaseStageConfig {
+  kind: StageKind.WTLSurvey;
+  questionText: string;
+  lowerBound: string;
+  upperBound: string;
+}
+
 export interface GroupChatStageConfig extends BaseStageConfig {
   kind: StageKind.GroupChat;
   chatId: string; // TODO: remove field as no longer used
@@ -87,6 +96,7 @@ export type StageConfig =
   | ProfileStageConfig
   | SurveyStageConfig
   | LostAtSeaSurveyStageConfig
+  | WTLSurveyStageConfig
   | GroupChatStageConfig
   | VoteForLeaderStageConfig
   | PayoutStageConfig
@@ -114,6 +124,12 @@ export interface LostAtSeaSurveyStageAnswer extends BaseStageAnswer {
   answers: Record<number, LostAtSeaQuestionAnswer>;
 }
 
+/** Willingness to lead answer. */
+export interface  WTLSurveyStageAnswer extends BaseStageAnswer {
+  kind: StageKind.WTLSurvey;
+  score: number;
+}
+
 export interface VoteForLeaderStageAnswer extends BaseStageAnswer {
   kind: StageKind.VoteForLeader;
 
@@ -131,6 +147,7 @@ export interface ChatStageAnswer {
 export type StageAnswer =
   | LostAtSeaSurveyStageAnswer
   | SurveyStageAnswer
+  | WTLSurveyStageAnswer
   | VoteForLeaderStageAnswer
   | ChatStageAnswer;
 
@@ -167,9 +184,15 @@ export interface LostAtSeaSurveyStagePublicData extends BasePublicStageData {
   participantAnswers: Record<string, Record<number, LostAtSeaQuestionAnswer>>;
 }
 
+export interface WTLSurveyStagePublicData extends BasePublicStageData {
+  kind: StageKind.WTLSurvey,
+  participantScores: Record<string, number>; // participant public ID, WTL score
+}
+
 // NOTE: some stages do not have public stage data
 export type PublicStageData =
   | GroupChatStagePublicData
   | VoteForLeaderStagePublicData
   | SurveyStagePublicData
-  | LostAtSeaSurveyStagePublicData;
+  | LostAtSeaSurveyStagePublicData
+  | WTLSurveyStagePublicData;

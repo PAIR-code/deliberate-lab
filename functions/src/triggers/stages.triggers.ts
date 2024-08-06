@@ -10,6 +10,7 @@ import {
   StageConfig,
   StageKind,
   VoteForLeaderStagePublicData,
+  WTLSurveyStagePublicData,
   getCondorcetElectionWinner,
 } from '@llm-mediation-experiments/utils';
 import { Timestamp } from 'firebase-admin/firestore';
@@ -43,6 +44,12 @@ export const initializePublicStageData = onDocumentWritten(
         publicData = {
           kind: data.kind,
           participantAnswers: {},
+        };
+        break;
+      case StageKind.WTLSurvey:
+        publicData = {
+          kind: data.kind,
+          participantScores: {},
         };
         break;
       case StageKind.GroupChat:
@@ -142,11 +149,50 @@ export const publishStageData = onDocumentWritten(
           .get();
         const publicData = publicDoc.data() as VoteForLeaderStagePublicData;
 
-        // Update participant rankings
         const participantRankings = publicData.participantRankings;
         participantRankings[participantPublicId] = data.rankings;
 
-        const currentLeader = getCondorcetElectionWinner(participantRankings);
+        let currentLeader = '';
+
+        // Search for the WTL stage ID
+        const stagesSnapshot = await app
+          .firestore()
+          .collection(`experiments/${experimentId}/stages`)
+          .get();
+        const wtlStageDoc = stagesSnapshot.docs
+          .map((doc) => doc.data())
+          .find((data) => data.kind === StageKind.WTLSurvey);
+
+        if (wtlStageDoc) {
+          const wtlDoc = await app
+            .firestore()
+            .doc(`experiments/${experimentId}/publicStageData/${wtlStageDoc.id}`)
+            .get();
+          const wtlData = wtlDoc.data() as WTLSurveyStagePublicData;
+
+          // Get the 2 participant IDs with the highest WTL scores.
+          // If there are multiple with the same high score, a participant
+          // will be chosen pseudo-randomly.
+          const pScores = wtlData.participantScores;
+          const wtlCandidates = Object.entries(pScores)
+            .sort(([, scoreA], [, scoreB]) => scoreB - scoreA)
+            .slice(0, 2)
+            .map(([id]) => id);
+
+          // Update participant rankings
+          const initialRankings = publicData.participantRankings;
+          initialRankings[participantPublicId] = data.rankings;
+          const filteredRankings: Record<string, string[]> = Object.fromEntries(
+            Object.entries(initialRankings).map(([participant, rankings]) => [
+              participant,
+              rankings.filter((rank) => wtlCandidates.includes(rank)),
+            ]),
+          );
+
+          currentLeader = getCondorcetElectionWinner(filteredRankings)!;
+        } else {
+          currentLeader = getCondorcetElectionWinner(participantRankings)!;
+        }
 
         // Update the public data
         await publicDoc.ref.update({
@@ -154,6 +200,19 @@ export const publishStageData = onDocumentWritten(
           currentLeader,
         });
 
+        break;
+      case StageKind.WTLSurvey:
+        // Map participants to their willing to lead scores
+        const wtlPublicDoc = await app
+          .firestore()
+          .doc(`experiments/${experimentId}/publicStageData/${stageId}`)
+          .get();
+        const wtlPublicData = wtlPublicDoc.data() as WTLSurveyStagePublicData;
+
+        const participantScores = wtlPublicData.participantScores;
+        participantScores[participantPublicId] = data.score;
+
+        await wtlPublicDoc.ref.update({ participantScores });
         break;
       case StageKind.TakeSurvey:
         const surveyParticipantDoc = await app

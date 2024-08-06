@@ -74,16 +74,23 @@ export const uniqueId = (prefix?: string) => {
 /**
  * Runs a Condorcet election on a set of rankings.
  */
+
 export function getCondorcetElectionWinner(rankings: Record<string, string[]>) {
-  const participants = Object.keys(rankings);
+  // Extract unique candidates from all rankings
+  const candidates = new Set<string>();
+  Object.values(rankings).forEach((ranking) => {
+    ranking.forEach((candidate) => candidates.add(candidate));
+  });
+
+  const participants = Array.from(candidates);
   const wins: Record<string, number> = {};
 
   // Initialize win counts
-  participants.forEach((participant) => {
-    wins[participant] = 0;
+  participants.forEach((candidate) => {
+    wins[candidate] = 0;
   });
 
-  // Compare each participant against each other
+  // Compare each candidate against each other
   for (let i = 0; i < participants.length; i++) {
     for (let j = i + 1; j < participants.length; j++) {
       const p1 = participants[i];
@@ -93,9 +100,11 @@ export function getCondorcetElectionWinner(rankings: Record<string, string[]>) {
       let p2Wins = 0;
 
       // Determine the winner in each ranking
-      participants.forEach((participant) => {
-        const ranking = rankings[participant];
-        if (ranking.indexOf(p1) < ranking.indexOf(p2)) {
+      Object.values(rankings).forEach((ranking) => {
+        const indexP1 = ranking.indexOf(p1);
+        const indexP2 = ranking.indexOf(p2);
+
+        if (indexP1 < indexP2) {
           p1Wins++;
         } else {
           p2Wins++;
@@ -105,21 +114,22 @@ export function getCondorcetElectionWinner(rankings: Record<string, string[]>) {
       // Update the win counts
       if (p1Wins > p2Wins) {
         wins[p1]++;
-      } else {
+      } else if (p2Wins > p1Wins) {
         wins[p2]++;
       }
+      // In case of a tie, no win count is updated
     }
   }
 
   // Find the participant with the most wins
-  let winner = null;
+  let winner: string | null = null;
   let maxWins = -1;
-  for (const participant in wins) {
-    if (wins[participant] > maxWins) {
-      maxWins = wins[participant];
-      winner = participant;
+  for (const candidate in wins) {
+    if (wins[candidate] > maxWins) {
+      maxWins = wins[candidate];
+      winner = candidate;
     }
   }
 
-  return winner;
+  return winner ?? participants[0];
 }
