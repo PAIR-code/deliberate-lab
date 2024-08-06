@@ -152,7 +152,7 @@ export const publishStageData = onDocumentWritten(
         const participantRankings = publicData.participantRankings;
         participantRankings[participantPublicId] = data.rankings;
 
-        let currentLeader = getCondorcetElectionWinner(participantRankings);
+        let currentLeader = '';
 
         // Search for the WTL stage ID
         const stagesSnapshot = await app
@@ -170,7 +170,9 @@ export const publishStageData = onDocumentWritten(
             .get();
           const wtlData = wtlDoc.data() as WTLSurveyStagePublicData;
 
-          // Get the participant IDs of the top two WTL scores.
+          // Get the 2 participant IDs with the highest WTL scores.
+          // If there are multiple with the same high score, a participant
+          // will be chosen pseudo-randomly.
           const pScores = wtlData.participantScores;
           const wtlCandidates = Object.entries(pScores)
             .sort(([, scoreA], [, scoreB]) => scoreB - scoreA)
@@ -180,7 +182,6 @@ export const publishStageData = onDocumentWritten(
           // Update participant rankings
           const initialRankings = publicData.participantRankings;
           initialRankings[participantPublicId] = data.rankings;
-
           const filteredRankings: Record<string, string[]> = Object.fromEntries(
             Object.entries(initialRankings).map(([participant, rankings]) => [
               participant,
@@ -188,7 +189,9 @@ export const publishStageData = onDocumentWritten(
             ]),
           );
 
-          currentLeader = getCondorcetElectionWinner(filteredRankings);
+          currentLeader = getCondorcetElectionWinner(filteredRankings)!;
+        } else {
+          currentLeader = getCondorcetElectionWinner(participantRankings)!;
         }
 
         // Update the public data
