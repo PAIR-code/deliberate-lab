@@ -149,17 +149,47 @@ export const publishStageData = onDocumentWritten(
           .get();
         const publicData = publicDoc.data() as VoteForLeaderStagePublicData;
 
-        // Update participant rankings
         const participantRankings = publicData.participantRankings;
         participantRankings[participantPublicId] = data.rankings;
 
-        // TODO: When determining current leader,
-        // only use participants whose scores are in the top two
-        // for willingness to lead (WTL).
-        //
-        // Determine top two scores from WTL, then filter participantRankings
-        // by participants who have those scores.
-        const currentLeader = getCondorcetElectionWinner(participantRankings);
+        let currentLeader = getCondorcetElectionWinner(participantRankings);
+
+        // Search for the WTL stage ID
+        const stagesSnapshot = await app
+          .firestore()
+          .collection(`experiments/${experimentId}/stages`)
+          .get();
+        const wtlStageDoc = stagesSnapshot.docs
+          .map((doc) => doc.data())
+          .find((data) => data.kind === StageKind.WTLSurvey);
+
+        if (wtlStageDoc) {
+          const wtlDoc = await app
+            .firestore()
+            .doc(`experiments/${experimentId}/publicStageData/${wtlStageDoc.id}`)
+            .get();
+          const wtlData = wtlDoc.data() as WTLSurveyStagePublicData;
+
+          // Get the participant IDs of the top two WTL scores.
+          const pScores = wtlData.participantScores;
+          const wtlCandidates = Object.entries(pScores)
+            .sort(([, scoreA], [, scoreB]) => scoreB - scoreA)
+            .slice(0, 2)
+            .map(([id]) => id);
+
+          // Update participant rankings
+          const initialRankings = publicData.participantRankings;
+          initialRankings[participantPublicId] = data.rankings;
+
+          const filteredRankings: Record<string, string[]> = Object.fromEntries(
+            Object.entries(initialRankings).map(([participant, rankings]) => [
+              participant,
+              rankings.filter((rank) => wtlCandidates.includes(rank)),
+            ]),
+          );
+
+          currentLeader = getCondorcetElectionWinner(filteredRankings);
+        }
 
         // Update the public data
         await publicDoc.ref.update({
