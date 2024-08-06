@@ -17,7 +17,6 @@ import {
 } from '@llm-mediation-experiments/utils';
 import {
   collectSnapshotWithId,
-  convertExperimentStages,
   createInfoStage,
   createProfileStage,
   createTOSStage,
@@ -69,7 +68,6 @@ export class ExperimentConfigService extends Service {
   @observable isProlific = false;
   @observable prolificRedirectCode = '';
 
-
   // Loading (if writing experiment, template to Firebase)
   @observable isLoading = false;
 
@@ -109,7 +107,7 @@ export class ExperimentConfigService extends Service {
       // Set stages in order
       const stages = collectSnapshotWithId(stagesDocs, 'name') as StageConfig[];
       const stageIds = template.stageIds ?? [];
-        this.stages = [];
+      this.stages = [];
       stageIds.forEach((id) => {
         const stage = stages.find((stage) => stage.id === id);
         if (stage) {
@@ -130,11 +128,15 @@ export class ExperimentConfigService extends Service {
       // Attention Check config
       this.waitSeconds = template.attentionCheckConfig?.waitSeconds ?? 0;
       this.popupSeconds = template.attentionCheckConfig?.popupSeconds ?? 0;
-      this.prolificAttentionFailRedirectCode = template.attentionCheckConfig?.prolificAttentionFailRedirectCode ?? '';
+      this.prolificAttentionFailRedirectCode =
+        template.attentionCheckConfig?.prolificAttentionFailRedirectCode ?? '';
       // Participant config
-      this.hasMaxNumParticipants = (template.participantConfig?.numberOfMaxParticipants ?? 0) > 0;
-      this.numMaxParticipants = template.participantConfig?.numberOfMaxParticipants ?? 0;
-      this.waitForAllToStart = template.participantConfig?.waitForAllToStart ?? false;
+      this.hasMaxNumParticipants =
+        (template.participantConfig?.numberOfMaxParticipants ?? 0) > 0;
+      this.numMaxParticipants =
+        template.participantConfig?.numberOfMaxParticipants ?? 0;
+      this.waitForAllToStart =
+        template.participantConfig?.waitForAllToStart ?? false;
       // Lobby config
       this.isMultiPart = template.isMultiPart ?? false;
       this.dividerStageId = template.dividerStageId ?? '';
@@ -142,7 +144,11 @@ export class ExperimentConfigService extends Service {
     });
   }
 
-  getMultiExperiments(groupId: string, numExperiments: number, stages: StageConfig[]) {
+  getMultiExperiments(
+    groupId: string,
+    numExperiments: number,
+    stages: StageConfig[]
+  ) {
     const experiments = [];
     for (let i = 0; i < numExperiments; i++) {
       experiments.push({
@@ -150,7 +156,7 @@ export class ExperimentConfigService extends Service {
         publicName: toJS(this.publicName),
         description: toJS(this.description),
         group: groupId,
-        stages: convertExperimentStages(toJS(stages)),
+        stages: toJS(stages),
         numberOfParticipants: toJS(this.numParticipants),
         prolificRedirectCode: this.isProlific
           ? toJS(this.prolificRedirectCode)
@@ -190,7 +196,11 @@ export class ExperimentConfigService extends Service {
     );
 
     if (!this.isMultiPart || dividerIndex == -1) {
-      return this.getMultiExperiments(groupId, this.numExperiments, this.stages);
+      return this.getMultiExperiments(
+        groupId,
+        this.numExperiments,
+        this.stages
+      );
     } else {
       const preStages = this.stages.slice(0, dividerIndex + 1);
       const postStages = this.stages.slice(dividerIndex + 1);
@@ -202,7 +212,7 @@ export class ExperimentConfigService extends Service {
         publicName: toJS(this.publicName),
         description: toJS(this.description),
         group: groupId,
-        stages: convertExperimentStages(toJS(preStages)),
+        stages: toJS(preStages),
         numberOfParticipants: toJS(this.numParticipants),
         prolificRedirectCode: this.isProlific
           ? toJS(this.prolificRedirectCode)
@@ -236,7 +246,7 @@ export class ExperimentConfigService extends Service {
         publicName: toJS(this.publicName),
         description: toJS(this.description),
         group: toJS(this.name),
-        stages: convertExperimentStages(toJS(this.stages)),
+        stages: toJS(this.stages),
         numberOfParticipants: toJS(this.numParticipants),
         lobbyConfig: {
           isLobby: false,

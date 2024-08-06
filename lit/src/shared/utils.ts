@@ -238,21 +238,6 @@ export function convertMarkdownToHTML(
   return html;
 }
 
-/**
- *  Adjust experiment stages to Firebase format (e.g., HTML instead of .md)
- */
-export function convertExperimentStages(stages: StageConfig[]) {
-  return stages.map((stage, index) => {
-    if (stage.kind === StageKind.TermsOfService) {
-      stage.tosLines = stage.tosLines.map((info) =>
-        convertMarkdownToHTML(info)
-      );
-      return stage;
-    }
-    return stage;
-  });
-}
-
 /** Calculate experiment payouts for current payout stage.
  * Return currency, payout map from participant public ID to value.
  */

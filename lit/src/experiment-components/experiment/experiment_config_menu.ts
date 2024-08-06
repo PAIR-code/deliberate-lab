@@ -156,7 +156,7 @@ export class ExperimentConfigMenu extends MobxLitElement {
 
     // Attention check.
     this.experimentConfig.hasAttentionCheck = true;
-    this.experimentConfig.waitSeconds = 90; // 90 second attention check.
+    this.experimentConfig.waitSeconds = 120; // 120 second attention check.
     this.experimentConfig.popupSeconds = 30; // 30 second popup.
 
     return html`
