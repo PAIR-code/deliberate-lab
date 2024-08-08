@@ -284,10 +284,11 @@ export function getPayouts(
       ).participantAnswers[participant.publicId];
       if (!userAnswers) return [];
       return item.questions.map((question) => {
+        const userAnswer = userAnswers[question.id] ?
+          (userAnswers[question.id] as LostAtSeaQuestionAnswer).choice : '';
         return {
           ...question,
-          userAnswer: (userAnswers[question.id] as LostAtSeaQuestionAnswer)
-            .choice,
+          userAnswer,
         };
       });
     };
