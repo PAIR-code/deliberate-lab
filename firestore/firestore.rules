@@ -1,97 +1,75 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // ***************************************************************************************** //
-    //                                     VALIDATION FUNCTIONS                                  //
-    // ***************************************************************************************** //
-
-    function validateString(value) {
-      return value is string;
-    }
-
-    function validateInt(value) {
-      return value is int
-    }
-
-    function validateFloat(value) {
-      return value is int || value is float;
-    }
-
-    function validateTimestamp(value) {
-      return value.keys().hasAll(['seconds', 'nanoseconds']) &&
-        validateNumber(value.seconds) &&
-        validateNumber(value.nanoseconds);
-    }
-
-    // Validate the profile
-    function validateProfile(value) {
-      return value.keys().hasOnly(['pronouns', 'avatarUrl', 'name', 'acceptTosTimestamp']) &&
-        (!('pronouns' in value) || validateString(value.pronouns)) &&
-        (!('avatarUrl' in value) || validateString(value.avatarUrl)) &&
-        (!('name' in value) || validateString(value.name)) &&
-        (!('acceptTosTimestamp' in value) || validateTimestamp(value.acceptTosTimestamp));
-    }
-
-    // Validate the chat document data
-    function validateChat(value) {
-      return value.keys().hasOnly(['readyToEndChat']) && value.readyToEndChat == false;
-    }
-
-    // ***************************************************************************************** //
-    //                                            RULES                                          //
-    // ***************************************************************************************** //
-
-    // Template rules (experimenter-only)
-    match /templates/{documents=**} {
-      allow read: if request.auth.token.role == 'experimenter';
+    // Experiment templates (experimenter only)
+    match /experimentTemplates/{templateId} {
+      allow list: if request.auth.token.role == 'experimenter';
+      allow get: if request.auth.token.role == 'experimenter' && (get(/groupTemplates/{templateId}).data.permissions.visibility == "public" || request.auth.uid in get(/experimentTemplates/{templateId}).data.permissions.readers);
       allow write: if false; // Complex validation through cloud functions 
     }
 
-    // Experiment rules
-    match /experiments/{experimentId} {
+    // Agent templates (experimenter only)
+    match /agentTemplates/{agentId} {
+      allow list: if request.auth.token.role == 'experimenter';
+      allow get: if request.auth.token.role == 'experimenter' && (get(/agentTemplates/{templateId}).data.permissions.visibility == "public" || request.auth.uid in get(/agentTemplates/{templateId}).data.permissions.readers);
+      allow write: if request.auth.uid == get(/agentTemplates/{agentId}).data.metadata.creator;
+    }
 
+    // Experimenter data (experimenter with matching ID only)
+    match /experimenterData/{experimenterId} {
+      allow list: if false;
+      allow get: if experimenterId == request.auth.uid;
+      allow write: if experimenterId == request.auth.uid;
+    }
+
+    // Experimenter profiles (experimenter only)
+    match /experimenters/{experimenterId} {
+      allow read: true;
+      allow write: if experimenterId == request.auth.uid;
+    }
+
+    // Experiments
+    match /experiments/{experimentId} {
       allow get: if true;
       allow list: if request.auth.token.role == 'experimenter';
-      allow delete: if request.auth.token.role == 'experimenter';
       allow write: if false; // Complex validation through cloud functions
 
       match /stages/{stageId} {
         allow read: if true; // Public read
-        allow write: if false; // Write as experimenter through cloud functions
+        allow write: if false; // Editors can write through cloud functions
       }
 
-      match /publicStageData/{stageId} {
-        allow read: if true;
-        allow write: if false; // Public readonly for everyone. Computed through firestore triggers
+      match /roles/{roleId} {
+        allow read: if true; // Public read
+        allow write: if false; // Editors can write through cloud functions
+      }
 
-        match /messages/{messageId} {
+      match/cohorts/{cohortId} {
+        allow get: if true; // Public read
+        allow list: if request.auth.token.role == 'experimenter' && (get(/experiments/{experimentId}).data.permissions.visibility == "public" || request.auth.uid in get(/experiments/{experimentId}).data.permissions.readers);
+        allow write: if false; // Editors can write through cloud functions
+
+        match /publicStageData/{stageId} {
           allow read: if true;
-          allow write: if false; // Write through cloud functions, triggers
+          allow write: if false; // Computed through firestore triggers
         }
       }
 
-      // Participant rules
-      match /participants/{participantId} {
+      match /participants/{participantPrivateId} {
+        allow list: if request.auth.token.role == 'experimenter' && (get(/experiments/{experimentId}).data.permissions.visibility == "public" || request.auth.uid in get(/experiments/{experimentId}).data.permissions.readers);
+        allow get: if true; // Public read
+        allow update: if true;
 
-        allow get: if true; // Public if you know the ID
-        allow list: if request.auth.token.role == 'experimenter'; // Avoid leaking IDs (only experimenters can view them)
-        allow update: if true; // validateProfile(request.resource.data); // emulator bug
-
-        match /stages/{stageId} {
+        match /stageData/{stageId} {
           allow read: if true;
-          allow write: if false; // Complex validation through cloud functions
+          allow write: if false; // Can write through cloud functions
         }
+      }
 
-        match /chats/{chatId} {
-          allow read: if true;
-          allow update: if true; // validateChat(request.resource.data); // emulator bug
-        
-          match /messages/{messageId} {
-            allow read: if true;
-            allow write: if false; // Replication to all participants done through cloud functions in order to avoid trigger loops
-          }
-        }
+      match /participantPublicData/{participantPublicId} {
+        allow list: if false;
+        allow get: if true;
+        allow write: if false; // Computed through firestore triggers
       }
     }
   }
