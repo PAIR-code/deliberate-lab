@@ -1,7 +1,7 @@
 {
-  "name": "@llm-mediation-experiments/utils",
+  "name": "@deliberation-lab/utils",
   "version": "1.0.0",
-  "description": "Shared utilities for frontend and backend",
+  "description": "Shared utilities for Deliberation Lab frontend and backend",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",

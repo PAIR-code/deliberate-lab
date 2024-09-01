@@ -1,5 +1,5 @@
 {
-  "name": "llm-mediation-experiments",
+  "name": "deliberation-lab",
   "private": true,
   "scripts": {
     "build": "webpack --mode development",
@@ -32,7 +32,7 @@
   "dependencies": {
     "@adobe/lit-mobx": "^2.2.2",
     "@google/generative-ai": "^0.13.0",
-    "@llm-mediation-experiments/utils": "file:../utils",
+    "@deliberation-lab/utils": "file:../utils",
     "@material/web": "^1.5.0",
     "@types/router5": "^5.0.0",
     "css-loader": "^7.0.0",

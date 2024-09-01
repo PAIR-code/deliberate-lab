@@ -8,7 +8,7 @@
     "strict": true,
     "target": "es2017",
     "paths": {
-      "@llm-mediation-experiments/utils": ["../utils/dist"] // Makes `tsc --watch` also watch changes in the utils package
+      "@deliberation-lab/utils": ["../utils/dist"] // Makes `tsc --watch` also watch changes in the utils package
     }
   },
   "compileOnSave": true,
