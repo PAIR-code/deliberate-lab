@@ -4,6 +4,7 @@
 node_modules/
 
 # Packed shared utils package
+deliberation-lab-utils-*.tgz
 llm-mediation-experiments-utils-*.tgz
 
 webapp/

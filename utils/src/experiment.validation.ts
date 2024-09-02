@@ -8,20 +8,29 @@ import { StageConfigData } from './stages/stage.validation';
 /** Shorthand for strict TypeBox object validation */
 const strict = { additionalProperties: false } as const;
 
+/** Firestore collections that experiments can be written to. */
+export const FirestoreCollectionData = Type.Union([
+    Type.Literal('experimentTemplates'),
+    Type.Literal('experiments')
+]);
+
 // ************************************************************************* //
 // deleteExperiment endpoint                                                 //
 // ************************************************************************* //
 export const ExperimentDeletionData = Type.Object(
   {
-    id: Type.String({ minLength: 1}),
+    // Firestore collection name to save experiment under
+    // (e.g., 'experimentTemplates' if the experiment is a template)
+    collectionName: FirestoreCollectionData,
+    experimentId: Type.String({ minLength: 1}),
   },
   strict,
 );
 
-export type ExperimentDelectionData = Static<typeof ExperimentDeletionData>;
+export type ExperimentDeletionData = Static<typeof ExperimentDeletionData>;
 
 // ************************************************************************* //
-// createExperiment endpoint                                                 //
+// writeExperiment endpoint                                                  //
 // ************************************************************************* //
 export const ParticipantConfigSchema = Type.Object({
   minParticipantsPerCohort: Type.Union([Type.Null(), Type.Number({ minimum: 0 })]),
@@ -43,14 +52,19 @@ export const ProlificConfigSchema = Type.Object({
 
 export const ExperimentCreationData = Type.Object(
   {
-    isTemplate: Type.Boolean(), // whether or not to create template
+    // Firestore collection name to save experiment under
+    // (e.g., 'experimentTemplates' if the experiment is a template)
+    collectionName: FirestoreCollectionData,
+    // Experiment config (excluding ordered stage IDs)
     experimentConfig: Type.Object(
       {
+        id: Type.String(),
         metadata: MetadataConfigSchema,
         permissions: PermissionsConfigSchema,
-        participantConfig: ParticipantConfigSchema,
+        defaultParticipantConfig: ParticipantConfigSchema,
         attentionCheckConfig: AttentionCheckConfigSchema,
         prolificConfig: ProlificConfigSchema,
+        stageIds: Type.Array(Type.String()),
       },
       strict,
     ),

@@ -1,4 +1,4 @@
-import type { Timestamp } from 'firebase/firestore';
+import { Timestamp } from 'firebase/firestore';
 
 /** Shared types and functions. */
 
@@ -33,7 +33,7 @@ export interface MetadataConfig {
   creator: string; // experimenter ID
   starred: Record<string, boolean>; // maps from experimenter ID to isStarred
   dateCreated: UnifiedTimestamp;
-  dateEdited: UnifiedTimestamp;
+  dateModified: UnifiedTimestamp;
 }
 
 /** Permissions config for templates. **/
@@ -53,4 +53,32 @@ export enum Visibility {
 
 export function generateId(): string {
   return crypto.randomUUID();
+}
+
+/** Create MetadataConfig. */
+export function createMetadataConfig(
+  config: Partial<MetadataConfig> = {},
+): MetadataConfig {
+  const timestamp = Timestamp.now();
+
+  return {
+    name: config.name ?? '',
+    publicName: config.publicName ?? '',
+    description: config.description ?? '',
+    tags: config.tags ?? [],
+    creator: config.creator ?? '',
+    starred: config.starred ?? {},
+    dateCreated: config.dateCreated ?? timestamp,
+    dateModified: config.dateModified ?? timestamp,
+  };
+}
+
+/** Create PermissionsConfig. */
+export function createPermissionsConfig(
+  config: Partial<PermissionsConfig> = {}
+): PermissionsConfig {
+  return {
+    visibility: config.visibility ?? Visibility.PRIVATE,
+    readers: config.readers ?? [],
+  };
 }

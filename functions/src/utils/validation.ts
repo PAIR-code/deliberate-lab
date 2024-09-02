@@ -1,13 +1,13 @@
 /** Pretty printing and analysis utils for typebox validation */
 
-import { CONFIG_DATA, Index } from '@llm-mediation-experiments/utils';
+import { CONFIG_DATA, Index } from '@deliberation-lab/utils';
 import { TObject } from '@sinclair/typebox';
 import { ValueError, ValueErrorIterator } from '@sinclair/typebox/build/cjs/errors';
 import { Value } from '@sinclair/typebox/value';
 
-// ********************************************************************************************* //
-//                                      PRETTY PRINTING                                          //
-// ********************************************************************************************* //
+// ************************************************************************* //
+// PRETTY PRINTING                                                           //
+// ************************************************************************* //
 
 /** Pretty print typebox validation error */
 export const prettyPrintError = (error: ValueError) => {
@@ -23,9 +23,9 @@ export const prettyPrintErrors = (errors: ValueErrorIterator | ValueError[]) => 
   }
 };
 
-// ********************************************************************************************* //
-//                                         DATA ACCESS                                           //
-// ********************************************************************************************* //
+// ************************************************************************* //
+// DATA ACCESS                                                               //
+// ************************************************************************* //
 
 /** Access nested values in an object using typebox error paths */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,15 +36,15 @@ export const accessNestedValue = (obj: any, path: string, sep = '/') => {
   }, obj);
 };
 
-// ********************************************************************************************* //
-//                                           VALIDATION                                          //
-// ********************************************************************************************* //
+// ************************************************************************* //
+// VALIDATION                                                                //
+// ************************************************************************* //
 
 /** Check if a typebox validation error is a union error */
 export const isUnionError = (error: ValueError) => error.type === 62;
 
-/** Given existing data and a typebox error path, perform a deep check for union errors
- * on this path */
+/** Given existing data and a typebox error path, perform a deep check for
+ * union errors on this path */
 export const checkUnionErrorOnPath = (
   data: unknown,
   path: string,

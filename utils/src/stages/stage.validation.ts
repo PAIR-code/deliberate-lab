@@ -5,7 +5,7 @@ import { ProfileStageConfigData } from './profile_stage.validation';
 import { TOSStageConfigData } from './tos_stage.validation';
 
 // ************************************************************************* //
-// createExperiment, updateStageConfig endpoints                             //
+// writeExperiment, updateStageConfig endpoints                              //
 // ************************************************************************* //
 
 /** StageConfig input validation. */

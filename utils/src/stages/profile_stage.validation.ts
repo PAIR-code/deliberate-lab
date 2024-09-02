@@ -6,7 +6,7 @@ import { StageGameSchema, StageTextConfigSchema } from './stage.validation';
 const strict = { additionalProperties: false } as const;
 
 // ************************************************************************* //
-// createExperiment, updateStageConfig endpoints                             //
+// writeExperiment, updateStageConfig endpoints                              //
 // ************************************************************************* //
 
 /** ProfileStageConfig input validation. */

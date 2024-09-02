@@ -1,4 +1,10 @@
-import { MetadataConfig, PermissionsConfig } from './shared';
+import {
+  MetadataConfig,
+  PermissionsConfig,
+  createMetadataConfig,
+  createPermissionsConfig,
+  generateId
+} from './shared';
 import { StageConfig } from './stages/stage';
 
 /** Experiment types and functions. */
@@ -12,7 +18,7 @@ export interface Experiment {
   id: string;
   metadata: MetadataConfig;
   permissions: PermissionsConfig;  
-  participantConfig: ParticipantConfig;
+  defaultParticipantConfig: ParticipantConfig; // used by default for cohorts
   attentionCheckConfig: AttentionCheckConfig;
   prolificConfig: ProlificConfig;
   stageIds: string[]; // Ordered list of stage IDs
@@ -51,3 +57,52 @@ export interface ExperimentTemplate extends Experiment {
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
+
+/** Create experiment. */
+export function createExperimentConfig(
+  stages: StageConfig[] = [],
+  config: Partial<Experiment> = {}
+): Experiment {
+  return {
+    id: generateId(),
+    metadata: config.metadata ?? createMetadataConfig(),
+    permissions: config.permissions ?? createPermissionsConfig(),
+    defaultParticipantConfig: config.defaultParticipantConfig ?? createParticipantConfig(),
+    attentionCheckConfig: config.attentionCheckConfig ?? createAttentionCheckConfig(),
+    prolificConfig: config.prolificConfig ?? createProlificConfig(),
+    stageIds: stages.map(stage => stage.id),
+  };
+}
+
+/** Create ParticipantConfig. */
+export function createParticipantConfig(
+  config: Partial<ParticipantConfig> = {},
+): ParticipantConfig {
+  return {
+    minParticipantsPerCohort: config.minParticipantsPerCohort ?? null,
+    maxParticipantsPerCohort: config.maxParticipantsPerCohort ?? null,
+    includeAllParticipantsInCohortCount: config.includeAllParticipantsInCohortCount ?? false,
+  };
+}
+
+/** Create AttentionCheckConfig. */
+export function createAttentionCheckConfig(
+  config: Partial<AttentionCheckConfig> = {},
+): AttentionCheckConfig {
+  return {
+    enableAttentionChecks: config.enableAttentionChecks ?? false,
+    waitSeconds: config.waitSeconds ?? 300, // 5 minutes
+    popupSeconds: config.popupSeconds ?? 60, // 1 minute
+  };
+}
+
+/** Create ProlificConfig. */
+export function createProlificConfig(
+  config: Partial<ProlificConfig> = {},
+): ProlificConfig {
+  return {
+    enableProlificIntegration: config.enableProlificIntegration ?? false,
+    defaultRedirectCode: config.defaultRedirectCode ?? '',
+    attentionFailRedirectCode: config.attentionFailRedirectCode ?? '',
+  };
+}

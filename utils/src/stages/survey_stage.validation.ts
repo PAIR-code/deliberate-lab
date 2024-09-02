@@ -7,7 +7,7 @@ import { SurveyQuestionKind } from './survey_stage';
 const strict = { additionalProperties: false } as const;
 
 // ************************************************************************* //
-// createExperiment, updateStageConfig endpoints                             //
+// writeExperiment, updateStageConfig endpoints                              //
 // ************************************************************************* //
 
 /** TextSurveyQuestion input validation. */

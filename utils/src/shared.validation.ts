@@ -3,8 +3,8 @@ import { Visibility } from './shared';
 
 /** MetadataConfig input validation. */
 export const MetadataConfigSchema = Type.Object({
-  name: Type.String({ minLength: 1 }),
-  publicName: Type.String({ minLength: 1 }),
+  name: Type.String(),
+  publicName: Type.String(),
   description: Type.String(),
   tags: Type.Array(Type.String()),
   // creator - set by cloud functions endpoint
