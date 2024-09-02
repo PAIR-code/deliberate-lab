@@ -58,7 +58,7 @@ service cloud.firestore {
       match /participants/{participantPrivateId} {
         allow list: if request.auth.token.role == 'experimenter' && (get(/experiments/{experimentId}).data.permissions.visibility == "public" || request.auth.uid in get(/experiments/{experimentId}).data.permissions.readers);
         allow get: if true; // Public read
-        allow update: if true;
+        allow update: if false; // Can write through cloud functions
 
         match /stageData/{stageId} {
           allow read: if true;
