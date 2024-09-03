@@ -10,12 +10,6 @@
   z-index: 1;
 }
 
-@include common.viewport-small {
-  :host {
-    left: 0;
-  }
-}
-
 .banner {
   @include common.flex-row-align-center;
   background: var(--md-sys-color-tertiary-container);

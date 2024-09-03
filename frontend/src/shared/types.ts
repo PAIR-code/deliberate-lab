@@ -30,3 +30,13 @@ export enum TextSize {
   MEDIUM = "medium",
   LARGE = "large",
 }
+
+/** Gallery item (rendered as card). */
+export interface GalleryItem {
+  title: string;
+  description: string;
+  creator: string;
+  date: string;
+  isStarred: boolean;
+  tags: string[];
+}

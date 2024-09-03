@@ -1,5 +1,6 @@
 import './pair-components/button';
 
+import './components/gallery/home_gallery';
 import './components/header/header';
 import './components/login/login';
 import './components/settings/settings';
@@ -39,7 +40,7 @@ export class App extends MobxLitElement {
       case Pages.HOME:
         return html`
           <div class="content">
-            ${JSON.stringify(this.homeService.experiments)}
+            <home-gallery></home-gallery>
           </div>
         `;
       case Pages.SETTINGS:

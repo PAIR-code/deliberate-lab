@@ -1,0 +1,13 @@
+@use "../../sass/colors";
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+}
+
+.gallery-wrapper {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-large;
+}
