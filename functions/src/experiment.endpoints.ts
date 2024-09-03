@@ -1,7 +1,7 @@
 import { Value } from '@sinclair/typebox/value';
 import {
   ExperimentCreationData,
-  ExperimentDelectionData,
+  ExperimentDeletionData,
   createExperimentConfig
 } from '@deliberation-lab/utils';
 
@@ -34,11 +34,11 @@ export const writeExperiment = onCall(async (request) => {
   // TODO: If experiment exists, verify that the experimenter is the creator
   // before updating.
 
-  // Validate input
-  const validInput = Value.Check(ExperimentCreationData, data);
+  // TODO: Validate input
+  /* const validInput = Value.Check(ExperimentCreationData, data);
   if (!validInput) {
     handleExperimentCreationValidationErrors(data);
-  }
+  } */
 
   // Run document creation a transaction to enture consistency
   const document = app.firestore().collection(data.collectionName).doc();
@@ -47,9 +47,14 @@ export const writeExperiment = onCall(async (request) => {
     // Add experiment doc with current experimenter as creator
     const experimentConfig = createExperimentConfig(
       data.stageConfigs,
-      data.experimentConfig
+      data.experimentConfig,
     );
     experimentConfig.metadata.creator = request.auth!.uid;
+
+    // If existing experiment, set ID
+    if (data.experimentId) {
+      experimentConfig.id = data.experimentId;
+    }
 
     transaction.set(document, experimentConfig);
 

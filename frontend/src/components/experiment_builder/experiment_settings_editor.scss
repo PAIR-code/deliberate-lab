@@ -1,0 +1,12 @@
+@use "../../sass/colors";
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-xxl;
+}
+
+pr-textarea {
+  width: 100%;
+}

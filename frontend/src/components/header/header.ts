@@ -4,7 +4,7 @@ import {customElement} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
-import {HomeService} from '../../services/home.service';
+import {ExperimentEditor} from '../../services/experiment.editor';
 import {Pages, RouterService} from '../../services/router.service';
 
 import {styles} from './header.scss';
@@ -14,13 +14,12 @@ import {styles} from './header.scss';
 export class Header extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly experimentEditor = core.getService(ExperimentEditor);
   private readonly authService = core.getService(AuthService);
-  private readonly homeService = core.getService(HomeService);
   private readonly routerService = core.getService(RouterService);
 
   override render() {
     return html`
-      ${this.renderAuthBanner()}
       <div class="header">
         <div class="left">
           <h1>${this.renderTitle()}</h1>
@@ -61,9 +60,9 @@ export class Header extends MobxLitElement {
     switch (activePage) {
       case Pages.EXPERIMENT_CREATE:
         return html`
-          <pr-button variant="default">Save as template</pr-button>
+          <pr-button variant="default" disabled>Save as template</pr-button>
           <pr-button @click=${() => {
-            this.homeService.writeExperiment();
+            this.experimentEditor.writeExperiment();
           }}>
             Save experiment
           </pr-button>

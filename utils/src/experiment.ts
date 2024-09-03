@@ -61,7 +61,7 @@ export interface ExperimentTemplate extends Experiment {
 /** Create experiment. */
 export function createExperimentConfig(
   stages: StageConfig[] = [],
-  config: Partial<Experiment> = {}
+  config: Partial<Experiment> = {},
 ): Experiment {
   return {
     id: generateId(),

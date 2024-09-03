@@ -1,0 +1,18 @@
+@use "../../sass/colors";
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+}
+
+.menu-wrapper {
+  @include typescale.label-medium;
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.menu-item {
+  @include common.nav-item;
+  border-radius: common.$spacing-medium;
+}

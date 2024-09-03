@@ -1,0 +1,34 @@
+@use "../../sass/colors";
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  border-right: 1px solid var(--md-sys-color-outline-variant);
+  flex-shrink: 0;
+  gap: common.$spacing-medium;
+  max-height: calc(100vh - common.$header-height);
+  overflow: auto;
+  padding: common.$sidenav-padding;
+  width: common.$sidenav-width;
+}
+
+.nav-item-wrapper {
+  @include common.flex-row;
+  gap: common.$spacing-small;
+}
+
+.nav-item {
+  @include common.nav-item;
+  border-radius: common.$spacing-medium;
+}
+
+.buttons {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+}
+
+.primary {
+  @include typescale.label-medium;
+  color: var(--md-sys-color-primary);
+}

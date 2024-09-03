@@ -1,5 +1,6 @@
 import './pair-components/button';
 
+import './components/experiment_builder/experiment_builder';
 import './components/gallery/home_gallery';
 import './components/header/header';
 import './components/login/login';
@@ -51,9 +52,7 @@ export class App extends MobxLitElement {
         `;
       case Pages.EXPERIMENT_CREATE:
         return html`
-          <div class="content">
-            <div>New experiment</div>
-          </div>
+          <experiment-builder></experiment-builder>
         `;
       default:
         return this.render404();
