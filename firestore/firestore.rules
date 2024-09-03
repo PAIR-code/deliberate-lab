@@ -4,7 +4,7 @@ service cloud.firestore {
     // Experiment templates (experimenter only)
     match /experimentTemplates/{templateId} {
       allow list: if request.auth.token.role == 'experimenter';
-      allow get: if request.auth.token.role == 'experimenter' && (get(/groupTemplates/{templateId}).data.permissions.visibility == "public" || request.auth.uid in get(/experimentTemplates/{templateId}).data.permissions.readers);
+      allow get: if request.auth.token.role == 'experimenter' && (get(/experimentTemplates/{templateId}).data.permissions.visibility == "public" || request.auth.uid == get(/experimentTemplates/{templateId}).data.metadata.creator || request.auth.uid in get(/experimentTemplates/{templateId}).data.permissions.readers);
 
       // Experiments can use `writeExperiment`, `deleteExperiment` endpoints
       allow write: if false;
@@ -13,7 +13,7 @@ service cloud.firestore {
     // Agent templates (experimenter only)
     match /agentTemplates/{agentId} {
       allow list: if request.auth.token.role == 'experimenter';
-      allow get: if request.auth.token.role == 'experimenter' && (get(/agentTemplates/{templateId}).data.permissions.visibility == "public" || request.auth.uid in get(/agentTemplates/{templateId}).data.permissions.readers);
+      allow get: if request.auth.token.role == 'experimenter' && (get(/agentTemplates/{templateId}).data.permissions.visibility == "public" || request.auth.uid == get(/agentTemplates/{templateId}).data.metadata.creator || request.auth.uid in get(/agentTemplates/{templateId}).data.permissions.readers);
       allow write: if request.auth.uid == get(/agentTemplates/{agentId}).data.metadata.creator;
     }
 
@@ -32,7 +32,7 @@ service cloud.firestore {
 
     // Experiments
     match /experiments/{experimentId} {
-      allow get: if true;
+      allow get: if false; // if request.auth.token.role == 'experimenter' && (get(/experiments/{experimentId}).data.permissions.visibility == "public" || request.auth.uid == get(/experiments/{experimentId}).data.metadata.creator || request.auth.uid in get(/experiments/{experimentId}).data.permissions.readers);
       allow list: if request.auth.token.role == 'experimenter';
 
       // Experimenters can use `writeExperiment`, `deleteExperiment` endpoints
@@ -54,7 +54,7 @@ service cloud.firestore {
 
       match/cohorts/{cohortId} {
         allow get: if true; // Public read
-        allow list: if request.auth.token.role == 'experimenter' && (get(/experiments/{experimentId}).data.permissions.visibility == "public" || request.auth.uid in get(/experiments/{experimentId}).data.permissions.readers);
+        allow list: if request.auth.token.role == 'experimenter' && (get(/experiments/{experimentId}).data.permissions.visibility == "public" || request.auth.uid == get(/experiments/{experimentId}).data.metadata.creator || request.auth.uid in get(/experiments/{experimentId}).data.permissions.readers);
 
         // TODO: Experimenters can use cloud function endpoints
         allow write: if false; // Editors can write through cloud functions
@@ -68,7 +68,7 @@ service cloud.firestore {
       }
 
       match /participants/{participantPrivateId} {
-        allow list: if request.auth.token.role == 'experimenter' && (get(/experiments/{experimentId}).data.permissions.visibility == "public" || request.auth.uid in get(/experiments/{experimentId}).data.permissions.readers);
+        allow list: if request.auth.token.role == 'experimenter' && (get(/experiments/{experimentId}).data.permissions.visibility == "public" || request.auth.uid == get(/experiments/{experimentId}).data.metadata.creator || request.auth.uid in get(/experiments/{experimentId}).data.permissions.readers);
         allow get: if true; // Public read
 
         // TODO: Participants can use cloud function endpoints

@@ -1,0 +1,237 @@
+/**
+ * Typescale definitions and mixins.
+ */
+
+/** CSS global typescale variables. */
+:host,
+:root {
+  /* body - large */
+  --md-sys-typescale-body-large-font-family-name: "Inter";
+  --md-sys-typescale-body-large-font-family-style: Regular;
+  --md-sys-typescale-body-large-font-weight: 400;
+  /* body - medium */
+  --md-sys-typescale-body-medium-font-family-name: "Inter";
+  --md-sys-typescale-body-medium-font-family-style: Regular;
+  --md-sys-typescale-body-medium-font-weight: 500;
+  /* body - small */
+  --md-sys-typescale-body-small-font-family-name: "Inter";
+  --md-sys-typescale-body-small-font-family-style: Regular;
+  --md-sys-typescale-body-small-font-weight: 400;
+  /* label - large */
+  --md-sys-typescale-label-large-font-family-name: "Inter";
+  --md-sys-typescale-label-large-font-family-style: Medium;
+  --md-sys-typescale-label-large-font-weight: 400;
+  /* label - medium */
+  --md-sys-typescale-label-medium-font-family-name: "Inter";
+  --md-sys-typescale-label-medium-font-family-style: Medium;
+  --md-sys-typescale-label-medium-font-weight: 500;
+  /* label - small */
+  --md-sys-typescale-label-small-font-family-name: "Inter";
+  --md-sys-typescale-label-small-font-family-style: Medium;
+  --md-sys-typescale-label-small-font-weight: 500;
+  /* title - large */
+  --md-sys-typescale-title-large-font-family-name: "Inter";
+  --md-sys-typescale-title-large-font-family-style: Regular;
+  --md-sys-typescale-title-large-font-weight: 400;
+  /* title - medium */
+  --md-sys-typescale-title-medium-font-family-name: "Inter";
+  --md-sys-typescale-title-medium-font-family-style: Medium;
+  --md-sys-typescale-title-medium-font-weight: 500;
+  /* title - small */
+  --md-sys-typescale-title-small-font-family-name: "Inter";
+  --md-sys-typescale-title-small-font-family-style: Medium;
+  --md-sys-typescale-title-small-font-weight: 500;
+}
+/** App-level mixin for small font sizes. */
+@mixin app-small {
+  /* body - large */
+  --md-sys-typescale-body-large-font-size: 18px;
+  --md-sys-typescale-body-large-line-height: 28px;
+  --md-sys-typescale-body-large-letter-spacing: 0px;
+  /* body - medium */
+  --md-sys-typescale-body-medium-font-size: 16px;
+  --md-sys-typescale-body-medium-line-height: 24px;
+  --md-sys-typescale-body-medium-letter-spacing: 0.5px;
+  /* body - small */
+  --md-sys-typescale-body-small-font-size: 14px;
+  --md-sys-typescale-body-small-line-height: 20px;
+  --md-sys-typescale-body-small-letter-spacing: 0.25px;
+  /* label - large */
+  --md-sys-typescale-label-large-font-size: 18px;
+  --md-sys-typescale-label-large-line-height: 24px;
+  --md-sys-typescale-label-large-letter-spacing: 0.1px;
+  /* label - medium */
+  --md-sys-typescale-label-medium-font-size: 14px;
+  --md-sys-typescale-label-medium-line-height: 20px;
+  --md-sys-typescale-label-medium-letter-spacing: 0.5px;
+  /* label - small */
+  --md-sys-typescale-label-small-font-size: 11px;
+  --md-sys-typescale-label-small-line-height: 16px;
+  --md-sys-typescale-label-small-letter-spacing: 0.5px;
+  /* title - large */
+  --md-sys-typescale-title-large-font-size: 22px;
+  --md-sys-typescale-title-large-line-height: 28px;
+  --md-sys-typescale-title-large-letter-spacing: 0px;
+  /* title - medium */
+  --md-sys-typescale-title-medium-font-size: 16px;
+  --md-sys-typescale-title-medium-line-height: 24px;
+  --md-sys-typescale-title-medium-letter-spacing: 0.15px;
+  /* title - small */
+  --md-sys-typescale-title-small-font-size: 14px;
+  --md-sys-typescale-title-small-line-height: 20px;
+  --md-sys-typescale-title-small-letter-spacing: 0.1px;
+}
+
+/** App-level mixin for medium font sizes. */
+@mixin app-medium {
+  /* body - large */
+  --md-sys-typescale-body-large-font-size: 20px;
+  --md-sys-typescale-body-large-line-height: 28px;
+  --md-sys-typescale-body-large-letter-spacing: 0px;
+  /* body - medium */
+  --md-sys-typescale-body-medium-font-size: 18px;
+  --md-sys-typescale-body-medium-line-height: 26px;
+  --md-sys-typescale-body-medium-letter-spacing: 0.1px;
+  /* body - small */
+  --md-sys-typescale-body-small-font-size: 16px;
+  --md-sys-typescale-body-small-line-height: 24px;
+  --md-sys-typescale-body-small-letter-spacing: 0.1px;
+  /* label - large */
+  --md-sys-typescale-label-large-font-size: 20px;
+  --md-sys-typescale-label-large-line-height: 28px;
+  --md-sys-typescale-label-large-letter-spacing: 0px;
+  /* label - medium */
+  --md-sys-typescale-label-medium-font-size: 16px;
+  --md-sys-typescale-label-medium-line-height: 24px;
+  --md-sys-typescale-label-medium-letter-spacing: 0.1px;
+  /* label - small */
+  --md-sys-typescale-label-small-font-size: 12px;
+  --md-sys-typescale-label-small-line-height: 20px;
+  --md-sys-typescale-label-small-letter-spacing: 0.5px;
+  /* title - large */
+  --md-sys-typescale-title-large-font-size: 24px;
+  --md-sys-typescale-title-large-line-height: 28px;
+  --md-sys-typescale-title-large-letter-spacing: 0px;
+  /* title - medium */
+  --md-sys-typescale-title-medium-font-size: 16px;
+  --md-sys-typescale-title-medium-line-height: 24px;
+  --md-sys-typescale-title-medium-letter-spacing: 0.15px;
+  /* title - small */
+  --md-sys-typescale-title-small-font-size: 14px;
+  --md-sys-typescale-title-small-line-height: 20px;
+  --md-sys-typescale-title-small-letter-spacing: 0.1px;
+}
+
+/** App-level mixin for large font sizes. */
+@mixin app-large {
+  /* body - large */
+  --md-sys-typescale-body-large-font-size: 24px;
+  --md-sys-typescale-body-large-line-height: 32px;
+  --md-sys-typescale-body-large-letter-spacing: 0px;
+  /* body - medium */
+  --md-sys-typescale-body-medium-font-size: 20px;
+  --md-sys-typescale-body-medium-line-height: 28px;
+  --md-sys-typescale-body-medium-letter-spacing: 0px;
+  /* body - small */
+  --md-sys-typescale-body-small-font-size: 18px;
+  --md-sys-typescale-body-small-line-height: 26px;
+  --md-sys-typescale-body-small-letter-spacing: 0.1px;
+  /* label - large */
+  --md-sys-typescale-label-large-font-size: 24px;
+  --md-sys-typescale-label-large-line-height: 36px;
+  --md-sys-typescale-label-large-letter-spacing: 0px;
+  /* label - medium */
+  --md-sys-typescale-label-medium-font-size: 16px;
+  --md-sys-typescale-label-medium-line-height: 24px;
+  --md-sys-typescale-label-medium-letter-spacing: 0.1px;
+  /* label - small */
+  --md-sys-typescale-label-small-font-size: 14px;
+  --md-sys-typescale-label-small-line-height: 20px;
+  --md-sys-typescale-label-small-letter-spacing: 0.5px;
+  /* title - large */
+  --md-sys-typescale-title-large-font-size: 28px;
+  --md-sys-typescale-title-large-line-height: 36px;
+  --md-sys-typescale-title-large-letter-spacing: 0px;
+  /* title - medium */
+  --md-sys-typescale-title-medium-font-size: 22px;
+  --md-sys-typescale-title-medium-line-height: 28px;
+  --md-sys-typescale-title-medium-letter-spacing: 0px;
+  /* title - small */
+  --md-sys-typescale-title-small-font-size: 16px;
+  --md-sys-typescale-title-small-line-height: 24px;
+  --md-sys-typescale-title-small-letter-spacing: 0.15px;
+}
+
+/** Typescale mixins */
+
+@mixin title-large {
+  font-family: var(--md-sys-typescale-title-large-font-family-name);
+  font-style: var(--md-sys-typescale-title-large-font-family-style);
+  font-size: var(--md-sys-typescale-title-large-font-size);
+  font-weight: var(--md-sys-typescale-title-large-font-weight);
+  line-height: var(--md-sys-typescale-title-large-line-height);
+}
+
+@mixin title-medium {
+  font-family: var(--md-sys-typescale-title-medium-font-family-name);
+  font-style: var(--md-sys-typescale-title-medium-font-family-style);
+  font-size: var(--md-sys-typescale-title-medium-font-size);
+  font-weight: var(--md-sys-typescale-title-medium-font-weight);
+  line-height: var(--md-sys-typescale-title-medium-line-height);
+}
+
+@mixin title-small {
+  font-family: var(--md-sys-typescale-title-small-font-family-name);
+  font-style: var(--md-sys-typescale-title-small-font-family-style);
+  font-size: var(--md-sys-typescale-title-small-font-size);
+  font-weight: var(--md-sys-typescale-title-small-font-weight);
+  line-height: var(--md-sys-typescale-title-small-line-height);
+}
+
+@mixin body-large {
+  font-family: var(--md-sys-typescale-body-large-font-family-name);
+  font-style: var(--md-sys-typescale-body-large-font-family-style);
+  font-size: var(--md-sys-typescale-body-large-font-size);
+  font-weight: var(--md-sys-typescale-body-large-font-weight);
+  line-height: var(--md-sys-typescale-body-large-line-height);
+}
+
+@mixin body-medium {
+  font-family: var(--md-sys-typescale-body-medium-font-family-name);
+  font-style: var(--md-sys-typescale-body-medium-font-family-style);
+  font-size: var(--md-sys-typescale-body-medium-font-size);
+  font-weight: var(--md-sys-typescale-body-medium-font-weight);
+  line-height: var(--md-sys-typescale-body-medium-line-height);
+}
+
+@mixin body-small {
+  font-family: var(--md-sys-typescale-body-small-font-family-name);
+  font-style: var(--md-sys-typescale-body-small-font-family-style);
+  font-size: var(--md-sys-typescale-body-small-font-size);
+  font-weight: var(--md-sys-typescale-body-small-font-weight);
+  line-height: var(--md-sys-typescale-body-small-line-height);
+}
+
+@mixin label-large {
+  font-family: var(--md-sys-typescale-label-large-font-family-name);
+  font-style: var(--md-sys-typescale-label-large-font-family-style);
+  font-size: var(--md-sys-typescale-label-large-font-size);
+  font-weight: var(--md-sys-typescale-label-large-font-weight);
+  line-height: var(--md-sys-typescale-label-large-line-height);
+}
+
+@mixin label-medium {
+  font-family: var(--md-sys-typescale-label-medium-font-family-name);
+  font-style: var(--md-sys-typescale-label-medium-font-family-style);
+  font-size: var(--md-sys-typescale-label-medium-font-size);
+  font-weight: var(--md-sys-typescale-label-medium-font-weight);
+  line-height: var(--md-sys-typescale-label-medium-line-height);
+}
+
+@mixin label-small {
+  font-family: var(--md-sys-typescale-label-small-font-family-name);
+  font-style: var(--md-sys-typescale-label-small-font-family-style);
+  font-size: var(--md-sys-typescale-label-small-font-size);
+  font-weight: var(--md-sys-typescale-label-small-font-weight);
+  line-height: var(--md-sys-typescale-label-small-line-height);
+}

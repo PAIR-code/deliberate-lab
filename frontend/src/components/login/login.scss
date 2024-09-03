@@ -1,0 +1,30 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.default;
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+h1 {
+  @include typescale.title-large;
+  margin: 0;
+  text-align: center;
+}
+
+h2 {
+  @include typescale.title-medium;
+  margin: 0;
+}
+
+.cards-wrapper {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-large;
+  justify-content: center;
+}
+
+.card {
+  @include common.info-card;
+}
