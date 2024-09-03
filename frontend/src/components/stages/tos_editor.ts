@@ -45,7 +45,6 @@ export class TOSEditorComponent extends MobxLitElement {
       <pr-textarea
         label="Terms of Service"
         placeholder="Add Terms of Service"
-        size="medium"
         variant="outlined"
         .value=${this.stage?.tosLines.join('\n\n') ?? ''}
         @input=${updateTOSLines}

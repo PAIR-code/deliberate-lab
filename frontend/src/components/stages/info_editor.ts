@@ -45,7 +45,6 @@ export class InfoEditorComponent extends MobxLitElement {
       <pr-textarea
         label="Info"
         placeholder="Add info to display to participant"
-        size="medium"
         variant="outlined"
         .value=${this.stage?.infoLines.join('\n\n') ?? ''}
         @input=${updateInfoLines}

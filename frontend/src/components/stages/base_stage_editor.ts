@@ -48,7 +48,6 @@ export class BaseStageEditorComponent extends MobxLitElement {
       <pr-textarea
         label="Stage name"
         placeholder="Add stage name"
-        size="medium"
         variant="outlined"
         .value=${this.stage?.name ?? ''}
         @input=${updateName}
@@ -70,7 +69,6 @@ export class BaseStageEditorComponent extends MobxLitElement {
       <pr-textarea
         label="Stage description"
         placeholder="Add description"
-        size="medium"
         variant="outlined"
         .value=${this.stage?.descriptions.primaryText ?? ''}
         @input=${update}
@@ -92,7 +90,6 @@ export class BaseStageEditorComponent extends MobxLitElement {
       <pr-textarea
         label="Info popup text"
         placeholder="Add info popup text"
-        size="medium"
         variant="outlined"
         .value=${this.stage?.descriptions.infoText ?? ''}
         @input=${update}
@@ -114,7 +111,6 @@ export class BaseStageEditorComponent extends MobxLitElement {
       <pr-textarea
         label="Help popup text"
         placeholder="Add help popup text"
-        size="medium"
         variant="outlined"
         .value=${this.stage?.descriptions.helpText ?? ''}
         @input=${update}

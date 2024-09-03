@@ -41,7 +41,6 @@ export class ExperimentSettingsEditor extends MobxLitElement {
       <pr-textarea
         label="Private experiment name"
         placeholder="Internal experiment name (not visible to participants)"
-        size="medium"
         variant="outlined"
         .value=${this.experimentEditor.metadata.name ?? ''}
         @input=${updateName}
@@ -50,7 +49,6 @@ export class ExperimentSettingsEditor extends MobxLitElement {
       <pr-textarea
         label="Public experiment name"
         placeholder="External experiment name (shown to participants)"
-        size="medium"
         variant="outlined"
         .value=${this.experimentEditor.metadata.publicName ?? ''}
         @input=${updatePublicName}
