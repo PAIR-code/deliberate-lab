@@ -2,12 +2,17 @@ import * as router5 from "router5";
 import browserPlugin from "router5-plugin-browser";
 import { computed, makeObservable, observable } from "mobx";
 import { Service } from "./service";
+import { ExperimentEditor } from "./experiment.editor";
+
+interface ServiceProvider {
+  experimentEditor: ExperimentEditor;
+}
 
 /**
  * Handles app routing and page navigation
  */
 export class RouterService extends Service {
-  constructor() {
+  constructor(private readonly sp: ServiceProvider) {
     super();
     makeObservable(this);
 
@@ -95,7 +100,8 @@ export class RouterService extends Service {
     // Update services for current route
     switch (page) {
       case Pages.EXPERIMENT_CREATE:
-        console.log('Update for current route', params);
+        // TODO: Only reset ID, not whole experiment
+        this.sp.experimentEditor.resetExperiment();
         break;
       default:
         break;

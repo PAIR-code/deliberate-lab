@@ -47,8 +47,12 @@ export class Header extends MobxLitElement {
         return 'Home';
       case Pages.SETTINGS:
         return 'Settings';
+      case Pages.EXPERIMENT:
+        return 'Experiment';
       case Pages.EXPERIMENT_CREATE:
         return 'New experiment';
+      case Pages.EXPERIMENT_EDIT:
+        return 'Edit experiment';
       default:
         return '';
     }
@@ -61,9 +65,13 @@ export class Header extends MobxLitElement {
       case Pages.EXPERIMENT_CREATE:
         return html`
           <pr-button variant="default" disabled>Save as template</pr-button>
-          <pr-button @click=${() => {
-            this.experimentEditor.writeExperiment();
-          }}>
+          <pr-button
+            ?disabled=${!this.experimentEditor.isValidExperimentConfig}
+            @click=${() => {
+              this.experimentEditor.writeExperiment();
+              this.routerService.navigate(Pages.HOME);
+            }}
+          >
             Save experiment
           </pr-button>
         `;

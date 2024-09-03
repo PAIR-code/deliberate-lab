@@ -50,7 +50,18 @@ export class App extends MobxLitElement {
             <settings-page .showAccount=${true}></settings-page>
           </div>
         `;
+      case Pages.EXPERIMENT:
+        return html`
+          <div class="content">
+            <div>Experiment placeholder</div>
+          </div>
+        `;
       case Pages.EXPERIMENT_CREATE:
+        return html`
+          <experiment-builder></experiment-builder>
+        `;
+      case Pages.EXPERIMENT_EDIT:
+        // TODO: Use experiment ID in URL to load experiment into editor
         return html`
           <experiment-builder></experiment-builder>
         `;

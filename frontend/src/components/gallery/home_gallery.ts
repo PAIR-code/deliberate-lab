@@ -5,7 +5,6 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
-import {AuthService} from '../../services/auth.service';
 import {HomeService} from '../../services/home.service';
 import {Pages, RouterService} from '../../services/router.service';
 
@@ -19,14 +18,22 @@ import {styles} from './home_gallery.scss';
 export class HomeGallery extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  private readonly authService = core.getService(AuthService);
   private readonly homeService = core.getService(HomeService);
   private readonly routerService = core.getService(RouterService);
 
   override render() {
     const renderExperiment = (experiment: Experiment) => {
       const item = convertExperimentToGalleryItem(experiment);
-      return html`<gallery-card .item=${item}></gallery-card>`;
+
+      const navigate = () => {
+        this.routerService.navigate(Pages.EXPERIMENT, {
+          'experiment': experiment.id,
+        });
+      };
+
+      return html`
+        <gallery-card .item=${item} @click=${navigate}></gallery-card>
+      `;
     };
 
     return html`

@@ -50,7 +50,7 @@ export class ExperimentEditor extends Service {
   @observable currentStageId: string | undefined = undefined;
   @observable showStageBuilderDialog = false;
 
-  isValidExperimentConfig() {
+  @computed get isValidExperimentConfig() {
     // TODO: Add other validation checks here
     return this.metadata.name.length > 0;
   }
@@ -113,6 +113,16 @@ export class ExperimentEditor extends Service {
 
   toggleStageBuilderDialog() {
     this.showStageBuilderDialog = !this.showStageBuilderDialog;
+  }
+
+  loadExperiment(experiment: Experiment) {
+    this.id = experiment.id;
+    this.metadata = experiment.metadata;
+    this.permissions = experiment.permissions;
+    this.defaultParticipantConfig = experiment.defaultParticipantConfig;
+    this.attentionCheckConfig = experiment.attentionCheckConfig;
+    this.prolificConfig = experiment.prolificConfig;
+    // TODO: Load stages
   }
 
   resetExperiment() {

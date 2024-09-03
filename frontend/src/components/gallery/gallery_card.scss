@@ -4,8 +4,9 @@
 
 :host {
   @include common.flex-column;
-  border: 1px solid var(--md-sys-color-outline);
+  border: 2px solid var(--md-sys-color-outline);
   border-radius: common.$spacing-medium;
+  cursor: pointer;
   gap: common.$spacing-medium;
   padding: common.$spacing-large;
   width: 240px;

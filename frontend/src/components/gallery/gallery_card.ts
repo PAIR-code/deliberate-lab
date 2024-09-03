@@ -2,11 +2,6 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
-import {core} from '../../core/core';
-import {AuthService} from '../../services/auth.service';
-import {HomeService} from '../../services/home.service';
-import {Pages, RouterService} from '../../services/router.service';
-
 import { GalleryItem } from '../../shared/types';
 
 import {styles} from './gallery_card.scss';

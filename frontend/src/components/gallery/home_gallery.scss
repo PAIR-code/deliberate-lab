@@ -11,3 +11,10 @@
   flex-wrap: wrap;
   gap: common.$spacing-large;
 }
+
+gallery-card {
+  &:focus,
+  &:hover {
+    border: 2px solid var(--md-sys-color-primary);
+  }
+}

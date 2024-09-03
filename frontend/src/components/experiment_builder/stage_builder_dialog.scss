@@ -8,7 +8,7 @@
   bottom: 0;
   justify-content: center;
   left: 0;
-  padding: common.$main-content-padding;
+  padding: calc(common.$main-content-padding * 2);
   position: absolute;
   top: 0;
   right: 0;
