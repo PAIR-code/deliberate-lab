@@ -2,9 +2,10 @@ import { Value } from '@sinclair/typebox/value';
 import {
   ExperimentCreationData,
   ExperimentDeletionData,
-  createExperimentConfig
+  createExperimentConfig,
 } from '@deliberation-lab/utils';
 
+import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import { onCall } from 'firebase-functions/v2/https';
 
@@ -40,22 +41,31 @@ export const writeExperiment = onCall(async (request) => {
     handleExperimentCreationValidationErrors(data);
   } */
 
-  // Run document creation a transaction to enture consistency
-  const document = app.firestore().collection(data.collectionName).doc();
+  // Define current experimenter as creator
+  const experiment = data.experimentConfig;
+  experiment.metadata.creator = request.auth!.uid;
+
+  // If existing experiment
+  if (experiment.id.length > 0) {
+    // Set ID
+    experiment.id = data.experimentConfig.id;
+    // Update dateModified
+    const timestamp = admin.firestore.FieldValue.serverTimestamp();
+    experiment.metadata.dateModified = timestamp;
+  }
+
+  // Set up experiment config with stageIds
+  const experimentConfig = createExperimentConfig(
+    data.stageConfigs,
+    experiment,
+  );
+
+  const document = app.firestore().collection(data.collectionName).doc(
+    experimentConfig.id
+  );
+
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
-    // Add experiment doc with current experimenter as creator
-    const experimentConfig = createExperimentConfig(
-      data.stageConfigs,
-      data.experimentConfig,
-    );
-    experimentConfig.metadata.creator = request.auth!.uid;
-
-    // If existing experiment, set ID accordingly
-    if (data.experimentConfig.id.length > 0) {
-      experimentConfig.id = data.experimentConfig.id;
-    }
-
     transaction.set(document, experimentConfig);
 
     // Add collection of stages

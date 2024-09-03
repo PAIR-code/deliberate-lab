@@ -54,7 +54,7 @@ export class HomeService extends Service {
     // Subscribe to relevant experiment documents
     const experimentQuery = query(
       collection(this.sp.firebaseService.firestore, 'experiments'),
-      where('metadata.creator', '==', this.sp.authService.userId)
+      where('metadata.creator', '==', this.sp.authService.userId),
     );
 
     this.unsubscribe.push(
