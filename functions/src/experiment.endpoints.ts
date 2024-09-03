@@ -51,9 +51,9 @@ export const writeExperiment = onCall(async (request) => {
     );
     experimentConfig.metadata.creator = request.auth!.uid;
 
-    // If existing experiment, set ID
-    if (data.experimentId) {
-      experimentConfig.id = data.experimentId;
+    // If existing experiment, set ID accordingly
+    if (data.experimentConfig.id.length > 0) {
+      experimentConfig.id = data.experimentConfig.id;
     }
 
     transaction.set(document, experimentConfig);

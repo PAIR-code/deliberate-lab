@@ -55,16 +55,16 @@ export const ExperimentCreationData = Type.Object(
     // Firestore collection name to save experiment under
     // (e.g., 'experimentTemplates' if the experiment is a template)
     collectionName: FirestoreCollectionData,
-    // Experiment ID (if updating existing experiment) or null
-    experimentId: Type.Union([Type.String(), Type.Null()]),
     // Experiment config (excluding ordered stage IDs)
     experimentConfig: Type.Object(
       {
+        id: Type.String(),
         metadata: MetadataConfigSchema,
         permissions: PermissionsConfigSchema,
         defaultParticipantConfig: ParticipantConfigSchema,
         attentionCheckConfig: AttentionCheckConfigSchema,
         prolificConfig: ProlificConfigSchema,
+        stageIds: Type.Array(Type.String()),
       },
       strict,
     ),

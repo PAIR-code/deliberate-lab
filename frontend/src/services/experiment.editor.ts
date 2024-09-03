@@ -37,13 +37,10 @@ export class ExperimentEditor extends Service {
     makeObservable(this);
   }
 
-  // Experiment fields
-  @observable id: string | null = null;
-  @observable metadata: MetadataConfig = createMetadataConfig();
-  @observable permissions: PermissionsConfig = createPermissionsConfig();
-  @observable defaultParticipantConfig: ParticipantConfig = createParticipantConfig();
-  @observable attentionCheckConfig: AttentionCheckConfig = createAttentionCheckConfig();
-  @observable prolificConfig: ProlificConfig = createProlificConfig();
+  // Experiment config
+  // Use this.stages as source of truth for stage ordering,
+  // not this.experiment.stageIds (which will be overridden)
+  @observable experiment: Experiment = createExperimentConfig();
   @observable stages: StageConfig[] = [];
 
   // Editor tooling
@@ -52,15 +49,15 @@ export class ExperimentEditor extends Service {
 
   @computed get isValidExperimentConfig() {
     // TODO: Add other validation checks here
-    return this.metadata.name.length > 0;
+    return this.experiment.metadata.name.length > 0;
   }
 
   isInitializedExperiment() {
-    return this.id !== null;
+    return this.experiment.id.length > 0;
   }
 
   updateMetadata(metadata: Partial<MetadataConfig>) {
-    this.metadata = {...this.metadata, ...metadata};
+    this.experiment.metadata = {...this.experiment.metadata, ...metadata};
   }
 
   setCurrentStageId(id: string|undefined) {
@@ -116,22 +113,12 @@ export class ExperimentEditor extends Service {
   }
 
   loadExperiment(experiment: Experiment) {
-    this.id = experiment.id;
-    this.metadata = experiment.metadata;
-    this.permissions = experiment.permissions;
-    this.defaultParticipantConfig = experiment.defaultParticipantConfig;
-    this.attentionCheckConfig = experiment.attentionCheckConfig;
-    this.prolificConfig = experiment.prolificConfig;
+    this.experiment = experiment;
     // TODO: Load stages
   }
 
   resetExperiment() {
-    this.id = null;
-    this.metadata = createMetadataConfig();
-    this.permissions = createPermissionsConfig();
-    this.defaultParticipantConfig = createParticipantConfig();
-    this.attentionCheckConfig = createAttentionCheckConfig();
-    this.prolificConfig = createProlificConfig();
+    this.experiment = createExperimentConfig();
     this.stages = [];
   }
 
@@ -143,18 +130,9 @@ export class ExperimentEditor extends Service {
    * @rights Experimenter
    */
   async writeExperiment() {
-    const experimentConfig = {
-      metadata: this.metadata,
-      permissions: this.permissions,
-      defaultParticipantConfig: this.defaultParticipantConfig,
-      attentionCheckConfig: this.attentionCheckConfig,
-      prolificConfig: this.prolificConfig,
-    };
-
     return writeExperimentCallable(this.sp.firebaseService.functions, {
       collectionName: 'experiments',
-      experimentId: this.id,
-      experimentConfig,
+      experimentConfig: this.experiment,
       stageConfigs: this.stages,
     });
   }
