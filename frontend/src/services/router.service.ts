@@ -96,17 +96,6 @@ export class RouterService extends Service {
 
   navigate(page: Pages, params: { [key: string]: string } = {}) {
     this.hasNavigated = true;
-
-    // Update services for current route
-    switch (page) {
-      case Pages.EXPERIMENT_CREATE:
-        // TODO: Only reset ID, not whole experiment
-        this.sp.experimentEditor.resetExperiment();
-        break;
-      default:
-        break;
-    }
-
     return this.router.navigate(page, { ...params });
   }
 

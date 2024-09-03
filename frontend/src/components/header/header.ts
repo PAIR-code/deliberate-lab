@@ -67,8 +67,9 @@ export class Header extends MobxLitElement {
           <pr-button variant="default" disabled>Save as template</pr-button>
           <pr-button
             ?disabled=${!this.experimentEditor.isValidExperimentConfig}
-            @click=${() => {
-              this.experimentEditor.writeExperiment();
+            @click=${async () => {
+              await this.experimentEditor.writeExperiment();
+              this.experimentEditor.resetExperiment();
               this.routerService.navigate(Pages.HOME);
             }}
           >
