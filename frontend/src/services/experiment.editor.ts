@@ -15,6 +15,7 @@ import {
   createProlificConfig,
   generateId,
 } from '@deliberation-lab/utils';
+import { Timestamp } from 'firebase/firestore';
 import {computed, makeObservable, observable} from 'mobx';
 import {
   writeExperimentCallable,
@@ -130,6 +131,9 @@ export class ExperimentEditor extends Service {
    * @rights Experimenter
    */
   async writeExperiment() {
+    // Update date modified
+    this.experiment.metadata.dateModified = Timestamp.now();
+
     return writeExperimentCallable(this.sp.firebaseService.functions, {
       collectionName: 'experiments',
       experimentConfig: this.experiment,

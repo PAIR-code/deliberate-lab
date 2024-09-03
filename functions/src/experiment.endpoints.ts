@@ -41,25 +41,16 @@ export const writeExperiment = onCall(async (request) => {
     handleExperimentCreationValidationErrors(data);
   } */
 
-  // Define current experimenter as creator
-  const experiment = data.experimentConfig;
-  experiment.metadata.creator = request.auth!.uid;
-
-  // If existing experiment
-  if (experiment.id.length > 0) {
-    // Set ID
-    experiment.id = data.experimentConfig.id;
-    // Update dateModified
-    const timestamp = admin.firestore.FieldValue.serverTimestamp();
-    experiment.metadata.dateModified = timestamp;
-  }
-
   // Set up experiment config with stageIds
   const experimentConfig = createExperimentConfig(
     data.stageConfigs,
-    experiment,
+    data.experimentConfig,
   );
 
+  // Use current experimenter as creator
+  experimentConfig.metadata.creator = request.auth!.uid;
+
+  // Define document reference
   const document = app.firestore().collection(data.collectionName).doc(
     experimentConfig.id
   );
