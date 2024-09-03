@@ -2,6 +2,7 @@ import { Type } from '@sinclair/typebox';
 import { StageGame } from './stage';
 import { InfoStageConfigData } from './info_stage.validation';
 import { ProfileStageConfigData } from './profile_stage.validation';
+import { SurveyStageConfigData } from './survey_stage.validation';
 import { TOSStageConfigData } from './tos_stage.validation';
 
 // ************************************************************************* //
@@ -12,6 +13,7 @@ import { TOSStageConfigData } from './tos_stage.validation';
 export const StageConfigData = Type.Union([
   InfoStageConfigData,
   ProfileStageConfigData,
+  SurveyStageConfigData,
   TOSStageConfigData,
 ]);
 
