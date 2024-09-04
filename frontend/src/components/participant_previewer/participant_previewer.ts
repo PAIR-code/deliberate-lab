@@ -1,4 +1,5 @@
 import '../participant_profile/profile_editor';
+import '../popup/accept_transfer_popup';
 import '../stages/info_view';
 import '../stages/tos_view';
 import './participant_nav';
@@ -13,6 +14,7 @@ import {ParticipantService} from '../../services/participant.service';
 import {Pages, RouterService} from '../../services/router.service';
 
 import {
+  ParticipantStatus,
   StageConfig,
   StageKind
 } from '@deliberation-lab/utils';
@@ -36,9 +38,18 @@ export class ParticipantPreviewer extends MobxLitElement {
 
   override render() {
     if (this.routerService.activePage === Pages.PARTICIPANT) {
+      if (this.participantService.profile) {
+        this.routerService.navigate(Pages.PARTICIPANT_STAGE, {
+          experiment: this.routerService.activeRoute.params['experiment'],
+          participant: this.routerService.activeRoute.params['participant'],
+          stage: this.participantService.profile?.currentStageId,
+        });
+      }
+
       return html`
         <participant-nav></participant-nav>
         <div class="participant-previewer"></div>
+        ${this.renderTransferPopup()}
       `;
     }
 
@@ -53,7 +64,17 @@ export class ParticipantPreviewer extends MobxLitElement {
           ${this.renderStageContent(this.experimentService.getStage(stageId))}
         </div>
       </div>
+      ${this.renderTransferPopup()}
     `;
+  }
+
+  private renderTransferPopup() {
+    if (this.participantService.profile?.currentStatus
+      !== ParticipantStatus.TRANSFER_PENDING
+    ) {
+      return nothing;
+    }
+    return html`<transfer-popup></transfer-popup>`;
   }
 
   private renderStageContent(stage: StageConfig) {

@@ -3,29 +3,12 @@
 @use "../../sass/typescale";
 
 :host {
-  @include common.flex-row-align-center;
-  background: rgba(0, 0, 0, .75);
-  bottom: 0;
-  justify-content: center;
-  left: 0;
-  padding: calc(common.$main-content-padding * 2);
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 100%;
-  z-index: 2; // above app header
+  @include common.overlay;
 }
 
 .dialog {
-  @include common.flex-column;
-  background: var(--md-sys-color-surface);
-  border: 2px solid var(--md-sys-color-outline);
-  border-radius: common.$spacing-medium;
-  box-shadow: var(--md-sys-color-box-shadow-3);
-  color: var(--md-sys-color-on-surface);
+  @include common.dialog;
   height: 600px;
-  max-height: 100%;
-  max-width: 100%;
   width: 800px;
 }
 

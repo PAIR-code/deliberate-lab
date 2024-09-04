@@ -1,6 +1,8 @@
 import {
   ParticipantProfileExtended,
+  ParticipantStatus,
   StageParticipantAnswer,
+  createParticipantProfileExtended
 } from '@deliberation-lab/utils';
 import {
   Timestamp,
@@ -15,6 +17,10 @@ import {computed, makeObservable, observable} from 'mobx';
 import {FirebaseService} from './firebase.service';
 import {RouterService} from './router.service';
 import {Service} from './service';
+
+import {
+  updateParticipantCallable
+} from '../shared/callables';
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
@@ -134,10 +140,35 @@ export class ParticipantService extends Service {
     // TODO: Add progress timestamp and update current stage ID
   }
 
-  /** Update participant profile
-   */
+  /** Update participant profile */
   async updateProfile(config: Partial<ParticipantProfileExtended>) {
-    const profile = {...this.profile, ...config};
-    // TODO: Write to firestore
+    const participantConfig = createParticipantProfileExtended(config);
+    let response = {};
+
+    if (this.experimentId) {
+      response = await updateParticipantCallable(
+        this.sp.firebaseService.functions, {
+          experimentId: this.experimentId,
+          participantConfig
+        }
+      );
+    }
+    return response;
+  }
+
+  /** Accept participant transfer. */
+  async acceptParticipantTransfer() {
+    if (!this.profile?.transferCohortId) {
+      return;
+    }
+
+    this.updateProfile(
+      {
+        ...this.profile,
+        currentCohortId: this.profile.transferCohortId,
+        transferCohortId: null,
+        currentStatus: ParticipantStatus.IN_PROGRESS,
+      }
+    );
   }
 }

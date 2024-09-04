@@ -1,0 +1,39 @@
+@use "../../sass/common";
+@use "../../sass/colors";
+@use "../../sass/typescale";
+
+:host {
+  @include common.overlay;
+}
+
+.popup {
+  @include common.dialog;
+  gap: common.$spacing-xl;
+  padding: common.$spacing-xl;
+  width: max-content;
+}
+
+.title {
+  @include typescale.title-medium;
+}
+
+.button-row {
+  @include common.flex-row;
+  justify-content: space-between;
+  width: 100%;
+  gap: common.$spacing-xl;
+}
+
+.button-container {
+  @include common.flex-column;
+  align-items: start;
+  gap: common.$spacing-medium;
+  max-width: 200px;
+}
+
+.subtitle {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
+  font-style: italic;
+  margin: 0;
+}

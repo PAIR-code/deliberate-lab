@@ -115,6 +115,27 @@
   }
 }
 
+@mixin overlay {
+  @include flex-row-align-center;
+  background-color: rgba(0, 0, 0, .75);
+  inset: 0;
+  justify-content: center;
+  padding: calc($main-content-padding * 2);
+  position: absolute;
+  z-index: 2; // above app header
+}
+
+@mixin dialog {
+  @include flex-column;
+  background: var(--md-sys-color-surface);
+  border: 2px solid var(--md-sys-color-outline);
+  border-radius: $spacing-medium;
+  box-shadow: var(--md-sys-color-box-shadow-3);
+  color: var(--md-sys-color-on-surface);
+  max-height: 100%;
+  max-width: 100%;
+}
+
 @mixin info-card {
   @include flex-column;
   background: var(--md-sys-color-surface);
