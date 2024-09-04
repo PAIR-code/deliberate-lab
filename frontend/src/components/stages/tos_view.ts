@@ -35,8 +35,14 @@ export class TOSView extends MobxLitElement {
 
     const timestamp = this.participantService.profile?.timestamps.acceptedTOS;
     const handleTOSClick = () => {
-      const acceptTosTimestamp = timestamp ? null : Timestamp.now();
-      // TODO: Update participant progress timestamps
+      if (!this.participantService.profile) return;
+      const acceptedTOS = timestamp ? null : Timestamp.now();
+      // Update participant progress timestamps
+      const timestamps = {
+        ...this.participantService.profile.timestamps,
+        acceptedTOS
+      };
+      this.participantService.updateProfile({timestamps});
     };
 
     return html`
@@ -62,7 +68,7 @@ export class TOSView extends MobxLitElement {
             : nothing}
         </div>
       </div>
-      <stage-footer>
+      <stage-footer .disabled=${!timestamp}>
       </stage-footer>
     `;
   }
