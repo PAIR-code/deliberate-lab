@@ -19,6 +19,7 @@ export interface ParticipantProfile extends ParticipantProfileBase {
   prolificId: string|null;
   currentStageId: string;
   currentCohort: string;
+  transferCohort: string|null; // set if pending transfer, else null
   currentStatus: ParticipantStatus;
   timestamps: ProgressTimestamps;
 }
@@ -42,9 +43,12 @@ export interface ProgressTimestamps {
 }
 
 export enum ParticipantStatus {
+  // Actively participating in experiment
   IN_PROGRESS = 'IN_PROGRESS',
   // Completed experiment
   SUCCESS = 'SUCCESS',
+  // Waiting for participant to accept transfer
+  TRANSFER_PENDING = 'TRANSFER_PENDING',
   // Failed to transfer to an assigned cohort within the designated time
   TRANSFER_FAILED = 'TRANSFER_FAIL',
   // Declined to be transferred to a new experiment

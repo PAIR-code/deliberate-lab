@@ -8,6 +8,10 @@ export * from './shared.validation';
 export * from './experiment';
 export * from './experiment.validation';
 
+// Cohort
+export * from './cohort';
+export * from './cohort.validation';
+
 // Participant
 export * from './participant';
 export * from './participant.validation';

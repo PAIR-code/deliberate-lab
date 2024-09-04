@@ -5,3 +5,4 @@
 
 // Cloud functions
 export * from './experiment.endpoints';
+export * from './cohort.endpoints';

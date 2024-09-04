@@ -64,7 +64,7 @@ export function createExperimentConfig(
   config: Partial<Experiment> = {},
 ): Experiment {
   return {
-    id: generateId(),
+    id: config.id ?? generateId(),
     metadata: config.metadata ?? createMetadataConfig(),
     permissions: config.permissions ?? createPermissionsConfig(),
     defaultParticipantConfig: config.defaultParticipantConfig ?? createParticipantConfig(),

@@ -1,10 +1,16 @@
+import '../../pair-components/button';
+import '../../pair-components/icon_button';
+
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement} from 'lit/decorators.js';
+import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
+import {ExperimentService} from '../../services/experiment.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
+import {ExperimentManager} from '../../services/experiment.manager';
 import {Pages, RouterService} from '../../services/router.service';
 
 import {styles} from './header.scss';
@@ -15,26 +21,23 @@ export class Header extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
+  private readonly experimentManager = core.getService(ExperimentManager);
   private readonly authService = core.getService(AuthService);
+  private readonly experimentService = core.getService(ExperimentService);
   private readonly routerService = core.getService(RouterService);
 
   override render() {
+    const headerClasses = classMap({
+      'header': true,
+      'banner': this.experimentManager.isEditing,
+    });
+
     return html`
-      <div class="header">
+      <div class=${headerClasses}>
         <div class="left">
           <h1>${this.renderTitle()}</h1>
         </div>
         <div class="right">${this.renderActions()}</div>
-      </div>
-    `;
-  }
-
-  private renderAuthBanner() {
-    return html`
-      <div class="banner">
-        <div class="left">
-          <div>Test banner</div>
-        </div>
       </div>
     `;
   }
@@ -48,13 +51,20 @@ export class Header extends MobxLitElement {
       case Pages.SETTINGS:
         return 'Settings';
       case Pages.EXPERIMENT:
-        return 'Experiment';
+        return this.renderExperimentTitle();
       case Pages.EXPERIMENT_CREATE:
         return 'New experiment';
-      case Pages.EXPERIMENT_EDIT:
-        return 'Edit experiment';
       default:
         return '';
+    }
+  }
+
+  private renderExperimentTitle() {
+    const title = this.experimentService.experiment?.metadata.name ?? 'Experiment';
+    if (this.experimentManager.isEditing) {
+      return `Editing: ${title}`
+    } else {
+      return title;
     }
   }
 
@@ -66,6 +76,7 @@ export class Header extends MobxLitElement {
         return html`
           <pr-button variant="default" disabled>Save as template</pr-button>
           <pr-button
+            ?loading=${this.experimentEditor.isWritingExperiment}
             ?disabled=${!this.experimentEditor.isValidExperimentConfig}
             @click=${async () => {
               await this.experimentEditor.writeExperiment();
@@ -75,6 +86,35 @@ export class Header extends MobxLitElement {
           >
             Save experiment
           </pr-button>
+        `;
+      case Pages.EXPERIMENT:
+        if (this.experimentManager.isEditing) {
+          return html`
+            <pr-button
+              color="tertiary"
+              variant="default"
+              @click=${() => { this.experimentManager.setIsEditing(false) }}
+            >
+              Cancel
+            </pr-button>
+            <pr-button
+              color="tertiary"
+              variant="tonal"
+              @click=${() => { this.experimentManager.setIsEditing(false, true) }}
+            >
+              Save
+            </pr-button>
+          `;
+        }
+        return html`
+          <pr-icon-button
+            icon="edit"
+            color="primary"
+            variant="neutral"
+            ?disabled=${this.experimentManager.getNumParticipants() > 0}
+            @click=${() => { this.experimentManager.setIsEditing(true); }}
+          >
+          </pr-icon-button>
         `;
       default:
         return nothing;

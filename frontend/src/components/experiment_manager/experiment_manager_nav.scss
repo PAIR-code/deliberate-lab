@@ -1,0 +1,14 @@
+@use "../../sass/colors";
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  border-right: 1px solid var(--md-sys-color-outline-variant);
+  flex-shrink: 0;
+  gap: common.$spacing-medium;
+  max-height: calc(100vh - common.$header-height);
+  overflow: auto;
+  padding: common.$sidenav-padding;
+  width: calc(min(50%, 600px));
+}

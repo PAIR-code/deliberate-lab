@@ -13,7 +13,7 @@ service cloud.firestore {
     // Agent templates (experimenter only)
     match /agentTemplates/{agentId} {
       allow list: if request.auth.token.role == 'experimenter';
-      allow get: if request.auth.token.role == 'experimenter' && (get(/agentTemplates/{templateId}).data.permissions.visibility == "public" || request.auth.uid == get(/agentTemplates/{templateId}).data.metadata.creator || request.auth.uid in get(/agentTemplates/{templateId}).data.permissions.readers);
+      allow get: if request.auth.token.role == 'experimenter' && (get(/agentTemplates/{agentId}).data.permissions.visibility == "public" || request.auth.uid == get(/agentTemplates/{agentId}).data.metadata.creator || request.auth.uid in get(/agentTemplates/{agentId}).data.permissions.readers);
       allow write: if request.auth.uid == get(/agentTemplates/{agentId}).data.metadata.creator;
     }
 
@@ -32,7 +32,7 @@ service cloud.firestore {
 
     // Experiments
     match /experiments/{experimentId} {
-      allow get: if false; // if request.auth.token.role == 'experimenter' && (get(/experiments/{experimentId}).data.permissions.visibility == "public" || request.auth.uid == get(/experiments/{experimentId}).data.metadata.creator || request.auth.uid in get(/experiments/{experimentId}).data.permissions.readers);
+      allow get: if request.auth.token.role == 'experimenter'; // && (get(/experiments/{experimentId}).data.permissions.visibility == "public" || request.auth.uid == get(/experiments/{experimentId}).data.metadata.creator || request.auth.uid in get(/experiments/{experimentId}).data.permissions.readers);
       allow list: if request.auth.token.role == 'experimenter';
 
       // Experimenters can use `writeExperiment`, `deleteExperiment` endpoints
@@ -40,24 +40,21 @@ service cloud.firestore {
 
       match /stages/{stageId} {
         allow read: if true; // Public read
-
-        // TODO: Experimenters can use cloud function endpoints
+        // Experimenters can use `writeExperiment`, `deleteExperiment`
         allow write: if false;
       }
 
       match /roles/{roleId} {
         allow read: if true; // Public read
-
-        // TODO: Experimenters can use cloud function endpoints
-        allow write: if false;
+        allow write: if request.auth.token.role == 'experimenter';
       }
 
       match/cohorts/{cohortId} {
         allow get: if true; // Public read
-        allow list: if request.auth.token.role == 'experimenter' && (get(/experiments/{experimentId}).data.permissions.visibility == "public" || request.auth.uid == get(/experiments/{experimentId}).data.metadata.creator || request.auth.uid in get(/experiments/{experimentId}).data.permissions.readers);
+        allow list: if request.auth.token.role == 'experimenter'; // && (get(/experiments/{experimentId}).data.permissions.visibility == "public" || request.auth.uid == get(/experiments/{experimentId}).data.metadata.creator || request.auth.uid in get(/experiments/{experimentId}).data.permissions.readers);
 
         // TODO: Experimenters can use cloud function endpoints
-        allow write: if false; // Editors can write through cloud functions
+        allow write: if false;
 
         match /publicStageData/{stageId} {
           allow read: if true;
@@ -68,7 +65,7 @@ service cloud.firestore {
       }
 
       match /participants/{participantPrivateId} {
-        allow list: if request.auth.token.role == 'experimenter' && (get(/experiments/{experimentId}).data.permissions.visibility == "public" || request.auth.uid == get(/experiments/{experimentId}).data.metadata.creator || request.auth.uid in get(/experiments/{experimentId}).data.permissions.readers);
+        allow list: if request.auth.token.role == 'experimenter'; // && (get(/experiments/{experimentId}).data.permissions.visibility == "public" || request.auth.uid == get(/experiments/{experimentId}).data.metadata.creator || request.auth.uid in get(/experiments/{experimentId}).data.permissions.readers);
         allow get: if true; // Public read
 
         // TODO: Participants can use cloud function endpoints

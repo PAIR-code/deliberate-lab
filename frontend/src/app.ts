@@ -1,6 +1,7 @@
 import './pair-components/button';
 
 import './components/experiment_builder/experiment_builder';
+import './components/experiment_manager/experiment_manager';
 import './components/gallery/home_gallery';
 import './components/header/header';
 import './components/login/login';
@@ -39,6 +40,9 @@ export class App extends MobxLitElement {
   private renderPageContent() {
     switch (this.routerService.activePage) {
       case Pages.HOME:
+        if (!this.authService.isExperimenter) {
+          return this.render403();
+        }
         return html`
           <div class="content">
             <home-gallery></home-gallery>
@@ -51,17 +55,16 @@ export class App extends MobxLitElement {
           </div>
         `;
       case Pages.EXPERIMENT:
+        if (!this.authService.isExperimenter) {
+          return this.render403();
+        }
         return html`
-          <div class="content">
-            <div>Experiment placeholder</div>
-          </div>
+          <experiment-manager></experiment-manager>
         `;
       case Pages.EXPERIMENT_CREATE:
-        return html`
-          <experiment-builder></experiment-builder>
-        `;
-      case Pages.EXPERIMENT_EDIT:
-        // TODO: Use experiment ID in URL to load experiment into editor
+        if (!this.authService.isExperimenter) {
+          return this.render403();
+        }
         return html`
           <experiment-builder></experiment-builder>
         `;

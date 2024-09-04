@@ -98,7 +98,7 @@ export const deleteExperiment = onCall(async (request) => {
   // TODO: Verify that experimenter is the creator before enabling delete
 
   // Validate input
-  const validInput = Value.Check(ExperimentCreationData, data);
+  const validInput = Value.Check(ExperimentDeletionData, data);
   if (!validInput) {
     throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
     return { success: false };

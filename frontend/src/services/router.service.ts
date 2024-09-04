@@ -2,10 +2,10 @@ import * as router5 from "router5";
 import browserPlugin from "router5-plugin-browser";
 import { computed, makeObservable, observable } from "mobx";
 import { Service } from "./service";
-import { ExperimentEditor } from "./experiment.editor";
+import { ExperimentManager } from "./experiment.manager";
 
 interface ServiceProvider {
-  experimentEditor: ExperimentEditor;
+  experimentManager: ExperimentManager;
 }
 
 /**
@@ -42,16 +42,12 @@ export class RouterService extends Service {
       path: "/new_experiment",
     },
     {
-      name: Pages.EXPERIMENT_EDIT,
-      path: "/:experiment/edit",
-    },
-    {
-      name: Pages.COHORT,
-      path: "/:experiment/c/:cohort",
-    },
-    {
       name: Pages.PARTICIPANT,
       path: "/:experiment/p/:participant",
+    },
+    {
+      name: Pages.PARTICIPANT_JOIN_COHORT,
+      path: "/:experiment/c/:cohort",
     }
   ];
 
@@ -96,6 +92,7 @@ export class RouterService extends Service {
 
   navigate(page: Pages, params: { [key: string]: string } = {}) {
     this.hasNavigated = true;
+    this.sp.experimentManager.setIsEditing(false);
     return this.router.navigate(page, { ...params });
   }
 
@@ -127,12 +124,11 @@ export type RouteChange = router5.SubscribeState;
  * Enumeration of different pages.
  */
 export enum Pages {
-  COHORT = "COHORT",
   HOME = "HOME",
   EXPERIMENT = "EXPERIMENT",
   EXPERIMENT_CREATE = "EXPERIMENT_CREATE",
-  EXPERIMENT_EDIT = "EXPERIMENT_EDIT",
   PARTICIPANT = "PARTICIPANT",
+  PARTICIPANT_JOIN_COHORT = "PARTICIPANT_JOIN_COHORT",
   SETTINGS = "SETTINGS",
 }
 

@@ -44,6 +44,9 @@ export class ExperimentEditor extends Service {
   @observable experiment: Experiment = createExperimentConfig();
   @observable stages: StageConfig[] = [];
 
+  // Loading
+  @observable isWritingExperiment = false;
+
   // Editor tooling
   @observable currentStageId: string | undefined = undefined;
   @observable showStageBuilderDialog = false;
@@ -113,9 +116,9 @@ export class ExperimentEditor extends Service {
     this.showStageBuilderDialog = !this.showStageBuilderDialog;
   }
 
-  loadExperiment(experiment: Experiment) {
+  loadExperiment(experiment: Experiment, stages: StageConfig[]) {
     this.experiment = experiment;
-    // TODO: Load stages
+    this.stages = stages;
   }
 
   resetExperiment() {
@@ -131,14 +134,20 @@ export class ExperimentEditor extends Service {
    * @rights Experimenter
    */
   async writeExperiment() {
+    this.isWritingExperiment = true;
+    let response = {};
+
     // Update date modified
     this.experiment.metadata.dateModified = Timestamp.now();
 
-    return writeExperimentCallable(this.sp.firebaseService.functions, {
+    response = await writeExperimentCallable(this.sp.firebaseService.functions, {
       collectionName: 'experiments',
       experimentConfig: this.experiment,
       stageConfigs: this.stages,
     });
+
+    this.isWritingExperiment = false;
+    return response;
   }
 
   /** Delete an experiment.
