@@ -4,6 +4,7 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {ExperimentService} from '../../services/experiment.service';
+import {ParticipantService} from '../../services/participant.service';
 import {Pages, RouterService} from '../../services/router.service';
 import {styles} from './stage_footer.scss';
 
@@ -13,6 +14,7 @@ export class Footer extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly experimentService = core.getService(ExperimentService);
+  private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
   @property() disabled = false;
@@ -36,7 +38,7 @@ export class Footer extends MobxLitElement {
       // TODO: Progress to next stage OR end experiment
     };
 
-    const preventNextClick = this.disabled;
+    const preventNextClick = this.disabled || !this.participantService.isCurrentStage();
 
     return html`
       <pr-button

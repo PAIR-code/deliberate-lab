@@ -4,6 +4,7 @@ import { ExperimentService } from "./services/experiment.service";
 import { FirebaseService } from "./services/firebase.service";
 import { HomeService } from "./services/home.service";
 import { InitializationService } from "./services/initialization.service";
+import { ParticipantService } from "./services/participant.service";
 import { RouterService } from "./services/router.service";
 import { SettingsService } from "./services/settings.service";
 
@@ -29,6 +30,9 @@ export function makeServiceProvider(self: Core) {
     },
     get initializationService() {
       return self.getService(InitializationService);
+    },
+    get participantService() {
+      return self.getService(ParticipantService);
     },
     get routerService() {
       return self.getService(RouterService);

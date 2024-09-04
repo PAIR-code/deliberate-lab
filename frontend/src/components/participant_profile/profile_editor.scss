@@ -1,0 +1,36 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-xxl;
+  height: 100%;
+}
+
+.profile-wrapper {
+  @include common.flex-column;
+  flex-grow: 1;
+  gap: common.$spacing-xxl;
+}
+
+.title {
+  @include typescale.label-small;
+}
+
+.radio-question {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.radio-button {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  min-height: calc(var(--md-sys-typescale-body-small-line-height) * 1.5);
+}
+
+.avatars-wrapper {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-xxl;
+  max-width: 500px;
+}
