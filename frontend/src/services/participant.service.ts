@@ -14,6 +14,7 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import {computed, makeObservable, observable} from 'mobx';
+import {ExperimentService} from './experiment.service';
 import {FirebaseService} from './firebase.service';
 import {RouterService} from './router.service';
 import {Service} from './service';
@@ -23,6 +24,7 @@ import {
 } from '../shared/callables';
 
 interface ServiceProvider {
+  experimentService: ExperimentService;
   firebaseService: FirebaseService;
   routerService: RouterService;
 }
@@ -137,12 +139,40 @@ export class ParticipantService extends Service {
 
   /** Move to next stage. */
   async progressToNextStage() {
-    // TODO: Add progress timestamp and update current stage ID
+    if (!this.experimentId || !this.profile) {
+      return;
+    }
+
+    // Get new stage ID
+    const currentStageId = this.sp.experimentService.getNextStageId(
+      this.profile.currentStageId
+    );
+    if (currentStageId === null) return;
+
+    // Add progress timestamp
+    const completedStages = this.profile.timestamps.completedStages;
+    completedStages[this.profile.currentStageId] = Timestamp.now();
+    const timestamps = {
+      ...this.profile.timestamps,
+      completedStages
+    };
+
+    return await this.updateProfile(
+      {
+        ...this.profile,
+        currentStageId,
+        timestamps
+      }
+    );
   }
 
   /** Update participant profile */
   async updateProfile(config: Partial<ParticipantProfileExtended>) {
-    const participantConfig = createParticipantProfileExtended(config);
+    if (!this.profile) {
+      return;
+    }
+
+    const participantConfig = {...this.profile, ...config};
     let response = {};
 
     if (this.experimentId) {
@@ -162,7 +192,7 @@ export class ParticipantService extends Service {
       return;
     }
 
-    this.updateProfile(
+    return await this.updateProfile(
       {
         ...this.profile,
         currentCohortId: this.profile.transferCohortId,

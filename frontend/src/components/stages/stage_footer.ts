@@ -35,7 +35,15 @@ export class Footer extends MobxLitElement {
     }
 
     const handleNext = async () => {
-      // TODO: Progress to next stage OR end experiment
+      // Progress to next stage OR end experiment
+      await this.participantService.progressToNextStage();
+      // Navigate to new stage
+      console.log(this.participantService.profile?.currentStageId);
+      this.routerService.navigate(Pages.PARTICIPANT_STAGE, {
+        experiment: this.routerService.activeRoute.params['experiment'],
+        participant: this.routerService.activeRoute.params['participant'],
+        stage: this.participantService.profile?.currentStageId ?? '',
+      });
     };
 
     const preventNextClick = this.disabled || !this.participantService.isCurrentStage();
