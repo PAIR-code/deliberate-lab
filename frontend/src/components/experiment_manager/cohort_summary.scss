@@ -22,7 +22,7 @@
   .left,
   .right {
     @include common.flex-row-align-center;
-    gap: common.$spacing-small;
+    gap: common.$spacing-xs;
   }
 }
 

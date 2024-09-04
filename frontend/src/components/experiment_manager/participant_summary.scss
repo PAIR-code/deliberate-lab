@@ -11,11 +11,20 @@
   @include common.flex-row-align-center;
   border-top: 1px solid var(--md-sys-color-outline-variant-high);
   cursor: pointer;
-  padding: common.$spacing-medium common.$spacing-large;
+  justify-content: space-between;
+  padding: common.$spacing-xs common.$spacing-large;
 
   &:focus,
-  &:hover,
-  &.selected {
-    background: var(--md-sys-color-outline-variant-high);
+  &:hover {
+    background: var(--md-sys-color-surface-container-highest);
   }
+
+  &.selected {
+    background: var(--md-sys-color-surface-container-high);
+  }
+}
+
+.buttons {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
 }

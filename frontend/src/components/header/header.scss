@@ -50,6 +50,12 @@ h1 {
   margin: 0;
 }
 
+.banner {
+  h1 {
+    @include typescale.title-medium;
+  }
+}
+
 .action-button {
   @include common.flex-row-align-center;
   @include typescale.label-medium;

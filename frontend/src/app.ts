@@ -5,6 +5,8 @@ import './components/experiment_manager/experiment_manager';
 import './components/gallery/home_gallery';
 import './components/header/header';
 import './components/login/login';
+import './components/participant_previewer/cohort_landing';
+import './components/participant_previewer/participant_previewer';
 import './components/settings/settings';
 import './components/sidenav/experimenter_sidenav';
 
@@ -67,6 +69,18 @@ export class App extends MobxLitElement {
         }
         return html`
           <experiment-builder></experiment-builder>
+        `;
+      case Pages.PARTICIPANT:
+        return html`
+          <participant-previewer></participant-previewer>
+        `;
+      case Pages.PARTICIPANT_STAGE:
+        return html`
+          <participant-previewer></participant-previewer>
+        `;
+      case Pages.PARTICIPANT_JOIN_COHORT:
+        return html`
+          <cohort-landing></cohort-landing>
         `;
       default:
         return this.render404();

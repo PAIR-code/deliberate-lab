@@ -48,6 +48,10 @@ export class RouterService extends Service {
     {
       name: Pages.PARTICIPANT_JOIN_COHORT,
       path: "/e/:experiment/c/:cohort",
+    },
+    {
+      name: Pages.PARTICIPANT_STAGE,
+      path: "/e/:experiment/p/:participant/:stage",
     }
   ];
 
@@ -129,6 +133,7 @@ export enum Pages {
   EXPERIMENT_CREATE = "EXPERIMENT_CREATE",
   PARTICIPANT = "PARTICIPANT",
   PARTICIPANT_JOIN_COHORT = "PARTICIPANT_JOIN_COHORT",
+  PARTICIPANT_STAGE = "PARTICIPANT_STAGE",
   SETTINGS = "SETTINGS",
 }
 

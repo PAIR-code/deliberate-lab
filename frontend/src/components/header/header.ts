@@ -27,9 +27,13 @@ export class Header extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   override render() {
+    if (!this.authService.isExperimenter) {
+      return nothing;
+    }
+
     const headerClasses = classMap({
       'header': true,
-      'banner': this.experimentManager.isEditing,
+      'banner': this.isBanner(),
     });
 
     return html`
@@ -40,6 +44,14 @@ export class Header extends MobxLitElement {
         <div class="right">${this.renderActions()}</div>
       </div>
     `;
+  }
+
+  private isBanner() {
+    const activePage = this.routerService.activePage;
+    return this.experimentManager.isEditing
+      || activePage === Pages.PARTICIPANT
+      || activePage === Pages.PARTICIPANT_STAGE
+      || activePage === Pages.PARTICIPANT_JOIN_COHORT;
   }
 
   private renderTitle() {
@@ -54,13 +66,19 @@ export class Header extends MobxLitElement {
         return this.renderExperimentTitle();
       case Pages.EXPERIMENT_CREATE:
         return 'New experiment';
+      case Pages.PARTICIPANT_JOIN_COHORT:
+        return 'Previewing experiment cohort';
+      case Pages.PARTICIPANT:
+        return 'Previewing as participant';
+      case Pages.PARTICIPANT_STAGE:
+        return 'Previewing as participant';
       default:
         return '';
     }
   }
 
   private renderExperimentTitle() {
-    const title = this.experimentService.experiment?.metadata.name ?? 'Experiment';
+    const title = this.experimentService.experimentName;
     if (this.experimentManager.isEditing) {
       return `Editing: ${title}`
     } else {

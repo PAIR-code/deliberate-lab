@@ -41,10 +41,17 @@ export class ExperimentManagerNav extends MobxLitElement {
     return html`
       <div class="header">
         <div class="left">
-          <div>${this.experimentManager.numCohorts} cohorts</div>
+          <div>
+            ${this.experimentManager.numCohorts} cohorts
+          </div>
+          <small>
+            (${this.experimentManager.getNumParticipants()} participants)
+          </small>
         </div>
         <div class="right">
           <pr-button
+            color="secondary"
+            variant="tonal"
             ?loading=${this.experimentManager.isWritingCohort}
             @click=${() => { this.experimentManager.writeCohort() }}
           >

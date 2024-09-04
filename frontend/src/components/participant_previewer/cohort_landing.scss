@@ -1,0 +1,15 @@
+@use "../../sass/colors";
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  flex-grow: 1;
+  gap: common.$spacing-xl;
+  padding: common.$main-content-padding;
+  width: 100%;
+}
+
+.title{
+  @include typescale.title-large;
+}

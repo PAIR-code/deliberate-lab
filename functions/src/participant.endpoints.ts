@@ -38,6 +38,18 @@ export const createParticipant = onCall(async (request) => {
     handleCreateParticipantValidationErrors(data);
   }
 
+  // Create initial participant config
+  const participantConfig = createParticipantProfileExtended({
+    currentCohortId: data.cohortId,
+  });
+
+  // Define document reference
+  const document = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('participants')
+    .doc(participantConfig.privateId);
+
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     // Get number of participants in collection
@@ -53,25 +65,15 @@ export const createParticipant = onCall(async (request) => {
       await app.firestore().doc(`experiments/${data.experimentId}`).get()
     ).data() as Experiment;
 
-    // Define participant config
+    // Set values in participant config
     const publicId = generateParticipantPublicId(numParticipants);
-    const participantConfig = createParticipantProfileExtended({
-      publicId,
-      currentStageId: experiment.stageIds[0],
-      currentCohortId: data.cohortId,
-    });
-
-    // Define document reference
-    const document = app.firestore()
-      .collection('experiments')
-      .doc(data.experimentId)
-      .collection('participants')
-      .doc(participantConfig.privateId);
+    participantConfig.publicId = publicId;
+    participantConfig.currentStageId = experiment.stageIds[0];
 
     transaction.set(document, participantConfig);
   });
 
-  return true;
+  return { id: document.id };
 });
 
 function handleCreateParticipantValidationErrors(data: any) {

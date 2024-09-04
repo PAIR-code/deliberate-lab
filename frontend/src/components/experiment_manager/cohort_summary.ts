@@ -1,6 +1,7 @@
 import '../../pair-components/button';
 import '../../pair-components/icon';
 import '../../pair-components/icon_button';
+import '../../pair-components/tooltip';
 
 import './participant_summary';
 
@@ -11,6 +12,7 @@ import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
 import {ExperimentManager} from '../../services/experiment.manager';
+import {Pages, RouterService} from '../../services/router.service';
 
 import {
   CohortConfig
@@ -24,6 +26,7 @@ export class CohortSummary extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly experimentManager = core.getService(ExperimentManager);
+  private readonly routerService = core.getService(RouterService);
 
   @property() cohort: CohortConfig|undefined = undefined;
   @property() isExpanded = false;
@@ -47,6 +50,19 @@ export class CohortSummary extends MobxLitElement {
     return `Untitled cohort: ${this.cohort?.id.split('-')[0]}`;
   }
 
+  async copyCohortLink() {
+    if (!this.cohort) return;
+
+    const basePath = window.location.href.substring(
+      0,
+      window.location.href.indexOf('/#')
+    );
+    const link = `${basePath}/#/e/${this.experimentManager.experimentId}/c/${this.cohort.id}`;
+
+    await navigator.clipboard.writeText(link);
+    alert('Link copied to clipboard!');
+  }
+
   private renderHeader() {
     return html`
       <div class="header">
@@ -61,28 +77,85 @@ export class CohortSummary extends MobxLitElement {
           <div>${this.getCohortName()}</div>
         </div>
         <div class="right">
-          <pr-icon-button
-            icon="person_add"
-            color="tertiary"
-            variant="default"
-            ?loading=${this.experimentManager.isWritingParticipant}
-            @click=${async () => {
-              if (!this.cohort) return;
-              await this.experimentManager.createParticipant(this.cohort.id);
-              this.isExpanded = true;
-            }}
-          >
-          </pr-icon-button>
-          <pr-icon-button
-            icon="settings"
-            color="neutral"
-            variant="default"
-            @click=${() => {
-              this.experimentManager.setCohortEditing(this.cohort);
-            }}
-          >
-          </pr-icon-button>
+          ${this.renderAddParticipantButton()}
+          ${this.renderCopyButton()}
+          ${this.renderPreviewButton()}
+          ${this.renderSettingsButton()}
+        </div>
       </div>
+    `;
+  }
+
+  private renderSettingsButton() {
+    return html`
+      <pr-tooltip text="Edit cohort settings" position="BOTTOM_END">
+        <pr-icon-button
+          icon="settings"
+          color="neutral"
+          variant="default"
+          @click=${() => {
+            this.experimentManager.setCohortEditing(this.cohort);
+          }}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
+  }
+
+  private renderAddParticipantButton() {
+    return html`
+      <pr-tooltip text="Add participant" position="BOTTOM_END">
+        <pr-icon-button
+          icon="person_add"
+          color="tertiary"
+          variant="default"
+          ?loading=${this.experimentManager.isWritingParticipant}
+          @click=${async () => {
+            if (!this.cohort) return;
+            await this.experimentManager.createParticipant(this.cohort.id);
+            this.isExpanded = true;
+          }}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
+  }
+
+  private renderPreviewButton() {
+    const navigate = () => {
+      if (!this.cohort) return;
+      this.routerService.navigate(Pages.PARTICIPANT_JOIN_COHORT, {
+        experiment: this.experimentManager.experimentId ?? '',
+        cohort: this.cohort?.id,
+      })
+    };
+
+    return html`
+      <pr-tooltip text="Preview cohort page as participant" position="BOTTOM_END">
+        <pr-icon-button
+          icon="slideshow"
+          color="neutral"
+          variant="default"
+          ?disabled=${!this.cohort}
+          @click=${navigate}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
+  }
+
+  private renderCopyButton() {
+    return html`
+      <pr-tooltip text="Copy experiment cohort link" position="BOTTOM_END">
+        <pr-icon-button
+          icon="content_copy"
+          color="neutral"
+          variant="default"
+          ?disabled=${!this.cohort}
+          @click=${this.copyCohortLink}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
     `;
   }
 
