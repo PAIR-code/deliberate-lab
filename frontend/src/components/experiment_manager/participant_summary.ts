@@ -12,7 +12,8 @@ import {ExperimentManager} from '../../services/experiment.manager';
 import {Pages, RouterService} from '../../services/router.service';
 
 import {
-  ParticipantProfileExtended
+  ParticipantProfileExtended,
+  ParticipantStatus
 } from '@deliberation-lab/utils';
 
 import {styles} from './participant_summary.scss';
@@ -44,13 +45,23 @@ export class ParticipantSummary extends MobxLitElement {
 
     return html`
       <div class=${classes} @click=${setCurrentParticipant}>
-        <div>${this.participant.publicId}</div>
+        <div class="left">
+          <div>${this.participant.publicId}</div>
+          ${this.renderStatus()}
+        </div>
         <div class="buttons">
           ${this.renderCopyButton()}
           ${this.renderPreviewButton()}
         </div>
       </div>
     `;
+  }
+
+  private renderStatus() {
+    if (this.participant?.currentStatus !== ParticipantStatus.TRANSFER_PENDING) {
+      return nothing;
+    }
+    return html`<div class="chip secondary">transfer pending</div>`;
   }
 
   async copyParticipantLink() {

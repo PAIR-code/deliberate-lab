@@ -92,13 +92,16 @@ function handleCreateParticipantValidationErrors(data: any) {
 // ************************************************************************* //
 // updateParticipant endpoint for experimenters                              //
 //                                                                           //
-// Input structure: { experimentId, participnatConfig }                      //
+// Input structure: { experimentId, participantConfig }                      //
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
 
 
 export const updateParticipant = onCall(async (request) => {
-  await AuthGuard.isExperimenter(request);
+  // TODO: Only allow experimenters to update full profiles
+  // and use separate updateParticipantProfile (with base profile only)
+  // endpoint for participants
+  // await AuthGuard.isExperimenter(request);
   const { data } = request;
 
   // Validate input
@@ -112,11 +115,11 @@ export const updateParticipant = onCall(async (request) => {
     .collection('experiments')
     .doc(data.experimentId)
     .collection('participants')
-    .doc(participantConfig.privateId);
+    .doc(data.participantConfig.privateId);
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
-    transaction.set(document, participantConfig);
+    transaction.set(document, data.participantConfig);
   });
 
   return { id: document.id };

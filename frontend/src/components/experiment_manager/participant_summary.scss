@@ -22,9 +22,21 @@
   &.selected {
     background: var(--md-sys-color-surface-container);
   }
+
+  .left,
+  .right {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-medium;
+  }
 }
 
 .buttons {
   @include common.flex-row-align-center;
   gap: common.$spacing-small;
+}
+
+.chip {
+  @include typescale.label-small;
+  @include common.chip;
+  border-radius: common.$spacing-small;
 }

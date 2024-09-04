@@ -16,11 +16,13 @@ import {
   CohortConfig,
   Experiment,
   ParticipantProfileExtended,
+  ParticipantStatus,
   StageConfig,
   createCohortConfig
 } from '@deliberation-lab/utils';
 import {
   createParticipantCallable,
+  updateParticipantCallable,
   writeCohortCallable
 } from '../shared/callables';
 
@@ -113,9 +115,7 @@ export class ExperimentManager extends Service {
       return Object.keys(this.participantMap).length;
     }
     // For cohort ID
-    const participantsInCohort = Object.values(this.participantMap).filter(
-      participant => participant.currentCohortId === cohortId
-    );
+    const participantsInCohort = this.getCohortParticipants(cohortId);
 
     if (!countAllParticipants) {
       return participantsInCohort.length;
@@ -140,7 +140,13 @@ export class ExperimentManager extends Service {
     countAllParticipants = true, // if true, include booted, failed, etc.
   ) {
     return Object.values(this.participantMap).filter(
-      participant => participant.currentCohortId === cohortId
+      participant => {
+        if (participant.transferCohortId) {
+          return participant.transferCohortId === cohortId;
+        } else {
+          return participant.currentCohortId === cohortId;
+        }
+      }
     );
   }
 
@@ -293,5 +299,37 @@ export class ExperimentManager extends Service {
     }
     this.isWritingParticipant = false;
     return response;
+  }
+
+  /** Update a participant */
+  async updateParticipant(participantConfig: ParticipantProfileExtended) {
+    this.isWritingParticipant = true;
+    let response = {};
+
+    if (this.experimentId) {
+      console.log(participantConfig);
+      response = await updateParticipantCallable(
+        this.sp.firebaseService.functions, {
+          experimentId: this.experimentId,
+          participantConfig
+        }
+      );
+    }
+    this.isWritingParticipant = false;
+    return response;
+  }
+
+  /** Initiate participant transfer. */
+  async initiateParticipantTransfer(
+    participant: ParticipantProfileExtended,
+    transferCohortId: string
+  ) {
+    this.updateParticipant(
+      {
+        ...participant,
+        transferCohortId,
+        currentStatus: ParticipantStatus.TRANSFER_PENDING,
+      }
+    );
   }
 }

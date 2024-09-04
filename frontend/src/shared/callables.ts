@@ -4,6 +4,7 @@ import {
   CreationResponse,
   ExperimentCreationData,
   ExperimentDeletionData,
+  ParticipantProfileExtendedData,
   SimpleResponse
 } from '@deliberation-lab/utils';
 
@@ -32,5 +33,11 @@ export const writeCohortCallable = async (functions: Functions, cohort: CohortCr
 /** Generic endpoint to create participants */
 export const createParticipantCallable = async(functions: Functions, config: CreateParticipantData) => {
   const { data } = await httpsCallable<CreateParticipantData, CreationResponse>(functions, 'createParticipant')(config);
+  return data;
+}
+
+/** Generic endpoint to update participant profiles */
+export const updateParticipantCallable = async(functions: Functions, config: ParticipantProfileExtendedData) => {
+  const { data } = await httpsCallable<ParticipantProfileExtendedData, CreationResponse>(functions, 'updateParticipant')(config);
   return data;
 }

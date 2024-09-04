@@ -99,9 +99,27 @@ export class ExperimentManagerComponent extends MobxLitElement {
   }
 
   private renderTransferOption(cohort: CohortConfig) {
+    const initiateTransfer = () => {
+      if (!this.experimentManager.currentParticipant) {
+        return;
+      }
+
+      this.experimentManager.initiateParticipantTransfer(
+        this.experimentManager.currentParticipant,
+        cohort.id
+      )
+    }
+
     return html`
-      <div class="menu-item" role="button">
-        ${this.experimentManager.getCohortName(cohort)}
+      <div class="menu-item" role="button" @click=${initiateTransfer}>
+        <div>${this.experimentManager.getCohortName(cohort)}</div>
+        <div class="subtitle">
+          ${this.experimentManager.getNumParticipants(
+            cohort.participantConfig.includeAllParticipantsInCohortCount,
+            cohort.id
+          )}
+          participants
+        </div>
       </div>
     `;
   }
