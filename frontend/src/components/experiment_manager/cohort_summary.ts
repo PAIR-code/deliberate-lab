@@ -29,7 +29,7 @@ export class CohortSummary extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   @property() cohort: CohortConfig|undefined = undefined;
-  @property() isExpanded = false;
+  @property() isExpanded = true;
 
   override render() {
     if (this.cohort === undefined) {
