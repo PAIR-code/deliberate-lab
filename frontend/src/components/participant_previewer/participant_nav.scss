@@ -15,6 +15,7 @@
   @include common.flex-row-align-center;
   @include typescale.label-large;
   box-sizing: border-box;
+  cursor: pointer;
   gap: common.$spacing-medium;
   flex-shrink: 0;
   height: common.$header-height;

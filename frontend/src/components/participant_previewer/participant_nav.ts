@@ -28,8 +28,16 @@ export class ParticipantNav extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   override render() {
+    const navigateToLanding = () => {
+      const params = this.routerService.activeRoute.params;
+      this.routerService.navigate(Pages.PARTICIPANT, {
+        'experiment': params['experiment'],
+        'participant': params['participant'],
+      });
+    };
+
     return html`
-      <div class="title">
+      <div class="title" @click=${navigateToLanding}>
         <div>${this.experimentService.experimentName}</div>
       </div>
       <div class="stages">

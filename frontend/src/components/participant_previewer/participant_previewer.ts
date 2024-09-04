@@ -8,6 +8,8 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
+import {Timestamp} from 'firebase/firestore';
+
 import {core} from '../../core/core';
 import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
@@ -38,17 +40,13 @@ export class ParticipantPreviewer extends MobxLitElement {
 
   override render() {
     if (this.routerService.activePage === Pages.PARTICIPANT) {
-      if (this.participantService.profile) {
-        this.routerService.navigate(Pages.PARTICIPANT_STAGE, {
-          experiment: this.routerService.activeRoute.params['experiment'],
-          participant: this.routerService.activeRoute.params['participant'],
-          stage: this.participantService.profile?.currentStageId,
-        });
-      }
-
       return html`
         <participant-nav></participant-nav>
-        <div class="participant-previewer"></div>
+        <div class="participant-previewer">
+          <div class="content">
+            ${this.renderLanding()}
+          </div>
+        </div>
         ${this.renderTransferPopup()}
       `;
     }
@@ -66,6 +64,48 @@ export class ParticipantPreviewer extends MobxLitElement {
       </div>
       ${this.renderTransferPopup()}
     `;
+  }
+
+  private renderLanding() {
+    const profile = this.participantService.profile;
+    if (!profile) {
+      return nothing;
+    }
+
+    // If participant has not started experiment before
+    if (!profile.timestamps.startExperiment) {
+      const onStartExperiment = () => {
+        const startExperiment = Timestamp.now();
+        const timestamps = {
+          ...profile.timestamps,
+          startExperiment
+        };
+        this.participantService.updateProfile({timestamps});
+      };
+
+      return html`
+        <pr-button variant="tonal" @click=${onStartExperiment}>
+          Start experiment
+        </pr-button>
+      `;
+    }
+
+    // If experiment is over
+    if (
+      profile.currentStatus === ParticipantStatus.TRANSFER_FAILED
+      || profile.currentStatus === ParticipantStatus.TRANSFER_DECLINED
+      || profile.currentStatus === ParticipantStatus.ATTENTION_TIMEOUT
+      || profile.currentStatus === ParticipantStatus.BOOTED_OUT
+    ) {
+      return html`<div>The experiment has ended.</div>`;
+    }
+
+    // Otherwise, route to current stage
+    this.routerService.navigate(Pages.PARTICIPANT_STAGE, {
+      experiment: this.routerService.activeRoute.params['experiment'],
+      participant: this.routerService.activeRoute.params['participant'],
+      stage: profile.currentStageId,
+    });
   }
 
   private renderTransferPopup() {

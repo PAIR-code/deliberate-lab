@@ -53,25 +53,25 @@ class TransferPopup extends MobxLitElement {
     this.participantService.acceptParticipantTransfer();
   }
 
-  private handleNo() {
-    /* const transferConfig = this.participantService.profile?.transferConfig;
-    if (!transferConfig) {
-      return;
-    }
+  private async handleNo() {
+    if (!this.participantService.profile) return;
 
-    this.participantService.markExperimentCompleted(
-      PARTICIPANT_COMPLETION_TYPE.LOBBY_DECLINED
-    );
+    await this.participantService.updateProfile({
+      ...this.participantService.profile,
+      currentStatus: ParticipantStatus.TRANSFER_DECLINED
+    });
 
-    if (this.experimentService.experiment?.prolificRedirectCode) {
+    const prolificConfig = this.experimentService.experiment?.prolificConfig;
+    if (prolificConfig?.enableProlificIntegration) {
       // Navigate to Prolific with completion code.
-      window.location.href =
-        PROLIFIC_COMPLETION_URL_PREFIX +
-        this.experimentService.experiment?.prolificRedirectCode;
+      window.location.href = PROLIFIC_COMPLETION_URL_PREFIX
+        + prolificConfig.defaultRedirectCode;
     } else {
-      // TODO: navigate to an end-of-experiment payout page
-      this.routerService.navigate(Pages.HOME);
-    } */
+      this.routerService.navigate(Pages.PARTICIPANT, {
+        'experiment': this.routerService.activeRoute.params['experiment'],
+        'participant': this.routerService.activeRoute.params['participant']
+      });
+    }
   }
 }
 
