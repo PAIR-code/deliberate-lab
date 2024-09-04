@@ -8,7 +8,7 @@
 
 .cohort-summary {
   @include common.flex-column;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  border-bottom: 2px solid var(--md-sys-color-outline-variant);
 }
 
 .header {

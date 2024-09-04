@@ -4,7 +4,7 @@
 
 :host {
   @include common.flex-column;
-  border-right: 1px solid var(--md-sys-color-outline-variant);
+  border-right: 2px solid var(--md-sys-color-outline-variant);
   flex-shrink: 0;
   gap: common.$spacing-medium;
   max-height: calc(100vh - common.$header-height);
@@ -21,7 +21,7 @@
 .header {
   @include common.flex-row-align-center;
   @include typescale.title-medium;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  border-bottom: 2px solid var(--md-sys-color-outline-variant);
   flex-shrink: 0;
   gap: common.$spacing-medium;
   height: common.$header-height;
