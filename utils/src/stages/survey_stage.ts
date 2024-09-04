@@ -136,11 +136,79 @@ export function createSurveyStage(
   config: Partial<SurveyStageConfig> = {}
 ): SurveyStageConfig {
   return {
-    id: generateId(),
+    id: config.id ?? generateId(),
     kind: StageKind.SURVEY,
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Survey',
     descriptions: config.descriptions ?? createStageTextConfig(),
     questions: config.questions ?? [],
   };
+}
+
+/** Create checkbox question. */
+export function createCheckSurveyQuestion(
+  config: Partial<CheckSurveyQuestion> = {}
+): CheckSurveyQuestion {
+  return {
+    id: config.id ?? generateId(),
+    kind: SurveyQuestionKind.CHECK,
+    questionTitle: config.questionTitle ?? '',
+  }
+}
+
+/** Create text question. */
+export function createTextSurveyQuestion(
+  config: Partial<TextSurveyQuestion> = {}
+): TextSurveyQuestion {
+  return {
+    id: config.id ?? generateId(),
+    kind: SurveyQuestionKind.TEXT,
+    questionTitle: config.questionTitle ?? '',
+  }
+}
+
+/** Create multiple choice question. */
+export function createMultipleChoiceSurveyQuestion(
+  config: Partial<MultipleChoiceSurveyQuestion> = {}
+): MultipleChoiceSurveyQuestion {
+  return {
+    id: config.id ?? generateId(),
+    kind: SurveyQuestionKind.MULTIPLE_CHOICE,
+    questionTitle: config.questionTitle ?? '',
+    options: config.options ?? [],
+  }
+}
+
+/** Create multiple choice item. */
+export function createMultipleChoiceItem(
+  config: Partial<MultipleChoiceItem> = {}
+): MultipleChoiceItem {
+  return {
+    id: config.id ?? generateId(),
+    text: config.text ?? '',
+    points: config.points ?? 0,
+  }
+}
+
+/** Create scale question. */
+export function createScaleSurveyQuestion(
+  config: Partial<ScaleSurveyQuestion> = {}
+): ScaleSurveyQuestion {
+  return {
+    id: config.id ?? generateId(),
+    kind: SurveyQuestionKind.SCALE,
+    questionTitle: config.questionTitle ?? '',
+    options: config.options ?? [],
+  }
+}
+
+/** Create scale option. */
+export function createScaleItem(
+  config: Partial<ScaleItem> = {}
+): ScaleItem {
+  return {
+    id: config.id ?? generateId(),
+    value: config.value ?? 0,
+    description: config.description ?? '',
+  }
 }

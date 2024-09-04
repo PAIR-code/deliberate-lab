@@ -1,0 +1,56 @@
+@use "../../sass/colors";
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+.question-label {
+  @include typescale.label-small;
+}
+
+.question-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
+.question {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface);
+  border-radius: common.$spacing-medium;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-xl;
+}
+
+.header {
+  @include common.flex-row;
+  gap: common.$spacing-medium;
+  justify-content: space-between;
+
+  .left {
+    @include common.flex-column;
+    flex-grow: 1;
+    gap: common.$spacing-xs;
+  }
+
+  .right {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-small;
+  }
+}
+
+.mc-item {
+  @include common.flex-row-align-center;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: common.$spacing-medium;
+  gap: common.$spacing-medium;
+  justify-content: space-between;
+  padding: common.$spacing-small common.$spacing-large;
+}
+
+pr-textarea {
+  flex-grow: 1;
+  width: 100%;
+}

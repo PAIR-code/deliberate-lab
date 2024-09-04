@@ -1,5 +1,6 @@
 import '../stages/base_stage_editor';
 import '../stages/info_editor';
+import '../stages/survey_editor';
 import '../stages/survey_editor_menu';
 import '../stages/tos_editor';
 import './experiment_builder_nav';
@@ -87,6 +88,7 @@ export class ExperimentBuilder extends MobxLitElement {
       case StageKind.SURVEY:
         return html`
           <base-stage-editor .stage=${stage}></base-stage-editor>
+          <survey-editor .stage=${stage}></survey-editor>
         `;
       case StageKind.TOS:
         return html`
