@@ -1,0 +1,36 @@
+@use "../../sass/colors";
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+}
+
+.cohort-summary {
+  @include common.flex-column;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.header {
+  @include typescale.title-medium;
+  @include common.flex-row;
+  background: var(--md-sys-color-surface-container-high);
+  gap: common.$spacing-medium;
+  justify-content: space-between;
+  padding: common.$spacing-medium common.$spacing-large;
+
+  .left,
+  .right {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-small;
+  }
+}
+
+.body {
+  @include common.flex-column;
+}
+
+.empty-message {
+  color: var(--md-sys-color-outline);
+  padding: common.$spacing-large;
+}

@@ -1,6 +1,12 @@
 import { Type } from '@sinclair/typebox';
 import { Visibility } from './shared';
 
+/** UnifiedTimestamp input validation. */
+export const UnifiedTimestampSchema = Type.Object({
+  seconds: Type.Number(),
+  nanoseconds: Type.Number(),
+});
+
 /** MetadataConfig input validation. */
 export const MetadataConfigSchema = Type.Object({
   name: Type.String(),

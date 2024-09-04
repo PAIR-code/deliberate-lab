@@ -1,4 +1,4 @@
-import { UnifiedTimestamp } from './shared';
+import { UnifiedTimestamp, generateId } from './shared';
 
 /** Participant profile types and functions. */
 
@@ -18,14 +18,14 @@ export interface ParticipantProfile extends ParticipantProfileBase {
   publicId: string;
   prolificId: string|null;
   currentStageId: string;
-  currentCohort: string;
-  transferCohort: string|null; // set if pending transfer, else null
+  currentCohortId: string;
+  transferCohortId: string|null; // set if pending transfer, else null
   currentStatus: ParticipantStatus;
   timestamps: ProgressTimestamps;
 }
 
 /** Participant profile available in private participants collection. */
-export interface ParticipantProfileExtended {
+export interface ParticipantProfileExtended extends ParticipantProfile {
   privateId: string;
 }
 
@@ -63,4 +63,38 @@ export enum ParticipantStatus {
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
 
-export const participantPublicId = (index: number) => `participant-${index}`;
+export function generateParticipantPublicId(index: number) {
+  return `participant-${index}`;
+}
+
+/** Create ProgressTimestamps config. */
+export function createProgressTimestamps(
+  config: Partial<ProgressTimestamps> = {},
+): ProgressTimestamps {
+  return {
+    acceptedTOS: config.acceptedTOS ?? null,
+    startExperiment: config.startExperiment ?? null,
+    endExperiment: config.endExperiment ?? null,
+    completedStages: config.completedStages ?? {},
+    cohortTransfers: config.cohortTransfers ?? {},
+  };
+}
+
+/** Create private participant config. */
+export function createParticipantProfileExtended(
+  config: Partial<ParticipantProfileExtended> = {},
+): ParticipantProfileExtended {
+  return {
+    pronouns: config.pronouns ?? null,
+    name: config.name ?? null,
+    avatar: config.avatar ?? null,
+    privateId: config.privateId ?? generateId(),
+    publicId: config.publicId ?? '',
+    prolificId: config.prolificId ?? null,
+    currentStageId: config.currentStageId ?? '',
+    currentCohortId: config.currentCohortId ?? '',
+    transferCohortId: config.transferCohortId ?? null,
+    currentStatus: config.currentStatus ?? ParticipantStatus.IN_PROGRESS,
+    timestamps: config.timestamps ?? createProgressTimestamps(),
+  }
+}

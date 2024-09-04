@@ -35,7 +35,7 @@ export class RouterService extends Service {
     },
     {
       name: Pages.EXPERIMENT,
-      path: "/:experiment",
+      path: "/e/:experiment",
     },
     {
       name: Pages.EXPERIMENT_CREATE,
@@ -43,11 +43,11 @@ export class RouterService extends Service {
     },
     {
       name: Pages.PARTICIPANT,
-      path: "/:experiment/p/:participant",
+      path: "/e/:experiment/p/:participant",
     },
     {
       name: Pages.PARTICIPANT_JOIN_COHORT,
-      path: "/:experiment/c/:cohort",
+      path: "/e/:experiment/c/:cohort",
     }
   ];
 

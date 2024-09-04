@@ -33,3 +33,8 @@
   padding: common.$main-content-padding;
   word-break: break-all;
 }
+
+.empty-message {
+  color: var(--md-sys-color-outline);
+  padding: common.$main-content-padding;
+}

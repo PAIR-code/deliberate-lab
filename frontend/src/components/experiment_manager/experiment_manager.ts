@@ -1,4 +1,6 @@
 import '../experiment_builder/experiment_builder';
+
+import './cohort_settings_dialog';
 import './experiment_manager_nav';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -41,11 +43,19 @@ export class ExperimentManagerComponent extends MobxLitElement {
     return html`
       <experiment-manager-nav></experiment-manager-nav>
       <div class="experiment-manager">
-        <div class="header">
-          <div>Participant</div>
-        </div>
-        <div class="content">${this.renderContent()}</div>
+        ${this.renderManager()}
       </div>
+      ${this.renderCohortSettingsDialog()}
+    `;
+  }
+
+  private renderCohortSettingsDialog() {
+    if (!this.experimentManager.cohortEditing) {
+      return nothing;
+    }
+
+    return html`
+      <cohort-settings-dialog></cohort-settings-dialog>
     `;
   }
 
@@ -55,9 +65,32 @@ export class ExperimentManagerComponent extends MobxLitElement {
     `;
   }
 
+  private renderManager() {
+    if (!this.experimentManager.currentParticipantId) {
+      return html`
+        <div class="empty-message">
+          Use the left panel to manage and select participants.
+        </div>
+      `;
+    }
+
+    return html`
+      <div class="header">
+        ${this.renderHeader()}
+      </div>
+      <div class="content">${this.renderContent()}</div>
+    `;
+  }
+
+  private renderHeader() {
+    return html`
+      ${this.experimentManager.currentParticipant?.publicId ?? ''}
+    `;
+  }
+
   private renderContent() {
     return html`
-      ${JSON.stringify(this.experimentService.experiment)}
+      ${JSON.stringify(this.experimentManager.currentParticipant)}
     `;
   }
 }

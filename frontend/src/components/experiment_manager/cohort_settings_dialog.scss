@@ -1,0 +1,60 @@
+@use "../../sass/colors";
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-row-align-center;
+  background: rgba(0, 0, 0, .75);
+  bottom: 0;
+  justify-content: center;
+  left: 0;
+  padding: calc(common.$main-content-padding * 2);
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  z-index: 2; // above app header
+}
+
+.dialog {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface);
+  border: 2px solid var(--md-sys-color-outline);
+  border-radius: common.$spacing-medium;
+  box-shadow: var(--md-sys-color-box-shadow-3);
+  color: var(--md-sys-color-on-surface);
+  height: 600px;
+  max-height: 100%;
+  max-width: 100%;
+  width: 800px;
+}
+
+.header {
+  @include typescale.title-medium;
+  @include common.flex-row-align-center;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  flex-shrink: 0;
+  gap: common.$spacing-medium;
+  height: common.$header-height;
+  justify-content: space-between;
+  padding: 0 common.$main-content-padding;
+}
+
+.body {
+  @include common.flex-column;
+  flex-grow: 1;
+  gap: common.$spacing-xxl;
+  overflow: auto;
+  padding: common.$main-content-padding;
+}
+
+.footer {
+  @include typescale.title-medium;
+  @include common.flex-row-align-center;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  flex-shrink: 0;
+  gap: common.$spacing-medium;
+  height: common.$header-height;
+  justify-content: end;
+  padding: 0 common.$main-content-padding;
+}

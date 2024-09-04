@@ -1,0 +1,21 @@
+@use "../../sass/colors";
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+}
+
+.participant-summary {
+  @include typescale.label-medium;
+  @include common.flex-row-align-center;
+  border-top: 1px solid var(--md-sys-color-outline-variant-high);
+  cursor: pointer;
+  padding: common.$spacing-medium common.$spacing-large;
+
+  &:focus,
+  &:hover,
+  &.selected {
+    background: var(--md-sys-color-outline-variant-high);
+  }
+}

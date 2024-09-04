@@ -19,7 +19,10 @@ import {
   StageConfig,
   createCohortConfig
 } from '@deliberation-lab/utils';
-import { writeCohortCallable } from '../shared/callables';
+import {
+  createParticipantCallable,
+  writeCohortCallable
+} from '../shared/callables';
 
 interface ServiceProvider {
   experimentEditor: ExperimentEditor;
@@ -48,10 +51,19 @@ export class ExperimentManager extends Service {
   @observable unsubscribe: Unsubscribe[] = [];
   @observable isCohortsLoading = false;
   @observable isParticipantsLoading = false;
-  @observable isWritingCohort = false; // not associated with other loads
 
-  // Edit state
+  // Firestore loading (not included in general isLoading)
+  @observable isWritingCohort = false;
+  @observable isWritingParticipant = false;
+
+  // Experiment edit state
   @observable isEditing = false;
+
+  // Current participant in display panel
+  @observable currentParticipantId: string|undefined = undefined;
+
+  // Copy of cohort being edited in settings dialog
+  @observable cohortEditing: CohortConfig|undefined = undefined;
 
   async setIsEditing(isEditing: boolean, saveChanges = false) {
     if (!isEditing) {
@@ -76,16 +88,49 @@ export class ExperimentManager extends Service {
     }
   }
 
+  setCohortEditing(cohort: CohortConfig|undefined) {
+    this.cohortEditing = cohort;
+  }
+
+  setCurrentParticipantId(id: string|undefined) {
+    this.currentParticipantId = id;
+  }
+
+  @computed get currentParticipant() {
+    if (!this.currentParticipantId) return null;
+    return this.participantMap[this.currentParticipantId];
+  }
+
   // Get num participants for specified cohort, otherwise all
   getNumParticipants(
     countAllParticipants = true, // if true, include booted, failed, etc.
-    cohortId: string|null = null
   ) {
-    if (!cohortId && !countAllParticipants) {
+    if (!countAllParticipants) {
       return Object.keys(this.participantMap).length;
     }
-    // TODO: Calculate based on cohort ID
+    // TODO: Filter out participants who are not in-progress or completed
     return Object.keys(this.participantMap).length;
+  }
+
+  getCohort(id: string) {
+    return this.cohortMap[id];
+  }
+
+  getCohortParticipants(
+    cohortId: string,
+    countAllParticipants = true, // if true, include booted, failed, etc.
+  ) {
+    return Object.values(this.participantMap).filter(
+      participant => participant.currentCohortId === cohortId
+    );
+  }
+
+  @computed get numCohorts() {
+    return Object.keys(this.cohortMap).length;
+  }
+
+  @computed get cohortList() {
+    return Object.values(this.cohortMap);
   }
 
   @computed get isLoading() {
@@ -193,6 +238,24 @@ export class ExperimentManager extends Service {
       );
     }
     this.isWritingCohort = false;
+    return response;
+  }
+
+  /** Create a participant
+   */
+  async createParticipant(cohortId: string) {
+    this.isWritingParticipant = true;
+    let response = {};
+
+    if (this.experimentId) {
+      response = await createParticipantCallable(
+        this.sp.firebaseService.functions, {
+          experimentId: this.experimentId,
+          cohortId,
+        }
+      );
+    }
+    this.isWritingParticipant = false;
     return response;
   }
 }
