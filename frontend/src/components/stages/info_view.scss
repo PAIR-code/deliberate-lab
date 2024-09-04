@@ -1,0 +1,23 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+  height: 100%;
+  width: 100%;
+}
+
+.info-block {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+  width: 70%;
+}
+
+.html-wrapper {
+  @include common.flex-column;
+  @include typescale.body-small;
+  @include common.html-preview;
+  flex-grow: 1;
+  gap: common.$spacing-xl;
+}

@@ -1,0 +1,20 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-row-align-center;
+  background: var(--md-sys-color-surface-variant);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  bottom: 0;
+  flex-shrink: 0;
+  gap: common.$spacing-medium;
+  height: common.$footer-height;
+  justify-content: space-between;
+  position: sticky;
+
+  .left,
+  .right {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-medium;
+  }
+}
