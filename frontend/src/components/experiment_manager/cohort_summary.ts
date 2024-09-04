@@ -44,12 +44,6 @@ export class CohortSummary extends MobxLitElement {
     `;
   }
 
-  private getCohortName() {
-    const name = this.cohort?.metadata.name;
-    if (name) return name;
-    return `Untitled cohort: ${this.cohort?.id.split('-')[0]}`;
-  }
-
   async copyCohortLink() {
     if (!this.cohort) return;
 
@@ -64,6 +58,10 @@ export class CohortSummary extends MobxLitElement {
   }
 
   private renderHeader() {
+    if (!this.cohort) {
+      return nothing;
+    }
+
     return html`
       <div class="header">
         <div class="left">
@@ -74,7 +72,7 @@ export class CohortSummary extends MobxLitElement {
             @click=${() => { this.isExpanded = !this.isExpanded; }}
           >
           </pr-icon-button>
-          <div>${this.getCohortName()}</div>
+          <div>${this.experimentManager.getCohortName(this.cohort)}</div>
         </div>
         <div class="right">
           ${this.renderAddParticipantButton()}
@@ -103,12 +101,17 @@ export class CohortSummary extends MobxLitElement {
   }
 
   private renderAddParticipantButton() {
+    if (!this.cohort) {
+      return nothing;
+    }
+
     return html`
       <pr-tooltip text="Add participant" position="BOTTOM_END">
         <pr-icon-button
           icon="person_add"
           color="tertiary"
           variant="default"
+          ?disabled=${this.experimentManager.isFullCohort(this.cohort)}
           ?loading=${this.experimentManager.isWritingParticipant}
           @click=${async () => {
             if (!this.cohort) return;

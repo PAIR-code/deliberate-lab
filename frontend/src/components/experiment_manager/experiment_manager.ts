@@ -12,6 +12,7 @@ import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
 
 import {
+  CohortConfig,
   StageKind
 } from '@deliberation-lab/utils';
 
@@ -84,7 +85,24 @@ export class ExperimentManagerComponent extends MobxLitElement {
 
   private renderHeader() {
     return html`
-      ${this.experimentManager.currentParticipant?.publicId ?? ''}
+      <div class="left">
+        ${this.experimentManager.currentParticipant?.publicId ?? ''}
+      </div>
+      <pr-menu name="Transfer">
+        <div class="menu-wrapper">
+          ${this.experimentManager.availableCohorts.map(
+            cohort => this.renderTransferOption(cohort)
+          )}
+        </div>
+      </pr-menu>
+    `;
+  }
+
+  private renderTransferOption(cohort: CohortConfig) {
+    return html`
+      <div class="menu-item" role="button">
+        ${this.experimentManager.getCohortName(cohort)}
+      </div>
     `;
   }
 

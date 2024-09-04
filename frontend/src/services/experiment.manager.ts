@@ -104,16 +104,35 @@ export class ExperimentManager extends Service {
   // Get num participants for specified cohort, otherwise all
   getNumParticipants(
     countAllParticipants = true, // if true, include booted, failed, etc.
+    cohortId: string|null = null
   ) {
-    if (!countAllParticipants) {
+    if (!countAllParticipants && !cohortId) {
+      return Object.keys(this.participantMap).length;
+    } else if (!cohortId) {
+      // TODO: Filter out participants who are not in-progress or completed
       return Object.keys(this.participantMap).length;
     }
-    // TODO: Filter out participants who are not in-progress or completed
-    return Object.keys(this.participantMap).length;
+    // For cohort ID
+    const participantsInCohort = Object.values(this.participantMap).filter(
+      participant => participant.currentCohortId === cohortId
+    );
+
+    if (!countAllParticipants) {
+      return participantsInCohort.length;
+    } else {
+      // TODO: Filter out participants who are not in-progress or completed
+      return participantsInCohort.length;
+    }
   }
 
   getCohort(id: string) {
     return this.cohortMap[id];
+  }
+
+  getCohortName(cohort: CohortConfig) {
+    const name = cohort?.metadata.name;
+    if (name) return name;
+    return `Untitled cohort: ${cohort?.id.split('-')[0]}`;
   }
 
   getCohortParticipants(
@@ -123,6 +142,23 @@ export class ExperimentManager extends Service {
     return Object.values(this.participantMap).filter(
       participant => participant.currentCohortId === cohortId
     );
+  }
+
+  isFullCohort(cohort: CohortConfig) {
+    const maxParticipants = cohort.participantConfig.maxParticipantsPerCohort;
+    if (maxParticipants === null) {
+      return false;
+    }
+
+    const numParticipants = this.getNumParticipants(
+      cohort.participantConfig.includeAllParticipantsInCohortCount,
+      cohort.id
+    );
+    return numParticipants >= Number(maxParticipants);
+  }
+
+  @computed get availableCohorts() {
+    return Object.values(this.cohortMap).filter(cohort => !this.isFullCohort(cohort));
   }
 
   @computed get numCohorts() {
