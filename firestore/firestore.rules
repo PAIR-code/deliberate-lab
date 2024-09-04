@@ -65,7 +65,10 @@ service cloud.firestore {
       }
 
       match /participants/{participantPrivateId} {
-        allow list: if request.auth.token.role == 'experimenter'; // && (get(/experiments/{experimentId}).data.permissions.visibility == "public" || request.auth.uid == get(/experiments/{experimentId}).data.metadata.creator || request.auth.uid in get(/experiments/{experimentId}).data.permissions.readers);
+        // TODO: Only allow experimenters to read participants and use
+        // triggers to populate participantPublicData for participants
+        // to read
+        allow list: if true; // if request.auth.token.role == 'experimenter'; // && (get(/experiments/{experimentId}).data.permissions.visibility == "public" || request.auth.uid == get(/experiments/{experimentId}).data.metadata.creator || request.auth.uid in get(/experiments/{experimentId}).data.permissions.readers);
         allow get: if true; // Public read
 
         // TODO: Participants can use cloud function endpoints
@@ -80,7 +83,7 @@ service cloud.firestore {
       }
 
       match /participantPublicData/{participantPublicId} {
-        allow list: if false;
+        allow list: if true;
         allow get: if true;
 
         // TODO: Triggered by cloud function triggers

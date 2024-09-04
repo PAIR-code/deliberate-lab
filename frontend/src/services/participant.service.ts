@@ -14,6 +14,7 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import {computed, makeObservable, observable} from 'mobx';
+import {CohortService} from './cohort.service';
 import {ExperimentService} from './experiment.service';
 import {FirebaseService} from './firebase.service';
 import {RouterService} from './router.service';
@@ -24,6 +25,7 @@ import {
 } from '../shared/callables';
 
 interface ServiceProvider {
+  cohortService: CohortService;
   experimentService: ExperimentService;
   firebaseService: FirebaseService;
   routerService: RouterService;
@@ -95,6 +97,7 @@ export class ParticipantService extends Service {
         ),
         (doc) => {
           this.profile = doc.data() as ParticipantProfileExtended;
+          this.sp.cohortService.loadCohortData(this.profile.currentCohortId);
           this.isProfileLoading = false;
         }
       )

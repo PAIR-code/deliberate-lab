@@ -11,6 +11,7 @@ import {customElement, property} from 'lit/decorators.js';
 import {Timestamp} from 'firebase/firestore';
 
 import {core} from '../../core/core';
+import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 import {Pages, RouterService} from '../../services/router.service';
@@ -28,6 +29,7 @@ import {styles} from './participant_previewer.scss';
 export class ParticipantPreviewer extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly cohortService = core.getService(CohortService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
