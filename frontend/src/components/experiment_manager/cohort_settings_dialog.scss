@@ -56,6 +56,10 @@
 
 .checkbox-wrapper {
   @include common.flex-row-align-center;
-  flex-wrap: wrap;
-  gap: common.$spacing-medium;
+  gap: common.$spacing-small;
+  overflow-wrap: break-word;
+
+  md-checkbox {
+    flex-shrink: 0;
+  }
 }

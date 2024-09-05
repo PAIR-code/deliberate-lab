@@ -295,8 +295,15 @@ export class ExperimentManager extends Service {
    * @rights Experimenter
    */
   async writeCohort(config: Partial<CohortConfig> = {}) {
+    if (!this.sp.experimentService.experiment) return;
+
     this.isWritingCohort = true;
-    const cohortConfig = createCohortConfig(config);
+    console.log(JSON.stringify(this.sp.experimentService.experiment.defaultCohortConfig));
+    const cohortConfig = createCohortConfig({
+      participantConfig: this.sp.experimentService.experiment.defaultCohortConfig,
+      ...config
+    });
+
     let response = {};
 
     if (this.experimentId) {

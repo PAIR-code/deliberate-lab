@@ -164,7 +164,7 @@ export class CohortSettingsDialog extends MobxLitElement {
           </div>
         </div>
         <div class="number-input">
-          <label for="num">
+          <label for="minParticipants">
             Minimum number of participants
           </label>
           <input
@@ -213,7 +213,7 @@ export class CohortSettingsDialog extends MobxLitElement {
           </div>
         </div>
         <div class="number-input">
-          <label for="num">
+          <label for="maxParticipants">
             Maximum number of participants
           </label>
           <input

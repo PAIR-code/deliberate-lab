@@ -1,5 +1,6 @@
 import {
   AttentionCheckConfig,
+  CohortParticipantConfig,
   Experiment,
   MetadataConfig,
   PermissionsConfig,
@@ -60,6 +61,31 @@ export class ExperimentEditor extends Service {
 
   updateMetadata(metadata: Partial<MetadataConfig>) {
     this.experiment.metadata = {...this.experiment.metadata, ...metadata};
+  }
+
+  updatePermissions(permissions: Partial<PermissionsConfig>) {
+    this.experiment.permissions = {...this.experiment.permissions, ...permissions};
+  }
+
+  updateCohortConfig(config: Partial<CohortParticipantConfig>) {
+    this.experiment.defaultCohortConfig = {
+      ...this.experiment.defaultCohortConfig,
+      ...config
+    };
+  }
+
+  updateAttentionCheckConfig(config: Partial<AttentionCheckConfig>) {
+    this.experiment.attentionCheckConfig = {
+      ...this.experiment.attentionCheckConfig,
+      ...config
+    };
+  }
+
+  updateProlificConfig(config: Partial<ProlificConfig>) {
+    this.experiment.prolificConfig = {
+      ...this.experiment.prolificConfig,
+      ...config
+    };
   }
 
   setCurrentStageId(id: string|undefined) {
