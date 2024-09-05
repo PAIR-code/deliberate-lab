@@ -63,9 +63,7 @@ export class ParticipantPreviewer extends MobxLitElement {
         <div class="header">
           ${this.experimentService.getStageName(stageId)}
         </div>
-        <div class="content">
-          ${this.renderStageContent(this.experimentService.getStage(stageId))}
-        </div>
+        ${this.renderStageContent(this.experimentService.getStage(stageId))}
       </div>
       ${this.renderTransferPopup()}
     `;
@@ -131,22 +129,38 @@ export class ParticipantPreviewer extends MobxLitElement {
     const answer = this.participantService.currentStageAnswer;
     switch (stage.kind) {
       case StageKind.TOS:
-        return html`<tos-view .stage=${stage}></tos-view>`;
+        return html`
+          <div class="content">
+            <tos-view .stage=${stage}></tos-view>
+          </div>
+        `;
       case StageKind.INFO:
-        return html`<info-view .stage=${stage}></info-view>`;
+        return html`
+          <div class="content">
+            <info-view .stage=${stage}></info-view>
+          </div>
+        `;
       case StageKind.PROFILE:
-        return html`<profile-editor></profile-editor>`;
+        return html`
+          <div class="content">
+            <profile-editor></profile-editor>
+          </div>
+        `;
       case StageKind.CHAT:
         return html`
-          <chat-panel .stage=${stage}></chat-panel>
-          <chat-interface .stage=${stage}></chat-interface>
+          <div class="content chat">
+            <chat-panel .stage=${stage}></chat-panel>
+            <chat-interface .stage=${stage}></chat-interface>
+          </div>
         `;
       case StageKind.SURVEY:
         return html`
-          <survey-view .stage=${stage} .answer=${answer}></survey-view>
+          <div class="content">
+            <survey-view .stage=${stage} .answer=${answer}></survey-view>
+          </div>
         `;
       default:
-        return nothing;
+        return html`<div class="content">Stage not found</div>`;
     }
   }
 }

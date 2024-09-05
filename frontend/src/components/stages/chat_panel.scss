@@ -3,8 +3,8 @@
 
 :host {
   @include common.flex-column;
+  flex-shrink: 0;
   gap: common.$spacing-large;
-  padding-right: common.$main-content-padding;
   width: 240px;
 }
 

@@ -26,8 +26,14 @@
 }
 
 .content {
-  @include common.flex-row;
+  @include common.flex-column;
   flex-grow: 1;
   overflow: auto;
   padding: common.$main-content-padding;
+
+  &.chat {
+    @include common.flex-row;
+    gap: common.$main-content-padding;
+    padding-bottom: calc(common.$main-content-padding * 2);
+  }
 }
