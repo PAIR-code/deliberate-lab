@@ -72,12 +72,17 @@ export class CohortService extends Service {
     return Object.values(this.participantMap);
   }
 
+  // True if did not drop out of the experiment
+  isValidParticipant(participant: ParticipantProfile) {
+    return participant.currentStatus === ParticipantStatus.IN_PROGRESS
+      || participant.currentStatus === ParticipantStatus.SUCCESS;
+  }
+
   // Participants who did not drop out of the experiment
   @computed get validParticipants() {
     return Object.values(this.participantMap).filter(
-      participant => participant.currentStatus === ParticipantStatus.IN_PROGRESS
-        || participant.currentStatus === ParticipantStatus.SUCCESS
-    )
+      p => this.isValidParticipant(p)
+    );
   }
 
   loadCohortData(id: string) {

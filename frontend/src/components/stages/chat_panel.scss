@@ -1,0 +1,30 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+  padding-right: common.$main-content-padding;
+  width: 240px;
+}
+
+.panel-item {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.panel-item-title {
+  @include typescale.title-small;
+}
+
+.profile {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  word-break: break-all;
+}
+
+.name {
+  @include typescale.body-small;
+  color: var(--md-sys-color-outline);
+  font-weight: 500;
+}

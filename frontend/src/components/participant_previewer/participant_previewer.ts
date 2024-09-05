@@ -1,6 +1,7 @@
 import '../participant_profile/profile_editor';
 import '../popup/accept_transfer_popup';
 import '../stages/chat_interface';
+import '../stages/chat_panel';
 import '../stages/info_view';
 import '../stages/survey_view';
 import '../stages/tos_view';
@@ -137,7 +138,7 @@ export class ParticipantPreviewer extends MobxLitElement {
         return html`<profile-editor></profile-editor>`;
       case StageKind.CHAT:
         return html`
-          <div class="panel"></div>
+          <chat-panel .stage=${stage}></chat-panel>
           <chat-interface .stage=${stage}></chat-interface>
         `;
       case StageKind.SURVEY:
