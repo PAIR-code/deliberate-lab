@@ -9,7 +9,6 @@ import {
   CheckSurveyQuestion,
   MultipleChoiceItem,
   MultipleChoiceSurveyQuestion,
-  ScaleItem,
   ScaleSurveyQuestion,
   SurveyStageConfig,
   SurveyQuestion,
@@ -17,7 +16,6 @@ import {
   StageKind,
   TextSurveyQuestion,
   createMultipleChoiceItem,
-  createScaleItem
 } from '@deliberation-lab/utils';
 
 import {styles} from './survey_editor.scss';

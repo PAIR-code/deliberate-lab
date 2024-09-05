@@ -13,7 +13,6 @@ import {
   StageKind,
   createCheckSurveyQuestion,
   createMultipleChoiceSurveyQuestion,
-  createScaleItem,
   createScaleSurveyQuestion,
   createTextSurveyQuestion
 } from '@deliberation-lab/utils';
@@ -81,11 +80,7 @@ export class SurveyEditorMenu extends MobxLitElement {
   }
 
   private addScale() {
-    // By default, add 0 to 10 scale questions
-    const scale = [...Array(11).keys()];
-    this.addQuestion(createScaleSurveyQuestion({
-      options: scale.map(value => createScaleItem({value})),
-    }));
+    this.addQuestion(createScaleSurveyQuestion());
   }
 }
 

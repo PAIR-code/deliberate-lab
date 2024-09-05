@@ -71,6 +71,7 @@ export type StageConfig =
  * in Firestore.
  */
 export interface BaseStageParticipantAnswer {
+  id: string; // should match stage ID
   kind: StageKind;
 }
 

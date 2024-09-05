@@ -1,6 +1,7 @@
 import '../participant_profile/profile_editor';
 import '../popup/accept_transfer_popup';
 import '../stages/info_view';
+import '../stages/survey_view';
 import '../stages/tos_view';
 import './participant_nav';
 
@@ -76,29 +77,30 @@ export class ParticipantPreviewer extends MobxLitElement {
 
     // If participant has not started experiment before
     if (!profile.timestamps.startExperiment) {
-      const onStartExperiment = () => {
+      let isLoading = false;
+      const onStartExperiment = async () => {
+        isLoading = true;
         const startExperiment = Timestamp.now();
         const timestamps = {
           ...profile.timestamps,
           startExperiment
         };
-        this.participantService.updateProfile({timestamps});
+        await this.participantService.updateProfile({timestamps});
+        isLoading = false;
       };
 
       return html`
-        <pr-button variant="tonal" @click=${onStartExperiment}>
+        <pr-button
+          ?loading=${isLoading}
+          variant="tonal" @click=${onStartExperiment}
+        >
           Start experiment
         </pr-button>
       `;
     }
 
     // If experiment is over
-    if (
-      profile.currentStatus === ParticipantStatus.TRANSFER_FAILED
-      || profile.currentStatus === ParticipantStatus.TRANSFER_DECLINED
-      || profile.currentStatus === ParticipantStatus.ATTENTION_TIMEOUT
-      || profile.currentStatus === ParticipantStatus.BOOTED_OUT
-    ) {
+    if (profile.currentStatus !== ParticipantStatus.IN_PROGRESS) {
       return html`<div>The experiment has ended.</div>`;
     }
 
@@ -124,6 +126,7 @@ export class ParticipantPreviewer extends MobxLitElement {
       return nothing;
     }
 
+    const answer = this.participantService.currentStageAnswer;
     switch (stage.kind) {
       case StageKind.TOS:
         return html`<tos-view .stage=${stage}></tos-view>`;
@@ -131,6 +134,10 @@ export class ParticipantPreviewer extends MobxLitElement {
         return html`<info-view .stage=${stage}></info-view>`;
       case StageKind.PROFILE:
         return html`<profile-editor></profile-editor>`;
+      case StageKind.SURVEY:
+        return html`
+          <survey-view .stage=${stage} .answer=${answer}></survey-view>
+        `;
       default:
         return nothing;
     }

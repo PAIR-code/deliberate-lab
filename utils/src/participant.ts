@@ -38,7 +38,7 @@ export interface ProgressTimestamps {
   endExperiment: UnifiedTimestamp|null;
   // Stage ID to time that stage was marked completed
   completedStages: Record<string, UnifiedTimestamp>;
-  // Cohort ID to time participant joined or was transferred to that cohort
+  // Cohort ID to time participant left that cohort
   cohortTransfers: Record<string, UnifiedTimestamp>;
 }
 

@@ -58,13 +58,10 @@ export interface MultipleChoiceItem {
 
 export interface ScaleSurveyQuestion extends BaseSurveyQuestion {
   kind: SurveyQuestionKind.SCALE;
-  options: ScaleItem[];
-}
-
-export interface ScaleItem {
-  id: string;
-  value: number; // e.g., 1
-  description: string; // e.g., "least likely"
+  upperValue: number;
+  upperText: string;
+  lowerValue: number; // min 0
+  lowerText: string;
 }
 
 export type SurveyQuestion =
@@ -96,17 +93,17 @@ export interface TextSurveyAnswer extends BaseSurveyAnswer {
 
 export interface CheckSurveyAnswer extends BaseSurveyAnswer {
   kind: SurveyQuestionKind.CHECK;
-  answer: boolean;
+  isChecked: boolean;
 }
 
 export interface MultipleChoiceSurveyAnswer extends BaseSurveyAnswer {
   kind: SurveyQuestionKind.MULTIPLE_CHOICE;
-  answer: string; // ID of MultipleChoiceItem selected
+  choiceId: string; // ID of MultipleChoiceItem selected
 }
 
 export interface ScaleSurveyAnswer extends BaseSurveyAnswer {
   kind: SurveyQuestionKind.SCALE;
-  answer: string; // ID of ScaleItem selected
+  value: number; // number value selected
 }
 
 export type SurveyAnswer =
@@ -198,17 +195,20 @@ export function createScaleSurveyQuestion(
     id: config.id ?? generateId(),
     kind: SurveyQuestionKind.SCALE,
     questionTitle: config.questionTitle ?? '',
-    options: config.options ?? [],
+    upperValue: config.upperValue ?? 10,
+    upperText: config.upperText ?? '',
+    lowerValue: config.lowerValue ?? 0,
+    lowerText: config.lowerText ?? '',
   }
 }
 
-/** Create scale option. */
-export function createScaleItem(
-  config: Partial<ScaleItem> = {}
-): ScaleItem {
+/** Create survey stage participant answer. */
+export function createSurveyStageParticipantAnswer(
+  config: Partial<SurveyStageParticipantAnswer> = {}
+): SurveyStageParticipantAnswer {
   return {
     id: config.id ?? generateId(),
-    value: config.value ?? 0,
-    description: config.description ?? '',
+    kind: StageKind.SURVEY,
+    answerMap: config.answerMap ?? {},
   }
 }

@@ -1,8 +1,12 @@
 import {
   ParticipantProfileExtended,
   ParticipantStatus,
+  StageKind,
   StageParticipantAnswer,
-  createParticipantProfileExtended
+  SurveyAnswer,
+  SurveyStageParticipantAnswer,
+  createParticipantProfileExtended,
+  createSurveyStageParticipantAnswer,
 } from '@deliberation-lab/utils';
 import {
   Timestamp,
@@ -18,10 +22,12 @@ import {CohortService} from './cohort.service';
 import {ExperimentService} from './experiment.service';
 import {FirebaseService} from './firebase.service';
 import {RouterService} from './router.service';
+import {SurveyService} from './survey.service';
 import {Service} from './service';
 
 import {
-  updateParticipantCallable
+  updateParticipantCallable,
+  updateSurveyStageParticipantAnswerCallable,
 } from '../shared/callables';
 
 interface ServiceProvider {
@@ -29,6 +35,7 @@ interface ServiceProvider {
   experimentService: ExperimentService;
   firebaseService: FirebaseService;
   routerService: RouterService;
+  surveyService: SurveyService;
 }
 
 export class ParticipantService extends Service {
@@ -68,6 +75,26 @@ export class ParticipantService extends Service {
     stageId: string = this.sp.routerService.activeRoute.params['stage']
   ) {
     return this.profile?.currentStageId === stageId;
+  }
+
+  isLastStage(
+    stageId: string = this.sp.routerService.activeRoute.params['stage']
+  ) {
+    const ids = this.sp.experimentService.stageIds;
+    return ids.length > 0 && ids[ids.length - 1] === stageId;
+  }
+
+  @computed get disableStage() {
+    return this.completedExperiment || !this.isCurrentStage()
+  }
+
+  @computed get completedExperiment() {
+    return this.profile?.currentStatus !== ParticipantStatus.IN_PROGRESS
+  }
+
+  @computed get currentStageAnswer() {
+    if (!this.profile) return undefined;
+    return this.answerMap[this.profile.currentStageId];
   }
 
   updateForCurrentRoute() {
@@ -112,7 +139,7 @@ export class ParticipantService extends Service {
           this.experimentId,
           'participants',
           this.participantId,
-          'stages'
+          'stageData'
         ),
         (snapshot) => {
           let changedDocs = snapshot.docChanges().map((change) => change.doc);
@@ -120,7 +147,12 @@ export class ParticipantService extends Service {
 
           // Update the public stage data signals
           changedDocs.forEach((doc) => {
-            this.answerMap[doc.id] = doc.data() as StageParticipantAnswer;
+            const answer = doc.data() as StageParticipantAnswer;
+            this.answerMap[doc.id] = answer;
+            // Load relevant answers to survey service
+            if (answer.kind === StageKind.SURVEY) {
+              this.sp.surveyService.addSurveyAnswer(answer);
+            }
           });
           this.areAnswersLoading = false;
         }
@@ -139,6 +171,38 @@ export class ParticipantService extends Service {
   // *********************************************************************** //
   // FIRESTORE                                                               //
   // *********************************************************************** //
+
+  /** Save last stage and complete experiment. */
+  async completeLastStage() {
+    if (!this.profile) {
+      return;
+    }
+
+    // Add progress timestamps
+    const timestamp = Timestamp.now();
+
+    const completedStages = this.profile.timestamps.completedStages;
+    completedStages[this.profile.currentStageId] = timestamp;
+
+    const endExperiment = timestamp;
+
+    const timestamps = {
+      ...this.profile.timestamps,
+      completedStages,
+      endExperiment
+    };
+
+    // Update status
+    const currentStatus = ParticipantStatus.SUCCESS;
+
+    return await this.updateProfile(
+      {
+        ...this.profile,
+        currentStatus,
+        timestamps
+      }
+    );
+  }
 
   /** Move to next stage. */
   async progressToNextStage() {
@@ -195,6 +259,14 @@ export class ParticipantService extends Service {
       return;
     }
 
+    // Update transfer timestamp
+    const cohortTransfers = this.profile.timestamps.completedStages;
+    cohortTransfers[this.profile.currentCohortId] = Timestamp.now();
+    const timestamps = {
+      ...this.profile.timestamps,
+      cohortTransfers
+    };
+
     return await this.updateProfile(
       {
         ...this.profile,
@@ -203,5 +275,30 @@ export class ParticipantService extends Service {
         currentStatus: ParticipantStatus.IN_PROGRESS,
       }
     );
+  }
+
+  /** Update participant's survey stage answer. */
+  async updateSurveyStageParticipantAnswer(
+    id: string, // survey stage ID
+    updatedAnswer: SurveyAnswer,
+  ) {
+    let response = {};
+
+    let participantAnswer = this.answerMap[id] as SurveyStageParticipantAnswer;
+    if (!participantAnswer) {
+      participantAnswer = createSurveyStageParticipantAnswer({id});
+    }
+    participantAnswer.answerMap[updatedAnswer.id] = updatedAnswer;
+
+    if (this.experimentId && this.profile) {
+      response = await updateSurveyStageParticipantAnswerCallable(
+        this.sp.firebaseService.functions, {
+          experimentId: this.experimentId,
+          participantId: this.profile.privateId,
+          surveyStageParticipantAnswer: participantAnswer,
+        }
+      );
+    }
+    return response;
   }
 }

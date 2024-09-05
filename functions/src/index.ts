@@ -7,3 +7,4 @@
 export * from './experiment.endpoints';
 export * from './cohort.endpoints';
 export * from './participant.endpoints';
+export * from './stage.endpoints';

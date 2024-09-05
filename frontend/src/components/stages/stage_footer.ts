@@ -19,6 +19,7 @@ export class Footer extends MobxLitElement {
 
   @property() disabled = false;
   @property() showNextButton = true;
+  @property() onNextClick: () => void = () => {};
 
   override render() {
     return html`
@@ -29,16 +30,51 @@ export class Footer extends MobxLitElement {
     `;
   }
 
+  private renderEndExperimentButton() {
+    if (!this.participantService.isLastStage) {
+      return nothing;
+    }
+
+    const handleNext = async () => {
+      // Handle custom onNextClick
+      await this.onNextClick();
+      // Save last stage and mark experiment as completed
+      await this.participantService.completeLastStage();
+      // Navigate to landing
+      this.routerService.navigate(Pages.PARTICIPANT, {
+        experiment: this.routerService.activeRoute.params['experiment'],
+        participant: this.routerService.activeRoute.params['participant'],
+      });
+    };
+
+    const preventNextClick = this.disabled || this.participantService.disableStage;
+    return html`
+      <pr-button
+        variant=${this.disabled ? 'default' : 'tonal'}
+        ?disabled=${preventNextClick}
+        @click=${handleNext}
+      >
+        Save and complete experiment
+      </pr-button>
+    `;
+  }
+
   private renderNextStageButton() {
     if (!this.showNextButton) {
       return nothing;
     }
 
+    // If last stage, end experiment
+    if (this.participantService.isLastStage()) {
+      return this.renderEndExperimentButton();
+    }
+
     const handleNext = async () => {
-      // Progress to next stage OR end experiment
+      // Handle custom onNextClick
+      await this.onNextClick();
+      // Progress to next stage
       await this.participantService.progressToNextStage();
       // Navigate to new stage
-      console.log(this.participantService.profile?.currentStageId);
       this.routerService.navigate(Pages.PARTICIPANT_STAGE, {
         experiment: this.routerService.activeRoute.params['experiment'],
         participant: this.routerService.activeRoute.params['participant'],
@@ -46,7 +82,7 @@ export class Footer extends MobxLitElement {
       });
     };
 
-    const preventNextClick = this.disabled || !this.participantService.isCurrentStage();
+    const preventNextClick = this.disabled || this.participantService.disableStage;
 
     return html`
       <pr-button

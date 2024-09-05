@@ -52,7 +52,7 @@ export class ProfileEditor extends MobxLitElement {
         placeholder="This may be visible to other participants"
         variant="outlined"
         .value=${this.participantService.profile?.name}
-        ?disabled=${!this.participantService.isCurrentStage()}
+        ?disabled=${this.participantService.disableStage}
         @input=${handleNameInput}
       >
       </pr-textarea>
@@ -116,7 +116,7 @@ export class ProfileEditor extends MobxLitElement {
             value="1"
             aria-label="she/her"
             ?checked=${isMatch('she/her')}
-            ?disabled=${!this.participantService.isCurrentStage()}
+            ?disabled=${this.participantService.disableStage}
             @change=${handlePronounsInput}
           >
           </md-radio>
@@ -129,7 +129,7 @@ export class ProfileEditor extends MobxLitElement {
             value="2"
             aria-label="he/him"
             ?checked=${isMatch('he/him')}
-            ?disabled=${!this.participantService.isCurrentStage()}
+            ?disabled=${this.participantService.disableStage}
             @change=${handlePronounsInput}
           >
           </md-radio>
@@ -142,7 +142,7 @@ export class ProfileEditor extends MobxLitElement {
             value="3"
             aria-label="they/them"
             ?checked=${isMatch('they/them')}
-            ?disabled=${!this.participantService.isCurrentStage()}
+            ?disabled=${this.participantService.disableStage}
             @change=${handlePronounsInput}
           >
           </md-radio>
@@ -155,7 +155,7 @@ export class ProfileEditor extends MobxLitElement {
             value="4"
             aria-label="other"
             ?checked=${isCustom()}
-            ?disabled=${!this.participantService.isCurrentStage()}
+            ?disabled=${this.participantService.disableStage}
             @change=${handlePronounsInput}
           >
           </md-radio>
@@ -165,7 +165,7 @@ export class ProfileEditor extends MobxLitElement {
             .value=${isCustom()
               ? this.participantService.profile?.pronouns
               : this.customPronouns}
-            ?disabled=${!this.participantService.isCurrentStage()}
+            ?disabled=${this.participantService.disableStage}
             @change=${handleCustomPronouns}
           >
           </pr-textarea>
@@ -191,7 +191,7 @@ export class ProfileEditor extends MobxLitElement {
             value=${index}
             aria-label=${emoji}
             ?checked=${this.participantService.profile?.avatar === emoji}
-            ?disabled=${!this.participantService.isCurrentStage()}
+            ?disabled=${this.participantService.disableStage}
             @change=${handleAvatarClick}
           >
           </md-radio>

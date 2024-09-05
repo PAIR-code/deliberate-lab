@@ -56,7 +56,7 @@ export class TOSView extends MobxLitElement {
             touch-target="wrapper"
             aria-label="Accept the Terms of Service"
             ?checked=${timestamp !== null}
-            ?disabled=${!this.participantService.isCurrentStage()}
+            ?disabled=${this.participantService.disableStage}
             @click=${handleTOSClick}
           >
           </md-checkbox>

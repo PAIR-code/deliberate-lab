@@ -5,7 +5,8 @@ import {
   ExperimentCreationData,
   ExperimentDeletionData,
   ParticipantProfileExtendedData,
-  SimpleResponse
+  SimpleResponse,
+  UpdateSurveyStageParticipantAnswerData
 } from '@deliberation-lab/utils';
 
 import { Functions, httpsCallable } from 'firebase/functions';
@@ -39,5 +40,13 @@ export const createParticipantCallable = async(functions: Functions, config: Cre
 /** Generic endpoint to update participant profiles */
 export const updateParticipantCallable = async(functions: Functions, config: ParticipantProfileExtendedData) => {
   const { data } = await httpsCallable<ParticipantProfileExtendedData, CreationResponse>(functions, 'updateParticipant')(config);
+  return data;
+}
+
+/** Generic endpoint to update survey stage participant answers */
+export const updateSurveyStageParticipantAnswerCallable = async(
+  functions: Functions, config: UpdateSurveyStageParticipantAnswerData
+) => {
+  const { data } = await httpsCallable<UpdateSurveyStageParticipantAnswerData, CreationResponse>(functions, 'updateSurveyStageParticipantAnswer')(config);
   return data;
 }
