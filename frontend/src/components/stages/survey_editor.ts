@@ -2,6 +2,8 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
+import '@material/web/checkbox/checkbox.js';
+
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 

@@ -26,6 +26,14 @@
   }
 }
 
+.description {
+  @include typescale.body-small;
+  color: var(--md-sys-color-outline);
+  background: var(--md-sys-color-surface-container-high);
+  font-style: italic;
+  padding: 0 common.$spacing-large common.$spacing-medium;
+}
+
 .body {
   @include common.flex-column;
 }

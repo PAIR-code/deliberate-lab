@@ -4,11 +4,14 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
+import '@material/web/checkbox/checkbox.js';
+
 import {core} from '../../core/core';
 import {ExperimentManager} from '../../services/experiment.manager';
 
 import {
-  CohortConfig
+  CohortConfig,
+  ParticipantConfig
 } from '@deliberation-lab/utils';
 
 import {styles} from './cohort_settings_dialog.scss';
@@ -40,6 +43,8 @@ export class CohortSettingsDialog extends MobxLitElement {
         <div class="body">
           ${this.renderName()}
           ${this.renderDescription()}
+          ${this.renderMaxParticipantConfig()}
+          ${this.renderIncludeAllParticipantsConfig()}
         </div>
         <div class="footer">
           <pr-button
@@ -112,6 +117,144 @@ export class CohortSettingsDialog extends MobxLitElement {
         @input=${updateDescription}
       >
       </pr-textarea>
+    `;
+  }
+
+  updateConfig(config: Partial<ParticipantConfig> = {}) {
+    const cohort = this.experimentManager.cohortEditing;
+    if (!cohort) {
+      return;
+    }
+    this.experimentManager.setCohortEditing(
+      { ...cohort, participantConfig: {...cohort.participantConfig, ...config} }
+    );
+  }
+
+  private renderMinParticipantConfig() {
+    const cohort = this.experimentManager.cohortEditing;
+    if (!cohort) return;
+
+    const minParticipants = cohort.participantConfig.minParticipantsPerCohort;
+
+    const updateCheck = () => {
+      if (minParticipants === null) {
+        this.updateConfig({ minParticipantsPerCohort: 0 });
+      } else {
+        this.updateConfig({ minParticipantsPerCohort: null });
+      }
+    };
+
+    const updateNum = (e: InputEvent) => {
+      const num = Number((e.target as HTMLTextAreaElement).value);
+      this.updateConfig({ minParticipantsPerCohort: num });
+    };
+
+    return html`
+      <div class="config-item">
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${minParticipants !== null}
+            @click=${updateCheck}
+          >
+          </md-checkbox>
+          <div>
+            Require minimum number of participants in cohort
+            to start experiment
+          </div>
+        </div>
+        <div class="number-input">
+          <label for="num">
+            Minimum number of participants
+          </label>
+          <input
+            type="number"
+            id="minParticipants"
+            name="minParticipants"
+            min="0"
+            .value=${minParticipants ?? 0}
+            @input=${updateNum}
+          />
+        </div>
+      </div>
+    `;
+  }
+
+  private renderMaxParticipantConfig() {
+    const cohort = this.experimentManager.cohortEditing;
+    if (!cohort) return;
+
+    const maxParticipants = cohort.participantConfig.maxParticipantsPerCohort;
+
+    const updateCheck = () => {
+      if (maxParticipants === null) {
+        this.updateConfig({ maxParticipantsPerCohort: 100 });
+      } else {
+        this.updateConfig({ maxParticipantsPerCohort: null });
+      }
+    };
+
+    const updateNum = (e: InputEvent) => {
+      const num = Number((e.target as HTMLTextAreaElement).value);
+      this.updateConfig({ maxParticipantsPerCohort: num });
+    };
+
+    return html`
+      <div class="config-item">
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${maxParticipants !== null}
+            @click=${updateCheck}
+          >
+          </md-checkbox>
+          <div>
+            Limit cohort to maximum number of participants
+          </div>
+        </div>
+        <div class="number-input">
+          <label for="num">
+            Maximum number of participants
+          </label>
+          <input
+            type="number"
+            id="maxParticipants"
+            name="maxParticipants"
+            min="0"
+            .value=${maxParticipants ?? 100}
+            @input=${updateNum}
+          />
+        </div>
+      </div>
+    `;
+  }
+
+  private renderIncludeAllParticipantsConfig() {
+    const cohort = this.experimentManager.cohortEditing;
+    if (!cohort) return;
+
+    const includeAllParticipants = cohort.participantConfig.includeAllParticipantsInCohortCount;
+
+    const updateCheck = () => {
+      const includeAllParticipantsInCohortCount = !includeAllParticipants;
+      this.updateConfig({ includeAllParticipantsInCohortCount });
+    };
+
+    return html`
+      <div class="config-item">
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${includeAllParticipants}
+            @click=${updateCheck}
+          >
+          </md-checkbox>
+          <div>
+            Include all participants (even ones who have left the experiment)
+            in cohort count
+          </div>
+        </div>
+      </div>
     `;
   }
 }

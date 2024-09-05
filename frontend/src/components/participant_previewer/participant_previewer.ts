@@ -76,6 +76,8 @@ export class ParticipantPreviewer extends MobxLitElement {
     }
 
     // If participant has not started experiment before
+    // TODO: If cohort requires min number of participants,
+    // show loading screen before participants are allowed to start
     if (!profile.timestamps.startExperiment) {
       let isLoading = false;
       const onStartExperiment = async () => {

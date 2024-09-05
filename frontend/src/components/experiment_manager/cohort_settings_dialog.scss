@@ -41,3 +41,21 @@
   justify-content: end;
   padding: 0 common.$main-content-padding;
 }
+
+.config-item {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
+.number-input {
+  @include common.number-input;
+  /* width of checkbox plus gap */
+  margin-left: calc(48px + common.$spacing-medium);
+  width: max-content;
+}
+
+.checkbox-wrapper {
+  @include common.flex-row-align-center;
+  flex-wrap: wrap;
+  gap: common.$spacing-medium;
+}

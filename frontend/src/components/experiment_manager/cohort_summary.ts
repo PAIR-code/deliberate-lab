@@ -72,7 +72,8 @@ export class CohortSummary extends MobxLitElement {
             @click=${() => { this.isExpanded = !this.isExpanded; }}
           >
           </pr-icon-button>
-          <div>${this.experimentManager.getCohortName(this.cohort)}</div>
+          <div>
+            ${this.experimentManager.getCohortName(this.cohort)}</div>
         </div>
         <div class="right">
           ${this.renderAddParticipantButton()}
@@ -81,7 +82,16 @@ export class CohortSummary extends MobxLitElement {
           ${this.renderSettingsButton()}
         </div>
       </div>
+      ${this.renderDescription()}
     `;
+  }
+
+  private renderDescription() {
+    if (!this.isExpanded) return nothing;
+    const description = this.cohort?.metadata.description ?? '';
+    if (description.length === 0) return nothing;
+
+    return html`<div class="description">${description}</div>`;
   }
 
   private renderSettingsButton() {
