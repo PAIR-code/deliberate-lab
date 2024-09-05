@@ -39,6 +39,7 @@ export class Header extends MobxLitElement {
     return html`
       <div class=${headerClasses}>
         <div class="left">
+          ${this.renderBackButton()}
           <h1>${this.renderTitle()}</h1>
         </div>
         <div class="right">${this.renderActions()}</div>
@@ -52,6 +53,50 @@ export class Header extends MobxLitElement {
       || activePage === Pages.PARTICIPANT
       || activePage === Pages.PARTICIPANT_STAGE
       || activePage === Pages.PARTICIPANT_JOIN_COHORT;
+  }
+
+  private renderBackButton() {
+    const activePage = this.routerService.activePage;
+    const params = this.routerService.activeRoute.params;
+
+    if (activePage == Pages.HOME) {
+      return nothing;
+    }
+
+    const handleClick = () => {
+      switch (activePage) {
+        case Pages.SETTINGS:
+          this.routerService.navigate(Pages.HOME);
+          break;
+        case Pages.EXPERIMENT:
+          this.routerService.navigate(Pages.HOME);
+          break;
+        case Pages.EXPERIMENT_CREATE:
+          this.routerService.navigate(Pages.HOME);
+          break;
+        case Pages.PARTICIPANT_JOIN_COHORT:
+          this.routerService.navigate(Pages.EXPERIMENT, params);
+          break;
+        case Pages.PARTICIPANT:
+          this.routerService.navigate(Pages.EXPERIMENT, params);
+          break;
+        case Pages.PARTICIPANT_STAGE:
+          this.routerService.navigate(Pages.EXPERIMENT, params);
+          break;
+        default:
+          break;
+      }
+    };
+
+    return html`
+      <pr-icon-button
+        color="neutral"
+        icon="arrow_back"
+        variant="default"
+        @click=${handleClick}
+      >
+      </pr-icon-button>
+    `;
   }
 
   private renderTitle() {
