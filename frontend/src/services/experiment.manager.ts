@@ -113,8 +113,7 @@ export class ExperimentManager extends Service {
     } else if (!cohortId) {
       // Filter out participants who are not in-progress or completed
       return Object.values(this.participantMap).filter(
-        participant => participant.currentStatus === ParticipantStatus.SUCCESS
-          || participant.currentStatus === ParticipantStatus.IN_PROGRESS
+        participant => this.isActiveParticipant(participant)
       ).length;
     }
     // For cohort ID
@@ -125,11 +124,34 @@ export class ExperimentManager extends Service {
     } else {
       // Filter out participants who are not in-progress or completed
       return participantsInCohort.filter(
-        participant => participant.currentStatus === ParticipantStatus.SUCCESS
-          || participant.currentStatus === ParticipantStatus.IN_PROGRESS
+        participant => this.isActiveParticipant(participant)
       ).length;
     }
   }
+
+  // Participants currently participating in (or completed) the experiment
+  // (not dropped out or pending transfer)
+  isActiveParticipant(participant: ParticipantProfileExtended) {
+    return participant.currentStatus === ParticipantStatus.IN_PROGRESS
+      || participant.currentStatus === ParticipantStatus.SUCCESS;
+  }
+
+  // If participant has left the experiment
+  // (not active, not pending transfer)
+  isObsoleteParticipant(participant: ParticipantProfileExtended) {
+    return participant.currentStatus === ParticipantStatus.TRANSFER_FAILED
+      || participant.currentStatus === ParticipantStatus.TRANSFER_DECLINED
+      || participant.currentStatus === ParticipantStatus.ATTENTION_TIMEOUT
+      || participant.currentStatus === ParticipantStatus.BOOTED_OUT
+  }
+
+  // If participant is in a waiting state
+  // (e.g., while pending transfer, not currently in the experiment but also
+  // has not left yet)
+  isPendingParticipant(participant: ParticipantProfileExtended) {
+    return participant.currentStatus === ParticipantStatus.TRANSFER_PENDING;
+  }
+
 
   getCohort(id: string) {
     return this.cohortMap[id];

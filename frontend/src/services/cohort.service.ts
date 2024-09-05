@@ -72,16 +72,18 @@ export class CohortService extends Service {
     return Object.values(this.participantMap);
   }
 
-  // True if did not drop out of the experiment
-  isValidParticipant(participant: ParticipantProfile) {
+  // True if currently in the experiment (not dropped out, not transfer pending)
+  // (note that participants who completed experiment are included here)
+  isActiveParticipant(participant: ParticipantProfile) {
     return participant.currentStatus === ParticipantStatus.IN_PROGRESS
       || participant.currentStatus === ParticipantStatus.SUCCESS;
   }
 
-  // Participants who did not drop out of the experiment
+  // Participants currently in the experiment
+  // (not dropped out or pending transfer)
   @computed get validParticipants() {
     return Object.values(this.participantMap).filter(
-      p => this.isValidParticipant(p)
+      p => this.isActiveParticipant(p)
     );
   }
 

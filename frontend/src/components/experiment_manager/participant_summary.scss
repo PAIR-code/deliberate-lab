@@ -23,6 +23,10 @@
     background: var(--md-sys-color-surface-container);
   }
 
+  &.old {
+    opacity: .5;
+  }
+
   .left,
   .right {
     @include common.flex-row-align-center;

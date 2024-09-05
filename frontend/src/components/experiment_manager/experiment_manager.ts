@@ -88,6 +88,17 @@ export class ExperimentManagerComponent extends MobxLitElement {
       <div class="left">
         ${this.experimentManager.currentParticipant?.publicId ?? ''}
       </div>
+      ${this.renderTransferMenu()}
+    `;
+  }
+
+  private renderTransferMenu() {
+    const participant = this.experimentManager.currentParticipant;
+    if (!participant || this.experimentManager.isObsoleteParticipant(participant)) {
+      return nothing;
+    }
+
+    return html`
       <pr-menu name="Transfer">
         <div class="menu-wrapper">
           ${this.experimentManager.availableCohorts.map(

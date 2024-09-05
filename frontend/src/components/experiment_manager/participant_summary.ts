@@ -40,7 +40,8 @@ export class ParticipantSummary extends MobxLitElement {
 
     const classes = classMap({
       'participant-summary': true,
-      'selected': this.experimentManager.currentParticipantId === this.participant.privateId
+      'selected': this.experimentManager.currentParticipantId === this.participant.privateId,
+      'old': this.experimentManager.isObsoleteParticipant(this.participant)
     });
 
     return html`
@@ -58,10 +59,15 @@ export class ParticipantSummary extends MobxLitElement {
   }
 
   private renderStatus() {
-    if (this.participant?.currentStatus !== ParticipantStatus.TRANSFER_PENDING) {
-      return nothing;
+    if (!this.participant) return nothing;
+
+    if (this.experimentManager.isPendingParticipant(this.participant)) {
+      return html`<div class="chip secondary">transfer pending</div>`;
+    } else if (this.experimentManager.isObsoleteParticipant(this.participant)) {
+      return html`<div class="chip">${this.participant.currentStatus}</div>`;
     }
-    return html`<div class="chip secondary">transfer pending</div>`;
+    // TODO: else if in transfer stage, return "ready for transfer" chip
+    return nothing;
   }
 
   async copyParticipantLink() {

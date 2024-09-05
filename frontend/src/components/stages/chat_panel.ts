@@ -53,7 +53,7 @@ export class ChatPanel extends MobxLitElement {
       <div class="profile">
         <profile-avatar
           .emoji=${profile.avatar}
-          ?disabled=${this.cohortService.isValidParticipant(profile)}
+          ?disabled=${this.cohortService.isActiveParticipant(profile)}
         >
         </profile-avatar>
         <div class="name">
