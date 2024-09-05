@@ -48,12 +48,13 @@ export interface CheckSurveyQuestion extends BaseSurveyQuestion {
 export interface MultipleChoiceSurveyQuestion extends BaseSurveyQuestion {
   kind: SurveyQuestionKind.MULTIPLE_CHOICE;
   options: MultipleChoiceItem[];
+  // ID of correct MultipleChoiceItem, or null if no correct answer
+  correctAnswerId: string|null;
 }
 
 export interface MultipleChoiceItem {
   id: string;
   text: string;
-  points: number; // number of points gained if selected (default to 0)
 }
 
 export interface ScaleSurveyQuestion extends BaseSurveyQuestion {
@@ -173,6 +174,7 @@ export function createMultipleChoiceSurveyQuestion(
     kind: SurveyQuestionKind.MULTIPLE_CHOICE,
     questionTitle: config.questionTitle ?? '',
     options: config.options ?? [],
+    correctAnswerId: config.correctAnswerId ?? null,
   }
 }
 
@@ -183,7 +185,6 @@ export function createMultipleChoiceItem(
   return {
     id: config.id ?? generateId(),
     text: config.text ?? '',
-    points: config.points ?? 0,
   }
 }
 

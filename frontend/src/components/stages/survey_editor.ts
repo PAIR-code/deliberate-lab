@@ -209,21 +209,34 @@ export class SurveyEditor extends MobxLitElement {
         this.updateMultipleChoiceItem(newItem, itemIndex, question, index);
       };
 
+      const updateCorrectAnswer = () => {
+        const correctAnswerId = question.correctAnswerId === item.id ? null : item.id;
+        this.updateQuestion({...question, correctAnswerId}, index);
+      }
+
       return html`
-        <div class="mc-item">
-          <pr-textarea
-            placeholder="Add text for multiple choice item"
-            .value=${item.text}
-            @input=${updateItem}
+        <label class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${question.correctAnswerId === item.id}
+            @click=${updateCorrectAnswer}
           >
-          </pr-textarea>
-          <pr-icon-button
-            icon="close"
-            color="neutral"
-            padding="small"
-            variant="default"
-            @click=${deleteItem}>
-          </pr-icon-button>
+          </md-checkbox>
+          <div class="mc-item">
+            <pr-textarea
+              placeholder="Add text for multiple choice item"
+              .value=${item.text}
+              @input=${updateItem}
+            >
+            </pr-textarea>
+            <pr-icon-button
+              icon="close"
+              color="neutral"
+              padding="small"
+              variant="default"
+              @click=${deleteItem}>
+            </pr-icon-button>
+          </div>
         </div>
       `;
     };
@@ -237,6 +250,10 @@ export class SurveyEditor extends MobxLitElement {
               ${this.renderQuestionTitleEditor(question, index)}
             </div>
             ${this.renderQuestionNav(question, index)}
+          </div>
+          <div class="description">
+            <b>Optional:</b> Check a multiple choice item to set it as a "correct"
+            answer (e.g., to calculate results or payout later)
           </div>
           ${question.options.map((option, index) => renderItem(option, index))}
           <pr-button
@@ -275,11 +292,20 @@ export class SurveyEditor extends MobxLitElement {
     question: MultipleChoiceSurveyQuestion,
     questionIndex: number
   ) {
+    // If this was the correct answer, reset correct answer ID to null
+    const itemId = question.options[itemIndex].id;
+    const correctAnswerId = question.correctAnswerId === itemId ? null
+      : question.correctAnswerId;
+
+    // Remove item from list of options
     const options = [
       ...question.options.slice(0, itemIndex),
       ...question.options.slice(itemIndex + 1),
     ];
-    this.updateQuestion({ ...question, options }, questionIndex);
+
+    this.updateQuestion(
+      { ...question, options, correctAnswerId }, questionIndex
+    );
   }
 
   private renderScaleQuestion(question: ScaleSurveyQuestion, index: number) {

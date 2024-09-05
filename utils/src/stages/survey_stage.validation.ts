@@ -35,7 +35,6 @@ export const MultipleChoiceItemData = Type.Object(
   {
     id: Type.String({ minLength: 1 }),
     text: Type.String(),
-    points: Type.Number(),
   },
   strict,
 );
@@ -47,6 +46,7 @@ export const MultipleChoiceSurveyQuestionData = Type.Object(
     kind: Type.Literal(SurveyQuestionKind.MULTIPLE_CHOICE),
     questionTitle: Type.String(),
     options: Type.Array(MultipleChoiceItemData),
+    correctAnswerId: Type.Union([Type.Null(), Type.String()]),
   },
   strict,
 );

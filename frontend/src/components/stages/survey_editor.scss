@@ -41,10 +41,22 @@
   }
 }
 
+.description {
+  color: var(--md-sys-color-outline);
+  font-style: italic;
+}
+
+.checkbox-wrapper {
+  @include common.flex-row-align-center;
+  flex-wrap: wrap;
+  gap: common.$spacing-medium;
+}
+
 .mc-item {
   @include common.flex-row-align-center;
   border: 1px solid var(--md-sys-color-outline);
   border-radius: common.$spacing-medium;
+  flex-grow: 1;
   gap: common.$spacing-medium;
   justify-content: space-between;
   padding: common.$spacing-small common.$spacing-large;
