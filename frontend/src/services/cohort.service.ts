@@ -9,18 +9,23 @@ import {
   Unsubscribe,
   where,
 } from 'firebase/firestore';
+import {ExperimentService} from './experiment.service';
 import {FirebaseService} from './firebase.service';
 import {Pages, RouterService} from './router.service';
 import {Service} from './service';
 
 import {
+  ChatMessage,
+  ChatStageConfig,
   ParticipantProfile,
   ParticipantProfileExtended,
   StageConfig,
+  StageKind,
   StagePublicData,
 } from '@deliberation-lab/utils';
 
 interface ServiceProvider {
+  experimentService: ExperimentService;
   firebaseService: FirebaseService;
   routerService: RouterService;
 }
@@ -43,6 +48,7 @@ export class CohortService extends Service {
   @observable cohortId: string|null = null;
   @observable participantMap: Record<string, ParticipantProfile> = {};
   @observable stagePublicDataMap: Record<string, StagePublicData> = {};
+  @observable chatMap: Record<string, ChatMessage[]> = {};
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -74,6 +80,37 @@ export class CohortService extends Service {
     this.unsubscribeAll();
 
     // TODO: Subscribe to public stage data
+
+    // Subscribe to chat messages
+    for (const stageId of this.sp.experimentService.stageIds) {
+      this.unsubscribe.push(
+        onSnapshot(
+          collection(
+            this.sp.firebaseService.firestore,
+            'experiments',
+            this.experimentId,
+            'cohorts',
+            this.cohortId,
+            'publicStageData',
+            stageId,
+            'chats',
+          ),
+          (snapshot) => {
+            let changedDocs = snapshot.docChanges().map((change) => change.doc);
+            if (changedDocs.length === 0) {
+              changedDocs = snapshot.docs;
+            }
+
+            changedDocs.forEach((doc) => {
+              if (!this.chatMap[stageId]) {
+                this.chatMap[stageId] = [];
+              }
+              this.chatMap[stageId].push(doc.data() as ChatMessage);
+            });
+          }
+        )
+      );
+    }
 
     // Subscribe to participants' public profiles
     // TODO: Use participantPublicData collection once available

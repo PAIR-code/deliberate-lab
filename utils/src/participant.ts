@@ -80,6 +80,17 @@ export function createProgressTimestamps(
   };
 }
 
+/** Create base participant config. */
+export function createParticipantProfileBase(
+  config: Partial<ParticipantProfileBase> = {},
+): ParticipantProfileBase {
+  return {
+    name: config.name ?? null,
+    avatar: config.avatar ?? null,
+    pronouns: config.pronouns ?? null,
+  }
+}
+
 /** Create private participant config. */
 export function createParticipantProfileExtended(
   config: Partial<ParticipantProfileExtended> = {},

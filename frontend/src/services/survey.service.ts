@@ -93,6 +93,7 @@ export class SurveyService extends Service {
   }
 
   getNumTextAnswers() {
+    if (!this.textAnswersMap[this.stageId]) return 0;
     return Object.keys(this.textAnswersMap[this.stageId]).length;
   }
 

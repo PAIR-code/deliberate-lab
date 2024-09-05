@@ -19,6 +19,8 @@ export * from './participant.validation';
 // Stages
 export * from './stages/stage';
 export * from './stages/stage.validation';
+export * from './stages/chat_stage';
+export * from './stages/chat_stage.validation';
 export * from './stages/info_stage';
 export * from './stages/info_stage.validation';
 export * from './stages/profile_stage';

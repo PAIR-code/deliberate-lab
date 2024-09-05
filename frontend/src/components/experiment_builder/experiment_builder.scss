@@ -20,9 +20,16 @@
   @include typescale.title-large;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   flex-shrink: 0;
+  gap: common.$spacing-medium;
   height: common.$header-height;
   justify-content: space-between;
   padding: 0 common.$main-content-padding;
+
+  .left,
+  .right {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-medium;
+  }
 }
 
 .content {
@@ -31,4 +38,10 @@
   gap: common.$spacing-xxl;
   overflow: auto;
   padding: common.$main-content-padding;
+}
+
+.chip {
+  @include typescale.label-medium;
+  @include common.chip;
+  padding: common.$spacing-small common.$spacing-medium;
 }

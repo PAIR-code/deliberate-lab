@@ -47,7 +47,12 @@ export class ExperimentBuilder extends MobxLitElement {
     if (stage === undefined) {
       return html`<div>Settings</div>`;
     } else {
-      return html`<div>${stage.name}</div>`;
+      return html`
+        <div class="left">
+          <div class="chip secondary">${stage.kind}</div>
+          <div>${stage.name}</div>
+        </div>
+      `;
     }
   }
 
@@ -82,6 +87,10 @@ export class ExperimentBuilder extends MobxLitElement {
           <info-editor .stage=${stage}></info-editor>
         `;
       case StageKind.PROFILE:
+        return html`
+          <base-stage-editor .stage=${stage}></base-stage-editor>
+        `;
+      case StageKind.CHAT:
         return html`
           <base-stage-editor .stage=${stage}></base-stage-editor>
         `;

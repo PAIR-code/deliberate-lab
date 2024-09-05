@@ -26,9 +26,8 @@
 }
 
 .content {
-  @include common.flex-column;
+  @include common.flex-row;
   flex-grow: 1;
-  gap: common.$spacing-xxl;
   overflow: auto;
   padding: common.$main-content-padding;
 }

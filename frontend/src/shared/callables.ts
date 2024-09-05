@@ -1,4 +1,5 @@
 import {
+  CreateChatMessageData,
   CohortCreationData,
   CreateParticipantData,
   CreationResponse,
@@ -48,5 +49,11 @@ export const updateSurveyStageParticipantAnswerCallable = async(
   functions: Functions, config: UpdateSurveyStageParticipantAnswerData
 ) => {
   const { data } = await httpsCallable<UpdateSurveyStageParticipantAnswerData, CreationResponse>(functions, 'updateSurveyStageParticipantAnswer')(config);
+  return data;
+}
+
+/** Generic endpoint to write chat message. */
+export const createChatMessageCallable = async(functions: Functions, config: CreateChatMessageData) => {
+  const { data } = await httpsCallable<CreateChatMessageData, CreationResponse>(functions, 'createChatMessage')(config);
   return data;
 }

@@ -61,6 +61,11 @@ service cloud.firestore {
 
           // TODO: Triggered by cloud function triggers
           allow write: if false;
+
+          match /chats/{chatId} {
+            allow read: if true;
+            allow write: if false; // Write using cloud functions
+          }
         }
       }
 

@@ -1,0 +1,116 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface-container);
+  border-radius: common.$spacing-medium;
+  height: 100%;
+  justify-content: end;
+  width: 100%;
+}
+
+.chat-content {
+  background: var(--md-sys-color-surface-container);
+  border-radius: common.$spacing-medium;
+  display: flex;
+  flex-direction: column-reverse;
+  flex-grow: 1;
+  overflow: auto;
+}
+
+.chat-scroll {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.chat-info {
+  @include common.flex-column-align-center;
+  border-bottom: 1px solid var(--md-sys-color-surface);
+  color: var(--md-sys-color-outline);
+  margin-bottom: common.$spacing-xl;
+  padding: common.$spacing-xl common.$spacing-xl 0;
+  text-align: center;
+
+  .title {
+    @include typescale.title-large;
+  }
+
+  .label {
+    @include typescale.label-small;
+    border-radius: common.$spacing-small;
+    background: var(--md-sys-color-surface);
+    padding: common.$spacing-small common.$spacing-medium;
+    text-transform: uppercase;
+    transform: translateY(calc(common.$spacing-large));
+  }
+}
+
+.chat-participants-wrapper {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-medium;
+}
+
+.chat-participant {
+  @include common.flex-column-align-center;
+  flex-wrap: wrap;
+  gap: common.$spacing-medium;
+  max-width: 80px;
+  overflow-wrap: anywhere;
+}
+
+.chat-history {
+  @include common.flex-column;
+  justify-content: flex-end;
+  padding: common.$spacing-xl;
+}
+
+.chat-message-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-xs;
+  padding: common.$spacing-medium 0;
+}
+
+.input-row-wrapper {
+  @include common.flex-row-align-center;
+  flex-shrink: 0;
+  gap: common.$spacing-medium;
+  padding: 0 common.$main-content-padding;
+  position: sticky;
+}
+
+.input-row {
+  @include common.flex-row-align-center;
+  flex-grow: 1;
+  gap: common.$spacing-xl;
+  width: -webkit-fill-available;
+  max-width: common.$main-content-max-width;
+}
+
+.input-wrapper {
+  width: 100%;
+}
+
+.input {
+  align-items: center;
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 100px;
+  box-sizing: border-box;
+  display: flex;
+  gap: common.$spacing-small;
+  padding: common.$spacing-large common.$spacing-xl common.$spacing-large
+    common.$spacing-xxl;
+  width: 100%;
+
+  pr-textarea {
+    flex-grow: 1;
+  }
+}
+
+stage-footer {
+  background: inherit;
+  border: none;
+  padding: 0 common.$main-content-padding;
+}

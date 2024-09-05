@@ -1,10 +1,13 @@
 import {
+  CreateChatMessageData,
+  ParticipantChatMessage,
   ParticipantProfileExtended,
   ParticipantStatus,
   StageKind,
   StageParticipantAnswer,
   SurveyAnswer,
   SurveyStageParticipantAnswer,
+  createParticipantChatMessage,
   createParticipantProfileExtended,
   createSurveyStageParticipantAnswer,
 } from '@deliberation-lab/utils';
@@ -26,6 +29,7 @@ import {SurveyService} from './survey.service';
 import {Service} from './service';
 
 import {
+  createChatMessageCallable,
   updateParticipantCallable,
   updateSurveyStageParticipantAnswerCallable,
 } from '../shared/callables';
@@ -52,8 +56,11 @@ export class ParticipantService extends Service {
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
-    @observable isProfileLoading = false;
+  @observable isProfileLoading = false;
   @observable areAnswersLoading = false;
+
+  // Chat creation loading
+  @observable isSendingChat = false;
 
   @computed get isLoading() {
     return this.isProfileLoading || this.areAnswersLoading;
@@ -275,6 +282,37 @@ export class ParticipantService extends Service {
         currentStatus: ParticipantStatus.IN_PROGRESS,
       }
     );
+  }
+
+  /** Send chat message. */
+  async createChatMessage(config: Partial<ParticipantChatMessage> = {}) {
+    let response = {};
+    this.isSendingChat = true;
+    if (this.experimentId && this.profile) {
+      // TODO: Get current discussion from chat answers
+      const chatMessage = createParticipantChatMessage({
+        ...config,
+        participantPublicId: this.profile.publicId,
+        profile: {
+          name: this.profile.name,
+          avatar: this.profile.avatar,
+          pronouns: this.profile.pronouns,
+        }
+      });
+
+      const createData: CreateChatMessageData = {
+        experimentId: this.experimentId,
+        cohortId: this.profile.currentCohortId,
+        stageId: this.profile.currentStageId,
+        chatMessage
+      };
+
+      response = await createChatMessageCallable(
+        this.sp.firebaseService.functions, createData
+      );
+    }
+    this.isSendingChat = false;
+    return response;
   }
 
   /** Update participant's survey stage answer. */

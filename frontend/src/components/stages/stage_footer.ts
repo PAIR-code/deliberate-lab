@@ -1,6 +1,6 @@
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {ExperimentService} from '../../services/experiment.service';
@@ -21,6 +21,8 @@ export class Footer extends MobxLitElement {
   @property() showNextButton = true;
   @property() onNextClick: () => void = () => {};
 
+  @state() isLoadingNext = false;
+
   override render() {
     return html`
       <div class="left">
@@ -36,6 +38,7 @@ export class Footer extends MobxLitElement {
     }
 
     const handleNext = async () => {
+      this.isLoadingNext = true;
       // Handle custom onNextClick
       await this.onNextClick();
       // Save last stage and mark experiment as completed
@@ -45,6 +48,7 @@ export class Footer extends MobxLitElement {
         experiment: this.routerService.activeRoute.params['experiment'],
         participant: this.routerService.activeRoute.params['participant'],
       });
+      this.isLoadingNext = false;
     };
 
     const preventNextClick = this.disabled || this.participantService.disableStage;
@@ -52,6 +56,7 @@ export class Footer extends MobxLitElement {
       <pr-button
         variant=${this.disabled ? 'default' : 'tonal'}
         ?disabled=${preventNextClick}
+        ?loading=${this.isLoadingNext}
         @click=${handleNext}
       >
         Save and complete experiment
@@ -70,6 +75,7 @@ export class Footer extends MobxLitElement {
     }
 
     const handleNext = async () => {
+      this.isLoadingNext = true;
       // Handle custom onNextClick
       await this.onNextClick();
       // Progress to next stage
@@ -80,6 +86,7 @@ export class Footer extends MobxLitElement {
         participant: this.routerService.activeRoute.params['participant'],
         stage: this.participantService.profile?.currentStageId ?? '',
       });
+      this.isLoadingNext = false;
     };
 
     const preventNextClick = this.disabled || this.participantService.disableStage;
@@ -88,6 +95,7 @@ export class Footer extends MobxLitElement {
       <pr-button
         variant=${this.disabled ? 'default' : 'tonal'}
         ?disabled=${preventNextClick}
+        ?loading=${this.isLoadingNext}
         @click=${handleNext}
       >
         Next stage

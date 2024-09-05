@@ -1,3 +1,4 @@
+import { ChatStageConfig } from './chat_stage';
 import { InfoStageConfig } from './info_stage';
 import { ProfileStageConfig } from './profile_stage';
 import {
@@ -58,6 +59,7 @@ export interface StageTextConfig {
 }
 
 export type StageConfig =
+  | ChatStageConfig
   | InfoStageConfig
   | ProfileStageConfig
   | SurveyStageConfig
