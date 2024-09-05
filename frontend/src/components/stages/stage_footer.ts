@@ -44,10 +44,10 @@ export class Footer extends MobxLitElement {
       // Save last stage and mark experiment as completed
       await this.participantService.completeLastStage();
       // Navigate to landing
-      this.routerService.navigate(Pages.PARTICIPANT, {
-        experiment: this.routerService.activeRoute.params['experiment'],
-        participant: this.routerService.activeRoute.params['participant'],
-      });
+      this.routerService.navigate(
+        Pages.PARTICIPANT,
+        this.routerService.activeRoute.params
+      );
       this.isLoadingNext = false;
     };
 
@@ -82,8 +82,7 @@ export class Footer extends MobxLitElement {
       await this.participantService.progressToNextStage();
       // Navigate to new stage
       this.routerService.navigate(Pages.PARTICIPANT_STAGE, {
-        experiment: this.routerService.activeRoute.params['experiment'],
-        participant: this.routerService.activeRoute.params['participant'],
+        ...this.routerService.activeRoute.params['participant'],
         stage: this.participantService.profile?.currentStageId ?? '',
       });
       this.isLoadingNext = false;
