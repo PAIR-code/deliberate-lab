@@ -19,6 +19,7 @@ import {
   ChatStageConfig,
   ParticipantProfile,
   ParticipantProfileExtended,
+  ParticipantStatus,
   StageConfig,
   StageKind,
   StagePublicData,
@@ -65,6 +66,18 @@ export class CohortService extends Service {
   set isLoading(value: boolean) {
     this.isParticipantsLoading = value;
     this.isStageDataLoading = value;
+  }
+
+  @computed get allParticipants() {
+    return Object.values(this.participantMap);
+  }
+
+  // Participants who did not drop out of the experiment
+  @computed get validParticipants() {
+    return Object.values(this.participantMap).filter(
+      participant => participant.currentStatus === ParticipantStatus.IN_PROGRESS
+        || participant.currentStatus === ParticipantStatus.SUCCESS
+    )
   }
 
   loadCohortData(id: string) {

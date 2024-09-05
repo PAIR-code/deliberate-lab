@@ -111,8 +111,11 @@ export class ExperimentManager extends Service {
     if (!countAllParticipants && !cohortId) {
       return Object.keys(this.participantMap).length;
     } else if (!cohortId) {
-      // TODO: Filter out participants who are not in-progress or completed
-      return Object.keys(this.participantMap).length;
+      // Filter out participants who are not in-progress or completed
+      return Object.values(this.participantMap).filter(
+        participant => participant.currentStatus === ParticipantStatus.SUCCESS
+          || participant.currentStatus === ParticipantStatus.IN_PROGRESS
+      ).length;
     }
     // For cohort ID
     const participantsInCohort = this.getCohortParticipants(cohortId);
@@ -120,8 +123,11 @@ export class ExperimentManager extends Service {
     if (!countAllParticipants) {
       return participantsInCohort.length;
     } else {
-      // TODO: Filter out participants who are not in-progress or completed
-      return participantsInCohort.length;
+      // Filter out participants who are not in-progress or completed
+      return participantsInCohort.filter(
+        participant => participant.currentStatus === ParticipantStatus.SUCCESS
+          || participant.currentStatus === ParticipantStatus.IN_PROGRESS
+      ).length;
     }
   }
 
