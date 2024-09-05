@@ -59,7 +59,8 @@ export class ExperimentManager extends Service {
   @observable isWritingParticipant = false;
 
   // Experiment edit state
-  @observable isEditing = false;
+  @observable isEditing = false; // is on an edit page
+  @observable isEditingSettingsDialog = false; // is in settings dialog
 
   // Current participant in display panel
   @observable currentParticipantId: string|undefined = undefined;
@@ -88,6 +89,16 @@ export class ExperimentManager extends Service {
       );
       this.isEditing = true;
     }
+  }
+
+  async setIsEditingSettingsDialog(isEditing: boolean, saveChanges = false) {
+    this.setIsEditing(isEditing, saveChanges);
+    this.isEditingSettingsDialog = isEditing;
+  }
+
+  // Is editing full experiment, not settings dialog
+  @computed get isEditingFull() {
+    return this.isEditing && !this.isEditingSettingsDialog;
   }
 
   setCohortEditing(cohort: CohortConfig|undefined) {

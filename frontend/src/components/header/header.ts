@@ -49,7 +49,7 @@ export class Header extends MobxLitElement {
 
   private isBanner() {
     const activePage = this.routerService.activePage;
-    return this.experimentManager.isEditing
+    return this.experimentManager.isEditingFull
       || activePage === Pages.PARTICIPANT
       || activePage === Pages.PARTICIPANT_STAGE
       || activePage === Pages.PARTICIPANT_JOIN_COHORT;
@@ -124,7 +124,7 @@ export class Header extends MobxLitElement {
 
   private renderExperimentTitle() {
     const title = this.experimentService.experimentName;
-    if (this.experimentManager.isEditing) {
+    if (this.experimentManager.isEditingFull) {
       return `Editing: ${title}`
     } else {
       return title;
@@ -151,7 +151,7 @@ export class Header extends MobxLitElement {
           </pr-button>
         `;
       case Pages.EXPERIMENT:
-        if (this.experimentManager.isEditing) {
+        if (this.experimentManager.isEditingFull) {
           return html`
             <pr-button
               color="tertiary"
@@ -171,9 +171,16 @@ export class Header extends MobxLitElement {
         }
         return html`
           <pr-icon-button
+            icon="settings"
+            color="neutral"
+            variant="default"
+            @click=${() => { this.experimentManager.setIsEditingSettingsDialog(true); }}
+          >
+          </pr-icon-button>
+          <pr-icon-button
             icon="edit"
             color="primary"
-            variant="neutral"
+            variant="default"
             ?disabled=${this.experimentManager.getNumParticipants() > 0}
             @click=${() => { this.experimentManager.setIsEditing(true); }}
           >

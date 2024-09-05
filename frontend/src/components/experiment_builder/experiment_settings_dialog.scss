@@ -1,0 +1,43 @@
+@use "../../sass/colors";
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.overlay;
+}
+
+.dialog {
+  @include common.dialog;
+  height: 600px;
+  width: 800px;
+}
+
+.header {
+  @include typescale.title-medium;
+  @include common.flex-row-align-center;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  flex-shrink: 0;
+  gap: common.$spacing-medium;
+  height: common.$header-height;
+  justify-content: space-between;
+  padding: 0 common.$main-content-padding;
+}
+
+.body {
+  @include common.flex-column;
+  flex-grow: 1;
+  gap: common.$spacing-xxl;
+  overflow: auto;
+  padding: common.$main-content-padding;
+}
+
+.footer {
+  @include typescale.title-medium;
+  @include common.flex-row-align-center;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  flex-shrink: 0;
+  gap: common.$spacing-medium;
+  height: common.$header-height;
+  justify-content: end;
+  padding: 0 common.$main-content-padding;
+}

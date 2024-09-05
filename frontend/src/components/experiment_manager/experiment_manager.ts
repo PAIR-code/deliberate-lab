@@ -1,4 +1,5 @@
 import '../experiment_builder/experiment_builder';
+import '../experiment_builder/experiment_settings_dialog';
 
 import './cohort_settings_dialog';
 import './experiment_manager_nav';
@@ -33,7 +34,7 @@ export class ExperimentManagerComponent extends MobxLitElement {
   }
 
   override render() {
-    if (this.experimentManager.isEditing) {
+    if (this.experimentManager.isEditingFull) {
       return this.renderEditor();
     }
 
@@ -47,6 +48,17 @@ export class ExperimentManagerComponent extends MobxLitElement {
         ${this.renderManager()}
       </div>
       ${this.renderCohortSettingsDialog()}
+      ${this.renderExperimentSettingsDialog()}
+    `;
+  }
+
+  private renderExperimentSettingsDialog() {
+    if (!this.experimentManager.isEditingSettingsDialog) {
+      return nothing;
+    }
+
+    return html`
+      <experiment-settings-dialog></experiment-settings-dialog>
     `;
   }
 

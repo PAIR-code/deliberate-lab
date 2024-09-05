@@ -1,4 +1,6 @@
+import '../../pair-components/button';
 import '../../pair-components/icon_button';
+import '../../pair-components/textarea';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
