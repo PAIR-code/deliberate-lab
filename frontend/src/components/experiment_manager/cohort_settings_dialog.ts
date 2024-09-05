@@ -11,7 +11,7 @@ import {ExperimentManager} from '../../services/experiment.manager';
 
 import {
   CohortConfig,
-  ParticipantConfig
+  CohortParticipantConfig
 } from '@deliberation-lab/utils';
 
 import {styles} from './cohort_settings_dialog.scss';
@@ -120,7 +120,7 @@ export class CohortSettingsDialog extends MobxLitElement {
     `;
   }
 
-  updateConfig(config: Partial<ParticipantConfig> = {}) {
+  updateConfig(config: Partial<CohortParticipantConfig> = {}) {
     const cohort = this.experimentManager.cohortEditing;
     if (!cohort) {
       return;

@@ -18,14 +18,14 @@ export interface Experiment {
   id: string;
   metadata: MetadataConfig;
   permissions: PermissionsConfig;  
-  defaultParticipantConfig: ParticipantConfig; // used by default for cohorts
+  defaultCohortConfig: CohortParticipantConfig; // used by default for cohorts
   attentionCheckConfig: AttentionCheckConfig;
   prolificConfig: ProlificConfig;
   stageIds: string[]; // Ordered list of stage IDs
 }
 
 /** Experiment config for participant options. */
-export interface ParticipantConfig {
+export interface CohortParticipantConfig {
   // Min number of participants required for experiment cohort to begin
   // (or null if no requirement)
   minParticipantsPerCohort: number|null;
@@ -67,17 +67,17 @@ export function createExperimentConfig(
     id: config.id ?? generateId(),
     metadata: config.metadata ?? createMetadataConfig(),
     permissions: config.permissions ?? createPermissionsConfig(),
-    defaultParticipantConfig: config.defaultParticipantConfig ?? createParticipantConfig(),
+    defaultCohortConfig: config.defaultCohortConfig ?? createCohortParticipantConfig(),
     attentionCheckConfig: config.attentionCheckConfig ?? createAttentionCheckConfig(),
     prolificConfig: config.prolificConfig ?? createProlificConfig(),
     stageIds: stages.map(stage => stage.id),
   };
 }
 
-/** Create ParticipantConfig. */
-export function createParticipantConfig(
-  config: Partial<ParticipantConfig> = {},
-): ParticipantConfig {
+/** Create CohortParticipantConfig. */
+export function createCohortParticipantConfig(
+  config: Partial<CohortParticipantConfig> = {},
+): CohortParticipantConfig {
   return {
     minParticipantsPerCohort: config.minParticipantsPerCohort ?? null,
     maxParticipantsPerCohort: config.maxParticipantsPerCohort ?? null,

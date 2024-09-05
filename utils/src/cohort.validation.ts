@@ -3,7 +3,7 @@ import {
   MetadataConfigSchema
 } from './shared.validation';
 import {
-  ParticipantConfigSchema
+  CohortParticipantConfigSchema
 } from './experiment.validation';
 import { StageConfigData } from './stages/stage.validation';
 
@@ -21,7 +21,7 @@ export const CohortCreationData = Type.Object(
       {
         id: Type.String(),
         metadata: MetadataConfigSchema,
-        participantConfig: ParticipantConfigSchema,
+        participantConfig: CohortParticipantConfigSchema,
       },
       strict,
     ),

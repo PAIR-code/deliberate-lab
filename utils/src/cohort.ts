@@ -4,8 +4,8 @@ import {
   generateId
 } from './shared';
 import {
-  ParticipantConfig,
-  createParticipantConfig,
+  CohortParticipantConfig,
+  createCohortParticipantConfig,
 } from './experiment';
 
 /** Experiment cohort types and functions. */
@@ -18,7 +18,7 @@ import {
 export interface CohortConfig {
   id: string;
   metadata: MetadataConfig;
-  participantConfig: ParticipantConfig;
+  participantConfig: CohortParticipantConfig;
 }
 
 // ************************************************************************* //
@@ -32,6 +32,6 @@ export function createCohortConfig(
   return {
     id: config.id ?? generateId(),
     metadata: config.metadata ?? createMetadataConfig(),
-    participantConfig: config.participantConfig ?? createParticipantConfig(),
+    participantConfig: config.participantConfig ?? createCohortParticipantConfig(),
   };
 }

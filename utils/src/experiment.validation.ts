@@ -32,7 +32,7 @@ export type ExperimentDeletionData = Static<typeof ExperimentDeletionData>;
 // ************************************************************************* //
 // writeExperiment endpoint                                                  //
 // ************************************************************************* //
-export const ParticipantConfigSchema = Type.Object({
+export const CohortParticipantConfigSchema = Type.Object({
   minParticipantsPerCohort: Type.Union([Type.Null(), Type.Number({ minimum: 0 })]),
   maxParticipantsPerCohort: Type.Union([Type.Null(), Type.Number({ minimum: 1 })]),
   includeAllParticipantsInCohortCount: Type.Boolean(),
@@ -61,7 +61,7 @@ export const ExperimentCreationData = Type.Object(
         id: Type.String(),
         metadata: MetadataConfigSchema,
         permissions: PermissionsConfigSchema,
-        defaultParticipantConfig: ParticipantConfigSchema,
+        defaultCohortConfig: CohortParticipantConfigSchema,
         attentionCheckConfig: AttentionCheckConfigSchema,
         prolificConfig: ProlificConfigSchema,
         stageIds: Type.Array(Type.String()),
