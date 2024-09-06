@@ -124,6 +124,7 @@ export class ParticipantService extends Service {
 
   @computed get completedExperiment() {
     return this.profile?.currentStatus !== ParticipantStatus.IN_PROGRESS
+      && this.profile?.currentStatus !== ParticipantStatus.TRANSFER_PENDING
   }
 
   @computed get currentStageAnswer() {
