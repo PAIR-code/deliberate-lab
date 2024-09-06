@@ -44,6 +44,7 @@ export const ParticipantStatusData = Type.Union([
   Type.Literal(ParticipantStatus.IN_PROGRESS),
   Type.Literal(ParticipantStatus.SUCCESS),
   Type.Literal(ParticipantStatus.TRANSFER_PENDING),
+  Type.Literal(ParticipantStatus.TRANSFER_TIMEOUT),
   Type.Literal(ParticipantStatus.TRANSFER_FAILED),
   Type.Literal(ParticipantStatus.TRANSFER_DECLINED),
   Type.Literal(ParticipantStatus.ATTENTION_TIMEOUT),

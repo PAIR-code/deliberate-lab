@@ -49,6 +49,8 @@ export enum ParticipantStatus {
   SUCCESS = 'SUCCESS',
   // Waiting for participant to accept transfer
   TRANSFER_PENDING = 'TRANSFER_PENDING',
+  // Transfer timed out before experimenter could assign a transfer
+  TRANSFER_TIMEOUT = 'TRANSFER_TIMEOUT',
   // Failed to transfer to an assigned cohort within the designated time
   TRANSFER_FAILED = 'TRANSFER_FAIL',
   // Declined to be transferred to a new experiment

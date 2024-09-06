@@ -152,6 +152,7 @@ export class ExperimentManager extends Service {
   isObsoleteParticipant(participant: ParticipantProfileExtended) {
     return participant.currentStatus === ParticipantStatus.TRANSFER_FAILED
       || participant.currentStatus === ParticipantStatus.TRANSFER_DECLINED
+      || participant.currentStatus === ParticipantStatus.TRANSFER_TIMEOUT
       || participant.currentStatus === ParticipantStatus.ATTENTION_TIMEOUT
       || participant.currentStatus === ParticipantStatus.BOOTED_OUT
   }
