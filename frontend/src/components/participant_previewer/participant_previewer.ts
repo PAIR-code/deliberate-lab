@@ -1,5 +1,6 @@
 import '../participant_profile/profile_editor';
 import '../popup/accept_transfer_popup';
+import '../popup/attention_check_popup';
 import '../stages/chat_interface';
 import '../stages/chat_panel';
 import '../stages/info_view';
@@ -14,6 +15,7 @@ import {customElement, property} from 'lit/decorators.js';
 import {Timestamp} from 'firebase/firestore';
 
 import {core} from '../../core/core';
+import {AuthService} from '../../services/auth.service';
 import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
@@ -32,6 +34,7 @@ import {styles} from './participant_previewer.scss';
 export class ParticipantPreviewer extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly authService = core.getService(AuthService);
   private readonly cohortService = core.getService(CohortService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
@@ -53,6 +56,7 @@ export class ParticipantPreviewer extends MobxLitElement {
           </div>
         </div>
         ${this.renderTransferPopup()}
+        ${this.renderAttentionPopup()}
       `;
     }
 
@@ -66,6 +70,7 @@ export class ParticipantPreviewer extends MobxLitElement {
         ${this.renderStageContent(this.experimentService.getStage(stageId))}
       </div>
       ${this.renderTransferPopup()}
+      ${this.renderAttentionPopup()}
     `;
   }
 
@@ -112,6 +117,24 @@ export class ParticipantPreviewer extends MobxLitElement {
       participant: this.routerService.activeRoute.params['participant'],
       stage: profile.currentStageId,
     });
+  }
+
+  private renderAttentionPopup() {
+    const isObsolete = this.participantService.isObsoleteParticipant;
+    const isExperimenter = this.authService.isExperimenter;
+    const config = this.experimentService.experiment?.attentionCheckConfig;
+    if (
+      isObsolete || isExperimenter || !config || !config.enableAttentionChecks
+    ) {
+      return nothing;
+    }
+    return html`
+      <attention-check-popup
+        .waitSeconds=${config.waitSeconds}
+        .popupSeconds=${config.popupSeconds}
+      >
+      </attention-check-popup>
+    `;
   }
 
   private renderTransferPopup() {

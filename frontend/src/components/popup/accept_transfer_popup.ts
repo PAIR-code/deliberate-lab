@@ -23,26 +23,28 @@ class TransferPopup extends MobxLitElement {
 
   render() {
     return html`
-      <div class="popup">
-        <div class="title">You have been transferred to a new experiment!</div>
-        <div class="button-row">
-          <div class="button-container">
-            <pr-button color="error" variant="tonal" @click=${this.handleNo}>
-              Decline the invitation
-            </pr-button>
-            <p class="subtitle">This will end the experiment</p>
-          </div>
-          <div class="button-container">
-            <pr-button
-              color="primary"
-              variant="tonal"
-              @click=${this.handleYes}
-            >
-              Join the experiment
-            </pr-button>
-            <p class="subtitle">
-              This will redirect you to the next part of the experiment.
-            </p>
+      <div class="overlay">
+        <div class="popup">
+          <div class="title">You have been transferred to a new experiment!</div>
+          <div class="button-row">
+            <div class="button-container">
+              <pr-button color="error" variant="tonal" @click=${this.handleNo}>
+                Decline the invitation
+              </pr-button>
+              <p class="subtitle">This will end the experiment</p>
+            </div>
+            <div class="button-container">
+              <pr-button
+                color="primary"
+                variant="tonal"
+                @click=${this.handleYes}
+              >
+                Join the experiment
+              </pr-button>
+              <p class="subtitle">
+                This will redirect you to the next part of the experiment.
+              </p>
+            </div>
           </div>
         </div>
       </div>

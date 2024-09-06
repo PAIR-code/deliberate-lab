@@ -3,6 +3,10 @@
 @use "../../sass/typescale";
 
 :host {
+  @include common.flex-column;
+}
+
+.overlay {
   @include common.overlay;
 }
 

@@ -6,6 +6,7 @@ import {
   onSnapshot,
   Unsubscribe,
 } from 'firebase/firestore';
+import {CohortService} from './cohort.service';
 import {ExperimentEditor} from './experiment.editor';
 import {ExperimentService} from './experiment.service';
 import {FirebaseService} from './firebase.service';
@@ -27,6 +28,7 @@ import {
 } from '../shared/callables';
 
 interface ServiceProvider {
+  cohortService: CohortService;
   experimentEditor: ExperimentEditor;
   experimentService: ExperimentService;
   firebaseService: FirebaseService;
@@ -143,27 +145,21 @@ export class ExperimentManager extends Service {
   // Participants currently participating in (or completed) the experiment
   // (not dropped out or pending transfer)
   isActiveParticipant(participant: ParticipantProfileExtended) {
-    return participant.currentStatus === ParticipantStatus.IN_PROGRESS
-      || participant.currentStatus === ParticipantStatus.SUCCESS;
+    return this.sp.cohortService.isActiveParticipant(participant);
   }
 
   // If participant has left the experiment
   // (not active, not pending transfer)
   isObsoleteParticipant(participant: ParticipantProfileExtended) {
-    return participant.currentStatus === ParticipantStatus.TRANSFER_FAILED
-      || participant.currentStatus === ParticipantStatus.TRANSFER_DECLINED
-      || participant.currentStatus === ParticipantStatus.TRANSFER_TIMEOUT
-      || participant.currentStatus === ParticipantStatus.ATTENTION_TIMEOUT
-      || participant.currentStatus === ParticipantStatus.BOOTED_OUT
+    return this.sp.cohortService.isObsoleteParticipant(participant);
   }
 
   // If participant is in a waiting state
   // (e.g., while pending transfer, not currently in the experiment but also
   // has not left yet)
   isPendingParticipant(participant: ParticipantProfileExtended) {
-    return participant.currentStatus === ParticipantStatus.TRANSFER_PENDING;
+    return this.sp.cohortService.isPendingParticipant(participant);
   }
-
 
   getCohort(id: string) {
     return this.cohortMap[id];

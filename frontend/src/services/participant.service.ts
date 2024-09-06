@@ -78,6 +78,28 @@ export class ParticipantService extends Service {
     this.loadParticipantData();
   }
 
+  // True if currently in the experiment (not dropped out, not transfer pending)
+  // (note that participants who completed experiment are included here)
+  @computed get isActiveParticipant() {
+    if (!this.profile) return false;
+    return this.sp.cohortService.isActiveParticipant(this.profile);
+  }
+
+  // If participant has left the experiment
+  // (not active, not pending transfer)
+  @computed get isObsoleteParticipant() {
+    if (!this.profile) return false;
+    return this.sp.cohortService.isObsoleteParticipant(this.profile);
+  }
+
+  // If participant is in a waiting state
+  // (e.g., while pending transfer, not currently in the experiment but also
+  // has not left yet)
+  @computed get isPendingParticipant() {
+    if (!this.profile) return false;
+    return this.sp.cohortService.isPendingParticipant(this.profile);
+  }
+
   isCurrentStage(
     stageId: string = this.sp.routerService.activeRoute.params['stage']
   ) {
@@ -207,6 +229,28 @@ export class ParticipantService extends Service {
         ...this.profile,
         currentStatus,
         timestamps
+      }
+    );
+  }
+
+  /** Submit attention check failure. */
+  async submitAttentionCheckFailure() {
+    if (!this.profile) {
+      return;
+    }
+
+    const endExperiment = Timestamp.now();
+    const timestamps = {
+      ...this.profile.timestamps,
+      endExperiment
+    };
+
+    const currentStatus = ParticipantStatus.ATTENTION_TIMEOUT;
+    return await this.updateProfile(
+      {
+        ...this.profile,
+        timestamps,
+        currentStatus,
       }
     );
   }
