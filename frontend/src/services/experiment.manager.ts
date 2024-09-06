@@ -171,6 +171,12 @@ export class ExperimentManager extends Service {
     return `Untitled cohort: ${cohort?.id.split('-')[0]}`;
   }
 
+  getCohortDescription(cohort: CohortConfig) {
+    const description = cohort?.metadata.description;
+    if (description) return description;
+    return '';
+  }
+
   getCohortParticipants(
     cohortId: string,
     countAllParticipants = true, // if true, include booted, failed, etc.

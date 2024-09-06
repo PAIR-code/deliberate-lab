@@ -43,6 +43,7 @@
   @include typescale.label-medium;
   @include common.flex-column;
   gap: common.$spacing-medium;
+  overflow: auto;
 }
 
 .menu-item {

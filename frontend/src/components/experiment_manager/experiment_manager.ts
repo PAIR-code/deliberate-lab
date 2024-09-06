@@ -137,6 +137,9 @@ export class ExperimentManagerComponent extends MobxLitElement {
       <div class="menu-item" role="button" @click=${initiateTransfer}>
         <div>${this.experimentManager.getCohortName(cohort)}</div>
         <div class="subtitle">
+          ${this.experimentManager.getCohortDescription(cohort)}
+        </div>
+        <div class="subtitle">
           ${this.experimentManager.getNumParticipants(
             cohort.participantConfig.includeAllParticipantsInCohortCount,
             cohort.id
