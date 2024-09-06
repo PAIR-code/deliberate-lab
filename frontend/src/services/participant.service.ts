@@ -118,6 +118,10 @@ export class ParticipantService extends Service {
     return this.completedExperiment || !this.isCurrentStage()
   }
 
+  completedStage(stageId: string) {
+    return this.profile?.timestamps.completedStages[stageId];
+  }
+
   @computed get completedExperiment() {
     return this.profile?.currentStatus !== ParticipantStatus.IN_PROGRESS
   }
