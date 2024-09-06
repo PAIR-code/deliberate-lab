@@ -17,7 +17,8 @@ import {
   createInfoStage,
   createProfileStage,
   createSurveyStage,
-  createTOSStage
+  createTOSStage,
+  createTransferStage
 } from '@deliberation-lab/utils';
 
 import {styles} from './stage_builder_dialog.scss';
@@ -54,6 +55,7 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card-gallery-wrapper">
         ${this.renderTOSCard()}
         ${this.renderInfoCard()}
+        ${this.renderTransferCard()}
         ${this.renderProfileCard()}
         ${this.renderSurveyCard()}
         ${this.renderChatCard()}
@@ -140,6 +142,23 @@ export class StageBuilderDialog extends MobxLitElement {
         <div class="title">Profile</div>
         <div>
           Set participant profile
+        </div>
+      </div>
+    `;
+  }
+
+  private renderTransferCard() {
+    const addStage = () => {
+      this.experimentEditor.addStage(createTransferStage());
+      this.experimentEditor.toggleStageBuilderDialog();
+    }
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">Transfer</div>
+        <div>
+          During transfer stage, assign participants to different cohorts
+          in your experiment while participants wait
         </div>
       </div>
     `;

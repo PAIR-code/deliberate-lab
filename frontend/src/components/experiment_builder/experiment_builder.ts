@@ -104,6 +104,10 @@ export class ExperimentBuilder extends MobxLitElement {
           <base-stage-editor .stage=${stage}></base-stage-editor>
           <tos-editor .stage=${stage}></tos-editor>
         `;
+      case StageKind.TRANSFER:
+        return html`
+          <base-stage-editor .stage=${stage}></base-stage-editor>
+        `;
       default:
         return nothing;
     }
