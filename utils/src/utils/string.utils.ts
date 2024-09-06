@@ -1,4 +1,4 @@
-import { UnifiedTimestamp } from '../types/api.types';
+import { UnifiedTimestamp } from '../shared';
 
 export const dateStrOfTimestamp = (timestamp: UnifiedTimestamp): string => {
   const date = timestamp.toDate();
