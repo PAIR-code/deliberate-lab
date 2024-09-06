@@ -9,11 +9,13 @@ import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
 import {ExperimentManager} from '../../services/experiment.manager';
+import {ExperimentService} from '../../services/experiment.service';
 import {Pages, RouterService} from '../../services/router.service';
 
 import {
   ParticipantProfileExtended,
-  ParticipantStatus
+  ParticipantStatus,
+  StageKind
 } from '@deliberation-lab/utils';
 
 import {styles} from './participant_summary.scss';
@@ -24,6 +26,7 @@ export class ParticipantSummary extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly experimentManager = core.getService(ExperimentManager);
+  private readonly experimentService = core.getService(ExperimentService);
   private readonly routerService = core.getService(RouterService);
 
   @property() participant: ParticipantProfileExtended|undefined = undefined;
@@ -66,7 +69,13 @@ export class ParticipantSummary extends MobxLitElement {
     } else if (this.experimentManager.isObsoleteParticipant(this.participant)) {
       return html`<div class="chip">${this.participant.currentStatus}</div>`;
     }
-    // TODO: else if in transfer stage, return "ready for transfer" chip
+
+    // If in transfer stage, return "ready for transfer" chip
+    const stage = this.experimentService.getStage(this.participant.currentStageId);
+    if (stage.kind === StageKind.TRANSFER) {
+      return html`<div class="chip tertiary">ready for transfer!</div>`;
+    }
+
     return nothing;
   }
 
