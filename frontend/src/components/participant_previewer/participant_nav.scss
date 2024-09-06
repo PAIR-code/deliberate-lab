@@ -36,6 +36,10 @@
 .nav-item {
   @include common.nav-item;
   border-radius: common.$spacing-medium;
+
+  &.experimenter-only {
+    opacity: .25;
+  }
 }
 
 .primary {

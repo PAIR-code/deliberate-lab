@@ -118,6 +118,14 @@ export class ParticipantService extends Service {
     return this.completedExperiment || !this.isCurrentStage()
   }
 
+  // True if already completed stage or is current stage
+  canAccessStage(stageId: string) {
+    if (!this.profile) return false;
+    if (this.profile.currentStageId === stageId) return true;
+
+    return this.profile.timestamps.completedStages[stageId];
+  }
+
   completedStage(stageId: string) {
     return this.profile?.timestamps.completedStages[stageId];
   }
