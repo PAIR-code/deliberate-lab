@@ -152,6 +152,13 @@ export class ParticipantPreviewer extends MobxLitElement {
       return nothing;
     }
 
+    // If stage not yet unlocked, do not show to participants
+    if (!this.participantService.canAccessStage(stage.id)
+      && !this.authService.isExperimenter
+    ) {
+      return html`<div class="content">Stage not available yet</div>`;
+    }
+
     const answer = this.participantService.currentStageAnswer;
     switch (stage.kind) {
       case StageKind.TOS:
