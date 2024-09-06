@@ -3,6 +3,7 @@ import '../stages/info_editor';
 import '../stages/survey_editor';
 import '../stages/survey_editor_menu';
 import '../stages/tos_editor';
+import '../stages/transfer_editor';
 import './experiment_builder_nav';
 import './experiment_settings_editor';
 import './stage_builder_dialog';
@@ -103,6 +104,11 @@ export class ExperimentBuilder extends MobxLitElement {
         return html`
           <base-stage-editor .stage=${stage}></base-stage-editor>
           <tos-editor .stage=${stage}></tos-editor>
+        `;
+      case StageKind.TRANSFER:
+        return html`
+          <base-stage-editor .stage=${stage}></base-stage-editor>
+          <transfer-editor .stage=${stage}></transfer-editor>
         `;
       default:
         return nothing;

@@ -6,6 +6,7 @@ import '../stages/chat_panel';
 import '../stages/info_view';
 import '../stages/survey_view';
 import '../stages/tos_view';
+import '../stages/transfer_view';
 import './participant_nav';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -182,6 +183,12 @@ export class ParticipantPreviewer extends MobxLitElement {
         return html`
           <div class="content">
             <survey-view .stage=${stage} .answer=${answer}></survey-view>
+          </div>
+        `;
+      case StageKind.TRANSFER:
+        return html`
+          <div class="content">
+            <transfer-view .stage=${stage}></transfer-view>
           </div>
         `;
       default:

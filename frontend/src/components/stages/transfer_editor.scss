@@ -1,0 +1,35 @@
+@use "../../sass/colors";
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-xxl;
+}
+
+.section {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+pr-textarea {
+  flex-grow: 1;
+  width: 100%;
+}
+
+.checkbox-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+  overflow-wrap: break-word;
+
+  md-checkbox {
+    flex-shrink: 0;
+  }
+}
+
+.number-input {
+  @include common.number-input;
+  /* width of checkbox plus gap */
+  margin-left: calc(48px + common.$spacing-medium);
+  width: max-content;
+}
