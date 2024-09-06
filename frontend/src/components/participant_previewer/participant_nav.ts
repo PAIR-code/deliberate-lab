@@ -87,7 +87,14 @@ export class ParticipantNav extends MobxLitElement {
           role="button"
           @click=${navigate}
         >
-          ${index + 1}. ${stage.name}
+          <div>${index + 1}. ${stage.name}</div>
+          ${this.participantService.isCurrentStage(stage.id) ?
+            html`<div class="chip tertiary">current</div>`
+            : nothing
+          }
+          ${this.participantService.completedStage(stage.id) ?
+            html`<pr-icon icon="check_circle" size="small"></pr-icon>`
+            : nothing}
         </div>
       </div>
     `;

@@ -46,3 +46,9 @@
   @include typescale.label-medium;
   color: var(--md-sys-color-primary);
 }
+
+.chip {
+  @include common.chip;
+  @include typescale.label-small;
+  border-radius: common.$spacing-small;
+}
