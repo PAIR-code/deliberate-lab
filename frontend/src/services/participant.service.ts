@@ -332,16 +332,30 @@ export class ParticipantService extends Service {
 
   /** Accept participant transfer. */
   async acceptParticipantTransfer() {
-    if (!this.profile?.transferCohortId) {
+    if (!this.profile || !this.profile.transferCohortId) {
       return;
     }
 
     // Update transfer timestamp
     const cohortTransfers = this.profile.timestamps.completedStages;
     cohortTransfers[this.profile.currentCohortId] = Timestamp.now();
+
+    // If transfer stage, progress to next stage
+    const completedStages = this.profile.timestamps.completedStages;
+    let currentStageId = this.profile.currentStageId;
+
+    const stage = this.sp.experimentService.getStage(this.profile.currentStageId);
+    if (stage.kind === StageKind.TRANSFER) {
+      completedStages[this.profile.currentStageId] = Timestamp.now();
+      currentStageId = this.sp.experimentService.getNextStageId(
+        this.profile.currentStageId
+      ) ?? '';
+    }
+
     const timestamps = {
       ...this.profile.timestamps,
-      cohortTransfers
+      cohortTransfers,
+      completedStages,
     };
 
     return await this.updateProfile(
@@ -349,6 +363,7 @@ export class ParticipantService extends Service {
         ...this.profile,
         currentCohortId: this.profile.transferCohortId,
         transferCohortId: null,
+        currentStageId,
         currentStatus: ParticipantStatus.IN_PROGRESS,
       }
     );
