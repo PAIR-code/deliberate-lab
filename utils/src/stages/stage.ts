@@ -7,6 +7,7 @@ import {
   SurveyStagePublicData,
 } from './survey_stage';
 import { TOSStageConfig } from './tos_stage';
+import { TransferStageConfig } from './transfer_stage';
 
 /** Base stage types and functions. */
 
@@ -25,6 +26,7 @@ export enum StageKind {
   PAYOUT = 'payout',
   REVEAL = 'reveal',
   SURVEY = 'survey',
+  TRANSFER = 'transfer',
   WTL_SURVEY = 'wtlSurvey', // willingness to lead survey
 
   // Lost at Sea (LAS) game specific stages
@@ -63,7 +65,8 @@ export type StageConfig =
   | InfoStageConfig
   | ProfileStageConfig
   | SurveyStageConfig
-  | TOSStageConfig;
+  | TOSStageConfig
+  | TransferStageConfig;
 
 /**
  * Base stage answer created from participant input.

@@ -29,6 +29,8 @@ export * from './stages/survey_stage';
 export * from './stages/survey_stage.validation';
 export * from './stages/tos_stage';
 export * from './stages/tos_stage.validation';
+export * from './stages/transfer_stage';
+export * from './stages/transfer_stage.validation';
 
 // Utils
 export * from './utils/algebraic.utils';
