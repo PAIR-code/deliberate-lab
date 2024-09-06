@@ -58,22 +58,10 @@ class TransferPopup extends MobxLitElement {
   private async handleNo() {
     if (!this.participantService.profile) return;
 
-    await this.participantService.updateProfile({
-      ...this.participantService.profile,
-      currentStatus: ParticipantStatus.TRANSFER_DECLINED
-    });
-
-    const prolificConfig = this.experimentService.experiment?.prolificConfig;
-    if (prolificConfig?.enableProlificIntegration) {
-      // Navigate to Prolific with completion code.
-      window.location.href = PROLIFIC_COMPLETION_URL_PREFIX
-        + prolificConfig.defaultRedirectCode;
-    } else {
-      this.routerService.navigate(Pages.PARTICIPANT, {
-        'experiment': this.routerService.activeRoute.params['experiment'],
-        'participant': this.routerService.activeRoute.params['participant']
-      });
-    }
+    await this.participantService.updateExperimentFailure(
+      ParticipantStatus.TRANSFER_DECLINED,
+      true
+    );
   }
 }
 

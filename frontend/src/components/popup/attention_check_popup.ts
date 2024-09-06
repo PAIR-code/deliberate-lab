@@ -4,9 +4,6 @@ import {customElement, property, state} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
-import {Pages, RouterService} from '../../services/router.service';
-import {PROLIFIC_COMPLETION_URL_PREFIX} from '../../shared/constants';
-
 import {
   ParticipantStatus
 } from '@deliberation-lab/utils';
@@ -19,7 +16,6 @@ class AttentionPopup extends MobxLitElement {
 
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
-  private readonly routerService = core.getService(RouterService);
 
   @property({type: Number})
   waitSeconds: number = 60; // Default value of 60 seconds
@@ -102,20 +98,10 @@ class AttentionPopup extends MobxLitElement {
     this.showAttentionCheck = false;
     alert('Attention check failed.');
 
-    await this.participantService.submitAttentionCheckFailure();
-    const config = this.experimentService.experiment?.prolificConfig;
-
-    if (config && config.enableProlificIntegration) {
-      const code = config.attentionFailRedirectCode.length > 0 ?
-        config.attentionFailRedirectCode : config.defaultRedirectCode;
-      // Navigate to Prolific with completion code
-      window.location.href = PROLIFIC_COMPLETION_URL_PREFIX + code;
-    } else {
-      this.routerService.navigate(Pages.PARTICIPANT, {
-        'experiment': this.routerService.activeRoute.params['experiment'],
-        'participant': this.routerService.activeRoute.params['participant']
-      });
-    }
+    await this.participantService.updateExperimentFailure(
+      ParticipantStatus.ATTENTION_TIMEOUT,
+      true
+    );
   };
 
   render() {

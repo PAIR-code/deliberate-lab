@@ -24,7 +24,7 @@ import {computed, makeObservable, observable} from 'mobx';
 import {CohortService} from './cohort.service';
 import {ExperimentService} from './experiment.service';
 import {FirebaseService} from './firebase.service';
-import {RouterService} from './router.service';
+import {Pages,RouterService} from './router.service';
 import {SurveyService} from './survey.service';
 import {Service} from './service';
 
@@ -33,6 +33,7 @@ import {
   updateParticipantCallable,
   updateSurveyStageParticipantAnswerCallable,
 } from '../shared/callables';
+import {PROLIFIC_COMPLETION_URL_PREFIX} from '../shared/constants';
 
 interface ServiceProvider {
   cohortService: CohortService;
@@ -201,7 +202,7 @@ export class ParticipantService extends Service {
   // FIRESTORE                                                               //
   // *********************************************************************** //
 
-  /** Save last stage and complete experiment. */
+  /** Save last stage and complete experiment with success. */
   async completeLastStage() {
     if (!this.profile) {
       return;
@@ -233,26 +234,46 @@ export class ParticipantService extends Service {
     );
   }
 
-  /** Submit attention check failure. */
-  async submitAttentionCheckFailure() {
+  /** End experiment due to failure. */
+  async updateExperimentFailure(
+    currentStatus: ParticipantStatus,
+    navigateToFailurePage = false
+  ) {
     if (!this.profile) {
       return;
     }
 
+    // Update endExperiment timestamp and currentStatus
     const endExperiment = Timestamp.now();
     const timestamps = {
       ...this.profile.timestamps,
       endExperiment
     };
 
-    const currentStatus = ParticipantStatus.ATTENTION_TIMEOUT;
-    return await this.updateProfile(
+    await this.updateProfile(
       {
         ...this.profile,
         timestamps,
         currentStatus,
       }
     );
+
+    // Route to experiment landing (or redirect to Prolific)
+    if (!navigateToFailurePage) return;
+    const config = this.sp.experimentService.experiment?.prolificConfig;
+
+    if (config && config.enableProlificIntegration) {
+      const code = currentStatus === ParticipantStatus.ATTENTION_TIMEOUT
+        && config.attentionFailRedirectCode.length > 0 ?
+        config.attentionFailRedirectCode : config.defaultRedirectCode;
+      // Navigate to Prolific with completion code
+      window.location.href = PROLIFIC_COMPLETION_URL_PREFIX + code;
+    } else {
+      this.sp.routerService.navigate(Pages.PARTICIPANT, {
+        'experiment': this.experimentId!,
+        'participant': this.profile!.privateId,
+      });
+    }
   }
 
   /** Move to next stage. */
