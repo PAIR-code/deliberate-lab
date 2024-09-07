@@ -2,6 +2,8 @@ import '../../pair-components/button';
 import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 
+import '../participant_profile/profile_avatar';
+
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
@@ -56,6 +58,8 @@ export class ParticipantSummary extends MobxLitElement {
     return html`
       <div class=${classes} @click=${setCurrentParticipant}>
         <div class="left">
+          <profile-avatar .emoji=${this.participant.avatar} .small=${true}>
+          </profile-avatar>
           <div>${getParticipantName(this.participant)}</div>
           ${this.renderStatus()}
         </div>
