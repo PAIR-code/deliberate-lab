@@ -28,6 +28,9 @@ import {
   StageConfig,
   StageKind
 } from '@deliberation-lab/utils';
+import {
+  isParticipantEndedExperiment
+} from '../../shared/participant.utils';
 
 import {styles} from './participant_previewer.scss';
 
@@ -82,6 +85,11 @@ export class ParticipantPreviewer extends MobxLitElement {
       return nothing;
     }
 
+    // If experiment is over
+    if (isParticipantEndedExperiment(profile)) {
+      return html`<div>The experiment has ended.</div>`;
+    }
+
     // If participant has not started experiment before
     // TODO: If cohort requires min number of participants,
     // show loading screen before participants are allowed to start
@@ -106,11 +114,6 @@ export class ParticipantPreviewer extends MobxLitElement {
           Start experiment
         </pr-button>
       `;
-    }
-
-    // If experiment is over
-    if (profile.currentStatus !== ParticipantStatus.IN_PROGRESS) {
-      return html`<div>The experiment has ended.</div>`;
     }
 
     // Otherwise, route to current stage
