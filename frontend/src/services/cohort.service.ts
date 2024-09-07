@@ -25,6 +25,10 @@ import {
   StagePublicData,
 } from '@deliberation-lab/utils';
 
+import {
+  isActiveParticipant
+} from '../shared/participant.utils';
+
 interface ServiceProvider {
   experimentService: ExperimentService;
   firebaseService: FirebaseService;
@@ -72,35 +76,11 @@ export class CohortService extends Service {
     return Object.values(this.participantMap);
   }
 
-  // True if currently in the experiment (not dropped out, not transfer pending)
-  // (note that participants who completed experiment are included here)
-  isActiveParticipant(participant: ParticipantProfile) {
-    return participant.currentStatus === ParticipantStatus.IN_PROGRESS
-      || participant.currentStatus === ParticipantStatus.SUCCESS;
-  }
-
-  // If participant has left the experiment
-  // (not active, not pending transfer)
-  isObsoleteParticipant(participant: ParticipantProfile) {
-    return participant.currentStatus === ParticipantStatus.TRANSFER_FAILED
-      || participant.currentStatus === ParticipantStatus.TRANSFER_DECLINED
-      || participant.currentStatus === ParticipantStatus.TRANSFER_TIMEOUT
-      || participant.currentStatus === ParticipantStatus.ATTENTION_TIMEOUT
-      || participant.currentStatus === ParticipantStatus.BOOTED_OUT
-  }
-
-  // If participant is in a waiting state
-  // (e.g., while pending transfer, not currently in the experiment but also
-  // has not left yet)
-  isPendingParticipant(participant: ParticipantProfile) {
-    return participant.currentStatus === ParticipantStatus.TRANSFER_PENDING;
-  }
-
   // Participants currently in the experiment
   // (not dropped out or pending transfer)
-  @computed get validParticipants() {
+  @computed get activeParticipants() {
     return Object.values(this.participantMap).filter(
-      p => this.isActiveParticipant(p)
+      p => isActiveParticipant(p)
     );
   }
 

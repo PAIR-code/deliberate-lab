@@ -34,6 +34,13 @@ import {
   updateSurveyStageParticipantAnswerCallable,
 } from '../shared/callables';
 import {PROLIFIC_COMPLETION_URL_PREFIX} from '../shared/constants';
+import {
+  isUnlockedStage,
+  isActiveParticipant,
+  isObsoleteParticipant,
+  isPendingParticipant,
+  isParticipantEndedExperiment,
+} from '../shared/participant.utils';
 
 interface ServiceProvider {
   cohortService: CohortService;
@@ -83,14 +90,14 @@ export class ParticipantService extends Service {
   // (note that participants who completed experiment are included here)
   @computed get isActiveParticipant() {
     if (!this.profile) return false;
-    return this.sp.cohortService.isActiveParticipant(this.profile);
+    return isActiveParticipant(this.profile);
   }
 
   // If participant has left the experiment
   // (not active, not pending transfer)
   @computed get isObsoleteParticipant() {
     if (!this.profile) return false;
-    return this.sp.cohortService.isObsoleteParticipant(this.profile);
+    return isObsoleteParticipant(this.profile);
   }
 
   // If participant is in a waiting state
@@ -98,7 +105,7 @@ export class ParticipantService extends Service {
   // has not left yet)
   @computed get isPendingParticipant() {
     if (!this.profile) return false;
-    return this.sp.cohortService.isPendingParticipant(this.profile);
+    return isPendingParticipant(this.profile);
   }
 
   isCurrentStage(
@@ -121,9 +128,7 @@ export class ParticipantService extends Service {
   // True if already completed stage or is current stage
   canAccessStage(stageId: string) {
     if (!this.profile) return false;
-    if (this.profile.currentStageId === stageId) return true;
-
-    return this.profile.timestamps.completedStages[stageId];
+    return isUnlockedStage(this.profile, stageId);
   }
 
   completedStage(stageId: string) {
@@ -131,8 +136,7 @@ export class ParticipantService extends Service {
   }
 
   @computed get completedExperiment() {
-    return this.profile?.currentStatus !== ParticipantStatus.IN_PROGRESS
-      && this.profile?.currentStatus !== ParticipantStatus.TRANSFER_PENDING
+    return this.profile ? isParticipantEndedExperiment(this.profile) : false;
   }
 
   @computed get currentStageAnswer() {

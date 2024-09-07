@@ -181,7 +181,7 @@ export class Header extends MobxLitElement {
             icon="edit"
             color="primary"
             variant="default"
-            ?disabled=${this.experimentManager.getNumParticipants() > 0}
+            ?disabled=${this.experimentManager.getNumExperimentParticipants() > 0}
             @click=${() => { this.experimentManager.setIsEditing(true); }}
           >
           </pr-icon-button>

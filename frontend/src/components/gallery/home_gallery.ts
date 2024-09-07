@@ -8,8 +8,8 @@ import {core} from '../../core/core';
 import {HomeService} from '../../services/home.service';
 import {Pages, RouterService} from '../../services/router.service';
 
-import { Experiment } from '@deliberation-lab/utils';
-import { convertExperimentToGalleryItem } from '../../shared/utils';
+import {Experiment} from '@deliberation-lab/utils';
+import {convertExperimentToGalleryItem} from '../../shared/experiment.utils';
 
 import {styles} from './home_gallery.scss';
 

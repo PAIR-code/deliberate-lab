@@ -12,6 +12,10 @@ import {
   ChatStageConfig,
   ParticipantProfile,
 } from '@deliberation-lab/utils';
+import {
+  isActiveParticipant
+} from '../../shared/participant.utils';
+
 import {styles} from './chat_panel.scss';
 
 /** Chat panel view with stage info, participants. */
@@ -35,13 +39,13 @@ export class ChatPanel extends MobxLitElement {
   }
 
   private renderParticipantList() {
-    const validParticipants = this.cohortService.validParticipants;
+    const activeParticipants = this.cohortService.activeParticipants;
     return html`
       <div class="panel-item">
         <div class="panel-item-title">
-          Participants (${validParticipants.length})
+          Participants (${activeParticipants.length})
         </div>
-        ${validParticipants.map(
+        ${activeParticipants.map(
           participant => this.renderProfile(participant)
         )}
       </div>
@@ -53,7 +57,7 @@ export class ChatPanel extends MobxLitElement {
       <div class="profile">
         <profile-avatar
           .emoji=${profile.avatar}
-          ?disabled=${this.cohortService.isActiveParticipant(profile)}
+          ?disabled=${isActiveParticipant(profile)}
         >
         </profile-avatar>
         <div class="name">

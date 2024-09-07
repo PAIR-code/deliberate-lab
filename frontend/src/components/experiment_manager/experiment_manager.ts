@@ -16,6 +16,13 @@ import {
   CohortConfig,
   StageKind
 } from '@deliberation-lab/utils';
+import {
+  getCohortDescription,
+  getCohortName
+} from '../../shared/cohort.utils';
+import {
+  isObsoleteParticipant
+} from '../../shared/participant.utils';
 
 import {styles} from './experiment_manager.scss';
 
@@ -106,7 +113,7 @@ export class ExperimentManagerComponent extends MobxLitElement {
 
   private renderTransferMenu() {
     const participant = this.experimentManager.currentParticipant;
-    if (!participant || this.experimentManager.isObsoleteParticipant(participant)) {
+    if (!participant || isObsoleteParticipant(participant)) {
       return nothing;
     }
 
@@ -135,15 +142,15 @@ export class ExperimentManagerComponent extends MobxLitElement {
 
     return html`
       <div class="menu-item" role="button" @click=${initiateTransfer}>
-        <div>${this.experimentManager.getCohortName(cohort)}</div>
+        <div>${getCohortName(cohort)}</div>
         <div class="subtitle">
-          ${this.experimentManager.getCohortDescription(cohort)}
+          ${getCohortDescription(cohort)}
         </div>
         <div class="subtitle">
-          ${this.experimentManager.getNumParticipants(
+          ${this.experimentManager.getCohortParticipants(
+            cohort.id,
             cohort.participantConfig.includeAllParticipantsInCohortCount,
-            cohort.id
-          )}
+          ).length}
           participants
         </div>
       </div>

@@ -17,6 +17,10 @@ import {Pages, RouterService} from '../../services/router.service';
 import {
   CohortConfig
 } from '@deliberation-lab/utils';
+import {
+  getCohortDescription,
+  getCohortName
+} from '../../shared/cohort.utils';
 
 import {styles} from './cohort_summary.scss';
 
@@ -73,7 +77,7 @@ export class CohortSummary extends MobxLitElement {
           >
           </pr-icon-button>
           <div>
-            ${this.experimentManager.getCohortName(this.cohort)}</div>
+            ${getCohortName(this.cohort!)}</div>
         </div>
         <div class="right">
           ${this.renderAddParticipantButton()}
@@ -88,7 +92,7 @@ export class CohortSummary extends MobxLitElement {
 
   private renderDescription() {
     if (!this.isExpanded) return nothing;
-    const description = this.cohort?.metadata.description ?? '';
+    const description = getCohortDescription(this.cohort!);
     if (description.length === 0) return nothing;
 
     return html`<div class="description">${description}</div>`;

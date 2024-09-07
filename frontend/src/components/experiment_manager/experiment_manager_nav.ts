@@ -45,7 +45,7 @@ export class ExperimentManagerNav extends MobxLitElement {
             ${this.experimentManager.numCohorts} cohorts
           </div>
           <small>
-            (${this.experimentManager.getNumParticipants()} participants)
+            (${this.experimentManager.getNumExperimentParticipants(false)} participants)
           </small>
         </div>
         <div class="right">

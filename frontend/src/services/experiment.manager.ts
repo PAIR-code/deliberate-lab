@@ -26,6 +26,13 @@ import {
   updateParticipantCallable,
   writeCohortCallable
 } from '../shared/callables';
+import {
+  getCohortParticipants,
+  hasMaxParticipantsInCohort,
+} from '../shared/cohort.utils';
+import {
+  isObsoleteParticipant
+} from '../shared/participant.utils';
 
 interface ServiceProvider {
   cohortService: CohortService;
@@ -116,93 +123,38 @@ export class ExperimentManager extends Service {
     return this.participantMap[this.currentParticipantId];
   }
 
-  // Get num participants for specified cohort, otherwise all
-  getNumParticipants(
-    countAllParticipants = true, // if true, include booted, failed, etc.
-    cohortId: string|null = null
+  getNumExperimentParticipants(countObsoleteParticipants = true) {
+    const participants = Object.values(this.participantMap);
+    if (countObsoleteParticipants) {
+      return participants.length;
+    }
+
+    return participants.filter(
+      participant => !isObsoleteParticipant(participant)
+    ).length;
+  }
+
+  // Get participants for specified cohort
+  getCohortParticipants(
+    cohortId: string,
+    countObsoleteParticipants = true,
   ) {
-    if (!countAllParticipants && !cohortId) {
-      return Object.keys(this.participantMap).length;
-    } else if (!cohortId) {
-      // Filter out participants who are not in-progress or completed
-      return Object.values(this.participantMap).filter(
-        participant => this.isActiveParticipant(participant)
-      ).length;
-    }
-    // For cohort ID
-    const participantsInCohort = this.getCohortParticipants(cohortId);
-
-    if (!countAllParticipants) {
-      return participantsInCohort.length;
-    } else {
-      // Filter out participants who are not in-progress or completed
-      return participantsInCohort.filter(
-        participant => this.isActiveParticipant(participant)
-      ).length;
-    }
-  }
-
-  // Participants currently participating in (or completed) the experiment
-  // (not dropped out or pending transfer)
-  isActiveParticipant(participant: ParticipantProfileExtended) {
-    return this.sp.cohortService.isActiveParticipant(participant);
-  }
-
-  // If participant has left the experiment
-  // (not active, not pending transfer)
-  isObsoleteParticipant(participant: ParticipantProfileExtended) {
-    return this.sp.cohortService.isObsoleteParticipant(participant);
-  }
-
-  // If participant is in a waiting state
-  // (e.g., while pending transfer, not currently in the experiment but also
-  // has not left yet)
-  isPendingParticipant(participant: ParticipantProfileExtended) {
-    return this.sp.cohortService.isPendingParticipant(participant);
+    return getCohortParticipants(
+      Object.values(this.participantMap),
+      cohortId,
+      countObsoleteParticipants
+    );
   }
 
   getCohort(id: string) {
     return this.cohortMap[id];
   }
 
-  getCohortName(cohort: CohortConfig) {
-    const name = cohort?.metadata.name;
-    if (name) return name;
-    return `Untitled cohort: ${cohort?.id.split('-')[0]}`;
-  }
-
-  getCohortDescription(cohort: CohortConfig) {
-    const description = cohort?.metadata.description;
-    if (description) return description;
-    return '';
-  }
-
-  getCohortParticipants(
-    cohortId: string,
-    countAllParticipants = true, // if true, include booted, failed, etc.
-  ) {
-    return Object.values(this.participantMap).filter(
-      participant => {
-        if (participant.transferCohortId) {
-          return participant.transferCohortId === cohortId;
-        } else {
-          return participant.currentCohortId === cohortId;
-        }
-      }
-    );
-  }
-
   isFullCohort(cohort: CohortConfig) {
-    const maxParticipants = cohort.participantConfig.maxParticipantsPerCohort;
-    if (maxParticipants === null) {
-      return false;
-    }
-
-    const numParticipants = this.getNumParticipants(
-      cohort.participantConfig.includeAllParticipantsInCohortCount,
-      cohort.id
-    );
-    return numParticipants >= Number(maxParticipants);
+    return hasMaxParticipantsInCohort(
+      cohort,
+      Object.values(this.participantMap),
+    )
   }
 
   @computed get availableCohorts() {
@@ -356,7 +308,6 @@ export class ExperimentManager extends Service {
     let response = {};
 
     if (this.experimentId) {
-      console.log(participantConfig);
       response = await updateParticipantCallable(
         this.sp.firebaseService.functions, {
           experimentId: this.experimentId,

@@ -18,6 +18,12 @@ import {
   StageKind
 } from '@deliberation-lab/utils';
 
+import {
+  getParticipantName,
+  isObsoleteParticipant,
+  isPendingParticipant
+} from '../../shared/participant.utils';
+
 import {styles} from './participant_summary.scss';
 
 /** Participant summary for experimenters. */
@@ -44,13 +50,13 @@ export class ParticipantSummary extends MobxLitElement {
     const classes = classMap({
       'participant-summary': true,
       'selected': this.experimentManager.currentParticipantId === this.participant.privateId,
-      'old': this.experimentManager.isObsoleteParticipant(this.participant)
+      'old': isObsoleteParticipant(this.participant)
     });
 
     return html`
       <div class=${classes} @click=${setCurrentParticipant}>
         <div class="left">
-          <div>${this.participant.publicId}</div>
+          <div>${getParticipantName(this.participant)}</div>
           ${this.renderStatus()}
         </div>
         <div class="buttons">
@@ -64,14 +70,15 @@ export class ParticipantSummary extends MobxLitElement {
   private renderStatus() {
     if (!this.participant) return nothing;
 
-    if (this.experimentManager.isPendingParticipant(this.participant)) {
+    if (isPendingParticipant(this.participant)) {
       return html`<div class="chip secondary">transfer pending</div>`;
-    } else if (this.experimentManager.isObsoleteParticipant(this.participant)) {
+    } else if (isObsoleteParticipant(this.participant)) {
       return html`<div class="chip">${this.participant.currentStatus}</div>`;
     }
 
     // If in transfer stage, return "ready for transfer" chip
     const stage = this.experimentService.getStage(this.participant.currentStageId);
+    if (!stage) return nothing;
     if (stage.kind === StageKind.TRANSFER) {
       return html`<div class="chip tertiary">ready for transfer!</div>`;
     }
