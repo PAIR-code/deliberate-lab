@@ -26,7 +26,9 @@ import {
 } from '@deliberation-lab/utils';
 
 import {
-  isActiveParticipant
+  isActiveParticipant,
+  isObsoleteParticipant,
+  isUnlockedStage
 } from '../shared/participant.utils';
 
 interface ServiceProvider {
@@ -95,6 +97,30 @@ export class CohortService extends Service {
     return Object.values(this.participantMap).filter(
       p => isActiveParticipant(p)
     );
+  }
+
+  getUnlockedStageParticipants(stageId: string) {
+    return this.getAllParticipants().filter(
+      participant => isUnlockedStage(participant, stageId)
+        && !isObsoleteParticipant(participant)
+    );
+  }
+
+  getLockedStageParticipants(stageId: string) {
+    return this.getAllParticipants().filter(
+      participant => !isUnlockedStage(participant, stageId)
+        && !isObsoleteParticipant(participant)
+    );
+  }
+
+  // If stage is waiting for participants, i.e., is is locked to at least
+  // one participant and no one has completed the stage yet
+  isStageWaitingForParticipants(stageId: string) {
+    const numLocked = this.getLockedStageParticipants(stageId).length;
+    const numCompleted = this.getAllParticipants().filter(
+      participant => participant.timestamps.completedStages[stageId]
+    ).length;
+    return numLocked > 0 && numCompleted === 0;
   }
 
   loadCohortData(id: string) {

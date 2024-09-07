@@ -1,6 +1,7 @@
 import '../participant_profile/profile_editor';
 import '../popup/accept_transfer_popup';
 import '../popup/attention_check_popup';
+import '../progress/progress_stage_waiting';
 import '../stages/chat_interface';
 import '../stages/chat_panel';
 import '../stages/info_view';
@@ -159,6 +160,7 @@ export class ParticipantPreviewer extends MobxLitElement {
       return html`<div class="content">Stage not available yet</div>`;
     }
 
+    const isWaiting = this.cohortService.isStageWaitingForParticipants(stage.id);
     const answer = this.participantService.currentStageAnswer;
     switch (stage.kind) {
       case StageKind.TOS:
@@ -180,6 +182,13 @@ export class ParticipantPreviewer extends MobxLitElement {
           </div>
         `;
       case StageKind.CHAT:
+        if (isWaiting) {
+          return html`
+            <div class="content">
+              <progress-stage-waiting></progress-stage-waiting>
+            </div>
+          `;
+        }
         return html`
           <div class="content chat">
             <chat-panel .stage=${stage}></chat-panel>
