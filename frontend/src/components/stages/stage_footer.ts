@@ -81,9 +81,11 @@ export class Footer extends MobxLitElement {
       // Progress to next stage
       await this.participantService.progressToNextStage();
       // Navigate to new stage
+      if (!this.participantService.profile) return false;
       this.routerService.navigate(Pages.PARTICIPANT_STAGE, {
-        ...this.routerService.activeRoute.params['participant'],
-        stage: this.participantService.profile?.currentStageId ?? '',
+        experiment: this.routerService.activeRoute.params['experiment'],
+        participant: this.routerService.activeRoute.params['participant'],
+        stage: this.participantService.profile.currentStageId ?? '',
       });
       this.isLoadingNext = false;
     };
