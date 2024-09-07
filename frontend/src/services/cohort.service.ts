@@ -51,7 +51,12 @@ export class CohortService extends Service {
 
   @observable experimentId: string|null = null;
   @observable cohortId: string|null = null;
+
+  // Participants currently in the cohort
   @observable participantMap: Record<string, ParticipantProfile> = {};
+  // Participants pending transfer to this cohort
+  @observable transferParticipantMap: Record<string, ParticipantProfile> = {};
+
   @observable stagePublicDataMap: Record<string, StagePublicData> = {};
   @observable chatMap: Record<string, ChatMessage[]> = {};
 
@@ -72,8 +77,16 @@ export class CohortService extends Service {
     this.isStageDataLoading = value;
   }
 
-  @computed get allParticipants() {
-    return Object.values(this.participantMap);
+  getAllParticipants(
+    includePendingTransfer = true // if pending transfer into cohort
+  ) {
+    if (!includePendingTransfer) {
+      return Object.values(this.participantMap);
+    }
+    return [
+      ...Object.values(this.participantMap),
+      ...Object.values(this.transferParticipantMap)
+    ];
   }
 
   // Participants currently in the experiment
@@ -141,7 +154,10 @@ export class CohortService extends Service {
             this.experimentId,
             'participants'
           ),
-          where('currentCohortId', '==', this.cohortId),
+          or(
+            where('currentCohortId', '==', this.cohortId),
+            where('transferCohortId', '==', this.cohortId)
+          )
         ),
         (snapshot) => {
           let changedDocs = snapshot.docChanges().map((change) => change.doc);
@@ -151,7 +167,7 @@ export class CohortService extends Service {
 
           changedDocs.forEach((doc) => {
             const data = doc.data() as ParticipantProfileExtended;
-            this.participantMap[data.publicId] = {
+            const profile = {
               pronouns: data.pronouns,
               avatar: data.avatar,
               name: data.name,
@@ -163,6 +179,11 @@ export class CohortService extends Service {
               currentStatus: data.currentStatus,
               timestamps: data.timestamps,
             };
+            if (profile.currentCohortId === this.cohortId) {
+              this.participantMap[profile.publicId] = profile;
+            } else if (profile.transferCohortId === this.cohortId) {
+              this.transferParticipantMap[profile.publicId] = profile;
+            }
           });
           this.isParticipantsLoading = false;
         }
@@ -176,6 +197,7 @@ export class CohortService extends Service {
 
     // Reset stage configs
     this.participantMap = {};
+    this.transferParticipantMap = {};
     this.stagePublicDataMap = {};
   }
 }
