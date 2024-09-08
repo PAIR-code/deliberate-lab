@@ -70,14 +70,18 @@ export class CohortSummary extends MobxLitElement {
       <div class="header">
         <div class="left">
           <pr-icon-button
-            icon=${this.isExpanded ? "collapse_all" : "expand_all"}
+            icon=${this.isExpanded ? "keyboard_arrow_up" : "keyboard_arrow_down"}
             color="neutral"
             variant="default"
             @click=${() => { this.isExpanded = !this.isExpanded; }}
           >
           </pr-icon-button>
           <div>
-            ${getCohortName(this.cohort!)}</div>
+            ${getCohortName(this.cohort!)}
+            <span class="subtitle">
+              (${this.experimentManager.getCohortParticipants(this.cohort.id, false).length} participants)
+            </span>
+          </div>
         </div>
         <div class="right">
           ${this.renderAddParticipantButton()}
