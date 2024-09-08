@@ -44,6 +44,13 @@ export function isObsoleteParticipant(participant: ParticipantProfile) {
     || participant.currentStatus === ParticipantStatus.BOOTED_OUT;
 }
 
+/** If successfully completed experiment. */
+export function isSuccessParticipant(
+  participant: ParticipantProfile
+) {
+  return participant.currentStatus === ParticipantStatus.SUCCESS;
+}
+
 /** If participant is in a waiting state (and thus not "active")
  * (e.g., while pending transfer, not currently in the experiment but also
  * has not left yet)
@@ -61,7 +68,7 @@ export function isParticipantPendingTransfer(
     && participant.transferCohortId === cohortId;
 }
 
-/** If completed experiment (either successfully or via leaving). */
+/** If ended experiment (either successfully or via leaving). */
 export function isParticipantEndedExperiment(
   participant: ParticipantProfile
 ) {
