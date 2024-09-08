@@ -23,7 +23,8 @@ import {
 import {
   getParticipantName,
   isObsoleteParticipant,
-  isPendingParticipant
+  isPendingParticipant,
+  isParticipantEndedExperiment
 } from '../../shared/participant.utils';
 
 import {styles} from './participant_summary.scss';
@@ -66,6 +67,7 @@ export class ParticipantSummary extends MobxLitElement {
         <div class="buttons">
           ${this.renderCopyButton()}
           ${this.renderPreviewButton()}
+          ${this.renderBootButton()}
         </div>
       </div>
     `;
@@ -120,6 +122,26 @@ export class ParticipantSummary extends MobxLitElement {
           variant="default"
           ?disabled=${!this.participant}
           @click=${navigate}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
+  }
+
+  private renderBootButton() {
+    const bootParticipant = () => {
+      if (!this.participant) return;
+      this.experimentManager.bootParticipant(this.participant);
+    };
+
+    return html`
+      <pr-tooltip text="Boot participant from experiment" position="BOTTOM_END">
+        <pr-icon-button
+          icon="block"
+          color="error"
+          variant="default"
+          ?disabled=${!this.participant || isParticipantEndedExperiment(this.participant)}
+          @click=${bootParticipant}
         >
         </pr-icon-button>
       </pr-tooltip>

@@ -4,6 +4,7 @@ import {
   doc,
   getDocs,
   onSnapshot,
+  Timestamp,
   Unsubscribe,
 } from 'firebase/firestore';
 import {CohortService} from './cohort.service';
@@ -317,6 +318,23 @@ export class ExperimentManager extends Service {
     }
     this.isWritingParticipant = false;
     return response;
+  }
+
+  /** Boot participant from experiment. */
+  async bootParticipant(
+    participant: ParticipantProfileExtended,
+  ) {
+    const timestamps = {
+      ...participant.timestamps,
+      endExperiment: Timestamp.now(),
+    };
+    const config = {
+      ...participant,
+      currentStatus: ParticipantStatus.BOOTED_OUT,
+      timestamps,
+    };
+
+    this.updateParticipant(config);
   }
 
   /** Initiate participant transfer. */
