@@ -3,6 +3,7 @@ import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 
 import '../participant_profile/profile_avatar';
+import '../progress/participant_progress_bar';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -65,6 +66,11 @@ export class ParticipantSummary extends MobxLitElement {
           ${this.renderStatus()}
         </div>
         <div class="buttons">
+          <participant-progress-bar
+            .participant=${this.participant}
+            .stageIds=${this.experimentService.experiment?.stageIds ?? []}
+          >
+          </participant-progress-bar>
           ${this.renderCopyButton()}
           ${this.renderPreviewButton()}
           ${this.renderBootButton()}

@@ -152,7 +152,7 @@
 
 @mixin progress-bar {
   @include flex-row;
-  background: var(--md-sys-color-surface-container-highest);
+  background: var(--md-sys-color-outline-variant);
   border-radius: $spacing-large;
   height: $spacing-small;
   overflow: hidden;

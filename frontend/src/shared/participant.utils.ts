@@ -93,3 +93,17 @@ export function isUnlockedStage(
   }
   return participant.timestamps.completedStages[stageId];
 }
+
+/** Return number of stages that participant completed. */
+export function getParticipantProgress(
+  participant: ParticipantProfile,
+  stageIds: string[], // stages that count towards progress
+) {
+  let count = 0;
+  stageIds.forEach(id => {
+    if (participant.timestamps.completedStages[id]) {
+      count += 1
+    }
+  });
+  return count;
+}
