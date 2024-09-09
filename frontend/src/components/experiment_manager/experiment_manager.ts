@@ -1,5 +1,6 @@
 import '../experiment_builder/experiment_builder';
 import '../experiment_builder/experiment_settings_dialog';
+import '../participant_profile/profile_preview';
 
 import './cohort_settings_dialog';
 import './experiment_manager_nav';
@@ -159,7 +160,13 @@ export class ExperimentManagerComponent extends MobxLitElement {
 
   private renderContent() {
     return html`
-      ${JSON.stringify(this.experimentManager.currentParticipant)}
+      <participant-profile-preview
+        .profile=${this.experimentManager.currentParticipant}
+      >
+      </participant-profile-preview>
+      <code>
+        ${JSON.stringify(this.experimentManager.currentParticipant)}
+      </code>
     `;
   }
 }
