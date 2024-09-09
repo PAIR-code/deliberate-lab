@@ -40,3 +40,10 @@ export interface GalleryItem {
   isStarred: boolean;
   tags: string[];
 }
+
+/** Experimenter profile (written to Firestore under experimenters/{id}). */
+export interface ExperimenterProfile {
+  id: string;
+  name: string;
+  email: string;
+}

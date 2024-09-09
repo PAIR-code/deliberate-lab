@@ -16,11 +16,13 @@ import {
   where,
 } from 'firebase/firestore';
 import {computed, makeObservable, observable} from 'mobx';
-import {collectSnapshotWithId} from '../shared/utils';
 
 import {AuthService} from './auth.service';
 import {FirebaseService} from './firebase.service';
 import {Service} from './service';
+
+import {collectSnapshotWithId} from '../shared/utils';
+import {ExperimenterProfile} from '../shared/types';
 
 interface ServiceProvider {
   authService: AuthService;
@@ -40,6 +42,7 @@ export class HomeService extends Service {
   }
 
   @observable experiments: Experiment[] = [];
+  @observable experimenterMap: Record<string, ExperimenterProfile> = {};
   @observable experimentTemplates: Experiment[] = [];
 
   // Loading
@@ -52,6 +55,25 @@ export class HomeService extends Service {
   }
 
   subscribe() {
+    this.unsubscribeAll();
+
+    // Subscribe to experimenter profiles
+    this.unsubscribe.push(
+      onSnapshot(
+        collection(this.sp.firebaseService.firestore, 'experimenters'),
+        (snapshot) => {
+          let changedDocs = snapshot.docChanges().map((change) => change.doc);
+          if (changedDocs.length === 0) {
+            changedDocs = snapshot.docs;
+          }
+
+          changedDocs.forEach((doc) => {
+            this.experimenterMap[doc.id] = doc.data() as ExperimenterProfile;
+          });
+        }
+      )
+    );
+
     // Subscribe to relevant experiment documents
     const experimentQuery = query(
       collection(this.sp.firebaseService.firestore, 'experiments'),
@@ -96,10 +118,15 @@ export class HomeService extends Service {
 
     // Reset observables
     this.experiments = [];
+    this.experimenterMap = {};
     this.experimentTemplates = [];
   }
 
   getExperiment(experimentId: string) {
     return this.experiments.find((exp) => exp.id === experimentId);
+  }
+
+  getExperimenterName(experimenterId: string) {
+    return this.experimenterMap[experimenterId]?.name ?? '';
   }
 }

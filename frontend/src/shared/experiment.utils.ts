@@ -16,7 +16,7 @@ export function convertExperimentToGalleryItem(
   return {
     title: experiment.metadata.name,
     description: experiment.metadata.description,
-    creator: 'Author', // TODO: Find user name
+    creator: experiment.metadata.creator,
     date: convertUnifiedTimestampToDate(experiment.metadata.dateModified),
     isStarred: false, // TODO: Find user isStarred value
     tags: experiment.metadata.tags,

@@ -6,10 +6,16 @@ import {
   signOut,
   User
 } from 'firebase/auth';
+import {
+  doc,
+  setDoc
+} from 'firebase/firestore';
 
 import { Service } from "./service";
 import { FirebaseService } from "./firebase.service";
 import { HomeService } from "./home.service";
+
+import { ExperimenterProfile } from '../shared/types';
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
@@ -29,6 +35,7 @@ export class AuthService extends Service {
         this.user.getIdTokenResult().then((result) => {
           if (result.claims['role'] === 'experimenter') {
             this.isExperimenter = true;
+            this.writeExperimenterProfile(user);
             this.sp.homeService.subscribe();
           } else {
             this.isExperimenter = false;
@@ -71,5 +78,27 @@ export class AuthService extends Service {
   signOut() {
     signOut(this.sp.firebaseService.auth);
     this.sp.homeService.unsubscribeAll();
+  }
+
+  // *********************************************************************** //
+  // FIRESTORE                                                               //
+  // *********************************************************************** //
+
+  /** Update experimenter profile. */
+  async writeExperimenterProfile(user: User) {
+    const profile: ExperimenterProfile = {
+      id: user.uid,
+      name: user.displayName ?? '',
+      email: user.email ?? '',
+    };
+
+    setDoc(
+      doc(
+        this.sp.firebaseService.firestore,
+        'experimenters',
+        profile.id
+      ),
+      profile
+    );
   }
 }

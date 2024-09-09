@@ -2,7 +2,10 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
-import { GalleryItem } from '../../shared/types';
+import {core} from '../../core/core';
+import {HomeService} from '../../services/home.service';
+
+import {GalleryItem} from '../../shared/types';
 
 import {styles} from './gallery_card.scss';
 
@@ -10,6 +13,8 @@ import {styles} from './gallery_card.scss';
 @customElement('gallery-card')
 export class GalleryCard extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
+
+  private readonly homeService = core.getService(HomeService);
 
   @property() item: GalleryItem | null = null;
 
@@ -24,7 +29,7 @@ export class GalleryCard extends MobxLitElement {
       </div>
       <div class="description">${this.item.description}</div>
       <div class="footer">
-        <div>${this.item.creator}</div>
+        <div>${this.homeService.getExperimenterName(this.item.creator)}</div>
         <div>${this.item.date}</div>
       </div>
     `;

@@ -37,10 +37,16 @@ export class HomeGallery extends MobxLitElement {
     };
 
     return html`
+      ${this.renderEmptyMessage()}
       <div class="gallery-wrapper">
         ${this.homeService.experiments.map(e => renderExperiment(e))}
       </div>
     `;
+  }
+
+  private renderEmptyMessage() {
+    if (this.homeService.experiments.length > 0) return nothing;
+    return html`<div class="empty-message">No experiments yet</div>`;
   }
 }
 
