@@ -10,6 +10,7 @@ import {
   getDoc,
   getDocs,
   onSnapshot,
+  or,
   query,
   updateDoc,
   where,
@@ -54,7 +55,10 @@ export class HomeService extends Service {
     // Subscribe to relevant experiment documents
     const experimentQuery = query(
       collection(this.sp.firebaseService.firestore, 'experiments'),
-      where('metadata.creator', '==', this.sp.authService.userId),
+      or(
+        where('metadata.creator', '==', this.sp.authService.userId),
+        where('permissions.visibility', '==', 'public')
+      )
     );
 
     this.unsubscribe.push(
