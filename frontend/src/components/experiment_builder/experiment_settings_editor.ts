@@ -103,6 +103,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           <md-checkbox
             touch-target="wrapper"
             ?checked=${isPublic}
+            ?disabled=${!this.experimentEditor.isCreator}
             @click=${updateVisibility}
           >
           </md-checkbox>

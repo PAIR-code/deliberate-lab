@@ -21,10 +21,12 @@ import {
   deleteExperimentCallable,
 } from '../shared/callables';
 
+import {AuthService} from './auth.service';
 import {FirebaseService} from './firebase.service';
 import {Service} from './service';
 
 interface ServiceProvider {
+  authService: AuthService;
   firebaseService: FirebaseService;
 }
 
@@ -53,6 +55,11 @@ export class ExperimentEditor extends Service {
   @computed get isValidExperimentConfig() {
     // TODO: Add other validation checks here
     return this.experiment.metadata.name.length > 0;
+  }
+
+  @computed get isCreator() {
+    return this.sp.authService.userId === this.experiment.metadata.creator
+      || this.experiment.metadata.creator === '';
   }
 
   isInitializedExperiment() {
