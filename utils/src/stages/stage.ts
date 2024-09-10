@@ -1,4 +1,9 @@
 import { ChatStageConfig } from './chat_stage';
+import {
+  ElectionStageConfig,
+  ElectionStageParticipantAnswer,
+  ElectionStagePublicData,
+} from './election_stage';
 import { InfoStageConfig } from './info_stage';
 import { ProfileStageConfig } from './profile_stage';
 import {
@@ -62,6 +67,7 @@ export interface StageTextConfig {
 
 export type StageConfig =
   | ChatStageConfig
+  | ElectionStageConfig
   | InfoStageConfig
   | ProfileStageConfig
   | SurveyStageConfig
@@ -81,6 +87,7 @@ export interface BaseStageParticipantAnswer {
 }
 
 export type StageParticipantAnswer =
+ | ElectionStageParticipantAnswer
  | SurveyStageParticipantAnswer;
 
 /**
@@ -96,6 +103,7 @@ export interface BaseStagePublicData {
 }
 
 export type StagePublicData =
+  | ElectionStagePublicData
   | SurveyStagePublicData;
 
 // ************************************************************************* //
