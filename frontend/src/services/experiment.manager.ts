@@ -20,12 +20,14 @@ import {
   ParticipantProfileExtended,
   ParticipantStatus,
   StageConfig,
-  createCohortConfig
+  createCohortConfig,
+  generateId
 } from '@deliberation-lab/utils';
 import {
   createParticipantCallable,
   updateParticipantCallable,
-  writeCohortCallable
+  writeCohortCallable,
+  writeExperimentCallable
 } from '../shared/callables';
 import {
   getCohortParticipants,
@@ -262,6 +264,44 @@ export class ExperimentManager extends Service {
   // *********************************************************************** //
   // FIRESTORE                                                               //
   // *********************************************************************** //
+
+  /** Fork the current experiment. */
+  // TODO: Add forkExperiment cloud function on backend
+  // that takes in ID of experiment to fork (instead of experiment copy)
+  async forkExperiment() {
+    const experiment = this.sp.experimentService.experiment;
+    if (!experiment) return;
+
+    // Change ID (creator will be changed by cloud functions)
+    experiment.id = generateId();
+    experiment.metadata.name = `Copy of ${experiment.metadata.name}`;
+
+    // Get ordered list of stages
+    const stages: StageConfig[] = [];
+    experiment.stageIds.forEach(id => {
+      const stage = this.sp.experimentService.stageConfigMap[id];
+      if (stage) stages.push(stage);
+    });
+
+    let response = {};
+    response = await writeExperimentCallable(
+      this.sp.firebaseService.functions,
+      {
+        collectionName: 'experiments',
+        experimentConfig: experiment,
+        stageConfigs: stages
+      }
+    );
+
+    // Route to new experiment and reload to update changes
+    this.sp.routerService.navigate(Pages.EXPERIMENT, {
+      experiment: experiment.id
+    });
+    this.sp.experimentService.updateForCurrentRoute();
+    this.updateForCurrentRoute();
+
+    return response;
+  }
 
   /** Create or update a cohort
    * @rights Experimenter

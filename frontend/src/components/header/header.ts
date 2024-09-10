@@ -171,6 +171,13 @@ export class Header extends MobxLitElement {
         }
         return html`
           <pr-icon-button
+            icon="fork_right"
+            color="neutral"
+            variant="default"
+            @click=${() => { this.experimentManager.forkExperiment(); }}
+          >
+          </pr-icon-button>
+          <pr-icon-button
             icon="settings"
             color="neutral"
             variant="default"
