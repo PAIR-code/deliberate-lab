@@ -114,6 +114,18 @@ export class ElectionView extends MobxLitElement {
       target.style.opacity = '';
     };
 
+    const onAddToRanking = () => {
+      if (!this.stage || !profile) return;
+      const rankings = [
+        ...(this.answer?.rankingList ?? []),
+        profile.publicId,
+      ];
+      // Update ranking list
+      this.participantService.updateElectionStageParticipantAnswer(
+        this.stage.id, rankings
+      );
+    };
+
     return html`
       <div
         class="draggable"
@@ -122,6 +134,14 @@ export class ElectionView extends MobxLitElement {
         .ondragend=${onDragEnd}
       >
         ${this.renderParticipant(profile)}
+        <pr-icon-button
+          icon="playlist_add"
+          color="neutral"
+          variant="default"
+          ?disabled=${this.participantService.disableStage}
+          @click=${onAddToRanking}
+        >
+        </pr-icon-button>
       </div>
     `;
   }
@@ -203,10 +223,8 @@ export class ElectionView extends MobxLitElement {
       return nothing;
     }
 
+    const rankings = this.answer?.rankingList ?? [];
     const onCancel = () => {
-      const rankings = this.answer?.rankingList ?? [];
-      const index = rankings.findIndex((id) => id === profile.publicId);
-
       if (index === -1 || !this.stage) {
         return;
       }
@@ -216,6 +234,34 @@ export class ElectionView extends MobxLitElement {
         [...rankings.slice(0, index), ...rankings.slice(index + 1)],
       );
     };
+
+    const onMoveUp = () => {
+      if (!this.stage) return;
+      const rankingList = [
+        ...rankings.slice(0, index - 1),
+        ...rankings.slice(index, index + 1),
+        ...rankings.slice(index - 1, index),
+        ...rankings.slice(index + 1)
+      ];
+      this.participantService.updateElectionStageParticipantAnswer(
+        this.stage.id,
+        rankingList
+      );
+    };
+
+    const onMoveDown = () => {
+      if (!this.stage) return;
+      const rankingList = [
+        ...rankings.slice(0, index),
+        ...rankings.slice(index + 1, index + 2),
+        ...rankings.slice(index, index + 1),
+        ...rankings.slice(index + 2),
+      ];
+      this.participantService.updateElectionStageParticipantAnswer(
+        this.stage.id,
+        rankingList
+      );
+    }
 
     const onDragStart = (event: DragEvent) => {
       let target = event.target as HTMLElement;
@@ -241,14 +287,32 @@ export class ElectionView extends MobxLitElement {
         .ondragend=${onDragEnd}
       >
         ${this.renderParticipant(profile)}
-        <pr-icon-button
-          icon="close"
-          color="neutral"
-          variant="default"
-          ?disabled=${this.participantService.disableStage}
-          @click=${onCancel}
-        >
-        </pr-icon-button>
+        <div class="actions">
+          <pr-icon-button
+            icon="arrow_upward"
+            color="neutral"
+            variant="default"
+            ?disabled=${this.participantService.disableStage || index === 0}
+            @click=${onMoveUp}
+          >
+          </pr-icon-button>
+          <pr-icon-button
+            icon="arrow_downward"
+            color="neutral"
+            variant="default"
+            ?disabled=${this.participantService.disableStage || index === rankings.length - 1}
+            @click=${onMoveDown}
+          >
+          </pr-icon-button>
+          <pr-icon-button
+            icon="close"
+            color="neutral"
+            variant="default"
+            ?disabled=${this.participantService.disableStage}
+            @click=${onCancel}
+          >
+          </pr-icon-button>
+        </div>
       </div>
     `;
   }

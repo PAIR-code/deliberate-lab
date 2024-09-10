@@ -81,7 +81,7 @@ export class SurveyEditor extends MobxLitElement {
       ...this.stage.questions.slice(0, index),
       ...this.stage.questions.slice(index + 1, index + 2),
       ...this.stage.questions.slice(index, index + 1),
-      ...this.stage.questions.slice(index + 1),
+      ...this.stage.questions.slice(index + 2),
     ];
 
     this.experimentEditor.updateStage({

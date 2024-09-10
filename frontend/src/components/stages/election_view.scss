@@ -84,3 +84,8 @@
     flex-grow: 1;
   }
 }
+
+.actions {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+}
