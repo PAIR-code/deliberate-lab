@@ -4,6 +4,7 @@ import '../popup/attention_check_popup';
 import '../progress/progress_stage_waiting';
 import '../stages/chat_interface';
 import '../stages/chat_panel';
+import '../stages/election_view';
 import '../stages/info_view';
 import '../stages/survey_view';
 import '../stages/tos_view';
@@ -196,6 +197,19 @@ export class ParticipantPreviewer extends MobxLitElement {
           <div class="content chat">
             <chat-panel .stage=${stage}></chat-panel>
             <chat-interface .stage=${stage}></chat-interface>
+          </div>
+        `;
+      case StageKind.ELECTION:
+        if (isWaiting) {
+          return html`
+            <div class="content">
+              <progress-stage-waiting></progress-stage-waiting>
+            </div>
+          `;
+        }
+        return html`
+          <div class="content">
+            <election-view .stage=${stage} .answer=${answer}></election-view>
           </div>
         `;
       case StageKind.SURVEY:

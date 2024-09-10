@@ -1,30 +1,29 @@
 import { Value } from '@sinclair/typebox/value';
 import {
   SurveyStageParticipantAnswer,
-  UpdateSurveyStageParticipantAnswerData
+  UpdateSurveyStageParticipantAnswerData,
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import { onCall } from 'firebase-functions/v2/https';
 
-import { app } from './app';
-import { AuthGuard } from './utils/auth-guard';
+import { app } from '../app';
 import {
   checkConfigDataUnionOnPath,
   isUnionError,
   prettyPrintError,
   prettyPrintErrors,
-} from './utils/validation';
+} from '../utils/validation';
 
-/** Endpoints for updating stage participant answers. */
+/** Endpoints for updating survey stage participant answers. */
 
 // ************************************************************************* //
 // updateSurveyStageParticipantAnswer endpoint                               //
 //                                                                           //
 // Input structure: { experimentId, participantId,                           //
 //                    surveyStageParticipantAnswer }                         //
-// Validation: utils/src/stage.validation.ts                                 //
+// Validation: utils/src/stages/survey_stage.validation.ts                   //
 // ************************************************************************* //
 
 export const updateSurveyStageParticipantAnswer = onCall(async (request) => {

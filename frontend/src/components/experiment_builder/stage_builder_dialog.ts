@@ -14,6 +14,7 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 import {
   StageKind,
   createChatStage,
+  createElectionStage,
   createInfoStage,
   createProfileStage,
   createSurveyStage,
@@ -59,6 +60,7 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderProfileCard()}
         ${this.renderSurveyCard()}
         ${this.renderChatCard()}
+        ${this.renderElectionCard()}
       </div>
     `;
   }
@@ -110,6 +112,22 @@ export class StageBuilderDialog extends MobxLitElement {
         <div class="title">Group chat</div>
         <div>
           Discuss topics with other participants (LLM mediators coming soon!)
+        </div>
+      </div>
+    `;
+  }
+
+  private renderElectionCard() {
+    const addStage = () => {
+      this.experimentEditor.addStage(createElectionStage());
+      this.experimentEditor.toggleStageBuilderDialog();
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">Election</div>
+        <div>
+          Rank other participants in order to select a winner
         </div>
       </div>
     `;

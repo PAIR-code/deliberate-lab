@@ -131,5 +131,5 @@ export function getCondorcetElectionWinner(rankings: Record<string, string[]>) {
     }
   }
 
-  return winner ?? participants[0];
+  return winner ?? participants[0] ?? '';
 }

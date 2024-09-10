@@ -1,0 +1,91 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-xl;
+  height: 100%;
+}
+
+.election-wrapper {
+  display: grid;
+  flex-grow: 1;
+  grid-template-columns: repeat(2, 1fr);
+  gap: common.$spacing-xxl;
+  width: 100%;
+}
+
+.draggable,
+.ranked {
+  @include common.flex-row;
+  background: var(--md-sys-color-surface-variant);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: common.$spacing-medium;
+  gap: common.$spacing-medium;
+  justify-content: space-between;
+  overflow: hidden;
+  padding: common.$spacing-medium;
+}
+
+.participant {
+  @include common.flex-row-align-center;
+  flex-wrap: wrap;
+  gap: common.$spacing-large;
+
+  .right {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-small;
+  }
+}
+
+.title {
+  @include typescale.title-medium;
+}
+
+.subtitle {
+  @include typescale.label-medium;
+  color: var(--md-sys-color-outline);
+}
+
+.zone-header {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+
+  .subtitle {
+    @include typescale.label-small;
+    color: var(--md-sys-color-outline);
+    font-style: italic;
+  }
+}
+
+.start-zone {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+.end-zone {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface);
+  border: 1px dashed var(--md-sys-color-outline);
+  border-radius: common.$spacing-medium;
+  min-height: 200px;
+  padding: common.$spacing-xl;
+}
+
+.drag-zone{
+  padding: common.$spacing-medium;
+
+  &.drag-over {
+    height: 80px;
+    transition: height .25s ease-out;
+  }
+
+  &.fill {
+    flex-grow: 1;
+  }
+}
+
+.actions {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+}

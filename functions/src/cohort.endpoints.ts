@@ -1,6 +1,7 @@
 import { Value } from '@sinclair/typebox/value';
 import {
-  CohortCreationData
+  CohortCreationData,
+  createPublicDataFromStageConfigs,
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
@@ -53,6 +54,26 @@ export const writeCohort = onCall(async (request) => {
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     transaction.set(document, cohortConfig);
+
+    // For relevant stages, initialize public stage data documents
+    const stageConfigs =
+      await app.firestore().collection(`experiments/${data.experimentId}/stages`)
+      .get();
+
+    const publicData = createPublicDataFromStageConfigs(
+      stageConfigs.docs.map(stageDoc => stageDoc.data())
+    );
+
+    for (const dataItem of publicData) {
+      const dataDoc = app.firestore()
+        .collection('experiments')
+        .doc(data.experimentId)
+        .collection('cohorts')
+        .doc(cohortConfig.id)
+        .collection('publicStageData')
+        .doc(dataItem.id);
+      transaction.set(dataDoc, dataItem);
+    }
   });
 
   return { id: document.id };

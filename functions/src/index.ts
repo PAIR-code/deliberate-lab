@@ -5,7 +5,9 @@
 
 // Cloud functions
 export * from './experiment.endpoints';
-export * from './chat.endpoints';
 export * from './cohort.endpoints';
 export * from './participant.endpoints';
-export * from './stage.endpoints';
+
+export * from './stages/chat.endpoints';
+export * from './stages/election.endpoints';
+export * from './stages/survey.endpoints';

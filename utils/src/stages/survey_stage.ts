@@ -213,3 +213,14 @@ export function createSurveyStageParticipantAnswer(
     answerMap: config.answerMap ?? {},
   }
 }
+
+/** Create survey stage public data. */
+export function createSurveyStagePublicData(
+  id: string, // stage ID
+): SurveyStagePublicData {
+  return {
+    id,
+    kind: StageKind.SURVEY,
+    participantAnswerMap: {},
+  };
+}
