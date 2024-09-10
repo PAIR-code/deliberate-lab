@@ -2,6 +2,7 @@ import { Value } from '@sinclair/typebox/value';
 import {
   ElectionStageParticipantAnswer,
   StageKind,
+  StagePublicData,
   UpdateElectionStageParticipantAnswerData,
   getCondorcetElectionWinner,
 } from '@deliberation-lab/utils';
@@ -64,12 +65,11 @@ export const updateElectionStageParticipantAnswer = onCall(async (request) => {
     // Update answer
     transaction.set(document, answer);
 
-    // TODO: Initialize public stage data for election on cohort creation.
     // Update public stage data (current participant rankings, current winner)
-    /* const publicStageData = publicDocument.get().data();
+    const publicStageData = (await publicDocument.get()).data() as StagePublicData;
     publicStageData.participantAnswerMap[data.participantPublicId] = data.rankingList;
     publicStageData.currentWinner = getCondorcetElectionWinner(publicStageData.participantAnswerMap);
-    transaction.set(publicDocument, publicStageData); */
+    transaction.set(publicDocument, publicStageData);
   });
 
   return { id: document.id };

@@ -3,6 +3,7 @@ import {
   ElectionStageConfig,
   ElectionStageParticipantAnswer,
   ElectionStagePublicData,
+  createElectionStagePublicData,
 } from './election_stage';
 import { InfoStageConfig } from './info_stage';
 import { ProfileStageConfig } from './profile_stage';
@@ -10,6 +11,7 @@ import {
   SurveyStageConfig,
   SurveyStageParticipantAnswer,
   SurveyStagePublicData,
+  createSurveyStagePublicData,
 } from './survey_stage';
 import { TOSStageConfig } from './tos_stage';
 import { TransferStageConfig } from './transfer_stage';
@@ -99,6 +101,7 @@ export type StageParticipantAnswer =
  * in Firestore.
  */
 export interface BaseStagePublicData {
+  id: string; // should match stage ID
   kind: StageKind;
 }
 
@@ -124,4 +127,22 @@ export function createStageTextConfig(
 /** Find index of specific stage kind. */
 export function findStageKind(stages: StageConfig[], kind: StageKind) {
   return stages.findIndex((stage) => stage.kind === kind);
+}
+
+/** Given list of StageConfigs, return list of initialized PublicData. */
+export function createPublicDataFromStageConfigs(stages: StageConfig[]) {
+  const publicData: StagePublicData[] = [];
+  stages.forEach((stage) => {
+    switch (stage.kind) {
+      case StageKind.ELECTION:
+        publicData.push(createElectionStagePublicData(stage.id));
+        break;
+      case StageKind.SURVEY:
+        publicData.push(createSurveyStagePublicData(stage.id));
+        break;
+      default:
+        break;
+    }
+  });
+  return publicData;
 }
