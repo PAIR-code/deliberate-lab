@@ -14,3 +14,13 @@
     width: 150px;
   }
 }
+
+@include common.viewport-small {
+  .progress-bar {
+    width: 30px;
+
+    .large {
+      width: 50px;
+    }
+  }
+}
