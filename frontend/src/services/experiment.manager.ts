@@ -93,10 +93,15 @@ export class ExperimentManager extends Service {
       }
     } else {
       // Load current experiment into editor
-      this.sp.experimentEditor.loadExperiment(
-        this.sp.experimentService.experiment!,
-        Object.values(this.sp.experimentService.stageConfigMap)
-      );
+      const experiment = this.sp.experimentService.experiment;
+      if (!experiment) return;
+
+      const stages: StageConfig[] = [];
+      experiment.stageIds.forEach(id => {
+        const stage = this.sp.experimentService.stageConfigMap[id];
+        if (stage) stages.push(stage);
+      });
+      this.sp.experimentEditor.loadExperiment(experiment, stages);
       this.isEditing = true;
     }
   }
