@@ -145,7 +145,7 @@ export class ElectionView extends MobxLitElement {
 
     const onDrop = (event: DragEvent) => {
       const target = event.target as HTMLElement;
-      if (target && event.dataTransfer) {
+      if (target && event.dataTransfer && this.stage) {
         event.preventDefault();
         target.classList.remove('drag-over');
 
@@ -175,8 +175,10 @@ export class ElectionView extends MobxLitElement {
           participantId,
           ...rankings.slice(newIndex),
         ];
-        // TODO: Update call
-        // this.participantService.updateVoteForLeaderStage(stageId, rankings);
+        // Update ranking list
+        this.participantService.updateElectionStageParticipantAnswer(
+          this.stage.id, rankings
+        );
       }
     };
 
@@ -205,14 +207,14 @@ export class ElectionView extends MobxLitElement {
       const rankings = this.answer?.rankingList ?? [];
       const index = rankings.findIndex((id) => id === profile.publicId);
 
-      if (index === -1) {
+      if (index === -1 || !this.stage) {
         return;
       }
 
-      /** this.participantService.updateVoteForLeaderStage(stageId, [
-        ...rankings.slice(0, index),
-        ...rankings.slice(index + 1),
-      ]); */
+      this.participantService.updateElectionStageParticipantAnswer(
+        this.stage.id,
+        [...rankings.slice(0, index), ...rankings.slice(index + 1)],
+      );
     };
 
     const onDragStart = (event: DragEvent) => {

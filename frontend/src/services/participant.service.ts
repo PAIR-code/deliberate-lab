@@ -32,6 +32,7 @@ import {
   createChatMessageCallable,
   updateParticipantCallable,
   updateSurveyStageParticipantAnswerCallable,
+  updateElectionStageParticipantAnswerCallable,
 } from '../shared/callables';
 import {PROLIFIC_COMPLETION_URL_PREFIX} from '../shared/constants';
 import {
@@ -431,6 +432,27 @@ export class ParticipantService extends Service {
           experimentId: this.experimentId,
           participantId: this.profile.privateId,
           surveyStageParticipantAnswer: participantAnswer,
+        }
+      );
+    }
+    return response;
+  }
+
+  /** Update participant's election stage answer. */
+  async updateElectionStageParticipantAnswer(
+    stageId: string, // election stage ID
+    rankingList: string[], // list of rankings
+  ) {
+    let response = {};
+    if (this.experimentId && this.profile) {
+      response = await updateElectionStageParticipantAnswerCallable(
+        this.sp.firebaseService.functions, {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          participantPublicId: this.profile.publicId,
+          participantPrivateId: this.profile.privateId,
+          stageId,
+          rankingList
         }
       );
     }

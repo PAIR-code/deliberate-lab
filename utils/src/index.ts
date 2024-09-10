@@ -22,6 +22,7 @@ export * from './stages/stage.validation';
 export * from './stages/chat_stage';
 export * from './stages/chat_stage.validation';
 export * from './stages/election_stage';
+export * from './stages/election_stage.validation';
 export * from './stages/info_stage';
 export * from './stages/info_stage.validation';
 export * from './stages/profile_stage';

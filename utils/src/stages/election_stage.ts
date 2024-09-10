@@ -50,6 +50,8 @@ export interface ElectionStageParticipantAnswer extends BaseStageParticipantAnsw
  */
 export interface ElectionStagePublicData extends BaseStagePublicData {
   kind: StageKind.ELECTION;
+  // ID of current winner based on participant rankings
+  currentWinner: string;
   // Maps from participant to participant's rankings (question ID to answer)
   participantAnswerMap: Record<string, Record<string, string[]>>;
 }

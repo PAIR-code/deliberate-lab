@@ -7,6 +7,7 @@ import {
   ExperimentDeletionData,
   ParticipantProfileExtendedData,
   SimpleResponse,
+  UpdateElectionStageParticipantAnswerData,
   UpdateSurveyStageParticipantAnswerData
 } from '@deliberation-lab/utils';
 
@@ -49,6 +50,14 @@ export const updateSurveyStageParticipantAnswerCallable = async(
   functions: Functions, config: UpdateSurveyStageParticipantAnswerData
 ) => {
   const { data } = await httpsCallable<UpdateSurveyStageParticipantAnswerData, CreationResponse>(functions, 'updateSurveyStageParticipantAnswer')(config);
+  return data;
+}
+
+/** Generic endpoint to update election stage participant answers */
+export const updateElectionStageParticipantAnswerCallable = async(
+  functions: Functions, config: UpdateElectionStageParticipantAnswerData
+) => {
+  const { data } = await httpsCallable<UpdateElectionStageParticipantAnswerData, CreationResponse>(functions, 'updateElectionStageParticipantAnswer')(config);
   return data;
 }
 

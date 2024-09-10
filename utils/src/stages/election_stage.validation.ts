@@ -50,8 +50,13 @@ export const ElectionStageParticipantAnswerData = Type.Object(
 export const UpdateElectionStageParticipantAnswerData = Type.Object(
   {
     experimentId: Type.String({ minLength: 1 }),
-    participantId: Type.String({ minLength: 1 }),
-    electionStageParticipantAnswer: ElectionStageParticipantAnswerData,
+    cohortId: Type.String({ minLength: 1 }),
+    participantPublicId: Type.String({ minLength: 1 }),
+    participantPrivateId: Type.String({ minLength: 1}),
+    stageId: Type.String({ minLength: 1 }),
+    rankingList: Type.Array(Type.String()),
   },
   strict,
 );
+
+export type UpdateElectionStageParticipantAnswerData = Static<typeof UpdateElectionStageParticipantAnswerData>;

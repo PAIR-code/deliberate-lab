@@ -1,7 +1,11 @@
 import { Value } from '@sinclair/typebox/value';
 import {
+  ElectionStageParticipantAnswer,
   SurveyStageParticipantAnswer,
-  UpdateSurveyStageParticipantAnswerData
+  StageKind,
+  UpdateElectionStageParticipantAnswerData,
+  UpdateSurveyStageParticipantAnswerData,
+  getCondorcetElectionWinner,
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
@@ -24,7 +28,7 @@ import {
 //                                                                           //
 // Input structure: { experimentId, participantId,                           //
 //                    surveyStageParticipantAnswer }                         //
-// Validation: utils/src/stage.validation.ts                                 //
+// Validation: utils/src/stages/survey_stage.validation.ts                   //
 // ************************************************************************* //
 
 export const updateSurveyStageParticipantAnswer = onCall(async (request) => {
@@ -55,6 +59,74 @@ export const updateSurveyStageParticipantAnswer = onCall(async (request) => {
 
 function handleUpdateSurveyStageParticipantAnswerValidationErrors(data: any) {
   for (const error of Value.Errors(UpdateSurveyStageParticipantAnswerData, data)) {
+    if (isUnionError(error)) {
+      const nested = checkConfigDataUnionOnPath(data, error.path);
+      prettyPrintErrors(nested);
+    } else {
+      prettyPrintError(error);
+    }
+  }
+
+  throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
+}
+
+// ************************************************************************* //
+// updateElectionStageParticipantAnswer endpoint                             //
+//                                                                           //
+// Input structure: { experimentId, cohortId, participantPublicId,           //
+//                    participantPrivateId, stageId, rankingList }           //
+// Validation: utils/src/stages/election_stage.validation.ts                 //
+// ************************************************************************* //
+export const updateElectionStageParticipantAnswer = onCall(async (request) => {
+  const { data } = request;
+
+  // Validate input
+  const validInput = Value.Check(UpdateElectionStageParticipantAnswerData, data);
+  if (!validInput) {
+    handleUpdateElectionStageParticipantAnswerValidationErrors(data);
+  }
+
+  const answer: ElectionStageParticipantAnswer = {
+    id: data.stageId,
+    kind: StageKind.ELECTION,
+    rankingList: data.rankingList,
+  };
+
+  // Define document reference
+  const document = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('participants')
+    .doc(data.participantPrivateId)
+    .collection('stageData')
+    .doc(data.stageId);
+
+  const publicDocument = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('cohorts')
+    .doc(data.cohortId)
+    .collection('publicStageData')
+    .doc(data.stageId);
+
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    // Update answer
+    transaction.set(document, answer);
+
+    // TODO: Initialize public stage data for election on cohort creation.
+    // Update public stage data (current participant rankings, current winner)
+    /* const publicStageData = publicDocument.get().data();
+    publicStageData.participantAnswerMap[data.participantPublicId] = data.rankingList;
+    publicStageData.currentWinner = getCondorcetElectionWinner(publicStageData.participantAnswerMap);
+    transaction.set(publicDocument, publicStageData); */
+  });
+
+  return { id: document.id };
+});
+
+function handleUpdateElectionStageParticipantAnswerValidationErrors(data: any) {
+  for (const error of Value.Errors(UpdateElectionStageParticipantAnswerData, data)) {
     if (isUnionError(error)) {
       const nested = checkConfigDataUnionOnPath(data, error.path);
       prettyPrintErrors(nested);
