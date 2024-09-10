@@ -95,6 +95,10 @@ export class ExperimentBuilder extends MobxLitElement {
         return html`
           <base-stage-editor .stage=${stage}></base-stage-editor>
         `;
+      case StageKind.ELECTION:
+        return html`
+          <base-stage-editor .stage=${stage}></base-stage-editor>
+        `;
       case StageKind.SURVEY:
         return html`
           <base-stage-editor .stage=${stage}></base-stage-editor>

@@ -198,6 +198,12 @@ export class ParticipantPreviewer extends MobxLitElement {
             <chat-interface .stage=${stage}></chat-interface>
           </div>
         `;
+      case StageKind.ELECTION:
+        return html`
+          <div class="content">
+            Election view coming soon
+          </div>
+        `;
       case StageKind.SURVEY:
         return html`
           <div class="content">
