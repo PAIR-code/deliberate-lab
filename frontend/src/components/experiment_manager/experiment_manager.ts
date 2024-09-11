@@ -51,13 +51,26 @@ export class ExperimentManagerComponent extends MobxLitElement {
     }
 
     return html`
-      <experiment-manager-nav></experiment-manager-nav>
+      ${this.renderNav()}
       <div class="experiment-manager">
         ${this.renderManager()}
       </div>
       ${this.renderCohortSettingsDialog()}
       ${this.renderExperimentSettingsDialog()}
     `;
+  }
+
+  private renderNav() {
+    if (Object.keys(this.experimentService.stageConfigMap).length === 0) {
+      return html`
+        <div class="empty-nav">
+          WARNING: Your experiment has no stages.
+          Use the edit button in the top left to add stages
+          in order to unlock cohort and participant creation.
+        </div>
+      `;
+    }
+    return html`<experiment-manager-nav></experiment-manager-nav>`;
   }
 
   private renderExperimentSettingsDialog() {
