@@ -26,6 +26,7 @@ export class GalleryCard extends MobxLitElement {
     return html`
       <div class="header">
         <div class="title">${this.item.title}</div>
+        ${this.item.isPublic ? nothing : html`<div class="chip">private</div>`}
       </div>
       <div class="description">${this.item.description}</div>
       <div class="footer">

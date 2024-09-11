@@ -1,5 +1,6 @@
 import {
-  Experiment
+  Experiment,
+  Visibility
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToDate} from './utils';
 import {GalleryItem} from './types';
@@ -18,6 +19,7 @@ export function convertExperimentToGalleryItem(
     description: experiment.metadata.description,
     creator: experiment.metadata.creator,
     date: convertUnifiedTimestampToDate(experiment.metadata.dateModified),
+    isPublic: experiment.permissions.visibility === Visibility.PUBLIC,
     isStarred: false, // TODO: Find user isStarred value
     tags: experiment.metadata.tags,
   }

@@ -24,6 +24,11 @@
   word-break: break-all;
 }
 
+.chip {
+  @include typescale.label-small;
+  @include common.chip;
+}
+
 .description {
   @include typescale.body-small;
   color: var(--md-sys-color-outline);
