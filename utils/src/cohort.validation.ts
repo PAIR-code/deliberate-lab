@@ -30,3 +30,17 @@ export const CohortCreationData = Type.Object(
 );
 
 export type CohortCreationData = Static<typeof CohortCreationData>;
+
+// ************************************************************************* //
+// deleteCohort endpoint                                                     //
+// ************************************************************************* //
+
+export const CohortDeletionData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    cohortId: Type.String({ minLength: 1 }),
+  },
+  strict,
+);
+
+export type CohortDeletionData = Static<typeof CohortDeletionData>;

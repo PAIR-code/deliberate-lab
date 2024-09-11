@@ -50,6 +50,13 @@ export class CohortSettingsDialog extends MobxLitElement {
         </div>
         <div class="footer">
           <pr-button
+            color="error"
+            variant="tonal"
+            @click=${() => { this.experimentManager.deleteCohort(this.experimentManager.cohortEditing!.id) }}
+          >
+            Delete cohort
+          </pr-button>
+          <pr-button
             @click=${() => {
               this.experimentManager.writeCohort(
                 this.experimentManager.cohortEditing

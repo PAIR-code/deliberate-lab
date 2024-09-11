@@ -1,5 +1,6 @@
 import '../../pair-components/button';
 import '../../pair-components/icon_button';
+import '../../pair-components/tooltip';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -184,14 +185,16 @@ export class Header extends MobxLitElement {
             @click=${() => { this.experimentManager.setIsEditingSettingsDialog(true); }}
           >
           </pr-icon-button>
-          <pr-icon-button
-            icon="edit"
-            color="primary"
-            variant="default"
-            ?disabled=${this.experimentManager.getNumExperimentParticipants() > 0}
-            @click=${() => { this.experimentManager.setIsEditing(true); }}
-          >
-          </pr-icon-button>
+          <pr-tooltip text="Edit experiment stages (if no cohorts have been created)" position="BOTTOM_END">
+            <pr-icon-button
+              icon="edit"
+              color="primary"
+              variant="default"
+              ?disabled=${Object.keys(this.experimentManager.cohortMap).length > 0}
+              @click=${() => { this.experimentManager.setIsEditing(true); }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
         `;
       default:
         return nothing;

@@ -4,8 +4,10 @@ import {
   doc,
   getDocs,
   onSnapshot,
+  query,
   Timestamp,
   Unsubscribe,
+  where,
 } from 'firebase/firestore';
 import {CohortService} from './cohort.service';
 import {ExperimentEditor} from './experiment.editor';
@@ -28,6 +30,7 @@ import {
   deleteExperimentCallable,
   updateParticipantCallable,
   writeCohortCallable,
+  deleteCohortCallable,
   writeExperimentCallable
 } from '../shared/callables';
 import {
@@ -230,11 +233,14 @@ export class ExperimentManager extends Service {
     // Subscribe to participants' private profiles
     this.unsubscribe.push(
       onSnapshot(
-        collection(
-          this.sp.firebaseService.firestore,
-          'experiments',
-          id,
-          'participants'
+        query(
+          collection(
+            this.sp.firebaseService.firestore,
+            'experiments',
+            id,
+            'participants'
+          ),
+          where('currentStatus', '!=', ParticipantStatus.DELETED)
         ),
         (snapshot) => {
           let changedDocs = snapshot.docChanges().map((change) => change.doc);
@@ -315,6 +321,20 @@ export class ExperimentManager extends Service {
     });
     this.isEditingSettingsDialog = false;
     this.sp.routerService.navigate(Pages.HOME);
+    return response;
+  }
+
+  /** Deletes the specified cohort.
+   * @rights Creator of experiment
+   */
+  async deleteCohort(cohortId: string) {
+    if (!this.experimentId) return;
+    const response = await deleteCohortCallable(this.sp.firebaseService.functions, {
+      experimentId: this.experimentId,
+      cohortId
+    });
+    this.loadExperimentData(this.experimentId);
+    this.cohortEditing = undefined;
     return response;
   }
 

@@ -1,6 +1,7 @@
 import {
   CreateChatMessageData,
   CohortCreationData,
+  CohortDeletionData,
   CreateParticipantData,
   CreationResponse,
   ExperimentCreationData,
@@ -30,6 +31,12 @@ export const deleteExperimentCallable = async (functions: Functions, deletion: E
 /** Generic endpoint to write cohorts */
 export const writeCohortCallable = async (functions: Functions, cohort: CohortCreationData) => {
   const { data } = await httpsCallable<CohortCreationData, CreationResponse>(functions, 'writeCohort')(cohort);
+  return data;
+}
+
+/** Generic endpoint to delete cohorts */
+export const deleteCohortCallable = async (functions: Functions, cohort: CohortDeletionData) => {
+  const { data } = await httpsCallable<CohortDeletionData, CreationResponse>(functions, 'deleteCohort')(cohort);
   return data;
 }
 

@@ -59,6 +59,9 @@ export enum ParticipantStatus {
   ATTENTION_TIMEOUT = 'ATTENTION_FAIL',
   // Booted from the experiment by the experimenter
   BOOTED_OUT = 'BOOTED_OUT',
+  // Deleted (e.g., if cohort was deleted).
+  // The participant will not be part of dashboard, data download, etc.
+  DELETED = 'DELETED'
 }
 
 // ************************************************************************* //

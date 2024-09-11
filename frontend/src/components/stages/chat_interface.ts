@@ -95,7 +95,7 @@ export class ChatInterface extends MobxLitElement {
           text="Send message"
           color="tertiary"
           variant="outlined"
-          position="TOP_RIGHT"
+          position="TOP_END"
         >
           <pr-icon-button
             icon="send"

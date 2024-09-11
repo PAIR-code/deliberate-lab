@@ -1,6 +1,8 @@
 import { Value } from '@sinclair/typebox/value';
 import {
   CohortCreationData,
+  CohortDeletionData,
+  ParticipantStatus,
   createPublicDataFromStageConfigs,
 } from '@deliberation-lab/utils';
 
@@ -91,3 +93,45 @@ function handleCohortCreationValidationErrors(data: any) {
 
   throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
 }
+
+// ************************************************************************* //
+// deleteCohort endpoint                                                     //
+// (recursively remove cohort doc and subcollections)                        //
+//                                                                           //
+// Input structure: { experimentId, cohortId }                               //
+// Validation: utils/src/cohort.validation.ts                                //
+// ************************************************************************* //
+export const deleteCohort = onCall(async (request) => {
+  await AuthGuard.isExperimenter(request);
+  const { data } = request;
+
+  // Validate input
+  const validInput = Value.Check(CohortDeletionData, data);
+  if (!validInput) {
+    throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
+    return { success: false };
+  }
+
+  // Verify that experimenter is the creator before enabling delete
+  const experiment = (await app.firestore().collection('experiments').doc(data.experimentId).get())
+    .data();
+  if (request.auth?.uid !== experiment.metadata.creator) return;
+
+  // Delete document
+  const doc = app.firestore().doc(`experiments/${data.experimentId}/cohorts/${data.cohortId}`);
+  app.firestore().recursiveDelete(doc);
+
+  // Set all participants in cohort to deleted
+  const participants = (await app.firestore().collection('experiments').doc(data.experimentId).collection('participants').get())
+    .docs.map(doc => doc.data());
+  for (const participant of participants) {
+    if (participant.currentCohortId === data.cohortId || participant.transferCohortId === data.cohortId) {
+      await app.firestore().runTransaction(async (transaction) => {
+        const participantDoc = app.firestore().collection('experiments').doc(data.experimentId).collection('participants').doc(participant.privateId);
+        transaction.set(participantDoc, {...participant, currentStatus: ParticipantStatus.DELETED });
+      });
+    }
+  }
+
+  return { success: true };
+});
