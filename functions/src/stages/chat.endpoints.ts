@@ -3,10 +3,10 @@ import {
   ChatStageConfig,
   CreateChatMessageData,
   StageConfig,
-  StageKind
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
+import { Timestamp } from 'firebase-admin/firestore';
 import * as functions from 'firebase-functions';
 import { onCall } from 'firebase-functions/v2/https';
 
@@ -24,7 +24,7 @@ import {
 // createChatMessage endpoint                                                //
 //                                                                           //
 // Input structure: {                                                        //
-//   experimentId, cohortId, stageId, chatMessage, mediatorCalls             //
+//   experimentId, cohortId, stageId, chatMessage                            //
 // }                                                                         //
 // Validation: utils/src/chat.validation.ts                                  //
 // ************************************************************************* //
@@ -49,41 +49,13 @@ export const createChatMessage = onCall(async (request) => {
     .collection('chats')
     .doc(data.chatMessage.id);
 
+  const chatMessage = {...data.chatMessage, timestamp: Timestamp.now()};
+
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     // Add chat message
-    transaction.set(document, data.chatMessage);
-
-    // Then, check for mediators configured and run on chat history
-
-    // Get number of chats in collection
-    const numChatsBeforeMediator = (
-      await app
-      .firestore()
-      .collection(`experiments/${data.experimentId}/cohorts/${data.cohortId}/publicStageData/${data.stageId}/chats`)
-      .count().get())
-    .data().count;
-
-    // TODO: Call API for mediator messages
-    // Use experiment config to get ChatStageConfig with mediators.
-    const stage = (
-      await app.firestore().doc(`experiments/${data.experimentId}/stages/${data.stageId}`).get()
-    ).data() as StageConfig;
-    if (stage.kind !== StageKind.CHAT) { return; }
-
-    // Call LLM API with given modelCall info
-    // (prompt, experimenter ID to use for API key)
-
-    // If number of chats has not changed, add mediator message
-    const numChatsAfterMediator = (
-      await app
-      .firestore()
-      .collection(`experiments/${data.experimentId}/cohorts/${data.cohortId}/publicStageData/${data.stageId}/chats`)
-      .count().get())
-    .data().count;
-    if (numChatsAfterMediator > numChatsBeforeMediator) { return; }
-
-    // TODO: Add mediator message
+    // (see chat.triggers for auto-generated mediator responses)
+    transaction.set(document, chatMessage);
   });
 
   return { id: document.id };

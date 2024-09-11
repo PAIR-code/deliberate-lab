@@ -57,7 +57,6 @@ export interface CompareChatDiscussion extends BaseChatDiscussion {
 export interface DiscussionItem {
   id: string;
   name: string;
-  imageUrl: string|null; // null if no image provided
 }
 
 export type ChatDiscussion =
@@ -159,4 +158,41 @@ export function createParticipantChatMessage(
     profile: config.profile ?? createParticipantProfileBase(),
     participantPublicId: config.participantPublicId ?? '',
   };
+}
+
+/** Create agent mediator chat message. */
+export function createAgentMediatorChatMessage(
+  config: Partial<AgentMediatorChatMessage> = {}
+): AgentMediatorChatMessage {
+  return {
+    id: config.id ?? generateId(),
+    discussionId: config.discussionId ?? null,
+    type: ChatMessageType.AGENT_MEDIATOR,
+    message: config.message ?? '',
+    timestamp: config.timestamp ?? Timestamp.now(),
+    profile: config.profile ?? { name: 'Mediator', avatar: '🤖', pronouns: null },
+    mediatorId: config.mediatorId ?? '',
+  };
+}
+
+/** Convert chat messages into chat history string for prompt. */
+export function buildChatHistoryForPrompt(
+  messages: ChatMessage[]
+) {
+  const getTime = (timestamp: UnifiedTimestamp) => {
+    const date = new Date(timestamp.seconds * 1000);
+    return `(${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')})`;
+  };
+
+  return messages.map(
+    message => `${getTime(message.timestamp)} ${message.profile.name}: ${message.message}`
+  ).join('\n\n');
+}
+
+/** Add chat messages (as history) to given prompt. */
+export function addChatHistoryToPrompt(
+  messages: ChatMessage[],
+  prompt: string
+) {
+  return `${buildChatHistoryForPrompt(messages)}\n\n${prompt}`;
 }
