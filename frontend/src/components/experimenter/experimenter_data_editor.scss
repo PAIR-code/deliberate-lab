@@ -1,0 +1,35 @@
+@use "../../sass/colors";
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-xxl;
+}
+
+.section {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+.title {
+  @include typescale.title-small;
+  color: var(--md-sys-color-secondary);
+}
+
+.description {
+  color: var(--md-sys-color-outline);
+  font-style: italic;
+}
+
+.divider {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.spacer {
+  height: common.$spacing-xxl;
+}
+
+pr-textarea {
+  width: 100%;
+}

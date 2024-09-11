@@ -8,14 +8,20 @@ import {
 } from 'firebase/auth';
 import {
   doc,
-  setDoc
+  setDoc,
+  onSnapshot,
+  Unsubscribe
 } from 'firebase/firestore';
 
 import { Service } from "./service";
 import { FirebaseService } from "./firebase.service";
 import { HomeService } from "./home.service";
 
-import { ExperimenterProfile } from '../shared/types';
+import {
+  ExperimenterProfile,
+  ExperimenterData,
+  createExperimenterData
+} from '@deliberation-lab/utils';
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
@@ -35,6 +41,7 @@ export class AuthService extends Service {
         this.user.getIdTokenResult().then((result) => {
           if (result.claims['role'] === 'experimenter') {
             this.isExperimenter = true;
+            this.subscribe();
             this.writeExperimenterProfile(user);
             this.sp.homeService.subscribe();
           } else {
@@ -53,6 +60,10 @@ export class AuthService extends Service {
   @observable isExperimenter: boolean|null = null;
   @observable canEdit = false;
 
+  @observable unsubscribe: Unsubscribe[] = [];
+  @observable experimenterData: ExperimenterData|null = null;
+  @observable isExperimentDataLoading = false;
+
   @computed get userId() {
     return this.user?.uid;
   }
@@ -63,6 +74,33 @@ export class AuthService extends Service {
 
   @computed get authenticated() {
     return this.initialAuthCheck && this.user !== null;
+  }
+
+  subscribe() {
+    this.unsubscribeAll();
+    this.isExperimentDataLoading = true;
+
+    // Subscribe to user's experimenter data
+    if (!this.userId) return;
+    this.unsubscribe.push(
+      onSnapshot(
+        doc(this.sp.firebaseService.firestore, 'experimenterData', this.userId),
+        (doc) => {
+          if (!doc.exists()) {
+            this.writeExperimenterData(createExperimenterData(this.userId!));
+          } else {
+            this.experimenterData = doc.data() as ExperimenterData;
+          }
+          this.isExperimentDataLoading = false;
+        }
+      )
+    );
+  }
+
+  unsubscribeAll() {
+    this.unsubscribe.forEach((unsubscribe) => unsubscribe());
+    this.unsubscribe = [];
+    this.experimenterData = null;
   }
 
   setEditPermissions(canEdit: boolean) {
@@ -99,6 +137,18 @@ export class AuthService extends Service {
         profile.id
       ),
       profile
+    );
+  }
+
+  /** Update experimenter private data, e.g., API key. */
+  async writeExperimenterData(data: ExperimenterData) {
+    setDoc(
+      doc(
+        this.sp.firebaseService.firestore,
+        'experimenterData',
+        data.id
+      ),
+      data
     );
   }
 }

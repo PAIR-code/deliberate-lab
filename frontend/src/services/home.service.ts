@@ -1,5 +1,6 @@
 import {
   Experiment,
+  ExperimenterProfile,
   StageConfig,
 } from '@deliberation-lab/utils';
 import {
@@ -22,7 +23,6 @@ import {FirebaseService} from './firebase.service';
 import {Service} from './service';
 
 import {collectSnapshotWithId} from '../shared/utils';
-import {ExperimenterProfile} from '../shared/types';
 
 interface ServiceProvider {
   authService: AuthService;

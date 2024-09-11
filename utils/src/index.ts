@@ -1,5 +1,8 @@
 // Re export everything to simplify imports
 
+// Experimenter
+export * from './experimenter';
+
 // Shared
 export * from './shared';
 export * from './shared.validation';

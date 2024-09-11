@@ -1,5 +1,7 @@
 import "../../pair-components/button";
 
+import "../experimenter/experimenter_data_editor";
+
 import { MobxLitElement } from "@adobe/lit-mobx";
 import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
@@ -29,6 +31,7 @@ export class Settings extends MobxLitElement {
         ${this.renderColorThemeSection()}
         ${this.renderTextSizeSection()}
         ${this.renderAccountSection()}
+        ${this.authService.isExperimenter ? this.renderExperimenterData() : nothing}
         ${this.authService.isExperimenter ? this.renderAppVersionSection() : nothing}
       </div>
     `;
@@ -209,6 +212,15 @@ export class Settings extends MobxLitElement {
           <a href="https://github.com/PAIR-code/llm-mediation-experiments/commit/${GIT_COMMIT_HASH}" target="_blank">${GIT_VERSION}</a>
         </p>
         <p><b>Commit Date:</b> ${new Date(GIT_LAST_COMMIT_DATETIME)}</p>
+      </div>
+    `;
+  }
+
+  private renderExperimenterData() {
+    return html`
+      <div class="section">
+        <h2>Experiment private data</h2>
+        <experimenter-data-editor></experimenter-data-editor>
       </div>
     `;
   }
