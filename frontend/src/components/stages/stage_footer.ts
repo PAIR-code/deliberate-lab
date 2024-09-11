@@ -46,7 +46,10 @@ export class Footer extends MobxLitElement {
       // Navigate to landing
       this.routerService.navigate(
         Pages.PARTICIPANT,
-        this.routerService.activeRoute.params
+        {
+          'experiment': this.routerService.activeRoute.params['experiment'],
+          'participant': this.routerService.activeRoute.params['participant'],
+        }
       );
       this.isLoadingNext = false;
     };
