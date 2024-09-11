@@ -86,7 +86,7 @@ export class ChatInterface extends MobxLitElement {
           placeholder="Send message"
           .value=${this.value}
           ?focused=${autoFocus()}
-          ?disabled=${this.disableInput}
+          ?disabled=${this.disableInput || this.participantService.disableStage}
           @keyup=${handleKeyUp}
           @input=${handleInput}
         >
@@ -100,7 +100,7 @@ export class ChatInterface extends MobxLitElement {
           <pr-icon-button
             icon="send"
             variant="tonal"
-            .disabled=${this.value === '' || this.disableInput}
+            .disabled=${this.value === '' || this.disableInput || this.participantService.disableStage}
             ?loading=${this.participantService.isSendingChat}
             @click=${this.sendUserInput}
           >

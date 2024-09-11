@@ -5,6 +5,7 @@ import {
   getDocs,
   onSnapshot,
   or,
+  orderBy,
   query,
   Unsubscribe,
   where,
@@ -141,15 +142,18 @@ export class CohortService extends Service {
     for (const stageId of this.sp.experimentService.stageIds) {
       this.unsubscribe.push(
         onSnapshot(
-          collection(
-            this.sp.firebaseService.firestore,
-            'experiments',
-            this.experimentId,
-            'cohorts',
-            this.cohortId,
-            'publicStageData',
-            stageId,
-            'chats',
+          query(
+            collection(
+              this.sp.firebaseService.firestore,
+              'experiments',
+              this.experimentId,
+              'cohorts',
+              this.cohortId,
+              'publicStageData',
+              stageId,
+              'chats',
+            ),
+            orderBy('timestamp', 'asc'),
           ),
           (snapshot) => {
             let changedDocs = snapshot.docChanges().map((change) => change.doc);
@@ -223,6 +227,7 @@ export class CohortService extends Service {
 
     // Reset stage configs
     this.participantMap = {};
+    this.chatMap = {};
     this.transferParticipantMap = {};
     this.stagePublicDataMap = {};
   }

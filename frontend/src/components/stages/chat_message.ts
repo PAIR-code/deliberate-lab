@@ -14,10 +14,14 @@ import { ExperimentService } from "../../services/experiment.service";
 import { ParticipantService } from "../../services/participant.service";
 
 import {
+  AgentMediatorChatMessage,
   ChatMessage,
   ChatMessageType,
-  ParticipantChatMessage
+  ParticipantChatMessage,
 } from '@deliberation-lab/utils';
+import {
+  convertUnifiedTimestampToDate
+} from '../../shared/utils';
 
 import { styles } from "./chat_message.scss";
 
@@ -39,11 +43,12 @@ export class ChatMessageComponent extends MobxLitElement {
     switch(this.chat.type) {
       case ChatMessageType.PARTICIPANT:
         return this.renderParticipantMessage(this.chat);
+      case ChatMessageType.AGENT_MEDIATOR:
+        return this.renderAgentMediatorMessage(this.chat);
       default:
         return nothing;
     }
   }
-
 
   renderParticipantMessage(chatMessage: ParticipantChatMessage) {
     const classes = classMap({
@@ -60,6 +65,22 @@ export class ChatMessageComponent extends MobxLitElement {
           <div class="label">
             ${profile.name ?? chatMessage.participantPublicId}
             ${profile.pronouns ? `(${profile.pronouns})` : ""}
+          </div>
+          <div class="chat-bubble">${chatMessage.message}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderAgentMediatorMessage(chatMessage: AgentMediatorChatMessage) {
+    const profile = chatMessage.profile;
+
+    return html`
+      <div class="chat-message">
+        <profile-avatar .emoji=${profile.avatar}></profile-avatar>
+          <div class="content">
+          <div class="label">
+            ${profile.name}
           </div>
           <div class="chat-bubble">${chatMessage.message}</div>
         </div>

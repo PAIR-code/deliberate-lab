@@ -392,7 +392,7 @@ export class ParticipantService extends Service {
         ...config,
         participantPublicId: this.profile.publicId,
         profile: {
-          name: this.profile.name,
+          name: this.profile.name ?? this.profile.publicId,
           avatar: this.profile.avatar,
           pronouns: this.profile.pronouns,
         }
