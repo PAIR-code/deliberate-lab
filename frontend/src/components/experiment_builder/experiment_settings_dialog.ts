@@ -36,6 +36,12 @@ export class ExperimentSettingsDialog extends MobxLitElement {
         </div>
         <div class="footer">
           <pr-button
+            color="error"
+            @click=${() => { this.experimentManager.deleteExperiment()}}
+          >
+            Delete experiment
+          </pr-button>
+          <pr-button
             @click=${() => { this.experimentManager.setIsEditingSettingsDialog(false, true) }}
           >
             Save

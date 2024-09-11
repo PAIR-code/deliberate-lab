@@ -18,7 +18,6 @@ import { Timestamp } from 'firebase/firestore';
 import {computed, makeObservable, observable} from 'mobx';
 import {
   writeExperimentCallable,
-  deleteExperimentCallable,
 } from '../shared/callables';
 
 import {AuthService} from './auth.service';
@@ -179,15 +178,5 @@ export class ExperimentEditor extends Service {
 
     this.isWritingExperiment = false;
     return response;
-  }
-
-  /** Delete an experiment.
-   * @rights Experimenter
-   */
-  async deleteExperiment(experimentId: string) {
-    return deleteExperimentCallable(this.sp.firebaseService.functions, {
-      collectionName: 'experiments',
-      experimentId: experimentId,
-    });
   }
 }

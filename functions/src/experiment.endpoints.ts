@@ -95,14 +95,17 @@ export const deleteExperiment = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
   const { data } = request;
 
-  // TODO: Verify that experimenter is the creator before enabling delete
-
   // Validate input
   const validInput = Value.Check(ExperimentDeletionData, data);
   if (!validInput) {
     throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
     return { success: false };
   }
+
+  // Verify that experimenter is the creator before enabling delete
+  const experiment = (await app.firestore().collection('experiments').doc(data.experimentId).get())
+    .data();
+  if (request.auth?.uid !== experiment.metadata.creator) return;
 
   // Delete document
   const doc = app.firestore().doc(`${data.collectionName}/${data.experimentId}`);

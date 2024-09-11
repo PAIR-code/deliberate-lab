@@ -25,6 +25,7 @@ import {
 } from '@deliberation-lab/utils';
 import {
   createParticipantCallable,
+  deleteExperimentCallable,
   updateParticipantCallable,
   writeCohortCallable,
   writeExperimentCallable
@@ -300,6 +301,20 @@ export class ExperimentManager extends Service {
     this.sp.experimentService.updateForCurrentRoute();
     this.updateForCurrentRoute();
 
+    return response;
+  }
+
+  /** Deletes the current experiment.
+   * @rights Creator of experiment
+   */
+  async deleteExperiment() {
+    if (!this.experimentId) return;
+    const response = await deleteExperimentCallable(this.sp.firebaseService.functions, {
+      collectionName: 'experiments',
+      experimentId: this.experimentId,
+    });
+    this.isEditingSettingsDialog = false;
+    this.sp.routerService.navigate(Pages.HOME);
     return response;
   }
 

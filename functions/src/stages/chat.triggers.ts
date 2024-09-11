@@ -1,5 +1,5 @@
 import { Timestamp } from 'firebase-admin/firestore';
-import { onDocumentWritten } from 'firebase-functions/v2/firestore';
+import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import {
   ChatMessage,
   ChatMessageType,
@@ -12,7 +12,7 @@ import { app } from '../app';
 import { getGeminiAPIResponse } from '../api/gemini.api';
 
 /** When chat message is created, generate mediator response if relevant. */
-export const createMediatorMessage = onDocumentWritten(
+export const createMediatorMessage = onDocumentCreated(
   'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}',
   async (event) => {
     const data = event.data?.after.data() as ChatMessage | undefined;

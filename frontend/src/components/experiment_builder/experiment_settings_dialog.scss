@@ -38,6 +38,6 @@
   flex-shrink: 0;
   gap: common.$spacing-medium;
   height: common.$header-height;
-  justify-content: end;
+  justify-content: space-between;
   padding: 0 common.$main-content-padding;
 }
