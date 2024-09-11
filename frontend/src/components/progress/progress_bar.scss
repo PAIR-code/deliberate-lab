@@ -10,8 +10,8 @@
   width: 100px;
 
   &.large {
-    height: common.$spacing-medium;
-    width: 150px;
+    height: calc(common.$spacing-small + 2px);
+    width: 200px;
   }
 }
 

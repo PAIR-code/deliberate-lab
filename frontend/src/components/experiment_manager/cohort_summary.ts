@@ -3,6 +3,7 @@ import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
 
+import '../progress/cohort_progress_bar';
 import './participant_summary';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -76,11 +77,18 @@ export class CohortSummary extends MobxLitElement {
             @click=${() => { this.isExpanded = !this.isExpanded; }}
           >
           </pr-icon-button>
-          <div>
+          <div class="header-details">
+            <div class="top">
             ${getCohortName(this.cohort!)}
             <span class="subtitle">
               (${this.experimentManager.getCohortParticipants(this.cohort.id, false).length} participants)
             </span>
+            </div>
+            <cohort-progress-bar
+              .cohortId=${this.cohort.id}
+              .participantList=${this.experimentManager.getCohortParticipants(this.cohort.id)}
+            >
+            </cohort-progress-bar>
           </div>
         </div>
         <div class="right">
