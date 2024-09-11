@@ -10,4 +10,8 @@ export * from './participant.endpoints';
 
 export * from './stages/chat.endpoints';
 export * from './stages/election.endpoints';
+
 export * from './stages/survey.endpoints';
+
+// API functions
+export * from './api/gemini.api';

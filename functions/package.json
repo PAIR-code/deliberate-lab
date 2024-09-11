@@ -16,6 +16,7 @@
   "main": "lib/index.js",
   "dependencies": {
     "@deliberation-lab/utils": "file:../utils",
+    "@google/generative-ai": "^0.17.2",
     "@sinclair/typebox": "^0.32.30",
     "firebase-admin": "^12.1.0",
     "firebase-functions": "^5.0.0",
