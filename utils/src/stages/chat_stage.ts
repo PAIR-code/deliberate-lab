@@ -127,6 +127,24 @@ export interface ChatStagePublicData extends BaseStagePublicData {
 }
 
 // ************************************************************************* //
+// CONSTANTS                                                                 //
+// ************************************************************************* //
+export const DEFAULT_MEDIATOR_PROMPT = `
+You are a mediator for the above chat conversation. Before responding,
+consider the following:
+
+1. Is everyone in the conversation being respectful?
+2. Did everyone have the opportunity to speak?
+3. Is anyone asking you (Mediator) a question?
+
+If the answer to these questions is no, return nothing (empty string).
+
+Otherwise, please come up with a short response.
+Only include the response. Do not include any timestamps,
+speaker names, or reasoning.
+`;
+
+// ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
 
@@ -195,4 +213,16 @@ export function addChatHistoryToPrompt(
   prompt: string
 ) {
   return `${buildChatHistoryForPrompt(messages)}\n\n${prompt}`;
+}
+
+/** Create agent mediator. */
+export function createMediatorConfig(
+  config: Partial<MediatorConfig> = {}
+): MediatorConfig {
+  return {
+    id: config.id ?? generateId(),
+    name: config.name ?? 'Mediator',
+    avatar: config.avatar ?? '🤖',
+    prompt: config.prompt ?? DEFAULT_MEDIATOR_PROMPT.trim(),
+  };
 }

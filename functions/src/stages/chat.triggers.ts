@@ -63,7 +63,12 @@ export const createMediatorMessage = onDocumentWritten(
       if (message.trim() === '') return;
 
       const mediatorMessage = createAgentMediatorChatMessage(
-        { message, timestamp: Timestamp.now(), mediatorId: mediator.id }
+        {
+          profile: { name: mediator.name, avatar: mediator.avatar, pronouns: null },
+          message,
+          timestamp: Timestamp.now(),
+          mediatorId: mediator.id
+        }
       );
       const mediatorDocument = app.firestore()
         .collection('experiments')

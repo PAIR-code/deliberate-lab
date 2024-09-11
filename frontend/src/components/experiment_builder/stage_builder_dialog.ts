@@ -111,7 +111,7 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addStage}>
         <div class="title">Group chat</div>
         <div>
-          Discuss topics with other participants (LLM mediators coming soon!)
+          Discuss topics with other participants and LLM mediators
         </div>
       </div>
     `;
