@@ -1,6 +1,6 @@
 import './stage_description';
 
-// import './election_reveal_view';
+import './election_reveal_view';
 // import './survey_reveal_view';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -8,6 +8,7 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
+import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
@@ -24,6 +25,7 @@ import {styles} from './reveal_view.scss';
 export class RevealView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly cohortService = core.getService(CohortService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
 
@@ -43,13 +45,13 @@ export class RevealView extends MobxLitElement {
   private renderStage(stageId: string) {
     const stage = this.experimentService.getStage(stageId);
     const answer = this.participantService.answerMap[stageId];
+    const publicData = this.cohortService.stagePublicDataMap[stageId];
     if (!stage) return nothing;
 
     switch(stage.kind) {
       case StageKind.ELECTION:
         return html`
-          <div>Election reveal</div>
-          <election-reveal-view .stage=${stage} .answer=${answer}>
+          <election-reveal-view .publicData=${publicData}>
           </election-reveal-view>
         `;
       case StageKind.SURVEY:
