@@ -6,6 +6,7 @@ import '../stages/chat_interface';
 import '../stages/chat_panel';
 import '../stages/election_view';
 import '../stages/info_view';
+import '../stages/reveal_view';
 import '../stages/survey_view';
 import '../stages/tos_view';
 import '../stages/transfer_view';
@@ -210,6 +211,19 @@ export class ParticipantPreviewer extends MobxLitElement {
         return html`
           <div class="content">
             <election-view .stage=${stage} .answer=${answer}></election-view>
+          </div>
+        `;
+      case StageKind.REVEAL:
+        if (isWaiting) {
+          return html`
+            <div class="content">
+              <progress-stage-waiting></progress-stage-waiting>
+            </div>
+          `;
+        }
+        return html`
+          <div class="content">
+            <reveal-view .stage=${stage}></reveal-view>
           </div>
         `;
       case StageKind.SURVEY:
