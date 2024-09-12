@@ -84,6 +84,7 @@ export class SurveyService extends Service {
   }
 
   isAllTextAnswersValid() {
+    if (!this.textAnswersMap[this.stageId]) return true;
     for (const answer of Object.values(this.textAnswersMap[this.stageId])) {
       if (answer === '') {
         return false;
@@ -103,6 +104,7 @@ export class SurveyService extends Service {
 
   async saveTextAnswers() {
     const stageAnswerMap = this.textAnswersMap[this.stageId];
+    if (!stageAnswerMap) return;
     for (const id of Object.keys(stageAnswerMap)) {
       const answer: TextSurveyAnswer = {
         id,
