@@ -137,6 +137,29 @@ export class CohortService extends Service {
     this.unsubscribeAll();
 
     // TODO: Subscribe to public stage data
+    this.unsubscribe.push(
+      onSnapshot(
+        collection(
+          this.sp.firebaseService.firestore,
+          'experiments',
+          this.experimentId,
+          'cohorts',
+          this.cohortId,
+          'publicStageData'
+        ),
+        (snapshot) => {
+          let changedDocs = snapshot.docChanges().map((change) => change.doc);
+          if (changedDocs.length === 0) {
+            changedDocs = snapshot.docs;
+          }
+
+          changedDocs.forEach((doc) => {
+            this.stagePublicDataMap[doc.id] = doc.data() as StagePublicData;
+          });
+          this.isParticipantsLoading = false;
+        }
+      )
+    );
 
     // Subscribe to chat messages
     for (const stageId of this.sp.experimentService.stageIds) {
