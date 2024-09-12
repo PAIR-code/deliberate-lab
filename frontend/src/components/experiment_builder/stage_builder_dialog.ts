@@ -17,6 +17,7 @@ import {
   createElectionStage,
   createInfoStage,
   createProfileStage,
+  createRevealStage,
   createSurveyStage,
   createTOSStage,
   createTransferStage
@@ -61,6 +62,7 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderSurveyCard()}
         ${this.renderChatCard()}
         ${this.renderElectionCard()}
+        ${this.renderRevealCard()}
       </div>
     `;
   }
@@ -128,6 +130,22 @@ export class StageBuilderDialog extends MobxLitElement {
         <div class="title">Election</div>
         <div>
           Rank other participants in order to select a winner
+        </div>
+      </div>
+    `;
+  }
+
+  private renderRevealCard() {
+    const addStage = () => {
+      this.experimentEditor.addStage(createRevealStage());
+      this.experimentEditor.toggleStageBuilderDialog();
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">Reveal</div>
+        <div>
+          Show results for election stages, survey stages (multiple choice only)
         </div>
       </div>
     `;

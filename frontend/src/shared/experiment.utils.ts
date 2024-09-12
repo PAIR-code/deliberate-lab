@@ -1,5 +1,7 @@
 import {
   Experiment,
+  StageConfig,
+  StageKind,
   Visibility
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToDate} from './utils';
@@ -23,4 +25,11 @@ export function convertExperimentToGalleryItem(
     isStarred: false, // TODO: Find user isStarred value
     tags: experiment.metadata.tags,
   }
+}
+
+/** Return stages that support reveal views. */
+export function getStagesWithReveal(stages: StageConfig[]) {
+  return stages.filter(
+    stage => stage.kind === StageKind.SURVEY || stage.kind === StageKind.ELECTION
+  );
 }

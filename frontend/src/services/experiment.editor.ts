@@ -117,6 +117,10 @@ export class ExperimentEditor extends Service {
     this.stages.push(stage);
   }
 
+  getStage(stageId: string) {
+    return this.stages.find(stage => stage.id === stageId);
+  }
+
   deleteStage(index: number) {
     this.stages = [
       ...this.stages.slice(0, index),

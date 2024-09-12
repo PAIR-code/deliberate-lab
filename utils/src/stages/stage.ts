@@ -7,6 +7,7 @@ import {
 } from './election_stage';
 import { InfoStageConfig } from './info_stage';
 import { ProfileStageConfig } from './profile_stage';
+import { RevealStageConfig } from './reveal_stage';
 import {
   SurveyStageConfig,
   SurveyStageParticipantAnswer,
@@ -72,6 +73,7 @@ export type StageConfig =
   | ElectionStageConfig
   | InfoStageConfig
   | ProfileStageConfig
+  | RevealStageConfig
   | SurveyStageConfig
   | TOSStageConfig
   | TransferStageConfig;

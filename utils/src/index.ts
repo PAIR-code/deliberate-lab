@@ -30,6 +30,8 @@ export * from './stages/info_stage';
 export * from './stages/info_stage.validation';
 export * from './stages/profile_stage';
 export * from './stages/profile_stage.validation';
+export * from './stages/reveal_stage';
+export * from './stages/reveal_stage.validation';
 export * from './stages/survey_stage';
 export * from './stages/survey_stage.validation';
 export * from './stages/tos_stage';
