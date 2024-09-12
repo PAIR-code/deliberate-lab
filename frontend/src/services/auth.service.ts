@@ -8,6 +8,7 @@ import {
 } from 'firebase/auth';
 import {
   doc,
+  getDoc,
   setDoc,
   onSnapshot,
   Unsubscribe
@@ -33,21 +34,24 @@ export class AuthService extends Service {
     super();
     makeObservable(this);
 
-    onAuthStateChanged(this.sp.firebaseService.auth, (user: User | null) => {
+    onAuthStateChanged(this.sp.firebaseService.auth, async (user: User | null) => {
       if (user) {
         // User is signed in, see docs for a list of available properties
         // https://firebase.google.com/docs/reference/js/auth.user
         this.user = user;
-        this.user.getIdTokenResult().then((result) => {
-          if (result.claims['role'] === 'experimenter') {
-            this.isExperimenter = true;
-            this.subscribe();
-            this.writeExperimenterProfile(user);
-            this.sp.homeService.subscribe();
-          } else {
-            this.isExperimenter = false;
-          }
-        });
+
+        const allowlistDoc = await getDoc(
+          doc(this.sp.firebaseService.firestore, 'allowlist', user.email ?? '')
+        );
+
+        if (allowlistDoc.exists()) {
+          this.isExperimenter = true;
+          this.subscribe();
+          this.writeExperimenterProfile(user);
+          this.sp.homeService.subscribe();
+        } else {
+          this.isExperimenter = false;
+        }
       } else {
         // User is signed out
         this.user = null;

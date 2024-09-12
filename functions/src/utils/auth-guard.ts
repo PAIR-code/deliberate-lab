@@ -7,10 +7,13 @@ import * as functions from 'firebase-functions';
 const getClaims = async (request: CallableRequest) => {
   const uid = request.auth?.uid;
   if (!uid) throw new functions.https.HttpsError('unauthenticated', 'User is not authenticated');
-  return app
-    .auth()
-    .getUser(uid)
-    .then((u) => u.customClaims ?? {});
+
+  const allowlistDoc = await app.firestore()
+    .collection('allowlist')
+    .doc(request.auth.token.email)
+    .get();
+
+  return allowlistDoc.exists;
 };
 
 const throwUnauthIfNot = (condition: boolean) => {
@@ -26,6 +29,6 @@ export class AuthGuard {
   public static async isExperimenter(request: CallableRequest) {
     const claims = await getClaims(request);
 
-    throwUnauthIfNot(claims['role'] === 'experimenter');
+    throwUnauthIfNot(claims);
   }
 }

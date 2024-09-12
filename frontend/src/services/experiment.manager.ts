@@ -345,7 +345,6 @@ export class ExperimentManager extends Service {
     if (!this.sp.experimentService.experiment) return;
 
     this.isWritingCohort = true;
-    console.log(JSON.stringify(this.sp.experimentService.experiment.defaultCohortConfig));
     const cohortConfig = createCohortConfig({
       participantConfig: this.sp.experimentService.experiment.defaultCohortConfig,
       ...config
