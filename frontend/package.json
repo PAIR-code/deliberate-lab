@@ -5,7 +5,9 @@
     "build": "webpack --mode development",
     "build:prod": "webpack --mode production",
     "serve": "webpack serve  --mode development",
+    "serve:prod": "webpack serve --mode production",
     "start": "npm run build && npm run serve",
+    "start:prod": "npm run build:prod && npm run serve:prod",
     "lint": "eslint src"
   },
   "author": "",
