@@ -1,4 +1,5 @@
 import { Timestamp } from 'firebase/firestore';
+import {v4 as uuidv4} from 'uuid';
 
 /** Shared types and functions. */
 
@@ -52,7 +53,7 @@ export enum Visibility {
 // ************************************************************************* //
 
 export function generateId(): string {
-  return crypto.randomUUID();
+  return uuidv4();
 }
 
 /** Create MetadataConfig. */

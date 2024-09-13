@@ -77,9 +77,22 @@ const config: webpack.Configuration = {
         gitRevisionPlugin.lastcommitdatetime()
       ),
     }),
+    new webpack.ProvidePlugin({
+      process: 'process/browser',
+    }),
   ],
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
+    fallback: {
+      "crypto": require.resolve("crypto-browserify"),
+      "buffer": require.resolve("buffer/"),
+      "stream": require.resolve("stream-browserify"),
+      "events": require.resolve("events/"),
+      "vm": require.resolve("vm-browserify"),
+    },
+    alias: {
+       process: "process/browser"
+    },
   },
   output: {
     filename: 'bundle.js',
