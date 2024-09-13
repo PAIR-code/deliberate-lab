@@ -1,4 +1,5 @@
 import './stage_description';
+import './stage_footer';
 
 import './election_reveal_view';
 import './survey_reveal_view';
@@ -38,7 +39,10 @@ export class RevealView extends MobxLitElement {
 
     return html`
       <stage-description .stage=${this.stage}></stage-description>
-      ${this.stage.stageIds.map(id => this.renderStage(id))}
+      <div class="reveal-wrapper">
+        ${this.stage.stageIds.map(id => this.renderStage(id))}
+      </div>
+      <stage-footer></stage-footer>
     `;
   }
 

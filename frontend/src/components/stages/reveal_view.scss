@@ -3,6 +3,11 @@
 
 :host {
   @include common.flex-column;
-  gap: common.$spacing-xl;
   height: 100%;
+}
+
+.reveal-wrapper {
+  @include common.flex-column;
+  flex-grow: 1;
+  gap: common.$spacing-xl;
 }
