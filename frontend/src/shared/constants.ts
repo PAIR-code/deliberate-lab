@@ -7,7 +7,7 @@ export const FIREBASE_LOCAL_HOST_PORT_AUTH = 9099;
 export const FIREBASE_LOCAL_HOST_PORT_FUNCTIONS = 5001;
 
 /** App name. */
-export const APP_NAME = "Deliberation Lab";
+export const APP_NAME = "Deliberate Lab";
 
 /** Profile avatars. */
 export const PROFILE_AVATARS = [
