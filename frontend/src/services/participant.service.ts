@@ -430,6 +430,7 @@ export class ParticipantService extends Service {
       response = await updateSurveyStageParticipantAnswerCallable(
         this.sp.firebaseService.functions, {
           experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
           participantId: this.profile.privateId,
           surveyStageParticipantAnswer: participantAnswer,
         }

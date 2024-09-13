@@ -154,6 +154,7 @@ export const SurveyStageParticipantAnswerData = Type.Object(
 export const UpdateSurveyStageParticipantAnswerData = Type.Object(
   {
     experimentId: Type.String({ minLength: 1 }),
+    cohortId: Type.String({ minLength: 1 }),
     participantId: Type.String({ minLength: 1 }),
     surveyStageParticipantAnswer: SurveyStageParticipantAnswerData,
   },

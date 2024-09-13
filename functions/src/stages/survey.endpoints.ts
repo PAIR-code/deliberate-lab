@@ -21,7 +21,7 @@ import {
 // ************************************************************************* //
 // updateSurveyStageParticipantAnswer endpoint                               //
 //                                                                           //
-// Input structure: { experimentId, participantId,                           //
+// Input structure: { experimentId, cohortId, participantId,                 //
 //                    surveyStageParticipantAnswer }                         //
 // Validation: utils/src/stages/survey_stage.validation.ts                   //
 // ************************************************************************* //
@@ -44,9 +44,23 @@ export const updateSurveyStageParticipantAnswer = onCall(async (request) => {
     .collection('stageData')
     .doc(data.surveyStageParticipantAnswer.id);
 
+  // Define public stage document reference
+  const publicDocument = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('cohorts')
+    .doc(data.cohortId)
+    .collection('publicStageData')
+    .doc(data.surveyStageParticipantAnswer.id);
+
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     transaction.set(document, data.surveyStageParticipantAnswer);
+
+    // Update public stage data
+    const publicStageData = (await publicDocument.get()).data() as StagePublicData;
+    publicStageData.participantAnswerMap[data.participantId] = data.surveyStageParticipantAnswer.answerMap;
+    transaction.set(publicDocument, publicStageData);
   });
 
   return { id: document.id };
