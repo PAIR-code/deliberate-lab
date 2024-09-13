@@ -119,7 +119,8 @@ export class ExperimentManager extends Service {
 
   // Can edit if no cohorts exist
   @computed get canEditExperimentStages() {
-    return Object.keys(this.cohortMap).length === 0;
+    return Object.keys(this.cohortMap).length === 0
+      || this.sp.routerService.activePage === Pages.EXPERIMENT_CREATE;
   }
 
   // Is editing full experiment, not settings dialog

@@ -80,6 +80,9 @@ export class SurveyService extends Service {
   }
 
   updateTextAnswer(id: string, answer: string) {
+    if (!this.textAnswersMap[this.stageId]) {
+      this.textAnswersMap[this.stageId] = {};
+    }
     this.textAnswersMap[this.stageId][id] = answer;
   }
 
@@ -99,7 +102,10 @@ export class SurveyService extends Service {
   }
 
   getTextAnswer(questionId: string) {
-    return this.textAnswersMap[this.stageId][questionId];
+    const stageAnswers = this.textAnswersMap[this.stageId];
+    if (!stageAnswers) return '';
+
+    return stageAnswers[questionId];
   }
 
   async saveTextAnswers() {

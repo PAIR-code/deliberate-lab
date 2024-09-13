@@ -140,9 +140,9 @@ export class ParticipantService extends Service {
     return this.profile ? isParticipantEndedExperiment(this.profile) : false;
   }
 
-  @computed get currentStageAnswer() {
+  getStageAnswer(stageId: string) {
     if (!this.profile) return undefined;
-    return this.answerMap[this.profile.currentStageId];
+    return this.answerMap[stageId];
   }
 
   updateForCurrentRoute() {

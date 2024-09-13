@@ -166,7 +166,7 @@ export class ParticipantPreviewer extends MobxLitElement {
     }
 
     const isWaiting = this.cohortService.isStageWaitingForParticipants(stage.id);
-    const answer = this.participantService.currentStageAnswer;
+    const answer = this.participantService.getStageAnswer(stage.id);
     switch (stage.kind) {
       case StageKind.TOS:
         return html`

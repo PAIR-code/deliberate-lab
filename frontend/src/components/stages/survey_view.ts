@@ -150,7 +150,7 @@ export class SurveyView extends MobxLitElement {
         <pr-textarea
           variant="outlined"
           placeholder="Type your response"
-          .value=${this.surveyService.getTextAnswer(question.id)}
+          .value=${this.surveyService.getTextAnswer(question.id) ?? ''}
           ?disabled=${this.participantService.disableStage}
           @change=${handleTextChange}
         >

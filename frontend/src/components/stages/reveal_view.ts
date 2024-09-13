@@ -1,7 +1,7 @@
 import './stage_description';
 
 import './election_reveal_view';
-// import './survey_reveal_view';
+import './survey_reveal_view';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -56,7 +56,6 @@ export class RevealView extends MobxLitElement {
         `;
       case StageKind.SURVEY:
         return html`
-          <div>Survey reveal</div>
           <survey-reveal-view .stage=${stage} .answer=${answer}>
           </survey-reveal-view>
         `;
