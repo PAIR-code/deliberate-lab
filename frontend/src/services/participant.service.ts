@@ -314,13 +314,14 @@ export class ParticipantService extends Service {
       completedStages
     };
 
-    return await this.updateProfile(
+    await this.updateProfile(
       {
         ...this.profile,
         currentStageId,
         timestamps
       }
     );
+    return currentStageId; // return new stage
   }
 
   /** Update participant profile */
