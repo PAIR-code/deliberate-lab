@@ -193,6 +193,10 @@ export class ChatEditor extends MobxLitElement {
     return html`
       <div class="question-wrapper">
         <div class="question-label">Mediator ${index + 1}</div>
+        <div class="warning">
+          <b>Note:</b> In order for LLM mediator calls to work,
+          you must add your Gemini API key under Settings.
+        </div>
         <div class="question">
           <div class="header">
             <div class="left">
