@@ -45,6 +45,7 @@ service cloud.firestore {
     match /allowlist/{experimenterId} {
       allow list: if false;
       allow get: if request.auth.uid != null;
+      allow write: if false;
     }
 
     // Experiment templates (experimenter only)
