@@ -12,7 +12,10 @@ import {AuthService} from '../../services/auth.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
+import {ParticipantService} from '../../services/participant.service';
 import {Pages, RouterService} from '../../services/router.service';
+
+import {getParticipantName} from '../../shared/participant.utils';
 
 import {styles} from './header.scss';
 
@@ -25,6 +28,7 @@ export class Header extends MobxLitElement {
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly authService = core.getService(AuthService);
   private readonly experimentService = core.getService(ExperimentService);
+  private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
   override render() {
@@ -102,6 +106,7 @@ export class Header extends MobxLitElement {
 
   private renderTitle() {
     const activePage = this.routerService.activePage;
+    const profile = this.participantService.profile;
 
     switch (activePage) {
       case Pages.HOME:
@@ -115,9 +120,9 @@ export class Header extends MobxLitElement {
       case Pages.PARTICIPANT_JOIN_COHORT:
         return 'Previewing experiment cohort';
       case Pages.PARTICIPANT:
-        return 'Previewing as participant';
+        return `Previewing as: ${profile ? getParticipantName(profile) : ''}`;
       case Pages.PARTICIPANT_STAGE:
-        return 'Previewing as participant';
+        return `Previewing as: ${profile ? getParticipantName(profile) : ''}`;
       default:
         return '';
     }
