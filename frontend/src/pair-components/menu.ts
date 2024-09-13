@@ -18,6 +18,7 @@ export class Menu extends MobxLitElement {
   @property() name = "";
   @property() icon = "";
   @property() variant: MenuVariant = "default";
+  @property({ type: Boolean }) disabled = false;
 
   @state() showMenu = false;
 
@@ -28,11 +29,11 @@ export class Menu extends MobxLitElement {
 
     const menuClasses = classMap({
       "menu-wrapper": true,
-      "show-menu": this.showMenu,
+      "show-menu": this.showMenu && !this.disabled,
     });
 
     return html`
-      <pr-button variant=${this.variant} @click=${toggleMenu}>
+      <pr-button variant=${this.variant} @click=${toggleMenu} ?disabled=${this.disabled}>
         <div class="button-content">
           ${this.renderIcon(this.icon)}
           <div>${this.name}</div>
@@ -41,7 +42,7 @@ export class Menu extends MobxLitElement {
       </pr-button>
       <div class=${menuClasses} @click=${toggleMenu}>
         <div class="menu">
-          <slot></slot>
+          ${this.disabled ? nothing : html`<slot></slot>`}
         </div>
       </div>
     `;

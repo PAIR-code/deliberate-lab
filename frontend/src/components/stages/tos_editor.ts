@@ -47,6 +47,7 @@ export class TOSEditorComponent extends MobxLitElement {
         placeholder="Add Terms of Service"
         variant="outlined"
         .value=${this.stage?.tosLines.join('\n\n') ?? ''}
+        ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updateTOSLines}
       >
       </pr-textarea>

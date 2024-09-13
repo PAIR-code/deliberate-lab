@@ -11,6 +11,7 @@ import {AuthService} from '../../services/auth.service';
 import {HomeService} from '../../services/home.service';
 import {Pages, RouterService} from '../../services/router.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
+import {ExperimentManager} from '../../services/experiment.manager';
 
 import {
   Visibility
@@ -24,6 +25,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
+  private readonly experimentManager = core.getService(ExperimentManager);
 
   override render() {
     return html`
@@ -37,6 +39,13 @@ export class ExperimentSettingsEditor extends MobxLitElement {
       <div class="divider"></div>
       ${this.renderProlificConfig()}
       <div class="spacer"></div>
+      <pr-button
+        color="error"
+        variant="tonal"
+        @click=${() => { this.experimentManager.deleteExperiment()}}
+      >
+        Delete experiment
+      </pr-button>
     `;
   }
 

@@ -32,6 +32,7 @@ export class ExperimentBuilderNav extends MobxLitElement {
       <pr-button
         color="primary"
         variant="tonal"
+        ?disabled=${!this.experimentEditor.canEditStages}
         @click=${() => { this.experimentEditor.toggleStageBuilderDialog() }}
       >
         Add new stage
@@ -97,7 +98,7 @@ export class ExperimentBuilderNav extends MobxLitElement {
             padding="small"
             size="small"
             variant="default"
-            ?disabled=${index === 0}
+            ?disabled=${index === 0 || !this.experimentEditor.canEditStages}
             @click=${handleMoveUp}
           >
           </pr-icon-button>
@@ -107,7 +108,7 @@ export class ExperimentBuilderNav extends MobxLitElement {
             padding="small"
             size="small"
             variant="default"
-            ?disabled=${index === this.experimentEditor.stages.length - 1}
+            ?disabled=${index === this.experimentEditor.stages.length - 1 || !this.experimentEditor.canEditStages}
             @click=${handleMoveDown}
           >
           </pr-icon-button>
@@ -117,6 +118,7 @@ export class ExperimentBuilderNav extends MobxLitElement {
             padding="small"
             size="small"
             variant="default"
+            ?disabled=${!this.experimentEditor.canEditStages}
             @click=${handleDelete}
           >
           </pr-icon-button>

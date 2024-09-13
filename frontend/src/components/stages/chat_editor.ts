@@ -40,6 +40,7 @@ export class ChatEditor extends MobxLitElement {
       <pr-button
         color="secondary"
         variant="tonal"
+        ?disabled=${!this.experimentEditor.canEditStages}
         @click=${() => {this.addMediator()}}
       >
         Add mediator
@@ -106,6 +107,7 @@ export class ChatEditor extends MobxLitElement {
         placeholder="Display name for mediator"
         variant="outlined"
         .value=${mediator.name}
+        ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updateName}
       >
       </pr-textarea>
@@ -134,6 +136,7 @@ export class ChatEditor extends MobxLitElement {
         placeholder="Custom prompt for mediator"
         variant="outlined"
         .value=${mediator.prompt}
+        ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updatePrompt}
       >
       </pr-textarea>
@@ -161,6 +164,7 @@ export class ChatEditor extends MobxLitElement {
             value=${index}
             aria-label=${emoji}
             ?checked=${mediator.avatar === emoji}
+            ?disabled=${!this.experimentEditor.canEditStages}
             @change=${handleAvatarClick}
           >
           </md-radio>
@@ -199,6 +203,7 @@ export class ChatEditor extends MobxLitElement {
               color="neutral"
               padding="small"
               variant="default"
+              ?disabled=${!this.experimentEditor.canEditStages}
               @click=${onDelete}>
             </pr-icon-button>
           </div>

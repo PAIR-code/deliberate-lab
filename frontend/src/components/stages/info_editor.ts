@@ -47,6 +47,7 @@ export class InfoEditorComponent extends MobxLitElement {
         placeholder="Add info to display to participant"
         variant="outlined"
         .value=${this.stage?.infoLines.join('\n\n') ?? ''}
+        ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updateInfoLines}
       >
       </pr-textarea>

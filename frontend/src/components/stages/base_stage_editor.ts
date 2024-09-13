@@ -50,6 +50,7 @@ export class BaseStageEditorComponent extends MobxLitElement {
         placeholder="Add stage name"
         variant="outlined"
         .value=${this.stage?.name ?? ''}
+        ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updateName}
       >
       </pr-textarea>
@@ -71,6 +72,7 @@ export class BaseStageEditorComponent extends MobxLitElement {
         placeholder="Add description"
         variant="outlined"
         .value=${this.stage?.descriptions.primaryText ?? ''}
+        ?disabled=${!this.experimentEditor.canEditStages}
         @input=${update}
       >
       </pr-textarea>
@@ -92,6 +94,7 @@ export class BaseStageEditorComponent extends MobxLitElement {
         placeholder="Add info popup text"
         variant="outlined"
         .value=${this.stage?.descriptions.infoText ?? ''}
+        ?disabled=${!this.experimentEditor.canEditStages}
         @input=${update}
       >
       </pr-textarea>
@@ -113,6 +116,7 @@ export class BaseStageEditorComponent extends MobxLitElement {
         placeholder="Add help popup text"
         variant="outlined"
         .value=${this.stage?.descriptions.helpText ?? ''}
+        ?disabled=${!this.experimentEditor.canEditStages}
         @input=${update}
       >
       </pr-textarea>

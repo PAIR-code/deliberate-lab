@@ -53,7 +53,7 @@ export class RevealEditor extends MobxLitElement {
     );
 
     return html`
-      <pr-menu name="Add stage">
+      <pr-menu name="Add stage" ?disabled=${!this.experimentEditor.canEditStages}>
         <div class="menu-wrapper">
           <div class="stages">
             ${stageOptions.length === 0 ? html`<div class="empty-message">No stages available</div>` : nothing}
@@ -151,7 +151,7 @@ export class RevealEditor extends MobxLitElement {
             padding="small"
             size="small"
             variant="default"
-            ?disabled=${index === 0}
+            ?disabled=${index === 0 || !this.experimentEditor.canEditStages}
             @click=${handleMoveUp}
           >
           </pr-icon-button>
@@ -161,7 +161,7 @@ export class RevealEditor extends MobxLitElement {
             padding="small"
             size="small"
             variant="default"
-            ?disabled=${index === this.stage.stageIds.length - 1}
+            ?disabled=${index === this.stage.stageIds.length - 1 || !this.experimentEditor.canEditStages}
             @click=${handleMoveDown}
           >
           </pr-icon-button>
@@ -171,6 +171,7 @@ export class RevealEditor extends MobxLitElement {
             padding="small"
             size="small"
             variant="default"
+            ?disabled=${!this.experimentEditor.canEditStages}
             @click=${handleDelete}
           >
           </pr-icon-button>

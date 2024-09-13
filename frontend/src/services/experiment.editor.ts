@@ -21,11 +21,13 @@ import {
 } from '../shared/callables';
 
 import {AuthService} from './auth.service';
+import {ExperimentManager} from './experiment.manager';
 import {FirebaseService} from './firebase.service';
 import {Service} from './service';
 
 interface ServiceProvider {
   authService: AuthService;
+  experimentManager: ExperimentManager;
   firebaseService: FirebaseService;
 }
 
@@ -54,6 +56,10 @@ export class ExperimentEditor extends Service {
   @computed get isValidExperimentConfig() {
     // TODO: Add other validation checks here
     return this.experiment.metadata.name.length > 0;
+  }
+
+  @computed get canEditStages() {
+    return this.sp.experimentManager.canEditExperimentStages;
   }
 
   @computed get isCreator() {

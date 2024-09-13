@@ -57,6 +57,7 @@ export class TransferEditorComponent extends MobxLitElement {
           <md-checkbox
             touch-target="wrapper"
             ?checked=${isTimeout}
+            ?disabled=${!this.experimentEditor.canEditStages}
             @click=${updateTimeout}
           >
           </md-checkbox>
@@ -89,6 +90,7 @@ export class TransferEditorComponent extends MobxLitElement {
           name="waitSeconds"
           min="0"
           .value=${waitSeconds}
+          ?disabled=${!this.experimentEditor.canEditStages}
           @input=${updateNum}
         />
       </div>

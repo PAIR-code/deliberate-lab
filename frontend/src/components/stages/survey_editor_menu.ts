@@ -34,7 +34,7 @@ export class SurveyEditorMenu extends MobxLitElement {
     }
 
     return html`
-      <pr-menu name="Add survey question">
+      <pr-menu name="Add survey question" ?disabled=${!this.experimentEditor.canEditStages}>
         <div class="menu-wrapper">
           <div class="menu-item" role="button" @click=${this.addText}>
             Freeform

@@ -117,6 +117,11 @@ export class ExperimentManager extends Service {
     this.isEditingSettingsDialog = isEditing;
   }
 
+  // Can edit if no cohorts exist
+  @computed get canEditExperimentStages() {
+    return Object.keys(this.cohortMap).length === 0;
+  }
+
   // Is editing full experiment, not settings dialog
   @computed get isEditingFull() {
     return this.isEditing && !this.isEditingSettingsDialog;

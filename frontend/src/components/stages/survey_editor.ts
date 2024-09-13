@@ -135,6 +135,7 @@ export class SurveyEditor extends MobxLitElement {
         placeholder="Add question title"
         size="medium"
         .value=${question.questionTitle}
+        ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updateTitle}
       >
       </pr-textarea>
@@ -154,7 +155,7 @@ export class SurveyEditor extends MobxLitElement {
           padding="small"
           size="small"
           variant="default"
-          ?disabled=${index === 0}
+          ?disabled=${index === 0 || !this.experimentEditor.canEditStages}
           @click=${() => { this.moveQuestionUp(index) }}
         >
         </pr-icon-button>
@@ -164,7 +165,7 @@ export class SurveyEditor extends MobxLitElement {
           padding="small"
           size="small"
           variant="default"
-          ?disabled=${index === this.stage.questions.length - 1}
+          ?disabled=${index === this.stage.questions.length - 1 || !this.experimentEditor.canEditStages}
           @click=${() => { this.moveQuestionDown(index) }}
         >
         </pr-icon-button>
@@ -174,6 +175,7 @@ export class SurveyEditor extends MobxLitElement {
           padding="small"
           size="small"
           variant="default"
+          ?disabled=${!this.experimentEditor.canEditStages}
           @click=${() => { this.deleteQuestion(index) }}
         >
         </pr-icon-button>
@@ -221,6 +223,7 @@ export class SurveyEditor extends MobxLitElement {
           <md-checkbox
             touch-target="wrapper"
             ?checked=${question.correctAnswerId === item.id}
+            ?disabled=${!this.experimentEditor.canEditStages}
             @click=${updateCorrectAnswer}
           >
           </md-checkbox>
@@ -228,6 +231,7 @@ export class SurveyEditor extends MobxLitElement {
             <pr-textarea
               placeholder="Add text for multiple choice item"
               .value=${item.text}
+              ?disabled=${!this.experimentEditor.canEditStages}
               @input=${updateItem}
             >
             </pr-textarea>
@@ -236,6 +240,7 @@ export class SurveyEditor extends MobxLitElement {
               color="neutral"
               padding="small"
               variant="default"
+              ?disabled=${!this.experimentEditor.canEditStages}
               @click=${deleteItem}>
             </pr-icon-button>
           </div>
@@ -261,6 +266,7 @@ export class SurveyEditor extends MobxLitElement {
           <pr-button
             color="secondary"
             variant="tonal"
+            ?disabled=${!this.experimentEditor.canEditStages}
             @click=${() => {this.addMultipleChoiceItem(question, index)}}
           >
             Add multiple choice item

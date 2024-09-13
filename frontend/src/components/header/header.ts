@@ -178,19 +178,11 @@ export class Header extends MobxLitElement {
             @click=${() => { this.experimentManager.forkExperiment(); }}
           >
           </pr-icon-button>
-          <pr-icon-button
-            icon="settings"
-            color="neutral"
-            variant="default"
-            @click=${() => { this.experimentManager.setIsEditingSettingsDialog(true); }}
-          >
-          </pr-icon-button>
-          <pr-tooltip text="Edit experiment stages (if no cohorts have been created)" position="BOTTOM_END">
+          <pr-tooltip text="Edit experiment (NOTE: stages can only be edited if no cohorts have been created)" position="BOTTOM_END">
             <pr-icon-button
               icon="edit"
               color="primary"
               variant="default"
-              ?disabled=${Object.keys(this.experimentManager.cohortMap).length > 0}
               @click=${() => { this.experimentManager.setIsEditing(true); }}
             >
             </pr-icon-button>
