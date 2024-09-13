@@ -64,7 +64,7 @@ export class ExperimentManagerComponent extends MobxLitElement {
     if (Object.keys(this.experimentService.stageConfigMap).length === 0) {
       return html`
         <div class="empty-nav">
-          WARNING: Your experiment has no stages.
+          ⚠️ WARNING: Your experiment has no stages.
           Use the edit button in the top left to add stages
           in order to unlock cohort and participant creation.
         </div>
@@ -119,6 +119,7 @@ export class ExperimentManagerComponent extends MobxLitElement {
   private renderHeader() {
     return html`
       <div class="left">
+        ${this.experimentManager.currentParticipant?.name ?? ''} /
         ${this.experimentManager.currentParticipant?.publicId ?? ''}
       </div>
       ${this.renderTransferMenu()}
