@@ -15,8 +15,8 @@ import { getGeminiAPIResponse } from '../api/gemini.api';
 export const createMediatorMessage = onDocumentCreated(
   'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}',
   async (event) => {
-    const data = event.data?.after.data() as ChatMessage | undefined;
-    if (data.type !== ChatMessageType.PARTICIPANT) return;
+    const data = event.data?.data() as ChatMessage | undefined;
+    if (data?.type !== ChatMessageType.PARTICIPANT) return;
 
     // Use experiment config to get ChatStageConfig with mediators.
     const stage = (
