@@ -10,6 +10,7 @@ import '../stages/reveal_view';
 import '../stages/survey_view';
 import '../stages/tos_view';
 import '../stages/transfer_view';
+import './participant_header';
 import './participant_nav';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -68,13 +69,13 @@ export class ParticipantPreviewer extends MobxLitElement {
     }
 
     const stageId = this.routerService.activeRoute.params['stage'];
+    const stage = this.experimentService.getStage(stageId);
+
     return html`
       <participant-nav></participant-nav>
       <div class="participant-previewer">
-        <div class="header">
-          ${this.experimentService.getStageName(stageId)}
-        </div>
-        ${this.renderStageContent(this.experimentService.getStage(stageId))}
+        <participant-header .stage=${stage}></participant-header>
+        ${this.renderStageContent(stage)}
       </div>
       ${this.renderTransferPopup()}
       ${this.renderAttentionPopup()}
