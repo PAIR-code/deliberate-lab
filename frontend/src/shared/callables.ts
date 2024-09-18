@@ -8,6 +8,7 @@ import {
   ExperimentDeletionData,
   ParticipantProfileExtendedData,
   SimpleResponse,
+  UpdateChatStageParticipantAnswerData,
   UpdateElectionStageParticipantAnswerData,
   UpdateSurveyStageParticipantAnswerData
 } from '@deliberation-lab/utils';
@@ -49,6 +50,14 @@ export const createParticipantCallable = async(functions: Functions, config: Cre
 /** Generic endpoint to update participant profiles */
 export const updateParticipantCallable = async(functions: Functions, config: ParticipantProfileExtendedData) => {
   const { data } = await httpsCallable<ParticipantProfileExtendedData, CreationResponse>(functions, 'updateParticipant')(config);
+  return data;
+}
+
+/** Generic endpoint to update chat stage participant answers */
+export const updateChatStageParticipantAnswerCallable = async(
+  functions: Functions, config: UpdateChatStageParticipantAnswerData
+) => {
+  const { data } = await httpsCallable<UpdateChatStageParticipantAnswerData, CreationResponse>(functions, 'updateChatStageParticipantAnswer')(config);
   return data;
 }
 

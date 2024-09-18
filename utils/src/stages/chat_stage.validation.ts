@@ -1,4 +1,5 @@
 import { Type, type Static } from '@sinclair/typebox';
+import { UnifiedTimestampSchema } from '../shared.validation';
 import { StageKind } from './stage';
 import { StageGameSchema, StageTextConfigSchema } from './stage.validation';
 import { ChatMessageType } from './chat_stage';
@@ -64,3 +65,34 @@ export const CreateChatMessageData = Type.Object(
 );
 
 export type CreateChatMessageData = Static<typeof CreateChatMessageData>;
+
+// ************************************************************************* //
+// updateChatStageParticipantAnswer endpoint                                 //
+// ************************************************************************* //
+
+/** ChatStageParticipantAnswerData. */
+export const ChatStageParticipantAnswerData = Type.Object(
+  {
+    id: Type.String({ minLength: 1 }),
+    kind: Type.Literal(StageKind.CHAT),
+    discussionTimestampMap: Type.Record(
+      Type.String({ minLength: 1 }),
+      Type.Union([Type.Null(), UnifiedTimestampSchema])
+    ),
+  },
+  strict,
+);
+
+/** UpdateChatStageParticipantAnswer endpoint validation. */
+export const UpdateChatStageParticipantAnswerData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    cohortId: Type.String({ minLength: 1 }),
+    participantPrivateId: Type.String({ minLength: 1 }),
+    participantPublicId: Type.String({ minLength: 1 }),
+    chatStageParticipantAnswer: ChatStageParticipantAnswerData,
+  },
+  strict
+);
+
+export type UpdateChatStageParticipantAnswerData = Static<typeof UpdateChatStageParticipantAnswerData>;

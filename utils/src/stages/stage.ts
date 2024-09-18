@@ -1,4 +1,9 @@
-import { ChatStageConfig } from './chat_stage';
+import {
+  ChatStageConfig,
+  ChatStageParticipantAnswer,
+  ChatStagePublicData,
+  createChatStagePublicData,
+} from './chat_stage';
 import {
   ElectionStageConfig,
   ElectionStageParticipantAnswer,
@@ -91,6 +96,7 @@ export interface BaseStageParticipantAnswer {
 }
 
 export type StageParticipantAnswer =
+ | ChatStageParticipantAnswer
  | ElectionStageParticipantAnswer
  | SurveyStageParticipantAnswer;
 
@@ -108,6 +114,7 @@ export interface BaseStagePublicData {
 }
 
 export type StagePublicData =
+  | ChatStagePublicData
   | ElectionStagePublicData
   | SurveyStagePublicData;
 
@@ -136,6 +143,9 @@ export function createPublicDataFromStageConfigs(stages: StageConfig[]) {
   const publicData: StagePublicData[] = [];
   stages.forEach((stage) => {
     switch (stage.kind) {
+      case StageKind.CHAT:
+        publicData.push(createChatStagePublicData(stage));
+        break;
       case StageKind.ELECTION:
         publicData.push(createElectionStagePublicData(stage.id));
         break;

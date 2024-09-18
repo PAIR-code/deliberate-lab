@@ -2,6 +2,7 @@ import { Timestamp } from 'firebase/firestore';
 import { generateId, UnifiedTimestamp } from '../shared';
 import {
   BaseStageConfig,
+  BaseStageParticipantAnswer,
   BaseStagePublicData,
   StageGame,
   StageKind,
@@ -113,6 +114,18 @@ export type ChatMessage =
   | AgentMediatorChatMessage;
 
 /**
+ * ChatStageParticipantAnswer.
+ *
+ * This is saved as a stage doc (with stage ID as doc ID) under
+ * experiments/{experimentId}/participants/{participantPrivateId}/stageData
+ */
+export interface ChatStageParticipantAnswer extends BaseStageParticipantAnswer {
+  kind: StageKind.CHAT;
+  // discussion ID --> readyToEndDiscussion timestamp (or null if not ready)
+  discussionTimestampMap: Record<string, UnifiedTimestamp|null>;
+}
+
+/**
  * ChatStagePublicData.
  *
  * This is saved as a stage doc (with stage ID as doc ID) under
@@ -120,10 +133,8 @@ export type ChatMessage =
  */
 export interface ChatStagePublicData extends BaseStagePublicData {
   kind: StageKind.CHAT;
-  // Null if all discussion have ended (or no discussions)
-  currentDiscussionId: string|null;
-  // discussionId --> map of participant public ID to readyToEndDiscussion
-  discussionStatusMap: Record<string, Record<string, boolean>>;
+  // discussionId --> map of participant public ID to readyToEndDiscussion timestamp
+  discussionTimestampMap: Record<string, Record<string, UnifiedTimestamp|null>>;
 }
 
 // ************************************************************************* //
@@ -161,6 +172,29 @@ export function createChatStage(
     discussions: config.discussions ?? [],
     mediators: config.mediators ?? [],
   };
+}
+
+/** Create chat default discussion. */
+export function createDefaultChatDiscussion(
+  config: Partial<DefaultChatDiscussion> = {}
+): DefaultChatDiscussion {
+  return {
+    id: config.id ?? generateId(),
+    type: ChatDiscussionType.DEFAULT,
+    description: config.description ?? '',
+  }
+}
+
+/** Create compare chat discussion. */
+export function createCompareChatDiscussion(
+  config: Partial<CompareChatDiscussion> = {}
+): CompareChatDiscussion {
+  return {
+    id: config.id ?? generateId(),
+    type: ChatDiscussionType.COMPARE,
+    description: config.description ?? '',
+    items: config.items ?? [],
+  }
 }
 
 /** Create participant chat message. */
@@ -225,4 +259,26 @@ export function createMediatorConfig(
     avatar: config.avatar ?? '🤖',
     prompt: config.prompt ?? DEFAULT_MEDIATOR_PROMPT.trim(),
   };
+}
+
+/** Create participant chat stage answer. */
+export function createChatStageParticipantAnswer(
+  config: Partial<ChatStageParticipantAnswer>
+): ChatStageParticipantAnswer {
+  return {
+    id: config.id ?? generateId(),
+    kind: StageKind.CHAT,
+    discussionTimestampMap: config.discussionTimestampMap ?? {},
+  }
+}
+
+/** Create chat stage public data. */
+export function createChatStagePublicData(
+  stage: ChatStageConfig,
+): ChatStagePublicData {
+  return {
+    id: stage.id,
+    kind: StageKind.CHAT,
+    discussionTimestampMap: {},
+  }
 }

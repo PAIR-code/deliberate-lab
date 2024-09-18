@@ -16,6 +16,7 @@ import {Pages, RouterService} from './router.service';
 import {Service} from './service';
 
 import {
+  ChatDiscussion,
   ChatMessage,
   ChatStageConfig,
   ParticipantProfile,
@@ -61,7 +62,12 @@ export class CohortService extends Service {
   @observable transferParticipantMap: Record<string, ParticipantProfile> = {};
 
   @observable stagePublicDataMap: Record<string, StagePublicData> = {};
+
+  // Stage ID to list of non-discussion chat messages
   @observable chatMap: Record<string, ChatMessage[]> = {};
+  // Stage ID to map of discussion ID to list of chat messages
+  @observable chatDiscussionMap: Record<string, Record<string, ChatMessage[]>> = {};
+  @observable isChatLoading = false;
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -124,6 +130,53 @@ export class CohortService extends Service {
     return numLocked > 0 && numCompleted === 0;
   }
 
+  getChatDiscussionMessages(stageId: string, discussionId: string) {
+    if (!this.chatDiscussionMap[stageId]) return [];
+    if (!this.chatDiscussionMap[stageId][discussionId]) return [];
+
+    return this.chatDiscussionMap[stageId][discussionId];
+  }
+
+  // Returns chat discussion ID (or null if none or finished with all chats)
+  getChatDiscussionId(stageId: string): string|null {
+    const stageData = this.stagePublicDataMap[stageId];
+    if (!stageData || stageData.kind !== StageKind.CHAT) {
+      return null;
+    }
+
+    const stageConfig = this.sp.experimentService.getStage(stageId);
+    if (!stageConfig || stageConfig.kind !== StageKind.CHAT || stageConfig.discussions.length === 0) {
+      return null;
+    }
+
+    // Find latest chat with messages, then check if everyone
+    // is ready to end that chat
+    const getLatestDiscussion = () => {
+      const reverseIndex = [...stageConfig.discussions].reverse().findIndex(
+        discussion => isReadyToEndDiscussion(discussion)
+      );
+
+      if (reverseIndex < 0) return stageConfig.discussions[0].id;
+      const completedIndex = stageConfig.discussions.length - reverseIndex - 1;
+
+      // If the last discussion is ready to end, return null
+      if (completedIndex === stageConfig.discussions.length - 1) return null;
+
+      // Otherwise, return the next discussion
+      return stageConfig.discussions[completedIndex + 1].id;
+    };
+
+    const isReadyToEndDiscussion = (discussion: ChatDiscussion) => {
+      if (!stageData.discussionTimestampMap[discussion.id]) return false;
+      for (const participant of this.activeParticipants) {
+        if (!stageData.discussionTimestampMap[discussion.id][participant.publicId]) return false;
+      }
+      return true;
+    };
+
+    return getLatestDiscussion();
+  }
+
   loadCohortData(id: string) {
     if (id === this.cohortId) {
       return;
@@ -162,6 +215,7 @@ export class CohortService extends Service {
     );
 
     // Subscribe to chat messages
+    this.isChatLoading = true;
     for (const stageId of this.sp.experimentService.stageIds) {
       this.unsubscribe.push(
         onSnapshot(
@@ -188,8 +242,20 @@ export class CohortService extends Service {
               if (!this.chatMap[stageId]) {
                 this.chatMap[stageId] = [];
               }
-              this.chatMap[stageId].push(doc.data() as ChatMessage);
+              if (!this.chatDiscussionMap[stageId]) {
+                this.chatDiscussionMap[stageId] = {};
+              }
+              const message = doc.data() as ChatMessage;
+              if (!message.discussionId) {
+                this.chatMap[stageId].push(message);
+              } else {
+                if (!this.chatDiscussionMap[stageId][message.discussionId]) {
+                  this.chatDiscussionMap[stageId][message.discussionId] = [];
+                }
+                this.chatDiscussionMap[stageId][message.discussionId].push(message);
+              }
             });
+            this.isChatLoading = false;
           }
         )
       );

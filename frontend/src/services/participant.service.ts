@@ -1,4 +1,5 @@
 import {
+  ChatStageParticipantAnswer,
   CreateChatMessageData,
   ParticipantChatMessage,
   ParticipantProfileExtended,
@@ -7,6 +8,8 @@ import {
   StageParticipantAnswer,
   SurveyAnswer,
   SurveyStageParticipantAnswer,
+  UpdateChatStageParticipantAnswerData,
+  createChatStageParticipantAnswer,
   createParticipantChatMessage,
   createParticipantProfileExtended,
   createSurveyStageParticipantAnswer,
@@ -31,6 +34,7 @@ import {Service} from './service';
 import {
   createChatMessageCallable,
   updateParticipantCallable,
+  updateChatStageParticipantAnswerCallable,
   updateSurveyStageParticipantAnswerCallable,
   updateElectionStageParticipantAnswerCallable,
 } from '../shared/callables';
@@ -143,6 +147,13 @@ export class ParticipantService extends Service {
   getStageAnswer(stageId: string) {
     if (!this.profile) return undefined;
     return this.answerMap[stageId];
+  }
+
+  isReadyToEndChatDiscussion(stageId: string, discussionId: string) {
+    const stageAnswer = this.answerMap[stageId];
+    if (!stageAnswer || stageAnswer.kind !== StageKind.CHAT) return false;
+
+    return stageAnswer.discussionTimestampMap[discussionId];
   }
 
   updateForCurrentRoute() {
@@ -388,9 +399,9 @@ export class ParticipantService extends Service {
     let response = {};
     this.isSendingChat = true;
     if (this.experimentId && this.profile) {
-      // TODO: Get current discussion from chat answers
       const chatMessage = createParticipantChatMessage({
         ...config,
+        discussionId: this.sp.cohortService.getChatDiscussionId(this.profile.currentStageId),
         participantPublicId: this.profile.publicId,
         profile: {
           name: this.profile.name ?? this.profile.publicId,
@@ -411,6 +422,36 @@ export class ParticipantService extends Service {
       );
     }
     this.isSendingChat = false;
+    return response;
+  }
+
+  /** Update participant's ready to end chat answer. */
+  async updateReadyToEndChatDiscussion(
+    stageId: string,
+    discussionId: string,
+  ) {
+    let response = {};
+
+    if (this.experimentId && this.profile) {
+      const answer = this.answerMap[stageId];
+      const chatStageParticipantAnswer = answer ? (answer as ChatStageParticipantAnswer)
+        : createChatStageParticipantAnswer({ id: stageId });
+
+      chatStageParticipantAnswer.discussionTimestampMap[discussionId] = Timestamp.now();
+
+      const createData: UpdateChatStageParticipantAnswerData = {
+        experimentId: this.experimentId,
+        cohortId: this.profile.currentCohortId,
+        participantPrivateId: this.profile.privateId,
+        participantPublicId: this.profile.publicId,
+        chatStageParticipantAnswer
+      };
+
+      response = await updateChatStageParticipantAnswerCallable(
+        this.sp.firebaseService.functions,
+        createData
+      );
+    }
     return response;
   }
 

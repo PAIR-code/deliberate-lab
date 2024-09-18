@@ -15,8 +15,14 @@ import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
 import {
+  ChatDiscussion,
+  ChatDiscussionType,
   ChatMessage,
+  ChatStageConfig,
+  DiscussionItem,
   ParticipantProfile,
+  StageConfig,
+  StageKind,
 } from '@deliberation-lab/utils';
 import {styles} from './chat_interface.scss';
 
@@ -29,9 +35,11 @@ export class ChatInterface extends MobxLitElement {
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
 
+  @property() stage: ChatStageConfig|undefined = undefined;
   @property() value = '';
   @property() disableInput = false;
   @property() showInfo = false;
+  @property() readyToEndDiscussionLoading = false;
 
   private sendUserInput() {
     this.participantService.createChatMessage(
@@ -48,8 +56,31 @@ export class ChatInterface extends MobxLitElement {
     `;
   }
 
-  private renderChatHistory() {
+  private renderChatHistory(currentDiscussionId: string|null) {
     const stageId = this.participantService.profile?.currentStageId ?? '';
+    const stage = this.experimentService.getStage(stageId);
+    if (!stage || stage.kind !== StageKind.CHAT) return nothing;
+
+    // If discussion threads, render each thread
+    if (stage.discussions.length > 0) {
+      let discussions = stage.discussions;
+      // Only show discussion threads that have been unlocked
+      if (currentDiscussionId !== null) {
+        const index = discussions.findIndex(discussion => discussion.id === currentDiscussionId);
+        discussions = discussions.slice(0, index + 1);
+      }
+
+      return html`
+        <div class="chat-scroll">
+          <div class="chat-history">
+            ${discussions.map((discussion, index) =>
+              this.renderChatDiscussionThread(stage, index))}
+          </div>
+        </div>
+      `;
+    }
+
+    // Otherwise, render all messages in non-discussion chatMap
     const messages = this.cohortService.chatMap[stageId];
     if (!messages) return nothing;
 
@@ -59,6 +90,51 @@ export class ChatInterface extends MobxLitElement {
           ${messages.map(this.renderChatMessage.bind(this))}
         </div>
       </div>
+    `;
+  }
+
+  private renderChatDiscussionThread(
+    stage: ChatStageConfig,
+    discussionIndex: number,
+  ) {
+    const discussion = stage.discussions[discussionIndex];
+
+    const renderMessages = () => {
+      const stageMap = this.cohortService.chatDiscussionMap[stage.id];
+      if (!stageMap) return nothing;
+
+      const messages = stageMap[discussion.id] ?? [];
+      return html`${messages.map(this.renderChatMessage.bind(this))}`;
+    };
+
+    const renderDiscussionItems = () => {
+      if (discussion.type !== ChatDiscussionType.COMPARE) return nothing;
+
+      return html`
+        <div class="discussion-items">
+          ${discussion.items.map(item => renderDiscussionItem(item))}
+        </div>
+      `;
+    };
+
+    const renderDiscussionItem = (item: DiscussionItem) => {
+      return html`
+        <div class="discussion-item">
+          ${item.name}
+        </div>
+      `;
+    };
+
+    return html`
+      <div class="discussion">
+        <div class="discussion-title">
+          Discussion ${discussionIndex + 1} of ${stage.discussions.length}
+        </div>
+        ${discussion.description.length > 0 ?
+          html`<div>${discussion.description}</div>` : nothing}
+        ${renderDiscussionItems()}
+      </div>
+      ${renderMessages()}
     `;
   }
 
@@ -110,15 +186,53 @@ export class ChatInterface extends MobxLitElement {
     </div>`;
   }
 
+  private renderEndDiscussionButton(currentDiscussionId: string|null) {
+    if (!this.stage || !currentDiscussionId) {
+      return nothing;
+    }
+
+    const onClick = async () => {
+      if (!this.stage) return;
+
+      this.readyToEndDiscussionLoading = true;
+      await this.participantService.updateReadyToEndChatDiscussion(
+        this.stage.id,
+        currentDiscussionId
+      );
+      this.readyToEndDiscussionLoading = false;
+    };
+
+    return html`
+      <pr-button
+        color="tertiary"
+        variant="tonal"
+        ?disabled=${this.participantService.disableStage
+          || this.participantService.isReadyToEndChatDiscussion(this.stage.id, currentDiscussionId)}
+        ?loading=${this.readyToEndDiscussionLoading}
+        @click=${onClick}
+      >
+        Ready to end discussion
+      </pr-button>
+    `;
+  }
+
   override render() {
+    if (!this.stage) return nothing;
+    const currentDiscussionId = this.cohortService.getChatDiscussionId(
+      this.stage.id
+    );
+
     return html`
       <div class="chat-content">
-        ${this.renderChatHistory()}
+        ${this.cohortService.isChatLoading ?
+          html`<div>Loading...</div>` : this.renderChatHistory(currentDiscussionId)}
       </div>
       <div class="input-row-wrapper">
         <div class="input-row">${this.renderInput()}</div>
       </div>
-      <stage-footer></stage-footer>
+      <stage-footer .showNextButton=${currentDiscussionId === null}>
+        ${this.renderEndDiscussionButton(currentDiscussionId)}
+      </stage-footer>
     `;
   }
 }

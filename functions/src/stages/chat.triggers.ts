@@ -65,6 +65,7 @@ export const createMediatorMessage = onDocumentCreated(
       const mediatorMessage = createAgentMediatorChatMessage(
         {
           profile: { name: mediator.name, avatar: mediator.avatar, pronouns: null },
+          discussionId: data.discussionId,
           message,
           timestamp: Timestamp.now(),
           mediatorId: mediator.id
