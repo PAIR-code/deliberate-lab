@@ -119,6 +119,10 @@ export class ExperimentEditor extends Service {
     }
   }
 
+  setStages(stages: StageConfig[]) {
+    this.stages = stages;
+  }
+
   addStage(stage: StageConfig) {
     this.stages.push(stage);
   }

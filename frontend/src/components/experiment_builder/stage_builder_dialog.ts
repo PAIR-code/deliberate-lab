@@ -22,6 +22,10 @@ import {
   createTOSStage,
   createTransferStage
 } from '@deliberation-lab/utils';
+import {
+  LAS_METADATA,
+  getLASStageConfigs,
+} from '../../shared/games/lost_at_sea';
 
 import {styles} from './stage_builder_dialog.scss';
 
@@ -55,6 +59,7 @@ export class StageBuilderDialog extends MobxLitElement {
   private renderStageCards() {
     return html`
       <div class="card-gallery-wrapper">
+        ${this.renderLASCard()}
         ${this.renderTOSCard()}
         ${this.renderInfoCard()}
         ${this.renderTransferCard()}
@@ -63,6 +68,23 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderChatCard()}
         ${this.renderElectionCard()}
         ${this.renderRevealCard()}
+      </div>
+    `;
+  }
+
+  private renderLASCard() {
+    const addGame = () => {
+      this.experimentEditor.updateMetadata(LAS_METADATA);
+      this.experimentEditor.setStages(getLASStageConfigs());
+      this.experimentEditor.toggleStageBuilderDialog();
+    };
+
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">Lost at Sea</div>
+        <div>
+          Lost at Sea game
+        </div>
       </div>
     `;
   }
