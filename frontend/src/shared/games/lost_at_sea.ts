@@ -10,6 +10,7 @@ import {
   createElectionStage,
   createExperimentConfig,
   createInfoStage,
+  createProfileStage,
   createMetadataConfig,
   createMultipleChoiceSurveyQuestion,
   createRevealStage,
@@ -37,6 +38,8 @@ export function getLASStageConfigs(): StageConfig[] {
   stages.push(LAS_TOS_STAGE);
   // Intro
   stages.push(LAS_INTRO_STAGE);
+  // Profile
+  stages.push(LAS_PROFILE_STAGE);
   // Part 1
   stages.push(LAS_PART_1_INSTRUCTIONS_STAGE);
   stages.push(LAS_PART_1_SURVIVAL_SURVEY_STAGE);
@@ -217,6 +220,13 @@ const LAS_INTRO_STAGE = createInfoStage({
   name: 'Welcome to the experiment',
   descriptions: createStageTextConfig({ primaryText: LAS_INTRO_INFO_DESCRIPTION_PRIMARY }),
   infoLines: LAS_INTRO_INFO_LINES,
+});
+
+// ****************************************************************************
+// Profile stage
+// ****************************************************************************
+const LAS_PROFILE_STAGE = createProfileStage({
+  game: StageGame.LAS,
 });
 
 // ****************************************************************************
