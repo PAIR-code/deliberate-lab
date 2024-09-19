@@ -10,6 +10,7 @@ import {
   createElectionStage,
   createExperimentConfig,
   createInfoStage,
+  createPayoutStage,
   createProfileStage,
   createMetadataConfig,
   createMultipleChoiceSurveyQuestion,
@@ -63,7 +64,7 @@ export function getLASStageConfigs(): StageConfig[] {
   stages.push(LAS_PART_3_REVEAL_STAGE);
   // Payout
   stages.push(LAS_PAYOUT_INFO_STAGE);
-  // TODO: stages.push(LAS_PAYOUT_STAGE);
+  stages.push(LAS_PAYOUT_STAGE);
   // Final
   stages.push(LAS_FINAL_SURVEY_STAGE);
 
@@ -252,7 +253,10 @@ const LAS_PART_1_INSTRUCTIONS_STAGE = createInfoStage({
 // ****************************************************************************
 // Part 1 initial survival task - survey stage
 // ****************************************************************************
+export const LAS_PART_1_SURVIVAL_SURVEY_STAGE_ID = 'initial';
+
 const LAS_PART_1_SURVIVAL_SURVEY_STAGE = createSurveyStage({
+  id: LAS_PART_1_SURVIVAL_SURVEY_STAGE_ID,
   game: StageGame.LAS,
   name: 'Initial survival task',
   descriptions: createStageTextConfig({ infoText: LAS_SCENARIO_REMINDER }),
@@ -599,8 +603,9 @@ const LAS_PAYOUT_INFO_STAGE = createInfoStage({
 // ****************************************************************************
 // Payout stage
 // ****************************************************************************
-
-// TODO: Add payout stage
+const LAS_PAYOUT_STAGE = createPayoutStage({
+  game: StageGame.LAS,
+});
 
 // ****************************************************************************
 // Final survey stage

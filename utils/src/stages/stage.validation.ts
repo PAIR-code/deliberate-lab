@@ -3,6 +3,7 @@ import { StageGame } from './stage';
 import { ChatStageConfigData } from './chat_stage.validation';
 import { ElectionStageConfigData } from './election_stage.validation';
 import { InfoStageConfigData } from './info_stage.validation';
+import { PayoutStageConfigData } from './payout_stage.validation';
 import { ProfileStageConfigData } from './profile_stage.validation';
 import { RevealStageConfigData } from './reveal_stage.validation';
 import { SurveyStageConfigData } from './survey_stage.validation';
@@ -18,6 +19,7 @@ export const StageConfigData = Type.Union([
   ChatStageConfigData,
   ElectionStageConfigData,
   InfoStageConfigData,
+  PayoutStageConfigData,
   ProfileStageConfigData,
   RevealStageConfigData,
   SurveyStageConfigData,

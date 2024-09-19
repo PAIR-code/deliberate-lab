@@ -28,6 +28,8 @@ export * from './stages/election_stage';
 export * from './stages/election_stage.validation';
 export * from './stages/info_stage';
 export * from './stages/info_stage.validation';
+export * from './stages/payout_stage';
+export * from './stages/payout_stage.validation';
 export * from './stages/profile_stage';
 export * from './stages/profile_stage.validation';
 export * from './stages/reveal_stage';

@@ -6,6 +6,7 @@ import '../stages/chat_interface';
 import '../stages/chat_panel';
 import '../stages/election_view';
 import '../stages/info_view';
+import '../stages/payout_view';
 import '../stages/reveal_view';
 import '../stages/survey_view';
 import '../stages/tos_view';
@@ -213,6 +214,12 @@ export class ParticipantPreviewer extends MobxLitElement {
         return html`
           <div class="content">
             <election-view .stage=${stage} .answer=${answer}></election-view>
+          </div>
+        `;
+      case StageKind.PAYOUT:
+        return html`
+          <div class="content">
+            <payout-view .stage=${stage}></payout-view>
           </div>
         `;
       case StageKind.REVEAL:

@@ -11,6 +11,7 @@ import {
   createElectionStagePublicData,
 } from './election_stage';
 import { InfoStageConfig } from './info_stage';
+import { PayoutStageConfig } from './payout_stage';
 import { ProfileStageConfig } from './profile_stage';
 import { RevealStageConfig } from './reveal_stage';
 import {
@@ -39,12 +40,7 @@ export enum StageKind {
   PAYOUT = 'payout',
   REVEAL = 'reveal',
   SURVEY = 'survey',
-  TRANSFER = 'transfer',
-  WTL_SURVEY = 'wtlSurvey', // willingness to lead survey
-
-  // Lost at Sea (LAS) game specific stages
-  LAS_CHAT = 'lasChat',
-  LAS_SURVEY = 'lasSurvey',
+  TRANSFER = 'transfer'
 }
 
 /** Specific game associated with stage. */
@@ -77,6 +73,7 @@ export type StageConfig =
   | ChatStageConfig
   | ElectionStageConfig
   | InfoStageConfig
+  | PayoutStageConfig
   | ProfileStageConfig
   | RevealStageConfig
   | SurveyStageConfig
