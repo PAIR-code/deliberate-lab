@@ -21,8 +21,8 @@ import {
 // ************************************************************************* //
 // updateSurveyStageParticipantAnswer endpoint                               //
 //                                                                           //
-// Input structure: { experimentId, cohortId, participantId,                 //
-//                    surveyStageParticipantAnswer }                         //
+// Input structure: { experimentId, cohortId, participantPrivateId,          //
+//                    participantPublicId, surveyStageParticipantAnswer }    //
 // Validation: utils/src/stages/survey_stage.validation.ts                   //
 // ************************************************************************* //
 
@@ -40,7 +40,7 @@ export const updateSurveyStageParticipantAnswer = onCall(async (request) => {
     .collection('experiments')
     .doc(data.experimentId)
     .collection('participants')
-    .doc(data.participantId)
+    .doc(data.participantPrivateId)
     .collection('stageData')
     .doc(data.surveyStageParticipantAnswer.id);
 
@@ -59,7 +59,7 @@ export const updateSurveyStageParticipantAnswer = onCall(async (request) => {
 
     // Update public stage data
     const publicStageData = (await publicDocument.get()).data() as StagePublicData;
-    publicStageData.participantAnswerMap[data.participantId] = data.surveyStageParticipantAnswer.answerMap;
+    publicStageData.participantAnswerMap[data.participantPublicId] = data.surveyStageParticipantAnswer.answerMap;
     transaction.set(publicDocument, publicStageData);
   });
 

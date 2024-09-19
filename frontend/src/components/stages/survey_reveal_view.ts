@@ -5,9 +5,14 @@ import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
+import {core} from '../../core/core';
+import {CohortService} from '../../services/cohort.service';
+
 import {
   MultipleChoiceSurveyAnswer,
   MultipleChoiceSurveyQuestion,
+  StageGame,
+  StageKind,
   SurveyAnswer,
   SurveyQuestion,
   SurveyQuestionKind,
@@ -15,6 +20,9 @@ import {
   SurveyStageParticipantAnswer,
   SurveyStagePublicData,
 } from "@deliberation-lab/utils";
+import {
+  LAS_PART_2_ELECTION_STAGE_ID,
+} from '../../shared/games/lost_at_sea';
 
 import { styles } from "./survey_reveal_view.scss";
 
@@ -22,6 +30,8 @@ import { styles } from "./survey_reveal_view.scss";
 @customElement("survey-reveal-view")
 export class SurveyReveal extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
+
+  private readonly cohortService = core.getService(CohortService);
 
   @property() stage: SurveyStageConfig|undefined = undefined;
   @property() answer: SurveyStageParticipantAnswer|undefined = undefined;
@@ -74,16 +84,39 @@ export class SurveyReveal extends MobxLitElement {
 
   /** Render leader answer (or column header if null). */
   private renderLeaderCell(question: MultipleChoiceSurveyQuestion|null = null) {
+    if (this.stage?.game !== StageGame.LAS) return nothing;
+
     // If no elected leader specified, skip this column
-    return nothing;
+    const leader = this.cohortService.stagePublicDataMap[LAS_PART_2_ELECTION_STAGE_ID];
+    if (!leader || leader.kind !== StageKind.ELECTION || leader.currentWinner === '') return nothing;
 
     // If no question provided, return column header
-    /* if (!question) {
+    if (!question) {
       return html`
         <div class="table-cell">Your elected leader chose</div>
       `;
-    } */
+    }
     // Otherwise, render leader answer
+    const surveyAnswers = this.cohortService.stagePublicDataMap[this.stage.id];
+    if (!surveyAnswers || surveyAnswers.kind !== StageKind.SURVEY) {
+      return html`<div class="table-cell"></div>`;
+    }
+
+    const leaderAnswerMap = surveyAnswers.participantAnswerMap[leader.currentWinner];
+    if (!leaderAnswerMap || !leaderAnswerMap[question.id]) return html`<div class="table-cell"></div>`;
+
+    const leaderAnswer = leaderAnswerMap[question.id] as MultipleChoiceSurveyAnswer;
+
+    const answer = question.options.find(
+      option => option.id === leaderAnswer?.choiceId ?? ''
+    );
+
+    return html`
+      <div class="table-cell">
+        ${this.renderIcon(question.correctAnswerId ?? '', leaderAnswer?.choiceId ?? null)}
+        <div>${answer?.text ?? ''}</div>
+      </div>
+    `;
   }
 
   private renderIcon(correctAnswer: string, selectedAnswer: string) {

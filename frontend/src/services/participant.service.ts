@@ -473,7 +473,8 @@ export class ParticipantService extends Service {
         this.sp.firebaseService.functions, {
           experimentId: this.experimentId,
           cohortId: this.profile.currentCohortId,
-          participantId: this.profile.privateId,
+          participantPrivateId: this.profile.privateId,
+          participantPublicId: this.profile.publicId,
           surveyStageParticipantAnswer: participantAnswer,
         }
       );

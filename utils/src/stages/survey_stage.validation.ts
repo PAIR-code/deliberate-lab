@@ -155,7 +155,8 @@ export const UpdateSurveyStageParticipantAnswerData = Type.Object(
   {
     experimentId: Type.String({ minLength: 1 }),
     cohortId: Type.String({ minLength: 1 }),
-    participantId: Type.String({ minLength: 1 }),
+    participantPrivateId: Type.String({ minLength: 1}),
+    participantPublicId: Type.String({ minLength: 1 }),
     surveyStageParticipantAnswer: SurveyStageParticipantAnswerData,
   },
   strict,
