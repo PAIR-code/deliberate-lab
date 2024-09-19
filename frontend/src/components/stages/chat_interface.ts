@@ -24,6 +24,10 @@ import {
   StageConfig,
   StageKind,
 } from '@deliberation-lab/utils';
+import {
+  LAS_ITEMS,
+  getLASItemImageURL
+} from '../../shared/games/lost_at_sea';
 import {styles} from './chat_interface.scss';
 
 /** Chat interface component */
@@ -120,6 +124,9 @@ export class ChatInterface extends MobxLitElement {
     const renderDiscussionItem = (item: DiscussionItem) => {
       return html`
         <div class="discussion-item">
+          ${LAS_ITEMS[item.id] ?
+            html`<div class="img-wrapper"><img src=${getLASItemImageURL(item.id)} /></div>`
+            : nothing}
           ${item.name}
         </div>
       `;

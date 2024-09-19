@@ -7,6 +7,7 @@ import '@material/web/radio/radio.js';
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
+import {classMap} from 'lit/directives/class-map.js';
 
 import {
   CheckSurveyAnswer,
@@ -23,6 +24,10 @@ import {
   SurveyStageParticipantAnswer,
   TextSurveyQuestion,
 } from '@deliberation-lab/utils';
+import {
+  LAS_ITEMS,
+  getLASItemImageURL
+} from '../../shared/games/lost_at_sea';
 
 import {core} from '../../core/core';
 import {ParticipantService} from '../../services/participant.service';
@@ -160,12 +165,19 @@ export class SurveyView extends MobxLitElement {
   }
 
   private renderMultipleChoiceQuestion(question: MultipleChoiceSurveyQuestion) {
+    const questionWrapperClasses = classMap({
+      'radio-question-wrapper': true,
+      'las': question.id.slice(0, 3) === 'las',
+    });
+
     return html`
       <div class="radio-question">
         <div class="title">${question.questionTitle}</div>
-        ${question.options.map((option) =>
-          this.renderRadioButton(option, question.id)
-        )}
+        <div class=${questionWrapperClasses}>
+          ${question.options.map((option) =>
+            this.renderRadioButton(option, question.id)
+          )}
+        </div>
       </div>
     `;
   }
@@ -194,6 +206,34 @@ export class SurveyView extends MobxLitElement {
         answer
       );
     };
+
+    if (LAS_ITEMS[choice.id]) {
+      const classes = classMap({
+        'las-question': true,
+        'selected': this.isMultipleChoiceMatch(questionId, choice.id),
+        'disabled': this.participantService.disableStage,
+      });
+
+      return html`
+        <div class=${classes} @click=${handleMultipleChoiceClick}>
+          <div class="img-wrapper">
+            <img src=${getLASItemImageURL(choice.id)} />
+          </div>
+          <div class="radio-button">
+            <md-radio
+              id=${id}
+              name=${questionId}
+              value=${choice.id}
+              aria-label=${choice.text}
+              ?checked=${this.isMultipleChoiceMatch(questionId, choice.id)}
+              ?disabled=${this.participantService.disableStage}
+            >
+            </md-radio>
+            <label for=${id}>${choice.text}</label>
+          </div>
+        </div>
+      `;
+    }
 
     return html`
       <div class="radio-button">
