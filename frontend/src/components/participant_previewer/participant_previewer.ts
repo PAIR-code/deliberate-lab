@@ -15,7 +15,7 @@ import './participant_nav';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 
 import {Timestamp} from 'firebase/firestore';
 
@@ -47,6 +47,8 @@ export class ParticipantPreviewer extends MobxLitElement {
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
+
+  @state() isStartExperimentLoading = false;
 
   connectedCallback() {
     super.connectedCallback();
@@ -97,21 +99,20 @@ export class ParticipantPreviewer extends MobxLitElement {
     // TODO: If cohort requires min number of participants,
     // show loading screen before participants are allowed to start
     if (!profile.timestamps.startExperiment) {
-      let isLoading = false;
       const onStartExperiment = async () => {
-        isLoading = true;
+        this.isStartExperimentLoading = true;
         const startExperiment = Timestamp.now();
         const timestamps = {
           ...profile.timestamps,
           startExperiment
         };
         await this.participantService.updateProfile({timestamps});
-        isLoading = false;
+        this.isStartExperimentLoading = false;
       };
 
       return html`
         <pr-button
-          ?loading=${isLoading}
+          ?loading=${this.isStartExperimentLoading}
           variant="tonal" @click=${onStartExperiment}
         >
           Start experiment
