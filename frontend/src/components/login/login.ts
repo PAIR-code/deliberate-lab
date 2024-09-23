@@ -7,8 +7,6 @@ import { customElement, state } from "lit/decorators.js";
 
 import { core } from "../../core/core";
 import { AuthService } from "../../services/auth.service";
-import { Pages, RouterService } from "../../services/router.service";
-
 import { APP_NAME } from "../../shared/constants";
 
 import { styles } from "./login.scss";
@@ -19,67 +17,50 @@ export class Login extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly authService = core.getService(AuthService);
-  private readonly routerService = core.getService(RouterService);
 
   @state() experimentId = "";
   @state() participantId = "";
 
   override render() {
-    return html`
-      <h1>${APP_NAME}</h1>
-      <div class="cards-wrapper">
-        ${this.renderParticipantLogin()}
-        ${this.renderExperimenterLogin()}
-      </div>
-    `;
-  }
-
-  private renderParticipantLogin() {
-    const handleLogin = () => {
-      this.routerService.navigate(
-        Pages.PARTICIPANT,
-        {
-          "experiment": this.experimentId,
-          "participant": this.participantId
-        }
-      );
-    };
-
-    return html`
-      <div class="card">
-        <h2>Participant login</h2>
-        <pr-textarea
-          label="Experiment ID"
-          placeholder="Enter experiment ID"
-          variant="outlined"
-          .value=${this.experimentId}
-          @input=${(e: Event) => this.experimentId = (e.target as HTMLInputElement).value}
-        ></pr-textarea>
-        <pr-textarea
-          label="Participant ID"
-          placeholder="Enter participant ID"
-          variant="outlined"
-          .value=${this.participantId}
-          @input=${(e: Event) => this.participantId = (e.target as HTMLInputElement).value}
-        ></pr-textarea>
-        <pr-button
-          ?disabled=${this.experimentId === "" || this.participantId === ""}
-          @click=${handleLogin}>
-          Login
-        </pr-button>
-      </div>
-    `;
-  }
-
-  private renderExperimenterLogin() {
     const handleLogin = () => {
       this.authService.signInWithGoogle();
     };
 
+    // TODO: Enable developers to customize info by importing a Git-ignored
+    // app_info.md file (and push app_info.example.md to repository)
     return html`
-      <div class="card">
-        <h2>Experimenter login</h2>
-        <pr-button @click=${handleLogin}>Sign in with Google</pr-button>
+      <div class="login">
+        <h1>🕊️ Welcome to ${APP_NAME}</h1>
+        <div>
+          ${APP_NAME} is
+          <a href="https://github.com/PAIR-code/deliberate-lab/wiki" target="blank">
+            an open-source platform
+          </a>
+          for running online research experiments on human + LLM group dynamics.
+        </div>
+        <div class="info">
+          <div>
+            ⚠️ The owner(s) of this deployment will have access to any
+            experiment data created.
+            Contact the owner(s) for information about analytics
+            tracking, data retention policies, etc.
+          </div>
+          <div>
+            To run the platform locally or create your own deployment,
+            <a href="https://github.com/PAIR-code/deliberate-lab" target="_blank">
+            clone ${APP_NAME} on GitHub</a>.
+          </div>
+        </div>
+        <div class="info">
+          <div>
+            📋 For "researcher" access to the platform (e.g., ability to create
+            and run experiments), the owner(s) of this deployment must add
+            your email address to their Firebase "allowlist."
+          </div>
+        </div>
+        <div class="action-buttons">
+          <pr-button @click=${handleLogin}>Sign in with Google</pr-button>
+        </div>
       </div>
     `;
   }

@@ -91,8 +91,18 @@ export class App extends MobxLitElement {
     return html`<div class="content">404: ${message}</div>`;
   }
 
-  private render403(message = 'Participants do not have access') {
-    return html`<div class="content">403: ${message}</div>`;
+  private render403() {
+    return html`
+      <div class="error-wrapper">
+        <div class="error">
+          <div>Participants do not have access to this page.</div>
+          <div>
+            If you are a researcher, contact the owner(s) of this deployment
+            and have them add your email address to the allowlist.
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   override render() {
