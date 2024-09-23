@@ -23,9 +23,41 @@
   padding: 0 common.$main-content-padding;
 }
 
+.banner {
+  background: var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-medium;
+  padding: common.$spacing-medium;
+
+  &.error {
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+  }
+}
+
+.tabs {
+  @include common.flex-row;
+  align-self: stretch;
+}
+
+.tab {
+  @include common.flex-row-align-center;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  padding: 0 common.$spacing-large;
+  user-select: none;
+
+  &.selected {
+    border-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-primary);
+    cursor: initial;
+  }
+}
+
 .body {
+  @include common.flex-column;
   flex-grow: 1;
   overflow: auto;
+  gap: common.$spacing-medium;
   padding: common.$main-content-padding;
 }
 

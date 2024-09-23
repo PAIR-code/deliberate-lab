@@ -104,6 +104,12 @@ export class ExperimentEditor extends Service {
     this.currentStageId = id;
   }
 
+  jumpToLastStage() {
+    const stage = this.stages[this.stages.length - 1];
+    const id = stage ? stage.id : undefined;
+    this.setCurrentStageId(id);
+  }
+
   @computed get currentStage() {
     return this.stages.find(stage => stage.id === this.currentStageId);
   }

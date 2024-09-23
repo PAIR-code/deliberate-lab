@@ -2,7 +2,8 @@ import '../../pair-components/icon_button';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
+import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
@@ -36,11 +37,13 @@ export class StageBuilderDialog extends MobxLitElement {
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
+  @state() showGames = false;
+
   override render() {
     return html`
       <div class="dialog">
         <div class="header">
-          <div>Add experiment stage</div>
+          ${this.renderTabs()}
           <pr-icon-button
             color="neutral"
             icon="close"
@@ -50,8 +53,43 @@ export class StageBuilderDialog extends MobxLitElement {
           </pr-icon-button>
         </div>
         <div class="body">
-          ${this.renderStageCards()}
+          ${this.showGames ? this.renderGameCards() : this.renderStageCards()}
         </div>
+      </div>
+    `;
+  }
+
+  private renderTabs() {
+    const getClasses = (selected: boolean) => {
+      return classMap({
+        'tab': true,
+        'selected': selected,
+      });
+    };
+
+    const toggleView = (showGames: boolean) => {
+      this.showGames = showGames;
+    }
+
+    return html`
+      <div class="tabs">
+        <div class=${getClasses(!this.showGames)} @click=${() => {toggleView(false)}}>
+          Add stages
+        </div>
+        <div class=${getClasses(this.showGames)} @click=${() => {toggleView(true)}}>
+          Add game
+        </div>
+      </div>
+    `;
+  }
+
+  private renderGameCards() {
+    return html`
+      <div class="banner error">
+        ⚠️ Adding a game will override any current stages in your configuration
+      </div>
+      <div class="card-gallery-wrapper">
+        ${this.renderLASCard()}
       </div>
     `;
   }
@@ -59,7 +97,6 @@ export class StageBuilderDialog extends MobxLitElement {
   private renderStageCards() {
     return html`
       <div class="card-gallery-wrapper">
-        ${this.renderLASCard()}
         ${this.renderTOSCard()}
         ${this.renderInfoCard()}
         ${this.renderTransferCard()}
@@ -81,9 +118,11 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addGame}>
-        <div class="title">Lost at Sea</div>
+        <div class="title">🌊 Lost at Sea</div>
         <div>
-          Lost at Sea game
+          After individually ranking survival items and discussing
+          in group chat, elect a leader
+          who will rank a new set of survival items
         </div>
       </div>
     `;
@@ -93,6 +132,7 @@ export class StageBuilderDialog extends MobxLitElement {
     const addStage = () => {
       this.experimentEditor.addStage(createInfoStage());
       this.experimentEditor.toggleStageBuilderDialog();
+      this.experimentEditor.jumpToLastStage();
     };
 
     return html`
@@ -113,6 +153,7 @@ export class StageBuilderDialog extends MobxLitElement {
     const addStage = () => {
       this.experimentEditor.addStage(createTOSStage());
       this.experimentEditor.toggleStageBuilderDialog();
+      this.experimentEditor.jumpToLastStage();
     };
 
     return html`
@@ -129,6 +170,7 @@ export class StageBuilderDialog extends MobxLitElement {
     const addStage = () => {
       this.experimentEditor.addStage(createChatStage());
       this.experimentEditor.toggleStageBuilderDialog();
+      this.experimentEditor.jumpToLastStage();
     };
 
     return html`
@@ -145,6 +187,7 @@ export class StageBuilderDialog extends MobxLitElement {
     const addStage = () => {
       this.experimentEditor.addStage(createElectionStage());
       this.experimentEditor.toggleStageBuilderDialog();
+      this.experimentEditor.jumpToLastStage();
     };
 
     return html`
@@ -161,6 +204,7 @@ export class StageBuilderDialog extends MobxLitElement {
     const addStage = () => {
       this.experimentEditor.addStage(createRevealStage());
       this.experimentEditor.toggleStageBuilderDialog();
+      this.experimentEditor.jumpToLastStage();
     };
 
     return html`
@@ -177,6 +221,7 @@ export class StageBuilderDialog extends MobxLitElement {
     const addStage = () => {
       this.experimentEditor.addStage(createSurveyStage());
       this.experimentEditor.toggleStageBuilderDialog();
+      this.experimentEditor.jumpToLastStage();
     };
 
     return html`
@@ -193,6 +238,7 @@ export class StageBuilderDialog extends MobxLitElement {
     const addStage = () => {
       this.experimentEditor.addStage(createProfileStage());
       this.experimentEditor.toggleStageBuilderDialog();
+      this.experimentEditor.jumpToLastStage();
     };
 
     return html`
@@ -209,6 +255,7 @@ export class StageBuilderDialog extends MobxLitElement {
     const addStage = () => {
       this.experimentEditor.addStage(createTransferStage());
       this.experimentEditor.toggleStageBuilderDialog();
+      this.experimentEditor.jumpToLastStage();
     }
 
     return html`
