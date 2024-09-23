@@ -48,7 +48,7 @@ export class ExperimentBuilder extends MobxLitElement {
     const stage = this.experimentEditor.currentStage;
 
     if (stage === undefined) {
-      return html`<div>Settings</div>`;
+      return html`<div>Experiment config</div>`;
     } else {
       return html`
         <div class="left">

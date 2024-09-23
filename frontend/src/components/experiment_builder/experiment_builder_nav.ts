@@ -59,8 +59,8 @@ export class ExperimentBuilderNav extends MobxLitElement {
         role="button"
         @click=${() => { this.experimentEditor.setCurrentStageId(undefined) }}
       >
-        <pr-icon icon="settings"></pr-icon>
-        <div class="primary">Settings</div>
+        <pr-icon icon="edit_note"></pr-icon>
+        <div class="primary">Experiment config</div>
       </div>
     `;
   }

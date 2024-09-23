@@ -119,8 +119,8 @@ export class ExperimentManagerComponent extends MobxLitElement {
   private renderHeader() {
     return html`
       <div class="left">
-        ${this.experimentManager.currentParticipant?.name ?? ''} /
-        ${this.experimentManager.currentParticipant?.publicId ?? ''}
+        ${this.experimentManager.currentParticipant?.name ?? ''}
+        ${this.experimentManager.currentParticipant?.publicId ? `(${this.experimentManager.currentParticipant?.publicId})` : ''}
       </div>
       ${this.renderTransferMenu()}
     `;

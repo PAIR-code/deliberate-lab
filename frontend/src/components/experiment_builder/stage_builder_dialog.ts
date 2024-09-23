@@ -137,7 +137,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">Info</div>
+        <div class="title">ℹ️ Info</div>
         <div>
           Shows Markdown-rendered information
         </div>
@@ -158,7 +158,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">Terms of Service</div>
+        <div class="title">📜 Terms of Service</div>
         <div>
           Shows Markdown-rendered terms of service to accept
         </div>
@@ -175,7 +175,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">Group chat</div>
+        <div class="title">💬 Group chat</div>
         <div>
           Discuss topics with other participants and LLM mediators
         </div>
@@ -192,7 +192,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">Election</div>
+        <div class="title">🗳️ Election</div>
         <div>
           Rank other participants in order to select a winner
         </div>
@@ -209,7 +209,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">Reveal</div>
+        <div class="title">👁️‍🗨️ Reveal</div>
         <div>
           Show results for election stages, survey stages (multiple choice only)
         </div>
@@ -226,7 +226,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">Survey</div>
+        <div class="title">📋 Survey</div>
         <div>
           Answer freeform, multiple choice, checkbox, and scale questions
         </div>
@@ -243,7 +243,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">Profile</div>
+        <div class="title">👤 Profile</div>
         <div>
           Set participant profile
         </div>
@@ -260,7 +260,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">Transfer</div>
+        <div class="title">🚪 Transfer</div>
         <div>
           During transfer stage, assign participants to different cohorts
           in your experiment while participants wait
