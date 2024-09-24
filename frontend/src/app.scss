@@ -101,3 +101,9 @@ main {
   max-width: 600px;
   padding: common.$main-content-padding;
 }
+
+.action-buttons {
+  @include common.flex-row;
+  gap: common.$spacing-medium;
+  justify-content: end;
+}

@@ -92,6 +92,21 @@ export class App extends MobxLitElement {
   }
 
   private render403() {
+    const renderLogoutButton = () => {
+      if (!this.authService.authenticated) return nothing;
+      return html`
+        <div class="action-buttons">
+          <pr-button
+            color="error"
+            variant="outlined"
+            @click=${() => { this.authService.signOut() }}
+          >
+            Log out
+          </pr-button>
+        </div>
+      `;
+    };
+
     return html`
       <div class="error-wrapper">
         <div class="error">
@@ -100,6 +115,7 @@ export class App extends MobxLitElement {
             If you are a researcher, contact the owner(s) of this deployment
             and have them add your email address to the allowlist.
           </div>
+          ${renderLogoutButton()}
         </div>
       </div>
     `;
