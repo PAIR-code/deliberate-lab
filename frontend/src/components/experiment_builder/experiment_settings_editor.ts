@@ -138,6 +138,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           later.
         </div>
         ${this.renderMaxParticipantConfig()}
+        ${this.renderIncludeAllParticipantsConfig()}
       </div>
     `;
   }
@@ -217,7 +218,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           >
           </md-checkbox>
           <div>
-          Set a cap on the number of participants in each cohort
+            Limit cohort to maximum number of participants
           </div>
         </div>
         <div class="number-input">
@@ -236,7 +237,35 @@ export class ExperimentSettingsEditor extends MobxLitElement {
       </div>
     `;
   }
-  
+
+  private renderIncludeAllParticipantsConfig() {
+    const includeAllParticipants =
+      this.experimentEditor.experiment.defaultCohortConfig.includeAllParticipantsInCohortCount;
+    const updateCheck = () => {
+      const includeAllParticipantsInCohortCount = !includeAllParticipants;
+      this.experimentEditor.updateCohortConfig(
+        { includeAllParticipantsInCohortCount }
+      );
+    };
+
+    return html`
+      <div class="config-item">
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${includeAllParticipants}
+            @click=${updateCheck}
+          >
+          </md-checkbox>
+          <div>
+            Include all participants (even ones who have left the experiment)
+            in cohort count
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   private renderAttentionChecks() {
     const isAttention = this.experimentEditor.experiment.attentionCheckConfig.enableAttentionChecks;
 

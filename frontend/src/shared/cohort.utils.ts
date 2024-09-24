@@ -26,9 +26,18 @@ export function getCohortDescription(cohort: CohortConfig) {
 export function getCohortParticipants(
   participants: ParticipantProfile[],
   cohortId: string,
+  countObsoleteParticipants = true, // participants who left the experiment
   includeParticipantsPendingTransferToCohort = true,
 ) {
   let participantList = participants;
+
+  // If not counting obsolete, filter out participants
+  // who left the experiment before completing
+  if (!countObsoleteParticipants) {
+    participantList = participants.filter(
+      participant => !isObsoleteParticipant(participant)
+    );
+  }
 
   return participantList.filter(
     participant => {
@@ -53,6 +62,7 @@ export function hasMaxParticipantsInCohort(
   const numParticipants = getCohortParticipants(
     participants,
     cohort.id,
+    cohort.participantConfig.includeAllParticipantsInCohortCount,
     true // include participants pending transfer into this stage
   ).length;
 
@@ -71,6 +81,7 @@ export function hasMinParticipantsInCohort(
   const numParticipants = getCohortParticipants(
     participants,
     cohort.id,
+    cohort.participantConfig.includeAllParticipantsInCohortCount,
     true // include participants pending transfer into this stage
   ).length;
 
