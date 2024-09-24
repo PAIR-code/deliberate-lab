@@ -309,18 +309,12 @@ export class ParticipantService extends Service {
       window.location.href = PROLIFIC_COMPLETION_URL_PREFIX + redirectCode;
     } 
     
-    // Redirect to home page.
-    else {
-      this.sp.routerService.navigate(Pages.HOME);
-    }
-    /*
     else {
       this.sp.routerService.navigate(Pages.PARTICIPANT, {
         'experiment': this.experimentId!,
         'participant': this.profile!.privateId,
       });
     }
-    */
   }
 
   /** Move to next stage. */
