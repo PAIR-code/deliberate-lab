@@ -171,7 +171,6 @@ export class ExperimentManagerComponent extends MobxLitElement {
         <div class="subtitle">
           ${this.experimentManager.getCohortParticipants(
             cohort.id,
-            cohort.participantConfig.includeAllParticipantsInCohortCount,
           ).length}
           participants
         </div>

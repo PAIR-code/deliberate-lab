@@ -35,7 +35,6 @@ export type ExperimentDeletionData = Static<typeof ExperimentDeletionData>;
 export const CohortParticipantConfigSchema = Type.Object({
   minParticipantsPerCohort: Type.Union([Type.Null(), Type.Number({ minimum: 0 })]),
   maxParticipantsPerCohort: Type.Union([Type.Null(), Type.Number({ minimum: 1 })]),
-  includeAllParticipantsInCohortCount: Type.Boolean(),
 });
 
 export const AttentionCheckConfigSchema = Type.Object({

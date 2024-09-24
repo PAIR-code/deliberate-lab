@@ -31,8 +31,6 @@ export interface CohortParticipantConfig {
   minParticipantsPerCohort: number|null;
   // Max number of participants for experiment cohort (or null if no limit)
   maxParticipantsPerCohort: number|null;
-  // If false, exclude booted participant from min/max participant counts
-  includeAllParticipantsInCohortCount: boolean;
 }
 
 /** Attention check config. */
@@ -82,7 +80,6 @@ export function createCohortParticipantConfig(
   return {
     minParticipantsPerCohort: config.minParticipantsPerCohort ?? null,
     maxParticipantsPerCohort: config.maxParticipantsPerCohort ?? null,
-    includeAllParticipantsInCohortCount: config.includeAllParticipantsInCohortCount ?? false,
   };
 }
 
