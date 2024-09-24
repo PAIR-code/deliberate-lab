@@ -46,6 +46,7 @@ export class ChatInterface extends MobxLitElement {
   @property() readyToEndDiscussionLoading = false;
 
   private sendUserInput() {
+    if (this.value.trim() === '') return;
     this.participantService.createChatMessage(
       { message: this.value.trim() }
     );
@@ -183,7 +184,7 @@ export class ChatInterface extends MobxLitElement {
           <pr-icon-button
             icon="send"
             variant="tonal"
-            .disabled=${this.value === '' || this.disableInput || this.participantService.disableStage}
+            .disabled=${this.value.trim() === '' || this.disableInput || this.participantService.disableStage}
             ?loading=${this.participantService.isSendingChat}
             @click=${this.sendUserInput}
           >
