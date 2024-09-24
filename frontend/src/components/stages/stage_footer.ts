@@ -7,6 +7,7 @@ import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 import {Pages, RouterService} from '../../services/router.service';
 import {styles} from './stage_footer.scss';
+import { ParticipantStatus } from '@deliberation-lab/utils';
 
 /** Experiment stage footer */
 @customElement('stage-footer')
@@ -41,16 +42,11 @@ export class Footer extends MobxLitElement {
       this.isLoadingNext = true;
       // Handle custom onNextClick
       await this.onNextClick();
+      
       // Save last stage and mark experiment as completed
       await this.participantService.completeLastStage();
-      // Navigate to landing
-      this.routerService.navigate(
-        Pages.PARTICIPANT,
-        {
-          'experiment': this.routerService.activeRoute.params['experiment'],
-          'participant': this.routerService.activeRoute.params['participant'],
-        }
-      );
+      await this.participantService.routeToEndExperiment(ParticipantStatus.SUCCESS);
+
       this.isLoadingNext = false;
     };
 

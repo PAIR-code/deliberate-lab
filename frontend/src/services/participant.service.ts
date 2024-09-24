@@ -289,20 +289,38 @@ export class ParticipantService extends Service {
 
     // Route to experiment landing (or redirect to Prolific)
     if (!navigateToFailurePage) return;
+    this.routeToEndExperiment(currentStatus);
+  }
+
+  async routeToEndExperiment(currentStatus: ParticipantStatus) {
+    
     const config = this.sp.experimentService.experiment?.prolificConfig;
 
+    // Redirect to Prolific
     if (config && config.enableProlificIntegration) {
-      const code = currentStatus === ParticipantStatus.ATTENTION_TIMEOUT
-        && config.attentionFailRedirectCode.length > 0 ?
-        config.attentionFailRedirectCode : config.defaultRedirectCode;
-      // Navigate to Prolific with completion code
-      window.location.href = PROLIFIC_COMPLETION_URL_PREFIX + code;
-    } else {
+      let redirectCode = config.defaultRedirectCode;
+      if (currentStatus === ParticipantStatus.ATTENTION_TIMEOUT && config.attentionFailRedirectCode.length > 0) {
+        redirectCode = config.attentionFailRedirectCode;
+      } else if (currentStatus === ParticipantStatus.BOOTED_OUT && config.bootedRedirectCode.length > 0) {
+        redirectCode = config.bootedRedirectCode;
+      }
+
+     // Navigate to Prolific with completion code
+      window.location.href = PROLIFIC_COMPLETION_URL_PREFIX + redirectCode;
+    } 
+    
+    // Redirect to home page.
+    else {
+      this.sp.routerService.navigate(Pages.HOME);
+    }
+    /*
+    else {
       this.sp.routerService.navigate(Pages.PARTICIPANT, {
         'experiment': this.experimentId!,
         'participant': this.profile!.privateId,
       });
     }
+    */
   }
 
   /** Move to next stage. */

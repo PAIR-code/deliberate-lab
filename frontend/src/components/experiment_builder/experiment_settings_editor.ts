@@ -389,6 +389,12 @@ export class ExperimentSettingsEditor extends MobxLitElement {
       this.experimentEditor.updateProlificConfig({ attentionFailRedirectCode });
     };
 
+    const updateBooted = (e: InputEvent) => {
+      const bootedRedirectCode = (e.target as HTMLTextAreaElement).value;
+      this.experimentEditor.updateProlificConfig({ bootedRedirectCode });
+    };
+
+
     return html`
       <div class="inner-setting">
         <pr-textarea
@@ -407,6 +413,15 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           @input=${updateAttention}
         >
         </pr-textarea>
+        <pr-textarea
+          label="Booted redirect code (used when experimenters boot a participant from an experiment)"
+          placeholder="Add Prolific redirect code for booted participants"
+          variant="outlined"
+          .value=${this.experimentEditor.experiment.prolificConfig.bootedRedirectCode ?? ''}
+          @input=${updateBooted}
+        >
+        </pr-textarea>
+
       </div>
     `;
   }
