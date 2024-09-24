@@ -201,12 +201,13 @@ export class Header extends MobxLitElement {
             @click=${() => { this.experimentManager.forkExperiment(); }}
           >
           </pr-icon-button>
-          <pr-tooltip text="Edit experiment (NOTE: stages can only be edited if no cohorts have been created)" position="BOTTOM_END">
+          <pr-tooltip text="Experiment creators can edit metadata, and can edit stages if users have not joined the experiment." position="BOTTOM_END">
             <pr-icon-button
               icon="edit"
               color="primary"
               variant="default"
               @click=${() => { this.experimentManager.setIsEditing(true); }}
+              ?disabled=${!this.experimentEditor.isCreator}
             >
             </pr-icon-button>
           </pr-tooltip>
