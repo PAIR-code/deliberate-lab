@@ -1,7 +1,7 @@
 import '../../pair-components/button';
 import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
-
+import '../../components/experiment_builder/experiment_builder_nav';
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement} from 'lit/decorators.js';
@@ -137,12 +137,31 @@ export class Header extends MobxLitElement {
     }
   }
 
+
   private renderActions() {
     const activePage = this.routerService.activePage;
 
     switch (activePage) {
       case Pages.EXPERIMENT_CREATE:
         return html`
+        <pr-button
+          color="primary"
+          variant="tonal"
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @click=${() => { this.experimentEditor.toggleStageBuilderDialog(false) }}
+        >
+          Add stage
+        </pr-button>
+
+        <pr-button
+          color="primary"
+          variant="tonal"
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @click=${() => { this.experimentEditor.toggleStageBuilderDialog(true) }}
+        >
+          Load game
+        </pr-button>
+      </pr-tooltip>
           <pr-button variant="default" disabled>Save as template</pr-button>
           <pr-button
             ?loading=${this.experimentEditor.isWritingExperiment}

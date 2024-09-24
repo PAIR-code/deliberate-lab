@@ -37,7 +37,8 @@ export class StageBuilderDialog extends MobxLitElement {
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
-  @state() showGames = false;
+  @property({type: Boolean})
+  showGames : boolean = false;
 
   override render() {
     return html`
@@ -77,7 +78,7 @@ export class StageBuilderDialog extends MobxLitElement {
           Add stages
         </div>
         <div class=${getClasses(this.showGames)} @click=${() => {toggleView(true)}}>
-          Add game
+          Load game
         </div>
       </div>
     `;
@@ -86,7 +87,7 @@ export class StageBuilderDialog extends MobxLitElement {
   private renderGameCards() {
     return html`
       <div class="banner error">
-        ⚠️ Adding a game will override any current stages in your configuration
+        ⚠️ Loading a game will override any current stages in your configuration
       </div>
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()}

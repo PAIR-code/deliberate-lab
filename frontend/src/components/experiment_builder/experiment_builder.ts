@@ -133,7 +133,7 @@ export class ExperimentBuilder extends MobxLitElement {
 
   private renderStageBuilderDialog() {
     if (this.experimentEditor.showStageBuilderDialog) {
-      return html`<stage-builder-dialog></stage-builder-dialog>`;
+      return html`<stage-builder-dialog .showGames=${this.experimentEditor.showGamesTab}></stage-builder-dialog>`;
     }
     return nothing;
   }

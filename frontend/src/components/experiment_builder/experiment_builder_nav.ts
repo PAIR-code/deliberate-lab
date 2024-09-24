@@ -30,16 +30,6 @@ export class ExperimentBuilderNav extends MobxLitElement {
   override render() {
 
     return html`
-      <pr-tooltip text="Note: Stages can only be added/edited if no cohorts have been created" position="BOTTOM_START">
-        <pr-button
-          color="primary"
-          variant="tonal"
-          ?disabled=${!this.experimentEditor.canEditStages}
-          @click=${() => { this.experimentEditor.toggleStageBuilderDialog() }}
-        >
-          Add new stage
-        </pr-button>
-      </pr-tooltip>
       ${this.renderMetadataItem()}
       ${this.experimentEditor.stages.map(
         (stage, index) => this.renderStageItem(stage, index)
