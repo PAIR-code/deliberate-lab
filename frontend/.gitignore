@@ -15,5 +15,8 @@ npm-debug.log*
 .gcloudignore
 app.yaml
 
+Dockerfile
+Caddyfile
+
 *firebase_config.ts
 *config.ts
