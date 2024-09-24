@@ -1,5 +1,13 @@
 {
-  "name": "deliberation-lab",
+  "name": "deliberate-lab",
+  "author": "Google PAIR",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "website": "https://github.com/PAIR-code/deliberate-lab",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PAIR-code/deliberate-lab.git"
+  },
   "private": true,
   "scripts": {
     "build": "webpack --mode development",
@@ -10,8 +18,6 @@
     "start:prod": "npm run build:prod && npm run serve:prod",
     "lint": "eslint src"
   },
-  "author": "",
-  "license": "Apache-2.0",
   "devDependencies": {
     "@swc/register": "^0.1.10",
     "@types/sanitize-html": "^2.11.0",
