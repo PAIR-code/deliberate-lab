@@ -18,14 +18,16 @@ import {Pages, RouterService} from '../../services/router.service';
 import {
   ParticipantProfileExtended,
   ParticipantStatus,
-  StageKind
+  StageKind,
+  getTimeElapsedInMinutes,
+  getRgbColorInterpolation,
 } from '@deliberation-lab/utils';
 
 import {
   getParticipantName,
   isObsoleteParticipant,
   isPendingParticipant,
-  isParticipantEndedExperiment
+  isParticipantEndedExperiment,
 } from '../../shared/participant.utils';
 
 import {styles} from './participant_summary.scss';
@@ -39,22 +41,25 @@ export class ParticipantSummary extends MobxLitElement {
   private readonly experimentService = core.getService(ExperimentService);
   private readonly routerService = core.getService(RouterService);
 
-  @property() participant: ParticipantProfileExtended|undefined = undefined;
+  @property() participant: ParticipantProfileExtended | undefined = undefined;
 
   override render() {
     if (this.participant === undefined) {
       return nothing;
     }
-
     const setCurrentParticipant = () => {
       if (!this.participant) return;
-      this.experimentManager.setCurrentParticipantId(this.participant.privateId);
+      this.experimentManager.setCurrentParticipantId(
+        this.participant.privateId
+      );
     };
 
     const classes = classMap({
       'participant-summary': true,
-      'selected': this.experimentManager.currentParticipantId === this.participant.privateId,
-      'old': isObsoleteParticipant(this.participant)
+      selected:
+        this.experimentManager.currentParticipantId ===
+        this.participant.privateId,
+      old: isObsoleteParticipant(this.participant),
     });
 
     return html`
@@ -63,7 +68,7 @@ export class ParticipantSummary extends MobxLitElement {
           <profile-avatar .emoji=${this.participant.avatar} .small=${true}>
           </profile-avatar>
           <div>${getParticipantName(this.participant)}</div>
-          ${this.renderStatus()}
+          ${this.renderStatus()} ${this.renderTimeElapsed()}
         </div>
         <div class="buttons">
           <participant-progress-bar
@@ -71,14 +76,50 @@ export class ParticipantSummary extends MobxLitElement {
             .stageIds=${this.experimentService.experiment?.stageIds ?? []}
           >
           </participant-progress-bar>
-          ${this.renderCopyButton()}
-          ${this.renderPreviewButton()}
+          ${this.renderCopyButton()} ${this.renderPreviewButton()}
           ${this.renderBootButton()}
         </div>
       </div>
     `;
   }
 
+  private renderTimeElapsed() {
+    if (
+      this.participant === undefined ||
+      this.participant.currentStatus !== ParticipantStatus.IN_PROGRESS
+    ) {
+      return;
+    }
+    // Get the index of this.participant.currentStageId in this.experimentService.stageIds.
+    const index = this.experimentService.stageIds.indexOf(
+      this.participant.currentStageId
+    );
+
+    let timestamp;
+    if (index === 0) {
+      // If the participant is on the first stage, use the startExperiment timestamp.
+      timestamp = this.participant.timestamps.startExperiment;
+    } else {
+      // Otherwise, get the previous stage's ID and use its completion timestamp.
+      const prevStage = this.experimentService.stageIds[index - 1];
+      timestamp = this.participant.timestamps.completedStages[prevStage];
+    }
+
+    if (!timestamp) {
+      return;
+    }
+    const numMinutes = getTimeElapsedInMinutes(timestamp);
+    // Get a color on the scale from green to red; full red is hit at 30 minutes.
+    const timeColor = getRgbColorInterpolation("#A8DAB5","#FBA9D6", numMinutes, 30); 
+
+    return html` <div
+      class="chip"
+      style="color: ${timeColor};"
+      title="${numMinutes} minutes elapsed on current stage"
+    >
+      ⏳ ${numMinutes}m
+    </div>`;
+  }
   private renderStatus() {
     if (!this.participant) return nothing;
 
@@ -89,7 +130,9 @@ export class ParticipantSummary extends MobxLitElement {
     }
 
     // If in transfer stage, return "ready for transfer" chip
-    const stage = this.experimentService.getStage(this.participant.currentStageId);
+    const stage = this.experimentService.getStage(
+      this.participant.currentStageId
+    );
     if (!stage) return nothing;
     if (stage.kind === StageKind.TRANSFER) {
       return html`<div class="chip tertiary">ready for transfer!</div>`;
@@ -116,8 +159,8 @@ export class ParticipantSummary extends MobxLitElement {
       if (!this.participant) return;
       this.routerService.navigate(Pages.PARTICIPANT, {
         experiment: this.experimentManager.experimentId ?? '',
-        participant: this.participant?.privateId
-      })
+        participant: this.participant?.privateId,
+      });
     };
 
     return html`
@@ -146,7 +189,8 @@ export class ParticipantSummary extends MobxLitElement {
           icon="block"
           color="error"
           variant="default"
-          ?disabled=${!this.participant || isParticipantEndedExperiment(this.participant)}
+          ?disabled=${!this.participant ||
+          isParticipantEndedExperiment(this.participant)}
           @click=${bootParticipant}
         >
         </pr-icon-button>
