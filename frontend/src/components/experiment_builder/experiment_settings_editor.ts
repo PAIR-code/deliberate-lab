@@ -138,7 +138,6 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           later.
         </div>
         ${this.renderMaxParticipantConfig()}
-        ${this.renderIncludeAllParticipantsConfig()}
       </div>
     `;
   }
@@ -233,34 +232,6 @@ export class ExperimentSettingsEditor extends MobxLitElement {
             .value=${maxParticipants ?? 100}
             @input=${updateNum}
           />
-        </div>
-      </div>
-    `;
-  }
-
-  private renderIncludeAllParticipantsConfig() {
-    const includeAllParticipants =
-      this.experimentEditor.experiment.defaultCohortConfig.includeAllParticipantsInCohortCount;
-    const updateCheck = () => {
-      const includeAllParticipantsInCohortCount = !includeAllParticipants;
-      this.experimentEditor.updateCohortConfig(
-        { includeAllParticipantsInCohortCount }
-      );
-    };
-
-    return html`
-      <div class="config-item">
-        <div class="checkbox-wrapper">
-          <md-checkbox
-            touch-target="wrapper"
-            ?checked=${includeAllParticipants}
-            @click=${updateCheck}
-          >
-          </md-checkbox>
-          <div>
-            Include all participants (even ones who have left the experiment)
-            in cohort count
-          </div>
         </div>
       </div>
     `;

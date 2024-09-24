@@ -161,7 +161,6 @@ export class Header extends MobxLitElement {
         >
           Load game
         </pr-button>
-      </pr-tooltip>
           <pr-button variant="default" disabled>Save as template</pr-button>
           <pr-button
             ?loading=${this.experimentEditor.isWritingExperiment}
