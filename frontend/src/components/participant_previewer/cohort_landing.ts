@@ -35,12 +35,17 @@ export class CohortLanding extends MobxLitElement {
 
   override render() {
     return html`
-      <div class="title">${this.experimentService.experimentName}</div>
-      <pr-button
-        ?loading=${this.isLoading}
-        @click=${this.joinExperiment}>
-        Join experiment
-      </pr-button>
+      <div class="main">
+        <h1>${this.experimentService.experimentName}</h1>
+        <div>You've been invited to join this experiment. Please click the button below to begin.</div>
+        <div class="action-buttons">
+          <pr-button
+            ?loading=${this.isLoading}
+            @click=${this.joinExperiment}>
+            Join experiment
+          </pr-button>
+        </div>
+      </div>
     `;
   }
 

@@ -8,8 +8,27 @@
   gap: common.$spacing-xl;
   padding: common.$main-content-padding;
   width: 100%;
+
+  display: flex;
+  align-items: center;
 }
 
-.title{
+h1 {
   @include typescale.title-large;
+  margin: 0;
+}
+
+.main {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface);
+  border-radius: common.$spacing-medium;
+  gap: common.$spacing-xxl;
+  max-width: 500px;
+  padding: common.$spacing-xxl;
+  width: 100%;
+}
+
+.action-buttons {
+  @include common.flex-row;
+  justify-content: center;
 }
