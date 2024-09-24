@@ -33,6 +33,7 @@ $bubble-radius-small: common.$spacing-small;
   border-radius: $bubble-radius $bubble-radius $bubble-radius
     $bubble-radius-small;
   color: var(--md-sys-color-on-secondary-container);
+  max-width: max-content;
   overflow-wrap: anywhere;
 }
 
