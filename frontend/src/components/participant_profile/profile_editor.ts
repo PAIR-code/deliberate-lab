@@ -22,20 +22,25 @@ export class ProfileEditor extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly participantService = core.getService(ParticipantService);
+  @property() name = '';
 
   @property() customPronouns = '';
 
   override render() {
     const filled =
-      this.participantService.profile?.name &&
+      this.name &&
       this.participantService.profile?.pronouns &&
       this.participantService.profile?.avatar;
+
+    const saveProfileTextProperties = async () => {
+      await this.participantService.updateProfile({name: this.name});
+    }
 
     return html`
       <div class="profile-wrapper">
         ${this.renderName()} ${this.renderPronouns()} ${this.renderAvatars()}
       </div>
-      <stage-footer .disabled=${!filled}>
+      <stage-footer .disabled=${!filled} .onNextClick=${saveProfileTextProperties}>
       </stage-footer>
     `;
   }
@@ -43,7 +48,7 @@ export class ProfileEditor extends MobxLitElement {
   private renderName() {
     const handleNameInput = (e: Event) => {
       const name = (e.target as HTMLTextAreaElement).value;
-      this.participantService.updateProfile({name});
+      this.name = name;
     };
 
     return html`
