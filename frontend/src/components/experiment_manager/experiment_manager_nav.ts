@@ -80,9 +80,10 @@ export class ExperimentManagerNav extends MobxLitElement {
 
     return html`
       <div class="content">
-        ${this.experimentManager.cohortList.map(
-          cohort => html`<cohort-summary .cohort=${cohort}></cohort-summary>`
-        )}
+      ${this.experimentManager.cohortList
+        .slice()
+        .sort((a, b) => a.id.localeCompare(b.id))  // Sort cohorts by ID for stability.
+        .map(cohort => html`<cohort-summary .cohort=${cohort}></cohort-summary>`)}
       </div>
     `;
   }

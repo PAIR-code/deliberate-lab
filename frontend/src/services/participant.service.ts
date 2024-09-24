@@ -310,10 +310,14 @@ export class ParticipantService extends Service {
     } 
     
     else {
+      if (currentStatus === ParticipantStatus.BOOTED_OUT) {
+        this.sp.routerService.navigate(Pages.HOME);
+      } else {
       this.sp.routerService.navigate(Pages.PARTICIPANT, {
         'experiment': this.experimentId!,
         'participant': this.profile!.privateId,
       });
+      }
     }
   }
 

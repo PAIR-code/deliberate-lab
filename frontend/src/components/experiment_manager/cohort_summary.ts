@@ -205,11 +205,12 @@ export class CohortSummary extends MobxLitElement {
 
     return html`
       <div class="body">
-        ${participants.map(
-          participant =>
+      ${participants
+        .slice()
+        .sort((a, b) => a.publicId.localeCompare(b.publicId))
+        .map(participant => 
           html`
-            <participant-summary .participant=${participant}>
-            </participant-summary>
+            <participant-summary .participant=${participant}></participant-summary>
           `
         )}
       </div>
