@@ -81,6 +81,13 @@
   &:hover {
     background: var(--md-sys-color-surface-variant);
   }
+  
+  &.disabled {
+    pointer-events: none;
+    background-color: var(--md-sys-color-surface);
+    opacity: 0.5;
+    cursor: default;
+  }
 
   .title {
     @include typescale.title-small;
