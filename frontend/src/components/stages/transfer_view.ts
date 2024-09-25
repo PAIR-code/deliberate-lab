@@ -6,11 +6,16 @@ import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
+import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 import {
+  getTimeElapsed,
   ParticipantStatus,
-  TransferStageConfig
+  TransferStageConfig,
+  getRgbColorInterpolation,
 } from '@deliberation-lab/utils';
+
+import {getCurrentStageStartTime} from '../../shared/participant.utils';
 
 import {styles} from './transfer_view.scss';
 
@@ -20,12 +25,13 @@ export class TransferView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly authService = core.getService(AuthService);
+  private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
 
   @property() stage: TransferStageConfig | null = null;
 
   // Timeout states
-  @state() countdownInterval: number|undefined = undefined;
+  @state() countdownInterval: number | undefined = undefined;
   @state() timeRemainingSeconds: number = 600;
 
   connectedCallback() {
@@ -48,15 +54,22 @@ export class TransferView extends MobxLitElement {
 
     return html`
       <stage-description .stage=${this.stage}></stage-description>
-      ${this.renderCountdown()}
-      ${this.renderOverlay()}
+
+      <div>
+        Please wait while we transfer you to the next stage of the experiment.
+        Some latency may occur as we wait for additional participants.
+      </div>
+      ${this.renderCountdown()} ${this.renderOverlay()}
     `;
   }
 
   private renderOverlay() {
-    if (!this.stage?.enableTimeout
-      || this.participantService.completedStage(this.stage.id ?? '')
-      || this.authService.isExperimenter) return;
+    if (
+      !this.stage?.enableTimeout ||
+      this.participantService.completedStage(this.stage.id ?? '') ||
+      this.authService.isExperimenter
+    )
+      return;
 
     // Temporary solution: Prevent participant from clicking to other
     // stages and resetting the transfer countdown
@@ -64,11 +77,23 @@ export class TransferView extends MobxLitElement {
   }
 
   private renderCountdown() {
-    if (!this.countdownInterval) return;
+    if (!this.countdownInterval || !this.stage?.timeoutSeconds) return;
 
-    return html`
-      <div>Time remaining: ${this.timeRemainingSeconds} seconds</div>
-    `;
+    const minutes = Math.floor(this.timeRemainingSeconds / 60);
+    const seconds = this.timeRemainingSeconds % 60;
+
+    const timeColor = getRgbColorInterpolation(
+      '#A8DAB5', // Green
+      '#FBA9D6', // Red
+      this.timeRemainingSeconds,
+      this.stage?.timeoutSeconds
+    );
+    return html` <div>
+      If the transfer cannot be completed, the experiment will end in:
+      <span style="font-weight: bold; color: ${timeColor};">
+        ${minutes}:${seconds.toString().padStart(2, '0')} (mm:ss) </span
+      >.
+    </div>`;
   }
 
   handleTimedOut() {
@@ -76,8 +101,10 @@ export class TransferView extends MobxLitElement {
 
     // Don't end experiment if experiment is already over
     // or if experimenter is previewing
-    if (this.authService.isExperimenter
-      || this.participantService.completedStage(this.stage?.id ?? '')) {
+    if (
+      this.authService.isExperimenter ||
+      this.participantService.completedStage(this.stage?.id ?? '')
+    ) {
       return;
     }
 
@@ -90,10 +117,20 @@ export class TransferView extends MobxLitElement {
 
   startCountdown() {
     this.clearCountdown(); // Ensure no previous intervals are running
-    if (this.stage) {
-      this.timeRemainingSeconds = this.stage.timeoutSeconds;
+    if (!this.stage) {
+      return;
     }
-      this.countdownInterval = window.setInterval(() => {
+    const startTime = getCurrentStageStartTime(
+      this.participantService.profile!,
+      this.experimentService.stageIds
+    )!;
+    const secondsElapsed = getTimeElapsed(startTime, 's');
+    this.timeRemainingSeconds = this.stage.timeoutSeconds - secondsElapsed;
+    if (this.timeRemainingSeconds < 0) {
+      this.handleTimedOut();
+    }
+    
+    this.countdownInterval = window.setInterval(() => {
       if (this.timeRemainingSeconds > 0) {
         this.timeRemainingSeconds -= 1;
       } else {

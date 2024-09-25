@@ -134,19 +134,25 @@ export function getCondorcetElectionWinner(rankings: Record<string, string[]>) {
   return winner ?? participants[0] ?? '';
 }
 
-export function getTimeElapsedInMinutes(timestamp: { seconds: number, nanoseconds: number }) {
-    const now = Date.now();
+export function getTimeElapsed(timestamp: { seconds: number, nanoseconds: number }, unit: 's' | 'm' | 'h' | 'd' = 'm') {
+  const now = Date.now();
 
-    // Convert the timestamp to milliseconds
-    const timestampMillis = (timestamp.seconds * 1000) + Math.floor(timestamp.nanoseconds / 1000000);
-  
-    // Calculate the difference in milliseconds
-    const diffMillis = now - timestampMillis;
-  
-    // Convert the difference to minutes and round it down
-    const diffMinutes = Math.floor(diffMillis / (1000 * 60));
-  
-    return diffMinutes;
+  const timestampMillis = (timestamp.seconds * 1000) + Math.floor(timestamp.nanoseconds / 1000000);
+  const diffMillis = now - timestampMillis;
+
+  // Convert the difference based on the specified unit
+  switch (unit) {
+      case 's': // Seconds
+          return Math.floor(diffMillis / 1000);
+      case 'm': // Minutes
+          return Math.floor(diffMillis / (1000 * 60));
+      case 'h': // Hours
+          return Math.floor(diffMillis / (1000 * 60 * 60));
+      case 'd': // Days
+          return Math.floor(diffMillis / (1000 * 60 * 60 * 24));
+      default:
+          throw new Error("Invalid unit. Use 's' for seconds, 'm' for minutes, 'h' for hours, or 'd' for days.");
+  }
 }
 
 export function hexToRgb(hex: string) {

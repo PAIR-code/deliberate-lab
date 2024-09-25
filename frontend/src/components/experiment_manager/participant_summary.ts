@@ -19,11 +19,12 @@ import {
   ParticipantProfileExtended,
   ParticipantStatus,
   StageKind,
-  getTimeElapsedInMinutes,
+  getTimeElapsed,
   getRgbColorInterpolation,
 } from '@deliberation-lab/utils';
 
 import {
+  getCurrentStageStartTime,
   getParticipantName,
   isObsoleteParticipant,
   isPendingParticipant,
@@ -90,25 +91,12 @@ export class ParticipantSummary extends MobxLitElement {
     ) {
       return;
     }
-    // Get the index of this.participant.currentStageId in this.experimentService.stageIds.
-    const index = this.experimentService.stageIds.indexOf(
-      this.participant.currentStageId
-    );
 
-    let timestamp;
-    if (index === 0) {
-      // If the participant is on the first stage, use the startExperiment timestamp.
-      timestamp = this.participant.timestamps.startExperiment;
-    } else {
-      // Otherwise, get the previous stage's ID and use its completion timestamp.
-      const prevStage = this.experimentService.stageIds[index - 1];
-      timestamp = this.participant.timestamps.completedStages[prevStage];
-    }
-
-    if (!timestamp) {
+    const startTime = getCurrentStageStartTime(this.participant, this.experimentService.stageIds);
+    if (!startTime) {
       return;
     }
-    const numMinutes = getTimeElapsedInMinutes(timestamp);
+    const numMinutes = getTimeElapsed(startTime, 'm'); // In minutes.
     // Get a color on the scale from green to red; full red is hit at 30 minutes.
     const timeColor = getRgbColorInterpolation(
       '#A8DAB5',
