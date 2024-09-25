@@ -33,3 +33,11 @@ export function getStagesWithReveal(stages: StageConfig[]) {
     stage => stage.kind === StageKind.SURVEY || stage.kind === StageKind.ELECTION
   );
 }
+
+/** Get experiment name (or default value if field is empty). */
+export function getExperimentName(
+  experiment: Experiment,
+  defaultValue = 'Experiment',
+) {
+  return experiment.metadata.name.length > 0 ? experiment.metadata.name : defaultValue;
+}
