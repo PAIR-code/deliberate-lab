@@ -144,24 +144,23 @@ export class Header extends MobxLitElement {
     switch (activePage) {
       case Pages.EXPERIMENT_CREATE:
         return html`
-        <pr-button
-          color="primary"
-          variant="tonal"
-          ?disabled=${!this.experimentEditor.canEditStages}
-          @click=${() => { this.experimentEditor.toggleStageBuilderDialog(false) }}
-        >
-          Add stage
-        </pr-button>
+          <pr-button
+            color="primary"
+            variant="outlined"
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @click=${() => { this.experimentEditor.toggleStageBuilderDialog(false) }}
+          >
+            Add stage
+          </pr-button>
 
-        <pr-button
-          color="primary"
-          variant="tonal"
-          ?disabled=${!this.experimentEditor.canEditStages}
-          @click=${() => { this.experimentEditor.toggleStageBuilderDialog(true) }}
-        >
-          Load game
-        </pr-button>
-          <pr-button variant="default" disabled>Save as template</pr-button>
+          <pr-button
+            color="primary"
+            variant="outlined"
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @click=${() => { this.experimentEditor.toggleStageBuilderDialog(true) }}
+          >
+            Load game
+          </pr-button>
           <pr-button
             ?loading=${this.experimentEditor.isWritingExperiment}
             ?disabled=${!this.experimentEditor.isValidExperimentConfig}
@@ -177,6 +176,23 @@ export class Header extends MobxLitElement {
       case Pages.EXPERIMENT:
         if (this.experimentManager.isEditingFull) {
           return html`
+            <pr-button
+              color="tertiary"
+              variant="outlined"
+              ?disabled=${!this.experimentEditor.canEditStages}
+              @click=${() => { this.experimentEditor.toggleStageBuilderDialog(false) }}
+            >
+              Add stage
+            </pr-button>
+
+            <pr-button
+              color="tertiary"
+              variant="outlined"
+              ?disabled=${!this.experimentEditor.canEditStages}
+              @click=${() => { this.experimentEditor.toggleStageBuilderDialog(true) }}
+            >
+              Load game
+            </pr-button>
             <pr-button
               color="tertiary"
               variant="default"
