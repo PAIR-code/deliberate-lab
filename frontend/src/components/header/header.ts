@@ -178,9 +178,9 @@ export class Header extends MobxLitElement {
             ?loading=${this.experimentEditor.isWritingExperiment}
             ?disabled=${!this.experimentEditor.isValidExperimentConfig}
             @click=${async () => {
-              await this.experimentEditor.writeExperiment();
+              const response = await this.experimentEditor.writeExperiment();
               this.experimentEditor.resetExperiment();
-              this.routerService.navigate(Pages.HOME);
+              this.routerService.navigate(Pages.EXPERIMENT, {'experiment': response.id});
             }}
           >
             Save experiment
