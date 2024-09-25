@@ -19,11 +19,12 @@ import {
   ParticipantProfileExtended,
   ParticipantStatus,
   StageKind,
-  getTimeElapsedInMinutes,
+  getTimeElapsed,
   getRgbColorInterpolation,
 } from '@deliberation-lab/utils';
 
 import {
+  getCurrentStageStartTime,
   getParticipantName,
   isObsoleteParticipant,
   isPendingParticipant,
@@ -90,34 +91,39 @@ export class ParticipantSummary extends MobxLitElement {
     ) {
       return;
     }
-    // Get the index of this.participant.currentStageId in this.experimentService.stageIds.
-    const index = this.experimentService.stageIds.indexOf(
-      this.participant.currentStageId
-    );
 
-    let timestamp;
-    if (index === 0) {
-      // If the participant is on the first stage, use the startExperiment timestamp.
-      timestamp = this.participant.timestamps.startExperiment;
-    } else {
-      // Otherwise, get the previous stage's ID and use its completion timestamp.
-      const prevStage = this.experimentService.stageIds[index - 1];
-      timestamp = this.participant.timestamps.completedStages[prevStage];
-    }
-
-    if (!timestamp) {
+    const startTime = getCurrentStageStartTime(this.participant, this.experimentService.stageIds);
+    if (!startTime) {
       return;
     }
-    const numMinutes = getTimeElapsedInMinutes(timestamp);
+    const numMinutes = getTimeElapsed(startTime, 'm'); // In minutes.
     // Get a color on the scale from green to red; full red is hit at 30 minutes.
-    const timeColor = getRgbColorInterpolation("#A8DAB5","#FBA9D6", numMinutes, 30); 
+    const timeColor = getRgbColorInterpolation(
+      '#A8DAB5',
+      '#FBA9D6',
+      numMinutes,
+      30
+    );
+
+    const getTimeElapsedText = (numMinutes: number) => {
+      const numHours = Math.floor(numMinutes / 60);
+      const numDays = Math.floor(numHours / 24);
+      const maxDays = 3; // Show "3+ days" after this threshold.
+      return numMinutes < 120
+        ? `${numMinutes}m`
+        : numHours < 24
+        ? `${numHours}h`
+        : numDays <= maxDays
+        ? `${numDays}d`
+        : `${maxDays}+ days`;
+    };
 
     return html` <div
       class="chip"
       style="color: ${timeColor};"
-      title="${numMinutes} minutes elapsed on current stage"
+      title="Time elapsed on current stage"
     >
-      ⏳ ${numMinutes}m
+      ⏳ ${getTimeElapsedText(numMinutes)}
     </div>`;
   }
   private renderStatus() {
@@ -180,6 +186,15 @@ export class ParticipantSummary extends MobxLitElement {
   private renderBootButton() {
     const bootParticipant = () => {
       if (!this.participant) return;
+      const isConfirmed = window.confirm(
+        `Are you sure you want to boot ${
+          this.participant.name
+            ? this.participant.name
+            : this.participant.publicId
+        }?`
+      );
+      if (!isConfirmed) return;
+
       this.experimentManager.bootParticipant(this.participant);
     };
 

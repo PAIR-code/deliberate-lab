@@ -187,12 +187,11 @@ export class ExperimentEditor extends Service {
    */
   async writeExperiment() {
     this.isWritingExperiment = true;
-    let response = {};
 
     // Update date modified
     this.experiment.metadata.dateModified = Timestamp.now();
 
-    response = await writeExperimentCallable(this.sp.firebaseService.functions, {
+    const response = await writeExperimentCallable(this.sp.firebaseService.functions, {
       collectionName: 'experiments',
       experimentConfig: this.experiment,
       stageConfigs: this.stages,

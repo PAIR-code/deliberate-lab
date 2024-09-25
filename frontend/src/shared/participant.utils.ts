@@ -19,11 +19,35 @@ export function getParticipantPronouns(
   includeParentheses = true,
 ) {
   if (participant.pronouns !== null) {
-    return `(${participant.pronouns})`;
+    return includeParentheses ? `(${participant.pronouns})` : participant.pronouns;
   }
   return '';
 }
 
+
+/** Returns the start timestamp of the current stage. */
+export function getCurrentStageStartTime(
+  participant: ParticipantProfile,
+  stageIds: string[] // An ordered list of stages in the experiment.
+) {
+  // Get the index of this.participant.currentStageId in this.experimentService.stageIds.
+  const index = stageIds.indexOf(
+    participant.currentStageId
+  );
+
+  if (index === 0) {
+    // If the participant is on the first stage, use the startExperiment timestamp.
+    return participant.timestamps.startExperiment;
+  } 
+  
+  // Otherwise, get the previous stage's ID and use its completion timestamp.
+  const prevStage = stageIds[index - 1];
+  if (prevStage in participant.timestamps.completedStages) {
+    return participant.timestamps.completedStages[prevStage];
+  }
+
+  return null;
+}
 
 /** True if participating in experiment (not dropped out, not transfer pending)
  *  (note that participants who completed experiment are included here)

@@ -22,7 +22,7 @@ class BootedPopup extends MobxLitElement {
     return html`
       <div class="overlay">
         <div class="popup">
-          <div class="title">You have been booted from the experiment.</div>
+          <div class="title">You have been removed from the experiment.</div>
           <p class="subtitle">
             Please contact the administrator if you have any questions.
           </p>
