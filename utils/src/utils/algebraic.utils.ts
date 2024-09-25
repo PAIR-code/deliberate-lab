@@ -133,3 +133,42 @@ export function getCondorcetElectionWinner(rankings: Record<string, string[]>) {
 
   return winner ?? participants[0] ?? '';
 }
+
+export function getTimeElapsedInMinutes(timestamp: { seconds: number, nanoseconds: number }) {
+    const now = Date.now();
+
+    // Convert the timestamp to milliseconds
+    const timestampMillis = (timestamp.seconds * 1000) + Math.floor(timestamp.nanoseconds / 1000000);
+  
+    // Calculate the difference in milliseconds
+    const diffMillis = now - timestampMillis;
+  
+    // Convert the difference to minutes and round it down
+    const diffMinutes = Math.floor(diffMillis / (1000 * 60));
+  
+    return diffMinutes;
+}
+
+export function hexToRgb(hex: string) {
+  const bigint = parseInt(hex.slice(1), 16);
+  return {
+    r: (bigint >> 16) & 255,
+    g: (bigint >> 8) & 255,
+    b: bigint & 255
+  };
+}
+
+// Returns an RGB color interpolated on the range between startColor and endColor.
+export function getRgbColorInterpolation(startColorHex: string, endColorHex:string, curNum: number, maxNum:number) {
+    const clampedMinutes = Math.min(Math.max(curNum, 0), maxNum);
+    
+    const startColor = hexToRgb(startColorHex);
+    const endColor = hexToRgb(endColorHex); 
+  
+    const factor = clampedMinutes / maxNum; 
+    const r = Math.round(startColor.r + factor * (endColor.r - startColor.r));
+    const g = Math.round(startColor.g + factor * (endColor.g - startColor.g));
+    const b = Math.round(startColor.b + factor * (endColor.b - startColor.b));
+  
+    return `rgb(${r}, ${g}, ${b})`;
+}

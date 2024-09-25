@@ -1,6 +1,7 @@
 import '../participant_profile/profile_editor';
 import '../popup/accept_transfer_popup';
 import '../popup/attention_check_popup';
+import '../popup/booted_popup';
 import '../progress/progress_stage_waiting';
 import '../stages/chat_interface';
 import '../stages/chat_panel';
@@ -66,8 +67,8 @@ export class ParticipantPreviewer extends MobxLitElement {
             ${this.renderLanding()}
           </div>
         </div>
-        ${this.renderTransferPopup()}
-        ${this.renderAttentionPopup()}
+
+        ${this.renderPopups()}
       `;
     }
 
@@ -80,8 +81,15 @@ export class ParticipantPreviewer extends MobxLitElement {
         <participant-header .stage=${stage}></participant-header>
         ${this.renderStageContent(stage)}
       </div>
-      ${this.renderTransferPopup()}
-      ${this.renderAttentionPopup()}
+      ${this.renderPopups()}
+    `;
+  }
+
+  private renderPopups() {
+    return html`
+    ${this.renderTransferPopup()}
+    ${this.renderAttentionPopup()}
+    ${this.renderBootedPopup()}
     `;
   }
 
@@ -147,6 +155,16 @@ export class ParticipantPreviewer extends MobxLitElement {
     `;
   }
 
+  private renderBootedPopup() {
+    if (this.participantService.profile?.currentStatus
+      !== ParticipantStatus.BOOTED_OUT
+    ) {
+      return nothing;
+    }
+    return html`<booted-popup></booted-popup>`;
+  }
+
+ 
   private renderTransferPopup() {
     if (this.participantService.profile?.currentStatus
       !== ParticipantStatus.TRANSFER_PENDING

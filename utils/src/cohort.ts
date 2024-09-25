@@ -30,7 +30,7 @@ export function createCohortConfig(
   config: Partial<CohortConfig>
 ): CohortConfig {
   return {
-    id: config.id ?? generateId(),
+    id: config.id ?? generateId(true), // Alphanumeric sorting.
     metadata: config.metadata ?? createMetadataConfig(),
     participantConfig: config.participantConfig ?? createCohortParticipantConfig(),
   };

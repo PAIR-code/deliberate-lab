@@ -1,7 +1,7 @@
 import '../../pair-components/button';
 import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
-
+import '../../components/experiment_builder/experiment_builder_nav';
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement} from 'lit/decorators.js';
@@ -74,7 +74,11 @@ export class Header extends MobxLitElement {
           this.routerService.navigate(Pages.HOME);
           break;
         case Pages.EXPERIMENT:
-          this.routerService.navigate(Pages.HOME);
+          if (this.experimentManager.isEditingFull) {
+            this.closeEditorWithoutSaving();
+          } else {
+            this.routerService.navigate(Pages.HOME);
+          }
           break;
         case Pages.EXPERIMENT_CREATE:
           this.routerService.navigate(Pages.HOME);
@@ -102,6 +106,15 @@ export class Header extends MobxLitElement {
       >
       </pr-icon-button>
     `;
+  }
+
+  private closeEditorWithoutSaving() {
+    // Display confirmation dialog
+    const isConfirmed = window.confirm(
+        "You may have unsaved changes. Are you sure you want to exit?"
+    );
+    if (!isConfirmed) return;
+    this.experimentManager.setIsEditing(false);
   }
 
   private renderTitle() {
@@ -137,13 +150,30 @@ export class Header extends MobxLitElement {
     }
   }
 
+
   private renderActions() {
     const activePage = this.routerService.activePage;
 
     switch (activePage) {
       case Pages.EXPERIMENT_CREATE:
         return html`
-          <pr-button variant="default" disabled>Save as template</pr-button>
+          <pr-button
+            color="primary"
+            variant="outlined"
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @click=${() => { this.experimentEditor.toggleStageBuilderDialog(false) }}
+          >
+            Add stage
+          </pr-button>
+
+          <pr-button
+            color="primary"
+            variant="outlined"
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @click=${() => { this.experimentEditor.toggleStageBuilderDialog(true) }}
+          >
+            Load game
+          </pr-button>
           <pr-button
             ?loading=${this.experimentEditor.isWritingExperiment}
             ?disabled=${!this.experimentEditor.isValidExperimentConfig}
@@ -161,8 +191,25 @@ export class Header extends MobxLitElement {
           return html`
             <pr-button
               color="tertiary"
+              variant="outlined"
+              ?disabled=${!this.experimentEditor.canEditStages}
+              @click=${() => { this.experimentEditor.toggleStageBuilderDialog(false) }}
+            >
+              Add stage
+            </pr-button>
+
+            <pr-button
+              color="tertiary"
+              variant="outlined"
+              ?disabled=${!this.experimentEditor.canEditStages}
+              @click=${() => { this.experimentEditor.toggleStageBuilderDialog(true) }}
+            >
+              Load game
+            </pr-button>
+            <pr-button
+              color="tertiary"
               variant="default"
-              @click=${() => { this.experimentManager.setIsEditing(false) }}
+              @click=${this.closeEditorWithoutSaving}
             >
               Cancel
             </pr-button>
@@ -183,12 +230,13 @@ export class Header extends MobxLitElement {
             @click=${() => { this.experimentManager.forkExperiment(); }}
           >
           </pr-icon-button>
-          <pr-tooltip text="Edit experiment (NOTE: stages can only be edited if no cohorts have been created)" position="BOTTOM_END">
+          <pr-tooltip text="Experiment creators can edit metadata, and can edit stages if users have not joined the experiment." position="BOTTOM_END">
             <pr-icon-button
               icon="edit"
               color="primary"
               variant="default"
               @click=${() => { this.experimentManager.setIsEditing(true); }}
+              ?disabled=${!this.experimentEditor.isCreator}
             >
             </pr-icon-button>
           </pr-tooltip>

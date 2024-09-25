@@ -52,7 +52,16 @@ export enum Visibility {
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
 
-export function generateId(): string {
+export function generateId(isSequential: boolean = false): string {
+  // If isSequential is selected, the ID will be lower in the alphanumeric
+  // scale as time progresses. This helps to ensure that IDs created at a later time
+  // will be sorted later.
+  if (isSequential) {
+    const timestamp = Date.now().toString(36);
+    const randomPart = Math.random().toString(36).substring(2, 8);
+    return `${timestamp}-${randomPart}`;
+  }
+  
   return uuidv4();
 }
 

@@ -53,9 +53,9 @@ export class Login extends MobxLitElement {
         </div>
         <div class="info">
           <div>
-            📋 For "researcher" access to the platform (e.g., ability to create
-            and run experiments), the owner(s) of this deployment must add
-            your email address to their Firebase "allowlist."
+            📋 The platform is currently closed access.
+            If you're a researcher interested in running experiments on this platform, please reach out to the developers through 
+             <a href="https://github.com/PAIR-code/deliberate-lab/issues/new" target="_blank">Github</a>.
           </div>
         </div>
         <div class="action-buttons">

@@ -128,6 +128,7 @@ export class ExperimentManagerComponent extends MobxLitElement {
 
   private renderTransferMenu() {
     const participant = this.experimentManager.currentParticipant;
+
     if (!participant || isObsoleteParticipant(participant)) {
       return nothing;
     }
@@ -144,6 +145,12 @@ export class ExperimentManagerComponent extends MobxLitElement {
   }
 
   private renderTransferOption(cohort: CohortConfig) {
+    const currentCohortId = this.experimentManager.currentParticipant?.currentCohortId;
+    // Don't allow transferring to the current cohort.
+    if (cohort.id == currentCohortId) {
+      return;
+    }
+
     const initiateTransfer = () => {
       if (!this.experimentManager.currentParticipant) {
         return;

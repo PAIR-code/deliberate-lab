@@ -46,7 +46,6 @@ export class CohortSettingsDialog extends MobxLitElement {
           ${this.renderName()}
           ${this.renderDescription()}
           ${this.renderMaxParticipantConfig()}
-          ${this.renderIncludeAllParticipantsConfig()}
         </div>
         <div class="footer">
           <pr-button
@@ -233,35 +232,6 @@ export class CohortSettingsDialog extends MobxLitElement {
             .value=${maxParticipants ?? 100}
             @input=${updateNum}
           />
-        </div>
-      </div>
-    `;
-  }
-
-  private renderIncludeAllParticipantsConfig() {
-    const cohort = this.experimentManager.cohortEditing;
-    if (!cohort) return;
-
-    const includeAllParticipants = cohort.participantConfig.includeAllParticipantsInCohortCount;
-
-    const updateCheck = () => {
-      const includeAllParticipantsInCohortCount = !includeAllParticipants;
-      this.updateConfig({ includeAllParticipantsInCohortCount });
-    };
-
-    return html`
-      <div class="config-item">
-        <div class="checkbox-wrapper">
-          <md-checkbox
-            touch-target="wrapper"
-            ?checked=${includeAllParticipants}
-            @click=${updateCheck}
-          >
-          </md-checkbox>
-          <div>
-            Include all participants (even ones who have left the experiment)
-            in cohort count
-          </div>
         </div>
       </div>
     `;

@@ -285,6 +285,12 @@ export class ExperimentManager extends Service {
     const experiment = this.sp.experimentService.experiment;
     if (!experiment) return;
 
+    // Display confirmation dialog
+    const isConfirmed = window.confirm(
+        "This will create a copy of this experiment. Are you sure you want to proceed?"
+    );
+    if (!isConfirmed) return;
+
     // Change ID (creator will be changed by cloud functions)
     experiment.id = generateId();
     experiment.metadata.name = `Copy of ${experiment.metadata.name}`;
@@ -292,30 +298,30 @@ export class ExperimentManager extends Service {
     // Get ordered list of stages
     const stages: StageConfig[] = [];
     experiment.stageIds.forEach(id => {
-      const stage = this.sp.experimentService.stageConfigMap[id];
-      if (stage) stages.push(stage);
+        const stage = this.sp.experimentService.stageConfigMap[id];
+        if (stage) stages.push(stage);
     });
 
     let response = {};
     response = await writeExperimentCallable(
-      this.sp.firebaseService.functions,
-      {
-        collectionName: 'experiments',
-        experimentConfig: experiment,
-        stageConfigs: stages
-      }
+        this.sp.firebaseService.functions,
+        {
+            collectionName: 'experiments',
+            experimentConfig: experiment,
+            stageConfigs: stages
+        }
     );
 
     // Route to new experiment and reload to update changes
     this.sp.routerService.navigate(Pages.EXPERIMENT, {
-      experiment: experiment.id
+        experiment: experiment.id
     });
     this.sp.experimentService.updateForCurrentRoute();
     this.updateForCurrentRoute();
 
     return response;
-  }
-
+}
+  
   /** Deletes the current experiment.
    * @rights Creator of experiment
    */

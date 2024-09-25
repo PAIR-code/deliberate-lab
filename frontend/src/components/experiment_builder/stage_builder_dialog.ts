@@ -37,7 +37,8 @@ export class StageBuilderDialog extends MobxLitElement {
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
-  @state() showGames = false;
+  @property({type: Boolean})
+  showGames : boolean = false;
 
   override render() {
     return html`
@@ -77,7 +78,7 @@ export class StageBuilderDialog extends MobxLitElement {
           Add stages
         </div>
         <div class=${getClasses(this.showGames)} @click=${() => {toggleView(true)}}>
-          Add game
+          Load game
         </div>
       </div>
     `;
@@ -86,7 +87,7 @@ export class StageBuilderDialog extends MobxLitElement {
   private renderGameCards() {
     return html`
       <div class="banner error">
-        ⚠️ Adding a game will override any current stages in your configuration
+        ⚠️ Loading a game will override any current stages in your configuration
       </div>
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()}
@@ -139,28 +140,28 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addStage}>
         <div class="title">ℹ️ Info</div>
         <div>
-          Shows Markdown-rendered information
+          Display Markdown-rendered information.
         </div>
       </div>
     `;
   }
 
   private renderTOSCard() {
-    if (this.experimentEditor.hasStageKind(StageKind.TOS)) {
-      return nothing;
-    }
+    const isDisabled = this.experimentEditor.hasStageKind(StageKind.TOS);
 
     const addStage = () => {
-      this.experimentEditor.addStage(createTOSStage());
-      this.experimentEditor.toggleStageBuilderDialog();
-      this.experimentEditor.jumpToLastStage();
+      if (!isDisabled) {
+        this.experimentEditor.addStage(createTOSStage());
+        this.experimentEditor.toggleStageBuilderDialog();
+        this.experimentEditor.jumpToLastStage();
+      }
     };
-
+  
     return html`
-      <div class="card" @click=${addStage}>
+      <div class="card ${isDisabled ? 'disabled' : ''}" @click=${addStage}>
         <div class="title">📜 Terms of Service</div>
         <div>
-          Shows Markdown-rendered terms of service to accept
+          Display Markdown-rendered terms of service.
         </div>
       </div>
     `;
@@ -177,7 +178,7 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addStage}>
         <div class="title">💬 Group chat</div>
         <div>
-          Discuss topics with other participants and LLM mediators
+          Host a conversation among participants and optional LLMs.
         </div>
       </div>
     `;
@@ -194,7 +195,7 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addStage}>
         <div class="title">🗳️ Election</div>
         <div>
-          Rank other participants in order to select a winner
+          Run a rank-ordered election among other participants.
         </div>
       </div>
     `;
@@ -211,7 +212,7 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addStage}>
         <div class="title">👁️‍🗨️ Reveal</div>
         <div>
-          Show results for election stages, survey stages (multiple choice only)
+          Reveal the results of the election and multiple-choice responses to survey stages.
         </div>
       </div>
     `;
@@ -228,7 +229,7 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addStage}>
         <div class="title">📋 Survey</div>
         <div>
-          Answer freeform, multiple choice, checkbox, and scale questions
+          Conduct a survey with freeform, multiple choice, checkbox, and scale questions.
         </div>
       </div>
     `;
@@ -245,7 +246,7 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addStage}>
         <div class="title">👤 Profile</div>
         <div>
-          Set participant profile
+          Allow participants to set their profiles.
         </div>
       </div>
     `;
@@ -262,8 +263,7 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addStage}>
         <div class="title">🚪 Transfer</div>
         <div>
-          During transfer stage, assign participants to different cohorts
-          in your experiment while participants wait
+          Assign participants to different cohorts while they wait in this stage.
         </div>
       </div>
     `;

@@ -48,6 +48,7 @@ export const ProlificConfigSchema = Type.Object({
   enableProlificIntegration: Type.Boolean(),
   defaultRedirectCode: Type.String(),
   attentionFailRedirectCode: Type.String(),
+  bootedRedirectCode: Type.String(),
 });
 
 export const ExperimentCreationData = Type.Object(

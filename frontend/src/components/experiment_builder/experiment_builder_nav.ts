@@ -17,6 +17,9 @@ import {
   StageConfig
 } from '@deliberation-lab/utils';
 import {ExperimentEditor} from '../../services/experiment.editor';
+import {
+  getExperimentName
+} from '../../shared/experiment.utils';
 
 import {styles} from './experiment_builder_nav.scss';
 
@@ -30,16 +33,6 @@ export class ExperimentBuilderNav extends MobxLitElement {
   override render() {
 
     return html`
-      <pr-tooltip text="Note: Stages can only be added/edited if no cohorts have been created" position="BOTTOM_START">
-        <pr-button
-          color="primary"
-          variant="tonal"
-          ?disabled=${!this.experimentEditor.canEditStages}
-          @click=${() => { this.experimentEditor.toggleStageBuilderDialog() }}
-        >
-          Add new stage
-        </pr-button>
-      </pr-tooltip>
       ${this.renderMetadataItem()}
       ${this.experimentEditor.stages.map(
         (stage, index) => this.renderStageItem(stage, index)
@@ -60,7 +53,9 @@ export class ExperimentBuilderNav extends MobxLitElement {
         @click=${() => { this.experimentEditor.setCurrentStageId(undefined) }}
       >
         <pr-icon icon="edit_note"></pr-icon>
-        <div class="primary">Experiment config</div>
+        <div class="primary">
+          ${getExperimentName(this.experimentEditor.experiment, 'Experiment config')}
+        </div>
       </div>
     `;
   }

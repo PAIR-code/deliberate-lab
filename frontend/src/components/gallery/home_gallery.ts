@@ -5,10 +5,11 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
+import {AuthService} from '../../services/auth.service';
 import {HomeService} from '../../services/home.service';
 import {Pages, RouterService} from '../../services/router.service';
 
-import {Experiment} from '@deliberation-lab/utils';
+import {Experiment, Visibility} from '@deliberation-lab/utils';
 import {convertExperimentToGalleryItem} from '../../shared/experiment.utils';
 
 import {styles} from './home_gallery.scss';
@@ -17,7 +18,8 @@ import {styles} from './home_gallery.scss';
 @customElement('home-gallery')
 export class HomeGallery extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
-
+  
+  private readonly authService = core.getService(AuthService);
   private readonly homeService = core.getService(HomeService);
   private readonly routerService = core.getService(RouterService);
 
@@ -36,11 +38,32 @@ export class HomeGallery extends MobxLitElement {
       `;
     };
 
+    const experiments = this.homeService.experiments
+    .slice() 
+    .sort((a, b) => a.metadata.dateCreated.seconds - b.metadata.dateCreated.seconds);
+
+    const yourExperiments = experiments.filter(e => e.metadata.creator === this.authService.userId);
+    const otherExperiments = experiments.filter(e => e.metadata.creator !== this.authService.userId);
+ 
     return html`
       ${this.renderEmptyMessage()}
-      <div class="gallery-wrapper">
-        ${this.homeService.experiments.map(e => renderExperiment(e))}
-      </div>
+      ${yourExperiments.length ? 
+        html`
+       <h1>Your experiments</h1>
+        <div class="gallery-wrapper">
+        ${yourExperiments.map(e => renderExperiment(e))}
+        </div>
+        ` : ''
+      }
+      ${otherExperiments.length ? 
+        html`
+       <h1>Other public experiments</h1>
+        <div class="gallery-wrapper">
+        ${otherExperiments.map(e => renderExperiment(e))}
+        </div>
+        ` : ''
+      }
+
     `;
   }
 

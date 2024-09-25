@@ -47,6 +47,7 @@ export interface ProlificConfig {
   enableProlificIntegration: boolean;
   defaultRedirectCode: string;
   attentionFailRedirectCode: string;
+  bootedRedirectCode: string;
 }
 
 /** Experiment template with stage configs preloaded. */
@@ -104,5 +105,6 @@ export function createProlificConfig(
     enableProlificIntegration: config.enableProlificIntegration ?? false,
     defaultRedirectCode: config.defaultRedirectCode ?? '',
     attentionFailRedirectCode: config.attentionFailRedirectCode ?? '',
+    bootedRedirectCode: config.bootedRedirectCode ?? '',
   };
 }
