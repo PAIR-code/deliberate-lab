@@ -74,7 +74,11 @@ export class Header extends MobxLitElement {
           this.routerService.navigate(Pages.HOME);
           break;
         case Pages.EXPERIMENT:
-          this.routerService.navigate(Pages.HOME);
+          if (this.experimentManager.isEditingFull) {
+            this.closeEditorWithoutSaving();
+          } else {
+            this.routerService.navigate(Pages.HOME);
+          }
           break;
         case Pages.EXPERIMENT_CREATE:
           this.routerService.navigate(Pages.HOME);
@@ -102,6 +106,15 @@ export class Header extends MobxLitElement {
       >
       </pr-icon-button>
     `;
+  }
+
+  private closeEditorWithoutSaving() {
+    // Display confirmation dialog
+    const isConfirmed = window.confirm(
+        "You may have unsaved changes. Are you sure you want to exit?"
+    );
+    if (!isConfirmed) return;
+    this.experimentManager.setIsEditing(false);
   }
 
   private renderTitle() {
@@ -196,7 +209,7 @@ export class Header extends MobxLitElement {
             <pr-button
               color="tertiary"
               variant="default"
-              @click=${() => { this.experimentManager.setIsEditing(false) }}
+              @click=${this.closeEditorWithoutSaving}
             >
               Cancel
             </pr-button>
