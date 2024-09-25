@@ -11,7 +11,7 @@
 .info-block {
   @include common.flex-column;
   gap: common.$spacing-large;
-  width: 70%;
+  max-width: common.$info-content-max-width;
 }
 
 .html-wrapper {
@@ -20,4 +20,5 @@
   @include common.html-preview;
   flex-grow: 1;
   gap: common.$spacing-xl;
+  margin-bottom: common.$spacing-xl;
 }

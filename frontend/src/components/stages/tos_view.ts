@@ -48,7 +48,9 @@ export class TOSView extends MobxLitElement {
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="html-wrapper">
-        ${this.stage?.tosLines.map((line) => this.renderTOSLine(line))}
+        <div class="tos-block">
+          ${this.stage?.tosLines.map((line) => this.renderTOSLine(line))}
+        </div>
       </div>
       <div class="ack-wrapper">
         <label class="checkbox-wrapper">

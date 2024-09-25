@@ -22,6 +22,12 @@
   overflow: auto;
 }
 
+.tos-block {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+  max-width: common.$info-content-max-width;
+}
+
 .ack-wrapper {
   @include common.flex-column;
   background: var(--md-sys-color-surface-variant);
