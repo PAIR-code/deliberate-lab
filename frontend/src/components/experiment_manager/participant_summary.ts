@@ -110,14 +110,32 @@ export class ParticipantSummary extends MobxLitElement {
     }
     const numMinutes = getTimeElapsedInMinutes(timestamp);
     // Get a color on the scale from green to red; full red is hit at 30 minutes.
-    const timeColor = getRgbColorInterpolation("#A8DAB5","#FBA9D6", numMinutes, 30); 
+    const timeColor = getRgbColorInterpolation(
+      '#A8DAB5',
+      '#FBA9D6',
+      numMinutes,
+      30
+    );
+
+    const getTimeElapsedText = (numMinutes: number) => {
+      const numHours = Math.floor(numMinutes / 60);
+      const numDays = Math.floor(numHours / 24);
+      const maxDays = 3; // Show "3+ days" after this threshold.
+      return numMinutes < 120
+        ? `${numMinutes}m`
+        : numHours < 24
+        ? `${numHours}h`
+        : numDays <= maxDays
+        ? `${numDays}d`
+        : `${maxDays}+ days`;
+    };
 
     return html` <div
       class="chip"
       style="color: ${timeColor};"
-      title="${numMinutes} minutes elapsed on current stage"
+      title="Time elapsed on current stage"
     >
-      ⏳ ${numMinutes}m
+      ⏳ ${getTimeElapsedText(numMinutes)}
     </div>`;
   }
   private renderStatus() {
@@ -180,6 +198,15 @@ export class ParticipantSummary extends MobxLitElement {
   private renderBootButton() {
     const bootParticipant = () => {
       if (!this.participant) return;
+      const isConfirmed = window.confirm(
+        `Are you sure you want to boot ${
+          this.participant.name
+            ? this.participant.name
+            : this.participant.publicId
+        }?`
+      );
+      if (!isConfirmed) return;
+
       this.experimentManager.bootParticipant(this.participant);
     };
 
