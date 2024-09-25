@@ -22,16 +22,19 @@ export interface TransferStageConfig extends BaseStageConfig {
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
 
+
 /** Create transfer stage. */
 export function createTransferStage(
   config: Partial<TransferStageConfig> = {}
 ): TransferStageConfig {
+
+  const defaultText = 'Please wait while we transfer you to the next stage of the experiment. Some latency may occur as we wait for additional participants.';
   return {
     id: config.id ?? generateId(),
     kind: StageKind.TRANSFER,
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Transfer',
-    descriptions: config.descriptions ?? createStageTextConfig(),
+    descriptions: config.descriptions ?? createStageTextConfig({primaryText : defaultText}),
     enableTimeout: config.enableTimeout ?? false,
     timeoutSeconds: config.timeoutSeconds ?? 600, // 10 minutes
   };

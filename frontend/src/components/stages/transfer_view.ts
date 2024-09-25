@@ -55,10 +55,6 @@ export class TransferView extends MobxLitElement {
     return html`
       <stage-description .stage=${this.stage}></stage-description>
 
-      <div>
-        Please wait while we transfer you to the next stage of the experiment.
-        Some latency may occur as we wait for additional participants.
-      </div>
       ${this.renderCountdown()} ${this.renderOverlay()}
     `;
   }
@@ -77,7 +73,7 @@ export class TransferView extends MobxLitElement {
   }
 
   private renderCountdown() {
-    if (!this.countdownInterval || !this.stage?.timeoutSeconds) return;
+    if (!this.stage?.enableTimeout) return;
 
     const minutes = Math.floor(this.timeRemainingSeconds / 60);
     const seconds = this.timeRemainingSeconds % 60;
@@ -129,7 +125,7 @@ export class TransferView extends MobxLitElement {
     if (this.timeRemainingSeconds < 0) {
       this.handleTimedOut();
     }
-    
+
     this.countdownInterval = window.setInterval(() => {
       if (this.timeRemainingSeconds > 0) {
         this.timeRemainingSeconds -= 1;
