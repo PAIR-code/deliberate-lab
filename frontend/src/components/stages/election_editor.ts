@@ -12,7 +12,7 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 import {
   ElectionStageConfig,
   ElectionItem,
-  generateId,
+  createElectionItem,
 } from '@deliberation-lab/utils';
 
 import {styles} from './election_editor.scss';
@@ -72,7 +72,7 @@ export class ElectionEditorComponent extends MobxLitElement {
 
     const addItem = () => {
       if (!this.stage) return;
-      const newItems: ElectionItem[] = [...electionItems, { id: generateId(), text: '' }];
+      const newItems: ElectionItem[] = [...electionItems, createElectionItem()];
       this.experimentEditor.updateStage({ ...this.stage, electionItems: newItems });
     };
 

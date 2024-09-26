@@ -79,6 +79,17 @@ export function createElectionStage(
   };
 }
 
+/** Create election item. */
+export function createElectionItem(
+  config: Partial<ElectionItem> = {}
+): ElectionItem {
+  return {
+    id: config.id ?? generateId(),
+    imageId: config.imageId ?? '',
+    text: config.text ?? '',
+  };
+}
+
 /** Create election stage public data. */
 export function createElectionStagePublicData(
   id: string, // stage ID
