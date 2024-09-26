@@ -198,7 +198,7 @@ export class ParticipantPreviewer extends MobxLitElement {
       case StageKind.INFO:
         return html`<info-view .stage=${stage}></info-view>`;
       case StageKind.PROFILE:
-        return html`<profile-editor></profile-editor>`;
+        return html`<profile-editor .stage=${stage}></profile-editor>`;
       case StageKind.CHAT:
         return html`
           <div class="content chat">

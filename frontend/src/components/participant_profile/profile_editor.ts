@@ -1,18 +1,20 @@
 import '../../pair-components/textarea';
 
+import '../stages/stage_description';
 import '../stages/stage_footer';
 import './profile_avatar';
 
 import '@material/web/radio/radio.js';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
-import {CSSResultGroup, html} from 'lit';
+import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {ParticipantService} from '../../services/participant.service';
 
 import {PROFILE_AVATARS} from '../../shared/constants';
+import {ProfileStageConfig} from '@deliberation-lab/utils';
 
 import {styles} from './profile_editor.scss';
 
@@ -22,11 +24,15 @@ export class ProfileEditor extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly participantService = core.getService(ParticipantService);
+
+  @property() stage: ProfileStageConfig | null = null;
   @property() name = '';
 
   @property() customPronouns = '';
 
   override render() {
+    if (!this.stage) return nothing;
+
     const filled =
       this.name &&
       this.participantService.profile?.pronouns &&
@@ -37,6 +43,7 @@ export class ProfileEditor extends MobxLitElement {
     }
 
     return html`
+      <stage-description .stage=${this.stage}></stage-description>
       <div class="profile-wrapper">
         ${this.renderName()} ${this.renderPronouns()} ${this.renderAvatars()}
       </div>
