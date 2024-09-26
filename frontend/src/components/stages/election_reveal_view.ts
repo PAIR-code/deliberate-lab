@@ -35,8 +35,15 @@ export class ElectionReveal extends MobxLitElement {
     const winner = this.publicData.currentWinner ?? "";
     const leader = this.cohortService.participantMap[winner];
 
+    // Infer that this is a winning item.
     if (leader === undefined) {
-      return html`<div class="reveal-wrapper">No election winner.</div>`;
+      return html`
+        <div class="reveal-wrapper">
+        <div class="reveal">
+        <h2>The winning item is ${winner}.</h2>
+        </div>
+      </div>
+      `
     }
 
     return html`

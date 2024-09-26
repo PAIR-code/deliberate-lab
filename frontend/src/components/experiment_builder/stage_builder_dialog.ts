@@ -195,7 +195,7 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addStage}>
         <div class="title">🗳️ Election</div>
         <div>
-          Run a rank-ordered election among other participants.
+          Conduct a ranking among participants or items.
         </div>
       </div>
     `;
