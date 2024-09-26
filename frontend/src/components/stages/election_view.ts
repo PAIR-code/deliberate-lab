@@ -23,7 +23,11 @@ import {
   ElectionItem,
 } from '@deliberation-lab/utils';
 import {convertMarkdownToHTML} from '../../shared/utils';
-import {isObsoleteParticipant} from '../../shared/participant.utils';
+import {
+  getParticipantName,
+  getParticipantPronouns,
+  isObsoleteParticipant
+} from '../../shared/participant.utils';
 
 import {styles} from './election_view.scss';
 
@@ -120,8 +124,8 @@ export class ElectionView extends MobxLitElement {
         >
         </profile-avatar>
         <div class="right">
-          <div class="title">${profile.name}</div>
-          <div class="subtitle">(${profile.pronouns})</div>
+          <div class="title">${getParticipantName(profile)}</div>
+          <div class="subtitle">${getParticipantPronouns(profile)}</div>
         </div>
       </div>
     `;
