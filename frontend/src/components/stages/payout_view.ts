@@ -176,6 +176,7 @@ export class PayoutView extends MobxLitElement {
 
   private renderAnswerItem(item: AnswerItem) {
     const getName = (id: string) => {
+      if (id.length === 0) return '';
       return LAS_ITEMS[id].name;
     };
 
