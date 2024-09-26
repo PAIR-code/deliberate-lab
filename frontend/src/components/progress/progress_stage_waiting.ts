@@ -63,16 +63,17 @@ export class Progress extends MobxLitElement {
 
     return html`
       <pr-tooltip text=${tooltipText}>
-      <div class="participant">
-        <profile-avatar
-          .emoji=${participant.avatar}
-          .disabled=${isDisabled}
-        ></profile-avatar>
-        <div>
-          ${getParticipantName(participant)}
-          ${getParticipantPronouns(participant)}
+        <div class="participant">
+          <profile-avatar
+            .emoji=${participant.avatar}
+            .disabled=${isDisabled}
+          ></profile-avatar>
+          <div>
+            ${getParticipantName(participant)}
+            ${getParticipantPronouns(participant)}
+          </div>
         </div>
-      </div>
+      </pr-tooltip>
     `;
   }
 

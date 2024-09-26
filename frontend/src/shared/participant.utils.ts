@@ -24,7 +24,6 @@ export function getParticipantPronouns(
   return '';
 }
 
-
 /** Returns the start timestamp of the current stage. */
 export function getCurrentStageStartTime(
   participant: ParticipantProfile,

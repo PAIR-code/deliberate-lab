@@ -10,6 +10,7 @@
   gap: common.$spacing-medium;
   height: common.$footer-height;
   justify-content: space-between;
+  padding: 0 common.$main-content-padding;
   position: sticky;
 
   .left,

@@ -17,6 +17,7 @@ export class ProfileAvatar extends MobxLitElement {
   @property() square = false;
   @property() small = false;
   @property() disabled = false;
+  @property() tooltip = '';
 
   override render() {
     const classes = classMap({
@@ -29,16 +30,18 @@ export class ProfileAvatar extends MobxLitElement {
       person: ['🧑🏻', '🧑🏼', '🧑🏽', '🧑🏾', '🧑🏿'].indexOf(this.emoji) > -1,
     });
 
-    const emojiHtml = html` <div class=${classes} text="test">
-      ${this.emoji}
-    </div>`;
-    if (this.disabled) {
-      return html`<pr-tooltip text="This participant is no longer active.">
-        ${emojiHtml}
-      </pr-tooltip>`;
-    } else {
-      return emojiHtml;
+    const emojiHtml = html`
+      <div class=${classes}>
+        ${this.emoji}
+      </div>
+    `;
+
+    if (this.tooltip.length > 0) {
+      return html`
+        <pr-tooltip text=${this.tooltip}>${emojiHtml}</pr-tooltip>
+      `;
     }
+    return emojiHtml;
   }
 }
 
