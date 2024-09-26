@@ -187,7 +187,7 @@ export class ParticipantPreviewer extends MobxLitElement {
     }
 
     const isWaiting = this.cohortService.isStageWaitingForParticipants(stage.id);
-    if (isWaiting) {
+    if (isWaiting && !this.authService.isExperimenter) {
       return html`<progress-stage-waiting></progress-stage-waiting>`;
     }
 
