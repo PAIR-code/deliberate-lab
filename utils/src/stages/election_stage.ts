@@ -73,7 +73,7 @@ export function createElectionStage(
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Election',
     descriptions: config.descriptions ?? createStageTextConfig(),
-    progress: config.progress ?? createStageProgressConfig({ waitForParticipants: true }),
+    progress: config.progress ?? createStageProgressConfig({ waitForAllParticipants: true }),
     isParticipantElection: config.isParticipantElection ?? true,
     electionItems: config.electionItems ?? [],
   };

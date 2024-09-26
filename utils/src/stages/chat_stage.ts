@@ -171,7 +171,7 @@ export function createChatStage(
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Group chat',
     descriptions: config.descriptions ?? createStageTextConfig(),
-    progress: config.progress ?? createStageProgressConfig({ waitForParticipants: true }),
+    progress: config.progress ?? createStageProgressConfig({ waitForAllParticipants: true }),
     discussions: config.discussions ?? [],
     mediators: config.mediators ?? [],
   };
