@@ -3,6 +3,8 @@ import '../../pair-components/icon_button';
 import '../../pair-components/textarea';
 import '../../pair-components/tooltip';
 
+import '../progress/progress_chat_discussion_completed';
+import '../progress/progress_stage_completed';
 import './chat_message';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -237,6 +239,16 @@ export class ChatInterface extends MobxLitElement {
       this.stage.id
     );
 
+    const renderProgress = () => {
+      if (currentDiscussionId) {
+        return html`
+          <progress-chat-discussion-completed .discussionId=${currentDiscussionId}>
+          </progress-chat-discussion-completed>
+        `;
+      }
+      return html`<progress-stage-completed></progress-stage-completed>`;
+    };
+
     return html`
       <div class="chat-content">
         ${this.cohortService.isChatLoading ?
@@ -246,6 +258,7 @@ export class ChatInterface extends MobxLitElement {
         <div class="input-row">${this.renderInput()}</div>
       </div>
       <stage-footer .showNextButton=${currentDiscussionId === null}>
+        ${renderProgress()}
         ${this.renderEndDiscussionButton(currentDiscussionId)}
       </stage-footer>
     `;

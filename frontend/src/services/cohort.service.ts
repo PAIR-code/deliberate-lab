@@ -145,6 +145,34 @@ export class CohortService extends Service {
     return { completed, notCompleted };
   }
 
+  // Get participants by chat discussion completion
+  // (excluding obsolete participants)
+  getParticipantsByChatDiscussionCompletion(
+    stageId: string, discussionId: string
+  ) {
+    const completed: ParticipantProfile[] = [];
+    const notCompleted: ParticipantProfile[] = [];
+
+    const stage = this.sp.experimentService.getStage(stageId);
+    if (!stage || stage.kind !== StageKind.CHAT) return { completed, notCompleted };
+
+    const stageData = this.stagePublicDataMap[stageId];
+    const discussionMap = stageData?.kind === StageKind.CHAT ?
+      stageData.discussionTimestampMap[discussionId] ?? {} : {};
+
+    this.getAllParticipants().forEach(participant => {
+      if (!isObsoleteParticipant(participant)) {
+        if (discussionMap[participant.publicId]) {
+          completed.push(participant);
+        } else {
+          notCompleted.push(participant);
+        }
+      }
+    });
+
+    return { completed, notCompleted };
+  }
+
   // If stage is waiting for participants, e.g.,
   // - minParticipants not reached
   // - waitForParticipants is true, stage is locked to 1+ participant,
