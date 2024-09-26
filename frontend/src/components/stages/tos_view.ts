@@ -60,13 +60,13 @@ export class TOSView extends MobxLitElement {
             @click=${handleTOSClick}
           >
           </md-checkbox>
-          I accept the Terms of Service
+          <div class="timestamp-wrapper">
+            <div>I accept the Terms of Service</div>
+            ${timestamp
+              ? html`<div class="ack">Accepted at ${convertUnifiedTimestampToDate(timestamp)}</div>`
+              : nothing}
+          </div>
         </label>
-        <div class="timestamp-wrapper">
-          ${timestamp
-            ? `Accepted at ${convertUnifiedTimestampToDate(timestamp)}`
-            : nothing}
-        </div>
       </div>
       <stage-footer .disabled=${!timestamp}>
       </stage-footer>

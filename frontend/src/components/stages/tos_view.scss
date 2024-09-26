@@ -37,8 +37,12 @@
 }
 
 .timestamp-wrapper {
-  @include typescale.label-medium;
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
+.ack {
+  @include typescale.label-small;
   color: var(--md-sys-color-primary);
   font-style: italic;
-  margin-left: calc(common.$spacing-xxl * 2 + common.$spacing-medium);
 }
