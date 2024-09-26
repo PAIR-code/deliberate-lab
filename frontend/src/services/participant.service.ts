@@ -1,6 +1,7 @@
 import {
   ChatStageParticipantAnswer,
   CreateChatMessageData,
+  ElectionItem,
   ParticipantChatMessage,
   ParticipantProfileExtended,
   ParticipantStatus,
@@ -502,6 +503,7 @@ export class ParticipantService extends Service {
   async updateElectionStageParticipantAnswer(
     stageId: string, // election stage ID
     rankingList: string[], // list of rankings
+    electionItems: ElectionItem[] | null
   ) {
     let response = {};
     if (this.experimentId && this.profile) {
@@ -512,7 +514,8 @@ export class ParticipantService extends Service {
           participantPublicId: this.profile.publicId,
           participantPrivateId: this.profile.privateId,
           stageId,
-          rankingList
+          rankingList,
+          electionItems: electionItems ?? [],
         }
       );
     }

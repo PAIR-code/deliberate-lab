@@ -1,30 +1,28 @@
-import "../participant_profile/profile_avatar";
+import '../participant_profile/profile_avatar';
 
-import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {CSSResultGroup, html, nothing} from 'lit';
+import {customElement, property} from 'lit/decorators.js';
 
-import {
-  ElectionStagePublicData,
-} from "@deliberation-lab/utils";
+import {ElectionStagePublicData} from '@deliberation-lab/utils';
 import {
   getParticipantName,
-  getParticipantPronouns
+  getParticipantPronouns,
 } from '../../shared/participant.utils';
 
-import { core } from "../../core/core";
-import { CohortService } from "../../services/cohort.service";
+import {core} from '../../core/core';
+import {CohortService} from '../../services/cohort.service';
 
-import { styles } from "./election_reveal_view.scss";
+import {styles} from './election_reveal_view.scss';
 
 /** Election reveal */
-@customElement("election-reveal-view")
+@customElement('election-reveal-view')
 export class ElectionReveal extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly cohortService = core.getService(CohortService);
 
-  @property() publicData: ElectionStagePublicData|undefined = undefined;
+  @property() publicData: ElectionStagePublicData | undefined = undefined;
 
   override render() {
     if (!this.publicData) {
@@ -32,11 +30,58 @@ export class ElectionReveal extends MobxLitElement {
     }
 
     // TODO: Display participant or winner based on isParticipantElection
-    const winner = this.publicData.currentWinner ?? "";
+    const winner = this.publicData.currentWinner ?? '';
     const leader = this.cohortService.participantMap[winner];
+    console.log(this.publicData);
+    const electionIdToText = new Map(
+      this.publicData.electionItems.map((item) => [item.id, item.text])
+    );
 
+    // Infer that this is a winning item.
     if (leader === undefined) {
-      return html`<div class="reveal-wrapper">No election winner.</div>`;
+      const winningItem = this.publicData.electionItems.find(
+        (item) => item.id === winner
+      );
+      if (!winningItem) {
+        return html`<div class="reveal-wrapper">An error occurred.</div>`;
+      }
+
+      const maxOptions = this.publicData.electionItems.length;
+      return html`
+        <div class="reveal-wrapper">
+          <div class="reveal">
+            <h2>The winning item is ${winningItem.text}.</h2>
+          </div>
+        </div>
+        Here is how people voted:
+        <div class="participant-votes-table">
+        <div class="table-head">
+          <div class="table-row">
+            <div class="table-cell">#</div>
+            ${Object.keys(this.publicData.participantAnswerMap).map(participant => html`
+              <div class="table-cell">${getParticipantName(this.cohortService.participantMap[participant])}</div>
+            `)}
+          </div>
+        </div>
+        <div class="table-body">
+          ${[...Array(maxOptions).keys()].map((rowIndex) => html`
+            <div class="table-row">
+              <div class="table-cell">${rowIndex + 1}</div>
+              ${Object.keys(this.publicData!.participantAnswerMap).map(participant => {
+                const votedItems = this.publicData!.participantAnswerMap[participant]
+                  .map(itemId => electionIdToText.get(itemId))
+                  .filter(text => text !== undefined);
+                
+                const itemText = votedItems[rowIndex] || '';
+                return html`
+                  <div class="table-cell">${itemText}</div>
+                `;
+              })}
+            </div>
+          `)}
+        </div>
+      </div>
+      `;
     }
 
     return html`
@@ -57,6 +102,6 @@ export class ElectionReveal extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "election-reveal-view": ElectionReveal;
+    'election-reveal-view': ElectionReveal;
   }
 }

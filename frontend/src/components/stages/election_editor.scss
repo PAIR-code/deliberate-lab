@@ -1,0 +1,39 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+  height: 100%;
+}
+
+.section {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.title {
+  @include typescale.title-small;
+}
+
+.checkbox-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+}
+
+.election-items {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.election-item {
+  @include common.flex-row-align-center;
+  justify-content: space-between;
+  padding: common.$spacing-medium;
+  background-color: var(--md-sys-color-surface);
+  border-radius: common.$spacing-medium;
+}
+
+pr-icon-button {
+  margin-left: common.$spacing-small;
+}

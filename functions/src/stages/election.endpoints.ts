@@ -2,7 +2,7 @@ import { Value } from '@sinclair/typebox/value';
 import {
   ElectionStageParticipantAnswer,
   StageKind,
-  StagePublicData,
+  ElectionStagePublicData,
   UpdateElectionStageParticipantAnswerData,
   getCondorcetElectionWinner,
 } from '@deliberation-lab/utils';
@@ -66,9 +66,10 @@ export const updateElectionStageParticipantAnswer = onCall(async (request) => {
     transaction.set(document, answer);
 
     // Update public stage data (current participant rankings, current winner)
-    const publicStageData = (await publicDocument.get()).data() as StagePublicData;
+    const publicStageData = (await publicDocument.get()).data() as ElectionStagePublicData;
     publicStageData.participantAnswerMap[data.participantPublicId] = data.rankingList;
     publicStageData.currentWinner = getCondorcetElectionWinner(publicStageData.participantAnswerMap);
+    publicStageData.electionItems = data.electionItems;
     transaction.set(publicDocument, publicStageData);
   });
 

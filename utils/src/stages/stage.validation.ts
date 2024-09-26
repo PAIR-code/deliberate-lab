@@ -31,6 +31,7 @@ export const StageConfigData = Type.Union([
 export const StageGameSchema = Type.Union([
   Type.Literal(StageGame.NONE),
   Type.Literal(StageGame.LAS),
+  Type.Literal(StageGame.GCE),
 ]);
 
 /** StageTextConfig input validation. */

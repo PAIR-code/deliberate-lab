@@ -18,6 +18,7 @@ import {
   ParticipantProfile,
   ElectionStageParticipantAnswer,
   ElectionStageConfig,
+  ElectionItem,
 } from '@deliberation-lab/utils';
 import {convertMarkdownToHTML} from '../../shared/utils';
 import {isObsoleteParticipant} from '../../shared/participant.utils';
@@ -37,6 +38,26 @@ export class ElectionView extends MobxLitElement {
   @property() stage: ElectionStageConfig|undefined = undefined;
   @property() answer: ElectionStageParticipantAnswer|undefined = undefined;
 
+  private getItems() {
+    if (this.stage?.isParticipantElection) {
+      // TODO: Enable voting for self.
+      return this.cohortService
+  .getAllParticipants()
+  .filter(profile => profile.publicId !== this.participantService.profile?.publicId) ?? [];
+    } else {
+      return this.stage?.electionItems ?? [];
+    }
+  }
+
+  private getItemId(item: ParticipantProfile | ElectionItem) {
+    if ('publicId' in item) {
+      return (item as ParticipantProfile).publicId;
+    } 
+    else {
+      return (item as ElectionItem).id;
+    }
+  }
+
   override render() {
     if (!this.stage) {
       return nothing;
@@ -45,7 +66,8 @@ export class ElectionView extends MobxLitElement {
     // Must rank all participants except self
     // TODO: Don't show obsolete participants if they never interacted
     // (e.g., during group chat)
-    const disabled = (this.answer?.rankingList ?? []).length < this.cohortService.getAllParticipants().length - 1;
+    const items = this.getItems();
+    const disabled = (this.answer?.rankingList ?? []).length < items.length;
 
     return html`
       <stage-description .stage=${this.stage}></stage-description>
@@ -60,27 +82,32 @@ export class ElectionView extends MobxLitElement {
   private renderStartZone() {
     return html`
       <div class="start-zone">
-        ${this.cohortService
-          .getAllParticipants()
-          .sort((p1, p2) => p1.publicId.localeCompare(p2.publicId))
+        ${this.getItems().slice()
+          .sort((p1, p2) => this.getItemId(p1).localeCompare(this.getItemId(p2)))
           .filter(
-            (profile) =>
+            (i) =>
               !(this.answer?.rankingList ?? []).find(
-                (id) => id === profile.publicId
+                (id) => id === this.getItemId(i)
               )
           )
-          .map((profile) => this.renderDraggableParticipant(profile))}
+          .map((i) => this.renderDraggableParticipant(i))}
       </div>
     `;
   }
 
-  private renderParticipant(profile: ParticipantProfile) {
-    if (profile.publicId === this.participantService.profile?.publicId) {
-      return nothing;
+  private renderItem(item: ParticipantProfile | ElectionItem) {
+    if ('publicId' in item) {
+      // It's a ParticipantProfile
+      return this.renderParticipant(item as ParticipantProfile);
+    } else {
+      // It's an ElectionItem
+      return this.renderElectionItem(item as ElectionItem);
     }
+  }
 
+  private renderParticipant(profile: ParticipantProfile) {
     return html`
-      <div class="participant">
+      <div class="item">
         <profile-avatar
           .emoji=${profile.avatar}
           .square=${true}
@@ -94,10 +121,18 @@ export class ElectionView extends MobxLitElement {
     `;
   }
 
-  private renderDraggableParticipant(profile: ParticipantProfile) {
-    if (profile.publicId === this.participantService.profile?.publicId) {
-      return nothing;
-    }
+  private renderElectionItem(item: ElectionItem) {
+    // TODO: Allow item photos?
+    return html`
+      <div class="item">
+        <div class="right">
+          <div class="title">${item.text}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderDraggableParticipant(item: ParticipantProfile | ElectionItem) {
 
     const onDragStart = (event: DragEvent) => {
       let target = event.target as HTMLElement;
@@ -105,7 +140,7 @@ export class ElectionView extends MobxLitElement {
 
       if (event.dataTransfer) {
         event.dataTransfer.effectAllowed = 'move';
-        event.dataTransfer.setData('text/plain', profile.publicId);
+        event.dataTransfer.setData('text/plain', this.getItemId(item));
       }
     };
 
@@ -115,14 +150,14 @@ export class ElectionView extends MobxLitElement {
     };
 
     const onAddToRanking = () => {
-      if (!this.stage || !profile) return;
+      if (!this.stage || !item) return;
       const rankings = [
         ...(this.answer?.rankingList ?? []),
-        profile.publicId,
+        this.getItemId(item),
       ];
       // Update ranking list
       this.participantService.updateElectionStageParticipantAnswer(
-        this.stage.id, rankings
+        this.stage.id, rankings, this.stage.electionItems
       );
     };
 
@@ -133,7 +168,7 @@ export class ElectionView extends MobxLitElement {
         .ondragstart=${onDragStart}
         .ondragend=${onDragEnd}
       >
-        ${this.renderParticipant(profile)}
+        ${this.renderItem(item)}
         <pr-icon-button
           icon="playlist_add"
           color="neutral"
@@ -170,13 +205,13 @@ export class ElectionView extends MobxLitElement {
         target.classList.remove('drag-over');
 
         const currentRankings = this.answer?.rankingList ?? [];
-        const participantId = event.dataTransfer.getData('text/plain');
+        const itemId = event.dataTransfer.getData('text/plain');
 
         // Create new rankings (using answerIndex to slot participant in)
         let rankings = [...currentRankings];
 
         const existingIndex = currentRankings.findIndex(
-          (id) => id === participantId
+          (id) => id === itemId
         );
         let newIndex = index;
 
@@ -192,12 +227,12 @@ export class ElectionView extends MobxLitElement {
         }
         rankings = [
           ...rankings.slice(0, newIndex),
-          participantId,
+          itemId,
           ...rankings.slice(newIndex),
         ];
         // Update ranking list
         this.participantService.updateElectionStageParticipantAnswer(
-          this.stage.id, rankings
+          this.stage.id, rankings, this.stage.electionItems
         );
       }
     };
@@ -217,11 +252,7 @@ export class ElectionView extends MobxLitElement {
     `;
   }
 
-  private renderRankedParticipant(profile: ParticipantProfile, index: number) {
-    // If current participant
-    if (profile.publicId === this.participantService.profile?.publicId) {
-      return nothing;
-    }
+  private renderRankedItem(item: ParticipantProfile | ElectionItem, index: number) {
 
     const rankings = this.answer?.rankingList ?? [];
     const onCancel = () => {
@@ -232,6 +263,7 @@ export class ElectionView extends MobxLitElement {
       this.participantService.updateElectionStageParticipantAnswer(
         this.stage.id,
         [...rankings.slice(0, index), ...rankings.slice(index + 1)],
+        this.stage.electionItems
       );
     };
 
@@ -245,7 +277,8 @@ export class ElectionView extends MobxLitElement {
       ];
       this.participantService.updateElectionStageParticipantAnswer(
         this.stage.id,
-        rankingList
+        rankingList,
+        this.stage.electionItems
       );
     };
 
@@ -259,7 +292,8 @@ export class ElectionView extends MobxLitElement {
       ];
       this.participantService.updateElectionStageParticipantAnswer(
         this.stage.id,
-        rankingList
+        rankingList,
+        this.stage.electionItems
       );
     }
 
@@ -269,7 +303,7 @@ export class ElectionView extends MobxLitElement {
 
       if (event.dataTransfer) {
         event.dataTransfer.effectAllowed = 'move';
-        event.dataTransfer.setData('text/plain', profile.publicId);
+        event.dataTransfer.setData('text/plain', this.getItemId(item));
       }
     };
 
@@ -286,7 +320,7 @@ export class ElectionView extends MobxLitElement {
         .ondragstart=${onDragStart}
         .ondragend=${onDragEnd}
       >
-        ${this.renderParticipant(profile)}
+        ${this.renderItem(item)}
         <div class="actions">
           <pr-icon-button
             icon="arrow_upward"
@@ -323,16 +357,15 @@ export class ElectionView extends MobxLitElement {
         <div class="zone-header">
           <div class="title">Rankings</div>
           <div class="subtitle">
-            Drag and drop to rank participants (with most preferred at top)
+            Drag and drop to rank, placing your most preferred at the top.
           </div>
         </div>
-        ${this.answer?.rankingList.map((publicId: string, index: number) => {
-          const participant = this.cohortService
-            .getAllParticipants()
-            .find((profile) => profile.publicId === publicId);
+        ${this.answer?.rankingList.map((id: string, index: number) => {
+          const item = this.getItems()
+            .find((item) => this.getItemId(item) === id);
 
-          return participant
-            ? this.renderRankedParticipant(participant, index)
+          return item
+            ? this.renderRankedItem(item, index)
             : nothing;
         })}
         ${this.renderDragZone((this.answer?.rankingList ?? []).length, true)}
