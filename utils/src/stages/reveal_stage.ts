@@ -5,6 +5,7 @@ import {
   BaseStagePublicData,
   StageGame,
   StageKind,
+  createStageProgressConfig,
   createStageTextConfig,
 } from './stage';
 
@@ -38,6 +39,7 @@ export function createRevealStage(
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Reveal',
     descriptions: config.descriptions ?? createStageTextConfig(),
+    progress: config.progress ?? createStageProgressConfig(),
     stageIds: config.stageIds ?? [],
   };
 }

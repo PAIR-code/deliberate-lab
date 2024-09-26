@@ -1,7 +1,11 @@
 import { Type, type Static } from '@sinclair/typebox';
 import { UnifiedTimestampSchema } from '../shared.validation';
 import { StageKind } from './stage';
-import { StageGameSchema, StageTextConfigSchema } from './stage.validation';
+import {
+  StageGameSchema,
+  StageTextConfigSchema,
+  StageProgressConfigSchema
+} from './stage.validation';
 import { ChatMessageType } from './chat_stage';
 
 /** Shorthand for strict TypeBox object validation */
@@ -17,6 +21,7 @@ export const ChatStageConfigData = Type.Object(
     game: StageGameSchema,
     name: Type.String(),
     descriptions: StageTextConfigSchema,
+    progress: StageProgressConfigSchema,
     // discussions
     // mediators
   },

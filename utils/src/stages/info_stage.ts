@@ -4,6 +4,7 @@ import {
   StageGame,
   StageKind,
   createStageTextConfig,
+  createStageProgressConfig,
 } from './stage';
 
 /** Info stage types and functions. */
@@ -31,6 +32,7 @@ export function createInfoStage(
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Info',
     descriptions: config.descriptions ?? createStageTextConfig(),
+    progress: config.progress ?? createStageProgressConfig(),
     infoLines: config.infoLines ?? [],
   };
 }

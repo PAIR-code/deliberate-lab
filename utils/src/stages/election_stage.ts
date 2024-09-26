@@ -5,6 +5,7 @@ import {
   BaseStagePublicData,
   StageGame,
   StageKind,
+  createStageProgressConfig,
   createStageTextConfig,
 } from './stage';
 
@@ -72,6 +73,7 @@ export function createElectionStage(
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Election',
     descriptions: config.descriptions ?? createStageTextConfig(),
+    progress: config.progress ?? createStageProgressConfig({ waitForParticipants: true }),
     isParticipantElection: config.isParticipantElection ?? true,
     electionItems: config.electionItems ?? [],
   };

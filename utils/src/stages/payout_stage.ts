@@ -3,7 +3,8 @@ import {
   BaseStageConfig,
   StageGame,
   StageKind,
-  createStageTextConfig
+  createStageTextConfig,
+  createStageProgressConfig,
 } from './stage';
 
 /** Payout stage types and functions. */
@@ -30,5 +31,6 @@ export function createPayoutStage(
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Payout',
     descriptions: config.descriptions ?? createStageTextConfig(),
+    progress: config.progress ?? createStageProgressConfig(),
   };
 }

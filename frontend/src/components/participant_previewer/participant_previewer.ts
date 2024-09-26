@@ -187,6 +187,10 @@ export class ParticipantPreviewer extends MobxLitElement {
     }
 
     const isWaiting = this.cohortService.isStageWaitingForParticipants(stage.id);
+    if (isWaiting) {
+      return html`<progress-stage-waiting></progress-stage-waiting>`;
+    }
+
     const answer = this.participantService.getStageAnswer(stage.id);
     switch (stage.kind) {
       case StageKind.TOS:
@@ -196,9 +200,6 @@ export class ParticipantPreviewer extends MobxLitElement {
       case StageKind.PROFILE:
         return html`<profile-editor></profile-editor>`;
       case StageKind.CHAT:
-        if (isWaiting) {
-          return html`<progress-stage-waiting></progress-stage-waiting>`;
-        }
         return html`
           <div class="content chat">
             <chat-panel .stage=${stage}></chat-panel>
@@ -206,18 +207,12 @@ export class ParticipantPreviewer extends MobxLitElement {
           </div>
         `;
       case StageKind.ELECTION:
-        if (isWaiting) {
-          return html`<progress-stage-waiting></progress-stage-waiting>`;
-        }
         return html`
           <election-view .stage=${stage} .answer=${answer}></election-view>
         `;
       case StageKind.PAYOUT:
         return html`<payout-view .stage=${stage}></payout-view>`;
       case StageKind.REVEAL:
-        if (isWaiting) {
-          return html`<progress-stage-waiting></progress-stage-waiting>`;
-        }
         return html`<reveal-view .stage=${stage}></reveal-view>`;
       case StageKind.SURVEY:
         return html`

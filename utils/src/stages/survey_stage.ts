@@ -5,6 +5,7 @@ import {
   BaseStagePublicData,
   StageGame,
   StageKind,
+  createStageProgressConfig,
   createStageTextConfig,
 } from './stage';
 
@@ -140,6 +141,7 @@ export function createSurveyStage(
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Survey',
     descriptions: config.descriptions ?? createStageTextConfig(),
+    progress: config.progress ?? createStageProgressConfig(),
     questions: config.questions ?? [],
   };
 }

@@ -120,6 +120,12 @@ export class CohortService extends Service {
     );
   }
 
+  @computed get nonObsoleteParticipants() {
+    return this.getAllParticipants().filter(
+      p => !isObsoleteParticipant(p)
+    );
+  }
+
   // Get participants who have completed/not completed the stage
   // (excluding obsolete participants)
   getParticipantsByCompletion(stageId: string) {
@@ -139,9 +145,21 @@ export class CohortService extends Service {
     return { completed, notCompleted };
   }
 
-  // If stage is waiting for participants, i.e., is is locked to at least
-  // one participant and no one has completed the stage yet
+  // If stage is waiting for participants, e.g.,
+  // - minParticipants not reached
+  // - waitForParticipants is true, stage is locked to 1+ participant,
+  //   and no one has completed the stage yet
   isStageWaitingForParticipants(stageId: string) {
+    const stageConfig = this.sp.experimentService.getStage(stageId);
+    if (!stageConfig) return false;
+
+    // Check for min number of participants
+    const numUnlocked = this.getUnlockedStageParticipants(stageId).length;
+    if (stageConfig.progress.minParticipants > numUnlocked) return true;
+
+    // Otherwise, if waitForParticipants is true, check for locked participants
+    if (!stageConfig.progress.waitForAllParticipants) return false;
+
     const numLocked = this.getLockedStageParticipants(stageId).length;
     const numCompleted = this.getAllParticipants().filter(
       participant => participant.timestamps.completedStages[stageId]

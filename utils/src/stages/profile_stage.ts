@@ -3,6 +3,7 @@ import {
   BaseStageConfig,
   StageGame,
   StageKind,
+  createStageProgressConfig,
   createStageTextConfig
 } from './stage';
 
@@ -30,5 +31,6 @@ export function createProfileStage(
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Set profile',
     descriptions: config.descriptions ?? createStageTextConfig(),
+    progress: config.progress ?? createStageProgressConfig(),
   };
 }

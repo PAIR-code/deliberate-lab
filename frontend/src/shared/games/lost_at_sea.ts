@@ -395,6 +395,11 @@ const LAS_PART_2_CHAT_STAGE = createChatStage({
   game: StageGame.LAS,
   name: 'Group discussion',
   discussions: LAS_PART_2_CHAT_DISCUSSIONS,
+  progress: {
+    minParticipants: 4,
+    waitForAllParticipants: true,
+    showParticipantProgress: true,
+  }
 });
 
 // ****************************************************************************

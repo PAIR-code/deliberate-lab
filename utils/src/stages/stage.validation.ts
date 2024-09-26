@@ -40,3 +40,10 @@ export const StageTextConfigSchema = Type.Object({
   infoText: Type.String(),
   helpText: Type.String(),
 });
+
+/** StageProgressConfig input validation. */
+export const StageProgressConfigSchema = Type.Object({
+  minParticipants: Type.Number(),
+  waitForAllParticipants: Type.Boolean(),
+  showParticipantProgress: Type.Boolean(),
+});

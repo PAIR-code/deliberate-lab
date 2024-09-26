@@ -1,6 +1,10 @@
 import { Type, type Static } from '@sinclair/typebox';
 import { StageKind } from './stage';
-import { StageGameSchema, StageTextConfigSchema } from './stage.validation';
+import {
+  StageGameSchema,
+  StageProgressConfigSchema,
+  StageTextConfigSchema
+} from './stage.validation';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = { additionalProperties: false } as const;
@@ -17,6 +21,7 @@ export const ProfileStageConfigData = Type.Object(
     game: StageGameSchema,
     name: Type.String({ minLength: 1 }),
     descriptions: StageTextConfigSchema,
+    progress: StageProgressConfigSchema,
   },
   strict,
 );

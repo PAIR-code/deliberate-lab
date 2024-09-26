@@ -3,7 +3,8 @@ import {
   BaseStageConfig,
   StageGame,
   StageKind,
-  createStageTextConfig
+  createStageTextConfig,
+  createStageProgressConfig,
 } from './stage';
 
 /** Terms of Service (TOS) stage types and functions. */
@@ -31,6 +32,7 @@ export function createTOSStage(
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Terms of Service',
     descriptions: config.descriptions ?? createStageTextConfig(),
+    progress: config.progress ?? createStageProgressConfig(),
     tosLines: config.tosLines ?? [],
   };
 }

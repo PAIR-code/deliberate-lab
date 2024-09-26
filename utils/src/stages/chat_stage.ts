@@ -6,7 +6,8 @@ import {
   BaseStagePublicData,
   StageGame,
   StageKind,
-  createStageTextConfig
+  createStageTextConfig,
+  createStageProgressConfig,
 } from './stage';
 import {
   ParticipantProfileBase,
@@ -170,6 +171,7 @@ export function createChatStage(
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Group chat',
     descriptions: config.descriptions ?? createStageTextConfig(),
+    progress: config.progress ?? createStageProgressConfig({ waitForParticipants: true }),
     discussions: config.discussions ?? [],
     mediators: config.mediators ?? [],
   };
