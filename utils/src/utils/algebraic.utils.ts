@@ -1,3 +1,11 @@
+import {
+  SurveyQuestionKind,
+  SurveyStagePublicData
+} from '../stages/survey_stage';
+import {
+  LAS_WTL_QUESTION_ID
+} from '../shared';
+
 export interface AlgebraicData<Data> {
   kind: string;
   data: Data;
@@ -132,6 +140,50 @@ export function getCondorcetElectionWinner(rankings: Record<string, string[]>) {
   }
 
   return winner ?? participants[0] ?? '';
+}
+
+/** Uses hardcoded variables to find top N participants (based on willingness
+  * to lead survey answers).
+  *
+  * If there are multiple participants with the same WTL high score(s),
+  * the "top N" are pseudorandomly chosen.
+  */
+export function getRankingCandidatesFromWTL(
+  stagePublicData: SurveyStagePublicData,
+  numCandidates = 2
+) {
+  // Map from participant to participant's rankings
+  const rankingAnswerMap: Record<string, string[]> = {};
+
+  const surveyAnswerMap = stagePublicData.participantAnswerMap;
+
+  const getScore = (participantId: string) => {
+    const participantAnswer = surveyAnswerMap[participantId];
+    if (!participantAnswer) return 0;
+
+    const questionAnswer = participantAnswer[LAS_WTL_QUESTION_ID];
+    if (!questionAnswer || questionAnswer.kind !== SurveyQuestionKind.SCALE) {
+      return 0;
+    }
+    return questionAnswer.value;
+  };
+
+  return Object.keys(surveyAnswerMap).sort((p1, p2) => {
+    return getScore(p2) - getScore(p1)
+  }).slice(0, numCandidates);
+}
+
+/** Given participant rankings and a list of candidates,
+  * filter rankings so that they only include those candidates. */
+export function filterRankingsByCandidates(
+  participantRankings: Record<string, string[]>, candidateList = [],
+) {
+  Object.keys(participantRankings).forEach(id => {
+    participantRankings[id] = participantRankings[id].filter(
+      id => candidateList.findIndex(candidate => candidate === id) > -1
+    );
+  });
+  return participantRankings;
 }
 
 export function getTimeElapsed(timestamp: { seconds: number, nanoseconds: number }, unit: 's' | 'm' | 'h' | 'd' = 'm') {

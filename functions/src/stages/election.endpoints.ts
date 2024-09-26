@@ -1,10 +1,14 @@
 import { Value } from '@sinclair/typebox/value';
 import {
   ElectionStageParticipantAnswer,
-  StageKind,
   ElectionStagePublicData,
+  StageKind,
+  SurveyStagePublicData,
   UpdateElectionStageParticipantAnswerData,
+  filterRankingsByCandidates,
   getCondorcetElectionWinner,
+  getRankingCandidatesFromWTL,
+  LAS_WTL_STAGE_ID,
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
@@ -60,6 +64,14 @@ export const updateElectionStageParticipantAnswer = onCall(async (request) => {
     .collection('publicStageData')
     .doc(data.stageId);
 
+  const wtlDoc = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('cohorts')
+    .doc(data.cohortId)
+    .collection('publicStageData')
+    .doc(LAS_WTL_STAGE_ID);
+
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     // Update answer
@@ -67,8 +79,26 @@ export const updateElectionStageParticipantAnswer = onCall(async (request) => {
 
     // Update public stage data (current participant rankings, current winner)
     const publicStageData = (await publicDocument.get()).data() as ElectionStagePublicData;
-    publicStageData.participantAnswerMap[data.participantPublicId] = data.rankingList;
-    publicStageData.currentWinner = getCondorcetElectionWinner(publicStageData.participantAnswerMap);
+    publicStageData.participantAnswerMap[data.participantPublicId] = data.rankingList
+
+    // Calculate rankings
+    let participantAnswerMap = publicStageData.participantAnswerMap;
+
+    // If experiment has hardcoded WTL stage (for LAS game), use the WTL
+    // stage/question IDs to only consider top ranking participants
+    const wtlResponse = (await wtlDoc.get());
+    if (wtlResponse.exists) {
+      const wtlData = wtlResponse.data() as SurveyStagePublicData;
+
+      if (wtlData?.kind === StageKind.SURVEY) {
+        const candidateList = getRankingCandidatesFromWTL(wtlData);
+        participantAnswerMap = filterRankingsByCandidates(
+          participantAnswerMap, candidateList
+        );
+      }
+    }
+
+    publicStageData.currentWinner = getCondorcetElectionWinner(participantAnswerMap);
     publicStageData.electionItems = data.electionItems;
     transaction.set(publicDocument, publicStageData);
   });

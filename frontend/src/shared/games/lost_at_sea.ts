@@ -20,6 +20,8 @@ import {
   createSurveyStage,
   createTOSStage,
   createTransferStage,
+  LAS_WTL_STAGE_ID,
+  LAS_WTL_QUESTION_ID,
 } from '@deliberation-lab/utils';
 
 /** Constants and functions to create the Lost at Sea game. */
@@ -489,8 +491,6 @@ const LAS_PART_2_ELECTION_INFO_STAGE = createInfoStage({
 // ****************************************************************************
 // Part 2 updated willingness to lead - survey stage
 // ****************************************************************************
-export const LAS_PART_2_WTL_ID = 'wtl';
-
 export const LAS_PART_2_WTL_DESCRIPTION_PRIMARY =
   'Please indicate your willingness to become the group leader';
 
@@ -498,7 +498,7 @@ export const LAS_PART_2_WTL_DESCRIPTION_INFO =
   'Your group must elect a leader whose role is to answer on behalf of the group the same types of questions you have just seen. In this scenario, the leader is the only one who chooses the most useful items for survival from pairs, and their answers determine the payment for each member of the group.';
 
 const LAS_PART_2_WTL_SURVEY_STAGE = createSurveyStage({
-  id: LAS_PART_2_WTL_ID,
+  id: LAS_WTL_STAGE_ID,
   game: StageGame.LAS,
   name: 'Willingness to lead survey',
   descriptions: createStageTextConfig({
@@ -507,6 +507,7 @@ const LAS_PART_2_WTL_SURVEY_STAGE = createSurveyStage({
   }),
   questions: [
     createScaleSurveyQuestion({
+      id: LAS_WTL_QUESTION_ID,
       questionTitle: 'How much would you like to become the group leader in Part 3?',
       upperText: 'Very much',
       lowerText: 'Not at all',
