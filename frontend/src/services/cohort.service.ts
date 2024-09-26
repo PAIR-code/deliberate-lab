@@ -176,14 +176,15 @@ export class CohortService extends Service {
 
   // Returns chat discussion ID (or null if none or finished with all chats)
   getChatDiscussionId(stageId: string): string|null {
-    const stageData = this.stagePublicDataMap[stageId];
-    if (!stageData || stageData.kind !== StageKind.CHAT) {
-      return null;
-    }
-
     const stageConfig = this.sp.experimentService.getStage(stageId);
     if (!stageConfig || stageConfig.kind !== StageKind.CHAT || stageConfig.discussions.length === 0) {
       return null;
+    }
+
+    const stageData = this.stagePublicDataMap[stageId];
+    // If no public stage data yet, return first discussion
+    if (!stageData || stageData.kind !== StageKind.CHAT) {
+      return stageConfig.discussions[0].id;
     }
 
     // Find latest chat with messages, then check if everyone

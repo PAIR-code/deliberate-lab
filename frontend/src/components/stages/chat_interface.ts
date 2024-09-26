@@ -14,6 +14,7 @@ import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {FirebaseService} from '../../services/firebase.service';
 import {ParticipantService} from '../../services/participant.service';
+import {RouterService} from '../../services/router.service';
 
 import {
   ChatDiscussion,
@@ -36,6 +37,7 @@ export class ChatInterface extends MobxLitElement {
   private readonly firebaseService = core.getService(FirebaseService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
+  private readonly routerService = core.getService(RouterService);
 
   @property() stage: ChatStageConfig|undefined = undefined;
   @property() value = '';
@@ -60,7 +62,7 @@ export class ChatInterface extends MobxLitElement {
   }
 
   private renderChatHistory(currentDiscussionId: string|null) {
-    const stageId = this.participantService.profile?.currentStageId ?? '';
+    const stageId = this.routerService.activeRoute.params['stage'];
     const stage = this.experimentService.getStage(stageId);
     if (!stage || stage.kind !== StageKind.CHAT) return nothing;
 
