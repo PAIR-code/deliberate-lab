@@ -1,3 +1,5 @@
+import '../progress/progress_stage_completed';
+
 import './stage_description';
 import './stage_footer';
 
@@ -29,6 +31,9 @@ export class InfoView extends MobxLitElement {
         ${this.stage?.infoLines.map((line) => this.renderInfoLine(line))}
       </div>
       <stage-footer>
+        ${this.stage.progress.showParticipantProgress ?
+          html`<progress-stage-completed></progress-stage-completed>`
+          : nothing}
       </stage-footer>
     `;
   }

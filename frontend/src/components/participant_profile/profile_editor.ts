@@ -1,5 +1,6 @@
 import '../../pair-components/textarea';
 
+import '../progress/progress_stage_completed';
 import '../stages/stage_description';
 import '../stages/stage_footer';
 import './profile_avatar';
@@ -48,6 +49,9 @@ export class ProfileEditor extends MobxLitElement {
         ${this.renderName()} ${this.renderPronouns()} ${this.renderAvatars()}
       </div>
       <stage-footer .disabled=${!filled} .onNextClick=${saveProfileTextProperties}>
+        ${this.stage.progress.showParticipantProgress ?
+          html`<progress-stage-completed></progress-stage-completed>`
+          : nothing}
       </stage-footer>
     `;
   }

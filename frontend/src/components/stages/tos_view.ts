@@ -1,3 +1,4 @@
+import '../progress/progress_stage_completed';
 import './stage_description';
 import './stage_footer';
 
@@ -69,6 +70,9 @@ export class TOSView extends MobxLitElement {
         </label>
       </div>
       <stage-footer .disabled=${!timestamp}>
+        ${this.stage.progress.showParticipantProgress ?
+          html`<progress-stage-completed></progress-stage-completed>`
+          : nothing}
       </stage-footer>
     `;
   }

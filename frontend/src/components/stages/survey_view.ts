@@ -1,7 +1,9 @@
 import '../../pair-components/textarea';
 
+import '../progress/progress_stage_completed';
 import './stage_description';
 import './stage_footer';
+
 import '@material/web/radio/radio.js';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -83,6 +85,9 @@ export class SurveyView extends MobxLitElement {
         .disabled=${!questionsComplete()}
         .onNextClick=${saveTextAnswers}
       >
+        ${this.stage.progress.showParticipantProgress ?
+          html`<progress-stage-completed></progress-stage-completed>`
+          : nothing}
       </stage-footer>
     `;
   }

@@ -3,6 +3,7 @@ import '../../pair-components/icon_button';
 import './stage_description';
 import './stage_footer';
 import '../participant_profile/profile_avatar';
+import '../progress/progress_stage_completed';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -77,6 +78,9 @@ export class ElectionView extends MobxLitElement {
         ${this.renderStartZone()} ${this.renderEndZone()}
       </div>
       <stage-footer .disabled=${disabled}>
+        ${this.stage.progress.showParticipantProgress ?
+          html`<progress-stage-completed></progress-stage-completed>`
+          : nothing}
       </stage-footer>
     `;
   }
