@@ -27,6 +27,11 @@ import {
   LAS_METADATA,
   getLASStageConfigs,
 } from '../../shared/games/lost_at_sea';
+import {
+  GCE_METADATA,
+  getGCEStageConfigs,
+} from '../../shared/games/gift_card_exchange';
+
 
 import {styles} from './stage_builder_dialog.scss';
 
@@ -91,6 +96,7 @@ export class StageBuilderDialog extends MobxLitElement {
       </div>
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()}
+        ${this.renderNegotiationCard()}
       </div>
     `;
   }
@@ -121,9 +127,24 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addGame}>
         <div class="title">🌊 Lost at Sea</div>
         <div>
-          After individually ranking survival items and discussing
-          in group chat, elect a leader
-          who will rank a new set of survival items
+        An election scenario where participants deliberate together to elect a leader responsible for completing a survival task.
+        </div>
+      </div>
+    `;
+  }
+
+  private renderNegotiationCard() {
+    const addGame = () => {
+      this.experimentEditor.updateMetadata(GCE_METADATA);
+      this.experimentEditor.setStages(getGCEStageConfigs());
+      this.experimentEditor.toggleStageBuilderDialog();
+    };
+
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">🚧 Gift Card Exchange</div>
+        <div>
+          A negotiation scenario where participants deliberate together to optimally allocate a bundle of gift cards.
         </div>
       </div>
     `;
