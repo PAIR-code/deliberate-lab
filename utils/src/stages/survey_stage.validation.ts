@@ -34,6 +34,7 @@ export const CheckSurveyQuestionData = Type.Object(
 export const MultipleChoiceItemData = Type.Object(
   {
     id: Type.String({ minLength: 1 }),
+    imageId: Type.String(),
     text: Type.String(),
   },
   strict,

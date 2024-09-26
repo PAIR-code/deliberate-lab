@@ -172,8 +172,8 @@ export function createLASMultipleChoiceQuestion(
     kind: SurveyQuestionKind.MULTIPLE_CHOICE,
     questionTitle: LAS_ITEM_MULTIPLE_CHOICE_QUESTION_TITLE,
     options: [
-      { id: id1, text: LAS_ITEMS[id1]?.name ?? '' },
-      { id: id2, text: LAS_ITEMS[id2]?.name ?? '' },
+      { id: id1, imageId: getLASItemImageId(id1), text: LAS_ITEMS[id1]?.name ?? '' },
+      { id: id2, imageId: getLASItemImageId(id2), text: LAS_ITEMS[id2]?.name ?? '' },
     ],
     correctAnswerId: getCorrectLASAnswer(id1, id2),
   };
@@ -334,18 +334,22 @@ const LAS_PART_2_PERFORMANCE_ESTIMATION_SURVEY_STAGE = createSurveyStage({
       options: [
         {
           id: '1',
+          imageId: '',
           text: 'My score was the best',
         },
         {
           id: '2',
+          imageId: '',
           text: 'My score was the second best',
         },
         {
           id: '3',
+          imageId: '',
           text: 'My score was the third best',
         },
         {
           id: '4',
+          imageId: '',
           text: 'My score was the fourth best',
         },
       ],
@@ -431,18 +435,22 @@ const LAS_PART_2_UPDATED_PERFORMANCE_ESTIMATION_SURVEY_STAGE = createSurveyStage
       options: [
         {
           id: '1',
+          imageId: '',
           text: 'My score was the best',
         },
         {
           id: '2',
+          imageId: '',
           text: 'My score was the second best',
         },
         {
           id: '3',
+          imageId: '',
           text: 'My score was the third best',
         },
         {
           id: '4',
+          imageId: '',
           text: 'My score was the fourth best',
         },
       ],

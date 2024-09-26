@@ -38,13 +38,13 @@
   @include common.flex-column;
   gap: common.$spacing-medium;
 
-  &.las {
+  &.image {
     @include common.flex-row;
     flex-wrap: wrap;
   }
 }
 
-.las-question {
+.image-question {
   @include common.flex-column;
   border: 2px solid transparent;
   border-radius: common.$spacing-medium;

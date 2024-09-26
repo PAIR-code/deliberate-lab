@@ -23,11 +23,8 @@ import {
   SurveyStageConfig,
   SurveyStageParticipantAnswer,
   TextSurveyQuestion,
+  isMultipleChoiceImageQuestion
 } from '@deliberation-lab/utils';
-import {
-  LAS_ITEMS,
-  getLASItemImageId
-} from '../../shared/games/lost_at_sea';
 
 import {core} from '../../core/core';
 import {FirebaseService} from '../../services/firebase.service';
@@ -169,7 +166,7 @@ export class SurveyView extends MobxLitElement {
   private renderMultipleChoiceQuestion(question: MultipleChoiceSurveyQuestion) {
     const questionWrapperClasses = classMap({
       'radio-question-wrapper': true,
-      'las': question.id.slice(0, 3) === 'las',
+      'image': isMultipleChoiceImageQuestion(question),
     });
 
     return html`
@@ -209,15 +206,15 @@ export class SurveyView extends MobxLitElement {
       );
     };
 
-    if (LAS_ITEMS[choice.id]) {
+    if (choice.imageId.length > 0) {
       const classes = classMap({
-        'las-question': true,
+        'image-question': true,
         'selected': this.isMultipleChoiceMatch(questionId, choice.id),
         'disabled': this.participantService.disableStage,
       });
 
       const image = document.createElement('img');
-      this.firebaseService.setImage(image, getLASItemImageId(choice.id));
+      this.firebaseService.setImage(image, choice.imageId);
 
       return html`
         <div class=${classes} @click=${handleMultipleChoiceClick}>
