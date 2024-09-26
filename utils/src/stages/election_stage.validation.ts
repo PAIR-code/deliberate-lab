@@ -18,6 +18,7 @@ const strict = { additionalProperties: false } as const;
 export const ElectionItemData = Type.Object(
   {
     id: Type.String({ minLength: 1 }),
+    imageId: Type.String(),
     text: Type.String(),
   },
   strict,
