@@ -54,6 +54,7 @@ export interface ElectionStagePublicData extends BaseStagePublicData {
   currentWinner: string;
   // Maps from participant to participant's rankings (question ID to answer)
   participantAnswerMap: Record<string, string[]>;
+  electionItems: ElectionItem[];
 }
 
 // ************************************************************************* //
@@ -84,5 +85,6 @@ export function createElectionStagePublicData(
     kind: StageKind.ELECTION,
     currentWinner: '',
     participantAnswerMap: {},
+    electionItems: [],
   };
 }

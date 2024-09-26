@@ -156,7 +156,7 @@ export class ElectionView extends MobxLitElement {
       ];
       // Update ranking list
       this.participantService.updateElectionStageParticipantAnswer(
-        this.stage.id, rankings
+        this.stage.id, rankings, this.stage.electionItems
       );
     };
 
@@ -231,7 +231,7 @@ export class ElectionView extends MobxLitElement {
         ];
         // Update ranking list
         this.participantService.updateElectionStageParticipantAnswer(
-          this.stage.id, rankings
+          this.stage.id, rankings, this.stage.electionItems
         );
       }
     };
@@ -262,6 +262,7 @@ export class ElectionView extends MobxLitElement {
       this.participantService.updateElectionStageParticipantAnswer(
         this.stage.id,
         [...rankings.slice(0, index), ...rankings.slice(index + 1)],
+        this.stage.electionItems
       );
     };
 
@@ -275,7 +276,8 @@ export class ElectionView extends MobxLitElement {
       ];
       this.participantService.updateElectionStageParticipantAnswer(
         this.stage.id,
-        rankingList
+        rankingList,
+        this.stage.electionItems
       );
     };
 
@@ -289,7 +291,8 @@ export class ElectionView extends MobxLitElement {
       ];
       this.participantService.updateElectionStageParticipantAnswer(
         this.stage.id,
-        rankingList
+        rankingList,
+        this.stage.electionItems
       );
     }
 
