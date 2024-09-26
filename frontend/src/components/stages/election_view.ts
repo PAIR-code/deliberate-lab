@@ -107,7 +107,7 @@ export class ElectionView extends MobxLitElement {
 
   private renderParticipant(profile: ParticipantProfile) {
     return html`
-      <div class="participant">
+      <div class="item">
         <profile-avatar
           .emoji=${profile.avatar}
           .square=${true}
@@ -124,6 +124,7 @@ export class ElectionView extends MobxLitElement {
   private renderElectionItem(item: ElectionItem) {
     // TODO: Allow item photos?
     return html`
+      <div class="item">
         <div class="right">
           <div class="title">${item.text}</div>
         </div>

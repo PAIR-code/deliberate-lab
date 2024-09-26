@@ -11,7 +11,8 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
   ElectionStageConfig,
-  ElectionItem
+  ElectionItem,
+  generateId,
 } from '@deliberation-lab/utils';
 
 import {styles} from './election_editor.scss';
@@ -71,8 +72,7 @@ export class ElectionEditorComponent extends MobxLitElement {
 
     const addItem = () => {
       if (!this.stage) return;
-      const newId = String(electionItems.length + 1); // Generate a numeric ID as string
-      const newItems: ElectionItem[] = [...electionItems, { id: newId, text: '' }];
+      const newItems: ElectionItem[] = [...electionItems, { id: generateId(), text: '' }];
       this.experimentEditor.updateStage({ ...this.stage, electionItems: newItems });
     };
 

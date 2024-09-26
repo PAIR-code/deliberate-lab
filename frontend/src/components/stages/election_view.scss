@@ -27,7 +27,7 @@
   padding: common.$spacing-medium;
 }
 
-.participant {
+.item {
   @include common.flex-row-align-center;
   flex-wrap: wrap;
   gap: common.$spacing-large;
