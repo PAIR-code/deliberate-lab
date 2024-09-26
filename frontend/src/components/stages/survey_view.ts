@@ -26,10 +26,11 @@ import {
 } from '@deliberation-lab/utils';
 import {
   LAS_ITEMS,
-  getLASItemImageURL
+  getLASItemImageId
 } from '../../shared/games/lost_at_sea';
 
 import {core} from '../../core/core';
+import {FirebaseService} from '../../services/firebase.service';
 import {ParticipantService} from '../../services/participant.service';
 import {SurveyService} from '../../services/survey.service';
 
@@ -40,6 +41,7 @@ import {styles} from './survey_view.scss';
 export class SurveyView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly firebaseService = core.getService(FirebaseService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly surveyService = core.getService(SurveyService);
 
@@ -214,10 +216,13 @@ export class SurveyView extends MobxLitElement {
         'disabled': this.participantService.disableStage,
       });
 
+      const image = document.createElement('img');
+      this.firebaseService.setImage(image, getLASItemImageId(choice.id));
+
       return html`
         <div class=${classes} @click=${handleMultipleChoiceClick}>
           <div class="img-wrapper">
-            <img src=${getLASItemImageURL(choice.id)} />
+            ${image}
           </div>
           <div class="radio-button">
             <md-radio

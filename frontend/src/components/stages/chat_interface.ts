@@ -12,6 +12,7 @@ import {customElement, property} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
+import {FirebaseService} from '../../services/firebase.service';
 import {ParticipantService} from '../../services/participant.service';
 
 import {
@@ -26,7 +27,7 @@ import {
 } from '@deliberation-lab/utils';
 import {
   LAS_ITEMS,
-  getLASItemImageURL
+  getLASItemImageId
 } from '../../shared/games/lost_at_sea';
 import {styles} from './chat_interface.scss';
 
@@ -36,6 +37,7 @@ export class ChatInterface extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly cohortService = core.getService(CohortService);
+  private readonly firebaseService = core.getService(FirebaseService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
 
@@ -123,10 +125,13 @@ export class ChatInterface extends MobxLitElement {
     };
 
     const renderDiscussionItem = (item: DiscussionItem) => {
+      const image = document.createElement('img');
+      this.firebaseService.setImage(image, getLASItemImageId(item.id));
+
       return html`
         <div class="discussion-item">
           ${LAS_ITEMS[item.id] ?
-            html`<div class="img-wrapper"><img src=${getLASItemImageURL(item.id)} /></div>`
+            html`<div class="img-wrapper">${image}</div>`
             : nothing}
           ${item.name}
         </div>

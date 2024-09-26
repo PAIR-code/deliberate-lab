@@ -77,8 +77,6 @@ export function getLASStageConfigs(): StageConfig[] {
 export const LAS_SCENARIO_REMINDER =
   'Here is a reminder of the scenario:\n\nYou and three friends are on a yacht trip across the Atlantic. A fire breaks out, and the skipper and crew are lost. The yacht is sinking, and your location is unclear.\nYou have saved 10 items, a life raft, and a box of matches.\n\nEvaluate the relative importance of items in each presented pair by selecting the one you believe is most useful. You can earn £2 per correct answer if that question is drawn to determine your payoff.';
 
-export const LAS_IMAGE_URL_PREFIX = (process.env.URL_PREFIX ?? '') + 'assets/lost_at_sea/';
-
 interface LASItem {
   name: string;
   ranking: number;
@@ -101,10 +99,8 @@ export const LAS_ITEMS: Record<string, LASItem> = {
   'netting': { name: 'Mosquito netting', ranking: 14 },
 };
 
-export function getLASItemImageURL(itemId: string) {
-  const item = LAS_ITEMS[itemId];
-  if (!item) return undefined;
-  return `${LAS_IMAGE_URL_PREFIX}${itemId}.jpg`;
+export function getLASItemImageId(itemId: string) {
+  return `las/${itemId}.jpg`;
 }
 
 export const LAS_ITEM_MULTIPLE_CHOICE_QUESTION_TITLE =

@@ -55,12 +55,6 @@ const config: webpack.Configuration = {
     ],
   },
   plugins: [
-    new CopyWebpackPlugin({
-      patterns: [
-        // Move assets from assets/ to dist/assets/
-        {from: 'assets', to: 'assets'},
-      ],
-    }),
     new HtmlWebpackPlugin({
       template: './index.html',
       filename: 'index.html',
