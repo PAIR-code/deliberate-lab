@@ -4,22 +4,14 @@
 :host {
   @include common.flex-column;
   @include common.html-preview;
-  gap: common.$spacing-xl;
   height: 100%;
+  overflow: auto;
 }
 
-.description {
-  @include typescale.title-small;
-  color: var(--md-sys-color-secondary);
-
-  padding-bottom: common.$spacing-medium;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-}
-
-.tos-wrapper {
+.html-wrapper {
   @include common.flex-column;
   gap: common.$spacing-xl;
-  overflow: auto;
+  padding: common.$main-content-padding;
 }
 
 .tos-block {
@@ -35,7 +27,6 @@
   flex-shrink: 0;
   margin-bottom: 0;
   margin-top: auto;
-  padding: common.$spacing-medium 0;
   position: sticky;
 }
 

@@ -5,6 +5,7 @@
   @include common.flex-column;
   gap: common.$spacing-xl;
   height: 100%;
+  overflow: auto;
 }
 
 .election-wrapper {
@@ -12,6 +13,7 @@
   flex-grow: 1;
   grid-template-columns: repeat(2, 1fr);
   gap: common.$spacing-xxl;
+  padding: common.$main-content-padding;
   width: 100%;
 }
 

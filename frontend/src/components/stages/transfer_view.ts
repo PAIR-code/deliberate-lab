@@ -73,7 +73,10 @@ export class TransferView extends MobxLitElement {
   }
 
   private renderCountdown() {
-    if (!this.stage?.enableTimeout) return;
+    if (
+      !this.stage?.enableTimeout ||
+      this.participantService.completedStage(this.stage.id ?? '')
+    ) return;
 
     const minutes = Math.floor(this.timeRemainingSeconds / 60);
     const seconds = this.timeRemainingSeconds % 60;
@@ -84,12 +87,15 @@ export class TransferView extends MobxLitElement {
       this.timeRemainingSeconds,
       this.stage?.timeoutSeconds
     );
-    return html` <div>
-      If the transfer cannot be completed, the experiment will end in:
-      <span style="font-weight: bold; color: ${timeColor};">
-        ${minutes}:${seconds.toString().padStart(2, '0')} (mm:ss) </span
-      >.
-    </div>`;
+
+    return html`
+      <div class="transfer-wrapper">
+        If the transfer cannot be completed, the experiment will end in:
+        <span style="font-weight: bold; color: ${timeColor};">
+          ${minutes}:${seconds.toString().padStart(2, '0')} (mm:ss)
+        </span>.
+      </div>
+    `;
   }
 
   handleTimedOut() {

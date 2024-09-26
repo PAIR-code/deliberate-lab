@@ -64,7 +64,7 @@ export class PayoutView extends MobxLitElement {
     if (this.stage.game !== StageGame.LAS) {
       return html`
         <stage-description .stage=${this.stage}></stage-description>
-        <div>No payout view available at this time.</div>
+        <div class="stages-wrapper">No payout view available at this time.</div>
         <stage-footer></stage-footer>
       `;
     }

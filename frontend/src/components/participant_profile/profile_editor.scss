@@ -5,12 +5,14 @@
   @include common.flex-column;
   gap: common.$spacing-xxl;
   height: 100%;
+  overflow: auto;
 }
 
 .profile-wrapper {
   @include common.flex-column;
   flex-grow: 1;
   gap: common.$spacing-xxl;
+  padding: common.$main-content-padding;
 }
 
 .title {

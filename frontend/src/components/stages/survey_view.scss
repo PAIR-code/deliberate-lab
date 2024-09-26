@@ -5,19 +5,14 @@
   @include common.flex-column;
   gap: common.$spacing-xl;
   height: 100%;
-}
-
-.description {
-  @include typescale.title-small;
-  color: var(--md-sys-color-secondary);
-  padding-bottom: common.$spacing-medium;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  overflow: auto;
 }
 
 .questions-wrapper {
   @include common.flex-column;
   flex-grow: 1;
   gap: calc(common.$spacing-xxl * 2);
+  padding: common.$main-content-padding;
 }
 
 .question {
