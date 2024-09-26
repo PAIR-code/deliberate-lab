@@ -45,8 +45,8 @@ export class ElectionView extends MobxLitElement {
     if (this.stage?.isParticipantElection) {
       // TODO: Enable voting for self.
       return this.cohortService
-  .getAllParticipants()
-  .filter(profile => profile.publicId !== this.participantService.profile?.publicId) ?? [];
+        .getAllParticipants()
+        .filter(profile => profile.publicId !== this.participantService.profile?.publicId) ?? [];
     } else {
       return this.stage?.electionItems ?? [];
     }
