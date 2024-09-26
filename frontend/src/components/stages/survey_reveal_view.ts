@@ -147,7 +147,7 @@ export class SurveyReveal extends MobxLitElement {
           html`<div class="table-cell"></div>`
         )}
         <div class="table-cell">
-          ${this.renderIcon(question.correctAnswerId ?? '', participantAnswer?.choiceId ?? null)}
+          ${question.correctAnswerId ? this.renderIcon(question.correctAnswerId, participantAnswer?.choiceId ?? null) : nothing}
           <div>${answer?.text ?? ''}</div>
         </div>
         ${this.renderLeaderCell(question)}
