@@ -57,6 +57,7 @@ export interface CompareChatDiscussion extends BaseChatDiscussion {
 /** Discussion item to compare. */
 export interface DiscussionItem {
   id: string;
+  imageId: string; // or empty if no image provided
   name: string;
 }
 

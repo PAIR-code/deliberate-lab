@@ -25,10 +25,6 @@ import {
   StageConfig,
   StageKind,
 } from '@deliberation-lab/utils';
-import {
-  LAS_ITEMS,
-  getLASItemImageId
-} from '../../shared/games/lost_at_sea';
 import {styles} from './chat_interface.scss';
 
 /** Chat interface component */
@@ -125,14 +121,18 @@ export class ChatInterface extends MobxLitElement {
     };
 
     const renderDiscussionItem = (item: DiscussionItem) => {
-      const image = document.createElement('img');
-      this.firebaseService.setImage(image, getLASItemImageId(item.id));
+      const renderImage = () => {
+        if (item.imageId.length === 0) return nothing;
+
+        const image = document.createElement('img');
+        this.firebaseService.setImage(image, item.imageId);
+
+        return html`<div class="img-wrapper">${image}</div>`;
+      };
 
       return html`
         <div class="discussion-item">
-          ${LAS_ITEMS[item.id] ?
-            html`<div class="img-wrapper">${image}</div>`
-            : nothing}
+          ${renderImage()}
           ${item.name}
         </div>
       `;

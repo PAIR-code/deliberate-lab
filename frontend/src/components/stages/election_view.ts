@@ -11,6 +11,7 @@ import {customElement, property} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
+import {FirebaseService} from '../../services/firebase.service';
 import {ParticipantService} from '../../services/participant.service';
 import {RouterService} from '../../services/router.service';
 
@@ -32,6 +33,7 @@ export class ElectionView extends MobxLitElement {
 
   private readonly cohortService = core.getService(CohortService);
   private readonly experimentService = core.getService(ExperimentService);
+  private readonly firebaseService = core.getService(FirebaseService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
@@ -122,9 +124,18 @@ export class ElectionView extends MobxLitElement {
   }
 
   private renderElectionItem(item: ElectionItem) {
-    // TODO: Allow item photos?
+    const renderImage = () => {
+      if (item.imageId.length === 0) return nothing;
+
+      const image = document.createElement('img');
+      this.firebaseService.setImage(image, item.imageId);
+
+      return html`<div class="img-wrapper">${image}</div>`;
+    };
+
     return html`
       <div class="item">
+        ${renderImage()}
         <div class="right">
           <div class="title">${item.text}</div>
         </div>
@@ -133,7 +144,6 @@ export class ElectionView extends MobxLitElement {
   }
 
   private renderDraggableParticipant(item: ParticipantProfile | ElectionItem) {
-
     const onDragStart = (event: DragEvent) => {
       let target = event.target as HTMLElement;
       target.style.opacity = '.25';
@@ -253,7 +263,6 @@ export class ElectionView extends MobxLitElement {
   }
 
   private renderRankedItem(item: ParticipantProfile | ElectionItem, index: number) {
-
     const rankings = this.answer?.rankingList ?? [];
     const onCancel = () => {
       if (index === -1 || !this.stage) {
@@ -376,6 +385,6 @@ export class ElectionView extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'election-view': ElectionView;
+      'election-view': ElectionView;
   }
 }

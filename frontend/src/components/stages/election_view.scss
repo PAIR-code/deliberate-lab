@@ -91,3 +91,17 @@
   @include common.flex-row-align-center;
   gap: common.$spacing-small;
 }
+
+.img-wrapper {
+  @include common.flex-row-align-center;
+  aspect-ratio: 1 / 1;
+  background: var(--md-sys-color-surface);
+  border-radius: 100%;
+  overflow: hidden;
+  width: 30px;
+
+  img {
+    height: auto;
+    width: 100%;
+  }
+}

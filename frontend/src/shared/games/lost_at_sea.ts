@@ -385,8 +385,8 @@ const LAS_PART_2_GROUP_INSTRUCTIONS_STAGE = createInfoStage({
 const LAS_PART_2_CHAT_DISCUSSIONS = ITEMS_SET_1.map(itemSet =>
   createCompareChatDiscussion({
     items: [
-      { id: itemSet[0], name: LAS_ITEMS[itemSet[0]]?.name ?? '' },
-      { id: itemSet[1], name: LAS_ITEMS[itemSet[1]]?.name ?? '' },
+      { id: itemSet[0], imageId: getLASItemImageId(itemSet[0]), name: LAS_ITEMS[itemSet[0]]?.name ?? '' },
+      { id: itemSet[1], imageId: getLASItemImageId(itemSet[1]), name: LAS_ITEMS[itemSet[1]]?.name ?? '' },
     ]
   })
 );

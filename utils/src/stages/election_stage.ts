@@ -27,6 +27,7 @@ export interface ElectionStageConfig extends BaseStageConfig {
 
 export interface ElectionItem {
   id: string;
+  imageId: string; // or empty if no image provided
   text: string;
 }
 
