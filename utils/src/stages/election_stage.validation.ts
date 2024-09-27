@@ -5,7 +5,7 @@ import {
   StageProgressConfigSchema,
   StageTextConfigSchema
 } from './stage.validation';
-import { ElectionItem } from './election_stage';
+import { ElectionItem, ElectionStrategy, ElectionType } from './election_stage';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = { additionalProperties: false } as const;
@@ -25,7 +25,7 @@ export const ElectionItemData = Type.Object(
 );
 
 /** ElectionStageConfig input validation. */
-export const ElectionStageConfigData = Type.Object(
+export const ItemElectionStageConfigData = Type.Object(
   {
     id: Type.String({ minLength: 1 }),
     kind: Type.Literal(StageKind.ELECTION),
@@ -33,8 +33,25 @@ export const ElectionStageConfigData = Type.Object(
     name: Type.String({ minLength: 1 }),
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,
-    isParticipantElection: Type.Boolean(),
+    electionType: Type.Literal(ElectionType.ITEMS),
+    strategy: Type.Union([Type.Literal(ElectionStrategy.NONE), Type.Literal(ElectionStrategy.CONDORCET)]),
     electionItems: Type.Array(ElectionItemData),
+  },
+  strict,
+);
+
+
+export const ParticipantElectionStageConfigData = Type.Object(
+  {
+    id: Type.String({ minLength: 1 }),
+    kind: Type.Literal(StageKind.ELECTION),
+    game: StageGameSchema,
+    name: Type.String({ minLength: 1 }),
+    descriptions: StageTextConfigSchema,
+    progress: StageProgressConfigSchema,
+    electionType: Type.Literal(ElectionType.PARTICIPANTS),
+    strategy: Type.Union([Type.Literal(ElectionStrategy.NONE), Type.Literal(ElectionStrategy.CONDORCET)]),
+    enableSelfVoting: Type.Boolean(),
   },
   strict,
 );

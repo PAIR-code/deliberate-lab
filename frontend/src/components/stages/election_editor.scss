@@ -41,3 +41,8 @@
 pr-icon-button {
   margin-left: common.$spacing-small;
 }
+
+.indented {
+  /* width of checkbox plus gap */
+  margin-left: calc(48px + common.$spacing-medium);
+}

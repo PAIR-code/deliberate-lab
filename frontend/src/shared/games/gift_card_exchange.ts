@@ -1,3 +1,4 @@
+import { ElectionStrategy } from '@deliberation-lab/utils';
 import {
   ElectionItemData,
   Experiment,
@@ -19,6 +20,7 @@ import {
   createScaleSurveyQuestion,
   createStageTextConfig,
   createSurveyStage,
+  ElectionType,
   createTOSStage,
   createTransferStage,
 } from '@deliberation-lab/utils';
@@ -149,7 +151,8 @@ const GCE_PART_1_RANKING_STAGE = createElectionStage({
   game: StageGame.GCE,
   name: 'Initial item ranking',
   descriptions: createStageTextConfig({ infoText: RANKING_INSTRUCTIONS }),
-  isParticipantElection: false,
+  strategy: ElectionStrategy.NONE,
+  electionType: ElectionType.ITEMS,
   electionItems: GIFT_CARDS,
 });
 

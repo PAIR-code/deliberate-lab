@@ -5,6 +5,8 @@ import {
   createChatStagePublicData,
 } from './chat_stage';
 import {
+  ItemElectionStage,
+  ParticipantElectionStage,
   ElectionStageConfig,
   ElectionStageParticipantAnswer,
   ElectionStagePublicData,
@@ -79,7 +81,8 @@ export interface StageProgressConfig {
 
 export type StageConfig =
   | ChatStageConfig
-  | ElectionStageConfig
+  | ItemElectionStage
+  | ParticipantElectionStage
   | InfoStageConfig
   | PayoutStageConfig
   | ProfileStageConfig

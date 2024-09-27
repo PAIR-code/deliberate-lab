@@ -20,10 +20,25 @@ import {
  *
  * This is saved as a stage doc under experiments/{experimentId}/stages
  */
-export interface ElectionStageConfig extends BaseStageConfig {
+export enum ElectionStrategy {
+  NONE = 'none', // Not an election.
+  CONDORCET = 'condorcet', // Condorcet resolution.
+}
+
+export enum ElectionType {
+  ITEMS = 'items', // Item ranking.
+  PARTICIPANTS = 'participants', // Participant ranking.
+}
+
+export interface BaseElectionStage extends BaseStageConfig {
   kind: StageKind.ELECTION;
-  isParticipantElection: boolean; // use participants instead of election items
-  electionItems: ElectionItem[]; // election items to rank
+  electionType: ElectionType;
+  strategy: ElectionStrategy;
+}
+
+export interface ParticipantElectionStage extends BaseElectionStage {
+  electionType: ElectionType.PARTICIPANTS;
+  enableSelfVoting: boolean; // Whether to allow voting for oneself.
 }
 
 export interface ElectionItem {
@@ -31,6 +46,13 @@ export interface ElectionItem {
   imageId: string; // or empty if no image provided
   text: string;
 }
+
+export interface ItemElectionStage extends BaseElectionStage {
+  electionType: ElectionType.ITEMS;
+  electionItems: ElectionItem[];
+}
+
+export type ElectionStageConfig = ParticipantElectionStage | ItemElectionStage;
 
 /**
  * ElectionStageParticipantAnswer.
@@ -63,26 +85,40 @@ export interface ElectionStagePublicData extends BaseStagePublicData {
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
 
-/** Create election stage. */
 export function createElectionStage(
-  config: Partial<ElectionStageConfig> = {}
+  config: Partial<ElectionStageConfig> = {},
 ): ElectionStageConfig {
-  return {
+  const baseStageConfig = {
     id: config.id ?? generateId(),
     kind: StageKind.ELECTION,
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Election',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig({ waitForAllParticipants: true }),
-    isParticipantElection: config.isParticipantElection ?? true,
-    electionItems: config.electionItems ?? [],
+    strategy: config.strategy ?? ElectionStrategy.NONE,
   };
+
+  config.electionType = config.electionType ?? ElectionType.PARTICIPANTS;
+  if (config.electionType === ElectionType.ITEMS) {
+    return {
+      ...baseStageConfig,
+      electionType: ElectionType.ITEMS,
+      electionItems: config.electionItems ?? [],
+    } as ItemElectionStage; // Assert as ItemElectionStage
+  } else if (config.electionType === ElectionType.PARTICIPANTS) {
+    return {
+      ...baseStageConfig,
+      electionType: ElectionType.PARTICIPANTS,
+      enableSelfVoting: config.enableSelfVoting ?? false,
+    } as ParticipantElectionStage; // Assert as ParticipantElectionStage
+  } else {
+    console.log(config);
+    throw new Error('Invalid electionType specified in the configuration.');
+  }
 }
 
 /** Create election item. */
-export function createElectionItem(
-  config: Partial<ElectionItem> = {}
-): ElectionItem {
+export function createElectionItem(config: Partial<ElectionItem> = {}): ElectionItem {
   return {
     id: config.id ?? generateId(),
     imageId: config.imageId ?? '',
