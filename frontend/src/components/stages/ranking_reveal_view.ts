@@ -4,7 +4,11 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
-import {RankingStagePublicData, RankingItem} from '@deliberation-lab/utils';
+import {
+  RankingStagePublicData,
+  RankingItem,
+  RevealType,
+} from '@deliberation-lab/utils';
 import {
   getParticipantName,
   getParticipantPronouns,
@@ -13,10 +17,15 @@ import {
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
+import {ParticipantService} from '../../services/participant.service';
 
 import {styles} from './ranking_reveal_view.scss';
-import {ParticipantProfile, ElectionStrategy, RankingStageConfig} from '@deliberation-lab/utils';
-import { RankingType } from '@deliberation-lab/utils';
+import {
+  ParticipantProfile,
+  ElectionStrategy,
+  RankingStageConfig,
+} from '@deliberation-lab/utils';
+import {RankingType} from '@deliberation-lab/utils';
 
 /** Ranking reveal */
 @customElement('ranking-reveal-view')
@@ -25,6 +34,7 @@ export class RankingReveal extends MobxLitElement {
 
   private readonly cohortService = core.getService(CohortService);
   private readonly experimentService = core.getService(ExperimentService);
+  private readonly participantService = core.getService(ParticipantService);
 
   @property() publicData: RankingStagePublicData | undefined = undefined;
 
@@ -55,81 +65,127 @@ export class RankingReveal extends MobxLitElement {
     `;
   }
 
-  override render() {
-    if (!this.publicData) {
-      return html`<div class="reveal-wrapper">No election winner.</div>`;
-    }
+  private renderWinner() {
+    if (!this.publicData) return;
 
     const isItemRanking =
-      (this.experimentService.stageConfigMap[this.publicData.id] as RankingStageConfig).rankingType === RankingType.ITEMS;
+      (
+        this.experimentService.stageConfigMap[
+          this.publicData.id
+        ] as RankingStageConfig
+      ).rankingType === RankingType.ITEMS;
     const hasWinner =
-      (this.experimentService.stageConfigMap[this.publicData.id] as RankingStageConfig).strategy === ElectionStrategy.CONDORCET;
+      (
+        this.experimentService.stageConfigMap[
+          this.publicData.id
+        ] as RankingStageConfig
+      ).strategy === ElectionStrategy.CONDORCET;
 
     // Display the winner.
-    let winnerDisplayHTML;
     if (hasWinner) {
       const winner = this.publicData.currentWinner ?? '';
       // This is a participant election.
       if (!isItemRanking) {
         const leader = this.cohortService.participantMap[winner];
-        winnerDisplayHTML = this.renderParticipantWinner(leader);
+        return this.renderParticipantWinner(leader);
       } else {
         // This is an item election.
         const winningItem = this.publicData.rankingItems.find(
           (item) => item.id === winner
         );
-        winnerDisplayHTML = this.renderItemWinner(winningItem);
+        return this.renderItemWinner(winningItem);
       }
     }
+    return '';
+  }
 
-    // TODO: Optionally display how people voted.
-    let resultsDisplayHTML;
+  private renderResultsTable() {
+    if (!this.publicData) return;
+  
+    const showAllParticipants =
+      (
+        this.experimentService.stageConfigMap[
+          this.publicData.id
+        ] as RankingStageConfig
+      ).revealType === RevealType.ALL_PARTICIPANTS;
+  
+  
+    const headerText = showAllParticipants
+      ? 'Here are the rankings of your group:'
+      : 'As a reminder, here are your rankings.';
+  
+    const curId = this.participantService.profile!.publicId!;
+    if (!showAllParticipants && !curId) {
+      return '';
+    }
+  
+    const isItemRanking =
+      (
+        this.experimentService.stageConfigMap[
+          this.publicData.id
+        ] as RankingStageConfig
+      ).rankingType === RankingType.ITEMS;
+  
+    const getEntryText = (entry: string) => {
+      if (!this.publicData) return '';
+      
+      if (isItemRanking) {
+        const item = this.publicData.rankingItems.find(item => item.id === entry);
+        return item ? item.text : 'Unknown item';
+      } else {
+        const participant = this.cohortService.participantMap[entry];
+        return participant ? getParticipantName(participant) : 'Unknown participant';
+      }
+    };
+  
+    const participantMap = showAllParticipants
+      ? this.publicData.participantAnswerMap
+      : { [curId]: this.publicData.participantAnswerMap[curId] };
+  
+    const maxOptions = Math.max(...Object.values(participantMap).map(list => list.length));
 
-    if (isItemRanking) {
-      const itemIdToText = new Map(
-        this.publicData.rankingItems.map((item) => [item.id, item.text])
-      );
-      const maxOptions = this.publicData.rankingItems.length;
-      resultsDisplayHTML = html`
-        Here is how people voted:
-        <div class="participant-votes-table">
-          <div class="table-head">
-            <div class="table-row">
-              <div class="table-cell">Rank</div>
-              ${Object.keys(this.publicData.participantAnswerMap).map(
-                (participant) => html`
-                  <div class="table-cell">
-                    ${getParticipantName(
-                      this.cohortService.participantMap[participant]
-                    )}
-                  </div>
-                `
-              )}
-            </div>
-          </div>
-          <div class="table-body">
-            ${[...Array(maxOptions).keys()].map(
-              (rowIndex) => html`
-                <div class="table-row">
-                  <div class="table-cell">${rowIndex + 1}</div>
-                  ${Object.keys(this.publicData!.participantAnswerMap).map(
-                    (participant) => {
-                      const votedItems = this.publicData!.participantAnswerMap[
-                        participant
-                      ].map((itemId) => itemIdToText.get(itemId)).filter(
-                        (text) => text !== undefined
-                      );
-
-                      const itemText = votedItems[rowIndex] || '';
-                      return html` <div class="table-cell">${itemText}</div> `;
-                    }
-                  )}
+    return html`
+      <div>${headerText}</div>
+      <div class="participant-votes-table">
+        <div class="table-head">
+          <div class="table-row">
+            <div class="table-cell rank-row">Rank</div>
+            ${Object.keys(participantMap).map(
+              (participant) => html`
+                <div class="table-cell">
+                  ${getParticipantName(
+                    this.cohortService.participantMap[participant]
+                  ) ?? participant}
                 </div>
               `
             )}
           </div>
         </div>
-      `;
+  
+        <div class="table-body">
+          ${[...Array(maxOptions).keys()].map(
+            (rowIndex) => html`
+              <div class="table-row">
+                <div class="table-cell rank-row">${rowIndex + 1}</div>
+                ${Object.keys(participantMap).map(
+                  (participant) => {
+                    const votedItems = participantMap[participant]
+                      .map((itemId: string) => getEntryText(itemId));
+                    const itemText = votedItems[rowIndex] || '';
+                    return html` <div class="table-cell">${itemText}</div> `;
+                  }
+                )}
+              </div>
+            `
+          )}
+        </div>
+      </div>
+    `;
+  }
+  
+  override render() {
+    if (!this.publicData) {
+      return html`<div class="reveal-wrapper">No election winner.</div>`;
     }
 
     const electionName = this.experimentService.getStageName(
@@ -137,7 +193,7 @@ export class RankingReveal extends MobxLitElement {
     );
     return html`
       <h2>Results for ${electionName}</h2>
-      ${winnerDisplayHTML} ${resultsDisplayHTML}
+      ${this.renderWinner()} ${this.renderResultsTable()}
       <div class="divider"></div>
     `;
   }

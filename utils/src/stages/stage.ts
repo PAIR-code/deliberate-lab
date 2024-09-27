@@ -67,6 +67,12 @@ export interface BaseStageConfig {
   progress: StageProgressConfig;
 }
 
+// This property is put on stages where information may be revealed.
+export enum RevealType {
+  CURRENT_PARTICIPANT = 'CURRENT', // Reveals answers for the current participant.
+  ALL_PARTICIPANTS = 'ALL', // Reveals answers for all participants.
+}
+
 export interface StageTextConfig {
   primaryText: string; // shown at top of screen under header
   infoText: string; // for info popup

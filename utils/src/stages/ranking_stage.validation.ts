@@ -6,6 +6,7 @@ import {
   StageTextConfigSchema
 } from './stage.validation';
 import { RankingItem, ElectionStrategy, RankingType } from './ranking_stage';
+import { RevealType } from './stage';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = { additionalProperties: false } as const;
@@ -36,6 +37,7 @@ export const ItemRankingStageConfigData = Type.Object(
     rankingType: Type.Literal(RankingType.ITEMS),
     strategy: Type.Union([Type.Literal(ElectionStrategy.NONE), Type.Literal(ElectionStrategy.CONDORCET)]),
     rankingItems: Type.Array(RankingItemData),
+    revealType: Type.Union([Type.Literal(RevealType.CURRENT_PARTICIPANT), Type.Literal(RevealType.ALL_PARTICIPANTS)]),
   },
   strict,
 );
@@ -52,6 +54,7 @@ export const ParticipantRankingStageConfigData = Type.Object(
     rankingType: Type.Literal(RankingType.PARTICIPANTS),
     strategy: Type.Union([Type.Literal(ElectionStrategy.NONE), Type.Literal(ElectionStrategy.CONDORCET)]),
     enableSelfVoting: Type.Boolean(),
+    revealType: Type.Union([Type.Literal(RevealType.CURRENT_PARTICIPANT), Type.Literal(RevealType.ALL_PARTICIPANTS)]),
   },
   strict,
 );

@@ -12,6 +12,7 @@ import {
   createRankingItem,
   ParticipantRankingStage,
   ItemRankingStage,
+  RevealType,
 } from '@deliberation-lab/utils';
 import {styles} from './ranking_editor.scss';
 
@@ -28,20 +29,21 @@ export class RankingEditorComponent extends MobxLitElement {
     if (this.stage === undefined) {
       return nothing;
     }
-    return html` ${this.renderRankingSettings()} `;
+    return html` ${this.renderRankingSettings()} ${this.renderRevealSettings()}`;
   }
+
   private renderRankingSettings() {
     if (!this.stage) return;
-  
-    const isParticipantRanking = this.stage.rankingType === 'participants';
-    const enableSelfVoting = (this.stage as ParticipantRankingStage).enableSelfVoting;
+
+    const enableSelfVoting = (this.stage as ParticipantRankingStage)
+      .enableSelfVoting;
     const isElection = this.stage.strategy === ElectionStrategy.CONDORCET;
-    
-  
+    const isParticipantRanking = this.stage.rankingType === 'participants';
+
     const updateRankingType = () => {
       if (!this.stage) return;
       const newType = isParticipantRanking ? 'items' : 'participants';
-      const updatedStage = { ...this.stage, rankingType: newType } as
+      const updatedStage = {...this.stage, rankingType: newType} as
         | ParticipantRankingStage
         | ItemRankingStage;
       if (newType === 'participants') {
@@ -49,7 +51,7 @@ export class RankingEditorComponent extends MobxLitElement {
       }
       this.experimentEditor.updateStage(updatedStage);
     };
-  
+
     const toggleSelfVoting = () => {
       if (!this.stage) return;
       const updatedStage = {
@@ -58,17 +60,19 @@ export class RankingEditorComponent extends MobxLitElement {
       } as ParticipantRankingStage;
       this.experimentEditor.updateStage(updatedStage);
     };
-  
+
     const toggleElectionStrategy = () => {
       if (!this.stage) return;
-      const newStrategy = isElection ? ElectionStrategy.NONE : ElectionStrategy.CONDORCET;
+      const newStrategy = isElection
+        ? ElectionStrategy.NONE
+        : ElectionStrategy.CONDORCET;
       const updatedStage = {
         ...this.stage,
         strategy: newStrategy,
       };
       this.experimentEditor.updateStage(updatedStage);
     };
-  
+
     return html`
       <div class="section">
         <div class="title">Ranking Settings</div>
@@ -96,7 +100,7 @@ export class RankingEditorComponent extends MobxLitElement {
               </div>
             `
           : ''}
-  
+
         <!-- New checkbox for election strategy -->
         <div class="checkbox-wrapper">
           <md-checkbox
@@ -108,8 +112,47 @@ export class RankingEditorComponent extends MobxLitElement {
           </md-checkbox>
           <div>Conduct an election; compute a winner from the rankings</div>
         </div>
-        
+
         ${isParticipantRanking ? nothing : this.renderRankingItems()}
+      </div>
+    `;
+  }
+  private renderRevealSettings() {
+    if (!this.stage) return;
+
+    const revealAllParticipants =
+      this.stage.revealType === RevealType.ALL_PARTICIPANTS;
+
+    const toggleRevealAllParticipants = () => {
+      if (!this.stage) return;
+
+      const newReveal = revealAllParticipants
+        ? RevealType.CURRENT_PARTICIPANT
+        : RevealType.ALL_PARTICIPANTS;
+      const updatedStage = {
+        ...this.stage,
+        revealType: newReveal,
+      };
+
+      this.experimentEditor.updateStage(updatedStage);
+    };
+ 
+    return html`
+      <div class="section">
+        <div class="title">Reveal Settings</div>
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${revealAllParticipants}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @click=${toggleRevealAllParticipants}
+          >
+          </md-checkbox>
+          <div>
+            Reveal selections from this stage by all participants within the
+            cohort in subsequent reveal stages
+          </div>
+        </div>
       </div>
     `;
   }
