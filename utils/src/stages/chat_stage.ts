@@ -6,7 +6,8 @@ import {
   BaseStagePublicData,
   StageGame,
   StageKind,
-  createStageTextConfig
+  createStageTextConfig,
+  createStageProgressConfig,
 } from './stage';
 import {
   ParticipantProfileBase,
@@ -57,6 +58,7 @@ export interface CompareChatDiscussion extends BaseChatDiscussion {
 /** Discussion item to compare. */
 export interface DiscussionItem {
   id: string;
+  imageId: string; // or empty if no image provided
   name: string;
 }
 
@@ -169,6 +171,7 @@ export function createChatStage(
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Group chat',
     descriptions: config.descriptions ?? createStageTextConfig(),
+    progress: config.progress ?? createStageProgressConfig({ waitForAllParticipants: true }),
     discussions: config.discussions ?? [],
     mediators: config.mediators ?? [],
   };

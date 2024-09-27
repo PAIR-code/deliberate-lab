@@ -1,6 +1,10 @@
 import { Type, type Static } from '@sinclair/typebox';
 import { StageKind } from './stage';
-import { StageGameSchema, StageTextConfigSchema } from './stage.validation';
+import {
+  StageGameSchema,
+  StageProgressConfigSchema,
+  StageTextConfigSchema
+} from './stage.validation';
 import { SurveyQuestionKind } from './survey_stage';
 
 /** Shorthand for strict TypeBox object validation */
@@ -34,6 +38,7 @@ export const CheckSurveyQuestionData = Type.Object(
 export const MultipleChoiceItemData = Type.Object(
   {
     id: Type.String({ minLength: 1 }),
+    imageId: Type.String(),
     text: Type.String(),
   },
   strict,
@@ -81,6 +86,7 @@ export const SurveyStageConfigData = Type.Object(
     game: StageGameSchema,
     name: Type.String({ minLength: 1 }),
     descriptions: StageTextConfigSchema,
+    progress: StageProgressConfigSchema,
     questions: Type.Array(SurveyQuestionData),
   },
   strict,

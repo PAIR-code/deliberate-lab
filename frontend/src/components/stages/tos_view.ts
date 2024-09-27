@@ -1,3 +1,4 @@
+import '../progress/progress_stage_completed';
 import './stage_description';
 import './stage_footer';
 
@@ -48,9 +49,7 @@ export class TOSView extends MobxLitElement {
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="html-wrapper">
-        <div class="tos-block">
-          ${this.stage?.tosLines.map((line) => this.renderTOSLine(line))}
-        </div>
+        ${this.stage?.tosLines.map((line) => this.renderTOSLine(line))}
       </div>
       <div class="ack-wrapper">
         <label class="checkbox-wrapper">
@@ -62,15 +61,18 @@ export class TOSView extends MobxLitElement {
             @click=${handleTOSClick}
           >
           </md-checkbox>
-          I accept the Terms of Service
+          <div class="timestamp-wrapper">
+            <div>I accept the Terms of Service</div>
+            ${timestamp
+              ? html`<div class="ack">Accepted at ${convertUnifiedTimestampToDate(timestamp)}</div>`
+              : nothing}
+          </div>
         </label>
-        <div class="timestamp-wrapper">
-          ${timestamp
-            ? `Accepted at ${convertUnifiedTimestampToDate(timestamp)}`
-            : nothing}
-        </div>
       </div>
       <stage-footer .disabled=${!timestamp}>
+        ${this.stage.progress.showParticipantProgress ?
+          html`<progress-stage-completed></progress-stage-completed>`
+          : nothing}
       </stage-footer>
     `;
   }

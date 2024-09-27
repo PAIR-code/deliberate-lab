@@ -1,6 +1,7 @@
+import '../progress/progress_stage_completed';
+
 import './stage_description';
 import './stage_footer';
-
 import './election_reveal_view';
 import './survey_reveal_view';
 
@@ -42,7 +43,11 @@ export class RevealView extends MobxLitElement {
       <div class="reveal-wrapper">
         ${this.stage.stageIds.map(id => this.renderStage(id))}
       </div>
-      <stage-footer></stage-footer>
+      <stage-footer>
+        ${this.stage.progress.showParticipantProgress ?
+          html`<progress-stage-completed></progress-stage-completed>`
+          : nothing}
+      </stage-footer>
     `;
   }
 

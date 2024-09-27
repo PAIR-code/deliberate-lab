@@ -1,7 +1,9 @@
 import '../../pair-components/textarea';
 
+import '../progress/progress_stage_completed';
 import './stage_description';
 import './stage_footer';
+
 import '@material/web/radio/radio.js';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -23,13 +25,11 @@ import {
   SurveyStageConfig,
   SurveyStageParticipantAnswer,
   TextSurveyQuestion,
+  isMultipleChoiceImageQuestion
 } from '@deliberation-lab/utils';
-import {
-  LAS_ITEMS,
-  getLASItemImageURL
-} from '../../shared/games/lost_at_sea';
 
 import {core} from '../../core/core';
+import {FirebaseService} from '../../services/firebase.service';
 import {ParticipantService} from '../../services/participant.service';
 import {SurveyService} from '../../services/survey.service';
 
@@ -40,6 +40,7 @@ import {styles} from './survey_view.scss';
 export class SurveyView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly firebaseService = core.getService(FirebaseService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly surveyService = core.getService(SurveyService);
 
@@ -84,6 +85,9 @@ export class SurveyView extends MobxLitElement {
         .disabled=${!questionsComplete()}
         .onNextClick=${saveTextAnswers}
       >
+        ${this.stage.progress.showParticipantProgress ?
+          html`<progress-stage-completed></progress-stage-completed>`
+          : nothing}
       </stage-footer>
     `;
   }
@@ -167,7 +171,7 @@ export class SurveyView extends MobxLitElement {
   private renderMultipleChoiceQuestion(question: MultipleChoiceSurveyQuestion) {
     const questionWrapperClasses = classMap({
       'radio-question-wrapper': true,
-      'las': question.id.slice(0, 3) === 'las',
+      'image': isMultipleChoiceImageQuestion(question),
     });
 
     return html`
@@ -207,17 +211,20 @@ export class SurveyView extends MobxLitElement {
       );
     };
 
-    if (LAS_ITEMS[choice.id]) {
+    if (choice.imageId.length > 0) {
       const classes = classMap({
-        'las-question': true,
+        'image-question': true,
         'selected': this.isMultipleChoiceMatch(questionId, choice.id),
         'disabled': this.participantService.disableStage,
       });
 
+      const image = document.createElement('img');
+      this.firebaseService.setImage(image, choice.imageId);
+
       return html`
         <div class=${classes} @click=${handleMultipleChoiceClick}>
           <div class="img-wrapper">
-            <img src=${getLASItemImageURL(choice.id)} />
+            ${image}
           </div>
           <div class="radio-button">
             <md-radio

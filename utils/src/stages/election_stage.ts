@@ -5,6 +5,7 @@ import {
   BaseStagePublicData,
   StageGame,
   StageKind,
+  createStageProgressConfig,
   createStageTextConfig,
 } from './stage';
 
@@ -27,6 +28,7 @@ export interface ElectionStageConfig extends BaseStageConfig {
 
 export interface ElectionItem {
   id: string;
+  imageId: string; // or empty if no image provided
   text: string;
 }
 
@@ -71,8 +73,20 @@ export function createElectionStage(
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Election',
     descriptions: config.descriptions ?? createStageTextConfig(),
+    progress: config.progress ?? createStageProgressConfig({ waitForAllParticipants: true }),
     isParticipantElection: config.isParticipantElection ?? true,
     electionItems: config.electionItems ?? [],
+  };
+}
+
+/** Create election item. */
+export function createElectionItem(
+  config: Partial<ElectionItem> = {}
+): ElectionItem {
+  return {
+    id: config.id ?? generateId(),
+    imageId: config.imageId ?? '',
+    text: config.text ?? '',
   };
 }
 

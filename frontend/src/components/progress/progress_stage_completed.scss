@@ -1,0 +1,22 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include typescale.label-small;
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  user-select: none;
+}
+
+.participants-wrapper {
+  @include common.flex-row-align-center;
+  max-width: 200px;
+}
+
+.participant {
+  width: common.$spacing-large;
+
+  &:last-of-type {
+    width: max-content;
+  }
+}

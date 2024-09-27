@@ -3,6 +3,7 @@ import {
   BaseStageConfig,
   StageGame,
   StageKind,
+  createStageProgressConfig,
   createStageTextConfig,
 } from './stage';
 
@@ -35,6 +36,7 @@ export function createTransferStage(
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Transfer',
     descriptions: config.descriptions ?? createStageTextConfig({primaryText : defaultText}),
+    progress: config.progress ?? createStageProgressConfig(),
     enableTimeout: config.enableTimeout ?? false,
     timeoutSeconds: config.timeoutSeconds ?? 600, // 10 minutes
   };

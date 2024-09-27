@@ -3,8 +3,6 @@
 
 :host {
   @include common.flex-column;
-  border: 1px solid var(--md-sys-color-outline);
-  border-radius: common.$spacing-medium;
   gap: common.$spacing-xl;
   padding: common.$spacing-xxl;
 }

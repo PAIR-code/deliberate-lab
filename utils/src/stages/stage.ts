@@ -62,12 +62,19 @@ export interface BaseStageConfig {
   game: StageGame;
   name: string;
   descriptions: StageTextConfig;
+  progress: StageProgressConfig;
 }
 
 export interface StageTextConfig {
   primaryText: string; // shown at top of screen under header
   infoText: string; // for info popup
   helpText: string; // for help popup
+}
+
+export interface StageProgressConfig {
+  minParticipants: number; // min participants required for stage
+  waitForAllParticipants: boolean; // wait for all participants to reach stage
+  showParticipantProgress: boolean; // show participants who completed stage
 }
 
 export type StageConfig =
@@ -128,6 +135,17 @@ export function createStageTextConfig(
     primaryText: config.primaryText ?? '',
     infoText: config.infoText ?? '',
     helpText: config.helpText ?? '',
+  };
+}
+
+/** Create stage progress config. */
+export function createStageProgressConfig(
+  config: Partial<StageProgressConfig> = {}
+): StageProgressConfig {
+  return {
+    minParticipants: config.minParticipants ?? 0,
+    waitForAllParticipants: config.waitForAllParticipants ?? false,
+    showParticipantProgress: config.showParticipantProgress ?? true,
   };
 }
 

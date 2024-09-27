@@ -7,6 +7,7 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
+import {ExperimentService} from '../../services/experiment.service';
 import {RouterService} from '../../services/router.service';
 
 import {
@@ -26,6 +27,7 @@ export class Progress extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly cohortService = core.getService(CohortService);
+  private readonly experimentService = core.getService(ExperimentService);
   private readonly routerService = core.getService(RouterService);
 
   @property() showReadyAvatars = true;
@@ -33,6 +35,9 @@ export class Progress extends MobxLitElement {
 
   override render() {
     const stageId = this.routerService.activeRoute.params['stage'];
+    const stage = this.experimentService.getStage(stageId);
+    if (!stage) return nothing;
+
     const locked = this.cohortService.getLockedStageParticipants(stageId);
     const unlocked = this.cohortService.getUnlockedStageParticipants(stageId);
 
@@ -40,7 +45,7 @@ export class Progress extends MobxLitElement {
       <div class="status">
         <h2 class="secondary">
           <div class="chip secondary">Waiting on</div>
-          <div>${locked.length} participants</div>
+          <div>${Math.max(locked.length, stage.progress.minParticipants - unlocked.length)} participants</div>
         </h2>
         ${this.showWaitingAvatars ? this.renderParticipants(locked) : nothing}
       </div>
@@ -63,16 +68,17 @@ export class Progress extends MobxLitElement {
 
     return html`
       <pr-tooltip text=${tooltipText}>
-      <div class="participant">
-        <profile-avatar
-          .emoji=${participant.avatar}
-          .disabled=${isDisabled}
-        ></profile-avatar>
-        <div>
-          ${getParticipantName(participant)}
-          ${getParticipantPronouns(participant)}
+        <div class="participant">
+          <profile-avatar
+            .emoji=${participant.avatar}
+            .disabled=${isDisabled}
+          ></profile-avatar>
+          <div>
+            ${getParticipantName(participant)}
+            ${getParticipantPronouns(participant)}
+          </div>
         </div>
-      </div>
+      </pr-tooltip>
     `;
   }
 

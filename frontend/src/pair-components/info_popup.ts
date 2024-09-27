@@ -20,15 +20,12 @@ export class InfoPopupComponent extends LitElement {
 
   @property({type: Object}) handleClose: () => void = () => {};
   @property() popupText: string = "";
+  @property() showHelpIcon: boolean = false;
   @state() private showModal: boolean = false;
 
   private handleButtonClick() {
     this.showModal = true;
   }
-
-  private handleCloseClick() {
-    this.showModal = false;
-}
 
   private handleOutsideClick(e: MouseEvent) {
     if ((e.target as HTMLElement).classList.contains('modal')) {
@@ -37,13 +34,12 @@ export class InfoPopupComponent extends LitElement {
   }
 
   override render() {
+    const icon = this.showHelpIcon ? "help" : "info";
     return html`
-    <pr-icon-button color="secondary" variant="default" icon="info" @click=${this.handleButtonClick}>info</pr-icon-button>
-
+    <pr-icon-button variant="default" color="secondary" icon="${icon}" @click=${this.handleButtonClick}>${icon}</pr-icon-button>
     <div class="modal" style=${this.showModal ? 'display: block;' : 'display: none;'} @click=${this.handleOutsideClick}>
       <div class="modal-content">
-        <pr-icon-button color="neutral" class="close" variant="default" icon="close" @click=${this.handleCloseClick}></pr-icon-button>
-        ${unsafeHTML(convertMarkdownToHTML(this.popupText))}
+        <p>${this.popupText}</p>
       </div>
     </div>
     `;

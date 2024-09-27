@@ -3,6 +3,8 @@ import '../../pair-components/icon_button';
 import '../../pair-components/textarea';
 import '../../pair-components/tooltip';
 
+import '../progress/progress_chat_discussion_completed';
+import '../progress/progress_stage_completed';
 import './chat_message';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -12,7 +14,9 @@ import {customElement, property} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
+import {FirebaseService} from '../../services/firebase.service';
 import {ParticipantService} from '../../services/participant.service';
+import {RouterService} from '../../services/router.service';
 
 import {
   ChatDiscussion,
@@ -24,10 +28,6 @@ import {
   StageConfig,
   StageKind,
 } from '@deliberation-lab/utils';
-import {
-  LAS_ITEMS,
-  getLASItemImageURL
-} from '../../shared/games/lost_at_sea';
 import {styles} from './chat_interface.scss';
 
 /** Chat interface component */
@@ -36,8 +36,10 @@ export class ChatInterface extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly cohortService = core.getService(CohortService);
+  private readonly firebaseService = core.getService(FirebaseService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
+  private readonly routerService = core.getService(RouterService);
 
   @property() stage: ChatStageConfig|undefined = undefined;
   @property() value = '';
@@ -62,7 +64,7 @@ export class ChatInterface extends MobxLitElement {
   }
 
   private renderChatHistory(currentDiscussionId: string|null) {
-    const stageId = this.participantService.profile?.currentStageId ?? '';
+    const stageId = this.routerService.activeRoute.params['stage'];
     const stage = this.experimentService.getStage(stageId);
     if (!stage || stage.kind !== StageKind.CHAT) return nothing;
 
@@ -123,11 +125,18 @@ export class ChatInterface extends MobxLitElement {
     };
 
     const renderDiscussionItem = (item: DiscussionItem) => {
+      const renderImage = () => {
+        if (item.imageId.length === 0) return nothing;
+
+        const image = document.createElement('img');
+        this.firebaseService.setImage(image, item.imageId);
+
+        return html`<div class="img-wrapper">${image}</div>`;
+      };
+
       return html`
         <div class="discussion-item">
-          ${LAS_ITEMS[item.id] ?
-            html`<div class="img-wrapper"><img src=${getLASItemImageURL(item.id)} /></div>`
-            : nothing}
+          ${renderImage()}
           ${item.name}
         </div>
       `;
@@ -230,6 +239,16 @@ export class ChatInterface extends MobxLitElement {
       this.stage.id
     );
 
+    const renderProgress = () => {
+      if (currentDiscussionId) {
+        return html`
+          <progress-chat-discussion-completed .discussionId=${currentDiscussionId}>
+          </progress-chat-discussion-completed>
+        `;
+      }
+      return html`<progress-stage-completed></progress-stage-completed>`;
+    };
+
     return html`
       <div class="chat-content">
         ${this.cohortService.isChatLoading ?
@@ -239,6 +258,7 @@ export class ChatInterface extends MobxLitElement {
         <div class="input-row">${this.renderInput()}</div>
       </div>
       <stage-footer .showNextButton=${currentDiscussionId === null}>
+        ${renderProgress()}
         ${this.renderEndDiscussionButton(currentDiscussionId)}
       </stage-footer>
     `;

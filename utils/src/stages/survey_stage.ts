@@ -5,6 +5,7 @@ import {
   BaseStagePublicData,
   StageGame,
   StageKind,
+  createStageProgressConfig,
   createStageTextConfig,
 } from './stage';
 
@@ -54,6 +55,7 @@ export interface MultipleChoiceSurveyQuestion extends BaseSurveyQuestion {
 
 export interface MultipleChoiceItem {
   id: string;
+  imageId: string; // or empty if no image provided
   text: string;
 }
 
@@ -139,6 +141,7 @@ export function createSurveyStage(
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Survey',
     descriptions: config.descriptions ?? createStageTextConfig(),
+    progress: config.progress ?? createStageProgressConfig(),
     questions: config.questions ?? [],
   };
 }
@@ -184,6 +187,7 @@ export function createMultipleChoiceItem(
 ): MultipleChoiceItem {
   return {
     id: config.id ?? generateId(),
+    imageId: config.imageId ?? '',
     text: config.text ?? '',
   }
 }
@@ -223,4 +227,16 @@ export function createSurveyStagePublicData(
     kind: StageKind.SURVEY,
     participantAnswerMap: {},
   };
+}
+
+/** Returns true if any multiple choice options contain an image. */
+export function isMultipleChoiceImageQuestion(
+  question: MultipleChoiceSurveyQuestion
+) {
+  for (const option of question.options) {
+    if (option.imageId.length > 0) {
+      return true;
+    }
+  }
+  return false;
 }

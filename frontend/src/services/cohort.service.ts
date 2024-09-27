@@ -120,9 +120,74 @@ export class CohortService extends Service {
     );
   }
 
-  // If stage is waiting for participants, i.e., is is locked to at least
-  // one participant and no one has completed the stage yet
+  @computed get nonObsoleteParticipants() {
+    return this.getAllParticipants().filter(
+      p => !isObsoleteParticipant(p)
+    );
+  }
+
+  // Get participants who have completed/not completed the stage
+  // (excluding obsolete participants)
+  getParticipantsByCompletion(stageId: string) {
+    const completed: ParticipantProfile[] = [];
+    const notCompleted: ParticipantProfile[] = [];
+
+    this.getAllParticipants().forEach(participant => {
+      if (!isObsoleteParticipant(participant)) {
+        if (participant.timestamps.completedStages[stageId]) {
+          completed.push(participant);
+        } else {
+          notCompleted.push(participant);
+        }
+      }
+    });
+
+    return { completed, notCompleted };
+  }
+
+  // Get participants by chat discussion completion
+  // (excluding obsolete participants)
+  getParticipantsByChatDiscussionCompletion(
+    stageId: string, discussionId: string
+  ) {
+    const completed: ParticipantProfile[] = [];
+    const notCompleted: ParticipantProfile[] = [];
+
+    const stage = this.sp.experimentService.getStage(stageId);
+    if (!stage || stage.kind !== StageKind.CHAT) return { completed, notCompleted };
+
+    const stageData = this.stagePublicDataMap[stageId];
+    const discussionMap = stageData?.kind === StageKind.CHAT ?
+      stageData.discussionTimestampMap[discussionId] ?? {} : {};
+
+    this.getAllParticipants().forEach(participant => {
+      if (!isObsoleteParticipant(participant)) {
+        if (discussionMap[participant.publicId]) {
+          completed.push(participant);
+        } else {
+          notCompleted.push(participant);
+        }
+      }
+    });
+
+    return { completed, notCompleted };
+  }
+
+  // If stage is waiting for participants, e.g.,
+  // - minParticipants not reached
+  // - waitForParticipants is true, stage is locked to 1+ participant,
+  //   and no one has completed the stage yet
   isStageWaitingForParticipants(stageId: string) {
+    const stageConfig = this.sp.experimentService.getStage(stageId);
+    if (!stageConfig) return false;
+
+    // Check for min number of participants
+    const numUnlocked = this.getUnlockedStageParticipants(stageId).length;
+    if (stageConfig.progress.minParticipants > numUnlocked) return true;
+
+    // Otherwise, if waitForParticipants is true, check for locked participants
+    if (!stageConfig.progress.waitForAllParticipants) return false;
+
     const numLocked = this.getLockedStageParticipants(stageId).length;
     const numCompleted = this.getAllParticipants().filter(
       participant => participant.timestamps.completedStages[stageId]
@@ -139,14 +204,15 @@ export class CohortService extends Service {
 
   // Returns chat discussion ID (or null if none or finished with all chats)
   getChatDiscussionId(stageId: string): string|null {
-    const stageData = this.stagePublicDataMap[stageId];
-    if (!stageData || stageData.kind !== StageKind.CHAT) {
-      return null;
-    }
-
     const stageConfig = this.sp.experimentService.getStage(stageId);
     if (!stageConfig || stageConfig.kind !== StageKind.CHAT || stageConfig.discussions.length === 0) {
       return null;
+    }
+
+    const stageData = this.stagePublicDataMap[stageId];
+    // If no public stage data yet, return first discussion
+    if (!stageData || stageData.kind !== StageKind.CHAT) {
+      return stageConfig.discussions[0].id;
     }
 
     // Find latest chat with messages, then check if everyone

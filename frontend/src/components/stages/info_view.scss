@@ -5,6 +5,7 @@
   @include common.flex-column;
   gap: common.$spacing-large;
   height: 100%;
+  overflow: auto;
   width: 100%;
 }
 
@@ -21,4 +22,5 @@
   flex-grow: 1;
   gap: common.$spacing-xl;
   margin-bottom: common.$spacing-xl;
+  padding: common.$main-content-padding;
 }

@@ -187,34 +187,19 @@ export class ParticipantPreviewer extends MobxLitElement {
     }
 
     const isWaiting = this.cohortService.isStageWaitingForParticipants(stage.id);
+    if (isWaiting && !this.authService.isExperimenter) {
+      return html`<progress-stage-waiting></progress-stage-waiting>`;
+    }
+
     const answer = this.participantService.getStageAnswer(stage.id);
     switch (stage.kind) {
       case StageKind.TOS:
-        return html`
-          <div class="content">
-            <tos-view .stage=${stage}></tos-view>
-          </div>
-        `;
+        return html`<tos-view .stage=${stage}></tos-view>`;
       case StageKind.INFO:
-        return html`
-          <div class="content">
-            <info-view .stage=${stage}></info-view>
-          </div>
-        `;
+        return html`<info-view .stage=${stage}></info-view>`;
       case StageKind.PROFILE:
-        return html`
-          <div class="content">
-            <profile-editor></profile-editor>
-          </div>
-        `;
+        return html`<profile-editor .stage=${stage}></profile-editor>`;
       case StageKind.CHAT:
-        if (isWaiting) {
-          return html`
-            <div class="content">
-              <progress-stage-waiting></progress-stage-waiting>
-            </div>
-          `;
-        }
         return html`
           <div class="content chat">
             <chat-panel .stage=${stage}></chat-panel>
@@ -222,49 +207,19 @@ export class ParticipantPreviewer extends MobxLitElement {
           </div>
         `;
       case StageKind.ELECTION:
-        if (isWaiting) {
-          return html`
-            <div class="content">
-              <progress-stage-waiting></progress-stage-waiting>
-            </div>
-          `;
-        }
         return html`
-          <div class="content">
-            <election-view .stage=${stage} .answer=${answer}></election-view>
-          </div>
+          <election-view .stage=${stage} .answer=${answer}></election-view>
         `;
       case StageKind.PAYOUT:
-        return html`
-          <div class="content">
-            <payout-view .stage=${stage}></payout-view>
-          </div>
-        `;
+        return html`<payout-view .stage=${stage}></payout-view>`;
       case StageKind.REVEAL:
-        if (isWaiting) {
-          return html`
-            <div class="content">
-              <progress-stage-waiting></progress-stage-waiting>
-            </div>
-          `;
-        }
-        return html`
-          <div class="content">
-            <reveal-view .stage=${stage}></reveal-view>
-          </div>
-        `;
+        return html`<reveal-view .stage=${stage}></reveal-view>`;
       case StageKind.SURVEY:
         return html`
-          <div class="content">
-            <survey-view .stage=${stage} .answer=${answer}></survey-view>
-          </div>
+          <survey-view .stage=${stage} .answer=${answer}></survey-view>
         `;
       case StageKind.TRANSFER:
-        return html`
-          <div class="content">
-            <transfer-view .stage=${stage}></transfer-view>
-          </div>
-        `;
+        return html`<transfer-view .stage=${stage}></transfer-view>`;
       default:
         return html`<div class="content">Stage not found</div>`;
     }

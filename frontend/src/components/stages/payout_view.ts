@@ -1,3 +1,4 @@
+import '../progress/progress_stage_completed';
 import './stage_description';
 import './stage_footer';
 
@@ -64,8 +65,12 @@ export class PayoutView extends MobxLitElement {
     if (this.stage.game !== StageGame.LAS) {
       return html`
         <stage-description .stage=${this.stage}></stage-description>
-        <div>No payout view available at this time.</div>
-        <stage-footer></stage-footer>
+        <div class="stages-wrapper">No payout view available at this time.</div>
+        <stage-footer>
+          ${this.stage.progress.showParticipantProgress ?
+            html`<progress-stage-completed></progress-stage-completed>`
+            : nothing}
+        </stage-footer>
       `;
     }
 
@@ -95,7 +100,11 @@ export class PayoutView extends MobxLitElement {
           ${this.renderScoringItem(item2)}
         </div>
       </div>
-      <stage-footer></stage-footer>
+      <stage-footer>
+        ${this.stage.progress.showParticipantProgress ?
+          html`<progress-stage-completed></progress-stage-completed>`
+          : nothing}
+      </stage-footer>
     `;
   }
 
@@ -176,6 +185,7 @@ export class PayoutView extends MobxLitElement {
 
   private renderAnswerItem(item: AnswerItem) {
     const getName = (id: string) => {
+      if (id.length === 0) return '';
       return LAS_ITEMS[id].name;
     };
 

@@ -16,12 +16,20 @@ import {
     connectFunctionsEmulator,
     getFunctions
 } from 'firebase/functions';
+import {
+  connectStorageEmulator,
+  FirebaseStorage,
+  getDownloadURL,
+  getStorage,
+  ref
+} from "firebase/storage";
 import { makeObservable } from "mobx";
 
 import {
     FIREBASE_LOCAL_HOST_PORT_AUTH,
     FIREBASE_LOCAL_HOST_PORT_FIRESTORE,
-    FIREBASE_LOCAL_HOST_PORT_FUNCTIONS
+    FIREBASE_LOCAL_HOST_PORT_FUNCTIONS,
+    FIREBASE_LOCAL_HOST_PORT_STORAGE,
 } from '../shared/constants';
 import { FIREBASE_CONFIG } from '../../firebase_config';
 
@@ -39,6 +47,7 @@ export class FirebaseService extends Service {
     this.firestore = getFirestore(this.app);
     this.auth = getAuth(this.app);
     this.functions = getFunctions(this.app);
+    this.storage = getStorage(this.app);
 
     // Only register emulators if in dev mode
     if (process.env.NODE_ENV === 'development'){
@@ -55,13 +64,29 @@ export class FirebaseService extends Service {
   auth: Auth;
   functions: Functions;
   provider: GoogleAuthProvider;
+  storage: FirebaseStorage;
   unsubscribe: Unsubscribe[] = [];
+
+  setImage(imageElement: HTMLImageElement, imageId: string) {
+    const imageRef = ref(this.storage, `images/${imageId}`);
+    getDownloadURL(imageRef).then((url) => {
+      imageElement.setAttribute('src', url);
+    })
+    .catch((error) => {
+      // Handle any errors
+    });
+  }
 
   registerEmulators() {
     connectFirestoreEmulator(
       this.firestore,
       'localhost',
       FIREBASE_LOCAL_HOST_PORT_FIRESTORE
+    );
+    connectStorageEmulator(
+      this.storage,
+      'localhost',
+      FIREBASE_LOCAL_HOST_PORT_STORAGE
     );
     connectAuthEmulator(
       this.auth,

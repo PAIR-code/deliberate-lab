@@ -20,6 +20,8 @@ import {
   createSurveyStage,
   createTOSStage,
   createTransferStage,
+  LAS_WTL_STAGE_ID,
+  LAS_WTL_QUESTION_ID,
 } from '@deliberation-lab/utils';
 
 /** Constants and functions to create the Lost at Sea game. */
@@ -77,8 +79,6 @@ export function getLASStageConfigs(): StageConfig[] {
 export const LAS_SCENARIO_REMINDER =
   'Here is a reminder of the scenario:\n\nYou and three friends are on a yacht trip across the Atlantic. A fire breaks out, and the skipper and crew are lost. The yacht is sinking, and your location is unclear.\nYou have saved 10 items, a life raft, and a box of matches.\n\nEvaluate the relative importance of items in each presented pair by selecting the one you believe is most useful. You can earn £2 per correct answer if that question is drawn to determine your payoff.';
 
-export const LAS_IMAGE_URL_PREFIX = (process.env.URL_PREFIX ?? '') + 'assets/lost_at_sea/';
-
 interface LASItem {
   name: string;
   ranking: number;
@@ -101,10 +101,8 @@ export const LAS_ITEMS: Record<string, LASItem> = {
   'netting': { name: 'Mosquito netting', ranking: 14 },
 };
 
-export function getLASItemImageURL(itemId: string) {
-  const item = LAS_ITEMS[itemId];
-  if (!item) return undefined;
-  return `${LAS_IMAGE_URL_PREFIX}${itemId}.jpg`;
+export function getLASItemImageId(itemId: string) {
+  return `las/${itemId}.jpg`;
 }
 
 export const LAS_ITEM_MULTIPLE_CHOICE_QUESTION_TITLE =
@@ -176,8 +174,8 @@ export function createLASMultipleChoiceQuestion(
     kind: SurveyQuestionKind.MULTIPLE_CHOICE,
     questionTitle: LAS_ITEM_MULTIPLE_CHOICE_QUESTION_TITLE,
     options: [
-      { id: id1, text: LAS_ITEMS[id1]?.name ?? '' },
-      { id: id2, text: LAS_ITEMS[id2]?.name ?? '' },
+      { id: id1, imageId: getLASItemImageId(id1), text: LAS_ITEMS[id1]?.name ?? '' },
+      { id: id2, imageId: getLASItemImageId(id2), text: LAS_ITEMS[id2]?.name ?? '' },
     ],
     correctAnswerId: getCorrectLASAnswer(id1, id2),
   };
@@ -338,18 +336,22 @@ const LAS_PART_2_PERFORMANCE_ESTIMATION_SURVEY_STAGE = createSurveyStage({
       options: [
         {
           id: '1',
+          imageId: '',
           text: 'My score was the best',
         },
         {
           id: '2',
+          imageId: '',
           text: 'My score was the second best',
         },
         {
           id: '3',
+          imageId: '',
           text: 'My score was the third best',
         },
         {
           id: '4',
+          imageId: '',
           text: 'My score was the fourth best',
         },
       ],
@@ -385,8 +387,8 @@ const LAS_PART_2_GROUP_INSTRUCTIONS_STAGE = createInfoStage({
 const LAS_PART_2_CHAT_DISCUSSIONS = ITEMS_SET_1.map(itemSet =>
   createCompareChatDiscussion({
     items: [
-      { id: itemSet[0], name: LAS_ITEMS[itemSet[0]]?.name ?? '' },
-      { id: itemSet[1], name: LAS_ITEMS[itemSet[1]]?.name ?? '' },
+      { id: itemSet[0], imageId: getLASItemImageId(itemSet[0]), name: LAS_ITEMS[itemSet[0]]?.name ?? '' },
+      { id: itemSet[1], imageId: getLASItemImageId(itemSet[1]), name: LAS_ITEMS[itemSet[1]]?.name ?? '' },
     ]
   })
 );
@@ -395,6 +397,11 @@ const LAS_PART_2_CHAT_STAGE = createChatStage({
   game: StageGame.LAS,
   name: 'Group discussion',
   discussions: LAS_PART_2_CHAT_DISCUSSIONS,
+  progress: {
+    minParticipants: 4,
+    waitForAllParticipants: true,
+    showParticipantProgress: true,
+  }
 });
 
 // ****************************************************************************
@@ -435,18 +442,22 @@ const LAS_PART_2_UPDATED_PERFORMANCE_ESTIMATION_SURVEY_STAGE = createSurveyStage
       options: [
         {
           id: '1',
+          imageId: '',
           text: 'My score was the best',
         },
         {
           id: '2',
+          imageId: '',
           text: 'My score was the second best',
         },
         {
           id: '3',
+          imageId: '',
           text: 'My score was the third best',
         },
         {
           id: '4',
+          imageId: '',
           text: 'My score was the fourth best',
         },
       ],
@@ -480,8 +491,6 @@ const LAS_PART_2_ELECTION_INFO_STAGE = createInfoStage({
 // ****************************************************************************
 // Part 2 updated willingness to lead - survey stage
 // ****************************************************************************
-export const LAS_PART_2_WTL_ID = 'wtl';
-
 export const LAS_PART_2_WTL_DESCRIPTION_PRIMARY =
   'Please indicate your willingness to become the group leader';
 
@@ -489,7 +498,7 @@ export const LAS_PART_2_WTL_DESCRIPTION_INFO =
   'Your group must elect a leader whose role is to answer on behalf of the group the same types of questions you have just seen. In this scenario, the leader is the only one who chooses the most useful items for survival from pairs, and their answers determine the payment for each member of the group.';
 
 const LAS_PART_2_WTL_SURVEY_STAGE = createSurveyStage({
-  id: LAS_PART_2_WTL_ID,
+  id: LAS_WTL_STAGE_ID,
   game: StageGame.LAS,
   name: 'Willingness to lead survey',
   descriptions: createStageTextConfig({
@@ -498,6 +507,7 @@ const LAS_PART_2_WTL_SURVEY_STAGE = createSurveyStage({
   }),
   questions: [
     createScaleSurveyQuestion({
+      id: LAS_WTL_QUESTION_ID,
       questionTitle: 'How much would you like to become the group leader in Part 3?',
       upperText: 'Very much',
       lowerText: 'Not at all',

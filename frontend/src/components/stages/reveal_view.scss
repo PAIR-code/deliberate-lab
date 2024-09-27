@@ -4,10 +4,12 @@
 :host {
   @include common.flex-column;
   height: 100%;
+  overflow: auto;
 }
 
 .reveal-wrapper {
   @include common.flex-column;
   flex-grow: 1;
   gap: common.$spacing-xl;
+  padding: common.$main-content-padding;
 }

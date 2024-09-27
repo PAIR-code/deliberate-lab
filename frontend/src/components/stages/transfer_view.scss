@@ -11,3 +11,7 @@
   @include common.overlay;
   opacity: 0;
 }
+
+.transfer-wrapper {
+  padding: common.$main-content-padding;
+}

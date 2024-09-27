@@ -1,6 +1,6 @@
 import '../../pair-components/button';
 import '../../pair-components/icon_button';
-import '../../pair-components/tooltip';
+import '../../pair-components/info_popup';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -40,9 +40,7 @@ export class Header extends MobxLitElement {
       return nothing;
     }
     return html`
-      <pr-tooltip text=${this.stage.descriptions.infoText} position="BOTTOM_END">
-        <pr-icon color="neutral" icon="info"></pr-icon>
-      </pr-tooltip>
+      <info-popup .popupText=${this.stage.descriptions.infoText}></info-popup>
     `;
   }
 
@@ -51,9 +49,7 @@ export class Header extends MobxLitElement {
       return nothing;
     }
     return html`
-      <pr-tooltip text=${this.stage.descriptions.helpText} position="BOTTOM_END">
-        <pr-icon color="neutral" icon="help"></pr-icon>
-      </pr-tooltip>
+      <info-popup .showHelpIcon=${true} .popupText=${this.stage.descriptions.helpText}></info-popup>
     `;
   }
 }

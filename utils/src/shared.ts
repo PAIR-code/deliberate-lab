@@ -49,6 +49,20 @@ export enum Visibility {
 }
 
 // ************************************************************************* //
+// CONSTANTS                                                                 //
+// ************************************************************************* //
+
+/** Hardcoded willingness to lead stage ID for Lost at Sea game
+  * (needed for determining winner of participant rankings)
+  */
+export const LAS_WTL_STAGE_ID = 'wtl';
+
+/** Hardcoded willingness to lead question ID for Lost at Sea game
+  * (needed for determining winner of participant rankings)
+  */
+export const LAS_WTL_QUESTION_ID = 'wtl';
+
+// ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
 
