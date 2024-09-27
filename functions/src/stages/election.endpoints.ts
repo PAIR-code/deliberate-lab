@@ -9,6 +9,7 @@ import {
   getCondorcetElectionWinner,
   getRankingCandidatesFromWTL,
   LAS_WTL_STAGE_ID,
+  ElectionStrategy,
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
@@ -98,7 +99,9 @@ export const updateElectionStageParticipantAnswer = onCall(async (request) => {
       }
     }
 
-    publicStageData.currentWinner = getCondorcetElectionWinner(participantAnswerMap);
+    if (data.strategy === ElectionStrategy.CONDORCET) {
+      publicStageData.currentWinner = getCondorcetElectionWinner(participantAnswerMap);
+    }
     publicStageData.electionItems = data.electionItems;
     transaction.set(publicDocument, publicStageData);
   });

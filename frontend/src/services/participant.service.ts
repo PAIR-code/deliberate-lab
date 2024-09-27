@@ -47,6 +47,7 @@ import {
   isPendingParticipant,
   isParticipantEndedExperiment,
 } from '../shared/participant.utils';
+import { ElectionStrategy } from '@deliberation-lab/utils';
 
 interface ServiceProvider {
   cohortService: CohortService;
@@ -502,6 +503,7 @@ export class ParticipantService extends Service {
   /** Update participant's election stage answer. */
   async updateElectionStageParticipantAnswer(
     stageId: string, // election stage ID
+    strategy: ElectionStrategy,
     rankingList: string[], // list of rankings
     electionItems: ElectionItem[] | null
   ) {
@@ -514,6 +516,7 @@ export class ParticipantService extends Service {
           participantPublicId: this.profile.publicId,
           participantPrivateId: this.profile.privateId,
           stageId,
+          strategy,
           rankingList,
           electionItems: electionItems ?? [],
         }

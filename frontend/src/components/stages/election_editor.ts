@@ -7,6 +7,7 @@ import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {
   ElectionStageConfig,
+  ElectionStrategy,
   ElectionItem,
   createElectionItem,
   ParticipantElectionStage,
@@ -31,15 +32,16 @@ export class ElectionEditorComponent extends MobxLitElement {
   }
   private renderElectionSettings() {
     if (!this.stage) return;
-
+  
     const isParticipantElection = this.stage.electionType === 'participants';
-    const enableSelfVoting = (this.stage as ParticipantElectionStage)
-      .enableSelfVoting;
-
+    const enableSelfVoting = (this.stage as ParticipantElectionStage).enableSelfVoting;
+    const isElection = this.stage.strategy === ElectionStrategy.CONDORCET;
+    
+  
     const updateElection = () => {
       if (!this.stage) return;
       const newType = isParticipantElection ? 'items' : 'participants';
-      const updatedStage = {...this.stage, electionType: newType} as
+      const updatedStage = { ...this.stage, electionType: newType } as
         | ParticipantElectionStage
         | ItemElectionStage;
       if (newType === 'participants') {
@@ -47,7 +49,7 @@ export class ElectionEditorComponent extends MobxLitElement {
       }
       this.experimentEditor.updateStage(updatedStage);
     };
-
+  
     const toggleSelfVoting = () => {
       if (!this.stage) return;
       const updatedStage = {
@@ -56,10 +58,20 @@ export class ElectionEditorComponent extends MobxLitElement {
       } as ParticipantElectionStage;
       this.experimentEditor.updateStage(updatedStage);
     };
-
+  
+    const toggleElectionStrategy = () => {
+      if (!this.stage) return;
+      const newStrategy = isElection ? ElectionStrategy.NONE : ElectionStrategy.CONDORCET;
+      const updatedStage = {
+        ...this.stage,
+        strategy: newStrategy,
+      };
+      this.experimentEditor.updateStage(updatedStage);
+    };
+  
     return html`
       <div class="section">
-        <div class="title">Election Settings</div>
+        <div class="title">Ranking Settings</div>
         <div class="checkbox-wrapper">
           <md-checkbox
             touch-target="wrapper"
@@ -84,6 +96,19 @@ export class ElectionEditorComponent extends MobxLitElement {
               </div>
             `
           : ''}
+  
+        <!-- New checkbox for election strategy -->
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${isElection}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @click=${toggleElectionStrategy}
+          >
+          </md-checkbox>
+          <div>Conduct an election; compute a winner from the rankings</div>
+        </div>
+        
         ${isParticipantElection ? nothing : this.renderElectionItems()}
       </div>
     `;

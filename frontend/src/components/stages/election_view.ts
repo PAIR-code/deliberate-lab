@@ -185,6 +185,7 @@ export class ElectionView extends MobxLitElement {
       // Update ranking list
       this.participantService.updateElectionStageParticipantAnswer(
         this.stage.id,
+        this.stage.strategy,
         rankings,
         items
       );
@@ -262,6 +263,7 @@ export class ElectionView extends MobxLitElement {
         // Update ranking list
         this.participantService.updateElectionStageParticipantAnswer(
           this.stage.id,
+          this.stage.strategy,
           rankings,
           items
         );
@@ -295,6 +297,7 @@ export class ElectionView extends MobxLitElement {
 
       this.participantService.updateElectionStageParticipantAnswer(
         this.stage.id,
+        this.stage.strategy,
         [...rankings.slice(0, index), ...rankings.slice(index + 1)],
         items
       );
@@ -311,6 +314,7 @@ export class ElectionView extends MobxLitElement {
       ];
       this.participantService.updateElectionStageParticipantAnswer(
         this.stage.id,
+        this.stage.strategy,
         rankingList,
         items
       );
@@ -326,6 +330,7 @@ export class ElectionView extends MobxLitElement {
       ];
       this.participantService.updateElectionStageParticipantAnswer(
         this.stage.id,
+        this.stage.strategy,
         rankingList,
         items
       );

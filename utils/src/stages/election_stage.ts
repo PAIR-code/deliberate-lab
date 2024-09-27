@@ -74,6 +74,8 @@ export interface ElectionStageParticipantAnswer extends BaseStageParticipantAnsw
  */
 export interface ElectionStagePublicData extends BaseStagePublicData {
   kind: StageKind.ELECTION;
+  // Strategy
+  strategy: ElectionStrategy;
   // ID of current winner based on participant rankings
   currentWinner: string;
   // Maps from participant to participant's rankings (question ID to answer)
@@ -95,7 +97,7 @@ export function createElectionStage(
     name: config.name ?? 'Election',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig({ waitForAllParticipants: true }),
-    strategy: config.strategy ?? ElectionStrategy.NONE,
+    strategy: config.strategy ?? ElectionStrategy.CONDORCET,
   };
 
   config.electionType = config.electionType ?? ElectionType.PARTICIPANTS;
@@ -112,7 +114,6 @@ export function createElectionStage(
       enableSelfVoting: config.enableSelfVoting ?? false,
     } as ParticipantElectionStage; // Assert as ParticipantElectionStage
   } else {
-    console.log(config);
     throw new Error('Invalid electionType specified in the configuration.');
   }
 }
@@ -133,6 +134,7 @@ export function createElectionStagePublicData(
   return {
     id,
     kind: StageKind.ELECTION,
+    strategy: ElectionStrategy.NONE,
     currentWinner: '',
     participantAnswerMap: {},
     electionItems: [],

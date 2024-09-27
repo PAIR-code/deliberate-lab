@@ -64,6 +64,7 @@ export const ParticipantElectionStageConfigData = Type.Object(
 export const ElectionStageParticipantAnswerData = Type.Object(
   {
     id: Type.String({ minLength: 1 }),
+    strategy: Type.Union([Type.Literal(ElectionStrategy.NONE), Type.Literal(ElectionStrategy.CONDORCET)]),
     kind: Type.Literal(StageKind.ELECTION),
     rankingList: Type.Array(Type.String()),
     electionItems: Type.Array(ElectionItemData),
@@ -78,6 +79,7 @@ export const UpdateElectionStageParticipantAnswerData = Type.Object(
     participantPublicId: Type.String({ minLength: 1 }),
     participantPrivateId: Type.String({ minLength: 1}),
     stageId: Type.String({ minLength: 1 }),
+    strategy: Type.Union([Type.Literal(ElectionStrategy.NONE), Type.Literal(ElectionStrategy.CONDORCET)]),
     electionItems: Type.Array(ElectionItemData),
     rankingList: Type.Array(Type.String()),
   },
