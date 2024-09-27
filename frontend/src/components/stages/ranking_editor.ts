@@ -6,46 +6,46 @@ import '@material/web/checkbox/checkbox.js';
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {
-  ElectionStageConfig,
+  RankingStageConfig,
   ElectionStrategy,
-  ElectionItem,
-  createElectionItem,
-  ParticipantElectionStage,
-  ItemElectionStage,
+  RankingItem,
+  createRankingItem,
+  ParticipantRankingStage,
+  ItemRankingStage,
 } from '@deliberation-lab/utils';
-import {styles} from './election_editor.scss';
+import {styles} from './ranking_editor.scss';
 
-/** Editor for election stage. */
-@customElement('election-editor')
-export class ElectionEditorComponent extends MobxLitElement {
+/** Editor for ranking stage. */
+@customElement('ranking-editor')
+export class RankingEditorComponent extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
-  @property() stage: ElectionStageConfig | undefined = undefined;
+  @property() stage: RankingStageConfig | undefined = undefined;
 
   override render() {
     if (this.stage === undefined) {
       return nothing;
     }
-    return html` ${this.renderElectionSettings()} `;
+    return html` ${this.renderRankingSettings()} `;
   }
-  private renderElectionSettings() {
+  private renderRankingSettings() {
     if (!this.stage) return;
   
-    const isParticipantElection = this.stage.electionType === 'participants';
-    const enableSelfVoting = (this.stage as ParticipantElectionStage).enableSelfVoting;
+    const isParticipantRanking = this.stage.rankingType === 'participants';
+    const enableSelfVoting = (this.stage as ParticipantRankingStage).enableSelfVoting;
     const isElection = this.stage.strategy === ElectionStrategy.CONDORCET;
     
   
-    const updateElection = () => {
+    const updateRankingType = () => {
       if (!this.stage) return;
-      const newType = isParticipantElection ? 'items' : 'participants';
-      const updatedStage = { ...this.stage, electionType: newType } as
-        | ParticipantElectionStage
-        | ItemElectionStage;
+      const newType = isParticipantRanking ? 'items' : 'participants';
+      const updatedStage = { ...this.stage, rankingType: newType } as
+        | ParticipantRankingStage
+        | ItemRankingStage;
       if (newType === 'participants') {
-        (updatedStage as ParticipantElectionStage).enableSelfVoting = false; // Reset self-voting if switched to non-participant election
+        (updatedStage as ParticipantRankingStage).enableSelfVoting = false; // Reset self-voting if switched to non-participant election
       }
       this.experimentEditor.updateStage(updatedStage);
     };
@@ -55,7 +55,7 @@ export class ElectionEditorComponent extends MobxLitElement {
       const updatedStage = {
         ...this.stage,
         enableSelfVoting: !enableSelfVoting,
-      } as ParticipantElectionStage;
+      } as ParticipantRankingStage;
       this.experimentEditor.updateStage(updatedStage);
     };
   
@@ -75,14 +75,14 @@ export class ElectionEditorComponent extends MobxLitElement {
         <div class="checkbox-wrapper">
           <md-checkbox
             touch-target="wrapper"
-            ?checked=${isParticipantElection}
+            ?checked=${isParticipantRanking}
             ?disabled=${!this.experimentEditor.canEditStages}
-            @click=${updateElection}
+            @click=${updateRankingType}
           >
           </md-checkbox>
           <div>Ranking among participants (rather than items)</div>
         </div>
-        ${isParticipantElection
+        ${isParticipantRanking
           ? html`
               <div class="checkbox-wrapper indented">
                 <md-checkbox
@@ -109,56 +109,56 @@ export class ElectionEditorComponent extends MobxLitElement {
           <div>Conduct an election; compute a winner from the rankings</div>
         </div>
         
-        ${isParticipantElection ? nothing : this.renderElectionItems()}
+        ${isParticipantRanking ? nothing : this.renderRankingItems()}
       </div>
     `;
   }
 
-  private renderElectionItems() {
-    if (!this.stage || this.stage.electionType !== 'items') return nothing;
+  private renderRankingItems() {
+    if (!this.stage || this.stage.rankingType !== 'items') return nothing;
 
-    const itemsStage = this.stage as ItemElectionStage;
-    const electionItems: ElectionItem[] = itemsStage.electionItems || [];
+    const itemsStage = this.stage as ItemRankingStage;
+    const rankingItems: RankingItem[] = itemsStage.rankingItems || [];
 
     const addItem = () => {
       if (!this.stage) return;
-      const newItems: ElectionItem[] = [...electionItems, createElectionItem()];
+      const newItems: RankingItem[] = [...rankingItems, createRankingItem()];
       this.experimentEditor.updateStage({
         ...this.stage,
-        electionItems: newItems,
-      } as ItemElectionStage);
+        rankingItems: newItems,
+      } as ItemRankingStage);
     };
 
     const updateItem = (index: number, e: InputEvent) => {
       if (!this.stage) return;
       const text = (e.target as HTMLTextAreaElement).value;
-      const newItems: ElectionItem[] = [...electionItems];
+      const newItems: RankingItem[] = [...rankingItems];
       newItems[index].text = text;
       this.experimentEditor.updateStage({
         ...this.stage,
-        electionItems: newItems,
-      } as ItemElectionStage);
+        rankingItems: newItems,
+      } as ItemRankingStage);
     };
 
     const deleteItem = (index: number) => {
       if (!this.stage) return;
-      const newItems: ElectionItem[] = [
-        ...electionItems.slice(0, index),
-        ...electionItems.slice(index + 1),
+      const newItems: RankingItem[] = [
+        ...rankingItems.slice(0, index),
+        ...rankingItems.slice(index + 1),
       ];
       this.experimentEditor.updateStage({
         ...this.stage,
-        electionItems: newItems,
-      } as ItemElectionStage);
+        rankingItems: newItems,
+      } as ItemRankingStage);
     };
 
     return html`
-      <div class="election-items">
-        ${electionItems.map(
+      <div class="ranking-items">
+        ${rankingItems.map(
           (item, index) => html`
-            <div class="election-item">
+            <div class="ranking-item">
               <pr-textarea
-                placeholder="Add election item"
+                placeholder="Add item for ranking"
                 .value=${item.text}
                 ?disabled=${!this.experimentEditor.canEditStages}
                 @input=${(e: InputEvent) => updateItem(index, e)}
@@ -180,7 +180,7 @@ export class ElectionEditorComponent extends MobxLitElement {
           ?disabled=${!this.experimentEditor.canEditStages}
           @click=${addItem}
         >
-          Add Election Item
+          Add item to rank
         </pr-button>
       </div>
     `;
@@ -189,6 +189,6 @@ export class ElectionEditorComponent extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'election-editor': ElectionEditorComponent;
+    'ranking-editor': RankingEditorComponent;
   }
 }

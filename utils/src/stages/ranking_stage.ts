@@ -16,7 +16,7 @@ import {
 // ************************************************************************* //
 
 /**
- * ElectionStageConfig.
+ * RankingStageConfig.
  *
  * This is saved as a stage doc under experiments/{experimentId}/stages
  */
@@ -25,54 +25,54 @@ export enum ElectionStrategy {
   CONDORCET = 'condorcet', // Condorcet resolution.
 }
 
-export enum ElectionType {
+export enum RankingType {
   ITEMS = 'items', // Item ranking.
   PARTICIPANTS = 'participants', // Participant ranking.
 }
 
-export interface BaseElectionStage extends BaseStageConfig {
+export interface BaseRankingStage extends BaseStageConfig {
   kind: StageKind.ELECTION;
-  electionType: ElectionType;
+  rankingType: RankingType;
   strategy: ElectionStrategy;
 }
 
-export interface ParticipantElectionStage extends BaseElectionStage {
-  electionType: ElectionType.PARTICIPANTS;
+export interface ParticipantRankingStage extends BaseRankingStage {
+  rankingType: RankingType.PARTICIPANTS;
   enableSelfVoting: boolean; // Whether to allow voting for oneself.
 }
 
-export interface ElectionItem {
+export interface RankingItem {
   id: string;
   imageId: string; // or empty if no image provided
   text: string;
 }
 
-export interface ItemElectionStage extends BaseElectionStage {
-  electionType: ElectionType.ITEMS;
-  electionItems: ElectionItem[];
+export interface ItemRankingStage extends BaseRankingStage {
+  rankingType: RankingType.ITEMS;
+  rankingItems: RankingItem[];
 }
 
-export type ElectionStageConfig = ParticipantElectionStage | ItemElectionStage;
+export type RankingStageConfig = ParticipantRankingStage | ItemRankingStage;
 
 /**
- * ElectionStageParticipantAnswer.
+ * RankingStageParticipantAnswer.
  *
  * This is saved as a stage doc (with stage ID as doc ID) under
  * experiments/{experimentId}/participants/{participantPrivateId}/stageData
  */
-export interface ElectionStageParticipantAnswer extends BaseStageParticipantAnswer {
+export interface RankingStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.ELECTION;
-  // ordered answer list of either participant IDs or election item IDs
+  // ordered answer list of either participant IDs or ranking item IDs
   rankingList: string[];
 }
 
 /**
- * ElectionStagePublicData.
+ * RankingStagePublicData.
  *
  * This is saved as a stage doc (with stage ID as doc ID) under
  * experiments/{experimentId}/cohorts/{cohortId}/publicStageData
  */
-export interface ElectionStagePublicData extends BaseStagePublicData {
+export interface RankingStagePublicData extends BaseStagePublicData {
   kind: StageKind.ELECTION;
   // Strategy
   strategy: ElectionStrategy;
@@ -80,16 +80,16 @@ export interface ElectionStagePublicData extends BaseStagePublicData {
   currentWinner: string;
   // Maps from participant to participant's rankings (question ID to answer)
   participantAnswerMap: Record<string, string[]>;
-  electionItems: ElectionItem[];
+  rankingItems: RankingItem[];
 }
 
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
 
-export function createElectionStage(
-  config: Partial<ElectionStageConfig> = {},
-): ElectionStageConfig {
+export function createRankingStage(
+  config: Partial<RankingStageConfig> = {},
+): RankingStageConfig {
   const baseStageConfig = {
     id: config.id ?? generateId(),
     kind: StageKind.ELECTION,
@@ -100,26 +100,26 @@ export function createElectionStage(
     strategy: config.strategy ?? ElectionStrategy.CONDORCET,
   };
 
-  config.electionType = config.electionType ?? ElectionType.PARTICIPANTS;
-  if (config.electionType === ElectionType.ITEMS) {
+  config.rankingType = config.rankingType ?? RankingType.PARTICIPANTS;
+  if (config.rankingType === RankingType.ITEMS) {
     return {
       ...baseStageConfig,
-      electionType: ElectionType.ITEMS,
-      electionItems: config.electionItems ?? [],
-    } as ItemElectionStage; // Assert as ItemElectionStage
-  } else if (config.electionType === ElectionType.PARTICIPANTS) {
+      rankingType: RankingType.ITEMS,
+      rankingItems: config.rankingItems ?? [],
+    } as ItemRankingStage; // Assert as ItemRankingStage
+  } else if (config.rankingType === RankingType.PARTICIPANTS) {
     return {
       ...baseStageConfig,
-      electionType: ElectionType.PARTICIPANTS,
+      rankingType: RankingType.PARTICIPANTS,
       enableSelfVoting: config.enableSelfVoting ?? false,
-    } as ParticipantElectionStage; // Assert as ParticipantElectionStage
+    } as ParticipantRankingStage; // Assert as ParticipantRankingStage
   } else {
-    throw new Error('Invalid electionType specified in the configuration.');
+    throw new Error('Invalid rankingType specified in the configuration.');
   }
 }
 
-/** Create election item. */
-export function createElectionItem(config: Partial<ElectionItem> = {}): ElectionItem {
+/** Create item for ranking. */
+export function createRankingItem(config: Partial<RankingItem> = {}): RankingItem {
   return {
     id: config.id ?? generateId(),
     imageId: config.imageId ?? '',
@@ -127,16 +127,16 @@ export function createElectionItem(config: Partial<ElectionItem> = {}): Election
   };
 }
 
-/** Create election stage public data. */
-export function createElectionStagePublicData(
+/** Create ranking stage public data. */
+export function createRankingStagePublicData(
   id: string, // stage ID
-): ElectionStagePublicData {
+): RankingStagePublicData {
   return {
     id,
     kind: StageKind.ELECTION,
     strategy: ElectionStrategy.NONE,
     currentWinner: '',
     participantAnswerMap: {},
-    electionItems: [],
+    rankingItems: [],
   };
 }

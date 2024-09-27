@@ -7,7 +7,7 @@ import {
   SurveyQuestionKind,
   createChatStage,
   createCompareChatDiscussion,
-  createElectionStage,
+  createRankingStage,
   createExperimentConfig,
   createInfoStage,
   createPayoutStage,
@@ -523,7 +523,7 @@ export const LAS_PART_2_ELECTION_STAGE_ID = 'election';
 export const LAS_PART_2_ELECTION_DESCRIPTION_PRIMARY
   = `On this page, you will submit your vote for who should become the group leader. Below, you see a list of the other members of your group. Cast your vote by ranking the other group members according to who you would like to see lead your group.\n\n*Remember, you cannot affect your own chances of being elected. If you are one of the two candidates in the election, your vote doesn't count for the outcome of the election. Therefore, it is in your best interest to rank all group members based on who you would like to see lead the group.*`;
 
-export const LAS_PART_2_ELECTION_STAGE = createElectionStage({
+export const LAS_PART_2_ELECTION_STAGE = createRankingStage({
   id: LAS_PART_2_ELECTION_STAGE_ID,
   game: StageGame.LAS,
   name: 'Representative election',

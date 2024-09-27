@@ -1,6 +1,6 @@
 import { ElectionStrategy } from '@deliberation-lab/utils';
 import {
-  ElectionItemData,
+  RankingItemData,
   Experiment,
   MultipleChoiceSurveyQuestion,
   StageConfig,
@@ -9,7 +9,7 @@ import {
   SurveyQuestionKind,
   createChatStage,
   createCompareChatDiscussion,
-  createElectionStage,
+  createRankingStage,
   createExperimentConfig,
   createInfoStage,
   createPayoutStage,
@@ -20,7 +20,7 @@ import {
   createScaleSurveyQuestion,
   createStageTextConfig,
   createSurveyStage,
-  ElectionType,
+  RankingType,
   createTOSStage,
   createTransferStage,
 } from '@deliberation-lab/utils';
@@ -146,14 +146,14 @@ export const GCE_PART_1_RANKING_ID = 'item_ranking';
 
 export const RANKING_INSTRUCTIONS = 'Please rank the following gift card pairs, placing your most preferred at the top.'
 
-const GCE_PART_1_RANKING_STAGE = createElectionStage({
+const GCE_PART_1_RANKING_STAGE = createRankingStage({
   id: GCE_PART_1_RANKING_ID,
   game: StageGame.GCE,
   name: 'Initial item ranking',
   descriptions: createStageTextConfig({ infoText: RANKING_INSTRUCTIONS }),
   strategy: ElectionStrategy.NONE,
-  electionType: ElectionType.ITEMS,
-  electionItems: GIFT_CARDS,
+  rankingType: RankingType.ITEMS,
+  rankingItems: GIFT_CARDS,
 });
 
 

@@ -21,12 +21,12 @@
   gap: common.$spacing-medium;
 }
 
-.election-items {
+.ranking-items {
   @include common.flex-column;
   gap: common.$spacing-medium;
 }
 
-.election-item {
+.ranking-item {
   @include common.flex-row-align-center;
   justify-content: space-between;
   padding: common.$spacing-medium;

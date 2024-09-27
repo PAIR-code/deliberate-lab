@@ -4,7 +4,7 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
-import {ElectionStagePublicData, ElectionItem} from '@deliberation-lab/utils';
+import {RankingStagePublicData, RankingItem} from '@deliberation-lab/utils';
 import {
   getParticipantName,
   getParticipantPronouns,
@@ -14,19 +14,19 @@ import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
 
-import {styles} from './election_reveal_view.scss';
-import {ParticipantProfile, ElectionStrategy, ElectionStageConfig} from '@deliberation-lab/utils';
-import { ElectionType } from '@deliberation-lab/utils';
+import {styles} from './ranking_reveal_view.scss';
+import {ParticipantProfile, ElectionStrategy, RankingStageConfig} from '@deliberation-lab/utils';
+import { RankingType } from '@deliberation-lab/utils';
 
-/** Election reveal */
-@customElement('election-reveal-view')
-export class ElectionReveal extends MobxLitElement {
+/** Ranking reveal */
+@customElement('ranking-reveal-view')
+export class RankingReveal extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly cohortService = core.getService(CohortService);
   private readonly experimentService = core.getService(ExperimentService);
 
-  @property() publicData: ElectionStagePublicData | undefined = undefined;
+  @property() publicData: RankingStagePublicData | undefined = undefined;
 
   private renderParticipantWinner(leader: ParticipantProfile) {
     return html` <div class="reveal-wrapper">
@@ -42,7 +42,7 @@ export class ElectionReveal extends MobxLitElement {
     </div>`;
   }
 
-  private renderItemWinner(item: ElectionItem | undefined) {
+  private renderItemWinner(item: RankingItem | undefined) {
     if (!item) {
       return;
     }
@@ -60,24 +60,22 @@ export class ElectionReveal extends MobxLitElement {
       return html`<div class="reveal-wrapper">No election winner.</div>`;
     }
 
-    const isItemElection =
-      (this.experimentService.stageConfigMap[this.publicData.id] as ElectionStageConfig).electionType === ElectionType.ITEMS;
+    const isItemRanking =
+      (this.experimentService.stageConfigMap[this.publicData.id] as RankingStageConfig).rankingType === RankingType.ITEMS;
     const hasWinner =
-      (this.experimentService.stageConfigMap[this.publicData.id] as ElectionStageConfig).strategy === ElectionStrategy.CONDORCET;
+      (this.experimentService.stageConfigMap[this.publicData.id] as RankingStageConfig).strategy === ElectionStrategy.CONDORCET;
 
-    console.log(isItemElection);
-    console.log(hasWinner);
     // Display the winner.
     let winnerDisplayHTML;
     if (hasWinner) {
       const winner = this.publicData.currentWinner ?? '';
       // This is a participant election.
-      if (!isItemElection) {
+      if (!isItemRanking) {
         const leader = this.cohortService.participantMap[winner];
         winnerDisplayHTML = this.renderParticipantWinner(leader);
       } else {
         // This is an item election.
-        const winningItem = this.publicData.electionItems.find(
+        const winningItem = this.publicData.rankingItems.find(
           (item) => item.id === winner
         );
         winnerDisplayHTML = this.renderItemWinner(winningItem);
@@ -87,11 +85,11 @@ export class ElectionReveal extends MobxLitElement {
     // TODO: Optionally display how people voted.
     let resultsDisplayHTML;
 
-    if (isItemElection) {
-      const electionIdToText = new Map(
-        this.publicData.electionItems.map((item) => [item.id, item.text])
+    if (isItemRanking) {
+      const itemIdToText = new Map(
+        this.publicData.rankingItems.map((item) => [item.id, item.text])
       );
-      const maxOptions = this.publicData.electionItems.length;
+      const maxOptions = this.publicData.rankingItems.length;
       resultsDisplayHTML = html`
         Here is how people voted:
         <div class="participant-votes-table">
@@ -118,7 +116,7 @@ export class ElectionReveal extends MobxLitElement {
                     (participant) => {
                       const votedItems = this.publicData!.participantAnswerMap[
                         participant
-                      ].map((itemId) => electionIdToText.get(itemId)).filter(
+                      ].map((itemId) => itemIdToText.get(itemId)).filter(
                         (text) => text !== undefined
                       );
 
@@ -147,6 +145,6 @@ export class ElectionReveal extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'election-reveal-view': ElectionReveal;
+    'ranking-reveal-view': RankingReveal;
   }
 }

@@ -5,13 +5,13 @@ import {
   createChatStagePublicData,
 } from './chat_stage';
 import {
-  ItemElectionStage,
-  ParticipantElectionStage,
-  ElectionStageConfig,
-  ElectionStageParticipantAnswer,
-  ElectionStagePublicData,
-  createElectionStagePublicData,
-} from './election_stage';
+  ItemRankingStage,
+  ParticipantRankingStage,
+  RankingStageConfig,
+  RankingStageParticipantAnswer,
+  RankingStagePublicData,
+  createRankingStagePublicData,
+} from './ranking_stage';
 import { InfoStageConfig } from './info_stage';
 import { PayoutStageConfig } from './payout_stage';
 import { ProfileStageConfig } from './profile_stage';
@@ -81,8 +81,8 @@ export interface StageProgressConfig {
 
 export type StageConfig =
   | ChatStageConfig
-  | ItemElectionStage
-  | ParticipantElectionStage
+  | ItemRankingStage
+  | ParticipantRankingStage
   | InfoStageConfig
   | PayoutStageConfig
   | ProfileStageConfig
@@ -105,7 +105,7 @@ export interface BaseStageParticipantAnswer {
 
 export type StageParticipantAnswer =
  | ChatStageParticipantAnswer
- | ElectionStageParticipantAnswer
+ | RankingStageParticipantAnswer
  | SurveyStageParticipantAnswer;
 
 /**
@@ -123,7 +123,7 @@ export interface BaseStagePublicData {
 
 export type StagePublicData =
   | ChatStagePublicData
-  | ElectionStagePublicData
+  | RankingStagePublicData
   | SurveyStagePublicData;
 
 // ************************************************************************* //
@@ -166,7 +166,7 @@ export function createPublicDataFromStageConfigs(stages: StageConfig[]) {
         publicData.push(createChatStagePublicData(stage));
         break;
       case StageKind.ELECTION:
-        publicData.push(createElectionStagePublicData(stage.id));
+        publicData.push(createRankingStagePublicData(stage.id));
         break;
       case StageKind.SURVEY:
         publicData.push(createSurveyStagePublicData(stage.id));

@@ -11,7 +11,7 @@ export * from './participant.endpoints';
 export * from './stages/chat.endpoints';
 export * from './stages/chat.triggers';
 
-export * from './stages/election.endpoints';
+export * from './stages/ranking.endpoints';
 
 export * from './stages/survey.endpoints';
 

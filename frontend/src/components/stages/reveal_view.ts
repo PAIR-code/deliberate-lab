@@ -2,7 +2,7 @@ import '../progress/progress_stage_completed';
 
 import './stage_description';
 import './stage_footer';
-import './election_reveal_view';
+import './ranking_reveal_view';
 import './survey_reveal_view';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -60,8 +60,8 @@ export class RevealView extends MobxLitElement {
     switch(stage.kind) {
       case StageKind.ELECTION:
         return html`
-          <election-reveal-view .publicData=${publicData}>
-          </election-reveal-view>
+          <ranking-reveal-view .publicData=${publicData}>
+          </ranking-reveal-view>
         `;
       case StageKind.SURVEY:
         return html`

@@ -1,7 +1,7 @@
 import {
   ChatStageParticipantAnswer,
   CreateChatMessageData,
-  ElectionItem,
+  RankingItem,
   ParticipantChatMessage,
   ParticipantProfileExtended,
   ParticipantStatus,
@@ -37,7 +37,7 @@ import {
   updateParticipantCallable,
   updateChatStageParticipantAnswerCallable,
   updateSurveyStageParticipantAnswerCallable,
-  updateElectionStageParticipantAnswerCallable,
+  updateRankingStageParticipantAnswerCallable,
 } from '../shared/callables';
 import {PROLIFIC_COMPLETION_URL_PREFIX} from '../shared/constants';
 import {
@@ -500,16 +500,16 @@ export class ParticipantService extends Service {
     return response;
   }
 
-  /** Update participant's election stage answer. */
-  async updateElectionStageParticipantAnswer(
-    stageId: string, // election stage ID
+  /** Update participant's ranking stage answer. */
+  async updateRankingStageParticipantAnswer(
+    stageId: string, // ranking stage ID
     strategy: ElectionStrategy,
     rankingList: string[], // list of rankings
-    electionItems: ElectionItem[] | null
+    rankingItems: RankingItem[] | null
   ) {
     let response = {};
     if (this.experimentId && this.profile) {
-      response = await updateElectionStageParticipantAnswerCallable(
+      response = await updateRankingStageParticipantAnswerCallable(
         this.sp.firebaseService.functions, {
           experimentId: this.experimentId,
           cohortId: this.profile.currentCohortId,
@@ -518,7 +518,7 @@ export class ParticipantService extends Service {
           stageId,
           strategy,
           rankingList,
-          electionItems: electionItems ?? [],
+          rankingItems: rankingItems ?? [],
         }
       );
     }
