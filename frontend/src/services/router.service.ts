@@ -112,6 +112,12 @@ export class RouterService extends Service {
   getActiveRouteParams() {
     return this.activeRoute.params;
   }
+
+  getRoutePath(page: Pages) {
+    const routeItem = this.routes.find(item => item.name === page);
+    if (!routeItem) return;
+    return routeItem.path;
+  }
 }
 
 /**
