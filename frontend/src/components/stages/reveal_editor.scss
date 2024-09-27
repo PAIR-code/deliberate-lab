@@ -57,3 +57,8 @@
 .buttons {
   @include common.flex-row-align-center;
 }
+
+.checkbox-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+}

@@ -38,7 +38,7 @@ export enum StageKind {
   TOS = 'tos', // terms of service
   PROFILE = 'profile', // set profile
   CHAT = 'chat', // group chat
-  ELECTION = 'election',
+  RANKING = 'ranking',
   PAYOUT = 'payout',
   REVEAL = 'reveal',
   SURVEY = 'survey',
@@ -165,7 +165,7 @@ export function createPublicDataFromStageConfigs(stages: StageConfig[]) {
       case StageKind.CHAT:
         publicData.push(createChatStagePublicData(stage));
         break;
-      case StageKind.ELECTION:
+      case StageKind.RANKING:
         publicData.push(createRankingStagePublicData(stage.id));
         break;
       case StageKind.SURVEY:

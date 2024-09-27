@@ -88,7 +88,7 @@ export class SurveyReveal extends MobxLitElement {
 
     // If no elected leader specified, skip this column
     const leader = this.cohortService.stagePublicDataMap[LAS_PART_2_ELECTION_STAGE_ID];
-    if (!leader || leader.kind !== StageKind.ELECTION || leader.currentWinner === '') return nothing;
+    if (!leader || leader.kind !== StageKind.RANKING || leader.currentWinner === '') return nothing;
 
     // If no question provided, return column header
     if (!question) {
@@ -108,7 +108,7 @@ export class SurveyReveal extends MobxLitElement {
     const leaderAnswer = leaderAnswerMap[question.id] as MultipleChoiceSurveyAnswer;
 
     const answer = question.options.find(
-      option => option.id === leaderAnswer?.choiceId ?? ''
+      option => option.id === (leaderAnswer?.choiceId || '')
     );
 
     return html`
@@ -135,7 +135,7 @@ export class SurveyReveal extends MobxLitElement {
 
     const extraCells = maxOptions - question.options.length;
     const answer = question.options.find(
-      option => option.id === participantAnswer?.choiceId ?? ''
+      option => option.id === (participantAnswer?.choiceId || '')
     );
 
     return html`

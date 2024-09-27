@@ -58,7 +58,7 @@ export class RevealView extends MobxLitElement {
     if (!stage) return nothing;
 
     switch(stage.kind) {
-      case StageKind.ELECTION:
+      case StageKind.RANKING:
         return html`
           <ranking-reveal-view .publicData=${publicData}>
           </ranking-reveal-view>

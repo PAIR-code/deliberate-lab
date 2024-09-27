@@ -103,7 +103,7 @@ export class ExperimentBuilder extends MobxLitElement {
           <base-stage-editor .stage=${stage}></base-stage-editor>
           <chat-editor .stage=${stage}></chat-editor>
         `;
-      case StageKind.ELECTION:
+      case StageKind.RANKING:
         return html`
           <base-stage-editor .stage=${stage}></base-stage-editor>
           <ranking-editor .stage=${stage}></ranking-editor>

@@ -206,7 +206,7 @@ export class ParticipantPreviewer extends MobxLitElement {
             <chat-interface .stage=${stage}></chat-interface>
           </div>
         `;
-      case StageKind.ELECTION:
+      case StageKind.RANKING:
         return html`
           <ranking-view .stage=${stage} .answer=${answer}></ranking-view>
         `;

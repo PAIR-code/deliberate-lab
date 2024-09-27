@@ -28,7 +28,7 @@ export const RankingItemData = Type.Object(
 export const ItemRankingStageConfigData = Type.Object(
   {
     id: Type.String({ minLength: 1 }),
-    kind: Type.Literal(StageKind.ELECTION),
+    kind: Type.Literal(StageKind.RANKING),
     game: StageGameSchema,
     name: Type.String({ minLength: 1 }),
     descriptions: StageTextConfigSchema,
@@ -44,7 +44,7 @@ export const ItemRankingStageConfigData = Type.Object(
 export const ParticipantRankingStageConfigData = Type.Object(
   {
     id: Type.String({ minLength: 1 }),
-    kind: Type.Literal(StageKind.ELECTION),
+    kind: Type.Literal(StageKind.RANKING),
     game: StageGameSchema,
     name: Type.String({ minLength: 1 }),
     descriptions: StageTextConfigSchema,
@@ -65,7 +65,7 @@ export const RankingStageParticipantAnswerData = Type.Object(
   {
     id: Type.String({ minLength: 1 }),
     strategy: Type.Union([Type.Literal(ElectionStrategy.NONE), Type.Literal(ElectionStrategy.CONDORCET)]),
-    kind: Type.Literal(StageKind.ELECTION),
+    kind: Type.Literal(StageKind.RANKING),
     rankingList: Type.Array(Type.String()),
     rankingItems: Type.Array(RankingItemData),
   },

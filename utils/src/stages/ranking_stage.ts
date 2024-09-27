@@ -31,7 +31,7 @@ export enum RankingType {
 }
 
 export interface BaseRankingStage extends BaseStageConfig {
-  kind: StageKind.ELECTION;
+  kind: StageKind.RANKING;
   rankingType: RankingType;
   strategy: ElectionStrategy;
 }
@@ -61,7 +61,7 @@ export type RankingStageConfig = ParticipantRankingStage | ItemRankingStage;
  * experiments/{experimentId}/participants/{participantPrivateId}/stageData
  */
 export interface RankingStageParticipantAnswer extends BaseStageParticipantAnswer {
-  kind: StageKind.ELECTION;
+  kind: StageKind.RANKING;
   // ordered answer list of either participant IDs or ranking item IDs
   rankingList: string[];
 }
@@ -73,7 +73,7 @@ export interface RankingStageParticipantAnswer extends BaseStageParticipantAnswe
  * experiments/{experimentId}/cohorts/{cohortId}/publicStageData
  */
 export interface RankingStagePublicData extends BaseStagePublicData {
-  kind: StageKind.ELECTION;
+  kind: StageKind.RANKING;
   // Strategy
   strategy: ElectionStrategy;
   // ID of current winner based on participant rankings
@@ -92,7 +92,7 @@ export function createRankingStage(
 ): RankingStageConfig {
   const baseStageConfig = {
     id: config.id ?? generateId(),
-    kind: StageKind.ELECTION,
+    kind: StageKind.RANKING,
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Election',
     descriptions: config.descriptions ?? createStageTextConfig(),
@@ -133,7 +133,7 @@ export function createRankingStagePublicData(
 ): RankingStagePublicData {
   return {
     id,
-    kind: StageKind.ELECTION,
+    kind: StageKind.RANKING,
     strategy: ElectionStrategy.NONE,
     currentWinner: '',
     participantAnswerMap: {},

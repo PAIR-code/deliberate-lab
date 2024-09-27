@@ -44,7 +44,7 @@ export const updateRankingStageParticipantAnswer = onCall(async (request) => {
 
   const answer: RankingStageParticipantAnswer = {
     id: data.stageId,
-    kind: StageKind.ELECTION,
+    kind: StageKind.RANKING,
     rankingList: data.rankingList,
   };
 
