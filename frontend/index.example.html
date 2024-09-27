@@ -15,6 +15,35 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
     />
+    <% if (process.env.NODE_ENV === 'production') { %>
+    <script>
+      function addAnalyticsScript() {
+        // Create a new script element
+        var gaScript = document.createElement('script');
+
+        // Set the script source (replace with your actual gtag.js URL)
+        // TODO: Replace 'your-google-analytics-id' with real ID
+        gaScript.src = `https://www.googletagmanager.com/gtag/js?id='your-google-analytics-id'`;
+        gaScript.async = true;
+
+        // Create a script element for the config code
+        var configScript = document.createElement('script');
+
+        // TODO: Replace 'your-google-analytics-id' with real ID
+        configScript.textContent = `
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'your-google-analytics-id');
+        `;
+        // Append the scripts to the head of the document
+        document.head.appendChild(gaScript);
+        document.head.appendChild(configScript);
+      }
+      // Comment out if not tracking analytics
+      addAnalyticsScript();
+    </script>
+    <% } %>
     <style>
       body {
         margin: 0;
