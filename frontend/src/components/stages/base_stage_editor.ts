@@ -4,12 +4,15 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
+import '@material/web/checkbox/checkbox.js';
+
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
   StageConfig,
   StageKind,
+  StageProgressConfig,
 } from '@deliberation-lab/utils';
 
 import {styles} from './base_stage_editor.scss';
@@ -33,6 +36,9 @@ export class BaseStageEditorComponent extends MobxLitElement {
       ${this.renderPrimaryText()}
       ${this.renderInfoText()}
       ${this.renderHelpText()}
+      ${this.renderMinParticipants()}
+      ${this.renderWaitForAllParticipants()}
+      ${this.renderShowParticipantProgress()}
     `;
   }
 
@@ -120,6 +126,91 @@ export class BaseStageEditorComponent extends MobxLitElement {
         @input=${update}
       >
       </pr-textarea>
+    `;
+  }
+
+  private renderWaitForAllParticipants() {
+    if (!this.stage) return nothing;
+    const waitForAllParticipants = this.stage.progress.waitForAllParticipants;
+
+    const updateCheck = () => {
+      if (!this.stage) return;
+      const progress: StageProgressConfig = { ...this.stage.progress, waitForAllParticipants: !waitForAllParticipants };
+      this.experimentEditor.updateStage({ ...this.stage, progress });
+    };
+
+    return html`
+      <div class="config-item">
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${waitForAllParticipants}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @click=${updateCheck}
+          >
+          </md-checkbox>
+          <div>
+            Wait for all participants before starting stage
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderShowParticipantProgress() {
+    if (!this.stage) return nothing;
+    const showParticipantProgress = this.stage.progress.showParticipantProgress;
+
+    const updateCheck = () => {
+      if (!this.stage) return;
+      const progress: StageProgressConfig = { ...this.stage.progress, showParticipantProgress: !showParticipantProgress };
+      this.experimentEditor.updateStage({ ...this.stage, progress });
+    };
+
+    return html`
+      <div class="config-item">
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${showParticipantProgress}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @click=${updateCheck}
+          >
+          </md-checkbox>
+          <div>
+            Show participant progress (number of participants who have completed stage)
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderMinParticipants() {
+    const minParticipants = this.stage?.progress.minParticipants ?? 0;
+
+    const updateNum = (e: InputEvent) => {
+      if (!this.stage) return;
+      const minParticipants = Number((e.target as HTMLTextAreaElement).value);
+      const progress: StageProgressConfig = { ...this.stage.progress, minParticipants };
+      this.experimentEditor.updateStage({ ...this.stage, progress });
+    };
+
+    return html`
+      <div class="config-item">
+        <div class="number-input">
+          <label for="minParticipants">
+            Minimum number of participants
+          </label>
+          <input
+            type="number"
+            id="minParticipants"
+            name="minParticipants"
+            min="0"
+            .value=${minParticipants ?? 0}
+            @input=${updateNum}
+          />
+        </div>
+      </div>
     `;
   }
 }

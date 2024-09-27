@@ -10,3 +10,18 @@
 pr-textarea {
   width: 100%;
 }
+
+.checkbox-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+  overflow-wrap: break-word;
+
+  md-checkbox {
+    flex-shrink: 0;
+  }
+}
+
+.number-input {
+  @include common.number-input;
+  width: max-content;
+}
