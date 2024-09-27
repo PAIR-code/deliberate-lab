@@ -1,10 +1,12 @@
 import {
   Experiment,
   MultipleChoiceSurveyQuestion,
+  PayoutCurrency,
   StageConfig,
   StageGame,
   SurveyQuestion,
   SurveyQuestionKind,
+  choice,
   createChatStage,
   createCompareChatDiscussion,
   createRankingStage,
@@ -18,10 +20,12 @@ import {
   createRevealStage,
   createScaleSurveyQuestion,
   createStageTextConfig,
+  createSurveyPayoutItem,
   createSurveyRevealItem,
   createSurveyStage,
   createTOSStage,
   createTransferStage,
+  randint,
   LAS_WTL_STAGE_ID,
   RevealAudience,
   LAS_WTL_QUESTION_ID,
@@ -458,7 +462,10 @@ const LAS_PART_2_UPDATED_TASK_INFO_STAGE = createInfoStage({
 // ****************************************************************************
 // Part 2 Updated Task survey stage
 // ****************************************************************************
+export const LAS_PART_2_UPDATED_TASK_SURVEY_STAGE_ID = 'updated';
+
 export const LAS_PART_2_UPDATED_TASK_SURVEY_STAGE = createSurveyStage({
+  id: LAS_PART_2_UPDATED_TASK_SURVEY_STAGE_ID,
   game: StageGame.LAS,
   name: 'Updated survival task',
   descriptions: createStageTextConfig({infoText: LAS_SCENARIO_REMINDER}),
@@ -667,8 +674,50 @@ const LAS_PAYOUT_INFO_STAGE = createInfoStage({
 // ****************************************************************************
 // Payout stage
 // ****************************************************************************
+
+export function createLASPayoutItems() {
+  const part1 = createSurveyPayoutItem({
+    name: 'Part 1 payoff',
+    description: LAS_PAYMENT_PART_1_DESCRIPTION,
+    stageId: LAS_PART_1_SURVIVAL_SURVEY_STAGE_ID,
+    baseCurrencyAmount: 3,
+  });
+  const part1Question = choice(LAS_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
+  part1.questionMap[part1Question.id] = 2;
+
+  const part2Selected = randint(0, 1) === 1;
+
+  const part2 = createSurveyPayoutItem({
+    isActive: part2Selected,
+    name: 'Parts 2 and 3 payoff - Part 2 selected',
+    description: [LAS_PAYMENT_PARTS_2_AND_3_DESCRIPTION, LAS_PAYMENT_PART_2_DESCRIPTION].join('\n\n'),
+    stageId: LAS_PART_2_UPDATED_TASK_SURVEY_STAGE_ID,
+    baseCurrencyAmount: 6,
+  });
+  const part2Question = choice(LAS_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
+  part2.questionMap[part2Question.id] = 2;
+
+  const part3 = createSurveyPayoutItem({
+    isActive: !part2Selected,
+    name: 'Parts 2 and 3 payoff - Part 3 selected',
+    description: [LAS_PAYMENT_PARTS_2_AND_3_DESCRIPTION, LAS_PAYMENT_PART_3_DESCRIPTION].join('\n\n'),
+    stageId: LAS_PART_3_LEADER_TASK_SURVEY_ID,
+    baseCurrencyAmount: 6,
+    rankingStageId: LAS_PART_2_ELECTION_STAGE_ID,
+  });
+  const part3Question = choice(LAS_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
+  part3.questionMap[part3Question.id] = 2;
+
+  return [part1, part2, part3];
+}
+
 const LAS_PAYOUT_STAGE = createPayoutStage({
   game: StageGame.LAS,
+  currency: PayoutCurrency.GBP,
+  descriptions: createStageTextConfig({
+    infoText: LAS_PAYMENT_INSTRUCTIONS.join('\n'),
+  }),
+  payoutItems: createLASPayoutItems(),
 });
 
 // ****************************************************************************
