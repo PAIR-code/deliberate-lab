@@ -7,7 +7,7 @@ import {customElement, property} from 'lit/decorators.js';
 import {
   RankingStagePublicData,
   RankingItem,
-  RevealType,
+  RevealAudience,
 } from '@deliberation-lab/utils';
 import {
   getParticipantName,
@@ -107,7 +107,7 @@ export class RankingReveal extends MobxLitElement {
         this.experimentService.stageConfigMap[
           this.publicData.id
         ] as RankingStageConfig
-      ).revealType === RevealType.ALL_PARTICIPANTS;
+      ).revealAudience === RevealAudience.ALL_PARTICIPANTS;
   
   
     const headerText = showAllParticipants

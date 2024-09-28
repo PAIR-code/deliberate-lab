@@ -7,6 +7,7 @@ import {
   StageKind,
   createStageProgressConfig,
   createStageTextConfig,
+  RevealAudience,
 } from './stage';
 
 /** Survey stage types and functions. */
@@ -23,6 +24,8 @@ import {
 export interface SurveyStageConfig extends BaseStageConfig {
   kind: StageKind.SURVEY;
   questions: SurveyQuestion[];
+  revealAudience: RevealAudience;
+  revealScorableOnly: boolean;
 }
 
 export enum SurveyQuestionKind {
@@ -143,6 +146,8 @@ export function createSurveyStage(
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig(),
     questions: config.questions ?? [],
+    revealAudience: config.revealAudience ?? RevealAudience.CURRENT_PARTICIPANT,
+    revealScorableOnly: config.revealScorableOnly ?? false,
   };
 }
 

@@ -68,7 +68,7 @@ export interface BaseStageConfig {
 }
 
 // This property is put on stages where information may be revealed.
-export enum RevealType {
+export enum RevealAudience {
   CURRENT_PARTICIPANT = 'CURRENT', // Reveals answers for the current participant.
   ALL_PARTICIPANTS = 'ALL', // Reveals answers for all participants.
 }

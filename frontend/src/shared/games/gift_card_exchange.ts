@@ -23,7 +23,7 @@ import {
   RankingType,
   createTOSStage,
   createTransferStage,
-  RevealType,
+  RevealAudience,
 } from '@deliberation-lab/utils';
   
 /** Constants and functions to create the Gift Card Exchange game. */
@@ -155,7 +155,7 @@ const GCE_PART_1_RANKING_STAGE = createRankingStage({
   strategy: ElectionStrategy.NONE,
   rankingType: RankingType.ITEMS,
   rankingItems: GIFT_CARDS,
-  revealType: RevealType.ALL_PARTICIPANTS,
+  revealAudience: RevealAudience.ALL_PARTICIPANTS,
 });
 
 

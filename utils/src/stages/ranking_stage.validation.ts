@@ -3,10 +3,10 @@ import { StageKind } from './stage';
 import {
   StageGameSchema,
   StageProgressConfigSchema,
-  StageTextConfigSchema
+  StageTextConfigSchema,
 } from './stage.validation';
 import { RankingItem, ElectionStrategy, RankingType } from './ranking_stage';
-import { RevealType } from './stage';
+import { RevealAudience } from './stage';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = { additionalProperties: false } as const;
@@ -35,13 +35,18 @@ export const ItemRankingStageConfigData = Type.Object(
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,
     rankingType: Type.Literal(RankingType.ITEMS),
-    strategy: Type.Union([Type.Literal(ElectionStrategy.NONE), Type.Literal(ElectionStrategy.CONDORCET)]),
+    strategy: Type.Union([
+      Type.Literal(ElectionStrategy.NONE),
+      Type.Literal(ElectionStrategy.CONDORCET),
+    ]),
     rankingItems: Type.Array(RankingItemData),
-    revealType: Type.Union([Type.Literal(RevealType.CURRENT_PARTICIPANT), Type.Literal(RevealType.ALL_PARTICIPANTS)]),
+    revealAudience: Type.Union([
+      Type.Literal(RevealAudience.CURRENT_PARTICIPANT),
+      Type.Literal(RevealAudience.ALL_PARTICIPANTS),
+    ]),
   },
   strict,
 );
-
 
 export const ParticipantRankingStageConfigData = Type.Object(
   {
@@ -52,9 +57,15 @@ export const ParticipantRankingStageConfigData = Type.Object(
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,
     rankingType: Type.Literal(RankingType.PARTICIPANTS),
-    strategy: Type.Union([Type.Literal(ElectionStrategy.NONE), Type.Literal(ElectionStrategy.CONDORCET)]),
+    strategy: Type.Union([
+      Type.Literal(ElectionStrategy.NONE),
+      Type.Literal(ElectionStrategy.CONDORCET),
+    ]),
     enableSelfVoting: Type.Boolean(),
-    revealType: Type.Union([Type.Literal(RevealType.CURRENT_PARTICIPANT), Type.Literal(RevealType.ALL_PARTICIPANTS)]),
+    revealAudience: Type.Union([
+      Type.Literal(RevealAudience.CURRENT_PARTICIPANT),
+      Type.Literal(RevealAudience.ALL_PARTICIPANTS),
+    ]),
   },
   strict,
 );
@@ -67,7 +78,10 @@ export const ParticipantRankingStageConfigData = Type.Object(
 export const RankingStageParticipantAnswerData = Type.Object(
   {
     id: Type.String({ minLength: 1 }),
-    strategy: Type.Union([Type.Literal(ElectionStrategy.NONE), Type.Literal(ElectionStrategy.CONDORCET)]),
+    strategy: Type.Union([
+      Type.Literal(ElectionStrategy.NONE),
+      Type.Literal(ElectionStrategy.CONDORCET),
+    ]),
     kind: Type.Literal(StageKind.RANKING),
     rankingList: Type.Array(Type.String()),
     rankingItems: Type.Array(RankingItemData),
@@ -80,13 +94,18 @@ export const UpdateRankingStageParticipantAnswerData = Type.Object(
     experimentId: Type.String({ minLength: 1 }),
     cohortId: Type.String({ minLength: 1 }),
     participantPublicId: Type.String({ minLength: 1 }),
-    participantPrivateId: Type.String({ minLength: 1}),
+    participantPrivateId: Type.String({ minLength: 1 }),
     stageId: Type.String({ minLength: 1 }),
-    strategy: Type.Union([Type.Literal(ElectionStrategy.NONE), Type.Literal(ElectionStrategy.CONDORCET)]),
+    strategy: Type.Union([
+      Type.Literal(ElectionStrategy.NONE),
+      Type.Literal(ElectionStrategy.CONDORCET),
+    ]),
     rankingItems: Type.Array(RankingItemData),
     rankingList: Type.Array(Type.String()),
   },
   strict,
 );
 
-export type UpdateRankingStageParticipantAnswerData = Static<typeof UpdateRankingStageParticipantAnswerData>;
+export type UpdateRankingStageParticipantAnswerData = Static<
+  typeof UpdateRankingStageParticipantAnswerData
+>;

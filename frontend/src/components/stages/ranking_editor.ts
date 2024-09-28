@@ -12,7 +12,7 @@ import {
   createRankingItem,
   ParticipantRankingStage,
   ItemRankingStage,
-  RevealType,
+  RevealAudience,
 } from '@deliberation-lab/utils';
 import {styles} from './ranking_editor.scss';
 
@@ -117,21 +117,22 @@ export class RankingEditorComponent extends MobxLitElement {
       </div>
     `;
   }
+
   private renderRevealSettings() {
     if (!this.stage) return;
 
     const revealAllParticipants =
-      this.stage.revealType === RevealType.ALL_PARTICIPANTS;
+      this.stage.revealAudience === RevealAudience.ALL_PARTICIPANTS;
 
     const toggleRevealAllParticipants = () => {
       if (!this.stage) return;
 
       const newReveal = revealAllParticipants
-        ? RevealType.CURRENT_PARTICIPANT
-        : RevealType.ALL_PARTICIPANTS;
+        ? RevealAudience.CURRENT_PARTICIPANT
+        : RevealAudience.ALL_PARTICIPANTS;
       const updatedStage = {
         ...this.stage,
-        revealType: newReveal,
+        revealAudience: newReveal,
       };
 
       this.experimentEditor.updateStage(updatedStage);
