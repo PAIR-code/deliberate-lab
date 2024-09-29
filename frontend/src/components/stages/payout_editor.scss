@@ -1,0 +1,118 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-xxl;
+}
+
+.options-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.options-title {
+  @include typescale.label-small;
+  color: var(--md-sys-color-primary);
+}
+
+.options {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-medium;
+
+  &.col {
+    @include common.flex-column;
+  }
+}
+
+.option {
+  border-radius: common.$spacing-medium;
+  cursor: pointer;
+  padding: common.$spacing-small common.$spacing-medium;
+  width: max-content;
+
+  &.selected {
+    background: var(--md-sys-color-primary-container);
+    border: 1px solid var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary-container);
+  }
+}
+
+.menu-wrapper {
+  @include typescale.label-medium;
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+  max-height: 300px;
+  overflow: auto;
+}
+
+.menu-item {
+  @include common.nav-item;
+  @include common.flex-column;
+  align-items: start;
+  border-radius: common.$spacing-medium;
+  gap: common.$spacing-small;
+}
+
+.subtitle {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
+}
+
+.payout-item {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface);
+  border-radius: common.$spacing-medium;
+  gap: common.$spacing-xl;
+  padding: common.$spacing-large;
+}
+
+.base-editor {
+  @include common.flex-column;
+  gap: common.$spacing-xl;
+}
+
+.checkbox-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+
+  md-checkbox {
+    flex-shrink: 0;
+  }
+}
+
+.number-input {
+  @include common.number-input;
+}
+
+.payout-item-header {
+  @include common.flex-row;
+  flex-grow: 1;
+  gap: common.$spacing-medium;
+  justify-content: space-between;
+
+  .left {
+    @include common.flex-column;
+  }
+
+  .right {
+    @include common.flex-row;
+    gap: common.$spacing-small;
+  }
+}
+
+.survey-questions {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-large;
+}
+
+.survey-question {
+  @include common.info-card;
+  background: var(--md-sys-color-surface-variant);
+
+  .number-input {
+    margin-left: 56px;
+  }
+}

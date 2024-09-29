@@ -17,6 +17,7 @@ import {
   createChatStage,
   createRankingStage,
   createInfoStage,
+  createPayoutStage,
   createProfileStage,
   createRevealStage,
   createSurveyStage,
@@ -112,6 +113,7 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderChatCard()}
         ${this.renderRankingCard()}
         ${this.renderRevealCard()}
+        ${this.renderPayoutCard()}
       </div>
     `;
   }
@@ -251,6 +253,23 @@ export class StageBuilderDialog extends MobxLitElement {
         <div class="title">📋 Survey</div>
         <div>
           Conduct a survey with freeform, multiple choice, checkbox, and scale questions.
+        </div>
+      </div>
+    `;
+  }
+
+  private renderPayoutCard() {
+    const addStage = () => {
+      this.experimentEditor.addStage(createPayoutStage());
+      this.experimentEditor.toggleStageBuilderDialog();
+      this.experimentEditor.jumpToLastStage();
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">💰 Payout</div>
+        <div>
+          Display calculated experiment payouts.
         </div>
       </div>
     `;
