@@ -113,6 +113,7 @@
   background: var(--md-sys-color-surface-variant);
 
   .number-input {
-    margin-left: 56px;
+    /* width of checkbox plus gap */
+    margin-left: calc(48px + common.$spacing-medium);
   }
 }
