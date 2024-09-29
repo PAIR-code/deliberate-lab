@@ -12,11 +12,24 @@ import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
 import {
+  DefaultPayoutItem,
+  DefaultPayoutItemResult,
   MultipleChoiceSurveyAnswer,
+  MultipleChoiceSurveyQuestion,
+  PayoutCurrency,
+  PayoutItem,
+  PayoutItemType,
   PayoutStageConfig,
+  PayoutResultConfig,
+  PayoutItemResult,
   StageConfig,
   StageGame,
   StageKind,
+  SurveyPayoutItem,
+  SurveyPayoutItemResult,
+  SurveyPayoutQuestionResult,
+  SurveyQuestionKind,
+  calculatePayoutResult
 } from '@deliberation-lab/utils';
 import {
   LAS_ITEMS,
@@ -31,20 +44,6 @@ import {
 
 import {styles} from './payout_view.scss';
 
-export interface PayoutItem {
-  stageId: string;
-  currencyAmountPerQuestion: number;
-  fixedCurrencyAmount: number;
-}
-
-export interface AnswerItem {
-  item1: string;
-  item2: string;
-  answer: string;
-  userAnswer: string;
-  isLeader: boolean;
-}
-
 /** Payout stage view for participants. */
 // TODO: Generalize for all experiments, not just LAS game
 @customElement('payout-view')
@@ -58,47 +57,22 @@ export class PayoutView extends MobxLitElement {
   @property() stage: PayoutStageConfig | null = null;
 
   override render() {
-    if (!this.stage) {
+    if (!this.stage || !this.participantService.profile) {
       return nothing;
     }
 
-    if (this.stage.game !== StageGame.LAS) {
-      return html`
-        <stage-description .stage=${this.stage}></stage-description>
-        <div class="stages-wrapper">No payout view available at this time.</div>
-        <stage-footer>
-          ${this.stage.progress.showParticipantProgress ?
-            html`<progress-stage-completed></progress-stage-completed>`
-            : nothing}
-        </stage-footer>
-      `;
-    }
-
-    const item1: PayoutItem = {
-      stageId: LAS_PART_1_SURVIVAL_SURVEY_STAGE_ID,
-      currencyAmountPerQuestion: 2,
-      fixedCurrencyAmount: 3,
-    };
-
-    const item2: PayoutItem = {
-      stageId: LAS_PART_3_LEADER_TASK_SURVEY_ID,
-      currencyAmountPerQuestion: 2,
-      fixedCurrencyAmount: 6,
-    };
+    const resultConfig = calculatePayoutResult(
+      this.stage,
+      this.experimentService.stageConfigMap,
+      this.cohortService.stagePublicDataMap,
+      this.participantService.profile
+    );
 
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="stages-wrapper">
-        <div class="scoring-bundle">
-          <h2>Part 1 payoff</h2>
-          <div class="scoring-description">${LAS_PAYMENT_PART_1_DESCRIPTION}</div>
-          ${this.renderScoringItem(item1)}
-        </div>
-        <div class="scoring-bundle">
-          <h2>Parts 2 and 3 payoff</h2>
-          <div class="scoring-description">${LAS_PAYMENT_PARTS_2_AND_3_DESCRIPTION}</div>
-          ${this.renderScoringItem(item2)}
-        </div>
+        ${resultConfig.results.map(result => this.renderPayoutItemResult(result, resultConfig.currency))}
+        ${this.renderTotalPayout(resultConfig)}
       </div>
       <stage-footer>
         ${this.stage.progress.showParticipantProgress ?
@@ -108,97 +82,139 @@ export class PayoutView extends MobxLitElement {
     `;
   }
 
-  private renderScoringItem(item: PayoutItem) {
-    const stage = this.experimentService.getStage(item.stageId);
-    const renderFixedAmount = () => {
-      if (item.fixedCurrencyAmount === 0) {
-        return nothing;
+  private renderTotalPayout(resultConfig: PayoutResultConfig) {
+    let total = 0;
+    resultConfig.results.forEach(result => {
+      total += result.baseAmountEarned;
+      if (result.type === PayoutItemType.SURVEY) {
+        result.questionResults.forEach(question => {
+          total += question.amountEarned;
+        });
       }
-      return html`
-        <div class="chip secondary">
-          £${item.fixedCurrencyAmount}
-        </div>
-        fixed +
-      `;
-    }
-
-    const answerItem = this.getAnswerItem(item);
-    const multiplier = answerItem.userAnswer === answerItem.answer ? 1 : 0;
+    });
 
     return html`
+      <div class="scoring-bundle row">
+        <h2>Final payout</h2>
+        <div class="chip primary">
+          ${this.renderCurrency(total, resultConfig.currency)}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderCurrency(amount: number, currency: PayoutCurrency) {
+    switch (currency) {
+      case PayoutCurrency.EUR:
+        return `€${amount}`;
+      case PayoutCurrency.GBP:
+        return `£${amount}`;
+      case PayoutCurrency.USD:
+        return `$${amount}`;
+      default:
+        return `${amount}`;
+    }
+  }
+
+  private renderPayoutItemResult(
+    item: PayoutItemResult,
+    currency: PayoutCurrency
+  ) {
+    switch (item.type) {
+      case PayoutItemType.DEFAULT:
+        return this.renderDefaultPayoutItemResult(item, currency);
+      case PayoutItemType.SURVEY:
+        return this.renderSurveyPayoutItemResult(item, currency);
+      default:
+        return nothing;
+    }
+  }
+
+  private renderDefaultPayoutItemResult(
+    item: DefaultPayoutItemResult,
+    currency: PayoutCurrency
+  ) {
+    return html`
       <div class="scoring-item">
-        <h3>${stage.name}</h3>
-        ${item.stageId === LAS_PART_3_LEADER_TASK_SURVEY_ID ?
-          html`<div class="scoring-description">${LAS_PAYMENT_PART_3_DESCRIPTION}</div>` : nothing}
-        ${this.renderAnswerItem(answerItem)}
-        <div class="amount-wrapper">
-          ${renderFixedAmount()}
+        ${this.renderBaseAmountEarned(item, currency)}
+      </div>
+    `;
+  }
+
+  private renderBaseAmountEarned(
+    item: PayoutItemResult, currency: PayoutCurrency
+  ) {
+    return html`
+      <div class="scoring-item">
+        <h2>Payout for completing stage</h2>
+        <div class="row">
+          <div>Stage completed?</div>
           <div class="chip secondary">
-            £${item.currencyAmountPerQuestion}
+            ${item.completedStage ? 'yes' : 'no'}
           </div>
-          x ${multiplier} correct questions =
-          <div class="chip">
-            £${item.fixedCurrencyAmount +
-                item.currencyAmountPerQuestion * multiplier}
-            total
+        </div>
+        <div class="row">
+          <div>Payout earned:</div>
+          <div class="chip secondary">
+            ${this.renderCurrency(item.baseAmountEarned, currency)}
           </div>
         </div>
       </div>
     `;
   }
 
-  private getAnswerItem(item: PayoutItem): AnswerItem {
-    let item1 = '';
-    let item2 = '';
-    let answer = '';
-    let userAnswer = '';
-    let isLeader = item.stageId === LAS_PART_3_LEADER_TASK_SURVEY_ID;
-
-    const surveyAnswers = this.cohortService.stagePublicDataMap[item.stageId];
-    if (surveyAnswers && surveyAnswers.kind === StageKind.SURVEY) {
-      // Find public ID for participant whose answers will be used
-      let participantId = this.participantService.profile?.publicId ?? '';
-      if (isLeader) {
-        const leader = this.cohortService.stagePublicDataMap[LAS_PART_2_ELECTION_STAGE_ID];
-        if (leader && leader.kind === StageKind.RANKING && leader.currentWinner !== '') {
-          participantId = leader.currentWinner;
-        } else {
-          isLeader = false;
-        }
-      }
-
-      const userAnswerMap = surveyAnswers.participantAnswerMap[participantId];
-      if (!userAnswerMap || Object.values(userAnswerMap).length === 0) {
-         return { item1, item2, answer, userAnswer, isLeader };
-      }
-
-      const ans = Object.values(userAnswerMap)[0] as MultipleChoiceSurveyAnswer;
-      const segments = ans.id.split('-');
-      item1 = segments[1];
-      item2 = segments[2];
-      userAnswer = ans.choiceId;
-      answer = getCorrectLASAnswer(item1, item2);
-    }
-
-    return { item1, item2, answer, userAnswer, isLeader };
-  }
-
-  private renderAnswerItem(item: AnswerItem) {
-    const getName = (id: string) => {
-      if (id.length === 0) return '';
-      return LAS_ITEMS[id].name;
-    };
+  private renderSurveyPayoutItemResult(
+    item: SurveyPayoutItemResult,
+    currency: PayoutCurrency
+  ) {
+    let total = item.baseAmountEarned;
+    item.questionResults.forEach(result => {
+      total += result.amountEarned;
+    });
 
     return html`
-      <div class="answer-item">
-        <div class="primary">
-          ${getName(item.item1)} vs.
-          ${getName(item.item2)}
+      <div class="scoring-bundle">
+        <h2>${item.name}</h2>
+        <div class="scoring-description">${item.description}</div>
+        ${this.renderBaseAmountEarned(item, currency)}
+        ${item.questionResults.map(result => this.renderSurveyPayoutQuestionResult(result, item.rankingWinner, currency))}
+        <div class="scoring-item row">
+          <h2>Stage payout</h2>
+          <div class="chip primary">${this.renderCurrency(total, currency)}</div>
         </div>
-        <div class="result">Correct answer: ${getName(item.answer)}</div>
-        <div class="result">
-          Your ${item.isLeader ? "leader's " : ''}answer:
-          <span class="chip secondary">${getName(item.userAnswer)}</span>
+      </div>
+    `;
+  }
+
+  private renderSurveyPayoutQuestionResult(
+    result: SurveyPayoutQuestionResult,
+    rankingWinner: string|null,
+    currency: PayoutCurrency
+  ) {
+    const correctAnswer = result.question.options.find(option => option.id === result.question.correctAnswerId);
+    const participantAnswer = result.question.options.find(option => option.id === result.answerId);
+
+    return html`
+      <div class="scoring-item">
+        <div class="column">
+          <h2>${result.question.questionTitle}</h2>
+          <div class="primary">
+            ${result.question.options.map(option => option.text).join(', ')}
+          </div>
+          <div class="row">
+            <div>Correct answer:</div>
+            <div class="chip secondary">${correctAnswer?.text ?? ''}</div>
+          </div>
+          <div class="row">
+            <div>${rankingWinner !== null ? `Election winner's answer:` : 'Your answer:'}</div>
+            <div class="chip secondary">${participantAnswer?.text ?? ''}</div>
+          </div>
+        </div>
+        <div class="row">
+          <div>Payout earned:</div>
+          <div class="chip secondary">
+            ${this.renderCurrency(result.amountEarned, currency)}
+          </div>
         </div>
       </div>
     `;
