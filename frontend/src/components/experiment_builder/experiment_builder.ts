@@ -2,6 +2,7 @@ import '../stages/base_stage_editor';
 import '../stages/chat_editor';
 import '../stages/ranking_editor';
 import '../stages/info_editor';
+import '../stages/payout_editor';
 import '../stages/reveal_editor';
 import '../stages/survey_editor';
 import '../stages/survey_editor_menu';
@@ -93,6 +94,7 @@ export class ExperimentBuilder extends MobxLitElement {
       case StageKind.PAYOUT:
         return html`
           <base-stage-editor .stage=${stage}></base-stage-editor>
+          <payout-editor .stage=${stage}></payout-editor>
         `;
       case StageKind.PROFILE:
         return html`
