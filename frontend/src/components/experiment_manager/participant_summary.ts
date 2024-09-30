@@ -11,6 +11,7 @@ import {customElement, property} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
+import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
 import {Pages, RouterService} from '../../services/router.service';
@@ -38,6 +39,7 @@ import {styles} from './participant_summary.scss';
 export class ParticipantSummary extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly routerService = core.getService(RouterService);
@@ -195,6 +197,7 @@ export class ParticipantSummary extends MobxLitElement {
       );
       if (!isConfirmed) return;
 
+      this.analyticsService.trackButtonClick(ButtonClick.PARTICIPANT_BOOT);
       this.experimentManager.bootParticipant(this.participant);
     };
 
