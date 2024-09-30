@@ -2,6 +2,7 @@ import './pair-components/button';
 
 import './components/experiment_builder/experiment_builder';
 import './components/experiment_manager/experiment_manager';
+import './components/experimenter/experimenter_panel';
 import './components/gallery/home_gallery';
 import './components/header/header';
 import './components/login/login';
@@ -169,7 +170,7 @@ export class App extends MobxLitElement {
             <page-header></page-header>
             ${this.renderPageContent()}
           </div>
-          <sidenav-menu></sidenav-menu>
+          <experimenter-panel></experimenter-panel>
         </main>
       </div>
     `;
