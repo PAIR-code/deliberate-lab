@@ -68,6 +68,9 @@ export class ChatInterface extends MobxLitElement {
     const stage = this.experimentService.getStage(stageId);
     if (!stage || stage.kind !== StageKind.CHAT) return nothing;
 
+    // Non-discussion messages
+    const messages = this.cohortService.chatMap[stageId] ?? [];
+
     // If discussion threads, render each thread
     if (stage.discussions.length > 0) {
       let discussions = stage.discussions;
@@ -82,13 +85,13 @@ export class ChatInterface extends MobxLitElement {
           <div class="chat-history">
             ${discussions.map((discussion, index) =>
               this.renderChatDiscussionThread(stage, index))}
+            ${messages.map(this.renderChatMessage.bind(this))}
           </div>
         </div>
       `;
     }
 
     // Otherwise, render all messages in non-discussion chatMap
-    const messages = this.cohortService.chatMap[stageId];
     if (!messages) return nothing;
 
     return html`
