@@ -69,11 +69,13 @@ export class ExperimentBuilderNav extends MobxLitElement {
     });
 
     const handleMoveUp = (e: Event) => {
+      this.analyticsService.trackButtonClick(ButtonClick.STAGE_MOVE_UP);
       this.experimentEditor.moveStageUp(index);
       e.stopPropagation();
     };
 
     const handleMoveDown = (e: Event) => {
+      this.analyticsService.trackButtonClick(ButtonClick.STAGE_MOVE_DOWN);
       this.experimentEditor.moveStageDown(index);
       e.stopPropagation();
     };
