@@ -7,8 +7,9 @@ interface ServiceProvider {
 }
 
 export enum ButtonClick {
-  // COHORT_CREATE = 'click_cohort_add',
-  // COHORT_DELETE = 'click_cohort_delete',
+  COHORT_ADD = 'click_cohort_add',
+  COHORT_SAVE_EXISTING = 'click_cohort_save_edits',
+  COHORT_DELETE = 'click_cohort_delete',
   EXPERIMENT_DELETE = 'click_experiment_delete',
   EXPERIMENT_EDIT = 'click_experiment_edit',
   EXPERIMENT_FORK = 'click_experiment_fork',

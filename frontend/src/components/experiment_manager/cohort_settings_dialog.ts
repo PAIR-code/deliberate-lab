@@ -9,6 +9,7 @@ import {customElement, property} from 'lit/decorators.js';
 import '@material/web/checkbox/checkbox.js';
 
 import {core} from '../../core/core';
+import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 
 import {
@@ -23,6 +24,7 @@ import {styles} from './cohort_settings_dialog.scss';
 export class CohortSettingsDialog extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentManager = core.getService(ExperimentManager);
 
   override render() {
@@ -51,12 +53,16 @@ export class CohortSettingsDialog extends MobxLitElement {
           <pr-button
             color="error"
             variant="tonal"
-            @click=${() => { this.experimentManager.deleteCohort(this.experimentManager.cohortEditing!.id) }}
+            @click=${() => {
+              this.analyticsService.trackButtonClick(ButtonClick.COHORT_DELETE);
+              this.experimentManager.deleteCohort(this.experimentManager.cohortEditing!.id);
+            }}
           >
             Delete cohort
           </pr-button>
           <pr-button
             @click=${() => {
+              this.analyticsService.trackButtonClick(ButtonClick.COHORT_SAVE_EXISTING);
               this.experimentManager.writeCohort(
                 this.experimentManager.cohortEditing
               );

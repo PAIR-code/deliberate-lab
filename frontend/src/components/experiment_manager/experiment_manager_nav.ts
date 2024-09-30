@@ -10,6 +10,7 @@ import {customElement, property} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
+import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {AuthService} from '../../services/auth.service';
 import {HomeService} from '../../services/home.service';
 import {Pages, RouterService} from '../../services/router.service';
@@ -26,6 +27,7 @@ import {styles} from './experiment_manager_nav.scss';
 export class ExperimentManagerNav extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentManager = core.getService(ExperimentManager);
 
   override render() {
@@ -53,7 +55,10 @@ export class ExperimentManagerNav extends MobxLitElement {
             color="secondary"
             variant="tonal"
             ?loading=${this.experimentManager.isWritingCohort}
-            @click=${() => { this.experimentManager.writeCohort() }}
+            @click=${() => {
+              this.analyticsService.trackButtonClick(ButtonClick.COHORT_ADD);
+              this.experimentManager.writeCohort()
+            }}
           >
             Add cohort
           </pr-button>
