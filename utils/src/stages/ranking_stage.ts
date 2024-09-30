@@ -7,7 +7,6 @@ import {
   StageKind,
   createStageProgressConfig,
   createStageTextConfig,
-  RevealAudience,
 } from './stage';
 
 /** Election stage types and functions. */
@@ -35,7 +34,6 @@ export interface BaseRankingStage extends BaseStageConfig {
   kind: StageKind.RANKING;
   rankingType: RankingType;
   strategy: ElectionStrategy;
-  revealAudience: RevealAudience;
 }
 
 export interface ParticipantRankingStage extends BaseRankingStage {
@@ -96,11 +94,10 @@ export function createRankingStage(
     id: config.id ?? generateId(),
     kind: StageKind.RANKING,
     game: config.game ?? StageGame.NONE,
-    name: config.name ?? 'Election',
+    name: config.name ?? 'Ranking',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig({ waitForAllParticipants: true }),
-    strategy: config.strategy ?? ElectionStrategy.CONDORCET,
-    revealAudience: config.revealAudience ?? RevealAudience.CURRENT_PARTICIPANT,
+    strategy: config.strategy ?? ElectionStrategy.CONDORCET
   };
 
   config.rankingType = config.rankingType ?? RankingType.PARTICIPANTS;

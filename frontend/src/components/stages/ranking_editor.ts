@@ -12,7 +12,6 @@ import {
   createRankingItem,
   ParticipantRankingStage,
   ItemRankingStage,
-  RevealAudience,
 } from '@deliberation-lab/utils';
 import {styles} from './ranking_editor.scss';
 
@@ -29,7 +28,7 @@ export class RankingEditorComponent extends MobxLitElement {
     if (this.stage === undefined) {
       return nothing;
     }
-    return html` ${this.renderRankingSettings()} ${this.renderRevealSettings()}`;
+    return html` ${this.renderRankingSettings()} `;
   }
 
   private renderRankingSettings() {
@@ -114,46 +113,6 @@ export class RankingEditorComponent extends MobxLitElement {
         </div>
 
         ${isParticipantRanking ? nothing : this.renderRankingItems()}
-      </div>
-    `;
-  }
-
-  private renderRevealSettings() {
-    if (!this.stage) return;
-
-    const revealAllParticipants =
-      this.stage.revealAudience === RevealAudience.ALL_PARTICIPANTS;
-
-    const toggleRevealAllParticipants = () => {
-      if (!this.stage) return;
-
-      const newReveal = revealAllParticipants
-        ? RevealAudience.CURRENT_PARTICIPANT
-        : RevealAudience.ALL_PARTICIPANTS;
-      const updatedStage = {
-        ...this.stage,
-        revealAudience: newReveal,
-      };
-
-      this.experimentEditor.updateStage(updatedStage);
-    };
- 
-    return html`
-      <div class="section">
-        <div class="title">Reveal Settings</div>
-        <div class="checkbox-wrapper">
-          <md-checkbox
-            touch-target="wrapper"
-            ?checked=${revealAllParticipants}
-            ?disabled=${!this.experimentEditor.canEditStages}
-            @click=${toggleRevealAllParticipants}
-          >
-          </md-checkbox>
-          <div>
-            Reveal selections from this stage by all participants within the
-            cohort in subsequent reveal stages
-          </div>
-        </div>
       </div>
     `;
   }

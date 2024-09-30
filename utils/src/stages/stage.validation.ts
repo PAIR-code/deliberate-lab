@@ -1,7 +1,7 @@
 import { Type } from '@sinclair/typebox';
 import { StageGame } from './stage';
 import { ChatStageConfigData } from './chat_stage.validation';
-import { ParticipantRankingStageConfigData, ItemRankingStageConfigData } from './ranking_stage.validation';
+import { RankingStageConfigData } from './ranking_stage.validation';
 import { InfoStageConfigData } from './info_stage.validation';
 import { PayoutStageConfigData } from './payout_stage.validation';
 import { ProfileStageConfigData } from './profile_stage.validation';
@@ -17,11 +17,10 @@ import { TOSStageConfigData } from './tos_stage.validation';
 /** StageConfig input validation. */
 export const StageConfigData = Type.Union([
   ChatStageConfigData,
-  ItemRankingStageConfigData,
-  ParticipantRankingStageConfigData,
   InfoStageConfigData,
   PayoutStageConfigData,
   ProfileStageConfigData,
+  RankingStageConfigData,
   RevealStageConfigData,
   SurveyStageConfigData,
   TOSStageConfigData,

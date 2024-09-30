@@ -5,8 +5,6 @@ import {
   createChatStagePublicData,
 } from './chat_stage';
 import {
-  ItemRankingStage,
-  ParticipantRankingStage,
   RankingStageConfig,
   RankingStageParticipantAnswer,
   RankingStagePublicData,
@@ -67,12 +65,6 @@ export interface BaseStageConfig {
   progress: StageProgressConfig;
 }
 
-// This property is put on stages where information may be revealed.
-export enum RevealAudience {
-  CURRENT_PARTICIPANT = 'CURRENT', // Reveals answers for the current participant.
-  ALL_PARTICIPANTS = 'ALL', // Reveals answers for all participants.
-}
-
 export interface StageTextConfig {
   primaryText: string; // shown at top of screen under header
   infoText: string; // for info popup
@@ -87,8 +79,7 @@ export interface StageProgressConfig {
 
 export type StageConfig =
   | ChatStageConfig
-  | ItemRankingStage
-  | ParticipantRankingStage
+  | RankingStageConfig
   | InfoStageConfig
   | PayoutStageConfig
   | ProfileStageConfig

@@ -11,7 +11,6 @@ import {
   CheckSurveyQuestion,
   MultipleChoiceItem,
   MultipleChoiceSurveyQuestion,
-  RevealAudience,
   ScaleSurveyQuestion,
   SurveyStageConfig,
   SurveyQuestion,
@@ -32,79 +31,12 @@ export class SurveyEditor extends MobxLitElement {
 
   @property() stage: SurveyStageConfig | undefined = undefined;
 
-  private renderRevealSettings() {
-    if (!this.stage) return;
-
-    const revealAllParticipants =
-      this.stage.revealAudience === RevealAudience.ALL_PARTICIPANTS;
-    const revealScorableOnly = this.stage.revealScorableOnly;
-
-    const toggleRevealAllParticipants = () => {
-      if (!this.stage) return;
-
-      const newReveal = revealAllParticipants
-        ? RevealAudience.CURRENT_PARTICIPANT
-        : RevealAudience.ALL_PARTICIPANTS;
-      const updatedStage = {
-        ...this.stage,
-        revealAudience: newReveal,
-      };
-
-      this.experimentEditor.updateStage(updatedStage);
-    };
-
-    const toggleRevealScorableOnly = () => {
-      if (!this.stage) return;
-
-      const updatedStage = {
-        ...this.stage,
-        revealScorableOnly: !revealScorableOnly,
-      };
-
-      this.experimentEditor.updateStage(updatedStage);
-    };
-
-    return html`
-      <div class="section">
-        <div class="title">Reveal Settings</div>
-        <div class="checkbox-wrapper">
-          <md-checkbox
-            touch-target="wrapper"
-            ?checked=${revealAllParticipants}
-            ?disabled=${!this.experimentEditor.canEditStages}
-            @click=${toggleRevealAllParticipants}
-          >
-          </md-checkbox>
-          <div>
-            Reveal selections from this stage by all participants within the
-            cohort in subsequent reveal stages
-          </div>
-        </div>
-
-        <div class="checkbox-wrapper">
-          <md-checkbox
-            touch-target="wrapper"
-            ?checked=${revealScorableOnly}
-            ?disabled=${!this.experimentEditor.canEditStages}
-            @click=${toggleRevealScorableOnly}
-          >
-          </md-checkbox>
-          <div>
-            Reveal only scorable questions (questiosn with correct answers) in
-            subsequent reveal stages
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
   override render() {
     if (this.stage === undefined) {
       return nothing;
     }
 
     return html`
-      ${this.renderRevealSettings()}
       <div class="section">
         <div class="title">Survey questions</div>
         ${this.stage.questions.map((question, index) =>

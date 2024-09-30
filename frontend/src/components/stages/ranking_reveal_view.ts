@@ -7,6 +7,7 @@ import {customElement, property} from 'lit/decorators.js';
 import {
   RankingStagePublicData,
   RankingItem,
+  RankingRevealItem,
   RevealAudience,
 } from '@deliberation-lab/utils';
 import {
@@ -36,20 +37,23 @@ export class RankingReveal extends MobxLitElement {
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
 
+  @property() item: RankingRevealItem | undefined = undefined;
   @property() publicData: RankingStagePublicData | undefined = undefined;
 
   private renderParticipantWinner(leader: ParticipantProfile) {
-    return html` <div class="reveal-wrapper">
-      <h3>The winner of the election is:</h3>
-      <div class="reveal">
-        <profile-avatar .emoji=${leader.avatar} .square=${true}>
-        </profile-avatar>
-        <div class="info">
-          <div class="title">${getParticipantName(leader)}</div>
-          <div class="subtitle">${getParticipantPronouns(leader)}</div>
+    return html`
+      <div class="reveal-wrapper">
+        <h3>The winner of the election is:</h3>
+        <div class="reveal">
+          <profile-avatar .emoji=${leader.avatar} .square=${true}>
+          </profile-avatar>
+          <div class="info">
+            <div class="title">${getParticipantName(leader)}</div>
+            <div class="subtitle">${getParticipantPronouns(leader)}</div>
+          </div>
         </div>
       </div>
-    </div>`;
+    `;
   }
 
   private renderItemWinner(item: RankingItem | undefined) {
@@ -100,14 +104,9 @@ export class RankingReveal extends MobxLitElement {
   }
 
   private renderResultsTable() {
-    if (!this.publicData) return;
+    if (!this.publicData || !this.item) return;
   
-    const showAllParticipants =
-      (
-        this.experimentService.stageConfigMap[
-          this.publicData.id
-        ] as RankingStageConfig
-      ).revealAudience === RevealAudience.ALL_PARTICIPANTS;
+    const showAllParticipants = this.item.revealAudience === RevealAudience.ALL_PARTICIPANTS;
   
   
     const headerText = showAllParticipants

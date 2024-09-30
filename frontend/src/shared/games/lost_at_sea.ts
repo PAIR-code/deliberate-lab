@@ -14,9 +14,11 @@ import {
   createProfileStage,
   createMetadataConfig,
   createMultipleChoiceSurveyQuestion,
+  createRankingRevealItem,
   createRevealStage,
   createScaleSurveyQuestion,
   createStageTextConfig,
+  createSurveyRevealItem,
   createSurveyStage,
   createTOSStage,
   createTransferStage,
@@ -600,9 +602,7 @@ export const LAS_PART_3_LEADER_TASK_SURVEY_STAGE = createSurveyStage({
   descriptions: createStageTextConfig({infoText: LAS_SCENARIO_REMINDER}),
   questions: createLASSurvivalSurvey(
     LAS_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS
-  ),
-  revealAudience: RevealAudience.ALL_PARTICIPANTS,
-  revealScorableOnly: true,
+  )
 });
 
 // ****************************************************************************
@@ -620,7 +620,16 @@ export const LAS_PART_3_REVEAL_STAGE = createRevealStage({
     infoText: LAS_PART_3_REVEAL_DESCRIPTION_INFO,
     primaryText: LAS_PART_3_REVEAL_DESCRIPTION_PRIMARY,
   }),
-  stageIds: [LAS_PART_2_ELECTION_STAGE_ID, LAS_PART_3_LEADER_TASK_SURVEY_ID],
+  items: [
+    createRankingRevealItem({
+      id: LAS_PART_2_ELECTION_STAGE_ID,
+    }),
+    createSurveyRevealItem({
+      id: LAS_PART_3_LEADER_TASK_SURVEY_ID,
+      revealAudience: RevealAudience.ALL_PARTICIPANTS,
+      revealScorableOnly: true,
+    }),
+  ],
 });
 
 // ****************************************************************************

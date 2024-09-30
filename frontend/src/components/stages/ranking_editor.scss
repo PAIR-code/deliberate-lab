@@ -21,6 +21,10 @@
   gap: common.$spacing-medium;
 }
 
+md-checkbox {
+  flex-shrink: 0;
+}
+
 .ranking-items {
   @include common.flex-column;
   gap: common.$spacing-medium;

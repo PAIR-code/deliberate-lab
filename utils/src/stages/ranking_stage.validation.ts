@@ -6,7 +6,6 @@ import {
   StageTextConfigSchema,
 } from './stage.validation';
 import { RankingItem, ElectionStrategy, RankingType } from './ranking_stage';
-import { RevealAudience } from './stage';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = { additionalProperties: false } as const;
@@ -40,10 +39,6 @@ export const ItemRankingStageConfigData = Type.Object(
       Type.Literal(ElectionStrategy.CONDORCET),
     ]),
     rankingItems: Type.Array(RankingItemData),
-    revealAudience: Type.Union([
-      Type.Literal(RevealAudience.CURRENT_PARTICIPANT),
-      Type.Literal(RevealAudience.ALL_PARTICIPANTS),
-    ]),
   },
   strict,
 );
@@ -62,16 +57,17 @@ export const ParticipantRankingStageConfigData = Type.Object(
       Type.Literal(ElectionStrategy.CONDORCET),
     ]),
     enableSelfVoting: Type.Boolean(),
-    revealAudience: Type.Union([
-      Type.Literal(RevealAudience.CURRENT_PARTICIPANT),
-      Type.Literal(RevealAudience.ALL_PARTICIPANTS),
-    ]),
   },
   strict,
 );
 
+export const RankingStageConfigData = Type.Union([
+  ItemRankingStageConfigData,
+  ParticipantRankingStageConfigData,
+]);
+
 // ************************************************************************* //
-// updateRankingStageParticipantAnswer endpoint                             //
+// updateRankingStageParticipantAnswer endpoint                              //
 // ************************************************************************* //
 
 /** RankingStageParticipantAnswer input validation. */

@@ -9,8 +9,13 @@ import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 import {
+  RevealAudience,
+  RevealItem,
   RevealStageConfig,
-  StageConfig
+  StageConfig,
+  StageKind,
+  SurveyRevealItem,
+  createNewRevealItem,
 } from "@deliberation-lab/utils";
 
 import { core } from "../../core/core";
@@ -39,8 +44,8 @@ export class RevealEditor extends MobxLitElement {
         <div class="left">Stages to reveal</div>
         ${this.renderAddMenu()}
       </div>
-      ${this.stage.stageIds.map(
-        (stageId, index) => this.renderRevealStageItem(stageId, index)
+      ${this.stage.items.map(
+        (item, index) => this.renderRevealStageItem(item, index)
       )}
     `;
   }
@@ -49,7 +54,7 @@ export class RevealEditor extends MobxLitElement {
     if (!this.stage) return nothing;
 
     const stageOptions = getStagesWithReveal(this.experimentEditor.stages).filter(
-      stage => !this.stage!.stageIds.find(stageId => stageId === stage.id)
+      stage => stage.id !== this.stage?.id
     );
 
     return html`
@@ -68,10 +73,13 @@ export class RevealEditor extends MobxLitElement {
     const onAdd = () => {
       if (!this.stage) return;
 
-      const stageIds = [...this.stage.stageIds, stage.id];
+      const item = createNewRevealItem(stage.id, stage.kind);
+      if (!item) return;
+
+      const items = [...this.stage.items, item];
       this.experimentEditor.updateStage({
         ...this.stage,
-        stageIds
+        items
       });
     };
 
@@ -86,95 +94,164 @@ export class RevealEditor extends MobxLitElement {
     `;
   }
 
-  private renderRevealStageItem(stageId: string, index: number) {
+  private updateRevealItem(item: RevealItem, index: number) {
+    if (!this.stage) return;
+
+    const items = [
+      ...this.stage.items.slice(0, index),
+      item,
+      ...this.stage.items.slice(index + 1),
+    ];
+
+    this.experimentEditor.updateStage({
+      ...this.stage,
+      items,
+    });
+  }
+
+  private renderRevealStageItem(item: RevealItem, index: number) {
     const handleMoveUp = () => {
       if (!this.stage) return;
 
-      const stageIds = [
-        ...this.stage.stageIds.slice(0, index - 1),
-        ...this.stage.stageIds.slice(index, index + 1),
-        ...this.stage.stageIds.slice(index - 1, index),
-        ...this.stage.stageIds.slice(index + 1),
+      const items = [
+        ...this.stage.items.slice(0, index - 1),
+        ...this.stage.items.slice(index, index + 1),
+        ...this.stage.items.slice(index - 1, index),
+        ...this.stage.items.slice(index + 1),
       ];
 
       this.experimentEditor.updateStage({
         ...this.stage,
-        stageIds
+        items
       });
     };
 
     const handleMoveDown = () => {
       if (!this.stage) return;
 
-      const stageIds = [
-        ...this.stage.stageIds.slice(0, index),
-        ...this.stage.stageIds.slice(index + 1, index + 2),
-        ...this.stage.stageIds.slice(index, index + 1),
-        ...this.stage.stageIds.slice(index + 2),
+      const items = [
+        ...this.stage.items.slice(0, index),
+        ...this.stage.items.slice(index + 1, index + 2),
+        ...this.stage.items.slice(index, index + 1),
+        ...this.stage.items.slice(index + 2),
       ];
 
       this.experimentEditor.updateStage({
         ...this.stage,
-        stageIds
+        items
       });
     };
 
     const handleDelete = (e: Event) => {
       if (!this.stage) return;
 
-      const stageIds = [
-        ...this.stage.stageIds.slice(0, index),
-        ...this.stage.stageIds.slice(index + 1)
+      const items = [
+        ...this.stage.items.slice(0, index),
+        ...this.stage.items.slice(index + 1)
       ];
 
       this.experimentEditor.updateStage({
         ...this.stage,
-        stageIds
+        items
       });
     };
 
-    const stage = this.experimentEditor.getStage(stageId);
+    const stage = this.experimentEditor.getStage(item.id);
     const stageIndex = this.experimentEditor.stages.findIndex(
-      stage => stage.id === stageId
+      stage => stage.id === item.id
     );
     if (!this.stage || !stage) return nothing;
 
+    const revealAllParticipants =
+      item.revealAudience === RevealAudience.ALL_PARTICIPANTS;
+
+    const toggleRevealAllParticipants = () => {
+      const revealAudience = revealAllParticipants
+        ? RevealAudience.CURRENT_PARTICIPANT
+        : RevealAudience.ALL_PARTICIPANTS;
+
+      this.updateRevealItem({...item, revealAudience}, index);
+    };
+
     return html`
       <div class="reveal-stage">
-        <div class="label">
-          ${stageIndex + 1}. ${stage.name}
+        <div class="header">
+          <div class="label">
+            ${stageIndex + 1}. ${stage.name}
+          </div>
+          <div class="buttons">
+            <pr-icon-button
+              color="neutral"
+              icon="arrow_upward"
+              padding="small"
+              size="small"
+              variant="default"
+              ?disabled=${index === 0 || !this.experimentEditor.canEditStages}
+              @click=${handleMoveUp}
+            >
+            </pr-icon-button>
+            <pr-icon-button
+              color="neutral"
+              icon="arrow_downward"
+              padding="small"
+              size="small"
+              variant="default"
+              ?disabled=${index === this.stage.items.length - 1 || !this.experimentEditor.canEditStages}
+              @click=${handleMoveDown}
+            >
+            </pr-icon-button>
+            <pr-icon-button
+              color="neutral"
+              icon="close"
+              padding="small"
+              size="small"
+              variant="default"
+              ?disabled=${!this.experimentEditor.canEditStages}
+              @click=${handleDelete}
+            >
+            </pr-icon-button>
+          </div>
         </div>
-        <div class="buttons">
-          <pr-icon-button
-            color="neutral"
-            icon="arrow_upward"
-            padding="small"
-            size="small"
-            variant="default"
-            ?disabled=${index === 0 || !this.experimentEditor.canEditStages}
-            @click=${handleMoveUp}
-          >
-          </pr-icon-button>
-          <pr-icon-button
-            color="neutral"
-            icon="arrow_downward"
-            padding="small"
-            size="small"
-            variant="default"
-            ?disabled=${index === this.stage.stageIds.length - 1 || !this.experimentEditor.canEditStages}
-            @click=${handleMoveDown}
-          >
-          </pr-icon-button>
-          <pr-icon-button
-            color="neutral"
-            icon="close"
-            padding="small"
-            size="small"
-            variant="default"
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${revealAllParticipants}
             ?disabled=${!this.experimentEditor.canEditStages}
-            @click=${handleDelete}
+            @click=${toggleRevealAllParticipants}
           >
-          </pr-icon-button>
+          </md-checkbox>
+          <div>
+            Reveal selections by all participants within the
+            cohort
+          </div>
+        </div>
+        ${item.kind === StageKind.SURVEY ?
+          this.renderSurveyRevealSettings(item, index)
+          : nothing}
+      </div>
+    `;
+  }
+
+  private renderSurveyRevealSettings(item: SurveyRevealItem, index: number) {
+    if (!this.stage) return;
+
+    const revealScorableOnly = item.revealScorableOnly;
+
+    const toggleRevealScorableOnly = () => {
+      this.updateRevealItem({...item, revealScorableOnly: !revealScorableOnly}, index);
+    };
+
+    return html`
+      <div class="checkbox-wrapper">
+        <md-checkbox
+          touch-target="wrapper"
+          ?checked=${revealScorableOnly}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @click=${toggleRevealScorableOnly}
+        >
+        </md-checkbox>
+        <div>
+          Reveal only scorable questions (questions with correct answers)
         </div>
       </div>
     `;

@@ -1,5 +1,5 @@
 import { Type, type Static } from '@sinclair/typebox';
-import { RevealAudience, StageKind } from './stage';
+import { StageKind } from './stage';
 import {
   StageGameSchema,
   StageProgressConfigSchema,
@@ -88,11 +88,6 @@ export const SurveyStageConfigData = Type.Object(
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,
     questions: Type.Array(SurveyQuestionData),
-    revealAudience: Type.Union([
-      Type.Literal(RevealAudience.CURRENT_PARTICIPANT),
-      Type.Literal(RevealAudience.ALL_PARTICIPANTS),
-    ]),
-    revealScorableOnly: Type.Boolean(),
   },
   strict,
 );

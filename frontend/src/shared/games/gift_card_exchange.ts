@@ -1,8 +1,10 @@
 import { ElectionStrategy } from '@deliberation-lab/utils';
 import {
-  RankingItemData,
   Experiment,
   MultipleChoiceSurveyQuestion,
+  RankingItemData,
+  RankingType,
+  RevealAudience,
   StageConfig,
   StageGame,
   SurveyQuestion,
@@ -20,10 +22,9 @@ import {
   createScaleSurveyQuestion,
   createStageTextConfig,
   createSurveyStage,
-  RankingType,
+  createSurveyRevealItem,
   createTOSStage,
   createTransferStage,
-  RevealAudience,
 } from '@deliberation-lab/utils';
   
 /** Constants and functions to create the Gift Card Exchange game. */
@@ -155,7 +156,6 @@ const GCE_PART_1_RANKING_STAGE = createRankingStage({
   strategy: ElectionStrategy.NONE,
   rankingType: RankingType.ITEMS,
   rankingItems: GIFT_CARDS,
-  revealAudience: RevealAudience.ALL_PARTICIPANTS,
 });
 
 
@@ -202,7 +202,7 @@ export const GCE_REVEAL_STAGE = createRevealStage({
   descriptions: createStageTextConfig({
     primaryText: 'Here are the allocation results.'
   }),
-  stageIds: [SELECTION_ID],
+  items: [createSurveyRevealItem({ id: SELECTION_ID })],
 });
     
 // ****************************************************************************
@@ -230,7 +230,7 @@ export const GCE_REVEAL2_STAGE = createRevealStage({
   descriptions: createStageTextConfig({
     primaryText: 'Here are the results after any trades may have occurred.'
   }),
-  stageIds: [TRADE_ID],
+  items: [createSurveyRevealItem({ id: TRADE_ID })],
 });
  
 // ****************************************************************************

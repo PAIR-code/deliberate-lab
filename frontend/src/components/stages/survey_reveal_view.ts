@@ -9,18 +9,19 @@ import {CohortService} from '../../services/cohort.service';
 import {getParticipantName} from '../../shared/participant.utils';
 
 import {
+  CheckSurveyAnswer,
   MultipleChoiceSurveyAnswer,
   MultipleChoiceSurveyQuestion,
-  SurveyQuestion,
-  SurveyStageConfig,
-  SurveyQuestionKind,
+  RevealAudience,
+  ScaleSurveyAnswer,
   StageKind,
+  SurveyRevealItem,
   SurveyStageParticipantAnswer,
   SurveyStagePublicData,
+  SurveyStageConfig,
+  SurveyQuestion,
+  SurveyQuestionKind,
   TextSurveyAnswer,
-  CheckSurveyAnswer,
-  ScaleSurveyAnswer,
-  RevealAudience,
 } from '@deliberation-lab/utils';
 
 import {styles} from './survey_reveal_view.scss';
@@ -36,9 +37,10 @@ export class SurveyReveal extends MobxLitElement {
   @property() stage: SurveyStageConfig | undefined = undefined;
   @property() answer: SurveyStageParticipantAnswer | undefined = undefined;
   @property() publicData: SurveyStagePublicData | undefined = undefined;
+  @property() item: SurveyRevealItem | undefined = undefined;
 
   override render() {
-    if (!this.stage) {
+    if (!this.stage || !this.item) {
       return nothing;
     }
 
@@ -46,12 +48,12 @@ export class SurveyReveal extends MobxLitElement {
       (question) => 'correctAnswerId' in question && question.correctAnswerId
     );
 
-    const questions: SurveyQuestion[] = this.stage.revealScorableOnly
+    const questions: SurveyQuestion[] = this.item.revealScorableOnly
       ? scorableQuestions
       : this.stage.questions;
 
     const showAllParticipants =
-      this.stage.revealAudience === RevealAudience.ALL_PARTICIPANTS;
+      this.item.revealAudience === RevealAudience.ALL_PARTICIPANTS;
 
     const hasScorableQuestions = scorableQuestions.length > 0;
     return html`
