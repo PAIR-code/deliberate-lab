@@ -16,6 +16,7 @@ import {Pages, RouterService} from '../../services/router.service';
 import {
   StageConfig
 } from '@deliberation-lab/utils';
+import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {
   getExperimentName
@@ -28,6 +29,7 @@ import {styles} from './experiment_builder_nav.scss';
 export class ExperimentBuilderNav extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
   override render() {
@@ -77,6 +79,7 @@ export class ExperimentBuilderNav extends MobxLitElement {
     };
 
     const handleDelete = () => {
+      this.analyticsService.trackButtonClick(ButtonClick.STAGE_DELETE);
       this.experimentEditor.deleteStage(index);
     };
 

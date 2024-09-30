@@ -7,25 +7,27 @@ interface ServiceProvider {
 }
 
 export enum ButtonClick {
-  // COHORT_CREATE = 'click_experimenter_add_cohort',
-  // COHORT_DELETE = 'click_experimenter_delete_cohort',
+  // COHORT_CREATE = 'click_cohort_add',
+  // COHORT_DELETE = 'click_cohort_delete',
   EXPERIMENT_DELETE = 'click_experiment_delete',
   EXPERIMENT_EDIT = 'click_experiment_edit',
   EXPERIMENT_FORK = 'click_experiment_fork',
   EXPERIMENT_PREVIEW_CONFIG = 'click_experiment_preview_config',
   EXPERIMENT_SAVE_EXISTING = 'click_experiment_save_edits',
   EXPERIMENT_SAVE_NEW = 'click_experiment_save_new',
-  // GAME_ADD = 'click_load_game',
+  GAME_ADD = 'click_game_add',
   LOGIN = 'click_login',
-  // PARTICIPANT_BOOT = 'click_experimenter_boot_participant',
-  // PARTICIPANT_CREATE = 'click_experimenter_add_participant',
+  // PARTICIPANT_BOOT = 'click_participant_boot',
+  // PARTICIPANT_CREATE = 'click_participant_add',
   // PARTICIPANT_JOIN = 'click_participant_join',
-  // STAGE_ADD = 'click_add_stage',
-  // STAGE_DELETE = 'click_delete_stage',
-  // STAGE_NEXT = 'click_next_stage',
-  // TRANSFER_INITIATE = 'click_experimenter_initiate_transfer',
-  // TRANSFER_ACCEPT = 'click_participant_accept_transfer',
-  // TRANSFER_REJECT = 'click_participant_reject_transfer',
+  STAGE_ADD = 'click_stage_add',
+  STAGE_DELETE = 'click_delete_stage',
+  STAGE_MOVE_UP = 'click_stage_move_up',
+  STAGE_MOVE_DOWN = 'click_stage_move_down',
+  STAGE_NEXT = 'click_stage_next',
+  // TRANSFER_INITIATE = 'click_transfer_initiate',
+  // TRANSFER_ACCEPT = 'click_transfer_accept',
+  // TRANSFER_REJECT = 'click_transfer_reject',
 }
 
 /** Manages Google Analytics. */

@@ -6,6 +6,7 @@ import {customElement, property, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
+import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {AuthService} from '../../services/auth.service';
 import {HomeService} from '../../services/home.service';
 import {Pages, RouterService} from '../../services/router.service';
@@ -13,6 +14,8 @@ import {Pages, RouterService} from '../../services/router.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
+  MetadataConfig,
+  StageConfig,
   StageKind,
   createChatStage,
   createRankingStage,
@@ -41,6 +44,7 @@ import {styles} from './stage_builder_dialog.scss';
 export class StageBuilderDialog extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
   @property({type: Boolean})
@@ -118,11 +122,23 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
+  private addStage(stage: StageConfig) {
+    this.analyticsService.trackButtonClick(ButtonClick.STAGE_ADD);
+    this.experimentEditor.addStage(stage);
+    this.experimentEditor.toggleStageBuilderDialog();
+    this.experimentEditor.jumpToLastStage();
+  }
+
+  private addGame(metadata: Partial<MetadataConfig>, stages: StageConfig[]) {
+    this.analyticsService.trackButtonClick(ButtonClick.GAME_ADD);
+    this.experimentEditor.updateMetadata(metadata);
+    this.experimentEditor.setStages(stages);
+    this.experimentEditor.toggleStageBuilderDialog();
+  }
+
   private renderLASCard() {
     const addGame = () => {
-      this.experimentEditor.updateMetadata(LAS_METADATA);
-      this.experimentEditor.setStages(getLASStageConfigs());
-      this.experimentEditor.toggleStageBuilderDialog();
+      this.addGame(LAS_METADATA, getLASStageConfigs());
     };
 
     return html`
@@ -137,9 +153,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
   private renderNegotiationCard() {
     const addGame = () => {
-      this.experimentEditor.updateMetadata(GCE_METADATA);
-      this.experimentEditor.setStages(getGCEStageConfigs());
-      this.experimentEditor.toggleStageBuilderDialog();
+      this.addGame(GCE_METADATA, getGCEStageConfigs());
     };
 
     return html`
@@ -154,9 +168,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
   private renderInfoCard() {
     const addStage = () => {
-      this.experimentEditor.addStage(createInfoStage());
-      this.experimentEditor.toggleStageBuilderDialog();
-      this.experimentEditor.jumpToLastStage();
+      this.addStage(createInfoStage());
     };
 
     return html`
@@ -174,9 +186,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
     const addStage = () => {
       if (!isDisabled) {
-        this.experimentEditor.addStage(createTOSStage());
-        this.experimentEditor.toggleStageBuilderDialog();
-        this.experimentEditor.jumpToLastStage();
+        this.addStage(createTOSStage());
       }
     };
   
@@ -192,9 +202,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
   private renderChatCard() {
     const addStage = () => {
-      this.experimentEditor.addStage(createChatStage());
-      this.experimentEditor.toggleStageBuilderDialog();
-      this.experimentEditor.jumpToLastStage();
+      this.addStage(createChatStage());
     };
 
     return html`
@@ -209,9 +217,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
   private renderRankingCard() {
     const addStage = () => {
-      this.experimentEditor.addStage(createRankingStage());
-      this.experimentEditor.toggleStageBuilderDialog();
-      this.experimentEditor.jumpToLastStage();
+      this.addStage(createRankingStage());
     };
 
     return html`
@@ -226,9 +232,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
   private renderRevealCard() {
     const addStage = () => {
-      this.experimentEditor.addStage(createRevealStage());
-      this.experimentEditor.toggleStageBuilderDialog();
-      this.experimentEditor.jumpToLastStage();
+      this.addStage(createRevealStage());
     };
 
     return html`
@@ -243,9 +247,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
   private renderSurveyCard() {
     const addStage = () => {
-      this.experimentEditor.addStage(createSurveyStage());
-      this.experimentEditor.toggleStageBuilderDialog();
-      this.experimentEditor.jumpToLastStage();
+      this.addStage(createSurveyStage());
     };
 
     return html`
@@ -260,9 +262,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
   private renderPayoutCard() {
     const addStage = () => {
-      this.experimentEditor.addStage(createPayoutStage());
-      this.experimentEditor.toggleStageBuilderDialog();
-      this.experimentEditor.jumpToLastStage();
+      this.addStage(createPayoutStage());
     };
 
     return html`
@@ -277,9 +277,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
   private renderProfileCard() {
     const addStage = () => {
-      this.experimentEditor.addStage(createProfileStage());
-      this.experimentEditor.toggleStageBuilderDialog();
-      this.experimentEditor.jumpToLastStage();
+      this.addStage(createProfileStage());
     };
 
     return html`
@@ -294,9 +292,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
   private renderTransferCard() {
     const addStage = () => {
-      this.experimentEditor.addStage(createTransferStage());
-      this.experimentEditor.toggleStageBuilderDialog();
-      this.experimentEditor.jumpToLastStage();
+      this.addStage(createTransferStage());
     }
 
     return html`
