@@ -43,10 +43,6 @@ export class App extends MobxLitElement {
   }
 
   private renderPageContent() {
-    if (this.routerService.activePage) {
-      this.analyticsService.trackPageView(this.routerService.activePage);
-    }
-
     switch (this.routerService.activePage) {
       case Pages.HOME:
         if (!this.authService.isExperimenter) {

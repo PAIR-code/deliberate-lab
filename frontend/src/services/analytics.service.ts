@@ -13,11 +13,11 @@ export class AnalyticsService extends Service {
     makeObservable(this);
   }
 
-  trackPageView(page: Pages) {
+  trackPageView(page: Pages, path: string) {
     if (typeof gtag === 'function') {
       gtag('event', 'page_view', {
         page_title: page,
-        page_location: this.sp.routerService.getRoutePath(page),
+        page_location: path,
       });
     }
   }
