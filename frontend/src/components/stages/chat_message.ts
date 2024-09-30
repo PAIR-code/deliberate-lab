@@ -17,6 +17,7 @@ import {
   AgentMediatorChatMessage,
   ChatMessage,
   ChatMessageType,
+  HumanMediatorChatMessage,
   ParticipantChatMessage,
 } from '@deliberation-lab/utils';
 import {
@@ -43,6 +44,8 @@ export class ChatMessageComponent extends MobxLitElement {
     switch(this.chat.type) {
       case ChatMessageType.PARTICIPANT:
         return this.renderParticipantMessage(this.chat);
+      case ChatMessageType.HUMAN_MEDIATOR:
+        return this.renderHumanMediatorMessage(this.chat);
       case ChatMessageType.AGENT_MEDIATOR:
         return this.renderAgentMediatorMessage(this.chat);
       default:
@@ -65,6 +68,22 @@ export class ChatMessageComponent extends MobxLitElement {
           <div class="label">
             ${profile.name ?? chatMessage.participantPublicId}
             ${profile.pronouns ? `(${profile.pronouns})` : ""}
+          </div>
+          <div class="chat-bubble">${chatMessage.message}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderHumanMediatorMessage(chatMessage: HumanMediatorChatMessage) {
+    const profile = chatMessage.profile;
+
+    return html`
+      <div class="chat-message">
+        <profile-avatar .emoji=${profile.avatar}></profile-avatar>
+          <div class="content">
+          <div class="label">
+            ${profile.name}
           </div>
           <div class="chat-bubble">${chatMessage.message}</div>
         </div>
