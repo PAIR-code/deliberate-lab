@@ -243,7 +243,7 @@ export class PayoutEditor extends MobxLitElement {
   }
 
   private renderRankingStageOption(stage: StageConfig, item: SurveyPayoutItem, index: number) {
-    if (stage.kind !== StageKind.ELECTION) return nothing;
+    if (stage.kind !== StageKind.RANKING) return nothing;
 
     const updateRankingStageId = () => {
       this.updatePayoutItem({...item, rankingStageId: stage.id }, index);

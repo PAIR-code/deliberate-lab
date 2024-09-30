@@ -253,8 +253,7 @@ export function calculateSurveyPayoutItemResult(
   let rankingWinner: string|null = null;
   if (item.rankingStageId) {
     const rankingStageData = publicDataMap[item.rankingStageId];
-    // TODO: Change ELECTION to RANKING when merging PR #272
-    if (rankingStageData && rankingStageData.kind === StageKind.ELECTION) {
+    if (rankingStageData && rankingStageData.kind === StageKind.RANKING) {
       rankingWinner = rankingStageData.currentWinner;
     } else {
       return null; // can't calculate payout with missing ranking stage
