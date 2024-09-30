@@ -6,6 +6,7 @@ import { CSSResultGroup, html, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
 
 import { core } from "../../core/core";
+import { AnalyticsService, ButtonClick } from "../../services/analytics.service";
 import { AuthService } from "../../services/auth.service";
 import { APP_NAME } from "../../shared/constants";
 
@@ -16,6 +17,7 @@ import { styles } from "./login.scss";
 export class Login extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly authService = core.getService(AuthService);
 
   @state() experimentId = "";
@@ -23,6 +25,7 @@ export class Login extends MobxLitElement {
 
   override render() {
     const handleLogin = () => {
+      this.analyticsService.trackButtonClick(ButtonClick.LOGIN);
       this.authService.signInWithGoogle();
     };
 
