@@ -1,0 +1,47 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  flex-grow: 1;
+  justify-content: end;
+  padding-bottom: common.$spacing-xxl;
+  width: 100%;
+}
+
+.input-row-wrapper {
+  @include common.flex-row-align-center;
+  flex-shrink: 0;
+  gap: common.$spacing-medium;
+  position: sticky;
+}
+
+.input-row {
+  @include common.flex-row-align-center;
+  flex-grow: 1;
+  gap: common.$spacing-xl;
+  width: -webkit-fill-available;
+  max-width: common.$main-content-max-width;
+}
+
+.input-wrapper {
+  width: 100%;
+}
+
+.input {
+  align-items: center;
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 50px;
+  box-sizing: border-box;
+  display: flex;
+  gap: common.$spacing-small;
+  padding: common.$spacing-large common.$spacing-xl common.$spacing-large
+    common.$spacing-xxl;
+  width: 100%;
+
+  pr-textarea {
+    flex-grow: 1;
+  }
+}
+

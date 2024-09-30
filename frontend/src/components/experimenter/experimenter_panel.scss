@@ -1,0 +1,69 @@
+@use "../../sass/colors";
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-row;
+  flex-shrink: 0;
+}
+
+.panel-wrapper {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface);
+  border-left: 1px solid var(--md-sys-color-outline-variant-high);
+  flex-shrink: 0;
+  height: 100%;
+  width: common.$sidenav-width;
+
+  &.closed {
+    width: common.$sidenav-closed-width;
+  }
+}
+
+.button-wrapper {
+  @include common.flex-row-align-center;
+  flex-shrink: 0;
+  justify-content: center;
+  width: calc(common.$sidenav-closed-width - common.$sidenav-padding * 2);
+}
+
+.sidebar {
+  @include common.flex-column-align-center;
+  border-right: 1px solid var(--md-sys-color-outline-variant);
+  flex-shrink: 0;
+  gap: common.$spacing-small;
+  padding: common.$sidenav-padding;
+  width: common.$sidenav-closed-width;
+}
+
+.main {
+  @include common.flex-column;
+  flex-grow: 1;
+  gap: common.$spacing-large;
+  padding: common.$sidenav-padding;
+}
+
+.header {
+  @include common.flex-row-align-center;
+}
+
+.title {
+  @include common.flex-row-align-center;
+  @include typescale.label-large;
+  flex-shrink: 0;
+}
+
+.top {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+  overflow: auto;
+  padding: common.$sidenav-padding;
+}
+
+.bottom {
+  @include common.flex-column;
+  flex-grow: 1;
+  gap: common.$spacing-small;
+  overflow: auto;
+  padding: common.$sidenav-padding;
+}
