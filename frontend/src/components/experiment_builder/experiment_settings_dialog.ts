@@ -38,6 +38,7 @@ export class ExperimentSettingsDialog extends MobxLitElement {
           <pr-button
             color="error"
             variant="tonal"
+            ?disabled=${!this.experimentManager.isCreator}
             @click=${() => { this.experimentManager.deleteExperiment()}}
           >
             Delete experiment

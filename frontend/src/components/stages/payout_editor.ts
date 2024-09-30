@@ -47,7 +47,10 @@ export class PayoutEditor extends MobxLitElement {
 
     return html`
       ${this.renderPayoutCurrency()}
-      <pr-menu name="Add stage payout">
+      <pr-menu
+        name="Add stage payout"
+        ?disabled=${!this.experimentEditor.canEditStages}
+      >
         <div class="menu-wrapper">
           ${this.experimentEditor.stages.slice(0, index).map(
             stage => this.renderPayoutStageOption(stage)
@@ -144,7 +147,11 @@ export class PayoutEditor extends MobxLitElement {
 
   private renderPayoutStageOption(stage: StageConfig) {
     return html`
-      <div class="menu-item" role="button" @click=${() => {this.addPayout(stage)}}>
+      <div class="menu-item"
+        role="button"
+        ?disabled=${!this.experimentEditor.canEditStages}
+        @click=${() => {this.addPayout(stage)}}
+      >
         <div>${stage.name}</div>
       </div>
     `;
@@ -165,27 +172,32 @@ export class PayoutEditor extends MobxLitElement {
       <div class="options-wrapper">
         <div class="options-title">Currency</div>
         <div class="options">
-          <div
-            role="button"
-            class="option ${this.stage.currency === PayoutCurrency.USD ? 'selected': ''}"
+          <pr-button
+            color=${this.stage.currency === PayoutCurrency.USD ? 'primary': 'neutral'}
+            variant=${this.stage.currency === PayoutCurrency.USD ? 'tonal' : 'default'}
+            variant="tonal"
+            ?disabled=${!this.experimentEditor.canEditStages}
             @click=${() => { handleCurrency(PayoutCurrency.USD)}}
           >
             US Dollar (USD)
-          </div>
-          <div
-            role="button"
-            class="option ${this.stage.currency === PayoutCurrency.EUR ? 'selected': ''}"
+          </pr-button>
+          <pr-button
+            color=${this.stage.currency === PayoutCurrency.EUR ? 'primary' : 'neutral'}
+            variant=${this.stage.currency === PayoutCurrency.EUR ? 'tonal' : 'default'}
+            ?disabled=${!this.experimentEditor.canEditStages}
             @click=${() => { handleCurrency(PayoutCurrency.EUR)}}
           >
             Euro (EUR)
-          </div>
-          <div
-            role="button"
-            class="option ${this.stage.currency === PayoutCurrency.GBP ? 'selected': ''}"
+          </pr-button>
+          <pr-button
+            color=${this.stage.currency === PayoutCurrency.GBP ? 'primary' : 'neutral'}
+            variant=${this.stage.currency === PayoutCurrency.GBP ? 'tonal' : 'default'}
+            variant="tonal"
+            ?disabled=${!this.experimentEditor.canEditStages}
             @click=${() => { handleCurrency(PayoutCurrency.GBP)}}
           >
             British pound (GBP)
-          </div>
+          </pr-button>
         </div>
       </div>    
     `;
@@ -220,13 +232,14 @@ export class PayoutEditor extends MobxLitElement {
         <div class="options-wrapper">
           <div class="subtitle">Participant answers to use for payout</div>
           <div class="options">
-            <div
-              role="button"
-              class="option ${!item.rankingStageId ? 'selected': ''}"
+            <pr-button
+              color=${!item.rankingStageId ? 'primary' : 'neutral'}
+              variant=${!item.rankingStageId ? 'tonal' : 'default'}
+              ?disabled=${!this.experimentEditor.canEditStages}
               @click=${() => { this.updatePayoutItem({...item, rankingStageId: null }, index); }}
             >
               Current participant
-            </div>
+            </pr-button>
             ${this.experimentEditor.stages.map(stage => this.renderRankingStageOption(stage, item, index))}
           </div>
         </div>
@@ -250,13 +263,14 @@ export class PayoutEditor extends MobxLitElement {
     };
 
     return html`
-      <div
-        role="button"
-        class="option ${item.rankingStageId === stage.id ? 'selected': ''}"
+      <pr-button
+        color=${item.rankingStageId === stage.id ? 'primary': 'neutral'}
+        variant=${item.rankingStageId === stage.id ? 'tonal' : 'default'}
+        ?disabled=${!this.experimentEditor.canEditStages}
         @click=${updateRankingStageId}
       >
         Winner of ${stage.name}
-      </div>        
+      </pr-button>
     `;
   }
 
@@ -310,6 +324,7 @@ export class PayoutEditor extends MobxLitElement {
             name=${id}
             min="0"
             .value=${item.questionMap[question.id] ?? 0}
+            ?disabled=${!this.experimentEditor.canEditStages}
             @input=${updatePayout}
           />
         </div>

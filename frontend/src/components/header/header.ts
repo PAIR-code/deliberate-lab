@@ -109,11 +109,13 @@ export class Header extends MobxLitElement {
   }
 
   private closeEditorWithoutSaving() {
-    // Display confirmation dialog
-    const isConfirmed = window.confirm(
-        "You may have unsaved changes. Are you sure you want to exit?"
-    );
-    if (!isConfirmed) return;
+    if (this.experimentManager.isCreator) {
+      // Display confirmation dialog
+      const isConfirmed = window.confirm(
+          "You may have unsaved changes. Are you sure you want to exit?"
+      );
+      if (!isConfirmed) return;
+    }
     this.experimentManager.setIsEditing(false);
   }
 
@@ -144,7 +146,7 @@ export class Header extends MobxLitElement {
   private renderExperimentTitle() {
     const title = this.experimentService.experimentName;
     if (this.experimentManager.isEditingFull) {
-      return `Editing: ${title}`
+      return this.experimentManager.isCreator ? `Editing: ${title}` : `Previewing config: ${title}`;
     } else {
       return title;
     }
@@ -188,6 +190,8 @@ export class Header extends MobxLitElement {
         `;
       case Pages.EXPERIMENT:
         if (this.experimentManager.isEditingFull) {
+          if (!this.experimentManager.isCreator) return nothing;
+
           return html`
             <pr-button
               color="tertiary"
@@ -232,11 +236,10 @@ export class Header extends MobxLitElement {
           </pr-icon-button>
           <pr-tooltip text="Experiment creators can edit metadata, and can edit stages if users have not joined the experiment." position="BOTTOM_END">
             <pr-icon-button
-              icon="edit"
+              icon=${this.experimentManager.isCreator ? 'edit_note' : 'overview'}
               color="primary"
               variant="default"
               @click=${() => { this.experimentManager.setIsEditing(true); }}
-              ?disabled=${!this.experimentEditor.isCreator}
             >
             </pr-icon-button>
           </pr-tooltip>

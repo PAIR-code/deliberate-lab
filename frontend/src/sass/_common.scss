@@ -79,6 +79,9 @@
     &:hover {
       outline: none;
     }
+    &:disabled {
+      border-color: var(--md-sys-color-outline-variant);
+    }
   }
 }
 

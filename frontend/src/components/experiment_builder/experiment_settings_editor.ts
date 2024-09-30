@@ -42,6 +42,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
       <pr-button
         color="error"
         variant="tonal"
+        ?disabled=${!this.experimentManager.isCreator}
         @click=${() => { this.experimentManager.deleteExperiment()}}
       >
         Delete experiment
@@ -73,6 +74,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           placeholder="Internal experiment name (not visible to participants)"
           variant="outlined"
           .value=${this.experimentEditor.experiment.metadata.name ?? ''}
+          ?disabled=${!this.experimentManager.isCreator}
           @input=${updateName}
         >
         </pr-textarea>
@@ -81,6 +83,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           placeholder="Experiment description (not visible to participants)"
           variant="outlined"
           .value=${this.experimentEditor.experiment.metadata.description ?? ''}
+          ?disabled=${!this.experimentManager.isCreator}
           @input=${updateDescription}
         >
         </pr-textarea>
@@ -89,6 +92,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           placeholder="External experiment name (shown to participants)"
           variant="outlined"
           .value=${this.experimentEditor.experiment.metadata.publicName ?? ''}
+          ?disabled=${!this.experimentManager.isCreator}
           @input=${updatePublicName}
         >
         </pr-textarea>
@@ -165,6 +169,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           <md-checkbox
             touch-target="wrapper"
             ?checked=${minParticipants !== null}
+            ?disabled=${!this.experimentManager.isCreator}
             @click=${updateCheck}
           >
           </md-checkbox>
@@ -183,6 +188,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
             name="minParticipants"
             min="0"
             .value=${minParticipants ?? 0}
+            ?disabled=${!this.experimentManager.isCreator}
             @input=${updateNum}
           />
         </div>
@@ -213,6 +219,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           <md-checkbox
             touch-target="wrapper"
             ?checked=${maxParticipants !== null}
+            ?disabled=${!this.experimentManager.isCreator}
             @click=${updateCheck}
           >
           </md-checkbox>
@@ -230,6 +237,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
             name="maxParticipants"
             min="0"
             .value=${maxParticipants ?? 100}
+            ?disabled=${!this.experimentManager.isCreator}
             @input=${updateNum}
           />
         </div>
@@ -256,6 +264,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           <md-checkbox
             touch-target="wrapper"
             ?checked=${isAttention}
+            ?disabled=${!this.experimentManager.isCreator}
             @click=${updateAttention}
           >
           </md-checkbox>
@@ -289,6 +298,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           name="waitSeconds"
           min="0"
           .value=${waitSeconds}
+          ?disabled=${!this.experimentManager.isCreator}
           @input=${updateNum}
         />
       </div>
@@ -315,6 +325,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           name="popupSeconds"
           min="0"
           .value=${popupSeconds}
+          ?disabled=${!this.experimentManager.isCreator}
           @input=${updateNum}
         />
       </div>
@@ -337,6 +348,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           <md-checkbox
             touch-target="wrapper"
             ?checked=${isProlific}
+            ?disabled=${!this.experimentManager.isCreator}
             @click=${updateProlificIntegration}
           >
           </md-checkbox>
@@ -373,6 +385,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           placeholder="Add Prolific redirect code"
           variant="outlined"
           .value=${this.experimentEditor.experiment.prolificConfig.defaultRedirectCode ?? ''}
+          ?disabled=${!this.experimentManager.isCreator}
           @input=${updateDefault}
         >
         </pr-textarea>
@@ -381,6 +394,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           placeholder="Add Prolific redirect code for attention check failures"
           variant="outlined"
           .value=${this.experimentEditor.experiment.prolificConfig.attentionFailRedirectCode ?? ''}
+          ?disabled=${!this.experimentManager.isCreator}
           @input=${updateAttention}
         >
         </pr-textarea>
@@ -389,6 +403,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           placeholder="Add Prolific redirect code for booted participants"
           variant="outlined"
           .value=${this.experimentEditor.experiment.prolificConfig.bootedRedirectCode ?? ''}
+          ?disabled=${!this.experimentManager.isCreator}
           @input=${updateBooted}
         >
         </pr-textarea>

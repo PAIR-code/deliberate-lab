@@ -207,6 +207,7 @@ export class BaseStageEditorComponent extends MobxLitElement {
             name="minParticipants"
             min="0"
             .value=${minParticipants ?? 0}
+            ?disabled=${!this.experimentEditor.canEditStages}
             @input=${updateNum}
           />
         </div>
