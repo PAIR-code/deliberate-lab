@@ -62,6 +62,7 @@ export class RouterService extends Service {
   @observable hasNavigated = false; // True if navigated at least once in app
 
   @observable isExperimenterNavOpen = false;
+  @observable isExperimenterPanelOpen = false;
 
   private getPage(route: Route): Pages | undefined {
     if (!route) return undefined;
@@ -92,6 +93,10 @@ export class RouterService extends Service {
 
   setExperimenterNav(isOpen: boolean) {
     this.isExperimenterNavOpen = isOpen;
+  }
+
+  setExperimenterPanel(isOpen: boolean) {
+    this.isExperimenterPanelOpen = isOpen;
   }
 
   navigate(page: Pages, params: { [key: string]: string } = {}) {

@@ -215,6 +215,20 @@ export function createParticipantChatMessage(
   };
 }
 
+/** Create human mediator chat message. */
+export function createHumanMediatorChatMessage(
+  config: Partial<HumanMediatorChatMessage> = {},
+): HumanMediatorChatMessage {
+  return {
+    id: config.id ?? generateId(),
+    discussionId: config.discussionId ?? null,
+    type: ChatMessageType.HUMAN_MEDIATOR,
+    message: config.message ?? '',
+    timestamp: config.timestamp ?? Timestamp.now(),
+    profile: config.profile ?? { name: 'Mediator', avatar: '⭐', pronouns: null },
+  }
+}
+
 /** Create agent mediator chat message. */
 export function createAgentMediatorChatMessage(
   config: Partial<AgentMediatorChatMessage> = {}

@@ -19,14 +19,18 @@ import {Service} from './service';
 
 import {
   CohortConfig,
+  CreateChatMessageData,
   Experiment,
+  HumanMediatorChatMessage,
   ParticipantProfileExtended,
   ParticipantStatus,
   StageConfig,
   createCohortConfig,
+  createHumanMediatorChatMessage,
   generateId
 } from '@deliberation-lab/utils';
 import {
+  createChatMessageCallable,
   createParticipantCallable,
   deleteExperimentCallable,
   updateParticipantCallable,
@@ -447,5 +451,35 @@ export class ExperimentManager extends Service {
         currentStatus: ParticipantStatus.TRANSFER_PENDING,
       }
     );
+  }
+
+  /** Create a manual (human) mediator chat message. */
+  async createManualChatMessage(
+    stageId: string,
+    config: Partial<HumanMediatorChatMessage> = {}
+  ) {
+    let response = {};
+    const experimentId = this.sp.routerService.activeRoute.params['experiment'];
+    const cohortId = this.sp.cohortService.cohortId;
+
+    if (experimentId && cohortId) {
+      const chatMessage = createHumanMediatorChatMessage({
+        ...config,
+        discussionId: this.sp.cohortService.getChatDiscussionId(stageId),
+      });
+
+      const createData: CreateChatMessageData = {
+        experimentId,
+        cohortId,
+        stageId,
+        chatMessage
+      };
+
+      response = await createChatMessageCallable(
+        this.sp.firebaseService.functions, createData
+      );
+    }
+
+    return response;
   }
 }
