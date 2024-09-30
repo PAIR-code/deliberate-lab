@@ -7,6 +7,7 @@ import {customElement, property} from 'lit/decorators.js';
 import '@material/web/checkbox/checkbox.js';
 
 import {core} from '../../core/core';
+import {ButtonClick, AnalyticsService} from '../../services/analytics.service';
 import {AuthService} from '../../services/auth.service';
 import {HomeService} from '../../services/home.service';
 import {Pages, RouterService} from '../../services/router.service';
@@ -24,6 +25,7 @@ import {styles} from './experiment_settings_editor.scss';
 export class ExperimentSettingsEditor extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
   private readonly experimentManager = core.getService(ExperimentManager);
 
@@ -43,7 +45,10 @@ export class ExperimentSettingsEditor extends MobxLitElement {
         color="error"
         variant="tonal"
         ?disabled=${!this.experimentManager.isCreator}
-        @click=${() => { this.experimentManager.deleteExperiment()}}
+        @click=${() => {
+          this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_DELETE);
+          this.experimentManager.deleteExperiment()
+        }}
       >
         Delete experiment
       </pr-button>

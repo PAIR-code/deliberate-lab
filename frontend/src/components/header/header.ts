@@ -8,6 +8,7 @@ import {customElement} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
+import {ButtonClick, AnalyticsService} from '../../services/analytics.service';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
@@ -26,6 +27,7 @@ export class Header extends MobxLitElement {
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
   private readonly experimentManager = core.getService(ExperimentManager);
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly authService = core.getService(AuthService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
@@ -180,10 +182,11 @@ export class Header extends MobxLitElement {
             ?loading=${this.experimentEditor.isWritingExperiment}
             ?disabled=${!this.experimentEditor.isValidExperimentConfig}
             @click=${async () => {
+              this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_SAVE_NEW);
               const response = await this.experimentEditor.writeExperiment();
               this.experimentEditor.resetExperiment();
               this.routerService.navigate(Pages.EXPERIMENT, {'experiment': response.id});
-            }}
+              }}
           >
             Save experiment
           </pr-button>
@@ -220,7 +223,11 @@ export class Header extends MobxLitElement {
             <pr-button
               color="tertiary"
               variant="tonal"
-              @click=${() => { this.experimentManager.setIsEditing(false, true) }}
+              ?disabled=${!this.experimentManager.isCreator}
+              @click=${() => {
+                this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_SAVE_EXISTING);
+                this.experimentManager.setIsEditing(false, true);
+              }}
             >
               Save
             </pr-button>
@@ -231,7 +238,15 @@ export class Header extends MobxLitElement {
             icon="fork_right"
             color="neutral"
             variant="default"
-            @click=${() => { this.experimentManager.forkExperiment(); }}
+            @click=${() => {
+              // Display confirmation dialog
+              const isConfirmed = window.confirm(
+                  "This will create a copy of this experiment. Are you sure you want to proceed?"
+              );
+              if (!isConfirmed) return;
+              this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_FORK);
+              this.experimentManager.forkExperiment();
+            }}
           >
           </pr-icon-button>
           <pr-tooltip text="Experiment creators can edit metadata, and can edit stages if users have not joined the experiment." position="BOTTOM_END">
@@ -239,7 +254,14 @@ export class Header extends MobxLitElement {
               icon=${this.experimentManager.isCreator ? 'edit_note' : 'overview'}
               color="primary"
               variant="default"
-              @click=${() => { this.experimentManager.setIsEditing(true); }}
+              @click=${() => {
+                this.analyticsService.trackButtonClick(
+                  this.experimentManager.isCreator ?
+                  ButtonClick.EXPERIMENT_EDIT :
+                  ButtonClick.EXPERIMENT_PREVIEW_CONFIG
+                );
+                this.experimentManager.setIsEditing(true);
+              }}
             >
             </pr-icon-button>
           </pr-tooltip>

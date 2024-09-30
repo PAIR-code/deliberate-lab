@@ -296,12 +296,6 @@ export class ExperimentManager extends Service {
     const experiment = this.sp.experimentService.experiment;
     if (!experiment) return;
 
-    // Display confirmation dialog
-    const isConfirmed = window.confirm(
-        "This will create a copy of this experiment. Are you sure you want to proceed?"
-    );
-    if (!isConfirmed) return;
-
     // Change ID (creator will be changed by cloud functions)
     experiment.id = generateId();
     experiment.metadata.name = `Copy of ${experiment.metadata.name}`;
