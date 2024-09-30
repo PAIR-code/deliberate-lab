@@ -26,9 +26,9 @@ export enum ButtonClick {
   STAGE_MOVE_UP = 'click_stage_move_up',
   STAGE_MOVE_DOWN = 'click_stage_move_down',
   STAGE_NEXT = 'click_stage_next',
-  // TRANSFER_INITIATE = 'click_transfer_initiate',
-  // TRANSFER_ACCEPT = 'click_transfer_accept',
-  // TRANSFER_REJECT = 'click_transfer_reject',
+  TRANSFER_INITIATE = 'click_transfer_initiate',
+  TRANSFER_ACCEPT = 'click_transfer_accept',
+  TRANSFER_REJECT = 'click_transfer_reject',
 }
 
 /** Manages Google Analytics. */

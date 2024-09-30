@@ -10,6 +10,7 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
+import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
 
@@ -32,6 +33,7 @@ import {styles} from './experiment_manager.scss';
 export class ExperimentManagerComponent extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentService = core.getService(ExperimentService);
 
@@ -156,6 +158,7 @@ export class ExperimentManagerComponent extends MobxLitElement {
         return;
       }
 
+      this.analyticsService.trackButtonClick(ButtonClick.TRANSFER_INITIATE);
       this.experimentManager.initiateParticipantTransfer(
         this.experimentManager.currentParticipant,
         cohort.id
