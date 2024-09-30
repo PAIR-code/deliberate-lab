@@ -3,14 +3,20 @@ import '../../pair-components/icon_button';
 import '../../pair-components/textarea';
 import '../../pair-components/tooltip';
 
+import '../participant_profile/profile_avatar';
+
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property, state} from 'lit/decorators.js';
+import {customElement, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {RouterService} from '../../services/router.service';
+
+import {
+  LLM_MEDIATOR_AVATARS
+} from '../../shared/constants';
 
 import {styles} from './experimenter_manual_chat.scss';
 
@@ -23,17 +29,26 @@ export class Chat extends MobxLitElement {
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly routerService = core.getService(RouterService);
 
-  @property() value = '';
+  @state() value = '';
+  @state() name = 'Mediator';
+  @state() avatar = '⭐';
   @state() isLoading = false;
 
-  private sendUserInput() {
+  private async sendUserInput() {
     if (this.value.trim() === '') return;
+    this.isLoading = true;
+
     // Send chat message
-    this.experimentManager.createManualChatMessage(
+    await this.experimentManager.createManualChatMessage(
       this.routerService.activeRoute.params['stage'],
-      { message: this.value.trim() }
+      {
+        message: this.value.trim(),
+        profile: { name: this.name, avatar: this.avatar, pronouns: null }
+      }
     );
+
     this.value = '';
+    this.isLoading = false;
   }
 
   private renderInput() {
@@ -75,6 +90,7 @@ export class Chat extends MobxLitElement {
             icon="send"
             variant="tonal"
             .disabled=${this.value.trim() === '' || this.isLoading}
+            ?loading=${this.isLoading}
             @click=${this.sendUserInput}
           >
           </pr-icon-button>
@@ -83,12 +99,70 @@ export class Chat extends MobxLitElement {
     </div>`;
   }
 
+  private renderName() {
+    const updateName = (e: InputEvent) => {
+      const value = (e.target as HTMLTextAreaElement).value;
+      this.name = value;
+    };
+
+    return html`
+      <div class="radio-question">
+        <div class="title">Sender name</div>
+        <pr-textarea
+          placeholder="Name of sender"
+          variant="outlined"
+          .value=${this.name}
+          ?disabled=${this.isLoading}
+          @input=${updateName}
+        >
+        </pr-textarea>
+      </div>
+    `;
+  }
+
+  private renderAvatars() {
+    const handleAvatarClick = (e: Event) => {
+      const value = Number((e.target as HTMLInputElement).value);
+      const avatar = LLM_MEDIATOR_AVATARS[value];
+      this.avatar = avatar;
+    };
+
+    const renderAvatarRadio = (emoji: string, index: number) => {
+      return html`
+        <div class="radio-button">
+          <md-radio
+            id=${emoji}
+            name="manual-chat-avatar"
+            value=${index}
+            ?checked=${this.avatar === emoji}
+            @change=${handleAvatarClick}
+          >
+          </md-radio>
+          <profile-avatar .emoji=${emoji} .square=${true}></profile-avatar>
+        </div>
+      `;
+    };
+
+    return html`
+      <div class="radio-question">
+        <div class="title">Avatar</div>
+        <div class="radio-wrapper">
+          ${LLM_MEDIATOR_AVATARS.map(
+            (avatar, index) => renderAvatarRadio(avatar, index)
+          )}
+        </div>
+      </div>
+    `;
+  }
+
   override render() {
     if (!this.authService.isExperimenter) return nothing;
 
     const stageId = this.routerService.activeRoute.params['stage'];
 
     return html`
+      ${this.renderName()}
+      ${this.renderAvatars()}
       <div class="input-row-wrapper">
         <div class="input-row">${this.renderInput()}</div>
       </div>
