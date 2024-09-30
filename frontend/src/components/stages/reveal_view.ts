@@ -2,7 +2,7 @@ import '../progress/progress_stage_completed';
 
 import './stage_description';
 import './stage_footer';
-import './election_reveal_view';
+import './ranking_reveal_view';
 import './survey_reveal_view';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -15,6 +15,7 @@ import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
 import {
+  RevealItem,
   RevealStageConfig,
   StageConfig,
   StageKind,
@@ -41,7 +42,7 @@ export class RevealView extends MobxLitElement {
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="reveal-wrapper">
-        ${this.stage.stageIds.map(id => this.renderStage(id))}
+        ${this.stage.items.map(item => this.renderItem(item))}
       </div>
       <stage-footer>
         ${this.stage.progress.showParticipantProgress ?
@@ -51,21 +52,21 @@ export class RevealView extends MobxLitElement {
     `;
   }
 
-  private renderStage(stageId: string) {
-    const stage = this.experimentService.getStage(stageId);
-    const answer = this.participantService.answerMap[stageId];
-    const publicData = this.cohortService.stagePublicDataMap[stageId];
+  private renderItem(item: RevealItem) {
+    const stage = this.experimentService.getStage(item.id);
+    const answer = this.participantService.answerMap[item.id];
+    const publicData = this.cohortService.stagePublicDataMap[item.id];
     if (!stage) return nothing;
 
-    switch(stage.kind) {
-      case StageKind.ELECTION:
+    switch(item.kind) {
+      case StageKind.RANKING:
         return html`
-          <election-reveal-view .publicData=${publicData}>
-          </election-reveal-view>
+          <ranking-reveal-view .item=${item} .publicData=${publicData}>
+          </ranking-reveal-view>
         `;
       case StageKind.SURVEY:
         return html`
-          <survey-reveal-view .stage=${stage} .answer=${answer}>
+          <survey-reveal-view .item=${item} .stage=${stage} .answer=${answer}>
           </survey-reveal-view>
         `;
       default:

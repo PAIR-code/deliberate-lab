@@ -9,7 +9,7 @@ import {
   ParticipantProfileExtendedData,
   SimpleResponse,
   UpdateChatStageParticipantAnswerData,
-  UpdateElectionStageParticipantAnswerData,
+  UpdateRankingStageParticipantAnswerData,
   UpdateSurveyStageParticipantAnswerData
 } from '@deliberation-lab/utils';
 
@@ -69,11 +69,11 @@ export const updateSurveyStageParticipantAnswerCallable = async(
   return data;
 }
 
-/** Generic endpoint to update election stage participant answers */
-export const updateElectionStageParticipantAnswerCallable = async(
-  functions: Functions, config: UpdateElectionStageParticipantAnswerData
+/** Generic endpoint to update ranking stage participant answers */
+export const updateRankingStageParticipantAnswerCallable = async(
+  functions: Functions, config: UpdateRankingStageParticipantAnswerData
 ) => {
-  const { data } = await httpsCallable<UpdateElectionStageParticipantAnswerData, CreationResponse>(functions, 'updateElectionStageParticipantAnswer')(config);
+  const { data } = await httpsCallable<UpdateRankingStageParticipantAnswerData, CreationResponse>(functions, 'updateRankingStageParticipantAnswer')(config);
   return data;
 }
 

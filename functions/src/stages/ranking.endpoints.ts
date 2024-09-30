@@ -1,14 +1,15 @@
 import { Value } from '@sinclair/typebox/value';
 import {
-  ElectionStageParticipantAnswer,
-  ElectionStagePublicData,
+  RankingStageParticipantAnswer,
+  RankingStagePublicData,
   StageKind,
   SurveyStagePublicData,
-  UpdateElectionStageParticipantAnswerData,
+  UpdateRankingStageParticipantAnswerData,
   filterRankingsByCandidates,
   getCondorcetElectionWinner,
   getRankingCandidatesFromWTL,
   LAS_WTL_STAGE_ID,
+  ElectionStrategy,
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
@@ -23,27 +24,27 @@ import {
   prettyPrintErrors,
 } from '../utils/validation';
 
-/** Endpoints for updating election stage participant answers. */
+/** Endpoints for updating ranking stage participant answers. */
 
 // ************************************************************************* //
-// updateElectionStageParticipantAnswer endpoint                             //
+// updateRankingStageParticipantAnswer endpoint                             //
 //                                                                           //
 // Input structure: { experimentId, cohortId, participantPublicId,           //
 //                    participantPrivateId, stageId, rankingList }           //
-// Validation: utils/src/stages/election_stage.validation.ts                 //
+// Validation: utils/src/stages/ranking_stage.validation.ts                 //
 // ************************************************************************* //
-export const updateElectionStageParticipantAnswer = onCall(async (request) => {
+export const updateRankingStageParticipantAnswer = onCall(async (request) => {
   const { data } = request;
 
   // Validate input
-  const validInput = Value.Check(UpdateElectionStageParticipantAnswerData, data);
+  const validInput = Value.Check(UpdateRankingStageParticipantAnswerData, data);
   if (!validInput) {
-    handleUpdateElectionStageParticipantAnswerValidationErrors(data);
+    handleUpdateRankingStageParticipantAnswerValidationErrors(data);
   }
 
-  const answer: ElectionStageParticipantAnswer = {
+  const answer: RankingStageParticipantAnswer = {
     id: data.stageId,
-    kind: StageKind.ELECTION,
+    kind: StageKind.RANKING,
     rankingList: data.rankingList,
   };
 
@@ -78,7 +79,7 @@ export const updateElectionStageParticipantAnswer = onCall(async (request) => {
     transaction.set(document, answer);
 
     // Update public stage data (current participant rankings, current winner)
-    const publicStageData = (await publicDocument.get()).data() as ElectionStagePublicData;
+    const publicStageData = (await publicDocument.get()).data() as RankingStagePublicData;
     publicStageData.participantAnswerMap[data.participantPublicId] = data.rankingList
 
     // Calculate rankings
@@ -98,16 +99,18 @@ export const updateElectionStageParticipantAnswer = onCall(async (request) => {
       }
     }
 
-    publicStageData.currentWinner = getCondorcetElectionWinner(participantAnswerMap);
-    publicStageData.electionItems = data.electionItems;
+    if (data.strategy === ElectionStrategy.CONDORCET) {
+      publicStageData.currentWinner = getCondorcetElectionWinner(participantAnswerMap);
+    }
+    publicStageData.rankingItems = data.rankingItems;
     transaction.set(publicDocument, publicStageData);
   });
 
   return { id: document.id };
 });
 
-function handleUpdateElectionStageParticipantAnswerValidationErrors(data: any) {
-  for (const error of Value.Errors(UpdateElectionStageParticipantAnswerData, data)) {
+function handleUpdateRankingStageParticipantAnswerValidationErrors(data: any) {
+  for (const error of Value.Errors(UpdateRankingStageParticipantAnswerData, data)) {
     if (isUnionError(error)) {
       const nested = checkConfigDataUnionOnPath(data, error.path);
       prettyPrintErrors(nested);

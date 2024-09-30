@@ -30,7 +30,7 @@ export function convertExperimentToGalleryItem(
 /** Return stages that support reveal views. */
 export function getStagesWithReveal(stages: StageConfig[]) {
   return stages.filter(
-    stage => stage.kind === StageKind.SURVEY || stage.kind === StageKind.ELECTION
+    stage => stage.kind === StageKind.SURVEY || stage.kind === StageKind.RANKING
   );
 }
 

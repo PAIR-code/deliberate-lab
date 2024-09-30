@@ -11,6 +11,12 @@ h2 {
   margin: 0;
 }
 
+h3 {
+  @include typescale.title-small;
+  margin: 0;
+}
+
+
 .reveal-wrapper {
   @include common.flex-column;
   flex-grow: 1;
@@ -20,6 +26,9 @@ h2 {
 .reveal {
   @include common.flex-row;
   gap: common.$spacing-medium;
+  margin-left: calc(48px + common.$spacing-medium);
+  color: var(--md-sys-color-tertiary);
+  font-weight: bold;
 }
 
 .info {
@@ -86,4 +95,12 @@ h2 {
       }
     }
   }
+}
+
+.divider {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.rank-row{
+  flex: 0 0 30px;
 }

@@ -160,7 +160,7 @@ export class PayoutView extends MobxLitElement {
       let participantId = this.participantService.profile?.publicId ?? '';
       if (isLeader) {
         const leader = this.cohortService.stagePublicDataMap[LAS_PART_2_ELECTION_STAGE_ID];
-        if (leader && leader.kind === StageKind.ELECTION && leader.currentWinner !== '') {
+        if (leader && leader.kind === StageKind.RANKING && leader.currentWinner !== '') {
           participantId = leader.currentWinner;
         } else {
           isLeader = false;

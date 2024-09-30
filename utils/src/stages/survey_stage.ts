@@ -142,7 +142,7 @@ export function createSurveyStage(
     name: config.name ?? 'Survey',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig(),
-    questions: config.questions ?? [],
+    questions: config.questions ?? []
   };
 }
 

@@ -3,7 +3,7 @@ import { StageKind } from './stage';
 import {
   StageGameSchema,
   StageProgressConfigSchema,
-  StageTextConfigSchema
+  StageTextConfigSchema,
 } from './stage.validation';
 import { SurveyQuestionKind } from './survey_stage';
 
@@ -149,10 +149,7 @@ export const SurveyStageParticipantAnswerData = Type.Object(
   {
     id: Type.String({ minLength: 1 }),
     kind: Type.Literal(StageKind.SURVEY),
-    answerMap: Type.Record(
-      Type.String({ minLength: 1 }),
-      SurveyAnswerData
-    ),
+    answerMap: Type.Record(Type.String({ minLength: 1 }), SurveyAnswerData),
   },
   strict,
 );
@@ -161,11 +158,13 @@ export const UpdateSurveyStageParticipantAnswerData = Type.Object(
   {
     experimentId: Type.String({ minLength: 1 }),
     cohortId: Type.String({ minLength: 1 }),
-    participantPrivateId: Type.String({ minLength: 1}),
+    participantPrivateId: Type.String({ minLength: 1 }),
     participantPublicId: Type.String({ minLength: 1 }),
     surveyStageParticipantAnswer: SurveyStageParticipantAnswerData,
   },
   strict,
 );
 
-export type UpdateSurveyStageParticipantAnswerData = Static<typeof UpdateSurveyStageParticipantAnswerData>;
+export type UpdateSurveyStageParticipantAnswerData = Static<
+  typeof UpdateSurveyStageParticipantAnswerData
+>;

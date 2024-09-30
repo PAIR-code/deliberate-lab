@@ -18,22 +18,24 @@ import {RouterService} from '../../services/router.service';
 
 import {
   ParticipantProfile,
-  ElectionStageParticipantAnswer,
-  ElectionStageConfig,
-  ElectionItem,
+  RankingStageParticipantAnswer,
+  ItemRankingStage,
+  RankingStageConfig,
+  RankingItem,
+  RankingType,
 } from '@deliberation-lab/utils';
 import {convertMarkdownToHTML} from '../../shared/utils';
 import {
   getParticipantName,
   getParticipantPronouns,
-  isObsoleteParticipant
+  isObsoleteParticipant,
 } from '../../shared/participant.utils';
 
-import {styles} from './election_view.scss';
+import {styles} from './ranking_view.scss';
 
-/** Election view */
-@customElement('election-view')
-export class ElectionView extends MobxLitElement {
+/** Ranking view */
+@customElement('ranking-view')
+export class RankingView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly cohortService = core.getService(CohortService);
@@ -42,26 +44,31 @@ export class ElectionView extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
-  @property() stage: ElectionStageConfig|undefined = undefined;
-  @property() answer: ElectionStageParticipantAnswer|undefined = undefined;
+  @property() stage: RankingStageConfig | undefined = undefined;
+  @property() answer: RankingStageParticipantAnswer | undefined = undefined;
 
   private getItems() {
-    if (this.stage?.isParticipantElection) {
-      // TODO: Enable voting for self.
-      return this.cohortService
-        .getAllParticipants()
-        .filter(profile => profile.publicId !== this.participantService.profile?.publicId) ?? [];
+    if (this.stage?.rankingType === RankingType.PARTICIPANTS) {
+      const allParticipants = this.cohortService.getAllParticipants();
+      if (this.stage.enableSelfVoting) {
+        return allParticipants;
+      }
+      return (
+        allParticipants.filter(
+          (profile) =>
+            profile.publicId !== this.participantService.profile?.publicId
+        ) ?? []
+      );
     } else {
-      return this.stage?.electionItems ?? [];
+      return this.stage?.rankingItems ?? [];
     }
   }
 
-  private getItemId(item: ParticipantProfile | ElectionItem) {
+  private getItemId(item: ParticipantProfile | RankingItem) {
     if ('publicId' in item) {
       return (item as ParticipantProfile).publicId;
-    } 
-    else {
-      return (item as ElectionItem).id;
+    } else {
+      return (item as RankingItem).id;
     }
   }
 
@@ -78,12 +85,12 @@ export class ElectionView extends MobxLitElement {
 
     return html`
       <stage-description .stage=${this.stage}></stage-description>
-      <div class="election-wrapper">
+      <div class="ranking-wrapper">
         ${this.renderStartZone()} ${this.renderEndZone()}
       </div>
       <stage-footer .disabled=${disabled}>
-        ${this.stage.progress.showParticipantProgress ?
-          html`<progress-stage-completed></progress-stage-completed>`
+        ${this.stage.progress.showParticipantProgress
+          ? html`<progress-stage-completed></progress-stage-completed>`
           : nothing}
       </stage-footer>
     `;
@@ -92,8 +99,11 @@ export class ElectionView extends MobxLitElement {
   private renderStartZone() {
     return html`
       <div class="start-zone">
-        ${this.getItems().slice()
-          .sort((p1, p2) => this.getItemId(p1).localeCompare(this.getItemId(p2)))
+        ${this.getItems()
+          .slice()
+          .sort((p1, p2) =>
+            this.getItemId(p1).localeCompare(this.getItemId(p2))
+          )
           .filter(
             (i) =>
               !(this.answer?.rankingList ?? []).find(
@@ -105,23 +115,20 @@ export class ElectionView extends MobxLitElement {
     `;
   }
 
-  private renderItem(item: ParticipantProfile | ElectionItem) {
+  private renderItem(item: ParticipantProfile | RankingItem) {
     if ('publicId' in item) {
       // It's a ParticipantProfile
       return this.renderParticipant(item as ParticipantProfile);
     } else {
-      // It's an ElectionItem
-      return this.renderElectionItem(item as ElectionItem);
+      // It's an RankingItem
+      return this.renderRankingItem(item as RankingItem);
     }
   }
 
   private renderParticipant(profile: ParticipantProfile) {
     return html`
       <div class="item">
-        <profile-avatar
-          .emoji=${profile.avatar}
-          .square=${true}
-        >
+        <profile-avatar .emoji=${profile.avatar} .square=${true}>
         </profile-avatar>
         <div class="right">
           <div class="title">${getParticipantName(profile)}</div>
@@ -131,7 +138,7 @@ export class ElectionView extends MobxLitElement {
     `;
   }
 
-  private renderElectionItem(item: ElectionItem) {
+  private renderRankingItem(item: RankingItem) {
     const renderImage = () => {
       if (item.imageId.length === 0) return nothing;
 
@@ -151,7 +158,9 @@ export class ElectionView extends MobxLitElement {
     `;
   }
 
-  private renderDraggableParticipant(item: ParticipantProfile | ElectionItem) {
+  private renderDraggableParticipant(item: ParticipantProfile | RankingItem) {
+    const items = (this.stage as ItemRankingStage).rankingItems ?? [];
+
     const onDragStart = (event: DragEvent) => {
       let target = event.target as HTMLElement;
       target.style.opacity = '.25';
@@ -174,8 +183,11 @@ export class ElectionView extends MobxLitElement {
         this.getItemId(item),
       ];
       // Update ranking list
-      this.participantService.updateElectionStageParticipantAnswer(
-        this.stage.id, rankings, this.stage.electionItems
+      this.participantService.updateRankingStageParticipantAnswer(
+        this.stage.id,
+        this.stage.strategy,
+        rankings,
+        items
       );
     };
 
@@ -216,6 +228,8 @@ export class ElectionView extends MobxLitElement {
       }
     };
 
+    const items = (this.stage as ItemRankingStage).rankingItems ?? [];
+
     const onDrop = (event: DragEvent) => {
       const target = event.target as HTMLElement;
       if (target && event.dataTransfer && this.stage) {
@@ -228,9 +242,7 @@ export class ElectionView extends MobxLitElement {
         // Create new rankings (using answerIndex to slot participant in)
         let rankings = [...currentRankings];
 
-        const existingIndex = currentRankings.findIndex(
-          (id) => id === itemId
-        );
+        const existingIndex = currentRankings.findIndex((id) => id === itemId);
         let newIndex = index;
 
         if (existingIndex >= 0) {
@@ -249,8 +261,11 @@ export class ElectionView extends MobxLitElement {
           ...rankings.slice(newIndex),
         ];
         // Update ranking list
-        this.participantService.updateElectionStageParticipantAnswer(
-          this.stage.id, rankings, this.stage.electionItems
+        this.participantService.updateRankingStageParticipantAnswer(
+          this.stage.id,
+          this.stage.strategy,
+          rankings,
+          items
         );
       }
     };
@@ -270,19 +285,24 @@ export class ElectionView extends MobxLitElement {
     `;
   }
 
-  private renderRankedItem(item: ParticipantProfile | ElectionItem, index: number) {
+  private renderRankedItem(
+    item: ParticipantProfile | RankingItem,
+    index: number
+  ) {
     const rankings = this.answer?.rankingList ?? [];
     const onCancel = () => {
       if (index === -1 || !this.stage) {
         return;
       }
 
-      this.participantService.updateElectionStageParticipantAnswer(
+      this.participantService.updateRankingStageParticipantAnswer(
         this.stage.id,
+        this.stage.strategy,
         [...rankings.slice(0, index), ...rankings.slice(index + 1)],
-        this.stage.electionItems
+        items
       );
     };
+    const items = (this.stage as ItemRankingStage).rankingItems ?? [];
 
     const onMoveUp = () => {
       if (!this.stage) return;
@@ -290,12 +310,13 @@ export class ElectionView extends MobxLitElement {
         ...rankings.slice(0, index - 1),
         ...rankings.slice(index, index + 1),
         ...rankings.slice(index - 1, index),
-        ...rankings.slice(index + 1)
+        ...rankings.slice(index + 1),
       ];
-      this.participantService.updateElectionStageParticipantAnswer(
+      this.participantService.updateRankingStageParticipantAnswer(
         this.stage.id,
+        this.stage.strategy,
         rankingList,
-        this.stage.electionItems
+        items
       );
     };
 
@@ -307,12 +328,13 @@ export class ElectionView extends MobxLitElement {
         ...rankings.slice(index, index + 1),
         ...rankings.slice(index + 2),
       ];
-      this.participantService.updateElectionStageParticipantAnswer(
+      this.participantService.updateRankingStageParticipantAnswer(
         this.stage.id,
+        this.stage.strategy,
         rankingList,
-        this.stage.electionItems
+        items
       );
-    }
+    };
 
     const onDragStart = (event: DragEvent) => {
       let target = event.target as HTMLElement;
@@ -351,7 +373,8 @@ export class ElectionView extends MobxLitElement {
             icon="arrow_downward"
             color="neutral"
             variant="default"
-            ?disabled=${this.participantService.disableStage || index === rankings.length - 1}
+            ?disabled=${this.participantService.disableStage ||
+            index === rankings.length - 1}
             @click=${onMoveDown}
           >
           </pr-icon-button>
@@ -378,12 +401,11 @@ export class ElectionView extends MobxLitElement {
           </div>
         </div>
         ${this.answer?.rankingList.map((id: string, index: number) => {
-          const item = this.getItems()
-            .find((item) => this.getItemId(item) === id);
+          const item = this.getItems().find(
+            (item) => this.getItemId(item) === id
+          );
 
-          return item
-            ? this.renderRankedItem(item, index)
-            : nothing;
+          return item ? this.renderRankedItem(item, index) : nothing;
         })}
         ${this.renderDragZone((this.answer?.rankingList ?? []).length, true)}
       </div>
@@ -393,6 +415,6 @@ export class ElectionView extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-      'election-view': ElectionView;
+    'ranking-view': RankingView;
   }
 }

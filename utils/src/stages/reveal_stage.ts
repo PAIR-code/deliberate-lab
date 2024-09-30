@@ -22,7 +22,34 @@ import {
  */
 export interface RevealStageConfig extends BaseStageConfig {
   kind: StageKind.REVEAL;
-  stageIds: string[]; // ordered list of stages to reveal
+  items: RevealItem[]; // ordered list of reveal items
+}
+
+/** Base reveal item for all stages. */
+export interface BaseRevealItem {
+  id: string; // ID of stage to reveal
+  kind: StageKind;
+  revealAudience: RevealAudience;
+}
+
+/** Reveal item. */
+export type RevealItem = RankingRevealItem | SurveyRevealItem;
+
+/** Reveal settings for ranking stage. */
+export interface RankingRevealItem extends BaseRevealItem {
+  kind: StageKind.RANKING;
+}
+
+/** Reveal settings for survey stage. */
+export interface SurveyRevealItem extends BaseRevealItem {
+  kind: StageKind.SURVEY;
+  revealScorableOnly: boolean;
+}
+
+/** Specifies which answers to reveal. */
+export enum RevealAudience {
+  CURRENT_PARTICIPANT = 'CURRENT', // Reveals answers for the current participant.
+  ALL_PARTICIPANTS = 'ALL', // Reveals answers for all participants.
 }
 
 // ************************************************************************* //
@@ -40,6 +67,44 @@ export function createRevealStage(
     name: config.name ?? 'Reveal',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig(),
-    stageIds: config.stageIds ?? [],
+    items: config.items ?? [],
   };
+}
+
+/** Create new reveal item. */
+export function createNewRevealItem(
+  id: string,
+  kind: StageKind
+): RevealItem|null {
+  switch (kind) {
+    case StageKind.RANKING:
+      return createRankingRevealItem({id});
+    case StageKind.SURVEY:
+      return createSurveyRevealItem({id});
+    default:
+      return null;
+  }
+}
+
+/** Create ranking reveal item. */
+export function createRankingRevealItem(
+  config: Partial<RankingRevealItem> = {},
+): RankingRevealItem {
+  return {
+    id: config.id ?? generateId(),
+    kind: StageKind.RANKING,
+    revealAudience: config.revealAudience ?? RevealAudience.CURRENT_PARTICIPANT,
+  }
+}
+
+/** Create survey reveal item. */
+export function createSurveyRevealItem(
+  config: Partial<SurveyRevealItem> = {},
+): SurveyRevealItem {
+  return {
+    id: config.id ?? generateId(),
+    kind: StageKind.SURVEY,
+    revealAudience: config.revealAudience ?? RevealAudience.CURRENT_PARTICIPANT,
+    revealScorableOnly: config.revealScorableOnly ?? false,
+  }
 }

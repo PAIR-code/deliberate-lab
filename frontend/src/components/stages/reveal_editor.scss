@@ -42,18 +42,23 @@
   }
 }
 
-.checkbox-input {
-  @include common.flex-row-align-center;
-}
-
 .reveal-stage {
-  @include common.flex-row-align-center;
+  @include common.flex-column;
   background: var(--md-sys-color-surface);
   border-radius: common.$spacing-medium;
-  justify-content: space-between;
-  padding: common.$spacing-medium;
+  gap: common.$spacing-xl;
+  padding: common.$spacing-large;
 }
 
 .buttons {
   @include common.flex-row-align-center;
+}
+
+.checkbox-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+}
+
+md-checkbox {
+  flex-shrink: 0;
 }

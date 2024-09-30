@@ -1,7 +1,7 @@
 import {
   ChatStageParticipantAnswer,
   CreateChatMessageData,
-  ElectionItem,
+  RankingItem,
   ParticipantChatMessage,
   ParticipantProfileExtended,
   ParticipantStatus,
@@ -37,7 +37,7 @@ import {
   updateParticipantCallable,
   updateChatStageParticipantAnswerCallable,
   updateSurveyStageParticipantAnswerCallable,
-  updateElectionStageParticipantAnswerCallable,
+  updateRankingStageParticipantAnswerCallable,
 } from '../shared/callables';
 import {PROLIFIC_COMPLETION_URL_PREFIX} from '../shared/constants';
 import {
@@ -47,6 +47,7 @@ import {
   isPendingParticipant,
   isParticipantEndedExperiment,
 } from '../shared/participant.utils';
+import { ElectionStrategy } from '@deliberation-lab/utils';
 
 interface ServiceProvider {
   cohortService: CohortService;
@@ -499,23 +500,25 @@ export class ParticipantService extends Service {
     return response;
   }
 
-  /** Update participant's election stage answer. */
-  async updateElectionStageParticipantAnswer(
-    stageId: string, // election stage ID
+  /** Update participant's ranking stage answer. */
+  async updateRankingStageParticipantAnswer(
+    stageId: string, // ranking stage ID
+    strategy: ElectionStrategy,
     rankingList: string[], // list of rankings
-    electionItems: ElectionItem[] | null
+    rankingItems: RankingItem[] | null
   ) {
     let response = {};
     if (this.experimentId && this.profile) {
-      response = await updateElectionStageParticipantAnswerCallable(
+      response = await updateRankingStageParticipantAnswerCallable(
         this.sp.firebaseService.functions, {
           experimentId: this.experimentId,
           cohortId: this.profile.currentCohortId,
           participantPublicId: this.profile.publicId,
           participantPrivateId: this.profile.privateId,
           stageId,
+          strategy,
           rankingList,
-          electionItems: electionItems ?? [],
+          rankingItems: rankingItems ?? [],
         }
       );
     }

@@ -69,3 +69,12 @@ pr-textarea {
   flex-grow: 1;
   width: 100%;
 }
+
+.section {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.title {
+  @include typescale.title-small;
+}

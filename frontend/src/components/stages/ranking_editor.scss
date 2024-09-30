@@ -21,12 +21,16 @@
   gap: common.$spacing-medium;
 }
 
-.election-items {
+md-checkbox {
+  flex-shrink: 0;
+}
+
+.ranking-items {
   @include common.flex-column;
   gap: common.$spacing-medium;
 }
 
-.election-item {
+.ranking-item {
   @include common.flex-row-align-center;
   justify-content: space-between;
   padding: common.$spacing-medium;
@@ -40,4 +44,9 @@
 
 pr-icon-button {
   margin-left: common.$spacing-small;
+}
+
+.indented {
+  /* width of checkbox plus gap */
+  margin-left: calc(48px + common.$spacing-medium);
 }

@@ -298,18 +298,18 @@ export class ExperimentManager extends Service {
     // Get ordered list of stages
     const stages: StageConfig[] = [];
     experiment.stageIds.forEach(id => {
-        const stage = this.sp.experimentService.stageConfigMap[id];
-        if (stage) stages.push(stage);
+      const stage = this.sp.experimentService.stageConfigMap[id];
+      if (stage) stages.push(stage);
     });
 
     let response = {};
     response = await writeExperimentCallable(
-        this.sp.firebaseService.functions,
-        {
-            collectionName: 'experiments',
-            experimentConfig: experiment,
-            stageConfigs: stages
-        }
+      this.sp.firebaseService.functions,
+      {
+        collectionName: 'experiments',
+        experimentConfig: experiment,
+        stageConfigs: stages
+      }
     );
 
     // Route to new experiment and reload to update changes

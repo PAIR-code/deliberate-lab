@@ -15,7 +15,7 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 import {
   StageKind,
   createChatStage,
-  createElectionStage,
+  createRankingStage,
   createInfoStage,
   createProfileStage,
   createRevealStage,
@@ -110,7 +110,7 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderProfileCard()}
         ${this.renderSurveyCard()}
         ${this.renderChatCard()}
-        ${this.renderElectionCard()}
+        ${this.renderRankingCard()}
         ${this.renderRevealCard()}
       </div>
     `;
@@ -205,18 +205,18 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
-  private renderElectionCard() {
+  private renderRankingCard() {
     const addStage = () => {
-      this.experimentEditor.addStage(createElectionStage());
+      this.experimentEditor.addStage(createRankingStage());
       this.experimentEditor.toggleStageBuilderDialog();
       this.experimentEditor.jumpToLastStage();
     };
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">🗳️ Election</div>
+        <div class="title">🗳️ Ranking / Election</div>
         <div>
-          Conduct a ranking among participants or items.
+          Have participants rank each other or items, and optionally hold an election.
         </div>
       </div>
     `;
@@ -233,7 +233,7 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addStage}>
         <div class="title">👁️‍🗨️ Reveal</div>
         <div>
-          Reveal the results of the election and multiple-choice responses to survey stages.
+          Reveal the results of rankings, elections, and survey stage responses.
         </div>
       </div>
     `;

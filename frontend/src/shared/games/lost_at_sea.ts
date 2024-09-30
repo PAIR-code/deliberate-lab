@@ -7,20 +7,23 @@ import {
   SurveyQuestionKind,
   createChatStage,
   createCompareChatDiscussion,
-  createElectionStage,
+  createRankingStage,
   createExperimentConfig,
   createInfoStage,
   createPayoutStage,
   createProfileStage,
   createMetadataConfig,
   createMultipleChoiceSurveyQuestion,
+  createRankingRevealItem,
   createRevealStage,
   createScaleSurveyQuestion,
   createStageTextConfig,
+  createSurveyRevealItem,
   createSurveyStage,
   createTOSStage,
   createTransferStage,
   LAS_WTL_STAGE_ID,
+  RevealAudience,
   LAS_WTL_QUESTION_ID,
 } from '@deliberation-lab/utils';
 
@@ -32,7 +35,8 @@ import {
 export const LAS_METADATA = createMetadataConfig({
   name: 'Lost at Sea Experiment',
   publicName: 'Adrift in the Atlantic',
-  description: 'An implementation of the Lost at Sea task (Born 2022) with pairwise elements.',
+  description:
+    'An implementation of the Lost at Sea task (Born 2022) with pairwise elements.',
 });
 
 export function getLASStageConfigs(): StageConfig[] {
@@ -85,20 +89,20 @@ interface LASItem {
 }
 
 export const LAS_ITEMS: Record<string, LASItem> = {
-  'mirror': { name: 'Mirror', ranking: 1 },
-  'oil': { name: 'Can of oil/petrol (10L)', ranking: 2 },
-  'water': { name: 'Water (25L)', ranking: 3 },
-  'rations': { name: 'Case of army rations', ranking: 4 },
-  'sheeting': { name: 'Plastic sheeting', ranking: 5 },
-  'chocolate': { name: 'Chocolate bars (2 boxes)', ranking: 6},
-  'fishing': { name: 'A fishing kit & pole', ranking: 7 },
-  'rope': { name: 'Nylon rope (15 ft.)', ranking: 8 },
-  'cushion': { name: 'Floating seat cushion', ranking: 9 },
-  'repellent': { name: 'Can of shark repellent', ranking: 10 },
-  'rubbing_alcohol': { name: 'Bottle of rubbing alcohol', ranking: 11 },
-  'radio': { name: 'Small transistor radio', ranking: 12 },
-  'map': { name: 'Maps of the Atlantic Ocean', ranking: 13 },
-  'netting': { name: 'Mosquito netting', ranking: 14 },
+  mirror: {name: 'Mirror', ranking: 1},
+  oil: {name: 'Can of oil/petrol (10L)', ranking: 2},
+  water: {name: 'Water (25L)', ranking: 3},
+  rations: {name: 'Case of army rations', ranking: 4},
+  sheeting: {name: 'Plastic sheeting', ranking: 5},
+  chocolate: {name: 'Chocolate bars (2 boxes)', ranking: 6},
+  fishing: {name: 'A fishing kit & pole', ranking: 7},
+  rope: {name: 'Nylon rope (15 ft.)', ranking: 8},
+  cushion: {name: 'Floating seat cushion', ranking: 9},
+  repellent: {name: 'Can of shark repellent', ranking: 10},
+  rubbing_alcohol: {name: 'Bottle of rubbing alcohol', ranking: 11},
+  radio: {name: 'Small transistor radio', ranking: 12},
+  map: {name: 'Maps of the Atlantic Ocean', ranking: 13},
+  netting: {name: 'Mosquito netting', ranking: 14},
 };
 
 export function getLASItemImageId(itemId: string) {
@@ -135,29 +139,34 @@ export const ITEMS_SET_3: Array<[string, string]> = [
   ['radio', 'water'],
 ];
 
-export const LAS_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS: MultipleChoiceSurveyQuestion[]
-  = ITEMS_SET_1.map(itemSet => createLASMultipleChoiceQuestion(itemSet[0], itemSet[1]));
+export const LAS_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS: MultipleChoiceSurveyQuestion[] =
+  ITEMS_SET_1.map((itemSet) =>
+    createLASMultipleChoiceQuestion(itemSet[0], itemSet[1])
+  );
 
-export const LAS_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS: MultipleChoiceSurveyQuestion[]
-  = ITEMS_SET_2.map(itemSet => createLASMultipleChoiceQuestion(itemSet[0], itemSet[1]));
+export const LAS_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS: MultipleChoiceSurveyQuestion[] =
+  ITEMS_SET_2.map((itemSet) =>
+    createLASMultipleChoiceQuestion(itemSet[0], itemSet[1])
+  );
 
-export function createLASSurvivalSurvey(itemQuestions: MultipleChoiceSurveyQuestion[]) {
+export function createLASSurvivalSurvey(
+  itemQuestions: MultipleChoiceSurveyQuestion[]
+) {
   const questions: SurveyQuestion[] = [];
-  itemQuestions.forEach(question => {
+  itemQuestions.forEach((question) => {
     questions.push(question);
-    questions.push(createScaleSurveyQuestion({
-      questionTitle: LAS_ITEM_SCALE_QUESTION_TITLE,
-      upperText: 'Very confident',
-      lowerText: 'Not confident'
-    }));
+    questions.push(
+      createScaleSurveyQuestion({
+        questionTitle: LAS_ITEM_SCALE_QUESTION_TITLE,
+        upperText: 'Very confident',
+        lowerText: 'Not confident',
+      })
+    );
   });
   return questions;
 }
 
-export function getCorrectLASAnswer(
-  id1: string,
-  id2: string,
-): string {
+export function getCorrectLASAnswer(id1: string, id2: string): string {
   const item1 = LAS_ITEMS[id1];
   const item2 = LAS_ITEMS[id2];
   if (!item1 || !item2) return '';
@@ -174,8 +183,16 @@ export function createLASMultipleChoiceQuestion(
     kind: SurveyQuestionKind.MULTIPLE_CHOICE,
     questionTitle: LAS_ITEM_MULTIPLE_CHOICE_QUESTION_TITLE,
     options: [
-      { id: id1, imageId: getLASItemImageId(id1), text: LAS_ITEMS[id1]?.name ?? '' },
-      { id: id2, imageId: getLASItemImageId(id2), text: LAS_ITEMS[id2]?.name ?? '' },
+      {
+        id: id1,
+        imageId: getLASItemImageId(id1),
+        text: LAS_ITEMS[id1]?.name ?? '',
+      },
+      {
+        id: id2,
+        imageId: getLASItemImageId(id2),
+        text: LAS_ITEMS[id2]?.name ?? '',
+      },
     ],
     correctAnswerId: getCorrectLASAnswer(id1, id2),
   };
@@ -201,8 +218,7 @@ const LAS_TOS_STAGE = createTOSStage({
 // ****************************************************************************
 // Intro info stage
 // ****************************************************************************
-const LAS_INTRO_INFO_DESCRIPTION_PRIMARY =
-  `This experiment is part of a research project that explores human decisions in various online environments. You will play an engaging game that presents a survival scenario, and answer questions. You may also interact with others during the experiment.`;
+const LAS_INTRO_INFO_DESCRIPTION_PRIMARY = `This experiment is part of a research project that explores human decisions in various online environments. You will play an engaging game that presents a survival scenario, and answer questions. You may also interact with others during the experiment.`;
 
 const LAS_INTRO_INFO_LINES = [
   'You will receive a fixed fee of £3 for your participation, with an opportunity to earn a bonus. We will explain precisely how your bonus is determined later.',
@@ -217,7 +233,9 @@ const LAS_INTRO_INFO_LINES = [
 const LAS_INTRO_STAGE = createInfoStage({
   game: StageGame.LAS,
   name: 'Welcome to the experiment',
-  descriptions: createStageTextConfig({ primaryText: LAS_INTRO_INFO_DESCRIPTION_PRIMARY }),
+  descriptions: createStageTextConfig({
+    primaryText: LAS_INTRO_INFO_DESCRIPTION_PRIMARY,
+  }),
   infoLines: LAS_INTRO_INFO_LINES,
 });
 
@@ -257,8 +275,10 @@ const LAS_PART_1_SURVIVAL_SURVEY_STAGE = createSurveyStage({
   id: LAS_PART_1_SURVIVAL_SURVEY_STAGE_ID,
   game: StageGame.LAS,
   name: 'Initial survival task',
-  descriptions: createStageTextConfig({ infoText: LAS_SCENARIO_REMINDER }),
-  questions: createLASSurvivalSurvey(LAS_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS),
+  descriptions: createStageTextConfig({infoText: LAS_SCENARIO_REMINDER}),
+  questions: createLASSurvivalSurvey(
+    LAS_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS
+  ),
 });
 
 // ****************************************************************************
@@ -270,14 +290,17 @@ export const LAS_PART_1_WTL_DESCRIPTION_PRIMARY =
 const LAS_PART_1_WTL_SURVEY_STAGE = createSurveyStage({
   game: StageGame.LAS,
   name: 'Willingness to lead survey',
-  descriptions: createStageTextConfig({ primaryText: LAS_PART_1_WTL_DESCRIPTION_PRIMARY }),
+  descriptions: createStageTextConfig({
+    primaryText: LAS_PART_1_WTL_DESCRIPTION_PRIMARY,
+  }),
   questions: [
     createScaleSurveyQuestion({
-      questionTitle: 'How much would you like to become the group leader described above, and complete the task on behalf of your crew?',
+      questionTitle:
+        'How much would you like to become the group leader described above, and complete the task on behalf of your crew?',
       upperText: 'Very much',
       lowerText: 'Not at all',
-    })
-  ]
+    }),
+  ],
 });
 
 // ****************************************************************************
@@ -289,7 +312,9 @@ export const LAS_TRANSFER_DESCRIPTION_PRIMARY =
 export const LAS_TRANSFER_STAGE = createTransferStage({
   game: StageGame.LAS,
   name: 'Lobby',
-  descriptions: createStageTextConfig({ primaryText: LAS_TRANSFER_DESCRIPTION_PRIMARY }),
+  descriptions: createStageTextConfig({
+    primaryText: LAS_TRANSFER_DESCRIPTION_PRIMARY,
+  }),
   enableTimeout: true,
   timeoutSeconds: 600, // 10 minutes
 });
@@ -329,10 +354,13 @@ export const LAS_PART_2_PERFORMANCE_ESTIMATION_DESCRIPTION_PRIMARY =
 const LAS_PART_2_PERFORMANCE_ESTIMATION_SURVEY_STAGE = createSurveyStage({
   game: StageGame.LAS,
   name: 'Performance estimation',
-  descriptions: createStageTextConfig({ primaryText: LAS_PART_2_PERFORMANCE_ESTIMATION_DESCRIPTION_PRIMARY }),
+  descriptions: createStageTextConfig({
+    primaryText: LAS_PART_2_PERFORMANCE_ESTIMATION_DESCRIPTION_PRIMARY,
+  }),
   questions: [
     createMultipleChoiceSurveyQuestion({
-      questionTitle: 'How well do you think you did compared to the other members of your group?',
+      questionTitle:
+        'How well do you think you did compared to the other members of your group?',
       options: [
         {
           id: '1',
@@ -355,7 +383,7 @@ const LAS_PART_2_PERFORMANCE_ESTIMATION_SURVEY_STAGE = createSurveyStage({
           text: 'My score was the fourth best',
         },
       ],
-    })
+    }),
   ],
 });
 
@@ -384,12 +412,20 @@ const LAS_PART_2_GROUP_INSTRUCTIONS_STAGE = createInfoStage({
 // ****************************************************************************
 // Part 2 Group Discussion chat stage
 // ****************************************************************************
-const LAS_PART_2_CHAT_DISCUSSIONS = ITEMS_SET_1.map(itemSet =>
+const LAS_PART_2_CHAT_DISCUSSIONS = ITEMS_SET_1.map((itemSet) =>
   createCompareChatDiscussion({
     items: [
-      { id: itemSet[0], imageId: getLASItemImageId(itemSet[0]), name: LAS_ITEMS[itemSet[0]]?.name ?? '' },
-      { id: itemSet[1], imageId: getLASItemImageId(itemSet[1]), name: LAS_ITEMS[itemSet[1]]?.name ?? '' },
-    ]
+      {
+        id: itemSet[0],
+        imageId: getLASItemImageId(itemSet[0]),
+        name: LAS_ITEMS[itemSet[0]]?.name ?? '',
+      },
+      {
+        id: itemSet[1],
+        imageId: getLASItemImageId(itemSet[1]),
+        name: LAS_ITEMS[itemSet[1]]?.name ?? '',
+      },
+    ],
   })
 );
 
@@ -401,7 +437,7 @@ const LAS_PART_2_CHAT_STAGE = createChatStage({
     minParticipants: 4,
     waitForAllParticipants: true,
     showParticipantProgress: true,
-  }
+  },
 });
 
 // ****************************************************************************
@@ -425,45 +461,51 @@ const LAS_PART_2_UPDATED_TASK_INFO_STAGE = createInfoStage({
 export const LAS_PART_2_UPDATED_TASK_SURVEY_STAGE = createSurveyStage({
   game: StageGame.LAS,
   name: 'Updated survival task',
-  descriptions: createStageTextConfig({ infoText: LAS_SCENARIO_REMINDER }),
-  questions: createLASSurvivalSurvey(LAS_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS),
+  descriptions: createStageTextConfig({infoText: LAS_SCENARIO_REMINDER}),
+  questions: createLASSurvivalSurvey(
+    LAS_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS
+  ),
 });
 
 // ****************************************************************************
 // Part 2 Updated Performance Estimation survey stage
 // ****************************************************************************
-const LAS_PART_2_UPDATED_PERFORMANCE_ESTIMATION_SURVEY_STAGE = createSurveyStage({
-  game: StageGame.LAS,
-  name: 'Update performance estimation',
-  descriptions: createStageTextConfig({ primaryText: LAS_PART_2_PERFORMANCE_ESTIMATION_DESCRIPTION_PRIMARY }),
-  questions: [
-    createMultipleChoiceSurveyQuestion({
-      questionTitle: 'We also give you the opportunity to update your guess about how well you did in Part 1 compared to the other 3 members of your group. Please indicate your answer by clicking on one of the options below. If you think you earned the highest number of good answers in your group, click on the first option. If you think you earned the second highest number of good answers, click on the second option, and so on.',
-      options: [
-        {
-          id: '1',
-          imageId: '',
-          text: 'My score was the best',
-        },
-        {
-          id: '2',
-          imageId: '',
-          text: 'My score was the second best',
-        },
-        {
-          id: '3',
-          imageId: '',
-          text: 'My score was the third best',
-        },
-        {
-          id: '4',
-          imageId: '',
-          text: 'My score was the fourth best',
-        },
-      ],
-    })
-  ],
-});
+const LAS_PART_2_UPDATED_PERFORMANCE_ESTIMATION_SURVEY_STAGE =
+  createSurveyStage({
+    game: StageGame.LAS,
+    name: 'Update performance estimation',
+    descriptions: createStageTextConfig({
+      primaryText: LAS_PART_2_PERFORMANCE_ESTIMATION_DESCRIPTION_PRIMARY,
+    }),
+    questions: [
+      createMultipleChoiceSurveyQuestion({
+        questionTitle:
+          'We also give you the opportunity to update your guess about how well you did in Part 1 compared to the other 3 members of your group. Please indicate your answer by clicking on one of the options below. If you think you earned the highest number of good answers in your group, click on the first option. If you think you earned the second highest number of good answers, click on the second option, and so on.',
+        options: [
+          {
+            id: '1',
+            imageId: '',
+            text: 'My score was the best',
+          },
+          {
+            id: '2',
+            imageId: '',
+            text: 'My score was the second best',
+          },
+          {
+            id: '3',
+            imageId: '',
+            text: 'My score was the third best',
+          },
+          {
+            id: '4',
+            imageId: '',
+            text: 'My score was the fourth best',
+          },
+        ],
+      }),
+    ],
+  });
 
 // ****************************************************************************
 // Part 2 Election Instructions info stage
@@ -503,16 +545,17 @@ const LAS_PART_2_WTL_SURVEY_STAGE = createSurveyStage({
   name: 'Willingness to lead survey',
   descriptions: createStageTextConfig({
     infoText: LAS_PART_2_WTL_DESCRIPTION_INFO,
-    primaryText: LAS_PART_2_WTL_DESCRIPTION_PRIMARY
+    primaryText: LAS_PART_2_WTL_DESCRIPTION_PRIMARY,
   }),
   questions: [
     createScaleSurveyQuestion({
       id: LAS_WTL_QUESTION_ID,
-      questionTitle: 'How much would you like to become the group leader in Part 3?',
+      questionTitle:
+        'How much would you like to become the group leader in Part 3?',
       upperText: 'Very much',
       lowerText: 'Not at all',
-    })
-  ]
+    }),
+  ],
 });
 
 // ****************************************************************************
@@ -520,14 +563,15 @@ const LAS_PART_2_WTL_SURVEY_STAGE = createSurveyStage({
 // ****************************************************************************
 export const LAS_PART_2_ELECTION_STAGE_ID = 'election';
 
-export const LAS_PART_2_ELECTION_DESCRIPTION_PRIMARY
-  = `On this page, you will submit your vote for who should become the group leader. Below, you see a list of the other members of your group. Cast your vote by ranking the other group members according to who you would like to see lead your group.\n\n*Remember, you cannot affect your own chances of being elected. If you are one of the two candidates in the election, your vote doesn't count for the outcome of the election. Therefore, it is in your best interest to rank all group members based on who you would like to see lead the group.*`;
+export const LAS_PART_2_ELECTION_DESCRIPTION_PRIMARY = `On this page, you will submit your vote for who should become the group leader. Below, you see a list of the other members of your group. Cast your vote by ranking the other group members according to who you would like to see lead your group.\n\n*Remember, you cannot affect your own chances of being elected. If you are one of the two candidates in the election, your vote doesn't count for the outcome of the election. Therefore, it is in your best interest to rank all group members based on who you would like to see lead the group.*`;
 
-export const LAS_PART_2_ELECTION_STAGE = createElectionStage({
+export const LAS_PART_2_ELECTION_STAGE = createRankingStage({
   id: LAS_PART_2_ELECTION_STAGE_ID,
   game: StageGame.LAS,
   name: 'Representative election',
-  descriptions: createStageTextConfig({ primaryText: LAS_PART_2_ELECTION_DESCRIPTION_PRIMARY }),
+  descriptions: createStageTextConfig({
+    primaryText: LAS_PART_2_ELECTION_DESCRIPTION_PRIMARY,
+  }),
 });
 
 // ****************************************************************************
@@ -555,8 +599,10 @@ export const LAS_PART_3_LEADER_TASK_SURVEY_STAGE = createSurveyStage({
   id: LAS_PART_3_LEADER_TASK_SURVEY_ID,
   game: StageGame.LAS,
   name: 'Representative task',
-  descriptions: createStageTextConfig({ infoText: LAS_SCENARIO_REMINDER }),
-  questions: createLASSurvivalSurvey(LAS_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS),
+  descriptions: createStageTextConfig({infoText: LAS_SCENARIO_REMINDER}),
+  questions: createLASSurvivalSurvey(
+    LAS_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS
+  )
 });
 
 // ****************************************************************************
@@ -565,17 +611,25 @@ export const LAS_PART_3_LEADER_TASK_SURVEY_STAGE = createSurveyStage({
 export const LAS_PART_3_REVEAL_DESCRIPTION_PRIMARY =
   'Here are the results from the task.';
 
-export const LAS_PART_3_REVEAL_DESCRIPTION_INFO =
-  `An explanation of the results can be found [here](https://raw.githubusercontent.com/PAIR-code/deliberate-lab/main/frontend/src/assets/lost_at_sea/lost_at_sea_answers.pdf).`;
+export const LAS_PART_3_REVEAL_DESCRIPTION_INFO = `An explanation of the results can be found [here](https://raw.githubusercontent.com/PAIR-code/deliberate-lab/main/frontend/src/assets/lost_at_sea/lost_at_sea_answers.pdf).`;
 
 export const LAS_PART_3_REVEAL_STAGE = createRevealStage({
   game: StageGame.LAS,
   name: 'Results reveal',
   descriptions: createStageTextConfig({
     infoText: LAS_PART_3_REVEAL_DESCRIPTION_INFO,
-    primaryText: LAS_PART_3_REVEAL_DESCRIPTION_PRIMARY
+    primaryText: LAS_PART_3_REVEAL_DESCRIPTION_PRIMARY,
   }),
-  stageIds: [LAS_PART_2_ELECTION_STAGE_ID, LAS_PART_3_LEADER_TASK_SURVEY_ID],
+  items: [
+    createRankingRevealItem({
+      id: LAS_PART_2_ELECTION_STAGE_ID,
+    }),
+    createSurveyRevealItem({
+      id: LAS_PART_3_LEADER_TASK_SURVEY_ID,
+      revealAudience: RevealAudience.ALL_PARTICIPANTS,
+      revealScorableOnly: true,
+    }),
+  ],
 });
 
 // ****************************************************************************
@@ -620,8 +674,7 @@ const LAS_PAYOUT_STAGE = createPayoutStage({
 // ****************************************************************************
 // Final survey stage
 // ****************************************************************************
-const LAS_FINAL_DESCRIPTION_PRIMARY =
-  `Thanks for participating. Please complete this final survey.`;
+const LAS_FINAL_DESCRIPTION_PRIMARY = `Thanks for participating. Please complete this final survey.`;
 
 export const LAS_FINAL_SURVEY_QUESTIONS: SurveyQuestion[] = [
   {
@@ -688,6 +741,8 @@ export const LAS_FINAL_SURVEY_QUESTIONS: SurveyQuestion[] = [
 const LAS_FINAL_SURVEY_STAGE = createSurveyStage({
   game: StageGame.LAS,
   name: 'Final survey',
-  descriptions: createStageTextConfig({ primaryText: LAS_FINAL_DESCRIPTION_PRIMARY }),
+  descriptions: createStageTextConfig({
+    primaryText: LAS_FINAL_DESCRIPTION_PRIMARY,
+  }),
   questions: LAS_FINAL_SURVEY_QUESTIONS,
 });

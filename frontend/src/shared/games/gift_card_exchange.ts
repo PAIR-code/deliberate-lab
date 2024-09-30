@@ -1,14 +1,17 @@
+import { ElectionStrategy } from '@deliberation-lab/utils';
 import {
-  ElectionItemData,
   Experiment,
   MultipleChoiceSurveyQuestion,
+  RankingItemData,
+  RankingType,
+  RevealAudience,
   StageConfig,
   StageGame,
   SurveyQuestion,
   SurveyQuestionKind,
   createChatStage,
   createCompareChatDiscussion,
-  createElectionStage,
+  createRankingStage,
   createExperimentConfig,
   createInfoStage,
   createPayoutStage,
@@ -19,6 +22,7 @@ import {
   createScaleSurveyQuestion,
   createStageTextConfig,
   createSurveyStage,
+  createSurveyRevealItem,
   createTOSStage,
   createTransferStage,
 } from '@deliberation-lab/utils';
@@ -144,13 +148,14 @@ export const GCE_PART_1_RANKING_ID = 'item_ranking';
 
 export const RANKING_INSTRUCTIONS = 'Please rank the following gift card pairs, placing your most preferred at the top.'
 
-const GCE_PART_1_RANKING_STAGE = createElectionStage({
+const GCE_PART_1_RANKING_STAGE = createRankingStage({
   id: GCE_PART_1_RANKING_ID,
   game: StageGame.GCE,
   name: 'Initial item ranking',
   descriptions: createStageTextConfig({ infoText: RANKING_INSTRUCTIONS }),
-  isParticipantElection: false,
-  electionItems: GIFT_CARDS,
+  strategy: ElectionStrategy.NONE,
+  rankingType: RankingType.ITEMS,
+  rankingItems: GIFT_CARDS,
 });
 
 
@@ -197,7 +202,7 @@ export const GCE_REVEAL_STAGE = createRevealStage({
   descriptions: createStageTextConfig({
     primaryText: 'Here are the allocation results.'
   }),
-  stageIds: [SELECTION_ID],
+  items: [createSurveyRevealItem({ id: SELECTION_ID })],
 });
     
 // ****************************************************************************
@@ -225,7 +230,7 @@ export const GCE_REVEAL2_STAGE = createRevealStage({
   descriptions: createStageTextConfig({
     primaryText: 'Here are the results after any trades may have occurred.'
   }),
-  stageIds: [TRADE_ID],
+  items: [createSurveyRevealItem({ id: TRADE_ID })],
 });
  
 // ****************************************************************************

@@ -1,6 +1,6 @@
 import '../stages/base_stage_editor';
 import '../stages/chat_editor';
-import '../stages/election_editor';
+import '../stages/ranking_editor';
 import '../stages/info_editor';
 import '../stages/reveal_editor';
 import '../stages/survey_editor';
@@ -103,10 +103,10 @@ export class ExperimentBuilder extends MobxLitElement {
           <base-stage-editor .stage=${stage}></base-stage-editor>
           <chat-editor .stage=${stage}></chat-editor>
         `;
-      case StageKind.ELECTION:
+      case StageKind.RANKING:
         return html`
           <base-stage-editor .stage=${stage}></base-stage-editor>
-          <election-editor .stage=${stage}></election-editor>
+          <ranking-editor .stage=${stage}></ranking-editor>
         `;
       case StageKind.REVEAL:
         return html`
