@@ -4,6 +4,7 @@
 :host {
   @include common.flex-column;
   flex-grow: 1;
+  gap: common.$spacing-xxl;
   justify-content: end;
   padding-bottom: common.$spacing-xxl;
   width: 100%;
@@ -43,5 +44,26 @@
   pr-textarea {
     flex-grow: 1;
   }
+}
+
+.title {
+  @include typescale.title-small;
+}
+
+.radio-question {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.radio-button {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  min-height: calc(var(--md-sys-typescale-body-small-line-height) * 1.5);
+}
+
+.radio-wrapper {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-xl;
 }
 
