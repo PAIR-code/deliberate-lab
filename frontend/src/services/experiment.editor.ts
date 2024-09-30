@@ -1,4 +1,4 @@
-import {
+  import {
   AttentionCheckConfig,
   CohortParticipantConfig,
   Experiment,

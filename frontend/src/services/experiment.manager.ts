@@ -9,6 +9,7 @@ import {
   Unsubscribe,
   where,
 } from 'firebase/firestore';
+import {AuthService} from './auth.service';
 import {CohortService} from './cohort.service';
 import {ExperimentEditor} from './experiment.editor';
 import {ExperimentService} from './experiment.service';
@@ -42,6 +43,7 @@ import {
 } from '../shared/participant.utils';
 
 interface ServiceProvider {
+  authService: AuthService;
   cohortService: CohortService;
   experimentEditor: ExperimentEditor;
   experimentService: ExperimentService;
@@ -117,9 +119,14 @@ export class ExperimentManager extends Service {
     this.isEditingSettingsDialog = isEditing;
   }
 
-  // Can edit if no cohorts exist
+  @computed get isCreator() {
+    return this.sp.authService.userId === this.sp.experimentService.experiment?.metadata.creator
+      || this.sp.experimentService.experiment?.metadata.creator === '';
+  }
+
+  // Can edit if (no cohorts exist AND is creator) OR new experiment
   @computed get canEditExperimentStages() {
-    return Object.keys(this.cohortMap).length === 0
+    return (this.isCreator && Object.keys(this.cohortMap).length === 0)
       || this.sp.routerService.activePage === Pages.EXPERIMENT_CREATE;
   }
 
