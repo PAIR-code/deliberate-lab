@@ -7,6 +7,7 @@ interface ServiceProvider {
 }
 
 export enum ButtonClick {
+  ATTENTION_ACCEPT = 'click_attention_accept', // responded to attention check
   COHORT_ADD = 'click_cohort_add',
   COHORT_SAVE_EXISTING = 'click_cohort_save_edits',
   COHORT_DELETE = 'click_cohort_delete',
