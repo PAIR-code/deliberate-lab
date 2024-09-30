@@ -333,7 +333,7 @@ export class ExperimentManager extends Service {
    * @rights Creator of experiment
    */
   async deleteExperiment() {
-    if (!this.experimentId) return;
+    if (!this.experimentId || !this.isCreator) return;
     const response = await deleteExperimentCallable(this.sp.firebaseService.functions, {
       collectionName: 'experiments',
       experimentId: this.experimentId,
