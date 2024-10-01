@@ -17,6 +17,7 @@ import {customElement} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from './core/core';
+import {AnalyticsService} from './services/analytics.service';
 import {AuthService} from './services/auth.service';
 import {HomeService} from './services/home.service';
 import {Pages, RouterService} from './services/router.service';
@@ -31,6 +32,7 @@ import {styles} from './app.scss';
 export class App extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly authService = core.getService(AuthService);
   private readonly homeService = core.getService(HomeService);
   private readonly routerService = core.getService(RouterService);

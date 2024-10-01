@@ -2,6 +2,7 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 import {core} from '../../core/core';
+import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 import {
@@ -14,6 +15,7 @@ import {styles} from './popup.scss';
 class AttentionPopup extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
 
@@ -90,6 +92,7 @@ class AttentionPopup extends MobxLitElement {
   }
 
   private handleAttentionCheckResponse = () => {
+    this.analyticsService.trackButtonClick(ButtonClick.ATTENTION_ACCEPT);
     this.showAttentionCheck = false;
     this.resetAttentionCheck();
   };

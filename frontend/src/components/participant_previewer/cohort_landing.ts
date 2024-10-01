@@ -5,6 +5,7 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
+import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {FirebaseService} from '../../services/firebase.service';
 import {Pages, RouterService} from '../../services/router.service';
@@ -22,6 +23,7 @@ import {styles} from './cohort_landing.scss';
 export class CohortLanding extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly firebaseService = core.getService(FirebaseService);
   private readonly routerService = core.getService(RouterService);
@@ -51,6 +53,8 @@ export class CohortLanding extends MobxLitElement {
 
   private async joinExperiment() {
     this.isLoading = true;
+    this.analyticsService.trackButtonClick(ButtonClick.PARTICIPANT_JOIN);
+
     const params = this.routerService.activeRoute.params;
     const response = await createParticipantCallable(
       this.firebaseService.functions, {

@@ -2,6 +2,7 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 import {core} from '../../core/core';
+import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 import {Pages, RouterService} from '../../services/router.service';
@@ -17,6 +18,7 @@ import {styles} from './popup.scss';
 class TransferPopup extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
@@ -52,12 +54,14 @@ class TransferPopup extends MobxLitElement {
   }
 
   private handleYes() {
+    this.analyticsService.trackButtonClick(ButtonClick.TRANSFER_ACCEPT);
     this.participantService.acceptParticipantTransfer();
   }
 
   private async handleNo() {
     if (!this.participantService.profile) return;
 
+    this.analyticsService.trackButtonClick(ButtonClick.TRANSFER_REJECT);
     await this.participantService.updateExperimentFailure(
       ParticipantStatus.TRANSFER_DECLINED,
       true

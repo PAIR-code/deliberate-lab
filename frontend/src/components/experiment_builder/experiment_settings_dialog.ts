@@ -7,6 +7,7 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
+import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 
 import {styles} from './experiment_settings_dialog.scss';
@@ -16,6 +17,7 @@ import {styles} from './experiment_settings_dialog.scss';
 export class ExperimentSettingsDialog extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentManager = core.getService(ExperimentManager);
 
   override render() {
@@ -27,7 +29,9 @@ export class ExperimentSettingsDialog extends MobxLitElement {
             color="neutral"
             icon="close"
             variant="default"
-            @click=${() => { this.experimentManager.setIsEditingSettingsDialog(false) }}
+            @click=${() => {
+              this.experimentManager.setIsEditingSettingsDialog(false)
+            }}
           >
           </pr-icon-button>
         </div>
@@ -36,15 +40,11 @@ export class ExperimentSettingsDialog extends MobxLitElement {
         </div>
         <div class="footer">
           <pr-button
-            color="error"
-            variant="tonal"
             ?disabled=${!this.experimentManager.isCreator}
-            @click=${() => { this.experimentManager.deleteExperiment()}}
-          >
-            Delete experiment
-          </pr-button>
-          <pr-button
-            @click=${() => { this.experimentManager.setIsEditingSettingsDialog(false, true) }}
+            @click=${() => {
+              this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_SAVE_EXISTING);
+              this.experimentManager.setIsEditingSettingsDialog(false, true);
+            }}
           >
             Save
           </pr-button>

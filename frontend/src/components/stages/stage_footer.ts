@@ -3,6 +3,7 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
+import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 import {Pages, RouterService} from '../../services/router.service';
@@ -14,6 +15,7 @@ import { ParticipantStatus } from '@deliberation-lab/utils';
 export class Footer extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
@@ -40,6 +42,9 @@ export class Footer extends MobxLitElement {
 
     const handleNext = async () => {
       this.isLoadingNext = true;
+      // Track click
+      this.analyticsService.trackButtonClick(ButtonClick.STAGE_NEXT);
+
       // Handle custom onNextClick
       await this.onNextClick();
       

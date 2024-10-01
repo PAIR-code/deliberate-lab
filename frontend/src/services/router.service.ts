@@ -2,9 +2,11 @@ import * as router5 from "router5";
 import browserPlugin from "router5-plugin-browser";
 import { computed, makeObservable, observable } from "mobx";
 import { Service } from "./service";
+import { AnalyticsService } from "./analytics.service";
 import { ExperimentManager } from "./experiment.manager";
 
 interface ServiceProvider {
+  analyticsService: AnalyticsService;
   experimentManager: ExperimentManager;
 }
 
@@ -89,6 +91,9 @@ export class RouterService extends Service {
 
   private handlerRouteChange(routeChange: RouteChange) {
     this.activeRoute = routeChange.route;
+    if (this.activePage) {
+      this.sp.analyticsService.trackPageView(this.activePage, this.activeRoute.path);
+    }
   }
 
   setExperimenterNav(isOpen: boolean) {
@@ -116,6 +121,12 @@ export class RouterService extends Service {
 
   getActiveRouteParams() {
     return this.activeRoute.params;
+  }
+
+  getRoutePath(page: Pages) {
+    const routeItem = this.routes.find(item => item.name === page);
+    if (!routeItem) return;
+    return routeItem.path;
   }
 }
 
