@@ -29,7 +29,7 @@ import {CohortService} from './cohort.service';
 import {ExperimentService} from './experiment.service';
 import {FirebaseService} from './firebase.service';
 import {Pages,RouterService} from './router.service';
-import {SurveyService} from './survey.service';
+import {SurveyAnswerService} from './survey.answer';
 import {Service} from './service';
 
 import {
@@ -54,7 +54,7 @@ interface ServiceProvider {
   experimentService: ExperimentService;
   firebaseService: FirebaseService;
   routerService: RouterService;
-  surveyService: SurveyService;
+  surveyAnswerService: SurveyAnswerService;
 }
 
 export class ParticipantService extends Service {
@@ -212,7 +212,7 @@ export class ParticipantService extends Service {
             this.answerMap[doc.id] = answer;
             // Load relevant answers to survey service
             if (answer.kind === StageKind.SURVEY) {
-              this.sp.surveyService.addSurveyAnswer(answer);
+              this.sp.surveyAnswerService.addSurveyAnswer(answer);
             }
           });
           this.areAnswersLoading = false;
@@ -227,6 +227,7 @@ export class ParticipantService extends Service {
 
     this.profile = undefined;
     this.answerMap = {};
+    this.sp.surveyAnswerService.resetAnswers();
   }
 
   // *********************************************************************** //
@@ -473,7 +474,7 @@ export class ParticipantService extends Service {
     return response;
   }
 
-  /** Update participant's survey stage answer. */
+  /** Update single participant survey stage answer. */
   async updateSurveyStageParticipantAnswer(
     id: string, // survey stage ID
     updatedAnswer: SurveyAnswer,
@@ -485,6 +486,33 @@ export class ParticipantService extends Service {
       participantAnswer = createSurveyStageParticipantAnswer({id});
     }
     participantAnswer.answerMap[updatedAnswer.id] = updatedAnswer;
+
+    if (this.experimentId && this.profile) {
+      response = await updateSurveyStageParticipantAnswerCallable(
+        this.sp.firebaseService.functions, {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          participantPrivateId: this.profile.privateId,
+          participantPublicId: this.profile.publicId,
+          surveyStageParticipantAnswer: participantAnswer,
+        }
+      );
+    }
+    return response;
+  }
+
+  /** Update participant survey answerMap. */
+  async updateSurveyStageParticipantAnswerMap(
+    id: string, // survey stage ID,
+    answerMap: Record<string, SurveyAnswer>, // map of question ID to answer
+  ) {
+    let response = {};
+
+    let participantAnswer = this.answerMap[id] as SurveyStageParticipantAnswer;
+    if (!participantAnswer) {
+      participantAnswer = createSurveyStageParticipantAnswer({id});
+    }
+    participantAnswer.answerMap = answerMap;
 
     if (this.experimentId && this.profile) {
       response = await updateSurveyStageParticipantAnswerCallable(

@@ -9,7 +9,7 @@ import { InitializationService } from "./services/initialization.service";
 import { ParticipantService } from "./services/participant.service";
 import { RouterService } from "./services/router.service";
 import { SettingsService } from "./services/settings.service";
-import { SurveyService } from "./services/survey.service";
+import { SurveyAnswerService } from "./services/survey.answer";
 
 import { ExperimentEditor } from "./services/experiment.editor";
 import { ExperimentManager } from "./services/experiment.manager";
@@ -49,8 +49,8 @@ export function makeServiceProvider(self: Core) {
     get settingsService() {
       return self.getService(SettingsService);
     },
-    get surveyService() {
-      return self.getService(SurveyService);
+    get surveyAnswerService() {
+      return self.getService(SurveyAnswerService);
     },
     // Editors
     get experimentEditor() {

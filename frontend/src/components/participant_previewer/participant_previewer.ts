@@ -216,7 +216,7 @@ export class ParticipantPreviewer extends MobxLitElement {
         return html`<reveal-view .stage=${stage}></reveal-view>`;
       case StageKind.SURVEY:
         return html`
-          <survey-view .stage=${stage} .answer=${answer}></survey-view>
+          <survey-view .stage=${stage}></survey-view>
         `;
       case StageKind.TRANSFER:
         return html`<transfer-view .stage=${stage}></transfer-view>`;

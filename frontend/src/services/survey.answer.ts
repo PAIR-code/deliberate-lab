@@ -11,8 +11,7 @@ import {
   doc,
   onSnapshot
 } from "firebase/firestore";
-import {
-  TextSurveyAnswer,
+  import {
   StageKind,
   SurveyAnswer,
   SurveyStageConfig,
@@ -29,7 +28,7 @@ interface ServiceProvider {
 
 /** Handles participant responses to frontend survey stage
   * (e.g., before sending to backend) */
-export class SurveyService extends Service {
+export class SurveyAnswerService extends Service {
   constructor(private readonly sp: ServiceProvider) {
     super();
     makeObservable(this);
@@ -39,8 +38,8 @@ export class SurveyService extends Service {
   @observable participantId: string | null = null;
   @observable stageId = '';
 
-  // Map of stage ID to map of text answers
-  @observable textAnswersMap: Record<string, Record<string, string>> = {};
+  // Map of stage ID to map of survey answers
+  @observable answerMap: Record<string, Record<string, SurveyAnswer>> = {};
 
   // Loading
   @observable areAnswersLoading = false;
@@ -53,10 +52,19 @@ export class SurveyService extends Service {
     this.areAnswersLoading = value;
   }
 
+  getAnswer(stageId: string, questionId: string) {
+    const answerMap = this.answerMap[stageId];
+    return answerMap ? answerMap[questionId] : undefined;
+  }
+
   setSurvey(experimentId: string, participantId: string, stageId: string) {
     this.experimentId = experimentId;
     this.participantId = participantId;
     this.stageId = stageId;
+  }
+
+  resetAnswers() {
+    this.answerMap = {};
   }
 
   addSurveyAnswer(answer: SurveyStageParticipantAnswer) {
@@ -67,62 +75,29 @@ export class SurveyService extends Service {
       this.areAnswersLoading = false;
       return;
     }
-
-    const textAnswers: Record<string, string> = {};
-    Object.values(answer.answerMap).filter(
-      item => item.kind === SurveyQuestionKind.TEXT
-    ).forEach(item => {
-      textAnswers[item.id] = (item as TextSurveyAnswer).answer;
-    });
-
-    this.textAnswersMap[stage.id] = textAnswers;
+    this.answerMap[stage.id] = answer.answerMap;
     this.areAnswersLoading = false;
   }
 
-  updateTextAnswer(id: string, answer: string) {
-    if (!this.textAnswersMap[this.stageId]) {
-      this.textAnswersMap[this.stageId] = {};
+  getNumAnswers(stageId: string) {
+    if (!this.answerMap[stageId]) return 0;
+    return Object.keys(this.answerMap[stageId]).length;
+  }
+
+  updateAnswer(stageId: string, answer: SurveyAnswer) {
+    if (!this.answerMap[stageId]) {
+      this.answerMap[stageId] = {};
     }
-    this.textAnswersMap[this.stageId][id] = answer;
+    this.answerMap[stageId][answer.id] = answer;
   }
 
-  isAllTextAnswersValid() {
-    if (!this.textAnswersMap[this.stageId]) return true;
-    for (const answer of Object.values(this.textAnswersMap[this.stageId])) {
-      if (answer === '') {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  getNumTextAnswers() {
-    if (!this.textAnswersMap[this.stageId]) return 0;
-    return Object.keys(this.textAnswersMap[this.stageId]).length;
-  }
-
-  getTextAnswer(questionId: string) {
-    const stageAnswers = this.textAnswersMap[this.stageId];
-    if (!stageAnswers) return '';
-
-    return stageAnswers[questionId];
-  }
-
-  async saveTextAnswers() {
-    const stageAnswerMap = this.textAnswersMap[this.stageId];
-    if (!stageAnswerMap) return;
-    for (const id of Object.keys(stageAnswerMap)) {
-      const answer: TextSurveyAnswer = {
-        id,
-        kind: SurveyQuestionKind.TEXT,
-        answer: stageAnswerMap[id] ?? '',
-      };
-      // Save text answer
-      await this.sp.participantService.updateSurveyStageParticipantAnswer(
-        this.stageId,
-        answer
-      );
-    }
+  async saveAnswers() {
+    const answers = this.answerMap[this.stageId];
+    if (!answers) return;
+    await this.sp.participantService.updateSurveyStageParticipantAnswerMap(
+      this.stageId,
+      answers
+    );
   }
 
   updateForCurrentRoute() {
