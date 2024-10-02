@@ -13,6 +13,7 @@ import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {FirebaseService} from '../../services/firebase.service';
+import {ImageService} from '../../services/image.service';
 import {ParticipantService} from '../../services/participant.service';
 import {RouterService} from '../../services/router.service';
 
@@ -41,6 +42,7 @@ export class RankingView extends MobxLitElement {
   private readonly cohortService = core.getService(CohortService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly firebaseService = core.getService(FirebaseService);
+  private readonly imageService = core.getService(ImageService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
@@ -142,10 +144,11 @@ export class RankingView extends MobxLitElement {
     const renderImage = () => {
       if (item.imageId.length === 0) return nothing;
 
-      const image = document.createElement('img');
-      this.firebaseService.setImage(image, item.imageId);
-
-      return html`<div class="img-wrapper">${image}</div>`;
+      return html`
+        <div class="img-wrapper">
+          <img src=${this.imageService.getImageSrc(item.imageId)} />
+        </div>
+      `;
     };
 
     return html`

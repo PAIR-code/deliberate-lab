@@ -5,6 +5,7 @@ import { CohortService } from "./services/cohort.service";
 import { ExperimentService } from "./services/experiment.service";
 import { FirebaseService } from "./services/firebase.service";
 import { HomeService } from "./services/home.service";
+import { ImageService } from "./services/image.service";
 import { InitializationService } from "./services/initialization.service";
 import { ParticipantService } from "./services/participant.service";
 import { ParticipantAnswerService } from "./services/participant.answer";
@@ -35,6 +36,9 @@ export function makeServiceProvider(self: Core) {
     },
     get homeService() {
       return self.getService(HomeService);
+    },
+    get imageService() {
+      return self.getService(ImageService);
     },
     get initializationService() {
       return self.getService(InitializationService);

@@ -31,6 +31,7 @@ import {
 
 import {core} from '../../core/core';
 import {FirebaseService} from '../../services/firebase.service';
+import {ImageService} from '../../services/image.service';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 
@@ -42,6 +43,7 @@ export class SurveyView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly firebaseService = core.getService(FirebaseService);
+  private readonly imageService = core.getService(ImageService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly participantAnswerService = core.getService(ParticipantAnswerService);
 
@@ -217,13 +219,10 @@ export class SurveyView extends MobxLitElement {
         'disabled': this.participantService.disableStage,
       });
 
-      const image = document.createElement('img');
-      this.firebaseService.setImage(image, choice.imageId);
-
       return html`
         <div class=${classes} @click=${handleMultipleChoiceClick}>
           <div class="img-wrapper">
-            ${image}
+            <img src=${this.imageService.getImageSrc(choice.imageId)} />
           </div>
           <div class="radio-button">
             <md-radio
