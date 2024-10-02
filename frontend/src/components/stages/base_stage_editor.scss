@@ -25,3 +25,9 @@ pr-textarea {
   @include common.number-input;
   width: max-content;
 }
+
+.warning{
+  font-style: italic;
+  color: var(--md-sys-color-secondary);
+  max-width: common.$info-content-max-width;
+}
