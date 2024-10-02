@@ -12,6 +12,7 @@ import {
   onSnapshot
 } from "firebase/firestore";
   import {
+  ParticipantProfileExtended,
   StageKind,
   StageParticipantAnswer,
   SurveyAnswer,
@@ -41,6 +42,8 @@ export class ParticipantAnswerService extends Service {
 
   // Map of stage ID to map of participant answers
   @observable answerMap: Record<string, StageParticipantAnswer> = {};
+  // Profile
+  @observable profile: ParticipantProfileExtended | null = null;
 
   // Loading
   @observable areAnswersLoading = false;
@@ -72,6 +75,11 @@ export class ParticipantAnswerService extends Service {
 
   resetData() {
     this.answerMap = {};
+    this.profile = null;
+  }
+
+  setProfile(profile: ParticipantProfileExtended) {
+    this.profile = profile;
   }
 
   addAnswer(stageId: string, answer: StageParticipantAnswer) {
@@ -87,10 +95,23 @@ export class ParticipantAnswerService extends Service {
     this.areAnswersLoading = false;
   }
 
+  @computed get isProfileCompleted() {
+    if (!this.profile) return false;
+
+    return this.profile.name
+      && this.profile.pronouns
+      && this.profile.avatar;
+  }
+
   getNumSurveyAnswers(stageId: string) {
     const answer = this.answerMap[stageId];
     if (!answer || answer.kind !== StageKind.SURVEY) return 0;
     return Object.keys(answer.answerMap).length;
+  }
+
+  updateProfile(config: Partial<ParticipantProfileExtended>) {
+    if (!this.profile) return;
+    this.profile = {...this.profile, ...config};
   }
 
   updateSurveyAnswer(stageId: string, surveyAnswer: SurveyAnswer) {
@@ -101,6 +122,11 @@ export class ParticipantAnswerService extends Service {
 
     answer.answerMap[surveyAnswer.id] = surveyAnswer;
     this.answerMap[stageId] = answer;
+  }
+
+  async saveProfile() {
+    if (!this.profile) return;
+    await this.sp.participantService.updateProfile(this.profile);
   }
 
   async saveSurveyAnswers(stageId: string) {

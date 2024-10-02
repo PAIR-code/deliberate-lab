@@ -200,6 +200,9 @@ export class ParticipantService extends Service {
               this.profile.currentCohortId
             );
           }
+          // Load profile to participant answer service
+          this.sp.participantAnswerService.setProfile(this.profile);
+
           this.isProfileLoading = false;
         }
       )
