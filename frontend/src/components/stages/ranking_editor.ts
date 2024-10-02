@@ -72,9 +72,18 @@ export class RankingEditorComponent extends MobxLitElement {
       this.experimentEditor.updateStage(updatedStage);
     };
 
+    const waitingWarning = html`<div class="warning">
+      As the 'Wait for all participants' box is unchecked, any anticipated
+      participants who have not yet joined the experiment by the time this stage
+      is reached may be excluded as candidates in participant rankings, and
+      their votes will not be counted in any elections.
+    </div>`;
+    const waitForAllParticipants = this.stage.progress.waitForAllParticipants;
+
     return html`
       <div class="section">
         <div class="title">Ranking Settings</div>
+        ${!waitForAllParticipants ? waitingWarning : ''}
         <div class="checkbox-wrapper">
           <md-checkbox
             touch-target="wrapper"
