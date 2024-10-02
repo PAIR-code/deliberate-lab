@@ -33,7 +33,7 @@ export class CohortLanding extends MobxLitElement {
   override render() {
     return html`
       <div class="main">
-        <h1>${this.experimentService.experimentName}</h1>
+        <h1>${this.experimentService.experimentPublicName}</h1>
         <div>You've been invited to join this experiment. Please click the button below to begin.</div>
         <div class="action-buttons">
           <pr-button

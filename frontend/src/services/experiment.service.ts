@@ -112,8 +112,8 @@ export class ExperimentService extends Service {
     this.unsubscribeAll();
   }
 
-  @computed get experimentName() {
-    return this.experiment?.metadata?.name ?? 'Experiment';
+  @computed get experimentPublicName() {
+    return this.experiment?.metadata?.publicName ?? 'Experiment';
   }
 
   @computed get stageIds(): string[] {

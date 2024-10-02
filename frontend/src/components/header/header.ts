@@ -174,7 +174,7 @@ export class Header extends MobxLitElement {
   }
 
   private renderExperimentTitle() {
-    const title = this.experimentService.experimentName;
+    const title = this.experimentService.experiment?.metadata.name ?? '';
     if (this.experimentManager.isEditingFull) {
       return this.experimentManager.isCreator
         ? `Editing: ${title}`
