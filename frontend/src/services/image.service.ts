@@ -43,7 +43,7 @@ export class ImageService extends Service {
   }
 
   setImage(imageId: string) {
-    const imageRef = ref(this.sp.firebaseService.storage, `images/${imageId}`);
+    const imageRef = ref(this.sp.firebaseService.storage, imageId);
     getDownloadURL(imageRef).then((url) => {
       this.imageMap[imageId] = url;
     })

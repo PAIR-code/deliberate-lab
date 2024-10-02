@@ -110,7 +110,7 @@ export const LAS_ITEMS: Record<string, LASItem> = {
 };
 
 export function getLASItemImageId(itemId: string) {
-  return `las/${itemId}.jpg`;
+  return `images/las/${itemId}.jpg`;
 }
 
 export const LAS_ITEM_MULTIPLE_CHOICE_QUESTION_TITLE =
