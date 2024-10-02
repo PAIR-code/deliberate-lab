@@ -311,7 +311,6 @@ export class SurveyView extends MobxLitElement {
           id=${id}
           name=${name}
           value=${value}
-          aria-label=${value}
           ?checked=${isScaleChoiceMatch(value)}
           ?disabled=${this.participantService.disableStage}
           @change=${handleScaleClick}

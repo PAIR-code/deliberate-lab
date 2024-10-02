@@ -199,7 +199,6 @@ export class ProfileEditor extends MobxLitElement {
             id=${emoji}
             name="avatar"
             value=${index}
-            aria-label=${emoji}
             ?checked=${this.participantAnswerService.profile?.avatar === emoji}
             ?disabled=${this.participantService.disableStage}
             @change=${handleAvatarClick}
