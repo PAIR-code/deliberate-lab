@@ -37,16 +37,12 @@ export class ProfileEditor extends MobxLitElement {
 
     const filled = this.participantAnswerService.isProfileCompleted;
 
-    const saveProfileTextProperties = async () => {
-      await this.participantAnswerService.saveProfile();
-    }
-
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="profile-wrapper">
         ${this.renderName()} ${this.renderPronouns()} ${this.renderAvatars()}
       </div>
-      <stage-footer .disabled=${!filled} .onNextClick=${saveProfileTextProperties}>
+      <stage-footer .disabled=${!filled}>
         ${this.stage.progress.showParticipantProgress ?
           html`<progress-stage-completed></progress-stage-completed>`
           : nothing}

@@ -258,20 +258,23 @@ export class ParticipantService extends Service {
 
   /** Save last stage and complete experiment with success. */
   async completeLastStage() {
-    if (!this.profile) {
+    // Use participant answer service verison of profile,
+    // which might have updates that need to be written to Firestore
+    const profile = this.sp.participantAnswerService.profile;
+    if (!profile) {
       return;
     }
 
     // Add progress timestamps
     const timestamp = Timestamp.now();
 
-    const completedStages = this.profile.timestamps.completedStages;
-    completedStages[this.profile.currentStageId] = timestamp;
+    const completedStages = profile.timestamps.completedStages;
+    completedStages[profile.currentStageId] = timestamp;
 
     const endExperiment = timestamp;
 
     const timestamps = {
-      ...this.profile.timestamps,
+      ...profile.timestamps,
       completedStages,
       endExperiment
     };
@@ -281,7 +284,7 @@ export class ParticipantService extends Service {
 
     return await this.updateProfile(
       {
-        ...this.profile,
+        ...profile,
         currentStatus,
         timestamps
       }
@@ -347,27 +350,30 @@ export class ParticipantService extends Service {
 
   /** Move to next stage. */
   async progressToNextStage() {
-    if (!this.experimentId || !this.profile) {
+    // Use participant answer profile (as it may include frontend-only
+    // updates that should be written to Firestore)
+    const profile = this.sp.participantAnswerService.profile;
+    if (!this.experimentId || !profile) {
       return;
     }
 
     // Get new stage ID
     const currentStageId = this.sp.experimentService.getNextStageId(
-      this.profile.currentStageId
+      profile.currentStageId
     );
     if (currentStageId === null) return;
 
     // Add progress timestamp
-    const completedStages = this.profile.timestamps.completedStages;
-    completedStages[this.profile.currentStageId] = Timestamp.now();
+    const completedStages = profile.timestamps.completedStages;
+    completedStages[profile.currentStageId] = Timestamp.now();
     const timestamps = {
-      ...this.profile.timestamps,
+      ...profile.timestamps,
       completedStages
     };
 
     await this.updateProfile(
       {
-        ...this.profile,
+        ...profile,
         currentStageId,
         timestamps
       }

@@ -124,11 +124,6 @@ export class ParticipantAnswerService extends Service {
     this.answerMap[stageId] = answer;
   }
 
-  async saveProfile() {
-    if (!this.profile) return;
-    await this.sp.participantService.updateProfile(this.profile);
-  }
-
   async saveSurveyAnswers(stageId: string) {
     const answer = this.answerMap[stageId];
     if (!answer || answer.kind !== StageKind.SURVEY) return;
