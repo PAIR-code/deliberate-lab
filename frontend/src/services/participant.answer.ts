@@ -117,7 +117,7 @@ export class ParticipantAnswerService extends Service {
   updateSurveyAnswer(stageId: string, surveyAnswer: SurveyAnswer) {
     let answer = this.answerMap[stageId];
     if (!answer || answer.kind !== StageKind.SURVEY) {
-      answer = createSurveyStageParticipantAnswer();
+      answer = createSurveyStageParticipantAnswer({ id: stageId });
     }
 
     answer.answerMap[surveyAnswer.id] = surveyAnswer;
