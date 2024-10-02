@@ -90,13 +90,20 @@ export class Header extends MobxLitElement {
           this.routerService.navigate(Pages.HOME);
           break;
         case Pages.PARTICIPANT_JOIN_COHORT:
-          this.routerService.navigate(Pages.EXPERIMENT, params);
+          this.routerService.navigate(Pages.EXPERIMENT, {
+            experiment: params['experiment'],
+          });
           break;
         case Pages.PARTICIPANT:
-          this.routerService.navigate(Pages.EXPERIMENT, params);
+          this.routerService.navigate(Pages.EXPERIMENT, {
+            experiment: params['experiment'],
+            participant: params['participant']
+          });
           break;
         case Pages.PARTICIPANT_STAGE:
-          this.routerService.navigate(Pages.EXPERIMENT, params);
+          this.routerService.navigate(Pages.EXPERIMENT, {
+            experiment: params['experiment'],
+          });
           break;
         default:
           break;
