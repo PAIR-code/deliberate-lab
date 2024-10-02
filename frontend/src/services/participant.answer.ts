@@ -13,12 +13,14 @@ import {
 } from "firebase/firestore";
   import {
   ParticipantProfileExtended,
+  RankingStageParticipantAnswer,
   StageKind,
   StageParticipantAnswer,
   SurveyAnswer,
   SurveyStageConfig,
   SurveyStageParticipantAnswer,
   SurveyQuestionKind,
+  createRankingStageParticipantAnswer,
   createSurveyStageParticipantAnswer,
 } from "@deliberation-lab/utils";
 
@@ -54,6 +56,12 @@ export class ParticipantAnswerService extends Service {
 
   set isLoading(value: boolean) {
     this.areAnswersLoading = value;
+  }
+
+  getRankingList(stageId: string) {
+    const answer = this.answerMap[stageId];
+    if (!answer || answer.kind !== StageKind.RANKING) return [];
+    return answer.rankingList;
   }
 
   getSurveyAnswer(stageId: string, questionId: string) {
@@ -103,6 +111,12 @@ export class ParticipantAnswerService extends Service {
       && this.profile.avatar;
   }
 
+  getNumRankings(stageId: string) {
+    const answer = this.answerMap[stageId];
+    if (!answer || answer.kind !== StageKind.RANKING) return 0;
+    return answer.rankingList.length;
+  }
+
   getNumSurveyAnswers(stageId: string) {
     const answer = this.answerMap[stageId];
     if (!answer || answer.kind !== StageKind.SURVEY) return 0;
@@ -112,6 +126,12 @@ export class ParticipantAnswerService extends Service {
   updateProfile(config: Partial<ParticipantProfileExtended>) {
     if (!this.profile) return;
     this.profile = {...this.profile, ...config};
+  }
+
+  updateRankingAnswer(stageId: string, rankingList: string[]) {
+    const answer: RankingStageParticipantAnswer = createRankingStageParticipantAnswer({ id: stageId });
+    answer.rankingList = rankingList;
+    this.answerMap[stageId] = answer;
   }
 
   updateSurveyAnswer(stageId: string, surveyAnswer: SurveyAnswer) {

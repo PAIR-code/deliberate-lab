@@ -127,6 +127,17 @@ export function createRankingItem(config: Partial<RankingItem> = {}): RankingIte
   };
 }
 
+/** Create ranking stage particiapnt answer. */
+export function createRankingStageParticipantAnswer(
+  config: Partial<RankingStageParticipantAnswer> = {}
+): RankingStageParticipantAnswer {
+  return {
+    id: config.id ?? generateId(),
+    kind: StageKind.RANKING,
+    rankingList: config.rankingList ?? [],
+  }
+}
+
 /** Create ranking stage public data. */
 export function createRankingStagePublicData(
   id: string, // stage ID
