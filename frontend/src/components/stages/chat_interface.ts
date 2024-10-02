@@ -41,7 +41,7 @@ export class ChatInterface extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
-  @property() stage: ChatStageConfig|undefined = undefined;
+  @property() stage: ChatStageConfig | undefined = undefined;
   @property() value = '';
   @property() disableInput = false;
   @property() showInfo = false;
@@ -49,9 +49,7 @@ export class ChatInterface extends MobxLitElement {
 
   private sendUserInput() {
     if (this.value.trim() === '') return;
-    this.participantService.createChatMessage(
-      { message: this.value.trim() }
-    );
+    this.participantService.createChatMessage({message: this.value.trim()});
     this.value = '';
   }
 
@@ -63,7 +61,7 @@ export class ChatInterface extends MobxLitElement {
     `;
   }
 
-  private renderChatHistory(currentDiscussionId: string|null) {
+  private renderChatHistory(currentDiscussionId: string | null) {
     const stageId = this.routerService.activeRoute.params['stage'];
     const stage = this.experimentService.getStage(stageId);
     if (!stage || stage.kind !== StageKind.CHAT) return nothing;
@@ -76,7 +74,9 @@ export class ChatInterface extends MobxLitElement {
       let discussions = stage.discussions;
       // Only show discussion threads that have been unlocked
       if (currentDiscussionId !== null) {
-        const index = discussions.findIndex(discussion => discussion.id === currentDiscussionId);
+        const index = discussions.findIndex(
+          (discussion) => discussion.id === currentDiscussionId
+        );
         discussions = discussions.slice(0, index + 1);
       }
 
@@ -84,7 +84,8 @@ export class ChatInterface extends MobxLitElement {
         <div class="chat-scroll">
           <div class="chat-history">
             ${discussions.map((discussion, index) =>
-              this.renderChatDiscussionThread(stage, index))}
+              this.renderChatDiscussionThread(stage, index)
+            )}
             ${messages.map(this.renderChatMessage.bind(this))}
           </div>
         </div>
@@ -105,7 +106,7 @@ export class ChatInterface extends MobxLitElement {
 
   private renderChatDiscussionThread(
     stage: ChatStageConfig,
-    discussionIndex: number,
+    discussionIndex: number
   ) {
     const discussion = stage.discussions[discussionIndex];
 
@@ -122,7 +123,7 @@ export class ChatInterface extends MobxLitElement {
 
       return html`
         <div class="discussion-items">
-          ${discussion.items.map(item => renderDiscussionItem(item))}
+          ${discussion.items.map((item) => renderDiscussionItem(item))}
         </div>
       `;
     };
@@ -138,10 +139,7 @@ export class ChatInterface extends MobxLitElement {
       };
 
       return html`
-        <div class="discussion-item">
-          ${renderImage()}
-          ${item.name}
-        </div>
+        <div class="discussion-item">${renderImage()} ${item.name}</div>
       `;
     };
 
@@ -150,8 +148,9 @@ export class ChatInterface extends MobxLitElement {
         <div class="discussion-title">
           Discussion ${discussionIndex + 1} of ${stage.discussions.length}
         </div>
-        ${discussion.description.length > 0 ?
-          html`<div>${discussion.description}</div>` : nothing}
+        ${discussion.description.length > 0
+          ? html`<div>${discussion.description}</div>`
+          : nothing}
         ${renderDiscussionItems()}
       </div>
       ${renderMessages()}
@@ -196,7 +195,9 @@ export class ChatInterface extends MobxLitElement {
           <pr-icon-button
             icon="send"
             variant="tonal"
-            .disabled=${this.value.trim() === '' || this.disableInput || this.participantService.disableStage}
+            .disabled=${this.value.trim() === '' ||
+            this.disableInput ||
+            this.participantService.disableStage}
             ?loading=${this.participantService.isSendingChat}
             @click=${this.sendUserInput}
           >
@@ -206,7 +207,7 @@ export class ChatInterface extends MobxLitElement {
     </div>`;
   }
 
-  private renderEndDiscussionButton(currentDiscussionId: string|null) {
+  private renderEndDiscussionButton(currentDiscussionId: string | null) {
     if (!this.stage || !currentDiscussionId) {
       return nothing;
     }
@@ -222,18 +223,29 @@ export class ChatInterface extends MobxLitElement {
       this.readyToEndDiscussionLoading = false;
     };
 
-    return html`
+    const isDisabled =
+      this.participantService.disableStage ||
+      this.participantService.isReadyToEndChatDiscussion(
+        this.stage.id,
+        currentDiscussionId
+      );
+    const buttonHTML = html`
       <pr-button
         color="tertiary"
         variant="tonal"
-        ?disabled=${this.participantService.disableStage
-          || this.participantService.isReadyToEndChatDiscussion(this.stage.id, currentDiscussionId)}
+        ?disabled=${isDisabled}
         ?loading=${this.readyToEndDiscussionLoading}
         @click=${onClick}
       >
         Ready to end discussion
       </pr-button>
     `;
+    return isDisabled
+      ? html`<pr-tooltip text="You can move on once others are also ready to move on."
+      position="BOTTOM_RIGHT"
+          >${buttonHTML}</pr-tooltip
+        >`
+      : buttonHTML;
   }
 
   override render() {
@@ -245,7 +257,9 @@ export class ChatInterface extends MobxLitElement {
     const renderProgress = () => {
       if (currentDiscussionId) {
         return html`
-          <progress-chat-discussion-completed .discussionId=${currentDiscussionId}>
+          <progress-chat-discussion-completed
+            .discussionId=${currentDiscussionId}
+          >
           </progress-chat-discussion-completed>
         `;
       }
@@ -254,8 +268,9 @@ export class ChatInterface extends MobxLitElement {
 
     return html`
       <div class="chat-content">
-        ${this.cohortService.isChatLoading ?
-          html`<div>Loading...</div>` : this.renderChatHistory(currentDiscussionId)}
+        ${this.cohortService.isChatLoading
+          ? html`<div>Loading...</div>`
+          : this.renderChatHistory(currentDiscussionId)}
       </div>
       <div class="input-row-wrapper">
         <div class="input-row">${this.renderInput()}</div>
