@@ -1,5 +1,5 @@
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -15,6 +15,12 @@
 
 .panel-item-title {
   @include typescale.title-small;
+}
+.panel-item-subtitle {
+  margin-top: -4px;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--md-sys-color-secondary);
 }
 
 .profile {
