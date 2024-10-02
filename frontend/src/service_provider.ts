@@ -7,10 +7,9 @@ import { FirebaseService } from "./services/firebase.service";
 import { HomeService } from "./services/home.service";
 import { InitializationService } from "./services/initialization.service";
 import { ParticipantService } from "./services/participant.service";
+import { ParticipantAnswerService } from "./services/participant.answer";
 import { RouterService } from "./services/router.service";
 import { SettingsService } from "./services/settings.service";
-import { SurveyAnswerService } from "./services/survey.answer";
-
 import { ExperimentEditor } from "./services/experiment.editor";
 import { ExperimentManager } from "./services/experiment.manager";
 
@@ -43,14 +42,14 @@ export function makeServiceProvider(self: Core) {
     get participantService() {
       return self.getService(ParticipantService);
     },
+    get participantAnswerService() {
+      return self.getService(ParticipantAnswerService);
+    },
     get routerService() {
       return self.getService(RouterService);
     },
     get settingsService() {
       return self.getService(SettingsService);
-    },
-    get surveyAnswerService() {
-      return self.getService(SurveyAnswerService);
     },
     // Editors
     get experimentEditor() {

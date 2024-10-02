@@ -32,7 +32,7 @@ import {
 import {core} from '../../core/core';
 import {FirebaseService} from '../../services/firebase.service';
 import {ParticipantService} from '../../services/participant.service';
-import {SurveyAnswerService} from '../../services/survey.answer';
+import {ParticipantAnswerService} from '../../services/participant.answer';
 
 import {styles} from './survey_view.scss';
 
@@ -43,7 +43,7 @@ export class SurveyView extends MobxLitElement {
 
   private readonly firebaseService = core.getService(FirebaseService);
   private readonly participantService = core.getService(ParticipantService);
-  private readonly surveyAnswerService = core.getService(SurveyAnswerService);
+  private readonly participantAnswerService = core.getService(ParticipantAnswerService);
 
   @property() stage: SurveyStageConfig | undefined = undefined;
 
@@ -56,12 +56,13 @@ export class SurveyView extends MobxLitElement {
       if (!this.stage) return false;
 
       // Confirm all questions are written to survey answer service
-      return this.surveyAnswerService.getNumAnswers(this.stage.id) ===
+      return this.participantAnswerService.getNumSurveyAnswers(this.stage.id) ===
         this.stage!.questions.length;
     };
 
     const saveAnswers = async () => {
-      this.surveyAnswerService.saveAnswers();
+      if (!this.stage) return;
+      this.participantAnswerService.saveSurveyAnswers(this.stage.id);
     }
 
     return html`
@@ -98,7 +99,7 @@ export class SurveyView extends MobxLitElement {
   private renderCheckQuestion(question: CheckSurveyQuestion) {
     const isChecked = () => {
       if (!this.stage) return;
-      const answer = this.surveyAnswerService.getAnswer(this.stage.id, question.id);
+      const answer = this.participantAnswerService.getSurveyAnswer(this.stage.id, question.id);
       if (answer && answer.kind === SurveyQuestionKind.CHECK) {
         return answer.isChecked;
       }
@@ -113,7 +114,7 @@ export class SurveyView extends MobxLitElement {
       };
       // Update stage answer
       if (!this.stage) return;
-      this.surveyAnswerService.updateAnswer(
+      this.participantAnswerService.updateSurveyAnswer(
         this.stage.id,
         answer
       );
@@ -147,7 +148,7 @@ export class SurveyView extends MobxLitElement {
         kind: SurveyQuestionKind.TEXT,
         answer
       };
-      this.surveyAnswerService.updateAnswer(this.stage.id, textAnswer);
+      this.participantAnswerService.updateSurveyAnswer(this.stage.id, textAnswer);
     };
 
     return html`
@@ -156,7 +157,7 @@ export class SurveyView extends MobxLitElement {
         <pr-textarea
           variant="outlined"
           placeholder="Type your response"
-          .value=${this.surveyAnswerService.getAnswer(this.stage.id, question.id) ?? ''}
+          .value=${this.participantAnswerService.getSurveyAnswer(this.stage.id, question.id) ?? ''}
           ?disabled=${this.participantService.disableStage}
           @change=${handleTextChange}
         >
@@ -185,7 +186,7 @@ export class SurveyView extends MobxLitElement {
 
   private isMultipleChoiceMatch(questionId: string, choiceId: string) {
     if (!this.stage) return;
-    const answer = this.surveyAnswerService.getAnswer(this.stage.id, questionId);
+    const answer = this.participantAnswerService.getSurveyAnswer(this.stage.id, questionId);
     if (answer && answer.kind === SurveyQuestionKind.MULTIPLE_CHOICE) {
       return answer?.choiceId === choiceId;
     }
@@ -203,7 +204,7 @@ export class SurveyView extends MobxLitElement {
       };
       // Update stage answer
       if (!this.stage) return;
-      this.surveyAnswerService.updateAnswer(
+      this.participantAnswerService.updateSurveyAnswer(
         this.stage.id,
         answer
       );
@@ -279,7 +280,7 @@ export class SurveyView extends MobxLitElement {
 
     const isScaleChoiceMatch = (value: number) => {
       if (!this.stage) return;
-      const answer = this.surveyAnswerService.getAnswer(this.stage.id, question.id);
+      const answer = this.participantAnswerService.getSurveyAnswer(this.stage.id, question.id);
       if (answer && answer.kind === SurveyQuestionKind.SCALE) {
         return answer.value === value;
       }
@@ -296,7 +297,7 @@ export class SurveyView extends MobxLitElement {
 
       // Update stage answer
       if (!this.stage) return;
-      this.surveyAnswerService.updateAnswer(
+      this.participantAnswerService.updateSurveyAnswer(
         this.stage.id,
         answer
       );

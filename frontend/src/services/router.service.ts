@@ -6,14 +6,12 @@ import { AnalyticsService } from "./analytics.service";
 import { ExperimentManager } from "./experiment.manager";
 import { ExperimentService } from "./experiment.service";
 import { ParticipantService } from "./participant.service";
-import { SurveyAnswerService } from "./survey.answer";
 
 interface ServiceProvider {
   analyticsService: AnalyticsService;
   experimentManager: ExperimentManager;
   experimentService: ExperimentService;
   participantService: ParticipantService;
-  surveyAnswerService: SurveyAnswerService;
 }
 
 /**
@@ -106,19 +104,7 @@ export class RouterService extends Service {
   private loadDataForRoute() {
     const params = this.activeRoute.params;
 
-    if (params['experiment'] && params['participant'] && params['stage']) {
-      this.sp.surveyAnswerService.updateForRoute(
-        params['experiment'],
-        params['participant'],
-        params['stage']
-      );
-      this.sp.participantService.updateForRoute(
-        params['experiment'],
-        params['participant'],
-      );
-      this.sp.experimentManager.updateForRoute(params['experiment']);
-      this.sp.experimentService.updateForRoute(params['experiment']);
-    } else if (params['experiment'] && params['participant']) {
+    if (params['experiment'] && params['participant']) {
       this.sp.participantService.updateForRoute(
         params['experiment'],
         params['participant'],

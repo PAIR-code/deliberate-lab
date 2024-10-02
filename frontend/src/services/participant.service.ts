@@ -28,8 +28,8 @@ import {computed, makeObservable, observable} from 'mobx';
 import {CohortService} from './cohort.service';
 import {ExperimentService} from './experiment.service';
 import {FirebaseService} from './firebase.service';
-import {Pages,RouterService} from './router.service';
-import {SurveyAnswerService} from './survey.answer';
+import {Pages, RouterService} from './router.service';
+import {ParticipantAnswerService} from './participant.answer';
 import {Service} from './service';
 
 import {
@@ -54,7 +54,7 @@ interface ServiceProvider {
   experimentService: ExperimentService;
   firebaseService: FirebaseService;
   routerService: RouterService;
-  surveyAnswerService: SurveyAnswerService;
+  participantAnswerService: ParticipantAnswerService;
 }
 
 export class ParticipantService extends Service {
@@ -169,12 +169,19 @@ export class ParticipantService extends Service {
 
   loadParticipantData() {
     this.unsubscribeAll();
+    this.sp.participantAnswerService.resetData();
 
     if (this.experimentId === null || this.participantId === null) {
       this.isLoading = false;
       return;
     }
 
+    // Set IDs for participant answer service
+    this.sp.participantAnswerService.updateForRoute(
+      this.experimentId, this.participantId
+    );
+
+    // Subscribe to profile
     this.unsubscribe.push(
       onSnapshot(
         doc(
@@ -186,6 +193,7 @@ export class ParticipantService extends Service {
         ),
         (doc) => {
           this.profile = doc.data() as ParticipantProfileExtended;
+          // Load cohort data
           if (this.experimentId) {
             this.sp.cohortService.loadCohortData(
               this.experimentId,
@@ -216,10 +224,8 @@ export class ParticipantService extends Service {
           changedDocs.forEach((doc) => {
             const answer = doc.data() as StageParticipantAnswer;
             this.answerMap[doc.id] = answer;
-            // Load relevant answers to survey service
-            if (answer.kind === StageKind.SURVEY) {
-              this.sp.surveyAnswerService.addSurveyAnswer(doc.id, answer);
-            }
+            // Load answers to participant answer service
+            this.sp.participantAnswerService.addAnswer(doc.id, answer);
           });
           this.areAnswersLoading = false;
         }
@@ -233,7 +239,7 @@ export class ParticipantService extends Service {
 
     this.profile = undefined;
     this.answerMap = {};
-    this.sp.surveyAnswerService.resetAnswers();
+    this.sp.participantAnswerService.reset();
   }
 
   reset() {
@@ -309,7 +315,6 @@ export class ParticipantService extends Service {
   }
 
   async routeToEndExperiment(currentStatus: ParticipantStatus) {
-    
     const config = this.sp.experimentService.experiment?.prolificConfig;
 
     // Redirect to Prolific
@@ -323,16 +328,16 @@ export class ParticipantService extends Service {
 
      // Navigate to Prolific with completion code
       window.location.href = PROLIFIC_COMPLETION_URL_PREFIX + redirectCode;
-    } 
-    
+    }
+
     else {
       if (currentStatus === ParticipantStatus.BOOTED_OUT) {
         this.sp.routerService.navigate(Pages.HOME);
       } else {
-      this.sp.routerService.navigate(Pages.PARTICIPANT, {
-        'experiment': this.experimentId!,
-        'participant': this.profile!.privateId,
-      });
+        this.sp.routerService.navigate(Pages.PARTICIPANT, {
+          'experiment': this.experimentId!,
+          'participant': this.profile!.privateId,
+        });
       }
     }
   }
