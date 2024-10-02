@@ -229,23 +229,23 @@ export class ChatInterface extends MobxLitElement {
         this.stage.id,
         currentDiscussionId
       );
-    const buttonHTML = html`
-      <pr-button
-        color="tertiary"
-        variant="tonal"
-        ?disabled=${isDisabled}
-        ?loading=${this.readyToEndDiscussionLoading}
-        @click=${onClick}
+
+    return html`
+      <pr-tooltip
+        text=${isDisabled ? "You can move on once others are also ready to move on." : ''}
+        position="TOP_END"
       >
-        Ready to end discussion
-      </pr-button>
+        <pr-button
+          color="tertiary"
+          variant="tonal"
+          ?disabled=${isDisabled}
+          ?loading=${this.readyToEndDiscussionLoading}
+          @click=${onClick}
+        >
+          Ready to end discussion
+        </pr-button>
+      </pr-tooltip>
     `;
-    return isDisabled
-      ? html`<pr-tooltip text="You can move on once others are also ready to move on."
-      position="BOTTOM_RIGHT"
-          >${buttonHTML}</pr-tooltip
-        >`
-      : buttonHTML;
   }
 
   override render() {
