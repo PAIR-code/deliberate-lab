@@ -186,7 +186,12 @@ export class ParticipantService extends Service {
         ),
         (doc) => {
           this.profile = doc.data() as ParticipantProfileExtended;
-          this.sp.cohortService.loadCohortData(this.profile.currentCohortId);
+          if (this.experimentId) {
+            this.sp.cohortService.loadCohortData(
+              this.experimentId,
+              this.profile.currentCohortId
+            );
+          }
           this.isProfileLoading = false;
         }
       )
@@ -235,6 +240,7 @@ export class ParticipantService extends Service {
     this.experimentId = null;
     this.participantId = null;
     this.unsubscribeAll();
+    this.sp.cohortService.reset();
   }
 
   // *********************************************************************** //
