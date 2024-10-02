@@ -10,13 +10,11 @@ import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {RouterService} from '../../services/router.service';
 
-import {
-  ParticipantProfile,
-} from '@deliberation-lab/utils';
+import {ParticipantProfile} from '@deliberation-lab/utils';
 import {
   getParticipantName,
   getParticipantPronouns,
-  isActiveParticipant
+  isActiveParticipant,
 } from '../../shared/participant.utils';
 
 import {styles} from './progress_stage_waiting.scss';
@@ -45,7 +43,13 @@ export class Progress extends MobxLitElement {
       <div class="status">
         <h2 class="secondary">
           <div class="chip secondary">Waiting on</div>
-          <div>${Math.max(locked.length, stage.progress.minParticipants - unlocked.length)} participants</div>
+          <div>
+            ${Math.max(
+              locked.length,
+              stage.progress.minParticipants - unlocked.length
+            )}
+            participants
+          </div>
         </h2>
         ${this.showWaitingAvatars ? this.renderParticipants(locked) : nothing}
       </div>
@@ -63,20 +67,29 @@ export class Progress extends MobxLitElement {
   private renderParticipant(participant: ParticipantProfile) {
     const isDisabled = !isActiveParticipant(participant);
 
-    const tooltipText = !isDisabled ? nothing :
-      'This participant is no longer in the experiment';
+    const participantName = getParticipantName(participant);
+    const isTruncated = participantName.length > 14;
+    const displayName = isTruncated
+      ? participantName.substring(0, 11) + '...'
+      : participantName;
+
+    let tooltipText = '';
+    if (isTruncated && isDisabled) {
+      tooltipText = `${participantName} is no longer in the experiment`;
+    } else if (isTruncated) {
+      tooltipText = participantName;
+    } else if (isDisabled) {
+      tooltipText = 'This participant is no longer in the experiment';
+    }
 
     return html`
-      <pr-tooltip text=${tooltipText}>
+      <pr-tooltip text=${tooltipText} position="BOTTOM_END">
         <div class="participant">
           <profile-avatar
             .emoji=${participant.avatar}
             .disabled=${isDisabled}
           ></profile-avatar>
-          <div>
-            ${getParticipantName(participant)}
-            ${getParticipantPronouns(participant)}
-          </div>
+          <div>${displayName} ${getParticipantPronouns(participant)}</div>
         </div>
       </pr-tooltip>
     `;
