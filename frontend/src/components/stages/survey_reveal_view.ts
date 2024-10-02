@@ -192,14 +192,19 @@ export class SurveyReveal extends MobxLitElement {
       <div class="table-row">
         <div class="table-cell number-row">${rowIndex}</div>
         <div class="table-cell">
-          ${question.questionTitle.length > 50
-            ? html` <pr-tooltip text="${tooltipText}" position="BOTTOM_END">
-                <span style="cursor: pointer"
-                  >${question.questionTitle.slice(0, 50)}...</span
-                >
-              </pr-tooltip>`
-            : question.questionTitle}
+          ${question.questionTitle.length > 50 ?
+            html`
+              <pr-tooltip text="${tooltipText}" position="BOTTOM_END">
+                <span style="cursor: pointer">
+                  ${question.questionTitle.slice(0, 50)}...
+                </span>
+              </pr-tooltip>
+            ` : question.questionTitle}
         </div>
+        ${showAllParticipants
+          ? renderMultipleAnswerCells()
+          : renderIndividualAnswerCells()}
+        ${renderCorrectAnswerCell()}
       </div>
     `;
   }
