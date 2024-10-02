@@ -50,3 +50,9 @@ pr-icon-button {
   /* width of checkbox plus gap */
   margin-left: calc(48px + common.$spacing-medium);
 }
+
+.warning{
+  font-style: italic;
+  color: var(--md-sys-color-error);
+  max-width: common.$info-content-max-width;
+}

@@ -14,9 +14,7 @@ import {Pages, RouterService} from '../../services/router.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
 
-import {
-  Visibility
-} from '@deliberation-lab/utils';
+import {Visibility} from '@deliberation-lab/utils';
 
 import {styles} from './experiment_settings_editor.scss';
 
@@ -46,8 +44,13 @@ export class ExperimentSettingsEditor extends MobxLitElement {
         variant="tonal"
         ?disabled=${!this.experimentManager.isCreator}
         @click=${() => {
+          const isConfirmed = window.confirm(
+            `Are you sure you want to delete this experiment?`
+          );
+          if (!isConfirmed) return;
+
           this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_DELETE);
-          this.experimentManager.deleteExperiment()
+          this.experimentManager.deleteExperiment();
         }}
       >
         Delete experiment
@@ -58,25 +61,26 @@ export class ExperimentSettingsEditor extends MobxLitElement {
   private renderMetadata() {
     const updateName = (e: InputEvent) => {
       const name = (e.target as HTMLTextAreaElement).value;
-      this.experimentEditor.updateMetadata({ name });
+      this.experimentEditor.updateMetadata({name});
     };
 
     const updateDescription = (e: InputEvent) => {
       const description = (e.target as HTMLTextAreaElement).value;
-      this.experimentEditor.updateMetadata({ description });
+      this.experimentEditor.updateMetadata({description});
     };
 
     const updatePublicName = (e: InputEvent) => {
       const publicName = (e.target as HTMLTextAreaElement).value;
-      this.experimentEditor.updateMetadata({ publicName });
+      this.experimentEditor.updateMetadata({publicName});
     };
 
     return html`
       <div class="section">
         <div class="title">Metadata</div>
         <pr-textarea
-          label="Private experiment name"
+          label="Private experiment name*"
           placeholder="Internal experiment name (not visible to participants)"
+          class=${(this.experimentEditor.experiment.metadata.name === '') ? 'required' : ''}
           variant="outlined"
           .value=${this.experimentEditor.experiment.metadata.name ?? ''}
           ?disabled=${!this.experimentManager.isCreator}
@@ -106,7 +110,8 @@ export class ExperimentSettingsEditor extends MobxLitElement {
   }
 
   private renderPermissions() {
-    const isPublic = this.experimentEditor.experiment.permissions.visibility ===
+    const isPublic =
+      this.experimentEditor.experiment.permissions.visibility ===
       Visibility.PUBLIC;
 
     const updateVisibility = () => {
@@ -126,8 +131,8 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           >
           </md-checkbox>
           <div>
-            Make experiment public (all researchers on platform can
-            view and edit)
+            Make experiment public (all researchers on platform can view and
+            edit)
           </div>
         </div>
       </div>
@@ -153,19 +158,22 @@ export class ExperimentSettingsEditor extends MobxLitElement {
 
   private renderMinParticipantConfig() {
     const minParticipants =
-      this.experimentEditor.experiment.defaultCohortConfig.minParticipantsPerCohort;
+      this.experimentEditor.experiment.defaultCohortConfig
+        .minParticipantsPerCohort;
 
     const updateCheck = () => {
       if (minParticipants === null) {
-        this.experimentEditor.updateCohortConfig({ minParticipantsPerCohort: 0 });
+        this.experimentEditor.updateCohortConfig({minParticipantsPerCohort: 0});
       } else {
-        this.experimentEditor.updateCohortConfig({ minParticipantsPerCohort: null });
+        this.experimentEditor.updateCohortConfig({
+          minParticipantsPerCohort: null,
+        });
       }
     };
 
     const updateNum = (e: InputEvent) => {
       const num = Number((e.target as HTMLTextAreaElement).value);
-      this.experimentEditor.updateCohortConfig({ minParticipantsPerCohort: num });
+      this.experimentEditor.updateCohortConfig({minParticipantsPerCohort: num});
     };
 
     return html`
@@ -179,14 +187,11 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           >
           </md-checkbox>
           <div>
-            Require minimum number of participants in cohort
-            to start experiment
+            Require minimum number of participants in cohort to start experiment
           </div>
         </div>
         <div class="number-input">
-          <label for="minParticipants">
-            Minimum number of participants
-          </label>
+          <label for="minParticipants"> Minimum number of participants </label>
           <input
             type="number"
             id="minParticipants"
@@ -203,19 +208,24 @@ export class ExperimentSettingsEditor extends MobxLitElement {
 
   private renderMaxParticipantConfig() {
     const maxParticipants =
-      this.experimentEditor.experiment.defaultCohortConfig.maxParticipantsPerCohort;
+      this.experimentEditor.experiment.defaultCohortConfig
+        .maxParticipantsPerCohort;
 
     const updateCheck = () => {
       if (maxParticipants === null) {
-        this.experimentEditor.updateCohortConfig({ maxParticipantsPerCohort: 100 });
+        this.experimentEditor.updateCohortConfig({
+          maxParticipantsPerCohort: 100,
+        });
       } else {
-        this.experimentEditor.updateCohortConfig({ maxParticipantsPerCohort: null });
+        this.experimentEditor.updateCohortConfig({
+          maxParticipantsPerCohort: null,
+        });
       }
     };
 
     const updateNum = (e: InputEvent) => {
       const num = Number((e.target as HTMLTextAreaElement).value);
-      this.experimentEditor.updateCohortConfig({ maxParticipantsPerCohort: num });
+      this.experimentEditor.updateCohortConfig({maxParticipantsPerCohort: num});
     };
 
     return html`
@@ -228,14 +238,10 @@ export class ExperimentSettingsEditor extends MobxLitElement {
             @click=${updateCheck}
           >
           </md-checkbox>
-          <div>
-            Limit cohort to maximum number of participants
-          </div>
+          <div>Limit cohort to maximum number of participants</div>
         </div>
         <div class="number-input">
-          <label for="maxParticipants">
-            Maximum number of participants
-          </label>
+          <label for="maxParticipants"> Maximum number of participants </label>
           <input
             type="number"
             id="maxParticipants"
@@ -251,7 +257,9 @@ export class ExperimentSettingsEditor extends MobxLitElement {
   }
 
   private renderAttentionChecks() {
-    const isAttention = this.experimentEditor.experiment.attentionCheckConfig.enableAttentionChecks;
+    const isAttention =
+      this.experimentEditor.experiment.attentionCheckConfig
+        .enableAttentionChecks;
 
     const updateAttention = () => {
       const enableAttentionChecks = !isAttention;
@@ -262,8 +270,8 @@ export class ExperimentSettingsEditor extends MobxLitElement {
       <div class="section">
         <div class="title">Attention Checks</div>
         <div class="description">
-          Note: If an attention check popup is not clicked within the given time,
-          the participant is removed from the experiment
+          Note: If an attention check popup is not clicked within the given
+          time, the participant is removed from the experiment
         </div>
         <div class="checkbox-wrapper">
           <md-checkbox
@@ -273,9 +281,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
             @click=${updateAttention}
           >
           </md-checkbox>
-          <div>
-            Enable attention checks
-          </div>
+          <div>Enable attention checks</div>
         </div>
         ${isAttention ? this.renderAttentionWaitSeconds() : nothing}
         ${isAttention ? this.renderAttentionPopupSeconds() : nothing}
@@ -289,7 +295,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
 
     const updateNum = (e: InputEvent) => {
       const waitSeconds = Number((e.target as HTMLTextAreaElement).value);
-      this.experimentEditor.updateAttentionCheckConfig({ waitSeconds });
+      this.experimentEditor.updateAttentionCheckConfig({waitSeconds});
     };
 
     return html`
@@ -316,7 +322,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
 
     const updateNum = (e: InputEvent) => {
       const popupSeconds = Number((e.target as HTMLTextAreaElement).value);
-      this.experimentEditor.updateAttentionCheckConfig({ popupSeconds });
+      this.experimentEditor.updateAttentionCheckConfig({popupSeconds});
     };
 
     return html`
@@ -357,9 +363,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
             @click=${updateProlificIntegration}
           >
           </md-checkbox>
-          <div>
-            Enable integration with Prolific
-          </div>
+          <div>Enable integration with Prolific</div>
         </div>
         ${isProlific ? this.renderProlificRedirectCodes() : nothing}
       </div>
@@ -369,19 +373,18 @@ export class ExperimentSettingsEditor extends MobxLitElement {
   private renderProlificRedirectCodes() {
     const updateDefault = (e: InputEvent) => {
       const defaultRedirectCode = (e.target as HTMLTextAreaElement).value;
-      this.experimentEditor.updateProlificConfig({ defaultRedirectCode });
+      this.experimentEditor.updateProlificConfig({defaultRedirectCode});
     };
 
     const updateAttention = (e: InputEvent) => {
       const attentionFailRedirectCode = (e.target as HTMLTextAreaElement).value;
-      this.experimentEditor.updateProlificConfig({ attentionFailRedirectCode });
+      this.experimentEditor.updateProlificConfig({attentionFailRedirectCode});
     };
 
     const updateBooted = (e: InputEvent) => {
       const bootedRedirectCode = (e.target as HTMLTextAreaElement).value;
-      this.experimentEditor.updateProlificConfig({ bootedRedirectCode });
+      this.experimentEditor.updateProlificConfig({bootedRedirectCode});
     };
-
 
     return html`
       <div class="inner-setting">
@@ -389,7 +392,8 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           label="Default redirect code (e.g., when experiment ends)"
           placeholder="Add Prolific redirect code"
           variant="outlined"
-          .value=${this.experimentEditor.experiment.prolificConfig.defaultRedirectCode ?? ''}
+          .value=${this.experimentEditor.experiment.prolificConfig
+            .defaultRedirectCode ?? ''}
           ?disabled=${!this.experimentManager.isCreator}
           @input=${updateDefault}
         >
@@ -398,7 +402,8 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           label="Attention redirect code (used when participants fail attention checks)"
           placeholder="Add Prolific redirect code for attention check failures"
           variant="outlined"
-          .value=${this.experimentEditor.experiment.prolificConfig.attentionFailRedirectCode ?? ''}
+          .value=${this.experimentEditor.experiment.prolificConfig
+            .attentionFailRedirectCode ?? ''}
           ?disabled=${!this.experimentManager.isCreator}
           @input=${updateAttention}
         >
@@ -407,12 +412,12 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           label="Booted redirect code (used when experimenters boot a participant from an experiment)"
           placeholder="Add Prolific redirect code for booted participants"
           variant="outlined"
-          .value=${this.experimentEditor.experiment.prolificConfig.bootedRedirectCode ?? ''}
+          .value=${this.experimentEditor.experiment.prolificConfig
+            .bootedRedirectCode ?? ''}
           ?disabled=${!this.experimentManager.isCreator}
           @input=${updateBooted}
         >
         </pr-textarea>
-
       </div>
     `;
   }

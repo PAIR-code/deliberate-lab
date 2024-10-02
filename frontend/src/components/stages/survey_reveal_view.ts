@@ -105,7 +105,7 @@ export class SurveyReveal extends MobxLitElement {
               question,
               showAllParticipants,
               hasScorableQuestions,
-              index + 1 
+              index + 1
             )
           )}
         </div>
@@ -178,14 +178,28 @@ export class SurveyReveal extends MobxLitElement {
       }
     };
 
+    let tooltipText = question.questionTitle;
+    if ('options' in question) {
+      // TODO: Render HTML.
+      tooltipText +=
+        '. Options: ' +
+        (question as MultipleChoiceSurveyQuestion).options
+          .map((item) => item.text)
+          .join(', ');
+    }
+
     return html`
       <div class="table-row">
         <div class="table-cell number-row">${rowIndex}</div>
-        <div class="table-cell">${question.questionTitle}</div>
-        ${showAllParticipants
-          ? renderMultipleAnswerCells()
-          : renderIndividualAnswerCells()}
-        ${renderCorrectAnswerCell()}
+        <div class="table-cell">
+          ${question.questionTitle.length > 50
+            ? html` <pr-tooltip text="${tooltipText}" position="BOTTOM_END">
+                <span style="cursor: pointer"
+                  >${question.questionTitle.slice(0, 50)}...</span
+                >
+              </pr-tooltip>`
+            : question.questionTitle}
+        </div>
       </div>
     `;
   }
