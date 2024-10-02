@@ -25,6 +25,7 @@ import {
   ParticipantProfile,
   ElectionStrategy,
   RankingStageConfig,
+  StageKind,
 } from '@deliberation-lab/utils';
 import {RankingType} from '@deliberation-lab/utils';
 
@@ -119,12 +120,10 @@ export class RankingReveal extends MobxLitElement {
       return '';
     }
 
-    const isItemRanking =
-      (
-        this.experimentService.stageConfigMap[
-          this.publicData.id
-        ] as RankingStageConfig
-      ).rankingType === RankingType.ITEMS;
+    const stage = this.experimentService.stageConfigMap[this.publicData.id];
+    if (!stage || stage.kind !== StageKind.RANKING) return nothing;
+
+    const isItemRanking = stage.rankingType === RankingType.ITEMS;
 
     const getEntryText = (entry: string) => {
       if (!this.publicData) return '';
