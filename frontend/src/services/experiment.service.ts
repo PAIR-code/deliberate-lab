@@ -14,6 +14,7 @@ import {
   Experiment,
   StageConfig,
 } from '@deliberation-lab/utils';
+import {getPublicExperimentName} from '../shared/experiment.utils';
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
@@ -113,7 +114,7 @@ export class ExperimentService extends Service {
   }
 
   @computed get experimentPublicName() {
-    return this.experiment?.metadata?.publicName ?? 'Experiment';
+    return getPublicExperimentName(this.experiment);
   }
 
   @computed get stageIds(): string[] {

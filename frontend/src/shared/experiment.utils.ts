@@ -34,10 +34,20 @@ export function getStagesWithReveal(stages: StageConfig[]) {
   );
 }
 
-/** Get experiment name (or default value if field is empty). */
-export function getExperimentName(
-  experiment: Experiment,
+/** Get private experiment name (or default value if field is empty). */
+export function getPrivateExperimentName(
+  experiment: Experiment|undefined,
+  defaultValue = 'New experiment',
+) {
+  if (!experiment) return defaultValue;
+  return experiment.metadata.name.length > 0 ? experiment.metadata.name : defaultValue;
+}
+
+/** Get public experiment name (or default value if field is empty). */
+export function getPublicExperimentName(
+  experiment: Experiment|undefined,
   defaultValue = 'Experiment',
 ) {
-  return experiment.metadata.name.length > 0 ? experiment.metadata.name : defaultValue;
+  if (!experiment) return defaultValue;
+  return experiment.metadata.publicName.length > 0 ? experiment.metadata.publicName : defaultValue;
 }
