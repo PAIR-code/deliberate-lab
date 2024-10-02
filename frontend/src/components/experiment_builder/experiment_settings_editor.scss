@@ -62,3 +62,7 @@ pr-textarea {
   /* width of checkbox plus gap */
   margin-left: calc(48px + common.$spacing-medium);
 }
+
+.required {
+  color: var(--md-sys-color-error);
+}

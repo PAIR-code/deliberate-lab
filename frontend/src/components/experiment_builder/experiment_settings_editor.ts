@@ -78,8 +78,9 @@ export class ExperimentSettingsEditor extends MobxLitElement {
       <div class="section">
         <div class="title">Metadata</div>
         <pr-textarea
-          label="Private experiment name"
+          label="Private experiment name*"
           placeholder="Internal experiment name (not visible to participants)"
+          class=${(this.experimentEditor.experiment.metadata.name === '') ? 'required' : ''}
           variant="outlined"
           .value=${this.experimentEditor.experiment.metadata.name ?? ''}
           ?disabled=${!this.experimentManager.isCreator}
