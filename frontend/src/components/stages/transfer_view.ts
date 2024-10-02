@@ -55,28 +55,16 @@ export class TransferView extends MobxLitElement {
     return html`
       <stage-description .stage=${this.stage}></stage-description>
 
-      ${this.renderCountdown()} ${this.renderOverlay()}
+      ${this.renderCountdown()}
     `;
-  }
-
-  private renderOverlay() {
-    if (
-      !this.stage?.enableTimeout ||
-      this.participantService.completedStage(this.stage.id ?? '') ||
-      this.authService.isExperimenter
-    )
-      return;
-
-    // Temporary solution: Prevent participant from clicking to other
-    // stages and resetting the transfer countdown
-    return html`<div class="overlay"></div>`;
   }
 
   private renderCountdown() {
     if (
       !this.stage?.enableTimeout ||
       this.participantService.completedStage(this.stage.id ?? '')
-    ) return;
+    )
+      return;
 
     const minutes = Math.floor(this.timeRemainingSeconds / 60);
     const seconds = this.timeRemainingSeconds % 60;
@@ -92,8 +80,8 @@ export class TransferView extends MobxLitElement {
       <div class="transfer-wrapper">
         If the transfer cannot be completed, the experiment will end in:
         <span style="font-weight: bold; color: ${timeColor};">
-          ${minutes}:${seconds.toString().padStart(2, '0')} (mm:ss)
-        </span>.
+          ${minutes}:${seconds.toString().padStart(2, '0')} (mm:ss) </span
+        >.
       </div>
     `;
   }
