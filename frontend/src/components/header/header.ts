@@ -139,15 +139,17 @@ export class Header extends MobxLitElement {
     const renderParticipantProfileBanner = () => {
       const stageId = this.routerService.activeRoute.params['stage'];
       const stage = this.experimentService.getStage(stageId);
+      if (!stage || !profile) return nothing;
+
       const isWaiting = this.cohortService.isStageWaitingForParticipants(
         stage.id
       );
       const isWaitingText = isWaiting
         ? '. This participant currently sees a wait stage, as they are waiting for others in the cohort to catch up.'
         : '';
-      return `Previewing as: ${
-        profile ? `${getParticipantName(profile)}${isWaitingText}` : ''
-      }`;
+      return `Previewing as:
+        ${getParticipantName(profile)}${isWaitingText}
+      `;
     };
 
     switch (activePage) {
@@ -162,7 +164,8 @@ export class Header extends MobxLitElement {
       case Pages.PARTICIPANT_JOIN_COHORT:
         return 'Previewing experiment cohort';
       case Pages.PARTICIPANT:
-        return renderParticipantProfileBanner();
+        // Participant landing page
+        return `Previewing as: ${profile ? getParticipantName(profile) : ''}`;
       case Pages.PARTICIPANT_STAGE:
         return renderParticipantProfileBanner();
       default:
