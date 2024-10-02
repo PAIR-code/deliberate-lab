@@ -1,12 +1,12 @@
-
-import "../../pair-components/icon_button";
-import "../../pair-components/menu";
+import '../../pair-components/icon_button';
+import '../../pair-components/menu';
+import '../../pair-components/tooltip';
 
 import '@material/web/checkbox/checkbox.js';
 
-import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {CSSResultGroup, html, nothing} from 'lit';
+import {customElement, property} from 'lit/decorators.js';
 
 import {
   RevealAudience,
@@ -16,25 +16,23 @@ import {
   StageKind,
   SurveyRevealItem,
   createNewRevealItem,
-} from "@deliberation-lab/utils";
+} from '@deliberation-lab/utils';
 
-import { core } from "../../core/core";
-import { ExperimentEditor } from "../../services/experiment.editor";
+import {core} from '../../core/core';
+import {ExperimentEditor} from '../../services/experiment.editor';
 
-import {
-  getStagesWithReveal
-} from '../../shared/experiment.utils';
+import {getStagesWithReveal} from '../../shared/experiment.utils';
 
-import { styles } from "./reveal_editor.scss";
+import {styles} from './reveal_editor.scss';
 
 /** Reveal stage editor */
-@customElement("reveal-editor")
+@customElement('reveal-editor')
 export class RevealEditor extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
-  @property() stage: RevealStageConfig|undefined = undefined;
+  @property() stage: RevealStageConfig | undefined = undefined;
 
   override render() {
     if (!this.stage) return nothing;
@@ -44,8 +42,8 @@ export class RevealEditor extends MobxLitElement {
         <div class="left">Stages to reveal</div>
         ${this.renderAddMenu()}
       </div>
-      ${this.stage.items.map(
-        (item, index) => this.renderRevealStageItem(item, index)
+      ${this.stage.items.map((item, index) =>
+        this.renderRevealStageItem(item, index)
       )}
     `;
   }
@@ -53,16 +51,49 @@ export class RevealEditor extends MobxLitElement {
   private renderAddMenu() {
     if (!this.stage) return nothing;
 
-    const stageOptions = getStagesWithReveal(this.experimentEditor.stages).filter(
-      stage => stage.id !== this.stage?.id
-    );
+    // Get all stages with a reveal stage.
+    // Get all stages with a reveal stage.
+    const getStageOptions = () => {
+      const revealStages = getStagesWithReveal(
+        this.experimentEditor.stages
+      ).filter((stage) => stage.id !== this.stage?.id);
+
+      // Get the current stage index.
+      const currentStageIndex = this.experimentEditor.stages.findIndex(
+        (stage) => stage.id === this.stage!.id
+      );
+
+      // Filter stages to only those before the current stage index.
+      const filteredStages = revealStages.filter((stage) => {
+        const stageIndex = this.experimentEditor.stages.findIndex(
+          (expStage) => expStage.id === stage.id
+        );
+        return stageIndex < currentStageIndex;
+      });
+
+      return filteredStages;
+    };
+
+    const stageOptions = getStageOptions();
+    if (stageOptions.length === 0) {
+      return html`
+        <pr-tooltip
+          position="TOP_END"
+          text="No stages available. Only survey and election stages that precede this stage can be revealed."
+        >
+          <pr-menu name="Add stage" ?disabled=${true}></pr-menu>
+        </pr-tooltip>
+      `;
+    }
 
     return html`
-      <pr-menu name="Add stage" ?disabled=${!this.experimentEditor.canEditStages}>
+      <pr-menu
+        name="Add stage"
+        ?disabled=${!this.experimentEditor.canEditStages}
+      >
         <div class="menu-wrapper">
           <div class="stages">
-            ${stageOptions.length === 0 ? html`<div class="empty-message">No stages available</div>` : nothing}
-            ${stageOptions.map(stage => this.renderAddRevealStage(stage))}
+            ${stageOptions.map((stage) => this.renderAddRevealStage(stage))}
           </div>
         </div>
       </pr-menu>
@@ -79,12 +110,12 @@ export class RevealEditor extends MobxLitElement {
       const items = [...this.stage.items, item];
       this.experimentEditor.updateStage({
         ...this.stage,
-        items
+        items,
       });
     };
 
     const stageIndex = this.experimentEditor.stages.findIndex(
-      s => s.id === stage.id
+      (s) => s.id === stage.id
     );
 
     return html`
@@ -122,7 +153,7 @@ export class RevealEditor extends MobxLitElement {
 
       this.experimentEditor.updateStage({
         ...this.stage,
-        items
+        items,
       });
     };
 
@@ -138,7 +169,7 @@ export class RevealEditor extends MobxLitElement {
 
       this.experimentEditor.updateStage({
         ...this.stage,
-        items
+        items,
       });
     };
 
@@ -147,18 +178,18 @@ export class RevealEditor extends MobxLitElement {
 
       const items = [
         ...this.stage.items.slice(0, index),
-        ...this.stage.items.slice(index + 1)
+        ...this.stage.items.slice(index + 1),
       ];
 
       this.experimentEditor.updateStage({
         ...this.stage,
-        items
+        items,
       });
     };
 
     const stage = this.experimentEditor.getStage(item.id);
     const stageIndex = this.experimentEditor.stages.findIndex(
-      stage => stage.id === item.id
+      (stage) => stage.id === item.id
     );
     if (!this.stage || !stage) return nothing;
 
@@ -176,9 +207,7 @@ export class RevealEditor extends MobxLitElement {
     return html`
       <div class="reveal-stage">
         <div class="header">
-          <div class="label">
-            ${stageIndex + 1}. ${stage.name}
-          </div>
+          <div class="label">${stageIndex + 1}. ${stage.name}</div>
           <div class="buttons">
             <pr-icon-button
               color="neutral"
@@ -196,7 +225,8 @@ export class RevealEditor extends MobxLitElement {
               padding="small"
               size="small"
               variant="default"
-              ?disabled=${index === this.stage.items.length - 1 || !this.experimentEditor.canEditStages}
+              ?disabled=${index === this.stage.items.length - 1 ||
+              !this.experimentEditor.canEditStages}
               @click=${handleMoveDown}
             >
             </pr-icon-button>
@@ -220,13 +250,10 @@ export class RevealEditor extends MobxLitElement {
             @click=${toggleRevealAllParticipants}
           >
           </md-checkbox>
-          <div>
-            Reveal selections by all participants within the
-            cohort
-          </div>
+          <div>Reveal selections by all participants within the cohort</div>
         </div>
-        ${item.kind === StageKind.SURVEY ?
-          this.renderSurveyRevealSettings(item, index)
+        ${item.kind === StageKind.SURVEY
+          ? this.renderSurveyRevealSettings(item, index)
           : nothing}
       </div>
     `;
@@ -238,7 +265,10 @@ export class RevealEditor extends MobxLitElement {
     const revealScorableOnly = item.revealScorableOnly;
 
     const toggleRevealScorableOnly = () => {
-      this.updateRevealItem({...item, revealScorableOnly: !revealScorableOnly}, index);
+      this.updateRevealItem(
+        {...item, revealScorableOnly: !revealScorableOnly},
+        index
+      );
     };
 
     return html`
@@ -260,6 +290,6 @@ export class RevealEditor extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "reveal-editor": RevealEditor;
+    'reveal-editor': RevealEditor;
   }
 }
