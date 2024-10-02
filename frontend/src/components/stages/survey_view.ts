@@ -47,11 +47,6 @@ export class SurveyView extends MobxLitElement {
 
   @property() stage: SurveyStageConfig | undefined = undefined;
 
-  connectedCallback() {
-    super.connectedCallback();
-    this.surveyAnswerService.updateForCurrentRoute();
-  }
-
   override render() {
     if (!this.stage) {
       return nothing;

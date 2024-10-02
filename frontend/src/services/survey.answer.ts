@@ -67,15 +67,9 @@ export class SurveyAnswerService extends Service {
     this.answerMap = {};
   }
 
-  addSurveyAnswer(answer: SurveyStageParticipantAnswer) {
+  addSurveyAnswer(stageId: string, answer: SurveyStageParticipantAnswer) {
     this.areAnswersLoading = true;
-
-    const stage = this.sp.experimentService.getStage(answer.id);
-    if (!stage) {
-      this.areAnswersLoading = false;
-      return;
-    }
-    this.answerMap[stage.id] = answer.answerMap;
+    this.answerMap[stageId] = answer.answerMap;
     this.areAnswersLoading = false;
   }
 
@@ -100,10 +94,11 @@ export class SurveyAnswerService extends Service {
     );
   }
 
-  updateForCurrentRoute() {
-    const eid = this.sp.routerService.activeRoute.params["experiment"];
-    const pid = this.sp.routerService.activeRoute.params["participant"];
-    const stageId = this.sp.routerService.activeRoute.params["stage"];
+  updateForRoute(
+    eid: string, // experiment ID
+    pid: string, // participant ID
+    stageId: string, // stage ID
+  ) {
     if (eid !== this.experimentId || pid !== this.participantId || stageId !== this.stageId) {
       this.setSurvey(eid, pid, stageId);
     }

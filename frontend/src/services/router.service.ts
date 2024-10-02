@@ -4,10 +4,16 @@ import { computed, makeObservable, observable } from "mobx";
 import { Service } from "./service";
 import { AnalyticsService } from "./analytics.service";
 import { ExperimentManager } from "./experiment.manager";
+import { ExperimentService } from "./experiment.service";
+import { ParticipantService } from "./participant.service";
+import { SurveyAnswerService } from "./survey.answer";
 
 interface ServiceProvider {
   analyticsService: AnalyticsService;
   experimentManager: ExperimentManager;
+  experimentService: ExperimentService;
+  participantService: ParticipantService;
+  surveyAnswerService: SurveyAnswerService;
 }
 
 /**
@@ -93,6 +99,40 @@ export class RouterService extends Service {
     this.activeRoute = routeChange.route;
     if (this.activePage) {
       this.sp.analyticsService.trackPageView(this.activePage, this.activeRoute.path);
+    }
+    this.loadDataForRoute();
+  }
+
+  private loadDataForRoute() {
+    const params = this.activeRoute.params;
+
+    if (params['experiment'] && params['participant'] && params['stage']) {
+      this.sp.surveyAnswerService.updateForRoute(
+        params['experiment'],
+        params['participant'],
+        params['stage']
+      );
+      this.sp.participantService.updateForRoute(
+        params['experiment'],
+        params['participant'],
+      );
+      this.sp.experimentManager.updateForRoute(params['experiment']);
+      this.sp.experimentService.updateForRoute(params['experiment']);
+    } else if (params['experiment'] && params['participant']) {
+      this.sp.participantService.updateForRoute(
+        params['experiment'],
+        params['participant'],
+      );
+      this.sp.experimentManager.updateForRoute(params['experiment']);
+      this.sp.experimentService.updateForRoute(params['experiment']);
+    } else if (params['experiment']) {
+      this.sp.experimentManager.updateForRoute(params['experiment']);
+      this.sp.experimentService.updateForRoute(params['experiment']);
+      this.sp.participantService.reset();
+    } else {
+      this.sp.experimentManager.reset();
+      this.sp.experimentService.reset();
+      this.sp.participantService.reset();
     }
   }
 

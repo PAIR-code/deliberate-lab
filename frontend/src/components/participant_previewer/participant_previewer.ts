@@ -52,12 +52,6 @@ export class ParticipantPreviewer extends MobxLitElement {
 
   @state() isStartExperimentLoading = false;
 
-  connectedCallback() {
-    super.connectedCallback();
-    this.experimentService.updateForCurrentRoute();
-    this.participantService.updateForCurrentRoute();
-  }
-
   override render() {
     if (this.routerService.activePage === Pages.PARTICIPANT) {
       return html`

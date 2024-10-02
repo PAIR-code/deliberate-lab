@@ -52,10 +52,9 @@ export class ExperimentService extends Service {
     this.isStageConfigsLoading = value;
   }
 
-  updateForCurrentRoute() {
-    const id = this.sp.routerService.activeRoute.params['experiment'];
-    if (id !== this.experiment?.id) {
-      this.loadExperiment(id);
+  updateForRoute(experimentId: string) {
+    if (experimentId !== this.experiment?.id) {
+      this.loadExperiment(experimentId);
     }
   }
 
@@ -107,6 +106,10 @@ export class ExperimentService extends Service {
     // Reset stage configs
     this.stageConfigMap = {};
     this.experiment = undefined;
+  }
+
+  reset() {
+    this.unsubscribeAll();
   }
 
   @computed get experimentName() {

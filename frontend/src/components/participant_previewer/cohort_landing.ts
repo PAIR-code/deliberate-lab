@@ -30,11 +30,6 @@ export class CohortLanding extends MobxLitElement {
 
   @state() isLoading = false;
 
-  connectedCallback() {
-    super.connectedCallback();
-    this.experimentService.updateForCurrentRoute();
-  }
-
   override render() {
     return html`
       <div class="main">

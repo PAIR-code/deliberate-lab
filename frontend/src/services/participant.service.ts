@@ -158,9 +158,10 @@ export class ParticipantService extends Service {
     return stageAnswer.discussionTimestampMap[discussionId];
   }
 
-  updateForCurrentRoute() {
-    const eid = this.sp.routerService.activeRoute.params['experiment'];
-    const pid = this.sp.routerService.activeRoute.params['participant'];
+  updateForRoute(
+    eid: string, // experiment ID
+    pid: string // participant ID
+  ) {
     if (eid !== this.experimentId || pid !== this.participantId) {
       this.setParticipant(eid, pid);
     }
@@ -212,7 +213,7 @@ export class ParticipantService extends Service {
             this.answerMap[doc.id] = answer;
             // Load relevant answers to survey service
             if (answer.kind === StageKind.SURVEY) {
-              this.sp.surveyAnswerService.addSurveyAnswer(answer);
+              this.sp.surveyAnswerService.addSurveyAnswer(doc.id, answer);
             }
           });
           this.areAnswersLoading = false;
@@ -228,6 +229,12 @@ export class ParticipantService extends Service {
     this.profile = undefined;
     this.answerMap = {};
     this.sp.surveyAnswerService.resetAnswers();
+  }
+
+  reset() {
+    this.experimentId = null;
+    this.participantId = null;
+    this.unsubscribeAll();
   }
 
   // *********************************************************************** //
