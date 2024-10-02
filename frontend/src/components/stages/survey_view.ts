@@ -153,13 +153,16 @@ export class SurveyView extends MobxLitElement {
       this.participantAnswerService.updateSurveyAnswer(this.stage.id, textAnswer);
     };
 
+    const answer = this.participantAnswerService.getSurveyAnswer(this.stage.id, question.id);
+    const textAnswer = answer && answer.kind === SurveyQuestionKind.TEXT ? answer.answer : '';
+
     return html`
       <div class="question">
         <div class="question-title">${question.questionTitle}</div>
         <pr-textarea
           variant="outlined"
           placeholder="Type your response"
-          .value=${this.participantAnswerService.getSurveyAnswer(this.stage.id, question.id) ?? ''}
+          .value=${textAnswer}
           ?disabled=${this.participantService.disableStage}
           @change=${handleTextChange}
         >
