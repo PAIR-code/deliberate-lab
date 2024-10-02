@@ -10,6 +10,7 @@ import {classMap} from 'lit/directives/class-map.js';
 import {core} from '../../core/core';
 import {ButtonClick, AnalyticsService} from '../../services/analytics.service';
 import {AuthService} from '../../services/auth.service';
+import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
@@ -29,6 +30,7 @@ export class Header extends MobxLitElement {
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly analyticsService = core.getService(AnalyticsService);
   private readonly authService = core.getService(AuthService);
+  private readonly cohortService = core.getService(CohortService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
@@ -39,8 +41,8 @@ export class Header extends MobxLitElement {
     }
 
     const headerClasses = classMap({
-      'header': true,
-      'banner': this.isBanner(),
+      header: true,
+      banner: this.isBanner(),
     });
 
     return html`
@@ -56,10 +58,12 @@ export class Header extends MobxLitElement {
 
   private isBanner() {
     const activePage = this.routerService.activePage;
-    return this.experimentManager.isEditingFull
-      || activePage === Pages.PARTICIPANT
-      || activePage === Pages.PARTICIPANT_STAGE
-      || activePage === Pages.PARTICIPANT_JOIN_COHORT;
+    return (
+      this.experimentManager.isEditingFull ||
+      activePage === Pages.PARTICIPANT ||
+      activePage === Pages.PARTICIPANT_STAGE ||
+      activePage === Pages.PARTICIPANT_JOIN_COHORT
+    );
   }
 
   private renderBackButton() {
@@ -114,7 +118,7 @@ export class Header extends MobxLitElement {
     if (this.experimentManager.isCreator) {
       // Display confirmation dialog
       const isConfirmed = window.confirm(
-          "You may have unsaved changes. Are you sure you want to exit?"
+        'You may have unsaved changes. Are you sure you want to exit?'
       );
       if (!isConfirmed) return;
     }
@@ -124,6 +128,20 @@ export class Header extends MobxLitElement {
   private renderTitle() {
     const activePage = this.routerService.activePage;
     const profile = this.participantService.profile;
+
+    const renderParticipantProfileBanner = () => {
+      const stageId = this.routerService.activeRoute.params['stage'];
+      const stage = this.experimentService.getStage(stageId);
+      const isWaiting = this.cohortService.isStageWaitingForParticipants(
+        stage.id
+      );
+      const isWaitingText = isWaiting
+        ? '. This participant currently sees a wait stage, as they are waiting for others in the cohort to catch up.'
+        : '';
+      return `Previewing as: ${
+        profile ? `${getParticipantName(profile)}${isWaitingText}` : ''
+      }`;
+    };
 
     switch (activePage) {
       case Pages.HOME:
@@ -137,9 +155,9 @@ export class Header extends MobxLitElement {
       case Pages.PARTICIPANT_JOIN_COHORT:
         return 'Previewing experiment cohort';
       case Pages.PARTICIPANT:
-        return `Previewing as: ${profile ? getParticipantName(profile) : ''}`;
+        return renderParticipantProfileBanner();
       case Pages.PARTICIPANT_STAGE:
-        return `Previewing as: ${profile ? getParticipantName(profile) : ''}`;
+        return renderParticipantProfileBanner();
       default:
         return '';
     }
@@ -148,12 +166,13 @@ export class Header extends MobxLitElement {
   private renderExperimentTitle() {
     const title = this.experimentService.experimentName;
     if (this.experimentManager.isEditingFull) {
-      return this.experimentManager.isCreator ? `Editing: ${title}` : `Previewing config: ${title}`;
+      return this.experimentManager.isCreator
+        ? `Editing: ${title}`
+        : `Previewing config: ${title}`;
     } else {
       return title;
     }
   }
-
 
   private renderActions() {
     const activePage = this.routerService.activePage;
@@ -165,7 +184,9 @@ export class Header extends MobxLitElement {
             color="primary"
             variant="outlined"
             ?disabled=${!this.experimentEditor.canEditStages}
-            @click=${() => { this.experimentEditor.toggleStageBuilderDialog(false) }}
+            @click=${() => {
+              this.experimentEditor.toggleStageBuilderDialog(false);
+            }}
           >
             Add stage
           </pr-button>
@@ -174,7 +195,9 @@ export class Header extends MobxLitElement {
             color="primary"
             variant="outlined"
             ?disabled=${!this.experimentEditor.canEditStages}
-            @click=${() => { this.experimentEditor.toggleStageBuilderDialog(true) }}
+            @click=${() => {
+              this.experimentEditor.toggleStageBuilderDialog(true);
+            }}
           >
             Load game
           </pr-button>
@@ -182,11 +205,15 @@ export class Header extends MobxLitElement {
             ?loading=${this.experimentEditor.isWritingExperiment}
             ?disabled=${!this.experimentEditor.isValidExperimentConfig}
             @click=${async () => {
-              this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_SAVE_NEW);
+              this.analyticsService.trackButtonClick(
+                ButtonClick.EXPERIMENT_SAVE_NEW
+              );
               const response = await this.experimentEditor.writeExperiment();
               this.experimentEditor.resetExperiment();
-              this.routerService.navigate(Pages.EXPERIMENT, {'experiment': response.id});
-              }}
+              this.routerService.navigate(Pages.EXPERIMENT, {
+                experiment: response.id,
+              });
+            }}
           >
             Save experiment
           </pr-button>
@@ -200,7 +227,9 @@ export class Header extends MobxLitElement {
               color="tertiary"
               variant="outlined"
               ?disabled=${!this.experimentEditor.canEditStages}
-              @click=${() => { this.experimentEditor.toggleStageBuilderDialog(false) }}
+              @click=${() => {
+                this.experimentEditor.toggleStageBuilderDialog(false);
+              }}
             >
               Add stage
             </pr-button>
@@ -209,7 +238,9 @@ export class Header extends MobxLitElement {
               color="tertiary"
               variant="outlined"
               ?disabled=${!this.experimentEditor.canEditStages}
-              @click=${() => { this.experimentEditor.toggleStageBuilderDialog(true) }}
+              @click=${() => {
+                this.experimentEditor.toggleStageBuilderDialog(true);
+              }}
             >
               Load game
             </pr-button>
@@ -225,7 +256,9 @@ export class Header extends MobxLitElement {
               variant="tonal"
               ?disabled=${!this.experimentManager.isCreator}
               @click=${() => {
-                this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_SAVE_EXISTING);
+                this.analyticsService.trackButtonClick(
+                  ButtonClick.EXPERIMENT_SAVE_EXISTING
+                );
                 this.experimentManager.setIsEditing(false, true);
               }}
             >
@@ -241,24 +274,31 @@ export class Header extends MobxLitElement {
             @click=${() => {
               // Display confirmation dialog
               const isConfirmed = window.confirm(
-                  "This will create a copy of this experiment. Are you sure you want to proceed?"
+                'This will create a copy of this experiment. Are you sure you want to proceed?'
               );
               if (!isConfirmed) return;
-              this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_FORK);
+              this.analyticsService.trackButtonClick(
+                ButtonClick.EXPERIMENT_FORK
+              );
               this.experimentManager.forkExperiment();
             }}
           >
           </pr-icon-button>
-          <pr-tooltip text="Experiment creators can edit metadata, and can edit stages if users have not joined the experiment." position="BOTTOM_END">
+          <pr-tooltip
+            text="Experiment creators can edit metadata, and can edit stages if users have not joined the experiment."
+            position="BOTTOM_END"
+          >
             <pr-icon-button
-              icon=${this.experimentManager.isCreator ? 'edit_note' : 'overview'}
+              icon=${this.experimentManager.isCreator
+                ? 'edit_note'
+                : 'overview'}
               color="primary"
               variant="default"
               @click=${() => {
                 this.analyticsService.trackButtonClick(
-                  this.experimentManager.isCreator ?
-                  ButtonClick.EXPERIMENT_EDIT :
-                  ButtonClick.EXPERIMENT_PREVIEW_CONFIG
+                  this.experimentManager.isCreator
+                    ? ButtonClick.EXPERIMENT_EDIT
+                    : ButtonClick.EXPERIMENT_PREVIEW_CONFIG
                 );
                 this.experimentManager.setIsEditing(true);
               }}
