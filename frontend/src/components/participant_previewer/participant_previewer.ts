@@ -56,7 +56,7 @@ export class ParticipantPreviewer extends MobxLitElement {
     if (this.routerService.activePage === Pages.PARTICIPANT) {
       return html`
         <participant-nav></participant-nav>
-        <div class="participant-previewer">
+        <div class="participant-previewer ${!this.authService.isExperimenter ? 'full-view' : ''}">
           <div class="content">
             ${this.renderLanding()}
           </div>
@@ -71,7 +71,7 @@ export class ParticipantPreviewer extends MobxLitElement {
 
     return html`
       <participant-nav></participant-nav>
-      <div class="participant-previewer">
+      <div class="participant-previewer ${!this.authService.isExperimenter ? 'full-view' : ''}">
         <participant-header .stage=${stage}></participant-header>
         ${this.renderStageContent(stage)}
       </div>

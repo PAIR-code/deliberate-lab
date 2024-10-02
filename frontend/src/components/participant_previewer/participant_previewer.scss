@@ -13,6 +13,10 @@
   flex-grow: 1;
   max-height: calc(100vh - common.$header-height);
   overflow: auto;
+
+  &.full-view {
+    max-height: 100vh;
+  }
 }
 
 .header {
