@@ -2,11 +2,12 @@ import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
 
+import "./experimenter_data_editor";
 import './experimenter_manual_chat';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement} from 'lit/decorators.js';
+import {customElement, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
@@ -18,6 +19,12 @@ import {StageKind} from '@deliberation-lab/utils';
 
 import {styles} from './experimenter_panel.scss';
 
+enum PanelView {
+  MANUAL_CHAT = 'manual_chat',
+  LLM_SETTINGS = 'llm_settings',
+  API_KEY = 'api_key'
+}
+
 /** Experimenter panel component */
 @customElement('experimenter-panel')
 export class Panel extends MobxLitElement {
@@ -25,6 +32,8 @@ export class Panel extends MobxLitElement {
   private readonly authService = core.getService(AuthService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly routerService = core.getService(RouterService);
+
+  @state() panelView: PanelView = PanelView.MANUAL_CHAT;
 
   override render() {
     if (!this.authService.isExperimenter) {
@@ -39,55 +48,118 @@ export class Panel extends MobxLitElement {
       return nothing;
     }
 
-    const togglePanel = () => {
-      this.routerService.setExperimenterPanel(
-        !this.routerService.isExperimenterPanelOpen
-      );
-    };
-
     const panelClasses = classMap({
       'panel-wrapper': true,
       closed: !this.routerService.isExperimenterPanelOpen,
     });
 
-    const renderChatTitle = () => {
-      if (this.routerService.isExperimenterPanelOpen) {
-        return html`<div class="title">Manual chat</div>`;
+    const isPanelOpen = this.routerService.isExperimenterPanelOpen;
+
+    const renderPanelView = () => {
+      if (!isPanelOpen) {
+        return nothing;
       }
-      return nothing;
+      switch (this.panelView) {
+        case PanelView.MANUAL_CHAT:
+          return html`
+            <div class="main">
+              <div class="top">
+                <div class="header">Manual chat</div>
+              </div>
+              <div class="bottom">
+                <experimenter-manual-chat></experimenter-manual-chat>
+              </div>
+            </div>
+          `;
+        case PanelView.API_KEY:
+          return html`
+            <div class="main">
+              <div class="top">
+                <div class="header">Experimenter settings</div>
+                <experimenter-data-editor></experimenter-data-editor>
+              </div>
+            </div>
+          `;
+        case PanelView.LLM_SETTINGS:
+          return html`
+            <div class="main">
+              <div class="top">
+                <div class="header">Mediator config</div>
+              </div>
+            </div>
+          `;
+        default:
+          return nothing;
+      }
     };
 
-    const renderChatPanel = () => {
-      if (this.routerService.isExperimenterPanelOpen) {
-        return html`<experimenter-manual-chat></experimenter-manual-chat>`;
-      }
-      return nothing;      
-    }
-
-    // TODO: Add experimenter data (API key) editor to panel
+    const isSelected = (panelView: PanelView) => {
+      return isPanelOpen && this.panelView === panelView;
+    };
 
     return html`
       <div class=${panelClasses}>
-        <div class="top">
-          <div class="header">
-            <div class="button-wrapper">
-              <pr-icon-button
-                color="secondary"
-                icon=${this.routerService.isExperimenterPanelOpen ? "chevron_right" : "chat"}
-                size="medium"
-                variant="default"
-                @click=${togglePanel}
-              >
-              </pr-icon-button>
-            </div>
-            ${renderChatTitle()}
-          </div>
+        <div class="sidebar">
+          <pr-tooltip text="Toggle experimenter panel" position="LEFT_END">
+            <pr-icon-button
+              color="secondary"
+              icon=${isPanelOpen ? "chevron_right" : "chevron_left"}
+              size="medium"
+              variant="default"
+              @click=${this.togglePanel}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
+          <pr-tooltip text="Send manual chat" position="LEFT_END">
+            <pr-icon-button
+              color="secondary"
+              icon="chat"
+              size="medium"
+              variant=${isSelected(PanelView.MANUAL_CHAT) ? "tonal" : "default"}
+              @click=${() => {
+                this.panelView = PanelView.MANUAL_CHAT;
+                this.routerService.setExperimenterPanel(true);
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
+          <pr-tooltip text="Edit API key" position="LEFT_END">
+            <pr-icon-button
+              color="secondary"
+              icon="key"
+              size="medium"
+              variant=${isSelected(PanelView.API_KEY) ? "tonal" : "default"}
+              @click=${() => {
+                this.panelView = PanelView.API_KEY;
+                this.routerService.setExperimenterPanel(true);
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
+          <pr-tooltip text="Coming soon: Edit LLM config" position="LEFT_END">
+            <pr-icon-button
+              color="secondary"
+              icon="edit_note"
+              size="medium"
+              variant=${isSelected(PanelView.LLM_SETTINGS) ? "tonal" : "default"}
+              disabled
+              @click=${() => {
+                this.panelView = PanelView.LLM_SETTINGS;
+                this.routerService.setExperimenterPanel(true);
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
         </div>
-        <div class="bottom">
-          ${renderChatPanel()}
-        </div>
+        ${renderPanelView()}
       </div>
     `;
+  }
+
+  private togglePanel() {
+    this.routerService.setExperimenterPanel(
+      !this.routerService.isExperimenterPanelOpen
+    );
   }
 }
 
