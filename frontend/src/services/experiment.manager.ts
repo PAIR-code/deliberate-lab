@@ -402,7 +402,10 @@ export class ExperimentManager extends Service {
   }
 
   /** Update a participant */
-  async updateParticipant(participantConfig: ParticipantProfileExtended) {
+  async updateParticipant(
+    participantConfig: ParticipantProfileExtended,
+    isTransfer = false
+  ) {
     this.isWritingParticipant = true;
     let response = {};
 
@@ -410,6 +413,7 @@ export class ExperimentManager extends Service {
       response = await updateParticipantCallable(
         this.sp.firebaseService.functions, {
           experimentId: this.experimentId,
+          isTransfer,
           participantConfig
         }
       );

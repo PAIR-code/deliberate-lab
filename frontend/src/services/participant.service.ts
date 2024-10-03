@@ -382,7 +382,10 @@ export class ParticipantService extends Service {
   }
 
   /** Update participant profile */
-  async updateProfile(config: Partial<ParticipantProfileExtended>) {
+  async updateProfile(
+    config: Partial<ParticipantProfileExtended>,
+    isTransfer = false
+  ) {
     if (!this.profile) {
       return;
     }
@@ -394,6 +397,7 @@ export class ParticipantService extends Service {
       response = await updateParticipantCallable(
         this.sp.firebaseService.functions, {
           experimentId: this.experimentId,
+          isTransfer,
           participantConfig
         }
       );
@@ -436,7 +440,8 @@ export class ParticipantService extends Service {
         transferCohortId: null,
         currentStageId,
         currentStatus: ParticipantStatus.IN_PROGRESS,
-      }
+      },
+      true
     );
   }
 
