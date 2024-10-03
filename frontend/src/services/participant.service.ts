@@ -558,9 +558,7 @@ export class ParticipantService extends Service {
   /** Update participant's ranking stage answer. */
   async updateRankingStageParticipantAnswer(
     stageId: string, // ranking stage ID
-    strategy: ElectionStrategy,
     rankingList: string[], // list of rankings
-    rankingItems: RankingItem[] | null
   ) {
     let response = {};
     if (this.experimentId && this.profile) {
@@ -571,9 +569,7 @@ export class ParticipantService extends Service {
           participantPublicId: this.profile.publicId,
           participantPrivateId: this.profile.privateId,
           stageId,
-          strategy,
           rankingList,
-          rankingItems: rankingItems ?? [],
         }
       );
     }

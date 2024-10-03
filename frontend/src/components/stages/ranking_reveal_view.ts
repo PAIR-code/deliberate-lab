@@ -41,7 +41,10 @@ export class RankingReveal extends MobxLitElement {
   @property() item: RankingRevealItem | undefined = undefined;
   @property() publicData: RankingStagePublicData | undefined = undefined;
 
-  private renderParticipantWinner(leader: ParticipantProfile) {
+  private renderParticipantWinner(winnerId: string) {
+    const leader = this.cohortService.participantMap[winnerId];
+    if (!leader) return nothing;
+
     return html`
       <div class="reveal-wrapper">
         <h3>The winner of the election is:</h3>
@@ -57,10 +60,15 @@ export class RankingReveal extends MobxLitElement {
     `;
   }
 
-  private renderItemWinner(item: RankingItem | undefined) {
-    if (!item) {
-      return;
-    }
+  private renderItemWinner(winnerId: string) {
+    if (!this.publicData) return nothing;
+
+    const stage = this.experimentService.getStage(this.publicData.id);
+    if (!stage || stage.kind !== StageKind.RANKING) return nothing;
+
+    const item = stage.rankingType === RankingType.ITEMS ?
+      stage.rankingItems.find(item => item.id === winnerId) : undefined;
+    if (!item) return nothing;
 
     return html`
       <div class="reveal-wrapper">
@@ -71,38 +79,19 @@ export class RankingReveal extends MobxLitElement {
   }
 
   private renderWinner() {
-    if (!this.publicData) return;
+    if (!this.publicData) return nothing;
 
-    const isItemRanking =
-      (
-        this.experimentService.stageConfigMap[
-          this.publicData.id
-        ] as RankingStageConfig
-      ).rankingType === RankingType.ITEMS;
-    const hasWinner =
-      (
-        this.experimentService.stageConfigMap[
-          this.publicData.id
-        ] as RankingStageConfig
-      ).strategy === ElectionStrategy.CONDORCET &&
-      this.publicData.currentWinner;
+    const rankingStage = this.experimentService.getStage(this.publicData.id);
+    if (!rankingStage || rankingStage.kind !== StageKind.RANKING) return;
 
-    // Display the winner.
-    if (hasWinner) {
-      const winner = this.publicData.currentWinner;
-      // This is a participant election.
-      if (!isItemRanking) {
-        const leader = this.cohortService.participantMap[winner];
-        return this.renderParticipantWinner(leader);
-      } else {
-        // This is an item election.
-        const winningItem = this.publicData.rankingItems.find(
-          (item) => item.id === winner
-        );
-        return this.renderItemWinner(winningItem);
-      }
-    }
-    return '';
+    const hasWinner = rankingStage.strategy !== ElectionStrategy.NONE;
+    if (!hasWinner) return nothing;
+
+    const winnerId = this.publicData.winnerId;
+
+    const isItemRanking = rankingStage.rankingType === RankingType.ITEMS;
+    return isItemRanking ? this.renderItemWinner(winnerId)
+      : this.renderParticipantWinner(winnerId);
   }
 
   private renderResultsTable() {
@@ -115,9 +104,9 @@ export class RankingReveal extends MobxLitElement {
       ? 'Here are the rankings of your group:'
       : 'As a reminder, here are your rankings.';
 
-    const curId = this.participantService.profile!.publicId!;
-    if (!showAllParticipants && !curId) {
-      return '';
+    const currentId = this.participantService.profile?.publicId ?? '';
+    if (!showAllParticipants && currentId.length === 0) {
+      return nothing;
     }
 
     const stage = this.experimentService.stageConfigMap[this.publicData.id];
@@ -129,9 +118,7 @@ export class RankingReveal extends MobxLitElement {
       if (!this.publicData) return '';
 
       if (isItemRanking) {
-        const item = this.publicData.rankingItems.find(
-          (item) => item.id === entry
-        );
+        const item = stage.rankingItems.find((item) => item.id === entry);
         return item ? item.text : 'Unknown item';
       } else {
         const participant = this.cohortService.participantMap[entry];
@@ -143,10 +130,10 @@ export class RankingReveal extends MobxLitElement {
 
     const participantMap = showAllParticipants
       ? this.publicData.participantAnswerMap
-      : {[curId]: this.publicData.participantAnswerMap[curId]};
+      : {[currentId]: this.publicData.participantAnswerMap[currentId]};
 
     const maxOptions = Math.max(
-      ...Object.values(participantMap).map((list) => list.length)
+      ...Object.values(participantMap).map(lst => lst.length)
     );
 
     return html`
@@ -155,15 +142,14 @@ export class RankingReveal extends MobxLitElement {
         <div class="table-head">
           <div class="table-row">
             <div class="table-cell rank-row">Rank</div>
-            ${Object.keys(participantMap).map(
-              (participant) => html`
+            ${Object.keys(participantMap).map((publicId) => {
+              const profile = this.cohortService.participantMap[publicId];
+              return html`
                 <div class="table-cell">
-                  ${getParticipantName(
-                    this.cohortService.participantMap[participant]
-                  ) ?? participant}
+                  ${profile ? getParticipantName(profile) : publicId}
                 </div>
-              `
-            )}
+              `;
+            })}
           </div>
         </div>
 

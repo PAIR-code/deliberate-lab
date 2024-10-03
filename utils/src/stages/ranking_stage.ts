@@ -74,13 +74,10 @@ export interface RankingStageParticipantAnswer extends BaseStageParticipantAnswe
  */
 export interface RankingStagePublicData extends BaseStagePublicData {
   kind: StageKind.RANKING;
-  // Strategy
-  strategy: ElectionStrategy;
   // ID of current winner based on participant rankings
-  currentWinner: string;
+  winnerId: string;
   // Maps from participant to participant's rankings (question ID to answer)
   participantAnswerMap: Record<string, string[]>;
-  rankingItems: RankingItem[];
 }
 
 // ************************************************************************* //
@@ -145,9 +142,7 @@ export function createRankingStagePublicData(
   return {
     id,
     kind: StageKind.RANKING,
-    strategy: ElectionStrategy.NONE,
-    currentWinner: '',
+    winnerId: '',
     participantAnswerMap: {},
-    rankingItems: [],
   };
 }

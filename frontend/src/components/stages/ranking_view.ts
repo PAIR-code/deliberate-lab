@@ -90,9 +90,7 @@ export class RankingView extends MobxLitElement {
       // Write rankings to Firestore
       this.participantService.updateRankingStageParticipantAnswer(
         this.stage.id,
-        this.stage.strategy,
         this.participantAnswerService.getRankingList(this.stage.id),
-        this.stage.rankingType === RankingType.ITEMS ? this.stage.rankingItems : [],
       )
     };
 
