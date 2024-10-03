@@ -40,6 +40,7 @@ export class BaseStageEditorComponent extends MobxLitElement {
       ${this.renderHelpText()} ${this.renderMinParticipants()}
       ${this.renderWaitForAllParticipants()}
       ${this.renderShowParticipantProgress()}
+      <div class="divider"></div>
     `;
   }
 

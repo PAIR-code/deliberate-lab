@@ -31,3 +31,7 @@ pr-textarea {
   color: var(--md-sys-color-secondary);
   max-width: common.$info-content-max-width;
 }
+
+.divider {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
