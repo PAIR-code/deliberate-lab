@@ -174,7 +174,7 @@ export class SurveyReveal extends MobxLitElement {
         );
         return this.makeCell(correctAnswer!.text);
       } else {
-        return this.makeCell('-');
+        return nothing;
       }
     };
 
