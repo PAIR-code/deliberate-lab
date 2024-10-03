@@ -48,11 +48,11 @@ h2 {
 }
 
 .participant {
+  @include typescale.body-small;
   @include common.flex-column-align-center;
   flex-wrap: wrap;
   gap: common.$spacing-medium;
   max-width: 100px;
   overflow-wrap: anywhere;
   text-align: center;
-  font-size: var(--md-sys-typescale-body-small-font-size);
 }

@@ -19,6 +19,7 @@ import {
 } from '@deliberation-lab/utils';
 
 import {styles} from './base_stage_editor.scss';
+import {mustWaitForAllParticipants} from '../../shared/experiment.utils';
 
 /** Editor for base StageConfig fields. */
 @customElement('base-stage-editor')
@@ -129,49 +130,6 @@ export class BaseStageEditorComponent extends MobxLitElement {
     `;
   }
 
-  private shouldDisableWaitForAllParticipants(): boolean {
-    if (!this.stage || this.stage.kind !== StageKind.REVEAL) {
-      return false;
-    }
-
-    for (const item of this.stage.items) {
-      // There's a dependency on all participants if we want to reveal all results.
-      if (
-        'revealAudience' in item &&
-        item.revealAudience === RevealAudience.ALL_PARTICIPANTS
-      ) {
-        return true;
-      }
-      if (item.kind === StageKind.RANKING) {
-        const stageId = item.id;
-
-        const foundStage = this.experimentEditor.stages.find(
-          (stage) => stage.id === stageId
-        );
-        // There's a dependency on all participants if we're ranking all participants.
-        if (
-          foundStage &&
-          'rankingType' in foundStage &&
-          foundStage.rankingType === RankingType.PARTICIPANTS
-        ) {
-          return true;
-        }
-
-        // There's a dependency on all participants if there's an election
-        // (so all votes are counted).
-        if (
-          foundStage &&
-          'strategy' in foundStage &&
-          foundStage.strategy === ElectionStrategy.CONDORCET
-        ) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
-
   private renderWaitForAllParticipants() {
     if (!this.stage) return nothing;
     const waitForAllParticipants = this.stage.progress.waitForAllParticipants;
@@ -185,45 +143,32 @@ export class BaseStageEditorComponent extends MobxLitElement {
       this.experimentEditor.updateStage({...this.stage, progress});
     };
 
-    if (this.shouldDisableWaitForAllParticipants()) {
-      if (!waitForAllParticipants) {
-        const progress: StageProgressConfig = {
-          ...this.stage.progress,
-          waitForAllParticipants: true,
-        };
-        this.experimentEditor.updateStage({...this.stage, progress});
-      }
-
-      return html`
-        <div class="config-item">
-          <div class="checkbox-wrapper">
-            <md-checkbox
-              touch-target="wrapper"
-              ?checked="${true}"
-              ?disabled="${true}"
-            >
-            </md-checkbox>
-            <div>Wait for all participants before starting stage<br/</div>
-            <div class="warning">
-              Because this experiment has a dependency on all participants'
-              responses, this must be enabled.
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
+    const mustWait = mustWaitForAllParticipants(
+      this.stage,
+      this.experimentEditor.stages
+    );
+    
     return html`
       <div class="config-item">
         <div class="checkbox-wrapper">
           <md-checkbox
             touch-target="wrapper"
-            ?checked=${waitForAllParticipants}
-            ?disabled=${!this.experimentEditor.canEditStages}
+            ?checked=${mustWait || waitForAllParticipants}
+            ?disabled=${mustWait || !this.experimentEditor.canEditStages}
             @click=${updateCheck}
           >
           </md-checkbox>
-          <div>Wait for all participants before starting stage</div>
+          <div>Wait for all participants before starting stage
+          ${mustWait
+            ? html`
+                <br/>
+                <div class="warning">
+                  Because this experiment has a dependency on all participants'
+                  responses, this must be enabled.
+                </div>
+              `
+            : ''}
+          </div>
         </div>
       </div>
     `;

@@ -21,7 +21,9 @@ import {
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
-import {getStagesWithReveal} from '../../shared/experiment.utils';
+import {
+  getPrecedingRevealableStages,
+} from '../../shared/experiment.utils';
 
 import {styles} from './reveal_editor.scss';
 
@@ -51,52 +53,27 @@ export class RevealEditor extends MobxLitElement {
   private renderAddMenu() {
     if (!this.stage) return nothing;
 
-    // Get all stages with a reveal stage.
-    // Get all stages with a reveal stage.
-    const getStageOptions = () => {
-      const revealStages = getStagesWithReveal(
-        this.experimentEditor.stages
-      ).filter((stage) => stage.id !== this.stage?.id);
-
-      // Get the current stage index.
-      const currentStageIndex = this.experimentEditor.stages.findIndex(
-        (stage) => stage.id === this.stage!.id
-      );
-
-      // Filter stages to only those before the current stage index.
-      const filteredStages = revealStages.filter((stage) => {
-        const stageIndex = this.experimentEditor.stages.findIndex(
-          (expStage) => expStage.id === stage.id
-        );
-        return stageIndex < currentStageIndex;
-      });
-
-      return filteredStages;
-    };
-
-    const stageOptions = getStageOptions();
-    if (stageOptions.length === 0) {
-      return html`
-        <pr-tooltip
-          position="TOP_END"
-          text="No stages available. Only survey and election stages that precede this stage can be revealed."
-        >
-          <pr-menu name="Add stage" ?disabled=${true}></pr-menu>
-        </pr-tooltip>
-      `;
-    }
-
+    const stageOptions = getPrecedingRevealableStages(
+      this.stage?.id,
+      this.experimentEditor.stages
+    );
+    const noAvailableStages = stageOptions.length === 0;
+    const tooltipText = noAvailableStages
+      ? 'No stages available. Only survey and election stages that precede this stage can be revealed.'
+      : '';
     return html`
-      <pr-menu
-        name="Add stage"
-        ?disabled=${!this.experimentEditor.canEditStages}
-      >
-        <div class="menu-wrapper">
-          <div class="stages">
-            ${stageOptions.map((stage) => this.renderAddRevealStage(stage))}
+      <pr-tooltip position="TOP_END" text=${tooltipText}>
+        <pr-menu
+          name="Add stage"
+          ?disabled=${!this.experimentEditor.canEditStages || noAvailableStages}
+        >
+          <div class="menu-wrapper">
+            <div class="stages">
+              ${stageOptions.map((stage) => this.renderAddRevealStage(stage))}
+            </div>
           </div>
-        </div>
-      </pr-menu>
+        </pr-menu>
+      </pr-tooltip>
     `;
   }
 
