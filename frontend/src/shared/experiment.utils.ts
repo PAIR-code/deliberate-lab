@@ -56,7 +56,7 @@ export function getPublicExperimentName(
   return experiment.metadata.publicName.length > 0 ? experiment.metadata.publicName : defaultValue;
 }
 
-/** Returns all survey or election stages preceding the stage with the current ID. */
+/** Returns all survey or election stages preceding the current stage. */
 export function getPrecedingRevealableStages(
   currentStageId: string,
   currentStages: StageConfig[]
@@ -91,7 +91,8 @@ export function getExperimentName(
     : defaultValue;
 }
 
-/* Returns whether the current stage must wait for all participants due to previous dependencies. */
+/* Returns whether the current stage must wait for all participants due to
+ * previous dependencies. */
 export function mustWaitForAllParticipants(
   stage: StageConfig,
   allStages: StageConfig[]
@@ -100,34 +101,30 @@ export function mustWaitForAllParticipants(
     return false;
   }
 
+  // For reveal stages, must wait for all participants if:
+  // 1. We want to reveal ALL results
+  // 2. The ranking is across all participants
+  // 3. There's an election
   for (const item of stage.items) {
-    // There's a dependency on all participants if we want to reveal all results.
-    if (
-      'revealAudience' in item &&
-      item.revealAudience === RevealAudience.ALL_PARTICIPANTS
-    ) {
+    // 1. If the reveal item is set to reveal all participants' results
+    if (item.revealAudience === RevealAudience.ALL_PARTICIPANTS) {
       return true;
     }
+
     if (item.kind === StageKind.RANKING) {
       const stageId = item.id;
+      const rankingStage = allStages.find((stage) => stage.id === stageId);
 
-      const foundStage = allStages.find((stage) => stage.id === stageId);
-      // There's a dependency on all participants if we're ranking all participants.
-      if (
-        foundStage &&
-        'rankingType' in foundStage &&
-        foundStage.rankingType === RankingType.PARTICIPANTS
-      ) {
+      // Confirm stage is a ranking stage
+      if (!rankingStage || rankingStage.kind !== StageKind.RANKING) break;
+
+      // 2. If the ranking is across all participants
+      if (rankingStage.rankingType === RankingType.PARTICIPANTS) {
         return true;
       }
-
-      // There's a dependency on all participants if there's an election
-      // (so all votes are counted).
-      if (
-        foundStage &&
-        'strategy' in foundStage &&
-        foundStage.strategy === ElectionStrategy.CONDORCET
-      ) {
+      // 3. If the ranking stage includes an election
+      // (i.e., all participants' votes are counted)
+      if (rankingStage.strategy === ElectionStrategy.CONDORCET) {
         return true;
       }
     }
