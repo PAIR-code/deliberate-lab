@@ -1,4 +1,4 @@
-  import {
+import {
   AttentionCheckConfig,
   CohortParticipantConfig,
   Experiment,
@@ -14,16 +14,15 @@
   createProlificConfig,
   generateId,
 } from '@deliberation-lab/utils';
-import { Timestamp } from 'firebase/firestore';
+import {Timestamp} from 'firebase/firestore';
 import {computed, makeObservable, observable} from 'mobx';
-import {
-  writeExperimentCallable,
-} from '../shared/callables';
+import {writeExperimentCallable} from '../shared/callables';
 
 import {AuthService} from './auth.service';
 import {ExperimentManager} from './experiment.manager';
 import {FirebaseService} from './firebase.service';
 import {Service} from './service';
+import {setMustWaitForAllParticipants} from '../shared/experiment.utils';
 
 interface ServiceProvider {
   authService: AuthService;
@@ -64,8 +63,10 @@ export class ExperimentEditor extends Service {
   }
 
   @computed get isCreator() {
-    return this.sp.authService.userId === this.experiment.metadata.creator
-      || this.experiment.metadata.creator === '';
+    return (
+      this.sp.authService.userId === this.experiment.metadata.creator ||
+      this.experiment.metadata.creator === ''
+    );
   }
 
   isInitializedExperiment() {
@@ -77,31 +78,34 @@ export class ExperimentEditor extends Service {
   }
 
   updatePermissions(permissions: Partial<PermissionsConfig>) {
-    this.experiment.permissions = {...this.experiment.permissions, ...permissions};
+    this.experiment.permissions = {
+      ...this.experiment.permissions,
+      ...permissions,
+    };
   }
 
   updateCohortConfig(config: Partial<CohortParticipantConfig>) {
     this.experiment.defaultCohortConfig = {
       ...this.experiment.defaultCohortConfig,
-      ...config
+      ...config,
     };
   }
 
   updateAttentionCheckConfig(config: Partial<AttentionCheckConfig>) {
     this.experiment.attentionCheckConfig = {
       ...this.experiment.attentionCheckConfig,
-      ...config
+      ...config,
     };
   }
 
   updateProlificConfig(config: Partial<ProlificConfig>) {
     this.experiment.prolificConfig = {
       ...this.experiment.prolificConfig,
-      ...config
+      ...config,
     };
   }
 
-  setCurrentStageId(id: string|undefined) {
+  setCurrentStageId(id: string | undefined) {
     this.currentStageId = id;
   }
 
@@ -112,7 +116,7 @@ export class ExperimentEditor extends Service {
   }
 
   @computed get currentStage() {
-    return this.stages.find(stage => stage.id === this.currentStageId);
+    return this.stages.find((stage) => stage.id === this.currentStageId);
   }
 
   hasStageKind(kind: StageKind) {
@@ -120,22 +124,34 @@ export class ExperimentEditor extends Service {
   }
 
   updateStage(newStage: StageConfig) {
-    const index = this.stages.findIndex(stage => stage.id === newStage.id);
+    const index = this.stages.findIndex((stage) => stage.id === newStage.id);
     if (index >= 0) {
+      // Update waitForAllParticipants if relevant
+      setMustWaitForAllParticipants(newStage, this.stages);
+      // Update stage in list
       this.stages[index] = newStage;
     }
   }
 
   setStages(stages: StageConfig[]) {
+    // Make sure all new stages have waitForAllParticipants configured correctly
+    for (const stage of stages) {
+      setMustWaitForAllParticipants(stage, stages);
+    }
+    // Set stages
     this.stages = stages;
   }
 
   addStage(stage: StageConfig) {
+    // Check if stage will have waitForAllParticipants dependencies
+    // after it's added
+    setMustWaitForAllParticipants(stage, [...this.stages, stage]);
+    // Add stage
     this.stages.push(stage);
   }
 
   getStage(stageId: string) {
-    return this.stages.find(stage => stage.id === stageId);
+    return this.stages.find((stage) => stage.id === stageId);
   }
 
   deleteStage(index: number) {
@@ -191,11 +207,14 @@ export class ExperimentEditor extends Service {
     // Update date modified
     this.experiment.metadata.dateModified = Timestamp.now();
 
-    const response = await writeExperimentCallable(this.sp.firebaseService.functions, {
-      collectionName: 'experiments',
-      experimentConfig: this.experiment,
-      stageConfigs: this.stages,
-    });
+    const response = await writeExperimentCallable(
+      this.sp.firebaseService.functions,
+      {
+        collectionName: 'experiments',
+        experimentConfig: this.experiment,
+        stageConfigs: this.stages,
+      }
+    );
 
     this.isWritingExperiment = false;
     return response;
