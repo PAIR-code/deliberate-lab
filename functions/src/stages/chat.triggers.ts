@@ -56,11 +56,15 @@ export const createMediatorMessage = onDocumentCreated(
         .collection(`experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}/chats`)
         .count().get())
       .data().count;
-      if (numChatsAfterMediator > numChatsBeforeMediator) { return; }
+      if (numChatsAfterMediator > numChatsBeforeMediator) { break; }
 
       // Add mediator message if non-empty
-      const message = response.text;
-      if (message.trim() === '') return;
+      const parsed = JSON.parse(response.text);
+      const isJSON = mediator.responseConfig.isJSON;
+      const message = isJSON ?
+        (parsed[mediator.responseConfig.messageField] ?? '') : response.text;
+
+      if (message.trim() === '') break;
 
       const mediatorMessage = createAgentMediatorChatMessage(
         {
@@ -68,7 +72,8 @@ export const createMediatorMessage = onDocumentCreated(
           discussionId: data.discussionId,
           message,
           timestamp: Timestamp.now(),
-          mediatorId: mediator.id
+          mediatorId: mediator.id,
+          explanation: isJSON ? (parsed[mediator.responseConfig.explanationField] ?? '') : '',
         }
       );
       const mediatorDocument = app.firestore()
