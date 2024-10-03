@@ -134,3 +134,13 @@ export function mustWaitForAllParticipants(
   }
   return false;
 }
+
+/** If must wait for all participants, set waitForAllParticipants in stage. */
+export function setMustWaitForAllParticipants(
+  stage: StageConfig,
+  allStages: StageConfig[]
+) {
+  if (mustWaitForAllParticipants(stage, allStages)) {
+    stage.progress.waitForAllParticipants = true;
+  }
+}

@@ -22,7 +22,7 @@ import {AuthService} from './auth.service';
 import {ExperimentManager} from './experiment.manager';
 import {FirebaseService} from './firebase.service';
 import {Service} from './service';
-import {mustWaitForAllParticipants} from '../shared/experiment.utils';
+import {setMustWaitForAllParticipants} from '../shared/experiment.utils';
 
 interface ServiceProvider {
   authService: AuthService;
@@ -126,21 +126,28 @@ export class ExperimentEditor extends Service {
   updateStage(newStage: StageConfig) {
     const index = this.stages.findIndex((stage) => stage.id === newStage.id);
     if (index >= 0) {
+      // Update waitForAllParticipants if relevant
+      setMustWaitForAllParticipants(newStage, this.stages);
+      // Update stage in list
       this.stages[index] = newStage;
     }
   }
 
   setStages(stages: StageConfig[]) {
-    for (let stage of stages) {
-      this.addStage(stage);
+    // Make sure all new stages have waitForAllParticipants configured correctly
+    for (const stage of stages) {
+      setMustWaitForAllParticipants(stage, stages);
     }
+    // Set stages
+    this.stages = stages;
   }
 
   addStage(stage: StageConfig) {
+    // Check if stage will have waitForAllParticipants dependencies
+    // after it's added
+    setMustWaitForAllParticipants(stage, [...this.stages, stage]);
+    // Add stage
     this.stages.push(stage);
-    if (mustWaitForAllParticipants(stage, this.stages)) {
-      stage.progress.waitForAllParticipants = true;
-    }
   }
 
   getStage(stageId: string) {
