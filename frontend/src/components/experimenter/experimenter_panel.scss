@@ -51,7 +51,7 @@
 
 .top {
   @include common.flex-column;
-  gap: common.$spacing-small;
+  gap: common.$spacing-large;
   overflow: auto;
   padding: common.$sidenav-padding;
 }
@@ -62,4 +62,35 @@
   gap: common.$spacing-small;
   overflow: auto;
   padding: common.$sidenav-padding;
+}
+
+.mediator {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
+.debug {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
+  word-break: break-all;
+
+  &.error {
+    color: var(--md-sys-color-error);
+  }
+}
+
+.mediator-title {
+  @include typescale.title-small;
+}
+
+.prompt-box {
+  @include common.flex-column;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-medium;
+  padding: common.$spacing-large;
+}
+
+.action-bar {
+  @include common.flex-row;
+  justify-content: end;
 }

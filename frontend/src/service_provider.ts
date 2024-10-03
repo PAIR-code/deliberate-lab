@@ -7,6 +7,7 @@ import { FirebaseService } from "./services/firebase.service";
 import { HomeService } from "./services/home.service";
 import { ImageService } from "./services/image.service";
 import { InitializationService } from "./services/initialization.service";
+import { MediatorEditor } from "./services/mediator.editor";
 import { ParticipantService } from "./services/participant.service";
 import { ParticipantAnswerService } from "./services/participant.answer";
 import { RouterService } from "./services/router.service";
@@ -42,6 +43,9 @@ export function makeServiceProvider(self: Core) {
     },
     get initializationService() {
       return self.getService(InitializationService);
+    },
+    get mediatorEditor() {
+      return self.getService(MediatorEditor);
     },
     get participantService() {
       return self.getService(ParticipantService);

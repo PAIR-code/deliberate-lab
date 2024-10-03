@@ -13,9 +13,13 @@ import {classMap} from 'lit/directives/class-map.js';
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentService} from '../../services/experiment.service';
+import {MediatorEditor} from '../../services/mediator.editor';
 import {RouterService} from '../../services/router.service';
 
-import {StageKind} from '@deliberation-lab/utils';
+import {
+  MediatorConfig,
+  StageKind
+} from '@deliberation-lab/utils';
 
 import {styles} from './experimenter_panel.scss';
 
@@ -29,8 +33,10 @@ enum PanelView {
 @customElement('experimenter-panel')
 export class Panel extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
+
   private readonly authService = core.getService(AuthService);
   private readonly experimentService = core.getService(ExperimentService);
+  private readonly mediatorEditor = core.getService(MediatorEditor);
   private readonly routerService = core.getService(RouterService);
 
   @state() panelView: PanelView = PanelView.MANUAL_CHAT;
@@ -81,10 +87,15 @@ export class Panel extends MobxLitElement {
             </div>
           `;
         case PanelView.LLM_SETTINGS:
+          const mediators = this.mediatorEditor.getMediators(stageId);
           return html`
             <div class="main">
               <div class="top">
                 <div class="header">Mediator config</div>
+                ${mediators.length === 0 ? html`<div>No mediators configured</div>` : nothing}
+                ${mediators.map((mediator, index) =>
+                  this.renderMediatorEditor(stageId, mediator, index)
+                )}
               </div>
             </div>
           `;
@@ -142,7 +153,6 @@ export class Panel extends MobxLitElement {
               icon="edit_note"
               size="medium"
               variant=${isSelected(PanelView.LLM_SETTINGS) ? "tonal" : "default"}
-              disabled
               @click=${() => {
                 this.panelView = PanelView.LLM_SETTINGS;
                 this.routerService.setExperimenterPanel(true);
@@ -160,6 +170,51 @@ export class Panel extends MobxLitElement {
     this.routerService.setExperimenterPanel(
       !this.routerService.isExperimenterPanelOpen
     );
+  }
+
+  private renderMediatorEditor(
+    stageId: string, mediator: MediatorConfig, index: number
+  ) {
+    const updatePrompt = (e: InputEvent) => {
+      const prompt = (e.target as HTMLTextAreaElement).value;
+      this.mediatorEditor.updateMediator(
+        stageId, {...mediator, prompt}, index
+      );
+    };
+
+    return html`
+      <div class="mediator">
+        <div class="mediator-title">
+          #${index + 1} - ${mediator.name}
+        </div>
+        <div class="debug">
+          ${JSON.stringify(mediator.responseConfig)}
+        </div>
+        <div class="prompt-box">
+          <pr-textarea
+            placeholder="Custom prompt for mediator"
+            .value=${mediator.prompt}
+            @input=${updatePrompt}
+          >
+          </pr-textarea>
+          <div class="action-bar">
+            <pr-button
+              color="secondary"
+              padding="small"
+              size="small"
+              variant="tonal"
+              disabled
+            >
+              Update prompt
+            </pr-button>
+          </div>
+        </div>
+        <div class="debug error">
+          Warning: Saving edits will update the mediator across
+          all experiment cohorts
+        </div>
+      </div>
+    `;
   }
 }
 
