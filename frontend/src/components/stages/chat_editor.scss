@@ -29,6 +29,13 @@
   font-style: italic;
 }
 
+.notification {
+  @include typescale.label-small;
+  background: var(--md-sys-color-surface-container);
+  border-radius: common.$spacing-medium;
+  color: var(--md-sys-color-on-surface-container);
+  padding: common.$spacing-small common.$spacing-medium;
+}
 .warning {
   @include typescale.label-small;
   background: var(--md-sys-color-error-container);

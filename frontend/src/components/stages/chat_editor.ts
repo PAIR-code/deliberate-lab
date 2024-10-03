@@ -5,6 +5,8 @@ import {customElement, property} from 'lit/decorators.js';
 import '@material/web/checkbox/checkbox.js';
 
 import {core} from '../../core/core';
+import {AuthService} from '../../services/auth.service';
+
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
@@ -25,6 +27,8 @@ export class ChatEditor extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
+  private readonly authService = core.getService(AuthService);
+
 
   @property() stage: ChatStageConfig|undefined = undefined;
 
@@ -33,7 +37,24 @@ export class ChatEditor extends MobxLitElement {
       return nothing;
     }
 
+
+    let apiCheck;
+    if (!this.authService.experimenterData?.apiKeys.geminiKey) {
+          apiCheck = html`
+        <div class="warning">
+          <b>Note:</b> In order for LLM calls to work,
+          you must add your Gemini API key under Settings.
+        </div>`;
+    } else {
+        apiCheck = html`<div class="notification">
+          <b>✅ A Gemini API key has been added. If it is valid, LLM calls will work.
+        </div>`;
+    }
+
+
     return html`
+      ${apiCheck}
+
       ${this.stage.mediators.map(
         (mediator, index) => this.renderMediator(mediator, index)
       )}
@@ -189,14 +210,9 @@ export class ChatEditor extends MobxLitElement {
     const onDelete = () => {
       this.deleteMediator(index);
     };
-
     return html`
       <div class="question-wrapper">
         <div class="question-label">Mediator ${index + 1}</div>
-        <div class="warning">
-          <b>Note:</b> In order for LLM mediator calls to work,
-          you must add your Gemini API key under Settings.
-        </div>
         <div class="question">
           <div class="header">
             <div class="left">
