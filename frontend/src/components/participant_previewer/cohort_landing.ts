@@ -14,7 +14,8 @@ import {
   StageKind
 } from '@deliberation-lab/utils';
 
-import { createParticipantCallable } from '../../shared/callables';
+import {createParticipantCallable} from '../../shared/callables';
+import {requiresAnonymousProfiles} from '../../shared/participant.utils';
 
 import {styles} from './cohort_landing.scss';
 
@@ -51,10 +52,14 @@ export class CohortLanding extends MobxLitElement {
     this.analyticsService.trackButtonClick(ButtonClick.PARTICIPANT_JOIN);
 
     const params = this.routerService.activeRoute.params;
+    const isAnonymous = requiresAnonymousProfiles(
+      this.experimentService.stages
+    );
     const response = await createParticipantCallable(
       this.firebaseService.functions, {
         experimentId: params['experiment'],
         cohortId: params['cohort'],
+        isAnonymous
       }
     );
     // Route to participant page

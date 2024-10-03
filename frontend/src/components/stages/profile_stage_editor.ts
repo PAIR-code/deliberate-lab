@@ -57,7 +57,7 @@ export class ProfileStageEditorComponent extends MobxLitElement {
         >
         </md-checkbox>
         <div>
-          🐱 Generate anonymous profiles.
+          🐱 Generate anonymous (animal-themed) profiles
         </div>
       </div>
     `;

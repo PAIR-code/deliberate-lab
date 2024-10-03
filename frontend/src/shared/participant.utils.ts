@@ -1,6 +1,10 @@
 import {
   ParticipantProfile,
   ParticipantStatus,
+  ProfileType,
+  StageConfig,
+  StageKind,
+  getHashIntegerFromString,
 } from '@deliberation-lab/utils';
 
 /**
@@ -129,4 +133,29 @@ export function getParticipantProgress(
     }
   });
   return count;
+}
+
+/** Returns true if stages include a profile stage with anon set. */
+export function requiresAnonymousProfiles(stages: StageConfig[]): boolean {
+  const profileStage = stages.find((stage) => stage.kind === StageKind.PROFILE);
+
+  if (!profileStage || profileStage.kind !== StageKind.PROFILE) return false;
+  return profileStage.profileType === ProfileType.ANONYMOUS_ANIMAL;
+}
+
+export function getAvatarBackgroundColor(emoji: string): string {
+  const BACKGROUND_COLORS = [
+    '#FF6F61',
+    '#A0E8D5',
+    '#FFD1A9',
+    '#C3B1E1',
+    '#B7E4C7',
+    '#ADE8F4',
+    '#F4D6A9',
+    '#D8A7B1',
+    '#A3B9D3',
+    '#FFC1CC',
+  ];
+  const index = getHashIntegerFromString(emoji) % 10;
+  return BACKGROUND_COLORS[index];
 }

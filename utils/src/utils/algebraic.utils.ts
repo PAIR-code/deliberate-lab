@@ -1,14 +1,17 @@
-import {
-  SurveyQuestionKind,
-  SurveyStagePublicData
-} from '../stages/survey_stage';
-import {
-  LAS_WTL_QUESTION_ID
-} from '../shared';
+import { SurveyQuestionKind, SurveyStagePublicData } from '../stages/survey_stage';
+import { LAS_WTL_QUESTION_ID } from '../shared';
 
 export interface AlgebraicData<Data> {
   kind: string;
   data: Data;
+}
+
+export function getHashIntegerFromString(str: string) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash);
 }
 
 // Elaborate data getter that in the presense of a kind gets the right kind of data.
@@ -143,14 +146,14 @@ export function getCondorcetElectionWinner(rankings: Record<string, string[]>) {
 }
 
 /** Uses hardcoded variables to find top N participants (based on willingness
-  * to lead survey answers).
-  *
-  * If there are multiple participants with the same WTL high score(s),
-  * the "top N" are pseudorandomly chosen.
-  */
+ * to lead survey answers).
+ *
+ * If there are multiple participants with the same WTL high score(s),
+ * the "top N" are pseudorandomly chosen.
+ */
 export function getRankingCandidatesFromWTL(
   stagePublicData: SurveyStagePublicData,
-  numCandidates = 2
+  numCandidates = 2,
 ) {
   // Map from participant to participant's rankings
   const rankingAnswerMap: Record<string, string[]> = {};
@@ -168,42 +171,50 @@ export function getRankingCandidatesFromWTL(
     return questionAnswer.value;
   };
 
-  return Object.keys(surveyAnswerMap).sort((p1, p2) => {
-    return getScore(p2) - getScore(p1)
-  }).slice(0, numCandidates);
+  return Object.keys(surveyAnswerMap)
+    .sort((p1, p2) => {
+      return getScore(p2) - getScore(p1);
+    })
+    .slice(0, numCandidates);
 }
 
 /** Given participant rankings and a list of candidates,
-  * filter rankings so that they only include those candidates. */
+ * filter rankings so that they only include those candidates. */
 export function filterRankingsByCandidates(
-  participantRankings: Record<string, string[]>, candidateList = [],
+  participantRankings: Record<string, string[]>,
+  candidateList = [],
 ) {
-  Object.keys(participantRankings).forEach(id => {
+  Object.keys(participantRankings).forEach((id) => {
     participantRankings[id] = participantRankings[id].filter(
-      id => candidateList.findIndex(candidate => candidate === id) > -1
+      (id) => candidateList.findIndex((candidate) => candidate === id) > -1,
     );
   });
   return participantRankings;
 }
 
-export function getTimeElapsed(timestamp: { seconds: number, nanoseconds: number }, unit: 's' | 'm' | 'h' | 'd' = 'm') {
+export function getTimeElapsed(
+  timestamp: { seconds: number; nanoseconds: number },
+  unit: 's' | 'm' | 'h' | 'd' = 'm',
+) {
   const now = Date.now();
 
-  const timestampMillis = (timestamp.seconds * 1000) + Math.floor(timestamp.nanoseconds / 1000000);
+  const timestampMillis = timestamp.seconds * 1000 + Math.floor(timestamp.nanoseconds / 1000000);
   const diffMillis = now - timestampMillis;
 
   // Convert the difference based on the specified unit
   switch (unit) {
-      case 's': // Seconds
-          return Math.floor(diffMillis / 1000);
-      case 'm': // Minutes
-          return Math.floor(diffMillis / (1000 * 60));
-      case 'h': // Hours
-          return Math.floor(diffMillis / (1000 * 60 * 60));
-      case 'd': // Days
-          return Math.floor(diffMillis / (1000 * 60 * 60 * 24));
-      default:
-          throw new Error("Invalid unit. Use 's' for seconds, 'm' for minutes, 'h' for hours, or 'd' for days.");
+    case 's': // Seconds
+      return Math.floor(diffMillis / 1000);
+    case 'm': // Minutes
+      return Math.floor(diffMillis / (1000 * 60));
+    case 'h': // Hours
+      return Math.floor(diffMillis / (1000 * 60 * 60));
+    case 'd': // Days
+      return Math.floor(diffMillis / (1000 * 60 * 60 * 24));
+    default:
+      throw new Error(
+        "Invalid unit. Use 's' for seconds, 'm' for minutes, 'h' for hours, or 'd' for days.",
+      );
   }
 }
 
@@ -212,21 +223,26 @@ export function hexToRgb(hex: string) {
   return {
     r: (bigint >> 16) & 255,
     g: (bigint >> 8) & 255,
-    b: bigint & 255
+    b: bigint & 255,
   };
 }
 
 // Returns an RGB color interpolated on the range between startColor and endColor.
-export function getRgbColorInterpolation(startColorHex: string, endColorHex:string, curNum: number, maxNum:number) {
-    const clampedMinutes = Math.min(Math.max(curNum, 0), maxNum);
-    
-    const startColor = hexToRgb(startColorHex);
-    const endColor = hexToRgb(endColorHex); 
-  
-    const factor = clampedMinutes / maxNum; 
-    const r = Math.round(startColor.r + factor * (endColor.r - startColor.r));
-    const g = Math.round(startColor.g + factor * (endColor.g - startColor.g));
-    const b = Math.round(startColor.b + factor * (endColor.b - startColor.b));
-  
-    return `rgb(${r}, ${g}, ${b})`;
+export function getRgbColorInterpolation(
+  startColorHex: string,
+  endColorHex: string,
+  curNum: number,
+  maxNum: number,
+) {
+  const clampedMinutes = Math.min(Math.max(curNum, 0), maxNum);
+
+  const startColor = hexToRgb(startColorHex);
+  const endColor = hexToRgb(endColorHex);
+
+  const factor = clampedMinutes / maxNum;
+  const r = Math.round(startColor.r + factor * (endColor.r - startColor.r));
+  const g = Math.round(startColor.g + factor * (endColor.g - startColor.g));
+  const b = Math.round(startColor.b + factor * (endColor.b - startColor.b));
+
+  return `rgb(${r}, ${g}, ${b})`;
 }

@@ -43,7 +43,8 @@ import {
   hasMaxParticipantsInCohort,
 } from '../shared/cohort.utils';
 import {
-  isObsoleteParticipant
+  isObsoleteParticipant,
+  requiresAnonymousProfiles
 } from '../shared/participant.utils';
 
 interface ServiceProvider {
@@ -390,10 +391,15 @@ export class ExperimentManager extends Service {
     let response = {};
 
     if (this.experimentId) {
+      const isAnonymous = requiresAnonymousProfiles(
+        this.sp.experimentService.stages
+      );
+
       response = await createParticipantCallable(
         this.sp.firebaseService.functions, {
           experimentId: this.experimentId,
           cohortId,
+          isAnonymous
         }
       );
     }

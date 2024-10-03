@@ -6,6 +6,7 @@ import {
   StageKind,
   createParticipantProfileExtended,
   generateParticipantPublicId,
+  setAnonymousProfile,
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
@@ -26,7 +27,7 @@ import {
 // ************************************************************************* //
 // createParticipant endpoint                                                //
 //                                                                           //
-// Input structure: { experimentId, cohortId }                               //
+// Input structure: { experimentId, cohortId, isAnonymous }                  //
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
 
@@ -66,9 +67,17 @@ export const createParticipant = onCall(async (request) => {
       await app.firestore().doc(`experiments/${data.experimentId}`).get()
     ).data() as Experiment;
 
-    // Set values in participant config
-    const publicId = generateParticipantPublicId(numParticipants);
-    participantConfig.publicId = publicId;
+    // Set participant config fields
+    if (data.isAnonymous) {
+      // If anonymous, set public ID, name, avatar, etc.
+      setAnonymousProfile(numParticipants, participantConfig);
+    } else {
+      // Else, just set public ID
+      const publicId = generateParticipantPublicId(numParticipants);
+      participantConfig.publicId = publicId;
+    }
+
+    // Set current stage ID in participant config
     participantConfig.currentStageId = experiment.stageIds[0];
 
     transaction.set(document, participantConfig);

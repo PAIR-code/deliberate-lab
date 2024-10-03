@@ -65,6 +65,45 @@ export enum ParticipantStatus {
 }
 
 // ************************************************************************* //
+// CONSTANTS                                                                 //
+// ************************************************************************* //
+export const ANIMAL_PROFILES: {name: string, avatar: string}[] = [
+  {name: 'Dog', avatar: '🐶'},
+  {name: 'Cat', avatar: '🐱'},
+  {name: 'Mouse', avatar: '🐭'},
+  {name: 'Hamster', avatar: '🐹'},
+  {name: 'Rabbit', avatar: '🐰'},
+  {name: 'Fox', avatar: '🦊'},
+  {name: 'Bear', avatar: '🐻'},
+  {name: 'Panda', avatar: '🐼'},
+  {name: 'Koala', avatar: '🐨'},
+  {name: 'Lion', avatar: '🦁'},
+  {name: 'Tiger', avatar: '🐯'},
+  {name: 'Unicorn', avatar: '🦄'},
+  {name: 'Zebra', avatar: '🦓'},
+  {name: 'Giraffe', avatar: '🦒'},
+  {name: 'Pig', avatar: '🐷'},
+  {name: 'Cow', avatar: '🐮'},
+  {name: 'Frog', avatar: '🐸'},
+  {name: 'Chicken', avatar: '🐔'},
+  {name: 'Penguin', avatar: '🐧'},
+  {name: 'Owl', avatar: '🦉'},
+  {name: 'Bird', avatar: '🐦'},
+  {name: 'Eagle', avatar: '🦅'},
+  {name: 'Lizard', avatar: '🦎'},
+  {name: 'Butterfly', avatar: '🦋'},
+  {name: 'Fish', avatar: '🐟'},
+  {name: 'Shark', avatar: '🦈'},
+  {name: 'Dolphin', avatar: '🐬'},
+  {name: 'Turtle', avatar: '🐢'},
+  {name: 'Parrot', avatar: '🦜'},
+  {name: 'Kangaroo', avatar: '🦘'},
+  {name: 'Rhinoceros', avatar: '🦏'},
+  {name: 'Elephant', avatar: '🐘'},
+  {name: 'Monkey', avatar: '🐒'},
+];
+
+// ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
 
@@ -113,4 +152,25 @@ export function createParticipantProfileExtended(
     currentStatus: config.currentStatus ?? ParticipantStatus.IN_PROGRESS,
     timestamps: config.timestamps ?? createProgressTimestamps(),
   }
+}
+
+/** Set anonymous profile fields based on participant number. */
+export function setAnonymousProfile(
+  participantNumber: number,
+  config: ParticipantProfileExtended,
+) {
+  // Get name/avatar based on participant number
+  const { name, avatar } = ANIMAL_PROFILES[
+    participantNumber % ANIMAL_PROFILES.length
+  ];
+
+  // Use, e.g., "Cat 2" if second time "Cat" is being used
+  const animalNum = Math.floor(participantNumber / ANIMAL_PROFILES.length);
+  config.name = `${name}${animalNum === 0 ? '' : ` ${animalNum + 1}`}`;
+
+  config.avatar = avatar;
+  config.pronouns = '';
+
+  // Set public ID based on participant number
+  config.publicId = generateParticipantPublicId(participantNumber);
 }
