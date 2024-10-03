@@ -4,6 +4,7 @@ import {
   ChatStageParticipantAnswer,
   CreateChatMessageData,
   StageConfig,
+  StageKind,
   UpdateChatStageParticipantAnswerData,
 } from '@deliberation-lab/utils';
 
@@ -76,6 +77,34 @@ function handleCreateChatMessageValidationErrors(data: any) {
   throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
 }
 
+// ************************************************************************* //
+// updateChatMediators endpoint                                              //
+//                                                                           //
+// Input structure: { experimentId, stageId, mediatorList }                  //
+// Validation: utils/src/stages/chat_stage.validation.ts                     //
+// ************************************************************************* //
+
+export const updateChatMediators = onCall(async (request) => {
+  const { data } = request;
+
+  // TODO: Validate input
+  const document = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('stages')
+    .doc(data.stageId);
+
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    const stageConfig = (await document.get()).data() as StageConfig;
+    if (!stageConfig || stageConfig.kind !== StageKind.CHAT) return {};
+
+    stageConfig.mediators = data.mediatorList;
+    transaction.set(document, stageConfig);
+  });
+
+  return { id: document.id };
+});
 
 // ************************************************************************* //
 // updateChatStageParticipantAnswer endpoint                                 //

@@ -72,6 +72,33 @@ export const CreateChatMessageData = Type.Object(
 export type CreateChatMessageData = Static<typeof CreateChatMessageData>;
 
 // ************************************************************************* //
+// updateChatMediators endpoint                                               //
+// ************************************************************************* //
+
+export const UpdateChatMediatorsData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1}),
+    stageId: Type.String({ minLength: 1}),
+    // TODO: Refactor mediator config validation
+    mediatorList: Type.Array(
+      Type.Object({
+        id: Type.String({ minLength: 1 }),
+        name: Type.String(),
+        avatar: Type.String(),
+        prompt: Type.String(),
+        responseConfig: Type.Object({
+          isJSON: Type.Boolean(),
+          messageField: Type.String(),
+          explanationField: Type.String(),
+        })
+      })
+    )
+  },
+);
+
+export type UpdateChatMediatorsData = Static<typeof UpdateChatMediatorsData>;
+
+// ************************************************************************* //
 // updateChatStageParticipantAnswer endpoint                                 //
 // ************************************************************************* //
 

@@ -40,6 +40,7 @@ export class Panel extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   @state() panelView: PanelView = PanelView.MANUAL_CHAT;
+  @state() isLoading = false;
 
   override render() {
     if (!this.authService.isExperimenter) {
@@ -203,7 +204,12 @@ export class Panel extends MobxLitElement {
               padding="small"
               size="small"
               variant="tonal"
-              disabled
+              ?loading=${this.isLoading}
+              @click=${async () => {
+                this.isLoading = true;
+                await this.mediatorEditor.saveChatMediators(stageId)
+                this.isLoading = false;
+              }}
             >
               Update prompt
             </pr-button>

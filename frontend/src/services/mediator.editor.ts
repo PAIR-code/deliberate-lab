@@ -7,16 +7,13 @@ import {
 import { Timestamp } from 'firebase/firestore';
 import {computed, makeObservable, observable} from 'mobx';
 
-import {AuthService} from './auth.service';
-import {ExperimentManager} from './experiment.manager';
 import {FirebaseService} from './firebase.service';
 import {Service} from './service';
 
 import {MediatorConfig} from '@deliberation-lab/utils';
+import {updateChatMediatorsCallable} from '../shared/callables';
 
 interface ServiceProvider {
-  authService: AuthService;
-  experimentManager: ExperimentManager;
   firebaseService: FirebaseService;
 }
 
@@ -79,5 +76,17 @@ export class MediatorEditor extends Service {
   // FIRESTORE                                                               //
   // *********************************************************************** //
 
-  // TODO: Add callable for mediator configs
+  // Write chat mediators to backend
+  async saveChatMediators(stageId: string) {
+    if (!this.experimentId || !this.configMap[stageId]) return;
+
+    await updateChatMediatorsCallable(
+      this.sp.firebaseService.functions,
+      {
+        experimentId: this.experimentId,
+        stageId,
+        mediatorList: this.configMap[stageId].mediators
+      }
+    );
+  }
 }
