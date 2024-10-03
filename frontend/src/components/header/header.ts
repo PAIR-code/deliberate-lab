@@ -187,6 +187,7 @@ export class Header extends MobxLitElement {
   private renderActions() {
     const activePage = this.routerService.activePage;
 
+    // TODO: Refactor pr-buttons into separate render stages
     switch (activePage) {
       case Pages.EXPERIMENT_CREATE:
         return html`
@@ -316,9 +317,34 @@ export class Header extends MobxLitElement {
             </pr-icon-button>
           </pr-tooltip>
         `;
+      case Pages.PARTICIPANT_STAGE:
+        return this.renderDebugModeButton();
       default:
         return nothing;
     }
+  }
+
+  private renderDebugModeButton() {
+    if (!this.authService.isExperimenter) return nothing;
+
+    const debugMode = this.authService.isDebugMode;
+    const tooltipText = `
+      Turn debug mode ${debugMode ? 'off' : 'on'}.
+      (When on, experimenters can debugging statements in participant preview.
+      Note that only some stages have debugging statements.)
+    `;
+
+    return html`
+      <pr-tooltip text=${tooltipText} position="BOTTOM_END">
+        <pr-icon-button
+          icon=${debugMode ? 'code_off' : 'code'}
+          color="neutral"
+          variant="default"
+          @click=${() => { this.authService.setDebugMode(!debugMode); }}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
   }
 }
 

@@ -64,6 +64,8 @@ export class AuthService extends Service {
   @observable isExperimenter: boolean|null = null;
   @observable canEdit = false;
 
+  @observable private debugMode = false;
+
   @observable unsubscribe: Unsubscribe[] = [];
   @observable experimenterData: ExperimenterData|null = null;
   @observable isExperimentDataLoading = false;
@@ -78,6 +80,16 @@ export class AuthService extends Service {
 
   @computed get authenticated() {
     return this.initialAuthCheck && this.user !== null;
+  }
+
+  // If true and is experimenter, show debugging components
+  // in experimenter preview
+  @computed get isDebugMode() {
+    return this.isExperimenter && this.debugMode;
+  }
+
+  setDebugMode(debugMode: boolean) {
+    this.debugMode = debugMode;
   }
 
   subscribe() {

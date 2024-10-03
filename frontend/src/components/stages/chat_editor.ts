@@ -5,12 +5,15 @@ import {customElement, property} from 'lit/decorators.js';
 import '@material/web/checkbox/checkbox.js';
 
 import {core} from '../../core/core';
+import {AuthService} from '../../services/auth.service';
+
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
   ChatStageConfig,
   StageKind,
   MediatorConfig,
+  MediatorResponseConfig,
   createMediatorConfig,
 } from '@deliberation-lab/utils';
 import {
@@ -25,6 +28,8 @@ export class ChatEditor extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
+  private readonly authService = core.getService(AuthService);
+
 
   @property() stage: ChatStageConfig|undefined = undefined;
 
@@ -33,7 +38,25 @@ export class ChatEditor extends MobxLitElement {
       return nothing;
     }
 
+    // Check if experimenter's API key exists
+    let apiCheck;
+    if (!this.authService.experimenterData?.apiKeys.geminiKey) {
+      apiCheck = html`
+        <div class="warning">
+          <b>Note:</b> In order for LLM calls to work,
+          you must add your Gemini API key under Settings.
+        </div>
+      `;
+    } else {
+      apiCheck = html`
+        <div class="notification">
+          <b>✅ A Gemini API key has been added. If it is valid, LLM calls will work.
+        </div>
+      `;
+    }
+
     return html`
+      ${apiCheck}
       ${this.stage.mediators.map(
         (mediator, index) => this.renderMediator(mediator, index)
       )}
@@ -189,14 +212,9 @@ export class ChatEditor extends MobxLitElement {
     const onDelete = () => {
       this.deleteMediator(index);
     };
-
     return html`
       <div class="question-wrapper">
         <div class="question-label">Mediator ${index + 1}</div>
-        <div class="warning">
-          <b>Note:</b> In order for LLM mediator calls to work,
-          you must add your Gemini API key under Settings.
-        </div>
         <div class="question">
           <div class="header">
             <div class="left">
@@ -213,8 +231,68 @@ export class ChatEditor extends MobxLitElement {
           </div>
           ${this.renderAvatars(mediator, index)}
           ${this.renderMediatorPrompt(mediator, index)}
+          ${this.renderMediatorResponseConfig(mediator, index)}
         </div>
       </div>
+    `;
+  }
+
+  private renderMediatorResponseConfig(
+    mediator: MediatorConfig,
+    index: number
+  ) {
+    const config = mediator.responseConfig;
+    const updateConfig = (responseConfig: MediatorResponseConfig) => {
+      this.updateMediator({ ...mediator, responseConfig }, index);
+    };
+    const updateJSON = () => {
+      updateConfig({ ...config, isJSON: !config.isJSON });
+    };
+    const updateMessageField = (e: InputEvent) => {
+      const messageField = (e.target as HTMLTextAreaElement).value;
+      updateConfig({ ...config, messageField })
+    };
+    const updateExplanationField = (e: InputEvent) => {
+      const explanationField = (e.target as HTMLTextAreaElement).value;
+      updateConfig({ ...config, explanationField })
+    };
+
+    return html`
+      <div class="checkbox-wrapper">
+        <md-checkbox
+          touch-target="wrapper"
+          ?checked=${config.isJSON}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @click=${updateJSON}
+        >
+        </md-checkbox>
+        <div>
+          Parse mediator response as JSON (tip: include appropriate
+          instructions/examples in prompt so that valid JSON is returned)
+        </div>
+      </div>
+      ${!config.isJSON ? nothing : html`
+        <pr-textarea
+          label="JSON field to extract chat message from"
+          placeholder="JSON field to extract chat message from"
+          variant="outlined"
+          .value=${config.messageField}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @input=${updateMessageField}
+        >
+        </pr-textarea>
+      `}
+      ${!config.isJSON ? nothing : html`
+        <pr-textarea
+          label="JSON field to extract debugging explanation from"
+          placeholder="JSON field to extract debugging explanation from"
+          variant="outlined"
+          .value=${config.explanationField}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @input=${updateExplanationField}
+        >
+        </pr-textarea>
+      `}
     `;
   }
 }

@@ -1,4 +1,5 @@
 import '../participant_profile/profile_editor';
+import '../participant_profile/profile_viewer';
 import '../popup/accept_transfer_popup';
 import '../popup/attention_check_popup';
 import '../popup/booted_popup';
@@ -30,6 +31,7 @@ import {Pages, RouterService} from '../../services/router.service';
 
 import {
   ParticipantStatus,
+  ProfileType,
   StageConfig,
   StageKind
 } from '@deliberation-lab/utils';
@@ -192,6 +194,9 @@ export class ParticipantPreviewer extends MobxLitElement {
       case StageKind.INFO:
         return html`<info-view .stage=${stage}></info-view>`;
       case StageKind.PROFILE:
+        if (stage.profileType === ProfileType.ANONYMOUS_ANIMAL) {
+        return html`<profile-viewer .stage=${stage}></profile-viewer>`;
+        }
         return html`<profile-editor .stage=${stage}></profile-editor>`;
       case StageKind.CHAT:
         return html`

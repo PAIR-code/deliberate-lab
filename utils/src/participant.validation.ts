@@ -29,6 +29,7 @@ export const CreateParticipantData = Type.Object(
   {
     experimentId: Type.String(),
     cohortId: Type.String(),
+    isAnonymous: Type.Boolean(), // true if requires anonymous profiles
   },
   strict,
 );

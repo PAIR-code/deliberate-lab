@@ -99,6 +99,7 @@ export interface HumanMediatorChatMessage extends BaseChatMessage {
 export interface AgentMediatorChatMessage extends BaseChatMessage {
   type: ChatMessageType.AGENT_MEDIATOR;
   mediatorId: string;
+  explanation: string;
 }
 
 /** LLM mediator config. */
@@ -107,7 +108,19 @@ export interface MediatorConfig {
   name: string;
   avatar: string; // emoji avatar for mediator
   prompt: string;
+  responseConfig: MediatorResponseConfig;
   // TODO: Add more settings, e.g., model, temperature, context window
+}
+
+/** Settings for formatting mediator response
+ *  (e.g., expect JSON, use specific JSON field for response, use end token)
+ */
+export interface MediatorResponseConfig {
+  isJSON: boolean;
+  // JSON field to extract chat message from
+  messageField: string;
+  // JSON field to extract explanation from
+  explanationField: string;
 }
 
 export type ChatMessage =
@@ -241,6 +254,7 @@ export function createAgentMediatorChatMessage(
     timestamp: config.timestamp ?? Timestamp.now(),
     profile: config.profile ?? { name: 'Mediator', avatar: '🤖', pronouns: null },
     mediatorId: config.mediatorId ?? '',
+    explanation: config.explanation ?? '',
   };
 }
 
@@ -275,7 +289,19 @@ export function createMediatorConfig(
     name: config.name ?? 'Mediator',
     avatar: config.avatar ?? '🤖',
     prompt: config.prompt ?? DEFAULT_MEDIATOR_PROMPT.trim(),
+    responseConfig: config.responseConfig ?? createMediatorResponseConfig(),
   };
+}
+
+/** Create mediator response config. */
+export function createMediatorResponseConfig(
+  config: Partial<MediatorResponseConfig> = {},
+): MediatorResponseConfig {
+  return {
+    isJSON: config.isJSON ?? false,
+    messageField: config.messageField ?? 'response',
+    explanationField: config.explanationField ?? 'explanation',
+  }
 }
 
 /** Create participant chat stage answer. */

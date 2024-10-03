@@ -7,17 +7,20 @@ import {
   Unsubscribe,
 } from 'firebase/firestore';
 import {FirebaseService} from './firebase.service';
+import {MediatorEditor} from './mediator.editor';
 import {Pages, RouterService} from './router.service';
 import {Service} from './service';
 
 import {
   Experiment,
   StageConfig,
+  StageKind
 } from '@deliberation-lab/utils';
 import {getPublicExperimentName} from '../shared/experiment.utils';
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
+  mediatorEditor: MediatorEditor;
   routerService: RouterService;
 }
 
@@ -69,6 +72,7 @@ export class ExperimentService extends Service {
         doc(this.sp.firebaseService.firestore, 'experiments', id),
         (doc) => {
           this.experiment = {id: doc.id, ...doc.data()} as Experiment;
+          this.sp.mediatorEditor.setExperimentId(doc.id);
           this.isExperimentLoading = false;
         }
       )
@@ -92,6 +96,10 @@ export class ExperimentService extends Service {
           changedDocs.forEach((doc) => {
             const data = doc.data() as StageConfig;
             this.stageConfigMap[doc.id] = data;
+            if (data.kind === StageKind.CHAT) {
+              // Load chat configs to mediator editor service
+              this.sp.mediatorEditor.addConfig(data);
+            }
           });
 
           this.isStageConfigsLoading = false;
@@ -107,6 +115,7 @@ export class ExperimentService extends Service {
     // Reset stage configs
     this.stageConfigMap = {};
     this.experiment = undefined;
+    this.sp.mediatorEditor.reset();
   }
 
   reset() {

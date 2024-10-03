@@ -11,10 +11,14 @@ export const FIREBASE_LOCAL_HOST_PORT_FUNCTIONS = 5001;
 export const APP_NAME = "Deliberate Lab";
 
 /** Profile avatars. */
+export const MAN_EMOJIS = ['👨🏻', '👨🏼', '👨🏽', '👨🏾', '👨🏿'];
+export const WOMAN_EMOJIS = ['👩🏻', '👩🏼', '👩🏽', '👩🏾', '👩🏿'];
+export const PERSON_EMOJIS = ['🧑🏻', '🧑🏼', '🧑🏽', '🧑🏾', '🧑🏿'];
+
 export const PROFILE_AVATARS = [
-  '👩🏻','👩🏼','👩🏽','👩🏾','👩🏿',
-  '👨🏻','👨🏼','👨🏽','👨🏾','👨🏿',
-  '🧑🏻','🧑🏼','🧑🏽','🧑🏾','🧑🏿'
+  ...WOMAN_EMOJIS,
+  ...MAN_EMOJIS,
+  ...PERSON_EMOJIS
 ];
 
 /** LLM mediator avatars. */

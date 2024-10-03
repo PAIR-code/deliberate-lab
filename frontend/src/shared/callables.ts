@@ -8,6 +8,7 @@ import {
   ExperimentDeletionData,
   ParticipantProfileExtendedData,
   SimpleResponse,
+  UpdateChatMediatorsData,
   UpdateChatStageParticipantAnswerData,
   UpdateRankingStageParticipantAnswerData,
   UpdateSurveyStageParticipantAnswerData
@@ -58,6 +59,14 @@ export const updateChatStageParticipantAnswerCallable = async(
   functions: Functions, config: UpdateChatStageParticipantAnswerData
 ) => {
   const { data } = await httpsCallable<UpdateChatStageParticipantAnswerData, CreationResponse>(functions, 'updateChatStageParticipantAnswer')(config);
+  return data;
+}
+
+/** Generic endpoint to update chat stage mediators */
+export const updateChatMediatorsCallable = async(
+  functions: Functions, config: UpdateChatMediatorsData
+) => {
+  const { data } = await httpsCallable<UpdateChatMediatorsData, CreationResponse>(functions, 'updateChatMediators')(config);
   return data;
 }
 

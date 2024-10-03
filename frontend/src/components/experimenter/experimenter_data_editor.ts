@@ -32,6 +32,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
       this.authService.writeExperimenterData({...data, apiKeys});
     };
 
+    // TODO: Make this more clear when this has been saved.
     return html`
       <div class="section">
         <div class="title">API keys</div>

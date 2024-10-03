@@ -13,8 +13,15 @@ import {
 // TYPES                                                                     //
 // ************************************************************************* //
 
+
+export enum ProfileType {
+  DEFAULT = 'DEFAULT', // Profiles are set by the participant.
+  ANONYMOUS_ANIMAL = 'ANONYMOUS_ANIMAL', // Profiles are set to anonymous animals.
+}
+
 export interface ProfileStageConfig extends BaseStageConfig {
   kind: StageKind.PROFILE;
+  profileType: ProfileType;
 }
 
 // ************************************************************************* //
@@ -32,5 +39,6 @@ export function createProfileStage(
     name: config.name ?? 'Set profile',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig(),
+    profileType: config.profileType ?? ProfileType.DEFAULT,
   };
 }

@@ -93,3 +93,8 @@ $bubble-radius-small: common.$spacing-small;
     width: 100%;
   }
 }
+
+.debug {
+  @include typescale.label-small;
+  color: var(--md-sys-color-tertiary);
+}

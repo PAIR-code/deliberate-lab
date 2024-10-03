@@ -8,12 +8,12 @@
 }
 
 .panel-wrapper {
-  @include common.flex-column;
+  @include common.flex-row;
   background: var(--md-sys-color-surface);
   border-left: 1px solid var(--md-sys-color-outline-variant-high);
   flex-shrink: 0;
   height: 100%;
-  width: common.$sidenav-width;
+  width: calc(common.$sidenav-width + common.$sidenav-closed-width);
 
   &.closed {
     width: common.$sidenav-closed-width;
@@ -31,7 +31,7 @@
   @include common.flex-column-align-center;
   border-right: 1px solid var(--md-sys-color-outline-variant);
   flex-shrink: 0;
-  gap: common.$spacing-small;
+  gap: common.$spacing-medium;
   padding: common.$sidenav-padding;
   width: common.$sidenav-closed-width;
 }
@@ -40,22 +40,18 @@
   @include common.flex-column;
   flex-grow: 1;
   gap: common.$spacing-large;
-  padding: common.$sidenav-padding;
 }
 
 .header {
   @include common.flex-row-align-center;
-}
-
-.title {
-  @include common.flex-row-align-center;
   @include typescale.label-large;
   flex-shrink: 0;
+  height: 40px;
 }
 
 .top {
   @include common.flex-column;
-  gap: common.$spacing-small;
+  gap: common.$spacing-large;
   overflow: auto;
   padding: common.$sidenav-padding;
 }
@@ -66,4 +62,35 @@
   gap: common.$spacing-small;
   overflow: auto;
   padding: common.$sidenav-padding;
+}
+
+.mediator {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
+.debug {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
+  word-break: break-all;
+
+  &.error {
+    color: var(--md-sys-color-error);
+  }
+}
+
+.mediator-title {
+  @include typescale.title-small;
+}
+
+.prompt-box {
+  @include common.flex-column;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-medium;
+  padding: common.$spacing-large;
+}
+
+.action-bar {
+  @include common.flex-row;
+  justify-content: end;
 }

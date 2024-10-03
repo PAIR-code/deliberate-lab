@@ -10,6 +10,7 @@ import { classMap } from "lit/directives/class-map.js";
 import { Timestamp } from "firebase/firestore";
 
 import { core } from "../../core/core";
+import { AuthService } from "../../services/auth.service";
 import { ExperimentService } from "../../services/experiment.service";
 import { ParticipantService } from "../../services/participant.service";
 
@@ -31,6 +32,7 @@ import { styles } from "./chat_message.scss";
 export class ChatMessageComponent extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly authService = core.getService(AuthService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
 
@@ -64,7 +66,7 @@ export class ChatMessageComponent extends MobxLitElement {
     return html`
       <div class=${classes}>
         <profile-avatar .emoji=${profile.avatar}></profile-avatar>
-          <div class="content">
+        <div class="content">
           <div class="label">
             ${profile.name ?? chatMessage.participantPublicId}
             ${profile.pronouns ? `(${profile.pronouns})` : ""}
@@ -81,7 +83,7 @@ export class ChatMessageComponent extends MobxLitElement {
     return html`
       <div class="chat-message">
         <profile-avatar .emoji=${profile.avatar}></profile-avatar>
-          <div class="content">
+        <div class="content">
           <div class="label">
             ${profile.name}
           </div>
@@ -97,12 +99,23 @@ export class ChatMessageComponent extends MobxLitElement {
     return html`
       <div class="chat-message">
         <profile-avatar .emoji=${profile.avatar}></profile-avatar>
-          <div class="content">
+        <div class="content">
           <div class="label">
             ${profile.name}
           </div>
           <div class="chat-bubble">${chatMessage.message}</div>
+          ${this.renderDebuggingExplanation(chatMessage)}
         </div>
+      </div>
+    `;
+  }
+
+  renderDebuggingExplanation(chatMessage: AgentMediatorChatMessage) {
+    if (!this.authService.isDebugMode) return nothing;
+
+    return html`
+      <div class="debug">
+        ${chatMessage.explanation}
       </div>
     `;
   }

@@ -3,6 +3,7 @@ import '../stages/chat_editor';
 import '../stages/ranking_editor';
 import '../stages/info_editor';
 import '../stages/payout_editor';
+import '../stages/profile_stage_editor';
 import '../stages/reveal_editor';
 import '../stages/survey_editor';
 import '../stages/survey_editor_menu';
@@ -99,6 +100,7 @@ export class ExperimentBuilder extends MobxLitElement {
       case StageKind.PROFILE:
         return html`
           <base-stage-editor .stage=${stage}></base-stage-editor>
+          <profile-stage-editor .stage=${stage}></profile-stage-editor>
         `;
       case StageKind.CHAT:
         return html`

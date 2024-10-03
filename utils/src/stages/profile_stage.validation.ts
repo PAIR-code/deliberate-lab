@@ -3,8 +3,9 @@ import { StageKind } from './stage';
 import {
   StageGameSchema,
   StageProgressConfigSchema,
-  StageTextConfigSchema
+  StageTextConfigSchema,
 } from './stage.validation';
+import { ProfileType } from './profile_stage';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = { additionalProperties: false } as const;
@@ -22,6 +23,10 @@ export const ProfileStageConfigData = Type.Object(
     name: Type.String({ minLength: 1 }),
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,
+    profileType: Type.Union([
+      Type.Literal(ProfileType.DEFAULT),
+      Type.Literal(ProfileType.ANONYMOUS_ANIMAL),
+    ]),
   },
   strict,
 );
