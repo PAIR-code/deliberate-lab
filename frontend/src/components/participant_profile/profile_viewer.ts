@@ -1,4 +1,5 @@
 import '../stages/stage_description';
+import '../stages/stage_footer';
 import './profile_avatar'; 
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -43,6 +44,7 @@ export class ProfileViewer extends MobxLitElement {
           </div>
         </div>
       </div>
+      <stage-footer></stage-footer>
     `;
   }
 }
