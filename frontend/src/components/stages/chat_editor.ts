@@ -13,6 +13,7 @@ import {
   ChatStageConfig,
   StageKind,
   MediatorConfig,
+  MediatorResponseConfig,
   createMediatorConfig,
 } from '@deliberation-lab/utils';
 import {
@@ -230,8 +231,68 @@ export class ChatEditor extends MobxLitElement {
           </div>
           ${this.renderAvatars(mediator, index)}
           ${this.renderMediatorPrompt(mediator, index)}
+          ${this.renderMediatorResponseConfig(mediator, index)}
         </div>
       </div>
+    `;
+  }
+
+  private renderMediatorResponseConfig(
+    mediator: MediatorConfig,
+    index: number
+  ) {
+    const config = mediator.responseConfig;
+    const updateConfig = (responseConfig: MediatorResponseConfig) => {
+      this.updateMediator({ ...mediator, responseConfig }, index);
+    };
+    const updateJSON = () => {
+      updateConfig({ ...config, isJSON: !config.isJSON });
+    };
+    const updateMessageField = (e: InputEvent) => {
+      const messageField = (e.target as HTMLTextAreaElement).value;
+      updateConfig({ ...config, messageField })
+    };
+    const updateExplanationField = (e: InputEvent) => {
+      const explanationField = (e.target as HTMLTextAreaElement).value;
+      updateConfig({ ...config, explanationField })
+    };
+
+    return html`
+      <div class="checkbox-wrapper">
+        <md-checkbox
+          touch-target="wrapper"
+          ?checked=${config.isJSON}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @click=${updateJSON}
+        >
+        </md-checkbox>
+        <div>
+          Parse mediator response as JSON (tip: include appropriate
+          instructions/examples in prompt so that valid JSON is returned)
+        </div>
+      </div>
+      ${!config.isJSON ? nothing : html`
+        <pr-textarea
+          label="JSON field to extract chat message from"
+          placeholder="JSON field to extract chat message from"
+          variant="outlined"
+          .value=${config.messageField}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @input=${updateMessageField}
+        >
+        </pr-textarea>
+      `}
+      ${!config.isJSON ? nothing : html`
+        <pr-textarea
+          label="JSON field to extract debugging explanation from"
+          placeholder="JSON field to extract debugging explanation from"
+          variant="outlined"
+          .value=${config.explanationField}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @input=${updateExplanationField}
+        >
+        </pr-textarea>
+      `}
     `;
   }
 }

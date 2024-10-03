@@ -36,6 +36,7 @@
   color: var(--md-sys-color-on-surface-container);
   padding: common.$spacing-small common.$spacing-medium;
 }
+
 .warning {
   @include typescale.label-small;
   background: var(--md-sys-color-error-container);
@@ -77,6 +78,16 @@
   flex-wrap: wrap;
   gap: common.$spacing-xl;
   max-width: 500px;
+}
+
+.checkbox-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+  overflow-wrap: break-word;
+
+  md-checkbox {
+    flex-shrink: 0;
+  }
 }
 
 pr-textarea {
