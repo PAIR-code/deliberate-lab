@@ -210,11 +210,10 @@ export class ExperimentManager extends Service {
     this.isParticipantsLoading = value;
   }
 
-  updateForCurrentRoute() {
-    const id = this.sp.routerService.activeRoute.params['experiment'];
-    if (id !== this.experimentId) {
-      this.experimentId = id;
-      this.loadExperimentData(id);
+  updateForRoute(experimentId: string) {
+    if (experimentId !== this.experimentId) {
+      this.experimentId = experimentId;
+      this.loadExperimentData(experimentId);
     }
   }
 
@@ -285,6 +284,11 @@ export class ExperimentManager extends Service {
     this.participantMap = {};
   }
 
+  reset() {
+    this.experimentId = undefined;
+    this.unsubscribeAll();
+  }
+
   // *********************************************************************** //
   // FIRESTORE                                                               //
   // *********************************************************************** //
@@ -321,8 +325,6 @@ export class ExperimentManager extends Service {
     this.sp.routerService.navigate(Pages.EXPERIMENT, {
         experiment: experiment.id
     });
-    this.sp.experimentService.updateForCurrentRoute();
-    this.updateForCurrentRoute();
 
     return response;
 }
@@ -400,7 +402,10 @@ export class ExperimentManager extends Service {
   }
 
   /** Update a participant */
-  async updateParticipant(participantConfig: ParticipantProfileExtended) {
+  async updateParticipant(
+    participantConfig: ParticipantProfileExtended,
+    isTransfer = false
+  ) {
     this.isWritingParticipant = true;
     let response = {};
 
@@ -408,6 +413,7 @@ export class ExperimentManager extends Service {
       response = await updateParticipantCallable(
         this.sp.firebaseService.functions, {
           experimentId: this.experimentId,
+          isTransfer,
           participantConfig
         }
       );

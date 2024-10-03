@@ -24,14 +24,16 @@ import {
   SurveyAnswer,
   SurveyStageConfig,
   SurveyStageParticipantAnswer,
+  TextSurveyAnswer,
   TextSurveyQuestion,
   isMultipleChoiceImageQuestion
 } from '@deliberation-lab/utils';
 
 import {core} from '../../core/core';
 import {FirebaseService} from '../../services/firebase.service';
+import {ImageService} from '../../services/image.service';
 import {ParticipantService} from '../../services/participant.service';
-import {SurveyService} from '../../services/survey.service';
+import {ParticipantAnswerService} from '../../services/participant.answer';
 
 import {styles} from './survey_view.scss';
 
@@ -41,16 +43,11 @@ export class SurveyView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly firebaseService = core.getService(FirebaseService);
+  private readonly imageService = core.getService(ImageService);
   private readonly participantService = core.getService(ParticipantService);
-  private readonly surveyService = core.getService(SurveyService);
+  private readonly participantAnswerService = core.getService(ParticipantAnswerService);
 
   @property() stage: SurveyStageConfig | undefined = undefined;
-  @property() answer: SurveyStageParticipantAnswer | undefined = undefined;
-
-  connectedCallback() {
-    super.connectedCallback();
-    this.surveyService.updateForCurrentRoute();
-  }
 
   override render() {
     if (!this.stage) {
@@ -58,22 +55,16 @@ export class SurveyView extends MobxLitElement {
     }
 
     const questionsComplete = () => {
-      const answerMap = this.answer?.answerMap;
-      const answerList = answerMap ? Object.values(answerMap) : [];
+      if (!this.stage) return false;
 
-      // Confirm all non-text questions are written to backend
-      if (
-        answerList.length <
-        this.stage!.questions.length - this.surveyService.getNumTextAnswers()
-      ) {
-        return false;
-      }
-      // Confirm that all text answers are completed on frontend
-      return this.surveyService.isAllTextAnswersValid();
+      // Confirm all questions are written to survey answer service
+      return this.participantAnswerService.getNumSurveyAnswers(this.stage.id) ===
+        this.stage!.questions.length;
     };
 
-    const saveTextAnswers = async () => {
-      await this.surveyService.saveTextAnswers();
+    const saveAnswers = async () => {
+      if (!this.stage) return;
+      this.participantAnswerService.saveSurveyAnswers(this.stage.id);
     }
 
     return html`
@@ -83,7 +74,7 @@ export class SurveyView extends MobxLitElement {
       </div>
       <stage-footer
         .disabled=${!questionsComplete()}
-        .onNextClick=${saveTextAnswers}
+        .onNextClick=${saveAnswers}
       >
         ${this.stage.progress.showParticipantProgress ?
           html`<progress-stage-completed></progress-stage-completed>`
@@ -109,7 +100,8 @@ export class SurveyView extends MobxLitElement {
 
   private renderCheckQuestion(question: CheckSurveyQuestion) {
     const isChecked = () => {
-      const answer = this.answer?.answerMap[question.id];
+      if (!this.stage) return;
+      const answer = this.participantAnswerService.getSurveyAnswer(this.stage.id, question.id);
       if (answer && answer.kind === SurveyQuestionKind.CHECK) {
         return answer.isChecked;
       }
@@ -124,7 +116,7 @@ export class SurveyView extends MobxLitElement {
       };
       // Update stage answer
       if (!this.stage) return;
-      this.participantService.updateSurveyStageParticipantAnswer(
+      this.participantAnswerService.updateSurveyAnswer(
         this.stage.id,
         answer
       );
@@ -148,10 +140,21 @@ export class SurveyView extends MobxLitElement {
   }
 
   private renderTextQuestion(question: TextSurveyQuestion) {
+    if (!this.stage) return;
+
     const handleTextChange = (e: Event) => {
-      const answerText = (e.target as HTMLInputElement).value ?? '';
-      this.surveyService.updateTextAnswer(question.id, answerText);
+      if (!this.stage) return;
+      const answer = (e.target as HTMLInputElement).value ?? '';
+      const textAnswer: TextSurveyAnswer = {
+        id: question.id,
+        kind: SurveyQuestionKind.TEXT,
+        answer
+      };
+      this.participantAnswerService.updateSurveyAnswer(this.stage.id, textAnswer);
     };
+
+    const answer = this.participantAnswerService.getSurveyAnswer(this.stage.id, question.id);
+    const textAnswer = answer && answer.kind === SurveyQuestionKind.TEXT ? answer.answer : '';
 
     return html`
       <div class="question">
@@ -159,7 +162,7 @@ export class SurveyView extends MobxLitElement {
         <pr-textarea
           variant="outlined"
           placeholder="Type your response"
-          .value=${this.surveyService.getTextAnswer(question.id) ?? ''}
+          .value=${textAnswer}
           ?disabled=${this.participantService.disableStage}
           @change=${handleTextChange}
         >
@@ -187,9 +190,10 @@ export class SurveyView extends MobxLitElement {
   }
 
   private isMultipleChoiceMatch(questionId: string, choiceId: string) {
-    const answer = this.answer?.answerMap[questionId];
+    if (!this.stage) return;
+    const answer = this.participantAnswerService.getSurveyAnswer(this.stage.id, questionId);
     if (answer && answer.kind === SurveyQuestionKind.MULTIPLE_CHOICE) {
-      return answer.choiceId === choiceId;
+      return answer?.choiceId === choiceId;
     }
     return false;
   }
@@ -205,7 +209,7 @@ export class SurveyView extends MobxLitElement {
       };
       // Update stage answer
       if (!this.stage) return;
-      this.participantService.updateSurveyStageParticipantAnswer(
+      this.participantAnswerService.updateSurveyAnswer(
         this.stage.id,
         answer
       );
@@ -214,17 +218,14 @@ export class SurveyView extends MobxLitElement {
     if (choice.imageId.length > 0) {
       const classes = classMap({
         'image-question': true,
-        'selected': this.isMultipleChoiceMatch(questionId, choice.id),
+        'selected': this.isMultipleChoiceMatch(questionId, choice.id) ?? false,
         'disabled': this.participantService.disableStage,
       });
-
-      const image = document.createElement('img');
-      this.firebaseService.setImage(image, choice.imageId);
 
       return html`
         <div class=${classes} @click=${handleMultipleChoiceClick}>
           <div class="img-wrapper">
-            ${image}
+            <img src=${this.imageService.getImageSrc(choice.imageId)} />
           </div>
           <div class="radio-button">
             <md-radio
@@ -280,7 +281,8 @@ export class SurveyView extends MobxLitElement {
     const id = `${question.id}-${value}`;
 
     const isScaleChoiceMatch = (value: number) => {
-      const answer = this.answer?.answerMap[question.id];
+      if (!this.stage) return;
+      const answer = this.participantAnswerService.getSurveyAnswer(this.stage.id, question.id);
       if (answer && answer.kind === SurveyQuestionKind.SCALE) {
         return answer.value === value;
       }
@@ -297,7 +299,7 @@ export class SurveyView extends MobxLitElement {
 
       // Update stage answer
       if (!this.stage) return;
-      this.participantService.updateSurveyStageParticipantAnswer(
+      this.participantAnswerService.updateSurveyAnswer(
         this.stage.id,
         answer
       );
@@ -309,7 +311,6 @@ export class SurveyView extends MobxLitElement {
           id=${id}
           name=${name}
           value=${value}
-          aria-label=${value}
           ?checked=${isScaleChoiceMatch(value)}
           ?disabled=${this.participantService.disableStage}
           @change=${handleScaleClick}

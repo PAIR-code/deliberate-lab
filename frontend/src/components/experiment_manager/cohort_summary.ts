@@ -81,7 +81,7 @@ export class CohortSummary extends MobxLitElement {
           </pr-icon-button>
           <div class="header-details">
             <div class="top">
-            ${getCohortName(this.cohort!)}
+            ${this.cohort ? getCohortName(this.cohort) : ''}
             <span class="subtitle">
               (${this.experimentManager.getCohortParticipants(this.cohort.id, false).length} participants)
             </span>

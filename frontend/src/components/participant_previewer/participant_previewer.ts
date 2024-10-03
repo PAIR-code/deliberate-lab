@@ -52,17 +52,11 @@ export class ParticipantPreviewer extends MobxLitElement {
 
   @state() isStartExperimentLoading = false;
 
-  connectedCallback() {
-    super.connectedCallback();
-    this.experimentService.updateForCurrentRoute();
-    this.participantService.updateForCurrentRoute();
-  }
-
   override render() {
     if (this.routerService.activePage === Pages.PARTICIPANT) {
       return html`
         <participant-nav></participant-nav>
-        <div class="participant-previewer">
+        <div class="participant-previewer ${!this.authService.isExperimenter ? 'full-view' : ''}">
           <div class="content">
             ${this.renderLanding()}
           </div>
@@ -77,7 +71,7 @@ export class ParticipantPreviewer extends MobxLitElement {
 
     return html`
       <participant-nav></participant-nav>
-      <div class="participant-previewer">
+      <div class="participant-previewer ${!this.authService.isExperimenter ? 'full-view' : ''}">
         <participant-header .stage=${stage}></participant-header>
         ${this.renderStageContent(stage)}
       </div>
@@ -216,7 +210,7 @@ export class ParticipantPreviewer extends MobxLitElement {
         return html`<reveal-view .stage=${stage}></reveal-view>`;
       case StageKind.SURVEY:
         return html`
-          <survey-view .stage=${stage} .answer=${answer}></survey-view>
+          <survey-view .stage=${stage}></survey-view>
         `;
       case StageKind.TRANSFER:
         return html`<transfer-view .stage=${stage}></transfer-view>`;

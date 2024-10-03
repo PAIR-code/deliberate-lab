@@ -90,13 +90,20 @@ export class Header extends MobxLitElement {
           this.routerService.navigate(Pages.HOME);
           break;
         case Pages.PARTICIPANT_JOIN_COHORT:
-          this.routerService.navigate(Pages.EXPERIMENT, params);
+          this.routerService.navigate(Pages.EXPERIMENT, {
+            experiment: params['experiment'],
+          });
           break;
         case Pages.PARTICIPANT:
-          this.routerService.navigate(Pages.EXPERIMENT, params);
+          this.routerService.navigate(Pages.EXPERIMENT, {
+            experiment: params['experiment'],
+            participant: params['participant']
+          });
           break;
         case Pages.PARTICIPANT_STAGE:
-          this.routerService.navigate(Pages.EXPERIMENT, params);
+          this.routerService.navigate(Pages.EXPERIMENT, {
+            experiment: params['experiment'],
+          });
           break;
         default:
           break;
@@ -132,15 +139,17 @@ export class Header extends MobxLitElement {
     const renderParticipantProfileBanner = () => {
       const stageId = this.routerService.activeRoute.params['stage'];
       const stage = this.experimentService.getStage(stageId);
+      if (!stage || !profile) return nothing;
+
       const isWaiting = this.cohortService.isStageWaitingForParticipants(
         stage.id
       );
       const isWaitingText = isWaiting
         ? '. This participant currently sees a wait stage, as they are waiting for others in the cohort to catch up.'
         : '';
-      return `Previewing as: ${
-        profile ? `${getParticipantName(profile)}${isWaitingText}` : ''
-      }`;
+      return `Previewing as:
+        ${getParticipantName(profile)}${isWaitingText}
+      `;
     };
 
     switch (activePage) {
@@ -155,7 +164,8 @@ export class Header extends MobxLitElement {
       case Pages.PARTICIPANT_JOIN_COHORT:
         return 'Previewing experiment cohort';
       case Pages.PARTICIPANT:
-        return renderParticipantProfileBanner();
+        // Participant landing page
+        return `Previewing as: ${profile ? getParticipantName(profile) : ''}`;
       case Pages.PARTICIPANT_STAGE:
         return renderParticipantProfileBanner();
       default:
@@ -164,7 +174,7 @@ export class Header extends MobxLitElement {
   }
 
   private renderExperimentTitle() {
-    const title = this.experimentService.experimentName;
+    const title = this.experimentService.experiment?.metadata.name ?? '';
     if (this.experimentManager.isEditingFull) {
       return this.experimentManager.isCreator
         ? `Editing: ${title}`

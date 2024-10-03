@@ -44,7 +44,8 @@ export class Preview extends MobxLitElement {
     };
 
     const getCohort = (id: string) => {
-      return getCohortName(this.experimentManager.getCohort(id));
+      const cohort = this.experimentManager.getCohort(id);
+      return cohort ? getCohortName(cohort) : '';
     }
 
     return html`

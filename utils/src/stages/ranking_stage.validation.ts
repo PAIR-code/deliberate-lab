@@ -74,13 +74,8 @@ export const RankingStageConfigData = Type.Union([
 export const RankingStageParticipantAnswerData = Type.Object(
   {
     id: Type.String({ minLength: 1 }),
-    strategy: Type.Union([
-      Type.Literal(ElectionStrategy.NONE),
-      Type.Literal(ElectionStrategy.CONDORCET),
-    ]),
     kind: Type.Literal(StageKind.RANKING),
     rankingList: Type.Array(Type.String()),
-    rankingItems: Type.Array(RankingItemData),
   },
   strict,
 );
@@ -92,11 +87,6 @@ export const UpdateRankingStageParticipantAnswerData = Type.Object(
     participantPublicId: Type.String({ minLength: 1 }),
     participantPrivateId: Type.String({ minLength: 1 }),
     stageId: Type.String({ minLength: 1 }),
-    strategy: Type.Union([
-      Type.Literal(ElectionStrategy.NONE),
-      Type.Literal(ElectionStrategy.CONDORCET),
-    ]),
-    rankingItems: Type.Array(RankingItemData),
     rankingList: Type.Array(Type.String()),
   },
   strict,

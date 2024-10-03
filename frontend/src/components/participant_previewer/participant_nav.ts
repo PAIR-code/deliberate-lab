@@ -40,11 +40,13 @@ export class ParticipantNav extends MobxLitElement {
     };
 
     return html`
-      <div class="title" @click=${navigateToLanding}>
-        <div>${this.experimentService.experimentName}</div>
-      </div>
-      <div class="stages">
-        ${this.renderStages()}
+      <div class="nav ${!this.authService.isExperimenter ? 'full-view' : ''}">
+        <div class="title" @click=${navigateToLanding}>
+          <div>${this.experimentService.experimentPublicName}</div>
+        </div>
+        <div class="stages">
+          ${this.renderStages()}
+        </div>
       </div>
     `;
   }

@@ -69,6 +69,7 @@ export const ProgressTimestampsSchema = Type.Object({
 export const ParticipantProfileExtendedData = Type.Object(
   {
     experimentId: Type.String(),
+    isTransfer: Type.Boolean(),
     participantConfig: Type.Object(
       {
         pronouns: Type.Union([Type.Null(), Type.String()]),

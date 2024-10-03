@@ -4,11 +4,20 @@
 
 :host {
   @include common.flex-column;
-  border-right: 1px solid var(--md-sys-color-outline-variant);
   flex-shrink: 0;
+}
+
+.nav {
+  @include common.flex-column;
+  border-right: 1px solid var(--md-sys-color-outline-variant);
+  flex-grow: 1;
   max-height: calc(100vh - common.$header-height);
   overflow: auto;
   width: common.$sidenav-width;
+
+  &.full-view {
+    max-height: 100vh;
+  }
 }
 
 .title {

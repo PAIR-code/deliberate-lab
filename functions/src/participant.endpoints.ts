@@ -3,6 +3,7 @@ import {
   CreateParticipantData,
   Experiment,
   ParticipantProfileExtendedData,
+  StageKind,
   createParticipantProfileExtended,
   generateParticipantPublicId,
 } from '@deliberation-lab/utils';
@@ -92,7 +93,7 @@ function handleCreateParticipantValidationErrors(data: any) {
 // ************************************************************************* //
 // updateParticipant endpoint for experimenters                              //
 //                                                                           //
-// Input structure: { experimentId, participantConfig }                      //
+// Input structure: { experimentId, isTransfer, participantConfig }          //
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
 
@@ -110,16 +111,49 @@ export const updateParticipant = onCall(async (request) => {
     handleUpdateParticipantValidationErrors(data);
   }
 
+  const privateId = data.participantConfig.privateId;
+  const publicId = data.participantConfig.publicId;
+
   // Define document reference
   const document = app.firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('participants')
-    .doc(data.participantConfig.privateId);
+    .doc(privateId);
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     transaction.set(document, data.participantConfig);
+
+    // If transfer is true, copy participant stage answers to current cohort
+    if (!data.isTransfer) {
+      return;
+    }
+
+    const stageData =
+      await app.firestore().collection(`experiments/${data.experimentId}/participants/${privateId}/stageData`)
+      .get();
+
+    const stageAnswers = stageData.docs.map(stage => stage.data());
+    // For each relevant answer, add to current cohort's public stage data
+    for (const stage of stageAnswers) {
+      const publicDocument = app.firestore()
+        .collection('experiments')
+        .doc(data.experimentId)
+        .collection('cohorts')
+        .doc(data.participantConfig.currentCohortId)
+        .collection('publicStageData')
+        .doc(stage.id);
+
+      switch (stage.kind) {
+        case StageKind.SURVEY:
+          const publicStageData = (await publicDocument.get()).data() as StagePublicData;
+          publicStageData.participantAnswerMap[publicId] = stage.answerMap;
+          transaction.set(publicDocument, publicStageData);
+        default:
+          break;
+      }
+    }
   });
 
   return { id: document.id };

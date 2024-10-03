@@ -2,6 +2,7 @@ import {computed, makeObservable, observable} from 'mobx';
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   onSnapshot,
   or,
@@ -67,12 +68,12 @@ export class CohortService extends Service {
   @observable chatMap: Record<string, ChatMessage[]> = {};
   // Stage ID to map of discussion ID to list of chat messages
   @observable chatDiscussionMap: Record<string, Record<string, ChatMessage[]>> = {};
-  @observable isChatLoading = false;
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
   @observable isParticipantsLoading = false;
   @observable isStageDataLoading = false;
+  @observable isChatLoading = false;
 
   @computed get isLoading() {
     return (
@@ -84,6 +85,7 @@ export class CohortService extends Service {
   set isLoading(value: boolean) {
     this.isParticipantsLoading = value;
     this.isStageDataLoading = value;
+    this.isChatLoading = value;
   }
 
   getAllParticipants(
@@ -243,19 +245,27 @@ export class CohortService extends Service {
     return getLatestDiscussion();
   }
 
-  loadCohortData(id: string) {
+  async loadCohortData(experimentId: string, id: string) {
     if (id === this.cohortId) {
       return;
     }
 
-    this.experimentId = this.sp.routerService.activeRoute.params['experiment'];
-    if (!this.experimentId) return;
-
+    this.experimentId = experimentId;
     this.isLoading = true;
     this.cohortId = id;
     this.unsubscribeAll();
 
-    // TODO: Subscribe to public stage data
+    // Subscribe to data
+    this.loadPublicStageData();
+    this.loadChatMessages();
+    this.loadParticipantProfiles();
+  }
+
+  /** Subscribe to public stage data. */
+  private loadPublicStageData() {
+    if (!this.experimentId || !this.cohortId) return;
+
+    this.isStageDataLoading = true;
     this.unsubscribe.push(
       onSnapshot(
         collection(
@@ -275,14 +285,28 @@ export class CohortService extends Service {
           changedDocs.forEach((doc) => {
             this.stagePublicDataMap[doc.id] = doc.data() as StagePublicData;
           });
-          this.isParticipantsLoading = false;
+          this.isStageDataLoading = false;
         }
       )
     );
+  }
 
-    // Subscribe to chat messages
+  /** Subscribe to chat message collections for each stage ID. */
+  private async loadChatMessages() {
+    if (!this.experimentId || !this.cohortId) return;
+
+    // Get stageIds from experiment doc
+    // (as they may not have loaded in experiment service yet)
+    const experimentRef = doc(
+      this.sp.firebaseService.firestore, 'experiments', this.experimentId
+    );
+    const experimentSnap = await getDoc(experimentRef);
+    if (!experimentSnap.exists()) return;
+    const experimentData = experimentSnap.data();
+    if (experimentData?.stageIds.length === 0) return;
+
     this.isChatLoading = true;
-    for (const stageId of this.sp.experimentService.stageIds) {
+    for (const stageId of experimentData.stageIds) {
       this.unsubscribe.push(
         onSnapshot(
           query(
@@ -326,8 +350,13 @@ export class CohortService extends Service {
         )
       );
     }
+  }
 
-    // Subscribe to participants' public profiles
+  /** Subscribe to participants' public profiles. */
+  private loadParticipantProfiles() {
+    if (!this.experimentId || !this.cohortId) return;
+
+    this.isParticipantsLoading = true;
     // TODO: Use participantPublicData collection once available
     // so that privateIds are not surfaced
     this.unsubscribe.push(
@@ -383,7 +412,14 @@ export class CohortService extends Service {
     // Reset stage configs
     this.participantMap = {};
     this.chatMap = {};
+    this.chatDiscussionMap = {};
     this.transferParticipantMap = {};
     this.stagePublicDataMap = {};
+  }
+
+  reset() {
+    this.cohortId = null;
+    this.experimentId = null;
+    this.unsubscribeAll();
   }
 }

@@ -15,6 +15,7 @@ import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {FirebaseService} from '../../services/firebase.service';
+import {ImageService} from '../../services/image.service';
 import {ParticipantService} from '../../services/participant.service';
 import {RouterService} from '../../services/router.service';
 
@@ -37,6 +38,7 @@ export class ChatInterface extends MobxLitElement {
 
   private readonly cohortService = core.getService(CohortService);
   private readonly firebaseService = core.getService(FirebaseService);
+  private readonly imageService = core.getService(ImageService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
@@ -132,10 +134,11 @@ export class ChatInterface extends MobxLitElement {
       const renderImage = () => {
         if (item.imageId.length === 0) return nothing;
 
-        const image = document.createElement('img');
-        this.firebaseService.setImage(image, item.imageId);
-
-        return html`<div class="img-wrapper">${image}</div>`;
+        return html`
+          <div class="img-wrapper">
+            <img src=${this.imageService.getImageSrc(item.imageId)} />
+          </div>
+        `;
       };
 
       return html`
@@ -229,23 +232,23 @@ export class ChatInterface extends MobxLitElement {
         this.stage.id,
         currentDiscussionId
       );
-    const buttonHTML = html`
-      <pr-button
-        color="tertiary"
-        variant="tonal"
-        ?disabled=${isDisabled}
-        ?loading=${this.readyToEndDiscussionLoading}
-        @click=${onClick}
+
+    return html`
+      <pr-tooltip
+        text=${isDisabled ? "You can move on once others are also ready to move on." : ''}
+        position="TOP_END"
       >
-        Ready to end discussion
-      </pr-button>
+        <pr-button
+          color="tertiary"
+          variant="tonal"
+          ?disabled=${isDisabled}
+          ?loading=${this.readyToEndDiscussionLoading}
+          @click=${onClick}
+        >
+          Ready to end discussion
+        </pr-button>
+      </pr-tooltip>
     `;
-    return isDisabled
-      ? html`<pr-tooltip text="You can move on once others are also ready to move on."
-      position="BOTTOM_RIGHT"
-          >${buttonHTML}</pr-tooltip
-        >`
-      : buttonHTML;
   }
 
   override render() {

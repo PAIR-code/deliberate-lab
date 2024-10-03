@@ -5,12 +5,12 @@ import { CohortService } from "./services/cohort.service";
 import { ExperimentService } from "./services/experiment.service";
 import { FirebaseService } from "./services/firebase.service";
 import { HomeService } from "./services/home.service";
+import { ImageService } from "./services/image.service";
 import { InitializationService } from "./services/initialization.service";
 import { ParticipantService } from "./services/participant.service";
+import { ParticipantAnswerService } from "./services/participant.answer";
 import { RouterService } from "./services/router.service";
 import { SettingsService } from "./services/settings.service";
-import { SurveyService } from "./services/survey.service";
-
 import { ExperimentEditor } from "./services/experiment.editor";
 import { ExperimentManager } from "./services/experiment.manager";
 
@@ -37,20 +37,23 @@ export function makeServiceProvider(self: Core) {
     get homeService() {
       return self.getService(HomeService);
     },
+    get imageService() {
+      return self.getService(ImageService);
+    },
     get initializationService() {
       return self.getService(InitializationService);
     },
     get participantService() {
       return self.getService(ParticipantService);
     },
+    get participantAnswerService() {
+      return self.getService(ParticipantAnswerService);
+    },
     get routerService() {
       return self.getService(RouterService);
     },
     get settingsService() {
       return self.getService(SettingsService);
-    },
-    get surveyService() {
-      return self.getService(SurveyService);
     },
     // Editors
     get experimentEditor() {

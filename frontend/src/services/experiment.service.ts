@@ -14,6 +14,7 @@ import {
   Experiment,
   StageConfig,
 } from '@deliberation-lab/utils';
+import {getPublicExperimentName} from '../shared/experiment.utils';
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
@@ -52,10 +53,9 @@ export class ExperimentService extends Service {
     this.isStageConfigsLoading = value;
   }
 
-  updateForCurrentRoute() {
-    const id = this.sp.routerService.activeRoute.params['experiment'];
-    if (id !== this.experiment?.id) {
-      this.loadExperiment(id);
+  updateForRoute(experimentId: string) {
+    if (experimentId !== this.experiment?.id) {
+      this.loadExperiment(experimentId);
     }
   }
 
@@ -109,8 +109,12 @@ export class ExperimentService extends Service {
     this.experiment = undefined;
   }
 
-  @computed get experimentName() {
-    return this.experiment?.metadata?.name ?? 'Experiment';
+  reset() {
+    this.unsubscribeAll();
+  }
+
+  @computed get experimentPublicName() {
+    return getPublicExperimentName(this.experiment);
   }
 
   @computed get stageIds(): string[] {

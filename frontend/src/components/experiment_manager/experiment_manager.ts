@@ -37,12 +37,6 @@ export class ExperimentManagerComponent extends MobxLitElement {
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentService = core.getService(ExperimentService);
 
-  connectedCallback() {
-    super.connectedCallback();
-    this.experimentService.updateForCurrentRoute();
-    this.experimentManager.updateForCurrentRoute();
-  }
-
   override render() {
     if (this.experimentManager.isEditingFull) {
       return this.renderEditor();

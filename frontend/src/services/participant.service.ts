@@ -28,8 +28,8 @@ import {computed, makeObservable, observable} from 'mobx';
 import {CohortService} from './cohort.service';
 import {ExperimentService} from './experiment.service';
 import {FirebaseService} from './firebase.service';
-import {Pages,RouterService} from './router.service';
-import {SurveyService} from './survey.service';
+import {Pages, RouterService} from './router.service';
+import {ParticipantAnswerService} from './participant.answer';
 import {Service} from './service';
 
 import {
@@ -54,7 +54,7 @@ interface ServiceProvider {
   experimentService: ExperimentService;
   firebaseService: FirebaseService;
   routerService: RouterService;
-  surveyService: SurveyService;
+  participantAnswerService: ParticipantAnswerService;
 }
 
 export class ParticipantService extends Service {
@@ -158,9 +158,10 @@ export class ParticipantService extends Service {
     return stageAnswer.discussionTimestampMap[discussionId];
   }
 
-  updateForCurrentRoute() {
-    const eid = this.sp.routerService.activeRoute.params['experiment'];
-    const pid = this.sp.routerService.activeRoute.params['participant'];
+  updateForRoute(
+    eid: string, // experiment ID
+    pid: string // participant ID
+  ) {
     if (eid !== this.experimentId || pid !== this.participantId) {
       this.setParticipant(eid, pid);
     }
@@ -168,12 +169,19 @@ export class ParticipantService extends Service {
 
   loadParticipantData() {
     this.unsubscribeAll();
+    this.sp.participantAnswerService.resetData();
 
     if (this.experimentId === null || this.participantId === null) {
       this.isLoading = false;
       return;
     }
 
+    // Set IDs for participant answer service
+    this.sp.participantAnswerService.updateForRoute(
+      this.experimentId, this.participantId
+    );
+
+    // Subscribe to profile
     this.unsubscribe.push(
       onSnapshot(
         doc(
@@ -185,7 +193,16 @@ export class ParticipantService extends Service {
         ),
         (doc) => {
           this.profile = doc.data() as ParticipantProfileExtended;
-          this.sp.cohortService.loadCohortData(this.profile.currentCohortId);
+          // Load cohort data
+          if (this.experimentId) {
+            this.sp.cohortService.loadCohortData(
+              this.experimentId,
+              this.profile.currentCohortId
+            );
+          }
+          // Load profile to participant answer service
+          this.sp.participantAnswerService.setProfile(this.profile);
+
           this.isProfileLoading = false;
         }
       )
@@ -210,10 +227,8 @@ export class ParticipantService extends Service {
           changedDocs.forEach((doc) => {
             const answer = doc.data() as StageParticipantAnswer;
             this.answerMap[doc.id] = answer;
-            // Load relevant answers to survey service
-            if (answer.kind === StageKind.SURVEY) {
-              this.sp.surveyService.addSurveyAnswer(answer);
-            }
+            // Load answers to participant answer service
+            this.sp.participantAnswerService.addAnswer(doc.id, answer);
           });
           this.areAnswersLoading = false;
         }
@@ -227,6 +242,14 @@ export class ParticipantService extends Service {
 
     this.profile = undefined;
     this.answerMap = {};
+    this.sp.participantAnswerService.reset();
+  }
+
+  reset() {
+    this.experimentId = null;
+    this.participantId = null;
+    this.unsubscribeAll();
+    this.sp.cohortService.reset();
   }
 
   // *********************************************************************** //
@@ -235,20 +258,23 @@ export class ParticipantService extends Service {
 
   /** Save last stage and complete experiment with success. */
   async completeLastStage() {
-    if (!this.profile) {
+    // Use participant answer service verison of profile,
+    // which might have updates that need to be written to Firestore
+    const profile = this.sp.participantAnswerService.profile;
+    if (!profile) {
       return;
     }
 
     // Add progress timestamps
     const timestamp = Timestamp.now();
 
-    const completedStages = this.profile.timestamps.completedStages;
-    completedStages[this.profile.currentStageId] = timestamp;
+    const completedStages = profile.timestamps.completedStages;
+    completedStages[profile.currentStageId] = timestamp;
 
     const endExperiment = timestamp;
 
     const timestamps = {
-      ...this.profile.timestamps,
+      ...profile.timestamps,
       completedStages,
       endExperiment
     };
@@ -258,7 +284,7 @@ export class ParticipantService extends Service {
 
     return await this.updateProfile(
       {
-        ...this.profile,
+        ...profile,
         currentStatus,
         timestamps
       }
@@ -295,7 +321,6 @@ export class ParticipantService extends Service {
   }
 
   async routeToEndExperiment(currentStatus: ParticipantStatus) {
-    
     const config = this.sp.experimentService.experiment?.prolificConfig;
 
     // Redirect to Prolific
@@ -309,43 +334,46 @@ export class ParticipantService extends Service {
 
      // Navigate to Prolific with completion code
       window.location.href = PROLIFIC_COMPLETION_URL_PREFIX + redirectCode;
-    } 
-    
+    }
+
     else {
       if (currentStatus === ParticipantStatus.BOOTED_OUT) {
         this.sp.routerService.navigate(Pages.HOME);
       } else {
-      this.sp.routerService.navigate(Pages.PARTICIPANT, {
-        'experiment': this.experimentId!,
-        'participant': this.profile!.privateId,
-      });
+        this.sp.routerService.navigate(Pages.PARTICIPANT, {
+          'experiment': this.experimentId!,
+          'participant': this.profile!.privateId,
+        });
       }
     }
   }
 
   /** Move to next stage. */
   async progressToNextStage() {
-    if (!this.experimentId || !this.profile) {
+    // Use participant answer profile (as it may include frontend-only
+    // updates that should be written to Firestore)
+    const profile = this.sp.participantAnswerService.profile;
+    if (!this.experimentId || !profile) {
       return;
     }
 
     // Get new stage ID
     const currentStageId = this.sp.experimentService.getNextStageId(
-      this.profile.currentStageId
+      profile.currentStageId
     );
     if (currentStageId === null) return;
 
     // Add progress timestamp
-    const completedStages = this.profile.timestamps.completedStages;
-    completedStages[this.profile.currentStageId] = Timestamp.now();
+    const completedStages = profile.timestamps.completedStages;
+    completedStages[profile.currentStageId] = Timestamp.now();
     const timestamps = {
-      ...this.profile.timestamps,
+      ...profile.timestamps,
       completedStages
     };
 
     await this.updateProfile(
       {
-        ...this.profile,
+        ...profile,
         currentStageId,
         timestamps
       }
@@ -354,7 +382,10 @@ export class ParticipantService extends Service {
   }
 
   /** Update participant profile */
-  async updateProfile(config: Partial<ParticipantProfileExtended>) {
+  async updateProfile(
+    config: Partial<ParticipantProfileExtended>,
+    isTransfer = false
+  ) {
     if (!this.profile) {
       return;
     }
@@ -366,6 +397,7 @@ export class ParticipantService extends Service {
       response = await updateParticipantCallable(
         this.sp.firebaseService.functions, {
           experimentId: this.experimentId,
+          isTransfer,
           participantConfig
         }
       );
@@ -408,7 +440,8 @@ export class ParticipantService extends Service {
         transferCohortId: null,
         currentStageId,
         currentStatus: ParticipantStatus.IN_PROGRESS,
-      }
+      },
+      true
     );
   }
 
@@ -473,7 +506,7 @@ export class ParticipantService extends Service {
     return response;
   }
 
-  /** Update participant's survey stage answer. */
+  /** Update single participant survey stage answer. */
   async updateSurveyStageParticipantAnswer(
     id: string, // survey stage ID
     updatedAnswer: SurveyAnswer,
@@ -500,12 +533,37 @@ export class ParticipantService extends Service {
     return response;
   }
 
+  /** Update participant survey answerMap. */
+  async updateSurveyStageParticipantAnswerMap(
+    id: string, // survey stage ID,
+    answerMap: Record<string, SurveyAnswer>, // map of question ID to answer
+  ) {
+    let response = {};
+
+    let participantAnswer = this.answerMap[id] as SurveyStageParticipantAnswer;
+    if (!participantAnswer) {
+      participantAnswer = createSurveyStageParticipantAnswer({id});
+    }
+    participantAnswer.answerMap = answerMap;
+
+    if (this.experimentId && this.profile) {
+      response = await updateSurveyStageParticipantAnswerCallable(
+        this.sp.firebaseService.functions, {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          participantPrivateId: this.profile.privateId,
+          participantPublicId: this.profile.publicId,
+          surveyStageParticipantAnswer: participantAnswer,
+        }
+      );
+    }
+    return response;
+  }
+
   /** Update participant's ranking stage answer. */
   async updateRankingStageParticipantAnswer(
     stageId: string, // ranking stage ID
-    strategy: ElectionStrategy,
     rankingList: string[], // list of rankings
-    rankingItems: RankingItem[] | null
   ) {
     let response = {};
     if (this.experimentId && this.profile) {
@@ -516,9 +574,7 @@ export class ParticipantService extends Service {
           participantPublicId: this.profile.publicId,
           participantPrivateId: this.profile.privateId,
           stageId,
-          strategy,
           rankingList,
-          rankingItems: rankingItems ?? [],
         }
       );
     }

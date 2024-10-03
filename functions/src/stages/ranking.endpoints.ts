@@ -99,10 +99,9 @@ export const updateRankingStageParticipantAnswer = onCall(async (request) => {
       }
     }
 
-    if (data.strategy === ElectionStrategy.CONDORCET) {
-      publicStageData.currentWinner = getCondorcetElectionWinner(participantAnswerMap);
-    }
-    publicStageData.rankingItems = data.rankingItems;
+    // Calculate winner (not used in frontend if strategy is none)
+    publicStageData.winnerId = getCondorcetElectionWinner(participantAnswerMap);
+
     transaction.set(publicDocument, publicStageData);
   });
 

@@ -254,7 +254,7 @@ export function calculateSurveyPayoutItemResult(
   if (item.rankingStageId) {
     const rankingStageData = publicDataMap[item.rankingStageId];
     if (rankingStageData && rankingStageData.kind === StageKind.RANKING) {
-      rankingWinner = rankingStageData.currentWinner;
+      rankingWinner = rankingStageData.winnerId;
     } else {
       return null; // can't calculate payout with missing ranking stage
     }

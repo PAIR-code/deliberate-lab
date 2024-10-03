@@ -13,12 +13,13 @@ import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {FirebaseService} from '../../services/firebase.service';
+import {ImageService} from '../../services/image.service';
 import {ParticipantService} from '../../services/participant.service';
+import {ParticipantAnswerService} from '../../services/participant.answer';
 import {RouterService} from '../../services/router.service';
 
 import {
   ParticipantProfile,
-  RankingStageParticipantAnswer,
   ItemRankingStage,
   RankingStageConfig,
   RankingItem,
@@ -41,11 +42,12 @@ export class RankingView extends MobxLitElement {
   private readonly cohortService = core.getService(CohortService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly firebaseService = core.getService(FirebaseService);
+  private readonly imageService = core.getService(ImageService);
+  private readonly participantAnswerService = core.getService(ParticipantAnswerService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
   @property() stage: RankingStageConfig | undefined = undefined;
-  @property() answer: RankingStageParticipantAnswer | undefined = undefined;
 
   private getItems() {
     if (this.stage?.rankingType === RankingType.PARTICIPANTS) {
@@ -81,14 +83,23 @@ export class RankingView extends MobxLitElement {
     // TODO: Don't show obsolete participants if they never interacted
     // (e.g., during group chat)
     const items = this.getItems();
-    const disabled = (this.answer?.rankingList ?? []).length < items.length;
+    const disabled = this.participantAnswerService.getNumRankings(this.stage.id) < items.length;
+
+    const saveRankings = async () => {
+      if (!this.stage) return;
+      // Write rankings to Firestore
+      this.participantService.updateRankingStageParticipantAnswer(
+        this.stage.id,
+        this.participantAnswerService.getRankingList(this.stage.id),
+      )
+    };
 
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="ranking-wrapper">
         ${this.renderStartZone()} ${this.renderEndZone()}
       </div>
-      <stage-footer .disabled=${disabled}>
+      <stage-footer .disabled=${disabled} .onNextClick=${saveRankings}>
         ${this.stage.progress.showParticipantProgress
           ? html`<progress-stage-completed></progress-stage-completed>`
           : nothing}
@@ -97,6 +108,9 @@ export class RankingView extends MobxLitElement {
   }
 
   private renderStartZone() {
+    if (!this.stage) return;
+    const rankingList = this.participantAnswerService.getRankingList(this.stage.id);
+
     return html`
       <div class="start-zone">
         ${this.getItems()
@@ -104,12 +118,7 @@ export class RankingView extends MobxLitElement {
           .sort((p1, p2) =>
             this.getItemId(p1).localeCompare(this.getItemId(p2))
           )
-          .filter(
-            (i) =>
-              !(this.answer?.rankingList ?? []).find(
-                (id) => id === this.getItemId(i)
-              )
-          )
+          .filter((i) => !rankingList.find((id) => id === this.getItemId(i)))
           .map((i) => this.renderDraggableParticipant(i))}
       </div>
     `;
@@ -142,10 +151,11 @@ export class RankingView extends MobxLitElement {
     const renderImage = () => {
       if (item.imageId.length === 0) return nothing;
 
-      const image = document.createElement('img');
-      this.firebaseService.setImage(image, item.imageId);
-
-      return html`<div class="img-wrapper">${image}</div>`;
+      return html`
+        <div class="img-wrapper">
+          <img src=${this.imageService.getImageSrc(item.imageId)} />
+        </div>
+      `;
     };
 
     return html`
@@ -179,15 +189,13 @@ export class RankingView extends MobxLitElement {
     const onAddToRanking = () => {
       if (!this.stage || !item) return;
       const rankings = [
-        ...(this.answer?.rankingList ?? []),
+        ...this.participantAnswerService.getRankingList(this.stage.id),
         this.getItemId(item),
       ];
       // Update ranking list
-      this.participantService.updateRankingStageParticipantAnswer(
+      this.participantAnswerService.updateRankingAnswer(
         this.stage.id,
-        this.stage.strategy,
         rankings,
-        items
       );
     };
 
@@ -236,7 +244,7 @@ export class RankingView extends MobxLitElement {
         event.preventDefault();
         target.classList.remove('drag-over');
 
-        const currentRankings = this.answer?.rankingList ?? [];
+        const currentRankings = this.participantAnswerService.getRankingList(this.stage.id);
         const itemId = event.dataTransfer.getData('text/plain');
 
         // Create new rankings (using answerIndex to slot participant in)
@@ -261,11 +269,9 @@ export class RankingView extends MobxLitElement {
           ...rankings.slice(newIndex),
         ];
         // Update ranking list
-        this.participantService.updateRankingStageParticipantAnswer(
+        this.participantAnswerService.updateRankingAnswer(
           this.stage.id,
-          this.stage.strategy,
           rankings,
-          items
         );
       }
     };
@@ -289,17 +295,16 @@ export class RankingView extends MobxLitElement {
     item: ParticipantProfile | RankingItem,
     index: number
   ) {
-    const rankings = this.answer?.rankingList ?? [];
+    if (!this.stage) return;
+    const rankings = this.participantAnswerService.getRankingList(this.stage.id);
     const onCancel = () => {
       if (index === -1 || !this.stage) {
         return;
       }
 
-      this.participantService.updateRankingStageParticipantAnswer(
+      this.participantAnswerService.updateRankingAnswer(
         this.stage.id,
-        this.stage.strategy,
         [...rankings.slice(0, index), ...rankings.slice(index + 1)],
-        items
       );
     };
     const items = (this.stage as ItemRankingStage).rankingItems ?? [];
@@ -312,11 +317,9 @@ export class RankingView extends MobxLitElement {
         ...rankings.slice(index - 1, index),
         ...rankings.slice(index + 1),
       ];
-      this.participantService.updateRankingStageParticipantAnswer(
+      this.participantAnswerService.updateRankingAnswer(
         this.stage.id,
-        this.stage.strategy,
         rankingList,
-        items
       );
     };
 
@@ -328,11 +331,9 @@ export class RankingView extends MobxLitElement {
         ...rankings.slice(index, index + 1),
         ...rankings.slice(index + 2),
       ];
-      this.participantService.updateRankingStageParticipantAnswer(
+      this.participantAnswerService.updateRankingAnswer(
         this.stage.id,
-        this.stage.strategy,
         rankingList,
-        items
       );
     };
 
@@ -392,6 +393,9 @@ export class RankingView extends MobxLitElement {
   }
 
   private renderEndZone() {
+    if (!this.stage) return;
+    const rankingList = this.participantAnswerService.getRankingList(this.stage.id);
+
     return html`
       <div class="end-zone">
         <div class="zone-header">
@@ -400,14 +404,14 @@ export class RankingView extends MobxLitElement {
             Drag and drop to rank, placing your most preferred at the top.
           </div>
         </div>
-        ${this.answer?.rankingList.map((id: string, index: number) => {
+        ${rankingList.map((id: string, index: number) => {
           const item = this.getItems().find(
             (item) => this.getItemId(item) === id
           );
 
           return item ? this.renderRankedItem(item, index) : nothing;
         })}
-        ${this.renderDragZone((this.answer?.rankingList ?? []).length, true)}
+        ${this.renderDragZone(rankingList.length, true)}
       </div>
     `;
   }

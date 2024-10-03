@@ -19,7 +19,7 @@ import {
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {
-  getExperimentName
+  getPrivateExperimentName
 } from '../../shared/experiment.utils';
 
 import {styles} from './experiment_builder_nav.scss';
@@ -56,7 +56,7 @@ export class ExperimentBuilderNav extends MobxLitElement {
       >
         <pr-icon icon="edit_note"></pr-icon>
         <div class="primary">
-          ${getExperimentName(this.experimentEditor.experiment, 'Experiment config')}
+          ${getPrivateExperimentName(this.experimentEditor.experiment, 'Experiment config')}
         </div>
       </div>
     `;

@@ -19,9 +19,7 @@ import {
 import {
   connectStorageEmulator,
   FirebaseStorage,
-  getDownloadURL,
   getStorage,
-  ref
 } from "firebase/storage";
 import { makeObservable } from "mobx";
 
@@ -66,16 +64,6 @@ export class FirebaseService extends Service {
   provider: GoogleAuthProvider;
   storage: FirebaseStorage;
   unsubscribe: Unsubscribe[] = [];
-
-  setImage(imageElement: HTMLImageElement, imageId: string) {
-    const imageRef = ref(this.storage, `images/${imageId}`);
-    getDownloadURL(imageRef).then((url) => {
-      imageElement.setAttribute('src', url);
-    })
-    .catch((error) => {
-      // Handle any errors
-    });
-  }
 
   registerEmulators() {
     connectFirestoreEmulator(
