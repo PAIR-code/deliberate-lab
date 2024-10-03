@@ -41,14 +41,13 @@ export class ChatPanel extends MobxLitElement {
   }
 
   private renderMediatorsList() {
-    if (!this.authService.isExperimenter || !this.stage) {
+    if (!this.authService.isDebugMode || !this.stage) {
       return;
     }
 
     const mediators = this.stage.mediators;
-    if (!mediators) {
-      return;
-    }
+    if (!mediators) return;
+
     return html`
       <div class="panel-item">
         <div class="panel-item-title">Agents (${mediators.length})</div>
@@ -76,12 +75,13 @@ export class ChatPanel extends MobxLitElement {
     return html`
       <pr-tooltip text=${mediator.prompt} position="BOTTOM_END">
         <div class="profile">
-          <profile-avatar .emoji=${mediator.avatar}> </profile-avatar>
+          <profile-avatar .emoji=${mediator.avatar}></profile-avatar>
           <div class="name">${mediator.name}</div>
         </div>
       </pr-tooltip>
     `;
   }
+
   private renderProfile(profile: ParticipantProfile) {
     return html`
       <div class="profile">

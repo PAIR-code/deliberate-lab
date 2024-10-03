@@ -16,11 +16,10 @@
 .panel-item-title {
   @include typescale.title-small;
 }
+
 .panel-item-subtitle {
-  margin-top: -4px;
-  font-size: 12px;
-  font-style: italic;
-  color: var(--md-sys-color-secondary);
+  @include typescale.label-small;
+  color: var(--md-sys-color-tertiary);
 }
 
 .profile {
