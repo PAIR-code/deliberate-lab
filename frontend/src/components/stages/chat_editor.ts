@@ -155,6 +155,13 @@ export class ChatEditor extends MobxLitElement {
         chat history (last 10 messages) and sent to the model
         (i.e., chat history + custom prompt => response)
       </div>
+      <div class="description">
+        <b>If JSON parsing enabled:</b> Make sure to
+        include appropriate instructions/examples in your prompt to
+        avoid parsing errors (if the specified message field is non-empty,
+        its contents will be turned into a chat message).
+        <b>If disabled:</b> non-empty responses will be turned into messages.
+      </div>
       <pr-textarea
         placeholder="Custom prompt for mediator"
         variant="outlined"
@@ -267,8 +274,7 @@ export class ChatEditor extends MobxLitElement {
         >
         </md-checkbox>
         <div>
-          Parse mediator response as JSON (tip: include appropriate
-          instructions/examples in prompt so that valid JSON is returned)
+          Parse mediator response as JSON
         </div>
       </div>
       ${!config.isJSON ? nothing : html`
