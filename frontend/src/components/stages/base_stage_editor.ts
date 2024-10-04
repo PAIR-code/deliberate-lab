@@ -154,7 +154,7 @@ export class BaseStageEditorComponent extends MobxLitElement {
         <div class="checkbox-wrapper">
           <md-checkbox
             touch-target="wrapper"
-            ?checked=${mustWait || waitForAllParticipants}
+            ?checked=${waitForAllParticipants}
             ?disabled=${mustWait || !this.experimentEditor.canEditStages}
             @click=${updateCheck}
           >
