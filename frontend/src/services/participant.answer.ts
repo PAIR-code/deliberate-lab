@@ -91,13 +91,6 @@ export class ParticipantAnswerService extends Service {
   }
 
   addAnswer(stageId: string, answer: StageParticipantAnswer) {
-    switch (answer.kind) {
-      case StageKind.SURVEY:
-        return this.addSurveyAnswer(stageId, answer);
-    }
-  }
-
-  addSurveyAnswer(stageId: string, answer: SurveyStageParticipantAnswer) {
     this.areAnswersLoading = true;
     this.answerMap[stageId] = answer;
     this.areAnswersLoading = false;
