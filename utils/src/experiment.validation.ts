@@ -60,6 +60,7 @@ export const ExperimentCreationData = Type.Object(
     experimentConfig: Type.Object(
       {
         id: Type.String(),
+        versionId: Type.Number(),
         metadata: MetadataConfigSchema,
         permissions: PermissionsConfigSchema,
         defaultCohortConfig: CohortParticipantConfigSchema,
