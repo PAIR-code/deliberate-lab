@@ -66,9 +66,22 @@ export const createMediatorMessage = onDocumentCreated(
       const response = await getGeminiAPIResponse(apiKeys.geminiKey, prompt);
 
       // Add mediator message if non-empty
-      const parsed = JSON.parse(response.text);
-      const isJSON = mediator.responseConfig.isJSON;
-      const message = isJSON ? (parsed[mediator.responseConfig.messageField] ?? '') : response.text;
+      let message = response.text;
+      let parsed = '';
+
+      if (mediator.responseConfig.isJSON) {
+        // Reset message to empty before trying to fill with JSON response
+        message = '';
+
+        try {
+          // TODO: Hack to get rid of markdown ticks surrounding {} ?
+          parsed = JSON.parse(response.text);
+        } catch {
+          // Response is already logged in console during Gemini API call
+          console.log('Could not parse JSON!');
+        }
+        message = parsed[mediator.responseConfig.messageField] ?? '';
+      }
 
       if (message.trim() === '') break;
       mediatorMessages.push({ mediator, parsed, message });
