@@ -13,9 +13,14 @@ import { StageConfig } from './stages/stage';
 // TYPES                                                                     //
 // ************************************************************************* //
 
+/** Increment this ID when changes to any Firestore objects are made. */
+export const EXPERIMENT_VERSION_ID = 0;
+
 /** Experiment. */
 export interface Experiment {
   id: string;
+  // Track current version for backwards compatibility
+  versionId: number;
   metadata: MetadataConfig;
   permissions: PermissionsConfig;  
   defaultCohortConfig: CohortParticipantConfig; // used by default for cohorts
@@ -66,6 +71,7 @@ export function createExperimentConfig(
 ): Experiment {
   return {
     id: config.id ?? generateId(),
+    versionId: EXPERIMENT_VERSION_ID,
     metadata: config.metadata ?? createMetadataConfig(),
     permissions: config.permissions ?? createPermissionsConfig(),
     defaultCohortConfig: config.defaultCohortConfig ?? createCohortParticipantConfig(),
