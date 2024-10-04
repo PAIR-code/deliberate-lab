@@ -92,5 +92,17 @@
 
 .action-bar {
   @include common.flex-row;
-  justify-content: end;
+  @include typescale.label-small;
+  gap: common.$spacing-small;
+  justify-content: space-between;
+}
+
+.checkbox-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+  overflow-wrap: break-word;
+
+  md-checkbox {
+    flex-shrink: 0;
+  }
 }

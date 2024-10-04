@@ -5,6 +5,8 @@ import '../../pair-components/tooltip';
 import "./experimenter_data_editor";
 import './experimenter_manual_chat';
 
+import '@material/web/checkbox/checkbox.js';
+
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
@@ -182,6 +184,15 @@ export class Panel extends MobxLitElement {
         stageId, {...mediator, prompt}, index
       );
     };
+    const updateJSON = () => {
+      const responseConfig = {
+        ...mediator.responseConfig,
+        isJSON: !mediator.responseConfig.isJSON,
+      };
+      this.mediatorEditor.updateMediator(
+        stageId, {...mediator, responseConfig}, index
+      );
+    };
 
     return html`
       <div class="mediator">
@@ -199,6 +210,17 @@ export class Panel extends MobxLitElement {
           >
           </pr-textarea>
           <div class="action-bar">
+            <div class="checkbox-wrapper">
+              <md-checkbox
+                touch-target="wrapper"
+                ?checked=${mediator.responseConfig.isJSON}
+                @click=${updateJSON}
+              >
+              </md-checkbox>
+              <div>
+                Parse as JSON
+              </div>
+            </div>
             <pr-button
               color="secondary"
               padding="small"
