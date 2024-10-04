@@ -29,6 +29,7 @@ export class MediatorEditor extends Service {
   // Experiment ID
   @observable experimentId: string|null = null;
   // Stage ID to chat config
+  // TODO: Map from stage ID to MediatorConfig list?
   @observable configMap: Record<string, ChatStageConfig> = {};
 
   setExperimentId(id: string) {
