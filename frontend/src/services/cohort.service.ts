@@ -185,16 +185,21 @@ export class CohortService extends Service {
 
     // Check for min number of participants
     const numUnlocked = this.getUnlockedStageParticipants(stageId).length;
-    if (stageConfig.progress.minParticipants > numUnlocked) return true;
+    const hasMinParticipants = () => {
+      return stageConfig.progress.minParticipants <= numUnlocked;
+    };
 
     // Otherwise, if waitForParticipants is true, check for locked participants
-    if (!stageConfig.progress.waitForAllParticipants) return false;
+    if (!stageConfig.progress.waitForAllParticipants) {
+      return !hasMinParticipants();
+    }
 
     const numLocked = this.getLockedStageParticipants(stageId).length;
     const numCompleted = this.getAllParticipants().filter(
       participant => participant.timestamps.completedStages[stageId]
     ).length;
-    return numLocked > 0 && numCompleted === 0;
+
+    return (numLocked > 0 && numCompleted === 0) || !hasMinParticipants();
   }
 
   getChatDiscussionMessages(stageId: string, discussionId: string) {
