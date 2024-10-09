@@ -33,6 +33,7 @@ export class Settings extends MobxLitElement {
         ${this.renderAccountSection()}
         ${this.authService.isExperimenter ? this.renderExperimenterData() : nothing}
         ${this.authService.isExperimenter ? this.renderAppVersionSection() : nothing}
+        ${this.renderReferenceSection()}
       </div>
     `;
   }
@@ -223,6 +224,29 @@ export class Settings extends MobxLitElement {
         <experimenter-data-editor></experimenter-data-editor>
       </div>
     `;
+  }
+
+  private renderReferenceSection() {
+    return html`
+    <div class="section">
+      <div class="action-buttons">
+        <pr-button
+          color="secondary"
+          variant="tonal"
+          @click=${() => window.open(`https://github.com/PAIR-code/deliberate-lab/wiki/Getting-started-(for-researchers)`, "_blank")}
+        >
+          📚 View the documentation
+        </pr-button>
+        <pr-button
+          color="secondary"
+          variant="tonal"
+          @click=${() => window.open(`https://github.com/PAIR-code/deliberate-lab/issues/new`, "_blank")}
+        >
+          🐞 Report a bug
+        </pr-button>
+      </div>
+    </div>
+  `;
   }
 }
 
