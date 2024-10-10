@@ -38,6 +38,7 @@ import {
 
 
 import {styles} from './stage_builder_dialog.scss';
+import { RTV_METADATA, getRTVStageConfigs } from '../../shared/games/reality_tv_chat';
 
 /** Stage builder dialog */
 @customElement('stage-builder-dialog')
@@ -102,6 +103,7 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()}
         ${this.renderNegotiationCard()}
+        ${this.renderRealityTVCard()}
       </div>
     `;
   }
@@ -150,6 +152,22 @@ export class StageBuilderDialog extends MobxLitElement {
       </div>
     `;
   }
+
+  private renderRealityTVCard() {
+    const addGame = () => {
+      this.addGame(RTV_METADATA, getRTVStageConfigs());
+    };
+
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">🚧 Reality TV Discussion</div>
+        <div>
+          A conversation between multiple agents who discuss reality TV shows.
+        </div>
+      </div>
+    `;
+  }
+
 
   private renderNegotiationCard() {
     const addGame = () => {

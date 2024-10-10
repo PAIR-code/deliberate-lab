@@ -4,7 +4,10 @@ import {
   ChatMessage,
   ChatMessageType,
   StageKind,
-  addChatHistoryToPrompt,
+  awaitTypingDelay,
+  getPreface,
+  getInstructions,
+  getChatHistory,
   createAgentMediatorChatMessage,
   MediatorConfig,
 } from '@deliberation-lab/utils';
@@ -23,7 +26,6 @@ export const createMediatorMessage = onDocumentCreated(
   'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}',
   async (event) => {
     const data = event.data?.data() as ChatMessage | undefined;
-    if (data?.type !== ChatMessageType.PARTICIPANT) return;
 
     // Use experiment config to get ChatStageConfig with mediators.
     const stage = (
@@ -59,9 +61,9 @@ export const createMediatorMessage = onDocumentCreated(
     // Fetch messages from all mediators
     const mediatorMessages: MediatorMessage[] = [];
     for (const mediator of stage.mediators) {
+      if (mediator.isMuted) continue;
       // Use last 10 messages to build chat history
-      const prompt = addChatHistoryToPrompt(chatMessages.slice(-10), mediator.prompt);
-
+      const prompt = `${getPreface(mediator)}\n${getChatHistory(chatMessages.slice(-10), mediator)}\n${getInstructions(mediator)}`;
       // Call Gemini API with given modelCall info
       const response = await getGeminiAPIResponse(apiKeys.geminiKey, prompt);
 
@@ -69,13 +71,14 @@ export const createMediatorMessage = onDocumentCreated(
       let message = response.text;
       let parsed = '';
 
+      console.log(prompt);
       if (mediator.responseConfig.isJSON) {
         // Reset message to empty before trying to fill with JSON response
         message = '';
 
         try {
-          // TODO: Hack to get rid of markdown ticks surrounding {} ?
-          parsed = JSON.parse(response.text);
+          const cleanedText = response.text.replace(/```json\s*|\s*```/g, '').trim();
+          parsed = JSON.parse(cleanedText);
         } catch {
           // Response is already logged in console during Gemini API call
           console.log('Could not parse JSON!');
@@ -83,11 +86,18 @@ export const createMediatorMessage = onDocumentCreated(
         message = parsed[mediator.responseConfig.messageField] ?? '';
       }
 
-      if (message.trim() === '') break;
+      const trimmed = message.trim();
+      if (trimmed === '' || trimmed === '""' || trimmed === "''") continue;
       mediatorMessages.push({ mediator, parsed, message });
     }
 
     if (mediatorMessages.length === 0) return;
+
+    // Show all of the potential messages.
+    console.log('The following participants wish to speak:');
+    mediatorMessages.forEach((message) => {
+      console.log(`\t${message.mediator.name}: ${message.message}`);
+    });
 
     // Randomly sample a message.
     const mediatorMessage = mediatorMessages[Math.floor(Math.random() * mediatorMessages.length)];
@@ -95,7 +105,9 @@ export const createMediatorMessage = onDocumentCreated(
     const message = mediatorMessage.message;
     const parsed = mediatorMessage.parsed;
 
-    // Don't send a message if the conversation has moved on. 
+    await awaitTypingDelay(message);
+
+    // Don't send a message if the conversation has moved on.
     const numChatsBeforeMediator = chatMessages.length;
     const numChatsAfterMediator = (
       await app
@@ -116,7 +128,9 @@ export const createMediatorMessage = onDocumentCreated(
       message,
       timestamp: Timestamp.now(),
       mediatorId: mediator.id,
-      explanation: mediator.responseConfig.isJSON ? (parsed[mediator.responseConfig.explanationField] ?? '') : '',
+      explanation: mediator.responseConfig.isJSON
+        ? (parsed[mediator.responseConfig.explanationField] ?? '')
+        : '',
     });
     const mediatorDocument = app
       .firestore()

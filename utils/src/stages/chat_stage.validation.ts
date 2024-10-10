@@ -86,6 +86,7 @@ export const UpdateChatMediatorsData = Type.Object(
         name: Type.String(),
         avatar: Type.String(),
         prompt: Type.String(),
+        isMuted: Type.Boolean(),
         responseConfig: Type.Object({
           isJSON: Type.Boolean(),
           messageField: Type.String(),
