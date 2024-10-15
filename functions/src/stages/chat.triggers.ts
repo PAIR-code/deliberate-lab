@@ -5,6 +5,8 @@ import {
   ChatMessageType,
   StageKind,
   addChatHistoryToPrompt,
+  getPreface,
+  getChatHistory,
   createAgentMediatorChatMessage,
   MediatorConfig,
 } from '@deliberation-lab/utils';
@@ -60,8 +62,8 @@ export const createMediatorMessage = onDocumentCreated(
     const mediatorMessages: MediatorMessage[] = [];
     for (const mediator of stage.mediators) {
       // Use last 10 messages to build chat history
-      const prompt = addChatHistoryToPrompt(chatMessages.slice(-10), mediator.prompt);
-
+      const prompt = `${getPreface(mediator)}\n${getChatHistory(chatMessages.slice(-10), mediator)}\n${mediator.responseConfig.formattingInstructions}`;
+      console.log(prompt);
       // Call Gemini API with given modelCall info
       const response = await getGeminiAPIResponse(apiKeys.geminiKey, prompt);
 
@@ -95,7 +97,7 @@ export const createMediatorMessage = onDocumentCreated(
     const message = mediatorMessage.message;
     const parsed = mediatorMessage.parsed;
 
-    // Don't send a message if the conversation has moved on. 
+    // Don't send a message if the conversation has moved on.
     const numChatsBeforeMediator = chatMessages.length;
     const numChatsAfterMediator = (
       await app
@@ -116,7 +118,9 @@ export const createMediatorMessage = onDocumentCreated(
       message,
       timestamp: Timestamp.now(),
       mediatorId: mediator.id,
-      explanation: mediator.responseConfig.isJSON ? (parsed[mediator.responseConfig.explanationField] ?? '') : '',
+      explanation: mediator.responseConfig.isJSON
+        ? (parsed[mediator.responseConfig.explanationField] ?? '')
+        : '',
     });
     const mediatorDocument = app
       .firestore()

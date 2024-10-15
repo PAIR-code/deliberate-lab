@@ -9,10 +9,7 @@ import {
   createStageTextConfig,
   createStageProgressConfig,
 } from './stage';
-import {
-  ParticipantProfileBase,
-  createParticipantProfileBase
-} from '../participant';
+import { ParticipantProfileBase, createParticipantProfileBase } from '../participant';
 
 /** Group chat stage types and functions. */
 
@@ -62,9 +59,7 @@ export interface DiscussionItem {
   name: string;
 }
 
-export type ChatDiscussion =
-  | DefaultChatDiscussion
-  | CompareChatDiscussion;
+export type ChatDiscussion = DefaultChatDiscussion | CompareChatDiscussion;
 
 /**
  * ChatMessage.
@@ -74,7 +69,7 @@ export type ChatDiscussion =
  */
 export interface BaseChatMessage {
   id: string;
-  discussionId: string|null; // discussion during which message was sent
+  discussionId: string | null; // discussion during which message was sent
   type: ChatMessageType;
   message: string;
   timestamp: UnifiedTimestamp;
@@ -121,6 +116,7 @@ export interface MediatorResponseConfig {
   messageField: string;
   // JSON field to extract explanation from
   explanationField: string;
+  formattingInstructions: string;
 }
 
 export type ChatMessage =
@@ -137,7 +133,7 @@ export type ChatMessage =
 export interface ChatStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.CHAT;
   // discussion ID --> readyToEndDiscussion timestamp (or null if not ready)
-  discussionTimestampMap: Record<string, UnifiedTimestamp|null>;
+  discussionTimestampMap: Record<string, UnifiedTimestamp | null>;
 }
 
 /**
@@ -149,35 +145,48 @@ export interface ChatStageParticipantAnswer extends BaseStageParticipantAnswer {
 export interface ChatStagePublicData extends BaseStagePublicData {
   kind: StageKind.CHAT;
   // discussionId --> map of participant public ID to readyToEndDiscussion timestamp
-  discussionTimestampMap: Record<string, Record<string, UnifiedTimestamp|null>>;
+  discussionTimestampMap: Record<string, Record<string, UnifiedTimestamp | null>>;
 }
 
 // ************************************************************************* //
 // CONSTANTS                                                                 //
 // ************************************************************************* //
-export const DEFAULT_MEDIATOR_PROMPT = `
-You are a mediator for the above chat conversation. Before responding,
-consider the following:
+export const DEFAULT_MEDIATOR_PROMPT = `You are a mediator for a chat conversation. Your task is to ensure that the conversation is polite.
+If you notice that participants are being rude, step in to make sure that everyone is respectful. 
+Otherwise, do not respond.`;
 
-1. Is everyone in the conversation being respectful?
-2. Did everyone have the opportunity to speak?
-3. Is anyone asking you (Mediator) a question?
+export const DEFAULT_RESPONSE_FIELD = 'response';
+export const DEFAULT_EXPLANATION_FIELD = 'explanation';
+export const DEFAULT_JSON_FORMATTING_INSTRUCTIONS = `INSTRUCTIONS:
+  Now, you have the opportunity to respond to the conversation. This response will be appended to the end of the transcript.
+  Fill out the following JSON response:
+    1. Do you want to add a message to the chat? ("true" or "false")
+    2. If yes, what would you like to say?
+    3. Why do you want to say that?
+  
+  IMPORTANT: Your output should be in a JSON dictionary exactly like the example output below. Just the JSON! Make sure the JSON is valid. No need to add any delimiters, just begin with a { bracket as in the example below.
+  
+  EXAMPLE OUTPUT:
+  {
+    "shouldRespond": true,
+    "${DEFAULT_RESPONSE_FIELD}": "This is my response.",
+    "${DEFAULT_EXPLANATION_FIELD}": "This is why I chose this response."
+  }
+  
+  EXAMPLE OUTPUT:
+  {
+    "shouldRespond": false,
+    "${DEFAULT_RESPONSE_FIELD}": "",
+    "${DEFAULT_EXPLANATION_FIELD}": "I have spoken recently and want to give others a chance to speak."
+  }`;
 
-If the answer to these questions is no, return nothing (empty string).
-
-Otherwise, please come up with a short response.
-Only include the response. Do not include any timestamps,
-speaker names, or reasoning.
-`;
-
+export const DEFAULT_STRING_FORMATTING_INSTRUCTIONS = `If you would like to respond, respond with the message you would like to send only (no timestamps or metadata), for example, "Hey everyone, please be respectful." This will be appended to the end of the chat transcript. If you don't wish to respond, respond with an empty string.`;
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
 
 /** Create chat stage. */
-export function createChatStage(
-  config: Partial<ChatStageConfig> = {}
-): ChatStageConfig {
+export function createChatStage(config: Partial<ChatStageConfig> = {}): ChatStageConfig {
   return {
     id: config.id ?? generateId(),
     kind: StageKind.CHAT,
@@ -192,30 +201,30 @@ export function createChatStage(
 
 /** Create chat default discussion. */
 export function createDefaultChatDiscussion(
-  config: Partial<DefaultChatDiscussion> = {}
+  config: Partial<DefaultChatDiscussion> = {},
 ): DefaultChatDiscussion {
   return {
     id: config.id ?? generateId(),
     type: ChatDiscussionType.DEFAULT,
     description: config.description ?? '',
-  }
+  };
 }
 
 /** Create compare chat discussion. */
 export function createCompareChatDiscussion(
-  config: Partial<CompareChatDiscussion> = {}
+  config: Partial<CompareChatDiscussion> = {},
 ): CompareChatDiscussion {
   return {
     id: config.id ?? generateId(),
     type: ChatDiscussionType.COMPARE,
     description: config.description ?? '',
     items: config.items ?? [],
-  }
+  };
 }
 
 /** Create participant chat message. */
 export function createParticipantChatMessage(
-  config: Partial<ParticipantChatMessage> = {}
+  config: Partial<ParticipantChatMessage> = {},
 ): ParticipantChatMessage {
   return {
     id: config.id ?? generateId(),
@@ -239,12 +248,12 @@ export function createHumanMediatorChatMessage(
     message: config.message ?? '',
     timestamp: config.timestamp ?? Timestamp.now(),
     profile: config.profile ?? { name: 'Mediator', avatar: '⭐', pronouns: null },
-  }
+  };
 }
 
 /** Create agent mediator chat message. */
 export function createAgentMediatorChatMessage(
-  config: Partial<AgentMediatorChatMessage> = {}
+  config: Partial<AgentMediatorChatMessage> = {},
 ): AgentMediatorChatMessage {
   return {
     id: config.id ?? generateId(),
@@ -259,31 +268,33 @@ export function createAgentMediatorChatMessage(
 }
 
 /** Convert chat messages into chat history string for prompt. */
-export function buildChatHistoryForPrompt(
-  messages: ChatMessage[]
-) {
+export function buildChatHistoryForPrompt(messages: ChatMessage[]) {
   const getTime = (timestamp: UnifiedTimestamp) => {
     const date = new Date(timestamp.seconds * 1000);
     return `(${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')})`;
   };
 
-  return messages.map(
-    message => `${getTime(message.timestamp)} ${message.profile.name}: ${message.message}`
-  ).join('\n\n');
+  return messages
+    .map((message) => `${getTime(message.timestamp)} ${message.profile.name}: ${message.message}`)
+    .join('\n');
 }
 
 /** Add chat messages (as history) to given prompt. */
-export function addChatHistoryToPrompt(
-  messages: ChatMessage[],
-  prompt: string
-) {
+export function addChatHistoryToPrompt(messages: ChatMessage[], prompt: string) {
   return `${buildChatHistoryForPrompt(messages)}\n\n${prompt}`;
 }
 
+export function getPreface(mediator: MediatorConfig) {
+  return `You are role-playing as ${mediator.avatar} ${mediator.name}, and you are participating in a conversation. You will be shown the conversation transcript. When you see ${mediator.avatar} ${mediator.name} as the ParticipantName in the transcript, that indicates a message that you previously sent. If the last message in the transcript is from ${mediator.name} ${mediator.name}, do not respond to yourself.`;
+}
+export function getChatHistory(messages: ChatMessage[], mediator: MediatorConfig) {
+  const latestMessage = messages[messages.length - 1];
+  const description = `The following is a conversation transcript between you and other participants. In the transcript, each entry follows the format (HH:MM) ParticipantName:  ParticipantMessage, where (HH:MM) is the timestamp of the message. The transcript is shown in sequential order from oldest message to latest message. The last entry is the most recent message. In this transcript, the latest message was written by ${latestMessage.profile.avatar} ${latestMessage.profile.name}. It said, ${latestMessage.message}.`;
+  return `${description}\n\nCONVERSATION TRANSCRIPT:\n\n${buildChatHistoryForPrompt(messages)}\n`;
+}
+
 /** Create agent mediator. */
-export function createMediatorConfig(
-  config: Partial<MediatorConfig> = {}
-): MediatorConfig {
+export function createMediatorConfig(config: Partial<MediatorConfig> = {}): MediatorConfig {
   return {
     id: config.id ?? generateId(),
     name: config.name ?? 'Mediator',
@@ -297,31 +308,34 @@ export function createMediatorConfig(
 export function createMediatorResponseConfig(
   config: Partial<MediatorResponseConfig> = {},
 ): MediatorResponseConfig {
+  const isJSON = config.isJSON ?? false;
   return {
-    isJSON: config.isJSON ?? false,
-    messageField: config.messageField ?? 'response',
-    explanationField: config.explanationField ?? 'explanation',
-  }
+    isJSON,
+    messageField: config.messageField ?? DEFAULT_RESPONSE_FIELD,
+    explanationField: config.explanationField ?? DEFAULT_EXPLANATION_FIELD,
+    formattingInstructions:
+      config.formattingInstructions ?? isJSON
+        ? DEFAULT_JSON_FORMATTING_INSTRUCTIONS
+        : DEFAULT_STRING_FORMATTING_INSTRUCTIONS,
+  };
 }
 
 /** Create participant chat stage answer. */
 export function createChatStageParticipantAnswer(
-  config: Partial<ChatStageParticipantAnswer>
+  config: Partial<ChatStageParticipantAnswer>,
 ): ChatStageParticipantAnswer {
   return {
     id: config.id ?? generateId(),
     kind: StageKind.CHAT,
     discussionTimestampMap: config.discussionTimestampMap ?? {},
-  }
+  };
 }
 
 /** Create chat stage public data. */
-export function createChatStagePublicData(
-  stage: ChatStageConfig,
-): ChatStagePublicData {
+export function createChatStagePublicData(stage: ChatStageConfig): ChatStagePublicData {
   return {
     id: stage.id,
     kind: StageKind.CHAT,
     discussionTimestampMap: {},
-  }
+  };
 }

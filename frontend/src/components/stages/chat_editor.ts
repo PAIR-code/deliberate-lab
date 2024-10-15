@@ -15,10 +15,10 @@ import {
   MediatorConfig,
   MediatorResponseConfig,
   createMediatorConfig,
+  DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
+  DEFAULT_STRING_FORMATTING_INSTRUCTIONS,
 } from '@deliberation-lab/utils';
-import {
-  LLM_MEDIATOR_AVATARS
-} from '../../shared/constants';
+import {LLM_MEDIATOR_AVATARS} from '../../shared/constants';
 
 import {styles} from './chat_editor.scss';
 
@@ -30,8 +30,7 @@ export class ChatEditor extends MobxLitElement {
   private readonly experimentEditor = core.getService(ExperimentEditor);
   private readonly authService = core.getService(AuthService);
 
-
-  @property() stage: ChatStageConfig|undefined = undefined;
+  @property() stage: ChatStageConfig | undefined = undefined;
 
   override render() {
     if (this.stage === undefined) {
@@ -43,8 +42,8 @@ export class ChatEditor extends MobxLitElement {
     if (!this.authService.experimenterData?.apiKeys.geminiKey) {
       apiCheck = html`
         <div class="warning">
-          <b>Note:</b> In order for LLM calls to work,
-          you must add your Gemini API key under Settings.
+          <b>Note:</b> In order for LLM calls to work, you must add your Gemini
+          API key under Settings.
         </div>
       `;
     } else {
@@ -57,14 +56,16 @@ export class ChatEditor extends MobxLitElement {
 
     return html`
       ${apiCheck}
-      ${this.stage.mediators.map(
-        (mediator, index) => this.renderMediator(mediator, index)
+      ${this.stage.mediators.map((mediator, index) =>
+        this.renderMediator(mediator, index)
       )}
       <pr-button
         color="secondary"
         variant="tonal"
         ?disabled=${!this.experimentEditor.canEditStages}
-        @click=${() => {this.addMediator()}}
+        @click=${() => {
+          this.addMediator();
+        }}
       >
         Add mediator
       </pr-button>
@@ -73,10 +74,7 @@ export class ChatEditor extends MobxLitElement {
 
   addMediator() {
     if (!this.stage) return;
-    const mediators = [
-      ...this.stage.mediators,
-      createMediatorConfig(),
-    ];
+    const mediators = [...this.stage.mediators, createMediatorConfig()];
 
     this.experimentEditor.updateStage({
       ...this.stage,
@@ -89,7 +87,7 @@ export class ChatEditor extends MobxLitElement {
 
     const mediators = [
       ...this.stage.mediators.slice(0, index),
-      ...this.stage.mediators.slice(index + 1)
+      ...this.stage.mediators.slice(index + 1),
     ];
 
     this.experimentEditor.updateStage({
@@ -104,7 +102,7 @@ export class ChatEditor extends MobxLitElement {
     const mediators = [
       ...this.stage.mediators.slice(0, index),
       mediator,
-      ...this.stage.mediators.slice(index + 1)
+      ...this.stage.mediators.slice(index + 1),
     ];
 
     this.experimentEditor.updateStage({
@@ -120,7 +118,8 @@ export class ChatEditor extends MobxLitElement {
         {
           ...mediator,
           name,
-        }, index
+        },
+        index
       );
     };
 
@@ -144,23 +143,24 @@ export class ChatEditor extends MobxLitElement {
         {
           ...mediator,
           prompt,
-        }, index
+        },
+        index
       );
     };
 
     return html`
       <div class="question-label">Prompt</div>
       <div class="description">
-        <b>Note:</b> Your custom prompt will be concatenated with the
-        chat history (last 10 messages) and sent to the model
-        (i.e., chat history + custom prompt => response)
+        <b>Note:</b> Your custom prompt will be concatenated with the chat
+        history (last 10 messages) and sent to the model (i.e., chat history +
+        custom prompt => response)
       </div>
       <div class="description">
-        <b>If JSON parsing enabled:</b> Make sure to
-        include appropriate instructions/examples in your prompt to
-        avoid parsing errors (if the specified message field is non-empty,
-        its contents will be turned into a chat message).
-        <b>If disabled:</b> non-empty responses will be turned into messages.
+        <b>If JSON parsing enabled:</b> Make sure to include appropriate
+        instructions/examples in your prompt to avoid parsing errors (if the
+        specified message field is non-empty, its contents will be turned into a
+        chat message). <b>If disabled:</b> non-empty responses will be turned
+        into messages.
       </div>
       <pr-textarea
         placeholder="Custom prompt for mediator"
@@ -181,7 +181,8 @@ export class ChatEditor extends MobxLitElement {
         {
           ...mediator,
           avatar,
-        }, index
+        },
+        index
       );
     };
 
@@ -207,8 +208,8 @@ export class ChatEditor extends MobxLitElement {
       <div class="radio-question">
         <div class="question-label">Avatar</div>
         <div class="radio-wrapper">
-          ${LLM_MEDIATOR_AVATARS.map(
-            (avatar, index) => renderAvatarRadio(avatar, index)
+          ${LLM_MEDIATOR_AVATARS.map((avatar, index) =>
+            renderAvatarRadio(avatar, index)
           )}
         </div>
       </div>
@@ -224,16 +225,15 @@ export class ChatEditor extends MobxLitElement {
         <div class="question-label">Mediator ${index + 1}</div>
         <div class="question">
           <div class="header">
-            <div class="left">
-              ${this.renderMediatorName(mediator, index)}
-            </div>
+            <div class="left">${this.renderMediatorName(mediator, index)}</div>
             <pr-icon-button
               icon="close"
               color="neutral"
               padding="small"
               variant="default"
               ?disabled=${!this.experimentEditor.canEditStages}
-              @click=${onDelete}>
+              @click=${onDelete}
+            >
             </pr-icon-button>
           </div>
           ${this.renderAvatars(mediator, index)}
@@ -250,18 +250,28 @@ export class ChatEditor extends MobxLitElement {
   ) {
     const config = mediator.responseConfig;
     const updateConfig = (responseConfig: MediatorResponseConfig) => {
-      this.updateMediator({ ...mediator, responseConfig }, index);
+      this.updateMediator({...mediator, responseConfig}, index);
+    };
+    const updateFormattingInstructions = (e: InputEvent) => {
+      const instructionsField = (e.target as HTMLTextAreaElement).value;
+      updateConfig({...config, formattingInstructions: instructionsField});
     };
     const updateJSON = () => {
-      updateConfig({ ...config, isJSON: !config.isJSON });
+      updateConfig({
+        ...config,
+        isJSON: !config.isJSON,
+        formattingInstructions: config.isJSON
+          ? DEFAULT_STRING_FORMATTING_INSTRUCTIONS
+          : DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
+      });
     };
     const updateMessageField = (e: InputEvent) => {
       const messageField = (e.target as HTMLTextAreaElement).value;
-      updateConfig({ ...config, messageField })
+      updateConfig({...config, messageField});
     };
     const updateExplanationField = (e: InputEvent) => {
       const explanationField = (e.target as HTMLTextAreaElement).value;
-      updateConfig({ ...config, explanationField })
+      updateConfig({...config, explanationField});
     };
 
     return html`
@@ -273,32 +283,45 @@ export class ChatEditor extends MobxLitElement {
           @click=${updateJSON}
         >
         </md-checkbox>
-        <div>
-          Parse mediator response as JSON
-        </div>
+        <div>Parse mediator response as JSON</div>
       </div>
-      ${!config.isJSON ? nothing : html`
+      <div>
         <pr-textarea
-          label="JSON field to extract chat message from"
-          placeholder="JSON field to extract chat message from"
+          label="Formatting instructions and examples"
+          placeholder="Instructions and examples for formatting the mediator response"
           variant="outlined"
-          .value=${config.messageField}
+          .value=${config.formattingInstructions}
           ?disabled=${!this.experimentEditor.canEditStages}
-          @input=${updateMessageField}
+          @input=${updateFormattingInstructions}
         >
         </pr-textarea>
-      `}
-      ${!config.isJSON ? nothing : html`
-        <pr-textarea
-          label="JSON field to extract debugging explanation from"
-          placeholder="JSON field to extract debugging explanation from"
-          variant="outlined"
-          .value=${config.explanationField}
-          ?disabled=${!this.experimentEditor.canEditStages}
-          @input=${updateExplanationField}
-        >
-        </pr-textarea>
-      `}
+      </div>
+      ${!config.isJSON
+        ? nothing
+        : html`
+            <pr-textarea
+              label="JSON field to extract chat message from"
+              placeholder="JSON field to extract chat message from"
+              variant="outlined"
+              .value=${config.messageField}
+              ?disabled=${!this.experimentEditor.canEditStages}
+              @input=${updateMessageField}
+            >
+            </pr-textarea>
+          `}
+      ${!config.isJSON
+        ? nothing
+        : html`
+            <pr-textarea
+              label="JSON field to extract debugging explanation from"
+              placeholder="JSON field to extract debugging explanation from"
+              variant="outlined"
+              .value=${config.explanationField}
+              ?disabled=${!this.experimentEditor.canEditStages}
+              @input=${updateExplanationField}
+            >
+            </pr-textarea>
+          `}
     `;
   }
 }

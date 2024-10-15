@@ -90,6 +90,7 @@ export const UpdateChatMediatorsData = Type.Object(
           isJSON: Type.Boolean(),
           messageField: Type.String(),
           explanationField: Type.String(),
+          formattingInstructions: Type.String(),
         })
       })
     )
