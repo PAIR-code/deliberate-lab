@@ -25,19 +25,19 @@ import {
   createRevealStage,
   createSurveyStage,
   createTOSStage,
-  createTransferStage
+  createTransferStage,
 } from '@deliberation-lab/utils';
-import {
-  LAS_METADATA,
-  getLASStageConfigs,
-} from '../../shared/games/lost_at_sea';
+import {LAS_METADATA, getLASStageConfigs} from '../../shared/games/lost_at_sea';
 import {
   GCE_METADATA,
   getGCEStageConfigs,
 } from '../../shared/games/gift_card_exchange';
 
-
 import {styles} from './stage_builder_dialog.scss';
+import {
+  RTV_METADATA,
+  getRTVStageConfigs,
+} from '../../shared/games/reality_tv_chat';
 
 /** Stage builder dialog */
 @customElement('stage-builder-dialog')
@@ -48,7 +48,7 @@ export class StageBuilderDialog extends MobxLitElement {
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
   @property({type: Boolean})
-  showGames : boolean = false;
+  showGames: boolean = false;
 
   override render() {
     return html`
@@ -59,7 +59,9 @@ export class StageBuilderDialog extends MobxLitElement {
             color="neutral"
             icon="close"
             variant="default"
-            @click=${() => { this.experimentEditor.toggleStageBuilderDialog(); }}
+            @click=${() => {
+              this.experimentEditor.toggleStageBuilderDialog();
+            }}
           >
           </pr-icon-button>
         </div>
@@ -73,21 +75,31 @@ export class StageBuilderDialog extends MobxLitElement {
   private renderTabs() {
     const getClasses = (selected: boolean) => {
       return classMap({
-        'tab': true,
-        'selected': selected,
+        tab: true,
+        selected: selected,
       });
     };
 
     const toggleView = (showGames: boolean) => {
       this.showGames = showGames;
-    }
+    };
 
     return html`
       <div class="tabs">
-        <div class=${getClasses(!this.showGames)} @click=${() => {toggleView(false)}}>
+        <div
+          class=${getClasses(!this.showGames)}
+          @click=${() => {
+            toggleView(false);
+          }}
+        >
           Add stages
         </div>
-        <div class=${getClasses(this.showGames)} @click=${() => {toggleView(true)}}>
+        <div
+          class=${getClasses(this.showGames)}
+          @click=${() => {
+            toggleView(true);
+          }}
+        >
           Load game
         </div>
       </div>
@@ -100,8 +112,8 @@ export class StageBuilderDialog extends MobxLitElement {
         ⚠️ Loading a game will override any current stages in your configuration
       </div>
       <div class="card-gallery-wrapper">
-        ${this.renderLASCard()}
-        ${this.renderNegotiationCard()}
+        ${this.renderLASCard()} ${this.renderNegotiationCard()}
+        ${this.renderRealityTVCard()}
       </div>
     `;
   }
@@ -109,14 +121,10 @@ export class StageBuilderDialog extends MobxLitElement {
   private renderStageCards() {
     return html`
       <div class="card-gallery-wrapper">
-        ${this.renderTOSCard()}
-        ${this.renderInfoCard()}
-        ${this.renderTransferCard()}
-        ${this.renderProfileCard()}
-        ${this.renderSurveyCard()}
-        ${this.renderChatCard()}
-        ${this.renderRankingCard()}
-        ${this.renderRevealCard()}
+        ${this.renderTOSCard()} ${this.renderInfoCard()}
+        ${this.renderTransferCard()} ${this.renderProfileCard()}
+        ${this.renderSurveyCard()} ${this.renderChatCard()}
+        ${this.renderRankingCard()} ${this.renderRevealCard()}
         ${this.renderPayoutCard()}
       </div>
     `;
@@ -145,7 +153,8 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addGame}>
         <div class="title">🌊 Lost at Sea</div>
         <div>
-        An election scenario where participants deliberate together to elect a leader responsible for completing a survival task.
+          An election scenario where participants deliberate together to elect a
+          leader responsible for completing a survival task.
         </div>
       </div>
     `;
@@ -158,9 +167,24 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addGame}>
-        <div class="title">🚧 Gift Card Exchange</div>
+        <div class="title">💵 Gift Card Exchange</div>
         <div>
-          A negotiation scenario where participants deliberate together to optimally allocate a bundle of gift cards.
+          A negotiation scenario where participants deliberate together to
+          optimally allocate a bundle of gift cards.
+        </div>
+      </div>
+    `;
+  }
+
+  private renderRealityTVCard() {
+    const addGame = () => {
+      this.addGame(RTV_METADATA, getRTVStageConfigs());
+    };
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">📺 Reality TV Discussion</div>
+        <div>
+          A conversation between multiple agents who discuss reality TV shows.
         </div>
       </div>
     `;
@@ -174,9 +198,7 @@ export class StageBuilderDialog extends MobxLitElement {
     return html`
       <div class="card" @click=${addStage}>
         <div class="title">ℹ️ Info</div>
-        <div>
-          Display Markdown-rendered information.
-        </div>
+        <div>Display Markdown-rendered information.</div>
       </div>
     `;
   }
@@ -189,13 +211,11 @@ export class StageBuilderDialog extends MobxLitElement {
         this.addStage(createTOSStage());
       }
     };
-  
+
     return html`
       <div class="card ${isDisabled ? 'disabled' : ''}" @click=${addStage}>
         <div class="title">📜 Terms of Service</div>
-        <div>
-          Display Markdown-rendered terms of service.
-        </div>
+        <div>Display Markdown-rendered terms of service.</div>
       </div>
     `;
   }
@@ -208,9 +228,7 @@ export class StageBuilderDialog extends MobxLitElement {
     return html`
       <div class="card" @click=${addStage}>
         <div class="title">💬 Group chat</div>
-        <div>
-          Host a conversation among participants and optional LLMs.
-        </div>
+        <div>Host a conversation among participants and optional LLMs.</div>
       </div>
     `;
   }
@@ -224,7 +242,8 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addStage}>
         <div class="title">🗳️ Ranking / Election</div>
         <div>
-          Have participants rank each other or items, and optionally hold an election.
+          Have participants rank each other or items, and optionally hold an
+          election.
         </div>
       </div>
     `;
@@ -254,7 +273,8 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addStage}>
         <div class="title">📋 Survey</div>
         <div>
-          Conduct a survey with freeform, multiple choice, checkbox, and scale questions.
+          Conduct a survey with freeform, multiple choice, checkbox, and scale
+          questions.
         </div>
       </div>
     `;
@@ -268,9 +288,7 @@ export class StageBuilderDialog extends MobxLitElement {
     return html`
       <div class="card" @click=${addStage}>
         <div class="title">💰 Payout</div>
-        <div>
-          Display calculated experiment payouts.
-        </div>
+        <div>Display calculated experiment payouts.</div>
       </div>
     `;
   }
@@ -283,9 +301,7 @@ export class StageBuilderDialog extends MobxLitElement {
     return html`
       <div class="card" @click=${addStage}>
         <div class="title">👤 Profile</div>
-        <div>
-          Allow participants to set their profiles.
-        </div>
+        <div>Allow participants to set their profiles.</div>
       </div>
     `;
   }
@@ -293,13 +309,14 @@ export class StageBuilderDialog extends MobxLitElement {
   private renderTransferCard() {
     const addStage = () => {
       this.addStage(createTransferStage());
-    }
+    };
 
     return html`
       <div class="card" @click=${addStage}>
         <div class="title">🚪 Transfer</div>
         <div>
-          Assign participants to different cohorts while they wait in this stage.
+          Assign participants to different cohorts while they wait in this
+          stage.
         </div>
       </div>
     `;
