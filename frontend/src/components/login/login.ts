@@ -65,6 +65,7 @@ export class Login extends MobxLitElement {
           <pr-button @click=${handleLogin}>Sign in with Google</pr-button>
         </div>
       </div>
+      <div class="version">Version: ${GIT_VERSION}</div>
     `;
   }
 }
