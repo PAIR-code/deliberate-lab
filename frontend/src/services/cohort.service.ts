@@ -111,7 +111,7 @@ export class CohortService extends Service {
   getUnlockedStageParticipants(stageId: string) {
     return this.getAllParticipants().filter(
       participant => isUnlockedStage(participant, stageId)
-        && !isObsoleteParticipant(participant)
+        || !isObsoleteParticipant(participant)
     );
   }
 
