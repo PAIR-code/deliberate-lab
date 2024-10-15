@@ -35,7 +35,7 @@ export class Progress extends MobxLitElement {
     super.connectedCallback();
     setInterval(() => {
       window.location.reload();
-    }, 30000);
+    }, 10000);
   }
 
   override render() {
