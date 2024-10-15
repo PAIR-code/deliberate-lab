@@ -19,7 +19,6 @@ import {
 
 import {styles} from './progress_stage_waiting.scss';
 
-/** Progress component: Shows how many participants are ready to begin stage */
 @customElement('progress-stage-waiting')
 export class Progress extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
@@ -30,6 +29,14 @@ export class Progress extends MobxLitElement {
 
   @property() showReadyAvatars = true;
   @property() showWaitingAvatars = false;
+
+  /** Refreshes the browser every 30 seconds */
+  connectedCallback() {
+    super.connectedCallback();
+    setInterval(() => {
+      window.location.reload();
+    }, 30000);
+  }
 
   override render() {
     const stageId = this.routerService.activeRoute.params['stage'];
