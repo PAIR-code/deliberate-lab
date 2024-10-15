@@ -1,21 +1,21 @@
-import "../../pair-components/button";
+import '../../pair-components/button';
 
-import "../experimenter/experimenter_data_editor";
+import '../experimenter/experimenter_data_editor';
 
-import { MobxLitElement } from "@adobe/lit-mobx";
-import { CSSResultGroup, html, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import {MobxLitElement} from '@adobe/lit-mobx';
+import {CSSResultGroup, html, nothing} from 'lit';
+import {customElement, property} from 'lit/decorators.js';
 
-import { core } from "../../core/core";
-import { AuthService } from "../../services/auth.service";
-import { SettingsService } from "../../services/settings.service";
+import {core} from '../../core/core';
+import {AuthService} from '../../services/auth.service';
+import {SettingsService} from '../../services/settings.service';
 
-import { ColorMode, ColorTheme, TextSize } from "../../shared/types";
+import {ColorMode, ColorTheme, TextSize} from '../../shared/types';
 
-import { styles } from "./settings.scss";
+import {styles} from './settings.scss';
 
 /** Settings page component */
-@customElement("settings-page")
+@customElement('settings-page')
 export class Settings extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -27,12 +27,15 @@ export class Settings extends MobxLitElement {
   override render() {
     return html`
       <div class="settings">
-        ${this.renderColorModeSection()}
-        ${this.renderColorThemeSection()}
-        ${this.renderTextSizeSection()}
-        ${this.renderAccountSection()}
-        ${this.authService.isExperimenter ? this.renderExperimenterData() : nothing}
-        ${this.authService.isExperimenter ? this.renderAppVersionSection() : nothing}
+        ${this.renderColorModeSection()} ${this.renderColorThemeSection()}
+        ${this.renderTextSizeSection()} ${this.renderAccountSection()}
+        ${this.authService.isExperimenter
+          ? this.renderExperimenterData()
+          : nothing}
+        ${this.authService.isExperimenter
+          ? this.renderAppVersionSection()
+          : nothing}
+        ${this.renderReferenceSection()}
       </div>
     `;
   }
@@ -51,12 +54,8 @@ export class Settings extends MobxLitElement {
         <h2>Color Mode</h2>
         <div class="action-buttons">
           <pr-button
-            color=${isMode(ColorMode.LIGHT)
-              ? "primary"
-              : "neutral"}
-            variant=${isMode(ColorMode.LIGHT)
-              ? "tonal"
-              : "default"}
+            color=${isMode(ColorMode.LIGHT) ? 'primary' : 'neutral'}
+            variant=${isMode(ColorMode.LIGHT) ? 'tonal' : 'default'}
             @click=${() => {
               handleClick(ColorMode.LIGHT);
             }}
@@ -64,12 +63,8 @@ export class Settings extends MobxLitElement {
             Light
           </pr-button>
           <pr-button
-            color=${isMode(ColorMode.DARK)
-              ? "primary"
-              : "neutral"}
-            variant=${isMode(ColorMode.DARK)
-              ? "tonal"
-              : "default"}
+            color=${isMode(ColorMode.DARK) ? 'primary' : 'neutral'}
+            variant=${isMode(ColorMode.DARK) ? 'tonal' : 'default'}
             @click=${() => {
               handleClick(ColorMode.DARK);
             }}
@@ -77,12 +72,8 @@ export class Settings extends MobxLitElement {
             Dark
           </pr-button>
           <pr-button
-            color=${isMode(ColorMode.DEFAULT)
-              ? "primary"
-              : "neutral"}
-            variant=${isMode(ColorMode.DEFAULT)
-              ? "tonal"
-              : "default"}
+            color=${isMode(ColorMode.DEFAULT) ? 'primary' : 'neutral'}
+            variant=${isMode(ColorMode.DEFAULT) ? 'tonal' : 'default'}
             @click=${() => {
               handleClick(ColorMode.DEFAULT);
             }}
@@ -108,12 +99,8 @@ export class Settings extends MobxLitElement {
         <h2>Color Theme</h2>
         <div class="action-buttons">
           <pr-button
-            color=${isTheme(ColorTheme.KAMINO)
-              ? "primary"
-              : "neutral"}
-            variant=${isTheme(ColorTheme.KAMINO)
-              ? "tonal"
-              : "default"}
+            color=${isTheme(ColorTheme.KAMINO) ? 'primary' : 'neutral'}
+            variant=${isTheme(ColorTheme.KAMINO) ? 'tonal' : 'default'}
             @click=${() => {
               handleClick(ColorTheme.KAMINO);
             }}
@@ -139,8 +126,8 @@ export class Settings extends MobxLitElement {
         <h2>Text Size</h2>
         <div class="action-buttons">
           <pr-button
-            color=${isSize(TextSize.SMALL) ? "primary" : "neutral"}
-            variant=${isSize(TextSize.SMALL) ? "tonal" : "default"}
+            color=${isSize(TextSize.SMALL) ? 'primary' : 'neutral'}
+            variant=${isSize(TextSize.SMALL) ? 'tonal' : 'default'}
             @click=${() => {
               handleClick(TextSize.SMALL);
             }}
@@ -148,8 +135,8 @@ export class Settings extends MobxLitElement {
             Small
           </pr-button>
           <pr-button
-            color=${isSize(TextSize.MEDIUM) ? "primary" : "neutral"}
-            variant=${isSize(TextSize.MEDIUM) ? "tonal" : "default"}
+            color=${isSize(TextSize.MEDIUM) ? 'primary' : 'neutral'}
+            variant=${isSize(TextSize.MEDIUM) ? 'tonal' : 'default'}
             @click=${() => {
               handleClick(TextSize.MEDIUM);
             }}
@@ -157,8 +144,8 @@ export class Settings extends MobxLitElement {
             Medium
           </pr-button>
           <pr-button
-            color=${isSize(TextSize.LARGE) ? "primary" : "neutral"}
-            variant=${isSize(TextSize.LARGE) ? "tonal" : "default"}
+            color=${isSize(TextSize.LARGE) ? 'primary' : 'neutral'}
+            variant=${isSize(TextSize.LARGE) ? 'tonal' : 'default'}
             @click=${() => {
               handleClick(TextSize.LARGE);
             }}
@@ -188,10 +175,7 @@ export class Settings extends MobxLitElement {
           ${this.authService.isExperimenter ? 'experimenter' : 'participant'}
         </p>
         <div class="action-buttons">
-          <pr-button
-            color="error"
-            variant="outlined"
-            @click=${handleSignOut}>
+          <pr-button color="error" variant="outlined" @click=${handleSignOut}>
             Log out
           </pr-button>
         </div>
@@ -208,8 +192,13 @@ export class Settings extends MobxLitElement {
       <div class="section">
         <h2>App version</h2>
         <p><b>Branch:</b> ${GIT_BRANCH}</p>
-        <p><b>Commit:</b> 
-          <a href="https://github.com/PAIR-code/llm-mediation-experiments/commit/${GIT_COMMIT_HASH}" target="_blank">${GIT_VERSION}</a>
+        <p>
+          <b>Commit:</b>
+          <a
+            href="https://github.com/PAIR-code/llm-mediation-experiments/commit/${GIT_COMMIT_HASH}"
+            target="_blank"
+            >${GIT_VERSION}</a
+          >
         </p>
         <p><b>Commit Date:</b> ${new Date(GIT_LAST_COMMIT_DATETIME)}</p>
       </div>
@@ -224,10 +213,41 @@ export class Settings extends MobxLitElement {
       </div>
     `;
   }
+
+  private renderReferenceSection() {
+    return html`
+      <div class="section">
+        <div class="action-buttons">
+          <pr-button
+            color="secondary"
+            variant="tonal"
+            @click=${() =>
+              window.open(
+                `https://github.com/PAIR-code/deliberate-lab/wiki/Getting-started-(for-researchers)`,
+                '_blank'
+              )}
+          >
+            📚 View the documentation
+          </pr-button>
+          <pr-button
+            color="secondary"
+            variant="tonal"
+            @click=${() =>
+              window.open(
+                `https://github.com/PAIR-code/deliberate-lab/issues/new`,
+                '_blank'
+              )}
+          >
+            🐞 Report a bug
+          </pr-button>
+        </div>
+      </div>
+    `;
+  }
 }
 
 declare global {
   interface HTMLElementTagNameMap {
-    "settings-page": Settings;
+    'settings-page': Settings;
   }
 }
