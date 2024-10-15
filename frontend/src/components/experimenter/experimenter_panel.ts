@@ -2,7 +2,7 @@ import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
 
-import "./experimenter_data_editor";
+import './experimenter_data_editor';
 import './experimenter_manual_chat';
 
 import '@material/web/checkbox/checkbox.js';
@@ -18,17 +18,16 @@ import {ExperimentService} from '../../services/experiment.service';
 import {MediatorEditor} from '../../services/mediator.editor';
 import {RouterService} from '../../services/router.service';
 
-import {
-  MediatorConfig,
-  StageKind
-} from '@deliberation-lab/utils';
+import {MediatorConfig, StageKind} from '@deliberation-lab/utils';
 
 import {styles} from './experimenter_panel.scss';
+import {DEFAULT_STRING_FORMATTING_INSTRUCTIONS} from '@deliberation-lab/utils';
+import {DEFAULT_JSON_FORMATTING_INSTRUCTIONS} from '@deliberation-lab/utils';
 
 enum PanelView {
   MANUAL_CHAT = 'manual_chat',
   LLM_SETTINGS = 'llm_settings',
-  API_KEY = 'api_key'
+  API_KEY = 'api_key',
 }
 
 /** Experimenter panel component */
@@ -95,7 +94,9 @@ export class Panel extends MobxLitElement {
             <div class="main">
               <div class="top">
                 <div class="header">Mediator config</div>
-                ${mediators.length === 0 ? html`<div>No mediators configured</div>` : nothing}
+                ${mediators.length === 0
+                  ? html`<div>No mediators configured</div>`
+                  : nothing}
                 ${mediators.map((mediator, index) =>
                   this.renderMediatorEditor(stageId, mediator, index)
                 )}
@@ -117,7 +118,7 @@ export class Panel extends MobxLitElement {
           <pr-tooltip text="Toggle experimenter panel" position="LEFT_END">
             <pr-icon-button
               color="secondary"
-              icon=${isPanelOpen ? "chevron_right" : "chevron_left"}
+              icon=${isPanelOpen ? 'chevron_right' : 'chevron_left'}
               size="medium"
               variant="default"
               @click=${this.togglePanel}
@@ -129,7 +130,7 @@ export class Panel extends MobxLitElement {
               color="secondary"
               icon="chat"
               size="medium"
-              variant=${isSelected(PanelView.MANUAL_CHAT) ? "tonal" : "default"}
+              variant=${isSelected(PanelView.MANUAL_CHAT) ? 'tonal' : 'default'}
               @click=${() => {
                 this.panelView = PanelView.MANUAL_CHAT;
                 this.routerService.setExperimenterPanel(true);
@@ -142,7 +143,7 @@ export class Panel extends MobxLitElement {
               color="secondary"
               icon="key"
               size="medium"
-              variant=${isSelected(PanelView.API_KEY) ? "tonal" : "default"}
+              variant=${isSelected(PanelView.API_KEY) ? 'tonal' : 'default'}
               @click=${() => {
                 this.panelView = PanelView.API_KEY;
                 this.routerService.setExperimenterPanel(true);
@@ -155,7 +156,9 @@ export class Panel extends MobxLitElement {
               color="secondary"
               icon="edit_note"
               size="medium"
-              variant=${isSelected(PanelView.LLM_SETTINGS) ? "tonal" : "default"}
+              variant=${isSelected(PanelView.LLM_SETTINGS)
+                ? 'tonal'
+                : 'default'}
               @click=${() => {
                 this.panelView = PanelView.LLM_SETTINGS;
                 this.routerService.setExperimenterPanel(true);
@@ -176,32 +179,47 @@ export class Panel extends MobxLitElement {
   }
 
   private renderMediatorEditor(
-    stageId: string, mediator: MediatorConfig, index: number
+    stageId: string,
+    mediator: MediatorConfig,
+    index: number
   ) {
     const updatePrompt = (e: InputEvent) => {
       const prompt = (e.target as HTMLTextAreaElement).value;
+      this.mediatorEditor.updateMediator(stageId, {...mediator, prompt}, index);
+    };
+    const updateFormattingInstructions = (e: InputEvent) => {
+      const instructions = (e.target as HTMLTextAreaElement).value;
+      const responseConfig = {
+        ...mediator.responseConfig,
+        formattingInstructions: instructions,
+      };
       this.mediatorEditor.updateMediator(
-        stageId, {...mediator, prompt}, index
+        stageId,
+        {...mediator, responseConfig},
+        index
       );
     };
+
     const updateJSON = () => {
       const responseConfig = {
         ...mediator.responseConfig,
         isJSON: !mediator.responseConfig.isJSON,
+        formattingInstructions: mediator.responseConfig.isJSON
+          ? DEFAULT_STRING_FORMATTING_INSTRUCTIONS
+          : DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
       };
       this.mediatorEditor.updateMediator(
-        stageId, {...mediator, responseConfig}, index
+        stageId,
+        {...mediator, responseConfig},
+        index
       );
     };
 
     return html`
       <div class="mediator">
-        <div class="mediator-title">
-          #${index + 1} - ${mediator.name}
-        </div>
-        <div class="debug">
-          ${JSON.stringify(mediator.responseConfig)}
-        </div>
+        <div class="mediator-title">#${index + 1} - ${mediator.name}</div>
+        <div class="debug">${JSON.stringify(mediator.responseConfig)}</div>
+        Prompt:
         <div class="prompt-box">
           <pr-textarea
             placeholder="Custom prompt for mediator"
@@ -209,6 +227,17 @@ export class Panel extends MobxLitElement {
             @input=${updatePrompt}
           >
           </pr-textarea>
+        </div>
+        Formatting instructions and examples:
+        <div class="prompt-box">
+          <pr-textarea
+            placeholder="Custom formatting instructions for mediator"
+            .value=${mediator.responseConfig.formattingInstructions}
+            @input=${updateFormattingInstructions}
+          >
+          </pr-textarea>
+        </div>
+        <div>
           <div class="action-bar">
             <div class="checkbox-wrapper">
               <md-checkbox
@@ -217,9 +246,7 @@ export class Panel extends MobxLitElement {
                 @click=${updateJSON}
               >
               </md-checkbox>
-              <div>
-                Parse as JSON
-              </div>
+              <div>Parse as JSON</div>
             </div>
             <pr-button
               color="secondary"
@@ -229,7 +256,7 @@ export class Panel extends MobxLitElement {
               ?loading=${this.isLoading}
               @click=${async () => {
                 this.isLoading = true;
-                await this.mediatorEditor.saveChatMediators(stageId)
+                await this.mediatorEditor.saveChatMediators(stageId);
                 this.isLoading = false;
               }}
             >
@@ -238,8 +265,8 @@ export class Panel extends MobxLitElement {
           </div>
         </div>
         <div class="debug error">
-          Warning: Saving edits will update the mediator across
-          all experiment cohorts
+          Warning: Saving edits will update the mediator across all experiment
+          cohorts
         </div>
       </div>
     `;
