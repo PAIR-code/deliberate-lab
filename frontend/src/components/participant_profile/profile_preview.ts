@@ -57,6 +57,7 @@ export class Preview extends MobxLitElement {
       <div><b>Status:</b> ${this.profile.currentStatus}</div>
       <div><b>Current stage:</b> ${getStageName(this.profile.currentStageId)}</div>
       <div><b>Current cohort:</b> ${getCohort(this.profile.currentCohortId)}</div>
+      <div><b>Prolific ID:</b> ${this.profile.prolificId ?? 'NONE'}</div>
       ${this.profile.transferCohortId ?
         html`<div><b>Pending transfer to cohort:</b> ${getCohort(this.profile.transferCohortId)}</div>`
         : nothing}
