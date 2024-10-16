@@ -29,7 +29,7 @@ import {
   SurveyPayoutItemResult,
   SurveyPayoutQuestionResult,
   SurveyQuestionKind,
-  calculatePayoutResult
+  calculatePayoutResult,
 } from '@deliberation-lab/utils';
 import {
   LAS_ITEMS,
@@ -39,7 +39,7 @@ import {
   LAS_PAYMENT_PART_1_DESCRIPTION,
   LAS_PAYMENT_PART_3_DESCRIPTION,
   LAS_PAYMENT_PARTS_2_AND_3_DESCRIPTION,
-  getCorrectLASAnswer
+  getCorrectLASAnswer,
 } from '../../shared/games/lost_at_sea';
 
 import {styles} from './payout_view.scss';
@@ -55,6 +55,7 @@ export class PayoutView extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
 
   @property() stage: PayoutStageConfig | null = null;
+  @property() renderSummaryView: boolean = false; // If true, render a minimized summary view.
 
   override render() {
     if (!this.stage || !this.participantService.profile) {
@@ -69,25 +70,29 @@ export class PayoutView extends MobxLitElement {
     );
 
     return html`
-      <stage-description .stage=${this.stage}></stage-description>
+      ${this.renderSummaryView ? '' : html`<stage-description .stage=${this.stage}></stage-description>`}
       <div class="stages-wrapper">
-        ${resultConfig.results.map(result => this.renderPayoutItemResult(result, resultConfig.currency))}
+        ${resultConfig.results.map((result) =>
+          this.renderPayoutItemResult(result, resultConfig.currency)
+        )}
         ${this.renderTotalPayout(resultConfig)}
       </div>
-      <stage-footer>
-        ${this.stage.progress.showParticipantProgress ?
-          html`<progress-stage-completed></progress-stage-completed>`
-          : nothing}
-      </stage-footer>
+      ${this.renderSummaryView
+        ? ''
+        : html`<stage-footer>
+            ${this.stage.progress.showParticipantProgress
+              ? html`<progress-stage-completed></progress-stage-completed>`
+              : nothing}
+          </stage-footer>`}
     `;
   }
 
   private renderTotalPayout(resultConfig: PayoutResultConfig) {
     let total = 0;
-    resultConfig.results.forEach(result => {
+    resultConfig.results.forEach((result) => {
       total += result.baseAmountEarned;
       if (result.type === PayoutItemType.SURVEY) {
-        result.questionResults.forEach(question => {
+        result.questionResults.forEach((question) => {
           total += question.amountEarned;
         });
       }
@@ -142,7 +147,8 @@ export class PayoutView extends MobxLitElement {
   }
 
   private renderBaseAmountEarned(
-    item: PayoutItemResult, currency: PayoutCurrency
+    item: PayoutItemResult,
+    currency: PayoutCurrency
   ) {
     return html`
       <div class="scoring-item">
@@ -168,7 +174,7 @@ export class PayoutView extends MobxLitElement {
     currency: PayoutCurrency
   ) {
     let total = item.baseAmountEarned;
-    item.questionResults.forEach(result => {
+    item.questionResults.forEach((result) => {
       total += result.amountEarned;
     });
 
@@ -177,10 +183,18 @@ export class PayoutView extends MobxLitElement {
         <h2>${item.name}</h2>
         <div class="scoring-description">${item.description}</div>
         ${this.renderBaseAmountEarned(item, currency)}
-        ${item.questionResults.map(result => this.renderSurveyPayoutQuestionResult(result, item.rankingWinner, currency))}
+        ${item.questionResults.map((result) =>
+          this.renderSurveyPayoutQuestionResult(
+            result,
+            item.rankingWinner,
+            currency
+          )
+        )}
         <div class="scoring-item row">
           <h2>Stage payout</h2>
-          <div class="chip primary">${this.renderCurrency(total, currency)}</div>
+          <div class="chip primary">
+            ${this.renderCurrency(total, currency)}
+          </div>
         </div>
       </div>
     `;
@@ -188,25 +202,33 @@ export class PayoutView extends MobxLitElement {
 
   private renderSurveyPayoutQuestionResult(
     result: SurveyPayoutQuestionResult,
-    rankingWinner: string|null,
+    rankingWinner: string | null,
     currency: PayoutCurrency
   ) {
-    const correctAnswer = result.question.options.find(option => option.id === result.question.correctAnswerId);
-    const participantAnswer = result.question.options.find(option => option.id === result.answerId);
+    const correctAnswer = result.question.options.find(
+      (option) => option.id === result.question.correctAnswerId
+    );
+    const participantAnswer = result.question.options.find(
+      (option) => option.id === result.answerId
+    );
 
     return html`
       <div class="scoring-item">
         <div class="column">
           <h2>${result.question.questionTitle}</h2>
           <div class="primary">
-            ${result.question.options.map(option => option.text).join(', ')}
+            ${result.question.options.map((option) => option.text).join(', ')}
           </div>
           <div class="row">
             <div>Correct answer:</div>
             <div class="chip secondary">${correctAnswer?.text ?? ''}</div>
           </div>
           <div class="row">
-            <div>${rankingWinner !== null ? `Election winner's answer:` : 'Your answer:'}</div>
+            <div>
+              ${rankingWinner !== null
+                ? `Election winner's answer:`
+                : 'Your answer:'}
+            </div>
             <div class="chip secondary">${participantAnswer?.text ?? ''}</div>
           </div>
         </div>

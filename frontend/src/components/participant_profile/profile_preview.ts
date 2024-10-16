@@ -8,14 +8,16 @@ import {ExperimentService} from '../../services/experiment.service';
 
 import {
   ParticipantProfileExtended,
-  UnifiedTimestamp
+  StageKind,
+  UnifiedTimestamp,
 } from '@deliberation-lab/utils';
-import {
-  getCohortName
-} from '../../shared/cohort.utils';
-import {
-  convertUnifiedTimestampToDate
-} from '../../shared/utils';
+import {getCohortName} from '../../shared/cohort.utils';
+import {convertUnifiedTimestampToDate} from '../../shared/utils';
+
+import '../stages/payout_view';
+import '../stages/reveal_view';
+import '../stages/ranking_view';
+import '../stages/survey_view';
 
 import {styles} from './profile_preview.scss';
 
@@ -27,7 +29,11 @@ export class Preview extends MobxLitElement {
   public readonly experimentManager = core.getService(ExperimentManager);
   public readonly experimentService = core.getService(ExperimentService);
 
-  @property() profile: ParticipantProfileExtended|undefined = undefined;
+  @property() profile: ParticipantProfileExtended | undefined = undefined;
+
+  private getStageName = (id: string) => {
+    return this.experimentService.getStageName(id, true);
+  };
 
   override render() {
     if (!this.profile) {
@@ -38,36 +44,113 @@ export class Preview extends MobxLitElement {
     // TODO: add progress bar
     // TODO: add completed stages
     // TODO: add current/past transfer log
-
-    const getStageName = (id: string) => {
-      return this.experimentService.getStageName(id, true);
-    };
-
     const getCohort = (id: string) => {
       const cohort = this.experimentManager.getCohort(id);
       return cohort ? getCohortName(cohort) : '';
-    }
+    };
 
     return html`
       <div><b>Private ID:</b> ${this.profile.privateId}</div>
       <div><b>Public ID:</b> ${this.profile.publicId}</div>
-      <div><b>Name:</b> ${this.profile.name}</div>
-      <div><b>Pronouns:</b> ${this.profile.pronouns}</div>
-      <div><b>Avatar:</b> ${this.profile.avatar}</div>
+      <div>
+        <b>Profile:</b> ${this.profile.avatar ?? ''} ${this.profile.name ?? ''}
+        ${this.profile.pronouns ? `(${this.profile.pronouns})` : ''}
+      </div>
       <div><b>Status:</b> ${this.profile.currentStatus}</div>
-      <div><b>Current stage:</b> ${getStageName(this.profile.currentStageId)}</div>
-      <div><b>Current cohort:</b> ${getCohort(this.profile.currentCohortId)}</div>
+      <div>
+        <b>Current stage:</b> ${this.getStageName(this.profile.currentStageId)}
+      </div>
+      <!--
+      <div>
+        <b>Current cohort:</b> ${getCohort(this.profile.currentCohortId)}
+      </div>
+      -->
       <div><b>Prolific ID:</b> ${this.profile.prolificId ?? 'NONE'}</div>
-      ${this.profile.transferCohortId ?
-        html`<div><b>Pending transfer to cohort:</b> ${getCohort(this.profile.transferCohortId)}</div>`
+      ${this.profile.transferCohortId
+        ? html`<div>
+            <b>Pending transfer to cohort:</b> ${getCohort(
+              this.profile.transferCohortId
+            )}
+          </div>`
         : nothing}
-      ${this.renderTimestamp('Started experiment', this.profile.timestamps.startExperiment)}
-      ${this.renderTimestamp('Ended experiment', this.profile.timestamps.endExperiment)}
-      ${this.renderTimestamp('Accepted TOS', this.profile.timestamps.acceptedTOS)}
+      ${this.renderTimestamp(
+        'Started experiment',
+        this.profile.timestamps.startExperiment
+      )}
+      ${this.renderTimestamp(
+        'Ended experiment',
+        this.profile.timestamps.endExperiment
+      )}
+      ${this.renderTimestamp(
+        'Accepted TOS',
+        this.profile.timestamps.acceptedTOS
+      )}
+      ${this.renderStageDatas()}
     `;
   }
 
-  private renderTimestamp(label: string, value: UnifiedTimestamp|null) {
+  private renderStageDatas() {
+    if (!this.profile) return;
+
+    const renderStageData = (stageId: string) => {
+      const stage = this.experimentService.getStage(stageId);
+      let stageHtml;
+
+      switch (stage.kind) {
+        case StageKind.PAYOUT:
+          stageHtml = html`<payout-view
+            .stage=${stage}
+            .renderSummaryView=${true}
+          ></payout-view>`;
+          break;
+        case StageKind.REVEAL:
+          stageHtml = html`<reveal-view
+            .stage=${stage}
+            .renderSummaryView=${true}
+          ></reveal-view>`;
+          break;
+        case StageKind.RANKING:
+          stageHtml = html`<ranking-view
+            .stage=${stage}
+            .renderSummaryView=${true}
+          ></ranking-view>`;
+          break;
+        case StageKind.SURVEY:
+          stageHtml = html`<survey-view
+            .stage=${stage}
+            .renderSummaryView=${true}
+          ></survey-view>`;
+          break;
+        default:
+          return ''; // Return empty HTML if no match
+      }
+
+      if (stageHtml) {
+        return html`<div>
+            <h4>${this.getStageName(stageId)}</h4>
+            ${stageHtml}
+          </div>
+          <div class="divider"></div>`;
+      }
+    };
+
+    const stages = [];
+    for (const stageId of Object.keys(
+      this.profile.timestamps.completedStages
+    )) {
+      const stageHtml = renderStageData(stageId);
+      if (stageHtml) {
+        stages.push(stageHtml);
+      }
+    }
+
+    return stages.length
+      ? html`<h3>Stage responses</h3>
+          ${stages}`
+      : ``;
+  }
+
+  private renderTimestamp(label: string, value: UnifiedTimestamp | null) {
     if (value === null) {
       return;
     }
