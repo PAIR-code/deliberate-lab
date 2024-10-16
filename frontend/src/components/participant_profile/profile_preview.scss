@@ -6,3 +6,10 @@
   gap: common.$spacing-large;
 }
 
+.divider {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+h3, h4 {
+  margin: common.$spacing-small;
+}
