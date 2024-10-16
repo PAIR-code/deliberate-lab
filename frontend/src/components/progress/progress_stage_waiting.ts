@@ -46,16 +46,17 @@ export class Progress extends MobxLitElement {
     const locked = this.cohortService.getLockedStageParticipants(stageId);
     const unlocked = this.cohortService.getUnlockedStageParticipants(stageId);
 
+    const numWaiting = Math.max(
+      locked.length,
+      stage.progress.minParticipants - unlocked.length
+    );
     return html`
       <div class="status">
         <h2 class="secondary">
           <div class="chip secondary">Waiting on</div>
           <div>
-            ${Math.max(
-              locked.length,
-              stage.progress.minParticipants - unlocked.length
-            )}
-            participants
+            ${numWaiting}
+            participant${numWaiting > 1 ? 's' : ''}
           </div>
         </h2>
         ${this.showWaitingAvatars ? this.renderParticipants(locked) : nothing}
