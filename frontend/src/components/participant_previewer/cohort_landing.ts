@@ -71,7 +71,6 @@ export class CohortLanding extends MobxLitElement {
       );
     }
 
-    console.log(prolificId);
     const response = await createParticipantCallable(
       this.firebaseService.functions, {
         experimentId: params['experiment'],

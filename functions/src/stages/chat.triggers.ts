@@ -1,6 +1,7 @@
 import { Timestamp } from 'firebase-admin/firestore';
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import {
+  awaitTypingDelay,
   ChatMessage,
   ChatMessageType,
   StageKind,
@@ -27,7 +28,7 @@ export const createMediatorMessage = onDocumentCreated(
     const data = event.data?.data() as ChatMessage | undefined;
 
     // Use experiment config to get ChatStageConfig with mediators.
-    const stage = (
+    let stage = (
       await app
         .firestore()
         .doc(`experiments/${event.params.experimentId}/stages/${event.params.stageId}`)
@@ -63,8 +64,8 @@ export const createMediatorMessage = onDocumentCreated(
     const mediatorMessages: MediatorMessage[] = [];
     for (const mediator of stage.mediators) {
       // Use last 10 messages to build chat history
-      const prompt = `${getPreface(mediator)}\n${getChatHistory(chatMessages.slice(-10), mediator)}\n${mediator.responseConfig.formattingInstructions}`;
-      
+      const prompt = `${getPreface(mediator)}\n${getChatHistory(chatMessages, mediator)}\n${mediator.responseConfig.formattingInstructions}`;
+
       // Call Gemini API with given modelCall info
       const response = await getGeminiAPIResponse(apiKeys.geminiKey, prompt);
 
@@ -105,6 +106,16 @@ export const createMediatorMessage = onDocumentCreated(
     const message = mediatorMessage.message;
     const parsed = mediatorMessage.parsed;
 
+    await awaitTypingDelay(message);
+
+    // Refresh the stage to check if mediators have been muted.
+    stage = (
+      await app
+        .firestore()
+        .doc(`experiments/${event.params.experimentId}/stages/${event.params.stageId}`)
+        .get()
+    ).data() as StageConfig;
+
     // Don't send a message if the conversation has moved on.
     const numChatsBeforeMediator = chatMessages.length;
     const numChatsAfterMediator = (
@@ -116,7 +127,7 @@ export const createMediatorMessage = onDocumentCreated(
         .count()
         .get()
     ).data().count;
-    if (numChatsAfterMediator > numChatsBeforeMediator) {
+    if (numChatsAfterMediator > numChatsBeforeMediator || stage.muteMediators) {
       return;
     }
 
