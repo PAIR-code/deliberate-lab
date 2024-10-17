@@ -25,7 +25,6 @@ export const createMediatorMessage = onDocumentCreated(
   'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}',
   async (event) => {
     const data = event.data?.data() as ChatMessage | undefined;
-    if (data?.type !== ChatMessageType.PARTICIPANT) return;
 
     // Use experiment config to get ChatStageConfig with mediators.
     const stage = (
@@ -37,7 +36,9 @@ export const createMediatorMessage = onDocumentCreated(
     if (stage.kind !== StageKind.CHAT) {
       return;
     }
-
+    if (stage.muteMediators) {
+      return;
+    }
     // Fetch experiment creator's API key.
     const creatorId = (
       await app.firestore().collection('experiments').doc(event.params.experimentId).get()
@@ -63,7 +64,7 @@ export const createMediatorMessage = onDocumentCreated(
     for (const mediator of stage.mediators) {
       // Use last 10 messages to build chat history
       const prompt = `${getPreface(mediator)}\n${getChatHistory(chatMessages.slice(-10), mediator)}\n${mediator.responseConfig.formattingInstructions}`;
-      console.log(prompt);
+      
       // Call Gemini API with given modelCall info
       const response = await getGeminiAPIResponse(apiKeys.geminiKey, prompt);
 
@@ -76,8 +77,8 @@ export const createMediatorMessage = onDocumentCreated(
         message = '';
 
         try {
-          // TODO: Hack to get rid of markdown ticks surrounding {} ?
-          parsed = JSON.parse(response.text);
+          const cleanedText = response.text.replace(/```json\s*|\s*```/g, '').trim();
+          parsed = JSON.parse(cleanedText);
         } catch {
           // Response is already logged in console during Gemini API call
           console.log('Could not parse JSON!');
@@ -85,11 +86,18 @@ export const createMediatorMessage = onDocumentCreated(
         message = parsed[mediator.responseConfig.messageField] ?? '';
       }
 
-      if (message.trim() === '') break;
+      const trimmed = message.trim();
+      if (trimmed === '' || trimmed === '""' || trimmed === "''") continue;
       mediatorMessages.push({ mediator, parsed, message });
     }
 
     if (mediatorMessages.length === 0) return;
+
+    // Show all of the potential messages.
+    console.log('The following participants wish to speak:');
+    mediatorMessages.forEach((message) => {
+      console.log(`\t${message.mediator.name}: ${message.message}`);
+    });
 
     // Randomly sample a message.
     const mediatorMessage = mediatorMessages[Math.floor(Math.random() * mediatorMessages.length)];
