@@ -185,6 +185,22 @@ export const DEFAULT_STRING_FORMATTING_INSTRUCTIONS = `If you would like to resp
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
+export async function awaitTypingDelay(message: string): Promise<void> {
+  const delay = getTypingDelay(message);
+  console.log(`Waiting ${(delay / 1000).toFixed(2)} seconds to simulate delay.`);
+  return new Promise((resolve) => setTimeout(resolve, delay));
+}
+
+export function getTypingDelay(message: string): number {
+  // 40 WPM = 300 ms per character.
+  const averageTypingSpeed = 75; // 180 WPM.
+  const randomnessFactor = 0.5;
+
+  const baseDelay = message.length * averageTypingSpeed;
+  const randomMultiplier = 1 + (Math.random() * randomnessFactor - randomnessFactor / 2);
+
+  return Math.round(baseDelay * randomMultiplier);
+}
 
 /** Create chat stage. */
 export function createChatStage(config: Partial<ChatStageConfig> = {}): ChatStageConfig {
