@@ -20,6 +20,7 @@ import {Pages, RouterService} from '../../services/router.service';
 import {getParticipantName} from '../../shared/participant.utils';
 
 import {styles} from './header.scss';
+import {ChatStageConfig} from '@deliberation-lab/utils';
 
 /** Header component for app pages */
 @customElement('page-header')
@@ -97,10 +98,20 @@ export class Header extends MobxLitElement {
         case Pages.PARTICIPANT:
           this.routerService.navigate(Pages.EXPERIMENT, {
             experiment: params['experiment'],
-            participant: params['participant']
+            participant: params['participant'],
           });
           break;
         case Pages.PARTICIPANT_STAGE:
+          const stageId = this.routerService.activeRoute.params['stage'];
+          const stage = this.experimentService.getStage(
+            stageId
+          ) as ChatStageConfig;
+          if (stage.mediators.length > 0 && !stage.muteMediators!) {
+            const isConfirmed = window.confirm(
+              `Agents will still respond to new messages. Are you sure you want to go back without muting the agents first?`
+            );
+            if (!isConfirmed) return;
+          }
           this.routerService.navigate(Pages.EXPERIMENT, {
             experiment: params['experiment'],
           });
@@ -340,7 +351,9 @@ export class Header extends MobxLitElement {
           icon=${debugMode ? 'code_off' : 'code'}
           color="neutral"
           variant="default"
-          @click=${() => { this.authService.setDebugMode(!debugMode); }}
+          @click=${() => {
+            this.authService.setDebugMode(!debugMode);
+          }}
         >
         </pr-icon-button>
       </pr-tooltip>

@@ -51,13 +51,32 @@ export class ChatPanel extends MobxLitElement {
     const mediators = this.stage.mediators;
     if (!mediators) return;
 
-    const isMuted = this.mediatorEditor.configMap[this.stage.id].muteMediators;
     return html`
       <div class="panel-item">
         <div class="panel-item-title">Agents (${mediators.length})</div>
-        <div class="panel-item-subtitle">Only visible to experimenters</div>
+        ${this.renderApiCheck()}
+        <div class="panel-item-subtitle">This agent panel is only visible to experimenters</div>
         ${mediators.map((mediator) => this.renderMediator(mediator))}
       </div>
+      ${this.renderMuteButton()}
+    `;
+  }
+  private renderApiCheck() {
+    if (!this.authService.experimenterData?.apiKeys.geminiKey) {
+      return html`
+        <div class="warning">
+          <b>Note:</b> In order for LLM calls to work, you must add your Gemini
+          API key under Settings.
+        </div>
+      `;
+    }
+    return '';
+  }
+
+  private renderMuteButton() {
+    if (!this.stage || this.stage.mediators.length == 0) return;
+    const isMuted = this.mediatorEditor.configMap[this.stage.id].muteMediators;
+    return html`
       <div class="panel-item">
         <pr-tooltip
           position="BOTTOM_END"
@@ -79,7 +98,6 @@ export class ChatPanel extends MobxLitElement {
       </div>
     `;
   }
-
   private renderParticipantList() {
     const activeParticipants = this.cohortService.activeParticipants;
     return html`
