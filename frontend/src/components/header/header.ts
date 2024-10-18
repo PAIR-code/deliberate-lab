@@ -106,7 +106,11 @@ export class Header extends MobxLitElement {
           const stage = this.experimentService.getStage(
             stageId
           ) as ChatStageConfig;
-          if (stage.mediators.length > 0 && !stage.muteMediators!) {
+          if (
+            stage.mediators &&
+            stage.mediators.length > 0 &&
+            !stage.muteMediators!
+          ) {
             const isConfirmed = window.confirm(
               `Agents will still respond to new messages. Are you sure you want to go back without muting the agents first?`
             );
