@@ -44,6 +44,7 @@ export interface TextSurveyQuestion extends BaseSurveyQuestion {
 
 export interface CheckSurveyQuestion extends BaseSurveyQuestion {
   kind: SurveyQuestionKind.CHECK;
+  isRequired: boolean; // Whether a check is required.
 }
 
 export interface MultipleChoiceSurveyQuestion extends BaseSurveyQuestion {
@@ -154,6 +155,7 @@ export function createCheckSurveyQuestion(
     id: config.id ?? generateId(),
     kind: SurveyQuestionKind.CHECK,
     questionTitle: config.questionTitle ?? '',
+    isRequired: config.isRequired ?? false,
   }
 }
 

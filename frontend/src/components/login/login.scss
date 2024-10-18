@@ -52,3 +52,9 @@ h2 {
     color: var(--md-sys-color-on-secondary-container);
   }
 }
+
+.version {
+  float: right;
+  font-size: 8px;
+  color: var(--md-sys-color-outline);
+}

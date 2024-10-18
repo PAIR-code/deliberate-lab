@@ -4,6 +4,7 @@
 
 :host {
   @include common.flex-column;
+  margin-top: -30px;
 }
 
 .menu-wrapper {

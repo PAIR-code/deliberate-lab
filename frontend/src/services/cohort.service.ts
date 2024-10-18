@@ -108,6 +108,15 @@ export class CohortService extends Service {
     );
   }
 
+  // Participants who are obsolete but have already passed
+  // the given stage should not hold up the waiting page.
+  getObsoleteParticipantsPastThisStage(stageId: string) {
+    return this.getAllParticipants().filter(
+      participant => isUnlockedStage(participant, stageId)
+        && isObsoleteParticipant(participant)
+    );
+  }
+ 
   getUnlockedStageParticipants(stageId: string) {
     return this.getAllParticipants().filter(
       participant => isUnlockedStage(participant, stageId)
@@ -185,8 +194,9 @@ export class CohortService extends Service {
 
     // Check for min number of participants
     const numUnlocked = this.getUnlockedStageParticipants(stageId).length;
+    const numObsolete = this.getObsoleteParticipantsPastThisStage(stageId).length;
     const hasMinParticipants = () => {
-      return stageConfig.progress.minParticipants <= numUnlocked;
+      return stageConfig.progress.minParticipants <= numUnlocked + numObsolete;
     };
 
     // Otherwise, if waitForParticipants is true, check for locked participants
