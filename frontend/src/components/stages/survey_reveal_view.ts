@@ -226,8 +226,8 @@ export class SurveyReveal extends MobxLitElement {
 
       case SurveyQuestionKind.CHECK:
         answerText = (answer as CheckSurveyAnswer).isChecked
-          ? 'Checked'
-          : 'Unchecked';
+          ? '✅ Checked'
+          : '☑️ Unchecked';
         return this.makeCell(answerText!);
 
       case SurveyQuestionKind.MULTIPLE_CHOICE:

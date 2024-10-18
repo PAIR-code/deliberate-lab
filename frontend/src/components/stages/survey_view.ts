@@ -49,32 +49,74 @@ export class SurveyView extends MobxLitElement {
     ParticipantAnswerService
   );
 
+  private checkQuestions: string[] = [];
+
   @property() stage: SurveyStageConfig | undefined = undefined;
   @property() renderSummaryView: boolean = false; // If true, render a minimized summary view.
+
+  private getRequiredQuestions() {
+    return (
+      this.stage!.questions.filter(
+        (q) =>
+          q.kind !== SurveyQuestionKind.CHECK ||
+          (q.kind === SurveyQuestionKind.CHECK && q.isRequired)
+      ).map((q) => q.id) ?? []
+    );
+  }
 
   override render() {
     if (!this.stage) {
       return nothing;
     }
 
-    const questionsComplete = () => {
+    const questionsComplete = (): boolean => {
       if (!this.stage) return false;
+      const answeredQuestionIds = new Set(
+        this.participantAnswerService.getSurveyAnswerIDs(this.stage.id)
+      );
 
-      // Confirm all questions are written to survey answer service
-      return (
-        this.participantAnswerService.getNumSurveyAnswers(this.stage.id) ===
-        this.stage!.questions.length
+      return this.getRequiredQuestions().every((id) =>
+        answeredQuestionIds.has(id)
       );
     };
 
     const saveAnswers = async () => {
       if (!this.stage) return;
-      this.participantAnswerService.saveSurveyAnswers(this.stage.id);
+
+      // Populate default answers for optional questions.
+      const requiredQuestionIds = this.getRequiredQuestions();
+      const optionalQuestions = this.stage.questions.filter(
+        (q) => !requiredQuestionIds.includes(q.id)
+      );
+
+      const answeredQuestionIDs =
+        this.participantAnswerService.getSurveyAnswerIDs(this.stage.id);
+
+      optionalQuestions.forEach((question) => {
+        if (!answeredQuestionIDs.includes(question.id)) {
+          const answer: CheckSurveyAnswer = {
+            id: question.id,
+            kind: SurveyQuestionKind.CHECK,
+            isChecked: false,
+          };
+          this.participantAnswerService.updateSurveyAnswer(
+            this.stage!.id,
+            answer
+          );
+        }
+      });
+
+      // Save all answers for this stage
+      await this.participantAnswerService.saveSurveyAnswers(this.stage.id);
     };
 
-    const wrapperStyle = this.renderSummaryView ? "questions-wrapper-condensed" : "questions-wrapper";
+    const wrapperStyle = this.renderSummaryView
+      ? 'questions-wrapper-condensed'
+      : 'questions-wrapper';
     return html`
-      ${this.renderSummaryView ? '' : html`<stage-description .stage=${this.stage}></stage-description>`}
+      ${this.renderSummaryView
+        ? ''
+        : html`<stage-description .stage=${this.stage}></stage-description>`}
       <div class="${wrapperStyle}">
         ${this.stage.questions.map((question) => this.renderQuestion(question))}
       </div>

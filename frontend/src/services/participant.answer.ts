@@ -110,12 +110,16 @@ export class ParticipantAnswerService extends Service {
     return answer.rankingList.length;
   }
 
-  getNumSurveyAnswers(stageId: string) {
+  getSurveyAnswerIDs(stageId: string) {
     const answer = this.answerMap[stageId];
-    if (!answer || answer.kind !== StageKind.SURVEY) return 0;
-    return Object.keys(answer.answerMap).length;
+    if (!answer || answer.kind !== StageKind.SURVEY) return [];
+    return Object.keys(answer.answerMap);
   }
-
+ 
+  getNumSurveyAnswers(stageId: string) {
+    return this.getSurveyAnswerIDs(stageId).length;
+  }
+  
   updateProfile(config: Partial<ParticipantProfileExtended>) {
     if (!this.profile) return;
     this.profile = {...this.profile, ...config};
