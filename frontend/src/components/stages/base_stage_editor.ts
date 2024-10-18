@@ -37,7 +37,7 @@ export class BaseStageEditorComponent extends MobxLitElement {
 
     return html`
       ${this.renderName()} ${this.renderPrimaryText()} ${this.renderInfoText()}
-      ${this.renderHelpText()} ${this.renderMinParticipants()}
+      ${this.renderHelpText()}
       ${this.renderWaitForAllParticipants()}
       ${this.renderShowParticipantProgress()}
       <div class="divider"></div>
@@ -159,7 +159,7 @@ export class BaseStageEditorComponent extends MobxLitElement {
             @click=${updateCheck}
           >
           </md-checkbox>
-          <div>Wait for all participants before starting stage
+          <div>Hold for x number of participants to arrive at this stage
           ${mustWait
             ? html`
                 <br/>
@@ -171,6 +171,7 @@ export class BaseStageEditorComponent extends MobxLitElement {
             : ''}
           </div>
         </div>
+        ${waitForAllParticipants ? this.renderMinParticipants() : ''}
       </div>
     `;
   }
@@ -222,7 +223,7 @@ export class BaseStageEditorComponent extends MobxLitElement {
 
     return html`
       <div class="config-item">
-        <div class="number-input">
+        <div class="number-input tab">
           <label for="minParticipants"> Minimum number of participants </label>
           <input
             type="number"
