@@ -5,6 +5,8 @@ import {customElement, property} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
+import {ParticipantService} from '../../services/participant.service';
+import {ParticipantAnswerService} from '../../services/participant.answer';
 
 import {
   ParticipantProfileExtended,
@@ -29,6 +31,11 @@ export class Preview extends MobxLitElement {
   public readonly experimentManager = core.getService(ExperimentManager);
   public readonly experimentService = core.getService(ExperimentService);
 
+  public readonly participantService = core.getService(ParticipantService);
+  public readonly participantAnswerService = core.getService(
+    ParticipantAnswerService
+  );
+
   @property() profile: ParticipantProfileExtended | undefined = undefined;
 
   private getStageName = (id: string) => {
@@ -39,6 +46,16 @@ export class Preview extends MobxLitElement {
     if (!this.profile) {
       return nothing;
     }
+
+    this.participantService.updateForRoute(
+      this.experimentService.experiment!.id!,
+      this.experimentManager.currentParticipantId!
+    );
+
+    this.participantAnswerService.updateForRoute(
+      this.experimentService.experiment!.id,
+      this.experimentManager.currentParticipantId!
+    );
 
     // TODO: add toolbar for previewing, copying links, etc.
     // TODO: add progress bar

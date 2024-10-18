@@ -114,6 +114,10 @@ export class SurveyReveal extends MobxLitElement {
   }
 
   private renderIcon(correctAnswer: string, selectedAnswer: string) {
+    if (correctAnswer === '') {
+      return;
+    }
+    
     if (correctAnswer === selectedAnswer) {
       return html`<pr-icon color="success" icon="check_circle"></pr-icon>`;
     } else {
