@@ -1,7 +1,7 @@
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
-
+import '../stages/survey_editor_menu';
 import '@material/web/checkbox/checkbox.js';
 
 import {core} from '../../core/core';
@@ -39,6 +39,7 @@ export class SurveyEditor extends MobxLitElement {
     return html`
       <div class="section">
         <div class="title">Survey questions</div>
+        <survey-editor-menu .stage=${this.stage}></survey-editor-menu>
         ${this.stage.questions.map((question, index) =>
           this.renderQuestion(question, index)
         )}
