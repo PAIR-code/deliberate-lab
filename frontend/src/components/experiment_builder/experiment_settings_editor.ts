@@ -80,7 +80,9 @@ export class ExperimentSettingsEditor extends MobxLitElement {
         <pr-textarea
           label="Private experiment name*"
           placeholder="Internal experiment name (not visible to participants)"
-          class=${(this.experimentEditor.experiment.metadata.name === '') ? 'required' : ''}
+          class=${this.experimentEditor.experiment.metadata.name === ''
+            ? 'required'
+            : ''}
           variant="outlined"
           .value=${this.experimentEditor.experiment.metadata.name ?? ''}
           ?disabled=${!this.experimentManager.isCreator}
@@ -240,18 +242,22 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           </md-checkbox>
           <div>Limit cohort to maximum number of participants</div>
         </div>
-        <div class="number-input">
-          <label for="maxParticipants"> Maximum number of participants </label>
-          <input
-            type="number"
-            id="maxParticipants"
-            name="maxParticipants"
-            min="0"
-            .value=${maxParticipants ?? 100}
-            ?disabled=${!this.experimentManager.isCreator}
-            @input=${updateNum}
-          />
-        </div>
+        ${maxParticipants
+          ? html`<div class="number-input">
+              <label for="maxParticipants">
+                Maximum number of participants
+              </label>
+              <input
+                type="number"
+                id="maxParticipants"
+                name="maxParticipants"
+                min="0"
+                .value=${maxParticipants ?? 100}
+                ?disabled=${!this.experimentManager.isCreator}
+                @input=${updateNum}
+              />
+            </div>`
+          : ''}
       </div>
     `;
   }
