@@ -196,6 +196,11 @@ export class SurveyEditor extends MobxLitElement {
   }
 
   private renderCheckQuestion(question: CheckSurveyQuestion, index: number) {
+    const toggleIsRequired = () => {
+      const updatedQuestion = {...question, isRequired: !question.isRequired};
+      this.updateQuestion(updatedQuestion, index);
+    };
+
     return html`
       <div class="question-wrapper">
         <div class="question-label">Question ${index + 1} (checkbox)</div>
@@ -204,8 +209,22 @@ export class SurveyEditor extends MobxLitElement {
             <div class="left">
               ${this.renderQuestionTitleEditor(question, index)}
             </div>
-            ${this.renderQuestionNav(question, index)}
+            <div class="right">${this.renderQuestionNav(question, index)}</div>
           </div>
+          <div class="description">
+            <b>Optional:</b> Mark this checkbox to indicate if the question is
+            required for participants.
+          </div>
+          <label class="checkbox-wrapper">
+            <md-checkbox
+              touch-target="wrapper"
+              ?checked=${question.isRequired}
+              ?disabled=${!this.experimentEditor.canEditStages}
+              @click=${toggleIsRequired}
+            >
+            </md-checkbox>
+            <span class="checkbox-label">Required</span>
+          </label>
         </div>
       </div>
     `;
