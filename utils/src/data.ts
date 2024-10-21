@@ -45,5 +45,38 @@ export interface CohortDownload {
   // Maps from stage ID to stage public data
   dataMap: Record<string, StagePublicData>;
   // Maps from stage ID to ordered list of chat messages
-  chatMap: Record<string, ChatMessage>;
+  chatMap: Record<string, ChatMessage[]>;
+}
+
+/** Create experiment download object. */
+export function createExperimentDownload(
+  experiment: Experiment
+): ExperimentDownload {
+  return {
+    experiment,
+    stageMap: {},
+    participantMap: {},
+    cohortMap: {},
+  };
+}
+
+/** Create participant download object. */
+export function createParticipantDownload(
+  profile: ParticipantProfileExtended
+): ParticipantDownload {
+  return {
+    profile,
+    answerMap: {},
+  };
+}
+
+/** Create cohort download object. */
+export function createCohortDownload(
+  cohort: CohortConfig
+): CohortDownload {
+  return {
+    cohort,
+    dataMap: {},
+    chatMap: {},
+  };
 }

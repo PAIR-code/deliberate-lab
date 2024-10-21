@@ -4,7 +4,7 @@ import '../../pair-components/tooltip';
 import '../../components/experiment_builder/experiment_builder_nav';
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement} from 'lit/decorators.js';
+import {customElement, property} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
@@ -21,7 +21,6 @@ import {
   getParticipantName,
   getParticipantStatusDetailText,
 } from '../../shared/participant.utils';
-
 import {styles} from './header.scss';
 import {ChatStageConfig, ParticipantStatus} from '@deliberation-lab/utils';
 
@@ -38,6 +37,8 @@ export class Header extends MobxLitElement {
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
+
+  @property() isDownloading = false;
 
   override render() {
     if (!this.authService.isExperimenter) {
@@ -303,6 +304,23 @@ export class Header extends MobxLitElement {
           `;
         }
         return html`
+          <pr-tooltip
+            text="Download experiment data"
+            position="BOTTOM_END"
+          >
+            <pr-icon-button
+              icon="download"
+              color="neutral"
+              variant="default"
+              ?loading=${this.isDownloading}
+              @click=${async () => {
+                this.isDownloading = true;
+                await this.experimentManager.downloadExperiment();
+                this.isDownloading = false;
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
           <pr-icon-button
             icon="fork_right"
             color="neutral"
