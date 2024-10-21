@@ -1,4 +1,5 @@
 import { Timestamp } from 'firebase/firestore';
+import { ExperimentDownload } from './data';
 import {v4 as uuidv4} from 'uuid';
 
 /** Shared types and functions. */
@@ -14,6 +15,10 @@ export interface SimpleResponse<T> {
 
 export interface CreationResponse {
   id: string;
+}
+
+export interface ExperimentDownloadResponse {
+  data: ExperimentDownload|null;
 }
 
 // Helper for Timestamp (make it work between admin & sdk).
