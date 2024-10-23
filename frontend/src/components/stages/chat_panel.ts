@@ -49,13 +49,15 @@ export class ChatPanel extends MobxLitElement {
     }
 
     const mediators = this.stage.mediators;
-    if (!mediators) return;
+    if (!mediators || mediators.length === 0) return;
 
     return html`
       <div class="panel-item">
         <div class="panel-item-title">Agents (${mediators.length})</div>
         ${this.renderApiCheck()}
-        <div class="panel-item-subtitle">This agent panel is only visible to experimenters</div>
+        <div class="panel-item-subtitle">
+          This agent panel is only visible to experimenters
+        </div>
         ${mediators.map((mediator) => this.renderMediator(mediator))}
       </div>
       ${this.renderMuteButton()}
