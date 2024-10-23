@@ -28,7 +28,7 @@ import {
   StageConfig,
   createCohortConfig,
   createHumanMediatorChatMessage,
-  generateId
+  generateId,
 } from '@deliberation-lab/utils';
 import {
   createChatMessageCallable,
@@ -45,7 +45,9 @@ import {
   hasMaxParticipantsInCohort,
 } from '../shared/cohort.utils';
 import {
-  downloadJSON
+  downloadCSV,
+  downloadJSON,
+  getChatHistoryData
 } from '../shared/file.utils';
 import {
   isObsoleteParticipant,
@@ -473,8 +475,13 @@ export class ExperimentManager extends Service {
         this.sp.firebaseService.functions, { experimentId }
       );
       if (result.data) {
+        downloadJSON(result.data, result.data.experiment.metadata.name);
+        const chatData = getChatHistoryData(result.data);
+        chatData.forEach(data => {
+          downloadCSV(data.data, `${data.experimentName}_ChatHistory_Cohort-${data.cohortId}_Stage-${data.stageId}`);
+        });
+
         data = result.data;
-        downloadJSON(data, result.data.experiment.metadata.name);
       }
     }
     return data;
