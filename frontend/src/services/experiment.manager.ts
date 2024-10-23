@@ -48,7 +48,8 @@ import {
 import {
   downloadCSV,
   downloadJSON,
-  getChatHistoryData
+  getChatHistoryData,
+  getParticipantData
 } from '../shared/file.utils';
 import {
   isObsoleteParticipant,
@@ -491,6 +492,10 @@ export class ExperimentManager extends Service {
         chatData.forEach(data => {
           downloadCSV(data.data, `${data.experimentName}_ChatHistory_Cohort-${data.cohortId}_Stage-${data.stageId}`);
         });
+        downloadCSV(
+          getParticipantData(result.data),
+          result.data.experiment.metadata.name
+        );
 
         data = result.data;
       }
