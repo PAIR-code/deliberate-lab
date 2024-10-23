@@ -6,7 +6,13 @@ import {
   ChatMessage,
   ChatMessageType,
   ExperimentDownload,
-  ParticipantProfileExtended
+  ParticipantDownload,
+  ParticipantProfileExtended,
+  StageKind,
+  SurveyAnswer,
+  SurveyStageConfig,
+  SurveyQuestion,
+  SurveyQuestionKind
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToDate} from './utils';
 
@@ -68,12 +74,13 @@ export function getParticipantData(
   data: ExperimentDownload
 ) {
   const participantData: string[][] = [];
+
   // Add headings
-  participantData.push(getParticipantProfileCSVColumns());
+  participantData.push(getAllParticipantCSVColumns(data));
 
   // Add participants
   for (const participant of Object.values(data.participantMap)) {
-    participantData.push(getParticipantProfileCSVColumns(participant.profile));
+    participantData.push(getAllParticipantCSVColumns(data, participant));
   }
   return participantData;
 }
@@ -103,6 +110,34 @@ export function getChatHistoryData(
     }
   }
   return chatData;
+}
+
+/** Returns all CSV columns for given participant (or headings if null). */
+export function getAllParticipantCSVColumns(
+  data: ExperimentDownload,
+  participant: ParticipantDownload|null = null
+) {
+  let participantColumns = getParticipantProfileCSVColumns(
+    participant?.profile ?? null
+  );
+
+  // For each answer stage, add columns
+  data.experiment.stageIds.forEach((stageId) => {
+    const stageConfig = data.stageMap[stageId];
+    if (!stageConfig) return;
+
+    switch (stageConfig.kind) {
+      case StageKind.SURVEY:
+        const surveyColumns = getSurveyStageCSVColumns(
+          stageConfig, participant
+        );
+        participantColumns = [...participantColumns, ...surveyColumns];
+        break;
+      default:
+        break;
+    }
+  });
+  return participantColumns;
 }
 
 /** Create CSV columns for participant profile. */
@@ -149,6 +184,86 @@ export function getParticipantProfileCSVColumns(
 
   // TODO: Add columns for stage and time completed
   // based on given list of stage configs
+
+  return columns;
+}
+
+/** Create CSV columns for survey stage answers. */
+export function getSurveyStageCSVColumns(
+  surveyStage: SurveyStageConfig,
+  participant: ParticipantDownload|null = null // if null, return headers
+): string[] {
+  const columns: string[] = [];
+
+  const stageAnswer = participant ? participant.answerMap[surveyStage.id] : null;
+  surveyStage.questions.forEach(question => {
+    const answer = stageAnswer?.kind === StageKind.SURVEY ?
+      stageAnswer?.answerMap[question.id] : null;
+
+    switch (question.kind) {
+      case SurveyQuestionKind.TEXT:
+        const textAnswer = answer?.kind === SurveyQuestionKind.TEXT ?
+          answer?.answer : '';
+        columns.push(!participant ?
+          `${question.questionTitle} - Survey ${surveyStage.id}` :
+          textAnswer
+        );
+        break;
+      case SurveyQuestionKind.CHECK:
+        const checkAnswer = answer?.kind === SurveyQuestionKind.CHECK ?
+          answer?.isChecked.toString() : '';
+        columns.push(!participant ?
+          `${question.questionTitle} - Survey ${surveyStage.id}` :
+          checkAnswer
+        );
+        break;
+      case SurveyQuestionKind.MULTIPLE_CHOICE:
+        const mcAnswer = answer?.kind === SurveyQuestionKind.MULTIPLE_CHOICE ?
+          answer?.choiceId : '';
+        // Add columns for every multiple choice option
+        question.options.forEach((item, index) => {
+          columns.push(!participant ?
+            `Option ${index + 1} (${item.id}) - ${question.questionTitle} - Survey ${surveyStage.id}` :
+            item.text
+          );
+        });
+        // If correct answer, add column for correct answer
+        if (question.correctAnswerId) {
+          columns.push(!participant ?
+            `Correct answer - ${question.questionTitle} - Survey ${surveyStage.id}` :
+            question.options.find(item => item.id === question.correctAnswerId)?.text ?? ''
+          );
+        }
+        // Add column for participant answer ID
+        columns.push(!participant ?
+          `Participant answer (ID) - ${question.questionTitle} - Survey ${surveyStage.id}` :
+          mcAnswer
+        );
+        // Add column for participant text answer
+        columns.push(!participant ?
+          `Participant answer (text) - ${question.questionTitle} - Survey ${surveyStage.id}` :
+          question.options.find(item => item.id === mcAnswer)?.text ?? ''
+        );
+        // If correct answer, add column for if answer was correct
+        if (question.correctAnswerId) {
+          columns.push(!participant ?
+            `Is participant correct? - ${question.questionTitle} - Survey ${surveyStage.id}` :
+            (mcAnswer === question.correctAnswerId).toString()
+          );
+        }
+        break;
+      case SurveyQuestionKind.SCALE:
+        const scaleAnswer = answer?.kind === SurveyQuestionKind.SCALE ?
+          answer?.value.toString() : '';
+        columns.push(!participant ?
+          `${question.questionTitle} - Survey ${surveyStage.id}` :
+          scaleAnswer
+        );
+        break;
+      default:
+        break;
+    }
+  });
 
   return columns;
 }
