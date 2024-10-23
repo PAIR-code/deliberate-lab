@@ -5,7 +5,8 @@
 import {
   ChatMessage,
   ChatMessageType,
-  ExperimentDownload
+  ExperimentDownload,
+  ParticipantProfileExtended
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToDate} from './utils';
 
@@ -62,6 +63,21 @@ export interface ChatHistoryData {
 // CSV DATA FUNCTIONS
 // ****************************************************************************
 
+/** Returns CSV data for all participants in experiment download. */
+export function getParticipantData(
+  data: ExperimentDownload
+) {
+  const participantData: string[][] = [];
+  // Add headings
+  participantData.push(getParticipantProfileCSVColumns());
+
+  // Add participants
+  for (const participant of Object.values(data.participantMap)) {
+    participantData.push(getParticipantProfileCSVColumns(participant.profile));
+  }
+  return participantData;
+}
+
 /** Returns CSV data for all chat histories in experiment download. */
 export function getChatHistoryData(
   data: ExperimentDownload
@@ -87,6 +103,54 @@ export function getChatHistoryData(
     }
   }
   return chatData;
+}
+
+/** Create CSV columns for participant profile. */
+export function getParticipantProfileCSVColumns(
+  profile: ParticipantProfileExtended|null = null // if null, return headers
+): string[] {
+  const columns: string[] = [];
+
+  // Private ID
+  columns.push(!profile ? 'Private ID' : profile.privateId);
+
+  // Public ID
+  columns.push(!profile ? 'Public ID' : profile.publicId);
+
+  // Prolific ID
+  columns.push(!profile ? 'Prolific ID' : profile.prolificId ?? '');
+
+  // Current status
+  columns.push(!profile ? 'Current status' : profile.currentStatus);
+
+  // Current stage ID
+  columns.push(!profile ? 'Current stage ID' : profile.currentStageId);
+
+  // Current cohort ID
+  columns.push(!profile ? 'Current cohort ID' : profile.currentCohortId);
+
+  // Transfer cohort ID
+  columns.push(!profile ? 'Transfer cohort ID' : profile.transferCohortId ?? '');
+
+  // Start experiment timestamp
+  const startTimestamp = profile?.timestamps.startExperiment ?
+    convertUnifiedTimestampToDate(profile.timestamps.startExperiment) : '';
+  columns.push(!profile ? 'Start experiment timestamp' : startTimestamp);
+
+  // End experiment timestamp
+  const endTimestamp = profile?.timestamps.endExperiment ?
+    convertUnifiedTimestampToDate(profile.timestamps.endExperiment) : '';
+  columns.push(!profile ? 'End experiment timestamp' : endTimestamp);
+
+  // Accepted TOS timestamp
+  const tosTimestamp = profile?.timestamps.acceptedTOS ?
+    convertUnifiedTimestampToDate(profile.timestamps.acceptedTOS) : '';
+  columns.push(!profile ? 'Accepted TOS timestamp' : tosTimestamp);
+
+  // TODO: Add columns for stage and time completed
+  // based on given list of stage configs
+
+  return columns;
 }
 
 /** Create CSV columns for ChatMessage. */
