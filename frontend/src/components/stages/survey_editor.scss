@@ -78,3 +78,7 @@ pr-textarea {
 .title {
   @include typescale.title-small;
 }
+
+.required {
+  color: var(--md-sys-color-error);
+}
