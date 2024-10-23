@@ -69,14 +69,20 @@ export class ExperimentBuilder extends MobxLitElement {
   }
 
   private renderForkAction(stage: StageConfig) {
+    const forkDisabled =
+      stage.kind === StageKind.TOS || stage.kind === StageKind.PROFILE;
+
     return html` <pr-tooltip
-      text="Create a copy of this stage"
+      text=${forkDisabled
+        ? 'Cannot copy this stage'
+        : 'Create a copy of this stage'}
       position="LEFT_START"
     >
       <pr-icon-button
         icon="fork_right"
         color="neutral"
         variant="default"
+        ?disabled=${forkDisabled}
         @click=${() => {
           const {id, ...stageWithoutId} = stage;
           this.experimentEditor.addStage({id: generateId(), ...stageWithoutId});

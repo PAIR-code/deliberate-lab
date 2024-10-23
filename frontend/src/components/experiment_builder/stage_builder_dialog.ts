@@ -294,12 +294,16 @@ export class StageBuilderDialog extends MobxLitElement {
   }
 
   private renderProfileCard() {
+    const isDisabled = this.experimentEditor.hasStageKind(StageKind.PROFILE);
+
     const addStage = () => {
-      this.addStage(createProfileStage());
+      if (!isDisabled) {
+        this.addStage(createProfileStage());
+      }
     };
 
     return html`
-      <div class="card" @click=${addStage}>
+      <div class="card ${isDisabled ? 'disabled' : ''}" @click=${addStage}>
         <div class="title">👤 Profile</div>
         <div>Allow participants to set their profiles.</div>
       </div>

@@ -56,9 +56,7 @@ export class ProfileStageEditorComponent extends MobxLitElement {
           @click=${toggleAnonymous}
         >
         </md-checkbox>
-        <div>
-          🐱 Generate anonymous (animal-themed) profiles
-        </div>
+        <div>🐱 Generate anonymous (animal-themed) profiles</div>
       </div>
     `;
   }
