@@ -63,7 +63,6 @@ export const createMediatorMessage = onDocumentCreated(
     // Fetch messages from all mediators
     const mediatorMessages: MediatorMessage[] = [];
     for (const mediator of stage.mediators) {
-      // Use last 10 messages to build chat history
       const prompt = `${getPreface(mediator)}\n${getChatHistory(chatMessages, mediator)}\n${mediator.responseConfig.formattingInstructions}`;
 
       // Call Gemini API with given modelCall info

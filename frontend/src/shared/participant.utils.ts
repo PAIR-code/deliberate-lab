@@ -22,7 +22,7 @@ export function getParticipantPronouns(
   participant: ParticipantProfile,
   includeParentheses = true,
 ) {
-  if (participant.pronouns !== null) {
+  if (participant.pronouns) {
     return includeParentheses ? `(${participant.pronouns})` : participant.pronouns;
   }
   return '';
