@@ -8,6 +8,8 @@ import {
   ExperimentDownload,
   ParticipantDownload,
   ParticipantProfileExtended,
+  RankingStageConfig,
+  RankingStagePublicData,
   StageKind,
   SurveyAnswer,
   SurveyStageConfig,
@@ -133,6 +135,12 @@ export function getAllParticipantCSVColumns(
         );
         participantColumns = [...participantColumns, ...surveyColumns];
         break;
+      case StageKind.RANKING:
+        const rankingColumns = getRankingStageCSVColumns(
+          stageConfig, data, participant
+        );
+        participantColumns = [...participantColumns, ...rankingColumns];
+        break;
       default:
         break;
     }
@@ -184,6 +192,55 @@ export function getParticipantProfileCSVColumns(
 
   // TODO: Add columns for stage and time completed
   // based on given list of stage configs
+
+  return columns;
+}
+
+/** Create CSV columns for ranking stage answers. */
+export function getRankingStageCSVColumns(
+  rankingStage: RankingStageConfig,
+  data: ExperimentDownload, // used to extract ranking public data for cohort
+  participant: ParticipantDownload|null = null // if null, return headers
+): string[] {
+  const columns: string[] = [];
+
+  // Extract participant answer for ranking stage
+  const stageAnswer = participant ? participant.answerMap[rankingStage.id] : null;
+
+  // Extract winner ID from cohort ranking public data
+  const cohortId = participant ? participant.profile.currentCohortId : null;
+  const publicData =
+    cohortId ? data.cohortMap[cohortId]?.dataMap[rankingStage.id] : null;
+  const winnerId = publicData?.kind === StageKind.RANKING ? publicData.winnerId : '';
+
+  // Add column for ranking stage type
+  columns.push(
+    !participant ? `Ranking type - ${rankingStage.id}` :
+    rankingStage.rankingType
+  );
+
+  // Add columns for ranking stage strategy
+  columns.push(
+    !participant ? `Ranking strategy - ${rankingStage.id}` :
+    rankingStage.strategy
+  );
+
+  // Add column for participant's cohort (since winners are per cohort)
+  columns.push(
+    !participant ? `Participant's cohort ID` : cohortId ?? ''
+  );
+
+  // Add column for ranking winner
+  columns.push(
+    !participant ? `Ranking winner (for participant's cohort) - ${rankingStage.id}` :
+    winnerId
+  );
+
+  // Add column for participant's rankings
+  columns.push(
+    !participant ? `Participant rankings - ${rankingStage.id}` :
+    (stageAnswer?.kind === StageKind.RANKING ? stageAnswer.rankingList.join(',') : '')
+  );
 
   return columns;
 }
