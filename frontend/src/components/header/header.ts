@@ -20,7 +20,7 @@ import {Pages, RouterService} from '../../services/router.service';
 import {getParticipantName} from '../../shared/participant.utils';
 
 import {styles} from './header.scss';
-import {ChatStageConfig} from '@deliberation-lab/utils';
+import {ChatStageConfig, ParticipantStatus} from '@deliberation-lab/utils';
 
 /** Header component for app pages */
 @customElement('page-header')
@@ -151,20 +151,35 @@ export class Header extends MobxLitElement {
     const activePage = this.routerService.activePage;
     const profile = this.participantService.profile;
 
-    const renderParticipantProfileBanner = () => {
+    const renderParticipantProfileBanner = (profile: any) => {
+      if (!profile) return;
+      
+      let detailText = '';
+      if (profile.currentStatus === ParticipantStatus.BOOTED_OUT) {
+        detailText = "‼️ This participant has been booted from the experiment and can no longer participate.";
+      } else if (profile.currentStatus === ParticipantStatus.ATTENTION_TIMEOUT) {
+        detailText = "‼️ This participant has failed an attention check and can no longer participate.";
+      } else if (profile.currentStatus === ParticipantStatus.TRANSFER_DECLINED) {
+        detailText = "🛑 This participant declined a transfer and can no longer participate.";
+      } else {
+        detailText = getStageDetailText();
+      }
+
+      return `Previewing as: ${profile.avatar ? profile.avatar : ''} ${getParticipantName(profile)}. ${detailText}`;
+    }
+
+    const getStageDetailText = () => {
       const stageId = this.routerService.activeRoute.params['stage'];
       const stage = this.experimentService.getStage(stageId);
-      if (!stage || !profile) return nothing;
+      if (!stage || !profile) return '';
 
       const isWaiting = this.cohortService.isStageWaitingForParticipants(
         stage.id
       );
-      const isWaitingText = isWaiting
-        ? '. This participant currently sees a wait stage, as they are waiting for others in the cohort to catch up.'
+      const detailText = isWaiting
+        ? '⏸️ This participant currently sees a wait stage; they are waiting for others in the cohort to catch up.'
         : '';
-      return `Previewing as:
-        ${getParticipantName(profile)}${isWaitingText}
-      `;
+      return detailText;
     };
 
     switch (activePage) {
@@ -179,10 +194,9 @@ export class Header extends MobxLitElement {
       case Pages.PARTICIPANT_JOIN_COHORT:
         return 'Previewing experiment cohort';
       case Pages.PARTICIPANT:
-        // Participant landing page
-        return `Previewing as: ${profile ? getParticipantName(profile) : ''}`;
+        return renderParticipantProfileBanner(profile);
       case Pages.PARTICIPANT_STAGE:
-        return renderParticipantProfileBanner();
+        return renderParticipantProfileBanner(profile);
       default:
         return '';
     }

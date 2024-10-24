@@ -10,6 +10,7 @@ import {ParticipantAnswerService} from '../../services/participant.answer';
 
 import {
   ParticipantProfileExtended,
+  ParticipantProfile,
   StageKind,
   UnifiedTimestamp,
 } from '@deliberation-lab/utils';
@@ -22,6 +23,8 @@ import '../stages/ranking_view';
 import '../stages/survey_view';
 
 import {styles} from './profile_preview.scss';
+
+import {isUnlockedStage} from '../../shared/participant.utils';
 
 /** ParticipantProfile preview (for experiment manager) */
 @customElement('participant-profile-preview')
@@ -46,7 +49,7 @@ export class Preview extends MobxLitElement {
     if (!this.profile) {
       return nothing;
     }
-
+    // Update so that answers can be correctly updated.
     this.participantService.updateForRoute(
       this.experimentService.experiment!.id!,
       this.experimentManager.currentParticipantId!
@@ -111,6 +114,10 @@ export class Preview extends MobxLitElement {
 
     const renderStageData = (stageId: string) => {
       const stage = this.experimentService.getStage(stageId);
+      if (!stage) return '';
+      if (!isUnlockedStage(this.profile as ParticipantProfile, stageId))
+        return '';
+
       let stageHtml;
 
       switch (stage.kind) {
@@ -152,9 +159,7 @@ export class Preview extends MobxLitElement {
     };
 
     const stages = [];
-    for (const stageId of Object.keys(
-      this.profile.timestamps.completedStages
-    )) {
+    for (const stageId of this.experimentService.experiment!.stageIds) {
       const stageHtml = renderStageData(stageId);
       if (stageHtml) {
         stages.push(stageHtml);
