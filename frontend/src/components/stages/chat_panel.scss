@@ -33,3 +33,11 @@
   color: var(--md-sys-color-outline);
   font-weight: 500;
 }
+
+.warning {
+  @include typescale.label-small;
+  background: var(--md-sys-color-error-container);
+  border-radius: common.$spacing-medium;
+  color: var(--md-sys-color-on-error-container);
+  padding: common.$spacing-small common.$spacing-medium;
+}

@@ -55,7 +55,21 @@ export class ExperimentEditor extends Service {
 
   @computed get isValidExperimentConfig() {
     // TODO: Add other validation checks here
-    return this.experiment.metadata.name.length > 0;
+    if (this.experiment.metadata.name.length == 0) {
+      return false;
+    }
+
+    for (const stage of this.stages) {
+      switch (stage.kind) {
+        case StageKind.SURVEY:
+          // Ensure all questions have a non-empty title
+          if (!stage.questions.every((q) => q.questionTitle !== '')) {
+            return false;
+          }
+          break;
+      }
+    }
+    return true;
   }
 
   @computed get canEditStages() {

@@ -15,6 +15,13 @@
   padding: common.$main-content-padding;
 }
 
+.questions-wrapper-condensed {
+  @include common.flex-column;
+  flex-grow: 1;
+  gap: calc(common.$spacing-small * 2);
+  padding: calc(common.$spacing-small * 2);
+}
+
 .question {
   @include common.flex-column;
   gap: common.$spacing-medium; 

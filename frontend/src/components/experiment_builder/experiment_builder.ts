@@ -7,6 +7,7 @@ import '../stages/profile_stage_editor';
 import '../stages/reveal_editor';
 import '../stages/survey_editor';
 import '../stages/survey_editor_menu';
+import '../../pair-components/tooltip';
 import '../stages/tos_editor';
 import '../stages/transfer_editor';
 import './experiment_builder_nav';
@@ -20,9 +21,7 @@ import {customElement, property} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
-import {
-  StageKind
-} from '@deliberation-lab/utils';
+import {StageConfig, StageKind, generateId} from '@deliberation-lab/utils';
 
 import {styles} from './experiment_builder.scss';
 
@@ -37,10 +36,7 @@ export class ExperimentBuilder extends MobxLitElement {
     return html`
       <experiment-builder-nav></experiment-builder-nav>
       <div class="experiment-builder">
-        <div class="header">
-          ${this.renderTitle()}
-          ${this.renderActions()}
-        </div>
+        <div class="header">${this.renderTitle()} ${this.renderActions()}</div>
         <div class="content">${this.renderContent()}</div>
       </div>
       ${this.renderStageBuilderDialog()}
@@ -69,14 +65,32 @@ export class ExperimentBuilder extends MobxLitElement {
       return nothing;
     }
 
-    switch(stage.kind) {
-      case StageKind.SURVEY:
-        return html`
-          <survey-editor-menu .stage=${stage}></survey-editor-menu>
-        `;
-      default:
-        return nothing;
-    }
+    return html` ${this.renderForkAction(stage)} `;
+  }
+
+  private renderForkAction(stage: StageConfig) {
+    const forkDisabled =
+      stage.kind === StageKind.TOS || stage.kind === StageKind.PROFILE;
+
+    return html` <pr-tooltip
+      text=${forkDisabled
+        ? 'Cannot copy this stage'
+        : 'Create a copy of this stage'}
+      position="LEFT_START"
+    >
+      <pr-icon-button
+        icon="fork_right"
+        color="neutral"
+        variant="default"
+        ?disabled=${forkDisabled}
+        @click=${() => {
+          const {id, ...stageWithoutId} = stage;
+          this.experimentEditor.addStage({id: generateId(), ...stageWithoutId});
+          this.experimentEditor.jumpToLastStage();
+        }}
+      >
+      </pr-icon-button>
+    </pr-tooltip>`;
   }
 
   private renderContent() {
@@ -86,7 +100,7 @@ export class ExperimentBuilder extends MobxLitElement {
       return html`<experiment-settings-editor></experiment-settings-editor>`;
     }
 
-    switch(stage.kind) {
+    switch (stage.kind) {
       case StageKind.INFO:
         return html`
           <base-stage-editor .stage=${stage}></base-stage-editor>
@@ -139,7 +153,9 @@ export class ExperimentBuilder extends MobxLitElement {
 
   private renderStageBuilderDialog() {
     if (this.experimentEditor.showStageBuilderDialog) {
-      return html`<stage-builder-dialog .showGames=${this.experimentEditor.showGamesTab}></stage-builder-dialog>`;
+      return html`<stage-builder-dialog
+        .showGames=${this.experimentEditor.showGamesTab}
+      ></stage-builder-dialog>`;
     }
     return nothing;
   }

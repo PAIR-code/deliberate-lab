@@ -55,13 +55,31 @@ export class CohortLanding extends MobxLitElement {
     const isAnonymous = requiresAnonymousProfiles(
       this.experimentService.stages
     );
+
+    const prolificIdMatch = window.location.href.match(
+      /[?&]PROLIFIC_PID=([^&]+)/
+    );
+    const prolificId = prolificIdMatch
+      ? prolificIdMatch[1]
+      : null;
+    if (
+      this.experimentService.experiment!.prolificConfig!.enableProlificIntegration &&
+      !prolificIdMatch
+    ) {
+      console.log(
+        'Warning: Participant joining a Prolific experiment without a Prolific code.'
+      );
+    }
+
     const response = await createParticipantCallable(
       this.firebaseService.functions, {
         experimentId: params['experiment'],
         cohortId: params['cohort'],
-        isAnonymous
+        isAnonymous,
+        prolificId,
       }
     );
+
     // Route to participant page
     this.routerService.navigate(Pages.PARTICIPANT, {
       experiment: params['experiment'],

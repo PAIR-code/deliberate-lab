@@ -33,11 +33,9 @@ import {
   ParticipantStatus,
   ProfileType,
   StageConfig,
-  StageKind
+  StageKind,
 } from '@deliberation-lab/utils';
-import {
-  isParticipantEndedExperiment
-} from '../../shared/participant.utils';
+import {isParticipantEndedExperiment} from '../../shared/participant.utils';
 
 import {styles} from './participant_previewer.scss';
 
@@ -58,10 +56,12 @@ export class ParticipantPreviewer extends MobxLitElement {
     if (this.routerService.activePage === Pages.PARTICIPANT) {
       return html`
         <participant-nav></participant-nav>
-        <div class="participant-previewer ${!this.authService.isExperimenter ? 'full-view' : ''}">
-          <div class="content">
-            ${this.renderLanding()}
-          </div>
+        <div
+          class="participant-previewer ${!this.authService.isExperimenter
+            ? 'full-view'
+            : ''}"
+        >
+          <div class="content">${this.renderLanding()}</div>
         </div>
 
         ${this.renderPopups()}
@@ -73,7 +73,11 @@ export class ParticipantPreviewer extends MobxLitElement {
 
     return html`
       <participant-nav></participant-nav>
-      <div class="participant-previewer ${!this.authService.isExperimenter ? 'full-view' : ''}">
+      <div
+        class="participant-previewer ${!this.authService.isExperimenter
+          ? 'full-view'
+          : ''}"
+      >
         <participant-header .stage=${stage}></participant-header>
         ${this.renderStageContent(stage)}
       </div>
@@ -83,9 +87,8 @@ export class ParticipantPreviewer extends MobxLitElement {
 
   private renderPopups() {
     return html`
-    ${this.renderTransferPopup()}
-    ${this.renderAttentionPopup()}
-    ${this.renderBootedPopup()}
+      ${this.renderTransferPopup()} ${this.renderAttentionPopup()}
+      ${this.renderBootedPopup()}
     `;
   }
 
@@ -109,7 +112,7 @@ export class ParticipantPreviewer extends MobxLitElement {
         const startExperiment = Timestamp.now();
         const timestamps = {
           ...profile.timestamps,
-          startExperiment
+          startExperiment,
         };
         await this.participantService.updateProfile({timestamps});
         this.isStartExperimentLoading = false;
@@ -118,7 +121,8 @@ export class ParticipantPreviewer extends MobxLitElement {
       return html`
         <pr-button
           ?loading=${this.isStartExperimentLoading}
-          variant="tonal" @click=${onStartExperiment}
+          variant="tonal"
+          @click=${onStartExperiment}
         >
           Start experiment
         </pr-button>
@@ -138,7 +142,10 @@ export class ParticipantPreviewer extends MobxLitElement {
     const isExperimenter = this.authService.isExperimenter;
     const config = this.experimentService.experiment?.attentionCheckConfig;
     if (
-      isObsolete || isExperimenter || !config || !config.enableAttentionChecks
+      isObsolete ||
+      isExperimenter ||
+      !config ||
+      !config.enableAttentionChecks
     ) {
       return nothing;
     }
@@ -152,18 +159,21 @@ export class ParticipantPreviewer extends MobxLitElement {
   }
 
   private renderBootedPopup() {
-    if (this.participantService.profile?.currentStatus
-      !== ParticipantStatus.BOOTED_OUT
+    const isExperimenter = this.authService.isExperimenter;
+    if (
+      isExperimenter ||
+      this.participantService.profile?.currentStatus !==
+        ParticipantStatus.BOOTED_OUT
     ) {
       return nothing;
     }
     return html`<booted-popup></booted-popup>`;
   }
 
- 
   private renderTransferPopup() {
-    if (this.participantService.profile?.currentStatus
-      !== ParticipantStatus.TRANSFER_PENDING
+    if (
+      this.participantService.profile?.currentStatus !==
+      ParticipantStatus.TRANSFER_PENDING
     ) {
       return nothing;
     }
@@ -176,13 +186,16 @@ export class ParticipantPreviewer extends MobxLitElement {
     }
 
     // If stage not yet unlocked, do not show to participants
-    if (!this.participantService.canAccessStage(stage.id)
-      && !this.authService.isExperimenter
+    if (
+      !this.participantService.canAccessStage(stage.id) &&
+      !this.authService.isExperimenter
     ) {
       return html`<div class="content">Stage not available yet</div>`;
     }
 
-    const isWaiting = this.cohortService.isStageWaitingForParticipants(stage.id);
+    const isWaiting = this.cohortService.isStageWaitingForParticipants(
+      stage.id
+    );
     if (isWaiting && !this.authService.isExperimenter) {
       return html`<progress-stage-waiting></progress-stage-waiting>`;
     }
@@ -195,7 +208,7 @@ export class ParticipantPreviewer extends MobxLitElement {
         return html`<info-view .stage=${stage}></info-view>`;
       case StageKind.PROFILE:
         if (stage.profileType === ProfileType.ANONYMOUS_ANIMAL) {
-        return html`<profile-viewer .stage=${stage}></profile-viewer>`;
+          return html`<profile-viewer .stage=${stage}></profile-viewer>`;
         }
         return html`<profile-editor .stage=${stage}></profile-editor>`;
       case StageKind.CHAT:
@@ -214,9 +227,7 @@ export class ParticipantPreviewer extends MobxLitElement {
       case StageKind.REVEAL:
         return html`<reveal-view .stage=${stage}></reveal-view>`;
       case StageKind.SURVEY:
-        return html`
-          <survey-view .stage=${stage}></survey-view>
-        `;
+        return html` <survey-view .stage=${stage}></survey-view> `;
       case StageKind.TRANSFER:
         return html`<transfer-view .stage=${stage}></transfer-view>`;
       default:

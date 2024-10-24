@@ -33,6 +33,7 @@ export class RevealView extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
 
   @property() stage: RevealStageConfig | null = null;
+  @property() renderSummaryView: boolean = false; // If true, render a minimized summary view.
 
   override render() {
     if (!this.stage) {
@@ -40,15 +41,19 @@ export class RevealView extends MobxLitElement {
     }
 
     return html`
-      <stage-description .stage=${this.stage}></stage-description>
+      ${this.renderSummaryView
+        ? ''
+        : html`<stage-description .stage=${this.stage}></stage-description>`}
       <div class="reveal-wrapper">
-        ${this.stage.items.map(item => this.renderItem(item))}
+        ${this.stage.items.map((item) => this.renderItem(item))}
       </div>
-      <stage-footer>
-        ${this.stage.progress.showParticipantProgress ?
-          html`<progress-stage-completed></progress-stage-completed>`
-          : nothing}
-      </stage-footer>
+      ${this.renderSummaryView
+        ? ''
+        : html`<stage-footer>
+            ${this.stage.progress.showParticipantProgress
+              ? html`<progress-stage-completed></progress-stage-completed>`
+              : nothing}
+          </stage-footer>`}
     `;
   }
 
@@ -58,7 +63,7 @@ export class RevealView extends MobxLitElement {
     const publicData = this.cohortService.stagePublicDataMap[item.id];
     if (!stage) return nothing;
 
-    switch(item.kind) {
+    switch (item.kind) {
       case StageKind.RANKING:
         return html`
           <ranking-reveal-view .item=${item} .publicData=${publicData}>

@@ -8,9 +8,7 @@ import {ParticipantService} from '../../services/participant.service';
 import {Pages, RouterService} from '../../services/router.service';
 import {PROLIFIC_COMPLETION_URL_PREFIX} from '../../shared/constants';
 
-import {
-  ParticipantStatus
-} from '@deliberation-lab/utils';
+import {ParticipantStatus} from '@deliberation-lab/utils';
 
 import {styles} from './popup.scss';
 
@@ -27,7 +25,9 @@ class TransferPopup extends MobxLitElement {
     return html`
       <div class="overlay">
         <div class="popup">
-          <div class="title">You have been transferred to a new experiment!</div>
+          <div class="title">
+            You have been transferred to a new experiment!
+          </div>
           <div class="button-row">
             <div class="button-container">
               <pr-button color="error" variant="tonal" @click=${this.handleNo}>
@@ -56,6 +56,18 @@ class TransferPopup extends MobxLitElement {
   private handleYes() {
     this.analyticsService.trackButtonClick(ButtonClick.TRANSFER_ACCEPT);
     this.participantService.acceptParticipantTransfer();
+
+    // Move to next stage.
+    const nextStageId = this.experimentService.getNextStageId(
+      this.participantService.profile?.currentStageId!
+    )!;
+    if (!this.participantService.profile) return false;
+    this.routerService.navigate(Pages.PARTICIPANT_STAGE, {
+      experiment: this.routerService.activeRoute.params['experiment'],
+      participant: this.routerService.activeRoute.params['participant'],
+      stage: nextStageId,
+    });
+    window.location.reload();
   }
 
   private async handleNo() {
