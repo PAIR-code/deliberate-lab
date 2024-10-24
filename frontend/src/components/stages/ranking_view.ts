@@ -20,6 +20,7 @@ import {RouterService} from '../../services/router.service';
 
 import {
   ParticipantProfile,
+  ParticipantStatus,
   ItemRankingStage,
   RankingStageConfig,
   RankingItem,
@@ -54,7 +55,12 @@ export class RankingView extends MobxLitElement {
 
   private getItems() {
     if (this.stage?.rankingType === RankingType.PARTICIPANTS) {
-      const allParticipants = this.cohortService.getAllParticipants();
+      const allParticipants = this.cohortService
+        .getAllParticipants()
+        .filter(
+          // Filter only to active participants.
+          (profile) => profile.currentStatus === ParticipantStatus.IN_PROGRESS
+        );
       if (this.stage.enableSelfVoting) {
         return allParticipants;
       }
@@ -99,24 +105,25 @@ export class RankingView extends MobxLitElement {
       );
     };
 
-    
     if (this.renderSummaryView) {
-      const rankingList = this.participantAnswerService.getRankingList(this.stage.id);
-      
+      const rankingList = this.participantAnswerService.getRankingList(
+        this.stage.id
+      );
+
       const items = this.getItems();
-      
+
       return html`
         <ol>
           ${rankingList.map((id: string) => {
             const item = items.find((i) => this.getItemId(i) === id);
-            return item 
-              ? html`<li>${this.renderItem(item)}</li>` 
+            return item
+              ? html`<li>${this.renderItem(item)}</li>`
               : html`<li>Unknown Item</li>`; // Handle missing items gracefully
           })}
         </ol>
       `;
     }
-        
+
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="ranking-wrapper">
