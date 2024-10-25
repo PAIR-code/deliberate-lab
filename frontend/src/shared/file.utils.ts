@@ -8,13 +8,17 @@ import {
   ExperimentDownload,
   ParticipantDownload,
   ParticipantProfileExtended,
+  PayoutItemType,
+  PayoutStageConfig,
   RankingStageConfig,
   RankingStagePublicData,
   StageKind,
   SurveyAnswer,
   SurveyStageConfig,
   SurveyQuestion,
-  SurveyQuestionKind
+  SurveyQuestionKind,
+  calculatePayoutResult,
+  calculatePayoutTotal
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToDate} from './utils';
 
@@ -141,6 +145,12 @@ export function getAllParticipantCSVColumns(
         );
         participantColumns = [...participantColumns, ...rankingColumns];
         break;
+      case StageKind.PAYOUT:
+        const payoutColumns = getPayoutStageCSVColumns(
+          stageConfig, data, participant
+        );
+        participantColumns = [...participantColumns, ...payoutColumns];
+        break;
       default:
         break;
     }
@@ -192,6 +202,74 @@ export function getParticipantProfileCSVColumns(
 
   // TODO: Add columns for stage and time completed
   // based on given list of stage configs
+
+  return columns;
+}
+
+/** Create CSV columns for payout stage. */
+export function getPayoutStageCSVColumns(
+  payoutStage: PayoutStageConfig,
+  data: ExperimentDownload, // used to extract cohort public data
+  participant: ParticipantDownload|null = null // if null, return headers
+): string[] {
+  const columns: string[] = [];
+
+  // Get public data map from relevant cohort
+  const cohortId = participant ? participant.profile.currentCohortId : null;
+  const publicDataMap = cohortId ? data.cohortMap[cohortId]?.dataMap : {};
+
+  // Get payout results
+  const resultConfig = participant ? calculatePayoutResult(
+    payoutStage,
+    data.stageMap,
+    publicDataMap,
+    participant.profile
+  ) : null;
+
+  payoutStage.payoutItems.forEach((item) => {
+    // Skip if payout item is not active
+    if (!item.isActive) return;
+
+    const resultItem = resultConfig?.results.find(result => result.id === item.id) ?? null;
+
+    // Column for amount earned if stage completed
+    columns.push(!participant ?
+      `Payout earned if stage completed - ${name} - Stage ${payoutStage.id}` :
+      // Get amount earned from result config
+      resultItem?.baseAmountEarned.toString() ?? ''
+    );
+
+    if (item.type === PayoutItemType.SURVEY) {
+      // Column for ranking stage whose winner is used
+      // (or null if using current participant's answers)
+      columns.push(!participant ?
+        `Ranking stage used for payout- ${name} - Stage ${payoutStage.id}` :
+        item.rankingStageId ?? ''
+      );
+
+      // For each question in payout stage config that is also
+      // in payout item question map, column for amount earned
+      const surveyQuestions
+        = (data.stageMap[item.stageId] as SurveyStageConfig)?.questions ?? [];
+      surveyQuestions.forEach((question) => {
+        if (item.questionMap[question.id]) {
+          const questionResult = resultItem?.type === PayoutItemType.SURVEY ?
+            resultItem.questionResults.find(result => result.question.id === question.id)
+            : null;
+          columns.push(!participant ?
+            `Correct answer payout - ${question.questionTitle} - Stage ${payoutStage.id}` :
+            questionResult?.amountEarned.toString() ?? ''
+          );
+        }
+      });
+    }
+  });
+
+  // Column for payout total
+  columns.push(!participant ?
+    `Total payout - Stage ${payoutStage.id}` :
+    resultConfig ? calculatePayoutTotal(resultConfig).toString() : ''
+  );
 
   return columns;
 }
