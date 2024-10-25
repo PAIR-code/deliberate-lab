@@ -8,7 +8,7 @@ import {ParticipantService} from '../../services/participant.service';
 import {Pages, RouterService} from '../../services/router.service';
 import {PROLIFIC_COMPLETION_URL_PREFIX} from '../../shared/constants';
 
-import {ParticipantStatus} from '@deliberation-lab/utils';
+import {ParticipantStatus, StageKind} from '@deliberation-lab/utils';
 
 import {styles} from './popup.scss';
 
@@ -57,10 +57,14 @@ class TransferPopup extends MobxLitElement {
     this.analyticsService.trackButtonClick(ButtonClick.TRANSFER_ACCEPT);
     this.participantService.acceptParticipantTransfer();
 
-    // Move to next stage.
-    const nextStageId = this.experimentService.getNextStageId(
-      this.participantService.profile?.currentStageId!
-    )!;
+    // Move to next stage if on a transfer stage.
+    const curStageId = this.participantService.profile?.currentStageId!;
+    const curStage = this.experimentService.getStage(curStageId);
+    if (curStage.kind !== StageKind.TRANSFER) {
+      return;
+    }
+    const nextStageId = this.experimentService.getNextStageId(curStageId)!;
+
     if (!this.participantService.profile) return false;
     this.routerService.navigate(Pages.PARTICIPANT_STAGE, {
       experiment: this.routerService.activeRoute.params['experiment'],

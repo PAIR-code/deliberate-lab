@@ -38,8 +38,10 @@ export class SurveyEditor extends MobxLitElement {
 
     return html`
       <div class="section">
-        <div class="title">Survey questions</div>
-        <survey-editor-menu .stage=${this.stage}></survey-editor-menu>
+        <div class="header">
+          <div class="title">Survey questions</div>
+          <survey-editor-menu .stage=${this.stage}></survey-editor-menu>
+        </div>
         ${this.stage.questions.map((question, index) =>
           this.renderQuestion(question, index)
         )}

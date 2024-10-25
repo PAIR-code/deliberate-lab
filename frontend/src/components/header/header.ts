@@ -17,7 +17,10 @@ import {ExperimentManager} from '../../services/experiment.manager';
 import {ParticipantService} from '../../services/participant.service';
 import {Pages, RouterService} from '../../services/router.service';
 
-import {getParticipantName} from '../../shared/participant.utils';
+import {
+  getParticipantName,
+  getParticipantStatusDetailText,
+} from '../../shared/participant.utils';
 
 import {styles} from './header.scss';
 import {ChatStageConfig, ParticipantStatus} from '@deliberation-lab/utils';
@@ -153,20 +156,13 @@ export class Header extends MobxLitElement {
 
     const renderParticipantProfileBanner = (profile: any) => {
       if (!profile) return;
-      
-      let detailText = '';
-      if (profile.currentStatus === ParticipantStatus.BOOTED_OUT) {
-        detailText = "‼️ This participant has been booted from the experiment and can no longer participate.";
-      } else if (profile.currentStatus === ParticipantStatus.ATTENTION_TIMEOUT) {
-        detailText = "‼️ This participant has failed an attention check and can no longer participate.";
-      } else if (profile.currentStatus === ParticipantStatus.TRANSFER_DECLINED) {
-        detailText = "🛑 This participant declined a transfer and can no longer participate.";
-      } else {
-        detailText = getStageDetailText();
-      }
 
-      return `Previewing as: ${profile.avatar ? profile.avatar : ''} ${getParticipantName(profile)}. ${detailText}`;
-    }
+      const detailText =
+        getParticipantStatusDetailText(profile) ?? getStageDetailText();
+      return `Previewing as: ${
+        profile.avatar ? profile.avatar : ''
+      } ${getParticipantName(profile)}. ${detailText}`;
+    };
 
     const getStageDetailText = () => {
       const stageId = this.routerService.activeRoute.params['stage'];

@@ -115,7 +115,7 @@ export class SurveyReveal extends MobxLitElement {
 
   private renderIcon(correctAnswer: string, selectedAnswer: string) {
     if (correctAnswer === '') {
-      return;
+      return nothing;
     }
     
     if (correctAnswer === selectedAnswer) {
