@@ -3,8 +3,19 @@
  */
 
 import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  Firestore,
+  orderBy,
+  query
+} from 'firebase/firestore';
+import {
   ChatMessage,
   ChatMessageType,
+  CohortConfig,
+  Experiment,
   ExperimentDownload,
   ParticipantDownload,
   ParticipantProfileExtended,
@@ -12,13 +23,19 @@ import {
   PayoutStageConfig,
   RankingStageConfig,
   RankingStagePublicData,
+  StageConfig,
   StageKind,
+  StageParticipantAnswer,
+  StagePublicData,
   SurveyAnswer,
   SurveyStageConfig,
   SurveyQuestion,
   SurveyQuestionKind,
   calculatePayoutResult,
-  calculatePayoutTotal
+  calculatePayoutTotal,
+  createCohortDownload,
+  createExperimentDownload,
+  createParticipantDownload
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToDate} from './utils';
 
@@ -57,6 +74,123 @@ export function downloadJSON(data: object, filename: string) {
 
   const blob = new Blob([jsonData], { type: 'application/json' });
   downloadBlob(blob, filename);
+}
+
+// ****************************************************************************
+// EXPERIMENT DOWNLOAD JSON
+// ****************************************************************************
+export async function getExperimentDownload(
+  firestore: Firestore,
+  experimentId: string,
+) {
+  // Get experiment config from experimentId
+  const experimentConfig = (await getDoc(
+    doc(
+      firestore,
+      'experiments',
+      experimentId
+    )
+  )).data() as Experiment;
+
+  // Create experiment download using experiment config
+  const experimentDownload = createExperimentDownload(experimentConfig);
+
+  // For each experiment stage config, add to ExperimentDownload
+  const stageConfigs = (await getDocs(
+    collection(
+      firestore,
+      'experiments',
+      experimentId,
+      'stages'
+    )
+  )).docs.map((doc) => (doc.data() as StageConfig));
+  for (const stage of stageConfigs) {
+    experimentDownload.stageMap[stage.id] = stage;
+  }
+
+  // For each participant, add ParticipantDownload
+  const profiles = (await getDocs(
+    collection(
+      firestore,
+      'experiments',
+      experimentId,
+      'participants'
+    )
+  )).docs.map((doc) => (doc.data() as ParticipantProfileExtended));
+  for (const profile of profiles) {
+    // Create new ParticipantDownload
+    const participantDownload = createParticipantDownload(profile);
+
+    // For each stage answer, add to ParticipantDownload map
+    const stageAnswers = (await getDocs(
+      collection(
+        firestore,
+        'experiments',
+        experimentId,
+        'participants',
+        profile.privateId,
+        'stageData'
+      )
+    )).docs.map((doc) => (doc.data() as StageParticipantAnswer));
+    for (const stage of stageAnswers) {
+      participantDownload.answerMap[stage.id] = stage;
+    }
+    // Add ParticipantDownload to ExperimentDownload
+    experimentDownload.participantMap[profile.publicId] = participantDownload;
+  }
+
+  // For each cohort, add CohortDownload
+  const cohorts = (await getDocs(
+    collection(
+      firestore,
+      'experiments',
+      experimentId,
+      'cohorts'
+    )
+  )).docs.map((cohort) => (cohort.data() as CohortConfig));
+  for (const cohort of cohorts) {
+    // Create new CohortDownload
+    const cohortDownload = createCohortDownload(cohort);
+
+    // For each public stage data, add to CohortDownload
+    const publicStageData = (await getDocs(
+      collection(
+        firestore,
+        'experiments',
+        experimentId,
+        'cohorts',
+        cohort.id,
+        'publicStageData'
+      )
+    )).docs.map((doc) => (doc.data() as StagePublicData));
+    for (const data of publicStageData) {
+      cohortDownload.dataMap[data.id] = data;
+      // If chat stage, add list of chat messages to CohortDownload
+      if (data.kind === StageKind.CHAT) {
+        const chatList = (await getDocs(
+          query(
+            collection(
+              firestore,
+              'experiments',
+              experimentId,
+              'cohorts',
+              cohort.id,
+              'publicStageData',
+              data.id,
+              'chats'
+            ),
+            orderBy('timestamp', 'asc')
+          )
+        )).docs.map((doc) => (doc.data() as ChatMessage));
+        cohortDownload.chatMap[data.id] = chatList;
+      }
+    }
+
+    // Add CohortDownload to ExperimentDownload
+    experimentDownload.cohortMap[cohort.id] = cohortDownload;
+  }
+
+  return experimentDownload;
 }
 
 // ****************************************************************************

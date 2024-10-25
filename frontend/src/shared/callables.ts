@@ -6,7 +6,6 @@ import {
   CreationResponse,
   ExperimentCreationData,
   ExperimentDeletionData,
-  ExperimentDownloadData,
   ExperimentDownloadResponse,
   ParticipantProfileExtendedData,
   SimpleResponse,
@@ -91,11 +90,5 @@ export const updateRankingStageParticipantAnswerCallable = async(
 /** Generic endpoint to write chat message. */
 export const createChatMessageCallable = async(functions: Functions, config: CreateChatMessageData) => {
   const { data } = await httpsCallable<CreateChatMessageData, CreationResponse>(functions, 'createChatMessage')(config);
-  return data;
-}
-
-/** Generic endpoint to get experiment download data. */
-export const getExperimentDownloadCallable = async(functions: Functions, config: ExperimentDownloadData) => {
-  const { data } = await httpsCallable<ExperimentDownloadData, ExperimentDownloadResponse>(functions, 'getExperimentDownload')(config);
   return data;
 }

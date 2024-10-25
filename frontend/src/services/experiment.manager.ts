@@ -35,7 +35,6 @@ import {
   createChatMessageCallable,
   createParticipantCallable,
   deleteExperimentCallable,
-  getExperimentDownloadCallable,
   updateParticipantCallable,
   writeCohortCallable,
   deleteCohortCallable,
@@ -49,6 +48,7 @@ import {
   downloadCSV,
   downloadJSON,
   getChatHistoryData,
+  getExperimentDownload,
   getParticipantData
 } from '../shared/file.utils';
 import {
@@ -483,21 +483,23 @@ export class ExperimentManager extends Service {
     let data = {};
     const experimentId = this.sp.routerService.activeRoute.params['experiment'];
     if (experimentId) {
-      const result = await getExperimentDownloadCallable(
-        this.sp.firebaseService.functions, { experimentId }
+      const result = await getExperimentDownload(
+        this.sp.firebaseService.firestore,
+        experimentId
       );
-      if (result.data) {
-        downloadJSON(result.data, result.data.experiment.metadata.name);
-        const chatData = getChatHistoryData(result.data);
+
+      if (result) {
+        downloadJSON(result, result.experiment.metadata.name);
+        const chatData = getChatHistoryData(result);
         chatData.forEach(data => {
           downloadCSV(data.data, `${data.experimentName}_ChatHistory_Cohort-${data.cohortId}_Stage-${data.stageId}`);
         });
         downloadCSV(
-          getParticipantData(result.data),
-          result.data.experiment.metadata.name
+          getParticipantData(result),
+          result.experiment.metadata.name
         );
 
-        data = result.data;
+        data = result;
       }
     }
     return data;

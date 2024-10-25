@@ -13,7 +13,6 @@ export * from './experiment.validation';
 
 // Experiment data
 export * from './data';
-export * from './data.validation';
 
 // Cohort
 export * from './cohort';
