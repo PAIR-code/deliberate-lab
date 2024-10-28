@@ -186,6 +186,22 @@ export function calculatePayoutResult(
   return resultConfig;
 }
 
+/** Calculate total payout from PayoutResultConfig. */
+export function calculatePayoutTotal(
+  resultConfig: PayoutResultConfig
+) {
+  let total = 0;
+  resultConfig.results.forEach((result) => {
+    total += result.baseAmountEarned;
+    if (result.type === PayoutItemType.SURVEY) {
+      result.questionResults.forEach((question) => {
+        total += question.amountEarned;
+      });
+    }
+  });
+  return total;
+}
+
 /** Calculate payout results for a single item (or null if can't calculate). */
 export function calculatePayoutItemResult(
   item: PayoutItem,

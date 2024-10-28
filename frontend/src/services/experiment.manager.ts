@@ -22,13 +22,14 @@ import {
   CohortConfig,
   CreateChatMessageData,
   Experiment,
+  ExperimentDownload,
   HumanMediatorChatMessage,
   ParticipantProfileExtended,
   ParticipantStatus,
   StageConfig,
   createCohortConfig,
   createHumanMediatorChatMessage,
-  generateId
+  generateId,
 } from '@deliberation-lab/utils';
 import {
   createChatMessageCallable,
@@ -43,6 +44,13 @@ import {
   getCohortParticipants,
   hasMaxParticipantsInCohort,
 } from '../shared/cohort.utils';
+import {
+  downloadCSV,
+  downloadJSON,
+  getChatHistoryData,
+  getExperimentDownload,
+  getParticipantData
+} from '../shared/file.utils';
 import {
   isObsoleteParticipant,
   requiresAnonymousProfiles
@@ -468,6 +476,33 @@ export class ExperimentManager extends Service {
         currentStatus: ParticipantStatus.TRANSFER_PENDING,
       }
     );
+  }
+
+  /** Download experiment. */
+  async downloadExperiment() {
+    let data = {};
+    const experimentId = this.sp.routerService.activeRoute.params['experiment'];
+    if (experimentId) {
+      const result = await getExperimentDownload(
+        this.sp.firebaseService.firestore,
+        experimentId
+      );
+
+      if (result) {
+        downloadJSON(result, result.experiment.metadata.name);
+        const chatData = getChatHistoryData(result);
+        chatData.forEach(data => {
+          downloadCSV(data.data, `${data.experimentName}_ChatHistory_Cohort-${data.cohortId}_Stage-${data.stageId}`);
+        });
+        downloadCSV(
+          getParticipantData(result),
+          result.experiment.metadata.name
+        );
+
+        data = result;
+      }
+    }
+    return data;
   }
 
   /** Create a manual (human) mediator chat message. */

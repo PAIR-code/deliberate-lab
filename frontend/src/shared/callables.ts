@@ -6,6 +6,7 @@ import {
   CreationResponse,
   ExperimentCreationData,
   ExperimentDeletionData,
+  ExperimentDownloadResponse,
   ParticipantProfileExtendedData,
   SimpleResponse,
   UpdateChatMediatorsData,

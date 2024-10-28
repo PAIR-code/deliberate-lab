@@ -30,6 +30,7 @@ import {
   SurveyPayoutQuestionResult,
   SurveyQuestionKind,
   calculatePayoutResult,
+  calculatePayoutTotal
 } from '@deliberation-lab/utils';
 import {
   LAS_ITEMS,
@@ -88,15 +89,7 @@ export class PayoutView extends MobxLitElement {
   }
 
   private renderTotalPayout(resultConfig: PayoutResultConfig) {
-    let total = 0;
-    resultConfig.results.forEach((result) => {
-      total += result.baseAmountEarned;
-      if (result.type === PayoutItemType.SURVEY) {
-        result.questionResults.forEach((question) => {
-          total += question.amountEarned;
-        });
-      }
-    });
+    const total = calculatePayoutTotal(resultConfig);
 
     return html`
       <div class="scoring-bundle row">
