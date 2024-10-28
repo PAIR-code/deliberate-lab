@@ -20,6 +20,7 @@ import {RouterService} from '../../services/router.service';
 
 import {
   ParticipantProfile,
+  ParticipantStatus,
   ItemRankingStage,
   RankingStageConfig,
   RankingItem,
@@ -43,15 +44,23 @@ export class RankingView extends MobxLitElement {
   private readonly experimentService = core.getService(ExperimentService);
   private readonly firebaseService = core.getService(FirebaseService);
   private readonly imageService = core.getService(ImageService);
-  private readonly participantAnswerService = core.getService(ParticipantAnswerService);
+  private readonly participantAnswerService = core.getService(
+    ParticipantAnswerService
+  );
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
   @property() stage: RankingStageConfig | undefined = undefined;
+  @property() renderSummaryView: boolean = false; // If true, render a minimized summary view.
 
   private getItems() {
     if (this.stage?.rankingType === RankingType.PARTICIPANTS) {
-      const allParticipants = this.cohortService.getAllParticipants();
+      const allParticipants = this.cohortService
+        .getAllParticipants()
+        .filter(
+          // Filter only to active participants.
+          (profile) => profile.currentStatus === ParticipantStatus.IN_PROGRESS
+        );
       if (this.stage.enableSelfVoting) {
         return allParticipants;
       }
@@ -83,16 +92,37 @@ export class RankingView extends MobxLitElement {
     // TODO: Don't show obsolete participants if they never interacted
     // (e.g., during group chat)
     const items = this.getItems();
-    const disabled = this.participantAnswerService.getNumRankings(this.stage.id) < items.length;
+    const disabled =
+      this.participantAnswerService.getNumRankings(this.stage.id) <
+      items.length;
 
     const saveRankings = async () => {
       if (!this.stage) return;
       // Write rankings to Firestore
       this.participantService.updateRankingStageParticipantAnswer(
         this.stage.id,
-        this.participantAnswerService.getRankingList(this.stage.id),
-      )
+        this.participantAnswerService.getRankingList(this.stage.id)
+      );
     };
+
+    if (this.renderSummaryView) {
+      const rankingList = this.participantAnswerService.getRankingList(
+        this.stage.id
+      );
+
+      const items = this.getItems();
+
+      return html`
+        <ol>
+          ${rankingList.map((id: string) => {
+            const item = items.find((i) => this.getItemId(i) === id);
+            return item
+              ? html`<li>${this.renderItem(item)}</li>`
+              : html`<li>Unknown Item</li>`; // Handle missing items gracefully
+          })}
+        </ol>
+      `;
+    }
 
     return html`
       <stage-description .stage=${this.stage}></stage-description>
@@ -109,7 +139,9 @@ export class RankingView extends MobxLitElement {
 
   private renderStartZone() {
     if (!this.stage) return;
-    const rankingList = this.participantAnswerService.getRankingList(this.stage.id);
+    const rankingList = this.participantAnswerService.getRankingList(
+      this.stage.id
+    );
 
     return html`
       <div class="start-zone">
@@ -195,7 +227,7 @@ export class RankingView extends MobxLitElement {
       // Update ranking list
       this.participantAnswerService.updateRankingAnswer(
         this.stage.id,
-        rankings,
+        rankings
       );
     };
 
@@ -244,7 +276,9 @@ export class RankingView extends MobxLitElement {
         event.preventDefault();
         target.classList.remove('drag-over');
 
-        const currentRankings = this.participantAnswerService.getRankingList(this.stage.id);
+        const currentRankings = this.participantAnswerService.getRankingList(
+          this.stage.id
+        );
         const itemId = event.dataTransfer.getData('text/plain');
 
         // Create new rankings (using answerIndex to slot participant in)
@@ -271,7 +305,7 @@ export class RankingView extends MobxLitElement {
         // Update ranking list
         this.participantAnswerService.updateRankingAnswer(
           this.stage.id,
-          rankings,
+          rankings
         );
       }
     };
@@ -296,16 +330,18 @@ export class RankingView extends MobxLitElement {
     index: number
   ) {
     if (!this.stage) return;
-    const rankings = this.participantAnswerService.getRankingList(this.stage.id);
+    const rankings = this.participantAnswerService.getRankingList(
+      this.stage.id
+    );
     const onCancel = () => {
       if (index === -1 || !this.stage) {
         return;
       }
 
-      this.participantAnswerService.updateRankingAnswer(
-        this.stage.id,
-        [...rankings.slice(0, index), ...rankings.slice(index + 1)],
-      );
+      this.participantAnswerService.updateRankingAnswer(this.stage.id, [
+        ...rankings.slice(0, index),
+        ...rankings.slice(index + 1),
+      ]);
     };
     const items = (this.stage as ItemRankingStage).rankingItems ?? [];
 
@@ -319,7 +355,7 @@ export class RankingView extends MobxLitElement {
       ];
       this.participantAnswerService.updateRankingAnswer(
         this.stage.id,
-        rankingList,
+        rankingList
       );
     };
 
@@ -333,7 +369,7 @@ export class RankingView extends MobxLitElement {
       ];
       this.participantAnswerService.updateRankingAnswer(
         this.stage.id,
-        rankingList,
+        rankingList
       );
     };
 
@@ -394,7 +430,9 @@ export class RankingView extends MobxLitElement {
 
   private renderEndZone() {
     if (!this.stage) return;
-    const rankingList = this.participantAnswerService.getRankingList(this.stage.id);
+    const rankingList = this.participantAnswerService.getRankingList(
+      this.stage.id
+    );
 
     return html`
       <div class="end-zone">

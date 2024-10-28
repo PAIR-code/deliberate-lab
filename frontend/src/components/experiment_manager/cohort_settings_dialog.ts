@@ -12,10 +12,7 @@ import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 
-import {
-  CohortConfig,
-  CohortParticipantConfig
-} from '@deliberation-lab/utils';
+import {CohortConfig, CohortParticipantConfig} from '@deliberation-lab/utils';
 
 import {styles} from './cohort_settings_dialog.scss';
 
@@ -40,13 +37,14 @@ export class CohortSettingsDialog extends MobxLitElement {
             color="neutral"
             icon="close"
             variant="default"
-            @click=${() => { this.experimentManager.setCohortEditing(undefined); }}
+            @click=${() => {
+              this.experimentManager.setCohortEditing(undefined);
+            }}
           >
           </pr-icon-button>
         </div>
         <div class="body">
-          ${this.renderName()}
-          ${this.renderDescription()}
+          ${this.renderName()} ${this.renderDescription()}
           ${this.renderMaxParticipantConfig()}
         </div>
         <div class="footer">
@@ -55,14 +53,18 @@ export class CohortSettingsDialog extends MobxLitElement {
             variant="tonal"
             @click=${() => {
               this.analyticsService.trackButtonClick(ButtonClick.COHORT_DELETE);
-              this.experimentManager.deleteCohort(this.experimentManager.cohortEditing!.id);
+              this.experimentManager.deleteCohort(
+                this.experimentManager.cohortEditing!.id
+              );
             }}
           >
             Delete cohort
           </pr-button>
           <pr-button
             @click=${() => {
-              this.analyticsService.trackButtonClick(ButtonClick.COHORT_SAVE_EXISTING);
+              this.analyticsService.trackButtonClick(
+                ButtonClick.COHORT_SAVE_EXISTING
+              );
               this.experimentManager.writeCohort(
                 this.experimentManager.cohortEditing
               );
@@ -85,12 +87,10 @@ export class CohortSettingsDialog extends MobxLitElement {
         return;
       }
 
-      this.experimentManager.setCohortEditing(
-        {
-          ...cohort,
-          metadata: {...cohort.metadata, name}
-        }
-      )
+      this.experimentManager.setCohortEditing({
+        ...cohort,
+        metadata: {...cohort.metadata, name},
+      });
     };
 
     return html`
@@ -114,12 +114,10 @@ export class CohortSettingsDialog extends MobxLitElement {
         return;
       }
 
-      this.experimentManager.setCohortEditing(
-        {
-          ...cohort,
-          metadata: {...cohort.metadata, description}
-        }
-      )
+      this.experimentManager.setCohortEditing({
+        ...cohort,
+        metadata: {...cohort.metadata, description},
+      });
     };
 
     return html`
@@ -127,7 +125,8 @@ export class CohortSettingsDialog extends MobxLitElement {
         label="Description"
         placeholder="Cohort description"
         variant="outlined"
-        .value=${this.experimentManager.cohortEditing?.metadata.description ?? ''}
+        .value=${this.experimentManager.cohortEditing?.metadata.description ??
+        ''}
         @input=${updateDescription}
       >
       </pr-textarea>
@@ -139,9 +138,10 @@ export class CohortSettingsDialog extends MobxLitElement {
     if (!cohort) {
       return;
     }
-    this.experimentManager.setCohortEditing(
-      { ...cohort, participantConfig: {...cohort.participantConfig, ...config} }
-    );
+    this.experimentManager.setCohortEditing({
+      ...cohort,
+      participantConfig: {...cohort.participantConfig, ...config},
+    });
   }
 
   private renderMinParticipantConfig() {
@@ -152,15 +152,15 @@ export class CohortSettingsDialog extends MobxLitElement {
 
     const updateCheck = () => {
       if (minParticipants === null) {
-        this.updateConfig({ minParticipantsPerCohort: 0 });
+        this.updateConfig({minParticipantsPerCohort: 0});
       } else {
-        this.updateConfig({ minParticipantsPerCohort: null });
+        this.updateConfig({minParticipantsPerCohort: null});
       }
     };
 
     const updateNum = (e: InputEvent) => {
       const num = Number((e.target as HTMLTextAreaElement).value);
-      this.updateConfig({ minParticipantsPerCohort: num });
+      this.updateConfig({minParticipantsPerCohort: num});
     };
 
     return html`
@@ -173,14 +173,11 @@ export class CohortSettingsDialog extends MobxLitElement {
           >
           </md-checkbox>
           <div>
-            Require minimum number of participants in cohort
-            to start experiment
+            Require minimum number of participants in cohort to start experiment
           </div>
         </div>
         <div class="number-input">
-          <label for="minParticipants">
-            Minimum number of participants
-          </label>
+          <label for="minParticipants"> Minimum number of participants </label>
           <input
             type="number"
             id="minParticipants"
@@ -202,15 +199,15 @@ export class CohortSettingsDialog extends MobxLitElement {
 
     const updateCheck = () => {
       if (maxParticipants === null) {
-        this.updateConfig({ maxParticipantsPerCohort: 100 });
+        this.updateConfig({maxParticipantsPerCohort: 100});
       } else {
-        this.updateConfig({ maxParticipantsPerCohort: null });
+        this.updateConfig({maxParticipantsPerCohort: null});
       }
     };
 
     const updateNum = (e: InputEvent) => {
       const num = Number((e.target as HTMLTextAreaElement).value);
-      this.updateConfig({ maxParticipantsPerCohort: num });
+      this.updateConfig({maxParticipantsPerCohort: num});
     };
 
     return html`
@@ -222,23 +219,23 @@ export class CohortSettingsDialog extends MobxLitElement {
             @click=${updateCheck}
           >
           </md-checkbox>
-          <div>
-            Limit cohort to maximum number of participants
-          </div>
+          <div>Limit cohort to maximum number of participants</div>
         </div>
-        <div class="number-input">
-          <label for="maxParticipants">
-            Maximum number of participants
-          </label>
-          <input
-            type="number"
-            id="maxParticipants"
-            name="maxParticipants"
-            min="0"
-            .value=${maxParticipants ?? 100}
-            @input=${updateNum}
-          />
-        </div>
+        ${maxParticipants
+          ? html`<div class="number-input">
+              <label for="maxParticipants">
+                Maximum number of participants
+              </label>
+              <input
+                type="number"
+                id="maxParticipants"
+                name="maxParticipants"
+                min="0"
+                .value=${maxParticipants ?? 100}
+                @input=${updateNum}
+              />
+            </div>`
+          : ''}
       </div>
     `;
   }

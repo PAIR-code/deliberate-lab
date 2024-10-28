@@ -43,6 +43,7 @@ export const createParticipant = onCall(async (request) => {
   // Create initial participant config
   const participantConfig = createParticipantProfileExtended({
     currentCohortId: data.cohortId,
+    prolificId: data.prolificId,
   });
 
   // Define document reference

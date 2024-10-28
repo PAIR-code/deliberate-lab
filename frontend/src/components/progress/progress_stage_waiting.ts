@@ -19,7 +19,6 @@ import {
 
 import {styles} from './progress_stage_waiting.scss';
 
-/** Progress component: Shows how many participants are ready to begin stage */
 @customElement('progress-stage-waiting')
 export class Progress extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
@@ -31,6 +30,14 @@ export class Progress extends MobxLitElement {
   @property() showReadyAvatars = true;
   @property() showWaitingAvatars = false;
 
+  /** Refreshes the browser every 30 seconds */
+  connectedCallback() {
+    super.connectedCallback();
+    setInterval(() => {
+      window.location.reload();
+    }, 10000);
+  }
+
   override render() {
     const stageId = this.routerService.activeRoute.params['stage'];
     const stage = this.experimentService.getStage(stageId);
@@ -39,16 +46,17 @@ export class Progress extends MobxLitElement {
     const locked = this.cohortService.getLockedStageParticipants(stageId);
     const unlocked = this.cohortService.getUnlockedStageParticipants(stageId);
 
+    const numWaiting = Math.max(
+      locked.length,
+      stage.progress.minParticipants - unlocked.length
+    );
     return html`
       <div class="status">
         <h2 class="secondary">
           <div class="chip secondary">Waiting on</div>
           <div>
-            ${Math.max(
-              locked.length,
-              stage.progress.minParticipants - unlocked.length
-            )}
-            participants
+            ${numWaiting}
+            participant${numWaiting > 1 ? 's' : ''}
           </div>
         </h2>
         ${this.showWaitingAvatars ? this.renderParticipants(locked) : nothing}

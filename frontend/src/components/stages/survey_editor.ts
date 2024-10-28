@@ -1,7 +1,7 @@
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
-
+import '../stages/survey_editor_menu';
 import '@material/web/checkbox/checkbox.js';
 
 import {core} from '../../core/core';
@@ -38,7 +38,10 @@ export class SurveyEditor extends MobxLitElement {
 
     return html`
       <div class="section">
-        <div class="title">Survey questions</div>
+        <div class="header">
+          <div class="title">Survey questions</div>
+          <survey-editor-menu .stage=${this.stage}></survey-editor-menu>
+        </div>
         ${this.stage.questions.map((question, index) =>
           this.renderQuestion(question, index)
         )}
@@ -47,6 +50,35 @@ export class SurveyEditor extends MobxLitElement {
   }
 
   private renderQuestion(question: SurveyQuestion, index: number) {
+    return html`
+      <div class="question-wrapper">
+        <div class="question-label ${question.questionTitle === ''
+        ? 'required'
+        : ''}">
+          Question ${index + 1} (${this.renderQuestionType(question)})*
+        </div>
+        <div class="question">
+          ${this.renderQuestionContent(question, index)}
+        </div>
+      </div>
+    `;
+  }
+  private renderQuestionType(question: SurveyQuestion) {
+    switch (question.kind) {
+      case SurveyQuestionKind.CHECK:
+        return 'checkbox';
+      case SurveyQuestionKind.MULTIPLE_CHOICE:
+        return 'multiple choice';
+      case SurveyQuestionKind.SCALE:
+        return 'scale from 1 to 10';
+      case SurveyQuestionKind.TEXT:
+        return 'freeform text';
+      default:
+        return nothing;
+    }
+  }
+
+  private renderQuestionContent(question: SurveyQuestion, index: number) {
     switch (question.kind) {
       case SurveyQuestionKind.CHECK:
         return this.renderCheckQuestion(question, index);
@@ -138,7 +170,7 @@ export class SurveyEditor extends MobxLitElement {
       <pr-textarea
         placeholder="Add question title"
         size="medium"
-        .value=${question.questionTitle}
+        .value=${question.questionTitle ?? ''}
         ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updateTitle}
       >
@@ -195,18 +227,32 @@ export class SurveyEditor extends MobxLitElement {
   }
 
   private renderCheckQuestion(question: CheckSurveyQuestion, index: number) {
+    const toggleIsRequired = () => {
+      const updatedQuestion = {...question, isRequired: !question.isRequired};
+      this.updateQuestion(updatedQuestion, index);
+    };
+
     return html`
-      <div class="question-wrapper">
-        <div class="question-label">Question ${index + 1} (checkbox)</div>
-        <div class="question">
-          <div class="header">
-            <div class="left">
-              ${this.renderQuestionTitleEditor(question, index)}
-            </div>
-            ${this.renderQuestionNav(question, index)}
-          </div>
+      <div class="header">
+        <div class="left">
+          ${this.renderQuestionTitleEditor(question, index)}
         </div>
+        <div class="right">${this.renderQuestionNav(question, index)}</div>
       </div>
+      <div class="description">
+        <b>Optional:</b> Mark this checkbox to indicate if the question is
+        required for participants.
+      </div>
+      <label class="checkbox-wrapper">
+        <md-checkbox
+          touch-target="wrapper"
+          ?checked=${question.isRequired}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @click=${toggleIsRequired}
+        >
+        </md-checkbox>
+        <span class="checkbox-label">Required</span>
+      </label>
     `;
   }
 
@@ -262,34 +308,27 @@ export class SurveyEditor extends MobxLitElement {
     };
 
     return html`
-      <div class="question-wrapper">
-        <div class="question-label">
-          Question ${index + 1} (multiple choice)
+      <div class="header">
+        <div class="left">
+          ${this.renderQuestionTitleEditor(question, index)}
         </div>
-        <div class="question">
-          <div class="header">
-            <div class="left">
-              ${this.renderQuestionTitleEditor(question, index)}
-            </div>
-            ${this.renderQuestionNav(question, index)}
-          </div>
-          <div class="description">
-            <b>Optional:</b> Check a multiple choice item to set it as a
-            "correct" answer (e.g., to calculate results or payout later)
-          </div>
-          ${question.options.map((option, index) => renderItem(option, index))}
-          <pr-button
-            color="secondary"
-            variant="tonal"
-            ?disabled=${!this.experimentEditor.canEditStages}
-            @click=${() => {
-              this.addMultipleChoiceItem(question, index);
-            }}
-          >
-            Add multiple choice item
-          </pr-button>
-        </div>
+        ${this.renderQuestionNav(question, index)}
       </div>
+      <div class="description">
+        <b>Optional:</b> Check a multiple choice item to set it as a "correct"
+        answer (e.g., to calculate results or payout later)
+      </div>
+      ${question.options.map((option, index) => renderItem(option, index))}
+      <pr-button
+        color="secondary"
+        variant="tonal"
+        ?disabled=${!this.experimentEditor.canEditStages}
+        @click=${() => {
+          this.addMultipleChoiceItem(question, index);
+        }}
+      >
+        Add multiple choice item
+      </pr-button>
     `;
   }
 
@@ -336,34 +375,22 @@ export class SurveyEditor extends MobxLitElement {
 
   private renderScaleQuestion(question: ScaleSurveyQuestion, index: number) {
     return html`
-      <div class="question-wrapper">
-        <div class="question-label">
-          Question ${index + 1} (scale of 1 to 10)
+      <div class="header">
+        <div class="left">
+          ${this.renderQuestionTitleEditor(question, index)}
         </div>
-        <div class="question">
-          <div class="header">
-            <div class="left">
-              ${this.renderQuestionTitleEditor(question, index)}
-            </div>
-            ${this.renderQuestionNav(question, index)}
-          </div>
-        </div>
+        ${this.renderQuestionNav(question, index)}
       </div>
     `;
   }
 
   private renderTextQuestion(question: TextSurveyQuestion, index: number) {
     return html`
-      <div class="question-wrapper">
-        <div class="question-label">Question ${index + 1} (freeform text)</div>
-        <div class="question">
-          <div class="header">
-            <div class="left">
-              ${this.renderQuestionTitleEditor(question, index)}
-            </div>
-            ${this.renderQuestionNav(question, index)}
-          </div>
+      <div class="header">
+        <div class="left">
+          ${this.renderQuestionTitleEditor(question, index)}
         </div>
+        ${this.renderQuestionNav(question, index)}
       </div>
     `;
   }

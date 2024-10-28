@@ -14,6 +14,7 @@ import {CohortService} from './cohort.service';
 import {ExperimentEditor} from './experiment.editor';
 import {ExperimentService} from './experiment.service';
 import {FirebaseService} from './firebase.service';
+import {ParticipantService} from './participant.service';
 import {Pages, RouterService} from './router.service';
 import {Service} from './service';
 
@@ -53,6 +54,7 @@ interface ServiceProvider {
   experimentEditor: ExperimentEditor;
   experimentService: ExperimentService;
   firebaseService: FirebaseService;
+  participantService: ParticipantService;
   routerService: RouterService;
 }
 
@@ -146,6 +148,15 @@ export class ExperimentManager extends Service {
 
   setCurrentParticipantId(id: string|undefined) {
     this.currentParticipantId = id;
+
+    // Update participant service in order to load correct participant answers
+    // (Note: This also updates participant answer service accordingly)
+    if (this.experimentId && id) {
+      this.sp.participantService.updateForRoute(
+        this.experimentId,
+        id
+      );
+    }
   }
 
   @computed get currentParticipant() {

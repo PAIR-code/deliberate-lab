@@ -17,9 +17,13 @@ import {ExperimentManager} from '../../services/experiment.manager';
 import {ParticipantService} from '../../services/participant.service';
 import {Pages, RouterService} from '../../services/router.service';
 
-import {getParticipantName} from '../../shared/participant.utils';
+import {
+  getParticipantName,
+  getParticipantStatusDetailText,
+} from '../../shared/participant.utils';
 
 import {styles} from './header.scss';
+import {ChatStageConfig, ParticipantStatus} from '@deliberation-lab/utils';
 
 /** Header component for app pages */
 @customElement('page-header')
@@ -97,10 +101,24 @@ export class Header extends MobxLitElement {
         case Pages.PARTICIPANT:
           this.routerService.navigate(Pages.EXPERIMENT, {
             experiment: params['experiment'],
-            participant: params['participant']
+            participant: params['participant'],
           });
           break;
         case Pages.PARTICIPANT_STAGE:
+          const stageId = this.routerService.activeRoute.params['stage'];
+          const stage = this.experimentService.getStage(
+            stageId
+          ) as ChatStageConfig;
+          if (
+            stage.mediators &&
+            stage.mediators.length > 0 &&
+            !stage.muteMediators!
+          ) {
+            const isConfirmed = window.confirm(
+              `Agents will still respond to new messages. Are you sure you want to go back without muting the agents first?`
+            );
+            if (!isConfirmed) return;
+          }
           this.routerService.navigate(Pages.EXPERIMENT, {
             experiment: params['experiment'],
           });
@@ -136,20 +154,28 @@ export class Header extends MobxLitElement {
     const activePage = this.routerService.activePage;
     const profile = this.participantService.profile;
 
-    const renderParticipantProfileBanner = () => {
+    const renderParticipantProfileBanner = (profile: any) => {
+      if (!profile) return;
+
+      const detailText =
+        getParticipantStatusDetailText(profile) ?? getStageDetailText();
+      return `Previewing as: ${
+        profile.avatar ? profile.avatar : ''
+      } ${getParticipantName(profile)}. ${detailText}`;
+    };
+
+    const getStageDetailText = () => {
       const stageId = this.routerService.activeRoute.params['stage'];
       const stage = this.experimentService.getStage(stageId);
-      if (!stage || !profile) return nothing;
+      if (!stage || !profile) return '';
 
       const isWaiting = this.cohortService.isStageWaitingForParticipants(
         stage.id
       );
-      const isWaitingText = isWaiting
-        ? '. This participant currently sees a wait stage, as they are waiting for others in the cohort to catch up.'
+      const detailText = isWaiting
+        ? '⏸️ This participant currently sees a wait stage; they are waiting for others in the cohort to catch up.'
         : '';
-      return `Previewing as:
-        ${getParticipantName(profile)}${isWaitingText}
-      `;
+      return detailText;
     };
 
     switch (activePage) {
@@ -164,10 +190,9 @@ export class Header extends MobxLitElement {
       case Pages.PARTICIPANT_JOIN_COHORT:
         return 'Previewing experiment cohort';
       case Pages.PARTICIPANT:
-        // Participant landing page
-        return `Previewing as: ${profile ? getParticipantName(profile) : ''}`;
+        return renderParticipantProfileBanner(profile);
       case Pages.PARTICIPANT_STAGE:
-        return renderParticipantProfileBanner();
+        return renderParticipantProfileBanner(profile);
       default:
         return '';
     }
@@ -340,7 +365,9 @@ export class Header extends MobxLitElement {
           icon=${debugMode ? 'code_off' : 'code'}
           color="neutral"
           variant="default"
-          @click=${() => { this.authService.setDebugMode(!debugMode); }}
+          @click=${() => {
+            this.authService.setDebugMode(!debugMode);
+          }}
         >
         </pr-icon-button>
       </pr-tooltip>

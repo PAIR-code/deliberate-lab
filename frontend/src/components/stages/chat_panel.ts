@@ -8,7 +8,9 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
+import {ExperimentManager} from '../../services/experiment.manager';
 import {CohortService} from '../../services/cohort.service';
+import {MediatorEditor} from '../../services/mediator.editor';
 
 import {
   ChatStageConfig,
@@ -16,7 +18,6 @@ import {
   ParticipantProfile,
 } from '@deliberation-lab/utils';
 import {isActiveParticipant} from '../../shared/participant.utils';
-
 import {styles} from './chat_panel.scss';
 
 /** Chat panel view with stage info, participants. */
@@ -26,6 +27,8 @@ export class ChatPanel extends MobxLitElement {
 
   private readonly authService = core.getService(AuthService);
   private readonly cohortService = core.getService(CohortService);
+  public readonly experimentManager = core.getService(ExperimentManager);
+  private readonly mediatorEditor = core.getService(MediatorEditor);
 
   @property() stage: ChatStageConfig | null = null;
 
@@ -46,17 +49,57 @@ export class ChatPanel extends MobxLitElement {
     }
 
     const mediators = this.stage.mediators;
-    if (!mediators) return;
+    if (!mediators || mediators.length === 0) return;
 
     return html`
       <div class="panel-item">
         <div class="panel-item-title">Agents (${mediators.length})</div>
-        <div class="panel-item-subtitle">Only visible to experimenters</div>
+        ${this.renderApiCheck()}
+        <div class="panel-item-subtitle">
+          This agent panel is only visible to experimenters
+        </div>
         ${mediators.map((mediator) => this.renderMediator(mediator))}
+      </div>
+      ${this.renderMuteButton()}
+    `;
+  }
+  private renderApiCheck() {
+    if (!this.authService.experimenterData?.apiKeys.geminiKey) {
+      return html`
+        <div class="warning">
+          <b>Note:</b> In order for LLM calls to work, you must add your Gemini
+          API key under Settings.
+        </div>
+      `;
+    }
+    return '';
+  }
+
+  private renderMuteButton() {
+    if (!this.stage || this.stage.mediators.length == 0) return;
+    const isMuted = this.mediatorEditor.configMap[this.stage.id].muteMediators;
+    return html`
+      <div class="panel-item">
+        <pr-tooltip
+          position="BOTTOM_END"
+          text=${isMuted
+            ? 'Unmuting agents will allow them to speak after a new message is shown.'
+            : 'Muting agents will stop their speaking.'}
+        >
+          <pr-button
+            color="${isMuted ? 'neutral' : 'error'}"
+            variant="tonal"
+            ?disabled=${!this.experimentManager.isCreator}
+            @click=${async () => {
+              this.mediatorEditor.toggleMuteMediators(this.stage!.id!);
+            }}
+          >
+            ${isMuted ? '🔈 Unmute agents' : '🔇 Mute agents'}
+          </pr-button>
+        </pr-tooltip>
       </div>
     `;
   }
-
   private renderParticipantList() {
     const activeParticipants = this.cohortService.activeParticipants;
     return html`

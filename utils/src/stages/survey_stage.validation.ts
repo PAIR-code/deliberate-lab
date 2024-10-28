@@ -30,6 +30,7 @@ export const CheckSurveyQuestionData = Type.Object(
     id: Type.String({ minLength: 1 }),
     kind: Type.Literal(SurveyQuestionKind.CHECK),
     questionTitle: Type.String(),
+    isRequired: Type.Boolean(),
   },
   strict,
 );

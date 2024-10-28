@@ -114,6 +114,10 @@ export class SurveyReveal extends MobxLitElement {
   }
 
   private renderIcon(correctAnswer: string, selectedAnswer: string) {
+    if (correctAnswer === '') {
+      return nothing;
+    }
+    
     if (correctAnswer === selectedAnswer) {
       return html`<pr-icon color="success" icon="check_circle"></pr-icon>`;
     } else {
@@ -226,8 +230,8 @@ export class SurveyReveal extends MobxLitElement {
 
       case SurveyQuestionKind.CHECK:
         answerText = (answer as CheckSurveyAnswer).isChecked
-          ? 'Checked'
-          : 'Unchecked';
+          ? '✅ Checked'
+          : '☑️ Unchecked';
         return this.makeCell(answerText!);
 
       case SurveyQuestionKind.MULTIPLE_CHOICE:

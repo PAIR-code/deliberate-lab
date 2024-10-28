@@ -61,7 +61,7 @@ export class ExperimentManagerComponent extends MobxLitElement {
       return html`
         <div class="empty-nav">
           ⚠️ WARNING: Your experiment has no stages.
-          Use the edit button in the top left to add stages
+          Use the edit button in the top right to add stages
           in order to unlock cohort and participant creation.
         </div>
       `;

@@ -64,7 +64,7 @@ export class AuthService extends Service {
   @observable isExperimenter: boolean|null = null;
   @observable canEdit = false;
 
-  @observable private debugMode = false;
+  @observable private debugMode = true;
 
   @observable unsubscribe: Unsubscribe[] = [];
   @observable experimenterData: ExperimenterData|null = null;
