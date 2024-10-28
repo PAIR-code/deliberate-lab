@@ -49,16 +49,6 @@ export class Preview extends MobxLitElement {
     if (!this.profile) {
       return nothing;
     }
-    // Update so that answers can be correctly updated.
-    this.participantService.updateForRoute(
-      this.experimentService.experiment!.id!,
-      this.experimentManager.currentParticipantId!
-    );
-
-    this.participantAnswerService.updateForRoute(
-      this.experimentService.experiment!.id,
-      this.experimentManager.currentParticipantId!
-    );
 
     // TODO: add toolbar for previewing, copying links, etc.
     // TODO: add progress bar
