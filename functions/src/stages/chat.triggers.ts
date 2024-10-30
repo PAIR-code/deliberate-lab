@@ -24,38 +24,84 @@ export interface MediatorMessage {
   message: string;
 }
 
+// Function to get the chat stage configuration based on the event.
+async function getChatStage(event: any): Promise<ChatStageConfig | null> {
+  const stageRef = app
+    .firestore()
+    .doc(`experiments/${event.params.experimentId}/stages/${event.params.stageId}`);
+
+  const stageDoc = await stageRef.get();
+  if (!stageDoc.exists) return null; // Return null if the stage doesn't exist.
+
+  return stageDoc.data() as ChatStageConfig; // Return the stage data.
+}
+
+// Function to get the public data for the chat stage.
+async function getChatStagePublicData(event: any): Promise<ChatStagePublicData | null> {
+  const publicStageRef = app
+    .firestore()
+    .doc(
+      `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
+    );
+
+  const publicStageDoc = await publicStageRef.get();
+  if (!publicStageDoc.exists) return null; // Return null if the public stage data doesn't exist.
+
+  return publicStageDoc.data() as ChatStagePublicData; // Return the public stage data.
+}
+
 // Function to start tracking elapsed time when a chat is created
 export const startTimeElapsed = onDocumentCreated(
   'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}',
   async (event) => {
-    const stageRef = app
-      .firestore()
-      .doc(`experiments/${event.params.experimentId}/stages/${event.params.stageId}`);
-    const publicStageRef = app
-      .firestore()
-      .doc(
-        `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
-      );
-
-    const stage = (await stageRef.get()).data() as ChatStageConfig;
+    const stage = await getChatStage(event);
     if (!stage) return;
 
-    const publicStageDataDoc = await publicStageRef.get();
-    if (!publicStageDataDoc.exists) return;
-    let publicStageData = publicStageDataDoc.data() as ChatStagePublicData;
+    const publicStageData = await getChatStagePublicData(event);
+    if (!publicStageData) return;
 
     // Exit if discussion has already ended.
     if (publicStageData.discussionEndTimestamp) return;
 
     // Update the start timestamp and checkpoint timestamp if not set.
     if (publicStageData.discussionStartTimestamp === null) {
-      await publicStageRef.update({
-        discussionStartTimestamp: Timestamp.now(),
-        discussionCheckpointTimestamp: Timestamp.now(),
-      });
+      await app
+        .firestore()
+        .doc(
+          `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
+        )
+        .update({
+          discussionStartTimestamp: Timestamp.now(),
+          discussionCheckpointTimestamp: Timestamp.now(),
+        });
     }
   },
 );
+
+// Checks whether the chat has ended, returning true if ending chat.
+async function hasEndedChat(
+  event: any,
+  stage: ChatStageConfig | null,
+  stageData: ChatStagePublicData | null,
+): Promise<boolean> {
+  const chatStage = stage || (await getChatStage(event));
+  const publicStageData = stageData || (await getChatStagePublicData(event));
+  if (!chatStage || !publicStageData || !chatStage.timeLimitInMinutes) return false;
+
+  const elapsedMinutes = getTimeElapsed(publicStageData.discussionStartTimestamp!, 'm');
+
+  // Check if the elapsed time has reached or exceeded the time limit
+  if (elapsedMinutes >= chatStage.timeLimitInMinutes) {
+    await app
+      .firestore()
+      .doc(
+        `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
+      )
+      .update({ discussionEndTimestamp: Timestamp.now() });
+    return true; // Indicate that the chat has ended.
+  }
+  return false;
+}
 
 // Function to update elapsed time and potentially end the discussion.
 export const updateTimeElapsed = onDocumentUpdated(
@@ -64,39 +110,31 @@ export const updateTimeElapsed = onDocumentUpdated(
     timeoutSeconds: 360, // Maximum timeout of 6 minutes.
   },
   async (event) => {
-    const publicStageRef = app
-      .firestore()
-      .doc(
-        `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
-      );
-
-    const publicStageDataDoc = await publicStageRef.get();
-    if (!publicStageDataDoc.exists) return;
-    let publicStageData = publicStageDataDoc.data() as ChatStagePublicData;
+    const publicStageData = await getChatStagePublicData(event);
+    if (!publicStageData) return;
 
     // Only update time if the conversation is in progress.
     if (!publicStageData.discussionStartTimestamp || publicStageData.discussionEndTimestamp) return;
 
-    const stageRef = app
-      .firestore()
-      .doc(`experiments/${event.params.experimentId}/stages/${event.params.stageId}`);
-    const stage = (await stageRef.get()).data() as ChatStageConfig;
+    const stage = await getChatStage(event);
     if (!stage || !stage.timeLimitInMinutes) return;
-
-    const elapsedMinutes = getTimeElapsed(publicStageData.discussionStartTimestamp!, 'm');
-    if (elapsedMinutes >= stage.timeLimitInMinutes) {
-      await publicStageRef.update({ discussionEndTimestamp: Timestamp.now() });
-      return;
-    }
+    // Maybe end the chat.
+    if (await hasEndedChat(event, stage, publicStageData)) return;
 
     // Calculate how long to wait.
+    const elapsedMinutes = getTimeElapsed(publicStageData.discussionStartTimestamp!, 'm');
     const maxWaitTimeInMinutes = 5;
     const remainingTime = stage.timeLimitInMinutes - elapsedMinutes;
     const intervalTime = Math.min(maxWaitTimeInMinutes, remainingTime);
 
     // Wait for the determined interval time, and then re-trigger the function.
     await new Promise((resolve) => setTimeout(resolve, intervalTime * 60 * 1000));
-    await publicStageRef.update({ discussionCheckpointTimestamp: Timestamp.now() });
+    await app
+      .firestore()
+      .doc(
+        `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
+      )
+      .update({ discussionCheckpointTimestamp: Timestamp.now() });
   },
 );
 
@@ -107,18 +145,15 @@ export const createMediatorMessage = onDocumentCreated(
     const data = event.data?.data() as ChatMessage | undefined;
 
     // Use experiment config to get ChatStageConfig with mediators.
-    let stage = (
-      await app
-        .firestore()
-        .doc(`experiments/${event.params.experimentId}/stages/${event.params.stageId}`)
-        .get()
-    ).data() as StageConfig;
-    if (stage.kind !== StageKind.CHAT) {
+    let stage = await getChatStage(event);
+    if (!stage || stage.muteMediators) {
       return;
     }
-    if (stage.muteMediators) {
-      return;
-    }
+
+    let publicStageData = await getChatStagePublicData(event);
+    // Make sure the conversation hasn't ended.
+    if (!publicStageData || Boolean(publicStageData.discussionEndTimestamp)) return;
+
     // Fetch experiment creator's API key.
     const creatorId = (
       await app.firestore().collection('experiments').doc(event.params.experimentId).get()
@@ -187,12 +222,17 @@ export const createMediatorMessage = onDocumentCreated(
     await awaitTypingDelay(message);
 
     // Refresh the stage to check if mediators have been muted.
-    stage = (
-      await app
-        .firestore()
-        .doc(`experiments/${event.params.experimentId}/stages/${event.params.stageId}`)
-        .get()
-    ).data() as StageConfig;
+    stage = await getChatStage(event);
+    publicStageData = await getChatStagePublicData(event);
+
+    if (
+      !stage ||
+      stage.muteMediators ||
+      !publicStageData ||
+      Boolean(publicStageData.discussionEndTimestamp) ||
+      await hasEndedChat(event, stage, publicStageData)
+    )
+      return;
 
     // Don't send a message if the conversation has moved on.
     const numChatsBeforeMediator = chatMessages.length;
@@ -205,7 +245,7 @@ export const createMediatorMessage = onDocumentCreated(
         .count()
         .get()
     ).data().count;
-    if (numChatsAfterMediator > numChatsBeforeMediator || stage.muteMediators) {
+    if (numChatsAfterMediator > numChatsBeforeMediator) {
       return;
     }
 

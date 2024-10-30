@@ -100,18 +100,18 @@ export class ChatPanel extends MobxLitElement {
       this.stage.id
     ] as ChatStagePublicData;
     if (!publicStageData) return;
-    let timeText = '';
     if (publicStageData.discussionEndTimestamp) {
-      timeText = 'Discussion ended';
+      return html`<div class="ended countdown">Discussion ended.</div>`;
     } else if (!publicStageData.discussionStartTimestamp) {
-      timeText = `Time remaining: ${this.formatTime(
+      const timeText = `Time remaining: ${this.formatTime(
         this.stage.timeLimitInMinutes * 60
       )}`;
-    } else {
-      timeText = `Time remaining: ${this.formatTime(
-        this.timeRemainingInSeconds!
-      )}`;
+      return html`<div class="countdown">${timeText}</div>`;
     }
+
+    const timeText = `Time remaining: ${this.formatTime(
+      this.timeRemainingInSeconds!
+    )}`;
     return html`<div class="countdown">${timeText}</div>`;
   }
 
