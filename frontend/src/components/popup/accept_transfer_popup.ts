@@ -1,6 +1,6 @@
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentService} from '../../services/experiment.service';
@@ -21,6 +21,8 @@ class TransferPopup extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
+  @state() isAccepting = false;
+
   render() {
     return html`
       <div class="overlay">
@@ -39,6 +41,7 @@ class TransferPopup extends MobxLitElement {
               <pr-button
                 color="primary"
                 variant="tonal"
+                ?loading=${this.isAccepting}
                 @click=${this.handleYes}
               >
                 Join the experiment
@@ -53,25 +56,11 @@ class TransferPopup extends MobxLitElement {
     `;
   }
 
-  private handleYes() {
+  private async handleYes() {
+    this.isAccepting = true;
     this.analyticsService.trackButtonClick(ButtonClick.TRANSFER_ACCEPT);
-    this.participantService.acceptParticipantTransfer();
-
-    // Move to next stage if on a transfer stage.
-    const curStageId = this.participantService.profile?.currentStageId!;
-    const curStage = this.experimentService.getStage(curStageId);
-    if (curStage.kind !== StageKind.TRANSFER) {
-      return;
-    }
-    const nextStageId = this.experimentService.getNextStageId(curStageId)!;
-
-    if (!this.participantService.profile) return false;
-    this.routerService.navigate(Pages.PARTICIPANT_STAGE, {
-      experiment: this.routerService.activeRoute.params['experiment'],
-      participant: this.routerService.activeRoute.params['participant'],
-      stage: nextStageId,
-    });
-    window.location.reload();
+    await this.participantService.acceptParticipantTransfer();
+    this.isAccepting = false;
   }
 
   private async handleNo() {

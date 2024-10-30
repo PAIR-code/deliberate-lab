@@ -433,7 +433,7 @@ export class ParticipantService extends Service {
       completedStages,
     };
 
-    return await this.updateProfile(
+    const accepted = await this.updateProfile(
       {
         ...this.profile,
         currentCohortId: this.profile.transferCohortId,
@@ -443,6 +443,11 @@ export class ParticipantService extends Service {
       },
       true
     );
+
+    // Once profile is updated, route the participant accordingly
+    window.location.reload();
+
+    return accepted;
   }
 
   /** Send chat message. */
