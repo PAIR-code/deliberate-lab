@@ -20,6 +20,7 @@ import {
   getTimeElapsed,
 } from '@deliberation-lab/utils';
 import {isActiveParticipant} from '../../shared/participant.utils';
+import {convertUnifiedTimestampToDate} from '../../shared/utils';
 import {styles} from './chat_panel.scss';
 
 /** Chat panel view with stage info, participants. */
@@ -101,7 +102,13 @@ export class ChatPanel extends MobxLitElement {
     ] as ChatStagePublicData;
     if (!publicStageData) return;
     if (publicStageData.discussionEndTimestamp) {
-      return html`<div class="ended countdown">Discussion ended.</div>`;
+      return html`<div class="ended countdown">
+        Discussion ended at
+        ${convertUnifiedTimestampToDate(
+          publicStageData.discussionEndTimestamp,
+          false
+        )}.
+      </div>`;
     } else if (!publicStageData.discussionStartTimestamp) {
       const timeText = `Time remaining: ${this.formatTime(
         this.stage.timeLimitInMinutes * 60
@@ -109,10 +116,14 @@ export class ChatPanel extends MobxLitElement {
       return html`<div class="countdown">${timeText}</div>`;
     }
 
+    const startText = `Conversation started at: ${convertUnifiedTimestampToDate(
+      publicStageData.discussionStartTimestamp,
+      false
+    )}`;
     const timeText = `Time remaining: ${this.formatTime(
       this.timeRemainingInSeconds!
     )}`;
-    return html`<div class="countdown">${timeText}</div>`;
+    return html`<div class="countdown">${startText}<br />${timeText}</div>`;
   }
 
   private formatTime(seconds: number): string {
@@ -148,7 +159,6 @@ export class ChatPanel extends MobxLitElement {
         </div>
         ${mediators.map((mediator) => this.renderMediator(mediator))}
       </div>
-      ${this.renderMuteButton()}
     `;
   }
   private renderApiCheck() {
@@ -163,31 +173,6 @@ export class ChatPanel extends MobxLitElement {
     return '';
   }
 
-  private renderMuteButton() {
-    if (!this.stage || this.stage.mediators.length == 0) return;
-    const isMuted = this.mediatorEditor.configMap[this.stage.id].muteMediators;
-    return html`
-      <div class="panel-item">
-        <pr-tooltip
-          position="BOTTOM_END"
-          text=${isMuted
-            ? 'Unmuting agents will allow them to speak after a new message is shown.'
-            : 'Muting agents will stop their speaking.'}
-        >
-          <pr-button
-            color="${isMuted ? 'neutral' : 'error'}"
-            variant="tonal"
-            ?disabled=${!this.experimentManager.isCreator}
-            @click=${async () => {
-              this.mediatorEditor.toggleMuteMediators(this.stage!.id!);
-            }}
-          >
-            ${isMuted ? '🔈 Unmute agents' : '🔇 Mute agents'}
-          </pr-button>
-        </pr-tooltip>
-      </div>
-    `;
-  }
   private renderParticipantList() {
     const activeParticipants = this.cohortService.activeParticipants;
     return html`

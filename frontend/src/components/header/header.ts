@@ -106,20 +106,6 @@ export class Header extends MobxLitElement {
           });
           break;
         case Pages.PARTICIPANT_STAGE:
-          const stageId = this.routerService.activeRoute.params['stage'];
-          const stage = this.experimentService.getStage(
-            stageId
-          ) as ChatStageConfig;
-          if (
-            stage.mediators &&
-            stage.mediators.length > 0 &&
-            !stage.muteMediators!
-          ) {
-            const isConfirmed = window.confirm(
-              `Agents will still respond to new messages. Are you sure you want to go back without muting the agents first?`
-            );
-            if (!isConfirmed) return;
-          }
           this.routerService.navigate(Pages.EXPERIMENT, {
             experiment: params['experiment'],
           });
@@ -304,10 +290,7 @@ export class Header extends MobxLitElement {
           `;
         }
         return html`
-          <pr-tooltip
-            text="Download experiment data"
-            position="BOTTOM_END"
-          >
+          <pr-tooltip text="Download experiment data" position="BOTTOM_END">
             <pr-icon-button
               icon="download"
               color="neutral"

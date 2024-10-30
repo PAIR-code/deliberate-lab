@@ -101,7 +101,7 @@ export class ChatMessageComponent extends MobxLitElement {
         <profile-avatar .emoji=${profile.avatar}></profile-avatar>
         <div class="content">
           <div class="label">
-            ${profile.name}
+            ${profile.name} <span class="date">${convertUnifiedTimestampToDate(chatMessage.timestamp, false)}</span>
           </div>
           <div class="chat-bubble">${chatMessage.message}</div>
           ${this.renderDebuggingExplanation(chatMessage)}

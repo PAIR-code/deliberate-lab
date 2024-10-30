@@ -26,7 +26,6 @@ export interface ChatStageConfig extends BaseStageConfig {
   kind: StageKind.CHAT;
   discussions: ChatDiscussion[]; // ordered list of discussions
   mediators: MediatorConfig[];
-  muteMediators: boolean; // Whether mediators are muted.
   timeLimitInMinutes: number | null; // How long remaining in the chat.
 }
 
@@ -220,7 +219,6 @@ export function createChatStage(config: Partial<ChatStageConfig> = {}): ChatStag
     progress: config.progress ?? createStageProgressConfig({ waitForAllParticipants: true }),
     discussions: config.discussions ?? [],
     mediators: config.mediators ?? [],
-    muteMediators: config.muteMediators ?? false,
     timeLimitInMinutes: config.timeLimitInMinutes ?? 20,
   };
 }

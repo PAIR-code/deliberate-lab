@@ -21,7 +21,6 @@ export const ChatStageConfigData = Type.Object({
   name: Type.String(),
   descriptions: StageTextConfigSchema,
   progress: StageProgressConfigSchema,
-  muteMediators: Type.Boolean(),
   timeLimitInMinutes: Type.Union([Type.Number(), Type.Null()]),
   // discussions
   // mediators
@@ -90,7 +89,6 @@ export const UpdateChatMediatorsData = Type.Object({
       }),
     }),
   ),
-  muteMediators: Type.Boolean(),
 });
 
 export type UpdateChatMediatorsData = Static<typeof UpdateChatMediatorsData>;

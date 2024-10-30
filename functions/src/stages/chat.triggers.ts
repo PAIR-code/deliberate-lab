@@ -146,7 +146,7 @@ export const createMediatorMessage = onDocumentCreated(
 
     // Use experiment config to get ChatStageConfig with mediators.
     let stage = await getChatStage(event);
-    if (!stage || stage.muteMediators) {
+    if (!stage) {
       return;
     }
 
@@ -221,13 +221,12 @@ export const createMediatorMessage = onDocumentCreated(
 
     await awaitTypingDelay(message);
 
-    // Refresh the stage to check if mediators have been muted.
+    // Refresh the stage to check if the conversation has ended..
     stage = await getChatStage(event);
     publicStageData = await getChatStagePublicData(event);
 
     if (
       !stage ||
-      stage.muteMediators ||
       !publicStageData ||
       Boolean(publicStageData.discussionEndTimestamp) ||
       await hasEndedChat(event, stage, publicStageData)
