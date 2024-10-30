@@ -1,15 +1,18 @@
 import { Timestamp } from 'firebase-admin/firestore';
-import { onDocumentCreated } from 'firebase-functions/v2/firestore';
+import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import {
   awaitTypingDelay,
   ChatMessage,
   ChatMessageType,
+  ChatStagePublicData,
   StageKind,
   addChatHistoryToPrompt,
   getPreface,
   getChatHistory,
+  getTimeElapsed,
   createAgentMediatorChatMessage,
   MediatorConfig,
+  ChatStageConfig,
 } from '@deliberation-lab/utils';
 
 import { app } from '../app';
@@ -20,6 +23,82 @@ export interface MediatorMessage {
   parsed: any;
   message: string;
 }
+
+// Function to start tracking elapsed time when a chat is created
+export const startTimeElapsed = onDocumentCreated(
+  'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}',
+  async (event) => {
+    const stageRef = app
+      .firestore()
+      .doc(`experiments/${event.params.experimentId}/stages/${event.params.stageId}`);
+    const publicStageRef = app
+      .firestore()
+      .doc(
+        `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
+      );
+
+    const stage = (await stageRef.get()).data() as ChatStageConfig;
+    if (!stage) return;
+
+    const publicStageDataDoc = await publicStageRef.get();
+    if (!publicStageDataDoc.exists) return;
+    let publicStageData = publicStageDataDoc.data() as ChatStagePublicData;
+
+    // Exit if discussion has already ended.
+    if (publicStageData.discussionEndTimestamp) return;
+
+    // Update the start timestamp and checkpoint timestamp if not set.
+    if (publicStageData.discussionStartTimestamp === null) {
+      await publicStageRef.update({
+        discussionStartTimestamp: Timestamp.now(),
+        discussionCheckpointTimestamp: Timestamp.now(),
+      });
+    }
+  },
+);
+
+// Function to update elapsed time and potentially end the discussion.
+export const updateTimeElapsed = onDocumentUpdated(
+  {
+    document: 'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/',
+    timeoutSeconds: 360, // Maximum timeout of 6 minutes.
+  },
+  async (event) => {
+    const publicStageRef = app
+      .firestore()
+      .doc(
+        `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
+      );
+
+    const publicStageDataDoc = await publicStageRef.get();
+    if (!publicStageDataDoc.exists) return;
+    let publicStageData = publicStageDataDoc.data() as ChatStagePublicData;
+
+    // Only update time if the conversation is in progress.
+    if (!publicStageData.discussionStartTimestamp || publicStageData.discussionEndTimestamp) return;
+
+    const stageRef = app
+      .firestore()
+      .doc(`experiments/${event.params.experimentId}/stages/${event.params.stageId}`);
+    const stage = (await stageRef.get()).data() as ChatStageConfig;
+    if (!stage || !stage.timeLimitInMinutes) return;
+
+    const elapsedMinutes = getTimeElapsed(publicStageData.discussionStartTimestamp!, 'm');
+    if (elapsedMinutes >= stage.timeLimitInMinutes) {
+      await publicStageRef.update({ discussionEndTimestamp: Timestamp.now() });
+      return;
+    }
+
+    // Calculate how long to wait.
+    const maxWaitTimeInMinutes = 5;
+    const remainingTime = stage.timeLimitInMinutes - elapsedMinutes;
+    const intervalTime = Math.min(maxWaitTimeInMinutes, remainingTime);
+
+    // Wait for the determined interval time, and then re-trigger the function.
+    await new Promise((resolve) => setTimeout(resolve, intervalTime * 60 * 1000));
+    await publicStageRef.update({ discussionCheckpointTimestamp: Timestamp.now() });
+  },
+);
 
 /** When chat message is created, generate mediator response if relevant. */
 export const createMediatorMessage = onDocumentCreated(

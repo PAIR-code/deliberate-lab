@@ -14,8 +14,10 @@ import {MediatorEditor} from '../../services/mediator.editor';
 
 import {
   ChatStageConfig,
+  ChatStagePublicData,
   MediatorConfig,
   ParticipantProfile,
+  getTimeElapsed,
 } from '@deliberation-lab/utils';
 import {isActiveParticipant} from '../../shared/participant.utils';
 import {styles} from './chat_panel.scss';
@@ -31,6 +33,50 @@ export class ChatPanel extends MobxLitElement {
   private readonly mediatorEditor = core.getService(MediatorEditor);
 
   @property() stage: ChatStageConfig | null = null;
+
+  @property({type: Number}) timeRemainingInSeconds: number | null = null;
+  private intervalId: number | null = null;
+  connectedCallback() {
+    super.connectedCallback();
+    this.startTimer();
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.clearTimer();
+  }
+
+  private startTimer() {
+    this.updateTimeRemaining();
+    this.intervalId = window.setInterval(() => {
+      this.updateTimeRemaining();
+    }, 1000);
+  }
+
+  private clearTimer() {
+    if (this.intervalId !== null) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+  }
+
+  private updateTimeRemaining() {
+    const chatStage = this.stage as ChatStageConfig;
+    if (!chatStage || !chatStage.timeLimitInMinutes) {
+      this.timeRemainingInSeconds = null;
+      return;
+    }
+
+    let timeRemainingInSeconds = chatStage.timeLimitInMinutes * 60;
+    const messages = this.cohortService.chatMap[chatStage.id] ?? [];
+    if (messages.length) {
+      const timeElapsed = getTimeElapsed(messages[0].timestamp, 's');
+      timeRemainingInSeconds -= timeElapsed;
+    }
+
+    this.timeRemainingInSeconds =
+      timeRemainingInSeconds > 0 ? timeRemainingInSeconds : 0;
+  }
 
   override render() {
     if (!this.stage) {
@@ -50,9 +96,23 @@ export class ChatPanel extends MobxLitElement {
       return '';
     }
 
-    return html`<div class="countdown">
-      Time remaining: ${this.formatTime(this.stage.timeLimitInMinutes * 60)}
-    </div>`;
+    const publicStageData = this.cohortService.stagePublicDataMap[
+      this.stage.id
+    ] as ChatStagePublicData;
+    if (!publicStageData) return;
+    let timeText = '';
+    if (publicStageData.discussionEndTimestamp) {
+      timeText = 'Discussion ended';
+    } else if (!publicStageData.discussionStartTimestamp) {
+      timeText = `Time remaining: ${this.formatTime(
+        this.stage.timeLimitInMinutes * 60
+      )}`;
+    } else {
+      timeText = `Time remaining: ${this.formatTime(
+        this.timeRemainingInSeconds!
+      )}`;
+    }
+    return html`<div class="countdown">${timeText}</div>`;
   }
 
   private formatTime(seconds: number): string {

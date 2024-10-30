@@ -148,6 +148,12 @@ export interface ChatStagePublicData extends BaseStagePublicData {
   kind: StageKind.CHAT;
   // discussionId --> map of participant public ID to readyToEndDiscussion timestamp
   discussionTimestampMap: Record<string, Record<string, UnifiedTimestamp | null>>;
+  // The timestamp of the first message, or null if not started.
+  discussionStartTimestamp: UnifiedTimestamp | null;
+  // A timestamp used for in progress checkpoint.
+  discussionCheckpointTimestamp: UnifiedTimestamp | null;
+  // If the end timestamp is not null, the conversation has ended.
+  discussionEndTimestamp: UnifiedTimestamp | null;
 }
 
 // ************************************************************************* //
@@ -357,5 +363,8 @@ export function createChatStagePublicData(stage: ChatStageConfig): ChatStagePubl
     id: stage.id,
     kind: StageKind.CHAT,
     discussionTimestampMap: {},
+    discussionStartTimestamp: null,
+    discussionCheckpointTimestamp: null,
+    discussionEndTimestamp: null,
   };
 }
