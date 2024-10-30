@@ -13,8 +13,12 @@ import { StageConfig } from './stages/stage';
 // TYPES                                                                     //
 // ************************************************************************* //
 
-/** Increment this ID when changes to any Firestore objects are made. */
-/** Version 3: PR#310. */
+/** Increment this ID when Firestore objects are updated in a way that
+  * impacts reading those objects on the frontend
+  * (e.g., field is added to existing stage config).
+  *
+  * VERSION 3 - updated in PR #310
+  */
 export const EXPERIMENT_VERSION_ID = 3;
 
 /** Experiment. */
