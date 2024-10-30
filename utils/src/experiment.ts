@@ -14,8 +14,8 @@ import { StageConfig } from './stages/stage';
 // ************************************************************************* //
 
 /** Increment this ID when Firestore objects are updated in a way that
-  * impacts reading those objects on the frontend
-  * (e.g., field is added to existing stage config).
+  * impacts loading previous versions of those objects on the frontend
+  * (e.g., new field is added to existing stage config).
   *
   * VERSION 3 - updated in PR #310
   */
