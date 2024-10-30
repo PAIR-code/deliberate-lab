@@ -93,6 +93,21 @@ export const SurveyStageConfigData = Type.Object(
   strict,
 );
 
+/** SurveyPerParticipantStageConfig input validation. */
+export const SurveyPerParticipantStageConfigData = Type.Object(
+  {
+    id: Type.String({ minLength: 1 }),
+    kind: Type.Literal(StageKind.SURVEY_PER_PARTICIPANT),
+    game: StageGameSchema,
+    name: Type.String({ minLength: 1 }),
+    descriptions: StageTextConfigSchema,
+    progress: StageProgressConfigSchema,
+    questions: Type.Array(SurveyQuestionData),
+    enableSelfSurvey: Type.Boolean(),
+  },
+  strict,
+);
+
 // ************************************************************************* //
 // updateSurveyStageParticipantAnswer endpoint                               //
 // ************************************************************************* //
