@@ -225,7 +225,7 @@ export const createMediatorMessage = onDocumentCreated(
 
     await awaitTypingDelay(message);
 
-    // Refresh the stage to check if the conversation has ended..
+    // Refresh the stage to check if the conversation has ended.
     stage = await getChatStage(event);
     publicStageData = await getChatStagePublicData(event);
 
