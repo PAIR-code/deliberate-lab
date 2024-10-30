@@ -23,6 +23,7 @@ export const ChatStageConfigData = Type.Object(
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,
     muteMediators: Type.Boolean(),
+    timeLimitInMinutes: Type.Union([Type.Number(), Type.Null()]),
     // discussions
     // mediators
   },

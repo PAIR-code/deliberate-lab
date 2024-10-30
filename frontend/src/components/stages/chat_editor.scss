@@ -95,3 +95,17 @@ pr-textarea {
   flex-grow: 1;
   width: 100%;
 }
+
+.number-input {
+  @include common.number-input;
+  width: max-content;
+}
+
+.divider {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.tab {
+  margin-top: 0px;
+  margin-left: calc(48px + common.$spacing-medium);
+}

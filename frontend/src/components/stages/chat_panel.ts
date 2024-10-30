@@ -39,8 +39,36 @@ export class ChatPanel extends MobxLitElement {
 
     return html`
       <stage-description .stage=${this.stage}></stage-description>
+      ${this.renderTimeRemaining()}
+      <div class="divider"></div>
       ${this.renderParticipantList()} ${this.renderMediatorsList()}
     `;
+  }
+
+  private renderTimeRemaining() {
+    if (!this.stage || this.stage.timeLimitInMinutes === null) {
+      return '';
+    }
+
+    return html`<div class="countdown">
+      Time remaining: ${this.formatTime(this.stage.timeLimitInMinutes * 60)}
+    </div>`;
+  }
+
+  private formatTime(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    if (hours > 0) {
+      return `${hours.toString().padStart(2, '0')}:${mins
+        .toString()
+        .padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    } else {
+      return `${mins.toString().padStart(2, '0')}:${secs
+        .toString()
+        .padStart(2, '0')}`;
+    }
   }
 
   private renderMediatorsList() {
