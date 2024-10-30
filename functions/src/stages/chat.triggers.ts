@@ -140,7 +140,11 @@ export const updateTimeElapsed = onDocumentUpdated(
 
 /** When chat message is created, generate mediator response if relevant. */
 export const createMediatorMessage = onDocumentCreated(
-  'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}',
+  {
+    document:
+      'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}',
+    timeoutSeconds: 60, // Maximum timeout of 1 minute for typing delay.
+  },
   async (event) => {
     const data = event.data?.data() as ChatMessage | undefined;
 
@@ -229,7 +233,7 @@ export const createMediatorMessage = onDocumentCreated(
       !stage ||
       !publicStageData ||
       Boolean(publicStageData.discussionEndTimestamp) ||
-      await hasEndedChat(event, stage, publicStageData)
+      (await hasEndedChat(event, stage, publicStageData))
     )
       return;
 

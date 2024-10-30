@@ -192,7 +192,7 @@ export const DEFAULT_STRING_FORMATTING_INSTRUCTIONS = `If you would like to resp
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
 export async function awaitTypingDelay(message: string): Promise<void> {
-  const delay = getTypingDelay(message);
+  const delay = Math.min(getTypingDelay(message), 30 * 1000); // Cap delay at 30 seconds.
   console.log(`Waiting ${(delay / 1000).toFixed(2)} seconds to simulate delay.`);
   return new Promise((resolve) => setTimeout(resolve, delay));
 }
