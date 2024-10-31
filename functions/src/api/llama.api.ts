@@ -53,3 +53,10 @@ async function decodeResponse(response: Response): Promise<string> {
 
     return content;
 }
+
+// hacky way to expose test functions without breaking encapsulation
+// I haven't found a better way to achieve this
+// https://stackoverflow.com/questions/31922977/testing-typescript-function-which-is-not-exported
+export const _testPrivate = {
+    encodeMessage,
+};
