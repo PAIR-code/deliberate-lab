@@ -8,12 +8,12 @@ import { OllamaChat } from "./llama.api";
 
 const MODEL_TYPE = "llama3.2";
 const LLM_SERVER_ENDPOINT = "http://localhost:11434/api/chat";
-const TEST_MESSAGE = "Say hi!'";
+const TEST_MESSAGE = "Say hello!";
 
 
 test("chat with hosted llm", async () => {
     const client = new OllamaChat(LLM_SERVER_ENDPOINT, MODEL_TYPE)
     const response = await client.chat([TEST_MESSAGE]);
-    expect(response).toContain("hi");
+    expect(response.toLowerCase()).toContain("hello");
     console.log(response);
 });
