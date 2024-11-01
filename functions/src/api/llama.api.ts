@@ -13,7 +13,8 @@ type IncomingMessage = {
 
 type OutgoingMessage = {
     model: string,
-    prompt: string
+    prompt: string,
+    stream: boolean
 }
 
 
@@ -26,7 +27,11 @@ export async function llamaChat(llm_server_endpoint_url: string, message: string
 
 
 function encodeMessage(model_type: string, message: string): OutgoingMessage {
-    return { "model": model_type, "prompt": message }
+    return { "model": model_type, "prompt": message , "stream": false}
+}
+
+function isError(rawjson: string): boolean {
+    return rawjson.startsWith('{"error"');
 }
 
 
@@ -36,22 +41,17 @@ async function decodeResponse(response: Response): Promise<string> {
         throw new Error("Failed to read response body");
     }
 
-    let content = ""
-    while(true) {
-        // we rely on the "done" property given to us in the response JSON
-        // to terminate the loop
-        const { done, value } = await reader.read();
-
-        const rawjson = new TextDecoder().decode(value);
+    const { done, value } = await reader.read();
+    const rawjson = new TextDecoder().decode(value);
+    console.log("Received: ", rawjson)
+    if(isError(rawjson)) {
+        console.log(rawjson)
+        return ""
+    } else {
         const json: IncomingMessage = JSON.parse(rawjson);
-
-        if (json.done) {
-            break;
-        }
-        content += json.response;
-    } 
-
-    return content;
+        console.log("Received: ", json.response)
+        return json.response;
+    }
 }
 
 // hacky way to expose test functions without breaking encapsulation
