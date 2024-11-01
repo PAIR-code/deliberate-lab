@@ -20,5 +20,6 @@ test("encode message", () => {
 
 test("chat with hosted llm", async () => {
     const response = await llamaChat(LLM_SERVER_ENDPOINT, TEST_MESSAGE, MODEL_TYPE);
-    expect(response).toContain("test")
+    expect(response).toContain("test");
+    console.log(response);
 });
