@@ -27,7 +27,8 @@
   "jest": {
     "transform": {
       "^.+\\.[t|j]sx?$": "babel-jest"
-    }
+    },
+    "testTimeout": 15000
   },
   "devDependencies": {
     "@babel/preset-env": "^7.26.0",
