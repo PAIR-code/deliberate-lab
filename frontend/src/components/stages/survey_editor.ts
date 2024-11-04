@@ -12,6 +12,7 @@ import {
   MultipleChoiceItem,
   MultipleChoiceSurveyQuestion,
   ScaleSurveyQuestion,
+  SurveyPerParticipantStageConfig,
   SurveyStageConfig,
   SurveyQuestion,
   SurveyQuestionKind,
@@ -29,7 +30,7 @@ export class SurveyEditor extends MobxLitElement {
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
-  @property() stage: SurveyStageConfig | undefined = undefined;
+  @property() stage: SurveyStageConfig | SurveyPerParticipantStageConfig | undefined = undefined;
 
   override render() {
     if (this.stage === undefined) {

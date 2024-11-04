@@ -6,7 +6,7 @@ import '../stages/payout_editor';
 import '../stages/profile_stage_editor';
 import '../stages/reveal_editor';
 import '../stages/survey_editor';
-import '../stages/survey_editor_menu';
+import '../stages/survey_per_participant_editor';
 import '../../pair-components/tooltip';
 import '../stages/tos_editor';
 import '../stages/transfer_editor';
@@ -135,6 +135,12 @@ export class ExperimentBuilder extends MobxLitElement {
         return html`
           <base-stage-editor .stage=${stage}></base-stage-editor>
           <survey-editor .stage=${stage}></survey-editor>
+        `;
+      case StageKind.SURVEY_PER_PARTICIPANT:
+        return html`
+          <base-stage-editor .stage=${stage}></base-stage-editor>
+          <survey-per-participant-editor .stage=${stage}>
+          </survey-per-participant-editor>
         `;
       case StageKind.TOS:
         return html`
