@@ -8,11 +8,13 @@ import {
   StageKind,
   StageParticipantAnswer,
   SurveyAnswer,
+  SurveyPerParticipantStageParticipantAnswer,
   SurveyStageParticipantAnswer,
   UpdateChatStageParticipantAnswerData,
   createChatStageParticipantAnswer,
   createParticipantChatMessage,
   createParticipantProfileExtended,
+  createSurveyPerParticipantStageParticipantAnswer,
   createSurveyStageParticipantAnswer,
 } from '@deliberation-lab/utils';
 import {
@@ -561,6 +563,26 @@ export class ParticipantService extends Service {
           surveyStageParticipantAnswer: participantAnswer,
         }
       );
+    }
+    return response;
+  }
+
+  /** Update survey-per-participant answerMap. */
+  async updateSurveyPerParticipantStageParticipantAnswerMap(
+    id: string, // survey stage ID,
+    // map of participant ID to (map of question ID to answer)
+    answerMap: Record<string, Record<string, SurveyAnswer>>,
+  ) {
+    let response = {};
+
+    let participantAnswer = this.answerMap[id] as SurveyPerParticipantStageParticipantAnswer;
+    if (!participantAnswer) {
+      participantAnswer = createSurveyPerParticipantStageParticipantAnswer({id});
+    }
+    participantAnswer.answerMap = answerMap;
+
+    if (this.experimentId && this.profile) {
+      // TODO: Call endpoint to save responses
     }
     return response;
   }

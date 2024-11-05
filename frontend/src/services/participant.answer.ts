@@ -21,6 +21,7 @@ import {
   SurveyStageParticipantAnswer,
   SurveyQuestionKind,
   createRankingStageParticipantAnswer,
+  createSurveyPerParticipantStageParticipantAnswer,
   createSurveyStageParticipantAnswer,
 } from "@deliberation-lab/utils";
 
@@ -72,6 +73,15 @@ export class ParticipantAnswerService extends Service {
     return answer.answerMap ? answer.answerMap[questionId] : undefined;
   }
 
+  getSurveyPerParticipantAnswer(
+    stageId: string, questionId: string, participantId: string
+  ) {
+    const answer = this.answerMap[stageId];
+    if (!answer || answer.kind !== StageKind.SURVEY_PER_PARTICIPANT) return undefined;
+    return answer.answerMap && answer.answerMap[participantId] ?
+      answer.answerMap[participantId][questionId] : undefined;
+  }
+
   setIds(experimentId: string, participantId: string) {
     this.experimentId = experimentId;
     this.participantId = participantId;
@@ -117,6 +127,17 @@ export class ParticipantAnswerService extends Service {
     if (!answer || answer.kind !== StageKind.SURVEY) return [];
     return Object.keys(answer.answerMap);
   }
+
+  getSurveyPerParticipantAnswerIDs(stageId: string, participantId: string) {
+    const answer = this.answerMap[stageId];
+    if (
+      !answer || answer.kind !== StageKind.SURVEY_PER_PARTICIPANT ||
+      !answer.answerMap[participantId]
+    ) {
+      return [];
+    }
+    return Object.keys(answer.answerMap[participantId]);
+  }
  
   getNumSurveyAnswers(stageId: string) {
     return this.getSurveyAnswerIDs(stageId).length;
@@ -151,10 +172,34 @@ export class ParticipantAnswerService extends Service {
     this.answerMap[stageId] = answer;
   }
 
+  updateSurveyPerParticipantAnswer(
+    stageId: string, surveyAnswer: SurveyAnswer, participantId: string
+  ) {
+    let answer = this.answerMap[stageId];
+    if (!answer || answer.kind !== StageKind.SURVEY_PER_PARTICIPANT) {
+      answer = createSurveyPerParticipantStageParticipantAnswer({ id: stageId });
+    }
+    if (!answer.answerMap[participantId]) {
+      answer.answerMap[participantId] = {};
+    }
+
+    answer.answerMap[participantId][surveyAnswer.id] = surveyAnswer;
+    this.answerMap[stageId] = answer;
+  }
+
   async saveSurveyAnswers(stageId: string) {
     const answer = this.answerMap[stageId];
     if (!answer || answer.kind !== StageKind.SURVEY) return;
     await this.sp.participantService.updateSurveyStageParticipantAnswerMap(
+      stageId,
+      answer.answerMap
+    );
+  }
+
+  async saveSurveyPerParticipantAnswers(stageId: string) {
+    const answer = this.answerMap[stageId];
+    if (!answer || answer.kind !== StageKind.SURVEY_PER_PARTICIPANT) return;
+    await this.sp.participantService.updateSurveyPerParticipantStageParticipantAnswerMap(
       stageId,
       answer.answerMap
     );
