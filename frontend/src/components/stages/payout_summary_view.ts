@@ -1,7 +1,3 @@
-import '../progress/progress_stage_completed';
-import './stage_description';
-import './stage_footer';
-
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
@@ -32,22 +28,11 @@ import {
   calculatePayoutResult,
   calculatePayoutTotal
 } from '@deliberation-lab/utils';
-import {
-  LAS_ITEMS,
-  LAS_PART_1_SURVIVAL_SURVEY_STAGE_ID,
-  LAS_PART_2_ELECTION_STAGE_ID,
-  LAS_PART_3_LEADER_TASK_SURVEY_ID,
-  LAS_PAYMENT_PART_1_DESCRIPTION,
-  LAS_PAYMENT_PART_3_DESCRIPTION,
-  LAS_PAYMENT_PARTS_2_AND_3_DESCRIPTION,
-  getCorrectLASAnswer,
-} from '../../shared/games/lost_at_sea';
 
 import {styles} from './payout_view.scss';
 
-/** Payout stage view for participants. */
-// TODO: Generalize for all experiments, not just LAS game
-@customElement('payout-view')
+/** Payout stage summary view. */
+@customElement('payout-summary-view')
 export class PayoutView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -56,7 +41,6 @@ export class PayoutView extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
 
   @property() stage: PayoutStageConfig | null = null;
-  @property() renderSummaryView: boolean = false; // If true, render a minimized summary view.
 
   override render() {
     if (!this.stage || !this.participantService.profile) {
@@ -71,20 +55,12 @@ export class PayoutView extends MobxLitElement {
     );
 
     return html`
-      ${this.renderSummaryView ? '' : html`<stage-description .stage=${this.stage}></stage-description>`}
       <div class="stages-wrapper">
         ${resultConfig.results.map((result) =>
           this.renderPayoutItemResult(result, resultConfig.currency)
         )}
         ${this.renderTotalPayout(resultConfig)}
       </div>
-      ${this.renderSummaryView
-        ? ''
-        : html`<stage-footer>
-            ${this.stage.progress.showParticipantProgress
-              ? html`<progress-stage-completed></progress-stage-completed>`
-              : nothing}
-          </stage-footer>`}
     `;
   }
 
@@ -238,6 +214,6 @@ export class PayoutView extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'payout-view': PayoutView;
+    'payout-summary-view': PayoutView;
   }
 }

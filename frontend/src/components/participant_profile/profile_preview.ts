@@ -16,8 +16,7 @@ import {
 } from '@deliberation-lab/utils';
 import {getCohortName} from '../../shared/cohort.utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
-
-import '../stages/payout_view';
+import '../stages/payout_summary_view';
 import '../stages/reveal_summary_view';
 import '../stages/ranking_view';
 import '../stages/survey_view';
@@ -112,10 +111,9 @@ export class Preview extends MobxLitElement {
 
       switch (stage.kind) {
         case StageKind.PAYOUT:
-          stageHtml = html`<payout-view
-            .stage=${stage}
-            .renderSummaryView=${true}
-          ></payout-view>`;
+          stageHtml = html`
+            <payout-summary-view .stage=${stage}></payout-summary-view>
+          `;
           break;
         case StageKind.REVEAL:
           stageHtml = html`
