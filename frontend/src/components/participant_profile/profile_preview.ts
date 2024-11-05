@@ -18,7 +18,7 @@ import {getCohortName} from '../../shared/cohort.utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
 import '../stages/payout_view';
-import '../stages/reveal_view';
+import '../stages/reveal_summary_view';
 import '../stages/ranking_view';
 import '../stages/survey_view';
 
@@ -104,9 +104,9 @@ export class Preview extends MobxLitElement {
 
     const renderStageData = (stageId: string) => {
       const stage = this.experimentService.getStage(stageId);
-      if (!stage) return '';
-      if (!isUnlockedStage(this.profile as ParticipantProfile, stageId))
-        return '';
+      if (!stage || !isUnlockedStage(this.profile as ParticipantProfile, stageId)) {
+        return nothing;
+      }
 
       let stageHtml;
 
@@ -118,10 +118,9 @@ export class Preview extends MobxLitElement {
           ></payout-view>`;
           break;
         case StageKind.REVEAL:
-          stageHtml = html`<reveal-view
-            .stage=${stage}
-            .renderSummaryView=${true}
-          ></reveal-view>`;
+          stageHtml = html`
+            <reveal-summary-view .stage=${stage}></reveal-summary-view>
+          `;
           break;
         case StageKind.RANKING:
           stageHtml = html`<ranking-view
@@ -136,30 +135,25 @@ export class Preview extends MobxLitElement {
           ></survey-view>`;
           break;
         default:
-          return ''; // Return empty HTML if no match
+          return nothing;
       }
 
       if (stageHtml) {
-        return html`<div>
+        return html`
+          <div>
             <h4>${this.getStageName(stageId)}</h4>
             ${stageHtml}
           </div>
-          <div class="divider"></div>`;
+          <div class="divider"></div>
+        `;
       }
     };
 
-    const stages = [];
-    for (const stageId of this.experimentService.experiment?.stageIds ?? []) {
-      const stageHtml = renderStageData(stageId);
-      if (stageHtml) {
-        stages.push(stageHtml);
-      }
-    }
-
+    const stages = this.experimentService.experiment?.stageIds ?? [];
     return stages.length
       ? html`<h3>Stage responses</h3>
-          ${stages}`
-      : ``;
+          ${stages.map(stageId => renderStageData(stageId))}`
+      : nothing;
   }
 
   private renderTimestamp(label: string, value: UnifiedTimestamp | null) {

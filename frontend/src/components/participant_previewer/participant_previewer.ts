@@ -9,7 +9,7 @@ import '../stages/chat_panel';
 import '../stages/ranking_view';
 import '../stages/info_view';
 import '../stages/payout_view';
-import '../stages/reveal_view';
+import '../stages/reveal_participant_view';
 import '../stages/survey_view';
 import '../stages/survey_per_participant_view';
 import '../stages/tos_view';
@@ -217,7 +217,9 @@ export class ParticipantPreviewer extends MobxLitElement {
       case StageKind.PAYOUT:
         return html`<payout-view .stage=${stage}></payout-view>`;
       case StageKind.REVEAL:
-        return html`<reveal-view .stage=${stage}></reveal-view>`;
+        return html`
+          <reveal-participant-view .stage=${stage}></reveal-participant-view>
+        `;
       case StageKind.SURVEY:
         return html`<survey-view .stage=${stage}></survey-view>`;
       case StageKind.SURVEY_PER_PARTICIPANT:
