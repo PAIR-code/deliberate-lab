@@ -6,7 +6,7 @@ import '../popup/booted_popup';
 import '../progress/progress_stage_waiting';
 import '../stages/chat_interface';
 import '../stages/chat_panel';
-import '../stages/ranking_view';
+import '../stages/ranking_participant_view';
 import '../stages/info_view';
 import '../stages/payout_participant_view';
 import '../stages/reveal_participant_view';
@@ -212,7 +212,8 @@ export class ParticipantPreviewer extends MobxLitElement {
         `;
       case StageKind.RANKING:
         return html`
-          <ranking-view .stage=${stage} .answer=${answer}></ranking-view>
+          <ranking-participant-view .stage=${stage} .answer=${answer}>
+          </ranking-participant-view>
         `;
       case StageKind.PAYOUT:
         return html`

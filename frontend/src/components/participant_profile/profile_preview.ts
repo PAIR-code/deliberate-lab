@@ -18,7 +18,7 @@ import {getCohortName} from '../../shared/cohort.utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
 import '../stages/payout_summary_view';
 import '../stages/reveal_summary_view';
-import '../stages/ranking_view';
+import '../stages/ranking_summary_view';
 import '../stages/survey_view';
 
 import {styles} from './profile_preview.scss';
@@ -121,10 +121,9 @@ export class Preview extends MobxLitElement {
           `;
           break;
         case StageKind.RANKING:
-          stageHtml = html`<ranking-view
-            .stage=${stage}
-            .renderSummaryView=${true}
-          ></ranking-view>`;
+          stageHtml = html`
+            <ranking-summary-view .stage=${stage}></ranking-summary-view>
+          `;
           break;
         case StageKind.SURVEY:
           stageHtml = html`<survey-view

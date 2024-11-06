@@ -11,12 +11,9 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
-import {ExperimentService} from '../../services/experiment.service';
-import {FirebaseService} from '../../services/firebase.service';
 import {ImageService} from '../../services/image.service';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
-import {RouterService} from '../../services/router.service';
 
 import {
   ParticipantProfile,
@@ -26,53 +23,36 @@ import {
   RankingItem,
   RankingType,
 } from '@deliberation-lab/utils';
-import {convertMarkdownToHTML} from '../../shared/utils';
+import {
+  getCohortRankingItems
+} from '../../shared/cohort.utils';
 import {
   getParticipantName,
   getParticipantPronouns,
-  isObsoleteParticipant,
 } from '../../shared/participant.utils';
 
 import {styles} from './ranking_view.scss';
 
-/** Ranking view */
-@customElement('ranking-view')
+/** Ranking view for participants */
+@customElement('ranking-participant-view')
 export class RankingView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly cohortService = core.getService(CohortService);
-  private readonly experimentService = core.getService(ExperimentService);
-  private readonly firebaseService = core.getService(FirebaseService);
   private readonly imageService = core.getService(ImageService);
   private readonly participantAnswerService = core.getService(
     ParticipantAnswerService
   );
   private readonly participantService = core.getService(ParticipantService);
-  private readonly routerService = core.getService(RouterService);
 
   @property() stage: RankingStageConfig | undefined = undefined;
-  @property() renderSummaryView: boolean = false; // If true, render a minimized summary view.
 
   private getItems() {
-    if (this.stage?.rankingType === RankingType.PARTICIPANTS) {
-      const allParticipants = this.cohortService
-        .getAllParticipants()
-        .filter(
-          // Filter only to active participants.
-          (profile) => profile.currentStatus === ParticipantStatus.IN_PROGRESS
-        );
-      if (this.stage.enableSelfVoting) {
-        return allParticipants;
-      }
-      return (
-        allParticipants.filter(
-          (profile) =>
-            profile.publicId !== this.participantService.profile?.publicId
-        ) ?? []
-      );
-    } else {
-      return this.stage?.rankingItems ?? [];
-    }
+    return this.stage ? getCohortRankingItems(
+      this.cohortService.activeParticipants,
+      this.participantService.profile?.publicId ?? '',
+      this.stage
+    ) : [];
   }
 
   private getItemId(item: ParticipantProfile | RankingItem) {
@@ -88,9 +68,6 @@ export class RankingView extends MobxLitElement {
       return nothing;
     }
 
-    // Must rank all participants except self
-    // TODO: Don't show obsolete participants if they never interacted
-    // (e.g., during group chat)
     const items = this.getItems();
     const disabled =
       this.participantAnswerService.getNumRankings(this.stage.id) <
@@ -104,25 +81,6 @@ export class RankingView extends MobxLitElement {
         this.participantAnswerService.getRankingList(this.stage.id)
       );
     };
-
-    if (this.renderSummaryView) {
-      const rankingList = this.participantAnswerService.getRankingList(
-        this.stage.id
-      );
-
-      const items = this.getItems();
-
-      return html`
-        <ol>
-          ${rankingList.map((id: string) => {
-            const item = items.find((i) => this.getItemId(i) === id);
-            return item
-              ? html`<li>${this.renderItem(item)}</li>`
-              : html`<li>Unknown Item</li>`; // Handle missing items gracefully
-          })}
-        </ol>
-      `;
-    }
 
     return html`
       <stage-description .stage=${this.stage}></stage-description>
@@ -457,6 +415,6 @@ export class RankingView extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'ranking-view': RankingView;
+    'ranking-participant-view': RankingView;
   }
 }
