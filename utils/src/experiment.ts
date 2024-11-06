@@ -14,8 +14,8 @@ import { StageConfig } from './stages/stage';
 // ************************************************************************* //
 
 /** Increment this ID when changes to any Firestore objects are made. */
-/** Version 3: PR#310. */
-export const EXPERIMENT_VERSION_ID = 3;
+/** Version 4: PR#324. */
+export const EXPERIMENT_VERSION_ID = 4;
 
 /** Experiment. */
 export interface Experiment {
