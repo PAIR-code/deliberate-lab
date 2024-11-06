@@ -15,8 +15,13 @@ $bubble-radius-small: common.$spacing-small;
 
 .label {
   @include typescale.label-medium;
-  color: var(--md-sys-color-outline);
+  color: var(--md-sys-color-on-surface-variant);
   width: max-content;
+}
+
+.date {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
 }
 
 .content {

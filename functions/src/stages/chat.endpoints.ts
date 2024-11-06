@@ -100,7 +100,6 @@ export const updateChatMediators = onCall(async (request) => {
     if (!stageConfig || stageConfig.kind !== StageKind.CHAT) return {};
 
     stageConfig.mediators = data.mediatorList;
-    stageConfig.muteMediators = data.muteMediators;
     transaction.set(document, stageConfig);
   });
 

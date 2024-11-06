@@ -78,21 +78,6 @@ export class MediatorEditor extends Service {
   // *********************************************************************** //
 
   // Write chat mediators to backend
-  async toggleMuteMediators(stageId: string | null) {
-    if (!stageId || !this.experimentId || !this.configMap[stageId]) return;
-
-    await updateChatMediatorsCallable(
-      this.sp.firebaseService.functions,
-      {
-        experimentId: this.experimentId,
-        stageId,
-        mediatorList: this.configMap[stageId].mediators,
-        muteMediators: !this.configMap[stageId].muteMediators
-      }
-    );
-  }
-
-  // Write chat mediators to backend
   async saveChatMediators(stageId: string) {
     if (!this.experimentId || !this.configMap[stageId]) return;
 
@@ -102,7 +87,6 @@ export class MediatorEditor extends Service {
         experimentId: this.experimentId,
         stageId,
         mediatorList: this.configMap[stageId].mediators,
-        muteMediators: this.configMap[stageId].muteMediators ?? false,
       }
     );
   }

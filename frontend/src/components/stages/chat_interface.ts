@@ -22,6 +22,7 @@ import {RouterService} from '../../services/router.service';
 import {
   ChatDiscussion,
   ChatDiscussionType,
+  ChatStagePublicData,
   ChatMessage,
   ChatStageConfig,
   DiscussionItem,
@@ -61,6 +62,18 @@ export class ChatInterface extends MobxLitElement {
         <chat-message .chat=${chatMessage}></chat-message>
       </div>
     `;
+  }
+
+  private isConversationOver() {
+    const stageId = this.routerService.activeRoute.params['stage'];
+    const stage = this.experimentService.getStage(stageId);
+
+    if (!stage || stage.kind !== StageKind.CHAT) return false; // Changed `nothing` to `false`
+    const stageData = this.cohortService.stagePublicDataMap[
+      stage.id
+    ] as ChatStagePublicData;
+    if (!stageData) return;
+    return Boolean(stageData.discussionEndTimestamp);
   }
 
   private renderChatHistory(currentDiscussionId: string | null) {
@@ -184,7 +197,9 @@ export class ChatInterface extends MobxLitElement {
           placeholder="Send message"
           .value=${this.value}
           ?focused=${autoFocus()}
-          ?disabled=${this.disableInput || this.participantService.disableStage}
+          ?disabled=${this.disableInput ||
+          this.participantService.disableStage ||
+          this.isConversationOver()}
           @keyup=${handleKeyUp}
           @input=${handleInput}
         >
@@ -200,7 +215,8 @@ export class ChatInterface extends MobxLitElement {
             variant="tonal"
             .disabled=${this.value.trim() === '' ||
             this.disableInput ||
-            this.participantService.disableStage}
+            this.participantService.disableStage ||
+            this.isConversationOver()}
             ?loading=${this.participantService.isSendingChat}
             @click=${this.sendUserInput}
           >
@@ -235,7 +251,9 @@ export class ChatInterface extends MobxLitElement {
 
     return html`
       <pr-tooltip
-        text=${isDisabled ? "You can move on once others are also ready to move on." : ''}
+        text=${isDisabled
+          ? 'You can move on once others are also ready to move on.'
+          : ''}
         position="TOP_END"
       >
         <pr-button

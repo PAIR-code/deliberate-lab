@@ -1,8 +1,6 @@
 import {micromark} from 'micromark';
 import {gfm, gfmHtml} from 'micromark-extension-gfm';
-import {
-  UnifiedTimestamp
-} from '@deliberation-lab/utils';
+import {UnifiedTimestamp} from '@deliberation-lab/utils';
 import {Snapshot} from './types';
 
 /**
@@ -38,7 +36,20 @@ export function collectSnapshotWithId<T>(snapshot: Snapshot, idKey: keyof T) {
 /**
  * Converts UnifiedTimestamp to previewable date.
  */
-export function convertUnifiedTimestampToDate(timestamp: UnifiedTimestamp) {
+export function convertUnifiedTimestampToDate(
+  timestamp: UnifiedTimestamp,
+  showLongFormat: boolean = true
+) {
   const date = new Date(timestamp.seconds * 1000);
-  return `${date.toDateString()} (${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')})`;
+  if (showLongFormat) {
+    return `${date.toDateString()} (${date
+      .getHours()
+      .toString()
+      .padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')})`;
+  } else {
+    return `${date.getHours().toString().padStart(2, '0')}:${date
+      .getMinutes()
+      .toString()
+      .padStart(2, '0')}`;
+  }
 }

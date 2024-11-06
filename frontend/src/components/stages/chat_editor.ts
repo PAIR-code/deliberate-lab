@@ -55,6 +55,10 @@ export class ChatEditor extends MobxLitElement {
     }
 
     return html`
+      <div class="title">Conversation settings</div>
+      ${this.renderTimeLimit()}
+      <div class="divider"></div>
+      <div class="title">Agent settings</div>
       ${apiCheck}
       ${this.stage.mediators.map((mediator, index) =>
         this.renderMediator(mediator, index)
@@ -72,6 +76,68 @@ export class ChatEditor extends MobxLitElement {
     `;
   }
 
+  private renderTimeLimit() {
+    const timeLimit = this.stage?.timeLimitInMinutes;
+
+    const updateCheck = () => {
+      if (!this.stage) return;
+      if (this.stage.timeLimitInMinutes) {
+        this.experimentEditor.updateStage({
+          ...this.stage,
+          timeLimitInMinutes: null,
+        });
+      } else {
+        this.experimentEditor.updateStage({
+          ...this.stage,
+          timeLimitInMinutes: 20, // Default to 20 if checked
+        });
+      }
+    };
+
+    const updateNum = (e: InputEvent) => {
+      if (!this.stage) return;
+      const timeLimit = Number((e.target as HTMLTextAreaElement).value);
+      this.experimentEditor.updateStage({
+        ...this.stage,
+        timeLimitInMinutes: timeLimit,
+      });
+    };
+
+    return html`
+      <div class="config-item">
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${timeLimit !== null}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @click=${updateCheck}
+          >
+          </md-checkbox>
+          <div>End convo after time elapsed</div>
+        </div>
+        ${timeLimit !== null
+          ? html`
+              <div class="number-input tab">
+                <label for="timeLimit">
+                  Elapsed time from first message to conversation close (in
+                  minutes)
+                </label>
+                <input
+                  type="number"
+                  id="timeLimit"
+                  name="timeLimit"
+                  min="0"
+                  .value=${timeLimit}
+                  ?disabled=${!this.experimentEditor.canEditStages}
+                  @input=${updateNum}
+                />
+              </div>
+            `
+          : ''}
+      </div>
+    `;
+  }
+  
   addMediator() {
     if (!this.stage) return;
     const mediators = [...this.stage.mediators, createMediatorConfig()];
