@@ -38,6 +38,7 @@ import {
   createChatMessageCallable,
   updateParticipantCallable,
   updateChatStageParticipantAnswerCallable,
+  updateSurveyPerParticipantStageParticipantAnswerCallable,
   updateSurveyStageParticipantAnswerCallable,
   updateRankingStageParticipantAnswerCallable,
 } from '../shared/callables';
@@ -582,7 +583,13 @@ export class ParticipantService extends Service {
     participantAnswer.answerMap = answerMap;
 
     if (this.experimentId && this.profile) {
-      // TODO: Call endpoint to save responses
+      response = await updateSurveyPerParticipantStageParticipantAnswerCallable(
+        this.sp.firebaseService.functions, {
+          experimentId: this.experimentId,
+          participantPrivateId: this.profile.privateId,
+          surveyPerParticipantStageParticipantAnswer: participantAnswer,
+        }
+      );
     }
     return response;
   }

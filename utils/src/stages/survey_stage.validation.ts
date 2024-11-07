@@ -170,6 +170,20 @@ export const SurveyStageParticipantAnswerData = Type.Object(
   strict,
 );
 
+/** SurveyPerParticipantStageParticipantAnswer input validation. */
+export const SurveyPerParticipantStageParticipantAnswerData = Type.Object(
+  {
+    id: Type.String({ minLength: 1 }),
+    kind: Type.Literal(StageKind.SURVEY_PER_PARTICIPANT),
+    answerMap: Type.Record(Type.String({ minLength: 1 }), Type.Record(
+      Type.String({ minLength: 1 }),
+      SurveyAnswerData
+    )),
+  },
+  strict,
+);
+
+/** Update survey stage endpoint validation. */
 export const UpdateSurveyStageParticipantAnswerData = Type.Object(
   {
     experimentId: Type.String({ minLength: 1 }),
@@ -183,4 +197,18 @@ export const UpdateSurveyStageParticipantAnswerData = Type.Object(
 
 export type UpdateSurveyStageParticipantAnswerData = Static<
   typeof UpdateSurveyStageParticipantAnswerData
+>;
+
+/** Update survey-per-participant stage endpoint validation. */
+export const UpdateSurveyPerParticipantStageParticipantAnswerData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    participantPrivateId: Type.String({ minLength: 1 }),
+    surveyPerParticipantStageParticipantAnswer: SurveyPerParticipantStageParticipantAnswerData,
+  },
+  strict,
+);
+
+export type UpdateSurveyPerParticipantStageParticipantAnswerData = Static<
+  typeof UpdateSurveyPerParticipantStageParticipantAnswerData
 >;
