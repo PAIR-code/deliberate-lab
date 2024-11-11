@@ -26,7 +26,7 @@ export interface ChatStageConfig extends BaseStageConfig {
   kind: StageKind.CHAT;
   discussions: ChatDiscussion[]; // ordered list of discussions
   mediators: MediatorConfig[];
-  muteMediators: boolean; // Whether mediators are muted.
+  timeLimitInMinutes: number | null; // How long remaining in the chat.
 }
 
 /** Chat discussion. */
@@ -147,6 +147,12 @@ export interface ChatStagePublicData extends BaseStagePublicData {
   kind: StageKind.CHAT;
   // discussionId --> map of participant public ID to readyToEndDiscussion timestamp
   discussionTimestampMap: Record<string, Record<string, UnifiedTimestamp | null>>;
+  // The timestamp of the first message, or null if not started.
+  discussionStartTimestamp: UnifiedTimestamp | null;
+  // A timestamp used for in progress checkpoint.
+  discussionCheckpointTimestamp: UnifiedTimestamp | null;
+  // If the end timestamp is not null, the conversation has ended.
+  discussionEndTimestamp: UnifiedTimestamp | null;
 }
 
 // ************************************************************************* //
@@ -186,7 +192,7 @@ export const DEFAULT_STRING_FORMATTING_INSTRUCTIONS = `If you would like to resp
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
 export async function awaitTypingDelay(message: string): Promise<void> {
-  const delay = getTypingDelay(message);
+  const delay = Math.min(getTypingDelay(message), 30 * 1000); // Cap delay at 30 seconds.
   console.log(`Waiting ${(delay / 1000).toFixed(2)} seconds to simulate delay.`);
   return new Promise((resolve) => setTimeout(resolve, delay));
 }
@@ -213,7 +219,7 @@ export function createChatStage(config: Partial<ChatStageConfig> = {}): ChatStag
     progress: config.progress ?? createStageProgressConfig({ waitForAllParticipants: true }),
     discussions: config.discussions ?? [],
     mediators: config.mediators ?? [],
-    muteMediators: config.muteMediators ?? false,
+    timeLimitInMinutes: config.timeLimitInMinutes ?? 20,
   };
 }
 
@@ -355,5 +361,8 @@ export function createChatStagePublicData(stage: ChatStageConfig): ChatStagePubl
     id: stage.id,
     kind: StageKind.CHAT,
     discussionTimestampMap: {},
+    discussionStartTimestamp: null,
+    discussionCheckpointTimestamp: null,
+    discussionEndTimestamp: null,
   };
 }
