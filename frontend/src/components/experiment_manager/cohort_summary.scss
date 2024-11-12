@@ -52,6 +52,8 @@
 
 .body {
   @include common.flex-column;
+  overflow: auto;
+  max-height: 220px;
 }
 
 .empty-message {

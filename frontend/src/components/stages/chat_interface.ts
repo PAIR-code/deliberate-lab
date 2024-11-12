@@ -17,6 +17,7 @@ import {ExperimentService} from '../../services/experiment.service';
 import {FirebaseService} from '../../services/firebase.service';
 import {ImageService} from '../../services/image.service';
 import {ParticipantService} from '../../services/participant.service';
+import {ParticipantAnswerService} from '../../services/participant.answer';
 import {RouterService} from '../../services/router.service';
 
 import {
@@ -42,18 +43,21 @@ export class ChatInterface extends MobxLitElement {
   private readonly imageService = core.getService(ImageService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
+  private readonly participantAnswerService = core.getService(ParticipantAnswerService);
   private readonly routerService = core.getService(RouterService);
 
   @property() stage: ChatStageConfig | undefined = undefined;
-  @property() value = '';
   @property() disableInput = false;
   @property() showInfo = false;
   @property() readyToEndDiscussionLoading = false;
 
   private sendUserInput() {
-    if (this.value.trim() === '') return;
-    this.participantService.createChatMessage({message: this.value.trim()});
-    this.value = '';
+    if (!this.stage) return;
+
+    const value = this.participantAnswerService.getChatInput(this.stage.id)
+    if (value.trim() === '') return;
+    this.participantService.createChatMessage({message: value.trim()});
+    this.participantAnswerService.updateChatInput(this.stage.id, '');
   }
 
   private renderChatMessage(chatMessage: ChatMessage) {
@@ -182,7 +186,10 @@ export class ChatInterface extends MobxLitElement {
     };
 
     const handleInput = (e: Event) => {
-      this.value = (e.target as HTMLTextAreaElement).value;
+      if (!this.stage) return;
+
+      const value = (e.target as HTMLTextAreaElement).value;
+      this.participantAnswerService.updateChatInput(this.stage.id, value);
     };
 
     const autoFocus = () => {
@@ -195,7 +202,7 @@ export class ChatInterface extends MobxLitElement {
         <pr-textarea
           size="small"
           placeholder="Send message"
-          .value=${this.value}
+          .value=${this.participantAnswerService.getChatInput(this.stage?.id ?? '')}
           ?focused=${autoFocus()}
           ?disabled=${this.disableInput ||
           this.participantService.disableStage ||
@@ -213,7 +220,7 @@ export class ChatInterface extends MobxLitElement {
           <pr-icon-button
             icon="send"
             variant="tonal"
-            .disabled=${this.value.trim() === '' ||
+            .disabled=${this.participantAnswerService.getChatInput(this.stage?.id ?? '').trim() === '' ||
             this.disableInput ||
             this.participantService.disableStage ||
             this.isConversationOver()}

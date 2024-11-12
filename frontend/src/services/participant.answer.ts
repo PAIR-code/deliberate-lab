@@ -44,6 +44,8 @@ export class ParticipantAnswerService extends Service {
 
   // Map of stage ID to map of participant answers
   @observable answerMap: Record<string, StageParticipantAnswer> = {};
+  // Map of stage ID to current chat input
+  @observable chatInputMap: Record<string, string> = {};
   // Profile
   @observable profile: ParticipantProfileExtended | null = null;
 
@@ -118,6 +120,14 @@ export class ParticipantAnswerService extends Service {
  
   getNumSurveyAnswers(stageId: string) {
     return this.getSurveyAnswerIDs(stageId).length;
+  }
+
+  updateChatInput(stageId: string, chatInput: string) {
+    this.chatInputMap[stageId] = chatInput;
+  }
+
+  getChatInput(stageId: string) {
+    return this.chatInputMap[stageId] ?? '';
   }
   
   updateProfile(config: Partial<ParticipantProfileExtended>) {
