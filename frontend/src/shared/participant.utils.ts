@@ -55,9 +55,9 @@ export function getCurrentStageStartTime(
 /** Returns an explanation text about the participant status. */
 export function getParticipantStatusDetailText(profile: ParticipantProfile) {
   if (profile.currentStatus === ParticipantStatus.BOOTED_OUT) {
-    return '‼️ This participant has been booted from the experiment and can no longer participate.';
+    return '‼️  This participant has been booted from the experiment and can no longer participate.';
   } else if (profile.currentStatus === ParticipantStatus.ATTENTION_TIMEOUT) {
-    return '‼️ This participant has failed an attention check and can no longer participate.';
+    return '‼️  This participant has failed an attention check and can no longer participate.';
   } else if (profile.currentStatus === ParticipantStatus.TRANSFER_DECLINED) {
     return '🛑 This participant declined a transfer and can no longer participate.';
   }
