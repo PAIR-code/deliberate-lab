@@ -100,7 +100,7 @@ export class ChatPanel extends MobxLitElement {
     const publicStageData = this.cohortService.stagePublicDataMap[
       this.stage.id
     ] as ChatStagePublicData;
-    if (!publicStageData) return;
+    if (!publicStageData || !this.stage.timeLimitInMinutes) return;
     if (publicStageData.discussionEndTimestamp) {
       return html`<div class="ended countdown">
         Discussion ended at

@@ -23,6 +23,7 @@ import {
   createPayoutStage,
   createProfileStage,
   createRevealStage,
+  createSurveyPerParticipantStage,
   createSurveyStage,
   createTOSStage,
   createTransferStage,
@@ -123,9 +124,9 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card-gallery-wrapper">
         ${this.renderTOSCard()} ${this.renderInfoCard()}
         ${this.renderTransferCard()} ${this.renderProfileCard()}
-        ${this.renderSurveyCard()} ${this.renderChatCard()}
-        ${this.renderRankingCard()} ${this.renderRevealCard()}
-        ${this.renderPayoutCard()}
+        ${this.renderSurveyCard()} ${this.renderSurveyPerParticipantCard()}
+        ${this.renderChatCard()} ${this.renderRankingCard()}
+        ${this.renderRevealCard()} ${this.renderPayoutCard()}
       </div>
     `;
   }
@@ -275,6 +276,21 @@ export class StageBuilderDialog extends MobxLitElement {
         <div>
           Conduct a survey with freeform, multiple choice, checkbox, and scale
           questions.
+        </div>
+      </div>
+    `;
+  }
+
+  private renderSurveyPerParticipantCard() {
+    const addStage = () => {
+      this.addStage(createSurveyPerParticipantStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">📋🧑‍🤝‍🧑 Survey per participant</div>
+        <div>
+          Ask each survey question about each participant in the current cohort.
         </div>
       </div>
     `;

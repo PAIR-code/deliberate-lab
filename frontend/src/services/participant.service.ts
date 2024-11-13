@@ -8,11 +8,13 @@ import {
   StageKind,
   StageParticipantAnswer,
   SurveyAnswer,
+  SurveyPerParticipantStageParticipantAnswer,
   SurveyStageParticipantAnswer,
   UpdateChatStageParticipantAnswerData,
   createChatStageParticipantAnswer,
   createParticipantChatMessage,
   createParticipantProfileExtended,
+  createSurveyPerParticipantStageParticipantAnswer,
   createSurveyStageParticipantAnswer,
 } from '@deliberation-lab/utils';
 import {
@@ -36,6 +38,7 @@ import {
   createChatMessageCallable,
   updateParticipantCallable,
   updateChatStageParticipantAnswerCallable,
+  updateSurveyPerParticipantStageParticipantAnswerCallable,
   updateSurveyStageParticipantAnswerCallable,
   updateRankingStageParticipantAnswerCallable,
 } from '../shared/callables';
@@ -559,6 +562,32 @@ export class ParticipantService extends Service {
           participantPrivateId: this.profile.privateId,
           participantPublicId: this.profile.publicId,
           surveyStageParticipantAnswer: participantAnswer,
+        }
+      );
+    }
+    return response;
+  }
+
+  /** Update survey-per-participant answerMap. */
+  async updateSurveyPerParticipantStageParticipantAnswerMap(
+    id: string, // survey stage ID,
+    // map of participant ID to (map of question ID to answer)
+    answerMap: Record<string, Record<string, SurveyAnswer>>,
+  ) {
+    let response = {};
+
+    let participantAnswer = this.answerMap[id] as SurveyPerParticipantStageParticipantAnswer;
+    if (!participantAnswer) {
+      participantAnswer = createSurveyPerParticipantStageParticipantAnswer({id});
+    }
+    participantAnswer.answerMap = answerMap;
+
+    if (this.experimentId && this.profile) {
+      response = await updateSurveyPerParticipantStageParticipantAnswerCallable(
+        this.sp.firebaseService.functions, {
+          experimentId: this.experimentId,
+          participantPrivateId: this.profile.privateId,
+          surveyPerParticipantStageParticipantAnswer: participantAnswer,
         }
       );
     }

@@ -8,6 +8,18 @@
   overflow: auto;
 }
 
+/** For per-participant. */
+.item {
+  @include common.flex-row-align-center;
+  flex-wrap: wrap;
+  gap: common.$spacing-large;
+
+  .right {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-small;
+  }
+}
+
 .questions-wrapper {
   @include common.flex-column;
   flex-grow: 1;
