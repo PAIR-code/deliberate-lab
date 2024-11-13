@@ -186,30 +186,29 @@ export class CohortService extends Service {
 
   // If stage is waiting for participants, e.g.,
   // - minParticipants not reached
-  // - waitForParticipants is true, stage is locked to 1+ participant,
+  // - waitForAllParticipants is true, stage is locked to 1+ participant,
   //   and no one has completed the stage yet
   isStageWaitingForParticipants(stageId: string) {
     const stageConfig = this.sp.experimentService.getStage(stageId);
     if (!stageConfig) return false;
 
-    // Check for min number of participants
-    const numUnlocked = this.getUnlockedStageParticipants(stageId).length;
-    const numObsolete = this.getObsoleteParticipantsPastThisStage(stageId).length;
-    const hasMinParticipants = () => {
-      return stageConfig.progress.minParticipants <= numUnlocked + numObsolete;
-    };
-
-    // Otherwise, if waitForParticipants is true, check for locked participants
-    if (!stageConfig.progress.waitForAllParticipants) {
-      return !hasMinParticipants();
-    }
-
-    const numLocked = this.getLockedStageParticipants(stageId).length;
+    // Note: Stage is not waiting if someone has already completed it
     const numCompleted = this.getAllParticipants().filter(
       participant => participant.timestamps.completedStages[stageId]
     ).length;
 
-    return (numLocked > 0 && numCompleted === 0) || !hasMinParticipants();
+    // Check for number of participants needed to reach minimum
+    const neededParticipants = stageConfig.progress.minParticipants
+      - this.getUnlockedStageParticipants(stageId).length;
+
+    if (!stageConfig.progress.waitForAllParticipants) {
+      return neededParticipants > 0 && numCompleted <= 0;
+    }
+
+    // If waitForAllParticipants is true, check for locked participants
+    const numLocked = this.getLockedStageParticipants(stageId).length;
+    const numWaiting = Math.max(neededParticipants, numLocked);
+    return (neededParticipants > 0 || numWaiting > 0) && numCompleted <= 0;
   }
 
   getChatDiscussionMessages(stageId: string, discussionId: string) {
