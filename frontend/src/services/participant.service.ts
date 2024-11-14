@@ -194,15 +194,24 @@ export class ParticipantService extends Service {
           'participants',
           this.participantId
         ),
-        (doc) => {
+        async (doc) => {
           this.profile = doc.data() as ParticipantProfileExtended;
           // Load cohort data
           if (this.experimentId) {
-            this.sp.cohortService.loadCohortData(
+            await this.sp.cohortService.loadCohortData(
               this.experimentId,
               this.profile.currentCohortId
             );
           }
+
+          // TODO: Move to backend?
+          // If started experiment and not waiting on current stage,
+          // add cohort stage timestamp
+          const stageId = this.profile.currentStageId;
+          if (!this.sp.cohortService.isStageWaitingForParticipants(stageId)) {
+            this.sp.cohortService.addStageStartTimestamp(stageId);
+          }
+
           // Load profile to participant answer service
           this.sp.participantAnswerService.setProfile(this.profile);
 

@@ -8,6 +8,7 @@ import {
   or,
   orderBy,
   query,
+  Timestamp,
   Unsubscribe,
   where,
 } from 'firebase/firestore';
@@ -29,7 +30,9 @@ import {
   StagePublicData,
   UnifiedTimestamp
 } from '@deliberation-lab/utils';
-
+import {
+  updateCohortCallable,
+} from '../shared/callables';
 import {
   isActiveParticipant,
   isObsoleteParticipant,
@@ -462,5 +465,29 @@ export class CohortService extends Service {
     this.cohortId = null;
     this.experimentId = null;
     this.unsubscribeAll();
+  }
+
+  async addStageStartTimestamp(stageId: string) {
+    if (!this.cohortConfig) return;
+
+    const stageTimestampMap = this.cohortConfig.stageTimestampMap;
+
+    // If stage already started, no need to update
+    if (stageTimestampMap[stageId]) return;
+
+    stageTimestampMap[stageId] = Timestamp.now();
+
+    const cohortConfig = {...this.cohortConfig, stageTimestampMap};
+
+    let response = {};
+    if (this.experimentId) {
+      response = await updateCohortCallable(
+        this.sp.firebaseService.functions, {
+          experimentId: this.experimentId,
+          cohortConfig,
+        }
+      );
+    }
+    return response;
   }
 }
