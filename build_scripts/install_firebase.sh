@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-SCRIPT_DIR=$(dirname "$0")
+# may need to be executed with sudo
+npm install -g firebase-tools
+firebase login
 
-cd "$SCRIPT_DIR"
-cd ..
-firebase emulators:start --import ./emulator_test_config
