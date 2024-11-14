@@ -149,7 +149,7 @@ export class Preview extends MobxLitElement {
     };
 
     const stages = [];
-    for (const stageId of this.experimentService.experiment!.stageIds) {
+    for (const stageId of this.experimentService.experiment?.stageIds ?? []) {
       const stageHtml = renderStageData(stageId);
       if (stageHtml) {
         stages.push(stageHtml);
