@@ -5,6 +5,7 @@
   @include common.flex-column;
   flex-shrink: 0;
   gap: common.$spacing-large;
+  overflow: auto;
   width: 240px;
 }
 
