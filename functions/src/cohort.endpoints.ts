@@ -22,14 +22,15 @@ import {
 /** Create/update and delete cohorts. */
 
 // ************************************************************************* //
-// writeCohort endpoint                                                      //
-// (create or update experiment to specified Firestore collection)           //
+// createCohort endpoint                                                     //
+// WARNING: Do not use this endpoint to update existing cohorts,             //
+//          as it will clear existing public stage data.                     //
 //                                                                           //
 // Input structure: { experimentId, cohortConfig }                           //
 // Validation: utils/src/cohort.validation.ts                                //
 // ************************************************************************* //
 
-export const writeCohort = onCall(async (request) => {
+export const createCohort = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
   const { data } = request;
   const cohortConfig = data.cohortConfig;
@@ -93,6 +94,47 @@ function handleCohortCreationValidationErrors(data: any) {
 
   throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
 }
+
+// ************************************************************************* //
+// updateCohort endpoint                                                     //
+// WARNING: Do not use this endpoint to creare cohorts,                      //
+//          as it will not set public stage data.                            //
+//                                                                           //
+// Input structure: { experimentId, cohortConfig }                           //
+// Validation: utils/src/cohort.validation.ts                                //
+// ************************************************************************* //
+
+export const updateCohort = onCall(async (request) => {
+  await AuthGuard.isExperimenter(request);
+  const { data } = request;
+  const cohortConfig = data.cohortConfig;
+
+  // Verify that the experimenter is the creator
+  // before updating.
+  if (cohortConfig.metadata.creator !== request.auth!.uid) {
+    return;
+  }
+
+  // Validate input
+  const validInput = Value.Check(CohortCreationData, data);
+  if (!validInput) {
+    handleCohortCreationValidationErrors(data);
+  }
+
+  // Define document reference
+  const document = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('cohorts')
+    .doc(cohortConfig.id);
+
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    transaction.set(document, cohortConfig);
+  });
+
+  return { id: document.id };
+});
 
 // ************************************************************************* //
 // deleteCohort endpoint                                                     //

@@ -36,8 +36,9 @@ import {
   createParticipantCallable,
   deleteExperimentCallable,
   updateParticipantCallable,
-  writeCohortCallable,
+  createCohortCallable,
   deleteCohortCallable,
+  updateCohortCallable,
   writeExperimentCallable
 } from '../shared/callables';
 import {
@@ -377,10 +378,10 @@ export class ExperimentManager extends Service {
     return response;
   }
 
-  /** Create or update a cohort
+  /** Create a new cohort
    * @rights Experimenter
    */
-  async writeCohort(config: Partial<CohortConfig> = {}) {
+  async createCohort(config: Partial<CohortConfig> = {}) {
     if (!this.sp.experimentService.experiment) return;
 
     this.isWritingCohort = true;
@@ -392,7 +393,33 @@ export class ExperimentManager extends Service {
     let response = {};
 
     if (this.experimentId) {
-      response = await writeCohortCallable(
+      response = await createCohortCallable(
+        this.sp.firebaseService.functions, {
+          experimentId: this.experimentId,
+          cohortConfig,
+        }
+      );
+    }
+    this.isWritingCohort = false;
+    return response;
+  }
+
+  /** Update existing cohort
+   * @rights Experimenter
+   */
+  async updateCohort(config: Partial<CohortConfig> = {}) {
+    if (!this.sp.experimentService.experiment) return;
+
+    this.isWritingCohort = true;
+    const cohortConfig = createCohortConfig({
+      participantConfig: this.sp.experimentService.experiment.defaultCohortConfig,
+      ...config
+    });
+
+    let response = {};
+
+    if (this.experimentId) {
+      response = await updateCohortCallable(
         this.sp.firebaseService.functions, {
           experimentId: this.experimentId,
           cohortConfig,
