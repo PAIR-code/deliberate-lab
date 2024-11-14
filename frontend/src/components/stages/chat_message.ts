@@ -1,18 +1,18 @@
-import "../participant_profile/profile_avatar";
+import '../participant_profile/profile_avatar';
 
-import { observable } from "mobx";
-import { MobxLitElement } from "@adobe/lit-mobx";
+import {observable} from 'mobx';
+import {MobxLitElement} from '@adobe/lit-mobx';
 
-import { CSSResultGroup, html, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
-import { classMap } from "lit/directives/class-map.js";
+import {CSSResultGroup, html, nothing} from 'lit';
+import {customElement, property} from 'lit/decorators.js';
+import {classMap} from 'lit/directives/class-map.js';
 
-import { Timestamp } from "firebase/firestore";
+import {Timestamp} from 'firebase/firestore';
 
-import { core } from "../../core/core";
-import { AuthService } from "../../services/auth.service";
-import { ExperimentService } from "../../services/experiment.service";
-import { ParticipantService } from "../../services/participant.service";
+import {core} from '../../core/core';
+import {AuthService} from '../../services/auth.service';
+import {ExperimentService} from '../../services/experiment.service';
+import {ParticipantService} from '../../services/participant.service';
 
 import {
   AgentMediatorChatMessage,
@@ -21,14 +21,12 @@ import {
   HumanMediatorChatMessage,
   ParticipantChatMessage,
 } from '@deliberation-lab/utils';
-import {
-  convertUnifiedTimestampToDate
-} from '../../shared/utils';
+import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
-import { styles } from "./chat_message.scss";
+import {styles} from './chat_message.scss';
 
 /** Chat message component */
-@customElement("chat-message")
+@customElement('chat-message')
 export class ChatMessageComponent extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -36,14 +34,14 @@ export class ChatMessageComponent extends MobxLitElement {
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
 
-  @property() chat: ChatMessage|undefined = undefined;
+  @property() chat: ChatMessage | undefined = undefined;
 
   override render() {
     if (!this.chat) {
       return nothing;
     }
 
-    switch(this.chat.type) {
+    switch (this.chat.type) {
       case ChatMessageType.PARTICIPANT:
         return this.renderParticipantMessage(this.chat);
       case ChatMessageType.HUMAN_MEDIATOR:
@@ -57,8 +55,10 @@ export class ChatMessageComponent extends MobxLitElement {
 
   renderParticipantMessage(chatMessage: ParticipantChatMessage) {
     const classes = classMap({
-      "chat-message": true,
-      "current-user": chatMessage.participantPublicId === this.participantService.profile?.publicId
+      'chat-message': true,
+      'current-user':
+        chatMessage.participantPublicId ===
+        this.participantService.profile?.publicId,
     });
 
     const profile = chatMessage.profile;
@@ -69,7 +69,14 @@ export class ChatMessageComponent extends MobxLitElement {
         <div class="content">
           <div class="label">
             ${profile.name ?? chatMessage.participantPublicId}
-            ${profile.pronouns ? `(${profile.pronouns})` : ""}
+            ${profile.pronouns ? `(${profile.pronouns})` : ''}
+
+            <span class="date"
+              >${convertUnifiedTimestampToDate(
+                chatMessage.timestamp,
+                false
+              )}</span
+            >
           </div>
           <div class="chat-bubble">${chatMessage.message}</div>
         </div>
@@ -86,6 +93,12 @@ export class ChatMessageComponent extends MobxLitElement {
         <div class="content">
           <div class="label">
             ${profile.name}
+            <span class="date"
+              >${convertUnifiedTimestampToDate(
+                chatMessage.timestamp,
+                false
+              )}</span
+            >
           </div>
           <div class="chat-bubble">${chatMessage.message}</div>
         </div>
@@ -101,7 +114,13 @@ export class ChatMessageComponent extends MobxLitElement {
         <profile-avatar .emoji=${profile.avatar}></profile-avatar>
         <div class="content">
           <div class="label">
-            ${profile.name} <span class="date">${convertUnifiedTimestampToDate(chatMessage.timestamp, false)}</span>
+            ${profile.name}
+            <span class="date"
+              >${convertUnifiedTimestampToDate(
+                chatMessage.timestamp,
+                false
+              )}</span
+            >
           </div>
           <div class="chat-bubble">${chatMessage.message}</div>
           ${this.renderDebuggingExplanation(chatMessage)}
@@ -113,16 +132,12 @@ export class ChatMessageComponent extends MobxLitElement {
   renderDebuggingExplanation(chatMessage: AgentMediatorChatMessage) {
     if (!this.authService.isDebugMode) return nothing;
 
-    return html`
-      <div class="debug">
-        ${chatMessage.explanation}
-      </div>
-    `;
+    return html` <div class="debug">${chatMessage.explanation}</div> `;
   }
 }
 
 declare global {
   interface HTMLElementTagNameMap {
-    "chat-message": ChatMessageComponent;
+    'chat-message': ChatMessageComponent;
   }
 }
