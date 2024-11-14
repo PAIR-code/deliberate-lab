@@ -36,10 +36,19 @@ export class BaseStageEditorComponent extends MobxLitElement {
     }
 
     return html`
-      ${this.renderName()} ${this.renderPrimaryText()} ${this.renderInfoText()}
-      ${this.renderHelpText()}
-      ${this.renderWaitForAllParticipants()}
-      ${this.renderShowParticipantProgress()}
+      <div class="section">
+        <div class="title">Metadata</div>
+        ${this.renderName()} ${this.renderPrimaryText()}
+        ${this.renderInfoText()} ${this.renderHelpText()}
+      </div>
+      <div class="divider"></div>
+      
+      <div class="section">
+        <div class="title">Progression</div>
+        ${this.renderWaitForAllParticipants()}
+        ${this.renderWaitForNumParticipants()}
+        ${this.renderShowParticipantProgress()}
+      </div>
       <div class="divider"></div>
     `;
   }
@@ -148,7 +157,7 @@ export class BaseStageEditorComponent extends MobxLitElement {
       this.stage,
       this.experimentEditor.stages
     );
-    
+
     return html`
       <div class="config-item">
         <div class="checkbox-wrapper">
@@ -159,19 +168,56 @@ export class BaseStageEditorComponent extends MobxLitElement {
             @click=${updateCheck}
           >
           </md-checkbox>
-          <div>Hold for x number of participants to arrive at this stage
-          ${mustWait
-            ? html`
-                <br/>
-                <div class="warning">
-                  Because this experiment has a dependency on all participants'
-                  responses, this must be enabled.
-                </div>
-              `
-            : ''}
+          <div>
+            Wait for <b>all active participants</b> to reach this stage before
+            allowing progression
+            ${mustWait
+              ? html`
+                  <br />
+                  <div class="warning">
+                    Because this experiment has a dependency on all
+                    participants' responses, this must be enabled.
+                  </div>
+                `
+              : ''}
           </div>
         </div>
-        ${waitForAllParticipants ? this.renderMinParticipants() : ''}
+      </div>
+    `;
+  }
+
+  private renderWaitForNumParticipants() {
+    if (!this.stage) return nothing;
+    const hasNumParticipants = this.stage.progress.minParticipants > 0;
+
+    const updateCheck = (e: InputEvent) => {
+      if (!this.stage) return;
+      const minParticipants = hasNumParticipants ? 0 : 2;
+
+      const progress: StageProgressConfig = {
+        ...this.stage.progress,
+        minParticipants,
+      };
+
+      this.experimentEditor.updateStage({...this.stage, progress});
+    };
+
+    return html`
+      <div class="config-item">
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${hasNumParticipants}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @click=${updateCheck}
+          >
+          </md-checkbox>
+          <div>
+            Wait for <b>a fixed number of participants</b> to reach this stage
+            before allowing progression
+          </div>
+        </div>
+        ${hasNumParticipants ? this.renderMinParticipants() : ''}
       </div>
     `;
   }
