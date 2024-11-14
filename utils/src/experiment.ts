@@ -17,9 +17,9 @@ import { StageConfig } from './stages/stage';
   * impacts loading previous versions of those objects on the frontend
   * (e.g., new field is added to existing stage config).
   *
-  * VERSION 4 - updated in PR #324
+  * VERSION 5 - updated in PR #334 to add stage timestamp map to cohorts
   */
-export const EXPERIMENT_VERSION_ID = 4;
+export const EXPERIMENT_VERSION_ID = 5;
 
 /** Experiment. */
 export interface Experiment {

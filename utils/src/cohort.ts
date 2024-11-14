@@ -1,5 +1,6 @@
 import {
   MetadataConfig,
+  UnifiedTimestamp,
   createMetadataConfig,
   generateId
 } from './shared';
@@ -19,6 +20,9 @@ export interface CohortConfig {
   id: string;
   metadata: MetadataConfig;
   participantConfig: CohortParticipantConfig;
+  // Maps from stage ID to timestamp of when stage was started
+  // by participants (e.g., after waiting screen)
+  stageTimestampMap: Record<string, UnifiedTimestamp>;
 }
 
 // ************************************************************************* //
@@ -33,5 +37,6 @@ export function createCohortConfig(
     id: config.id ?? generateId(true), // Alphanumeric sorting.
     metadata: config.metadata ?? createMetadataConfig(),
     participantConfig: config.participantConfig ?? createCohortParticipantConfig(),
+    stageTimestampMap: config.stageTimestampMap ?? {},
   };
 }
