@@ -86,9 +86,8 @@ export class ChatPanel extends MobxLitElement {
 
     return html`
       <stage-description .stage=${this.stage}></stage-description>
-      ${this.renderTimeRemaining()}
-      <div class="divider"></div>
-      ${this.renderParticipantList()} ${this.renderMediatorsList()}
+      ${this.renderTimeRemaining()} ${this.renderParticipantList()}
+      ${this.renderMediatorsList()}
     `;
   }
 
@@ -101,8 +100,10 @@ export class ChatPanel extends MobxLitElement {
       this.stage.id
     ] as ChatStagePublicData;
     if (!publicStageData || !this.stage.timeLimitInMinutes) return;
+
+    let timerHtml = html``;
     if (publicStageData.discussionEndTimestamp) {
-      return html`<div class="ended countdown">
+      timerHtml = html`<div class="ended countdown">
         Discussion ended at
         ${convertUnifiedTimestampToDate(
           publicStageData.discussionEndTimestamp,
@@ -113,17 +114,24 @@ export class ChatPanel extends MobxLitElement {
       const timeText = `Time remaining: ${this.formatTime(
         this.stage.timeLimitInMinutes * 60
       )}`;
-      return html`<div class="countdown">${timeText}</div>`;
+      timerHtml = html`<div class="countdown">${timeText}</div>`;
+    } else {
+      const startText = `Conversation started at: ${convertUnifiedTimestampToDate(
+        publicStageData.discussionStartTimestamp,
+        false
+      )}`;
+      const timeText = `Time remaining: ${this.formatTime(
+        this.timeRemainingInSeconds!
+      )}`;
+      timerHtml = html`<div class="countdown">
+        ${startText}<br />${timeText}
+      </div>`;
     }
 
-    const startText = `Conversation started at: ${convertUnifiedTimestampToDate(
-      publicStageData.discussionStartTimestamp,
-      false
-    )}`;
-    const timeText = `Time remaining: ${this.formatTime(
-      this.timeRemainingInSeconds!
-    )}`;
-    return html`<div class="countdown">${startText}<br />${timeText}</div>`;
+    return html`
+      ${timerHtml}
+      <div class="divider"></div>
+    `;
   }
 
   private formatTime(seconds: number): string {
