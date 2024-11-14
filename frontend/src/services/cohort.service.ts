@@ -197,7 +197,7 @@ export class CohortService extends Service {
   //   and no one has started the stage yet
   isStageWaitingForParticipants(stageId: string) {
     const stageConfig = this.sp.experimentService.getStage(stageId);
-    if (!stageConfig) return false;
+    if (!stageConfig) return true;
 
     // Stage is not waiting if someone has already started it
     if (this.cohortConfig?.stageTimestampMap[stageId]) {
