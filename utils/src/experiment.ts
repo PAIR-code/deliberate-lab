@@ -17,7 +17,7 @@ import { StageConfig } from './stages/stage';
   * impacts loading previous versions of those objects on the frontend
   * (e.g., new field is added to existing stage config).
   *
-  * VERSION 5 - TODO: update in PR #334 to add completedWaiting map
+  * VERSION 5 - updated in PR #334 to add completedWaiting map
   * to participant progress timestamps
   */
 export const EXPERIMENT_VERSION_ID = 5;
