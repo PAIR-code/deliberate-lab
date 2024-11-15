@@ -352,6 +352,27 @@ export class ParticipantService extends Service {
     }
   }
 
+  /** Complete waiting phase for stage. */
+  async updateWaitingPhaseCompletion(stageId: string) {
+    if (!this.experimentId || !this.profile) return false;
+
+    // Add waiting completion timestamp
+    const completedWaiting = this.profile.timestamps.completedWaiting;
+    completedWaiting[stageId] = Timestamp.now();
+    const timestamps = {
+      ...this.profile.timestamps,
+      completedWaiting
+    };
+
+    await this.updateProfile(
+      {
+        ...this.profile,
+        timestamps
+      }
+    );
+    return true;
+  }
+
   /** Move to next stage. */
   async progressToNextStage() {
     // Use participant answer profile (as it may include frontend-only
