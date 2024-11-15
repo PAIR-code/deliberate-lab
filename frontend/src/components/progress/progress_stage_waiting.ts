@@ -82,19 +82,14 @@ export class Progress extends MobxLitElement {
         </h2>
         ${this.showReadyAvatars ? this.renderParticipants(unlocked) : nothing}
       </div>
-      <pr-tooltip
-        text=${numWaiting > 0 ? 'Still waiting on participants' : ''}
-        position="BOTTOM_START"
+      <pr-button
+        color=${numWaiting > 0 ? 'neutral' : 'primary'}
+        ?disabled=${numWaiting > 0}
+        ?loading=${this.completeWaitingLoading}
+        @click=${completeWaiting}
       >
-        <pr-button
-          color=${numWaiting > 0 ? 'neutral' : 'primary'}
-          ?disabled=${numWaiting > 0}
-          ?loading=${this.completeWaitingLoading}
-          @click=${completeWaiting}
-        >
-          Continue to stage
-        </pr-button>
-      </pr-tooltip>
+        ${numWaiting > 0 ? 'Waiting on participants...' : 'Continue to stage'}
+      </pr-button>
     `;
   }
 
