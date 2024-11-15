@@ -38,6 +38,8 @@ export interface ProgressTimestamps {
   endExperiment: UnifiedTimestamp|null;
   // Stage ID to time that stage was marked completed
   completedStages: Record<string, UnifiedTimestamp>;
+  // Stage ID to time that stage's waiting phase was marked completed
+  completedWaiting: Record<string, UnifiedTimestamp>;
   // Cohort ID to time participant left that cohort
   cohortTransfers: Record<string, UnifiedTimestamp>;
 }
@@ -120,6 +122,7 @@ export function createProgressTimestamps(
     startExperiment: config.startExperiment ?? null,
     endExperiment: config.endExperiment ?? null,
     completedStages: config.completedStages ?? {},
+    completedWaiting: config.completedWaiting ?? {},
     cohortTransfers: config.cohortTransfers ?? {},
   };
 }

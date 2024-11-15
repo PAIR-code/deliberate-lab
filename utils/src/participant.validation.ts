@@ -62,6 +62,10 @@ export const ProgressTimestampsSchema = Type.Object({
     Type.String(),
     UnifiedTimestampSchema
   ),
+  completedWaiting: Type.Record(
+    Type.String(),
+    UnifiedTimestampSchema
+  ),
   cohortTransfers: Type.Record(
     Type.String(),
     UnifiedTimestampSchema
