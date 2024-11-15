@@ -1,5 +1,6 @@
 import {
   MetadataConfig,
+  UnifiedTimestamp,
   createMetadataConfig,
   generateId
 } from './shared';

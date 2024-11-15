@@ -57,7 +57,7 @@ export class ExperimentManagerNav extends MobxLitElement {
             ?loading=${this.experimentManager.isWritingCohort}
             @click=${() => {
               this.analyticsService.trackButtonClick(ButtonClick.COHORT_ADD);
-              this.experimentManager.writeCohort()
+              this.experimentManager.createCohort()
             }}
           >
             Add cohort

@@ -9,7 +9,7 @@ import './chat_message';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
@@ -49,7 +49,7 @@ export class ChatInterface extends MobxLitElement {
   @property() stage: ChatStageConfig | undefined = undefined;
   @property() disableInput = false;
   @property() showInfo = false;
-  @property() readyToEndDiscussionLoading = false;
+  @state() readyToEndDiscussionLoading = false;
 
   private sendUserInput() {
     if (!this.stage) return;

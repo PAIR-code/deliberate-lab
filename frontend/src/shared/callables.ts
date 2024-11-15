@@ -32,9 +32,15 @@ export const deleteExperimentCallable = async (functions: Functions, deletion: E
   return data;
 }
 
-/** Generic endpoint to write cohorts */
-export const writeCohortCallable = async (functions: Functions, cohort: CohortCreationData) => {
-  const { data } = await httpsCallable<CohortCreationData, CreationResponse>(functions, 'writeCohort')(cohort);
+/** Generic endpoint to create new cohorts */
+export const createCohortCallable = async (functions: Functions, cohort: CohortCreationData) => {
+  const { data } = await httpsCallable<CohortCreationData, CreationResponse>(functions, 'createCohort')(cohort);
+  return data;
+}
+
+/** Generic endpoint to update existing cohorts */
+export const updateCohortCallable = async (functions: Functions, cohort: CohortCreationData) => {
+  const { data } = await httpsCallable<CohortCreationData, CreationResponse>(functions, 'updateCohort')(cohort);
   return data;
 }
 

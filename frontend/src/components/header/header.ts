@@ -21,8 +21,13 @@ import {
   getParticipantName,
   getParticipantStatusDetailText,
 } from '../../shared/participant.utils';
+import {
+  ChatStageConfig,
+  ParticipantProfile,
+  ParticipantStatus
+} from '@deliberation-lab/utils';
+
 import {styles} from './header.scss';
-import {ChatStageConfig, ParticipantStatus} from '@deliberation-lab/utils';
 
 /** Header component for app pages */
 @customElement('page-header')
@@ -137,33 +142,32 @@ export class Header extends MobxLitElement {
     this.experimentManager.setIsEditing(false);
   }
 
-  private renderTitle() {
-    const activePage = this.routerService.activePage;
-    const profile = this.participantService.profile;
+  private renderParticipantProfileBanner(profile: ParticipantProfile|undefined) {
+    if (!profile) return;
 
-    const renderParticipantProfileBanner = (profile: any) => {
-      if (!profile) return;
-
-      const detailText =
-        getParticipantStatusDetailText(profile) ?? getStageDetailText();
-      return `Previewing as: ${
-        profile.avatar ? profile.avatar : ''
-      } ${getParticipantName(profile)}. ${detailText}`;
-    };
-
-    const getStageDetailText = () => {
+    const getStageWaitingText = () => {
       const stageId = this.routerService.activeRoute.params['stage'];
       const stage = this.experimentService.getStage(stageId);
       if (!stage || !profile) return '';
 
-      const isWaiting = this.cohortService.isStageWaitingForParticipants(
-        stage.id
-      );
-      const detailText = isWaiting
-        ? '⏸️ This participant currently sees a wait stage; they are waiting for others in the cohort to catch up.'
-        : '';
-      return detailText;
+      const isWaiting = this.cohortService.isStageInWaitingPhase(stage.id);
+      if (isWaiting) {
+        return '⏸️ This participant currently sees a wait stage; they are waiting for others in the cohort to catch up.'
+      }
+      return undefined;
     };
+
+    const detailText = getParticipantStatusDetailText(profile);
+
+    return html`
+      Previewing as: ${profile.avatar} ${getParticipantName(profile)}.
+      ${detailText.length > 0 ? detailText : getStageWaitingText()}
+    `;
+  }
+
+  private renderTitle() {
+    const activePage = this.routerService.activePage;
+    const profile = this.participantService.profile;
 
     switch (activePage) {
       case Pages.HOME:
@@ -177,9 +181,9 @@ export class Header extends MobxLitElement {
       case Pages.PARTICIPANT_JOIN_COHORT:
         return 'Previewing experiment cohort';
       case Pages.PARTICIPANT:
-        return renderParticipantProfileBanner(profile);
+        return this.renderParticipantProfileBanner(profile);
       case Pages.PARTICIPANT_STAGE:
-        return renderParticipantProfileBanner(profile);
+        return this.renderParticipantProfileBanner(profile);
       default:
         return '';
     }
