@@ -71,7 +71,7 @@ export class ParticipantSummary extends MobxLitElement {
           <profile-avatar .emoji=${this.participant.avatar} .small=${true}>
           </profile-avatar>
           <div>${getParticipantName(this.participant)}</div>
-          ${this.renderStatus()} ${this.renderTimeElapsed()}
+          ${this.renderStatus()} ${this.renderAttentionStatus()} ${this.renderTimeElapsed()}
         </div>
         <div class="buttons">
           <participant-progress-bar
@@ -130,6 +130,13 @@ export class ParticipantSummary extends MobxLitElement {
         ⏳ ${getTimeElapsedText(numMinutes)}
       </div>
     `;
+  }
+
+  private renderAttentionStatus() {
+    if (this.participant?.currentStatus !== ParticipantStatus.ATTENTION_CHECK) {
+      return nothing;
+    }
+    return html`<div class="chip error">attention check sent</div>`;
   }
 
   private renderStatus() {
