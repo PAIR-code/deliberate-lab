@@ -150,9 +150,7 @@ export class Header extends MobxLitElement {
       const stage = this.experimentService.getStage(stageId);
       if (!stage || !profile) return '';
 
-      const isWaiting = this.cohortService.isStageWaitingForParticipants(
-        stage.id
-      );
+      const isWaiting = this.cohortService.isStageInWaitingPhase(stage.id);
       if (isWaiting) {
         return '⏸️ This participant currently sees a wait stage; they are waiting for others in the cohort to catch up.'
       }

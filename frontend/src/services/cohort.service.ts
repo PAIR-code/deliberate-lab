@@ -190,28 +190,53 @@ export class CohortService extends Service {
     return { completed, notCompleted };
   }
 
-  // If stage is waiting for participants, e.g.,
-  // - minParticipants not reached
-  // - waitForAllParticipants is true, stage is locked to 1+ participant,
-  //   and no one has started the stage yet
-  isStageWaitingForParticipants(stageId: string) {
+  // If stage is in a waiting phase, i.e.,
+  // if the stage requires waiting and no participant has
+  // completed the waiting phase before
+  // (If a participant has unlocked a stage with waiting but not
+  // yet completed its waiting phase, then that participant is waiting)
+  isStageInWaitingPhase(stageId: string) {
     const stageConfig = this.sp.experimentService.getStage(stageId);
     if (!stageConfig) return true;
 
-    // TODO: Stage is not waiting if someone has already started it
-
-    // Check for number of participants needed to reach minimum
-    const neededParticipants = stageConfig.progress.minParticipants
-      - this.getUnlockedStageParticipants(stageId).length;
-
-    if (!stageConfig.progress.waitForAllParticipants) {
-      return neededParticipants > 0;
+    // If stage does not require waiting, then false
+    if (
+      stageConfig.progress.minParticipants === 0 &&
+      !stageConfig.progress.waitForAllParticipants
+    ) {
+      return false;
     }
 
-    // If waitForAllParticipants is true, check for locked participants
-    const numLocked = this.getLockedStageParticipants(stageId).length;
-    const numWaiting = Math.max(neededParticipants, numLocked);
-    return neededParticipants > 0 || numWaiting > 0;
+    // If any participant in the cohort has completed the waiting phase
+    // before, then waiting is false (as we never want to revert
+    // participants from "in stage" back to pre-stage "waiting")
+    for (const participant of this.getAllParticipants(false)) {
+      if (participant.timestamps.completedWaiting[stageId]) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  // Get number of participants needed to pass waiting phase
+  getWaitingPhaseMinParticipants(stageId: string) {
+    const stageConfig = this.sp.experimentService.getStage(stageId);
+    if (!stageConfig) return 0;
+
+    const numParticipants = this.nonObsoleteParticipants.length;
+    const minParticipants = stageConfig.progress.minParticipants;
+
+    if (
+      stageConfig.progress.waitForAllParticipants &&
+      stageConfig.progress.minParticipants
+    ) {
+      return Math.max(numParticipants, minParticipants);
+    } else if (stageConfig.progress.waitForAllParticipants) {
+      return numParticipants;
+    } else {
+      return minParticipants;
+    }
   }
 
   getChatDiscussionMessages(stageId: string, discussionId: string) {
