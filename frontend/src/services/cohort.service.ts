@@ -61,7 +61,6 @@ export class CohortService extends Service {
 
   @observable experimentId: string|null = null;
   @observable cohortId: string|null = null;
-  @observable cohortConfig: CohortConfig|null = null;
 
   // Participants currently in the cohort
   @observable participantMap: Record<string, ParticipantProfile> = {};
@@ -199,10 +198,7 @@ export class CohortService extends Service {
     const stageConfig = this.sp.experimentService.getStage(stageId);
     if (!stageConfig) return true;
 
-    // Stage is not waiting if someone has already started it
-    if (this.cohortConfig?.stageTimestampMap[stageId]) {
-      return false;
-    }
+    // TODO: Stage is not waiting if someone has already started it
 
     // Check for number of participants needed to reach minimum
     const neededParticipants = stageConfig.progress.minParticipants
@@ -280,28 +276,6 @@ export class CohortService extends Service {
     this.loadPublicStageData();
     this.loadChatMessages();
     this.loadParticipantProfiles();
-    this.loadCohortConfig();
-  }
-
-  /** Subscribe to cohort config. */
-  private loadCohortConfig() {
-    if (!this.experimentId || !this.cohortId) return;
-    this.isCohortConfigLoading = true;
-    this.unsubscribe.push(
-      onSnapshot(
-        doc(
-          this.sp.firebaseService.firestore,
-          'experiments',
-          this.experimentId,
-          'cohorts',
-          this.cohortId,
-        ),
-        (doc) => {
-          this.cohortConfig = (doc.data() as CohortConfig);
-          this.isCohortConfigLoading = false;
-        }
-      )
-    );
   }
 
   /** Subscribe to public stage data. */
@@ -458,36 +432,11 @@ export class CohortService extends Service {
     this.chatDiscussionMap = {};
     this.transferParticipantMap = {};
     this.stagePublicDataMap = {};
-    this.cohortConfig = null;
   }
 
   reset() {
     this.cohortId = null;
     this.experimentId = null;
     this.unsubscribeAll();
-  }
-
-  async addStageStartTimestamp(stageId: string) {
-    if (!this.cohortConfig) return;
-
-    const stageTimestampMap = this.cohortConfig.stageTimestampMap;
-
-    // If stage already started, no need to update
-    if (stageTimestampMap[stageId]) return;
-
-    stageTimestampMap[stageId] = Timestamp.now();
-
-    const cohortConfig = {...this.cohortConfig, stageTimestampMap};
-
-    let response = {};
-    if (this.experimentId) {
-      response = await updateCohortCallable(
-        this.sp.firebaseService.functions, {
-          experimentId: this.experimentId,
-          cohortConfig,
-        }
-      );
-    }
-    return response;
   }
 }

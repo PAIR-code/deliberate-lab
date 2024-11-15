@@ -1,7 +1,6 @@
 import { Type, type Static } from '@sinclair/typebox';
 import {
-  MetadataConfigSchema,
-  UnifiedTimestampSchema,
+  MetadataConfigSchema
 } from './shared.validation';
 import {
   CohortParticipantConfigSchema
@@ -22,8 +21,7 @@ export const CohortCreationData = Type.Object(
       {
         id: Type.String(),
         metadata: MetadataConfigSchema,
-        participantConfig: CohortParticipantConfigSchema,
-        stageTimestampMap: Type.Record(Type.String(), UnifiedTimestampSchema),
+        participantConfig: CohortParticipantConfigSchema
       },
       strict,
     ),

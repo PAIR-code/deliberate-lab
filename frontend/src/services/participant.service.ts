@@ -204,14 +204,6 @@ export class ParticipantService extends Service {
             );
           }
 
-          // TODO: Move to backend?
-          // If started experiment and not waiting on current stage,
-          // add cohort stage timestamp
-          const stageId = this.profile.currentStageId;
-          if (!this.sp.cohortService.isStageWaitingForParticipants(stageId)) {
-            this.sp.cohortService.addStageStartTimestamp(stageId);
-          }
-
           // Load profile to participant answer service
           this.sp.participantAnswerService.setProfile(this.profile);
 
