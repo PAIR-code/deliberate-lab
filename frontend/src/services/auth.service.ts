@@ -15,6 +15,7 @@ import {
 } from 'firebase/firestore';
 
 import { Service } from "./service";
+import { AdminService } from "./admin.service";
 import { FirebaseService } from "./firebase.service";
 import { HomeService } from "./home.service";
 
@@ -25,6 +26,7 @@ import {
 } from '@deliberation-lab/utils';
 
 interface ServiceProvider {
+  adminService: AdminService;
   firebaseService: FirebaseService;
   homeService: HomeService;
 }
@@ -49,6 +51,10 @@ export class AuthService extends Service {
           this.subscribe();
           this.writeExperimenterProfile(user);
           this.sp.homeService.subscribe();
+
+          // TODO: Read allowlistDoc.data() to determine if admin
+          // If admin, subscribe
+          this.sp.adminService.subscribe();
         } else {
           this.isExperimenter = false;
         }
