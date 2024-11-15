@@ -29,13 +29,13 @@ export class Progress extends MobxLitElement {
 
   override render() {
     const stageId = this.routerService.activeRoute.params['stage'];
-    const { completed, notCompleted } = this.cohortService.getParticipantsByCompletion(stageId);
+    const completed = this.cohortService.getStageCompletedParticipants(stageId);
 
     return html`
       ${this.renderParticipants(completed)}
       <div class="status">
         ${completed.length} of
-        ${completed.length + notCompleted.length}
+        ${this.cohortService.nonObsoleteParticipants.length}
         participants completed this stage
       </div>
     `;

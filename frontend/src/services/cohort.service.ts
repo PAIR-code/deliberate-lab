@@ -143,23 +143,12 @@ export class CohortService extends Service {
     );
   }
 
-  // Get participants who have completed/not completed the stage
+  // Get participants who have completed the stage
   // (excluding obsolete participants)
-  getParticipantsByCompletion(stageId: string) {
-    const completed: ParticipantProfile[] = [];
-    const notCompleted: ParticipantProfile[] = [];
-
-    this.getAllParticipants().forEach(participant => {
-      if (!isObsoleteParticipant(participant)) {
-        if (participant.timestamps.completedStages[stageId]) {
-          completed.push(participant);
-        } else {
-          notCompleted.push(participant);
-        }
-      }
-    });
-
-    return { completed, notCompleted };
+  getStageCompletedParticipants(stageId: string) {
+    return this.getAllParticipants().filter(
+      p => !isObsoleteParticipant(p) && p.timestamps.completedStages[stageId]
+    );
   }
 
   // Get participants by chat discussion completion
