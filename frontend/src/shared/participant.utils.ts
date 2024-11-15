@@ -60,6 +60,8 @@ export function getParticipantStatusDetailText(profile: ParticipantProfile) {
     return '‼️  This participant has failed an attention check and can no longer participate.';
   } else if (profile.currentStatus === ParticipantStatus.TRANSFER_DECLINED) {
     return '🛑 This participant declined a transfer and can no longer participate.';
+  } else if (profile.currentStatus === ParticipantStatus.ATTENTION_CHECK) {
+    return '⚠️ This participant has been sent an attention check.';
   }
 
   return '';
@@ -71,6 +73,7 @@ export function getParticipantStatusDetailText(profile: ParticipantProfile) {
 export function isActiveParticipant(participant: ParticipantProfile) {
   return (
     participant.currentStatus === ParticipantStatus.IN_PROGRESS ||
+    participant.currentStatus === ParticipantStatus.ATTENTION_CHECK ||
     participant.currentStatus === ParticipantStatus.SUCCESS
   );
 }
@@ -116,6 +119,7 @@ export function isParticipantPendingTransfer(
 export function isParticipantEndedExperiment(participant: ParticipantProfile) {
   return (
     participant.currentStatus !== ParticipantStatus.IN_PROGRESS &&
+    participant.currentStatus !== ParticipantStatus.ATTENTION_CHECK &&
     participant.currentStatus !== ParticipantStatus.TRANSFER_PENDING
   );
 }
