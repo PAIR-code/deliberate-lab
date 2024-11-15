@@ -10,7 +10,7 @@ import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {CohortService} from '../../services/cohort.service';
-import {MediatorEditor} from '../../services/mediator.editor';
+import {ParticipantService} from '../../services/participant.service';
 
 import {
   ChatStageConfig,
@@ -30,8 +30,8 @@ export class ChatPanel extends MobxLitElement {
 
   private readonly authService = core.getService(AuthService);
   private readonly cohortService = core.getService(CohortService);
-  public readonly experimentManager = core.getService(ExperimentManager);
-  private readonly mediatorEditor = core.getService(MediatorEditor);
+  private readonly experimentManager = core.getService(ExperimentManager);
+  private readonly participantService = core.getService(ParticipantService);
 
   @property() stage: ChatStageConfig | null = null;
 
@@ -217,7 +217,10 @@ export class ChatPanel extends MobxLitElement {
         <div class="name">
           ${profile.name ? profile.name : profile.publicId}
           ${profile.pronouns ? `(${profile.pronouns})` : ''}
-        </div>
+          ${
+            profile.publicId === this.participantService.profile?.publicId ?
+            `(you)` : ''
+          }
       </div>
     `;
   }
