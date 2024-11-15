@@ -55,18 +55,26 @@ export class Progress extends MobxLitElement {
       this.completeWaitingLoading = false;
     };
 
+    const renderWaitingStatus = () => {
+      if (numWaiting === 0) return nothing;
+
+      return html`
+        <div class="status">
+          <h2 class="secondary">
+            <div class="chip secondary">Waiting on</div>
+            <div>
+              ${numWaiting}
+              participant${numWaiting > 1 ? 's' : ''}
+            </div>
+          </h2>
+          ${this.showWaitingAvatars ? this.renderParticipants(locked) : nothing}
+        </div>
+        <div class="divider"></div>
+      `;
+    };
+
     return html`
-      <div class="status">
-        <h2 class="secondary">
-          <div class="chip secondary">Waiting on</div>
-          <div>
-            ${numWaiting}
-            participant${numWaiting > 1 ? 's' : ''}
-          </div>
-        </h2>
-        ${this.showWaitingAvatars ? this.renderParticipants(locked) : nothing}
-      </div>
-      <div class="divider"></div>
+      ${renderWaitingStatus()}
       <div class="status">
         <h2 class="secondary">
           <div class="chip secondary">Ready</div>
