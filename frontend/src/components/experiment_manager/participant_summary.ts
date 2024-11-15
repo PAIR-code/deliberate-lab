@@ -80,6 +80,7 @@ export class ParticipantSummary extends MobxLitElement {
           >
           </participant-progress-bar>
           ${this.renderCopyButton()} ${this.renderPreviewButton()}
+          ${this.renderAttentionButton()}
           ${this.renderBootButton()}
         </div>
       </div>
@@ -120,14 +121,17 @@ export class ParticipantSummary extends MobxLitElement {
         : `${maxDays}+ days`;
     };
 
-    return html` <div
-      class="chip"
-      style="color: ${timeColor};"
-      title="Time elapsed on current stage"
-    >
-      ⏳ ${getTimeElapsedText(numMinutes)}
-    </div>`;
+    return html`
+      <div
+        class="chip"
+        style="color: ${timeColor};"
+        title="Time elapsed on current stage"
+      >
+        ⏳ ${getTimeElapsedText(numMinutes)}
+      </div>
+    `;
   }
+
   private renderStatus() {
     if (!this.participant) return nothing;
 
@@ -179,6 +183,41 @@ export class ParticipantSummary extends MobxLitElement {
           variant="default"
           ?disabled=${!this.participant}
           @click=${navigate}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
+  }
+
+  private renderAttentionButton() {
+    const sendAttentionCheck = () => {
+      if (!this.participant) return;
+
+      const isConfirmed = window.confirm(
+        `Are you sure you want to send an attention check to ${
+          this.participant.name
+            ? this.participant.name
+            : this.participant.publicId
+        }?`
+      );
+      if (!isConfirmed) return;
+
+      this.analyticsService.trackButtonClick(ButtonClick.ATTENTION_CHECK_SEND);
+      this.experimentManager.sendAttentionCheckToParticipant(this.participant);
+    };
+
+    return html`
+      <pr-tooltip text="Send attention check to participant" position="BOTTOM_END">
+        <pr-icon-button
+          icon="warning"
+          color="error"
+          variant="default"
+          ?disabled=${
+            !this.participant ||
+            isParticipantEndedExperiment(this.participant) ||
+            this.participant.currentStatus === ParticipantStatus.ATTENTION_CHECK
+          }
+          @click=${sendAttentionCheck}
         >
         </pr-icon-button>
       </pr-tooltip>

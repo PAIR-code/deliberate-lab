@@ -474,17 +474,31 @@ export class ExperimentManager extends Service {
     return response;
   }
 
+  /** Send attention check to participant. */
+  async sendAttentionCheckToParticipant(
+    participant: ParticipantProfileExtended,
+  ) {
+    this.updateParticipant({
+      ...participant,
+      currentStatus: ParticipantStatus.ATTENTION_CHECK
+    });
+  }
+
   /** Boot participant from experiment. */
   async bootParticipant(
-    participant: ParticipantProfileExtended,
+    participant: ParticipantProfileExtended
   ) {
     const timestamps = {
       ...participant.timestamps,
       endExperiment: Timestamp.now(),
     };
+
+    const currentStatus = participant.currentStatus === ParticipantStatus.ATTENTION_CHECK ?
+      ParticipantStatus.ATTENTION_TIMEOUT : ParticipantStatus.BOOTED_OUT;
+
     const config = {
       ...participant,
-      currentStatus: ParticipantStatus.BOOTED_OUT,
+      currentStatus,
       timestamps,
     };
 
