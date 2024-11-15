@@ -57,8 +57,9 @@ export class SurveyReveal extends MobxLitElement {
 
     const hasScorableQuestions = scorableQuestions.length > 0;
     return html`
-      <h2>${this.stage.name}</h2>
+      <h2>Results for <b><i>${this.stage.name}</i></b> stage</h2>
       ${this.renderTable(questions, showAllParticipants, hasScorableQuestions)}
+      <div class="divider"></div>
     `;
   }
 
@@ -70,13 +71,24 @@ export class SurveyReveal extends MobxLitElement {
     showAllParticipants: boolean,
     hasScorableQuestions: boolean
   ) {
+    const surveyAnswers = this.cohortService.stagePublicDataMap[this.stage!.id];
+    if (!surveyAnswers || surveyAnswers.kind !== StageKind.SURVEY) {
+      return '';
+    }
     const getGroupCells = () => {
       return html` ${this.cohortService.participantMap &&
-      Object.keys(this.cohortService.participantMap).map((participantId) =>
-        this.makeCell(
-          getParticipantName(this.cohortService.participantMap[participantId])
-        )
-      )}`;
+      Object.keys(this.cohortService.participantMap)
+        .filter((participantId) => {
+          const answers = surveyAnswers.participantAnswerMap[participantId];
+          return (
+            answers && Object.values(answers).some((answer) => answer !== null)
+          );
+        })
+        .map((participantId) =>
+          this.makeCell(
+            getParticipantName(this.cohortService.participantMap[participantId])
+          )
+        )}`;
     };
 
     return html`
@@ -96,6 +108,29 @@ export class SurveyReveal extends MobxLitElement {
     showAllParticipants: boolean,
     hasScorableQuestions: boolean
   ) {
+    const surveyAnswers = this.cohortService.stagePublicDataMap[this.stage!.id];
+    if (!surveyAnswers || surveyAnswers.kind !== StageKind.SURVEY) {
+      return '';
+    }
+
+    const filteredParticipantIds = this.cohortService.participantMap
+      ? Object.keys(this.cohortService.participantMap).filter(
+          (participantId) => {
+            const answers = surveyAnswers?.participantAnswerMap[participantId];
+            return (
+              answers &&
+              Object.values(answers).some((answer) => answer !== null)
+            );
+          }
+        )
+      : [];
+
+    const allParticipantIds = Object.keys(
+      this.cohortService.participantMap || {}
+    );
+    const hasFilteredParticipants =
+      allParticipantIds.length > filteredParticipantIds.length;
+
     return html`
       <div class="table">
         ${this.renderTableHeader(showAllParticipants, hasScorableQuestions)}
@@ -117,7 +152,7 @@ export class SurveyReveal extends MobxLitElement {
     if (correctAnswer === '') {
       return nothing;
     }
-    
+
     if (correctAnswer === selectedAnswer) {
       return html`<pr-icon color="success" icon="check_circle"></pr-icon>`;
     } else {
@@ -141,8 +176,15 @@ export class SurveyReveal extends MobxLitElement {
 
     const renderMultipleAnswerCells = () => {
       return html`
-        ${Object.keys(this.cohortService.participantMap).map(
-          (participantId) => {
+        ${Object.keys(this.cohortService.participantMap)
+          .filter((participantId) => {
+            const answers = surveyAnswers.participantAnswerMap[participantId];
+            return (
+              answers &&
+              Object.values(answers).some((answer) => answer !== null)
+            );
+          })
+          .map((participantId) => {
             const participantAnswerMap =
               surveyAnswers.participantAnswerMap[participantId];
             if (!participantAnswerMap || !participantAnswerMap[question.id]) {
@@ -151,8 +193,7 @@ export class SurveyReveal extends MobxLitElement {
 
             const answer = participantAnswerMap[question.id] as SurveyAnswer;
             return this.renderCell(question, answer);
-          }
-        )}
+          })}
       `;
     };
 
@@ -196,14 +237,15 @@ export class SurveyReveal extends MobxLitElement {
       <div class="table-row">
         <div class="table-cell number-row">${rowIndex}</div>
         <div class="table-cell">
-          ${question.questionTitle.length > 50 ?
-            html`
-              <pr-tooltip text="${tooltipText}" position="BOTTOM_END">
-                <span style="cursor: pointer">
-                  ${question.questionTitle.slice(0, 50)}...
-                </span>
-              </pr-tooltip>
-            ` : question.questionTitle}
+          ${question.questionTitle.length > 50
+            ? html`
+                <pr-tooltip text="${tooltipText}" position="BOTTOM_END">
+                  <span style="cursor: pointer">
+                    ${question.questionTitle.slice(0, 50)}...
+                  </span>
+                </pr-tooltip>
+              `
+            : question.questionTitle}
         </div>
         ${showAllParticipants
           ? renderMultipleAnswerCells()
