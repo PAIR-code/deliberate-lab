@@ -100,6 +100,10 @@ export class SurveyView extends MobxLitElement {
         <div class="right">
           <div class="title">${getParticipantName(profile)}</div>
           <div class="subtitle">${getParticipantPronouns(profile)}</div>
+          ${
+            profile.publicId === this.participantService.profile?.publicId ?
+            html`<div>(you)</div>` : nothing
+          }
         </div>
       </div>
     `;
