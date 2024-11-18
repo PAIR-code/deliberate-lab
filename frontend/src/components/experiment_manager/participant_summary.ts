@@ -71,7 +71,8 @@ export class ParticipantSummary extends MobxLitElement {
           <profile-avatar .emoji=${this.participant.avatar} .small=${true}>
           </profile-avatar>
           <div>${getParticipantName(this.participant)}</div>
-          ${this.renderStatus()} ${this.renderAttentionStatus()} ${this.renderTimeElapsed()}
+          ${this.renderStatus()} ${this.renderAttentionStatus()}
+          ${this.renderTimeElapsed()}
         </div>
         <div class="buttons">
           <participant-progress-bar
@@ -80,8 +81,7 @@ export class ParticipantSummary extends MobxLitElement {
           >
           </participant-progress-bar>
           ${this.renderCopyButton()} ${this.renderPreviewButton()}
-          ${this.renderAttentionButton()}
-          ${this.renderBootButton()}
+          ${this.renderAttentionButton()} ${this.renderBootButton()}
         </div>
       </div>
     `;
@@ -90,12 +90,16 @@ export class ParticipantSummary extends MobxLitElement {
   private renderTimeElapsed() {
     if (
       this.participant === undefined ||
-      this.participant.currentStatus !== ParticipantStatus.IN_PROGRESS
+      (this.participant.currentStatus !== ParticipantStatus.IN_PROGRESS &&
+      this.participant.currentStatus !== ParticipantStatus.ATTENTION_CHECK)
     ) {
       return;
     }
 
-    const startTime = getCurrentStageStartTime(this.participant, this.experimentService.stageIds);
+    const startTime = getCurrentStageStartTime(
+      this.participant,
+      this.experimentService.stageIds
+    );
     if (!startTime) {
       return;
     }
@@ -214,16 +218,17 @@ export class ParticipantSummary extends MobxLitElement {
     };
 
     return html`
-      <pr-tooltip text="Send attention check to participant" position="BOTTOM_END">
+      <pr-tooltip
+        text="Send attention check to participant"
+        position="BOTTOM_END"
+      >
         <pr-icon-button
           icon="warning"
           color="error"
           variant="default"
-          ?disabled=${
-            !this.participant ||
-            isParticipantEndedExperiment(this.participant) ||
-            this.participant.currentStatus === ParticipantStatus.ATTENTION_CHECK
-          }
+          ?disabled=${!this.participant ||
+          isParticipantEndedExperiment(this.participant) ||
+          this.participant.currentStatus === ParticipantStatus.ATTENTION_CHECK}
           @click=${sendAttentionCheck}
         >
         </pr-icon-button>
