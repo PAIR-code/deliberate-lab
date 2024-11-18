@@ -182,7 +182,7 @@ export class RankingReveal extends MobxLitElement {
       this.publicData.id
     );
     return html`
-      <h2>Results for ${electionName}</h2>
+      <h2>Results for <b><i>${electionName}</i></b> stage</h2>
       ${this.renderWinner()} ${this.renderResultsTable()}
       <div class="divider"></div>
     `;

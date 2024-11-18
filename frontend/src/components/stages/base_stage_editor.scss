@@ -7,6 +7,16 @@
   gap: common.$spacing-xxl;
 }
 
+.section {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+.title {
+  @include typescale.title-small;
+  color: var(--md-sys-color-secondary);
+}
+
 pr-textarea {
   width: 100%;
 }

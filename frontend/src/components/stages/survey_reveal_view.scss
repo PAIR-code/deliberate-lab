@@ -61,3 +61,7 @@ h2 {
 .number-row{
   flex: 0 0 30px;
 }
+
+.divider {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
