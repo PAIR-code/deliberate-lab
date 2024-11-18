@@ -30,7 +30,6 @@ export interface Experiment {
   metadata: MetadataConfig;
   permissions: PermissionsConfig;  
   defaultCohortConfig: CohortParticipantConfig; // used by default for cohorts
-  attentionCheckConfig: AttentionCheckConfig;
   prolificConfig: ProlificConfig;
   stageIds: string[]; // Ordered list of stage IDs
 }
@@ -44,13 +43,6 @@ export interface CohortParticipantConfig {
   maxParticipantsPerCohort: number|null;
   // If false, exclude booted participant from min/max participant counts
   includeAllParticipantsInCohortCount: boolean;
-}
-
-/** Attention check config. */
-export interface AttentionCheckConfig {
-  enableAttentionChecks: boolean;
-  waitSeconds: number;
-  popupSeconds: number;
 }
 
 /** Prolific integration config. */
@@ -81,7 +73,6 @@ export function createExperimentConfig(
     metadata: config.metadata ?? createMetadataConfig(),
     permissions: config.permissions ?? createPermissionsConfig(),
     defaultCohortConfig: config.defaultCohortConfig ?? createCohortParticipantConfig(),
-    attentionCheckConfig: config.attentionCheckConfig ?? createAttentionCheckConfig(),
     prolificConfig: config.prolificConfig ?? createProlificConfig(),
     stageIds: stages.map(stage => stage.id),
   };
@@ -95,17 +86,6 @@ export function createCohortParticipantConfig(
     minParticipantsPerCohort: config.minParticipantsPerCohort ?? null,
     maxParticipantsPerCohort: config.maxParticipantsPerCohort ?? null,
     includeAllParticipantsInCohortCount: config.includeAllParticipantsInCohortCount ?? false,
-  };
-}
-
-/** Create AttentionCheckConfig. */
-export function createAttentionCheckConfig(
-  config: Partial<AttentionCheckConfig> = {},
-): AttentionCheckConfig {
-  return {
-    enableAttentionChecks: config.enableAttentionChecks ?? false,
-    waitSeconds: config.waitSeconds ?? 300, // 5 minutes
-    popupSeconds: config.popupSeconds ?? 60, // 1 minute
   };
 }
 
