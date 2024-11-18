@@ -183,7 +183,13 @@ export class SurveyView extends MobxLitElement {
             @click=${handleCheck}
           >
           </md-checkbox>
-          <div class="question-title">${question.questionTitle}</div>
+          <div
+            class="question-title ${question.isRequired && !isChecked()
+              ? 'required'
+              : ''}"
+          >
+            ${question.questionTitle}
+          </div>
         </label>
       </div>
     `;
@@ -215,7 +221,9 @@ export class SurveyView extends MobxLitElement {
 
     return html`
       <div class="question">
-        <div class="question-title">${question.questionTitle}</div>
+        <div class="question-title ${textAnswer === '' ? 'required' : ''}">
+          ${question.questionTitle}*
+        </div>
         <pr-textarea
           variant="outlined"
           placeholder="Type your response"
@@ -236,7 +244,16 @@ export class SurveyView extends MobxLitElement {
 
     return html`
       <div class="radio-question">
-        <div class="title">${question.questionTitle}</div>
+        <div
+          class="title ${this.participantAnswerService.getSurveyAnswer(
+            this.stage!.id,
+            question.id
+          )
+            ? ''
+            : 'required'}"
+        >
+          ${question.questionTitle}*
+        </div>
         <div class=${questionWrapperClasses}>
           ${question.options.map((option) =>
             this.renderRadioButton(option, question.id)
@@ -323,7 +340,16 @@ export class SurveyView extends MobxLitElement {
     );
     return html`
       <div class="question">
-        <div class="question-title">${question.questionTitle}</div>
+        <div
+          class="question-title ${this.participantAnswerService.getSurveyAnswer(
+            this.stage!.id,
+            question.id
+          )
+            ? ''
+            : 'required'}"
+        >
+          ${question.questionTitle}*
+        </div>
         <div class="scale labels">
           <div>${question.lowerText}</div>
           <div>${question.upperText}</div>
