@@ -10,7 +10,7 @@ import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {CohortService} from '../../services/cohort.service';
-import {MediatorEditor} from '../../services/mediator.editor';
+import {ParticipantService} from '../../services/participant.service';
 
 import {
   ChatStageConfig,
@@ -30,8 +30,8 @@ export class ChatPanel extends MobxLitElement {
 
   private readonly authService = core.getService(AuthService);
   private readonly cohortService = core.getService(CohortService);
-  public readonly experimentManager = core.getService(ExperimentManager);
-  private readonly mediatorEditor = core.getService(MediatorEditor);
+  private readonly experimentManager = core.getService(ExperimentManager);
+  private readonly participantService = core.getService(ParticipantService);
 
   @property() stage: ChatStageConfig | null = null;
 
@@ -86,9 +86,8 @@ export class ChatPanel extends MobxLitElement {
 
     return html`
       <stage-description .stage=${this.stage}></stage-description>
-      ${this.renderTimeRemaining()}
-      <div class="divider"></div>
-      ${this.renderParticipantList()} ${this.renderMediatorsList()}
+      ${this.renderTimeRemaining()} ${this.renderParticipantList()}
+      ${this.renderMediatorsList()}
     `;
   }
 
@@ -101,8 +100,10 @@ export class ChatPanel extends MobxLitElement {
       this.stage.id
     ] as ChatStagePublicData;
     if (!publicStageData || !this.stage.timeLimitInMinutes) return;
+
+    let timerHtml = html``;
     if (publicStageData.discussionEndTimestamp) {
-      return html`<div class="ended countdown">
+      timerHtml = html`<div class="ended countdown">
         Discussion ended at
         ${convertUnifiedTimestampToDate(
           publicStageData.discussionEndTimestamp,
@@ -113,17 +114,24 @@ export class ChatPanel extends MobxLitElement {
       const timeText = `Time remaining: ${this.formatTime(
         this.stage.timeLimitInMinutes * 60
       )}`;
-      return html`<div class="countdown">${timeText}</div>`;
+      timerHtml = html`<div class="countdown">${timeText}</div>`;
+    } else {
+      const startText = `Conversation started at: ${convertUnifiedTimestampToDate(
+        publicStageData.discussionStartTimestamp,
+        false
+      )}`;
+      const timeText = `Time remaining: ${this.formatTime(
+        this.timeRemainingInSeconds!
+      )}`;
+      timerHtml = html`<div class="countdown">
+        ${startText}<br />${timeText}
+      </div>`;
     }
 
-    const startText = `Conversation started at: ${convertUnifiedTimestampToDate(
-      publicStageData.discussionStartTimestamp,
-      false
-    )}`;
-    const timeText = `Time remaining: ${this.formatTime(
-      this.timeRemainingInSeconds!
-    )}`;
-    return html`<div class="countdown">${startText}<br />${timeText}</div>`;
+    return html`
+      ${timerHtml}
+      <div class="divider"></div>
+    `;
   }
 
   private formatTime(seconds: number): string {
@@ -209,7 +217,10 @@ export class ChatPanel extends MobxLitElement {
         <div class="name">
           ${profile.name ? profile.name : profile.publicId}
           ${profile.pronouns ? `(${profile.pronouns})` : ''}
-        </div>
+          ${
+            profile.publicId === this.participantService.profile?.publicId ?
+            `(you)` : ''
+          }
       </div>
     `;
   }

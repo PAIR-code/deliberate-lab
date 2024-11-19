@@ -8,6 +8,7 @@ import {
   or,
   orderBy,
   query,
+  Timestamp,
   Unsubscribe,
   where,
 } from 'firebase/firestore';
@@ -20,14 +21,18 @@ import {
   ChatDiscussion,
   ChatMessage,
   ChatStageConfig,
+  CohortConfig,
   ParticipantProfile,
   ParticipantProfileExtended,
   ParticipantStatus,
   StageConfig,
   StageKind,
   StagePublicData,
+  UnifiedTimestamp
 } from '@deliberation-lab/utils';
-
+import {
+  updateCohortCallable,
+} from '../shared/callables';
 import {
   isActiveParticipant,
   isObsoleteParticipant,
@@ -73,6 +78,7 @@ export class CohortService extends Service {
   @observable unsubscribe: Unsubscribe[] = [];
   @observable isParticipantsLoading = false;
   @observable isStageDataLoading = false;
+  @observable isCohortConfigLoading = false;
   @observable isChatLoading = false;
 
   @computed get isLoading() {
@@ -137,23 +143,12 @@ export class CohortService extends Service {
     );
   }
 
-  // Get participants who have completed/not completed the stage
+  // Get participants who have completed the stage
   // (excluding obsolete participants)
-  getParticipantsByCompletion(stageId: string) {
-    const completed: ParticipantProfile[] = [];
-    const notCompleted: ParticipantProfile[] = [];
-
-    this.getAllParticipants().forEach(participant => {
-      if (!isObsoleteParticipant(participant)) {
-        if (participant.timestamps.completedStages[stageId]) {
-          completed.push(participant);
-        } else {
-          notCompleted.push(participant);
-        }
-      }
-    });
-
-    return { completed, notCompleted };
+  getStageCompletedParticipants(stageId: string) {
+    return this.getAllParticipants().filter(
+      p => !isObsoleteParticipant(p) && p.timestamps.completedStages[stageId]
+    );
   }
 
   // Get participants by chat discussion completion
@@ -184,32 +179,53 @@ export class CohortService extends Service {
     return { completed, notCompleted };
   }
 
-  // If stage is waiting for participants, e.g.,
-  // - minParticipants not reached
-  // - waitForParticipants is true, stage is locked to 1+ participant,
-  //   and no one has completed the stage yet
-  isStageWaitingForParticipants(stageId: string) {
+  // If stage is in a waiting phase, i.e.,
+  // if the stage requires waiting and no participant has
+  // completed the waiting phase before
+  // (If a participant has unlocked a stage with waiting but not
+  // yet completed its waiting phase, then that participant is waiting)
+  isStageInWaitingPhase(stageId: string) {
     const stageConfig = this.sp.experimentService.getStage(stageId);
-    if (!stageConfig) return false;
+    if (!stageConfig) return true;
 
-    // Check for min number of participants
-    const numUnlocked = this.getUnlockedStageParticipants(stageId).length;
-    const numObsolete = this.getObsoleteParticipantsPastThisStage(stageId).length;
-    const hasMinParticipants = () => {
-      return stageConfig.progress.minParticipants <= numUnlocked + numObsolete;
-    };
-
-    // Otherwise, if waitForParticipants is true, check for locked participants
-    if (!stageConfig.progress.waitForAllParticipants) {
-      return !hasMinParticipants();
+    // If stage does not require waiting, then false
+    if (
+      stageConfig.progress.minParticipants === 0 &&
+      !stageConfig.progress.waitForAllParticipants
+    ) {
+      return false;
     }
 
-    const numLocked = this.getLockedStageParticipants(stageId).length;
-    const numCompleted = this.getAllParticipants().filter(
-      participant => participant.timestamps.completedStages[stageId]
-    ).length;
+    // If any participant in the cohort has completed the waiting phase
+    // before, then waiting is false (as we never want to revert
+    // participants from "in stage" back to pre-stage "waiting")
+    for (const participant of this.getAllParticipants(false)) {
+      if (participant.timestamps.completedWaiting[stageId]) {
+        return false;
+      }
+    }
 
-    return (numLocked > 0 && numCompleted === 0) || !hasMinParticipants();
+    return true;
+  }
+
+  // Get number of participants needed to pass waiting phase
+  getWaitingPhaseMinParticipants(stageId: string) {
+    const stageConfig = this.sp.experimentService.getStage(stageId);
+    if (!stageConfig) return 0;
+
+    const numParticipants = this.nonObsoleteParticipants.length;
+    const minParticipants = stageConfig.progress.minParticipants;
+
+    if (
+      stageConfig.progress.waitForAllParticipants &&
+      stageConfig.progress.minParticipants
+    ) {
+      return Math.max(numParticipants, minParticipants);
+    } else if (stageConfig.progress.waitForAllParticipants) {
+      return numParticipants;
+    } else {
+      return minParticipants;
+    }
   }
 
   getChatDiscussionMessages(stageId: string, discussionId: string) {

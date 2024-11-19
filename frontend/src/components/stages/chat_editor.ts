@@ -113,7 +113,7 @@ export class ChatEditor extends MobxLitElement {
             @click=${updateCheck}
           >
           </md-checkbox>
-          <div>End convo after time elapsed</div>
+          <div>Disable conversation after a fixed amount of time</div>
         </div>
         ${timeLimit !== null
           ? html`
