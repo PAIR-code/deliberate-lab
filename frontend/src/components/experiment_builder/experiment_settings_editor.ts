@@ -35,8 +35,6 @@ export class ExperimentSettingsEditor extends MobxLitElement {
       <div class="divider"></div>
       ${this.renderCohortParticipantConfig()}
       <div class="divider"></div>
-      ${this.renderAttentionChecks()}
-      <div class="divider"></div>
       ${this.renderProlificConfig()}
       <div class="spacer"></div>
       <pr-button
@@ -258,93 +256,6 @@ export class ExperimentSettingsEditor extends MobxLitElement {
               />
             </div>`
           : ''}
-      </div>
-    `;
-  }
-
-  private renderAttentionChecks() {
-    const isAttention =
-      this.experimentEditor.experiment.attentionCheckConfig
-        .enableAttentionChecks;
-
-    const updateAttention = () => {
-      const enableAttentionChecks = !isAttention;
-      this.experimentEditor.updateAttentionCheckConfig({enableAttentionChecks});
-    };
-
-    return html`
-      <div class="section">
-        <div class="title">Attention Checks</div>
-        <div class="description">
-          Note: If an attention check popup is not clicked within the given
-          time, the participant is removed from the experiment
-        </div>
-        <div class="checkbox-wrapper">
-          <md-checkbox
-            touch-target="wrapper"
-            ?checked=${isAttention}
-            ?disabled=${!this.experimentManager.isCreator}
-            @click=${updateAttention}
-          >
-          </md-checkbox>
-          <div>Enable attention checks</div>
-        </div>
-        ${isAttention ? this.renderAttentionWaitSeconds() : nothing}
-        ${isAttention ? this.renderAttentionPopupSeconds() : nothing}
-      </div>
-    `;
-  }
-
-  private renderAttentionWaitSeconds() {
-    const waitSeconds =
-      this.experimentEditor.experiment.attentionCheckConfig.waitSeconds;
-
-    const updateNum = (e: InputEvent) => {
-      const waitSeconds = Number((e.target as HTMLTextAreaElement).value);
-      this.experimentEditor.updateAttentionCheckConfig({waitSeconds});
-    };
-
-    return html`
-      <div class="number-input">
-        <label for="waitSeconds">
-          Wait time (in seconds) before attention check popup
-        </label>
-        <input
-          type="number"
-          id="waitSeconds"
-          name="waitSeconds"
-          min="0"
-          .value=${waitSeconds}
-          ?disabled=${!this.experimentManager.isCreator}
-          @input=${updateNum}
-        />
-      </div>
-    `;
-  }
-
-  private renderAttentionPopupSeconds() {
-    const popupSeconds =
-      this.experimentEditor.experiment.attentionCheckConfig.popupSeconds;
-
-    const updateNum = (e: InputEvent) => {
-      const popupSeconds = Number((e.target as HTMLTextAreaElement).value);
-      this.experimentEditor.updateAttentionCheckConfig({popupSeconds});
-    };
-
-    return html`
-      <div class="number-input">
-        <label for="popupSeconds">
-          Duration of attention check popup (in seconds)
-        </label>
-        <input
-          type="number"
-          id="popupSeconds"
-          name="popupSeconds"
-          min="0"
-          .value=${popupSeconds}
-          ?disabled=${!this.experimentManager.isCreator}
-          @input=${updateNum}
-        />
       </div>
     `;
   }

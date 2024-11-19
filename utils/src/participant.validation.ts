@@ -43,6 +43,7 @@ export type CreateParticipantData = Static<typeof CreateParticipantData>;
 
 /** Participant statuses. */
 export const ParticipantStatusData = Type.Union([
+  Type.Literal(ParticipantStatus.ATTENTION_CHECK),
   Type.Literal(ParticipantStatus.IN_PROGRESS),
   Type.Literal(ParticipantStatus.SUCCESS),
   Type.Literal(ParticipantStatus.TRANSFER_PENDING),

@@ -45,6 +45,8 @@ export interface ProgressTimestamps {
 }
 
 export enum ParticipantStatus {
+  // Attention check needs to be acknowledged
+  ATTENTION_CHECK = 'ATTENTION_CHECK',
   // Actively participating in experiment
   IN_PROGRESS = 'IN_PROGRESS',
   // Completed experiment

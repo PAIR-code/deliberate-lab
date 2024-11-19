@@ -71,7 +71,8 @@ export class ParticipantSummary extends MobxLitElement {
           <profile-avatar .emoji=${this.participant.avatar} .small=${true}>
           </profile-avatar>
           <div>${getParticipantName(this.participant)}</div>
-          ${this.renderStatus()} ${this.renderTimeElapsed()}
+          ${this.renderStatus()} ${this.renderAttentionStatus()}
+          ${this.renderTimeElapsed()}
         </div>
         <div class="buttons">
           <participant-progress-bar
@@ -80,7 +81,7 @@ export class ParticipantSummary extends MobxLitElement {
           >
           </participant-progress-bar>
           ${this.renderCopyButton()} ${this.renderPreviewButton()}
-          ${this.renderBootButton()}
+          ${this.renderAttentionButton()} ${this.renderBootButton()}
         </div>
       </div>
     `;
@@ -89,12 +90,16 @@ export class ParticipantSummary extends MobxLitElement {
   private renderTimeElapsed() {
     if (
       this.participant === undefined ||
-      this.participant.currentStatus !== ParticipantStatus.IN_PROGRESS
+      (this.participant.currentStatus !== ParticipantStatus.IN_PROGRESS &&
+      this.participant.currentStatus !== ParticipantStatus.ATTENTION_CHECK)
     ) {
       return;
     }
 
-    const startTime = getCurrentStageStartTime(this.participant, this.experimentService.stageIds);
+    const startTime = getCurrentStageStartTime(
+      this.participant,
+      this.experimentService.stageIds
+    );
     if (!startTime) {
       return;
     }
@@ -120,14 +125,24 @@ export class ParticipantSummary extends MobxLitElement {
         : `${maxDays}+ days`;
     };
 
-    return html` <div
-      class="chip"
-      style="color: ${timeColor};"
-      title="Time elapsed on current stage"
-    >
-      ⏳ ${getTimeElapsedText(numMinutes)}
-    </div>`;
+    return html`
+      <div
+        class="chip"
+        style="color: ${timeColor};"
+        title="Time elapsed on current stage"
+      >
+        ⏳ ${getTimeElapsedText(numMinutes)}
+      </div>
+    `;
   }
+
+  private renderAttentionStatus() {
+    if (this.participant?.currentStatus !== ParticipantStatus.ATTENTION_CHECK) {
+      return nothing;
+    }
+    return html`<div class="chip error">attention check sent</div>`;
+  }
+
   private renderStatus() {
     if (!this.participant) return nothing;
 
@@ -172,13 +187,49 @@ export class ParticipantSummary extends MobxLitElement {
     };
 
     return html`
-      <pr-tooltip text="Preview as participant" position="BOTTOM_END">
+      <pr-tooltip text="Preview as participant" position="LEFT_START">
         <pr-icon-button
           icon="slideshow"
           color="neutral"
           variant="default"
           ?disabled=${!this.participant}
           @click=${navigate}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
+  }
+
+  private renderAttentionButton() {
+    const sendAttentionCheck = () => {
+      if (!this.participant) return;
+
+      const isConfirmed = window.confirm(
+        `Are you sure you want to send an attention check to ${
+          this.participant.name
+            ? this.participant.name
+            : this.participant.publicId
+        }?`
+      );
+      if (!isConfirmed) return;
+
+      this.analyticsService.trackButtonClick(ButtonClick.ATTENTION_CHECK_SEND);
+      this.experimentManager.sendAttentionCheckToParticipant(this.participant);
+    };
+
+    return html`
+      <pr-tooltip
+        text="Send attention check to participant"
+        position="LEFT_START"
+      >
+        <pr-icon-button
+          icon="warning"
+          color="error"
+          variant="default"
+          ?disabled=${!this.participant ||
+          isParticipantEndedExperiment(this.participant) ||
+          this.participant.currentStatus === ParticipantStatus.ATTENTION_CHECK}
+          @click=${sendAttentionCheck}
         >
         </pr-icon-button>
       </pr-tooltip>
@@ -202,7 +253,7 @@ export class ParticipantSummary extends MobxLitElement {
     };
 
     return html`
-      <pr-tooltip text="Boot participant from experiment" position="BOTTOM_END">
+      <pr-tooltip text="Boot participant from experiment" position="LEFT_START">
         <pr-icon-button
           icon="block"
           color="error"
@@ -218,7 +269,7 @@ export class ParticipantSummary extends MobxLitElement {
 
   private renderCopyButton() {
     return html`
-      <pr-tooltip text="Copy experiment link" position="BOTTOM_END">
+      <pr-tooltip text="Copy experiment link" position="LEFT_START">
         <pr-icon-button
           icon="content_copy"
           color="neutral"

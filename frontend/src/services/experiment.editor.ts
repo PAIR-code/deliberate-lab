@@ -1,5 +1,4 @@
 import {
-  AttentionCheckConfig,
   CohortParticipantConfig,
   Experiment,
   MetadataConfig,
@@ -7,7 +6,6 @@ import {
   ProlificConfig,
   StageConfig,
   StageKind,
-  createAttentionCheckConfig,
   createExperimentConfig,
   createMetadataConfig,
   createPermissionsConfig,
@@ -101,13 +99,6 @@ export class ExperimentEditor extends Service {
   updateCohortConfig(config: Partial<CohortParticipantConfig>) {
     this.experiment.defaultCohortConfig = {
       ...this.experiment.defaultCohortConfig,
-      ...config,
-    };
-  }
-
-  updateAttentionCheckConfig(config: Partial<AttentionCheckConfig>) {
-    this.experiment.attentionCheckConfig = {
-      ...this.experiment.attentionCheckConfig,
       ...config,
     };
   }

@@ -139,22 +139,15 @@ export class ParticipantPreviewer extends MobxLitElement {
   }
 
   private renderAttentionPopup() {
-    const isObsolete = this.participantService.isObsoleteParticipant;
-    const isExperimenter = this.authService.isExperimenter;
-    const config = this.experimentService.experiment?.attentionCheckConfig;
     if (
-      isObsolete ||
-      isExperimenter ||
-      !config ||
-      !config.enableAttentionChecks
+      this.authService.isExperimenter ||
+      this.participantService.profile?.currentStatus !==
+      ParticipantStatus.ATTENTION_CHECK
     ) {
       return nothing;
     }
     return html`
-      <attention-check-popup
-        .waitSeconds=${config.waitSeconds}
-        .popupSeconds=${config.popupSeconds}
-      >
+      <attention-check-popup>
       </attention-check-popup>
     `;
   }
