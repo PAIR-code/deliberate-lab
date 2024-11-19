@@ -187,7 +187,7 @@ export class ParticipantSummary extends MobxLitElement {
     };
 
     return html`
-      <pr-tooltip text="Preview as participant" position="BOTTOM_END">
+      <pr-tooltip text="Preview as participant" position="LEFT_START">
         <pr-icon-button
           icon="slideshow"
           color="neutral"
@@ -220,7 +220,7 @@ export class ParticipantSummary extends MobxLitElement {
     return html`
       <pr-tooltip
         text="Send attention check to participant"
-        position="BOTTOM_END"
+        position="LEFT_START"
       >
         <pr-icon-button
           icon="warning"
@@ -253,7 +253,7 @@ export class ParticipantSummary extends MobxLitElement {
     };
 
     return html`
-      <pr-tooltip text="Boot participant from experiment" position="BOTTOM_END">
+      <pr-tooltip text="Boot participant from experiment" position="LEFT_START">
         <pr-icon-button
           icon="block"
           color="error"
@@ -269,7 +269,7 @@ export class ParticipantSummary extends MobxLitElement {
 
   private renderCopyButton() {
     return html`
-      <pr-tooltip text="Copy experiment link" position="BOTTOM_END">
+      <pr-tooltip text="Copy experiment link" position="LEFT_START">
         <pr-icon-button
           icon="content_copy"
           color="neutral"
