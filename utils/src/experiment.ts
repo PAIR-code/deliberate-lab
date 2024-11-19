@@ -19,8 +19,9 @@ import { StageConfig } from './stages/stage';
   *
   * VERSION 5 - updated in PR #334 to add completedWaiting map
   * to participant progress timestamps
+  * VERSION 6 - updated in PR #337 to remove attention check config
   */
-export const EXPERIMENT_VERSION_ID = 5;
+export const EXPERIMENT_VERSION_ID = 6;
 
 /** Experiment. */
 export interface Experiment {
