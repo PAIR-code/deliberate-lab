@@ -15,6 +15,8 @@ import { PayoutStageConfig } from './payout_stage';
 import { ProfileStageConfig } from './profile_stage';
 import { RevealStageConfig } from './reveal_stage';
 import {
+  SurveyPerParticipantStageConfig,
+  SurveyPerParticipantStageParticipantAnswer,
   SurveyStageConfig,
   SurveyStageParticipantAnswer,
   SurveyStagePublicData,
@@ -40,6 +42,7 @@ export enum StageKind {
   PAYOUT = 'payout',
   REVEAL = 'reveal',
   SURVEY = 'survey',
+  SURVEY_PER_PARTICIPANT = 'surveyPerParticipant',
   TRANSFER = 'transfer'
 }
 
@@ -86,6 +89,7 @@ export type StageConfig =
   | ProfileStageConfig
   | RevealStageConfig
   | SurveyStageConfig
+  | SurveyPerParticipantStageConfig
   | TOSStageConfig
   | TransferStageConfig;
 
@@ -104,7 +108,8 @@ export interface BaseStageParticipantAnswer {
 export type StageParticipantAnswer =
  | ChatStageParticipantAnswer
  | RankingStageParticipantAnswer
- | SurveyStageParticipantAnswer;
+ | SurveyStageParticipantAnswer
+ | SurveyPerParticipantStageParticipantAnswer;
 
 /**
  * Base stage public data created from cloud triggers

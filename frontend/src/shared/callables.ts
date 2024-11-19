@@ -12,6 +12,7 @@ import {
   UpdateChatMediatorsData,
   UpdateChatStageParticipantAnswerData,
   UpdateRankingStageParticipantAnswerData,
+  UpdateSurveyPerParticipantStageParticipantAnswerData,
   UpdateSurveyStageParticipantAnswerData
 } from '@deliberation-lab/utils';
 
@@ -76,6 +77,14 @@ export const updateSurveyStageParticipantAnswerCallable = async(
   functions: Functions, config: UpdateSurveyStageParticipantAnswerData
 ) => {
   const { data } = await httpsCallable<UpdateSurveyStageParticipantAnswerData, CreationResponse>(functions, 'updateSurveyStageParticipantAnswer')(config);
+  return data;
+}
+
+/** Generic endpoint to update survey-per-participant stage participant answers */
+export const updateSurveyPerParticipantStageParticipantAnswerCallable = async(
+  functions: Functions, config: UpdateSurveyPerParticipantStageParticipantAnswerData
+) => {
+  const { data } = await httpsCallable<UpdateSurveyPerParticipantStageParticipantAnswerData, CreationResponse>(functions, 'updateSurveyPerParticipantStageParticipantAnswer')(config);
   return data;
 }
 

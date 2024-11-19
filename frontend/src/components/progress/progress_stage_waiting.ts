@@ -30,14 +30,6 @@ export class Progress extends MobxLitElement {
   @property() showReadyAvatars = true;
   @property() showWaitingAvatars = false;
 
-  /** Refreshes the browser every 30 seconds */
-  connectedCallback() {
-    super.connectedCallback();
-    setInterval(() => {
-      window.location.reload();
-    }, 10000);
-  }
-
   override render() {
     const stageId = this.routerService.activeRoute.params['stage'];
     const stage = this.experimentService.getStage(stageId);

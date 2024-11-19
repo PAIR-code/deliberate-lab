@@ -8,7 +8,8 @@
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
+    "logs": "firebase functions:log",
+    "test": "jest"
   },
   "engines": {
     "node": "18"
@@ -23,10 +24,22 @@
     "unique-names-generator": "^4.7.1",
     "uuid": "^9.0.1"
   },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "transform": {
+      "^.+\\.[t|j]sx?$": "babel-jest"
+    },
+    "testTimeout": 15000
+  },
   "devDependencies": {
+    "@babel/preset-env": "^7.26.0",
+    "@babel/preset-typescript": "^7.26.0",
     "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^5.12.0",
     "@typescript-eslint/parser": "^5.12.0",
+    "@types/jest": "^29.5.14",
+    "babel-jest": "^29.7.0",
     "esbuild": "0.21.5",
     "eslint": "^8.9.0",
     "eslint-config-google": "^0.14.0",

@@ -11,6 +11,7 @@ import '../stages/info_view';
 import '../stages/payout_view';
 import '../stages/reveal_view';
 import '../stages/survey_view';
+import '../stages/survey_per_participant_view';
 import '../stages/tos_view';
 import '../stages/transfer_view';
 import './participant_header';
@@ -227,7 +228,9 @@ export class ParticipantPreviewer extends MobxLitElement {
       case StageKind.REVEAL:
         return html`<reveal-view .stage=${stage}></reveal-view>`;
       case StageKind.SURVEY:
-        return html` <survey-view .stage=${stage}></survey-view> `;
+        return html`<survey-view .stage=${stage}></survey-view>`;
+      case StageKind.SURVEY_PER_PARTICIPANT:
+        return html`<survey-per-participant-view .stage=${stage}></survey-view>`;
       case StageKind.TRANSFER:
         return html`<transfer-view .stage=${stage}></transfer-view>`;
       default:

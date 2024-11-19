@@ -38,6 +38,6 @@
   &.chat {
     @include common.flex-row;
     gap: common.$main-content-padding;
-    padding-bottom: calc(common.$main-content-padding * 2);
+    padding-bottom: 0;
   }
 }

@@ -25,6 +25,14 @@ export interface SurveyStageConfig extends BaseStageConfig {
   questions: SurveyQuestion[];
 }
 
+/** Special "survey per participant" stage
+  * with each question asked for each participant. */
+export interface SurveyPerParticipantStageConfig extends BaseStageConfig {
+  kind: StageKind.SURVEY_PER_PARTICIPANT;
+  enableSelfSurvey: boolean; // Whether to show survey for oneself.
+  questions: SurveyQuestion[];
+}
+
 export enum SurveyQuestionKind {
   TEXT = 'text',
   CHECK = 'check', // checkbox
@@ -83,6 +91,14 @@ export type SurveyQuestion =
 export interface SurveyStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.SURVEY;
   answerMap: Record<string, SurveyAnswer>; // map of question ID to answer
+}
+
+/** Special "survey per participant" stage
+  * with each question asked for each participant. */
+export interface SurveyPerParticipantStageParticipantAnswer extends BaseStageParticipantAnswer {
+  kind: StageKind.SURVEY_PER_PARTICIPANT;
+  // map of question ID to (map of participant public ID to answer)
+  answerMap: Record<string, Record<string, SurveyAnswer>>;
 }
 
 export interface BaseSurveyAnswer {
@@ -144,6 +160,23 @@ export function createSurveyStage(
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig(),
     questions: config.questions ?? []
+  };
+}
+
+/** Create special "survey per participant" stage
+  * with each question asked for each participant. */
+export function createSurveyPerParticipantStage(
+  config: Partial<SurveyPerParticipantStageConfig> = {}
+): SurveyPerParticipantStageConfig {
+  return {
+    id: config.id ?? generateId(),
+    kind: StageKind.SURVEY_PER_PARTICIPANT,
+    game: config.game ?? StageGame.NONE,
+    name: config.name ?? 'Survey per participant',
+    descriptions: config.descriptions ?? createStageTextConfig(),
+    progress: config.progress ?? createStageProgressConfig(),
+    questions: config.questions ?? [],
+    enableSelfSurvey: config.enableSelfSurvey ?? false,
   };
 }
 
@@ -216,6 +249,18 @@ export function createSurveyStageParticipantAnswer(
   return {
     id: config.id ?? generateId(),
     kind: StageKind.SURVEY,
+    answerMap: config.answerMap ?? {},
+  }
+}
+
+/** Create special "survey per participant" stage answer
+  * with each question asked for each participant. */
+export function createSurveyPerParticipantStageParticipantAnswer(
+  config: Partial<SurveyPerParticipantStageParticipantAnswer> = {}
+): SurveyPerParticipantStageParticipantAnswer {
+  return {
+    id: config.id ?? generateId(),
+    kind: StageKind.SURVEY_PER_PARTICIPANT,
     answerMap: config.answerMap ?? {},
   }
 }

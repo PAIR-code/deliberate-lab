@@ -5,6 +5,7 @@
   @include common.flex-column;
   flex-shrink: 0;
   gap: common.$spacing-large;
+  overflow: auto;
   width: 240px;
 }
 
@@ -40,4 +41,18 @@
   border-radius: common.$spacing-medium;
   color: var(--md-sys-color-on-error-container);
   padding: common.$spacing-small common.$spacing-medium;
+}
+
+.countdown {
+  @include typescale.label-medium;
+  font-style: italic;
+  color: var(--md-sys-color-secondary);
+}
+
+.ended {
+  color: var(--md-sys-color-tertiary);
+}
+
+.divider {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }

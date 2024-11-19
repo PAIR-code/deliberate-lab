@@ -17,9 +17,9 @@ import { StageConfig } from './stages/stage';
   * impacts loading previous versions of those objects on the frontend
   * (e.g., new field is added to existing stage config).
   *
-  * VERSION 3 - updated in PR #310
+  * VERSION 4 - updated in PR #324
   */
-export const EXPERIMENT_VERSION_ID = 3;
+export const EXPERIMENT_VERSION_ID = 4;
 
 /** Experiment. */
 export interface Experiment {
