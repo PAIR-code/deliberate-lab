@@ -78,6 +78,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
             },
             geminiApiKey: oldData.geminiApiKey
           }
+          break;
 
         case "port":
           newData = {
@@ -90,7 +91,12 @@ export class ExperimenterDataEditor extends MobxLitElement {
             },
             geminiApiKey: oldData.geminiApiKey
           }
-        };
+          break;
+
+        default:
+          console.log("No field associated with llama server settings: ", field);
+          return;
+      };
       this.authService.writeExperimenterData(newData);
     };
 
@@ -102,7 +108,7 @@ return html`
           label="Server URL"
           placeholder="Enter server URL"
           variant="outlined"
-          .value=${data?.llamaApiKey?.url ?? ""} 
+          .value=${data?.llamaApiKey?.url ?? "aaaaaaa"} 
           @input=${(e: InputEvent) => updateServerSettings(e, 'serverUrl')}
         >
         </pr-textarea>
@@ -110,7 +116,7 @@ return html`
           label="Port"
           placeholder="Enter port number"
           variant="outlined"
-          .value=${data?.llamaApiKey?.url ?? -1}
+          .value=${data?.llamaApiKey?.port ?? ""}
           @input=${(e: InputEvent) => updateServerSettings(e, 'port')}
         >
         </pr-textarea>
