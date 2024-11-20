@@ -14,12 +14,25 @@ export interface ExperimenterProfile {
 
 /** Experimenter data (written to Firestore under experimenterData/{id}). */
 export interface ExperimenterData {
+  /* 
+  Currently supports either all Llama or all gemini
+  TODO: refactor this as a list of types and values for each mediator(see design document)
+  */
   id: string;
-  apiKeys: APIKeyConfig;
+  geminiApiKey: string, // distinct types since we don't want to lose information when switching between them
+  llamaApiKey: LlamaServerConfig
+  activeApiKeyType: ApiKeyType // keeps track of model type selection
 }
 
-export interface APIKeyConfig {
-  geminiKey: string;
+export enum ApiKeyType {
+  GEMINI_API_KEY = 'gemini',
+  LLAMA_CUSTOM_URL = 'llamaCustomUrl',
+}
+
+export interface LlamaServerConfig {
+  url: string;
+  port: number;
+  // will probably need more data for server-side auth?
 }
 
 
@@ -32,6 +45,8 @@ export function createExperimenterData(
 ): ExperimenterData {
   return {
     id: experimenterId,
-    apiKeys: { geminiKey: '' }
+    geminiApiKey: "",
+    llamaApiKey: { url: "", port: -1 },
+    activeApiKeyType: ApiKeyType.GEMINI_API_KEY
   };
 }

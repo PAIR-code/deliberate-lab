@@ -1,13 +1,14 @@
 import '../../pair-components/textarea';
 
-import {MobxLitElement} from '@adobe/lit-mobx';
-import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import { MobxLitElement } from '@adobe/lit-mobx';
+import { CSSResultGroup, html, nothing } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 
-import {core} from '../../core/core';
-import {AuthService} from '../../services/auth.service';
+import { core } from '../../core/core';
+import { AuthService } from '../../services/auth.service';
 
-import {styles} from './experimenter_data_editor.scss';
+import { styles } from './experimenter_data_editor.scss';
+import { ApiKeyType, ExperimenterData } from '@deliberation-lab/utils';
 
 /** Editor for adjusting experimenter data */
 @customElement('experimenter-data-editor')
@@ -19,17 +20,23 @@ export class ExperimenterDataEditor extends MobxLitElement {
   override render() {
     return html`
       ${this.renderGeminiKey()}
+      ${this.renderServerSettings()}
     `;
   }
 
   private renderGeminiKey() {
     const updateKey = (e: InputEvent) => {
-      const data = this.authService.experimenterData;
-      if (!data) return;
+      const oldData = this.authService.experimenterData;
+      if (!oldData) return;
 
       const geminiKey = (e.target as HTMLTextAreaElement).value;
-      const apiKeys = {...data.apiKeys, geminiKey};
-      this.authService.writeExperimenterData({...data, apiKeys});
+      const new_data = {
+        id: oldData.id,
+        geminiApiKey: geminiKey,
+        llamaApiKey: oldData.llamaApiKey,
+        activeApiKeyType: ApiKeyType.GEMINI_API_KEY
+      };
+      this.authService.writeExperimenterData(new_data);
     };
 
     // TODO: Make this more clear when this has been saved.
@@ -40,8 +47,71 @@ export class ExperimenterDataEditor extends MobxLitElement {
           label="Gemini API key"
           placeholder="Add Gemini API key"
           variant="outlined"
-          .value=${this.authService.experimenterData?.apiKeys.geminiKey ?? ''}
+          .value=${this.authService.experimenterData?.geminiApiKey ?? ''}
           @input=${updateKey}
+        >
+        </pr-textarea>
+      </div>
+    `;
+  }
+
+  private renderServerSettings() {
+    const updateServerSettings = (e: InputEvent, field: 'serverUrl' | 'port') => {
+      const oldData = this.authService.experimenterData;
+      if (!oldData) return;
+
+      const serverSettings = (e.target as HTMLInputElement).value;
+
+      // This function will override the API key type. Thus, if someone selects
+      // this field, the website will think he wants a Llama key
+      // maybe a dropdown menu would be useful here
+      // TODO: fix
+      let newData: ExperimenterData;
+      switch (field) {
+        case "serverUrl":
+          newData = {
+            id: oldData.id,
+            activeApiKeyType: ApiKeyType.LLAMA_CUSTOM_URL,
+            llamaApiKey: {
+              url: serverSettings,
+              port: oldData.llamaApiKey.port
+            },
+            geminiApiKey: oldData.geminiApiKey
+          }
+
+        case "port":
+          newData = {
+            id: oldData.id,
+            activeApiKeyType: ApiKeyType.LLAMA_CUSTOM_URL,
+            llamaApiKey: {
+              url: oldData.llamaApiKey.url,
+              //TODO: Validate or use int field
+              port: parseInt(serverSettings)
+            },
+            geminiApiKey: oldData.geminiApiKey
+          }
+        };
+      this.authService.writeExperimenterData(newData);
+    };
+
+const data = this.authService.experimenterData;
+return html`
+      <div class="section">
+        <div class="title">Server Settings</div>
+        <pr-textarea
+          label="Server URL"
+          placeholder="Enter server URL"
+          variant="outlined"
+          .value=${data?.llamaApiKey?.url ?? ""} 
+          @input=${(e: InputEvent) => updateServerSettings(e, 'serverUrl')}
+        >
+        </pr-textarea>
+        <pr-textarea
+          label="Port"
+          placeholder="Enter port number"
+          variant="outlined"
+          .value=${data?.llamaApiKey?.url ?? -1}
+          @input=${(e: InputEvent) => updateServerSettings(e, 'port')}
         >
         </pr-textarea>
       </div>
