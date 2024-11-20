@@ -4,7 +4,6 @@
 // TYPES                                                                     //
 // ************************************************************************* //
 
-
 /** Experimenter profile (written to Firestore under experimenters/{id}). */
 export interface ExperimenterProfile {
   id: string;
@@ -25,8 +24,8 @@ export interface ExperimenterData {
 }
 
 export enum ApiKeyType {
-  GEMINI_API_KEY = 'gemini',
-  LLAMA_CUSTOM_URL = 'llamaCustomUrl',
+  GEMINI_API_KEY = 'Gemini',
+  LLAMA_CUSTOM_URL = 'Llama',
 }
 
 export interface LlamaServerConfig {
@@ -37,6 +36,13 @@ export interface LlamaServerConfig {
 
 
 // ************************************************************************* //
+// CONSTANTS                                                                 //
+// ************************************************************************* //
+
+const INVALID_API_KEY = ""
+const INVALID_PORT = -1
+
+// ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
 
@@ -45,8 +51,23 @@ export function createExperimenterData(
 ): ExperimenterData {
   return {
     id: experimenterId,
-    geminiApiKey: "",
-    llamaApiKey: { url: "", port: -1 },
+    geminiApiKey: INVALID_API_KEY,
+    llamaApiKey: { url: INVALID_API_KEY, port: INVALID_PORT },
     activeApiKeyType: ApiKeyType.GEMINI_API_KEY
   };
+}
+
+export function checkApiKeyExists(experimenterData: ExperimenterData): boolean {
+  // if gemini active and no api key selected
+  if ((experimenterData.activeApiKeyType === ApiKeyType.GEMINI_API_KEY) && 
+  (!experimenterData.geminiApiKey || experimenterData.geminiApiKey === INVALID_API_KEY)) {
+    return false
+  }
+  // if llama active and no api key selected
+  if ((experimenterData.activeApiKeyType === ApiKeyType.LLAMA_CUSTOM_URL) && 
+  (!experimenterData.llamaApiKey.url || experimenterData.llamaApiKey.url === INVALID_API_KEY) &&
+  (experimenterData.llamaApiKey.port === INVALID_PORT)) {
+    return false
+  }
+  return true
 }
