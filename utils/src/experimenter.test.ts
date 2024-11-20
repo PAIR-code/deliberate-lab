@@ -13,6 +13,10 @@ describe('checkApiKeyExists', () => {
         experimenterData = createExperimenterData('testExperimenter');
     });
 
+    test('returns false if active API key type is object is null', () => {
+        expect(checkApiKeyExists(null)).toBe(false);
+    });
+
     test('returns false if active API key type is Gemini and geminiApiKey is invalid', () => {
         experimenterData.activeApiKeyType = ApiKeyType.GEMINI_API_KEY;
         experimenterData.geminiApiKey = '';

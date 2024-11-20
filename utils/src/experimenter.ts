@@ -58,7 +58,10 @@ export function createExperimenterData(
 }
 
 
-export function checkApiKeyExists(experimenterData: ExperimenterData): boolean {
+export function checkApiKeyExists(experimenterData: ExperimenterData | null): boolean {
+  if (experimenterData===null) {
+    return false
+  }
   // if active API key type is Gemini
   if (experimenterData.activeApiKeyType === ApiKeyType.GEMINI_API_KEY) {
     // implicitly checks if geminiApiKey exists
