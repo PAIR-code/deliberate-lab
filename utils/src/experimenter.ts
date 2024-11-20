@@ -39,7 +39,7 @@ export interface LlamaServerConfig {
 // CONSTANTS                                                                 //
 // ************************************************************************* //
 
-const INVALID_API_KEY = ""
+const INVALID_API_KEY = ''
 const INVALID_PORT = -1
 
 // ************************************************************************* //
@@ -57,17 +57,22 @@ export function createExperimenterData(
   };
 }
 
+
 export function checkApiKeyExists(experimenterData: ExperimenterData): boolean {
-  // if gemini active and no api key selected
-  if ((experimenterData.activeApiKeyType === ApiKeyType.GEMINI_API_KEY) && 
-  (!experimenterData.geminiApiKey || experimenterData.geminiApiKey === INVALID_API_KEY)) {
-    return false
+  // if active API key type is Gemini
+  if (experimenterData.activeApiKeyType === ApiKeyType.GEMINI_API_KEY) {
+    // implicitly checks if geminiApiKey exists
+    return experimenterData.geminiApiKey !== INVALID_API_KEY
   }
-  // if llama active and no api key selected
-  if ((experimenterData.activeApiKeyType === ApiKeyType.LLAMA_CUSTOM_URL) && 
-  (!experimenterData.llamaApiKey.url || experimenterData.llamaApiKey.url === INVALID_API_KEY) &&
-  (experimenterData.llamaApiKey.port === INVALID_PORT)) {
-    return false
+
+  // if active API key type is Llama
+  if (experimenterData.activeApiKeyType === ApiKeyType.LLAMA_CUSTOM_URL) {
+    // implicitly checks if llamaApiKey exists
+    return (
+      experimenterData.llamaApiKey.url !== INVALID_API_KEY &&
+      experimenterData.llamaApiKey.port !== INVALID_PORT
+    );
   }
-  return true
+
+  return false; // false if no valid condition is met
 }
