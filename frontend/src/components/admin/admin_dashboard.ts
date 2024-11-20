@@ -9,7 +9,7 @@ import {HomeService} from '../../services/home.service';
 
 import {
   Experiment,
-  ExperimenterProfile,
+  Experimenter,
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
@@ -38,7 +38,7 @@ export class AdminDashboard extends MobxLitElement {
           Experiments (${this.adminService.experiments.length})
         </div>
         <div class="tab ${!this.showExperiments ? 'active' : ''}" @click=${toggle}>
-          Experimenters (${Object.keys(this.homeService.experimenterMap).length})
+          Experimenters (${this.adminService.experimenters.length})
         </div>
       </div>
       ${this.showExperiments ? this.renderExperimentList() :
@@ -60,7 +60,7 @@ export class AdminDashboard extends MobxLitElement {
   }
 
   private renderExperimenterList() {
-    const experimenters = Object.values(this.homeService.experimenterMap);
+    const experimenters = this.adminService.experimenters;
 
     return html`
       ${this.renderEmptyMessage(experimenters.length, true)}
@@ -90,7 +90,7 @@ export class AdminDashboard extends MobxLitElement {
   }
 
   // TODO: Refactor into separate component
-  private renderExperimenterItem(experimenter: ExperimenterProfile) {
+  private renderExperimenterItem(experimenter: Experimenter) {
     return html`
       <div class="experiment-item">
         <div class="left">
