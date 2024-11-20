@@ -10,7 +10,7 @@ const MODEL_TYPE = "llama3.2";
 const LLM_SERVER_ENDPOINT = "http://localhost:11434/api/chat";
 const TEST_MESSAGE = "Say hello!";
 
-
+// TODO: use jest describe
 test("chat with hosted llm", async () => {
     const client = new OllamaChat(LLM_SERVER_ENDPOINT, MODEL_TYPE)
     const response = await client.chat([TEST_MESSAGE]);
