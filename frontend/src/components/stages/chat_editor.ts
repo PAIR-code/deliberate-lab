@@ -17,6 +17,7 @@ import {
   createMediatorConfig,
   DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
   DEFAULT_STRING_FORMATTING_INSTRUCTIONS,
+  checkApiKeyExists,
 } from '@deliberation-lab/utils';
 import {LLM_MEDIATOR_AVATARS} from '../../shared/constants';
 
@@ -39,17 +40,17 @@ export class ChatEditor extends MobxLitElement {
 
     // Check if experimenter's API key exists
     let apiCheck;
-    if (!this.authService.experimenterData?.apiKeys.geminiKey) {
+    if (checkApiKeyExists(this.authService.experimenterData)) {
       apiCheck = html`
         <div class="warning">
-          <b>Note:</b> In order for LLM calls to work, you must add your Gemini
-          API key under Settings.
+          <b>Note:</b> In order for LLM calls to work, you must add your Gemini API key 
+          or Ollama server configuration under Settings.
         </div>
       `;
     } else {
       apiCheck = html`
         <div class="notification">
-          <b>✅ A Gemini API key has been added. If it is valid, LLM calls will work.
+          <b>✅ A valid API key has been added. If it is valid, LLM calls will work.
         </div>
       `;
     }
