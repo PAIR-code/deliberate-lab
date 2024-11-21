@@ -75,12 +75,7 @@ export class SurveyView extends MobxLitElement {
   private getParticipants() {
     if (!this.stage) return [];
 
-    const allParticipants = this.cohortService
-      .getAllParticipants()
-      .filter(
-        // Filter only to active participants.
-        (profile) => profile.currentStatus === ParticipantStatus.IN_PROGRESS
-      );
+    const allParticipants = this.cohortService.activeParticipants;
     if (this.stage.enableSelfSurvey) {
       return allParticipants;
     }
