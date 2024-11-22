@@ -28,7 +28,8 @@ export function isSurveyComplete(
     const answer = answerMap[question.id];
     if (
       !answer ||
-      (answer.kind === SurveyQuestionKind.CHECK && !answer.isChecked)
+      (answer.kind === SurveyQuestionKind.CHECK && !answer.isChecked) ||
+      (answer.kind === SurveyQuestionKind.TEXT && answer.answer.trim() === '')
     ) {
       return false;
     }
