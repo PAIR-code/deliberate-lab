@@ -29,7 +29,6 @@ import {
   isMultipleChoiceImageQuestion,
 } from '@deliberation-lab/utils';
 import {
-  getOptionalSurveyQuestions,
   isSurveyComplete
 } from '../../shared/stage.utils';
 
@@ -64,7 +63,7 @@ export class SurveyView extends MobxLitElement {
     const questionsComplete = (): boolean => {
       if (!this.stage) return false;
       return isSurveyComplete(
-        this.stage,
+        this.stage.questions,
         this.participantAnswerService.getSurveyAnswerMap(this.stage.id)
       );
     };

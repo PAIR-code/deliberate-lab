@@ -138,6 +138,17 @@ export class ParticipantAnswerService extends Service {
     return Object.keys(answer.answerMap);
   }
 
+  getSurveyPerParticipantAnswerMap(stageId: string, participantId: string) {
+    const answer = this.answerMap[stageId];
+    if (
+      !answer || answer.kind !== StageKind.SURVEY_PER_PARTICIPANT ||
+      !answer.answerMap[participantId]
+    ) {
+      return {};
+    }
+    return answer.answerMap[participantId];
+  }
+
   getSurveyPerParticipantAnswerIDs(stageId: string, participantId: string) {
     const answer = this.answerMap[stageId];
     if (

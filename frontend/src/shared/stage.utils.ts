@@ -1,30 +1,34 @@
 import {
   StageKind,
   SurveyAnswer,
-  SurveyStageConfig,
+  SurveyQuestion,
   SurveyQuestionKind
 } from '@deliberation-lab/utils';
 
 /** Returns required questions from survey stage. */
-export function getRequiredSurveyQuestions(stage: SurveyStageConfig) {
-  return stage.questions.filter(
+export function getRequiredSurveyQuestions(
+  questions: SurveyQuestion[]
+) {
+  return questions.filter(
     question => !(question.kind === SurveyQuestionKind.CHECK && !question.isRequired)
   );
 }
 
 /** Returns optional questions from survey stage. */
-export function getOptionalSurveyQuestions(stage: SurveyStageConfig) {
-  return stage.questions.filter(
+export function getOptionalSurveyQuestions(
+  questions: SurveyQuestion[]
+) {
+  return questions.filter(
     question => question.kind !== SurveyQuestionKind.CHECK || !question.isRequired
   );
 }
 
 /** Checks whether all required questions are answered. */
 export function isSurveyComplete(
-  stage: SurveyStageConfig, answerMap: Record<string, SurveyAnswer>
+  questions: SurveyQuestion[], answerMap: Record<string, SurveyAnswer>
 ) {
-  const questions = getRequiredSurveyQuestions(stage);
-  for (const question of questions) {
+  const required = getRequiredSurveyQuestions(questions);
+  for (const question of required) {
     const answer = answerMap[question.id];
     if (
       !answer ||
