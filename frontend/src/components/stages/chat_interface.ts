@@ -242,10 +242,14 @@ export class ChatInterface extends MobxLitElement {
       if (!this.stage) return;
 
       this.readyToEndDiscussionLoading = true;
-      await this.participantService.updateReadyToEndChatDiscussion(
-        this.stage.id,
-        currentDiscussionId
-      );
+      try {
+        await this.participantService.updateReadyToEndChatDiscussion(
+          this.stage.id,
+          currentDiscussionId
+        );
+      } catch (error) {
+        console.log(error);
+      }
       this.readyToEndDiscussionLoading = false;
     };
 
