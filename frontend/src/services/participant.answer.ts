@@ -122,6 +122,16 @@ export class ParticipantAnswerService extends Service {
     return answer.rankingList.length;
   }
 
+  getNumSurveyAnswers(stageId: string) {
+    return this.getSurveyAnswerIDs(stageId).length;
+  }
+
+  getSurveyAnswerMap(stageId: string) {
+    const answer = this.answerMap[stageId];
+    if (!answer || answer.kind !== StageKind.SURVEY) return {};
+    return answer.answerMap;
+  }
+
   getSurveyAnswerIDs(stageId: string) {
     const answer = this.answerMap[stageId];
     if (!answer || answer.kind !== StageKind.SURVEY) return [];
@@ -137,10 +147,6 @@ export class ParticipantAnswerService extends Service {
       return [];
     }
     return Object.keys(answer.answerMap[participantId]);
-  }
- 
-  getNumSurveyAnswers(stageId: string) {
-    return this.getSurveyAnswerIDs(stageId).length;
   }
 
   updateChatInput(stageId: string, chatInput: string) {

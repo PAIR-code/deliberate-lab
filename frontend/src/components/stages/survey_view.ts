@@ -28,6 +28,10 @@ import {
   TextSurveyQuestion,
   isMultipleChoiceImageQuestion,
 } from '@deliberation-lab/utils';
+import {
+  getOptionalSurveyQuestions,
+  isSurveyComplete
+} from '../../shared/stage.utils';
 
 import {core} from '../../core/core';
 import {FirebaseService} from '../../services/firebase.service';
@@ -49,20 +53,8 @@ export class SurveyView extends MobxLitElement {
     ParticipantAnswerService
   );
 
-  private checkQuestions: string[] = [];
-
   @property() stage: SurveyStageConfig | undefined = undefined;
   @property() renderSummaryView: boolean = false; // If true, render a minimized summary view.
-
-  private getRequiredQuestions() {
-    return (
-      this.stage!.questions.filter(
-        (q) =>
-          q.kind !== SurveyQuestionKind.CHECK ||
-          (q.kind === SurveyQuestionKind.CHECK && q.isRequired)
-      ).map((q) => q.id) ?? []
-    );
-  }
 
   override render() {
     if (!this.stage) {
@@ -71,40 +63,14 @@ export class SurveyView extends MobxLitElement {
 
     const questionsComplete = (): boolean => {
       if (!this.stage) return false;
-      const answeredQuestionIds = new Set(
-        this.participantAnswerService.getSurveyAnswerIDs(this.stage.id)
-      );
-
-      return this.getRequiredQuestions().every((id) =>
-        answeredQuestionIds.has(id)
+      return isSurveyComplete(
+        this.stage,
+        this.participantAnswerService.getSurveyAnswerMap(this.stage.id)
       );
     };
 
     const saveAnswers = async () => {
       if (!this.stage) return;
-
-      // Populate default answers for optional questions.
-      const requiredQuestionIds = this.getRequiredQuestions();
-      const optionalQuestions = this.stage.questions.filter(
-        (q) => !requiredQuestionIds.includes(q.id)
-      );
-
-      const answeredQuestionIDs =
-        this.participantAnswerService.getSurveyAnswerIDs(this.stage.id);
-
-      optionalQuestions.forEach((question) => {
-        if (!answeredQuestionIDs.includes(question.id)) {
-          const answer: CheckSurveyAnswer = {
-            id: question.id,
-            kind: SurveyQuestionKind.CHECK,
-            isChecked: false,
-          };
-          this.participantAnswerService.updateSurveyAnswer(
-            this.stage!.id,
-            answer
-          );
-        }
-      });
 
       // Save all answers for this stage
       await this.participantAnswerService.saveSurveyAnswers(this.stage.id);
