@@ -19,7 +19,7 @@ import {convertUnifiedTimestampToDate} from '../../shared/utils';
 import '../stages/payout_summary_view';
 import '../stages/reveal_summary_view';
 import '../stages/ranking_summary_view';
-import '../stages/survey_view';
+import '../stages/survey_summary_view';
 
 import {styles} from './profile_preview.scss';
 
@@ -126,10 +126,9 @@ export class Preview extends MobxLitElement {
           `;
           break;
         case StageKind.SURVEY:
-          stageHtml = html`<survey-view
-            .stage=${stage}
-            .renderSummaryView=${true}
-          ></survey-view>`;
+          stageHtml = html`
+            <survey-summary-view .stage=${stage}></survey-summary-view>
+          `;
           break;
         default:
           return nothing;
