@@ -29,7 +29,8 @@ import {
   isMultipleChoiceImageQuestion,
 } from '@deliberation-lab/utils';
 import {
-  isSurveyComplete
+  isSurveyComplete,
+  isSurveyAnswerComplete
 } from '../../shared/stage.utils';
 
 import {core} from '../../core/core';
@@ -137,6 +138,10 @@ export class SurveyView extends MobxLitElement {
       this.participantAnswerService.updateSurveyAnswer(this.stage.id, answer);
     };
 
+    const titleClasses = classMap({
+      'required': question.isRequired && !isChecked(),
+    });
+
     return html`
       <div class="question">
         <label class="checkbox-wrapper">
@@ -148,11 +153,7 @@ export class SurveyView extends MobxLitElement {
             @click=${handleCheck}
           >
           </md-checkbox>
-          <div
-            class="question-title ${question.isRequired && !isChecked()
-              ? 'required'
-              : ''}"
-          >
+          <div class=${titleClasses}>
             ${question.questionTitle}
           </div>
         </label>
@@ -184,9 +185,13 @@ export class SurveyView extends MobxLitElement {
     const textAnswer =
       answer && answer.kind === SurveyQuestionKind.TEXT ? answer.answer : '';
 
+    const titleClasses = classMap({
+      'required': !isSurveyAnswerComplete(answer),
+    });
+
     return html`
       <div class="question">
-        <div class="question-title ${textAnswer === '' ? 'required' : ''}">
+        <div class=${titleClasses}>
           ${question.questionTitle}*
         </div>
         <pr-textarea
@@ -207,16 +212,15 @@ export class SurveyView extends MobxLitElement {
       image: isMultipleChoiceImageQuestion(question),
     });
 
+    const titleClasses = classMap({
+      'required': !isSurveyAnswerComplete(
+        this.participantAnswerService.getSurveyAnswer(this.stage?.id ?? '', question.id)
+      ),
+    });
+
     return html`
       <div class="radio-question">
-        <div
-          class="title ${this.participantAnswerService.getSurveyAnswer(
-            this.stage!.id,
-            question.id
-          )
-            ? ''
-            : 'required'}"
-        >
+        <div class=${titleClasses}>
           ${question.questionTitle}*
         </div>
         <div class=${questionWrapperClasses}>
@@ -303,16 +307,16 @@ export class SurveyView extends MobxLitElement {
     const scale = [...Array(question.upperValue + 1).keys()].slice(
       question.lowerValue
     );
+
+    const titleClasses = classMap({
+      'required': !isSurveyAnswerComplete(
+        this.participantAnswerService.getSurveyAnswer(this.stage?.id ?? '', question.id)
+      ),
+    });
+
     return html`
       <div class="question">
-        <div
-          class="question-title ${this.participantAnswerService.getSurveyAnswer(
-            this.stage!.id,
-            question.id
-          )
-            ? ''
-            : 'required'}"
-        >
+        <div class=${titleClasses}>
           ${question.questionTitle}*
         </div>
         <div class="scale labels">

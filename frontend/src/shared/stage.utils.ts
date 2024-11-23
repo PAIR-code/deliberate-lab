@@ -30,14 +30,21 @@ export function isSurveyComplete(
   const required = getRequiredSurveyQuestions(questions);
   for (const question of required) {
     const answer = answerMap[question.id];
-    if (
-      !answer ||
-      (answer.kind === SurveyQuestionKind.CHECK && !answer.isChecked) ||
-      (answer.kind === SurveyQuestionKind.TEXT && answer.answer.trim() === '')
-    ) {
+    if (!isSurveyAnswerComplete(answer)) {
       return false;
     }
   }
 
+  return true;
+}
+
+/** Checks whether given survey answer is complete. */
+export function isSurveyAnswerComplete(answer: SurveyAnswer|undefined) {
+  if (!answer ||
+    (answer.kind === SurveyQuestionKind.CHECK && !answer.isChecked) ||
+    (answer.kind === SurveyQuestionKind.TEXT && answer.answer.trim() === '')
+  ) {
+    return false;
+  }
   return true;
 }

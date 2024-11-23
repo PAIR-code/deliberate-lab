@@ -39,9 +39,6 @@
   gap: common.$spacing-medium; 
 }
 
-.question-title {
-}
-
 .slider-wrapper {
   @include common.flex-row-align-center;
   gap: common.$spacing-medium;
