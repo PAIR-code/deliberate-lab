@@ -6,7 +6,6 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
-import {ImageService} from '../../services/image.service';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 
@@ -34,7 +33,6 @@ export class RankingView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly cohortService = core.getService(CohortService);
-  private readonly imageService = core.getService(ImageService);
   private readonly participantAnswerService = core.getService(
     ParticipantAnswerService
   );
@@ -113,7 +111,7 @@ export class RankingView extends MobxLitElement {
 
       return html`
         <div class="img-wrapper">
-          <img src=${this.imageService.getImageSrc(item.imageId)} />
+          <img src=${item.imageId} />
         </div>
       `;
     };

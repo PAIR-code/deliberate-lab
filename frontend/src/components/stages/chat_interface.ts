@@ -14,8 +14,6 @@ import {customElement, property, state} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
-import {FirebaseService} from '../../services/firebase.service';
-import {ImageService} from '../../services/image.service';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 import {RouterService} from '../../services/router.service';
@@ -39,8 +37,6 @@ export class ChatInterface extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly cohortService = core.getService(CohortService);
-  private readonly firebaseService = core.getService(FirebaseService);
-  private readonly imageService = core.getService(ImageService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly participantAnswerService = core.getService(ParticipantAnswerService);
@@ -153,7 +149,7 @@ export class ChatInterface extends MobxLitElement {
 
         return html`
           <div class="img-wrapper">
-            <img src=${this.imageService.getImageSrc(item.imageId)} />
+            <img src=${item.imageId} />
           </div>
         `;
       };
