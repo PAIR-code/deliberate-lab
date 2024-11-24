@@ -122,10 +122,31 @@ export class ParticipantAnswerService extends Service {
     return answer.rankingList.length;
   }
 
+  getNumSurveyAnswers(stageId: string) {
+    return this.getSurveyAnswerIDs(stageId).length;
+  }
+
+  getSurveyAnswerMap(stageId: string) {
+    const answer = this.answerMap[stageId];
+    if (!answer || answer.kind !== StageKind.SURVEY) return {};
+    return answer.answerMap;
+  }
+
   getSurveyAnswerIDs(stageId: string) {
     const answer = this.answerMap[stageId];
     if (!answer || answer.kind !== StageKind.SURVEY) return [];
     return Object.keys(answer.answerMap);
+  }
+
+  getSurveyPerParticipantAnswerMap(stageId: string, participantId: string) {
+    const answer = this.answerMap[stageId];
+    if (
+      !answer || answer.kind !== StageKind.SURVEY_PER_PARTICIPANT ||
+      !answer.answerMap[participantId]
+    ) {
+      return {};
+    }
+    return answer.answerMap[participantId];
   }
 
   getSurveyPerParticipantAnswerIDs(stageId: string, participantId: string) {
@@ -137,10 +158,6 @@ export class ParticipantAnswerService extends Service {
       return [];
     }
     return Object.keys(answer.answerMap[participantId]);
-  }
- 
-  getNumSurveyAnswers(stageId: string) {
-    return this.getSurveyAnswerIDs(stageId).length;
   }
 
   updateChatInput(stageId: string, chatInput: string) {

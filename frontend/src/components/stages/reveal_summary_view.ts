@@ -1,7 +1,3 @@
-import '../progress/progress_stage_completed';
-
-import './stage_description';
-import './stage_footer';
 import './ranking_reveal_view';
 import './survey_reveal_view';
 
@@ -23,8 +19,8 @@ import {
 
 import {styles} from './reveal_view.scss';
 
-/** Reveal stage view for participants. */
-@customElement('reveal-view')
+/** Reveal stage summary view. */
+@customElement('reveal-summary-view')
 export class RevealView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -33,7 +29,6 @@ export class RevealView extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
 
   @property() stage: RevealStageConfig | null = null;
-  @property() renderSummaryView: boolean = false; // If true, render a minimized summary view.
 
   override render() {
     if (!this.stage) {
@@ -41,19 +36,9 @@ export class RevealView extends MobxLitElement {
     }
 
     return html`
-      ${this.renderSummaryView
-        ? ''
-        : html`<stage-description .stage=${this.stage}></stage-description>`}
       <div class="reveal-wrapper">
         ${this.stage.items.map((item) => this.renderItem(item))}
       </div>
-      ${this.renderSummaryView
-        ? ''
-        : html`<stage-footer>
-            ${this.stage.progress.showParticipantProgress
-              ? html`<progress-stage-completed></progress-stage-completed>`
-              : nothing}
-          </stage-footer>`}
     `;
   }
 
@@ -82,6 +67,6 @@ export class RevealView extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'reveal-view': RevealView;
+    'reveal-summary-view': RevealView;
   }
 }

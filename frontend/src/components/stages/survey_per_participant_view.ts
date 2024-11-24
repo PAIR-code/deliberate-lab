@@ -34,7 +34,6 @@ import {
 
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
-import {ImageService} from '../../services/image.service';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 
@@ -42,6 +41,9 @@ import {
   getParticipantName,
   getParticipantPronouns
 } from '../../shared/participant.utils';
+import {
+  isSurveyComplete
+} from '../../shared/stage.utils';
 
 import {styles} from './survey_view.scss';
 
@@ -51,7 +53,6 @@ export class SurveyView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly cohortService = core.getService(CohortService);
-  private readonly imageService = core.getService(ImageService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly participantAnswerService = core.getService(
     ParticipantAnswerService
@@ -62,25 +63,10 @@ export class SurveyView extends MobxLitElement {
   @property() stage: SurveyPerParticipantStageConfig | undefined = undefined;
   @property() renderSummaryView: boolean = false; // If true, render a minimized summary view.
 
-  private getRequiredQuestions() {
-    return (
-      this.stage!.questions.filter(
-        (q) =>
-          q.kind !== SurveyQuestionKind.CHECK ||
-          (q.kind === SurveyQuestionKind.CHECK && q.isRequired)
-      ).map((q) => q.id) ?? []
-    );
-  }
-
   private getParticipants() {
     if (!this.stage) return [];
 
-    const allParticipants = this.cohortService
-      .getAllParticipants()
-      .filter(
-        // Filter only to active participants.
-        (profile) => profile.currentStatus === ParticipantStatus.IN_PROGRESS
-      );
+    const allParticipants = this.cohortService.activeParticipants;
     if (this.stage.enableSelfSurvey) {
       return allParticipants;
     }
@@ -119,15 +105,10 @@ export class SurveyView extends MobxLitElement {
       const participants = this.getParticipants();
 
       for (const participant of participants) {
-        const answeredQuestionIds = new Set(
-          this.participantAnswerService.getSurveyPerParticipantAnswerIDs(
-            this.stage.id, participant.publicId
-          )
+        const answerMap = this.participantAnswerService.getSurveyPerParticipantAnswerMap(
+          this.stage.id, participant.publicId
         );
-
-        if (!this.getRequiredQuestions().every((id) =>
-          answeredQuestionIds.has(id)
-        )) {
+        if (!isSurveyComplete(this.stage.questions, answerMap)) {
           return false;
         }
       }
@@ -137,37 +118,6 @@ export class SurveyView extends MobxLitElement {
 
     const saveAnswers = async () => {
       if (!this.stage) return;
-
-      // Populate default answers for optional questions.
-      const requiredQuestionIds = this.getRequiredQuestions();
-      const optionalQuestions = this.stage.questions.filter(
-        (q) => !requiredQuestionIds.includes(q.id)
-      );
-
-      optionalQuestions.forEach((question) => {
-        if (!this.stage) return;
-
-        const participants = this.getParticipants();
-        for (const participant of participants) {
-          const answeredQuestionIDs =
-            this.participantAnswerService.getSurveyPerParticipantAnswerIDs(
-              this.stage.id, participant.publicId
-            );
-
-          if (!answeredQuestionIDs.includes(question.id)) {
-            const answer: CheckSurveyAnswer = {
-              id: question.id,
-              kind: SurveyQuestionKind.CHECK,
-              isChecked: false,
-            };
-            this.participantAnswerService.updateSurveyPerParticipantAnswer(
-              this.stage!.id,
-              answer,
-              participant.publicId
-            );
-          }
-        }
-      });
 
       // Save all answers for this stage
       await this.participantAnswerService.saveSurveyPerParticipantAnswers(this.stage.id);
@@ -388,7 +338,7 @@ export class SurveyView extends MobxLitElement {
       return html`
         <div class=${classes} @click=${handleMultipleChoiceClick}>
           <div class="img-wrapper">
-            <img src=${this.imageService.getImageSrc(choice.imageId)} />
+            <img src=${choice.imageId} />
           </div>
           <div class="radio-button">
             <md-radio

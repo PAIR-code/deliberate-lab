@@ -110,7 +110,7 @@ export const LAS_ITEMS: Record<string, LASItem> = {
 };
 
 export function getLASItemImageId(itemId: string) {
-  return `images/las/${itemId}.jpg`;
+  return `https://raw.githubusercontent.com/PAIR-code/deliberate-lab/refs/heads/main/frontend/assets/lost_at_sea/${itemId}.jpg`;
 }
 
 export const LAS_ITEM_MULTIPLE_CHOICE_QUESTION_TITLE =

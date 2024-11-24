@@ -1,6 +1,8 @@
 import {
   CohortConfig,
-  ParticipantProfile
+  ParticipantProfile,
+  RankingStageConfig,
+  RankingType
 } from '@deliberation-lab/utils';
 import {
   isObsoleteParticipant
@@ -86,4 +88,23 @@ export function hasMinParticipantsInCohort(
   ).length;
 
   return numParticipants >= Number(cohort.participantConfig.minParticipantsPerCohort);
+}
+
+/** Given cohort participants, return list of ranking items. */
+export function getCohortRankingItems(
+  participants: ParticipantProfile[],
+  currentParticipantPublicId: string,
+  stage: RankingStageConfig,
+) {
+  if (stage.rankingType === RankingType.ITEMS) {
+    return stage.rankingItems;
+  }
+
+  if (stage.enableSelfVoting) {
+    return participants;
+  }
+
+  return participants.filter(
+    profile => profile.publicId !== currentParticipantPublicId
+  );
 }

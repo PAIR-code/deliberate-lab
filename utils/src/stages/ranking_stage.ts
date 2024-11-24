@@ -43,7 +43,7 @@ export interface ParticipantRankingStage extends BaseRankingStage {
 
 export interface RankingItem {
   id: string;
-  imageId: string; // or empty if no image provided
+  imageId: string; // image URL, or empty if no image provided
   text: string;
 }
 
