@@ -20,6 +20,7 @@ import '../stages/payout_summary_view';
 import '../stages/reveal_summary_view';
 import '../stages/ranking_summary_view';
 import '../stages/survey_summary_view';
+import '../stages/survey_per_participant_summary_view';
 
 import {styles} from './profile_preview.scss';
 
@@ -130,6 +131,12 @@ export class Preview extends MobxLitElement {
             <survey-summary-view .stage=${stage}></survey-summary-view>
           `;
           break;
+        case StageKind.SURVEY_PER_PARTICIPANT:
+          stageHtml = html`
+            <survey-per-participant-summary-view .stage=${stage}>
+            </survey-per-participant-summary-view>
+          `;
+          break;
         default:
           return nothing;
       }
@@ -146,10 +153,11 @@ export class Preview extends MobxLitElement {
     };
 
     const stages = this.experimentService.experiment?.stageIds ?? [];
-    return stages.length
-      ? html`<h3>Stage responses</h3>
-          ${stages.map(stageId => renderStageData(stageId))}`
-      : nothing;
+    if (stages.length === 0) return nothing;
+    return html`
+      <h3>Stage responses</h3>
+      ${stages.map(stageId => renderStageData(stageId))}
+    `;
   }
 
   private renderTimestamp(label: string, value: UnifiedTimestamp | null) {
