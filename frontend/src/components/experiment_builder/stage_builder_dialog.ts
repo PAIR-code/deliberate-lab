@@ -33,12 +33,16 @@ import {
   GCE_METADATA,
   getGCEStageConfigs,
 } from '../../shared/games/gift_card_exchange';
-
-import {styles} from './stage_builder_dialog.scss';
+import {
+  CHIP_GAME_METADATA,
+  getChipNegotiationStageConfigs,
+} from '../../shared/games/chip_negotiation';
 import {
   RTV_METADATA,
   getRTVStageConfigs,
 } from '../../shared/games/reality_tv_chat';
+
+import {styles} from './stage_builder_dialog.scss';
 
 /** Stage builder dialog */
 @customElement('stage-builder-dialog')
@@ -115,6 +119,7 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()} ${this.renderNegotiationCard()}
         ${this.renderRealityTVCard()}
+        ${this.renderChipNegotiationCard()}
       </div>
     `;
   }
@@ -186,6 +191,21 @@ export class StageBuilderDialog extends MobxLitElement {
         <div class="title">📺 Reality TV Discussion</div>
         <div>
           A conversation between multiple agents who discuss reality TV shows.
+        </div>
+      </div>
+    `;
+  }
+
+  private renderChipNegotiationCard() {
+    const addGame = () => {
+      this.addGame(CHIP_GAME_METADATA, getChipNegotiationStageConfigs());
+    };
+
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">🪙 Chip Negotiation</div>
+        <div>
+          A negotiation scenario where participants trade chips.
         </div>
       </div>
     `;
