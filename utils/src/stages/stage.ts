@@ -58,6 +58,7 @@ export enum StageGame {
   LAS = 'las', // Lost at Sea
   GCE = 'gce', // Gift Card Exchange
   RTV = 'rtv', // Reality TV Debate.
+  CHP = 'chp', // Chip Negotiation
 }
 
 /**
