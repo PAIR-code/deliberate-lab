@@ -84,6 +84,25 @@ export function generateId(isSequential: boolean = false): string {
   return uuidv4();
 }
 
+/** Await typing delay (e.g., for chat messages). */
+export async function awaitTypingDelay(message: string): Promise<void> {
+  const delay = Math.min(getTypingDelay(message), 30 * 1000); // Cap delay at 30 seconds.
+  console.log(`Waiting ${(delay / 1000).toFixed(2)} seconds to simulate delay.`);
+  return new Promise((resolve) => setTimeout(resolve, delay));
+}
+
+/** Calculate typing delay (e.g., for chat messages). */
+export function getTypingDelay(message: string): number {
+  // 40 WPM = 300 ms per character.
+  const averageTypingSpeed = 75; // 180 WPM.
+  const randomnessFactor = 0.5;
+
+  const baseDelay = message.length * averageTypingSpeed;
+  const randomMultiplier = 1 + (Math.random() * randomnessFactor - randomnessFactor / 2);
+
+  return Math.round(baseDelay * randomMultiplier);
+}
+
 /** Create MetadataConfig. */
 export function createMetadataConfig(
   config: Partial<MetadataConfig> = {},
