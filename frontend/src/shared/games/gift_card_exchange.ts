@@ -1,5 +1,5 @@
-import { ElectionStrategy } from '@deliberation-lab/utils';
 import {
+  ElectionStrategy,
   Experiment,
   MultipleChoiceSurveyQuestion,
   RankingItemData,
@@ -83,19 +83,19 @@ export function getGCEStageConfigs(): StageConfig[] {
   stages.push(GCE_FINAL_SURVEY_STAGE);
   return stages;
 }
-  
+
 // ****************************************************************************
 // Terms of Service stage
 // ****************************************************************************
 const GCE_TOS_LINES = [
   'Thank you for participating in this study.',
 ];
-  
+
 const GCE_TOS_STAGE = createTOSStage({
   game: StageGame.GCE,
   tosLines: GCE_TOS_LINES,
 });
- 
+
 // ****************************************************************************
 // Intro info stage
 // ****************************************************************************
@@ -122,7 +122,7 @@ const GCE_INTRO_STAGE = createInfoStage({
 const GCE_PROFILE_STAGE = createProfileStage({
   game: StageGame.GCE,
 });
-  
+
 // ****************************************************************************
 // Part 1 Instructions info stage
 // ****************************************************************************
@@ -140,7 +140,7 @@ const GCE_PART_1_INSTRUCTIONS_STAGE = createInfoStage({
   name: 'Ranking instructions',
   infoLines: GCE_PART_1_INSTRUCTIONS_INFO_LINES,
 });
- 
+
 // ****************************************************************************
 // Part 1: Ranking stage 
 // ****************************************************************************
@@ -158,11 +158,9 @@ const GCE_PART_1_RANKING_STAGE = createRankingStage({
   rankingItems: GIFT_CARDS,
 });
 
-
 // ****************************************************************************
 // Part 2: Chat stage
 // ****************************************************************************
-  
 export const GCE_CHAT_INSTRUCTIONS = [
   'Now you’re going to chat with other participants about the gift card allocations.',
   'Please select different pairs of gift cards to discuss; otherwise, you will receive a random pair.',
@@ -171,7 +169,7 @@ export const GCE_CHAT_INSTRUCTIONS = [
   'Throughout the experiment, you will engage in multiple bargaining sessions (specifically, five different bargaining games) with different groups. One of the pairs of gift cards you negotiate for will be randomly given to you based on the outcomes of these discussions.',
   'Please communicate effectively with your group to ensure everyone is satisfied with the final allocations. Click "Next" to proceed.',
 ];
-  
+
 export  const GCE_PART_2_INSTRUCTIONS_STAGE = createInfoStage({
   game: StageGame.GCE,
   name: 'Chat instructions',
@@ -181,7 +179,6 @@ export  const GCE_PART_2_INSTRUCTIONS_STAGE = createInfoStage({
 // ****************************************************************************
 // Part 3: Now rank the items 
 // ****************************************************************************
-
 const SELECTION_ID = 'gift_card_selection';
 const GCE_SELECTION_STAGE = createSurveyStage({
   id: SELECTION_ID,
@@ -204,11 +201,10 @@ export const GCE_REVEAL_STAGE = createRevealStage({
   }),
   items: [createSurveyRevealItem({ id: SELECTION_ID })],
 });
-    
+
 // ****************************************************************************
 // Part 4: Opportunity to trade 
 // ****************************************************************************
-
 
 const TRADE_ID = 'gift_card_trade';
 const GCE_TRADE_STAGE = createSurveyStage({
@@ -232,7 +228,7 @@ export const GCE_REVEAL2_STAGE = createRevealStage({
   }),
   items: [createSurveyRevealItem({ id: TRADE_ID })],
 });
- 
+
 // ****************************************************************************
 // Final survey stage
 // ****************************************************************************
