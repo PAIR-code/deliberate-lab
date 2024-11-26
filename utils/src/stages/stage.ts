@@ -5,6 +5,11 @@ import {
   createChatStagePublicData,
 } from './chat_stage';
 import {
+  ChipStageConfig,
+  ChipStageParticipantAnswer,
+  ChipStagePublicData,
+} from './chip_stage';
+import {
   RankingStageConfig,
   RankingStageParticipantAnswer,
   RankingStagePublicData,
@@ -38,6 +43,7 @@ export enum StageKind {
   TOS = 'tos', // terms of service
   PROFILE = 'profile', // set profile
   CHAT = 'chat', // group chat
+  CHIP = 'chip', // "chip" negotiation
   RANKING = 'ranking',
   PAYOUT = 'payout',
   REVEAL = 'reveal',
@@ -83,6 +89,7 @@ export interface StageProgressConfig {
 
 export type StageConfig =
   | ChatStageConfig
+  | ChipStageConfig
   | RankingStageConfig
   | InfoStageConfig
   | PayoutStageConfig
@@ -107,6 +114,7 @@ export interface BaseStageParticipantAnswer {
 
 export type StageParticipantAnswer =
  | ChatStageParticipantAnswer
+ | ChipStageParticipantAnswer
  | RankingStageParticipantAnswer
  | SurveyStageParticipantAnswer
  | SurveyPerParticipantStageParticipantAnswer;
@@ -126,6 +134,7 @@ export interface BaseStagePublicData {
 
 export type StagePublicData =
   | ChatStagePublicData
+  | ChipStagePublicData
   | RankingStagePublicData
   | SurveyStagePublicData;
 
