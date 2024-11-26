@@ -42,9 +42,9 @@ export const GIFT_CARDS_LIST_DESCRIPTION = GIFT_CARDS.map(
 // Experiment config
 // ****************************************************************************
 export const GCE_METADATA = createMetadataConfig({
-  name: 'Gift Card Exchange Experiment',
+  name: 'Gift Card Exchange',
   publicName: 'Gift Card Exchange',
-  description: 'A trading scenario involving gift cards.'
+  description: 'A negotiation scenario where participants deliberate together to optimally allocate a bundle of gift cards.'
 });
 
 export function getGCEStageConfigs(): StageConfig[] {

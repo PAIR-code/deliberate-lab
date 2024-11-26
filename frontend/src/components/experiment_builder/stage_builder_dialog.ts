@@ -157,11 +157,8 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addGame}>
-        <div class="title">🌊 Lost at Sea</div>
-        <div>
-          An election scenario where participants deliberate together to elect a
-          leader responsible for completing a survival task.
-        </div>
+        <div class="title">🌊 ${LAS_METADATA.name}</div>
+        <div>${LAS_METADATA.description}<div>
       </div>
     `;
   }
@@ -173,11 +170,8 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addGame}>
-        <div class="title">💵 Gift Card Exchange</div>
-        <div>
-          A negotiation scenario where participants deliberate together to
-          optimally allocate a bundle of gift cards.
-        </div>
+        <div class="title">💵 ${GCE_METADATA.name}</div>
+        <div>${GCE_METADATA.description}</div>
       </div>
     `;
   }
@@ -188,10 +182,8 @@ export class StageBuilderDialog extends MobxLitElement {
     };
     return html`
       <div class="card" @click=${addGame}>
-        <div class="title">📺 Reality TV Discussion</div>
-        <div>
-          A conversation between multiple agents who discuss reality TV shows.
-        </div>
+        <div class="title">📺 ${RTV_METADATA.name}</div>
+        <div>${RTV_METADATA.description}</div>
       </div>
     `;
   }
@@ -203,10 +195,8 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addGame}>
-        <div class="title">🪙 Chip Negotiation</div>
-        <div>
-          A negotiation scenario where participants trade chips.
-        </div>
+        <div class="title">🪙 ${CHIP_GAME_METADATA.name}</div>
+        <div>${CHIP_GAME_METADATA.description}</div>
       </div>
     `;
   }

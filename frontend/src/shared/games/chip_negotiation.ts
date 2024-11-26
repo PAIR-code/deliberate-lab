@@ -17,7 +17,7 @@ import {
 // Experiment config
 // ****************************************************************************
 export const CHIP_GAME_METADATA = createMetadataConfig({
-  name: 'Chip Negotiation Experiment',
+  name: 'Chip Negotiation',
   publicName: 'Chip Negotiation',
   description: 'A trading scenario involving chips of different values',
 });
