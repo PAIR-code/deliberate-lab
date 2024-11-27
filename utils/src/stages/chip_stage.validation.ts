@@ -36,3 +36,29 @@ export const ChipStageConfigData = Type.Object(
   },
   strict
 );
+
+/** Chip offer data. */
+export const ChipOfferData = Type.Object(
+  {
+    id: Type.String(),
+    round: Type.Number(),
+    buy: Type.Record(Type.String(), Type.Number()),
+    sell: Type.Record(Type.String(), Type.Number()),
+  },
+  strict
+);
+
+/** sendChipOffer endpoint data validation. */
+export const SendChipOfferData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    participantPrivateId: Type.String({ minLength: 1 }),
+    participantPublicId: Type.String({ minLength: 1 }),
+    cohortId: Type.String({ minLength: 1 }),
+    stageId: Type.String({ minLength: 1 }),
+    chipOffer: ChipOfferData,
+  },
+  strict
+);
+
+export type SendChipOfferData = Static<typeof SendChipOfferData>;

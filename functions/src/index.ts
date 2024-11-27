@@ -13,6 +13,8 @@ export * from './participant.triggers';
 export * from './stages/chat.endpoints';
 export * from './stages/chat.triggers';
 
+export * from './stages/chip.endpoints';
+
 export * from './stages/ranking.endpoints';
 
 export * from './stages/survey.endpoints';

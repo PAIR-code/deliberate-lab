@@ -81,6 +81,7 @@ export interface ChipLogEntry {
 }
 
 export enum ChipOfferStatus {
+  BLOCKED = 'blocked', // offer could not be made due to existing pending offer
   PENDING = 'proposed', // offer made
   REJECTED = 'rejected', // offer rejected (no transaction)
   ACCEPTED = 'transaction', // offer accepted (transaction made)
