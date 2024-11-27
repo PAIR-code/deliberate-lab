@@ -14,6 +14,7 @@ export * from './stages/chat.endpoints';
 export * from './stages/chat.triggers';
 
 export * from './stages/chip.endpoints';
+export * from './stages/chip.triggers';
 
 export * from './stages/ranking.endpoints';
 
