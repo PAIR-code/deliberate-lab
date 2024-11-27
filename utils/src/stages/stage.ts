@@ -8,6 +8,7 @@ import {
   ChipStageConfig,
   ChipStageParticipantAnswer,
   ChipStagePublicData,
+  createChipStagePublicData,
 } from './chip_stage';
 import {
   RankingStageConfig,
@@ -176,7 +177,10 @@ export function createPublicDataFromStageConfigs(stages: StageConfig[]) {
   stages.forEach((stage) => {
     switch (stage.kind) {
       case StageKind.CHAT:
-        publicData.push(createChatStagePublicData(stage));
+        publicData.push(createChatStagePublicData(stage.id));
+        break;
+      case StageKind.CHIP:
+        publicData.push(createChipStagePublicData(stage.id));
         break;
       case StageKind.RANKING:
         publicData.push(createRankingStagePublicData(stage.id));

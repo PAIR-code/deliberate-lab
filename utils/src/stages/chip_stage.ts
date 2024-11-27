@@ -45,7 +45,7 @@ export interface ChipItem {
 export interface ChipStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.CHIP;
   chipMap: Record<string, number>; // chip ID to quantity left
-  pendingOffer: ChipOffer; // offer waiting to be processed (or null if none)
+  pendingOffer: ChipOffer|null; // offer waiting to be processed (or null if none)
 }
 
 /** Chip offer. */
@@ -103,5 +103,30 @@ export function createChipStage(
     progress: config.progress ?? createStageProgressConfig({ waitForAllParticipants: true }),
     isPrivateOffers: config.isPrivateOffers ?? true,
     chips: config.chips ?? [],
+  };
+}
+
+/** Create chip stage participant answer. */
+export function createChipStageParticipantAnswer(
+  id: string, // stage ID
+  chipMap: Record<string, number> // chip ID to quantity
+): ChipStageParticipantAnswer {
+  return {
+    id,
+    kind: StageKind.CHIP,
+    chipMap,
+    pendingOffer: null
+  };
+}
+
+/** Create chip stage public data. */
+export function createChipStagePublicData(
+  id: string, // stage ID
+): ChipStagePublicData {
+  return {
+    id,
+    kind: StageKind.CHIP,
+    currentRound: 0,
+    participantOfferMap: {}
   };
 }
