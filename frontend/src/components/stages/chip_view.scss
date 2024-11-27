@@ -1,0 +1,31 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  height: 100%;
+  overflow: auto;
+}
+
+.panel-wrapper {
+  @include common.flex-row;
+  flex-grow: 1;
+}
+
+.panel {
+  @include common.flex-column;
+  flex-grow: 1;
+  gap: common.$spacing-xl;
+  max-width: 50%;
+  padding: common.$main-content-padding;
+
+  &.log {
+    border-left: 1px solid var(--md-sys-color-outline-variant);
+  }
+}
+
+.status {
+  background: var(--md-sys-color-surface);
+  border-radius: common.$spacing-medium;
+  padding: common.$spacing-medium;
+}
