@@ -213,7 +213,8 @@ export class ParticipantPreviewer extends MobxLitElement {
         `;
       case StageKind.CHIP:
         return html`
-          <chip-participant-view .stage=${stage}></chip-participant-view>
+          <chip-participant-view .stage=${stage} .answer=${answer}>
+          </chip-participant-view>
         `;
       case StageKind.RANKING:
         return html`

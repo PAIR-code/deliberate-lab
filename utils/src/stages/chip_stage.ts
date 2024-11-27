@@ -107,6 +107,18 @@ export function createChipStage(
   };
 }
 
+/** Create chip offer. */
+export function createChipOffer(
+  config: Partial<ChipOffer> = {}
+): ChipOffer {
+  return {
+    id: config.id ?? generateId(),
+    round: config.round ?? 0,
+    buy: config.buy ?? {},
+    sell: config.sell ?? {},
+  };
+}
+
 /** Create chip stage participant answer. */
 export function createChipStageParticipantAnswer(
   id: string, // stage ID

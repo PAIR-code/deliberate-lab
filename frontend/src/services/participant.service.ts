@@ -1,5 +1,6 @@
 import {
   ChatStageParticipantAnswer,
+  ChipOffer,
   CreateChatMessageData,
   RankingItem,
   ParticipantChatMessage,
@@ -36,6 +37,7 @@ import {Service} from './service';
 
 import {
   createChatMessageCallable,
+  sendChipOfferCallable,
   updateParticipantCallable,
   updateChatStageParticipantAnswerCallable,
   updateSurveyPerParticipantStageParticipantAnswerCallable,
@@ -636,6 +638,28 @@ export class ParticipantService extends Service {
           participantPrivateId: this.profile.privateId,
           stageId,
           rankingList,
+        }
+      );
+    }
+    return response;
+  }
+
+  /** Send participant chip offer. */
+  async sendParticipantChipOffer(
+    stageId: string,
+    chipOffer: ChipOffer
+  ) {
+    let response = {};
+    if (this.experimentId && this.profile) {
+      response = await sendChipOfferCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          participantPublicId: this.profile.publicId,
+          participantPrivateId: this.profile.privateId,
+          stageId,
+          chipOffer
         }
       );
     }

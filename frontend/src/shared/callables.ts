@@ -8,6 +8,7 @@ import {
   ExperimentDeletionData,
   ExperimentDownloadResponse,
   ParticipantProfileExtendedData,
+  SendChipOfferData,
   SimpleResponse,
   UpdateChatMediatorsData,
   UpdateChatStageParticipantAnswerData,
@@ -105,5 +106,13 @@ export const updateRankingStageParticipantAnswerCallable = async(
 /** Generic endpoint to write chat message. */
 export const createChatMessageCallable = async(functions: Functions, config: CreateChatMessageData) => {
   const { data } = await httpsCallable<CreateChatMessageData, CreationResponse>(functions, 'createChatMessage')(config);
+  return data;
+}
+
+/** Generic endpoint for sending chip negotiation offer. */
+export const sendChipOfferCallable = async(
+  functions: Functions, config: SendChipOfferData
+) => {
+  const { data } = await httpsCallable<SendChipOfferData, CreationResponse>(functions, 'sendChipOffer')(config);
   return data;
 }

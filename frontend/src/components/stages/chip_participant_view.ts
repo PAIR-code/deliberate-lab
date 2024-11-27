@@ -8,7 +8,13 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
-import {ChipStageConfig} from '@deliberation-lab/utils';
+import {core} from '../../core/core';
+import {ParticipantAnswerService} from '../../services/participant.answer';
+
+import {
+  ChipStageConfig,
+  ChipStageParticipantAnswer,
+} from '@deliberation-lab/utils';
 
 import {styles} from './chip_view.scss';
 
@@ -17,7 +23,12 @@ import {styles} from './chip_view.scss';
 export class ChipView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly participantAnswerService = core.getService(
+    ParticipantAnswerService
+  );
+
   @property() stage: ChipStageConfig | null = null;
+  @property() answer: ChipStageParticipantAnswer | null = null;
 
   override render() {
     if (!this.stage) {
@@ -41,12 +52,12 @@ export class ChipView extends MobxLitElement {
     if (!this.stage) return nothing;
 
     const isOfferPending = () => {
-      // TODO: Return true if participant has a pending offer
-      return true;
+      return this.answer?.pendingOffer;
     };
 
-    const sendOffer = () => {
-      // TODO: Send ChipOffer
+    const sendOffer = async () => {
+      if (!this.stage) return;
+      await this.participantAnswerService.sendChipOffer(this.stage.id);
     };
 
     return html`
@@ -54,7 +65,7 @@ export class ChipView extends MobxLitElement {
         <div class="status">
           You have
           ${this.stage.chips.map(
-              chip => `${chip.quantity} ${chip.name} chips`
+              chip => `${this.answer?.chipMap[chip.id] ?? 0} ${chip.name} chips`
             ).join(', ')}
         </div>
         <pr-button
