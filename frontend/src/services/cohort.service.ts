@@ -21,6 +21,7 @@ import {
   ChatDiscussion,
   ChatMessage,
   ChatStageConfig,
+  ChipLogEntry,
   CohortConfig,
   ParticipantProfile,
   ParticipantProfileExtended,
@@ -73,6 +74,8 @@ export class CohortService extends Service {
   @observable chatMap: Record<string, ChatMessage[]> = {};
   // Stage ID to map of discussion ID to list of chat messages
   @observable chatDiscussionMap: Record<string, Record<string, ChatMessage[]>> = {};
+  // Stage ID to list of chip negotiation log entries
+  @observable chipLogMap: Record<string, ChipLogEntry[]> = {};
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -80,6 +83,7 @@ export class CohortService extends Service {
   @observable isStageDataLoading = false;
   @observable isCohortConfigLoading = false;
   @observable isChatLoading = false;
+  @observable isChipLoading = false;
 
   @computed get isLoading() {
     return (
@@ -92,6 +96,7 @@ export class CohortService extends Service {
     this.isParticipantsLoading = value;
     this.isStageDataLoading = value;
     this.isChatLoading = value;
+    this.isChipLoading = value;
   }
 
   getAllParticipants(
@@ -276,6 +281,10 @@ export class CohortService extends Service {
     return getLatestDiscussion();
   }
 
+  getChipLogEntries(stageId: string) {
+    return this.chipLogMap[stageId] ?? [];
+  }
+
   async loadCohortData(experimentId: string, id: string) {
     if (id === this.cohortId) {
       return;
@@ -289,6 +298,7 @@ export class CohortService extends Service {
     // Subscribe to data
     this.loadPublicStageData();
     this.loadChatMessages();
+    this.loadChipLogEntries();
     this.loadParticipantProfiles();
   }
 
@@ -320,6 +330,57 @@ export class CohortService extends Service {
         }
       )
     );
+  }
+
+  /** Subscribe to chip negotiation log entries for each stage ID. */
+  private async loadChipLogEntries() {
+    if (!this.experimentId || !this.cohortId) return;
+
+    // Get stageIds from experiment doc
+    // (as they may not have loaded in experiment service yet)
+    const experimentRef = doc(
+      this.sp.firebaseService.firestore, 'experiments', this.experimentId
+    );
+    const experimentSnap = await getDoc(experimentRef);
+    if (!experimentSnap.exists()) return;
+    const experimentData = experimentSnap.data();
+    if (experimentData?.stageIds.length === 0) return;
+
+    this.isChipLoading = true;
+    for (const stageId of experimentData.stageIds) {
+      this.unsubscribe.push(
+        onSnapshot(
+          query(
+            collection(
+              this.sp.firebaseService.firestore,
+              'experiments',
+              this.experimentId,
+              'cohorts',
+              this.cohortId,
+              'publicStageData',
+              stageId,
+              'logs',
+            ),
+            orderBy('timestamp', 'asc'),
+          ),
+          (snapshot) => {
+            let changedDocs = snapshot.docChanges().map((change) => change.doc);
+            if (changedDocs.length === 0) {
+              changedDocs = snapshot.docs;
+            }
+
+            changedDocs.forEach((doc) => {
+              if (!this.chipLogMap[stageId]) {
+                this.chipLogMap[stageId] = [];
+              }
+              const chipLogEntry = doc.data() as ChipLogEntry;
+              this.chipLogMap[stageId].push(chipLogEntry);
+            });
+            this.isChipLoading = false;
+          }
+        )
+      );
+    }
   }
 
   /** Subscribe to chat message collections for each stage ID. */
@@ -444,6 +505,7 @@ export class CohortService extends Service {
     this.participantMap = {};
     this.chatMap = {};
     this.chatDiscussionMap = {};
+    this.chipLogMap = {};
     this.transferParticipantMap = {};
     this.stagePublicDataMap = {};
   }

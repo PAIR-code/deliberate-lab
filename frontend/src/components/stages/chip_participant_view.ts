@@ -9,12 +9,17 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
+import {CohortService} from '../../services/cohort.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 
 import {
+  ChipLogEntry,
   ChipStageConfig,
   ChipStageParticipantAnswer,
 } from '@deliberation-lab/utils';
+import {
+  convertUnifiedTimestampToDate
+} from '../../shared/utils';
 
 import {styles} from './chip_view.scss';
 
@@ -23,6 +28,7 @@ import {styles} from './chip_view.scss';
 export class ChipView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly cohortService = core.getService(CohortService);
   private readonly participantAnswerService = core.getService(
     ParticipantAnswerService
   );
@@ -81,9 +87,30 @@ export class ChipView extends MobxLitElement {
   private renderLogsPanel() {
     if (!this.stage) return nothing;
 
+    const logs = this.cohortService.getChipLogEntries(this.stage.id);
+
+    if (logs.length === 0) {
+      return html`
+        <div class="panel log">No logs yet</div>
+      `;
+    }
     return html`
       <div class="panel log">
-        <div>Chip transaction logs coming soon</div>
+        ${logs.map(entry => this.renderLogEntry(entry))}
+      </div>
+    `;
+  }
+
+  private renderLogEntry(entry: ChipLogEntry) {
+    return html`
+      <div class="log-entry">
+        <div class="subtitle">
+          ${convertUnifiedTimestampToDate(entry.timestamp)}
+        </div>
+        <div>
+          ${entry.participantId} offered to buy
+          ${JSON.stringify(entry.offer.buy)} for ${JSON.stringify(entry.offer.sell)}
+        </div>
       </div>
     `;
   }

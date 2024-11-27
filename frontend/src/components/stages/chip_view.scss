@@ -29,3 +29,14 @@
   border-radius: common.$spacing-medium;
   padding: common.$spacing-medium;
 }
+
+.log-entry {
+  @include common.flex-column;
+  border-left: 2px solid var(--md-sys-color-secondary);
+  padding-left: common.$spacing-large;
+}
+
+.subtitle {
+  @include typescale.label-small;
+  color: var(--md-sys-color-secondary);
+}
