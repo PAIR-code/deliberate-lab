@@ -24,33 +24,11 @@ export interface MediatorMessage {
   message: string;
 }
 
-// Function to get the chat stage configuration based on the event.
-async function getChatStage(event: any): Promise<ChatStageConfig | null> {
-  const stageRef = app
-    .firestore()
-    .doc(`experiments/${event.params.experimentId}/stages/${event.params.stageId}`);
+// ************************************************************************* //
+// TRIGGER FUNCTIONS                                                         //
+// ************************************************************************* //
 
-  const stageDoc = await stageRef.get();
-  if (!stageDoc.exists) return null; // Return null if the stage doesn't exist.
-
-  return stageDoc.data() as ChatStageConfig; // Return the stage data.
-}
-
-// Function to get the public data for the chat stage.
-async function getChatStagePublicData(event: any): Promise<ChatStagePublicData | null> {
-  const publicStageRef = app
-    .firestore()
-    .doc(
-      `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
-    );
-
-  const publicStageDoc = await publicStageRef.get();
-  if (!publicStageDoc.exists) return null; // Return null if the public stage data doesn't exist.
-
-  return publicStageDoc.data() as ChatStagePublicData; // Return the public stage data.
-}
-
-// Function to start tracking elapsed time when a chat is created
+/** When a chat message is created, start tracking elapsed time. */
 export const startTimeElapsed = onDocumentCreated(
   'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}',
   async (event) => {
@@ -78,32 +56,10 @@ export const startTimeElapsed = onDocumentCreated(
   },
 );
 
-// Checks whether the chat has ended, returning true if ending chat.
-async function hasEndedChat(
-  event: any,
-  stage: ChatStageConfig | null,
-  stageData: ChatStagePublicData | null,
-): Promise<boolean> {
-  const chatStage = stage || (await getChatStage(event));
-  const publicStageData = stageData || (await getChatStagePublicData(event));
-  if (!chatStage || !publicStageData || !chatStage.timeLimitInMinutes) return false;
-
-  const elapsedMinutes = getTimeElapsed(publicStageData.discussionStartTimestamp!, 'm');
-
-  // Check if the elapsed time has reached or exceeded the time limit
-  if (elapsedMinutes >= chatStage.timeLimitInMinutes) {
-    await app
-      .firestore()
-      .doc(
-        `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
-      )
-      .update({ discussionEndTimestamp: Timestamp.now() });
-    return true; // Indicate that the chat has ended.
-  }
-  return false;
-}
-
-// Function to update elapsed time and potentially end the discussion.
+/**
+  * When chat public stage data is updated, update elapsed time
+  * and potentially end the discussion.
+  */
 export const updateTimeElapsed = onDocumentUpdated(
   {
     document: 'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/',
@@ -278,3 +234,58 @@ export const createMediatorMessage = onDocumentCreated(
     });
   },
 );
+
+// ************************************************************************* //
+// HELPER FUNCTIONS                                                          //
+// ************************************************************************* //
+
+/** Get the chat stage configuration based on the event. */
+async function getChatStage(event: any): Promise<ChatStageConfig | null> {
+  const stageRef = app
+    .firestore()
+    .doc(`experiments/${event.params.experimentId}/stages/${event.params.stageId}`);
+
+  const stageDoc = await stageRef.get();
+  if (!stageDoc.exists) return null; // Return null if the stage doesn't exist.
+
+  return stageDoc.data() as ChatStageConfig; // Return the stage data.
+}
+
+/** Get public data for the given chat stage. */
+async function getChatStagePublicData(event: any): Promise<ChatStagePublicData | null> {
+  const publicStageRef = app
+    .firestore()
+    .doc(
+      `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
+    );
+
+  const publicStageDoc = await publicStageRef.get();
+  if (!publicStageDoc.exists) return null; // Return null if the public stage data doesn't exist.
+
+  return publicStageDoc.data() as ChatStagePublicData; // Return the public stage data.
+}
+
+/** Checks whether the chat has ended, returning true if ending chat. */
+async function hasEndedChat(
+  event: any,
+  stage: ChatStageConfig | null,
+  stageData: ChatStagePublicData | null,
+): Promise<boolean> {
+  const chatStage = stage || (await getChatStage(event));
+  const publicStageData = stageData || (await getChatStagePublicData(event));
+  if (!chatStage || !publicStageData || !chatStage.timeLimitInMinutes) return false;
+
+  const elapsedMinutes = getTimeElapsed(publicStageData.discussionStartTimestamp!, 'm');
+
+  // Check if the elapsed time has reached or exceeded the time limit
+  if (elapsedMinutes >= chatStage.timeLimitInMinutes) {
+    await app
+      .firestore()
+      .doc(
+        `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
+      )
+      .update({ discussionEndTimestamp: Timestamp.now() });
+    return true; // Indicate that the chat has ended.
+  }
+  return false;
+}
