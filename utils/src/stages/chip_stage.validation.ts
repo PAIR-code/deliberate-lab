@@ -31,7 +31,8 @@ export const ChipStageConfigData = Type.Object(
     name: Type.String(),
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,
-    isPrivateOffers: Type.Boolean(),
+    enableChat: Type.Boolean(),
+    numRounds: Type.Number(),
     chips: Type.Array(ChipItemData),
   },
   strict

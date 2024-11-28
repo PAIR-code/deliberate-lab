@@ -23,7 +23,11 @@ import {
  */
 export interface ChipStageConfig extends BaseStageConfig {
   kind: StageKind.CHIP;
-  isPrivateOffers: boolean; // if true, only show current participant offers
+  // allow participants to chat with each other
+  enableChat: boolean;
+  // number of rounds allowed (in each round, each participant
+  // has the opportunity to submit an offer that others accept/reject)
+  numRounds: number;
   chips: ChipItem[];
 }
 
@@ -52,6 +56,7 @@ export interface ChipStageParticipantAnswer extends BaseStageParticipantAnswer {
 export interface ChipOffer {
   id: string; // offer ID
   round: number; // round number
+  senderId: string; // public ID of participant who sent the offer
   buy: Record<string, number>; // chip ID to quantity willing to buy
   sell: Record<string, number>; // chip ID to quantity willing to sell
 }
@@ -64,10 +69,26 @@ export interface ChipOffer {
  */
 export interface ChipStagePublicData extends BaseStagePublicData {
   kind: StageKind.CHIP;
+  // initialized false, set to true once completes number of rounds
+  // specified in stage config
+  isGameOver: boolean;
   // starting with 0
   currentRound: number;
-  // map of round # to (map of participant public ID to if offer was made)
+  // current turn (e.g., participant offer) within a round
+  currentTurn: ChipTurn|null;
+  // map of round # to (map of public ID --> if participant had turn)
+  // (this helps determine whose turn it is and when to move to next round)
   participantOfferMap: Record<number, Record<string, boolean>>;
+}
+
+/** Chip turn in a round. */
+export interface ChipTurn {
+  // public ID of participant sending the offer, or null if not set yet
+  participantId: string|null;
+  // offer sent by participant, or null if not sent yet
+  offer: ChipOffer|null;
+  // map (public ID --> response) made by participants regarding offer
+  responseMap: Record<string, boolean>;
 }
 
 /** Chip log entry (recording pending, successful, or failed transaction). */
@@ -102,7 +123,8 @@ export function createChipStage(
     name: config.name ?? 'Chip negotiation',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig({ waitForAllParticipants: true }),
-    isPrivateOffers: config.isPrivateOffers ?? true,
+    enableChat: config.enableChat ?? false,
+    numRounds: config.numRounds ?? 3,
     chips: config.chips ?? [],
   };
 }
@@ -114,6 +136,7 @@ export function createChipOffer(
   return {
     id: config.id ?? generateId(),
     round: config.round ?? 0,
+    senderId: config.senderId ?? '',
     buy: config.buy ?? {},
     sell: config.sell ?? {},
   };
@@ -139,7 +162,9 @@ export function createChipStagePublicData(
   return {
     id,
     kind: StageKind.CHIP,
+    isGameOver: false,
     currentRound: 0,
+    currentTurn: null,
     participantOfferMap: {}
   };
 }
