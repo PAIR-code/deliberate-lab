@@ -9,6 +9,7 @@ import {
   ExperimentDownloadResponse,
   ParticipantProfileExtendedData,
   SendChipOfferData,
+  SetChipTurnData,
   SimpleResponse,
   SuccessResponse,
   UpdateChatMediatorsData,
@@ -115,5 +116,13 @@ export const sendChipOfferCallable = async(
   functions: Functions, config: SendChipOfferData
 ) => {
   const { data } = await httpsCallable<SendChipOfferData, SuccessResponse>(functions, 'sendChipOffer')(config);
+  return data;
+}
+
+/** Generic endpoint for setting chip turn. */
+export const setChipTurnCallable = async(
+  functions: Functions, config: SetChipTurnData
+) => {
+  const { data } = await httpsCallable<SetChipTurnData, SuccessResponse>(functions, 'setChipTurn')(config);
   return data;
 }

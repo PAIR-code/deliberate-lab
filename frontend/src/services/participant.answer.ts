@@ -220,6 +220,10 @@ export class ParticipantAnswerService extends Service {
     );
   }
 
+  async setChipTurn(stageId: string) {
+    await this.sp.participantService.setChipTurn(stageId);
+  }
+
   async saveSurveyAnswers(stageId: string) {
     const answer = this.answerMap[stageId];
     if (!answer || answer.kind !== StageKind.SURVEY) return;

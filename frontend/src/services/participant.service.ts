@@ -38,6 +38,7 @@ import {Service} from './service';
 import {
   createChatMessageCallable,
   sendChipOfferCallable,
+  setChipTurnCallable,
   updateParticipantCallable,
   updateChatStageParticipantAnswerCallable,
   updateSurveyPerParticipantStageParticipantAnswerCallable,
@@ -660,6 +661,24 @@ export class ParticipantService extends Service {
           participantPrivateId: this.profile.privateId,
           stageId,
           chipOffer
+        }
+      );
+    }
+    return response;
+  }
+
+  /** Set chip turn for current stage and cohort. */
+  async setChipTurn(
+    stageId: string
+  ) {
+    let response = {};
+    if (this.experimentId && this.profile) {
+      response = await setChipTurnCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          stageId,
         }
       );
     }
