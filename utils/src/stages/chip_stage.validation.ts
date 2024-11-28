@@ -43,6 +43,7 @@ export const ChipOfferData = Type.Object(
   {
     id: Type.String(),
     round: Type.Number(),
+    senderId: Type.String({ minLength: 1 }),
     buy: Type.Record(Type.String(), Type.Number()),
     sell: Type.Record(Type.String(), Type.Number()),
   },

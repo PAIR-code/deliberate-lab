@@ -211,6 +211,7 @@ export class ParticipantAnswerService extends Service {
       return Math.floor(Math.random() * 5) + 1;
     };
     const chipOffer = createChipOffer({
+      senderId: this.sp.participantService.profile?.publicId,
       buy: { 'red' : getNumChips(), 'blue': getNumChips() },
       sell: { 'green': getNumChips() }
     });
