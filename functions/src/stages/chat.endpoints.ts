@@ -103,7 +103,7 @@ export const updateChatMediators = onCall(async (request) => {
     transaction.set(document, stageConfig);
   });
 
-  return { id: document.id };
+  return { success: true };
 });
 
 // ************************************************************************* //

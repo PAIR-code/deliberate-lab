@@ -80,12 +80,22 @@ export const sendChipOffer = onCall(async (request) => {
     const chipOffer = data.chipOffer;
     chipOffer.round = publicStageData.currentRound;
 
+    // Confirm that offer is valid (it is the participant's turn to send offers)
+    if (chipOffer.senderId !== publicStageData.currentTurn?.participantId) {
+      return { success: false };
+    }
+
     // Update participant offer map in public stage data
     // (mark current participant as having submitted an offer)
     if (!publicStageData[chipOffer.round]) {
       publicStageData[chipOffer.round] = {};
     }
     publicStageData[chipOffer.round][data.participantPublicId] = true;
+
+    // Update offer in current turn
+    publicStageData.currentTurn.offer = chipOffer;
+
+    // Set new public data
     transaction.set(publicDoc, publicStageData);
 
     // Get participant answer with existing chip quantities, pending offer
@@ -106,7 +116,7 @@ export const sendChipOffer = onCall(async (request) => {
     if (participantAnswer.pendingOffer) {
       logEntry.offerStatus = ChipOfferStatus.BLOCKED;
       transaction.set(logDoc, logEntry);
-      return;
+      return { success: false };
     } else {
       transaction.set(logDoc, logEntry);
     }
@@ -116,7 +126,7 @@ export const sendChipOffer = onCall(async (request) => {
     transaction.set(answerDoc, participantAnswer);
   });
 
-  return { id: logId };
+  return { success: true };
 });
 
 function handleSendChipOfferValidationErrors(data: any) {

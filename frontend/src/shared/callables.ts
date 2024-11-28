@@ -10,6 +10,7 @@ import {
   ParticipantProfileExtendedData,
   SendChipOfferData,
   SimpleResponse,
+  SuccessResponse,
   UpdateChatMediatorsData,
   UpdateChatStageParticipantAnswerData,
   UpdateRankingStageParticipantAnswerData,
@@ -29,7 +30,7 @@ export const writeExperimentCallable = async (functions: Functions, experiment: 
 
 /** Generic endpoint to delete experiments or experiment templates */
 export const deleteExperimentCallable = async (functions: Functions, deletion: ExperimentDeletionData) => {
-  const { data } = await httpsCallable<ExperimentDeletionData, never>(functions, 'deleteExperiment')(deletion);
+  const { data } = await httpsCallable<ExperimentDeletionData, SuccessResponse>(functions, 'deleteExperiment')(deletion);
   return data;
 }
 
@@ -47,7 +48,7 @@ export const updateCohortCallable = async (functions: Functions, cohort: CohortC
 
 /** Generic endpoint to delete cohorts */
 export const deleteCohortCallable = async (functions: Functions, cohort: CohortDeletionData) => {
-  const { data } = await httpsCallable<CohortDeletionData, CreationResponse>(functions, 'deleteCohort')(cohort);
+  const { data } = await httpsCallable<CohortDeletionData, SuccessResponse>(functions, 'deleteCohort')(cohort);
   return data;
 }
 
@@ -75,7 +76,7 @@ export const updateChatStageParticipantAnswerCallable = async(
 export const updateChatMediatorsCallable = async(
   functions: Functions, config: UpdateChatMediatorsData
 ) => {
-  const { data } = await httpsCallable<UpdateChatMediatorsData, CreationResponse>(functions, 'updateChatMediators')(config);
+  const { data } = await httpsCallable<UpdateChatMediatorsData, SuccessResponse>(functions, 'updateChatMediators')(config);
   return data;
 }
 
@@ -113,6 +114,6 @@ export const createChatMessageCallable = async(functions: Functions, config: Cre
 export const sendChipOfferCallable = async(
   functions: Functions, config: SendChipOfferData
 ) => {
-  const { data } = await httpsCallable<SendChipOfferData, CreationResponse>(functions, 'sendChipOffer')(config);
+  const { data } = await httpsCallable<SendChipOfferData, SuccessResponse>(functions, 'sendChipOffer')(config);
   return data;
 }
