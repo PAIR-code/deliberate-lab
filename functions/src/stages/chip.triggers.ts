@@ -6,6 +6,10 @@ import {
 } from '@deliberation-lab/utils';
 
 import { app } from '../app';
+import {
+  getChipParticipantIds
+} from './chip.utils';
+
 
 /**
   * When chip negotiation public data is updated,
@@ -26,12 +30,6 @@ export const completeChipNegotiationRound = onDocumentUpdated(
       .collection('publicStageData')
       .doc(event.params.stageId);
 
-    const cohortParticipantsRef = app.firestore()
-      .collection('experiments')
-      .doc(event.params.experimentId)
-      .collection('participants')
-      .where('currentCohortId', '==', event.params.cohortId);
-
     await app.firestore().runTransaction(async (transaction) => {
       const stage = (await stageDoc.get()).data() as StageConfig;
       if (stage.kind !== StageKind.CHIP) {
@@ -39,18 +37,17 @@ export const completeChipNegotiationRound = onDocumentUpdated(
       }
 
       // Check all cohort participants for offer
-      // TODO: Only check active participants
-      // (see isActiveParticipant frontend util)
-      const participants: ParticipantProfile = [];
-      (await cohortParticipantsRef.get()).forEach(doc => {
-        participants.push(doc.data());
-      });
+      // TODO: Update based on new experiment design
+      const participantIds = await getChipParticipantIds(
+        event.params.experimentId,
+        event.params.cohortId
+      );
 
       const round = stage.currentRound;
-      for (const participant of participants) {
+      for (const participantId of participantIds) {
         if (
           !stage.participantOfferMap[round] ||
-          !stage.participantOfferMap[round][participant.publicId]
+          !stage.participantOfferMap[round][participantId]
         ) {
           return false;
         }

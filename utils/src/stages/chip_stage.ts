@@ -83,8 +83,8 @@ export interface ChipStagePublicData extends BaseStagePublicData {
 
 /** Chip turn in a round. */
 export interface ChipTurn {
-  // public ID of participant sending the offer, or null if not set yet
-  participantId: string|null;
+  // public ID of participant whose turn it is to send offer
+  participantId: string;
   // offer sent by participant, or null if not sent yet
   offer: ChipOffer|null;
   // map (public ID --> response) made by participants regarding offer
@@ -166,5 +166,16 @@ export function createChipStagePublicData(
     currentRound: 0,
     currentTurn: null,
     participantOfferMap: {}
+  };
+}
+
+/** Create chip turn. */
+export function createChipTurn(
+  participantId: string
+): ChipTurn {
+  return {
+    participantId,
+    offer: null,
+    responseMap: {},
   };
 }

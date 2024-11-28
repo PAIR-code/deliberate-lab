@@ -63,3 +63,15 @@ export const SendChipOfferData = Type.Object(
 );
 
 export type SendChipOfferData = Static<typeof SendChipOfferData>;
+
+/** setChipTurn endpoint data validation. */
+export const SetChipTurnData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    cohortId: Type.String({ minLength: 1 }),
+    stageId: Type.String({ minLength: 1 }),
+  },
+  strict
+);
+
+export type SetChipTurnData = Static<typeof SetChipTurnData>;

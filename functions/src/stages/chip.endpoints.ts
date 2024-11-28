@@ -5,7 +5,9 @@ import {
   ChipStageParticipantAnswer,
   ChipStagePublicData,
   SendChipOfferData,
+  SetChipTurnData,
   createChipStageParticipantAnswer,
+  createChipTurn,
   generateId,
 } from '@deliberation-lab/utils';
 
@@ -22,7 +24,69 @@ import {
   prettyPrintErrors,
 } from '../utils/validation';
 
+import {
+  getChipParticipantIds,
+  updateChipCurrentTurn
+} from './chip.utils';
+
+
 /** Manage chip negotiation offers. */
+
+// ************************************************************************* //
+// setChipTurn endpoint                                                      //
+//                                                                           //
+// If game is not over, set current turn based on first participant in       //
+// cohort who has not yet submitted an offer for the current round           //
+//                                                                           //
+// Input structure: {                                                        //
+//   experimentId, cohortId, stageId                                         //
+// }                                                                         //
+// Validation: utils/src/chip.validation.ts                                  //
+// ************************************************************************* //
+export const setChipTurn = onCall(async (request) => {
+  const { data } = request;
+
+  // Validate input
+  const validInput = Value.Check(SetChipTurnData, data);
+  if (!validInput) {
+    handleSetChipTurnValidationErrors(data);
+  }
+
+  // Define chip stage public data document reference
+  const publicDoc = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('cohorts')
+    .doc(data.cohortId)
+    .collection('publicStageData')
+    .doc(data.stageId);
+
+  await app.firestore().runTransaction(async (transaction) => {
+    const publicStageData =
+      (await publicDoc.get()).data() as ChipStagePublicData;
+
+    // If turn is already set, then no action needed
+    if (publicStageData.currentTurn !== null) {
+      return { success: false };
+    }
+
+    // Get relevant (active, in cohort) participant IDs
+    const participantIds = await getChipParticipantIds(
+      data.experimentId,
+      data.cohortId
+    );
+
+    // If no participants, then no action needed
+    if (participantIds.length === 0) {
+      return { success: false };
+    }
+
+    const newData = updateChipCurrentTurn(publicStageData, participantIds);
+    transaction.set(publicDoc, newData);
+  }); // end transaction
+
+  return { success: true };
+});
 
 // ************************************************************************* //
 // sendChipOffer endpoint                                                    //
@@ -76,7 +140,8 @@ export const sendChipOffer = onCall(async (request) => {
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     // Set offer round based on public stage current round
-    const publicStageData = (await publicDoc.get()).data() as ChipStagePublicData;
+    const publicStageData =
+      (await publicDoc.get()).data() as ChipStagePublicData;
     const chipOffer = data.chipOffer;
     chipOffer.round = publicStageData.currentRound;
 
@@ -128,6 +193,21 @@ export const sendChipOffer = onCall(async (request) => {
 
   return { success: true };
 });
+
+// ************************************************************************* //
+// VALIDATION FUNCTIONS                                                      //
+// ************************************************************************* //
+
+function handleSetChipTurnValidationErrors(data: any) {
+  for (const error of Value.Errors(SetChipTurnData, data)) {
+    if (isUnionError(error)) {
+      const nested = checkConfigDataUnionOnPath(data, error.path);
+      prettyPrintErrors(nested);
+    } else {
+      prettyPrintError(error);
+    }
+  }
+}
 
 function handleSendChipOfferValidationErrors(data: any) {
   for (const error of Value.Errors(SendChipOfferData, data)) {
