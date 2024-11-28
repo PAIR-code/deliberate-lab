@@ -36,6 +36,8 @@ export class ChipView extends MobxLitElement {
   @property() stage: ChipStageConfig | null = null;
   @property() answer: ChipStageParticipantAnswer | null = null;
 
+  @state() isOfferLoading = false;
+
   override render() {
     if (!this.stage) {
       return nothing;
@@ -63,7 +65,9 @@ export class ChipView extends MobxLitElement {
 
     const sendOffer = async () => {
       if (!this.stage) return;
+      this.isOfferLoading = true;
       await this.participantAnswerService.sendChipOffer(this.stage.id);
+      this.isOfferLoading = false;
     };
 
     return html`
@@ -75,6 +79,7 @@ export class ChipView extends MobxLitElement {
             ).join(', ')}
         </div>
         <pr-button
+          ?loading=${this.isOfferLoading}
           ?disabled=${isOfferPending()}
           @click=${sendOffer}
         >
