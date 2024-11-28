@@ -10,12 +10,14 @@ import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
+import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 
 import {
   ChipLogEntry,
   ChipStageConfig,
   ChipStageParticipantAnswer,
+  StageKind
 } from '@deliberation-lab/utils';
 import {
   convertUnifiedTimestampToDate
@@ -29,6 +31,9 @@ export class ChipView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly cohortService = core.getService(CohortService);
+  private readonly participantService = core.getService(
+    ParticipantService
+  );
   private readonly participantAnswerService = core.getService(
     ParticipantAnswerService
   );
@@ -37,6 +42,7 @@ export class ChipView extends MobxLitElement {
   @property() answer: ChipStageParticipantAnswer | null = null;
 
   @state() isOfferLoading = false;
+  @state() isSetTurnLoading = false;
 
   override render() {
     if (!this.stage) {
@@ -59,6 +65,51 @@ export class ChipView extends MobxLitElement {
   private renderStatusPanel() {
     if (!this.stage) return nothing;
 
+    const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
+    if (publicData?.kind === StageKind.CHIP &&
+      publicData.currentTurn === null && !publicData.isGameOver
+    ) {
+      const setTurn = async () => {
+        if (!this.stage) return;
+        this.isSetTurnLoading = true;
+        await this.participantAnswerService.setChipTurn(this.stage.id);
+        this.isSetTurnLoading = false;
+      };
+
+      return html`
+        <div class="panel">
+          <pr-button
+            variant="tonal"
+            ?loading=${this.isSetTurnLoading}
+            @click=${setTurn}
+          >
+            Start chip negotiation
+          </pr-button>
+        </div>
+      `;
+    }
+
+    const isCurrentTurn = () => {
+      if (publicData?.kind !== StageKind.CHIP) return false;
+
+      return publicData.currentTurn?.participantId
+        === this.participantService.profile?.publicId;
+    }
+
+    return html`
+      <div class="panel">
+        <div class="status">
+          You have
+          ${this.stage.chips.map(
+              chip => `${this.answer?.chipMap[chip.id] ?? 0} ${chip.name} chips`
+            ).join(', ')}
+        </div>
+        ${isCurrentTurn() ? this.renderSenderView() : this.renderRecipientView()}
+      </div>
+    `;
+  }
+
+  private renderSenderView() {
     const isOfferPending = () => {
       return this.answer?.pendingOffer;
     };
@@ -71,20 +122,30 @@ export class ChipView extends MobxLitElement {
     };
 
     return html`
-      <div class="panel">
-        <div class="status">
-          You have
-          ${this.stage.chips.map(
-              chip => `${this.answer?.chipMap[chip.id] ?? 0} ${chip.name} chips`
-            ).join(', ')}
-        </div>
-        <pr-button
-          ?loading=${this.isOfferLoading}
-          ?disabled=${isOfferPending()}
-          @click=${sendOffer}
-        >
-          ${isOfferPending() ? 'Offer pending...' : 'Submit offer'}
-        </pr-button>
+      <pr-button
+        ?loading=${this.isOfferLoading}
+        ?disabled=${isOfferPending()}
+        @click=${sendOffer}
+      >
+        ${isOfferPending() ? 'Offer pending...' : 'Submit offer'}
+      </pr-button>
+    `;
+  }
+
+  private renderRecipientView() {
+    if (!this.stage) return nothing;
+
+    const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
+    if (publicData?.kind !== StageKind.CHIP) return nothing;
+
+    const offer = publicData.currentTurn?.offer;
+    if (!offer) {
+      return html`Waiting for an offer...`;
+    }
+    return html`
+      <div>
+        ${offer.senderId} offered to buy
+        ${JSON.stringify(offer.buy)} for ${JSON.stringify(offer.sell)}
       </div>
     `;
   }
