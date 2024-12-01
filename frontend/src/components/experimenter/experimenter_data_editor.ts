@@ -19,11 +19,53 @@ export class ExperimenterDataEditor extends MobxLitElement {
 
   override render() {
     return html`
+      ${this.renderServerTypeButtons()}
       ${this.renderGeminiKey()}
       ${this.renderServerSettings()}
     `;
   }
 
+  // ============ Server Type selection ============ 
+  private renderServerTypeButtons() {
+    return html`
+    <div class="section">
+      <h2>
+        Select Server
+      </h2>
+      <div class="action-buttons">
+        ${this.renderServerTypeButton('Llama Server', ApiKeyType.LLAMA_CUSTOM_URL)}
+        ${this.renderServerTypeButton('Gemini', ApiKeyType.GEMINI_API_KEY)}
+      </div>
+    </div>`;
+  }
+
+  private renderServerTypeButton(serverTypeName: string, apiKeyType: ApiKeyType) {
+    const isActive = this.authService.experimenterData?.activeApiKeyType === apiKeyType;
+
+    return html`
+      <pr-button
+        color="${isActive ? 'primary' : 'neutral'}"
+        variant="default"
+        @click=${() => this.selectServerType(apiKeyType)}
+      >
+        ${serverTypeName}
+      </pr-button>
+    `;
+  }
+
+  private selectServerType(serverType: ApiKeyType) {
+    const oldData = this.authService.experimenterData;
+    if (!oldData) return;
+
+    let newData: ExperimenterData = {
+      ...oldData,
+      activeApiKeyType: serverType,
+    };
+
+    this.authService.writeExperimenterData(newData);
+  }
+
+  // ============ Gemini ============ 
   private renderGeminiKey() {
     const updateKey = (e: InputEvent) => {
       const oldData = this.authService.experimenterData;
@@ -55,6 +97,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
     `;
   }
 
+  // ============ Llama server ============ 
   private renderServerSettings() {
     const updateServerSettings = (e: InputEvent, field: 'serverUrl' | 'port') => {
       const oldData = this.authService.experimenterData;
@@ -100,15 +143,15 @@ export class ExperimenterDataEditor extends MobxLitElement {
       this.authService.writeExperimenterData(newData);
     };
 
-const data = this.authService.experimenterData;
-return html`
+    const data = this.authService.experimenterData;
+    return html`
       <div class="section">
         <div class="title">Server Settings</div>
         <pr-textarea
           label="Server URL"
           placeholder="Enter server URL"
           variant="outlined"
-          .value=${data?.llamaApiKey?.url ?? "aaaaaaa"} 
+          .value=${data?.llamaApiKey?.url ?? ""} 
           @input=${(e: InputEvent) => updateServerSettings(e, 'serverUrl')}
         >
         </pr-textarea>
