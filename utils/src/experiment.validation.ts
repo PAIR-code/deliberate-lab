@@ -38,12 +38,6 @@ export const CohortParticipantConfigSchema = Type.Object({
   includeAllParticipantsInCohortCount: Type.Boolean(),
 });
 
-export const AttentionCheckConfigSchema = Type.Object({
-  enableAttentionChecks: Type.Boolean(),
-  waitSeconds: Type.Number({ minimum: 0 }),
-  popupSeconds: Type.Number({ minimum: 0 }),
-});
-
 export const ProlificConfigSchema = Type.Object({
   enableProlificIntegration: Type.Boolean(),
   defaultRedirectCode: Type.String(),
@@ -64,7 +58,6 @@ export const ExperimentCreationData = Type.Object(
         metadata: MetadataConfigSchema,
         permissions: PermissionsConfigSchema,
         defaultCohortConfig: CohortParticipantConfigSchema,
-        attentionCheckConfig: AttentionCheckConfigSchema,
         prolificConfig: ProlificConfigSchema,
         stageIds: Type.Array(Type.String()),
       },

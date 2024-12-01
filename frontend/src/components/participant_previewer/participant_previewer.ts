@@ -6,10 +6,10 @@ import '../popup/booted_popup';
 import '../progress/progress_stage_waiting';
 import '../stages/chat_interface';
 import '../stages/chat_panel';
-import '../stages/ranking_view';
+import '../stages/ranking_participant_view';
 import '../stages/info_view';
-import '../stages/payout_view';
-import '../stages/reveal_view';
+import '../stages/payout_participant_view';
+import '../stages/reveal_participant_view';
 import '../stages/survey_view';
 import '../stages/survey_per_participant_view';
 import '../stages/tos_view';
@@ -139,22 +139,15 @@ export class ParticipantPreviewer extends MobxLitElement {
   }
 
   private renderAttentionPopup() {
-    const isObsolete = this.participantService.isObsoleteParticipant;
-    const isExperimenter = this.authService.isExperimenter;
-    const config = this.experimentService.experiment?.attentionCheckConfig;
     if (
-      isObsolete ||
-      isExperimenter ||
-      !config ||
-      !config.enableAttentionChecks
+      this.authService.isExperimenter ||
+      this.participantService.profile?.currentStatus !==
+      ParticipantStatus.ATTENTION_CHECK
     ) {
       return nothing;
     }
     return html`
-      <attention-check-popup
-        .waitSeconds=${config.waitSeconds}
-        .popupSeconds=${config.popupSeconds}
-      >
+      <attention-check-popup>
       </attention-check-popup>
     `;
   }
@@ -219,12 +212,17 @@ export class ParticipantPreviewer extends MobxLitElement {
         `;
       case StageKind.RANKING:
         return html`
-          <ranking-view .stage=${stage} .answer=${answer}></ranking-view>
+          <ranking-participant-view .stage=${stage} .answer=${answer}>
+          </ranking-participant-view>
         `;
       case StageKind.PAYOUT:
-        return html`<payout-view .stage=${stage}></payout-view>`;
+        return html`
+          <payout-participant-view .stage=${stage}></payout-participant-view>
+        `;
       case StageKind.REVEAL:
-        return html`<reveal-view .stage=${stage}></reveal-view>`;
+        return html`
+          <reveal-participant-view .stage=${stage}></reveal-participant-view>
+        `;
       case StageKind.SURVEY:
         return html`<survey-view .stage=${stage}></survey-view>`;
       case StageKind.SURVEY_PER_PARTICIPANT:

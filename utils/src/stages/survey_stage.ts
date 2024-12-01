@@ -64,7 +64,7 @@ export interface MultipleChoiceSurveyQuestion extends BaseSurveyQuestion {
 
 export interface MultipleChoiceItem {
   id: string;
-  imageId: string; // or empty if no image provided
+  imageId: string; // image URL, or empty if no image provided
   text: string;
 }
 

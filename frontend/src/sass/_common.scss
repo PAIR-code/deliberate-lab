@@ -108,6 +108,11 @@
     color: var(--md-sys-color-on-tertiary-container);
   }
 
+  &.error {
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+  }
+
   &.success {
     background: var(--md-sys-color-success);
     color: #222; // TODO: Add on-success color

@@ -118,6 +118,11 @@ export class ParticipantService extends Service {
     return isPendingParticipant(this.profile);
   }
 
+  // If transfer cohort ID is not null
+  @computed get isPendingTransfer() {
+    return this.profile?.transferCohortId !== null;
+  }
+
   isCurrentStage(
     stageId: string = this.sp.routerService.activeRoute.params['stage']
   ) {

@@ -16,11 +16,11 @@ import {
 } from '@deliberation-lab/utils';
 import {getCohortName} from '../../shared/cohort.utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
-
-import '../stages/payout_view';
-import '../stages/reveal_view';
-import '../stages/ranking_view';
-import '../stages/survey_view';
+import '../stages/payout_summary_view';
+import '../stages/reveal_summary_view';
+import '../stages/ranking_summary_view';
+import '../stages/survey_summary_view';
+import '../stages/survey_per_participant_summary_view';
 
 import {styles} from './profile_preview.scss';
 
@@ -104,62 +104,60 @@ export class Preview extends MobxLitElement {
 
     const renderStageData = (stageId: string) => {
       const stage = this.experimentService.getStage(stageId);
-      if (!stage) return '';
-      if (!isUnlockedStage(this.profile as ParticipantProfile, stageId))
-        return '';
+      if (!stage || !isUnlockedStage(this.profile as ParticipantProfile, stageId)) {
+        return nothing;
+      }
 
       let stageHtml;
 
       switch (stage.kind) {
         case StageKind.PAYOUT:
-          stageHtml = html`<payout-view
-            .stage=${stage}
-            .renderSummaryView=${true}
-          ></payout-view>`;
+          stageHtml = html`
+            <payout-summary-view .stage=${stage}></payout-summary-view>
+          `;
           break;
         case StageKind.REVEAL:
-          stageHtml = html`<reveal-view
-            .stage=${stage}
-            .renderSummaryView=${true}
-          ></reveal-view>`;
+          stageHtml = html`
+            <reveal-summary-view .stage=${stage}></reveal-summary-view>
+          `;
           break;
         case StageKind.RANKING:
-          stageHtml = html`<ranking-view
-            .stage=${stage}
-            .renderSummaryView=${true}
-          ></ranking-view>`;
+          stageHtml = html`
+            <ranking-summary-view .stage=${stage}></ranking-summary-view>
+          `;
           break;
         case StageKind.SURVEY:
-          stageHtml = html`<survey-view
-            .stage=${stage}
-            .renderSummaryView=${true}
-          ></survey-view>`;
+          stageHtml = html`
+            <survey-summary-view .stage=${stage}></survey-summary-view>
+          `;
+          break;
+        case StageKind.SURVEY_PER_PARTICIPANT:
+          stageHtml = html`
+            <survey-per-participant-summary-view .stage=${stage}>
+            </survey-per-participant-summary-view>
+          `;
           break;
         default:
-          return ''; // Return empty HTML if no match
+          return nothing;
       }
 
       if (stageHtml) {
-        return html`<div>
+        return html`
+          <div>
             <h4>${this.getStageName(stageId)}</h4>
             ${stageHtml}
           </div>
-          <div class="divider"></div>`;
+          <div class="divider"></div>
+        `;
       }
     };
 
-    const stages = [];
-    for (const stageId of this.experimentService.experiment?.stageIds ?? []) {
-      const stageHtml = renderStageData(stageId);
-      if (stageHtml) {
-        stages.push(stageHtml);
-      }
-    }
-
-    return stages.length
-      ? html`<h3>Stage responses</h3>
-          ${stages}`
-      : ``;
+    const stages = this.experimentService.experiment?.stageIds ?? [];
+    if (stages.length === 0) return nothing;
+    return html`
+      <h3>Stage responses</h3>
+      ${stages.map(stageId => renderStageData(stageId))}
+    `;
   }
 
   private renderTimestamp(label: string, value: UnifiedTimestamp | null) {
