@@ -20,8 +20,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
   override render() {
     return html`
       ${this.renderServerTypeButtons()}
-      ${this.renderGeminiKey()}
-      ${this.renderServerSettings()}
+      ${this.renderApiKeys()}
     `;
   }
 
@@ -63,6 +62,24 @@ export class ExperimenterDataEditor extends MobxLitElement {
     };
 
     this.authService.writeExperimenterData(newData);
+    this.requestUpdate(); // change visibility of relevant api key sections 
+  }
+
+
+  private renderApiKeys() {
+    // hide or show relevant input sections, according to which server type
+    // the user has selected
+    const activeType = this.authService.experimenterData?.activeApiKeyType;
+  
+    switch(activeType) {
+      case ApiKeyType.GEMINI_API_KEY:
+        return this.renderGeminiKey();
+      case ApiKeyType.LLAMA_CUSTOM_URL:
+        return this.renderServerSettings();
+      default:
+        console.log("Error: invalid server setting selected :", activeType);
+        return this.renderGeminiKey();
+    }    
   }
 
   // ============ Gemini ============ 
@@ -81,10 +98,10 @@ export class ExperimenterDataEditor extends MobxLitElement {
       this.authService.writeExperimenterData(new_data);
     };
 
-    // TODO: Make this more clear when this has been saved.
+    
     return html`
       <div class="section">
-        <div class="title">API keys</div>
+        <div class="title">Gemini</div>
         <pr-textarea
           label="Gemini API key"
           placeholder="Add Gemini API key"
@@ -146,7 +163,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
     const data = this.authService.experimenterData;
     return html`
       <div class="section">
-        <div class="title">Server Settings</div>
+        <div class="title">LLaMa Server</div>
         <pr-textarea
           label="Server URL"
           placeholder="Enter server URL"
