@@ -42,6 +42,8 @@ export class ChipView extends MobxLitElement {
   @property() answer: ChipStageParticipantAnswer | null = null;
 
   @state() isOfferLoading = false;
+  @state() isAcceptOfferLoading = false;
+  @state() isRejectOfferLoading = false;
   @state() isSetTurnLoading = false;
 
   override render() {
@@ -142,10 +144,48 @@ export class ChipView extends MobxLitElement {
     if (!offer) {
       return html`Waiting for an offer...`;
     }
+
+    const acceptOffer = async () => {
+      if (!this.stage) return;
+      this.isAcceptOfferLoading = true;
+      await this.participantService.sendParticipantChipResponse(this.stage.id, true);
+      this.isAcceptOfferLoading = false;
+    }
+
+    const rejectOffer = async () => {
+      if (!this.stage) return;
+      this.isRejectOfferLoading = true;
+      await this.participantService.sendParticipantChipResponse(this.stage.id, false);
+      this.isRejectOfferLoading = false;
+    }
+
+    const isResponsePending = () => {
+      return this.answer?.pendingResponse !== null;
+    };
+
     return html`
       <div>
         ${offer.senderId} offered to buy
         ${JSON.stringify(offer.buy)} for ${JSON.stringify(offer.sell)}
+      </div>
+      <div class="buttons">
+        <pr-button
+          variant="tonal"
+          ?loading=${this.isAcceptOfferLoading}
+          ?disabled=${isResponsePending()}
+          @click=${acceptOffer}
+        >
+          Accept offer
+        </pr-button>
+        <pr-button
+          color="secondary"
+          variant="tonal"
+          ?loading=${this.isRejectOfferLoading}
+          ?disabled=${isResponsePending()}
+          @click=${rejectOffer}
+        >
+          Reject offer
+        </pr-button>
       </div>
     `;
   }
