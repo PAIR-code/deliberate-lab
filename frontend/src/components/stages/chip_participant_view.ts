@@ -68,9 +68,15 @@ export class ChipView extends MobxLitElement {
     if (!this.stage) return nothing;
 
     const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
-    if (publicData?.kind === StageKind.CHIP &&
-      publicData.currentTurn === null && !publicData.isGameOver
-    ) {
+    if (!publicData || publicData.kind !== StageKind.CHIP) {
+      return nothing;
+    }
+
+    if (publicData.isGameOver) {
+      return html`
+        <div class="panel">Game over</div>
+      `;
+    } else if (publicData.currentTurn === null) {
       const setTurn = async () => {
         if (!this.stage) return;
         this.isSetTurnLoading = true;
