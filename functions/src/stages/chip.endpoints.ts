@@ -166,10 +166,10 @@ export const sendChipOffer = onCall(async (request) => {
 
     // Update participant offer map in public stage data
     // (mark current participant as having submitted an offer)
-    if (!publicStageData[chipOffer.round]) {
-      publicStageData[chipOffer.round] = {};
+    if (!publicStageData.participantOfferMap[chipOffer.round]) {
+      publicStageData.participantOfferMap[chipOffer.round] = {};
     }
-    publicStageData[chipOffer.round][data.participantPublicId] = true;
+    publicStageData.participantOfferMap[chipOffer.round][data.participantPublicId] = true;
 
     // Update offer in current turn
     publicStageData.currentTurn.offer = chipOffer;
