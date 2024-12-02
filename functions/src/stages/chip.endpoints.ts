@@ -6,6 +6,7 @@ import {
   ChipStageParticipantAnswer,
   ChipStagePublicData,
   SendChipOfferData,
+  SendChipResponseData,
   SetChipTurnData,
   createChipStageParticipantAnswer,
   createChipTurn,
@@ -208,6 +209,87 @@ export const sendChipOffer = onCall(async (request) => {
 });
 
 // ************************************************************************* //
+// sendChipResponse endpoint                                                 //
+// Send true/false response to current chip offer                            //
+//                                                                           //
+// Input structure: {                                                        //
+//   experimentId, participantPrivateId, participantPublicId, cohortId,      //
+//   stageId, chipResponse                                                   //
+// }                                                                         //
+// Validation: utils/src/chip.validation.ts                                  //
+// ************************************************************************* //
+export const sendChipResponse = onCall(async (request) => {
+  const { data } = request;
+
+  // Validate input
+  const validInput = Value.Check(SendChipResponseData, data);
+  if (!validInput) {
+    handleSendChipResponseValidationErrors(data);
+  }
+
+  // Define participant answer document reference
+  const answerDoc = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('participants')
+    .doc(data.participantPrivateId)
+    .collection('stageData')
+    .doc(data.stageId);
+
+  // Define chip stage public data document reference
+  const publicDoc = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('cohorts')
+    .doc(data.cohortId)
+    .collection('publicStageData')
+    .doc(data.stageId);
+
+  // Define log entry document reference
+  const logId = generateId();
+  const logDoc = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('cohorts')
+    .doc(data.cohortId)
+    .collection('publicStageData')
+    .doc(data.stageId)
+    .collection('logs')
+    .doc(logId);
+
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    // Confirm that offer is valid (ID matches the current offer ID)
+    const publicStageData =
+      (await publicDoc.get()).data() as ChipStagePublicData;
+    // TODO: Check offer ID
+    if (!publicStageData.currentTurn) {
+      return { success: false };
+    }
+
+    // Update participant offer map in public stage data
+    // (mark current participant as having responded to current offer)
+    publicStageData.currentTurn.responseMap[data.participantPublicId] =
+      data.chipResponse;
+
+    // Set new public data
+    transaction.set(publicDoc, publicStageData);
+
+    // Get participant answer with existing chip quantities, pending response
+    const participantAnswer =
+      (await answerDoc.get()).data() as ChipStageParticipantAnswer;
+
+    // TODO: Add log entry for chip response
+
+    // Set chip response
+    participantAnswer.pendingResponse = data.chipResponse;
+    transaction.set(answerDoc, participantAnswer);
+  });
+
+  return { success: true };
+});
+
+// ************************************************************************* //
 // VALIDATION FUNCTIONS                                                      //
 // ************************************************************************* //
 
@@ -224,6 +306,17 @@ function handleSetChipTurnValidationErrors(data: any) {
 
 function handleSendChipOfferValidationErrors(data: any) {
   for (const error of Value.Errors(SendChipOfferData, data)) {
+    if (isUnionError(error)) {
+      const nested = checkConfigDataUnionOnPath(data, error.path);
+      prettyPrintErrors(nested);
+    } else {
+      prettyPrintError(error);
+    }
+  }
+}
+
+function handleSendChipResponseValidationErrors(data: any) {
+  for (const error of Value.Errors(SendChipResponseData, data)) {
     if (isUnionError(error)) {
       const nested = checkConfigDataUnionOnPath(data, error.path);
       prettyPrintErrors(nested);

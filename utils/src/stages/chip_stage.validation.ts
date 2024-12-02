@@ -65,6 +65,21 @@ export const SendChipOfferData = Type.Object(
 
 export type SendChipOfferData = Static<typeof SendChipOfferData>;
 
+/** sendChipResponse endpoint data validation. */
+export const SendChipResponseData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    participantPrivateId: Type.String({ minLength: 1 }),
+    participantPublicId: Type.String({ minLength: 1 }),
+    cohortId: Type.String({ minLength: 1 }),
+    stageId: Type.String({ minLength: 1 }),
+    chipResponse: Type.Boolean(),
+  },
+  strict
+);
+
+export type SendChipResponseData = Static<typeof SendChipResponseData>;
+
 /** setChipTurn endpoint data validation. */
 export const SetChipTurnData = Type.Object(
   {

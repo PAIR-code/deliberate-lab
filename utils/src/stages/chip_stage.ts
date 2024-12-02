@@ -50,6 +50,7 @@ export interface ChipStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.CHIP;
   chipMap: Record<string, number>; // chip ID to quantity left
   pendingOffer: ChipOffer|null; // offer waiting to be processed (or null if none)
+  pendingResponse: boolean|null; // response waiting to be processed (or null if none)
 }
 
 /** Chip offer. */
@@ -151,7 +152,8 @@ export function createChipStageParticipantAnswer(
     id,
     kind: StageKind.CHIP,
     chipMap,
-    pendingOffer: null
+    pendingOffer: null,
+    pendingResponse: null,
   };
 }
 

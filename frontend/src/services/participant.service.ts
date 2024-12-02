@@ -38,6 +38,7 @@ import {Service} from './service';
 import {
   createChatMessageCallable,
   sendChipOfferCallable,
+  sendChipResponseCallable,
   setChipTurnCallable,
   updateParticipantCallable,
   updateChatStageParticipantAnswerCallable,
@@ -661,6 +662,29 @@ export class ParticipantService extends Service {
           participantPrivateId: this.profile.privateId,
           stageId,
           chipOffer
+        }
+      );
+    }
+    return response;
+  }
+
+
+  /** Send participant chip response. */
+  async sendParticipantChipResponse(
+    stageId: string,
+    chipResponse: boolean
+  ) {
+    let response = {};
+    if (this.experimentId && this.profile) {
+      response = await sendChipResponseCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          participantPublicId: this.profile.publicId,
+          participantPrivateId: this.profile.privateId,
+          stageId,
+          chipResponse
         }
       );
     }
