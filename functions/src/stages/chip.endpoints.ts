@@ -2,6 +2,7 @@ import { Value } from '@sinclair/typebox/value';
 import {
   ChipLogEntry,
   ChipOfferStatus,
+  ChipStageConfig,
   ChipStageParticipantAnswer,
   ChipStagePublicData,
   SendChipOfferData,
@@ -52,6 +53,13 @@ export const setChipTurn = onCall(async (request) => {
     handleSetChipTurnValidationErrors(data);
   }
 
+  // Define chip stage config
+  const stageDoc = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('stages')
+    .doc(data.stageId);
+
   // Define chip stage public data document reference
   const publicDoc = app.firestore()
     .collection('experiments')
@@ -81,7 +89,12 @@ export const setChipTurn = onCall(async (request) => {
       return { success: false };
     }
 
-    const newData = updateChipCurrentTurn(publicStageData, participantIds);
+    const stageConfig =
+      (await stageDoc.get()).data() as ChipStageConfig;
+
+    const newData = updateChipCurrentTurn(
+      publicStageData, participantIds, stageConfig.numRounds
+    );
     transaction.set(publicDoc, newData);
   }); // end transaction
 

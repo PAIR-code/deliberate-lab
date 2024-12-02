@@ -48,6 +48,7 @@ export async function getChipParticipantIds(
 export function updateChipCurrentTurn(
   publicStageData: ChipStagePublicData,
   participantIds: string[],
+  numRounds = 3,
 ) {
   if (participantIds.length === 0) {
     return publicStageData;
@@ -77,6 +78,11 @@ export function updateChipCurrentTurn(
     publicStageData.currentTurn = createChipTurn(participantIds[0]);
   } else {
     publicStageData.currentTurn = createChipTurn(nextParticipantId);
+  }
+
+  // If specified number of rounds is over, set isGameOver
+  if (publicStageData.currentRound === numRounds) {
+    publicStageData.isGameOver = true;
   }
 
   return publicStageData;
