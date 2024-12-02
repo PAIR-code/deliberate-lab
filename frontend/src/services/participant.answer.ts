@@ -20,6 +20,7 @@ import {
   SurveyStageConfig,
   SurveyStageParticipantAnswer,
   SurveyQuestionKind,
+  createChipOffer,
   createRankingStageParticipantAnswer,
   createSurveyPerParticipantStageParticipantAnswer,
   createSurveyStageParticipantAnswer,
@@ -202,6 +203,25 @@ export class ParticipantAnswerService extends Service {
 
     answer.answerMap[participantId][surveyAnswer.id] = surveyAnswer;
     this.answerMap[stageId] = answer;
+  }
+
+  async sendChipOffer(stageId: string) {
+    // TODO: Use user-inputted chip offer
+    const getNumChips = () => {
+      return Math.floor(Math.random() * 5) + 1;
+    };
+    const chipOffer = createChipOffer({
+      senderId: this.sp.participantService.profile?.publicId,
+      buy: { 'red' : getNumChips(), 'blue': getNumChips() },
+      sell: { 'green': getNumChips() }
+    });
+    await this.sp.participantService.sendParticipantChipOffer(
+      stageId, chipOffer
+    );
+  }
+
+  async setChipTurn(stageId: string) {
+    await this.sp.participantService.setChipTurn(stageId);
   }
 
   async saveSurveyAnswers(stageId: string) {

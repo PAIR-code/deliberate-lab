@@ -113,6 +113,11 @@ service cloud.firestore {
             allow read: if true;
             allow write: if false; // Write using cloud functions
           }
+
+          match /logs/{logId} {
+            allow read: if true;
+            allow write: if false; // Write using cloud functions
+          }
         }
       }
 

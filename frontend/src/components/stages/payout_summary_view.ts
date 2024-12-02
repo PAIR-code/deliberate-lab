@@ -109,9 +109,7 @@ export class PayoutView extends MobxLitElement {
     currency: PayoutCurrency
   ) {
     return html`
-      <div class="scoring-item">
-        ${this.renderBaseAmountEarned(item, currency)}
-      </div>
+      ${this.renderBaseAmountEarned(item, currency)}
     `;
   }
 
@@ -122,6 +120,8 @@ export class PayoutView extends MobxLitElement {
     return html`
       <div class="scoring-item">
         <h2>Payout for completing stage</h2>
+        ${item.description.length > 0 ? html`<div>${item.description}</div>`
+          : nothing}
         <div class="row">
           <div>Stage completed?</div>
           <div class="chip secondary">

@@ -13,6 +13,10 @@ export interface SimpleResponse<T> {
   data: T;
 }
 
+export interface SuccessResponse {
+  success: boolean;
+}
+
 export interface CreationResponse {
   id: string;
 }
