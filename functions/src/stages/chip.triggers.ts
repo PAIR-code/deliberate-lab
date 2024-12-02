@@ -1,9 +1,11 @@
+import { Timestamp } from 'firebase-admin/firestore';
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import {
   ParticipantProfile,
   StageConfig,
   StageKind,
-  StagePublicData
+  StagePublicData,
+  createChipLogEntry
 } from '@deliberation-lab/utils';
 
 import { app } from '../app';
@@ -37,6 +39,16 @@ export const completeChipTurn = onDocumentUpdated(
       .doc(event.params.experimentId)
       .collection('stages')
       .doc(event.params.stageId);
+
+    // Define log entry collection reference
+    const logCollection = app.firestore()
+      .collection('experiments')
+      .doc(event.params.experimentId)
+      .collection('cohorts')
+      .doc(event.params.cohortId)
+      .collection('publicStageData')
+      .doc(event.params.stageId)
+      .collection('logs');
 
     await app.firestore().runTransaction(async (transaction) => {
       const publicStage = (await publicDoc.get()).data() as StagePublicData;
@@ -85,13 +97,49 @@ export const completeChipTurn = onDocumentUpdated(
 
       // TODO: Run chip offer transaction, i.e., update sender and receipient
       // chip amounts and write relevant logs
-      console.log('Chip transaction', sender, recipient);
+      transaction.set(
+        logCollection.doc(),
+        createChipLogEntry(
+          `Transaction cleared: ${sender}'s offer accepted by ${recipient}`,
+          Timestamp.now()
+        )
+      );
 
       // Then, update current turn
       publicStage.currentTurn = null;
+      const oldCurrentRound = publicStage.currentRound;
       const newData = updateChipCurrentTurn(
         publicStage, participantIds, numRounds
       );
+
+      // Write logs
+      if (newData.isGameOver) {
+        transaction.set(
+          logCollection.doc(),
+          createChipLogEntry('Game over', Timestamp.now())
+        );
+      } else {
+        // Write new round log entry if applicable
+        if (oldCurrentRound !== newData.currentRound) {
+          transaction.set(
+            logCollection.doc(),
+            createChipLogEntry(
+              `Round ${newData.currentRound + 1}`,
+              Timestamp.now()
+            )
+          );
+        }
+        // Write new turn entry
+        transaction.set(
+          logCollection.doc(),
+          createChipLogEntry(
+            `${newData.currentTurn.participantId}'s turn`,
+            Timestamp.now()
+          )
+        );
+      }
+
+      // Update public stage data
       transaction.set(publicDoc, newData);
     }); // end transaction
 

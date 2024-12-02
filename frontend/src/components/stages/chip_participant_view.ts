@@ -226,12 +226,8 @@ export class ChipView extends MobxLitElement {
         <div class="subtitle">
           ${convertUnifiedTimestampToDate(entry.timestamp)}
         </div>
-        <div class="subtitle">
-          ${entry.offerStatus}
-        </div>
         <div>
-          ${entry.participantId} offered to buy
-          ${JSON.stringify(entry.offer.buy)} for ${JSON.stringify(entry.offer.sell)}
+          ${entry.message}
         </div>
       </div>
     `;

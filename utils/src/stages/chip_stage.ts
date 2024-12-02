@@ -91,13 +91,9 @@ export interface ChipTurn {
   responseMap: Record<string, boolean>;
 }
 
-/** Chip log entry (recording pending, successful, or failed transaction). */
+/** Chip log entry. */
 export interface ChipLogEntry {
-  id: string;
-  participantId: string;
-  offer: ChipOffer;
-  offerStatus: ChipOfferStatus;
-  chipMap: Record<string, number>; // chip ID to quantity left after offer
+  message: string;
   timestamp: UnifiedTimestamp;
 }
 
@@ -176,5 +172,16 @@ export function createChipTurn(
     participantId,
     offer: null,
     responseMap: {},
+  };
+}
+
+/** Create chip log entry. */
+export function createChipLogEntry(
+  message: string,
+  timestamp = Timestamp.now()
+): ChipLogEntry {
+  return {
+    message,
+    timestamp
   };
 }

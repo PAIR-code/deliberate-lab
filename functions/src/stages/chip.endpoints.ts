@@ -7,6 +7,7 @@ import {
   SendChipOfferData,
   SendChipResponseData,
   SetChipTurnData,
+  createChipLogEntry,
   createChipTurn,
   generateId,
 } from '@deliberation-lab/utils';
@@ -68,6 +69,16 @@ export const setChipTurn = onCall(async (request) => {
     .collection('publicStageData')
     .doc(data.stageId);
 
+  // Define log entry collection reference
+  const logCollection = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('cohorts')
+    .doc(data.cohortId)
+    .collection('publicStageData')
+    .doc(data.stageId)
+    .collection('logs');
+
   await app.firestore().runTransaction(async (transaction) => {
     const publicStageData =
       (await publicDoc.get()).data() as ChipStagePublicData;
@@ -95,6 +106,17 @@ export const setChipTurn = onCall(async (request) => {
       publicStageData, participantIds, stageConfig.numRounds
     );
     transaction.set(publicDoc, newData);
+    transaction.set(
+      logCollection.doc(),
+      createChipLogEntry(`Round ${newData.currentRound + 1}`, Timestamp.now())
+    );
+    transaction.set(
+      logCollection.doc(),
+      createChipLogEntry(
+        `${newData.currentTurn.participantId}'s turn`,
+        Timestamp.now()
+      )
+    );
   }); // end transaction
 
   return { success: true };
@@ -128,17 +150,15 @@ export const sendChipOffer = onCall(async (request) => {
     .collection('publicStageData')
     .doc(data.stageId);
 
-  // Define log entry document reference
-  const logId = generateId();
-  const logDoc = app.firestore()
+  // Define log entry collection reference
+  const logCollection = app.firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('cohorts')
     .doc(data.cohortId)
     .collection('publicStageData')
     .doc(data.stageId)
-    .collection('logs')
-    .doc(logId);
+    .collection('logs');
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
@@ -167,7 +187,14 @@ export const sendChipOffer = onCall(async (request) => {
     // Set new public data
     transaction.set(publicDoc, publicStageData);
 
-    // TODO: Add log entry for chip offer
+    // Add log entry for chip offer
+    transaction.set(
+      logCollection.doc(),
+      createChipLogEntry(
+        `${data.participantPublicId} offered ${JSON.stringify(data.chipOffer.sell)} for ${JSON.stringify(data.chipOffer.buy)}`,
+        Timestamp.now(),
+      )
+    )
   });
 
   return { success: true };
@@ -201,18 +228,6 @@ export const sendChipResponse = onCall(async (request) => {
     .collection('publicStageData')
     .doc(data.stageId);
 
-  // Define log entry document reference
-  const logId = generateId();
-  const logDoc = app.firestore()
-    .collection('experiments')
-    .doc(data.experimentId)
-    .collection('cohorts')
-    .doc(data.cohortId)
-    .collection('publicStageData')
-    .doc(data.stageId)
-    .collection('logs')
-    .doc(logId);
-
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     // Confirm that offer is valid (ID matches the current offer ID)
@@ -230,8 +245,6 @@ export const sendChipResponse = onCall(async (request) => {
 
     // Set new public data
     transaction.set(publicDoc, publicStageData);
-
-    // TODO: Add log entry for chip response
   });
 
   return { success: true };
