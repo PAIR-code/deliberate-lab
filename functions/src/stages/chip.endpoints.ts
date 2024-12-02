@@ -3,12 +3,10 @@ import {
   ChipLogEntry,
   ChipOfferStatus,
   ChipStageConfig,
-  ChipStageParticipantAnswer,
   ChipStagePublicData,
   SendChipOfferData,
   SendChipResponseData,
   SetChipTurnData,
-  createChipStageParticipantAnswer,
   createChipTurn,
   generateId,
 } from '@deliberation-lab/utils';
@@ -121,15 +119,6 @@ export const sendChipOffer = onCall(async (request) => {
     handleSendChipOfferValidationErrors(data);
   }
 
-  // Define participant answer document reference
-  const answerDoc = app.firestore()
-    .collection('experiments')
-    .doc(data.experimentId)
-    .collection('participants')
-    .doc(data.participantPrivateId)
-    .collection('stageData')
-    .doc(data.stageId);
-
   // Define chip stage public data document reference
   const publicDoc = app.firestore()
     .collection('experiments')
@@ -160,6 +149,7 @@ export const sendChipOffer = onCall(async (request) => {
     chipOffer.round = publicStageData.currentRound;
 
     // Confirm that offer is valid (it is the participant's turn to send offers)
+    // TODO: Confirm there is not already an offer
     if (chipOffer.senderId !== publicStageData.currentTurn?.participantId) {
       return { success: false };
     }
@@ -177,32 +167,7 @@ export const sendChipOffer = onCall(async (request) => {
     // Set new public data
     transaction.set(publicDoc, publicStageData);
 
-    // Get participant answer with existing chip quantities, pending offer
-    const participantAnswer =
-      (await answerDoc.get()).data() as ChipStageParticipantAnswer;
-
-    // Add log entry for chip offer
-    const logEntry: ChipLogEntry = {
-      id: logId,
-      participantId: data.participantPublicId,
-      offer: chipOffer,
-      offerStatus: ChipOfferStatus.PENDING,
-      chipMap: participantAnswer.chipMap,
-      timestamp: Timestamp.now(),
-    };
-
-    // If chip offer already exists, log this chip offer as failed
-    if (participantAnswer.pendingOffer) {
-      logEntry.offerStatus = ChipOfferStatus.BLOCKED;
-      transaction.set(logDoc, logEntry);
-      return { success: false };
-    } else {
-      transaction.set(logDoc, logEntry);
-    }
-
-    // Set new chip offer to pending
-    participantAnswer.pendingOffer = chipOffer;
-    transaction.set(answerDoc, participantAnswer);
+    // TODO: Add log entry for chip offer
   });
 
   return { success: true };
@@ -226,15 +191,6 @@ export const sendChipResponse = onCall(async (request) => {
   if (!validInput) {
     handleSendChipResponseValidationErrors(data);
   }
-
-  // Define participant answer document reference
-  const answerDoc = app.firestore()
-    .collection('experiments')
-    .doc(data.experimentId)
-    .collection('participants')
-    .doc(data.participantPrivateId)
-    .collection('stageData')
-    .doc(data.stageId);
 
   // Define chip stage public data document reference
   const publicDoc = app.firestore()
@@ -275,15 +231,7 @@ export const sendChipResponse = onCall(async (request) => {
     // Set new public data
     transaction.set(publicDoc, publicStageData);
 
-    // Get participant answer with existing chip quantities, pending response
-    const participantAnswer =
-      (await answerDoc.get()).data() as ChipStageParticipantAnswer;
-
     // TODO: Add log entry for chip response
-
-    // Set chip response
-    participantAnswer.pendingResponse = data.chipResponse;
-    transaction.set(answerDoc, participantAnswer);
   });
 
   return { success: true };

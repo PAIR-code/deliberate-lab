@@ -49,8 +49,7 @@ export interface ChipItem {
 export interface ChipStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.CHIP;
   chipMap: Record<string, number>; // chip ID to quantity left
-  pendingOffer: ChipOffer|null; // offer waiting to be processed (or null if none)
-  pendingResponse: boolean|null; // response waiting to be processed (or null if none)
+  // TODO: add chip values
 }
 
 /** Chip offer. */
@@ -151,9 +150,7 @@ export function createChipStageParticipantAnswer(
   return {
     id,
     kind: StageKind.CHIP,
-    chipMap,
-    pendingOffer: null,
-    pendingResponse: null,
+    chipMap
   };
 }
 

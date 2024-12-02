@@ -113,7 +113,10 @@ export class ChipView extends MobxLitElement {
 
   private renderSenderView() {
     const isOfferPending = () => {
-      return this.answer?.pendingOffer;
+      if (!this.stage) return;
+      const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
+      if (publicData?.kind !== StageKind.CHIP) return nothing;
+      return publicData.currentTurn?.offer;
     };
 
     const sendOffer = async () => {
@@ -160,7 +163,11 @@ export class ChipView extends MobxLitElement {
     }
 
     const isResponsePending = () => {
-      return this.answer?.pendingResponse !== null;
+      if (!this.stage) return;
+      const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
+      if (publicData?.kind !== StageKind.CHIP) return nothing;
+      const participantId = this.participantService.profile?.publicId ?? '';
+      return participantId in (publicData.currentTurn?.responseMap ?? {});
     };
 
     return html`
