@@ -1,4 +1,4 @@
-import { OllamaChat } from "./llama.api";
+import { ollamaChat } from "./llama.api";
 
 /**
  * Test assumes a container with ollama is running on port 11434
@@ -10,10 +10,10 @@ const MODEL_TYPE = "llama3.2";
 const LLM_SERVER_ENDPOINT = "http://localhost:11434/api/chat";
 const TEST_MESSAGE = "Say hello!";
 
-// TODO: use jest describe
-test("chat with hosted llm", async () => {
-    const client = new OllamaChat(LLM_SERVER_ENDPOINT, MODEL_TYPE)
-    const response = await client.chat([TEST_MESSAGE]);
-    expect(response.toLowerCase()).toContain("hello");
-    console.log(response);
+describe("OllamaChat Client", () => {
+    it("should return a response containing 'hello' (case insensitive)", async () => {
+        const response = await ollamaChat([TEST_MESSAGE], MODEL_TYPE, LLM_SERVER_ENDPOINT);
+        expect(response.toLowerCase()).toContain("hello");
+        console.log(response);
+    });
 });
