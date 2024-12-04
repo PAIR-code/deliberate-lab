@@ -8,6 +8,8 @@
  * Note: there already exists a client library for JavaScript, but not for Typescript.
  */
 
+import { LlamaServerConfig } from "@deliberation-lab/utils"
+
 
 /**
  * The JSON schema of Ollama LLM responses.
@@ -20,7 +22,6 @@ type IncomingMessage = {
     done: boolean
 }
 
-
 /**
  * The JSON schema for LLM input understood by Ollama.
  */
@@ -29,7 +30,6 @@ type OutgoingMessage = {
     messages: LlmMessage[],
     stream: boolean
 }
-
 
 /**
  * The JSON schema for LLM prompts enforced by the Ollama Chat API.
@@ -46,24 +46,23 @@ type LlmMessage = {
  * @param messages a list of string-messages to be sent as prompts to the model
  * @param llm_type the type of llm running in the server (e.g. "llama3.2"). 
  * Keep in mind that the model must have been loaded server-side in order to be used.
- * @param server_endpoint_url the URL of the Ollama server
+ * @param serverConfig the url and other necessary data of the Ollama server
  * @returns the model's response as a string, or empty string if an error occured
  */
 export async function ollamaChat(messages: string[], 
                                 llm_type: string, 
-                                server_endpoint_url: string)
+                                serverConfig: LlamaServerConfig)
                                 : Promise<ModelResponse> {
     const message_objects = encodeMessages(messages, llm_type);
 
     console.log("Sending prompt:", message_objects);
-    const response = await fetch(server_endpoint_url, { method: "POST", body: JSON.stringify(message_objects) });
+    const response = await fetch(serverConfig.url, { method: "POST", body: JSON.stringify(message_objects) });
 
     const response_message = await decodeResponse(response);
     console.log("Received response: ", response_message);
 
     return { text: response_message };
 }
-
 
 /**
  * Extract the REST API response of the model into a string.
@@ -90,7 +89,6 @@ async function decodeResponse(response: Response): Promise<string> {
     }
 }
 
-
 /**
  * Transform string-messages to JSON objects appropriate for the model's API. 
  * @param messages a list of string-messages to be sent to the LLM
@@ -106,7 +104,6 @@ function encodeMessages(messages: string[], model_type: string): OutgoingMessage
         stream: false
     };
 }
-
 
 /**
  * Check whether the model's response indicates an error.
