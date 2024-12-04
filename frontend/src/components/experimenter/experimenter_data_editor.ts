@@ -44,7 +44,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
     return html`
       <pr-button
         color="${isActive ? 'primary' : 'neutral'}"
-        variant="default"
+        variant=${isActive ? 'tonal' : 'default'}
         @click=${() => this.selectServerType(apiKeyType)}
       >
         ${serverTypeName}
