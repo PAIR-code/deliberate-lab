@@ -49,7 +49,10 @@ type LlmMessage = {
  * @param server_endpoint_url the URL of the Ollama server
  * @returns the model's response as a string, or empty string if an error occured
  */
-export async function ollamaChat(messages: string[], llm_type: string, server_endpoint_url: string): Promise<string> {
+export async function ollamaChat(messages: string[], 
+                                llm_type: string, 
+                                server_endpoint_url: string)
+                                : Promise<ModelResponse> {
     const message_objects = encodeMessages(messages, llm_type);
 
     console.log("Sending prompt:", message_objects);
@@ -58,7 +61,7 @@ export async function ollamaChat(messages: string[], llm_type: string, server_en
     const response_message = await decodeResponse(response);
     console.log("Received response: ", response_message);
 
-    return response_message;
+    return { text: response_message };
 }
 
 

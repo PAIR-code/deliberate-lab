@@ -13,7 +13,7 @@ const TEST_MESSAGE = "Say hello!";
 describe("OllamaChat Client", () => {
     it("should return a response containing 'hello' (case insensitive)", async () => {
         const response = await ollamaChat([TEST_MESSAGE], MODEL_TYPE, LLM_SERVER_ENDPOINT);
-        expect(response.toLowerCase()).toContain("hello");
+        expect(response.text.toLowerCase()).toContain("hello");
         console.log(response);
     });
 });
