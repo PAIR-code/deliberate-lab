@@ -134,7 +134,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
             activeApiKeyType: ApiKeyType.LLAMA_CUSTOM_URL,
             llamaApiKey: {
               url: serverSettings,
-              port: oldData.llamaApiKey.port
+              //port: oldData.llamaApiKey.port
             },
             geminiApiKey: oldData.geminiApiKey
           }

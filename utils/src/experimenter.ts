@@ -58,7 +58,6 @@ export function createExperimenterData(
 
 
 export function checkApiKeyExists(experimenterData: ExperimenterData | null | undefined): boolean {
-  console.log("aaaaaaa");
   if (experimenterData === null || experimenterData === undefined) {
     return false
   }

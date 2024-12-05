@@ -33,29 +33,16 @@ describe('checkApiKeyExists', () => {
 
     test('returns false if active API key type is Llama and llamaApiKey is invalid', () => {
         experimenterData.activeApiKeyType = ApiKeyType.LLAMA_CUSTOM_URL;
-        experimenterData.llamaApiKey = { url: '', port: -1 };
+        experimenterData.llamaApiKey = { url: '' };
 
         expect(checkApiKeyExists(experimenterData)).toBe(false);
     });
 
     test('returns true if active API key type is Llama and llamaApiKey is valid', () => {
         experimenterData.activeApiKeyType = ApiKeyType.LLAMA_CUSTOM_URL;
-        experimenterData.llamaApiKey = { url: 'http://valid-url.com', port: 8080 };
+        experimenterData.llamaApiKey = { url: 'http://valid-url.com' };
 
         expect(checkApiKeyExists(experimenterData)).toBe(true);
     });
 
-    test('returns false if active API key type is Llama but only the port is valid', () => {
-        experimenterData.activeApiKeyType = ApiKeyType.LLAMA_CUSTOM_URL;
-        experimenterData.llamaApiKey = { url: '', port: 8080 };
-
-        expect(checkApiKeyExists(experimenterData)).toBe(false);
-    });
-
-    test('returns false if active API key type is Llama but only the URL is valid', () => {
-        experimenterData.activeApiKeyType = ApiKeyType.LLAMA_CUSTOM_URL;
-        experimenterData.llamaApiKey = { url: 'http://valid-url.com', port: -1 };
-
-        expect(checkApiKeyExists(experimenterData)).toBe(false);
-    });
 });
