@@ -48,3 +48,9 @@ h2 {
 a {
   color: var(--md-sys-color-primary);
 }
+
+.action-buttons {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-xl;
+}
