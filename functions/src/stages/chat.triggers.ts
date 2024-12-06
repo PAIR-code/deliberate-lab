@@ -17,6 +17,7 @@ import {
 
 import { app } from '../app';
 import { getGeminiAPIResponse } from '../api/gemini.api';
+import { getOpenAIAPITextCompletionResponse } from '../api/openai.api';
 
 export interface MediatorMessage {
   mediator: MediatorConfig;
@@ -184,7 +185,8 @@ export const createMediatorMessage = onDocumentCreated(
       const prompt = `${getPreface(mediator)}\n${getChatHistory(chatMessages, mediator)}\n${mediator.responseConfig.formattingInstructions}`;
 
       // Call Gemini API with given modelCall info
-      const response = await getGeminiAPIResponse(apiKeys.geminiKey, prompt);
+      // const response = await getGeminiAPIResponse(apiKeys.geminiKey, prompt);
+      const response = await getOpenAIAPITextCompletionResponse(apiKeys.geminiKey, prompt);
 
       // Add mediator message if non-empty
       let message = response.text;
