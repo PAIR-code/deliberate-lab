@@ -105,6 +105,7 @@ export const setChipTurn = onCall(async (request) => {
     const newData = updateChipCurrentTurn(
       publicStageData, participantIds, stageConfig.numRounds
     );
+
     transaction.set(publicDoc, newData);
     transaction.set(
       logCollection.doc(),

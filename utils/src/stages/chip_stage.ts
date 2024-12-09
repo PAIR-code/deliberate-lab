@@ -81,6 +81,10 @@ export interface ChipStagePublicData extends BaseStagePublicData {
   // map of round # to (map of public ID --> if participant had turn)
   // (this helps determine whose turn it is and when to move to next round)
   participantOfferMap: Record<number, Record<string, boolean>>;
+  // map of participant to current chip quantity map
+  participantChipMap: Record<string, Record<string, number>>;
+  // map of participant to current chip value map
+  participantChipValueMap: Record<string, Record<string, number>>;
 }
 
 /** Chip turn in a round. */
@@ -164,7 +168,9 @@ export function createChipStagePublicData(
     isGameOver: false,
     currentRound: 0,
     currentTurn: null,
-    participantOfferMap: {}
+    participantOfferMap: {},
+    participantChipMap: {},
+    participantChipValueMap: {},
   };
 }
 
