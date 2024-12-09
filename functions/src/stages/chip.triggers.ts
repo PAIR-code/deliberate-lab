@@ -1,7 +1,13 @@
 import { Timestamp } from 'firebase-admin/firestore';
-import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import {
-  ParticipantProfile,
+  onDocumentCreated,
+  onDocumentUpdated
+} from 'firebase-functions/v2/firestore';
+import {
+  ChipStageParticipantAnswer,
+  ChipStagePublicData,
+  ChipTransaction,
+  ParticipantProfileExtended,
   StageConfig,
   StageKind,
   StagePublicData,
@@ -11,7 +17,8 @@ import {
 import { app } from '../app';
 import {
   getChipParticipantIds,
-  updateChipCurrentTurn
+  updateChipCurrentTurn,
+  updateParticipantChipQuantities,
 } from './chip.utils';
 
 
@@ -49,6 +56,16 @@ export const completeChipTurn = onDocumentUpdated(
       .collection('publicStageData')
       .doc(event.params.stageId)
       .collection('logs');
+
+    // Define chip transaction collection reference
+    const transactionCollection = app.firestore()
+      .collection('experiments')
+      .doc(event.params.experimentId)
+      .collection('cohorts')
+      .doc(event.params.cohortId)
+      .collection('publicStageData')
+      .doc(event.params.stageId)
+      .collection('transactions');
 
     await app.firestore().runTransaction(async (transaction) => {
       const publicStage = (await publicDoc.get()).data() as StagePublicData;
@@ -91,19 +108,28 @@ export const completeChipTurn = onDocumentUpdated(
 
       // If all (non-offer) participants have responded to the offer,
       // execute chip transaction
-      const sender = publicStage.currentTurn.participantId;
-      const recipient = acceptedOffer.length > 0 ?
+      const senderId = publicStage.currentTurn.participantId;
+      const recipientId = acceptedOffer.length > 0 ?
         acceptedOffer[Math.floor(Math.random() * acceptedOffer.length)] : null;
 
-      // TODO: Run chip offer transaction, i.e., update sender and receipient
-      // chip amounts and write relevant logs
-      transaction.set(
-        logCollection.doc(),
-        createChipLogEntry(
-          `Transaction cleared: ${sender}'s offer accepted by ${recipient}`,
-          Timestamp.now()
-        )
-      );
+      // Run chip offer transaction and write relevant logs
+      if (recipientId !== null) {
+        const chipTransaction: ChipTransaction = {
+          offer: publicStage.currentTurn.offer,
+          recipientId,
+          timestamp: Timestamp.now()
+        };
+        // Sender/recipient chips will be updated on chip transaction trigger
+        transaction.set(transactionCollection.doc(), chipTransaction);
+      } else {
+        transaction.set(
+          logCollection.doc(),
+          createChipLogEntry(
+            `Transaction failed: ${senderId}'s offer was not accepted by any participants`,
+            Timestamp.now()
+          )
+        );
+      }
 
       // Then, update current turn
       publicStage.currentTurn = null;
@@ -145,4 +171,97 @@ export const completeChipTurn = onDocumentUpdated(
 
     return true;
   }
-)
+);
+
+/**
+  * When chip transaction doc is written,
+  * update sender/recipient chip quantities and write log
+  */
+export const completeChipTransaction = onDocumentCreated(
+  {
+    document:
+    'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/transactions/{transactionId}'
+  },
+  async (event) => {
+    const publicDoc = app.firestore()
+      .collection('experiments')
+      .doc(event.params.experimentId)
+      .collection('cohorts')
+      .doc(event.params.cohortId)
+      .collection('publicStageData')
+      .doc(event.params.stageId);
+
+    const transactionDoc = app.firestore()
+      .collection('experiments')
+      .doc(event.params.experimentId)
+      .collection('cohorts')
+      .doc(event.params.cohortId)
+      .collection('publicStageData')
+      .doc(event.params.stageId)
+      .collection('transactions')
+      .doc(event.params.transactionId);
+
+    // Define log entry collection reference
+    const logCollection = app.firestore()
+      .collection('experiments')
+      .doc(event.params.experimentId)
+      .collection('cohorts')
+      .doc(event.params.cohortId)
+      .collection('publicStageData')
+      .doc(event.params.stageId)
+      .collection('logs');
+
+    await app.firestore().runTransaction(async (transaction) => {
+      const chipTransaction = (await transactionDoc.get()).data() as ChipTransaction;
+      const senderId = chipTransaction.offer.senderId;
+      const recipientId = chipTransaction.recipientId;
+      const buyMap = chipTransaction.offer.buy;
+      const sellMap = chipTransaction.offer.sell;
+
+      // Get public stage data
+      const publicStageData = (await publicDoc.get()).data() as ChipStagePublicData;
+
+      // Update sender chip quantities
+      const senderResult = await updateParticipantChipQuantities(
+        event.params.experimentId,
+        event.params.stageId,
+        senderId,
+        buyMap,
+        sellMap,
+        publicStageData,
+        transaction
+      );
+      if (senderResult) {
+        transaction.set(senderResult.answerDoc, senderResult.answer);
+      }
+
+      // Update recipient chip quantities
+      const recipientResult = await updateParticipantChipQuantities(
+        event.params.experimentId,
+        event.params.stageId,
+        recipientId,
+        sellMap,
+        buyMap,
+        publicStageData,
+        transaction
+      );
+      if (recipientResult) {
+        transaction.set(recipientResult.answerDoc, recipientResult.answer);
+      }
+
+      // Write success log
+      transaction.set(
+        logCollection.doc(),
+        createChipLogEntry(
+          `Transaction cleared: ${senderId}'s offer was accepted by ${recipientId}`,
+          Timestamp.now()
+        )
+      );
+
+      // Update public stage data
+      transaction.set(publicDoc, publicStageData);
+    }); // end transaction
+
+    return true;
+  }
+);

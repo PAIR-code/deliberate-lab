@@ -99,15 +99,16 @@ export interface ChipTurn {
 
 /** Chip log entry. */
 export interface ChipLogEntry {
+  // TODO: Add chip log entry types for offer|transaction|round|etc.
   message: string;
   timestamp: UnifiedTimestamp;
 }
 
-export enum ChipOfferStatus {
-  BLOCKED = 'blocked', // offer could not be made due to existing pending offer
-  PENDING = 'proposed', // offer made
-  REJECTED = 'rejected', // offer rejected (no transaction)
-  ACCEPTED = 'transaction', // offer accepted (transaction made)
+/** Chip transaction. */
+export interface ChipTransaction {
+  offer: ChipOffer; // offer from sender to receiver
+  recipientId: string; // participant public ID
+  timestamp: UnifiedTimestamp;
 }
 
 // ************************************************************************* //

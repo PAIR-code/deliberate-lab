@@ -212,8 +212,8 @@ export class ParticipantAnswerService extends Service {
     };
     const chipOffer = createChipOffer({
       senderId: this.sp.participantService.profile?.publicId,
-      buy: { 'red' : getNumChips(), 'blue': getNumChips() },
-      sell: { 'green': getNumChips() }
+      buy: { 'RED' : getNumChips(), 'BLUE': getNumChips() },
+      sell: { 'GREEN': getNumChips() }
     });
     await this.sp.participantService.sendParticipantChipOffer(
       stageId, chipOffer

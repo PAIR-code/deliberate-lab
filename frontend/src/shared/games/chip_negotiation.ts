@@ -82,7 +82,7 @@ const CHIP_NEGOTIATION_STAGE = createChipStage({
   game: StageGame.CHP,
   chips: [
     {
-      id: '0',
+      id: 'RED',
       name: 'red',
       canBuy: true,
       canSell: true,
@@ -91,7 +91,7 @@ const CHIP_NEGOTIATION_STAGE = createChipStage({
       upperValue: 0.10,
     },
     {
-      id: '1',
+      id: 'BLUE',
       name: 'blue',
       canBuy: true,
       canSell: true,
@@ -100,7 +100,7 @@ const CHIP_NEGOTIATION_STAGE = createChipStage({
       upperValue: 0.10,
     },
     {
-      id: '2',
+      id: 'GREEN',
       name: 'green',
       canBuy: true,
       canSell: true,

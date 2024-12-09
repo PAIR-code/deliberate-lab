@@ -87,3 +87,60 @@ export function updateChipCurrentTurn(
 
   return publicStageData;
 }
+
+/** Update participant chip quantities. */
+export async function updateParticipantChipQuantities(
+  experimentId: string,
+  stageId: string,
+  publicId: string, // participant public ID
+  addMap: Record<string, number>, // map of chip ID --> num chips to add
+  removeMap: Record<string, number>, // map of chip ID --> num chips to remove
+  publicStageData: ChipStagePublicData, // public stage data to update
+) {
+  const profiles = (
+    await app
+      .firestore()
+      .collection(
+        `experiments/${experimentId}/participants`,
+      )
+      .where('publicId', '==', publicId)
+      .get()
+  ).docs.map((doc) => doc.data() as ParticipantProfileExtended);
+
+  if (profiles.length !== 1) {
+    // TODO: log failure with more than one participant with publicId
+    return false;
+  }
+
+  const privateId = profiles[0].privateId;
+  const answerDoc = app
+      .firestore()
+      .doc(
+        `experiments/${experimentId}/participants/${privateId}/stageData/${stageId}`
+      );
+  const answer = (await answerDoc.get()).data() as ChipStageParticipantAnswer;
+
+  // Remove map items
+  Object.keys(removeMap).forEach((chipId) => {
+    const currentChips = answer.chipMap[chipId] ?? 0;
+    const removeChips = removeMap[chipId];
+
+    if (removeChips <= currentChips) {
+      answer.chipMap[chipId] -= removeChips;
+    } else {
+      // TODO: Log failure
+      return false;
+    }
+  });
+  // Add map items
+  Object.keys(addMap).forEach((chipId) => {
+    const currentChips = answer.chipMap[chipId] ?? 0;
+    const addChips = addMap[chipId];
+    answer.chipMap[chipId] = currentChips + addChips;
+  });
+
+  // Update public stage data
+  publicStageData.participantChipMap[publicId] = answer.chipMap;
+
+  return { answerDoc, answer, publicStageData };
+}
