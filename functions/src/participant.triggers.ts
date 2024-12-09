@@ -38,13 +38,20 @@ export const setParticipantStageData = onDocumentCreated(
           case StageKind.CHIP:
             // If chip stage, set default chips for participant based on config
             const chipMap = {};
+            const chipValueMap = {};
             stage.chips.forEach(chip => {
               chipMap[chip.id] = chip.quantity;
+              chipValue[chip.id] =
+                Math.floor(
+                  Math.random() * (chip.upperValue - chip.lowerValue) * 100
+                  + chip.lowerValue * 100
+                ) / 100;
             });
 
             const chipAnswer = createChipStageParticipantAnswer(
               stage.id,
-              chipMap 
+              chipMap,
+              chipValue
             );
 
             transaction.set(stageDoc, chipAnswer);

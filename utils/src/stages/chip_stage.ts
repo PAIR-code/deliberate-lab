@@ -38,6 +38,8 @@ export interface ChipItem {
   canBuy: boolean; // if true, participants can buy this chip
   canSell: boolean; // if true, participants can sell this chip
   quantity: number; // starting quantity of chips
+  lowerValue: number; // lower bound for randomly-sampled value
+  upperValue: number; // upper bound for randomly-sampled value
 }
 
 /**
@@ -49,7 +51,7 @@ export interface ChipItem {
 export interface ChipStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.CHIP;
   chipMap: Record<string, number>; // chip ID to quantity left
-  // TODO: add chip values
+  chipValueMap: Record<string, number>; // chip ID to value per chip
 }
 
 /** Chip offer. */
@@ -141,12 +143,14 @@ export function createChipOffer(
 /** Create chip stage participant answer. */
 export function createChipStageParticipantAnswer(
   id: string, // stage ID
-  chipMap: Record<string, number> // chip ID to quantity
+  chipMap: Record<string, number>, // chip ID to quantity
+  chipValueMap: Record<string, number> // chip ID to value
 ): ChipStageParticipantAnswer {
   return {
     id,
     kind: StageKind.CHIP,
-    chipMap
+    chipMap,
+    chipValueMap
   };
 }
 

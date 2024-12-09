@@ -86,21 +86,27 @@ const CHIP_NEGOTIATION_STAGE = createChipStage({
       name: 'red',
       canBuy: true,
       canSell: true,
-      quantity: 100
+      quantity: 100,
+      lowerValue: 0.01,
+      upperValue: 0.10,
     },
     {
       id: '1',
       name: 'blue',
       canBuy: true,
       canSell: true,
-      quantity: 100
+      quantity: 100,
+      lowerValue: 0.01,
+      upperValue: 0.10,
     },
     {
       id: '2',
       name: 'green',
       canBuy: true,
       canSell: true,
-      quantity: 100
+      quantity: 100,
+      lowerValue: 0.05,
+      upperValue: 0.05,
     }
   ]
 });
