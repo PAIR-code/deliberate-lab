@@ -341,9 +341,11 @@ export function createChatStageParticipantAnswer(
 }
 
 /** Create chat stage public data. */
-export function createChatStagePublicData(stage: ChatStageConfig): ChatStagePublicData {
+export function createChatStagePublicData(
+  id: string // stage ID
+): ChatStagePublicData {
   return {
-    id: stage.id,
+    id,
     kind: StageKind.CHAT,
     discussionTimestampMap: {},
     discussionStartTimestamp: null,

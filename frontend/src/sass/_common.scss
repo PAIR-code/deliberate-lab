@@ -124,6 +124,47 @@
   }
 }
 
+@mixin table {
+  @include flex-column;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: $spacing-medium;
+  overflow: hidden;
+
+  .table-head {
+    background: var(--md-sys-color-secondary-container);
+    border-bottom: 1px solid var(--md-sys-color-outline);
+  }
+
+  .table-row {
+    @include flex-row;
+
+    &:nth-of-type(2n) {
+      background: var(--md-sys-color-surface-container-high);
+    }
+  }
+
+  .table-cell {
+    @include flex-row-align-center;
+    border-right: 1px solid var(--md-sys-color-outline);
+    gap: $spacing-small;
+    padding: $spacing-small $spacing-medium;
+    width: 100%;
+    word-break: break-all;
+
+    &:last-of-type {
+      border-right: none;
+    }
+  }
+
+  .number-row {
+    flex: 0 0 30px;
+  }
+
+  .rank-row {
+    flex: 0 0 50px;
+  }
+}
+
 @mixin overlay {
   @include flex-row-align-center;
   background-color: rgba(0, 0, 0, .75);

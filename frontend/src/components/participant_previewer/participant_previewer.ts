@@ -6,6 +6,7 @@ import '../popup/booted_popup';
 import '../progress/progress_stage_waiting';
 import '../stages/chat_interface';
 import '../stages/chat_panel';
+import '../stages/chip_participant_view';
 import '../stages/ranking_participant_view';
 import '../stages/info_view';
 import '../stages/payout_participant_view';
@@ -209,6 +210,11 @@ export class ParticipantPreviewer extends MobxLitElement {
             <chat-panel .stage=${stage}></chat-panel>
             <chat-interface .stage=${stage}></chat-interface>
           </div>
+        `;
+      case StageKind.CHIP:
+        return html`
+          <chip-participant-view .stage=${stage} .answer=${answer}>
+          </chip-participant-view>
         `;
       case StageKind.RANKING:
         return html`

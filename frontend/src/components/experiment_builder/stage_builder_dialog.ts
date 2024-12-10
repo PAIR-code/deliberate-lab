@@ -33,12 +33,16 @@ import {
   GCE_METADATA,
   getGCEStageConfigs,
 } from '../../shared/games/gift_card_exchange';
-
-import {styles} from './stage_builder_dialog.scss';
+import {
+  CHIP_GAME_METADATA,
+  getChipNegotiationStageConfigs,
+} from '../../shared/games/chip_negotiation';
 import {
   RTV_METADATA,
   getRTVStageConfigs,
 } from '../../shared/games/reality_tv_chat';
+
+import {styles} from './stage_builder_dialog.scss';
 
 /** Stage builder dialog */
 @customElement('stage-builder-dialog')
@@ -115,6 +119,7 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()} ${this.renderNegotiationCard()}
         ${this.renderRealityTVCard()}
+        ${this.renderChipNegotiationCard()}
       </div>
     `;
   }
@@ -152,11 +157,8 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addGame}>
-        <div class="title">🌊 Lost at Sea</div>
-        <div>
-          An election scenario where participants deliberate together to elect a
-          leader responsible for completing a survival task.
-        </div>
+        <div class="title">🌊 ${LAS_METADATA.name}</div>
+        <div>${LAS_METADATA.description}<div>
       </div>
     `;
   }
@@ -168,11 +170,8 @@ export class StageBuilderDialog extends MobxLitElement {
 
     return html`
       <div class="card" @click=${addGame}>
-        <div class="title">💵 Gift Card Exchange</div>
-        <div>
-          A negotiation scenario where participants deliberate together to
-          optimally allocate a bundle of gift cards.
-        </div>
+        <div class="title">💵 ${GCE_METADATA.name}</div>
+        <div>${GCE_METADATA.description}</div>
       </div>
     `;
   }
@@ -183,10 +182,21 @@ export class StageBuilderDialog extends MobxLitElement {
     };
     return html`
       <div class="card" @click=${addGame}>
-        <div class="title">📺 Reality TV Discussion</div>
-        <div>
-          A conversation between multiple agents who discuss reality TV shows.
-        </div>
+        <div class="title">📺 ${RTV_METADATA.name}</div>
+        <div>${RTV_METADATA.description}</div>
+      </div>
+    `;
+  }
+
+  private renderChipNegotiationCard() {
+    const addGame = () => {
+      this.addGame(CHIP_GAME_METADATA, getChipNegotiationStageConfigs());
+    };
+
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">🪙 ${CHIP_GAME_METADATA.name}</div>
+        <div>${CHIP_GAME_METADATA.description}</div>
       </div>
     `;
   }

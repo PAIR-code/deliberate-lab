@@ -1,0 +1,15 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+}
+
+h2 {
+  @include typescale.title-medium;
+  margin: 0;
+}
+
+.table {
+  @include common.table;
+}
