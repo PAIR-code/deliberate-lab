@@ -3,7 +3,7 @@
  * 
  * Code assumes that the LLaMa instance is hosted on the provided IP address,
  * and is managed through the `ollama` framework (https://github.com/ollama/ollama).
- * Ideally, the code should accommodate multiple frameworks in the end.
+ * Example docker instance hosting an ollama server: https://github.com/dimits-ts/deliberate-lab-utils/tree/master/llm_server
  * 
  * Note: there already exists a client library for JavaScript, but not for Typescript.
  */
