@@ -159,7 +159,7 @@ export const completeChipTurn = onDocumentUpdated(
         transaction.set(
           logCollection.doc(),
           createChipLogEntry(
-            `${newData.currentTurn.participantId}'s turn`,
+            `${newData.currentTurn.participantId}'s turn to submit an offer.`,
             Timestamp.now()
           )
         );

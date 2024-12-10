@@ -157,7 +157,7 @@ export class ChipView extends MobxLitElement {
         Number.isInteger(this.sellChipAmount) &&
         this.buyChipAmount > 0 &&
         this.sellChipAmount > 0 &&
-        this.sellChipAmount <= availableSell &&
+        this.sellChipAmount <= availableSell
       );
     };
 
