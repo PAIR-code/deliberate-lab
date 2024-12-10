@@ -17,6 +17,7 @@ import {ParticipantAnswerService} from '../../services/participant.answer';
 import {getParticipantName} from '../../shared/participant.utils';
 import {
   createChipOffer,
+  displayChipOfferText,
   ChipItem,
   ChipLogEntry,
   ChipOffer,
@@ -117,7 +118,6 @@ export class ChipView extends MobxLitElement {
 
     return html`
       <div class="panel">
-        ${this.renderChipStatus()}
         <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
         </chip-reveal-view>
         ${isCurrentTurn()
@@ -127,39 +127,6 @@ export class ChipView extends MobxLitElement {
     `;
   }
 
-  private renderChipStatus() {
-    if (!this.stage) return nothing;
-
-    const renderChip = (chip: ChipItem) => {
-      return html`
-        <li>
-          ${this.answer?.chipMap[chip.id] ?? 0} ${chip.name} chips (x
-          ${this.answer?.chipValueMap[chip.id] ?? 0.0} per chip)
-        </li>
-      `;
-    };
-
-    const getTotal = () => {
-      if (!this.stage) return 0;
-      let total = 0;
-      this.stage.chips.forEach((chip) => {
-        const quantity = this.answer?.chipMap[chip.id] ?? 0;
-        const value = this.answer?.chipValueMap[chip.id] ?? 0;
-        total += quantity * value;
-      });
-      return total;
-    };
-
-    return html`
-      <div class="status">
-        <div>You have:</div>
-        <ul>
-          ${this.stage.chips.map((chip) => renderChip(chip))}
-        </ul>
-        <div>Total: $${getTotal()}</div>
-      </div>
-    `;
-  }
   private renderSenderView() {
     const isOfferPending = () => {
       if (!this.stage) return;
@@ -208,77 +175,88 @@ export class ChipView extends MobxLitElement {
     const isOfferValid = validateOffer();
     return html`
       <div class="offer-panel">
-        <div class="offer-description">
-          It's your turn to send an offer to the other participants.
-        </div>
-        <div class="offer-config">
-          <label>
-            Buy:
-            <select
-              .value=${this.selectedBuyChip}
-              @change=${(e: Event) => {
-                this.selectedBuyChip = (e.target as HTMLSelectElement).value;
-                this.requestUpdate(); // Trigger re-render after change
-              }}
-            >
-              <option value="RED">🔴 Red</option>
-              <option value="GREEN">🟢 Green</option>
-              <option value="BLUE">🔵 Blue</option>
-            </select>
-            <input
-              type="number"
-              min="1"
-              .value=${this.buyChipAmount}
-              @input=${(e: Event) => {
-                this.buyChipAmount = Math.max(
-                  1,
-                  Math.floor(parseInt((e.target as HTMLInputElement).value, 10))
-                );
-                this.requestUpdate(); // Trigger re-render after input
-              }}
-            />
-          </label>
-          <label>
-            Sell:
-            <select
-              .value=${this.selectedSellChip}
-              @change=${(e: Event) => {
-                this.selectedSellChip = (e.target as HTMLSelectElement).value;
-                this.requestUpdate(); // Trigger re-render after change
-              }}
-            >
-              <option value="RED">🔴 Red</option>
-              <option value="GREEN">🟢 Green</option>
-              <option value="BLUE">🔵 Blue</option>
-            </select>
-            <input
-              type="number"
-              min="1"
-              .value=${this.sellChipAmount}
-              @input=${(e: Event) => {
-                this.sellChipAmount = Math.max(
-                  1,
-                  Math.floor(parseInt((e.target as HTMLInputElement).value, 10))
-                );
-                this.requestUpdate(); // Trigger re-render after input
-              }}
-            />
-          </label>
-        </div>
+        ${isOfferPending()
+          ? ''
+          : html`<div class="offer-sending-panel">
+              <div class="offer-description">
+                It's your turn to send an offer to the other participants.
+              </div>
+              <div class="offer-config">
+                <label>
+                  Buy:
+                  <select
+                    .value=${this.selectedBuyChip}
+                    @change=${(e: Event) => {
+                      this.selectedBuyChip = (
+                        e.target as HTMLSelectElement
+                      ).value;
+                      this.requestUpdate(); // Trigger re-render after change
+                    }}
+                  >
+                    <option value="RED">🔴 Red</option>
+                    <option value="GREEN">🟢 Green</option>
+                    <option value="BLUE">🔵 Blue</option>
+                  </select>
+                  <input
+                    type="number"
+                    min="1"
+                    .value=${this.buyChipAmount}
+                    @input=${(e: Event) => {
+                      this.buyChipAmount = Math.max(
+                        1,
+                        Math.floor(
+                          parseInt((e.target as HTMLInputElement).value, 10)
+                        )
+                      );
+                      this.requestUpdate(); // Trigger re-render after input
+                    }}
+                  />
+                </label>
+                <label>
+                  Sell:
+                  <select
+                    .value=${this.selectedSellChip}
+                    @change=${(e: Event) => {
+                      this.selectedSellChip = (
+                        e.target as HTMLSelectElement
+                      ).value;
+                      this.requestUpdate(); // Trigger re-render after change
+                    }}
+                  >
+                    <option value="RED">🔴 Red</option>
+                    <option value="GREEN">🟢 Green</option>
+                    <option value="BLUE">🔵 Blue</option>
+                  </select>
+                  <input
+                    type="number"
+                    min="1"
+                    .value=${this.sellChipAmount}
+                    @input=${(e: Event) => {
+                      this.sellChipAmount = Math.max(
+                        1,
+                        Math.floor(
+                          parseInt((e.target as HTMLInputElement).value, 10)
+                        )
+                      );
+                      this.requestUpdate(); // Trigger re-render after input
+                    }}
+                  />
+                </label>
+              </div>
 
-        ${!isOfferValid
-          ? html`<div class="warning">
-              ‼️ You cannot offer to buy and sell the same chip color, and you
-              must have the amount that you are offering to sell.
-            </div>`
-          : nothing}
-
+              ${!isOfferValid
+                ? html`<div class="warning">
+                    ‼️ You cannot offer to buy and sell the same chip color, and
+                    you must have the amount that you are offering to sell.
+                  </div>`
+                : nothing}
+            </div>`}
         <pr-button
           ?loading=${this.isOfferLoading}
           ?disabled=${!isOfferValid || isOfferPending()}
           @click=${sendOffer}
         >
-          ${isOfferPending() ? 'Offer pending...' : 'Submit offer'}
+          ${isOfferPending() ? 'Offer sent and pending...' : 'Submit offer'}
         </pr-button>
       </div>
     `;
@@ -326,12 +304,15 @@ export class ChipView extends MobxLitElement {
     const senderParticipant = this.cohortService
       .getAllParticipants()
       .find((p) => p.publicId === offer.senderId);
-    const senderName = getParticipantName(senderParticipant!);
+    const senderName = `${senderParticipant!.avatar} ${getParticipantName(
+      senderParticipant!
+    )}`;
     return html`
       <div class="offer-panel">
         <div class="offer-description">
-          ${senderName} offered to buy ${JSON.stringify(offer.buy)} for
-          ${JSON.stringify(offer.sell)}
+          Incoming offer!<br />
+          ${senderName} would like to buy ${displayChipOfferText(offer.buy)} for
+          ${displayChipOfferText(offer.sell)}.
         </div>
         <div class="buttons">
           <pr-button

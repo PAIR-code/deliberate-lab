@@ -57,14 +57,17 @@ export class ChipReveal extends MobxLitElement {
           : []
         : this.cohortService.getAllParticipants();
 
-    return html` ${renderTitle()} ${this.renderTable(participants)} `;
+    return html`
+      ${renderTitle()} ${this.renderGlobalTable(participants)}
+      ${this.renderParticipantValuesTable()}
+    `;
   }
 
   private makeCell(content: string) {
     return html`<div class="table-cell">${content}</div>`;
   }
 
-  private renderTableHeader() {
+  private renderGlobalTableHeader() {
     if (!this.stage) return nothing;
 
     return html`
@@ -83,34 +86,103 @@ export class ChipReveal extends MobxLitElement {
     const isCurrentUser =
       participant.publicId! === this.participantService.profile!.publicId;
 
-    const renderChip = (chip: ChipItem) => {
+    const renderChip = (chip: ChipItem, isCurrentUser: boolean) => {
       const participantChipMap =
         this.publicData?.participantChipMap[participant.publicId] ?? {};
-      return this.makeCell(participantChipMap[chip.id]?.toString() ?? '');
+
+      let cellContent = participantChipMap[chip.id]?.toString() ?? '';
+      if (isCurrentUser) {
+        const participantChipValueMap =
+          this.publicData?.participantChipValueMap[participant.publicId] ?? {};
+        cellContent += ` (x $${participantChipValueMap[chip.id]} per chip)`;
+      }
+      return this.makeCell(cellContent);
     };
 
-    let participantIndicator = getParticipantName(participant);
+    let participantIndicator = `${participant.avatar} ${getParticipantName(
+      participant
+    )}`;
     if (isCurrentUser) {
       participantIndicator += ' (you)';
     }
 
     return html`
-      <div class="table-row ${isCurrentUser ? 'current-user-row' : ''}">
+      <div class="table-row">
         ${this.makeCell(participantIndicator)}
-        ${this.stage?.chips.map((chip) => renderChip(chip))}
+        ${this.stage?.chips.map((chip) => renderChip(chip, isCurrentUser))}
       </div>
     `;
   }
 
-  private renderTable(participants: ParticipantProfile[]) {
+  private renderGlobalTable(participants: ParticipantProfile[]) {
     return html`
-      <h3>Player Chip Balance Table</h3>
+      <h3>Global Player Chip Balance Table</h3>
       <div class="table">
-        ${this.renderTableHeader()}
+        ${this.renderGlobalTableHeader()}
         <div class="table-body">
           ${participants
             .filter((p) => isActiveParticipant(p))
+            .sort((a, b) => {
+              const isCurrentUserA =
+                a.publicId === this.participantService.profile!.publicId;
+              const isCurrentUserB =
+                b.publicId === this.participantService.profile!.publicId;
+
+              if (isCurrentUserA && !isCurrentUserB) {
+                return -1;
+              } else if (!isCurrentUserA && isCurrentUserB) {
+                return 1;
+              }
+              return 0;
+            })
             .map((p) => this.renderParticipantRow(p))}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderParticipantValuesTable() {
+    const currentParticipant = this.participantService.profile;
+    if (!this.publicData || !currentParticipant) return nothing;
+
+    const participantChipMap =
+      this.publicData?.participantChipMap[currentParticipant.publicId] ?? {};
+    const participantChipValueMap =
+      this.publicData?.participantChipValueMap[currentParticipant.publicId] ??
+      {};
+
+    // Get chip values for the current participant
+    const chipValues = this.stage?.chips.map((chip) => {
+      const quantity = participantChipMap[chip.id] ?? 0;
+      const value = participantChipValueMap[chip.id] ?? 0;
+      return {chip, quantity, value};
+    });
+
+    const totalPayout = chipValues
+      ?.reduce((total, {quantity, value}) => total + quantity * value, 0)
+      .toFixed(2);
+
+    return html`
+      <h3>Current Participant Payout</h3>
+      <div class="table">
+        <div class="table-row">
+          ${this.makeCell('Chip')} ${this.makeCell('Payout')}
+        </div>
+        ${chipValues?.map(
+          ({chip, quantity, value}) =>
+            html`
+              <div class="table-row">
+                ${this.makeCell(chip.name)}
+                ${this.makeCell(
+                  `$${(quantity * value).toFixed(
+                    2
+                  )} (${quantity} chips x $${value})`
+                )}
+              </div>
+            `
+        )}
+        <div class="table-row">
+          ${this.makeCell('Total payout')} ${this.makeCell(`$${totalPayout}`)}
         </div>
       </div>
     `;

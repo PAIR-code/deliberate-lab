@@ -77,7 +77,7 @@ export interface ChipStagePublicData extends BaseStagePublicData {
   // starting with 0
   currentRound: number;
   // current turn (e.g., participant offer) within a round
-  currentTurn: ChipTurn|null;
+  currentTurn: ChipTurn | null;
   // map of round # to (map of public ID --> if participant had turn)
   // (this helps determine whose turn it is and when to move to next round)
   participantOfferMap: Record<number, Record<string, boolean>>;
@@ -92,7 +92,7 @@ export interface ChipTurn {
   // public ID of participant whose turn it is to send offer
   participantId: string;
   // offer sent by participant, or null if not sent yet
-  offer: ChipOffer|null;
+  offer: ChipOffer | null;
   // map (public ID --> response) made by participants regarding offer
   responseMap: Record<string, boolean>;
 }
@@ -116,9 +116,7 @@ export interface ChipTransaction {
 // ************************************************************************* //
 
 /** Create chip stage. */
-export function createChipStage(
-  config: Partial<ChipStageConfig> = {}
-): ChipStageConfig {
+export function createChipStage(config: Partial<ChipStageConfig> = {}): ChipStageConfig {
   return {
     id: config.id ?? generateId(),
     kind: StageKind.CHIP,
@@ -133,9 +131,7 @@ export function createChipStage(
 }
 
 /** Create chip offer. */
-export function createChipOffer(
-  config: Partial<ChipOffer> = {}
-): ChipOffer {
+export function createChipOffer(config: Partial<ChipOffer> = {}): ChipOffer {
   return {
     id: config.id ?? generateId(),
     round: config.round ?? 0,
@@ -149,13 +145,13 @@ export function createChipOffer(
 export function createChipStageParticipantAnswer(
   id: string, // stage ID
   chipMap: Record<string, number>, // chip ID to quantity
-  chipValueMap: Record<string, number> // chip ID to value
+  chipValueMap: Record<string, number>, // chip ID to value
 ): ChipStageParticipantAnswer {
   return {
     id,
     kind: StageKind.CHIP,
     chipMap,
-    chipValueMap
+    chipValueMap,
   };
 }
 
@@ -176,9 +172,7 @@ export function createChipStagePublicData(
 }
 
 /** Create chip turn. */
-export function createChipTurn(
-  participantId: string
-): ChipTurn {
+export function createChipTurn(participantId: string): ChipTurn {
   return {
     participantId,
     offer: null,
@@ -187,12 +181,38 @@ export function createChipTurn(
 }
 
 /** Create chip log entry. */
-export function createChipLogEntry(
-  message: string,
-  timestamp = Timestamp.now()
-): ChipLogEntry {
+export function createChipLogEntry(message: string, timestamp = Timestamp.now()): ChipLogEntry {
   return {
     message,
-    timestamp
+    timestamp,
   };
+}
+
+export function displayChipOfferText(chips: Record<string, number>): string {
+  const chipIcons: Record<string, string> = {
+    RED: '🔴',
+    GREEN: '🟢',
+    BLUE: '🔵',
+  };
+
+  const getChipDescription = (chipId: string, quantity: number): string => {
+    return `${chipIcons[chipId]} ${quantity} ${chipId.toLowerCase()} chip${quantity > 1 ? 's' : ''}`;
+  };
+
+  if (Object.keys(chips).length === 1) {
+    const chipId = Object.keys(chips)[0];
+    const quantity = chips[chipId];
+    return getChipDescription(chipId, quantity);
+  }
+
+  const chipDescriptions = Object.entries(chips).map(([chipId, quantity]) => {
+    return getChipDescription(chipId, quantity);
+  });
+
+  if (chipDescriptions.length > 2) {
+    const lastDescription = chipDescriptions.pop();
+    return `${chipDescriptions.join(', ')}, and ${lastDescription}`;
+  }
+
+  return chipDescriptions.join(' and ');
 }
