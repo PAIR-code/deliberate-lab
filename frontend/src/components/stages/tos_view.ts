@@ -48,10 +48,11 @@ export class TOSView extends MobxLitElement {
       this.participantAnswerService.updateProfile({timestamps});
     };
 
+    const tosLinesJoined = this.stage?.tosLines.join('\n\n');
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="html-wrapper">
-        ${this.stage?.tosLines.map((line) => this.renderTOSLine(line))}
+        ${unsafeHTML(convertMarkdownToHTML(tosLinesJoined))}
       </div>
       <div class="ack-wrapper">
         <label class="checkbox-wrapper">

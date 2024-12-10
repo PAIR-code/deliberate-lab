@@ -1,5 +1,5 @@
-@use "./typescale.scss";
-@use "./colors.scss";
+@use './typescale.scss';
+@use './colors.scss';
 
 /**
  * Common mixins to be used across app.
@@ -135,6 +135,10 @@
     border-bottom: 1px solid var(--md-sys-color-outline);
   }
 
+  .table-foot {
+    border-top: 1px solid var(--md-sys-color-outline);
+  }
+
   .table-row {
     @include flex-row;
 
@@ -167,7 +171,7 @@
 
 @mixin overlay {
   @include flex-row-align-center;
-  background-color: rgba(0, 0, 0, .75);
+  background-color: rgba(0, 0, 0, 0.75);
   inset: 0;
   justify-content: center;
   padding: calc($main-content-padding * 2);
@@ -251,7 +255,13 @@
 }
 
 @mixin html-preview {
-  h1,h2,h3,h4,h5,h6,p {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p {
     margin: 0;
   }
   h1 {

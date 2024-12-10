@@ -5,6 +5,7 @@ import {
   ChipStageConfig,
   ChipStagePublicData,
   SendChipOfferData,
+  displayChipOfferText,
   SendChipResponseData,
   SetChipTurnData,
   createChipLogEntry,
@@ -25,11 +26,7 @@ import {
   prettyPrintErrors,
 } from '../utils/validation';
 
-import {
-  getChipParticipantIds,
-  updateChipCurrentTurn
-} from './chip.utils';
-
+import { getChipParticipantIds, updateChipCurrentTurn } from './chip.utils';
 
 /** Manage chip negotiation offers. */
 
@@ -54,14 +51,16 @@ export const setChipTurn = onCall(async (request) => {
   }
 
   // Define chip stage config
-  const stageDoc = app.firestore()
+  const stageDoc = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('stages')
     .doc(data.stageId);
 
   // Define chip stage public data document reference
-  const publicDoc = app.firestore()
+  const publicDoc = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('cohorts')
@@ -70,7 +69,8 @@ export const setChipTurn = onCall(async (request) => {
     .doc(data.stageId);
 
   // Define log entry collection reference
-  const logCollection = app.firestore()
+  const logCollection = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('cohorts')
@@ -80,8 +80,7 @@ export const setChipTurn = onCall(async (request) => {
     .collection('logs');
 
   await app.firestore().runTransaction(async (transaction) => {
-    const publicStageData =
-      (await publicDoc.get()).data() as ChipStagePublicData;
+    const publicStageData = (await publicDoc.get()).data() as ChipStagePublicData;
 
     // If turn is already set, then no action needed
     if (publicStageData.currentTurn !== null) {
@@ -89,34 +88,25 @@ export const setChipTurn = onCall(async (request) => {
     }
 
     // Get relevant (active, in cohort) participant IDs
-    const participantIds = await getChipParticipantIds(
-      data.experimentId,
-      data.cohortId
-    );
+    const participantIds = await getChipParticipantIds(data.experimentId, data.cohortId);
 
     // If no participants, then no action needed
     if (participantIds.length === 0) {
       return { success: false };
     }
 
-    const stageConfig =
-      (await stageDoc.get()).data() as ChipStageConfig;
+    const stageConfig = (await stageDoc.get()).data() as ChipStageConfig;
 
-    const newData = updateChipCurrentTurn(
-      publicStageData, participantIds, stageConfig.numRounds
-    );
+    const newData = updateChipCurrentTurn(publicStageData, participantIds, stageConfig.numRounds);
 
     transaction.set(publicDoc, newData);
     transaction.set(
       logCollection.doc(),
-      createChipLogEntry(`Round ${newData.currentRound + 1}`, Timestamp.now())
+      createChipLogEntry(`Round ${newData.currentRound + 1}`, Timestamp.now()),
     );
     transaction.set(
       logCollection.doc(),
-      createChipLogEntry(
-        `${newData.currentTurn.participantId}'s turn`,
-        Timestamp.now()
-      )
+      createChipLogEntry(`${newData.currentTurn.participantId}'s turn`, Timestamp.now()),
     );
   }); // end transaction
 
@@ -143,7 +133,8 @@ export const sendChipOffer = onCall(async (request) => {
   }
 
   // Define chip stage public data document reference
-  const publicDoc = app.firestore()
+  const publicDoc = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('cohorts')
@@ -152,7 +143,8 @@ export const sendChipOffer = onCall(async (request) => {
     .doc(data.stageId);
 
   // Define log entry collection reference
-  const logCollection = app.firestore()
+  const logCollection = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('cohorts')
@@ -164,8 +156,7 @@ export const sendChipOffer = onCall(async (request) => {
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     // Set offer round based on public stage current round
-    const publicStageData =
-      (await publicDoc.get()).data() as ChipStagePublicData;
+    const publicStageData = (await publicDoc.get()).data() as ChipStagePublicData;
     const chipOffer = data.chipOffer;
     chipOffer.round = publicStageData.currentRound;
 
@@ -192,10 +183,10 @@ export const sendChipOffer = onCall(async (request) => {
     transaction.set(
       logCollection.doc(),
       createChipLogEntry(
-        `${data.participantPublicId} offered ${JSON.stringify(data.chipOffer.sell)} for ${JSON.stringify(data.chipOffer.buy)}`,
+        `${data.participantPublicId} offered ${displayChipOfferText(data.chipOffer.sell)} for ${displayChipOfferText(data.chipOffer.buy)}`,
         Timestamp.now(),
-      )
-    )
+      ),
+    );
   });
 
   return { success: true };
@@ -221,7 +212,8 @@ export const sendChipResponse = onCall(async (request) => {
   }
 
   // Define chip stage public data document reference
-  const publicDoc = app.firestore()
+  const publicDoc = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('cohorts')
@@ -232,8 +224,7 @@ export const sendChipResponse = onCall(async (request) => {
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     // Confirm that offer is valid (ID matches the current offer ID)
-    const publicStageData =
-      (await publicDoc.get()).data() as ChipStagePublicData;
+    const publicStageData = (await publicDoc.get()).data() as ChipStagePublicData;
     // TODO: Check offer ID
     if (!publicStageData.currentTurn) {
       return { success: false };
@@ -241,8 +232,7 @@ export const sendChipResponse = onCall(async (request) => {
 
     // Update participant offer map in public stage data
     // (mark current participant as having responded to current offer)
-    publicStageData.currentTurn.responseMap[data.participantPublicId] =
-      data.chipResponse;
+    publicStageData.currentTurn.responseMap[data.participantPublicId] = data.chipResponse;
 
     // Set new public data
     transaction.set(publicDoc, publicStageData);
