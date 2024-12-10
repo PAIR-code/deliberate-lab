@@ -114,7 +114,9 @@ export class ChipReveal extends MobxLitElement {
   private renderGlobalTable(participants: ParticipantProfile[]) {
     return html`
       <h3>Chip Counts</h3>
-      <p class="description">This table shows how many chips the participants currently have.</p>
+      <p class="description">
+        This table shows how many chips all participants currently have.
+      </p>
       <div class="table">
         ${this.renderGlobalTableHeader()}
         <div class="table-body">
@@ -182,8 +184,10 @@ export class ChipReveal extends MobxLitElement {
               </div>
             `
         )}
+        <div class="table-foot">
         <div class="table-row">
           ${this.makeCell('Total payout')} ${this.makeCell(`$${totalPayout}`)}
+        </div>
         </div>
       </div>
     `;

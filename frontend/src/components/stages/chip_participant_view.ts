@@ -53,6 +53,13 @@ export class ChipView extends MobxLitElement {
   @state() isRejectOfferLoading = false;
   @state() isSetTurnLoading = false;
 
+  resetChipValues() {
+    this.selectedBuyChip = 'RED';
+    this.selectedSellChip = 'GREEN';
+    this.buyChipAmount = 1;
+    this.sellChipAmount = 1;
+  }
+
   override render() {
     if (!this.stage) {
       return nothing;
@@ -170,6 +177,7 @@ export class ChipView extends MobxLitElement {
       );
 
       this.isOfferLoading = false;
+      this.resetChipValues();
     };
 
     const isOfferValid = validateOffer();

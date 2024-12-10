@@ -25,7 +25,7 @@ export class InfoView extends MobxLitElement {
       return nothing;
     }
 
-    const infoLinesJoined = this.stage?.infoLines.join('\n');
+    const infoLinesJoined = this.stage?.infoLines.join('\n\n');
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="html-wrapper">

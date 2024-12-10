@@ -50,24 +50,24 @@
 }
 
 .offer-panel {
-  background-color: var(--md-sys-color-on-primary); /* Light gray background */
-  border-radius: 12px; /* Rounded corners */
-  padding: 16px; /* Padding for inner spacing */
+  background-color: var(--md-sys-color-surface); /* Light gray background */
+  border-radius: common.$spacing-small;
+  padding: common.$spacing-medium; /* Padding for inner spacing */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-  margin-bottom: 16px; /* Space between panels if multiple exist */
+  margin-bottom: common.$spacing-medium;
 }
 
 .offer-description {
   font-weight: bold;
   font-style: italic;
   line-height: 1.5;
-  margin-bottom: 10px;
+  margin-bottom: common.$spacing-small;
 }
 
 .offer-config {
   display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: common.$spacing-medium;
+  margin-bottom: common.$spacing-medium;
 }
 
 label {
@@ -82,7 +82,7 @@ input {
   padding: 4px 8px;
   border-radius: 4px;
   border: 1px solid #ccc;
-  font-size: 14px;
+  font-size: var(--md-sys-typescale-body-medium);
 }
 
 .warning{

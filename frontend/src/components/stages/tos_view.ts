@@ -48,7 +48,7 @@ export class TOSView extends MobxLitElement {
       this.participantAnswerService.updateProfile({timestamps});
     };
 
-    const tosLinesJoined = this.stage?.tosLines.join("\n");
+    const tosLinesJoined = this.stage?.tosLines.join('\n\n');
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="html-wrapper">
