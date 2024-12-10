@@ -168,7 +168,7 @@ export const createMediatorMessage = onDocumentCreated(
     const creatorDoc = await app.firestore().collection('experimenterData').doc(creatorId).get();
     if (!creatorDoc.exists) return;
 
-    const apiKeys = creatorDoc.data().apiKeys;
+    const experimenterData = creatorDoc.data() as ExperimenterData;
 
     // Use chats in collection to build chat history for prompt, get num chats
     const chatMessages = (
@@ -180,7 +180,6 @@ export const createMediatorMessage = onDocumentCreated(
         .orderBy('timestamp', 'asc')
         .get()
     ).docs.map((doc) => doc.data() as ChatMessage);
-    console.log(apiKeys);
 
     // Fetch messages from all mediators
     const mediatorMessages: MediatorMessage[] = [];
@@ -188,8 +187,7 @@ export const createMediatorMessage = onDocumentCreated(
       const prompt = `${getPreface(mediator)}\n${getChatHistory(chatMessages, mediator)}\n${mediator.responseConfig.formattingInstructions}`;
 
       // Call LLM API with given modelCall info
-      console.log("aaaaaaaa");
-      const response = await getMediatorResponse(apiKeys, prompt);
+      const response = await getMediatorResponse(experimenterData, prompt);
 
       // Add mediator message if non-empty
       let message = response.text;
