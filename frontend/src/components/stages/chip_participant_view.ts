@@ -16,14 +16,15 @@ import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 import {getParticipantName} from '../../shared/participant.utils';
 import {
-  createChipOffer,
-  displayChipOfferText,
   ChipItem,
   ChipLogEntry,
+  ChipLogType,
   ChipOffer,
   ChipStageConfig,
   ChipStageParticipantAnswer,
   StageKind,
+  createChipOffer,
+  displayChipOfferText,
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
@@ -359,14 +360,50 @@ export class ChipView extends MobxLitElement {
   }
 
   private renderLogEntry(entry: ChipLogEntry) {
-    return html`
-      <div class="log-entry">
-        <div class="subtitle">
-          ${convertUnifiedTimestampToDate(entry.timestamp)}
+    const renderEntry = (message: string) => {
+      return html`
+        <div class="log-entry">
+          <div class="subtitle">
+            ${convertUnifiedTimestampToDate(entry.timestamp)}
+          </div>
+          <div>${message}</div>
         </div>
-        <div>${entry.message}</div>
-      </div>
-    `;
+      `;
+    }
+
+    switch (entry.type) {
+      case ChipLogType.ERROR:
+        return renderEntry(entry.errorMessage);
+      case ChipLogType.INFO:
+        return renderEntry(entry.infoMessage);
+      case ChipLogType.NEW_ROUND:
+        return renderEntry(`Round ${entry.roundNumber + 1}`);
+      case ChipLogType.NEW_TURN:
+        // TODO: Render participant name and avatar
+        return renderEntry(`${entry.participantId}'s turn`);
+      case ChipLogType.OFFER:
+        // TODO: Render participant name and avatar
+        return renderEntry(
+          `${entry.offer.senderId} offered
+           ${displayChipOfferText(entry.offer.sell)}
+           for ${displayChipOfferText(entry.offer.buy)}
+          `
+        );
+      case ChipLogType.OFFER_DECLINED:
+        // TODO: Render participant name and avatar
+        return renderEntry(
+          `Transaction failed: No one accepted ${entry.offer.senderId}'s offer`
+        );
+      case ChipLogType.TRANSACTION:
+        // TODO: Render participant name and avatar
+        const sender = entry.offer.senderId;
+        const recipient = entry.recipientId;
+        return renderEntry(
+          `Transaction cleared: ${sender}'s offer was accepted by ${recipient}`
+        );
+      default:
+        return nothing;
+    }
   }
 }
 

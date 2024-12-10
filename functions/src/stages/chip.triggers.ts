@@ -11,7 +11,11 @@ import {
   StageConfig,
   StageKind,
   StagePublicData,
-  createChipLogEntry
+  createChipInfoLogEntry,
+  createChipOfferDeclinedLogEntry,
+  createChipRoundLogEntry,
+  createChipTransactionLogEntry,
+  createChipTurnLogEntry,
 } from '@deliberation-lab/utils';
 
 import { app } from '../app';
@@ -124,9 +128,8 @@ export const completeChipTurn = onDocumentUpdated(
       } else {
         transaction.set(
           logCollection.doc(),
-          createChipLogEntry(
-            `Transaction failed: ${senderId}'s offer was not accepted by any participants`,
-            Timestamp.now()
+          createChipOfferDeclinedLogEntry(
+            publicStage.currentTurn.offer, Timestamp.now()
           )
         );
       }
@@ -142,24 +145,22 @@ export const completeChipTurn = onDocumentUpdated(
       if (newData.isGameOver) {
         transaction.set(
           logCollection.doc(),
-          createChipLogEntry('Game over', Timestamp.now())
+          createChipInfoLogEntry('Game over', Timestamp.now())
         );
       } else {
         // Write new round log entry if applicable
         if (oldCurrentRound !== newData.currentRound) {
           transaction.set(
             logCollection.doc(),
-            createChipLogEntry(
-              `Round ${newData.currentRound + 1}`,
-              Timestamp.now()
-            )
+            createChipRoundLogEntry(newData.currentRound, Timestamp.now())
           );
         }
         // Write new turn entry
         transaction.set(
           logCollection.doc(),
-          createChipLogEntry(
-            `${newData.currentTurn.participantId}'s turn to submit an offer.`,
+          createChipTurnLogEntry(
+            newData.currentRound,
+            newData.currentTurn.participantId,
             Timestamp.now()
           )
         );
@@ -252,9 +253,8 @@ export const completeChipTransaction = onDocumentCreated(
       // Write success log
       transaction.set(
         logCollection.doc(),
-        createChipLogEntry(
-          `Transaction cleared: ${senderId}'s offer was accepted by ${recipientId}`,
-          Timestamp.now()
+        createChipTransactionLogEntry(
+          chipTransaction.offer, recipientId, Timestamp.now()
         )
       );
 

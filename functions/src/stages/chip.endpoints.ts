@@ -8,7 +8,9 @@ import {
   displayChipOfferText,
   SendChipResponseData,
   SetChipTurnData,
-  createChipLogEntry,
+  createChipOfferLogEntry,
+  createChipRoundLogEntry,
+  createChipTurnLogEntry,
   createChipTurn,
   generateId,
 } from '@deliberation-lab/utils';
@@ -102,11 +104,15 @@ export const setChipTurn = onCall(async (request) => {
     transaction.set(publicDoc, newData);
     transaction.set(
       logCollection.doc(),
-      createChipLogEntry(`Round ${newData.currentRound + 1}`, Timestamp.now()),
+      createChipRoundLogEntry(newData.currentRound, Timestamp.now()),
     );
     transaction.set(
       logCollection.doc(),
-      createChipLogEntry(`${newData.currentTurn.participantId}'s turn`, Timestamp.now()),
+      createChipTurnLogEntry(
+        newData.currentRound + 1,
+        newData.currentTurn.participantId,
+        Timestamp.now()
+      ),
     );
   }); // end transaction
 
@@ -182,10 +188,7 @@ export const sendChipOffer = onCall(async (request) => {
     // Add log entry for chip offer
     transaction.set(
       logCollection.doc(),
-      createChipLogEntry(
-        `${data.participantPublicId} offered ${displayChipOfferText(data.chipOffer.sell)} for ${displayChipOfferText(data.chipOffer.buy)}`,
-        Timestamp.now(),
-      ),
+      createChipOfferLogEntry(data.chipOffer, Timestamp.now())
     );
   });
 

@@ -98,10 +98,66 @@ export interface ChipTurn {
 }
 
 /** Chip log entry. */
-export interface ChipLogEntry {
-  // TODO: Add chip log entry types for offer|transaction|round|etc.
-  message: string;
+export type ChipLogEntry =
+  | ChipRoundLogEntry
+  | ChipTurnLogEntry
+  | ChipOfferLogEntry
+  | ChipOfferDeclinedLogEntry
+  | ChipInfoLogEntry
+  | ChipErrorLogEntry
+  | ChipTransactionLogEntry;
+
+export interface BaseChipLogEntry {
+  type: ChipLogType
   timestamp: UnifiedTimestamp;
+}
+
+/** Chip log type. */
+export enum ChipLogType {
+  ERROR = 'error', // error message
+  INFO = 'info', // info message
+  NEW_ROUND = 'newRound', // new round
+  NEW_TURN = 'newTurn', // new turn
+  OFFER = 'offer', // new offer posted
+  OFFER_DECLINED = 'offerDeclined', // no one accepted offer
+  TRANSACTION = 'transaction', // transaction cleared
+}
+
+export interface ChipRoundLogEntry extends BaseChipLogEntry {
+  type: ChipLogType.NEW_ROUND;
+  roundNumber: number;
+}
+
+export interface ChipTurnLogEntry extends BaseChipLogEntry {
+  type: ChipLogType.NEW_TURN;
+  roundNumber: number;
+  participantId: string; // public ID
+}
+
+export interface ChipInfoLogEntry extends BaseChipLogEntry {
+  type: ChipLogType.INFO;
+  infoMessage: string;
+}
+
+export interface ChipErrorLogEntry extends BaseChipLogEntry {
+  type: ChipLogType.ERROR;
+  errorMessage: string;
+}
+
+export interface ChipOfferLogEntry extends BaseChipLogEntry {
+  type: ChipLogType.OFFER;
+  offer: ChipOffer;
+}
+
+export interface ChipOfferDeclinedLogEntry extends BaseChipLogEntry {
+  type: ChipLogType.OFFER_DECLINED;
+  offer: ChipOffer;
+}
+
+export interface ChipTransactionLogEntry extends BaseChipLogEntry {
+  type: ChipLogType.TRANSACTION;
+  offer: ChipOffer;
+  recipientId: string; // public ID
 }
 
 /** Chip transaction. */
@@ -180,11 +236,82 @@ export function createChipTurn(participantId: string): ChipTurn {
   };
 }
 
-/** Create chip log entry. */
-export function createChipLogEntry(message: string, timestamp = Timestamp.now()): ChipLogEntry {
+/** Create chip info log entry. */
+export function createChipInfoLogEntry(
+  infoMessage: string, timestamp = Timestamp.now()
+): ChipInfoLogEntry {
   return {
-    message,
-    timestamp,
+    type: ChipLogType.INFO,
+    infoMessage,
+    timestamp
+  };
+}
+
+/** Create chip error log entry. */
+export function createChipErrorLogEntry(
+  errorMessage: string, timestamp = Timestamp.now()
+): ChipErrorLogEntry {
+  return {
+    type: ChipLogType.ERROR,
+    errorMessage,
+    timestamp
+  };
+}
+
+/** Create chip round log entry. */
+export function createChipRoundLogEntry(
+  roundNumber: number, timestamp = Timestamp.now()
+): ChipRoundLogEntry {
+  return {
+    type: ChipLogType.NEW_ROUND,
+    roundNumber,
+    timestamp
+  };
+}
+
+/** Create chip turn log entry. */
+export function createChipTurnLogEntry(
+  roundNumber: number, participantId: string, timestamp = Timestamp.now()
+): ChipTurnLogEntry {
+  return {
+    type: ChipLogType.NEW_TURN,
+    roundNumber,
+    participantId,
+    timestamp
+  };
+}
+
+/** Create chip offer log entry. */
+export function createChipOfferLogEntry(
+  offer: ChipOffer, timestamp = Timestamp.now()
+): ChipOfferLogEntry {
+  return {
+    type: ChipLogType.OFFER,
+    offer,
+    timestamp
+  };
+}
+
+/** Create chip offer declined log entry. */
+export function createChipOfferDeclinedLogEntry(
+  offer: ChipOffer, timestamp = Timestamp.now()
+): ChipOfferDeclinedLogEntry {
+  return {
+    type: ChipLogType.OFFER_DECLINED,
+    offer,
+    timestamp
+  };
+}
+
+/** Create chip transaction log entry. */
+export function createChipTransactionLogEntry(
+  offer: ChipOffer, recipientId: string, timestamp = Timestamp.now()
+): ChipTransactionLogEntry {
+  return {
+    type: ChipLogType.TRANSACTION,
+    offer,
+    recipientId,
+    timestamp
   };
 }
 
