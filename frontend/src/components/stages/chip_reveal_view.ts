@@ -59,7 +59,9 @@ export class ChipReveal extends MobxLitElement {
 
     return html`
       ${renderTitle()} ${this.renderGlobalTable(participants)}
+      <div class="divider"></div>
       ${this.renderParticipantValuesTable()}
+      <div class="divider"></div>
     `;
   }
 
@@ -90,12 +92,7 @@ export class ChipReveal extends MobxLitElement {
       const participantChipMap =
         this.publicData?.participantChipMap[participant.publicId] ?? {};
 
-      let cellContent = participantChipMap[chip.id]?.toString() ?? '';
-      if (isCurrentUser) {
-        const participantChipValueMap =
-          this.publicData?.participantChipValueMap[participant.publicId] ?? {};
-        cellContent += ` (x $${participantChipValueMap[chip.id]} per chip)`;
-      }
+      const cellContent = participantChipMap[chip.id]?.toString() ?? '';
       return this.makeCell(cellContent);
     };
 
@@ -116,7 +113,8 @@ export class ChipReveal extends MobxLitElement {
 
   private renderGlobalTable(participants: ParticipantProfile[]) {
     return html`
-      <h3>Global Player Chip Balance Table</h3>
+      <h3>Chip Counts</h3>
+      <p class="description">This table shows how many chips the participants currently have.</p>
       <div class="table">
         ${this.renderGlobalTableHeader()}
         <div class="table-body">
@@ -163,10 +161,13 @@ export class ChipReveal extends MobxLitElement {
       .toFixed(2);
 
     return html`
-      <h3>Current Participant Payout</h3>
+      <h3>Current Payout</h3>
+      <p class="description">This table shows how much your chips are currently worth.</div>
       <div class="table">
-        <div class="table-row">
-          ${this.makeCell('Chip')} ${this.makeCell('Payout')}
+        <div class="table-head">
+          <div class="table-row">
+            ${this.makeCell('Chip')} ${this.makeCell('Payout')}
+          </div>
         </div>
         ${chipValues?.map(
           ({chip, quantity, value}) =>
