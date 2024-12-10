@@ -13,3 +13,7 @@ h2 {
 .table {
   @include common.table;
 }
+
+.current-user-row {
+  font-weight: bold;
+}

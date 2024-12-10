@@ -14,9 +14,9 @@ import {
   ChipStageConfig,
   ParticipantProfile,
   RevealAudience,
-  StageKind
+  StageKind,
 } from '@deliberation-lab/utils';
-
+import {isActiveParticipant} from '../../shared/participant.utils';
 import {styles} from './chip_reveal_view.scss';
 import {SurveyAnswer} from '@deliberation-lab/utils';
 
@@ -47,18 +47,17 @@ export class ChipReveal extends MobxLitElement {
         return nothing;
       }
       return html`<h2>Results for <b>${this.stage?.name}</b> stage</h2>`;
-    }
+    };
 
     const currentParticipant = this.participantService.profile;
     const participants =
-      this.item?.revealAudience === RevealAudience.CURRENT_PARTICIPANT ?
-      (currentParticipant ? [currentParticipant] : []) :
-      this.cohortService.getAllParticipants();
+      this.item?.revealAudience === RevealAudience.CURRENT_PARTICIPANT
+        ? currentParticipant
+          ? [currentParticipant]
+          : []
+        : this.cohortService.getAllParticipants();
 
-    return html`
-      ${renderTitle()}
-      ${this.renderTable(participants)}
-    `;
+    return html` ${renderTitle()} ${this.renderTable(participants)} `;
   }
 
   private makeCell(content: string) {
@@ -72,7 +71,7 @@ export class ChipReveal extends MobxLitElement {
       <div class="table-head">
         <div class="table-row">
           ${this.makeCell('participant')}
-          ${this.stage.chips.map(chip => this.makeCell(chip.name))}
+          ${this.stage.chips.map((chip) => this.makeCell(chip.name))}
         </div>
       </div>
     `;
@@ -81,28 +80,37 @@ export class ChipReveal extends MobxLitElement {
   private renderParticipantRow(participant: ParticipantProfile) {
     if (!this.publicData) return nothing;
 
+    const isCurrentUser =
+      participant.publicId! === this.participantService.profile!.publicId;
+
     const renderChip = (chip: ChipItem) => {
       const participantChipMap =
         this.publicData?.participantChipMap[participant.publicId] ?? {};
       return this.makeCell(participantChipMap[chip.id]?.toString() ?? '');
     };
 
+    let participantIndicator = getParticipantName(participant);
+    if (isCurrentUser) {
+      participantIndicator += ' (you)';
+    }
+
     return html`
-      <div class="table-row">
-        ${this.makeCell(getParticipantName(participant))}
-        ${this.stage?.chips.map(chip => renderChip(chip))}
+      <div class="table-row ${isCurrentUser ? 'current-user-row' : ''}">
+        ${this.makeCell(participantIndicator)}
+        ${this.stage?.chips.map((chip) => renderChip(chip))}
       </div>
     `;
   }
 
-  private renderTable(
-    participants: ParticipantProfile[]
-  ) {
+  private renderTable(participants: ParticipantProfile[]) {
     return html`
+      <h3>Player Chip Balance Table</h3>
       <div class="table">
         ${this.renderTableHeader()}
         <div class="table-body">
-          ${participants.map(p => this.renderParticipantRow(p))}
+          ${participants
+            .filter((p) => isActiveParticipant(p))
+            .map((p) => this.renderParticipantRow(p))}
         </div>
       </div>
     `;

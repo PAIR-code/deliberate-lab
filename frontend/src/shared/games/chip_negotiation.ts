@@ -60,6 +60,7 @@ const CHIP_TOS_STAGE = createTOSStage({
 // ****************************************************************************
 const CHIP_PROFILE_STAGE = createProfileStage({
   id: 'profile',
+  name: 'View randomly generated profile',
   game: StageGame.CHP,
   profileType: ProfileType.ANONYMOUS_ANIMAL,
 });
@@ -83,7 +84,7 @@ const CHIP_NEGOTIATION_STAGE = createChipStage({
   chips: [
     {
       id: 'RED',
-      name: 'red',
+      name: '🔴 red',
       canBuy: true,
       canSell: true,
       quantity: 100,
@@ -92,7 +93,7 @@ const CHIP_NEGOTIATION_STAGE = createChipStage({
     },
     {
       id: 'BLUE',
-      name: 'blue',
+      name: '🔵 blue',
       canBuy: true,
       canSell: true,
       quantity: 100,
@@ -101,7 +102,7 @@ const CHIP_NEGOTIATION_STAGE = createChipStage({
     },
     {
       id: 'GREEN',
-      name: 'green',
+      name: '🟢 green',
       canBuy: true,
       canSell: true,
       quantity: 100,
