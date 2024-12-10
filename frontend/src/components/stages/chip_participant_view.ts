@@ -51,12 +51,17 @@ export class ChipView extends MobxLitElement {
       return nothing;
     }
 
+    const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
+    if (!publicData || publicData.kind !== StageKind.CHIP) {
+      return nothing;
+    }
+
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="panel-wrapper">
         ${this.renderStatusPanel()} ${this.renderLogsPanel()}
       </div>
-      <stage-footer>
+      <stage-footer .disabled=${!publicData.isGameOver}>
         ${this.stage.progress.showParticipantProgress
           ? html`<progress-stage-completed></progress-stage-completed>`
           : nothing}
