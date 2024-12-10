@@ -30,7 +30,7 @@ export enum ApiKeyType {
 
 export interface LlamaServerConfig {
   url: string;
-  port: number;
+  //port: number; // apparently not needed? https://github.com/ollama/ollama/blob/main/docs/api.md#generate-a-completion
   // will probably need more data for server-side auth?
 }
 
@@ -40,7 +40,6 @@ export interface LlamaServerConfig {
 // ************************************************************************* //
 
 const INVALID_API_KEY = ''
-const INVALID_PORT = -1
 
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
@@ -52,7 +51,7 @@ export function createExperimenterData(
   return {
     id: experimenterId,
     geminiApiKey: INVALID_API_KEY,
-    llamaApiKey: { url: INVALID_API_KEY, port: INVALID_PORT },
+    llamaApiKey: { url: INVALID_API_KEY },
     activeApiKeyType: ApiKeyType.GEMINI_API_KEY
   };
 }
@@ -72,10 +71,9 @@ export function checkApiKeyExists(experimenterData: ExperimenterData | null | un
   if (experimenterData.activeApiKeyType === ApiKeyType.LLAMA_CUSTOM_URL) {
     // implicitly checks if llamaApiKey exists
     return (
-      experimenterData.llamaApiKey.url !== INVALID_API_KEY &&
-      experimenterData.llamaApiKey.port !== INVALID_PORT
+      experimenterData.llamaApiKey.url !== INVALID_API_KEY
     );
   }
-
+  console.log(experimenterData);
   return false; // false if no valid condition is met
 }

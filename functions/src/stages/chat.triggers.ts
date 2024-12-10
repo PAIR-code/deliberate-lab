@@ -13,10 +13,13 @@ import {
   createAgentMediatorChatMessage,
   MediatorConfig,
   ChatStageConfig,
+  ApiKeyType,
+  ExperimenterData,
 } from '@deliberation-lab/utils';
 
 import { app } from '../app';
 import { getGeminiAPIResponse } from '../api/gemini.api';
+import { ollamaChat } from '../api/llama.api';
 
 export interface MediatorMessage {
   mediator: MediatorConfig;
@@ -165,7 +168,7 @@ export const createMediatorMessage = onDocumentCreated(
     const creatorDoc = await app.firestore().collection('experimenterData').doc(creatorId).get();
     if (!creatorDoc.exists) return;
 
-    const apiKeys = creatorDoc.data().apiKeys;
+    const experimenterData = creatorDoc.data() as ExperimenterData;
 
     // Use chats in collection to build chat history for prompt, get num chats
     const chatMessages = (
@@ -183,8 +186,8 @@ export const createMediatorMessage = onDocumentCreated(
     for (const mediator of stage.mediators) {
       const prompt = `${getPreface(mediator)}\n${getChatHistory(chatMessages, mediator)}\n${mediator.responseConfig.formattingInstructions}`;
 
-      // Call Gemini API with given modelCall info
-      const response = await getGeminiAPIResponse(apiKeys.geminiKey, prompt);
+      // Call LLM API with given modelCall info
+      const response = await getMediatorResponse(experimenterData, prompt);
 
       // Add mediator message if non-empty
       let message = response.text;
@@ -278,3 +281,28 @@ export const createMediatorMessage = onDocumentCreated(
     });
   },
 );
+
+async function getMediatorResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
+  const keyType = data.activeApiKeyType;
+  let response;
+
+  if (keyType === ApiKeyType.GEMINI_API_KEY) {
+    response =  getGeminiResponse(data, prompt);
+  } else if (keyType === ApiKeyType.LLAMA_CUSTOM_URL) {
+    response = await getLlamaResponse(data, prompt);
+  } else {
+    console.log("Error: invalid apiKey type: ", keyType)
+    response = {text: ""};
+  }
+
+  return response
+}
+
+async function getGeminiResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
+  return await getGeminiAPIResponse(data.geminiApiKey, prompt);
+}
+
+async function getLlamaResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
+  //TODO: make model_type field available to settings page
+  return await ollamaChat([prompt], "llama3.2", data.llamaApiKey);
+}

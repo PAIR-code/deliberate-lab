@@ -10,10 +10,6 @@ const DEFAULT_FETCH_TIMEOUT = 300 * 1000; // This is the Chrome default
 const MAX_TOKENS_FINISH_REASON = "MAX_TOKENS";
 const QUOTA_ERROR_CODE = 429;
 
-interface ModelResponse {
-  score?: number;
-  text: string;
-}
 
 const SAFETY_SETTINGS = [
   {

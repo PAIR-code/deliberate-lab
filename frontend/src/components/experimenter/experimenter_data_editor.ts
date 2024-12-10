@@ -44,7 +44,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
     return html`
       <pr-button
         color="${isActive ? 'primary' : 'neutral'}"
-        variant="default"
+        variant=${isActive ? 'tonal' : 'default'}
         @click=${() => this.selectServerType(apiKeyType)}
       >
         ${serverTypeName}
@@ -134,12 +134,13 @@ export class ExperimenterDataEditor extends MobxLitElement {
             activeApiKeyType: ApiKeyType.LLAMA_CUSTOM_URL,
             llamaApiKey: {
               url: serverSettings,
-              port: oldData.llamaApiKey.port
+              //port: oldData.llamaApiKey.port
             },
             geminiApiKey: oldData.geminiApiKey
           }
           break;
-
+          //may be useful later, switch will be reused for any other config this needs in the future
+        /*
         case "port":
           newData = {
             id: oldData.id,
@@ -152,7 +153,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
             geminiApiKey: oldData.geminiApiKey
           }
           break;
-
+          */
         default:
           console.log("No field associated with llama server settings: ", field);
           return;
@@ -170,14 +171,6 @@ export class ExperimenterDataEditor extends MobxLitElement {
           variant="outlined"
           .value=${data?.llamaApiKey?.url ?? ""} 
           @input=${(e: InputEvent) => updateServerSettings(e, 'serverUrl')}
-        >
-        </pr-textarea>
-        <pr-textarea
-          label="Port"
-          placeholder="Enter port number"
-          variant="outlined"
-          .value=${data?.llamaApiKey?.port ?? ""}
-          @input=${(e: InputEvent) => updateServerSettings(e, 'port')}
         >
         </pr-textarea>
       </div>

@@ -40,7 +40,7 @@ export class ChatEditor extends MobxLitElement {
 
     // Check if experimenter's API key exists
     let apiCheck;
-    if (checkApiKeyExists(this.authService.experimenterData)) {
+    if (!checkApiKeyExists(this.authService.experimenterData)) {
       apiCheck = html`
         <div class="warning">
           <b>Note:</b> In order for LLM calls to work, you must add your Gemini API key 
