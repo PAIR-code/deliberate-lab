@@ -14,6 +14,7 @@ import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 
 import {
+  ChipItem,
   ChipLogEntry,
   ChipStageConfig,
   ChipStageParticipantAnswer,
@@ -111,13 +112,40 @@ export class ChipView extends MobxLitElement {
 
     return html`
       <div class="panel">
-        <div class="status">
-          You have
-          ${this.stage.chips.map(
-              chip => `${this.answer?.chipMap[chip.id] ?? 0} ${chip.name} chips`
-            ).join(', ')}
-        </div>
+        ${this.renderChipStatus()}
         ${isCurrentTurn() ? this.renderSenderView() : this.renderRecipientView()}
+      </div>
+    `;
+  }
+
+  private renderChipStatus() {
+    if (!this.stage) return nothing;
+
+    const renderChip = (chip: ChipItem) => {
+      return html`
+        <li>
+          ${this.answer?.chipMap[chip.id] ?? 0} ${chip.name} chips
+          (x ${this.answer?.chipValueMap[chip.id] ?? 0.0} per chip)
+        </li>
+      `;
+    };
+
+    const getTotal = () => {
+      if (!this.stage) return 0;
+      let total = 0
+      this.stage.chips.forEach((chip) => {
+        const quantity = this.answer?.chipMap[chip.id] ?? 0;
+        const value = this.answer?.chipValueMap[chip.id] ?? 0;
+        total += quantity * value;
+      });
+      return total;
+    };
+
+    return html`
+      <div class="status">
+        <div>You have:</div>
+        <ul>${this.stage.chips.map(chip => renderChip(chip))}</ul>
+        <div>Total: $${getTotal()}</div>
       </div>
     `;
   }
