@@ -118,6 +118,11 @@ service cloud.firestore {
             allow read: if true;
             allow write: if false; // Write using cloud functions
           }
+
+          match /transactions/{transactionId} {
+            allow read: if true;
+            allow write: if false; // Write using cloud functions
+          }
         }
       }
 
