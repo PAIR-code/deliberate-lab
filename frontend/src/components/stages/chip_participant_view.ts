@@ -1,6 +1,8 @@
 import '../../pair-components/button';
 
 import '../progress/progress_stage_completed';
+
+import './chip_reveal_view';
 import './stage_description';
 import './stage_footer';
 
@@ -113,6 +115,8 @@ export class ChipView extends MobxLitElement {
     return html`
       <div class="panel">
         ${this.renderChipStatus()}
+        <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
+        </chip-reveal-view>
         ${isCurrentTurn() ? this.renderSenderView() : this.renderRecipientView()}
       </div>
     `;
