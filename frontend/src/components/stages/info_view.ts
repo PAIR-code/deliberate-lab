@@ -25,22 +25,19 @@ export class InfoView extends MobxLitElement {
       return nothing;
     }
 
+    const infoLinesJoined = this.stage?.infoLines.join('\n');
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="html-wrapper">
-        ${this.stage?.infoLines.map((line) => this.renderInfoLine(line))}
+        <div class="info-block">
+          ${unsafeHTML(convertMarkdownToHTML(infoLinesJoined))}
+        </div>
       </div>
       <stage-footer>
-        ${this.stage.progress.showParticipantProgress ?
-          html`<progress-stage-completed></progress-stage-completed>`
+        ${this.stage.progress.showParticipantProgress
+          ? html`<progress-stage-completed></progress-stage-completed>`
           : nothing}
       </stage-footer>
-    `;
-  }
-
-  private renderInfoLine(line: string) {
-    return html`
-      <div class="info-block">${unsafeHTML(convertMarkdownToHTML(line))}</div>
     `;
   }
 }
