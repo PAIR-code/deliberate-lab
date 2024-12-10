@@ -186,7 +186,7 @@ export const TRANSFER_STAGE = createTransferStage({
 const CHIP_NEGOTIATION_STAGE = createChipStage({
   id: 'negotiation1',
   game: StageGame.CHP,
-  name: 'First negotiation game'
+  name: 'First negotiation game',
   chips: [
     {
       id: 'RED',
@@ -221,7 +221,7 @@ const CHIP_NEGOTIATION_STAGE = createChipStage({
 const CHIP_NEGOTIATION_STAGE2 = createChipStage({
   id: 'negotiation2',
   game: StageGame.CHP,
-  name: 'Second negotiation game'
+  name: 'Second negotiation game',
   chips: [
     {
       id: 'RED',
