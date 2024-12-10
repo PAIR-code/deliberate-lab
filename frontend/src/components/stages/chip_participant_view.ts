@@ -149,7 +149,6 @@ export class ChipView extends MobxLitElement {
         publicData.participantChipMap[
           this.participantService.profile!.publicId
         ] ?? {};
-      const availableBuy = participantChipMap[this.selectedBuyChip] ?? 0;
       const availableSell = participantChipMap[this.selectedSellChip] ?? 0;
 
       return (
@@ -159,7 +158,6 @@ export class ChipView extends MobxLitElement {
         this.buyChipAmount > 0 &&
         this.sellChipAmount > 0 &&
         this.sellChipAmount <= availableSell &&
-        this.buyChipAmount <= availableBuy
       );
     };
 
