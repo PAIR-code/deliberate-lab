@@ -21,6 +21,7 @@
   "devDependencies": {
     "@swc/register": "^0.1.10",
     "@types/gtag.js": "^0.0.20",
+    "@types/jest": "^29.5.14",
     "@types/sanitize-html": "^2.11.0",
     "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^7.11.0",

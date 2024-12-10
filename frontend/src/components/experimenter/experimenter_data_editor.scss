@@ -33,3 +33,24 @@
 pr-textarea {
   width: 100%;
 }
+
+.action-buttons {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-xl;
+}
+
+h2 {
+  @include typescale.title-medium;
+  margin: 0;
+}
+
+a {
+  color: var(--md-sys-color-primary);
+}
+
+.action-buttons {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-xl;
+}

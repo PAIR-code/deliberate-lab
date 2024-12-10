@@ -17,6 +17,7 @@ import {
   ChatStagePublicData,
   MediatorConfig,
   ParticipantProfile,
+  checkApiKeyExists,
   getTimeElapsed,
 } from '@deliberation-lab/utils';
 import {isActiveParticipant} from '../../shared/participant.utils';
@@ -170,11 +171,11 @@ export class ChatPanel extends MobxLitElement {
     `;
   }
   private renderApiCheck() {
-    if (!this.authService.experimenterData?.apiKeys.geminiKey) {
+    if (!checkApiKeyExists(this.authService.experimenterData)) {
       return html`
         <div class="warning">
-          <b>Note:</b> In order for LLM calls to work, you must add your Gemini
-          API key under Settings.
+          <b>Note:</b> In order for LLM calls to work, you must add your Gemini API key 
+          or Ollama server configuration under Settings.
         </div>
       `;
     }
