@@ -3,7 +3,7 @@
  * 
  * Code assumes that the LLaMa instance is hosted on the provided IP address,
  * and is managed through the `ollama` framework (https://github.com/ollama/ollama).
- * Ideally, the code should accommodate multiple frameworks in the end.
+ * Example docker instance hosting an ollama server: https://github.com/dimits-ts/deliberate-lab-utils/tree/master/llm_server
  * 
  * Note: there already exists a client library for JavaScript, but not for Typescript.
  */
@@ -16,9 +16,9 @@ import { LlamaServerConfig } from "@deliberation-lab/utils"
  */
 type IncomingMessage = {
     model: string,
-    created_at: Date,
+    createdAt: Date,
     message: LlmMessage,
-    done_reason: string,
+    doneReason: string,
     done: boolean
 }
 
@@ -44,24 +44,24 @@ type LlmMessage = {
  * Send a list of string-messages to the hosted LLM and receive its response.
  *
  * @param messages a list of string-messages to be sent as prompts to the model
- * @param llm_type the type of llm running in the server (e.g. "llama3.2"). 
+ * @param llmType the type of llm running in the server (e.g. "llama3.2"). 
  * Keep in mind that the model must have been loaded server-side in order to be used.
  * @param serverConfig the url and other necessary data of the Ollama server
  * @returns the model's response as a string, or empty string if an error occured
  */
 export async function ollamaChat(messages: string[], 
-                                llm_type: string, 
+                                llmType: string, 
                                 serverConfig: LlamaServerConfig)
                                 : Promise<ModelResponse> {
-    const message_objects = encodeMessages(messages, llm_type);
+    const messageObjects = encodeMessages(messages, llmType);
 
-    console.log("Sending prompt:", message_objects);
-    const response = await fetch(serverConfig.url, { method: "POST", body: JSON.stringify(message_objects) });
+    console.log("Sending prompt:", messageObjects);
+    const response = await fetch(serverConfig.url, { method: "POST", body: JSON.stringify(messageObjects) });
 
-    const response_message = await decodeResponse(response);
-    console.log("Received response: ", response_message);
+    const responseMessage = await decodeResponse(response);
+    console.log("Received response: ", responseMessage);
 
-    return { text: response_message };
+    return { text: responseMessage };
 }
 
 /**
@@ -92,14 +92,14 @@ async function decodeResponse(response: Response): Promise<string> {
 /**
  * Transform string-messages to JSON objects appropriate for the model's API. 
  * @param messages a list of string-messages to be sent to the LLM
- * @param model_type the type of llm running in the server (e.g. "llama3.2"). 
+ * @param modelType the type of llm running in the server (e.g. "llama3.2"). 
  * Keep in mind that the model must have been loaded server-side in order to be used.
  * @returns appropriate JSON objects which the model can understand
  */
-function encodeMessages(messages: string[], model_type: string): OutgoingMessage {
+function encodeMessages(messages: string[], modelType: string): OutgoingMessage {
     const message_objs: LlmMessage[] = messages.map((message) => ({ role: "user", content: message }));
     return {
-        model: model_type,
+        model: modelType,
         messages: message_objs,
         stream: false
     };

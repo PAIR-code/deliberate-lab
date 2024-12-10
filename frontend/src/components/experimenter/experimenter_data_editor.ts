@@ -122,10 +122,6 @@ export class ExperimenterDataEditor extends MobxLitElement {
 
       const serverSettings = (e.target as HTMLInputElement).value;
 
-      // This function will override the API key type. Thus, if someone selects
-      // this field, the website will think he wants a Llama key
-      // maybe a dropdown menu would be useful here
-      // TODO: fix
       let newData: ExperimenterData;
       switch (field) {
         case "serverUrl":
@@ -139,21 +135,8 @@ export class ExperimenterDataEditor extends MobxLitElement {
             geminiApiKey: oldData.geminiApiKey
           }
           break;
-          //may be useful later, switch will be reused for any other config this needs in the future
-        /*
-        case "port":
-          newData = {
-            id: oldData.id,
-            activeApiKeyType: ApiKeyType.LLAMA_CUSTOM_URL,
-            llamaApiKey: {
-              url: oldData.llamaApiKey.url,
-              //TODO: Validate or use int field
-              port: parseInt(serverSettings)
-            },
-            geminiApiKey: oldData.geminiApiKey
-          }
-          break;
-          */
+        // more configs may be added in the future (e.g. server auth)
+
         default:
           console.log("No field associated with llama server settings: ", field);
           return;

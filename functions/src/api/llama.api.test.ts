@@ -4,6 +4,8 @@ import { ollamaChat } from "./llama.api";
  * Test assumes a container with ollama is running on port 11434
  * Download the docker image to run :
  * https://ollama.com/blog/ollama-is-now-available-as-an-official-docker-image
+ * 
+ * Example docker instance hosting an ollama server: https://github.com/dimits-ts/deliberate-lab-utils/tree/master/llm_server
  */
 
 const MODEL_TYPE = "llama3.2";
