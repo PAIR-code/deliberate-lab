@@ -163,8 +163,8 @@ const CHIP_INFO_TRANSFER_STAGE = createInfoStage({
   infoLines: [
     '# Congratulations!',
     'You’ve successfully completed your first game! Now, it’s time to play again with all the **same rules**. However, for this second round, please note the following changes:',
+    '* **New players**: You may be playing with different players.',
     '* **New chip values:** You will receive a different valuation for your chips this time, with the **exception of the Green chip**, which remains the same for everyone.',
-    '* **New turn order:** The order in which players take their turns will be **randomly rearranged** for this round.',
     'All players participating in this round are also playing for their second time. **Enjoy the game!**',
   ],
 });

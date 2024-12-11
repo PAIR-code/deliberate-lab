@@ -150,11 +150,12 @@ export class ChipView extends MobxLitElement {
 
     return html`
       <div class="panel panel-left">
-        <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
-        </chip-reveal-view>
         ${isCurrentTurn()
           ? this.renderSenderView()
           : this.renderRecipientView()}
+        <div class="divider"></div>
+        <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
+        </chip-reveal-view>
       </div>
     `;
   }
@@ -269,7 +270,7 @@ export class ChipView extends MobxLitElement {
     return html`
       <div class="offer-panel">
         <div class="offer-description">
-          ✋ It's your turn to send an offer to the other participants.
+          ✋ It's your turn! Make an offer to the other participants.
         </div>
 
         ${renderValidationMessage()}
@@ -413,11 +414,11 @@ export class ChipView extends MobxLitElement {
 
     return html`
       <div class="offer-panel">
-        <div class="offer-description">
-          Incoming offer!<br />
-          ${senderName} is offering ${displayChipOfferText(offer.sell)} to get
-          ${displayChipOfferText(offer.buy)} in return.
-        </div>
+        <div class="offer-description">Incoming offer!</div>
+        <p>
+        ${senderName} is offering to give <b>${displayChipOfferText(offer.sell)}</b> to get
+        <b>${displayChipOfferText(offer.buy)}</b> in return.
+        </p>
         <div class="buttons">
           <pr-tooltip
             text="You do not have enough chips to accept this offer."

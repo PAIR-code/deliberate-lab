@@ -60,12 +60,13 @@
   padding: common.$spacing-medium; /* Padding for inner spacing */
   box-shadow: var(--md-sys-color-box-shadow-3); /* Subtle shadow for depth */
   margin-bottom: common.$spacing-medium;
+  height: 200px;
+  justify-content: space-between;
 }
 
 .offer-description {
-  @include typescale.body-small;
+  @include typescale.body-medium;
   font-weight: bold;
-  font-style: italic;
 }
 
 .offer-config {
