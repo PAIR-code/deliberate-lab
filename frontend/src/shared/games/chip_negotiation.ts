@@ -29,6 +29,8 @@ export const CHIP_GAME_METADATA = createMetadataConfig({
 export function getChipNegotiationStageConfigs(): StageConfig[] {
   const stages: StageConfig[] = [];
 
+  stages.push(CHIP_INITIAL_TRANSFER_STAGE);
+
   // Informed consent
   stages.push(CHIP_TOS_STAGE);
 
@@ -168,6 +170,17 @@ const CHIP_INFO_TRANSFER_STAGE = createInfoStage({
 // ****************************************************************************
 // Transfer stages
 // ****************************************************************************/
+export const CHIP_INITIAL_TRANSFER_STAGE = createTransferStage({
+  game: StageGame.CHP,
+  name: 'Initial transfer stage',
+  descriptions: createStageTextConfig({
+    primaryText:
+    'Welcome to the experiment! Please wait as we add you to an experiment room with other participants.'
+  }),
+  enableTimeout: true,
+  timeoutSeconds: 600, // 10 minutes
+});
+
 export const TRANSFER_STAGE = createTransferStage({
   game: StageGame.CHP,
   name: 'Transfer stage',
