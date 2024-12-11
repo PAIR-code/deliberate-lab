@@ -29,11 +29,14 @@ export const CHIP_GAME_METADATA = createMetadataConfig({
 export function getChipNegotiationStageConfigs(): StageConfig[] {
   const stages: StageConfig[] = [];
 
+
   // Informed consent
   stages.push(CHIP_TOS_STAGE);
 
   // Anonymized profiles
   stages.push(CHIP_PROFILE_STAGE);
+
+  stages.push(CHIP_INITIAL_TRANSFER_STAGE);
 
   // Info stage for chip negotiation
   stages.push(CHIP_INFO_STAGE_INSTRUCTIONS);
@@ -96,7 +99,7 @@ const CHIP_INFO_STAGE_INSTRUCTIONS = createInfoStage({
   game: StageGame.CHP,
   name: 'Overview and gameplay (1/2)',
   infoLines: [
-    'Today, you will be playing two rounds of a trading game with two other participants. In each game, you and the other participants will start with:',
+    'Today, you will be playing two rounds of a trading game with other participants. In each game, you and the other participants will start with:',
     '* 🔴 100 **red** chips',
     '* 🟢 100 **green** chips',
     '* 🔵 100 **blue** chips',
@@ -160,14 +163,25 @@ const CHIP_INFO_TRANSFER_STAGE = createInfoStage({
   infoLines: [
     '# Congratulations!',
     'You’ve successfully completed your first game! Now, it’s time to play again with all the **same rules**. However, for this second round, please note the following changes:',
+    '* **New players**: You may be playing with different players.',
     '* **New chip values:** You will receive a different valuation for your chips this time, with the **exception of the Green chip**, which remains the same for everyone.',
-    '* **New turn order:** The order in which players take their turns will be **randomly rearranged** for this round.',
     'All players participating in this round are also playing for their second time. **Enjoy the game!**',
   ],
 });
 // ****************************************************************************
 // Transfer stages
 // ****************************************************************************/
+export const CHIP_INITIAL_TRANSFER_STAGE = createTransferStage({
+  game: StageGame.CHP,
+  name: 'Initial transfer stage',
+  descriptions: createStageTextConfig({
+    primaryText:
+    'Welcome to the experiment! Please wait as we add you to an experiment room with other participants.'
+  }),
+  enableTimeout: true,
+  timeoutSeconds: 600, // 10 minutes
+});
+
 export const TRANSFER_STAGE = createTransferStage({
   game: StageGame.CHP,
   name: 'Transfer stage',

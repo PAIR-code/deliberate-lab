@@ -13,11 +13,14 @@
   overflow: auto;
 }
 
+.panel-left {
+  max-width: 40%;
+}
+
 .panel {
   @include common.flex-column;
   flex-grow: 1;
   gap: common.$spacing-xl;
-  max-width: 50%;
   overflow: auto;
   padding: common.$main-content-padding;
 
@@ -57,12 +60,13 @@
   padding: common.$spacing-medium; /* Padding for inner spacing */
   box-shadow: var(--md-sys-color-box-shadow-3); /* Subtle shadow for depth */
   margin-bottom: common.$spacing-medium;
+  height: 200px;
+  justify-content: space-between;
 }
 
 .offer-description {
-  @include typescale.body-small;
+  @include typescale.body-medium;
   font-weight: bold;
-  font-style: italic;
 }
 
 .offer-config {
@@ -88,6 +92,7 @@ select {
 .warning {
   padding: common.$spacing-small;
   font-style: italic;  
+  background-color: var(--md-sys-color-tertiary-container);
 }
 
 .divider {
@@ -95,7 +100,11 @@ select {
 }
 
 .round-text {
-  font-style: italic;  
+  font-style:italic;  
+}
+
+.highlight {
+  background-color: var(--md-sys-color-tertiary-container);
 }
 
 .number-input {
@@ -104,4 +113,11 @@ select {
   input {
     max-width: 50px;
   }
+}
+
+.positive {
+  color: green;
+}
+.negative {
+  color: red;
 }
