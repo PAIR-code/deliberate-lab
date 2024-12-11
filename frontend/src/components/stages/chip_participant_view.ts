@@ -42,11 +42,6 @@ export class ChipView extends MobxLitElement {
     ParticipantAnswerService
   );
 
-  private selectedBuyChip: string = 'RED';
-  private selectedSellChip: string = 'GREEN';
-  private buyChipAmount: number = 1;
-  private sellChipAmount: number = 1;
-
   @property() stage: ChipStageConfig | null = null;
   @property() answer: ChipStageParticipantAnswer | null = null;
 
@@ -55,11 +50,17 @@ export class ChipView extends MobxLitElement {
   @state() isRejectOfferLoading = false;
   @state() isSetTurnLoading = false;
 
+  // Offer interface variables
+  @state() selectedBuyChip: string = '';
+  @state() selectedSellChip: string = '';
+  @state() buyChipAmount: number = 0;
+  @state() sellChipAmount: number = 0;
+
   resetChipValues() {
-    this.selectedBuyChip = 'RED';
-    this.selectedSellChip = 'GREEN';
-    this.buyChipAmount = 1;
-    this.sellChipAmount = 1;
+    this.selectedBuyChip = '';
+    this.selectedSellChip = '';
+    this.buyChipAmount = 0;
+    this.sellChipAmount = 0;
   }
 
   override render() {
@@ -156,41 +157,49 @@ export class ChipView extends MobxLitElement {
     `;
   }
 
+  private isOfferPending() {
+    if (!this.stage) return false;
+    const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
+    if (publicData?.kind !== StageKind.CHIP) return false;
+    return publicData.currentTurn?.offer;
+  }
+
+  private isOfferEmpty() {
+      return this.buyChipAmount === 0 && this.sellChipAmount === 0
+  }
+
+  private isOfferValid() {
+    const publicData = this.cohortService.stagePublicDataMap[this.stage!.id];
+    if (publicData?.kind !== StageKind.CHIP) return false;
+
+    const publicId = this.participantService.profile?.publicId ?? ''
+    const participantChipMap = publicData.participantChipMap[publicId] ?? {};
+    const availableSell = participantChipMap[this.selectedSellChip] ?? 0;
+
+    // TODO: Ensure at least one other participant can accept the offer
+
+    return (
+      // Ensure different chips are selected
+      this.selectedBuyChip !== this.selectedSellChip &&
+      Number.isInteger(this.buyChipAmount) &&
+      Number.isInteger(this.sellChipAmount) &&
+      this.buyChipAmount > 0 &&
+      this.sellChipAmount > 0 &&
+      this.sellChipAmount <= availableSell
+    );
+  }
+
   private renderSenderView() {
-    const isOfferPending = () => {
-      if (!this.stage) return;
-      const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
-      if (publicData?.kind !== StageKind.CHIP) return nothing;
-      return publicData.currentTurn?.offer;
-    };
-
-    const validateOffer = () => {
-      const publicData = this.cohortService.stagePublicDataMap[this.stage!.id];
-      if (publicData?.kind !== StageKind.CHIP) return nothing;
-      const participantChipMap =
-        publicData.participantChipMap[
-          this.participantService.profile!.publicId
-        ] ?? {};
-      const availableSell = participantChipMap[this.selectedSellChip] ?? 0;
-
-      return (
-        this.selectedBuyChip !== this.selectedSellChip && // Ensure different chips are selected
-        Number.isInteger(this.buyChipAmount) &&
-        Number.isInteger(this.sellChipAmount) &&
-        this.buyChipAmount > 0 &&
-        this.sellChipAmount > 0 &&
-        this.sellChipAmount <= availableSell
-      );
-    };
-
     const sendOffer = async () => {
       if (!this.stage) return;
       this.isOfferLoading = true;
+
       const chipOffer: Partial<ChipOffer> = {
         senderId: this.participantService.profile?.publicId,
         buy: {[this.selectedBuyChip]: this.buyChipAmount},
         sell: {[this.selectedSellChip]: this.sellChipAmount},
       };
+
       await this.participantService.sendParticipantChipOffer(
         this.stage.id,
         createChipOffer(chipOffer)
@@ -200,91 +209,93 @@ export class ChipView extends MobxLitElement {
       this.resetChipValues();
     };
 
-    const isOfferValid = validateOffer();
+    const renderValidationMessage = () => {
+      if (this.isOfferValid()) return nothing;
+      return html`
+        <div class="warning">
+          ‼️ You cannot offer to buy and sell the same chip color, and you
+          must have the amount that you are offering to sell.
+        </div>
+      `;
+    }
+
     return html`
       <div class="offer-panel">
-        <div class="offer-sending-panel">
-          <div class="offer-description">
-            It's your turn to send an offer to the other participants.
-          </div>
-          <div class="offer-config">
-            <label>
-              Buy:
-              <select
-                .disabled=${isOfferPending()}
-                .value=${this.selectedBuyChip}
-                @change=${(e: Event) => {
-                  this.selectedBuyChip = (e.target as HTMLSelectElement).value;
-                  this.requestUpdate(); // Trigger re-render after change
-                }}
-              >
-                <option value="RED">🔴 Red</option>
-                <option value="GREEN">🟢 Green</option>
-                <option value="BLUE">🔵 Blue</option>
-              </select>
-              <input
-                .disabled=${isOfferPending()}
-                type="number"
-                min="1"
-                .value=${this.buyChipAmount}
-                @input=${(e: Event) => {
-                  this.buyChipAmount = Math.max(
-                    1,
-                    Math.floor(
-                      parseInt((e.target as HTMLInputElement).value, 10)
-                    )
-                  );
-                  this.requestUpdate(); // Trigger re-render after input
-                }}
-              />
-            </label>
-            <label>
-              Sell:
-              <select
-                .value=${this.selectedSellChip}
-                .disabled=${isOfferPending()}
-                @change=${(e: Event) => {
-                  this.selectedSellChip = (e.target as HTMLSelectElement).value;
-                  this.requestUpdate(); // Trigger re-render after change
-                }}
-              >
-                <option value="RED">🔴 Red</option>
-                <option value="GREEN">🟢 Green</option>
-                <option value="BLUE">🔵 Blue</option>
-              </select>
-              <input
-                .disabled=${isOfferPending()}
-                type="number"
-                min="1"
-                .value=${this.sellChipAmount}
-                @input=${(e: Event) => {
-                  this.sellChipAmount = Math.max(
-                    1,
-                    Math.floor(
-                      parseInt((e.target as HTMLInputElement).value, 10)
-                    )
-                  );
-                  this.requestUpdate(); // Trigger re-render after input
-                }}
-              />
-            </label>
-          </div>
-
-          ${!isOfferValid
-            ? html`<div class="warning">
-                ‼️ You cannot offer to buy and sell the same chip color, and you
-                must have the amount that you are offering to sell.
-              </div>`
-            : nothing}
+        <div class="offer-description">
+          It's your turn to send an offer to the other participants.
         </div>
-        <pr-button
-          ?loading=${this.isOfferLoading}
-          ?disabled=${!isOfferValid || isOfferPending()}
-          @click=${sendOffer}
-        >
-          ${isOfferPending() ? 'Offer sent and pending...' : 'Submit offer'}
-        </pr-button>
+        <div class="offer-config">
+          <label class="offer-config-label">Give:</label>
+          ${this.renderChipNumberInput(
+            this.sellChipAmount,
+            (value) => { this.sellChipAmount = value; }
+          )}
+          ${this.renderChipSelector(
+            this.selectedSellChip,
+            (value) => { this.selectedSellChip = value; }
+          )}
+        </div>
+        <div class="offer-config">
+          <label class="offer-config-label">Get:</label>
+          ${this.renderChipNumberInput(
+            this.buyChipAmount,
+            (value) => { this.buyChipAmount = value; }
+          )}
+          ${this.renderChipSelector(
+            this.selectedBuyChip,
+            (value) => { this.selectedBuyChip = value; }
+          )}
+        </div>
+        ${renderValidationMessage()}
+        <div class="buttons">
+          <pr-button
+            ?loading=${this.isOfferLoading}
+            ?disabled=${this.isOfferEmpty() || !this.isOfferValid() || this.isOfferPending()}
+            @click=${sendOffer}
+          >
+            ${this.isOfferPending() ? 'Offer sent and pending...' : 'Submit offer'}
+          </pr-button>
+        </div>
       </div>
+    `;
+  }
+
+  private renderChipNumberInput(value: number, onInput: (value: number) => void) {
+    const updateInput = (e: Event) => {
+      const value = Math.floor(
+        parseInt((e.target as HTMLInputElement).value, 10)
+      );
+
+      onInput(Math.max(1, value));
+    };
+
+    return html`
+      <div class="number-input">
+        <input
+          .disabled=${this.isOfferPending()}
+          type="number"
+          min="0"
+          .value=${value}
+          @input=${updateInput}
+        />
+      </div>
+    `;
+  }
+
+  private renderChipSelector(value: string, onInput: (value: string) => void) {
+    return html`
+      <select
+        .disabled=${this.isOfferPending()}
+        .value=${value}
+        @change=${(e: Event) => {
+          onInput((e.target as HTMLSelectElement).value);
+        }}
+      >
+        <option value=""></option>
+        ${this.stage?.chips.map(chip =>
+          html`<option value=${chip.id}>${chip.name}</option>`
+        )}
+      </select>
     `;
   }
 
