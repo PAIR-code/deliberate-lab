@@ -165,6 +165,15 @@ export class ChipView extends MobxLitElement {
     return publicData.currentTurn?.offer;
   }
 
+  private isOfferIncomplete() {
+    return (
+      this.selectedBuyChip === '' ||
+      this.selectedSellChip === '' ||
+      this.buyChipAmount === 0 ||
+      this.sellChipAmount === 0
+    );
+  }
+
   private isOfferEmpty() {
     return this.buyChipAmount === 0 && this.sellChipAmount === 0;
   }
@@ -220,20 +229,23 @@ export class ChipView extends MobxLitElement {
     };
 
     const renderValidationMessage = () => {
-      if (this.isOfferValid()) return nothing;
-      return html`
-        <div class="warning">
-          ‼️ You cannot offer to buy and sell the same chip color, and you must
-          have the amount that you are offering to sell.
-        </div>
-      `;
+      if (this.isOfferValid() || this.isOfferIncomplete()) return nothing;
+      let errorMessage =
+        this.selectedBuyChip === this.selectedSellChip
+          ? 'You cannot offer to buy and sell the same chip color.'
+          : 'You must have the amount of chips that you are offering to give.';
+
+      return html` <div class="warning">‼️ ${errorMessage}</div> `;
     };
 
     return html`
       <div class="offer-panel">
         <div class="offer-description">
-          It's your turn to send an offer to the other participants.
+          ✋ It's your turn to send an offer to the other participants.
         </div>
+
+        ${renderValidationMessage()}
+
         <div class="offer-config">
           <label class="offer-config-label">Give:</label>
           ${this.renderChipNumberInput(this.sellChipAmount, (value) => {
@@ -252,7 +264,6 @@ export class ChipView extends MobxLitElement {
             this.selectedBuyChip = value;
           })}
         </div>
-        ${renderValidationMessage()}
         <div class="buttons">
           <pr-button
             ?loading=${this.isOfferLoading}

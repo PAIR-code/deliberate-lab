@@ -91,6 +91,7 @@ select {
 .warning {
   padding: common.$spacing-small;
   font-style: italic;  
+  background-color: var(--md-sys-color-tertiary-container);
 }
 
 .divider {
