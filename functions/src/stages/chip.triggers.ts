@@ -110,6 +110,8 @@ export const completeChipTurn = onDocumentUpdated(
         }
       }
 
+      const timestamp = Timestamp.now();
+
       // If all (non-offer) participants have responded to the offer,
       // execute chip transaction
       const senderId = publicStage.currentTurn.participantId;
@@ -121,7 +123,7 @@ export const completeChipTurn = onDocumentUpdated(
         const chipTransaction: ChipTransaction = {
           offer: publicStage.currentTurn.offer,
           recipientId,
-          timestamp: Timestamp.now()
+          timestamp,
         };
         // Sender/recipient chips will be updated on chip transaction trigger
         transaction.set(transactionCollection.doc(), chipTransaction);
@@ -129,7 +131,7 @@ export const completeChipTurn = onDocumentUpdated(
         transaction.set(
           logCollection.doc(),
           createChipOfferDeclinedLogEntry(
-            publicStage.currentTurn.offer, Timestamp.now()
+            publicStage.currentTurn.offer, timestamp
           )
         );
       }
@@ -145,14 +147,14 @@ export const completeChipTurn = onDocumentUpdated(
       if (newData.isGameOver) {
         transaction.set(
           logCollection.doc(),
-          createChipInfoLogEntry('Game over', Timestamp.now())
+          createChipInfoLogEntry('The game has ended.', timestamp)
         );
       } else {
         // Write new round log entry if applicable
         if (oldCurrentRound !== newData.currentRound) {
           transaction.set(
             logCollection.doc(),
-            createChipRoundLogEntry(newData.currentRound, Timestamp.now())
+            createChipRoundLogEntry(newData.currentRound, timestamp)
           );
         }
         // Write new turn entry
@@ -161,7 +163,7 @@ export const completeChipTurn = onDocumentUpdated(
           createChipTurnLogEntry(
             newData.currentRound,
             newData.currentTurn.participantId,
-            Timestamp.now()
+            timestamp
           )
         );
       }
@@ -250,11 +252,13 @@ export const completeChipTransaction = onDocumentCreated(
         transaction.set(recipientResult.answerDoc, recipientResult.answer);
       }
 
-      // Write success log
+      // Write success log.
+      // This takes a while and sometimes the next round has already started, so we write it 
+      // back in time for ordering.
       transaction.set(
         logCollection.doc(),
         createChipTransactionLogEntry(
-          chipTransaction.offer, recipientId, Timestamp.now()
+          chipTransaction.offer, recipientId, Timestamp.fromMillis(Timestamp.now().toMillis() - 5000)
         )
       );
 
