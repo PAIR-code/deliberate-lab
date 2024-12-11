@@ -168,6 +168,18 @@ export class ExperimenterDataEditor extends MobxLitElement {
         >
         </pr-textarea>
       </div>
+      <div class="section">
+        <div class="title">LLM type</div>
+        <pr-textarea
+          label="LLM type"
+          placeholder="llama3.2"
+          variant="outlined"
+          .value=${data?.llamaApiKey?.llmType ?? ""} 
+          @input=${(e: InputEvent) => updateServerSettings(e, 'llmType')}
+        >
+        </pr-textarea>
+        <p>All supported LLM types can be found <a href=https://ollama.com/library>here</a>. Make sure the LLM has been deployed on the server prior to selecting it here.</p>
+      </div>
     `;
   }
 }
