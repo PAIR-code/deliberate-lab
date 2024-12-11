@@ -12,6 +12,7 @@ import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
+  ChipPayoutItem,
   DefaultPayoutItem,
   MultipleChoiceSurveyQuestion,
   PayoutCurrency,
@@ -23,6 +24,7 @@ import {
   SurveyPayoutItem,
   SurveyQuestion,
   SurveyQuestionKind,
+  createChipPayoutItem,
   createDefaultPayoutItem,
   createSurveyPayoutItem
 } from '@deliberation-lab/utils';
@@ -71,6 +73,9 @@ export class PayoutEditor extends MobxLitElement {
     const name = stage.name;
 
     switch (stage.kind) {
+      case StageKind.CHIP:
+        payoutItems.push(createChipPayoutItem({name, stageId}));
+        break;
       case StageKind.SURVEY:
         payoutItems.push(createSurveyPayoutItem({name, stageId}));
         break;
@@ -205,6 +210,8 @@ export class PayoutEditor extends MobxLitElement {
 
   private renderPayoutItem(item: PayoutItem, index: number) {
     switch (item.type) {
+      case PayoutItemType.CHIP:
+        return this.renderChipPayoutItem(item, index);
       case PayoutItemType.DEFAULT:
         return this.renderDefaultPayoutItem(item, index);
       case PayoutItemType.SURVEY:
@@ -212,6 +219,15 @@ export class PayoutEditor extends MobxLitElement {
       default:
         return nothing;
     }
+  }
+
+  private renderChipPayoutItem(item: ChipPayoutItem, index: number) {
+    return html`
+      <div class="payout-item">
+        ${this.renderBasePayoutEditor(item, index)}
+        <div>Chip payout will be calculated based on final quantities/values.</div>
+      </div>
+    `;
   }
 
   private renderDefaultPayoutItem(item: DefaultPayoutItem, index: number) {

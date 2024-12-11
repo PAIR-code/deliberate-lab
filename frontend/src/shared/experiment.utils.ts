@@ -34,7 +34,8 @@ export function convertExperimentToGalleryItem(
 export function getStagesWithReveal(stages: StageConfig[]) {
   return stages.filter(
     (stage) =>
-      stage.kind === StageKind.SURVEY || stage.kind === StageKind.RANKING
+      stage.kind === StageKind.SURVEY || stage.kind === StageKind.RANKING ||
+      stage.kind === StageKind.CHIP
   );
 }
 

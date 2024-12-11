@@ -1,9 +1,11 @@
 import { Value } from '@sinclair/typebox/value';
 import {
+  ChipStagePublicData,
   CreateParticipantData,
   Experiment,
   ParticipantProfileExtendedData,
   StageKind,
+  SurveyStagePublicData,
   createParticipantProfileExtended,
   generateParticipantPublicId,
   setAnonymousProfile,
@@ -137,7 +139,7 @@ export const updateParticipant = onCall(async (request) => {
 
     // If transfer is true, copy participant stage answers to current cohort
     if (!data.isTransfer) {
-      return;
+      return { id: document.id };
     }
 
     const stageData =
@@ -157,9 +159,16 @@ export const updateParticipant = onCall(async (request) => {
 
       switch (stage.kind) {
         case StageKind.SURVEY:
-          const publicStageData = (await publicDocument.get()).data() as StagePublicData;
-          publicStageData.participantAnswerMap[publicId] = stage.answerMap;
-          transaction.set(publicDocument, publicStageData);
+          const publicSurveyData = (await publicDocument.get()).data() as SurveyStagePublicData;
+          publicSurveyData.participantAnswerMap[publicId] = stage.answerMap;
+          transaction.set(publicDocument, publicSurveyData);
+          break;
+        case StageKind.CHIP:
+          const publicChipData = (await publicDocument.get()).data() as ChipStagePublicData;
+          publicChipData.participantChipMap[publicId] = stage.chipMap;
+          publicChipData.participantChipValueMap[publicId] = stage.chipValueMap;
+          transaction.set(publicDocument, publicChipData);
+          break;
         default:
           break;
       }

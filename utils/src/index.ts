@@ -27,6 +27,8 @@ export * from './stages/stage';
 export * from './stages/stage.validation';
 export * from './stages/chat_stage';
 export * from './stages/chat_stage.validation';
+export * from './stages/chip_stage';
+export * from './stages/chip_stage.validation';
 export * from './stages/ranking_stage';
 export * from './stages/ranking_stage.validation';
 export * from './stages/info_stage';
