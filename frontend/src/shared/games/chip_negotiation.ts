@@ -99,7 +99,7 @@ const CHIP_INFO_STAGE_INSTRUCTIONS = createInfoStage({
   game: StageGame.CHP,
   name: 'Overview and gameplay (1/2)',
   infoLines: [
-    'Today, you will be playing two rounds of a trading game with two other participants. In each game, you and the other participants will start with:',
+    'Today, you will be playing two rounds of a trading game with other participants. In each game, you and the other participants will start with:',
     '* 🔴 100 **red** chips',
     '* 🟢 100 **green** chips',
     '* 🔵 100 **blue** chips',

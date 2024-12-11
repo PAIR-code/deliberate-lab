@@ -5,6 +5,7 @@ import '../progress/progress_stage_completed';
 import './chip_reveal_view';
 import './stage_description';
 import './stage_footer';
+import '../../pair-components/tooltip';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -332,6 +333,20 @@ export class ChipView extends MobxLitElement {
       this.isAcceptOfferLoading = false;
     };
 
+    const canAcceptOffer = () => {
+      if (!this.stage) return;
+      const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
+      if (publicData?.kind !== StageKind.CHIP) return nothing;
+
+      const buyChip = Object.keys(offer.buy)[0];
+
+      const publicId = this.participantService.profile?.publicId ?? '';
+      const participantChipMap = publicData.participantChipMap[publicId] ?? {};
+      const availableSell = participantChipMap[buyChip] ?? 0;
+
+      return availableSell >= offer.buy[buyChip];
+    };
+
     const rejectOffer = async () => {
       if (!this.stage) return;
       this.isRejectOfferLoading = true;
@@ -365,16 +380,21 @@ export class ChipView extends MobxLitElement {
           ${displayChipOfferText(offer.buy)} in return.
         </div>
         <div class="buttons">
-          <pr-button
-            variant="tonal"
-            ?loading=${this.isAcceptOfferLoading}
-            ?disabled=${isResponsePending()}
-            @click=${acceptOffer}
+          <pr-tooltip
+            text="You do not have enough chips to accept this offer."
+            position="BOTTOM_END"
           >
-            Accept offer
-          </pr-button>
+            <pr-button
+              variant="tonal"
+              ?loading=${this.isAcceptOfferLoading}
+              ?disabled=${isResponsePending() || !canAcceptOffer()}
+              @click=${acceptOffer}
+            >
+              Accept offer
+            </pr-button>
+          </pr-tooltip>
           <pr-button
-            color="secondary"
+            color="error"
             variant="tonal"
             ?loading=${this.isRejectOfferLoading}
             ?disabled=${isResponsePending()}
