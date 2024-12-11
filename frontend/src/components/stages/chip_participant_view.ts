@@ -95,7 +95,13 @@ export class ChipView extends MobxLitElement {
 
     if (publicData.isGameOver) {
       return html`<div class="divider"></div>
-        <div class="panel">This game has ended.</div> `;
+        <div class="panel">
+          <div class="status">
+            This game has ended. Please continue to the next stage.
+          </div>
+          <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
+          </chip-reveal-view>
+        </div> `;
     } else if (publicData.currentTurn === null) {
       const setTurn = async () => {
         if (!this.stage) return;
