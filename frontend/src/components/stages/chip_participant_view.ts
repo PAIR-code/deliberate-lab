@@ -181,6 +181,8 @@ export class ChipView extends MobxLitElement {
     return (
       // Ensure different chips are selected
       this.selectedBuyChip !== this.selectedSellChip &&
+      this.selectedBuyChip !== '' &&
+      this.selectedSellChip !== '' &&
       Number.isInteger(this.buyChipAmount) &&
       Number.isInteger(this.sellChipAmount) &&
       this.buyChipAmount > 0 &&
