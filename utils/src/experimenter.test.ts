@@ -45,4 +45,11 @@ describe('checkApiKeyExists', () => {
         expect(checkApiKeyExists(experimenterData)).toBe(true);
     });
 
+    test('returns false if active API key type is Llama and llamaApiKey is invalid', () => {
+        experimenterData.activeApiKeyType = ApiKeyType.LLAMA_CUSTOM_URL;
+        experimenterData.llamaApiKey = { url: 'http://valid-url.com' , llmType: '' };
+
+        expect(checkApiKeyExists(experimenterData)).toBe(false);
+    });
+
 });

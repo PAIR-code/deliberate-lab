@@ -12,9 +12,10 @@ const MODEL_TYPE = "llama3.2";
 const LLM_SERVER_ENDPOINT = "http://localhost:11434/api/chat";
 const TEST_MESSAGE = "Say hello!";
 
+
 describe("OllamaChat Client", () => {
     it("should return a response containing 'hello' (case insensitive)", async () => {
-        const response = await ollamaChat([TEST_MESSAGE], MODEL_TYPE, {url: LLM_SERVER_ENDPOINT});
+        const response = await ollamaChat([TEST_MESSAGE], {url: LLM_SERVER_ENDPOINT, llmType: MODEL_TYPE});
         expect(response.text.toLowerCase()).toContain("hello");
         console.log(response);
     });
