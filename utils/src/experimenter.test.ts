@@ -33,14 +33,14 @@ describe('checkApiKeyExists', () => {
 
     test('returns false if active API key type is Llama and llamaApiKey is invalid', () => {
         experimenterData.activeApiKeyType = ApiKeyType.LLAMA_CUSTOM_URL;
-        experimenterData.llamaApiKey = { url: '' };
+        experimenterData.llamaApiKey = { url: '' , llmType: "llama3.2"};
 
         expect(checkApiKeyExists(experimenterData)).toBe(false);
     });
 
     test('returns true if active API key type is Llama and llamaApiKey is valid', () => {
         experimenterData.activeApiKeyType = ApiKeyType.LLAMA_CUSTOM_URL;
-        experimenterData.llamaApiKey = { url: 'http://valid-url.com' };
+        experimenterData.llamaApiKey = { url: 'http://valid-url.com' , llmType: "llama3.2" };
 
         expect(checkApiKeyExists(experimenterData)).toBe(true);
     });

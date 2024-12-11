@@ -116,7 +116,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
 
   // ============ Llama server ============ 
   private renderServerSettings() {
-    const updateServerSettings = (e: InputEvent, field: 'serverUrl' | 'port') => {
+    const updateServerSettings = (e: InputEvent, field: 'serverUrl' | 'llmType') => {
       const oldData = this.authService.experimenterData;
       if (!oldData) return;
 
@@ -130,7 +130,18 @@ export class ExperimenterDataEditor extends MobxLitElement {
             activeApiKeyType: ApiKeyType.LLAMA_CUSTOM_URL,
             llamaApiKey: {
               url: serverSettings,
-              //port: oldData.llamaApiKey.port
+              llmType: oldData.llamaApiKey.llmType
+            },
+            geminiApiKey: oldData.geminiApiKey
+          }
+          break;
+        case "llmType":
+          newData = {
+            id: oldData.id,
+            activeApiKeyType: ApiKeyType.LLAMA_CUSTOM_URL,
+            llamaApiKey: {
+              url: oldData.llamaApiKey.llmType,
+              llmType: serverSettings
             },
             geminiApiKey: oldData.geminiApiKey
           }

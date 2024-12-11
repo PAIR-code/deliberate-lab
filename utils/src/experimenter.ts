@@ -30,6 +30,7 @@ export enum ApiKeyType {
 
 export interface LlamaServerConfig {
   url: string;
+  llmType: string
   //port: number; // apparently not needed? https://github.com/ollama/ollama/blob/main/docs/api.md#generate-a-completion
   // will probably need more data for server-side auth?
 }
@@ -51,7 +52,7 @@ export function createExperimenterData(
   return {
     id: experimenterId,
     geminiApiKey: INVALID_API_KEY,
-    llamaApiKey: { url: INVALID_API_KEY },
+    llamaApiKey: { url: INVALID_API_KEY, llmType: "llama3.2"},
     activeApiKeyType: ApiKeyType.GEMINI_API_KEY
   };
 }
