@@ -479,7 +479,11 @@ export class ParticipantService extends Service {
     );
 
     // Once profile is updated, route the participant accordingly
-    window.location.reload();
+    // (to the current stage)
+    this.sp.routerService.navigate(Pages.PARTICIPANT, {
+      'experiment': this.experimentId!,
+      'participant': this.profile!.privateId,
+    });
 
     return accepted;
   }
