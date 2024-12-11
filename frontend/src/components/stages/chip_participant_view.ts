@@ -21,6 +21,7 @@ import {
   ChipLogEntry,
   ChipLogType,
   ChipOffer,
+  ChipStagePublicData,
   ChipStageConfig,
   ChipStageParticipantAnswer,
   StageKind,
@@ -165,6 +166,22 @@ export class ChipView extends MobxLitElement {
     return publicData.currentTurn?.offer;
   }
 
+  private isOfferAcceptable() {
+    const publicData = this.cohortService.stagePublicDataMap[this.stage!.id];
+    if (publicData?.kind !== StageKind.CHIP) return true;
+
+    const currentParticipant = this.participantService.profile;
+    for (const participant of this.cohortService.getAllParticipants()) {
+      if (participant.publicId === currentParticipant!.publicId) continue;
+      const participantChipMap =
+        publicData.participantChipMap[participant.publicId] ?? {};
+      if (participantChipMap[this.selectedBuyChip] >= this.buyChipAmount) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private isOfferIncomplete() {
     return (
       this.selectedBuyChip === '' ||
@@ -229,7 +246,18 @@ export class ChipView extends MobxLitElement {
     };
 
     const renderValidationMessage = () => {
-      if (this.isOfferValid() || this.isOfferIncomplete()) return nothing;
+      if (this.isOfferIncomplete()) return nothing;
+
+      if (!this.isOfferAcceptable()) {
+        return html`
+          <div class="warning">
+            ‼️ No other players have enough chips to accept your offer.
+          </div>
+        `;
+      }
+
+      if (this.isOfferValid()) return nothing;
+
       let errorMessage =
         this.selectedBuyChip === this.selectedSellChip
           ? 'You cannot offer to buy and sell the same chip color.'
