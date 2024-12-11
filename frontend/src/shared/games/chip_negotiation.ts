@@ -3,8 +3,8 @@ import {
   StageConfig,
   StageGame,
   createCheckSurveyQuestion,
+  createChipPayoutItem,
   createChipStage,
-  createDefaultPayoutItem,
   createInfoStage,
   createMetadataConfig,
   createPayoutStage,
@@ -260,10 +260,10 @@ const CHIP_PAYOUT_STAGE = createPayoutStage({
   id: 'payout1',
   game: StageGame.CHP,
   payoutItems: [
-    createDefaultPayoutItem({
+    createChipPayoutItem({
       name: 'Negotiation completion',
       description: 'You earn $5 for completing the chip negotiation',
-      stageId: 'negotiation',
+      stageId: 'negotiation1',
       baseCurrencyAmount: 5,
     }),
   ],
@@ -273,10 +273,10 @@ const CHIP_PAYOUT_STAGE2 = createPayoutStage({
   id: 'payout2',
   game: StageGame.CHP,
   payoutItems: [
-    createDefaultPayoutItem({
+    createChipPayoutItem({
       name: 'Negotiation completion',
       description: 'You earn $5 for completing the chip negotiation',
-      stageId: 'negotiation',
+      stageId: 'negotiation2',
       baseCurrencyAmount: 5,
     }),
   ],

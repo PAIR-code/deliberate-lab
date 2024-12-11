@@ -8,6 +8,8 @@ import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
 import {
+  ChipPayoutItemResult,
+  ChipPayoutValueItem,
   DefaultPayoutItem,
   DefaultPayoutItemResult,
   MultipleChoiceSurveyAnswer,
@@ -95,6 +97,8 @@ export class PayoutView extends MobxLitElement {
     currency: PayoutCurrency
   ) {
     switch (item.type) {
+      case PayoutItemType.CHIP:
+        return this.renderChipPayoutItemResult(item, currency);
       case PayoutItemType.DEFAULT:
         return this.renderDefaultPayoutItemResult(item, currency);
       case PayoutItemType.SURVEY:
@@ -110,6 +114,62 @@ export class PayoutView extends MobxLitElement {
   ) {
     return html`
       ${this.renderBaseAmountEarned(item, currency)}
+    `;
+  }
+
+  private renderChipPayoutItemResult(
+    item: ChipPayoutItemResult,
+    currency: PayoutCurrency
+  ) {
+    const getTotal = () => {
+      let total = 0;
+      for (const result of item.chipResults) {
+        total += Math.floor(result.quantity * result.value * 100) / 100;
+      }
+      return total;
+    };
+
+    const renderChipValue = (result: ChipPayoutValueItem) => {
+      const quantity = result.quantity;
+      const value = result.value;
+      const total = Math.floor(quantity * value * 100) / 100;
+      const chipName = result.chip.name;
+
+      return html`
+        <div class="row">
+          <div class="chip secondary">
+            ${this.renderCurrency(total, currency)}
+          </div>
+          <div>
+            ${chipName} chips
+            (${quantity} chips x ${this.renderCurrency(value, currency)})
+          </div>
+        </div>
+      `;
+    };
+
+    return html`
+      <div class="scoring-bundle">
+        <h2>${item.name}</h2>
+        <div class="scoring-description">${item.description}</div>
+        ${this.renderBaseAmountEarned(item, currency)}
+        <div class="scoring-item">
+          <h2>Chip payout</h2>
+          ${item.chipResults.map(result => renderChipValue(result))}
+          <div class="row">
+            <div>Total</div>
+            <div class="chip secondary">
+              ${this.renderCurrency(getTotal(), currency)}
+            </div>
+          </div>
+        </div>
+        <div class="scoring-item row">
+          <h2>Stage payout</h2>
+          <div class="chip primary">
+            ${this.renderCurrency(getTotal() + item.baseAmountEarned, currency)}
+          </div>
+        </div>
+      </div>
     `;
   }
 
