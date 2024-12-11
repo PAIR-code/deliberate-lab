@@ -80,7 +80,11 @@ export class ParticipantPreviewer extends MobxLitElement {
           ? 'full-view'
           : ''}"
       >
-        <participant-header .stage=${stage}></participant-header>
+        <participant-header
+          .stage=${stage}
+          .profile=${this.participantService.profile}
+        >
+        </participant-header>
         ${this.renderStageContent(stage)}
       </div>
       ${this.renderPopups()}
