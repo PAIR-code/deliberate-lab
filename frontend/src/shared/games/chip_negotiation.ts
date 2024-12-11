@@ -29,13 +29,14 @@ export const CHIP_GAME_METADATA = createMetadataConfig({
 export function getChipNegotiationStageConfigs(): StageConfig[] {
   const stages: StageConfig[] = [];
 
-  stages.push(CHIP_INITIAL_TRANSFER_STAGE);
 
   // Informed consent
   stages.push(CHIP_TOS_STAGE);
 
   // Anonymized profiles
   stages.push(CHIP_PROFILE_STAGE);
+
+  stages.push(CHIP_INITIAL_TRANSFER_STAGE);
 
   // Info stage for chip negotiation
   stages.push(CHIP_INFO_STAGE_INSTRUCTIONS);
