@@ -46,7 +46,7 @@ export class Header extends MobxLitElement {
     const name = getParticipantName(this.profile);
     return html`
       <pr-tooltip
-        text="Your profile for this experiment is ${this.profile.avatar} ${name}"
+        text="You are playing as ${this.profile.avatar} ${name}"
         position="BOTTOM_END"
       >
         <div class="profile">

@@ -165,14 +165,14 @@ export class ChipView extends MobxLitElement {
   }
 
   private isOfferEmpty() {
-      return this.buyChipAmount === 0 && this.sellChipAmount === 0
+    return this.buyChipAmount === 0 && this.sellChipAmount === 0;
   }
 
   private isOfferValid() {
     const publicData = this.cohortService.stagePublicDataMap[this.stage!.id];
     if (publicData?.kind !== StageKind.CHIP) return false;
 
-    const publicId = this.participantService.profile?.publicId ?? ''
+    const publicId = this.participantService.profile?.publicId ?? '';
     const participantChipMap = publicData.participantChipMap[publicId] ?? {};
     const availableSell = participantChipMap[this.selectedSellChip] ?? 0;
 
@@ -222,11 +222,11 @@ export class ChipView extends MobxLitElement {
       if (this.isOfferValid()) return nothing;
       return html`
         <div class="warning">
-          ‼️ You cannot offer to buy and sell the same chip color, and you
-          must have the amount that you are offering to sell.
+          ‼️ You cannot offer to buy and sell the same chip color, and you must
+          have the amount that you are offering to sell.
         </div>
       `;
-    }
+    };
 
     return html`
       <div class="offer-panel">
@@ -235,41 +235,44 @@ export class ChipView extends MobxLitElement {
         </div>
         <div class="offer-config">
           <label class="offer-config-label">Give:</label>
-          ${this.renderChipNumberInput(
-            this.sellChipAmount,
-            (value) => { this.sellChipAmount = value; }
-          )}
-          ${this.renderChipSelector(
-            this.selectedSellChip,
-            (value) => { this.selectedSellChip = value; }
-          )}
+          ${this.renderChipNumberInput(this.sellChipAmount, (value) => {
+            this.sellChipAmount = value;
+          })}
+          ${this.renderChipSelector(this.selectedSellChip, (value) => {
+            this.selectedSellChip = value;
+          })}
         </div>
         <div class="offer-config">
           <label class="offer-config-label">Get:</label>
-          ${this.renderChipNumberInput(
-            this.buyChipAmount,
-            (value) => { this.buyChipAmount = value; }
-          )}
-          ${this.renderChipSelector(
-            this.selectedBuyChip,
-            (value) => { this.selectedBuyChip = value; }
-          )}
+          ${this.renderChipNumberInput(this.buyChipAmount, (value) => {
+            this.buyChipAmount = value;
+          })}
+          ${this.renderChipSelector(this.selectedBuyChip, (value) => {
+            this.selectedBuyChip = value;
+          })}
         </div>
         ${renderValidationMessage()}
         <div class="buttons">
           <pr-button
             ?loading=${this.isOfferLoading}
-            ?disabled=${this.isOfferEmpty() || !this.isOfferValid() || this.isOfferPending()}
+            ?disabled=${this.isOfferEmpty() ||
+            !this.isOfferValid() ||
+            this.isOfferPending()}
             @click=${sendOffer}
           >
-            ${this.isOfferPending() ? 'Offer sent and pending...' : 'Submit offer'}
+            ${this.isOfferPending()
+              ? 'Offer sent and pending...'
+              : 'Submit offer'}
           </pr-button>
         </div>
       </div>
     `;
   }
 
-  private renderChipNumberInput(value: number, onInput: (value: number) => void) {
+  private renderChipNumberInput(
+    value: number,
+    onInput: (value: number) => void
+  ) {
     const updateInput = (e: Event) => {
       const value = Math.floor(
         parseInt((e.target as HTMLInputElement).value, 10)
@@ -301,8 +304,8 @@ export class ChipView extends MobxLitElement {
         }}
       >
         <option value=""></option>
-        ${this.stage?.chips.map(chip =>
-          html`<option value=${chip.id}>${chip.name}</option>`
+        ${this.stage?.chips.map(
+          (chip) => html`<option value=${chip.id}>${chip.name}</option>`
         )}
       </select>
     `;
@@ -422,7 +425,10 @@ export class ChipView extends MobxLitElement {
               (logTypePriority[a.type] || Infinity)
             );
           })
-          .map((entry) => this.renderLogEntry(entry))}
+          .map((entry, index, array) => {
+            const isLastEntry = index === array.length - 1;
+            return this.renderLogEntry(entry, isLastEntry);
+          })}
       </div>
     `;
   }
@@ -441,10 +447,10 @@ export class ChipView extends MobxLitElement {
     return participant.name ?? participant.publicId;
   }
 
-  private renderLogEntry(entry: ChipLogEntry) {
-    const renderEntry = (message: string) => {
+  private renderLogEntry(entry: ChipLogEntry, isLatestEntry: boolean = false) {
+    const renderEntry = (message: string, cssClasses: string = '') => {
       return html`
-        <div class="log-entry">
+        <div class="log-entry ${cssClasses}">
           <div class="subtitle">
             ${convertUnifiedTimestampToDate(entry.timestamp)}
           </div>
@@ -469,12 +475,20 @@ export class ChipView extends MobxLitElement {
       case ChipLogType.NEW_TURN:
         participant = this.getParticipant(entry.participantId);
         const isCurrentUser =
-        participant.publicId! === this.participantService.profile!.publicId;
-  
+          participant.publicId! === this.participantService.profile!.publicId;
+
+        if (isCurrentUser) {
+          return renderEntry(
+            `Your turn (${this.getParticipantDisplay(
+              participant
+            )}) to submit an offer!`,
+            isLatestEntry ? 'highlight' : ''
+          );
+        }
         return renderEntry(
           `${this.getParticipantDisplay(
             participant
-          )}'s turn to submit an offer${isCurrentUser ? "-- that's you" : ""}!`
+          )}'s turn to submit an offer!`
         );
       case ChipLogType.OFFER:
         participant = this.getParticipant(entry.offer.senderId);
