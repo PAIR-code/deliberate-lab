@@ -94,14 +94,27 @@ export class ChipView extends MobxLitElement {
     }
 
     if (publicData.isGameOver) {
-      return html`<div class="divider"></div>
+      return html`
         <div class="panel">
           <div class="status">
             This game has ended. Please continue to the next stage.
           </div>
           <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
           </chip-reveal-view>
-        </div> `;
+        </div>
+      `;
+    } else if (this.participantService.completedStage(this.stage.id)) {
+      // If game was never started because participants transferred
+      // from different stage
+      // TODO: Show results from the cohort game that participant
+      // was in
+      return html`
+        <div class="panel">
+          <div class="status">
+            This game has ended. Please continue to the next stage.
+          </div>
+        </div>
+      `;
     } else if (publicData.currentTurn === null) {
       const setTurn = async () => {
         if (!this.stage) return;
