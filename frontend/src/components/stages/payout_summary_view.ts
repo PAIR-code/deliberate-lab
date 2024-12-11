@@ -126,7 +126,7 @@ export class PayoutView extends MobxLitElement {
       for (const result of item.chipResults) {
         total += Math.floor(result.quantity * result.value * 100) / 100;
       }
-      return total;
+      return Math.floor(total * 100) / 100;
     };
 
     const renderChipValue = (result: ChipPayoutValueItem) => {

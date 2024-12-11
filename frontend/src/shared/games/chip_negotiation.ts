@@ -187,7 +187,7 @@ export const TRANSFER_STAGE = createTransferStage({
   name: 'Transfer stage',
   descriptions: createStageTextConfig({
     primaryText:
-      'Please wait on this page for 10 minutes as you are transferred to the next stage of this experiment. Thank you for your patience.',
+      'Please wait on this page for up to 10 minutes as you are transferred to the next stage of this experiment. Thank you for your patience.',
   }),
   enableTimeout: true,
   timeoutSeconds: 600, // 10 minutes

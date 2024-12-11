@@ -27,6 +27,10 @@ h2 {
   }
 }
 
+.note {
+  color: var(--md-sys-color-outline);
+}
+
 .chip {
   @include common.chip;
 }
