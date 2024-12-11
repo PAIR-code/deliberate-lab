@@ -12,6 +12,9 @@ import {
   createStageProgressConfig,
 } from './stage';
 import {
+  ChipItem
+} from './chip_stage';
+import {
   MultipleChoiceSurveyQuestion,
   SurveyAnswer,
   SurveyQuestionKind,
@@ -35,7 +38,7 @@ export enum PayoutCurrency {
   USD = "USD", // US dollar
 }
 
-export type PayoutItem = DefaultPayoutItem | SurveyPayoutItem;
+export type PayoutItem = DefaultPayoutItem | ChipPayoutItem | SurveyPayoutItem;
 
 export interface BasePayoutItem {
   id: string;
@@ -53,11 +56,16 @@ export interface BasePayoutItem {
 
 export enum PayoutItemType {
   DEFAULT = "DEFAULT",
+  CHIP = "CHIP",
   SURVEY = "SURVEY",
 }
 
 export interface DefaultPayoutItem extends BasePayoutItem {
   type: PayoutItemType.DEFAULT;
+}
+
+export interface ChipPayoutItem extends BasePayoutItem {
+  type: PayoutItemType.CHIP;
 }
 
 export interface SurveyPayoutItem extends BasePayoutItem {
@@ -78,7 +86,10 @@ export interface PayoutResultConfig {
   results: PayoutItemResult[];
 }
 
-export type PayoutItemResult = DefaultPayoutItemResult | SurveyPayoutItemResult;
+export type PayoutItemResult =
+  | DefaultPayoutItemResult
+  | ChipPayoutItemResult
+  | SurveyPayoutItemResult;
 
 export interface BasePayoutItemResult {
   id: string;
@@ -92,6 +103,19 @@ export interface BasePayoutItemResult {
 
 export interface DefaultPayoutItemResult extends BasePayoutItemResult {
   type: PayoutItemType.DEFAULT;
+}
+
+export interface ChipPayoutItemResult extends BasePayoutItemResult {
+  type: PayoutItemType.CHIP;
+  chipResults: ChipPayoutValueItem[];
+  // TODO: Add field for whether to calculate based on
+  // total chips at end vs. delta from starting chips?
+}
+
+export interface ChipPayoutValueItem {
+  chip: ChipItem; // original chip
+  quantity: number; // final quantity
+  value: number; // value per chip
 }
 
 export interface SurveyPayoutItemResult extends BasePayoutItemResult {
@@ -134,6 +158,21 @@ export function createDefaultPayoutItem(
   return {
     id: config.id ?? generateId(),
     type: PayoutItemType.DEFAULT,
+    name: config.name ?? '',
+    description: config.description ?? '',
+    isActive: config.isActive ?? true,
+    stageId: config.stageId ?? '',
+    baseCurrencyAmount: config.baseCurrencyAmount ?? 0
+  };
+}
+
+/** Create chip payout item. */
+export function createChipPayoutItem(
+  config: Partial<ChipPayoutItem> = {},
+): ChipPayoutItem {
+  return {
+    id: config.id ?? generateId(),
+    type: PayoutItemType.CHIP,
     name: config.name ?? '',
     description: config.description ?? '',
     isActive: config.isActive ?? true,
@@ -197,6 +236,10 @@ export function calculatePayoutTotal(
       result.questionResults.forEach((question) => {
         total += question.amountEarned;
       });
+    } else if (result.type === PayoutItemType.CHIP) {
+      result.chipResults.forEach((result) => {
+        total += Math.floor(result.quantity * result.value * 100) / 100;
+      });
     }
   });
   return total;
@@ -212,6 +255,8 @@ export function calculatePayoutItemResult(
   if (!item.isActive) return null;
 
   switch (item.type) {
+    case PayoutItemType.CHIP:
+      return calculateChipPayoutItemResult(item, stageConfigMap, publicDataMap, profile);
     case PayoutItemType.DEFAULT:
       return calculateDefaultPayoutItemResult(item, stageConfigMap, publicDataMap, profile);
     case PayoutItemType.SURVEY:
@@ -244,6 +289,48 @@ export function calculateDefaultPayoutItemResult(
     stageName: stage.name,
     completedStage,
     baseAmountEarned: completedStage ? item.baseCurrencyAmount : 0
+  };
+}
+
+/** Calculate chip payout results for a single item (or null if can't calculate). */
+export function calculateChipPayoutItemResult(
+  item: ChipPayoutItem,
+  stageConfigMap: Record<string, StageConfig>,
+  publicDataMap: Record<string, StagePublicData>,
+  profile: ParticipantProfile, // current participant profile
+): ChipPayoutItemResult|null {
+  if (!item.isActive) return null;
+
+  // Get chip stage config
+  const stage = stageConfigMap[item.stageId];
+  if (!stage || stage.kind !== StageKind.CHIP) return null;
+
+  const stageTimestamp = profile.timestamps.completedStages[item.stageId];
+  const completedStage = stageTimestamp !== null && stageTimestamp !== undefined;
+
+  const publicChipData = publicDataMap[item.stageId];
+  console.log(publicChipData);
+  if (publicChipData?.kind !== StageKind.CHIP) return null;
+
+  const chipResults: ChipPayoutValueItem[] = stage.chips.map(chip => {
+    const quantity = publicChipData.participantChipMap[profile.publicId][chip.id] ?? 0;
+    const value = publicChipData.participantChipValueMap[profile.publicId][chip.id] ?? 0;
+    return {
+      chip,
+      quantity,
+      value
+    }
+  });
+
+  return {
+    id: item.id,
+    type: PayoutItemType.CHIP,
+    name: item.name,
+    description: item.description,
+    stageName: stage.name,
+    completedStage,
+    baseAmountEarned: completedStage ? item.baseCurrencyAmount : 0,
+    chipResults,
   };
 }
 

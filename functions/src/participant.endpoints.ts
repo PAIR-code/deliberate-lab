@@ -165,8 +165,8 @@ export const updateParticipant = onCall(async (request) => {
           break;
         case StageKind.CHIP:
           const publicChipData = (await publicDocument.get()).data() as ChipStagePublicData;
-          publicStageData.participantChipMap[publicId] = stage.chipMap;
-          publicStageData.participantChipValueMap[publicId] = stage.chipValueMap;
+          publicChipData.participantChipMap[publicId] = stage.chipMap;
+          publicChipData.participantChipValueMap[publicId] = stage.chipValueMap;
           transaction.set(publicDocument, publicChipData);
           break;
         default:
