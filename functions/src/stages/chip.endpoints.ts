@@ -166,9 +166,12 @@ export const sendChipOffer = onCall(async (request) => {
     const chipOffer = data.chipOffer;
     chipOffer.round = publicStageData.currentRound;
 
-    // Confirm that offer is valid (it is the participant's turn to send offers)
-    // TODO: Confirm there is not already an offer
-    if (chipOffer.senderId !== publicStageData.currentTurn?.participantId) {
+    // Confirm that offer is valid (it is the participant's turn to send offers
+    // and there is not already an offer)
+    if (
+      chipOffer.senderId !== publicStageData.currentTurn?.participantId ||
+      publicStageData.currentTurn.offer !== null
+    ) {
       return { success: false };
     }
 
