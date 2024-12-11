@@ -184,82 +184,80 @@ export class ChipView extends MobxLitElement {
     const isOfferValid = validateOffer();
     return html`
       <div class="offer-panel">
-        ${isOfferPending()
-          ? ''
-          : html`<div class="offer-sending-panel">
-              <div class="offer-description">
-                It's your turn to send an offer to the other participants.
-              </div>
-              <div class="offer-config">
-                <label>
-                  Buy:
-                  <select
-                    .value=${this.selectedBuyChip}
-                    @change=${(e: Event) => {
-                      this.selectedBuyChip = (
-                        e.target as HTMLSelectElement
-                      ).value;
-                      this.requestUpdate(); // Trigger re-render after change
-                    }}
-                  >
-                    <option value="RED">🔴 Red</option>
-                    <option value="GREEN">🟢 Green</option>
-                    <option value="BLUE">🔵 Blue</option>
-                  </select>
-                  <input
-                    type="number"
-                    min="1"
-                    .value=${this.buyChipAmount}
-                    @input=${(e: Event) => {
-                      this.buyChipAmount = Math.max(
-                        1,
-                        Math.floor(
-                          parseInt((e.target as HTMLInputElement).value, 10)
-                        )
-                      );
-                      this.requestUpdate(); // Trigger re-render after input
-                    }}
-                  />
-                </label>
-                <label>
-                  Sell:
-                  <select
-                    .value=${this.selectedSellChip}
-                    @change=${(e: Event) => {
-                      this.selectedSellChip = (
-                        e.target as HTMLSelectElement
-                      ).value;
-                      this.requestUpdate(); // Trigger re-render after change
-                    }}
-                  >
-                    <option value="RED">🔴 Red</option>
-                    <option value="GREEN">🟢 Green</option>
-                    <option value="BLUE">🔵 Blue</option>
-                  </select>
-                  <input
-                    type="number"
-                    min="1"
-                    .value=${this.sellChipAmount}
-                    @input=${(e: Event) => {
-                      this.sellChipAmount = Math.max(
-                        1,
-                        Math.floor(
-                          parseInt((e.target as HTMLInputElement).value, 10)
-                        )
-                      );
-                      this.requestUpdate(); // Trigger re-render after input
-                    }}
-                  />
-                </label>
-              </div>
+        <div class="offer-sending-panel">
+          <div class="offer-description">
+            It's your turn to send an offer to the other participants.
+          </div>
+          <div class="offer-config">
+            <label>
+              Buy:
+              <select
+                .disabled=${isOfferPending()}
+                .value=${this.selectedBuyChip}
+                @change=${(e: Event) => {
+                  this.selectedBuyChip = (e.target as HTMLSelectElement).value;
+                  this.requestUpdate(); // Trigger re-render after change
+                }}
+              >
+                <option value="RED">🔴 Red</option>
+                <option value="GREEN">🟢 Green</option>
+                <option value="BLUE">🔵 Blue</option>
+              </select>
+              <input
+                .disabled=${isOfferPending()}
+                type="number"
+                min="1"
+                .value=${this.buyChipAmount}
+                @input=${(e: Event) => {
+                  this.buyChipAmount = Math.max(
+                    1,
+                    Math.floor(
+                      parseInt((e.target as HTMLInputElement).value, 10)
+                    )
+                  );
+                  this.requestUpdate(); // Trigger re-render after input
+                }}
+              />
+            </label>
+            <label>
+              Sell:
+              <select
+                .value=${this.selectedSellChip}
+                .disabled=${isOfferPending()}
+                @change=${(e: Event) => {
+                  this.selectedSellChip = (e.target as HTMLSelectElement).value;
+                  this.requestUpdate(); // Trigger re-render after change
+                }}
+              >
+                <option value="RED">🔴 Red</option>
+                <option value="GREEN">🟢 Green</option>
+                <option value="BLUE">🔵 Blue</option>
+              </select>
+              <input
+                .disabled=${isOfferPending()}
+                type="number"
+                min="1"
+                .value=${this.sellChipAmount}
+                @input=${(e: Event) => {
+                  this.sellChipAmount = Math.max(
+                    1,
+                    Math.floor(
+                      parseInt((e.target as HTMLInputElement).value, 10)
+                    )
+                  );
+                  this.requestUpdate(); // Trigger re-render after input
+                }}
+              />
+            </label>
+          </div>
 
-              ${!isOfferValid
-                ? html`<div class="warning">
-                    ‼️ You cannot offer to buy and sell the same chip color, and
-                    you must have the amount that you are offering to sell.
-                  </div>`
-                : nothing}
-            </div>`}
+          ${!isOfferValid
+            ? html`<div class="warning">
+                ‼️ You cannot offer to buy and sell the same chip color, and you
+                must have the amount that you are offering to sell.
+              </div>`
+            : nothing}
+        </div>
         <pr-button
           ?loading=${this.isOfferLoading}
           ?disabled=${!isOfferValid || isOfferPending()}
@@ -321,8 +319,8 @@ export class ChipView extends MobxLitElement {
       <div class="offer-panel">
         <div class="offer-description">
           Incoming offer!<br />
-          ${senderName} would like to buy ${displayChipOfferText(offer.buy)} for
-          ${displayChipOfferText(offer.sell)}.
+          ${senderName} is offering ${displayChipOfferText(offer.sell)} to get
+          ${displayChipOfferText(offer.buy)} in return.
         </div>
         <div class="buttons">
           <pr-button
@@ -354,8 +352,8 @@ export class ChipView extends MobxLitElement {
       [ChipLogType.OFFER_DECLINED]: 0,
       [ChipLogType.TRANSACTION]: 0,
       [ChipLogType.OFFER]: 1,
-      [ChipLogType.NEW_ROUND]: 2,
-      [ChipLogType.NEW_TURN]: 3,
+      [ChipLogType.NEW_TURN]: 2,
+      [ChipLogType.NEW_ROUND]: 3,
       [ChipLogType.INFO]: 4,
       [ChipLogType.ERROR]: 4,
     };
