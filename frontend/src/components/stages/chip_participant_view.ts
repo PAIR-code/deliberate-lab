@@ -93,10 +93,7 @@ export class ChipView extends MobxLitElement {
       return nothing;
     }
 
-    if (publicData.isGameOver) {
-      return html`<div class="divider"></div>
-        <div class="panel">This game has ended.</div> `;
-    } else if (publicData.currentTurn === null) {
+    if (publicData.currentTurn === null) {
       const setTurn = async () => {
         if (!this.stage) return;
         this.isSetTurnLoading = true;
@@ -127,7 +124,7 @@ export class ChipView extends MobxLitElement {
     };
 
     return html`
-      <div class="panel">
+      <div class="panel panel-left">
         <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
         </chip-reveal-view>
         ${isCurrentTurn()
@@ -138,6 +135,17 @@ export class ChipView extends MobxLitElement {
   }
 
   private renderSenderView() {
+    if (!this.stage) return nothing;
+
+    const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
+    if (!publicData || publicData.kind !== StageKind.CHIP) {
+      return nothing;
+    }
+    if (publicData!.isGameOver) {
+      return html`<div class="divider"></div>
+        <div class="panel">This game has ended.</div> `;
+    }
+
     const isOfferPending = () => {
       if (!this.stage) return;
       const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
@@ -429,10 +437,13 @@ export class ChipView extends MobxLitElement {
         `;
       case ChipLogType.NEW_TURN:
         participant = this.getParticipant(entry.participantId);
+        const isCurrentUser =
+        participant.publicId! === this.participantService.profile!.publicId;
+  
         return renderEntry(
           `${this.getParticipantDisplay(
             participant
-          )}'s turn to submit an offer!`
+          )}'s turn to submit an offer${isCurrentUser ? "-- that's you" : ""}!`
         );
       case ChipLogType.OFFER:
         participant = this.getParticipant(entry.offer.senderId);

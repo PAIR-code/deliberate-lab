@@ -13,11 +13,14 @@
   overflow: auto;
 }
 
+.panel-left {
+  max-width: 40%;
+}
+
 .panel {
   @include common.flex-column;
   flex-grow: 1;
   gap: common.$spacing-xl;
-  max-width: 50%;
   overflow: auto;
   padding: common.$main-content-padding;
 
