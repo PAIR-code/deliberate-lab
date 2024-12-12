@@ -18,6 +18,12 @@ import {
 } from '@deliberation-lab/utils';
 
 // ****************************************************************************
+// Game parameters
+// ****************************************************************************
+export const N_INITIAL_GREEN_CHIPS = 100;
+export const N_INITIAL_BLUE_CHIPS = 100;
+export const N_INITIAL_RED_CHIPS = 100; 
+// ****************************************************************************
 // Experiment config
 // ****************************************************************************
 export const CHIP_GAME_METADATA = createMetadataConfig({
@@ -100,9 +106,9 @@ const CHIP_INFO_STAGE_INSTRUCTIONS = createInfoStage({
   name: 'Overview and gameplay (1/2)',
   infoLines: [
     'Today, you will be playing two rounds of a trading game with other participants. In each game, you and the other participants will start with:',
-    '* 🔴 100 **red** chips',
-    '* 🟢 100 **green** chips',
-    '* 🔵 100 **blue** chips',
+    `* 🔴 ${N_INITIAL_RED_CHIPS} **red** chips`,
+    `* 🟢 ${N_INITIAL_GREEN_CHIPS} **green** chips`,
+    `* 🔵 ${N_INITIAL_BLUE_CHIPS} **blue** chips`,
     '**Valuations:**',
     'Each 🟢 green chip is worth $0.05 to each participant. However, you will all have different valuations for the red and blue chips, randomly chosen between $0.01 and $0.10. For example, Participant A might value 🔴 red chips at $0.02 each and 🔵 blue chips at $0.07 each, while Participant B might value 🔴 red chips at $0.08 each and 🔵 blue chips at $0.03 each.',
     "You know your own chip valuation and that everyone values 🟢 green chips the same, at $0.05 per chip. However, you do not know the other players' valuations for red and blue chips.",
@@ -206,7 +212,7 @@ const CHIP_NEGOTIATION_STAGE = createChipStage({
       name: '🔴 red',
       canBuy: true,
       canSell: true,
-      quantity: 100,
+      quantity: N_INITIAL_RED_CHIPS,
       lowerValue: 0.01,
       upperValue: 0.1,
     },
@@ -215,7 +221,7 @@ const CHIP_NEGOTIATION_STAGE = createChipStage({
       name: '🔵 blue',
       canBuy: true,
       canSell: true,
-      quantity: 100,
+      quantity: N_INITIAL_BLUE_CHIPS,
       lowerValue: 0.01,
       upperValue: 0.1,
     },
@@ -224,7 +230,7 @@ const CHIP_NEGOTIATION_STAGE = createChipStage({
       name: '🟢 green',
       canBuy: true,
       canSell: true,
-      quantity: 100,
+      quantity: N_INITIAL_GREEN_CHIPS,
       lowerValue: 0.05,
       upperValue: 0.05,
     },
@@ -241,7 +247,7 @@ const CHIP_NEGOTIATION_STAGE2 = createChipStage({
       name: '🔴 red',
       canBuy: true,
       canSell: true,
-      quantity: 100,
+      quantity: N_INITIAL_RED_CHIPS,
       lowerValue: 0.01,
       upperValue: 0.1,
     },
@@ -250,7 +256,7 @@ const CHIP_NEGOTIATION_STAGE2 = createChipStage({
       name: '🔵 blue',
       canBuy: true,
       canSell: true,
-      quantity: 100,
+      quantity: N_INITIAL_BLUE_CHIPS,
       lowerValue: 0.01,
       upperValue: 0.1,
     },
@@ -259,7 +265,7 @@ const CHIP_NEGOTIATION_STAGE2 = createChipStage({
       name: '🟢 green',
       canBuy: true,
       canSell: true,
-      quantity: 100,
+      quantity: N_INITIAL_GREEN_CHIPS,
       lowerValue: 0.05,
       upperValue: 0.05,
     },

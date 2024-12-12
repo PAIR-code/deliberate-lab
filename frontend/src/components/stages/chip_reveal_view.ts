@@ -19,6 +19,11 @@ import {
 import {isActiveParticipant} from '../../shared/participant.utils';
 import {styles} from './chip_reveal_view.scss';
 import {SurveyAnswer} from '@deliberation-lab/utils';
+import {
+  N_INITIAL_BLUE_CHIPS,
+  N_INITIAL_GREEN_CHIPS,
+  N_INITIAL_RED_CHIPS,
+} from '../../shared/games/chip_negotiation';
 
 /** Chip negotiation reveal view */
 @customElement('chip-reveal-view')
@@ -152,10 +157,30 @@ export class ChipReveal extends MobxLitElement {
       return {chip, quantity, value};
     });
 
-    const totalPayout = chipValues
-      ?.reduce((total, {quantity, value}) => total + quantity * value, 0)
-      .toFixed(2);
+    // Calculate the initial payout as a sum
+    const initialPayout = this.stage?.chips
+      .reduce((sum, chip) => {
+        let initialQuantity = 0;
+        console.log(chip.id);
+        if (chip.id === 'BLUE') {
+          initialQuantity = N_INITIAL_BLUE_CHIPS;
+        } else if (chip.id === 'RED') {
+          initialQuantity = N_INITIAL_RED_CHIPS;
+        } else if (chip.id === 'GREEN') {
+          initialQuantity = N_INITIAL_GREEN_CHIPS;
+        }
 
+        const value = participantChipValueMap[chip.id] ?? 0;
+        return sum + initialQuantity * value;
+      }, 0);
+
+    const totalPayout = chipValues
+      ?.reduce((total, {quantity, value}) => total + quantity * value, 0);
+    const diff = totalPayout! - initialPayout!;
+    const diffDisplay = html`<span
+      class=${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}
+      ><b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b></span
+    >`;
     return html`
       <h3>Chip counts</h3>
       <p class="description">
@@ -183,9 +208,15 @@ export class ChipReveal extends MobxLitElement {
         </div>
         <div class="table-foot">
           <div class="table-row">
-            ${this.makeCell('Total payout')}
+            ${this.makeCell('Starting payout')}
             ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
-            ${this.makeCell(`$${totalPayout}`)}
+            ${this.makeCell(`$${initialPayout!.toFixed(2)}`)}
+          </div>
+
+          <div class="table-row">
+            ${this.makeCell('Current payout')}
+            ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
+            <div class="table-cell">$${totalPayout!.toFixed(2)} ${diffDisplay}</div>
           </div>
         </div>
       </div>
