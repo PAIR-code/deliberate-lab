@@ -459,7 +459,7 @@ export class ChipView extends MobxLitElement {
 
     const offer = publicData.currentTurn?.offer;
     if (!offer) {
-      return html`Waiting for an offer...`;
+      return html`<div class="offer-panel">Waiting for an offer...</div>`;
     }
 
     const acceptOffer = async () => {
