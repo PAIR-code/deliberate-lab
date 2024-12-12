@@ -214,9 +214,9 @@ export class ChipReveal extends MobxLitElement {
           </div>
 
           <div class="table-row">
-            ${this.makeCell('Current payout')}
+            ${this.makeCell('Total payout')}
             ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
-            <div class="table-cell">$${totalPayout!.toFixed(2)} ${diffDisplay}</div>
+            <div class="table-cell ${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}">$${totalPayout!.toFixed(2)}</div>
           </div>
         </div>
       </div>

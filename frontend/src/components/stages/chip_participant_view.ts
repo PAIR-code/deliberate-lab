@@ -277,7 +277,7 @@ export class ChipView extends MobxLitElement {
           createChipOffer(chipOffer)
         );
 
-        const diff = newTotalPayout - currentTotalPayout;
+        const diff = currentTotalPayout - newTotalPayout;
         const diffDisplay = html`<span
           class=${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}
           ><b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b></span
@@ -331,7 +331,7 @@ export class ChipView extends MobxLitElement {
     return html`
       <div class="offer-panel">
         <div class="offer-description">
-          ✋ It's your turn! Make an offer to the other participants.
+          ${this.isOfferPending() ? `Waiting on other participants to evaluate your offer...` : `✋ It's your turn! Make an offer to the other participants.`}
         </div>
 
         <div class="offer-form">
