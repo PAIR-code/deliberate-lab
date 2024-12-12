@@ -196,16 +196,18 @@ export class ChipView extends MobxLitElement {
     return this.buyChipAmount === 0 && this.sellChipAmount === 0;
   }
 
-  private isOfferValid() {
+  private getAvailableSell() {
+    /* Returns how many chips of the current selected chip we can sell. */
     const publicData = this.cohortService.stagePublicDataMap[this.stage!.id];
-    if (publicData?.kind !== StageKind.CHIP) return false;
+    if (publicData?.kind !== StageKind.CHIP) return 0;
 
     const publicId = this.participantService.profile?.publicId ?? '';
     const participantChipMap = publicData.participantChipMap[publicId] ?? {};
     const availableSell = participantChipMap[this.selectedSellChip] ?? 0;
 
-    // TODO: Ensure at least one other participant can accept the offer
-
+    return availableSell;
+  }
+  private isOfferValid() {
     return (
       // Ensure different chips are selected
       this.selectedBuyChip !== this.selectedSellChip &&
@@ -215,7 +217,7 @@ export class ChipView extends MobxLitElement {
       Number.isInteger(this.sellChipAmount) &&
       this.buyChipAmount > 0 &&
       this.sellChipAmount > 0 &&
-      this.sellChipAmount <= availableSell
+      this.sellChipAmount <= this.getAvailableSell()
     );
   }
 
@@ -246,25 +248,84 @@ export class ChipView extends MobxLitElement {
       this.resetChipValues();
     };
 
-    const renderValidationMessage = () => {
-      if (this.isOfferIncomplete()) return nothing;
+    const renderOfferPayout = () => {
+      let payoutHtml = html``;
+      if (!this.isOfferIncomplete() && this.isOfferValid()) {
+        if (!this.stage || !this.participantService.profile) return 0;
+        const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
+        if (publicData?.kind !== StageKind.CHIP) return 0;
 
-      if (!this.isOfferAcceptable()) {
-        return html`
-          <div class="warning">
-            ‼️ No other players have enough chips to accept your offer.
-          </div>
-        `;
+        const currentParticipant = this.participantService.profile;
+        const participantChipMap =
+          publicData.participantChipMap[currentParticipant.publicId] ?? {};
+        const participantChipValueMap =
+          publicData.participantChipValueMap[currentParticipant.publicId] ?? {};
+
+        const currentTotalPayout = this.calculatePayout(
+          participantChipMap,
+          participantChipValueMap
+        );
+
+        const chipOffer: Partial<ChipOffer> = {
+          buy: {[this.selectedBuyChip]: this.buyChipAmount},
+          sell: {[this.selectedSellChip]: this.sellChipAmount},
+        };
+
+        const newTotalPayout = this.calculatePayout(
+          participantChipMap,
+          participantChipValueMap,
+          createChipOffer(chipOffer)
+        );
+
+        const diff = newTotalPayout - currentTotalPayout;
+        const diffDisplay = html`<span
+          class=${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}
+          ><b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b></span
+        >`;
+        payoutHtml = html`<p>
+          If this offer is accepted, your updated payout will be
+          <b>$${newTotalPayout.toFixed(2)}</b> ${diffDisplay}.
+        </p>`;
+      }
+      return html`<div class="payout-panel">${payoutHtml}</div>`;
+    };
+    const renderValidationMessages = () => {
+      if (this.isOfferIncomplete()) {
+        return html`<div class="warnings-panel"></div>`;
       }
 
-      if (this.isOfferValid()) return nothing;
+      const errors = [];
 
-      let errorMessage =
-        this.selectedBuyChip === this.selectedSellChip
-          ? 'You cannot offer to buy and sell the same chip color.'
-          : 'You must have the amount of chips that you are offering to give.';
+      // Check if the offer is unacceptable
+      if (!this.isOfferAcceptable()) {
+        errors.push(html`
+          <div class="warning">
+            ⚠️ No other players have enough chips to accept your offer.
+          </div>
+        `);
+      }
 
-      return html` <div class="warning">‼️ ${errorMessage}</div> `;
+      // Validate the offer
+      if (!this.isOfferValid()) {
+        if (this.getAvailableSell() < this.sellChipAmount) {
+          errors.push(html`
+            <div class="warning">
+              ‼️ You cannot give more chips than you have.
+            </div>
+          `);
+        }
+
+        if (this.selectedBuyChip === this.selectedSellChip) {
+          errors.push(html`
+            <div class="warning">
+              ‼️ You cannot offer to buy and sell the same chip color.
+            </div>
+          `);
+        }
+      }
+
+      // Return all collected errors
+      return html`<div class="warnings-panel">${errors}</div>`;
     };
 
     return html`
@@ -273,26 +334,28 @@ export class ChipView extends MobxLitElement {
           ✋ It's your turn! Make an offer to the other participants.
         </div>
 
-        ${renderValidationMessage()}
+        <div class="offer-form">
+          <div class="offer-config">
+            <label class="offer-config-label">Give:</label>
+            ${this.renderChipNumberInput(this.sellChipAmount, (value) => {
+              this.sellChipAmount = value;
+            })}
+            ${this.renderChipSelector(this.selectedSellChip, (value) => {
+              this.selectedSellChip = value;
+            })}
+          </div>
+          <div class="offer-config">
+            <label class="offer-config-label">Get:</label>
+            ${this.renderChipNumberInput(this.buyChipAmount, (value) => {
+              this.buyChipAmount = value;
+            })}
+            ${this.renderChipSelector(this.selectedBuyChip, (value) => {
+              this.selectedBuyChip = value;
+            })}
+          </div>
+        </div>
 
-        <div class="offer-config">
-          <label class="offer-config-label">Give:</label>
-          ${this.renderChipNumberInput(this.sellChipAmount, (value) => {
-            this.sellChipAmount = value;
-          })}
-          ${this.renderChipSelector(this.selectedSellChip, (value) => {
-            this.selectedSellChip = value;
-          })}
-        </div>
-        <div class="offer-config">
-          <label class="offer-config-label">Get:</label>
-          ${this.renderChipNumberInput(this.buyChipAmount, (value) => {
-            this.buyChipAmount = value;
-          })}
-          ${this.renderChipSelector(this.selectedBuyChip, (value) => {
-            this.selectedBuyChip = value;
-          })}
-        </div>
+        ${renderOfferPayout()} ${renderValidationMessages()}
         <div class="buttons">
           <pr-button
             ?loading=${this.isOfferLoading}
@@ -333,6 +396,42 @@ export class ChipView extends MobxLitElement {
         />
       </div>
     `;
+  }
+
+  private calculatePayout(
+    chipMap: Record<string, number>,
+    chipValueMap: Record<string, number>,
+    offer: ChipOffer | null = null
+  ) {
+    // Calculate the total payout before the offer
+    const currentTotalPayout = Object.keys(chipMap)
+      .map((chipId) => {
+        const quantity = chipMap[chipId] ?? 0;
+        const value = chipValueMap[chipId] ?? 0;
+        return quantity * value;
+      })
+      .reduce((total, value) => total + value, 0);
+
+    // If no offer, return the current total payout
+    if (!offer) return currentTotalPayout;
+
+    // Calculate the changes from the offer
+    const buyChip = Object.keys(offer.buy)[0];
+    const buyAmount = offer.buy[buyChip] ?? 0;
+
+    const sellChip = Object.keys(offer.sell)[0];
+    const sellAmount = offer.sell[sellChip] ?? 0;
+
+    const buyValue = chipValueMap[buyChip] ?? 0;
+    const sellValue = chipValueMap[sellChip] ?? 0;
+
+    // Update the hypothetical payout
+    const newTotalPayout =
+      currentTotalPayout +
+      sellAmount * sellValue - // Add value for sold chips
+      buyAmount * buyValue; // Subtract value for bought chips
+
+    return newTotalPayout;
   }
 
   private renderChipSelector(value: string, onInput: (value: string) => void) {
@@ -398,45 +497,27 @@ export class ChipView extends MobxLitElement {
         publicData.participantChipMap[currentParticipant.publicId] ?? {};
       const participantChipValueMap =
         publicData.participantChipValueMap[currentParticipant.publicId] ?? {};
-      const offer = publicData.currentTurn?.offer;
 
+      const offer = publicData.currentTurn?.offer;
       if (!offer) return 0;
 
-      // Calculate the total payout before the offer
-      const chipValues = Object.keys(participantChipMap).map((chipId) => {
-        const quantity = participantChipMap[chipId] ?? 0;
-        const value = participantChipValueMap[chipId] ?? 0;
-        return quantity * value;
-      });
-
-      const currentTotalPayout = chipValues.reduce(
-        (total, value) => total + value,
-        0
+      const currentTotalPayout = this.calculatePayout(
+        participantChipMap,
+        participantChipValueMap
+      );
+      const newTotalPayout = this.calculatePayout(
+        participantChipMap,
+        participantChipValueMap,
+        publicData.currentTurn?.offer
       );
 
-      // Calculate the changes from the offer
-      const buyChip = Object.keys(offer.buy)[0];
-      const buyAmount = offer.buy[buyChip] ?? 0;
-
-      const sellChip = Object.keys(offer.sell)[0];
-      const sellAmount = offer.sell[sellChip] ?? 0;
-
-      const buyValue = participantChipValueMap[buyChip] ?? 0;
-      const sellValue = participantChipValueMap[sellChip] ?? 0;
-
-      // Update the hypothetical payout
-      const newTotalPayout =
-        currentTotalPayout +
-        sellAmount * sellValue - // Add value for sold chips
-        buyAmount * buyValue; // Subtract value for bought chips
-
       const diff = newTotalPayout - currentTotalPayout;
-      const diffDisplay = html`<span class=${diff > 0 ? 'positive' : 'negative'}
+      const diffDisplay = html`<span
+        class=${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}
         ><b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b></span
       >`;
       return html`<p>
-        Your current payout is <b>$${currentTotalPayout}</b>. If you accept this
-        offer, your updated payout will be
+        If you accept this offer, your updated payout will be
         <b>$${newTotalPayout.toFixed(2)}</b> ${diffDisplay}.
       </p>`;
     };
@@ -469,12 +550,14 @@ export class ChipView extends MobxLitElement {
     return html`
       <div class="offer-panel">
         <div class="offer-description">Incoming offer!</div>
-        <p>
-          ${senderName} is offering to give
-          <b>${displayChipOfferText(offer.sell)}</b> to get
-          <b>${displayChipOfferText(offer.buy)}</b> in return.
-        </p>
-        ${displayHypotheticalTotal()}
+        <div>
+          <p>
+            ${senderName} is offering to give
+            <b>${displayChipOfferText(offer.sell)}</b> to get
+            <b>${displayChipOfferText(offer.buy)}</b> in return.
+          </p>
+          ${displayHypotheticalTotal()}
+        </div>
         <div class="buttons">
           <pr-tooltip
             text=${!canAcceptOffer()
