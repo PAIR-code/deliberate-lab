@@ -117,6 +117,14 @@ export class ChipReveal extends MobxLitElement {
     const isCurrentUser =
       participant.publicId! === this.participantService.profile!.publicId;
 
+    const isCurrentTurn = (participant: ParticipantProfile) => {
+      if (this.publicData?.kind !== StageKind.CHIP) return false;
+
+      return (
+        this.publicData.currentTurn?.participantId === participant.publicId
+      );
+    };
+
     const renderChip = (chip: ChipItem, isCurrentUser: boolean) => {
       const participantChipMap =
         this.publicData?.participantChipMap[participant.publicId] ?? {};
@@ -125,16 +133,15 @@ export class ChipReveal extends MobxLitElement {
       return this.makeCell(cellContent);
     };
 
-    let participantIndicator = `${participant.avatar} ${getParticipantName(
-      participant
-    )}`;
-    if (isCurrentUser) {
-      participantIndicator += ' (you)';
-    }
+    const participantIndicator = html`<span
+        class="indicator ${isCurrentTurn(participant) ? '' : 'hidden'}"
+        >👉</span
+      >${participant.avatar}
+      ${getParticipantName(participant)}${isCurrentUser ? ' (you)' : ''}`;
 
     return html`
-      <div class="table-row">
-        ${this.makeCell(participantIndicator)}
+      <div class="table-row ${isCurrentUser ? 'highlight' : ''}">
+        <div class="table-cell participant-cell">${participantIndicator}</div>
         ${this.stage?.chips.map((chip) => renderChip(chip, isCurrentUser))}
       </div>
     `;
@@ -158,24 +165,25 @@ export class ChipReveal extends MobxLitElement {
     });
 
     // Calculate the initial payout as a sum
-    const initialPayout = this.stage?.chips
-      .reduce((sum, chip) => {
-        let initialQuantity = 0;
-        console.log(chip.id);
-        if (chip.id === 'BLUE') {
-          initialQuantity = N_INITIAL_BLUE_CHIPS;
-        } else if (chip.id === 'RED') {
-          initialQuantity = N_INITIAL_RED_CHIPS;
-        } else if (chip.id === 'GREEN') {
-          initialQuantity = N_INITIAL_GREEN_CHIPS;
-        }
+    const initialPayout = this.stage?.chips.reduce((sum, chip) => {
+      let initialQuantity = 0;
+      console.log(chip.id);
+      if (chip.id === 'BLUE') {
+        initialQuantity = N_INITIAL_BLUE_CHIPS;
+      } else if (chip.id === 'RED') {
+        initialQuantity = N_INITIAL_RED_CHIPS;
+      } else if (chip.id === 'GREEN') {
+        initialQuantity = N_INITIAL_GREEN_CHIPS;
+      }
 
-        const value = participantChipValueMap[chip.id] ?? 0;
-        return sum + initialQuantity * value;
-      }, 0);
+      const value = participantChipValueMap[chip.id] ?? 0;
+      return sum + initialQuantity * value;
+    }, 0);
 
-    const totalPayout = chipValues
-      ?.reduce((total, {quantity, value}) => total + quantity * value, 0);
+    const totalPayout = chipValues?.reduce(
+      (total, {quantity, value}) => total + quantity * value,
+      0
+    );
     const diff = totalPayout! - initialPayout!;
     const diffDisplay = html`<span
       class=${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}
@@ -184,39 +192,36 @@ export class ChipReveal extends MobxLitElement {
     return html`
       <h3>Chip counts</h3>
       <p class="description">
-        This table shows how many chips all participants currently have.
+        This table shows how many chips all participants currently have.<br />Participants
+        are ordered by the order in which they will make offers.
       </p>
       <div class="table">
         ${this.renderGlobalTableHeader()}
         <div class="table-body">
           ${participants
             .filter((p) => isActiveParticipant(p))
-            .sort((a, b) => {
-              const isCurrentUserA =
-                a.publicId === this.participantService.profile!.publicId;
-              const isCurrentUserB =
-                b.publicId === this.participantService.profile!.publicId;
-
-              if (isCurrentUserA && !isCurrentUserB) {
-                return -1;
-              } else if (!isCurrentUserA && isCurrentUserB) {
-                return 1;
-              }
-              return 0;
-            })
+            .sort((a, b) => a.publicId.localeCompare(b.publicId))
             .map((p) => this.renderParticipantRow(p))}
         </div>
         <div class="table-foot">
           <div class="table-row">
-            ${this.makeCell('Starting payout')}
+            ${this.makeCell('Your starting payout')}
             ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
             ${this.makeCell(`$${initialPayout!.toFixed(2)}`)}
           </div>
 
           <div class="table-row">
-            ${this.makeCell('Total payout')}
+            ${this.makeCell('Your total payout')}
             ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
-            <div class="table-cell ${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}">$${totalPayout!.toFixed(2)}</div>
+            <div
+              class="table-cell ${diff > 0
+                ? 'positive'
+                : diff < 0
+                ? 'negative'
+                : ''}"
+            >
+              $${totalPayout!.toFixed(2)}
+            </div>
           </div>
         </div>
       </div>

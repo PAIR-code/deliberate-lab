@@ -37,3 +37,20 @@ p {
 .negative {
   color: red;
 }
+
+.highlight {
+  color: var(--md-sys-color-tertiary);
+}
+
+.participant-cell {
+  display: "flex";
+  margin-right: 4px 0;
+}
+
+.indicator {
+  margin-right: 4px;
+}
+
+.hidden {
+  visibility: hidden;
+}

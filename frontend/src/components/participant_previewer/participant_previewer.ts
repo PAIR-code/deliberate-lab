@@ -130,7 +130,7 @@ export class ParticipantPreviewer extends MobxLitElement {
           variant="tonal"
           @click=${onStartExperiment}
         >
-          Start experiment
+          Click to begin experiment
         </pr-button>
       `;
     }
