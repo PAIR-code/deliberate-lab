@@ -289,9 +289,9 @@ async function getMediatorResponse(data: ExperimenterData, prompt: string): Prom
   if (keyType === ApiKeyType.GEMINI_API_KEY) {
     response =  getGeminiResponse(data, prompt);
   } else if (keyType === ApiKeyType.LLAMA_CUSTOM_URL) {
-    response = await getLlamaResponse(data, prompt);
+    response = await getOllamaResponse(data, prompt);
   } else {
-    console.log("Error: invalid apiKey type: ", keyType)
+    console.error("Error: invalid apiKey type: ", keyType)
     response = {text: ""};
   }
 
@@ -302,8 +302,6 @@ async function getGeminiResponse(data: ExperimenterData, prompt: string): Promis
   return await getGeminiAPIResponse(data.geminiApiKey, prompt);
 }
 
-async function getLlamaResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
-  // TODO: make model_type field available to settings page (text field?)
-  // keep in mind that any models need to be pulled and deployed on the server first
+async function getOllamaResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
   return await ollamaChat([prompt], data.llamaApiKey);
 }

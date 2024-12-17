@@ -115,11 +115,10 @@ export class OllamaChat {
 
         const { done, value } = await reader.read();
         const rawjson = new TextDecoder().decode(value);
-        console.log("Received raw: ", rawjson)
 
         if (this.isError(rawjson)) {
             // this should probably throw an Error, but Gemini's API just logs it
-            console.log("Error:", rawjson)
+            console.error("Error:", rawjson)
             return ""
         } else {
             const json: IncomingMessage = JSON.parse(rawjson);
