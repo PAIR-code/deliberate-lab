@@ -181,7 +181,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
         >
         </pr-textarea>
         <p>
-          All supported LLM types can be found <a href=https://ollama.com/library>here</a>. 
+          All supported LLM types can be found <a target="_blank" href=https://ollama.com/library>here</a>. 
           Make sure the LLM type has been deployed on the server prior to selecting it here.
         </p>
       </div>
