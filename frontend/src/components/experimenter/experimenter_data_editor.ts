@@ -10,6 +10,7 @@ import { AuthService } from '../../services/auth.service';
 import { styles } from './experimenter_data_editor.scss';
 import { ApiKeyType, ExperimenterData } from '@deliberation-lab/utils';
 
+
 /** Editor for adjusting experimenter data */
 @customElement('experimenter-data-editor')
 export class ExperimenterDataEditor extends MobxLitElement {
@@ -29,11 +30,11 @@ export class ExperimenterDataEditor extends MobxLitElement {
     return html`
     <div class="section">
       <h2>
-        Select Server
+        Select LLM host
       </h2>
       <div class="action-buttons">
-        ${this.renderServerTypeButton('Llama Server', ApiKeyType.LLAMA_CUSTOM_URL)}
         ${this.renderServerTypeButton('Gemini', ApiKeyType.GEMINI_API_KEY)}
+        ${this.renderServerTypeButton('Ollama Server', ApiKeyType.LLAMA_CUSTOM_URL)}
       </div>
     </div>`;
   }
@@ -116,7 +117,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
 
   // ============ Llama server ============ 
   private renderServerSettings() {
-    const updateServerSettings = (e: InputEvent, field: 'serverUrl' | 'port') => {
+    const updateServerSettings = (e: InputEvent, field: 'serverUrl' | 'llmType') => {
       const oldData = this.authService.experimenterData;
       if (!oldData) return;
 
@@ -130,7 +131,18 @@ export class ExperimenterDataEditor extends MobxLitElement {
             activeApiKeyType: ApiKeyType.LLAMA_CUSTOM_URL,
             llamaApiKey: {
               url: serverSettings,
-              //port: oldData.llamaApiKey.port
+              llmType: oldData.llamaApiKey.llmType
+            },
+            geminiApiKey: oldData.geminiApiKey
+          }
+          break;
+        case "llmType":
+          newData = {
+            id: oldData.id,
+            activeApiKeyType: ApiKeyType.LLAMA_CUSTOM_URL,
+            llamaApiKey: {
+              url: oldData.llamaApiKey.url,
+              llmType: serverSettings
             },
             geminiApiKey: oldData.geminiApiKey
           }
@@ -147,15 +159,31 @@ export class ExperimenterDataEditor extends MobxLitElement {
     const data = this.authService.experimenterData;
     return html`
       <div class="section">
-        <div class="title">LLaMa Server</div>
+        <div class="title">Ollama Server</div>
         <pr-textarea
           label="Server URL"
-          placeholder="Enter server URL"
+          placeholder="http://example:80/api/chat"
           variant="outlined"
           .value=${data?.llamaApiKey?.url ?? ""} 
           @input=${(e: InputEvent) => updateServerSettings(e, 'serverUrl')}
         >
         </pr-textarea>
+        <p>
+          Please ensure that the URL is valid before proceeding.
+        </p>
+
+        <pr-textarea
+          label="LLM type"
+          placeholder="llama3.2"
+          variant="outlined"
+          .value=${data?.llamaApiKey?.llmType ?? ""} 
+          @input=${(e: InputEvent) => updateServerSettings(e, 'llmType')}
+        >
+        </pr-textarea>
+        <p>
+          All supported LLM types can be found <a target="_blank" href=https://ollama.com/library>here</a>. 
+          Make sure the LLM type has been deployed on the server prior to selecting it here.
+        </p>
       </div>
     `;
   }

@@ -19,7 +19,7 @@ import {
 
 import { app } from '../app';
 import { getGeminiAPIResponse } from '../api/gemini.api';
-import { ollamaChat } from '../api/llama.api';
+import { ollamaChat } from '../api/ollama.api';
 
 export interface MediatorMessage {
   mediator: MediatorConfig;
@@ -305,5 +305,5 @@ async function getGeminiResponse(data: ExperimenterData, prompt: string): Promis
 async function getLlamaResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
   // TODO: make model_type field available to settings page (text field?)
   // keep in mind that any models need to be pulled and deployed on the server first
-  return await ollamaChat([prompt], "llama3.2", data.llamaApiKey);
+  return await ollamaChat([prompt], data.llamaApiKey);
 }

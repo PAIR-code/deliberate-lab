@@ -44,16 +44,13 @@ type LlmMessage = {
  * Send a list of string-messages to the hosted LLM and receive its response.
  *
  * @param messages a list of string-messages to be sent as prompts to the model
- * @param llmType the type of llm running in the server (e.g. "llama3.2"). 
- * Keep in mind that the model must have been loaded server-side in order to be used.
  * @param serverConfig the url and other necessary data of the Ollama server
  * @returns the model's response as a string, or empty string if an error occured
  */
-export async function ollamaChat(messages: string[], 
-                                llmType: string, 
+export async function ollamaChat(messages: string[],
                                 serverConfig: LlamaServerConfig)
                                 : Promise<ModelResponse> {
-    const messageObjects = encodeMessages(messages, llmType);
+    const messageObjects = encodeMessages(messages, serverConfig.llmType);
 
     console.log("Sending prompt:", messageObjects);
     const response = await fetch(serverConfig.url, { method: "POST", body: JSON.stringify(messageObjects) });
