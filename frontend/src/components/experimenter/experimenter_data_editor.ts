@@ -141,7 +141,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
             id: oldData.id,
             activeApiKeyType: ApiKeyType.LLAMA_CUSTOM_URL,
             llamaApiKey: {
-              url: oldData.llamaApiKey.llmType,
+              url: oldData.llamaApiKey.url,
               llmType: serverSettings
             },
             geminiApiKey: oldData.geminiApiKey
