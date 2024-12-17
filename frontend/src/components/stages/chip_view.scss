@@ -1,5 +1,5 @@
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -14,7 +14,7 @@
 }
 
 .panel-left {
-  max-width: 40%;
+  max-width: 45%;
 }
 
 .panel {
@@ -60,7 +60,7 @@
   padding: common.$spacing-medium; /* Padding for inner spacing */
   box-shadow: var(--md-sys-color-box-shadow-3); /* Subtle shadow for depth */
   margin-bottom: common.$spacing-medium;
-  height: 200px;
+  height: 50%;
   justify-content: space-between;
 }
 
@@ -80,6 +80,13 @@
   width: 50px;
 }
 
+.payout-panel {
+  height: 15%;
+}
+.warnings-panel {
+  height: 30%;
+}
+
 select {
   @include typescale.body-small;
   background: none;
@@ -91,7 +98,7 @@ select {
 
 .warning {
   padding: common.$spacing-small;
-  font-style: italic;  
+  font-style: italic;
   background-color: var(--md-sys-color-tertiary-container);
 }
 
@@ -100,7 +107,7 @@ select {
 }
 
 .round-text {
-  font-style:italic;  
+  font-style: italic;
 }
 
 .highlight {
