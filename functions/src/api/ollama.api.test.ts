@@ -1,4 +1,4 @@
-import { ollamaChat } from "./llama.api";
+import { ollamaChat } from "./ollama.api";
 
 /**
  * Test assumes a container with ollama is running on port 11434

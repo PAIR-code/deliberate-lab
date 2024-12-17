@@ -19,7 +19,7 @@ import {
 
 import { app } from '../app';
 import { getGeminiAPIResponse } from '../api/gemini.api';
-import { ollamaChat } from '../api/llama.api';
+import { ollamaChat } from '../api/ollama.api';
 
 export interface MediatorMessage {
   mediator: MediatorConfig;
