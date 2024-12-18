@@ -656,11 +656,15 @@ export class ChipView extends MobxLitElement {
     }
 
     return html`
-      <div class="panel log">
-        ${logs.slice().sort(sortLogsByPriority).map((entry, index, array) => {
-            const isLastEntry = index === array.length - 1;
-            return this.renderLogEntry(entry, index === logs.length - 1);
-          })}
+      <div class="log-panel">
+        <div class="log-scroll-outer-wrapper">
+          <div class="log-scroll-inner-wrapper">
+            ${logs.slice().sort(sortLogsByPriority).map((entry, index, array) => {
+                const isLastEntry = index === array.length - 1;
+                return this.renderLogEntry(entry, index === logs.length - 1);
+              })}
+          </div>
+        </div>
       </div>
     `;
   }
