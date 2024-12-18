@@ -38,7 +38,7 @@ export interface ChipItem {
   avatar: string; // emoji for chip
   canBuy: boolean; // if true, participants can buy this chip
   canSell: boolean; // if true, participants can sell this chip
-  quantity: number; // starting quantity of chips
+  startingQuantity: number; // starting quantity of chips
   lowerValue: number; // lower bound for randomly-sampled value
   upperValue: number; // upper bound for randomly-sampled value
 }

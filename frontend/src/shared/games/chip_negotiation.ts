@@ -23,6 +23,7 @@ import {
 export const N_INITIAL_GREEN_CHIPS = 100;
 export const N_INITIAL_BLUE_CHIPS = 100;
 export const N_INITIAL_RED_CHIPS = 100;
+
 // ****************************************************************************
 // Experiment config
 // ****************************************************************************
@@ -212,7 +213,7 @@ const CHIPS = [
     avatar: '🔴',
     canBuy: true,
     canSell: true,
-    quantity: N_INITIAL_RED_CHIPS,
+    startingQuantity: N_INITIAL_RED_CHIPS,
     lowerValue: 0.01,
     upperValue: 0.1,
   },
@@ -222,7 +223,7 @@ const CHIPS = [
     avatar: '🔵',
     canBuy: true,
     canSell: true,
-    quantity: N_INITIAL_BLUE_CHIPS,
+    startingQuantity: N_INITIAL_BLUE_CHIPS,
     lowerValue: 0.01,
     upperValue: 0.1,
   },
@@ -232,7 +233,7 @@ const CHIPS = [
     avatar: '🟢',
     canBuy: true,
     canSell: true,
-    quantity: N_INITIAL_GREEN_CHIPS,
+    startingQuantity: N_INITIAL_GREEN_CHIPS,
     lowerValue: 0.05,
     upperValue: 0.05,
   },

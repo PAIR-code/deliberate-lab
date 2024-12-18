@@ -18,7 +18,9 @@ export const ChipItemData = Type.Object(
     avatar: Type.String(),
     canBuy: Type.Boolean(),
     canSell: Type.Boolean(),
-    quantity: Type.Number(),
+    startingQuantity: Type.Number(),
+    lowerValue: Type.Number(),
+    upperValue: Type.Number(),
   },
   strict
 );

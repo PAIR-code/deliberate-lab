@@ -162,7 +162,7 @@ export class ChipReveal extends MobxLitElement {
     // Calculate the initial payout as a sum
     const initialPayout = this.stage?.chips.reduce((sum, chip) => {
       const value = participantChipValueMap[chip.id] ?? 0;
-      return sum + chip.quantity * value;
+      return sum + chip.startingQuantity * value;
     }, 0);
 
     const totalPayout = chipValues?.reduce(

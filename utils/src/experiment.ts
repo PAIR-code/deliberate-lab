@@ -18,11 +18,12 @@ import { StageConfig } from './stages/stage';
   * (e.g., new field is added to existing stage config).
   *
   * VERSION 5 - updated in PR #334 to add completedWaiting map
-  * to participant progress timestamps
+  *             to participant progress timestamps
   * VERSION 6 - updated in PR #337 to remove attention check config
   * VERSION 7 - updated in PR #348 to store additional chip negotiation data
   * VERSION 8 - updated in PR #372; MediatorConfig is now AgentConfig
   * VERSION 9 - updated in PR #373 to add avatar (emoji) field to ChipItem
+  *             and rename chip quantity field to startingQuantity
   */
 export const EXPERIMENT_VERSION_ID = 8;
 
