@@ -27,7 +27,7 @@ export function createTOSStage(
   config: Partial<TOSStageConfig> = {}
 ): TOSStageConfig {
   return {
-    id: generateId(),
+    id: config.id ?? generateId(),
     kind: StageKind.TOS,
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Terms of Service',

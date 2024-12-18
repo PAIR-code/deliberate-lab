@@ -38,6 +38,20 @@ export const DefaultPayoutItemData = Type.Object(
   strict
 );
 
+/** ChipPayoutItem input validation. */
+export const ChipPayoutItemData = Type.Object(
+  {
+    id: Type.String({ minLength: 1 }),
+    type: Type.Literal(PayoutItemType.CHIP),
+    name: Type.String(),
+    description: Type.String(),
+    isActive: Type.Boolean(),
+    stageId: Type.String(),
+    baseCurrencyAmount: Type.Number(),
+  },
+  strict
+);
+
 /** SurveyPayoutItem input validation. */
 export const SurveyPayoutItemData = Type.Object(
   {
@@ -57,6 +71,7 @@ export const SurveyPayoutItemData = Type.Object(
 /** PayoutItem input validation. */
 export const PayoutItemData = Type.Union([
   DefaultPayoutItemData,
+  ChipPayoutItemData,
   SurveyPayoutItemData,
 ]);
 

@@ -1,17 +1,17 @@
-import { computed, makeObservable, observable } from "mobx";
-import { FirebaseService } from "./firebase.service";
-import { Service } from "./service";
-import { ExperimentService } from "./experiment.service";
-import { ParticipantService } from "./participant.service";
-import { RouterService } from "./router.service";
+import {computed, makeObservable, observable} from 'mobx';
+import {FirebaseService} from './firebase.service';
+import {Service} from './service';
+import {ExperimentService} from './experiment.service';
+import {ParticipantService} from './participant.service';
+import {RouterService} from './router.service';
 import {
   Timestamp,
   Unsubscribe,
   collection,
   doc,
-  onSnapshot
-} from "firebase/firestore";
-  import {
+  onSnapshot,
+} from 'firebase/firestore';
+import {
   ParticipantProfileExtended,
   RankingStageParticipantAnswer,
   StageKind,
@@ -20,10 +20,12 @@ import {
   SurveyStageConfig,
   SurveyStageParticipantAnswer,
   SurveyQuestionKind,
+  createChipOffer,
   createRankingStageParticipantAnswer,
   createSurveyPerParticipantStageParticipantAnswer,
   createSurveyStageParticipantAnswer,
-} from "@deliberation-lab/utils";
+  ChipOffer,
+} from '@deliberation-lab/utils';
 
 interface ServiceProvider {
   experimentService: ExperimentService;
@@ -33,7 +35,7 @@ interface ServiceProvider {
 }
 
 /** Handles participant responses to frontend stages
-  * (e.g., before sending to backend) */
+ * (e.g., before sending to backend) */
 export class ParticipantAnswerService extends Service {
   constructor(private readonly sp: ServiceProvider) {
     super();
@@ -74,12 +76,16 @@ export class ParticipantAnswerService extends Service {
   }
 
   getSurveyPerParticipantAnswer(
-    stageId: string, questionId: string, participantId: string
+    stageId: string,
+    questionId: string,
+    participantId: string
   ) {
     const answer = this.answerMap[stageId];
-    if (!answer || answer.kind !== StageKind.SURVEY_PER_PARTICIPANT) return undefined;
-    return answer.answerMap && answer.answerMap[participantId] ?
-      answer.answerMap[participantId][questionId] : undefined;
+    if (!answer || answer.kind !== StageKind.SURVEY_PER_PARTICIPANT)
+      return undefined;
+    return answer.answerMap && answer.answerMap[participantId]
+      ? answer.answerMap[participantId][questionId]
+      : undefined;
   }
 
   setIds(experimentId: string, participantId: string) {
@@ -111,9 +117,7 @@ export class ParticipantAnswerService extends Service {
   @computed get isProfileCompleted() {
     if (!this.profile) return false;
 
-    return this.profile.name
-      && this.profile.pronouns
-      && this.profile.avatar;
+    return this.profile.name && this.profile.pronouns && this.profile.avatar;
   }
 
   getNumRankings(stageId: string) {
@@ -141,7 +145,8 @@ export class ParticipantAnswerService extends Service {
   getSurveyPerParticipantAnswerMap(stageId: string, participantId: string) {
     const answer = this.answerMap[stageId];
     if (
-      !answer || answer.kind !== StageKind.SURVEY_PER_PARTICIPANT ||
+      !answer ||
+      answer.kind !== StageKind.SURVEY_PER_PARTICIPANT ||
       !answer.answerMap[participantId]
     ) {
       return {};
@@ -152,7 +157,8 @@ export class ParticipantAnswerService extends Service {
   getSurveyPerParticipantAnswerIDs(stageId: string, participantId: string) {
     const answer = this.answerMap[stageId];
     if (
-      !answer || answer.kind !== StageKind.SURVEY_PER_PARTICIPANT ||
+      !answer ||
+      answer.kind !== StageKind.SURVEY_PER_PARTICIPANT ||
       !answer.answerMap[participantId]
     ) {
       return [];
@@ -167,14 +173,15 @@ export class ParticipantAnswerService extends Service {
   getChatInput(stageId: string) {
     return this.chatInputMap[stageId] ?? '';
   }
-  
+
   updateProfile(config: Partial<ParticipantProfileExtended>) {
     if (!this.profile) return;
     this.profile = {...this.profile, ...config};
   }
 
   updateRankingAnswer(stageId: string, rankingList: string[]) {
-    const answer: RankingStageParticipantAnswer = createRankingStageParticipantAnswer({ id: stageId });
+    const answer: RankingStageParticipantAnswer =
+      createRankingStageParticipantAnswer({id: stageId});
     answer.rankingList = rankingList;
     this.answerMap[stageId] = answer;
   }
@@ -182,7 +189,7 @@ export class ParticipantAnswerService extends Service {
   updateSurveyAnswer(stageId: string, surveyAnswer: SurveyAnswer) {
     let answer = this.answerMap[stageId];
     if (!answer || answer.kind !== StageKind.SURVEY) {
-      answer = createSurveyStageParticipantAnswer({ id: stageId });
+      answer = createSurveyStageParticipantAnswer({id: stageId});
     }
 
     answer.answerMap[surveyAnswer.id] = surveyAnswer;
@@ -190,11 +197,13 @@ export class ParticipantAnswerService extends Service {
   }
 
   updateSurveyPerParticipantAnswer(
-    stageId: string, surveyAnswer: SurveyAnswer, participantId: string
+    stageId: string,
+    surveyAnswer: SurveyAnswer,
+    participantId: string
   ) {
     let answer = this.answerMap[stageId];
     if (!answer || answer.kind !== StageKind.SURVEY_PER_PARTICIPANT) {
-      answer = createSurveyPerParticipantStageParticipantAnswer({ id: stageId });
+      answer = createSurveyPerParticipantStageParticipantAnswer({id: stageId});
     }
     if (!answer.answerMap[participantId]) {
       answer.answerMap[participantId] = {};
@@ -202,6 +211,10 @@ export class ParticipantAnswerService extends Service {
 
     answer.answerMap[participantId][surveyAnswer.id] = surveyAnswer;
     this.answerMap[stageId] = answer;
+  }
+
+  async setChipTurn(stageId: string) {
+    await this.sp.participantService.setChipTurn(stageId);
   }
 
   async saveSurveyAnswers(stageId: string) {
@@ -224,7 +237,7 @@ export class ParticipantAnswerService extends Service {
 
   updateForRoute(
     eid: string, // experiment ID
-    pid: string, // participant ID
+    pid: string // participant ID
   ) {
     if (eid !== this.experimentId || pid !== this.participantId) {
       this.setIds(eid, pid);

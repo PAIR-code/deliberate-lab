@@ -12,7 +12,7 @@ import {
 export const RTV_METADATA = createMetadataConfig({
   name: 'Reality TV Chat',
   publicName: 'Reality TV Chat',
-  description: 'A chat about reality TV involving a few agents.',
+  description: 'A conversation between multiple agents who discuss reality TV shows.'
 });
 export function getRTVStageConfigs(): StageConfig[] {
   const stages: StageConfig[] = [];

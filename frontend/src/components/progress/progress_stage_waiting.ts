@@ -82,6 +82,10 @@ export class Progress extends MobxLitElement {
         </h2>
         ${this.showReadyAvatars ? this.renderParticipants(unlocked) : nothing}
       </div>
+      <div class="note">
+        NOTE: If you have been waiting for a long time, please refresh to
+        ensure your page is up to date!
+      </div>
       <pr-button
         color=${numWaiting > 0 ? 'neutral' : 'primary'}
         ?disabled=${numWaiting > 0}
