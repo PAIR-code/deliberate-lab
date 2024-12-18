@@ -624,6 +624,31 @@ export class ChipView extends MobxLitElement {
   private renderLogsPanel() {
     if (!this.stage) return nothing;
 
+    const logTypePriority = {
+      [ChipLogType.OFFER_DECLINED]: 0,
+      [ChipLogType.TRANSACTION]: 0,
+      [ChipLogType.OFFER]: 1,
+      [ChipLogType.NEW_TURN]: 2,
+      [ChipLogType.NEW_ROUND]: 3,
+      [ChipLogType.INFO]: 4,
+      [ChipLogType.ERROR]: 4,
+    };
+
+    const sortLogsByPriority = (a: ChipLogEntry, b: ChipLogEntry) => {
+      const timeA =
+        a.timestamp.seconds * 1000 + a.timestamp.nanoseconds / 1e6;
+      const timeB =
+        b.timestamp.seconds * 1000 + b.timestamp.nanoseconds / 1e6;
+      // Compare by timestamp first
+      if (timeA !== timeB) {
+        return timeA - timeB;
+      }
+      return (
+        (logTypePriority[b.type] || Infinity) -
+        (logTypePriority[a.type] || Infinity)
+      );
+    }
+
     const logs = this.cohortService.getChipLogEntries(this.stage.id);
 
     if (logs.length === 0) {
@@ -632,7 +657,7 @@ export class ChipView extends MobxLitElement {
 
     return html`
       <div class="panel log">
-        ${logs.map((entry, index, array) => {
+        ${logs.slice().sort(sortLogsByPriority).map((entry, index, array) => {
             const isLastEntry = index === array.length - 1;
             return this.renderLogEntry(entry, index === logs.length - 1);
           })}
@@ -674,7 +699,7 @@ export class ChipView extends MobxLitElement {
         return renderEntry(entry.infoMessage);
       case ChipLogType.NEW_ROUND:
         return html`
-          <div class="divider"></div>
+          ${entry.roundNumber === 0 ? nothing : html`<div class="divider"></div>`}
           <div class="round-text">
             Round ${entry.roundNumber + 1} of ${this.stage!.numRounds}
           </div>
