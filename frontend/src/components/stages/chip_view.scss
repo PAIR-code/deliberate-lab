@@ -23,10 +23,26 @@
   gap: common.$spacing-xl;
   overflow: auto;
   padding: common.$main-content-padding;
+}
 
-  &.log {
-    border-left: 1px solid var(--md-sys-color-outline-variant);
-  }
+.log-panel {
+  border-left: 1px solid var(--md-sys-color-outline-variant);
+  display: flex;
+  flex-direction: column-reverse;
+  flex-grow: 1;
+  overflow: auto;
+}
+
+.log-scroll-outer-wrapper {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.log-scroll-inner-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-xl;
+  justify-content: flex-end;
+  padding: common.$main-content-padding;
 }
 
 .status {

@@ -20,9 +20,10 @@ import { StageConfig } from './stages/stage';
   * VERSION 5 - updated in PR #334 to add completedWaiting map
   * to participant progress timestamps
   * VERSION 6 - updated in PR #337 to remove attention check config
-  * VERSION 7 - Updated in PR #372; MediatorConfig is now AgentConfig
+  * VERSION 7 - updated in PR #348 to store additional chip negotiation data
+  * VERSION 8 - Updated in PR #372; MediatorConfig is now AgentConfig
   */
-export const EXPERIMENT_VERSION_ID = 7;
+export const EXPERIMENT_VERSION_ID = 8;
 
 /** Experiment. */
 export interface Experiment {

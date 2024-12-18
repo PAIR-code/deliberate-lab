@@ -24,6 +24,8 @@ import {
   ChipStagePublicData,
   ChipStageConfig,
   ChipStageParticipantAnswer,
+  ChipTransaction,
+  ChipTransactionStatus,
   StageKind,
   createChipOffer,
   ParticipantProfile,
@@ -143,7 +145,7 @@ export class ChipView extends MobxLitElement {
       if (publicData?.kind !== StageKind.CHIP) return false;
 
       return (
-        publicData.currentTurn?.participantId ===
+        publicData.currentTurn ===
         this.participantService.profile?.publicId
       );
     };
@@ -160,11 +162,37 @@ export class ChipView extends MobxLitElement {
     `;
   }
 
-  private isOfferPending() {
-    if (!this.stage) return false;
+  private getTransaction(round: number, turn: string) {
+    if (!this.stage) return null;
+
     const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
-    if (publicData?.kind !== StageKind.CHIP) return false;
-    return publicData.currentTurn?.offer;
+    if (publicData?.kind !== StageKind.CHIP) return null;
+    const offerMap = publicData.participantOfferMap;
+
+    if (!offerMap[round] || !offerMap[round][turn]) {
+      return null;
+    }
+    return offerMap[round][turn];
+  }
+
+  private getCurrentTransaction() {
+    if (!this.stage) return null;
+
+    const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
+    if (publicData?.kind !== StageKind.CHIP) return null;
+
+    const currentRound = publicData.currentRound;
+    const currentTurn = publicData.currentTurn ?? '';
+    const offerMap = publicData.participantOfferMap;
+
+    if (!offerMap[currentRound] || !offerMap[currentRound][currentTurn]) {
+      return null;
+    }
+    return offerMap[currentRound][currentTurn];
+  }
+
+  private isOfferPending() {
+    return this.getCurrentTransaction()?.offer ?? false;
   }
 
   private isOfferAcceptable() {
@@ -457,7 +485,7 @@ export class ChipView extends MobxLitElement {
     const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
     if (publicData?.kind !== StageKind.CHIP) return nothing;
 
-    const offer = publicData.currentTurn?.offer;
+    const offer = this.getCurrentTransaction()?.offer ?? null;
     if (!offer) {
       return html`<div class="offer-panel">Waiting for an offer...</div>`;
     }
@@ -493,12 +521,13 @@ export class ChipView extends MobxLitElement {
       if (publicData?.kind !== StageKind.CHIP) return 0;
 
       const currentParticipant = this.participantService.profile;
+      const currentId = currentParticipant.publicId;
       const participantChipMap =
-        publicData.participantChipMap[currentParticipant.publicId] ?? {};
+        publicData.participantChipMap[currentId] ?? {};
       const participantChipValueMap =
-        publicData.participantChipValueMap[currentParticipant.publicId] ?? {};
+        publicData.participantChipValueMap[currentId] ?? {};
 
-      const offer = publicData.currentTurn?.offer;
+      const offer = this.getCurrentTransaction()?.offer ?? null;
       if (!offer) return 0;
 
       const currentTotalPayout = this.calculatePayout(
@@ -508,7 +537,7 @@ export class ChipView extends MobxLitElement {
       const newTotalPayout = this.calculatePayout(
         participantChipMap,
         participantChipValueMap,
-        publicData.currentTurn?.offer
+        offer
       );
 
       const diff = newTotalPayout - currentTotalPayout;
@@ -537,7 +566,11 @@ export class ChipView extends MobxLitElement {
       const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
       if (publicData?.kind !== StageKind.CHIP) return nothing;
       const participantId = this.participantService.profile?.publicId ?? '';
-      return participantId in (publicData.currentTurn?.responseMap ?? {});
+      const round = publicData.currentRound;
+      const turn = publicData.currentTurn ?? '';
+      const roundMap = publicData.participantOfferMap[round] ?? {};
+      const transaction = roundMap[turn];
+      return transaction && participantId in transaction.responseMap;
     };
 
     const senderParticipant = this.cohortService
@@ -601,35 +634,37 @@ export class ChipView extends MobxLitElement {
       [ChipLogType.ERROR]: 4,
     };
 
+    const sortLogsByPriority = (a: ChipLogEntry, b: ChipLogEntry) => {
+      const timeA =
+        a.timestamp.seconds * 1000 + a.timestamp.nanoseconds / 1e6;
+      const timeB =
+        b.timestamp.seconds * 1000 + b.timestamp.nanoseconds / 1e6;
+      // Compare by timestamp first
+      if (timeA !== timeB) {
+        return timeA - timeB;
+      }
+      return (
+        (logTypePriority[b.type] || Infinity) -
+        (logTypePriority[a.type] || Infinity)
+      );
+    }
+
     const logs = this.cohortService.getChipLogEntries(this.stage.id);
 
     if (logs.length === 0) {
       return html` <div class="panel log">No logs yet</div> `;
     }
+
     return html`
-      <div class="panel log">
-        ${logs
-          .slice()
-          .sort((a, b) => {
-            const timeA =
-              a.timestamp.seconds * 1000 + a.timestamp.nanoseconds / 1e6;
-            const timeB =
-              b.timestamp.seconds * 1000 + b.timestamp.nanoseconds / 1e6;
-
-            // Compare by timestamp first
-            if (timeA !== timeB) {
-              return timeA - timeB;
-            }
-
-            return (
-              (logTypePriority[b.type] || Infinity) -
-              (logTypePriority[a.type] || Infinity)
-            );
-          })
-          .map((entry, index, array) => {
-            const isLastEntry = index === array.length - 1;
-            return this.renderLogEntry(entry, isLastEntry);
-          })}
+      <div class="log-panel">
+        <div class="log-scroll-outer-wrapper">
+          <div class="log-scroll-inner-wrapper">
+            ${logs.slice().sort(sortLogsByPriority).map((entry, index, array) => {
+                const isLastEntry = index === array.length - 1;
+                return this.renderLogEntry(entry, index === logs.length - 1);
+              })}
+          </div>
+        </div>
       </div>
     `;
   }
@@ -668,7 +703,7 @@ export class ChipView extends MobxLitElement {
         return renderEntry(entry.infoMessage);
       case ChipLogType.NEW_ROUND:
         return html`
-          <div class="divider"></div>
+          ${entry.roundNumber === 0 ? nothing : html`<div class="divider"></div>`}
           <div class="round-text">
             Round ${entry.roundNumber + 1} of ${this.stage!.numRounds}
           </div>
@@ -693,31 +728,51 @@ export class ChipView extends MobxLitElement {
         );
       case ChipLogType.OFFER:
         participant = this.getParticipant(entry.offer.senderId);
+        const transaction =
+          this.getTransaction(entry.offer.round, entry.offer.senderId);
+        return html`
+          ${renderEntry(
+            `${this.getParticipantDisplay(participant)} is offering
+             ${displayChipOfferText(
+               entry.offer.sell
+             )} of their chips to get ${displayChipOfferText(
+              entry.offer.buy
+            )} in return.`
+          )}
+          ${transaction ? this.renderTransactionStatus(transaction) : nothing}
+        `;
+      default:
+        return nothing;
+    }
+  }
 
-        return renderEntry(
-          `${this.getParticipantDisplay(participant)} is offering 
-           ${displayChipOfferText(
-             entry.offer.sell
-           )} of their chips to get ${displayChipOfferText(
-            entry.offer.buy
-          )} in return.`
-        );
-      case ChipLogType.OFFER_DECLINED:
-        participant = this.getParticipant(entry.offer.senderId);
-        return renderEntry(
-          `❌ No deal: No one accepted ${this.getParticipantDisplay(
-            participant
-          )}'s offer.`
-        );
-      case ChipLogType.TRANSACTION:
-        const sender = this.getParticipant(entry.offer.senderId);
-        const recipient = this.getParticipant(entry.recipientId);
+  private renderTransactionStatus(transaction: ChipTransaction) {
+    const renderStatus = (message: string) => {
+      return html`<div class="log-entry">${message}</div>`;
+    };
 
-        return renderEntry(
-          `🤝 Deal made: ${this.getParticipantDisplay(
-            sender
-          )}'s offer was accepted by ${this.getParticipantDisplay(recipient)}.`
+    const sender = this.getParticipantDisplay(
+      this.getParticipant(transaction.offer.senderId)
+    );
+
+    switch (transaction.status) {
+      case ChipTransactionStatus.PENDING:
+        return renderStatus('Waiting for other participants to respond...');
+      case ChipTransactionStatus.ACCEPTED:
+        const recipient = this.getParticipantDisplay(
+          this.getParticipant(transaction.recipientId ?? '')
         );
+        return renderStatus(
+          `🤝 Deal made: ${sender}'s offer was accepted by ${recipient}.`
+        );
+      case ChipTransactionStatus.DECLINED:
+        if (!transaction.recipientId) {
+          return renderStatus(`❌ No deal: No one accepted ${sender}'s offer'`);
+        } else {
+          return renderStatus(
+            `❌ No deal: There was an error processing ${sender}'s' offer`
+          );
+        }
       default:
         return nothing;
     }

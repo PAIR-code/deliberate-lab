@@ -75,9 +75,9 @@ export function updateChipCurrentTurn(
   // increment round and use first participant
   if (!nextParticipantId) {
     publicStageData.currentRound += 1;
-    publicStageData.currentTurn = createChipTurn(participantIds[0]);
+    publicStageData.currentTurn = participantIds[0];
   } else {
-    publicStageData.currentTurn = createChipTurn(nextParticipantId);
+    publicStageData.currentTurn = nextParticipantId;
   }
 
   // If specified number of rounds is over, set isGameOver
