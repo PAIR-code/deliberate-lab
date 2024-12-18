@@ -52,11 +52,16 @@ export class AuthService extends Service {
           this.writeExperimenterProfile(user);
           this.sp.homeService.subscribe();
 
-          // TODO: Read allowlistDoc.data() to determine if admin
-          // If admin, subscribe
-          this.sp.adminService.subscribe();
+          // Check if admin
+          if (allowlistDoc.data().isAdmin) {
+            this.sp.adminService.subscribe();
+            this.isAdmin = true;
+          } else {
+            this.isAdmin = false;
+          }
         } else {
           this.isExperimenter = false;
+          this.isAdmin = false;
         }
       } else {
         // User is signed out
@@ -67,6 +72,7 @@ export class AuthService extends Service {
   }
 
   @observable user: User|null|undefined = undefined;
+  @observable isAdmin: boolean|null = null;
   @observable isExperimenter: boolean|null = null;
   @observable canEdit = false;
 

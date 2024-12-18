@@ -27,8 +27,10 @@ export class AdminDashboard extends MobxLitElement {
   @state() showExperiments = false;
 
   override render() {
-    // TODO: If not admin, do not show dashboard
-    // return nothing;
+    // If not admin, do not show dashboard
+    if (!this.authService.isAdmin) {
+      return html`<div>Only admins have access to this page.</div>`;
+    }
 
     const toggle = () => { this.showExperiments = !this.showExperiments };
 

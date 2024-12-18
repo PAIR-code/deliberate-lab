@@ -48,7 +48,7 @@ service cloud.firestore {
 
     // Experimenter allowlist
     match /allowlist/{experimenterId} {
-      allow read: if isAdmin();
+      allow read: if isAdmin() || request.auth.token.email == experimenterId;
       allow update: if isAdmin();
     }
 
