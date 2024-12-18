@@ -57,7 +57,7 @@ export const createChatMessage = onCall(async (request) => {
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     // Add chat message
-    // (see chat.triggers for auto-generated mediator responses)
+    // (see chat.triggers for auto-generated agent responses)
     transaction.set(document, chatMessage);
   });
 
@@ -78,13 +78,13 @@ function handleCreateChatMessageValidationErrors(data: any) {
 }
 
 // ************************************************************************* //
-// updateChatMediators endpoint                                              //
+// updateChatAgents endpoint                                              //
 //                                                                           //
-// Input structure: { experimentId, stageId, mediatorList }                  //
+// Input structure: { experimentId, stageId, agentList }                  //
 // Validation: utils/src/stages/chat_stage.validation.ts                     //
 // ************************************************************************* //
 
-export const updateChatMediators = onCall(async (request) => {
+export const updateChatAgents = onCall(async (request) => {
   const { data } = request;
 
   // TODO: Validate input
@@ -99,7 +99,7 @@ export const updateChatMediators = onCall(async (request) => {
     const stageConfig = (await document.get()).data() as StageConfig;
     if (!stageConfig || stageConfig.kind !== StageKind.CHAT) return {};
 
-    stageConfig.mediators = data.mediatorList;
+    stageConfig.agents = data.agentList;
     transaction.set(document, stageConfig);
   });
 

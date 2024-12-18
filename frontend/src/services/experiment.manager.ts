@@ -23,12 +23,12 @@ import {
   CreateChatMessageData,
   Experiment,
   ExperimentDownload,
-  HumanMediatorChatMessage,
+  HumanAgentChatMessage,
   ParticipantProfileExtended,
   ParticipantStatus,
   StageConfig,
   createCohortConfig,
-  createHumanMediatorChatMessage,
+  createHumanAgentChatMessage,
   generateId,
 } from '@deliberation-lab/utils';
 import {
@@ -546,17 +546,17 @@ export class ExperimentManager extends Service {
     return data;
   }
 
-  /** Create a manual (human) mediator chat message. */
+  /** Create a manual (human) agent chat message. */
   async createManualChatMessage(
     stageId: string,
-    config: Partial<HumanMediatorChatMessage> = {}
+    config: Partial<HumanAgentChatMessage> = {}
   ) {
     let response = {};
     const experimentId = this.sp.routerService.activeRoute.params['experiment'];
     const cohortId = this.sp.cohortService.cohortId;
 
     if (experimentId && cohortId) {
-      const chatMessage = createHumanMediatorChatMessage({
+      const chatMessage = createHumanAgentChatMessage({
         ...config,
         discussionId: this.sp.cohortService.getChatDiscussionId(stageId),
       });

@@ -15,10 +15,10 @@ import {classMap} from 'lit/directives/class-map.js';
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentService} from '../../services/experiment.service';
-import {MediatorEditor} from '../../services/mediator.editor';
+import {AgentEditor} from '../../services/agent.editor';
 import {RouterService} from '../../services/router.service';
 
-import {MediatorConfig, StageKind} from '@deliberation-lab/utils';
+import {AgentConfig, StageKind} from '@deliberation-lab/utils';
 
 import {styles} from './experimenter_panel.scss';
 import {DEFAULT_STRING_FORMATTING_INSTRUCTIONS} from '@deliberation-lab/utils';
@@ -37,7 +37,7 @@ export class Panel extends MobxLitElement {
 
   private readonly authService = core.getService(AuthService);
   private readonly experimentService = core.getService(ExperimentService);
-  private readonly mediatorEditor = core.getService(MediatorEditor);
+  private readonly agentEditor = core.getService(AgentEditor);
   private readonly routerService = core.getService(RouterService);
 
   @state() panelView: PanelView = PanelView.MANUAL_CHAT;
@@ -89,16 +89,16 @@ export class Panel extends MobxLitElement {
             </div>
           `;
         case PanelView.LLM_SETTINGS:
-          const mediators = this.mediatorEditor.getMediators(stageId);
+          const agents = this.agentEditor.getAgents(stageId);
           return html`
             <div class="main">
               <div class="top">
-                <div class="header">Mediator config</div>
-                ${mediators.length === 0
-                  ? html`<div>No mediators configured</div>`
+                <div class="header">Agent config</div>
+                ${agents.length === 0
+                  ? html`<div>No agents configured</div>`
                   : nothing}
-                ${mediators.map((mediator, index) =>
-                  this.renderMediatorEditor(stageId, mediator, index)
+                ${agents.map((agent, index) =>
+                  this.renderAgentEditor(stageId, agent, index)
                 )}
               </div>
             </div>
@@ -178,39 +178,39 @@ export class Panel extends MobxLitElement {
     );
   }
 
-  private renderMediatorEditor(
+  private renderAgentEditor(
     stageId: string,
-    mediator: MediatorConfig,
+    agent: AgentConfig,
     index: number
   ) {
     const updatePrompt = (e: InputEvent) => {
       const prompt = (e.target as HTMLTextAreaElement).value;
-      this.mediatorEditor.updateMediator(stageId, {...mediator, prompt}, index);
+      this.agentEditor.updateAgent(stageId, {...agent, prompt}, index);
     };
     const updateFormattingInstructions = (e: InputEvent) => {
       const instructions = (e.target as HTMLTextAreaElement).value;
       const responseConfig = {
-        ...mediator.responseConfig,
+        ...agent.responseConfig,
         formattingInstructions: instructions,
       };
-      this.mediatorEditor.updateMediator(
+      this.agentEditor.updateAgent(
         stageId,
-        {...mediator, responseConfig},
+        {...agent, responseConfig},
         index
       );
     };
 
     const updateJSON = () => {
       const responseConfig = {
-        ...mediator.responseConfig,
-        isJSON: !mediator.responseConfig.isJSON,
-        formattingInstructions: mediator.responseConfig.isJSON
+        ...agent.responseConfig,
+        isJSON: !agent.responseConfig.isJSON,
+        formattingInstructions: agent.responseConfig.isJSON
           ? DEFAULT_STRING_FORMATTING_INSTRUCTIONS
           : DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
       };
-      this.mediatorEditor.updateMediator(
+      this.agentEditor.updateAgent(
         stageId,
-        {...mediator, responseConfig},
+        {...agent, responseConfig},
         index
       );
     };
@@ -218,23 +218,23 @@ export class Panel extends MobxLitElement {
     const updateWPM = (e: InputEvent) => {
       const wpm = parseInt((e.target as HTMLInputElement).value, 10);
       if (!isNaN(wpm)) {
-        this.mediatorEditor.updateMediator(
+        this.agentEditor.updateAgent(
           stageId,
-          {...mediator, wordsPerMinute: wpm},
+          {...agent, wordsPerMinute: wpm},
           index
         );
       }
     };
 
     return html`
-      <div class="mediator">
-        <div class="mediator-title">#${index + 1} - ${mediator.name}</div>
-        <div class="debug">${JSON.stringify(mediator.responseConfig)}</div>
+      <div class="agent">
+        <div class="agent-title">#${index + 1} - ${agent.name}</div>
+        <div class="debug">${JSON.stringify(agent.responseConfig)}</div>
         Prompt:
         <div class="prompt-box">
           <pr-textarea
-            placeholder="Custom prompt for mediator"
-            .value=${mediator.prompt}
+            placeholder="Custom prompt for agent"
+            .value=${agent.prompt}
             @input=${updatePrompt}
           >
           </pr-textarea>
@@ -242,8 +242,8 @@ export class Panel extends MobxLitElement {
         Formatting instructions and examples:
         <div class="prompt-box">
           <pr-textarea
-            placeholder="Custom formatting instructions for mediator"
-            .value=${mediator.responseConfig.formattingInstructions}
+            placeholder="Custom formatting instructions for agent"
+            .value=${agent.responseConfig.formattingInstructions}
             @input=${updateFormattingInstructions}
           >
           </pr-textarea>
@@ -253,7 +253,7 @@ export class Panel extends MobxLitElement {
           <div class="wpm-box">
             <input
               type="number"
-              .value=${mediator.wordsPerMinute ?? ''}
+              .value=${agent.wordsPerMinute ?? ''}
               placeholder="Enter WPM"
               @input=${updateWPM}
             />
@@ -264,7 +264,7 @@ export class Panel extends MobxLitElement {
             <div class="checkbox-wrapper">
               <md-checkbox
                 touch-target="wrapper"
-                ?checked=${mediator.responseConfig.isJSON}
+                ?checked=${agent.responseConfig.isJSON}
                 @click=${updateJSON}
               >
               </md-checkbox>
@@ -278,7 +278,7 @@ export class Panel extends MobxLitElement {
               ?loading=${this.isLoading}
               @click=${async () => {
                 this.isLoading = true;
-                await this.mediatorEditor.saveChatMediators(stageId);
+                await this.agentEditor.saveChatAgents(stageId);
                 this.isLoading = false;
               }}
             >
@@ -287,7 +287,7 @@ export class Panel extends MobxLitElement {
           </div>
         </div>
         <div class="debug error">
-          Warning: Saving edits will update the mediator across all experiment
+          Warning: Saving edits will update the agent across all experiment
           cohorts
         </div>
       </div>

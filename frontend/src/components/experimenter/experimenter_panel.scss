@@ -64,7 +64,7 @@
   padding: common.$sidenav-padding;
 }
 
-.mediator {
+.agent {
   @include common.flex-column;
   gap: common.$spacing-small;
 }
@@ -79,7 +79,7 @@
   }
 }
 
-.mediator-title {
+.agent-title {
   @include typescale.title-small;
 }
 

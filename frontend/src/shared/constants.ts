@@ -21,5 +21,5 @@ export const PROFILE_AVATARS = [
   ...PERSON_EMOJIS
 ];
 
-/** LLM mediator avatars. */
-export const LLM_MEDIATOR_AVATARS = ['🤖', '🙋', '👋', '💡', '⭐'];
+/** LLM agent avatars. */
+export const LLM_AGENT_AVATARS = ['🤖', '🙋', '👋', '💡', '⭐'];
