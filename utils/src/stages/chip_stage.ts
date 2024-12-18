@@ -57,10 +57,28 @@ export interface ChipStageParticipantAnswer extends BaseStageParticipantAnswer {
 /** Chip offer. */
 export interface ChipOffer {
   id: string; // offer ID
-  round: number; // round number
-  senderId: string; // public ID of participant who sent the offer
+  senderId: string; // public ID of participant esnding the offer
   buy: Record<string, number>; // chip ID to quantity willing to buy
   sell: Record<string, number>; // chip ID to quantity willing to sell
+}
+
+/** Chip transaction (specific turn in a round). */
+export interface ChipTransaction {
+  // offer sent by participant
+  offer: ChipOffer;
+  // map (public ID --> response) made by participants regarding offer
+  responseMap: Record<string, boolean>;
+  // status of transaction
+  status: ChipTransactionStatus;
+  // public ID of recipient chosen (or null if none available or not set)
+  recipientId: string | null;
+}
+
+/** Chip transaction status. */
+export enum ChipTransactionStatus {
+  ACCEPTED = 'ACCEPTED',
+  DECLINED = 'DECLINED',
+  PENDING = 'PENDING',
 }
 
 /**
@@ -76,25 +94,14 @@ export interface ChipStagePublicData extends BaseStagePublicData {
   isGameOver: boolean;
   // starting with 0
   currentRound: number;
-  // current turn (e.g., participant offer) within a round
-  currentTurn: ChipTurn | null;
-  // map of round # to (map of public ID --> if participant had turn)
-  // (this helps determine whose turn it is and when to move to next round)
-  participantOfferMap: Record<number, Record<string, boolean>>;
+  // participant public ID for current turn within a round
+  currentTurn: string | null;
+  // map of round # to (map of public ID --> participant's transaction)
+  participantOfferMap: Record<number, Record<string, ChipTransaction>>;
   // map of participant to current chip quantity map
   participantChipMap: Record<string, Record<string, number>>;
   // map of participant to current chip value map
   participantChipValueMap: Record<string, Record<string, number>>;
-}
-
-/** Chip turn in a round. */
-export interface ChipTurn {
-  // public ID of participant whose turn it is to send offer
-  participantId: string;
-  // offer sent by participant, or null if not sent yet
-  offer: ChipOffer | null;
-  // map (public ID --> response) made by participants regarding offer
-  responseMap: Record<string, boolean>;
 }
 
 /** Chip log entry. */
@@ -156,15 +163,7 @@ export interface ChipOfferDeclinedLogEntry extends BaseChipLogEntry {
 
 export interface ChipTransactionLogEntry extends BaseChipLogEntry {
   type: ChipLogType.TRANSACTION;
-  offer: ChipOffer;
-  recipientId: string; // public ID
-}
-
-/** Chip transaction. */
-export interface ChipTransaction {
-  offer: ChipOffer; // offer from sender to receiver
-  recipientId: string; // participant public ID
-  timestamp: UnifiedTimestamp;
+  transaction: ChipTransaction;
 }
 
 // ************************************************************************* //
@@ -190,7 +189,6 @@ export function createChipStage(config: Partial<ChipStageConfig> = {}): ChipStag
 export function createChipOffer(config: Partial<ChipOffer> = {}): ChipOffer {
   return {
     id: config.id ?? generateId(),
-    round: config.round ?? 0,
     senderId: config.senderId ?? '',
     buy: config.buy ?? {},
     sell: config.sell ?? {},
@@ -227,12 +225,13 @@ export function createChipStagePublicData(
   };
 }
 
-/** Create chip turn. */
-export function createChipTurn(participantId: string): ChipTurn {
+/** Create chip transaction. */
+export function createChipTransaction(offer: ChipOffer): ChipTransaction {
   return {
-    participantId,
-    offer: null,
+    offer,
     responseMap: {},
+    status: ChipTransactionStatus.PENDING,
+    recipientId: null
   };
 }
 
@@ -305,12 +304,11 @@ export function createChipOfferDeclinedLogEntry(
 
 /** Create chip transaction log entry. */
 export function createChipTransactionLogEntry(
-  offer: ChipOffer, recipientId: string, timestamp = Timestamp.now()
+  transaction: ChipTransaction, timestamp = Timestamp.now()
 ): ChipTransactionLogEntry {
   return {
     type: ChipLogType.TRANSACTION,
-    offer,
-    recipientId,
+    transaction,
     timestamp
   };
 }

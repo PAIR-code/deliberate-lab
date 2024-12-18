@@ -7,6 +7,7 @@ import {
   ChipStageParticipantAnswer,
   ChipStagePublicData,
   ChipTransaction,
+  ChipTransactionStatus,
   ParticipantProfileExtended,
   StageConfig,
   StageKind,
@@ -80,8 +81,18 @@ export const completeChipTurn = onDocumentUpdated(
       const stageConfig = (await stageDoc.get()).data() as ChipStageConfig;
       const numRounds = stageConfig.numRounds;
 
+      const currentRound = publicStage.currentRound;
+      const currentTurn = publicStage.currentTurn;
+
+      if (!publicStage.participantOfferMap[currentRound]) {
+        return false;
+      }
+
+      const currentTransaction =
+        publicStage.participantOfferMap[currentRound][currentTurn];
+
       // If no offer, no need to update
-      if (!publicStage.currentTurn) {
+      if (!currentTransaction) {
         return false;
       }
 
@@ -91,19 +102,18 @@ export const completeChipTurn = onDocumentUpdated(
         event.params.cohortId
       );
 
-      const currentRound = publicStage.currentRound;
       const acceptedOffer: string[] = [];
       for (const participantId of participantIds) {
         if (
-          participantId !== publicStage.currentTurn.participantId &&
-          !(participantId in publicStage.currentTurn.responseMap)
+          participantId !== currentTurn &&
+          !(participantId in currentTransaction.responseMap)
         ) {
           // If an active participant (not the current sender) has not
           // responded. do not proceed
           return false;
         } else if (
-          participantId !== publicStage.currentTurn.participantId &&
-          publicStage.currentTurn.responseMap[participantId]
+          participantId !== currentTurn &&
+          currentTransaction.responseMap[participantId]
         ) {
           // Track participants who accepted the current offer
           acceptedOffer.push(participantId);
@@ -114,31 +124,35 @@ export const completeChipTurn = onDocumentUpdated(
 
       // If all (non-offer) participants have responded to the offer,
       // execute chip transaction
-      const senderId = publicStage.currentTurn.participantId;
+      const senderId = currentTurn;
       const recipientId = acceptedOffer.length > 0 ?
         acceptedOffer[Math.floor(Math.random() * acceptedOffer.length)] : null;
 
+      publicStage.participantOfferMap[currentRound][currentTurn].recipientId =
+        recipientId;
+
       // Run chip offer transaction and write relevant logs
       if (recipientId !== null) {
-        const chipTransaction: ChipTransaction = {
-          offer: publicStage.currentTurn.offer,
-          recipientId,
-          timestamp,
-        };
+        currentTransaction.status = ChipTransactionStatus.ACCEPTED;
+        publicStage.participantOfferMap[currentRound][currentTurn] =
+          currentTransaction;
         // Sender/recipient chips will be updated on chip transaction trigger
-        transaction.set(transactionCollection.doc(), chipTransaction);
+        transaction.set(transactionCollection.doc(), currentTransaction);
       } else {
+        currentTransaction.status = ChipTransactionStatus.DECLINED;
+        publicStage.participantOfferMap[currentRound][currentTurn] =
+          currentTransaction;
         transaction.set(
           logCollection.doc(),
           createChipOfferDeclinedLogEntry(
-            publicStage.currentTurn.offer, timestamp
+            currentTransaction.offer, timestamp
           )
         );
       }
 
       // Then, update current turn
       publicStage.currentTurn = null;
-      const oldCurrentRound = publicStage.currentRound;
+      const oldCurrentRound = currentRound;
       const newData = updateChipCurrentTurn(
         publicStage, participantIds, numRounds
       );
@@ -162,7 +176,7 @@ export const completeChipTurn = onDocumentUpdated(
           logCollection.doc(),
           createChipTurnLogEntry(
             newData.currentRound,
-            newData.currentTurn.participantId,
+            newData.currentTurn,
             timestamp
           )
         );
@@ -258,7 +272,7 @@ export const completeChipTransaction = onDocumentCreated(
       transaction.set(
         logCollection.doc(),
         createChipTransactionLogEntry(
-          chipTransaction.offer, recipientId, Timestamp.fromMillis(Timestamp.now().toMillis() - 5000)
+          chipTransaction, Timestamp.fromMillis(Timestamp.now().toMillis() - 5000)
         )
       );
 

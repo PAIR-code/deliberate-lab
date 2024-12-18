@@ -121,7 +121,7 @@ export class ChipReveal extends MobxLitElement {
       if (this.publicData?.kind !== StageKind.CHIP) return false;
 
       return (
-        this.publicData.currentTurn?.participantId === participant.publicId
+        this.publicData.currentTurn === participant.publicId
       );
     };
 
