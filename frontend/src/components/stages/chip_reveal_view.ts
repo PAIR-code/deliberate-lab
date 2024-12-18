@@ -185,6 +185,7 @@ export class ChipReveal extends MobxLitElement {
       0
     );
     const diff = totalPayout! - initialPayout!;
+    const payout = Math.max(0, diff);
     const diffDisplay = html`<span
       class=${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}
       ><b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b></span
@@ -205,13 +206,13 @@ export class ChipReveal extends MobxLitElement {
         </div>
         <div class="table-foot">
           <div class="table-row">
-            ${this.makeCell('Your starting payout')}
+            ${this.makeCell('Initial total')}
             ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
             ${this.makeCell(`$${initialPayout!.toFixed(2)}`)}
           </div>
 
           <div class="table-row">
-            ${this.makeCell('Your total payout')}
+            ${this.makeCell('Current total')}
             ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
             <div
               class="table-cell ${diff > 0
@@ -220,7 +221,23 @@ export class ChipReveal extends MobxLitElement {
                 ? 'negative'
                 : ''}"
             >
-              $${totalPayout!.toFixed(2)}
+              <b>$${totalPayout!.toFixed(2)}</b>
+            </div>
+          </div>
+
+          <div class="table-row">
+          <div class="table-cell">
+          Current payout<br />(change in value, 0 if negative)
+        </div>
+            ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
+            <div
+              class="table-cell ${payout > 0
+                ? 'positive'
+                : payout < 0
+                ? 'negative'
+                : ''}"
+            >
+              <b>$${payout.toFixed(2)}</b>
             </div>
           </div>
         </div>

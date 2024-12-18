@@ -295,17 +295,19 @@ export class ChipView extends MobxLitElement {
         );
 
         const chipOffer: Partial<ChipOffer> = {
-          buy: {[this.selectedBuyChip]: this.buyChipAmount},
-          sell: {[this.selectedSellChip]: this.sellChipAmount},
+          // Flipped because this is on behalf of the sender.
+          sell: {[this.selectedBuyChip]: this.buyChipAmount},
+          buy: {[this.selectedSellChip]: this.sellChipAmount},
         };
 
         const newTotalPayout = this.calculatePayout(
           participantChipMap,
           participantChipValueMap,
+
           createChipOffer(chipOffer)
         );
 
-        const diff = currentTotalPayout - newTotalPayout;
+        const diff = newTotalPayout - currentTotalPayout;
         const diffDisplay = html`<span
           class=${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}
           ><b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b></span
@@ -364,7 +366,7 @@ export class ChipView extends MobxLitElement {
 
         <div class="offer-form">
           <div class="offer-config">
-            <label class="offer-config-label">Give:</label>
+            <label class="offer-config-label">You give:</label>
             ${this.renderChipNumberInput(this.sellChipAmount, (value) => {
               this.sellChipAmount = value;
             })}
@@ -373,7 +375,7 @@ export class ChipView extends MobxLitElement {
             })}
           </div>
           <div class="offer-config">
-            <label class="offer-config-label">Get:</label>
+            <label class="offer-config-label">You get:</label>
             ${this.renderChipNumberInput(this.buyChipAmount, (value) => {
               this.buyChipAmount = value;
             })}
@@ -456,8 +458,8 @@ export class ChipView extends MobxLitElement {
     // Update the hypothetical payout
     const newTotalPayout =
       currentTotalPayout +
-      sellAmount * sellValue - // Add value for sold chips
-      buyAmount * buyValue; // Subtract value for bought chips
+      (sellAmount * sellValue) - // Add value for sold chips
+      (buyAmount * buyValue); // Subtract value for bought chips
 
     return newTotalPayout;
   }
@@ -534,6 +536,7 @@ export class ChipView extends MobxLitElement {
         participantChipMap,
         participantChipValueMap
       );
+
       const newTotalPayout = this.calculatePayout(
         participantChipMap,
         participantChipValueMap,
@@ -546,7 +549,7 @@ export class ChipView extends MobxLitElement {
         ><b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b></span
       >`;
       return html`<p>
-        If you accept this offer, your updated payout will be
+        If you accept this offer, your updated chip value will be
         <b>$${newTotalPayout.toFixed(2)}</b> ${diffDisplay}.
       </p>`;
     };

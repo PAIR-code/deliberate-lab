@@ -225,7 +225,7 @@ export class PayoutEditor extends MobxLitElement {
     return html`
       <div class="payout-item">
         ${this.renderBasePayoutEditor(item, index)}
-        <div>Chip payout will be calculated based on final quantities/values.</div>
+        <div>Additional chip payout will be calculated based on changes in chip quantities/values.</div>
       </div>
     `;
   }
