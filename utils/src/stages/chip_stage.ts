@@ -60,6 +60,7 @@ export interface ChipOffer {
   senderId: string; // public ID of participant esnding the offer
   buy: Record<string, number>; // chip ID to quantity willing to buy
   sell: Record<string, number>; // chip ID to quantity willing to sell
+  timestamp: Timestamp;
 }
 
 /** Chip transaction (specific turn in a round). */
@@ -192,6 +193,7 @@ export function createChipOffer(config: Partial<ChipOffer> = {}): ChipOffer {
     senderId: config.senderId ?? '',
     buy: config.buy ?? {},
     sell: config.sell ?? {},
+    timestamp: config.timestamp ?? Timestamp.now(),
   };
 }
 

@@ -45,6 +45,7 @@ export const ChipOfferData = Type.Object(
     senderId: Type.String({ minLength: 1 }),
     buy: Type.Record(Type.String(), Type.Number()),
     sell: Type.Record(Type.String(), Type.Number()),
+    timestamp: UnifiedTimestampSchema,
   },
   strict
 );
