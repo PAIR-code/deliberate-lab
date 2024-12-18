@@ -57,9 +57,9 @@ export const startTimeElapsed = onDocumentCreated(
 );
 
 /**
-  * When chat public stage data is updated, update elapsed time
-  * and potentially end the discussion.
-  */
+ * When chat public stage data is updated, update elapsed time
+ * and potentially end the discussion.
+ */
 export const updateTimeElapsed = onDocumentUpdated(
   {
     document: 'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/',
@@ -170,16 +170,31 @@ export const createMediatorMessage = onDocumentCreated(
     // Show all of the potential messages.
     console.log('The following participants wish to speak:');
     mediatorMessages.forEach((message) => {
-      console.log(`\t${message.mediator.name}: ${message.message}`);
+      console.log(
+        `\t${message.mediator.name}: ${message.message} (${message.mediator.wordsPerMinute} WPM)`,
+      );
     });
 
+    // Weighted sampling based on wordsPerMinute (WPM)
+    const totalWPM = mediatorMessages.reduce(
+      (sum, message) => sum + (message.mediator.wordsPerMinute || 0),
+      0,
+    );
+    const cumulativeWeights: number[] = [];
+    let cumulativeSum = 0;
+    for (const message of mediatorMessages) {
+      cumulativeSum += message.mediator.wordsPerMinute || 0;
+      cumulativeWeights.push(cumulativeSum / totalWPM);
+    }
+    const random = Math.random();
+    const chosenIndex = cumulativeWeights.findIndex((weight) => random <= weight);
+    const mediatorMessage = mediatorMessages[chosenIndex];
     // Randomly sample a message.
-    const mediatorMessage = mediatorMessages[Math.floor(Math.random() * mediatorMessages.length)];
     const mediator = mediatorMessage.mediator;
     const message = mediatorMessage.message;
     const parsed = mediatorMessage.parsed;
-
-    await awaitTypingDelay(message);
+    console.log(`${mediator.name} has been chosen to speak (p=${cumulativeWeights[chosenIndex]})`);
+    await awaitTypingDelay(message, mediator.wordsPerMinute);
 
     // Refresh the stage to check if the conversation has ended.
     stage = await getChatStage(event);

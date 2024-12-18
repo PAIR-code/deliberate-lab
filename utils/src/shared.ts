@@ -1,6 +1,6 @@
 import { Timestamp } from 'firebase/firestore';
 import { ExperimentDownload } from './data';
-import {v4 as uuidv4} from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 /** Shared types and functions. */
 
@@ -22,7 +22,7 @@ export interface CreationResponse {
 }
 
 export interface ExperimentDownloadResponse {
-  data: ExperimentDownload|null;
+  data: ExperimentDownload | null;
 }
 
 // Helper for Timestamp (make it work between admin & sdk).
@@ -62,13 +62,13 @@ export enum Visibility {
 // ************************************************************************* //
 
 /** Hardcoded willingness to lead stage ID for Lost at Sea game
-  * (needed for determining winner of participant rankings)
-  */
+ * (needed for determining winner of participant rankings)
+ */
 export const LAS_WTL_STAGE_ID = 'wtl';
 
 /** Hardcoded willingness to lead question ID for Lost at Sea game
-  * (needed for determining winner of participant rankings)
-  */
+ * (needed for determining winner of participant rankings)
+ */
 export const LAS_WTL_QUESTION_ID = 'wtl';
 
 // ************************************************************************* //
@@ -84,33 +84,33 @@ export function generateId(isSequential: boolean = false): string {
     const randomPart = Math.random().toString(36).substring(2, 8);
     return `${timestamp}-${randomPart}`;
   }
-  
+
   return uuidv4();
 }
 
 /** Await typing delay (e.g., for chat messages). */
-export async function awaitTypingDelay(message: string): Promise<void> {
-  const delay = Math.min(getTypingDelay(message), 30 * 1000); // Cap delay at 30 seconds.
+export async function awaitTypingDelay(message: string, wordsPerMinute: number): Promise<void> {
+  const delay = Math.min(getTypingDelayInMs(message, wordsPerMinute), 30 * 1000); // Cap delay at 30 seconds.
   console.log(`Waiting ${(delay / 1000).toFixed(2)} seconds to simulate delay.`);
   return new Promise((resolve) => setTimeout(resolve, delay));
 }
 
 /** Calculate typing delay (e.g., for chat messages). */
-export function getTypingDelay(message: string): number {
-  // 40 WPM = 300 ms per character.
-  const averageTypingSpeed = 75; // 180 WPM.
+export function getTypingDelayInMs(message: string, wordsPerMinute: number): number {
+  const wordCount = message.split(' ').length;
+  const timeInMinutes = wordCount / wordsPerMinute;
+  let timeInSeconds = timeInMinutes * 60;
+
+  // Add randomness to simulate variability in typing speed
   const randomnessFactor = 0.5;
-
-  const baseDelay = message.length * averageTypingSpeed;
   const randomMultiplier = 1 + (Math.random() * randomnessFactor - randomnessFactor / 2);
+  timeInSeconds *= randomMultiplier;
 
-  return Math.round(baseDelay * randomMultiplier);
+  return Math.round(timeInSeconds) * 1000;
 }
 
 /** Create MetadataConfig. */
-export function createMetadataConfig(
-  config: Partial<MetadataConfig> = {},
-): MetadataConfig {
+export function createMetadataConfig(config: Partial<MetadataConfig> = {}): MetadataConfig {
   const timestamp = Timestamp.now();
 
   return {
@@ -127,7 +127,7 @@ export function createMetadataConfig(
 
 /** Create PermissionsConfig. */
 export function createPermissionsConfig(
-  config: Partial<PermissionsConfig> = {}
+  config: Partial<PermissionsConfig> = {},
 ): PermissionsConfig {
   return {
     visibility: config.visibility ?? Visibility.PRIVATE,

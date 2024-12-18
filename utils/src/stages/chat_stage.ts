@@ -104,6 +104,7 @@ export interface MediatorConfig {
   name: string;
   avatar: string; // emoji avatar for mediator
   prompt: string;
+  wordsPerMinute: number; // Typing speed
   responseConfig: MediatorResponseConfig;
   // TODO: Add more settings, e.g., model, temperature, context window
 }
@@ -309,6 +310,7 @@ export function createMediatorConfig(config: Partial<MediatorConfig> = {}): Medi
     name: config.name ?? 'Mediator',
     avatar: config.avatar ?? '🤖',
     prompt: config.prompt ?? DEFAULT_MEDIATOR_PROMPT.trim(),
+    wordsPerMinute: config.wordsPerMinute ?? 80, // Default 80 WPM.
     responseConfig: config.responseConfig ?? createMediatorResponseConfig(),
   };
 }

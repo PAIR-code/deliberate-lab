@@ -106,3 +106,7 @@
     flex-shrink: 0;
   }
 }
+
+.wpm-box {
+  @include common.number-input;
+}

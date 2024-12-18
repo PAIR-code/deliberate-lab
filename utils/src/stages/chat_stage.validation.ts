@@ -81,6 +81,7 @@ export const UpdateChatMediatorsData = Type.Object({
       name: Type.String(),
       avatar: Type.String(),
       prompt: Type.String(),
+      wordsPerMinute: Type.Number({ minimum: 1, maximum: 1000 }),
       responseConfig: Type.Object({
         isJSON: Type.Boolean(),
         messageField: Type.String(),

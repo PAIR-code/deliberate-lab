@@ -215,6 +215,17 @@ export class Panel extends MobxLitElement {
       );
     };
 
+    const updateWPM = (e: InputEvent) => {
+      const wpm = parseInt((e.target as HTMLInputElement).value, 10);
+      if (!isNaN(wpm)) {
+        this.mediatorEditor.updateMediator(
+          stageId,
+          {...mediator, wordsPerMinute: wpm},
+          index
+        );
+      }
+    };
+
     return html`
       <div class="mediator">
         <div class="mediator-title">#${index + 1} - ${mediator.name}</div>
@@ -236,6 +247,17 @@ export class Panel extends MobxLitElement {
             @input=${updateFormattingInstructions}
           >
           </pr-textarea>
+        </div>
+        <div>
+          Words per minute (WPM):
+          <div class="wpm-box">
+            <input
+              type="number"
+              .value=${mediator.wordsPerMinute ?? ''}
+              placeholder="Enter WPM"
+              @input=${updateWPM}
+            />
+          </div>
         </div>
         <div>
           <div class="action-bar">

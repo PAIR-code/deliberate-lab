@@ -137,7 +137,7 @@ export class ChatEditor extends MobxLitElement {
       </div>
     `;
   }
-  
+
   addMediator() {
     if (!this.stage) return;
     const mediators = [...this.stage.mediators, createMediatorConfig()];
@@ -305,7 +305,46 @@ export class ChatEditor extends MobxLitElement {
           ${this.renderAvatars(mediator, index)}
           ${this.renderMediatorPrompt(mediator, index)}
           ${this.renderMediatorResponseConfig(mediator, index)}
+          ${this.renderMediatorWordsPerMinute(mediator, index)}
         </div>
+      </div>
+    `;
+  }
+
+  private renderMediatorWordsPerMinute(
+    mediator: MediatorConfig,
+    index: number
+  ) {
+    const updateWordsPerMinute = (e: InputEvent) => {
+      const wordsPerMinute = Number((e.target as HTMLInputElement).value);
+      if (!isNaN(wordsPerMinute)) {
+        this.updateMediator(
+          {
+            ...mediator,
+            wordsPerMinute,
+          },
+          index
+        );
+      }
+    };
+
+    return html`
+      <div class="question-label">Words per minute</div>
+      <div class="description">
+        The higher this value, the faster the mediator will respond.
+      </div>
+      <div class="number-input">
+        <input
+          .disabled=${!this.experimentEditor.canEditStages}
+          type="number"
+          min="1"
+          max="1000"
+          .value=${mediator.wordsPerMinute}
+          @input=${updateWordsPerMinute}
+        />
+        ${mediator.wordsPerMinute < 1 || mediator.wordsPerMinute > 1000
+          ? html`<div class="error-message">Please enter a value between 1 and 1000.</div>`
+          : nothing}
       </div>
     `;
   }
