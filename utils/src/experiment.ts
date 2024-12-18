@@ -21,7 +21,8 @@ import { StageConfig } from './stages/stage';
   * to participant progress timestamps
   * VERSION 6 - updated in PR #337 to remove attention check config
   * VERSION 7 - updated in PR #348 to store additional chip negotiation data
-  * VERSION 8 - Updated in PR #372; MediatorConfig is now AgentConfig
+  * VERSION 8 - updated in PR #372; MediatorConfig is now AgentConfig
+  * VERSION 9 - updated in PR #373 to add avatar (emoji) field to ChipItem
   */
 export const EXPERIMENT_VERSION_ID = 8;
 

@@ -463,7 +463,7 @@ export class ChipView extends MobxLitElement {
       >
         <option value=""></option>
         ${this.stage?.chips.map(
-          (chip) => html`<option value=${chip.id}>${chip.name}</option>`
+          (chip) => html`<option value=${chip.id}>${chip.avatar} ${chip.name}</option>`
         )}
       </select>
     `;
@@ -577,8 +577,8 @@ export class ChipView extends MobxLitElement {
         <div>
           <p>
             ${senderName} is offering to give
-            <b>${displayChipOfferText(offer.sell)}</b> to get
-            <b>${displayChipOfferText(offer.buy)}</b> in return.
+            <b>${displayChipOfferText(offer.sell, this.stage.chips)}</b> to get
+            <b>${displayChipOfferText(offer.buy, this.stage.chips)}</b> in return.
           </p>
           ${displayHypotheticalTotal()}
         </div>
@@ -675,6 +675,8 @@ export class ChipView extends MobxLitElement {
   }
 
   private renderLogEntry(entry: ChipLogEntry, isLatestEntry: boolean = false) {
+    if (!this.stage) return nothing;
+
     const renderEntry = (message: string, cssClasses: string = '') => {
       return html`
         <div class="log-entry ${cssClasses}">
@@ -725,9 +727,9 @@ export class ChipView extends MobxLitElement {
           ${renderEntry(
             `${this.getParticipantDisplay(participant)} is offering
              ${displayChipOfferText(
-               entry.offer.sell
+               entry.offer.sell, this.stage.chips
              )} of their chips to get ${displayChipOfferText(
-              entry.offer.buy
+              entry.offer.buy, this.stage.chips
             )} in return.`
           )}
           ${transaction ? this.renderTransactionStatus(transaction) : nothing}

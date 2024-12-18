@@ -97,8 +97,8 @@ export class ChipReveal extends MobxLitElement {
           ${chipValues.map(
             (chip) =>
               html`<div class="table-cell">
-                ${chip.chip.name}<br />($${chip.value} for
-                ${chip.chip.name.includes('green') ? 'all' : 'you'})
+                ${chip.chip.avatar} ${chip.chip.name}<br />($${chip.value} for
+                ${chip.chip.upperValue === chip.chip.lowerValue ? 'all' : 'you'})
               </div>`
           )}
         </div>

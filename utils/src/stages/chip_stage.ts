@@ -35,6 +35,7 @@ export interface ChipStageConfig extends BaseStageConfig {
 export interface ChipItem {
   id: string; // id of chip
   name: string; // name of chip, e.g., "red"
+  avatar: string; // emoji for chip
   canBuy: boolean; // if true, participants can buy this chip
   canSell: boolean; // if true, participants can sell this chip
   quantity: number; // starting quantity of chips
@@ -322,25 +323,19 @@ export function createChipTransactionLogEntry(
   };
 }
 
-export function displayChipOfferText(chips: Record<string, number>): string {
-  const chipIcons: Record<string, string> = {
-    RED: '🔴',
-    GREEN: '🟢',
-    BLUE: '🔵',
-  };
+export function displayChipOfferText(
+  offerChipMap: Record<string, number>,
+  chipItems: ChipItem[]
+): string {
+  const chipDescriptions: string[] = [];
 
-  const getChipDescription = (chipId: string, quantity: number): string => {
-    return `${chipIcons[chipId]} ${quantity} ${chipId.toLowerCase()} chip${quantity > 1 ? 's' : ''}`;
-  };
-
-  if (Object.keys(chips).length === 1) {
-    const chipId = Object.keys(chips)[0];
-    const quantity = chips[chipId];
-    return getChipDescription(chipId, quantity);
-  }
-
-  const chipDescriptions = Object.entries(chips).map(([chipId, quantity]) => {
-    return getChipDescription(chipId, quantity);
+  chipItems.forEach((chip) => {
+    const quantity = offerChipMap[chip.id];
+    if (quantity) {
+      chipDescriptions.push(
+        `${chip.avatar} ${quantity} ${chip.name} chip${quantity !== 1 ? 's' : ''}`
+      )
+    }
   });
 
   if (chipDescriptions.length > 2) {
