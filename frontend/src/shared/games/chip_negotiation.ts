@@ -23,6 +23,7 @@ import {
 export const N_INITIAL_GREEN_CHIPS = 100;
 export const N_INITIAL_BLUE_CHIPS = 100;
 export const N_INITIAL_RED_CHIPS = 100;
+
 // ****************************************************************************
 // Experiment config
 // ****************************************************************************
@@ -205,6 +206,39 @@ export const TRANSFER_STAGE = createTransferStage({
 // ****************************************************************************
 // Chip negotiation stage
 // ****************************************************************************
+const CHIPS = [
+  {
+    id: 'RED',
+    name: 'red',
+    avatar: '🔴',
+    canBuy: true,
+    canSell: true,
+    startingQuantity: N_INITIAL_RED_CHIPS,
+    lowerValue: 0.01,
+    upperValue: 0.1,
+  },
+  {
+    id: 'BLUE',
+    name: 'blue',
+    avatar: '🔵',
+    canBuy: true,
+    canSell: true,
+    startingQuantity: N_INITIAL_BLUE_CHIPS,
+    lowerValue: 0.01,
+    upperValue: 0.1,
+  },
+  {
+    id: 'GREEN',
+    name: 'green',
+    avatar: '🟢',
+    canBuy: true,
+    canSell: true,
+    startingQuantity: N_INITIAL_GREEN_CHIPS,
+    lowerValue: 0.05,
+    upperValue: 0.05,
+  },
+];
+
 const CHIP_NEGOTIATION_STAGE = createChipStage({
   id: 'negotiation1',
   game: StageGame.CHP,
@@ -212,35 +246,7 @@ const CHIP_NEGOTIATION_STAGE = createChipStage({
   descriptions: createStageTextConfig({
     infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
   }),
-  chips: [
-    {
-      id: 'RED',
-      name: '🔴 red',
-      canBuy: true,
-      canSell: true,
-      quantity: N_INITIAL_RED_CHIPS,
-      lowerValue: 0.01,
-      upperValue: 0.1,
-    },
-    {
-      id: 'BLUE',
-      name: '🔵 blue',
-      canBuy: true,
-      canSell: true,
-      quantity: N_INITIAL_BLUE_CHIPS,
-      lowerValue: 0.01,
-      upperValue: 0.1,
-    },
-    {
-      id: 'GREEN',
-      name: '🟢 green',
-      canBuy: true,
-      canSell: true,
-      quantity: N_INITIAL_GREEN_CHIPS,
-      lowerValue: 0.05,
-      upperValue: 0.05,
-    },
-  ],
+  chips: CHIPS
 });
 
 const CHIP_NEGOTIATION_STAGE2 = createChipStage({
@@ -250,35 +256,7 @@ const CHIP_NEGOTIATION_STAGE2 = createChipStage({
   descriptions: createStageTextConfig({
     infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
   }),
-  chips: [
-    {
-      id: 'RED',
-      name: '🔴 red',
-      canBuy: true,
-      canSell: true,
-      quantity: N_INITIAL_RED_CHIPS,
-      lowerValue: 0.01,
-      upperValue: 0.1,
-    },
-    {
-      id: 'BLUE',
-      name: '🔵 blue',
-      canBuy: true,
-      canSell: true,
-      quantity: N_INITIAL_BLUE_CHIPS,
-      lowerValue: 0.01,
-      upperValue: 0.1,
-    },
-    {
-      id: 'GREEN',
-      name: '🟢 green',
-      canBuy: true,
-      canSell: true,
-      quantity: N_INITIAL_GREEN_CHIPS,
-      lowerValue: 0.05,
-      upperValue: 0.05,
-    },
-  ],
+  chips: CHIPS
 });
 
 // ****************************************************************************

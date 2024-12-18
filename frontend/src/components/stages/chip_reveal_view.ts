@@ -19,11 +19,6 @@ import {
 import {isActiveParticipant} from '../../shared/participant.utils';
 import {styles} from './chip_reveal_view.scss';
 import {SurveyAnswer} from '@deliberation-lab/utils';
-import {
-  N_INITIAL_BLUE_CHIPS,
-  N_INITIAL_GREEN_CHIPS,
-  N_INITIAL_RED_CHIPS,
-} from '../../shared/games/chip_negotiation';
 
 /** Chip negotiation reveal view */
 @customElement('chip-reveal-view')
@@ -102,8 +97,8 @@ export class ChipReveal extends MobxLitElement {
           ${chipValues.map(
             (chip) =>
               html`<div class="table-cell">
-                ${chip.chip.name}<br />($${chip.value} for
-                ${chip.chip.name.includes('green') ? 'all' : 'you'})
+                ${chip.chip.avatar} ${chip.chip.name}<br />($${chip.value} for
+                ${chip.chip.upperValue === chip.chip.lowerValue ? 'all' : 'you'})
               </div>`
           )}
         </div>
@@ -166,18 +161,8 @@ export class ChipReveal extends MobxLitElement {
 
     // Calculate the initial payout as a sum
     const initialPayout = this.stage?.chips.reduce((sum, chip) => {
-      let initialQuantity = 0;
-      console.log(chip.id);
-      if (chip.id === 'BLUE') {
-        initialQuantity = N_INITIAL_BLUE_CHIPS;
-      } else if (chip.id === 'RED') {
-        initialQuantity = N_INITIAL_RED_CHIPS;
-      } else if (chip.id === 'GREEN') {
-        initialQuantity = N_INITIAL_GREEN_CHIPS;
-      }
-
       const value = participantChipValueMap[chip.id] ?? 0;
-      return sum + initialQuantity * value;
+      return sum + chip.startingQuantity * value;
     }, 0);
 
     const totalPayout = chipValues?.reduce(
@@ -185,6 +170,7 @@ export class ChipReveal extends MobxLitElement {
       0
     );
     const diff = totalPayout! - initialPayout!;
+    const payout = Math.max(0, diff);
     const diffDisplay = html`<span
       class=${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}
       ><b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b></span
@@ -205,13 +191,13 @@ export class ChipReveal extends MobxLitElement {
         </div>
         <div class="table-foot">
           <div class="table-row">
-            ${this.makeCell('Your starting payout')}
+            ${this.makeCell('Initial total')}
             ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
             ${this.makeCell(`$${initialPayout!.toFixed(2)}`)}
           </div>
 
           <div class="table-row">
-            ${this.makeCell('Your total payout')}
+            ${this.makeCell('Current total')}
             ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
             <div
               class="table-cell ${diff > 0
@@ -220,7 +206,23 @@ export class ChipReveal extends MobxLitElement {
                 ? 'negative'
                 : ''}"
             >
-              $${totalPayout!.toFixed(2)}
+              <b>$${totalPayout!.toFixed(2)}</b>
+            </div>
+          </div>
+
+          <div class="table-row">
+          <div class="table-cell">
+          Current payout<br />(change in value, 0 if negative)
+        </div>
+            ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
+            <div
+              class="table-cell ${payout > 0
+                ? 'positive'
+                : payout < 0
+                ? 'negative'
+                : ''}"
+            >
+              <b>$${payout.toFixed(2)}</b>
             </div>
           </div>
         </div>

@@ -289,23 +289,16 @@ export class ChipView extends MobxLitElement {
         const participantChipValueMap =
           publicData.participantChipValueMap[currentParticipant.publicId] ?? {};
 
-        const currentTotalPayout = this.calculatePayout(
-          participantChipMap,
-          participantChipValueMap
-        );
-
-        const chipOffer: Partial<ChipOffer> = {
-          buy: {[this.selectedBuyChip]: this.buyChipAmount},
-          sell: {[this.selectedSellChip]: this.sellChipAmount},
-        };
-
-        const newTotalPayout = this.calculatePayout(
+        const payouts = this.calculatePayout(
           participantChipMap,
           participantChipValueMap,
-          createChipOffer(chipOffer)
+          {[this.selectedBuyChip]: this.buyChipAmount}, // gained chips
+          {[this.selectedSellChip]: this.sellChipAmount} // lost chips
         );
 
-        const diff = currentTotalPayout - newTotalPayout;
+        const currentTotalPayout = payouts.before;
+        const newTotalPayout = payouts.after;
+        const diff = newTotalPayout - currentTotalPayout;
         const diffDisplay = html`<span
           class=${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}
           ><b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b></span
@@ -317,6 +310,7 @@ export class ChipView extends MobxLitElement {
       }
       return html`<div class="payout-panel">${payoutHtml}</div>`;
     };
+
     const renderValidationMessages = () => {
       if (this.isOfferIncomplete()) {
         return html`<div class="warnings-panel"></div>`;
@@ -346,7 +340,7 @@ export class ChipView extends MobxLitElement {
         if (this.selectedBuyChip === this.selectedSellChip) {
           errors.push(html`
             <div class="warning">
-              ‼️ You cannot offer to buy and sell the same chip color.
+              ‼️ You cannot offer to buy and sell the same chip type.
             </div>
           `);
         }
@@ -364,7 +358,7 @@ export class ChipView extends MobxLitElement {
 
         <div class="offer-form">
           <div class="offer-config">
-            <label class="offer-config-label">Give:</label>
+            <label class="offer-config-label">You give:</label>
             ${this.renderChipNumberInput(this.sellChipAmount, (value) => {
               this.sellChipAmount = value;
             })}
@@ -373,7 +367,7 @@ export class ChipView extends MobxLitElement {
             })}
           </div>
           <div class="offer-config">
-            <label class="offer-config-label">Get:</label>
+            <label class="offer-config-label">You get:</label>
             ${this.renderChipNumberInput(this.buyChipAmount, (value) => {
               this.buyChipAmount = value;
             })}
@@ -426,13 +420,15 @@ export class ChipView extends MobxLitElement {
     `;
   }
 
+  // TODO: Move to utils? We do a similar calculation in cloud functions
   private calculatePayout(
     chipMap: Record<string, number>,
     chipValueMap: Record<string, number>,
-    offer: ChipOffer | null = null
+    addChipMap: Record<string, number> = {},
+    removeChipMap: Record<string, number> = {}
   ) {
     // Calculate the total payout before the offer
-    const currentTotalPayout = Object.keys(chipMap)
+    let currentTotalPayout = Object.keys(chipMap)
       .map((chipId) => {
         const quantity = chipMap[chipId] ?? 0;
         const value = chipValueMap[chipId] ?? 0;
@@ -440,26 +436,20 @@ export class ChipView extends MobxLitElement {
       })
       .reduce((total, value) => total + value, 0);
 
-    // If no offer, return the current total payout
-    if (!offer) return currentTotalPayout;
+      // Calculate the changes from the offer
+    const addAmount = Object.keys(addChipMap).map((chipId) => {
+      return (addChipMap[chipId] ?? 0) * (chipValueMap[chipId] ?? 0)
+    }).reduce((total, value) => total + value, 0);
 
-    // Calculate the changes from the offer
-    const buyChip = Object.keys(offer.buy)[0];
-    const buyAmount = offer.buy[buyChip] ?? 0;
-
-    const sellChip = Object.keys(offer.sell)[0];
-    const sellAmount = offer.sell[sellChip] ?? 0;
-
-    const buyValue = chipValueMap[buyChip] ?? 0;
-    const sellValue = chipValueMap[sellChip] ?? 0;
+    const removeAmount = Object.keys(removeChipMap).map((chipId) => {
+      return (removeChipMap[chipId] ?? 0) * (chipValueMap[chipId] ?? 0)
+    }).reduce((total, value) => total + value, 0);
 
     // Update the hypothetical payout
-    const newTotalPayout =
-      currentTotalPayout +
-      sellAmount * sellValue - // Add value for sold chips
-      buyAmount * buyValue; // Subtract value for bought chips
-
-    return newTotalPayout;
+    return {
+      before: currentTotalPayout,
+      after: currentTotalPayout + addAmount - removeAmount
+    };
   }
 
   private renderChipSelector(value: string, onInput: (value: string) => void) {
@@ -473,7 +463,7 @@ export class ChipView extends MobxLitElement {
       >
         <option value=""></option>
         ${this.stage?.chips.map(
-          (chip) => html`<option value=${chip.id}>${chip.name}</option>`
+          (chip) => html`<option value=${chip.id}>${chip.avatar} ${chip.name}</option>`
         )}
       </select>
     `;
@@ -528,25 +518,26 @@ export class ChipView extends MobxLitElement {
         publicData.participantChipValueMap[currentId] ?? {};
 
       const offer = this.getCurrentTransaction()?.offer ?? null;
-      if (!offer) return 0;
+      if (!offer) return nothing;
 
-      const currentTotalPayout = this.calculatePayout(
-        participantChipMap,
-        participantChipValueMap
-      );
-      const newTotalPayout = this.calculatePayout(
+      const payouts = this.calculatePayout(
         participantChipMap,
         participantChipValueMap,
-        offer
+        offer.sell, // the participant will gain what the sender is selling
+        offer.buy, // the participant will lose what the sender is buying
       );
+
+      const currentTotalPayout = payouts.before;
+      const newTotalPayout = payouts.after;
 
       const diff = newTotalPayout - currentTotalPayout;
       const diffDisplay = html`<span
         class=${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}
         ><b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b></span
       >`;
+
       return html`<p>
-        If you accept this offer, your updated payout will be
+        If you accept this offer, your updated chip value will be
         <b>$${newTotalPayout.toFixed(2)}</b> ${diffDisplay}.
       </p>`;
     };
@@ -586,8 +577,8 @@ export class ChipView extends MobxLitElement {
         <div>
           <p>
             ${senderName} is offering to give
-            <b>${displayChipOfferText(offer.sell)}</b> to get
-            <b>${displayChipOfferText(offer.buy)}</b> in return.
+            <b>${displayChipOfferText(offer.sell, this.stage.chips)}</b> to get
+            <b>${displayChipOfferText(offer.buy, this.stage.chips)}</b> in return.
           </p>
           ${displayHypotheticalTotal()}
         </div>
@@ -652,7 +643,7 @@ export class ChipView extends MobxLitElement {
     const logs = this.cohortService.getChipLogEntries(this.stage.id);
 
     if (logs.length === 0) {
-      return html` <div class="panel log">No logs yet</div> `;
+      return nothing;
     }
 
     return html`
@@ -684,6 +675,8 @@ export class ChipView extends MobxLitElement {
   }
 
   private renderLogEntry(entry: ChipLogEntry, isLatestEntry: boolean = false) {
+    if (!this.stage) return nothing;
+
     const renderEntry = (message: string, cssClasses: string = '') => {
       return html`
         <div class="log-entry ${cssClasses}">
@@ -734,9 +727,9 @@ export class ChipView extends MobxLitElement {
           ${renderEntry(
             `${this.getParticipantDisplay(participant)} is offering
              ${displayChipOfferText(
-               entry.offer.sell
+               entry.offer.sell, this.stage.chips
              )} of their chips to get ${displayChipOfferText(
-              entry.offer.buy
+              entry.offer.buy, this.stage.chips
             )} in return.`
           )}
           ${transaction ? this.renderTransactionStatus(transaction) : nothing}
