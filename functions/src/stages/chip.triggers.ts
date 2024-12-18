@@ -267,13 +267,9 @@ export const completeChipTransaction = onDocumentCreated(
       }
 
       // Write success log.
-      // This takes a while and sometimes the next round has already started, so we write it 
-      // back in time for ordering.
       transaction.set(
         logCollection.doc(),
-        createChipTransactionLogEntry(
-          chipTransaction, Timestamp.fromMillis(Timestamp.now().toMillis() - 5000)
-        )
+        createChipTransactionLogEntry(chipTransaction, Timestamp.now())
       );
 
       // Update public stage data

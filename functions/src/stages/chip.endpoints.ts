@@ -165,6 +165,9 @@ export const sendChipOffer = onCall(async (request) => {
     const chipOffer = data.chipOffer;
     const currentRound = publicStageData.currentRound;
 
+    // Set current round for chip offer
+    chipOffer.round = currentRound;
+
     // Confirm that offer is valid (it is the participant's turn to send offers
     // and there is not already an offer)
     if (
