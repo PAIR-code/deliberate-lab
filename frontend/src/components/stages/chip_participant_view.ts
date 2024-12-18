@@ -643,7 +643,7 @@ export class ChipView extends MobxLitElement {
     const logs = this.cohortService.getChipLogEntries(this.stage.id);
 
     if (logs.length === 0) {
-      return html` <div class="log-panel">No logs yet</div> `;
+      return nothing;
     }
 
     return html`
