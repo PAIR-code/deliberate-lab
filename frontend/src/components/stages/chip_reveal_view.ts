@@ -19,11 +19,6 @@ import {
 import {isActiveParticipant} from '../../shared/participant.utils';
 import {styles} from './chip_reveal_view.scss';
 import {SurveyAnswer} from '@deliberation-lab/utils';
-import {
-  N_INITIAL_BLUE_CHIPS,
-  N_INITIAL_GREEN_CHIPS,
-  N_INITIAL_RED_CHIPS,
-} from '../../shared/games/chip_negotiation';
 
 /** Chip negotiation reveal view */
 @customElement('chip-reveal-view')
@@ -166,18 +161,8 @@ export class ChipReveal extends MobxLitElement {
 
     // Calculate the initial payout as a sum
     const initialPayout = this.stage?.chips.reduce((sum, chip) => {
-      let initialQuantity = 0;
-      console.log(chip.id);
-      if (chip.id === 'BLUE') {
-        initialQuantity = N_INITIAL_BLUE_CHIPS;
-      } else if (chip.id === 'RED') {
-        initialQuantity = N_INITIAL_RED_CHIPS;
-      } else if (chip.id === 'GREEN') {
-        initialQuantity = N_INITIAL_GREEN_CHIPS;
-      }
-
       const value = participantChipValueMap[chip.id] ?? 0;
-      return sum + initialQuantity * value;
+      return sum + chip.quantity * value;
     }, 0);
 
     const totalPayout = chipValues?.reduce(

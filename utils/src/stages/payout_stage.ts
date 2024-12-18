@@ -229,10 +229,7 @@ export function calculatePayoutTotal(resultConfig: PayoutResultConfig) {
       });
       total += Math.max(0, chipTotal - initialChipTotal);
     }
-    console.log(result);
-    console.log(total);
   });
-  console.log(total); 
   return total;
 }
 

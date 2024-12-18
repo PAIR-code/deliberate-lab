@@ -30,11 +30,6 @@ import {
   calculatePayoutResult,
   calculatePayoutTotal,
 } from '@deliberation-lab/utils';
-import {
-  N_INITIAL_BLUE_CHIPS,
-  N_INITIAL_GREEN_CHIPS,
-  N_INITIAL_RED_CHIPS,
-} from '../../shared/games/chip_negotiation';
 import {styles} from './payout_view.scss';
 
 /** Payout stage summary view. */
@@ -125,19 +120,12 @@ export class PayoutView extends MobxLitElement {
   ) {
     const getInitialTotal = () => {
       let total = 0;
-      for (const result of item.chipResults) {
-        let quantity = 0;
-        if (result.chip.name.includes('red')) {
-          quantity = N_INITIAL_RED_CHIPS;
-        } else if (result.chip.name.includes('green')) {
-          quantity = N_INITIAL_GREEN_CHIPS;
-        } else if (result.chip.name.includes('blue')) {
-          quantity = N_INITIAL_BLUE_CHIPS;
-        }
-        total += Math.floor(quantity * result.value * 100) / 100;
-      }
+      item.chipResults.forEach((result) => {
+        total += Math.floor(result.chip.quantity * result.value * 100) / 100;
+      });
       return Math.floor(total * 100) / 100;
     };
+
     const getTotal = () => {
       let total = 0;
       for (const result of item.chipResults) {
