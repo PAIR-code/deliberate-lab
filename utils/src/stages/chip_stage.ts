@@ -68,11 +68,16 @@ export interface ChipTransaction {
   // offer sent by participant
   offer: ChipOffer;
   // map (public ID --> response) made by participants regarding offer
-  responseMap: Record<string, boolean>;
+  responseMap: Record<string, ChipOfferResponse>;
   // status of transaction
   status: ChipTransactionStatus;
   // public ID of recipient chosen (or null if none available or not set)
   recipientId: string | null;
+}
+
+export interface ChipOfferResponse {
+  response: boolean; // accept or decline offer
+  timestamp: Timestamp;
 }
 
 /** Chip transaction status. */

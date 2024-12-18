@@ -113,7 +113,7 @@ export const completeChipTurn = onDocumentUpdated(
           return false;
         } else if (
           participantId !== currentTurn &&
-          currentTransaction.responseMap[participantId]
+          currentTransaction.responseMap[participantId]?.response
         ) {
           // Track participants who accepted the current offer
           acceptedOffer.push(participantId);

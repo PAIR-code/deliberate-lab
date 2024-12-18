@@ -243,7 +243,8 @@ export const sendChipResponse = onCall(async (request) => {
     ) {
       return { success: false };
     }
-    publicStageData.participantOfferMap[currentRound][currentTurn].responseMap[data.participantPublicId] = data.chipResponse;
+    publicStageData.participantOfferMap[currentRound][currentTurn].responseMap[data.participantPublicId] =
+      { response: data.chipResponse, timestamp: Timestamp.now() };
 
     // Set new public data
     transaction.set(publicDoc, publicStageData);
