@@ -15,10 +15,10 @@ import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
 import {
-  AgentMediatorChatMessage,
+  AgentAgentChatMessage,
   ChatMessage,
   ChatMessageType,
-  HumanMediatorChatMessage,
+  HumanAgentChatMessage,
   ParticipantChatMessage,
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
@@ -44,10 +44,10 @@ export class ChatMessageComponent extends MobxLitElement {
     switch (this.chat.type) {
       case ChatMessageType.PARTICIPANT:
         return this.renderParticipantMessage(this.chat);
-      case ChatMessageType.HUMAN_MEDIATOR:
-        return this.renderHumanMediatorMessage(this.chat);
-      case ChatMessageType.AGENT_MEDIATOR:
-        return this.renderAgentMediatorMessage(this.chat);
+      case ChatMessageType.HUMAN_AGENT:
+        return this.renderHumanAgentMessage(this.chat);
+      case ChatMessageType.AGENT_AGENT:
+        return this.renderAgentAgentMessage(this.chat);
       default:
         return nothing;
     }
@@ -84,7 +84,7 @@ export class ChatMessageComponent extends MobxLitElement {
     `;
   }
 
-  renderHumanMediatorMessage(chatMessage: HumanMediatorChatMessage) {
+  renderHumanAgentMessage(chatMessage: HumanAgentChatMessage) {
     const profile = chatMessage.profile;
 
     return html`
@@ -106,7 +106,7 @@ export class ChatMessageComponent extends MobxLitElement {
     `;
   }
 
-  renderAgentMediatorMessage(chatMessage: AgentMediatorChatMessage) {
+  renderAgentAgentMessage(chatMessage: AgentAgentChatMessage) {
     const profile = chatMessage.profile;
 
     return html`
@@ -129,7 +129,7 @@ export class ChatMessageComponent extends MobxLitElement {
     `;
   }
 
-  renderDebuggingExplanation(chatMessage: AgentMediatorChatMessage) {
+  renderDebuggingExplanation(chatMessage: AgentAgentChatMessage) {
     if (!this.authService.isDebugMode) return nothing;
 
     return html` <div class="debug">${chatMessage.explanation}</div> `;

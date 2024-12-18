@@ -109,3 +109,8 @@ pr-textarea {
   margin-top: 0px;
   margin-left: calc(48px + common.$spacing-medium);
 }
+
+.error-message {
+  font-style: italic;
+  color: red;
+}

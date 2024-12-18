@@ -15,7 +15,7 @@ import {ExperimentManager} from '../../services/experiment.manager';
 import {RouterService} from '../../services/router.service';
 
 import {
-  LLM_MEDIATOR_AVATARS
+  LLM_AGENT_AVATARS
 } from '../../shared/constants';
 
 import {styles} from './experimenter_manual_chat.scss';
@@ -30,7 +30,7 @@ export class Chat extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   @state() value = '';
-  @state() name = 'Mediator';
+  @state() name = 'Agent';
   @state() avatar = '⭐';
   @state() isLoading = false;
 
@@ -123,7 +123,7 @@ export class Chat extends MobxLitElement {
   private renderAvatars() {
     const handleAvatarClick = (e: Event) => {
       const value = Number((e.target as HTMLInputElement).value);
-      const avatar = LLM_MEDIATOR_AVATARS[value];
+      const avatar = LLM_AGENT_AVATARS[value];
       this.avatar = avatar;
     };
 
@@ -147,7 +147,7 @@ export class Chat extends MobxLitElement {
       <div class="radio-question">
         <div class="title">Avatar</div>
         <div class="radio-wrapper">
-          ${LLM_MEDIATOR_AVATARS.map(
+          ${LLM_AGENT_AVATARS.map(
             (avatar, index) => renderAvatarRadio(avatar, index)
           )}
         </div>

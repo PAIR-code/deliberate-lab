@@ -10,17 +10,17 @@ import {computed, makeObservable, observable} from 'mobx';
 import {FirebaseService} from './firebase.service';
 import {Service} from './service';
 
-import {MediatorConfig} from '@deliberation-lab/utils';
-import {updateChatMediatorsCallable} from '../shared/callables';
+import {AgentConfig} from '@deliberation-lab/utils';
+import {updateChatAgentsCallable} from '../shared/callables';
 
 interface ServiceProvider {
   firebaseService: FirebaseService;
 }
 
 /**
- * Manage live mediator editing in experimenter panel.
+ * Manage live agent editing in experimenter panel.
  */
-export class MediatorEditor extends Service {
+export class AgentEditor extends Service {
   constructor(private readonly sp: ServiceProvider) {
     super();
     makeObservable(this);
@@ -29,15 +29,15 @@ export class MediatorEditor extends Service {
   // Experiment ID
   @observable experimentId: string|null = null;
   // Stage ID to chat config
-  // TODO: Map from stage ID to MediatorConfig list?
+  // TODO: Map from stage ID to AgentConfig list?
   @observable configMap: Record<string, ChatStageConfig> = {};
 
   setExperimentId(id: string) {
     this.experimentId = id;
   }
 
-  getMediators(stageId: string): MediatorConfig[] {
-    return this.configMap[stageId]?.mediators ?? [];
+  getAgents(stageId: string): AgentConfig[] {
+    return this.configMap[stageId]?.agents ?? [];
   }
 
   addConfig(config: ChatStageConfig) {
@@ -48,23 +48,23 @@ export class MediatorEditor extends Service {
     this.configMap[config.id] = config;
   }
 
-  updateMediator(
+  updateAgent(
     stageId: string,
-    mediator: MediatorConfig,
+    agent: AgentConfig,
     index: number
   ) {
     const config = this.configMap[stageId];
     if (!config) return;
 
-    const mediators = [
-      ...config.mediators.slice(0, index),
-      mediator,
-      ...config.mediators.slice(index + 1)
+    const agents = [
+      ...config.agents.slice(0, index),
+      agent,
+      ...config.agents.slice(index + 1)
     ];
 
     this.updateConfig({
       ...config,
-      mediators,
+      agents,
     });
   }
 
@@ -77,16 +77,16 @@ export class MediatorEditor extends Service {
   // FIRESTORE                                                               //
   // *********************************************************************** //
 
-  // Write chat mediators to backend
-  async saveChatMediators(stageId: string) {
+  // Write chat agents to backend
+  async saveChatAgents(stageId: string) {
     if (!this.experimentId || !this.configMap[stageId]) return;
 
-    await updateChatMediatorsCallable(
+    await updateChatAgentsCallable(
       this.sp.firebaseService.functions,
       {
         experimentId: this.experimentId,
         stageId,
-        mediatorList: this.configMap[stageId].mediators,
+        agentList: this.configMap[stageId].agents,
       }
     );
   }

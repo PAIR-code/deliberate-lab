@@ -13,7 +13,7 @@ import {
   SetChipTurnData,
   SimpleResponse,
   SuccessResponse,
-  UpdateChatMediatorsData,
+  UpdateChatAgentsData,
   UpdateChatStageParticipantAnswerData,
   UpdateRankingStageParticipantAnswerData,
   UpdateSurveyPerParticipantStageParticipantAnswerData,
@@ -74,11 +74,11 @@ export const updateChatStageParticipantAnswerCallable = async(
   return data;
 }
 
-/** Generic endpoint to update chat stage mediators */
-export const updateChatMediatorsCallable = async(
-  functions: Functions, config: UpdateChatMediatorsData
+/** Generic endpoint to update chat stage agents */
+export const updateChatAgentsCallable = async(
+  functions: Functions, config: UpdateChatAgentsData
 ) => {
-  const { data } = await httpsCallable<UpdateChatMediatorsData, SuccessResponse>(functions, 'updateChatMediators')(config);
+  const { data } = await httpsCallable<UpdateChatAgentsData, SuccessResponse>(functions, 'updateChatAgents')(config);
   return data;
 }
 
