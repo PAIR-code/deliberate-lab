@@ -10,7 +10,7 @@ import {
   getPreface,
   getChatHistory,
   getTimeElapsed,
-  createAgentAgentChatMessage,
+  createAgentMediatorChatMessage,
   AgentConfig,
   ChatStageConfig,
 } from '@deliberation-lab/utils';
@@ -223,7 +223,7 @@ export const createAgentMessage = onDocumentCreated(
       return;
     }
 
-    const chatMessage = createAgentAgentChatMessage({
+    const chatMessage = createAgentMediatorChatMessage({
       profile: { name: agent.name, avatar: agent.avatar, pronouns: null },
       discussionId: data.discussionId,
       message,

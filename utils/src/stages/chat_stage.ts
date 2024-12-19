@@ -88,11 +88,11 @@ export interface ParticipantChatMessage extends BaseChatMessage {
   participantPublicId: string;
 }
 
-export interface HumanAgentChatMessage extends BaseChatMessage {
+export interface HumanMediatorChatMessage extends BaseChatMessage {
   type: ChatMessageType.HUMAN_AGENT;
 }
 
-export interface AgentAgentChatMessage extends BaseChatMessage {
+export interface AgentMediatorChatMessage extends BaseChatMessage {
   type: ChatMessageType.AGENT_AGENT;
   agentId: string;
   explanation: string;
@@ -121,7 +121,7 @@ export interface AgentResponseConfig {
   formattingInstructions: string;
 }
 
-export type ChatMessage = ParticipantChatMessage | HumanAgentChatMessage | AgentAgentChatMessage;
+export type ChatMessage = ParticipantChatMessage | HumanMediatorChatMessage | AgentMediatorChatMessage;
 
 /**
  * ChatStageParticipantAnswer.
@@ -245,9 +245,9 @@ export function createParticipantChatMessage(
 }
 
 /** Create human agent chat message. */
-export function createHumanAgentChatMessage(
-  config: Partial<HumanAgentChatMessage> = {},
-): HumanAgentChatMessage {
+export function createHumanMediatorChatMessage(
+  config: Partial<HumanMediatorChatMessage> = {},
+): HumanMediatorChatMessage {
   return {
     id: config.id ?? generateId(),
     discussionId: config.discussionId ?? null,
@@ -259,9 +259,9 @@ export function createHumanAgentChatMessage(
 }
 
 /** Create agent agent chat message. */
-export function createAgentAgentChatMessage(
-  config: Partial<AgentAgentChatMessage> = {},
-): AgentAgentChatMessage {
+export function createAgentMediatorChatMessage(
+  config: Partial<AgentMediatorChatMessage> = {},
+): AgentMediatorChatMessage {
   return {
     id: config.id ?? generateId(),
     discussionId: config.discussionId ?? null,

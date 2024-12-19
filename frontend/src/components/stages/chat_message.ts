@@ -15,10 +15,10 @@ import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
 import {
-  AgentAgentChatMessage,
+  AgentMediatorChatMessage,
   ChatMessage,
   ChatMessageType,
-  HumanAgentChatMessage,
+  HumanMediatorChatMessage,
   ParticipantChatMessage,
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
@@ -45,9 +45,9 @@ export class ChatMessageComponent extends MobxLitElement {
       case ChatMessageType.PARTICIPANT:
         return this.renderParticipantMessage(this.chat);
       case ChatMessageType.HUMAN_AGENT:
-        return this.renderHumanAgentMessage(this.chat);
+        return this.renderHumanMediatorMessage(this.chat);
       case ChatMessageType.AGENT_AGENT:
-        return this.renderAgentAgentMessage(this.chat);
+        return this.renderAgentMediatorMessage(this.chat);
       default:
         return nothing;
     }
@@ -84,7 +84,7 @@ export class ChatMessageComponent extends MobxLitElement {
     `;
   }
 
-  renderHumanAgentMessage(chatMessage: HumanAgentChatMessage) {
+  renderHumanMediatorMessage(chatMessage: HumanMediatorChatMessage) {
     const profile = chatMessage.profile;
 
     return html`
@@ -106,7 +106,7 @@ export class ChatMessageComponent extends MobxLitElement {
     `;
   }
 
-  renderAgentAgentMessage(chatMessage: AgentAgentChatMessage) {
+  renderAgentMediatorMessage(chatMessage: AgentMediatorChatMessage) {
     const profile = chatMessage.profile;
 
     return html`
@@ -129,7 +129,7 @@ export class ChatMessageComponent extends MobxLitElement {
     `;
   }
 
-  renderDebuggingExplanation(chatMessage: AgentAgentChatMessage) {
+  renderDebuggingExplanation(chatMessage: AgentMediatorChatMessage) {
     if (!this.authService.isDebugMode) return nothing;
 
     return html` <div class="debug">${chatMessage.explanation}</div> `;
