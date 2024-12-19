@@ -15,7 +15,7 @@ export const RTV_METADATA = createMetadataConfig({
   name: 'Reality TV Chat',
   publicName: 'Reality TV Chat',
   description:
-    'A conversation between multiple agents who discuss reality TV shows.',
+    'A debate scenario that showcases multi-agent conversation and facilitation.',
 });
 export function getRTVStageConfigs(): StageConfig[] {
   const stages: StageConfig[] = [];
