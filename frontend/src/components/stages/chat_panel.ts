@@ -87,7 +87,6 @@ export class ChatPanel extends MobxLitElement {
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       ${this.renderTimeRemaining()} ${this.renderParticipantList()}
-      ${this.renderAgentsList()}
     `;
   }
 
@@ -150,25 +149,6 @@ export class ChatPanel extends MobxLitElement {
     }
   }
 
-  private renderAgentsList() {
-    if (!this.authService.isDebugMode || !this.stage) {
-      return;
-    }
-
-    const agents = this.stage.agents;
-    if (!agents || agents.length === 0) return;
-
-    return html`
-      <div class="panel-item">
-        <div class="panel-item-title">Agents (${agents.length})</div>
-        ${this.renderApiCheck()}
-        <div class="panel-item-subtitle">
-          This agent panel is only visible to experimenters
-        </div>
-        ${agents.map((agent) => this.renderAgent(agent))}
-      </div>
-    `;
-  }
   private renderApiCheck() {
     if (!this.authService.experimenterData?.apiKeys.geminiKey) {
       return html`
@@ -183,24 +163,40 @@ export class ChatPanel extends MobxLitElement {
 
   private renderParticipantList() {
     const activeParticipants = this.cohortService.activeParticipants;
+
+    if (!this.stage) {
+      return nothing;
+    }
+
+    const agents = this.stage.agents;
+    if (agents && agents.length === 0) {
+    }
+
     return html`
       <div class="panel-item">
         <div class="panel-item-title">
-          Participants (${activeParticipants.length})
+          Participants (${activeParticipants.length + agents.length})
         </div>
+        ${agents && agents.length > 0 ? this.renderApiCheck() : ''}
         ${activeParticipants.map((participant) =>
           this.renderProfile(participant)
         )}
+        ${agents.map((agent) => this.renderAgent(agent))}
       </div>
     `;
   }
 
   private renderAgent(agent: AgentConfig) {
     return html`
-      <pr-tooltip text=${agent.prompt} position="BOTTOM_END">
+      <pr-tooltip
+        text=${this.authService.isDebugMode ? agent.prompt : ''}
+        position="BOTTOM_END"
+      >
         <div class="profile">
           <profile-avatar .emoji=${agent.avatar}></profile-avatar>
-          <div class="name">${agent.name}</div>
+          <div class="name">
+            ${agent.name}${this.authService.isDebugMode ? ` 🤖` : ''}
+          </div>
         </div>
       </pr-tooltip>
     `;
@@ -217,10 +213,10 @@ export class ChatPanel extends MobxLitElement {
         <div class="name">
           ${profile.name ? profile.name : profile.publicId}
           ${profile.pronouns ? `(${profile.pronouns})` : ''}
-          ${
-            profile.publicId === this.participantService.profile?.publicId ?
-            `(you)` : ''
-          }
+          ${profile.publicId === this.participantService.profile?.publicId
+            ? `(you)`
+            : ''}
+        </div>
       </div>
     `;
   }
