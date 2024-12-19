@@ -43,8 +43,7 @@ export class ChatEditor extends MobxLitElement {
     if (!checkApiKeyExists(this.authService.experimenterData)) {
       apiCheck = html`
         <div class="warning">
-          <b>Note:</b> In order for LLM calls to work, you must add your Gemini API key 
-          or Ollama server configuration under Settings.
+          <b>Note:</b> In order for LLM calls to work, you must add an API key or server configuration under Experimenter Settings.
         </div>
       `;
     } else {
