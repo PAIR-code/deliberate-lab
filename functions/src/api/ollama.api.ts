@@ -88,10 +88,10 @@ async function decodeResponse(response: Response): Promise<string> {
  * @returns appropriate JSON objects which the model can understand
  */
 function encodeMessages(messages: string[], modelType: string): OutgoingMessage {
-    const message_objs: LlmMessage[] = messages.map((message) => ({ role: "user", content: message }));
+    const messageObjs: LlmMessage[] = messages.map((message) => ({ role: "user", content: message }));
     return {
         model: modelType,
-        messages: message_objs,
+        messages: messageObjs,
         stream: false
     };
 }

@@ -90,13 +90,13 @@ export class ExperimenterDataEditor extends MobxLitElement {
       if (!oldData) return;
 
       const geminiKey = (e.target as HTMLTextAreaElement).value;
-      const new_data = {
+      const newData = {
         id: oldData.id,
         geminiApiKey: geminiKey,
         llamaApiKey: oldData.llamaApiKey,
         activeApiKeyType: ApiKeyType.GEMINI_API_KEY
       };
-      this.authService.writeExperimenterData(new_data);
+      this.authService.writeExperimenterData(newData);
     };
 
     
