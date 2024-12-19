@@ -57,7 +57,6 @@ export enum StageKind {
 export enum StageGame {
   NONE = 'none',
   LAS = 'las', // Lost at Sea
-  GCE = 'gce', // Gift Card Exchange
   RTV = 'rtv', // Reality TV Debate.
   CHP = 'chp', // Chip Negotiation
 }

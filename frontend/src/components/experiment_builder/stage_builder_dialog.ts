@@ -30,10 +30,6 @@ import {
 } from '@deliberation-lab/utils';
 import {LAS_METADATA, getLASStageConfigs} from '../../shared/games/lost_at_sea';
 import {
-  GCE_METADATA,
-  getGCEStageConfigs,
-} from '../../shared/games/gift_card_exchange';
-import {
   CHIP_GAME_METADATA,
   getChipNegotiationStageConfigs,
 } from '../../shared/games/chip_negotiation';
@@ -117,8 +113,7 @@ export class StageBuilderDialog extends MobxLitElement {
         ⚠️ Loading a game will override any current stages in your configuration
       </div>
       <div class="card-gallery-wrapper">
-        ${this.renderLASCard()} ${this.renderNegotiationCard()}
-        ${this.renderRealityTVCard()}
+        ${this.renderLASCard()} ${this.renderRealityTVCard()}
         ${this.renderChipNegotiationCard()}
       </div>
     `;
@@ -158,20 +153,10 @@ export class StageBuilderDialog extends MobxLitElement {
     return html`
       <div class="card" @click=${addGame}>
         <div class="title">🌊 ${LAS_METADATA.name}</div>
-        <div>${LAS_METADATA.description}<div>
-      </div>
-    `;
-  }
-
-  private renderNegotiationCard() {
-    const addGame = () => {
-      this.addGame(GCE_METADATA, getGCEStageConfigs());
-    };
-
-    return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">💵 ${GCE_METADATA.name}</div>
-        <div>${GCE_METADATA.description}</div>
+        <div>
+          ${LAS_METADATA.description}
+          <div></div>
+        </div>
       </div>
     `;
   }

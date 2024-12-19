@@ -40,7 +40,7 @@ export const LAS_METADATA = createMetadataConfig({
   name: 'Lost at Sea',
   publicName: 'Adrift in the Atlantic',
   description:
-    'An election scenario where participants deliberate together to elect a leader responsible for completing a survival task. This is an implementation of the Lost at Sea task (Born 2022) with pairwise elements.',
+    'A complex election scenario (Born 2022) that showcases many different experiment stages.'
 });
 
 export function getLASStageConfigs(): StageConfig[] {

@@ -37,7 +37,6 @@ export const StageConfigData = Type.Union([
 export const StageGameSchema = Type.Union([
   Type.Literal(StageGame.NONE),
   Type.Literal(StageGame.LAS),
-  Type.Literal(StageGame.GCE),
   Type.Literal(StageGame.RTV),
   Type.Literal(StageGame.CHP),
 ]);
