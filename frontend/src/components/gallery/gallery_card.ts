@@ -30,10 +30,12 @@ export class GalleryCard extends MobxLitElement {
     return html`
       <div class="header">
         <div class="title">${this.item.title}</div>
-        ${this.item.isPublic ?
-          html`<div class="chip tertiary">public</div>` :
-          html`<div class="chip">private</div>`}
-        ${this.renderOutdatedChip()}
+        <div class="right">
+          ${this.item.isPublic ?
+            html`<div class="chip tertiary">public</div>` :
+            html`<div class="chip">private</div>`}
+          ${this.renderOutdatedChip()}
+        </div>
       </div>
       <div class="description">${this.item.description}</div>
       <div class="footer">
@@ -55,8 +57,8 @@ export class GalleryCard extends MobxLitElement {
     `;
 
     return html`
-      <pr-tooltip text=${tooltipText} position="TOP_END">
-        <div class="chip error">outdated</div>
+      <pr-tooltip text=${tooltipText} color="error" position="TOP_END">
+        <div class="chip">⚠️ </div>
       </pr-tooltip>
     `;
   }

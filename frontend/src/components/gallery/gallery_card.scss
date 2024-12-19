@@ -17,6 +17,12 @@
   @include common.flex-row;
   gap: common.$spacing-medium;
   justify-content: space-between;
+
+  .left,
+  .right {
+    @include common.flex-row-align-center;
+    gap: common.$spacing-medium;
+  }
 }
 
 .title {
