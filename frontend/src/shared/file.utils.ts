@@ -557,12 +557,12 @@ export function getSurveyPerParticipantStageCSVColumns(
   const stageAnswer = participant ? participant.answerMap[stage.id] : null;
   const participantList = Object.keys(participantMap);
 
-  stage.questions.forEach(question => {
+  participantList.forEach(participantId => {
     const answerMap = stageAnswer?.kind === StageKind.SURVEY_PER_PARTICIPANT ?
-      stageAnswer?.answerMap[question.id] ?? {} : {};
+      stageAnswer?.answerMap[participantId] ?? {} : {};
 
-    participantList.forEach(participantId => {
-      const answer = answerMap[participantId];
+    stage.questions.forEach(question => {
+      const answer = answerMap[question.id];
       switch (question.kind) {
         case SurveyQuestionKind.TEXT:
           const textAnswer = answer?.kind === SurveyQuestionKind.TEXT ?
