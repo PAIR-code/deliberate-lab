@@ -37,10 +37,10 @@ import {
 // Experiment config
 // ****************************************************************************
 export const LAS_METADATA = createMetadataConfig({
-  name: 'Lost at Sea Experiment',
+  name: 'Lost at Sea',
   publicName: 'Adrift in the Atlantic',
   description:
-    'An implementation of the Lost at Sea task (Born 2022) with pairwise elements.',
+    'An election scenario where participants deliberate together to elect a leader responsible for completing a survival task. This is an implementation of the Lost at Sea task (Born 2022) with pairwise elements.',
 });
 
 export function getLASStageConfigs(): StageConfig[] {

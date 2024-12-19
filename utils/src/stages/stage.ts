@@ -5,6 +5,12 @@ import {
   createChatStagePublicData,
 } from './chat_stage';
 import {
+  ChipStageConfig,
+  ChipStageParticipantAnswer,
+  ChipStagePublicData,
+  createChipStagePublicData,
+} from './chip_stage';
+import {
   RankingStageConfig,
   RankingStageParticipantAnswer,
   RankingStagePublicData,
@@ -38,6 +44,7 @@ export enum StageKind {
   TOS = 'tos', // terms of service
   PROFILE = 'profile', // set profile
   CHAT = 'chat', // group chat
+  CHIP = 'chip', // "chip" negotiation
   RANKING = 'ranking',
   PAYOUT = 'payout',
   REVEAL = 'reveal',
@@ -52,6 +59,7 @@ export enum StageGame {
   LAS = 'las', // Lost at Sea
   GCE = 'gce', // Gift Card Exchange
   RTV = 'rtv', // Reality TV Debate.
+  CHP = 'chp', // Chip Negotiation
 }
 
 /**
@@ -83,6 +91,7 @@ export interface StageProgressConfig {
 
 export type StageConfig =
   | ChatStageConfig
+  | ChipStageConfig
   | RankingStageConfig
   | InfoStageConfig
   | PayoutStageConfig
@@ -107,6 +116,7 @@ export interface BaseStageParticipantAnswer {
 
 export type StageParticipantAnswer =
  | ChatStageParticipantAnswer
+ | ChipStageParticipantAnswer
  | RankingStageParticipantAnswer
  | SurveyStageParticipantAnswer
  | SurveyPerParticipantStageParticipantAnswer;
@@ -126,6 +136,7 @@ export interface BaseStagePublicData {
 
 export type StagePublicData =
   | ChatStagePublicData
+  | ChipStagePublicData
   | RankingStagePublicData
   | SurveyStagePublicData;
 
@@ -166,7 +177,10 @@ export function createPublicDataFromStageConfigs(stages: StageConfig[]) {
   stages.forEach((stage) => {
     switch (stage.kind) {
       case StageKind.CHAT:
-        publicData.push(createChatStagePublicData(stage));
+        publicData.push(createChatStagePublicData(stage.id));
+        break;
+      case StageKind.CHIP:
+        publicData.push(createChipStagePublicData(stage.id));
         break;
       case StageKind.RANKING:
         publicData.push(createRankingStagePublicData(stage.id));

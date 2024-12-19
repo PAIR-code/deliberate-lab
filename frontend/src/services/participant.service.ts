@@ -1,5 +1,6 @@
 import {
   ChatStageParticipantAnswer,
+  ChipOffer,
   CreateChatMessageData,
   RankingItem,
   ParticipantChatMessage,
@@ -36,6 +37,9 @@ import {Service} from './service';
 
 import {
   createChatMessageCallable,
+  sendChipOfferCallable,
+  sendChipResponseCallable,
+  setChipTurnCallable,
   updateParticipantCallable,
   updateChatStageParticipantAnswerCallable,
   updateSurveyPerParticipantStageParticipantAnswerCallable,
@@ -475,7 +479,11 @@ export class ParticipantService extends Service {
     );
 
     // Once profile is updated, route the participant accordingly
-    window.location.reload();
+    // (to the current stage)
+    this.sp.routerService.navigate(Pages.PARTICIPANT, {
+      'experiment': this.experimentId!,
+      'participant': this.profile!.privateId,
+    });
 
     return accepted;
   }
@@ -636,6 +644,69 @@ export class ParticipantService extends Service {
           participantPrivateId: this.profile.privateId,
           stageId,
           rankingList,
+        }
+      );
+    }
+    return response;
+  }
+
+  /** Send participant chip offer. */
+  async sendParticipantChipOffer(
+    stageId: string,
+    chipOffer: ChipOffer
+  ) {
+    let response = {};
+    if (this.experimentId && this.profile) {
+      response = await sendChipOfferCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          participantPublicId: this.profile.publicId,
+          participantPrivateId: this.profile.privateId,
+          stageId,
+          chipOffer
+        }
+      );
+    }
+    return response;
+  }
+
+
+  /** Send participant chip response. */
+  async sendParticipantChipResponse(
+    stageId: string,
+    chipResponse: boolean
+  ) {
+    let response = {};
+    if (this.experimentId && this.profile) {
+      response = await sendChipResponseCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          participantPublicId: this.profile.publicId,
+          participantPrivateId: this.profile.privateId,
+          stageId,
+          chipResponse
+        }
+      );
+    }
+    return response;
+  }
+
+  /** Set chip turn for current stage and cohort. */
+  async setChipTurn(
+    stageId: string
+  ) {
+    let response = {};
+    if (this.experimentId && this.profile) {
+      response = await setChipTurnCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          stageId,
         }
       );
     }

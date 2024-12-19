@@ -15,7 +15,7 @@ import {ParticipantService} from '../../services/participant.service';
 import {
   ChatStageConfig,
   ChatStagePublicData,
-  MediatorConfig,
+  AgentConfig,
   ParticipantProfile,
   checkApiKeyExists,
   getTimeElapsed,
@@ -88,7 +88,7 @@ export class ChatPanel extends MobxLitElement {
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       ${this.renderTimeRemaining()} ${this.renderParticipantList()}
-      ${this.renderMediatorsList()}
+      ${this.renderAgentsList()}
     `;
   }
 
@@ -151,22 +151,22 @@ export class ChatPanel extends MobxLitElement {
     }
   }
 
-  private renderMediatorsList() {
+  private renderAgentsList() {
     if (!this.authService.isDebugMode || !this.stage) {
       return;
     }
 
-    const mediators = this.stage.mediators;
-    if (!mediators || mediators.length === 0) return;
+    const agents = this.stage.agents;
+    if (!agents || agents.length === 0) return;
 
     return html`
       <div class="panel-item">
-        <div class="panel-item-title">Agents (${mediators.length})</div>
+        <div class="panel-item-title">Agents (${agents.length})</div>
         ${this.renderApiCheck()}
         <div class="panel-item-subtitle">
           This agent panel is only visible to experimenters
         </div>
-        ${mediators.map((mediator) => this.renderMediator(mediator))}
+        ${agents.map((agent) => this.renderAgent(agent))}
       </div>
     `;
   }
@@ -195,12 +195,12 @@ export class ChatPanel extends MobxLitElement {
     `;
   }
 
-  private renderMediator(mediator: MediatorConfig) {
+  private renderAgent(agent: AgentConfig) {
     return html`
-      <pr-tooltip text=${mediator.prompt} position="BOTTOM_END">
+      <pr-tooltip text=${agent.prompt} position="BOTTOM_END">
         <div class="profile">
-          <profile-avatar .emoji=${mediator.avatar}></profile-avatar>
-          <div class="name">${mediator.name}</div>
+          <profile-avatar .emoji=${agent.avatar}></profile-avatar>
+          <div class="name">${agent.name}</div>
         </div>
       </pr-tooltip>
     `;

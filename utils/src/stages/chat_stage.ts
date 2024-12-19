@@ -25,7 +25,7 @@ import { ParticipantProfileBase, createParticipantProfileBase } from '../partici
 export interface ChatStageConfig extends BaseStageConfig {
   kind: StageKind.CHAT;
   discussions: ChatDiscussion[]; // ordered list of discussions
-  mediators: MediatorConfig[];
+  agents: AgentConfig[];
   timeLimitInMinutes: number | null; // How long remaining in the chat.
 }
 
@@ -79,8 +79,8 @@ export interface BaseChatMessage {
 
 export enum ChatMessageType {
   PARTICIPANT = 'PARTICIPANT',
-  HUMAN_MEDIATOR = 'HUMAN_MEDIATOR',
-  AGENT_MEDIATOR = 'AGENT_MEDIATOR',
+  HUMAN_AGENT = 'HUMAN_AGENT',
+  AGENT_AGENT = 'AGENT_AGENT',
 }
 
 export interface ParticipantChatMessage extends BaseChatMessage {
@@ -88,30 +88,31 @@ export interface ParticipantChatMessage extends BaseChatMessage {
   participantPublicId: string;
 }
 
-export interface HumanMediatorChatMessage extends BaseChatMessage {
-  type: ChatMessageType.HUMAN_MEDIATOR;
+export interface HumanAgentChatMessage extends BaseChatMessage {
+  type: ChatMessageType.HUMAN_AGENT;
 }
 
-export interface AgentMediatorChatMessage extends BaseChatMessage {
-  type: ChatMessageType.AGENT_MEDIATOR;
-  mediatorId: string;
+export interface AgentAgentChatMessage extends BaseChatMessage {
+  type: ChatMessageType.AGENT_AGENT;
+  agentId: string;
   explanation: string;
 }
 
-/** LLM mediator config. */
-export interface MediatorConfig {
+/** LLM agent config. */
+export interface AgentConfig {
   id: string;
   name: string;
-  avatar: string; // emoji avatar for mediator
+  avatar: string; // emoji avatar for agent
   prompt: string;
-  responseConfig: MediatorResponseConfig;
+  wordsPerMinute: number; // Typing speed
+  responseConfig: AgentResponseConfig;
   // TODO: Add more settings, e.g., model, temperature, context window
 }
 
-/** Settings for formatting mediator response
+/** Settings for formatting agent response
  *  (e.g., expect JSON, use specific JSON field for response, use end token)
  */
-export interface MediatorResponseConfig {
+export interface AgentResponseConfig {
   isJSON: boolean;
   // JSON field to extract chat message from
   messageField: string;
@@ -122,8 +123,8 @@ export interface MediatorResponseConfig {
 
 export type ChatMessage =
   | ParticipantChatMessage
-  | HumanMediatorChatMessage
-  | AgentMediatorChatMessage;
+  | HumanAgentChatMessage
+  | AgentAgentChatMessage;
 
 /**
  * ChatStageParticipantAnswer.
@@ -158,7 +159,7 @@ export interface ChatStagePublicData extends BaseStagePublicData {
 // ************************************************************************* //
 // CONSTANTS                                                                 //
 // ************************************************************************* //
-export const DEFAULT_MEDIATOR_PROMPT = `You are a mediator for a chat conversation. Your task is to ensure that the conversation is polite.
+export const DEFAULT_AGENT_PROMPT = `You are a agent for a chat conversation. Your task is to ensure that the conversation is polite.
 If you notice that participants are being rude, step in to make sure that everyone is respectful. 
 Otherwise, do not respond.`;
 
@@ -203,7 +204,7 @@ export function createChatStage(config: Partial<ChatStageConfig> = {}): ChatStag
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig({ waitForAllParticipants: true }),
     discussions: config.discussions ?? [],
-    mediators: config.mediators ?? [],
+    agents: config.agents ?? [],
     timeLimitInMinutes: config.timeLimitInMinutes ?? 20,
   };
 }
@@ -246,32 +247,32 @@ export function createParticipantChatMessage(
   };
 }
 
-/** Create human mediator chat message. */
-export function createHumanMediatorChatMessage(
-  config: Partial<HumanMediatorChatMessage> = {},
-): HumanMediatorChatMessage {
+/** Create human agent chat message. */
+export function createHumanAgentChatMessage(
+  config: Partial<HumanAgentChatMessage> = {},
+): HumanAgentChatMessage {
   return {
     id: config.id ?? generateId(),
     discussionId: config.discussionId ?? null,
-    type: ChatMessageType.HUMAN_MEDIATOR,
+    type: ChatMessageType.HUMAN_AGENT,
     message: config.message ?? '',
     timestamp: config.timestamp ?? Timestamp.now(),
-    profile: config.profile ?? { name: 'Mediator', avatar: '⭐', pronouns: null },
+    profile: config.profile ?? { name: 'Agent', avatar: '⭐', pronouns: null },
   };
 }
 
-/** Create agent mediator chat message. */
-export function createAgentMediatorChatMessage(
-  config: Partial<AgentMediatorChatMessage> = {},
-): AgentMediatorChatMessage {
+/** Create agent agent chat message. */
+export function createAgentAgentChatMessage(
+  config: Partial<AgentAgentChatMessage> = {},
+): AgentAgentChatMessage {
   return {
     id: config.id ?? generateId(),
     discussionId: config.discussionId ?? null,
-    type: ChatMessageType.AGENT_MEDIATOR,
+    type: ChatMessageType.AGENT_AGENT,
     message: config.message ?? '',
     timestamp: config.timestamp ?? Timestamp.now(),
-    profile: config.profile ?? { name: 'Mediator', avatar: '🤖', pronouns: null },
-    mediatorId: config.mediatorId ?? '',
+    profile: config.profile ?? { name: 'Agent', avatar: '🤖', pronouns: null },
+    agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
   };
 }
@@ -293,30 +294,31 @@ export function addChatHistoryToPrompt(messages: ChatMessage[], prompt: string) 
   return `${buildChatHistoryForPrompt(messages)}\n\n${prompt}`;
 }
 
-export function getPreface(mediator: MediatorConfig) {
-  return `You are role-playing as ${mediator.avatar} ${mediator.name}, and you are participating in a conversation. You will be shown the conversation transcript. When you see ${mediator.avatar} ${mediator.name} as the ParticipantName in the transcript, that indicates a message that you previously sent. If the last message in the transcript is from ${mediator.name} ${mediator.name}, do not respond to yourself.`;
+export function getPreface(agent: AgentConfig) {
+  return `You are role-playing as ${agent.avatar} ${agent.name}, and you are participating in a conversation. You will be shown the conversation transcript. When you see ${agent.avatar} ${agent.name} as the ParticipantName in the transcript, that indicates a message that you previously sent. If the last message in the transcript is from ${agent.name} ${agent.name}, do not respond to yourself.`;
 }
-export function getChatHistory(messages: ChatMessage[], mediator: MediatorConfig) {
+export function getChatHistory(messages: ChatMessage[], agent: AgentConfig) {
   const latestMessage = messages[messages.length - 1];
   const description = `The following is a conversation transcript between you and other participants. In the transcript, each entry follows the format (HH:MM) ParticipantName:  ParticipantMessage, where (HH:MM) is the timestamp of the message. The transcript is shown in sequential order from oldest message to latest message. The last entry is the most recent message. In this transcript, the latest message was written by ${latestMessage.profile.avatar} ${latestMessage.profile.name}. It said, ${latestMessage.message}.`;
   return `${description}\n\nCONVERSATION TRANSCRIPT:\n\n${buildChatHistoryForPrompt(messages)}\n`;
 }
 
-/** Create agent mediator. */
-export function createMediatorConfig(config: Partial<MediatorConfig> = {}): MediatorConfig {
+/** Create agent agent. */
+export function createAgentConfig(config: Partial<AgentConfig> = {}): AgentConfig {
   return {
     id: config.id ?? generateId(),
-    name: config.name ?? 'Mediator',
+    name: config.name ?? 'Agent',
     avatar: config.avatar ?? '🤖',
-    prompt: config.prompt ?? DEFAULT_MEDIATOR_PROMPT.trim(),
-    responseConfig: config.responseConfig ?? createMediatorResponseConfig(),
+    prompt: config.prompt ?? DEFAULT_AGENT_PROMPT.trim(),
+    wordsPerMinute: config.wordsPerMinute ?? 80, // Default 80 WPM.
+    responseConfig: config.responseConfig ?? createAgentResponseConfig(),
   };
 }
 
-/** Create mediator response config. */
-export function createMediatorResponseConfig(
-  config: Partial<MediatorResponseConfig> = {},
-): MediatorResponseConfig {
+/** Create agent response config. */
+export function createAgentResponseConfig(
+  config: Partial<AgentResponseConfig> = {},
+): AgentResponseConfig {
   const isJSON = config.isJSON ?? false;
   return {
     isJSON,
@@ -341,9 +343,11 @@ export function createChatStageParticipantAnswer(
 }
 
 /** Create chat stage public data. */
-export function createChatStagePublicData(stage: ChatStageConfig): ChatStagePublicData {
+export function createChatStagePublicData(
+  id: string // stage ID
+): ChatStagePublicData {
   return {
-    id: stage.id,
+    id,
     kind: StageKind.CHAT,
     discussionTimestampMap: {},
     discussionStartTimestamp: null,

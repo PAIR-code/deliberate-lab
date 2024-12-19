@@ -49,6 +49,15 @@ export class RevealView extends MobxLitElement {
     if (!stage) return nothing;
 
     switch (item.kind) {
+      case StageKind.CHIP:
+        return html`
+          <chip-reveal-view
+            .stage=${stage}
+            .item=${item}
+            .publicData=${publicData}
+          >
+          </chip-reveal-view>
+        `;
       case StageKind.RANKING:
         return html`
           <ranking-reveal-view .item=${item} .publicData=${publicData}>

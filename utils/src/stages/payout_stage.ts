@@ -1,7 +1,5 @@
 import { generateId } from '../shared';
-import {
-  ParticipantProfile
-} from '../participant';
+import { ParticipantProfile } from '../participant';
 import {
   BaseStageConfig,
   StageConfig,
@@ -11,11 +9,8 @@ import {
   createStageTextConfig,
   createStageProgressConfig,
 } from './stage';
-import {
-  MultipleChoiceSurveyQuestion,
-  SurveyAnswer,
-  SurveyQuestionKind,
-} from './survey_stage';
+import { ChipItem } from './chip_stage';
+import { MultipleChoiceSurveyQuestion, SurveyAnswer, SurveyQuestionKind } from './survey_stage';
 
 /** Payout stage types and functions. */
 
@@ -30,18 +25,18 @@ export interface PayoutStageConfig extends BaseStageConfig {
 }
 
 export enum PayoutCurrency {
-  EUR = "EUR", // Euro
-  GBP = "GBP", // British pound
-  USD = "USD", // US dollar
+  EUR = 'EUR', // Euro
+  GBP = 'GBP', // British pound
+  USD = 'USD', // US dollar
 }
 
-export type PayoutItem = DefaultPayoutItem | SurveyPayoutItem;
+export type PayoutItem = DefaultPayoutItem | ChipPayoutItem | SurveyPayoutItem;
 
 export interface BasePayoutItem {
   id: string;
   type: PayoutItemType;
   name: string;
-  description: string,
+  description: string;
   // Only include this item in total payout if true
   isActive: boolean;
   // ID of stage associated with payout
@@ -52,33 +47,41 @@ export interface BasePayoutItem {
 }
 
 export enum PayoutItemType {
-  DEFAULT = "DEFAULT",
-  SURVEY = "SURVEY",
+  DEFAULT = 'DEFAULT',
+  CHIP = 'CHIP',
+  SURVEY = 'SURVEY',
 }
 
 export interface DefaultPayoutItem extends BasePayoutItem {
   type: PayoutItemType.DEFAULT;
 }
 
+export interface ChipPayoutItem extends BasePayoutItem {
+  type: PayoutItemType.CHIP;
+}
+
 export interface SurveyPayoutItem extends BasePayoutItem {
   type: PayoutItemType.SURVEY;
   // ID of ranking stage if using ranking winner's survey answers for scoring
   // (else, leave null to use current participant survey answers for scoring)
-  rankingStageId: string|null;
+  rankingStageId: string | null;
   // Map of question ID to payout amount if correct (or null if no payout)
-  questionMap: Record<string, number|null>;
+  questionMap: Record<string, number | null>;
 }
 
 /** Payout result config (containing payout information for each item).
-  * This contains all the results needed to appropriately display payout.
-  */
+ * This contains all the results needed to appropriately display payout.
+ */
 export interface PayoutResultConfig {
   id: string; // stage ID of the original payout config
   currency: PayoutCurrency;
   results: PayoutItemResult[];
 }
 
-export type PayoutItemResult = DefaultPayoutItemResult | SurveyPayoutItemResult;
+export type PayoutItemResult =
+  | DefaultPayoutItemResult
+  | ChipPayoutItemResult
+  | SurveyPayoutItemResult;
 
 export interface BasePayoutItemResult {
   id: string;
@@ -94,10 +97,23 @@ export interface DefaultPayoutItemResult extends BasePayoutItemResult {
   type: PayoutItemType.DEFAULT;
 }
 
+export interface ChipPayoutItemResult extends BasePayoutItemResult {
+  type: PayoutItemType.CHIP;
+  chipResults: ChipPayoutValueItem[];
+  // TODO: Add field for whether to calculate based on
+  // total chips at end vs. delta from starting chips?
+}
+
+export interface ChipPayoutValueItem {
+  chip: ChipItem; // original chip
+  quantity: number; // final quantity
+  value: number; // value per chip
+}
+
 export interface SurveyPayoutItemResult extends BasePayoutItemResult {
   type: PayoutItemType.SURVEY;
   // public participant ID if ranking winner, null if self
-  rankingWinner: string|null;
+  rankingWinner: string | null;
   questionResults: SurveyPayoutQuestionResult[];
 }
 
@@ -112,9 +128,7 @@ export interface SurveyPayoutQuestionResult {
 // ************************************************************************* //
 
 /** Create payout stage. */
-export function createPayoutStage(
-  config: Partial<PayoutStageConfig> = {}
-): PayoutStageConfig {
+export function createPayoutStage(config: Partial<PayoutStageConfig> = {}): PayoutStageConfig {
   return {
     id: config.id ?? generateId(),
     kind: StageKind.PAYOUT,
@@ -138,14 +152,25 @@ export function createDefaultPayoutItem(
     description: config.description ?? '',
     isActive: config.isActive ?? true,
     stageId: config.stageId ?? '',
-    baseCurrencyAmount: config.baseCurrencyAmount ?? 0
+    baseCurrencyAmount: config.baseCurrencyAmount ?? 0,
+  };
+}
+
+/** Create chip payout item. */
+export function createChipPayoutItem(config: Partial<ChipPayoutItem> = {}): ChipPayoutItem {
+  return {
+    id: config.id ?? generateId(),
+    type: PayoutItemType.CHIP,
+    name: config.name ?? '',
+    description: config.description ?? '',
+    isActive: config.isActive ?? true,
+    stageId: config.stageId ?? '',
+    baseCurrencyAmount: config.baseCurrencyAmount ?? 0,
   };
 }
 
 /** Create survey payout item. */
-export function createSurveyPayoutItem(
-  config: Partial<SurveyPayoutItem> = {},
-): SurveyPayoutItem {
+export function createSurveyPayoutItem(config: Partial<SurveyPayoutItem> = {}): SurveyPayoutItem {
   return {
     id: config.id ?? generateId(),
     type: PayoutItemType.SURVEY,
@@ -169,7 +194,7 @@ export function calculatePayoutResult(
   let results: PayoutItemResult[] = [];
 
   // For each payout item, add result to list if item is active
-  payoutConfig.payoutItems.forEach(item => {
+  payoutConfig.payoutItems.forEach((item) => {
     if (item.isActive) {
       const result = calculatePayoutItemResult(item, stageConfigMap, publicDataMap, profile);
       if (result) {
@@ -181,15 +206,13 @@ export function calculatePayoutResult(
   const resultConfig: PayoutResultConfig = {
     id: payoutConfig.id,
     currency: payoutConfig.currency,
-    results
+    results,
   };
   return resultConfig;
 }
 
 /** Calculate total payout from PayoutResultConfig. */
-export function calculatePayoutTotal(
-  resultConfig: PayoutResultConfig
-) {
+export function calculatePayoutTotal(resultConfig: PayoutResultConfig) {
   let total = 0;
   resultConfig.results.forEach((result) => {
     total += result.baseAmountEarned;
@@ -197,6 +220,14 @@ export function calculatePayoutTotal(
       result.questionResults.forEach((question) => {
         total += question.amountEarned;
       });
+    } else if (result.type === PayoutItemType.CHIP) {
+      let chipTotal = 0;
+      let initialChipTotal = 0;
+      result.chipResults.forEach((result) => {
+        chipTotal += Math.floor(result.quantity * result.value * 100) / 100;
+        initialChipTotal += Math.floor(100 * result.value * 100) / 100;
+      });
+      total += Math.max(0, chipTotal - initialChipTotal);
     }
   });
   return total;
@@ -208,10 +239,12 @@ export function calculatePayoutItemResult(
   stageConfigMap: Record<string, StageConfig>,
   publicDataMap: Record<string, StagePublicData>,
   profile: ParticipantProfile, // current participant profile
-): PayoutItemResult|null {
+): PayoutItemResult | null {
   if (!item.isActive) return null;
 
   switch (item.type) {
+    case PayoutItemType.CHIP:
+      return calculateChipPayoutItemResult(item, stageConfigMap, publicDataMap, profile);
     case PayoutItemType.DEFAULT:
       return calculateDefaultPayoutItemResult(item, stageConfigMap, publicDataMap, profile);
     case PayoutItemType.SURVEY:
@@ -227,7 +260,7 @@ export function calculateDefaultPayoutItemResult(
   stageConfigMap: Record<string, StageConfig>,
   publicDataMap: Record<string, StagePublicData>,
   profile: ParticipantProfile, // current participant profile
-): DefaultPayoutItemResult|null {
+): DefaultPayoutItemResult | null {
   if (!item.isActive) return null;
 
   const stage = stageConfigMap[item.stageId];
@@ -243,7 +276,48 @@ export function calculateDefaultPayoutItemResult(
     description: item.description,
     stageName: stage.name,
     completedStage,
-    baseAmountEarned: completedStage ? item.baseCurrencyAmount : 0
+    baseAmountEarned: completedStage ? item.baseCurrencyAmount : 0,
+  };
+}
+
+/** Calculate chip payout results for a single item (or null if can't calculate). */
+export function calculateChipPayoutItemResult(
+  item: ChipPayoutItem,
+  stageConfigMap: Record<string, StageConfig>,
+  publicDataMap: Record<string, StagePublicData>,
+  profile: ParticipantProfile, // current participant profile
+): ChipPayoutItemResult | null {
+  if (!item.isActive) return null;
+
+  // Get chip stage config
+  const stage = stageConfigMap[item.stageId];
+  if (!stage || stage.kind !== StageKind.CHIP) return null;
+
+  const stageTimestamp = profile.timestamps.completedStages[item.stageId];
+  const completedStage = stageTimestamp !== null && stageTimestamp !== undefined;
+
+  const publicChipData = publicDataMap[item.stageId];
+  if (publicChipData?.kind !== StageKind.CHIP) return null;
+
+  const chipResults: ChipPayoutValueItem[] = stage.chips.map((chip) => {
+    const quantity = publicChipData.participantChipMap[profile.publicId][chip.id] ?? 0;
+    const value = publicChipData.participantChipValueMap[profile.publicId][chip.id] ?? 0;
+    return {
+      chip,
+      quantity,
+      value,
+    };
+  });
+
+  return {
+    id: item.id,
+    type: PayoutItemType.CHIP,
+    name: item.name,
+    description: item.description,
+    stageName: stage.name,
+    completedStage,
+    baseAmountEarned: completedStage ? item.baseCurrencyAmount : 0,
+    chipResults,
   };
 }
 
@@ -253,7 +327,7 @@ export function calculateSurveyPayoutItemResult(
   stageConfigMap: Record<string, StageConfig>,
   publicDataMap: Record<string, StagePublicData>,
   profile: ParticipantProfile, // current participant profile
-): SurveyPayoutItemResult|null {
+): SurveyPayoutItemResult | null {
   if (!item.isActive) return null;
 
   // Get survey stage config
@@ -266,7 +340,7 @@ export function calculateSurveyPayoutItemResult(
   // Get participant ID
   // If ranking stage ID is set, use ranking stage winner as participant
   const participantId = profile.publicId;
-  let rankingWinner: string|null = null;
+  let rankingWinner: string | null = null;
   if (item.rankingStageId) {
     const rankingStageData = publicDataMap[item.rankingStageId];
     if (rankingStageData && rankingStageData.kind === StageKind.RANKING) {
@@ -296,12 +370,13 @@ export function calculateSurveyPayoutItemResult(
     const questionAmount = item.questionMap[question.id];
     if (questionAmount && question.correctAnswerId) {
       const answer = answerMap[question.id];
-      const answerId = answer && answer.kind === SurveyQuestionKind.MULTIPLE_CHOICE ? answer.choiceId : '';
-      const amountEarned = (answerId === question.correctAnswerId) ? questionAmount : 0;
+      const answerId =
+        answer && answer.kind === SurveyQuestionKind.MULTIPLE_CHOICE ? answer.choiceId : '';
+      const amountEarned = answerId === question.correctAnswerId ? questionAmount : 0;
       const result: SurveyPayoutQuestionResult = {
         question,
         answerId,
-        amountEarned
+        amountEarned,
       };
       questionResults.push(result);
     }
@@ -316,6 +391,6 @@ export function calculateSurveyPayoutItemResult(
     completedStage,
     baseAmountEarned: completedStage ? item.baseCurrencyAmount : 0,
     rankingWinner,
-    questionResults
+    questionResults,
   };
 }

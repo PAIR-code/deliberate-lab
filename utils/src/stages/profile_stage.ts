@@ -33,7 +33,7 @@ export function createProfileStage(
   config: Partial<ProfileStageConfig> = {}
 ): ProfileStageConfig {
   return {
-    id: generateId(),
+    id: config.id ?? generateId(),
     kind: StageKind.PROFILE,
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Set profile',

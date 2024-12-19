@@ -12,18 +12,18 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 import {
   ChatStageConfig,
   StageKind,
-  MediatorConfig,
-  MediatorResponseConfig,
-  createMediatorConfig,
+  AgentConfig,
+  AgentResponseConfig,
+  createAgentConfig,
   DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
   DEFAULT_STRING_FORMATTING_INSTRUCTIONS,
   checkApiKeyExists,
 } from '@deliberation-lab/utils';
-import {LLM_MEDIATOR_AVATARS} from '../../shared/constants';
+import {LLM_AGENT_AVATARS} from '../../shared/constants';
 
 import {styles} from './chat_editor.scss';
 
-/** Chat editor for configuring mediators. */
+/** Chat editor for configuring agents. */
 @customElement('chat-editor')
 export class ChatEditor extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
@@ -60,18 +60,18 @@ export class ChatEditor extends MobxLitElement {
       <div class="divider"></div>
       <div class="title">Agent settings</div>
       ${apiCheck}
-      ${this.stage.mediators.map((mediator, index) =>
-        this.renderMediator(mediator, index)
+      ${this.stage.agents.map((agent, index) =>
+        this.renderAgent(agent, index)
       )}
       <pr-button
         color="secondary"
         variant="tonal"
         ?disabled=${!this.experimentEditor.canEditStages}
         @click=${() => {
-          this.addMediator();
+          this.addAgent();
         }}
       >
-        Add mediator
+        Add agent
       </pr-button>
     `;
   }
@@ -137,52 +137,52 @@ export class ChatEditor extends MobxLitElement {
       </div>
     `;
   }
-  
-  addMediator() {
+
+  addAgent() {
     if (!this.stage) return;
-    const mediators = [...this.stage.mediators, createMediatorConfig()];
+    const agents = [...this.stage.agents, createAgentConfig()];
 
     this.experimentEditor.updateStage({
       ...this.stage,
-      mediators,
+      agents,
     });
   }
 
-  deleteMediator(index: number) {
+  deleteAgent(index: number) {
     if (!this.stage) return;
 
-    const mediators = [
-      ...this.stage.mediators.slice(0, index),
-      ...this.stage.mediators.slice(index + 1),
+    const agents = [
+      ...this.stage.agents.slice(0, index),
+      ...this.stage.agents.slice(index + 1),
     ];
 
     this.experimentEditor.updateStage({
       ...this.stage,
-      mediators,
+      agents,
     });
   }
 
-  updateMediator(mediator: MediatorConfig, index: number) {
+  updateAgent(agent: AgentConfig, index: number) {
     if (!this.stage) return;
 
-    const mediators = [
-      ...this.stage.mediators.slice(0, index),
-      mediator,
-      ...this.stage.mediators.slice(index + 1),
+    const agents = [
+      ...this.stage.agents.slice(0, index),
+      agent,
+      ...this.stage.agents.slice(index + 1),
     ];
 
     this.experimentEditor.updateStage({
       ...this.stage,
-      mediators,
+      agents,
     });
   }
 
-  private renderMediatorName(mediator: MediatorConfig, index: number) {
+  private renderAgentName(agent: AgentConfig, index: number) {
     const updateName = (e: InputEvent) => {
       const name = (e.target as HTMLTextAreaElement).value;
-      this.updateMediator(
+      this.updateAgent(
         {
-          ...mediator,
+          ...agent,
           name,
         },
         index
@@ -192,9 +192,9 @@ export class ChatEditor extends MobxLitElement {
     return html`
       <pr-textarea
         label="Name"
-        placeholder="Display name for mediator"
+        placeholder="Display name for agent"
         variant="outlined"
-        .value=${mediator.name}
+        .value=${agent.name}
         ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updateName}
       >
@@ -202,12 +202,12 @@ export class ChatEditor extends MobxLitElement {
     `;
   }
 
-  private renderMediatorPrompt(mediator: MediatorConfig, index: number) {
+  private renderAgentPrompt(agent: AgentConfig, index: number) {
     const updatePrompt = (e: InputEvent) => {
       const prompt = (e.target as HTMLTextAreaElement).value;
-      this.updateMediator(
+      this.updateAgent(
         {
-          ...mediator,
+          ...agent,
           prompt,
         },
         index
@@ -229,9 +229,9 @@ export class ChatEditor extends MobxLitElement {
         into messages.
       </div>
       <pr-textarea
-        placeholder="Custom prompt for mediator"
+        placeholder="Custom prompt for agent"
         variant="outlined"
-        .value=${mediator.prompt}
+        .value=${agent.prompt}
         ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updatePrompt}
       >
@@ -239,13 +239,13 @@ export class ChatEditor extends MobxLitElement {
     `;
   }
 
-  private renderAvatars(mediator: MediatorConfig, index: number) {
+  private renderAvatars(agent: AgentConfig, index: number) {
     const handleAvatarClick = (e: Event) => {
       const value = Number((e.target as HTMLInputElement).value);
-      const avatar = LLM_MEDIATOR_AVATARS[value];
-      this.updateMediator(
+      const avatar = LLM_AGENT_AVATARS[value];
+      this.updateAgent(
         {
-          ...mediator,
+          ...agent,
           avatar,
         },
         index
@@ -257,10 +257,10 @@ export class ChatEditor extends MobxLitElement {
         <div class="radio-button">
           <md-radio
             id=${emoji}
-            name="${mediator.id}-avatar"
+            name="${agent.id}-avatar"
             value=${index}
             aria-label=${emoji}
-            ?checked=${mediator.avatar === emoji}
+            ?checked=${agent.avatar === emoji}
             ?disabled=${!this.experimentEditor.canEditStages}
             @change=${handleAvatarClick}
           >
@@ -274,7 +274,7 @@ export class ChatEditor extends MobxLitElement {
       <div class="radio-question">
         <div class="question-label">Avatar</div>
         <div class="radio-wrapper">
-          ${LLM_MEDIATOR_AVATARS.map((avatar, index) =>
+          ${LLM_AGENT_AVATARS.map((avatar, index) =>
             renderAvatarRadio(avatar, index)
           )}
         </div>
@@ -282,16 +282,16 @@ export class ChatEditor extends MobxLitElement {
     `;
   }
 
-  private renderMediator(mediator: MediatorConfig, index: number) {
+  private renderAgent(agent: AgentConfig, index: number) {
     const onDelete = () => {
-      this.deleteMediator(index);
+      this.deleteAgent(index);
     };
     return html`
       <div class="question-wrapper">
-        <div class="question-label">Mediator ${index + 1}</div>
+        <div class="question-label">Agent ${index + 1}</div>
         <div class="question">
           <div class="header">
-            <div class="left">${this.renderMediatorName(mediator, index)}</div>
+            <div class="left">${this.renderAgentName(agent, index)}</div>
             <pr-icon-button
               icon="close"
               color="neutral"
@@ -302,21 +302,60 @@ export class ChatEditor extends MobxLitElement {
             >
             </pr-icon-button>
           </div>
-          ${this.renderAvatars(mediator, index)}
-          ${this.renderMediatorPrompt(mediator, index)}
-          ${this.renderMediatorResponseConfig(mediator, index)}
+          ${this.renderAvatars(agent, index)}
+          ${this.renderAgentPrompt(agent, index)}
+          ${this.renderAgentResponseConfig(agent, index)}
+          ${this.renderAgentWordsPerMinute(agent, index)}
         </div>
       </div>
     `;
   }
 
-  private renderMediatorResponseConfig(
-    mediator: MediatorConfig,
+  private renderAgentWordsPerMinute(
+    agent: AgentConfig,
     index: number
   ) {
-    const config = mediator.responseConfig;
-    const updateConfig = (responseConfig: MediatorResponseConfig) => {
-      this.updateMediator({...mediator, responseConfig}, index);
+    const updateWordsPerMinute = (e: InputEvent) => {
+      const wordsPerMinute = Number((e.target as HTMLInputElement).value);
+      if (!isNaN(wordsPerMinute)) {
+        this.updateAgent(
+          {
+            ...agent,
+            wordsPerMinute,
+          },
+          index
+        );
+      }
+    };
+
+    return html`
+      <div class="question-label">Words per minute</div>
+      <div class="description">
+        The higher this value, the faster the agent will respond.
+      </div>
+      <div class="number-input">
+        <input
+          .disabled=${!this.experimentEditor.canEditStages}
+          type="number"
+          min="1"
+          max="1000"
+          .value=${agent.wordsPerMinute}
+          @input=${updateWordsPerMinute}
+        />
+        ${agent.wordsPerMinute < 1 || agent.wordsPerMinute > 1000
+          ? html`<div class="error-message">Please enter a value between 1 and 1000.</div>`
+          : nothing}
+      </div>
+    `;
+  }
+
+  private renderAgentResponseConfig(
+    agent: AgentConfig,
+    index: number
+  ) {
+    const config = agent.responseConfig;
+    const updateConfig = (responseConfig: AgentResponseConfig) => {
+      this.updateAgent({...agent, responseConfig}, index);
     };
     const updateFormattingInstructions = (e: InputEvent) => {
       const instructionsField = (e.target as HTMLTextAreaElement).value;
@@ -349,12 +388,12 @@ export class ChatEditor extends MobxLitElement {
           @click=${updateJSON}
         >
         </md-checkbox>
-        <div>Parse mediator response as JSON</div>
+        <div>Parse agent response as JSON</div>
       </div>
       <div>
         <pr-textarea
           label="Formatting instructions and examples"
-          placeholder="Instructions and examples for formatting the mediator response"
+          placeholder="Instructions and examples for formatting the agent response"
           variant="outlined"
           .value=${config.formattingInstructions}
           ?disabled=${!this.experimentEditor.canEditStages}
