@@ -143,7 +143,7 @@ export const createAgentMessage = onDocumentCreated(
       const prompt = `${getPreface(agent)}\n${getChatHistory(chatMessages, agent)}\n${agent.responseConfig.formattingInstructions}`;
 
       // Call LLM API with given modelCall info
-      const response = await getMediatorResponse(experimenterData, prompt);
+      const response = await getAgentResponse(experimenterData, prompt);
 
       // Add agent message if non-empty
       let message = response.text;
@@ -308,7 +308,7 @@ async function hasEndedChat(
   return false;
 }
 
-async function getMediatorResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
+async function getAgentResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
   const keyType = data.activeApiKeyType;
   let response;
 
