@@ -59,6 +59,12 @@ $tab-bar-weight: 3px;
 .title {
   color: var(--md-sys-color-secondary);
   font-weight: 500;
+
+  &:focus,
+  &:hover {
+    color: var(--md-sys-color-tertiary);
+    cursor: pointer;
+  }
 }
 
 .subtitle {

@@ -6,6 +6,7 @@ import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
 import {AdminService} from '../../services/admin.service';
 import {HomeService} from '../../services/home.service';
+import {Pages, RouterService} from '../../services/router.service';
 
 import {
   Experiment,
@@ -23,6 +24,7 @@ export class AdminDashboard extends MobxLitElement {
   private readonly authService = core.getService(AuthService);
   private readonly adminService = core.getService(AdminService);
   private readonly homeService = core.getService(HomeService);
+  private readonly routerService = core.getService(RouterService);
 
   @state() showExperiments = false;
 
@@ -74,10 +76,17 @@ export class AdminDashboard extends MobxLitElement {
 
   // TODO: Refactor into separate component
   private renderExperimentItem(experiment: Experiment) {
+    const onClick = () => {
+      this.routerService.navigate(
+        Pages.EXPERIMENT,
+        { experiment: experiment.id }
+      );
+    };
+
     return html`
       <div class="experiment-item">
         <div class="left">
-          <div class="title">${experiment.metadata.name}</div>
+          <div class="title" @click=${onClick}>${experiment.metadata.name}</div>
         </div>
         <div class="right">
           <div class="subtitle">
