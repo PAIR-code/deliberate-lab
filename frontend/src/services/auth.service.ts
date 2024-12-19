@@ -11,6 +11,7 @@ import {
   getDoc,
   setDoc,
   onSnapshot,
+  Timestamp,
   Unsubscribe
 } from 'firebase/firestore';
 
@@ -86,6 +87,10 @@ export class AuthService extends Service {
     return this.user?.uid;
   }
 
+  @computed get userEmail() {
+    return this.user?.email;
+  }
+
   @computed get initialAuthCheck() {
     return this.user !== undefined;
   }
@@ -109,13 +114,15 @@ export class AuthService extends Service {
     this.isExperimentDataLoading = true;
 
     // Subscribe to user's experimenter data
-    if (!this.userId) return;
+    if (!this.userId || !this.userEmail) return;
     this.unsubscribe.push(
       onSnapshot(
-        doc(this.sp.firebaseService.firestore, 'experimenterData', this.userId),
+        doc(this.sp.firebaseService.firestore, 'experimenterData', this.userEmail),
         (doc) => {
           if (!doc.exists()) {
-            this.writeExperimenterData(createExperimenterData(this.userId!));
+            this.writeExperimenterData(
+              createExperimenterData(this.userId!, this.userEmail!)
+            );
           } else {
             this.experimenterData = doc.data() as ExperimenterData;
           }
@@ -153,16 +160,16 @@ export class AuthService extends Service {
   /** Update experimenter profile. */
   async writeExperimenterProfile(user: User) {
     const profile: ExperimenterProfile = {
-      id: user.uid,
       name: user.displayName ?? '',
       email: user.email ?? '',
+      lastLogin: Timestamp.now(),
     };
 
     setDoc(
       doc(
         this.sp.firebaseService.firestore,
         'experimenters',
-        profile.id
+        profile.email
       ),
       profile
     );
@@ -174,7 +181,7 @@ export class AuthService extends Service {
       doc(
         this.sp.firebaseService.firestore,
         'experimenterData',
-        data.id
+        data.email
       ),
       data
     );

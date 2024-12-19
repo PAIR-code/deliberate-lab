@@ -9,7 +9,7 @@ import {HomeService} from '../../services/home.service';
 
 import {
   Experiment,
-  Experimenter,
+  ExperimenterProfileExtended,
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
@@ -92,7 +92,7 @@ export class AdminDashboard extends MobxLitElement {
   }
 
   // TODO: Refactor into separate component
-  private renderExperimenterItem(experimenter: Experimenter) {
+  private renderExperimenterItem(experimenter: ExperimenterProfileExtended) {
     return html`
       <div class="experiment-item">
         <div class="left">

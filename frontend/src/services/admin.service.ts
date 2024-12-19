@@ -1,6 +1,6 @@
 import {
   Experiment,
-  Experimenter,
+  ExperimenterProfileExtended,
   StageConfig,
   getFullExperimenterConfig
 } from '@deliberation-lab/utils';
@@ -38,7 +38,7 @@ export class AdminService extends Service {
   }
 
   @observable experiments: Experiment[] = [];
-  @observable experimenters: Experimenter[] = [];
+  @observable experimenters: ExperimenterProfileExtended[] = [];
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -52,14 +52,16 @@ export class AdminService extends Service {
   subscribe() {
     this.unsubscribeAll();
 
-    // TODO: Load experimenters based on allowlist
+    // Load experimenters based on allowlist
     const allowlistQuery = collection(this.sp.firebaseService.firestore, 'allowlist');
     this.unsubscribe.push(
       onSnapshot(
         allowlistQuery,
         (snapshot) => {
           this.experimenters = snapshot.docs.map(
-            doc => getFullExperimenterConfig({...doc.data(), email: doc.id} as Partial<Experimenter>)
+            doc => getFullExperimenterConfig(
+              {...doc.data(), email: doc.id} as Partial<ExperimenterProfileExtended>
+            )
           );
 
           this.isAllowlistLoading = false;

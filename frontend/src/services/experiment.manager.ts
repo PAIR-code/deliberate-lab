@@ -136,7 +136,7 @@ export class ExperimentManager extends Service {
   }
 
   @computed get isCreator() {
-    return this.sp.authService.userId === this.sp.experimentService.experiment?.metadata.creator
+    return this.sp.authService.userEmail === this.sp.experimentService.experiment?.metadata.creator
       || !this.sp.experimentService.experiment;
   }
 
