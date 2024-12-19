@@ -1,6 +1,7 @@
 import { generateId } from '../shared';
 import {
   BaseStageConfig,
+  BaseStageParticipantAnswer,
   StageGame,
   StageKind,
   createStageTextConfig,
@@ -47,6 +48,11 @@ export interface MultipleChoiceComprehensionQuestion extends BaseComprehensionQu
   correctAnswerId: string;
 }
 
+export interface ComprehensionStageParticipantAnswer extends BaseStageParticipantAnswer {
+  kind: StageKind.COMPREHENSION;
+  answerMap: Record<string, string>; // question ID to answer
+}
+
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
@@ -64,4 +70,29 @@ export function createComprehensionStage(
     progress: config.progress ?? createStageProgressConfig(),
     questions: config.questions ?? [],
   };
+}
+
+/** Create multiple choice comprehension question. */
+export function createMultipleChoiceComprehensionQuestion(
+  config: Partial<MultipleChoiceComprehensionQuestion> = {},
+  correctAnswerId: string,
+): MultipleChoiceComprehensionQuestion {
+  return {
+    id: config.id ?? generateId(),
+    kind: ComprehensionQuestionKind.MULTIPLE_CHOICE,
+    questionTitle: config.questionTitle ?? '',
+    options: config.options ?? [],
+    correctAnswerId,
+  }
+}
+
+/** Create comprehension stage participant answer. */
+export function createComprehensionStageParticipantAnswer(
+  config: Partial<ComprehensionStageParticipantAnswer> = {}
+): ComprehensionStageParticipantAnswer {
+  return {
+    id: config.id ?? generateId(),
+    kind: StageKind.COMPREHENSION,
+    answerMap: config.answerMap ?? {},
+  }
 }

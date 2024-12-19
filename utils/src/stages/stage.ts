@@ -11,7 +11,8 @@ import {
   createChipStagePublicData,
 } from './chip_stage';
 import {
-  ComprehensionStageConfig
+  ComprehensionStageConfig,
+  ComprehensionStageParticipantAnswer
 } from './comprehension_stage';
 import {
   RankingStageConfig,
@@ -121,6 +122,7 @@ export interface BaseStageParticipantAnswer {
 export type StageParticipantAnswer =
  | ChatStageParticipantAnswer
  | ChipStageParticipantAnswer
+ | ComprehensionStageParticipantAnswer
  | RankingStageParticipantAnswer
  | SurveyStageParticipantAnswer
  | SurveyPerParticipantStageParticipantAnswer;
