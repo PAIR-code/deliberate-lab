@@ -78,7 +78,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
       case ApiKeyType.LLAMA_CUSTOM_URL:
         return this.renderServerSettings();
       default:
-        console.log("Error: invalid server setting selected :", activeType);
+        console.error("Error: invalid server setting selected :", activeType);
         return this.renderGeminiKey();
     }    
   }

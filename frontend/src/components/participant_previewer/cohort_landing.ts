@@ -66,7 +66,7 @@ export class CohortLanding extends MobxLitElement {
       this.experimentService.experiment!.prolificConfig!.enableProlificIntegration &&
       !prolificIdMatch
     ) {
-      console.log(
+      console.warn(
         'Warning: Participant joining a Prolific experiment without a Prolific code.'
       );
     }

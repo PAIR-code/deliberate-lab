@@ -51,13 +51,8 @@ export async function ollamaChat(messages: string[],
                                 serverConfig: LlamaServerConfig)
                                 : Promise<ModelResponse> {
     const messageObjects = encodeMessages(messages, serverConfig.llmType);
-
-    console.log("Sending prompt:", messageObjects);
     const response = await fetch(serverConfig.url, { method: "POST", body: JSON.stringify(messageObjects) });
-
     const responseMessage = await decodeResponse(response);
-    console.log("Received response: ", responseMessage);
-
     return { text: responseMessage };
 }
 
@@ -74,11 +69,10 @@ async function decodeResponse(response: Response): Promise<string> {
 
     const { done, value } = await reader.read();
     const rawjson = new TextDecoder().decode(value);
-    console.log("Received raw: ", rawjson)
 
     if (isError(rawjson)) {
         // this should probably throw an Error, but Gemini's API just logs it
-        console.log("Error:", rawjson)
+        console.error("Error:", rawjson)
         return ""
     } else {
         const json: IncomingMessage = JSON.parse(rawjson);
