@@ -126,7 +126,11 @@ export class HomeService extends Service {
     return this.experiments.find((exp) => exp.id === experimentId);
   }
 
+  getExperimenter(experimenterId: string) {
+    return this.experimenterMap[experimenterId];
+  }
+
   getExperimenterName(experimenterId: string) {
-    return this.experimenterMap[experimenterId]?.name ?? '';
+    return this.experimenterMap[experimenterId]?.name ?? experimenterId;
   }
 }

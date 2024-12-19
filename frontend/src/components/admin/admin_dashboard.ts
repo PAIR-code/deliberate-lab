@@ -26,7 +26,7 @@ export class AdminDashboard extends MobxLitElement {
   private readonly homeService = core.getService(HomeService);
   private readonly routerService = core.getService(RouterService);
 
-  @state() showExperiments = false;
+  @state() showExperiments = true;
 
   override render() {
     // If not admin, do not show dashboard
@@ -102,13 +102,26 @@ export class AdminDashboard extends MobxLitElement {
 
   // TODO: Refactor into separate component
   private renderExperimenterItem(experimenter: ExperimenterProfileExtended) {
+    const numExperiments = this.adminService.experiments.filter(
+      experiment => experiment.metadata.creator === experimenter.email
+    ).length;
+
+    const fullExperimenter = this.homeService.getExperimenter(experimenter.email);
+    const lastLogin = fullExperimenter?.lastLogin ?? null;
+
     return html`
       <div class="experiment-item">
         <div class="left">
-          <div class="title">${experimenter.name}</div>
+          <div class="left">
+            ${this.homeService.getExperimenterName(experimenter.email)}
+            <div class="subtitle">(${experimenter.email})</div>
+          </div>
+          ${experimenter.isAdmin ? html`<div class="chip">admin</div>` : nothing}
         </div>
         <div class="right">
-          <div class="subtitle">${experimenter.email}</div>
+          <div class="subtitle">${numExperiments} experiments</div>
+          <div class="subtitle" style="min-width: 180px">
+            ${lastLogin ? convertUnifiedTimestampToDate(lastLogin) : nothing}</div>
         </div>
       </div>
     `;

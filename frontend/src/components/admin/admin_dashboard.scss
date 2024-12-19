@@ -49,7 +49,7 @@ $tab-bar-weight: 3px;
 
   .left,
   .right {
-    @include common.flex-row;
+    @include common.flex-row-align-center;
     flex-wrap: wrap;
     gap: common.$spacing-medium;
     overflow-wrap: anywhere;
@@ -73,4 +73,9 @@ $tab-bar-weight: 3px;
 
 h1 {
   @include typescale.title-medium;
+}
+
+.chip {
+  @include common.chip;
+  @include typescale.label-small;
 }
