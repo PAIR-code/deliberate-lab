@@ -38,11 +38,15 @@ export class BaseStageEditorComponent extends MobxLitElement {
     return html`
       <div class="section">
         <div class="title">Metadata</div>
-        ${this.renderName()} ${this.renderPrimaryText()}
-        ${this.renderInfoText()} ${this.renderHelpText()}
+        ${this.renderName()}
+        ${this.stage.kind === StageKind.CHAT
+          ? html`<i>If there are agents active in this stage, they will see the fields below:</i>`
+          : ``}
+        ${this.renderPrimaryText()} ${this.renderInfoText()}
+        ${this.renderHelpText()}
       </div>
       <div class="divider"></div>
-      
+
       <div class="section">
         <div class="title">Progression</div>
         ${this.renderWaitForAllParticipants()}
@@ -85,7 +89,7 @@ export class BaseStageEditorComponent extends MobxLitElement {
 
     return html`
       <pr-textarea
-        label="Stage description"
+        label="Stage description / instructions"
         placeholder="Add description"
         variant="outlined"
         .value=${this.stage?.descriptions.primaryText ?? ''}

@@ -2,6 +2,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import {
   awaitTypingDelay,
+  getTypingDelayInMs,
   ChatMessage,
   ChatMessageType,
   ChatStagePublicData,
@@ -171,7 +172,7 @@ export const createAgentMessage = onDocumentCreated(
     console.log('The following participants wish to speak:');
     agentMessages.forEach((message) => {
       console.log(
-        `\t${message.agent.name}: ${message.message} (${message.agent.wordsPerMinute} WPM)`,
+        `\t${message.agent.name}: ${message.message} (${message.agent.wordsPerMinute} WPM, ${getTypingDelayInMs(message.message, message.agent.wordsPerMinute) / 1000})`,
       );
     });
 
@@ -193,7 +194,7 @@ export const createAgentMessage = onDocumentCreated(
     const agent = agentMessage.agent;
     const message = agentMessage.message;
     const parsed = agentMessage.parsed;
-    console.log(`${agent.name} has been chosen to speak (p=${cumulativeWeights[chosenIndex]})`);
+    console.log(`${agent.name} has been chosen to speak.`);
     await awaitTypingDelay(message, agent.wordsPerMinute);
 
     // Refresh the stage to check if the conversation has ended.
