@@ -11,6 +11,9 @@ import {
   createChipStagePublicData,
 } from './chip_stage';
 import {
+  ComprehensionStageConfig
+} from './comprehension_stage';
+import {
   RankingStageConfig,
   RankingStageParticipantAnswer,
   RankingStagePublicData,
@@ -45,6 +48,7 @@ export enum StageKind {
   PROFILE = 'profile', // set profile
   CHAT = 'chat', // group chat
   CHIP = 'chip', // "chip" negotiation
+  COMPREHENSION = 'comprehension',
   RANKING = 'ranking',
   PAYOUT = 'payout',
   REVEAL = 'reveal',
@@ -91,6 +95,7 @@ export interface StageProgressConfig {
 export type StageConfig =
   | ChatStageConfig
   | ChipStageConfig
+  | ComprehensionStageConfig
   | RankingStageConfig
   | InfoStageConfig
   | PayoutStageConfig
