@@ -13,10 +13,13 @@ import {
   createAgentAgentChatMessage,
   AgentConfig,
   ChatStageConfig,
+  ApiKeyType,
+  ExperimenterData,
 } from '@deliberation-lab/utils';
 
 import { app } from '../app';
 import { getGeminiAPIResponse } from '../api/gemini.api';
+import { ollamaChat } from '../api/ollama.api';
 
 export interface AgentMessage {
   agent: AgentConfig;
@@ -121,7 +124,7 @@ export const createAgentMessage = onDocumentCreated(
     const creatorDoc = await app.firestore().collection('experimenterData').doc(creatorId).get();
     if (!creatorDoc.exists) return;
 
-    const apiKeys = creatorDoc.data().apiKeys;
+    const experimenterData = creatorDoc.data() as ExperimenterData;
 
     // Use chats in collection to build chat history for prompt, get num chats
     const chatMessages = (
@@ -139,8 +142,8 @@ export const createAgentMessage = onDocumentCreated(
     for (const agent of stage.agents) {
       const prompt = `${getPreface(agent)}\n${getChatHistory(chatMessages, agent)}\n${agent.responseConfig.formattingInstructions}`;
 
-      // Call Gemini API with given modelCall info
-      const response = await getGeminiAPIResponse(apiKeys.geminiKey, prompt);
+      // Call LLM API with given modelCall info
+      const response = await getAgentResponse(experimenterData, prompt);
 
       // Add agent message if non-empty
       let message = response.text;
@@ -303,4 +306,28 @@ async function hasEndedChat(
     return true; // Indicate that the chat has ended.
   }
   return false;
+}
+
+async function getAgentResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
+  const keyType = data.activeApiKeyType;
+  let response;
+
+  if (keyType === ApiKeyType.GEMINI_API_KEY) {
+    response =  getGeminiResponse(data, prompt);
+  } else if (keyType === ApiKeyType.LLAMA_CUSTOM_URL) {
+    response = await getOllamaResponse(data, prompt);
+  } else {
+    console.error("Error: invalid apiKey type: ", keyType)
+    response = {text: ""};
+  }
+
+  return response
+}
+
+async function getGeminiResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
+  return await getGeminiAPIResponse(data.geminiApiKey, prompt);
+}
+
+async function getOllamaResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
+  return await ollamaChat([prompt], data.llamaApiKey);
 }
