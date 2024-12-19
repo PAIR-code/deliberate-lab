@@ -137,7 +137,7 @@ export const createAgentMessage = onDocumentCreated(
     // Fetch messages from all agents
     const agentMessages: AgentMessage[] = [];
     for (const agent of stage.agents) {
-      const prompt = `${getPreface(agent)}\n${getChatHistory(chatMessages, agent)}\n${agent.responseConfig.formattingInstructions}`;
+      const prompt = `${getPreface(agent, stage)}\n${getChatHistory(chatMessages, agent)}\n${agent.responseConfig.formattingInstructions}`;
 
       // Call Gemini API with given modelCall info
       const response = await getGeminiAPIResponse(apiKeys.geminiKey, prompt);

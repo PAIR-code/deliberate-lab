@@ -187,6 +187,8 @@ export class ChatPanel extends MobxLitElement {
   }
 
   private renderAgent(agent: AgentConfig) {
+    // TODO: Consider adding a toggle so that agent details and identity
+    // can be exposed to all participants (not just in debug mode).
     return html`
       <pr-tooltip
         text=${this.authService.isDebugMode ? agent.prompt : ''}
