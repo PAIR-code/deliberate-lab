@@ -90,8 +90,10 @@ export function generateId(isSequential: boolean = false): string {
 
 /** Await typing delay (e.g., for chat messages). */
 export async function awaitTypingDelay(message: string, wordsPerMinute: number): Promise<void> {
-  const delay = Math.min(getTypingDelayInMs(message, wordsPerMinute), 30 * 1000); // Cap delay at 30 seconds.
-  console.log(`Waiting ${(delay / 1000).toFixed(2)} seconds to simulate delay.`);
+  const delay = getTypingDelayInMs(message, wordsPerMinute);
+  console.log(
+    `Waiting ${(delay / 1000).toFixed(2)} seconds to simulate delay.`,
+  );
   return new Promise((resolve) => setTimeout(resolve, delay));
 }
 
@@ -101,12 +103,13 @@ export function getTypingDelayInMs(message: string, wordsPerMinute: number): num
   const timeInMinutes = wordCount / wordsPerMinute;
   let timeInSeconds = timeInMinutes * 60;
 
-  // Add randomness to simulate variability in typing speed
+  // Add randomness to simulate variability in typing speed (0.75 - 1.25)
   const randomnessFactor = 0.5;
   const randomMultiplier = 1 + (Math.random() * randomnessFactor - randomnessFactor / 2);
   timeInSeconds *= randomMultiplier;
 
-  return Math.round(timeInSeconds) * 1000;
+  const delay = Math.min(timeInSeconds, 10) * 1000; // Cap delay at 10 seconds.
+  return Math.round(delay);
 }
 
 /** Create MetadataConfig. */
