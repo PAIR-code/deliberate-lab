@@ -121,7 +121,10 @@ export interface AgentResponseConfig {
   formattingInstructions: string;
 }
 
-export type ChatMessage = ParticipantChatMessage | HumanMediatorChatMessage | AgentMediatorChatMessage;
+export type ChatMessage =
+  | ParticipantChatMessage
+  | HumanMediatorChatMessage
+  | AgentMediatorChatMessage;
 
 /**
  * ChatStageParticipantAnswer.
@@ -308,9 +311,7 @@ export function getPreface(agent: AgentConfig, stage: ChatStageConfig) {
     ? `\nThis conversation has the following details:\n${descriptions.join('\n')}`
     : '';
 
-  return `You are role-playing as ${agent.avatar} ${agent.name}, participating in a conversation with other participants.${descriptionHtml}
-
-You will see the conversation transcript. When ${agent.avatar} ${agent.name} appears as the ParticipantName, that indicates a message you previously sent. Do not respond if the last message is from ${agent.avatar} ${agent.name}.`;
+  return `You are role-playing as ${agent.avatar} ${agent.name}, participating in a conversation with other participants.${descriptionHtml}.`;
 }
 
 export function getChatHistory(messages: ChatMessage[], agent: AgentConfig) {

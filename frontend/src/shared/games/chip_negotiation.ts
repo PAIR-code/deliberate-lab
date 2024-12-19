@@ -30,7 +30,7 @@ export const N_INITIAL_RED_CHIPS = 100;
 export const CHIP_GAME_METADATA = createMetadataConfig({
   name: 'Chip Negotiation',
   publicName: 'Chip Negotiation',
-  description: 'A trading scenario involving chips of different values',
+  description: 'A trading scenario that showcases a custom negotiation module.',
 });
 
 export function getChipNegotiationStageConfigs(): StageConfig[] {
