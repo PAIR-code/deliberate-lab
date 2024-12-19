@@ -43,7 +43,7 @@ export class TOSEditorComponent extends MobxLitElement {
 
     return html`
       <pr-textarea
-        label="Terms of Service"
+        label="Terms of service"
         placeholder="Add Terms of Service"
         variant="outlined"
         .value=${this.stage?.tosLines.join('\n\n') ?? ''}
