@@ -105,7 +105,7 @@ export const deleteExperiment = onCall(async (request) => {
   // Verify that experimenter is the creator before enabling delete
   const experiment = (await app.firestore().collection(data.collectionName).doc(data.experimentId).get())
     .data();
-  if (request.auth?.uid !== experiment.metadata.creator) return;
+  if (request.auth?.token.email !== experiment.metadata.creator) return;
 
   // Delete document
   const doc = app.firestore().doc(`${data.collectionName}/${data.experimentId}`);

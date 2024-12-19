@@ -45,7 +45,7 @@ export const createCohort = onCall(async (request) => {
   }
 
   // Use current experimenter as creator
-  cohortConfig.metadata.creator = request.auth!.uid;
+  cohortConfig.metadata.creator = request.auth?.token.email;
 
   // Define document reference
   const document = app.firestore()
@@ -111,7 +111,7 @@ export const updateCohort = onCall(async (request) => {
 
   // Verify that the experimenter is the creator
   // before updating.
-  if (cohortConfig.metadata.creator !== request.auth!.uid) {
+  if (cohortConfig.metadata.creator !== request.auth?.token.email) {
     return;
   }
 
@@ -157,7 +157,7 @@ export const deleteCohort = onCall(async (request) => {
   // Verify that experimenter is the creator before enabling delete
   const experiment = (await app.firestore().collection('experiments').doc(data.experimentId).get())
     .data();
-  if (request.auth?.uid !== experiment.metadata.creator) return;
+  if (request.auth?.token.email !== experiment.metadata.creator) return;
 
   // Delete document
   const doc = app.firestore().doc(`experiments/${data.experimentId}/cohorts/${data.cohortId}`);
