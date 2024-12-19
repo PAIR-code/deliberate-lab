@@ -12,29 +12,18 @@ import { LlamaServerConfig } from "@deliberation-lab/utils"
 
 
 /**
- * The JSON schema of Ollama LLM responses.
- */
-type IncomingMessage = {
-    model: string,
-    createdAt: Date,
-    message: LlmMessage,
-    doneReason: string,
-    done: boolean
-}
-
-/**
  * The JSON schema for LLM input understood by Ollama.
  */
 type OutgoingMessage = {
     model: string,
-    messages: LlmMessage[],
+    messages: OllamaMessage[],
     stream: boolean
 }
 
 /**
  * The JSON schema for LLM prompts enforced by the Ollama Chat API.
  */
-type LlmMessage = {
+type OllamaMessage = {
     role: string,
     content: string
 }
@@ -75,7 +64,7 @@ async function decodeResponse(response: Response): Promise<string> {
         console.error("Error:", rawjson)
         return ""
     } else {
-        const json: IncomingMessage = JSON.parse(rawjson);
+        const json = JSON.parse(rawjson);
         return json.message.content;
     }
 }
@@ -88,7 +77,7 @@ async function decodeResponse(response: Response): Promise<string> {
  * @returns appropriate JSON objects which the model can understand
  */
 function encodeMessages(messages: string[], modelType: string): OutgoingMessage {
-    const messageObjs: LlmMessage[] = messages.map((message) => ({ role: "user", content: message }));
+    const messageObjs: OllamaMessage[] = messages.map((message) => ({ role: "user", content: message }));
     return {
         model: modelType,
         messages: messageObjs,
