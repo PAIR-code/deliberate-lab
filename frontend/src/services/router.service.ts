@@ -36,6 +36,10 @@ export class RouterService extends Service {
       path: "/",
     },
     {
+      name: Pages.ADMIN,
+      path: "/admin",
+    },
+    {
       name: Pages.SETTINGS,
       path: "/settings",
     },
@@ -170,6 +174,7 @@ export type RouteChange = router5.SubscribeState;
  * Enumeration of different pages.
  */
 export enum Pages {
+  ADMIN = "ADMIN",
   HOME = "HOME",
   EXPERIMENT = "EXPERIMENT",
   EXPERIMENT_CREATE = "EXPERIMENT_CREATE",

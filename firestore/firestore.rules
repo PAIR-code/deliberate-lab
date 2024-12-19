@@ -1,6 +1,11 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Function: check if admin
+    function isAdmin() {
+      return get(/databases/$(database)/documents/allowlist/$(request.auth.token.email)).data.get("isAdmin", null) != null;
+    }
+
     // Function: checks if experimenter
     function isExperimenter() {
       return request.auth.uid != null && exists(/databases/$(database)/documents/allowlist/$(request.auth.token.email));
@@ -13,7 +18,7 @@ service cloud.firestore {
 
     // Function: checks if creator of resource
     function isCreator() {
-      return request.auth.uid == resource.data.metadata.creator;
+      return request.auth.token.email == resource.data.permissions.reader || request.auth.uid == resource.data.metadata.creator;
     }
 
     // Function: checks if read access (email listed in readers list)
@@ -28,7 +33,7 @@ service cloud.firestore {
 
     // Function: checks if creator of experiment
     function isExperimentCreator(experimentId) {
-      return get(/databases/$(database)/documents/experiments/$(experimentId)).data.metadata.creator == request.auth.uid;
+      return get(/databases/$(database)/documents/experiments/$(experimentId)).data.metadata.creator == request.auth.token.email || get(/databases/$(database)/documents/experiments/$(experimentId)).data.metadata.creator == request.auth.uid;
     }
 
     // Function: checks if experiment is public
@@ -43,15 +48,14 @@ service cloud.firestore {
 
     // Experimenter allowlist
     match /allowlist/{experimenterId} {
-      allow list: if false;
-      allow get: if request.auth.uid != null;
-      allow write: if false;
+      allow read: if isAdmin() || request.auth.token.email == experimenterId;
+      allow update: if isAdmin();
     }
 
     // Experiment templates (experimenter only)
     match /experimentTemplates/{templateId} {
       allow list: if isExperimenter();
-      allow get: if isExperimenter() && (isPublic() || isCreator() || isReader());
+      allow get: if isExperimenter() && (isPublic() || isCreator() || isReader() || isAdmin(request.auth.token.email));
 
       // Experiments can use `writeExperiment`, `deleteExperiment` endpoints
       allow write: if false;
@@ -60,21 +64,21 @@ service cloud.firestore {
     // Agent templates (experimenter only)
     match /agentTemplates/{agentId} {
       allow list: if isExperimenter();
-      allow get: if isExperimenter() && (isPublic() || isCreator() || isReader());
+      allow get: if isExperimenter() && (isPublic() || isCreator() || isReader() || isAdmin(request.auth.token.email));
       allow write: if isExperimenter() && isCreator();
     }
 
     // Experimenter data (experimenter with matching ID only)
     match /experimenterData/{experimenterId} {
       allow list: if false;
-      allow get: if experimenterId == request.auth.uid;
-      allow write: if experimenterId == request.auth.uid;
+      allow get: if experimenterId == request.auth.token.email || experimenterId == request.auth.uid;
+      allow write: if experimenterId == request.auth.token.email || experimenterId == request.auth.uid;
     }
 
     // Experimenter profiles (experimenter only)
     match /experimenters/{experimenterId} {
       allow read: if true;
-      allow write: if experimenterId == request.auth.uid;
+      allow write: if experimenterId == request.auth.token.email || experimenterId == request.auth.uid;
     }
 
     // Experiments

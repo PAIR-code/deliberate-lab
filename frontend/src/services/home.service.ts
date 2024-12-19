@@ -78,7 +78,7 @@ export class HomeService extends Service {
     const experimentQuery = query(
       collection(this.sp.firebaseService.firestore, 'experiments'),
       or(
-        where('metadata.creator', '==', this.sp.authService.userId),
+        where('metadata.creator', '==', this.sp.authService.userEmail),
         where('permissions.visibility', '==', 'public')
       )
     );
@@ -96,7 +96,7 @@ export class HomeService extends Service {
     // Subscribe to all experiment template documents
     const experimentTemplateQuery = query(
       collection(this.sp.firebaseService.firestore, 'experimentTemplates'),
-      where('metadata.creator', '==', this.sp.authService.userId)
+      where('metadata.creator', '==', this.sp.authService.userEmail)
     );
     this.unsubscribe.push(
       onSnapshot(
@@ -126,7 +126,11 @@ export class HomeService extends Service {
     return this.experiments.find((exp) => exp.id === experimentId);
   }
 
+  getExperimenter(experimenterId: string) {
+    return this.experimenterMap[experimenterId];
+  }
+
   getExperimenterName(experimenterId: string) {
-    return this.experimenterMap[experimenterId]?.name ?? '';
+    return this.experimenterMap[experimenterId]?.name ?? experimenterId;
   }
 }

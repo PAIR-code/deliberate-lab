@@ -1,0 +1,81 @@
+@use "../../sass/colors";
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+}
+
+$tab-bar-weight: 3px;
+
+.tabs {
+  @include common.flex-row;
+  border-bottom: $tab-bar-weight solid var(--md-sys-color-outline-variant);
+}
+
+.tab {
+  @include typescale.body-medium;
+  border-bottom: $tab-bar-weight solid transparent;
+  border-radius: common.$spacing-small common.$spacing-small 0 0;
+  color: var(--md-sys-color-outline);
+  cursor: pointer;
+  padding: common.$spacing-medium common.$spacing-large;
+  transform: translateY($tab-bar-weight);
+
+  &.active {
+    background: var(--md-sys-color-surface-container-high);
+    border-color: var(--md-sys-color-outline);
+    color: var(--md-sys-color-on-surface);
+  }
+}
+
+.empty-message {
+  color: var(--md-sys-color-outline);
+  font-style: italic;
+  padding: common.$spacing-large;
+}
+
+.list {
+  @include common.flex-column;
+}
+
+.experiment-item {
+  @include common.flex-row;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  flex-wrap: wrap;
+  gap: common.$spacing-medium;
+  justify-content: space-between;
+  padding: common.$spacing-medium;
+
+  .left,
+  .right {
+    @include common.flex-row-align-center;
+    flex-wrap: wrap;
+    gap: common.$spacing-medium;
+    overflow-wrap: anywhere;
+  }
+}
+
+.title {
+  color: var(--md-sys-color-secondary);
+  font-weight: 500;
+
+  &:focus,
+  &:hover {
+    color: var(--md-sys-color-tertiary);
+    cursor: pointer;
+  }
+}
+
+.subtitle {
+  color: var(--md-sys-color-outline);
+}
+
+h1 {
+  @include typescale.title-medium;
+}
+
+.chip {
+  @include common.chip;
+  @include typescale.label-small;
+}
