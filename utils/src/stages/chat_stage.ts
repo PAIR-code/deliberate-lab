@@ -88,11 +88,11 @@ export interface ParticipantChatMessage extends BaseChatMessage {
   participantPublicId: string;
 }
 
-export interface HumanAgentChatMessage extends BaseChatMessage {
+export interface HumanMediatorChatMessage extends BaseChatMessage {
   type: ChatMessageType.HUMAN_AGENT;
 }
 
-export interface AgentAgentChatMessage extends BaseChatMessage {
+export interface AgentMediatorChatMessage extends BaseChatMessage {
   type: ChatMessageType.AGENT_AGENT;
   agentId: string;
   explanation: string;
@@ -121,10 +121,7 @@ export interface AgentResponseConfig {
   formattingInstructions: string;
 }
 
-export type ChatMessage =
-  | ParticipantChatMessage
-  | HumanAgentChatMessage
-  | AgentAgentChatMessage;
+export type ChatMessage = ParticipantChatMessage | HumanMediatorChatMessage | AgentMediatorChatMessage;
 
 /**
  * ChatStageParticipantAnswer.
@@ -248,9 +245,9 @@ export function createParticipantChatMessage(
 }
 
 /** Create human agent chat message. */
-export function createHumanAgentChatMessage(
-  config: Partial<HumanAgentChatMessage> = {},
-): HumanAgentChatMessage {
+export function createHumanMediatorChatMessage(
+  config: Partial<HumanMediatorChatMessage> = {},
+): HumanMediatorChatMessage {
   return {
     id: config.id ?? generateId(),
     discussionId: config.discussionId ?? null,
@@ -262,9 +259,9 @@ export function createHumanAgentChatMessage(
 }
 
 /** Create agent agent chat message. */
-export function createAgentAgentChatMessage(
-  config: Partial<AgentAgentChatMessage> = {},
-): AgentAgentChatMessage {
+export function createAgentMediatorChatMessage(
+  config: Partial<AgentMediatorChatMessage> = {},
+): AgentMediatorChatMessage {
   return {
     id: config.id ?? generateId(),
     discussionId: config.discussionId ?? null,
@@ -294,9 +291,28 @@ export function addChatHistoryToPrompt(messages: ChatMessage[], prompt: string) 
   return `${buildChatHistoryForPrompt(messages)}\n\n${prompt}`;
 }
 
-export function getPreface(agent: AgentConfig) {
-  return `You are role-playing as ${agent.avatar} ${agent.name}, and you are participating in a conversation. You will be shown the conversation transcript. When you see ${agent.avatar} ${agent.name} as the ParticipantName in the transcript, that indicates a message that you previously sent. If the last message in the transcript is from ${agent.name} ${agent.name}, do not respond to yourself.`;
+export function getPreface(agent: AgentConfig, stage: ChatStageConfig) {
+  const descriptions = [];
+
+  if (stage.descriptions.primaryText) {
+    descriptions.push(`- Conversation description: ${stage.descriptions.primaryText}`);
+  }
+  if (stage.descriptions.infoText) {
+    descriptions.push(`- Additional information: ${stage.descriptions.infoText}`);
+  }
+  if (stage.descriptions.helpText) {
+    descriptions.push(`- If you need assistance: ${stage.descriptions.helpText}`);
+  }
+
+  const descriptionHtml = descriptions.length
+    ? `\nThis conversation has the following details:\n${descriptions.join('\n')}`
+    : '';
+
+  return `You are role-playing as ${agent.avatar} ${agent.name}, participating in a conversation with other participants.${descriptionHtml}
+
+You will see the conversation transcript. When ${agent.avatar} ${agent.name} appears as the ParticipantName, that indicates a message you previously sent. Do not respond if the last message is from ${agent.avatar} ${agent.name}.`;
 }
+
 export function getChatHistory(messages: ChatMessage[], agent: AgentConfig) {
   const latestMessage = messages[messages.length - 1];
   const description = `The following is a conversation transcript between you and other participants. In the transcript, each entry follows the format (HH:MM) ParticipantName:  ParticipantMessage, where (HH:MM) is the timestamp of the message. The transcript is shown in sequential order from oldest message to latest message. The last entry is the most recent message. In this transcript, the latest message was written by ${latestMessage.profile.avatar} ${latestMessage.profile.name}. It said, ${latestMessage.message}.`;
@@ -344,7 +360,7 @@ export function createChatStageParticipantAnswer(
 
 /** Create chat stage public data. */
 export function createChatStagePublicData(
-  id: string // stage ID
+  id: string, // stage ID
 ): ChatStagePublicData {
   return {
     id,
