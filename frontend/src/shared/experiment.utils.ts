@@ -24,6 +24,7 @@ export function convertExperimentToGalleryItem(
     description: experiment.metadata.description,
     creator: experiment.metadata.creator,
     date: convertUnifiedTimestampToDate(experiment.metadata.dateModified),
+    version: experiment.versionId,
     isPublic: experiment.permissions.visibility === Visibility.PUBLIC,
     isStarred: false, // TODO: Find user isStarred value
     tags: experiment.metadata.tags,

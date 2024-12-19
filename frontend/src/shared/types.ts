@@ -37,6 +37,7 @@ export interface GalleryItem {
   description: string;
   creator: string;
   date: string;
+  version: number;
   isPublic: boolean;
   isStarred: boolean;
   tags: string[];

@@ -1,9 +1,13 @@
+import '../../pair-components/tooltip';
+
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {HomeService} from '../../services/home.service';
+
+import {EXPERIMENT_VERSION_ID} from '@deliberation-lab/utils';
 
 import {GalleryItem} from '../../shared/types';
 
@@ -29,12 +33,31 @@ export class GalleryCard extends MobxLitElement {
         ${this.item.isPublic ?
           html`<div class="chip tertiary">public</div>` :
           html`<div class="chip">private</div>`}
+        ${this.renderOutdatedChip()}
       </div>
       <div class="description">${this.item.description}</div>
       <div class="footer">
         <div>${this.homeService.getExperimenterName(this.item.creator)}</div>
         <div>${this.item.date}</div>
       </div>
+    `;
+  }
+
+  private renderOutdatedChip() {
+    if (this.item?.version === EXPERIMENT_VERSION_ID) {
+      return nothing;
+    }
+
+    const tooltipText = `
+      Warning: This experiment was created with a previous version of
+      Deliberate Lab and may not be compatible with the current version.
+      Contact the deployment owners if you have additional questions
+    `;
+
+    return html`
+      <pr-tooltip text=${tooltipText} position="TOP_END">
+        <div class="chip error">outdated</div>
+      </pr-tooltip>
     `;
   }
 }
