@@ -208,7 +208,7 @@ export class Settings extends MobxLitElement {
   private renderExperimenterData() {
     return html`
       <div class="section">
-        <h2>Experiment private data</h2>
+        <h2>Experimenter Settings</h2>
         <experimenter-data-editor></experimenter-data-editor>
       </div>
     `;
