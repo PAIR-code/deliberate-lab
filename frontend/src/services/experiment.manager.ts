@@ -49,6 +49,7 @@ import {
   downloadCSV,
   downloadJSON,
   getChatHistoryData,
+  getChipNegotiationData,
   getExperimentDownload,
   getParticipantData
 } from '../shared/file.utils';
@@ -531,6 +532,14 @@ export class ExperimentManager extends Service {
 
       if (result) {
         downloadJSON(result, result.experiment.metadata.name);
+
+        // Download JSONs for each chip negotiation game
+        const chipData = getChipNegotiationData(result);
+        chipData.forEach(data => {
+          downloadJSON(data.data, `${data.experimentName}_ChipNegotiation_${data.cohortName}_${data.stageName}`);
+        });
+
+        // Download chat data for each group chat
         const chatData = getChatHistoryData(result);
         chatData.forEach(data => {
           downloadCSV(data.data, `${data.experimentName}_ChatHistory_Cohort-${data.cohortId}_Stage-${data.stageId}`);

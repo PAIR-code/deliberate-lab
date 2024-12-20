@@ -14,7 +14,13 @@ import {
 import {
   ChatMessage,
   ChatMessageType,
+  ChipItem,
+  ChipStageConfig,
+  ChipStagePublicData,
+  ChipTransaction,
+  ChipTransactionStatus,
   CohortConfig,
+  CohortDownload,
   Experiment,
   ExperimentDownload,
   ParticipantDownload,
@@ -32,6 +38,7 @@ import {
   SurveyStageConfig,
   SurveyQuestion,
   SurveyQuestionKind,
+  UnifiedTimestamp,
   calculatePayoutResult,
   calculatePayoutTotal,
   createCohortDownload,
@@ -192,6 +199,299 @@ export async function getExperimentDownload(
   }
 
   return experimentDownload;
+}
+
+// ****************************************************************************
+// JSON DATA TYPES
+// ****************************************************************************
+export interface ChipNegotiationData {
+  experimentName: string;
+  cohortName: string;
+  stageName: string;
+  data: ChipNegotiationGameData;
+}
+
+export interface ChipNegotiationGameData {
+  metadata: ChipNegotiationGameMetadata;
+  history: ChipNegotiationRoundData[];
+  isGameOver: boolean;
+}
+
+export interface ChipNegotiationGameMetadata {
+  // Maps from participant ID to chip value map
+  participantChipValueMap: Record<string, Record<string, number>>;
+  // List of players
+  players: string[];
+  // List of chips
+  chips: ChipItem[];
+}
+
+export interface ChipNegotiationRoundData {
+  round: number;
+  turns: ChipNegotiationTurnData[];
+}
+
+export interface ChipNegotiationTurnData {
+  transaction: ChipTransaction;
+  senderData: ChipNegotiationSenderData;
+  responseData: Record<string, ChipNegotiationResponderData>;
+}
+
+export interface ChipNegotiationSenderData {
+  participantId: string;
+  chipValues: Record<string, number>;
+  chipsBeforeTurn: Record<string, number>;
+  chipsAfterTurn: Record<string, number>;
+  payoutBeforeTurn: number;
+  payoutAfterTurn: number;
+}
+
+export interface ChipNegotiationResponderData {
+  participantId: string;
+  selectedAsRecipient: boolean;
+  offerResponse: boolean;
+  offerResponseTimestamp: UnifiedTimestamp;
+  chipValues: Record<string, number>;
+  chipsBeforeTurn: Record<string, number>;
+  chipsAfterTurn: Record<string, number>;
+  payoutBeforeTurn: number;
+  payoutAfterTurn: number;
+}
+
+// ****************************************************************************
+// JSON DATA FUNCTIONS
+// ****************************************************************************
+export function getChipNegotiationData(
+  data: ExperimentDownload
+): ChipNegotiationData[] {
+  const participantMap = data.participantMap;
+  const cohortMap = data.cohortMap;
+  const stageMap = data.stageMap;
+  const experimentName = data.experiment.metadata.name;
+
+  const gameData: ChipNegotiationData[] = [];
+
+  // For each cohort, look for chip negotiation games
+  Object.values(cohortMap).forEach((cohortData: CohortDownload) => {
+    const cohortName =
+      `${cohortData.cohort.metadata.name}-${cohortData.cohort.id.substring(0, 6)}`;
+
+    for (const publicStage of Object.values(cohortData.dataMap)) {
+      const stage = stageMap[publicStage.id];
+      const stageName = `${stage.name}-${stage.id}`;
+
+      // If public stage is a chip negotiation that was played
+      if (
+        publicStage.kind === StageKind.CHIP &&
+        stage?.kind === StageKind.CHIP &&
+        Object.keys(publicStage.participantOfferMap).length > 0
+      ) {
+        // build metadata
+        const metadata = getChipNegotiationGameMetadata(stage, publicStage);
+
+        // track each player's chip quantities from start to end of game
+        const currentChipMap = getChipNegotiationStartingQuantityMap(
+          stage, metadata.players
+        );
+
+        // for each round, add list of transactions
+        const roundData: ChipNegotiationRoundData[] = [];
+        let roundNumber = 0;
+        while (roundNumber < stage.numRounds) {
+          if (publicStage.participantOfferMap[roundNumber]) {
+            roundData.push(getChipNegotiationRoundData(
+              roundNumber,
+              publicStage.participantOfferMap[roundNumber],
+              metadata,
+              currentChipMap
+            ));
+          } // end if statement checking for round
+          roundNumber += 1;
+        } // end loop over game rounds
+
+        gameData.push({
+          experimentName,
+          cohortName,
+          stageName,
+          data: {
+            metadata,
+            history: roundData,
+            isGameOver: publicStage.isGameOver
+          }
+        });
+      } // end if statement for chip negotiation stage
+    } // end stage iteration
+  }); // end cohort iteration
+
+  return gameData;
+}
+
+function getChipNegotiationGameMetadata(
+  stage: ChipStageConfig,
+  publicStage: ChipStagePublicData
+): ChipNegotiationGameMetadata {
+  // iterate through offer map to determine players
+  const playerSet = new Set<string>();
+  Object.values(publicStage.participantOfferMap).forEach((round) => {
+    Object.keys(round).forEach((senderId) => {
+      playerSet.add(senderId);
+      Object.keys(round[senderId].responseMap).forEach((responderId) => {
+        playerSet.add(responderId);
+      });
+    });
+  });
+  const players: string[] = Array.from(playerSet);
+
+  // build metadata
+  return {
+    participantChipValueMap: publicStage.participantChipValueMap,
+    players,
+    chips: stage.chips
+  };
+}
+
+function getChipNegotiationStartingQuantityMap(
+  stage: ChipStageConfig,
+  players: string[]
+) {
+  const currentChipMap: Record<string, Record<string, number>> = {};
+  const startingQuantityMap: Record<string, number> = {};
+  stage.chips.forEach((chip) => {
+    startingQuantityMap[chip.id] = chip.startingQuantity;
+  });
+  players.forEach((player) => {
+    currentChipMap[player] = startingQuantityMap;
+  });
+
+  return currentChipMap;
+}
+
+function getChipNegotiationRoundData(
+  roundNumber: number,
+  roundMap: Record<string, ChipTransaction>, // participant ID to transaction
+  playerMetadata: ChipNegotiationGameMetadata,
+  currentChipMap: Record<string, Record<string, number>>,
+): ChipNegotiationRoundData {
+  const transactions = Object.values(roundMap).sort(
+    (a: ChipTransaction, b: ChipTransaction) => {
+      const timeA =
+        a.offer.timestamp.seconds * 1000 + a.offer.timestamp.nanoseconds / 1e6;
+      const timeB =
+        b.offer.timestamp.seconds * 1000 + b.offer.timestamp.nanoseconds / 1e6;
+      return timeA - timeB;
+    }
+  );
+
+  const turns: ChipNegotiationTurnData[] = [];
+  transactions.forEach((transaction) => {
+    const response = getChipNegotiationTurnData(
+      transaction, playerMetadata, currentChipMap
+    );
+    currentChipMap = response.currentChipMap;
+    turns.push(response.turn);
+  });
+
+  return { round: roundNumber, turns };
+}
+
+// TODO: Create utils function for transactions to use across frontend/backend
+function runChipTransaction(
+  currentChipMap: Record<string, number>,
+  addChipMap: Record<string, number>,
+  removeChipMap: Record<string, number>
+) {
+  const newChipMap: Record<string, number> = {};
+  Object.keys(currentChipMap).forEach((chipId) => {
+    newChipMap[chipId] = currentChipMap[chipId];
+  });
+
+  Object.keys(addChipMap).forEach((chipId) => {
+    newChipMap[chipId] = (currentChipMap[chipId] ?? 0) + addChipMap[chipId];
+  });
+
+  Object.keys(removeChipMap).forEach((chipId) => {
+    newChipMap[chipId] =
+      (currentChipMap[chipId] ?? 0) - removeChipMap[chipId];
+  });
+
+  return newChipMap;
+}
+
+// TODO: Create utils function for chip payout calculation
+function getChipPayout(
+  currentChipMap: Record<string, number>,
+  chipValueMap: Record<string, number>
+): number {
+  let payout = 0;
+  Object.keys(currentChipMap).forEach((chipId) => {
+    const value = chipValueMap[chipId] ?? 0;
+    payout += value * currentChipMap[chipId]
+  });
+
+  return Math.floor(payout * 100) / 100; // round final payout
+}
+
+function getChipNegotiationTurnData(
+  transaction: ChipTransaction,
+  playerMetadata: ChipNegotiationGameMetadata,
+  currentChipMap: Record<string, Record<string, number>>
+): { turn: ChipNegotiationTurnData; currentChipMap: Record<string, Record<string, number>> } {
+  const senderId = transaction.offer.senderId;
+  const before = currentChipMap;
+  const after: Record<string, Record<string, number>> = {};
+
+  // If appropriate, do transaction
+  if (
+    transaction.status === ChipTransactionStatus.ACCEPTED &&
+    transaction.recipientId !== null
+  ) {
+    const offer = transaction.offer;
+    after[senderId] = runChipTransaction(
+      before[senderId], offer.buy, offer.sell
+    );
+    after[transaction.recipientId] = runChipTransaction(
+      before[transaction.recipientId], offer.sell, offer.buy
+    );
+  } else {
+    after[senderId] = before[senderId];
+  }
+
+  const senderChipValueMap = playerMetadata.participantChipValueMap[senderId];
+  const senderData: ChipNegotiationSenderData = {
+    participantId: senderId,
+    chipValues: playerMetadata.participantChipValueMap[senderId],
+    chipsBeforeTurn: before[senderId],
+    chipsAfterTurn: after[senderId],
+    payoutBeforeTurn: getChipPayout(before[senderId], senderChipValueMap),
+    payoutAfterTurn: getChipPayout(after[senderId], senderChipValueMap)
+  };
+
+  const responseData: Record<string, ChipNegotiationResponderData> = {};
+  Object.keys(transaction.responseMap).forEach((responderId) => {
+    if (!after[responderId]) {
+      after[responderId] = before[responderId];
+    }
+    const offerResponse = transaction.responseMap[responderId];
+    const responderChipValueMap =
+      playerMetadata.participantChipValueMap[responderId];
+
+    responseData[responderId] = {
+      participantId: responderId,
+      selectedAsRecipient: responderId === transaction.recipientId,
+      offerResponse: offerResponse.response,
+      offerResponseTimestamp: offerResponse.timestamp,
+      chipValues: playerMetadata.participantChipValueMap[responderId],
+      chipsBeforeTurn: before[responderId],
+      chipsAfterTurn: after[responderId],
+      payoutBeforeTurn: getChipPayout(before[responderId], responderChipValueMap),
+      payoutAfterTurn: getChipPayout(after[responderId], responderChipValueMap)
+    };
+  });
+
+  return {
+    turn: { transaction, senderData, responseData },
+    currentChipMap: after
+  };
 }
 
 // ****************************************************************************
