@@ -18,6 +18,7 @@ import {
 
 import { app } from '../app';
 import { getGeminiAPIResponse } from '../api/gemini.api';
+import { getOpenAIAPITextCompletionResponse } from '../api/openai.api';
 
 export interface AgentMessage {
   agent: AgentConfig;
@@ -140,8 +141,13 @@ export const createAgentMessage = onDocumentCreated(
     for (const agent of stage.agents) {
       const prompt = `${getPreface(agent, stage)}\n${getChatHistory(chatMessages, agent)}\n${agent.responseConfig.formattingInstructions}`;
 
-      // Call Gemini API with given modelCall info
-      const response = await getGeminiAPIResponse(apiKeys.geminiKey, prompt);
+      // Call API with given modelCall info
+      const response = process.env.OPENAI_BASE_URL ?
+        await getOpenAIAPITextCompletionResponse(
+          process.env.OPENAI_API_KEY,
+          process.env.OPENAI_MODEL_NAME,
+          prompt) :
+        await getGeminiAPIResponse(apiKeys.geminiKey, prompt);
 
       // Add agent message if non-empty
       let message = response.text;
