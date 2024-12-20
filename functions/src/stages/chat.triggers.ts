@@ -184,9 +184,13 @@ export const createMediatorMessage = onDocumentCreated(
     for (const mediator of stage.mediators) {
       const prompt = `${getPreface(mediator)}\n${getChatHistory(chatMessages, mediator)}\n${mediator.responseConfig.formattingInstructions}`;
 
-      // Call Gemini API with given modelCall info
-      // const response = await getGeminiAPIResponse(apiKeys.geminiKey, prompt);
-      const response = await getOpenAIAPITextCompletionResponse(apiKeys.geminiKey, prompt);
+      // Call API with given modelCall info
+      const response = process.env.OPENAI_BASE_URL ?
+        await getOpenAIAPITextCompletionResponse(
+          process.env.OPENAI_API_KEY,
+          process.env.OPENAI_MODEL_NAME,
+          prompt) :
+        await getGeminiAPIResponse(apiKeys.geminiKey, prompt);
 
       // Add mediator message if non-empty
       let message = response.text;
