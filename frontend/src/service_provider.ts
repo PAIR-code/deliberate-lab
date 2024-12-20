@@ -1,4 +1,5 @@
 import { Core } from "./core/core";
+import { AdminService } from "./services/admin.service";
 import { AnalyticsService } from "./services/analytics.service";
 import { AuthService } from "./services/auth.service";
 import { CohortService } from "./services/cohort.service";
@@ -6,7 +7,7 @@ import { ExperimentService } from "./services/experiment.service";
 import { FirebaseService } from "./services/firebase.service";
 import { HomeService } from "./services/home.service";
 import { InitializationService } from "./services/initialization.service";
-import { MediatorEditor } from "./services/mediator.editor";
+import { AgentEditor } from "./services/agent.editor";
 import { ParticipantService } from "./services/participant.service";
 import { ParticipantAnswerService } from "./services/participant.answer";
 import { RouterService } from "./services/router.service";
@@ -19,6 +20,9 @@ import { ExperimentManager } from "./services/experiment.manager";
  */
 export function makeServiceProvider(self: Core) {
   const serviceProvider = {
+    get adminService() {
+      return self.getService(AdminService);
+    },
     get analyticsService() {
       return self.getService(AnalyticsService);
     },
@@ -40,8 +44,8 @@ export function makeServiceProvider(self: Core) {
     get initializationService() {
       return self.getService(InitializationService);
     },
-    get mediatorEditor() {
-      return self.getService(MediatorEditor);
+    get agentEditor() {
+      return self.getService(AgentEditor);
     },
     get participantService() {
       return self.getService(ParticipantService);

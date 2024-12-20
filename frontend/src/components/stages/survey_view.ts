@@ -34,7 +34,6 @@ import {
 } from '../../shared/stage.utils';
 
 import {core} from '../../core/core';
-import {FirebaseService} from '../../services/firebase.service';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 
@@ -45,7 +44,6 @@ import {styles} from './survey_view.scss';
 export class SurveyView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  private readonly firebaseService = core.getService(FirebaseService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly participantAnswerService = core.getService(
     ParticipantAnswerService

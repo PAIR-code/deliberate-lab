@@ -27,7 +27,7 @@ export function createInfoStage(
   config: Partial<InfoStageConfig> = {}
 ): InfoStageConfig {
   return {
-    id: generateId(),
+    id: config.id ?? generateId(),
     kind: StageKind.INFO,
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Info',

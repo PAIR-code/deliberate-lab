@@ -23,7 +23,7 @@ export const ChatStageConfigData = Type.Object({
   progress: StageProgressConfigSchema,
   timeLimitInMinutes: Type.Union([Type.Number(), Type.Null()]),
   // discussions
-  // mediators
+  // agents
 });
 
 // ************************************************************************* //
@@ -33,8 +33,8 @@ export const ChatStageConfigData = Type.Object({
 /** ChatMessageType input validation. */
 export const ChatMessageTypeData = Type.Union([
   Type.Literal(ChatMessageType.PARTICIPANT),
-  Type.Literal(ChatMessageType.HUMAN_MEDIATOR),
-  Type.Literal(ChatMessageType.AGENT_MEDIATOR),
+  Type.Literal(ChatMessageType.HUMAN_AGENT),
+  Type.Literal(ChatMessageType.AGENT_AGENT),
 ]);
 
 /** ChatMessage input validation. */
@@ -68,19 +68,20 @@ export const CreateChatMessageData = Type.Object(
 export type CreateChatMessageData = Static<typeof CreateChatMessageData>;
 
 // ************************************************************************* //
-// updateChatMediators endpoint                                               //
+// updateChatAgents endpoint                                               //
 // ************************************************************************* //
 
-export const UpdateChatMediatorsData = Type.Object({
+export const UpdateChatAgentsData = Type.Object({
   experimentId: Type.String({ minLength: 1 }),
   stageId: Type.String({ minLength: 1 }),
-  // TODO: Refactor mediator config validation
-  mediatorList: Type.Array(
+  // TODO: Refactor agent config validation
+  agentList: Type.Array(
     Type.Object({
       id: Type.String({ minLength: 1 }),
       name: Type.String(),
       avatar: Type.String(),
       prompt: Type.String(),
+      wordsPerMinute: Type.Number({ minimum: 1, maximum: 1000 }),
       responseConfig: Type.Object({
         isJSON: Type.Boolean(),
         messageField: Type.String(),
@@ -91,7 +92,7 @@ export const UpdateChatMediatorsData = Type.Object({
   ),
 });
 
-export type UpdateChatMediatorsData = Static<typeof UpdateChatMediatorsData>;
+export type UpdateChatAgentsData = Static<typeof UpdateChatAgentsData>;
 
 // ************************************************************************* //
 // updateChatStageParticipantAnswer endpoint                                 //

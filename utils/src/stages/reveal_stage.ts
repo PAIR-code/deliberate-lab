@@ -33,7 +33,12 @@ export interface BaseRevealItem {
 }
 
 /** Reveal item. */
-export type RevealItem = RankingRevealItem | SurveyRevealItem;
+export type RevealItem = ChipRevealItem | RankingRevealItem | SurveyRevealItem;
+
+/** Reveal settings for chip stage. */
+export interface ChipRevealItem extends BaseRevealItem {
+  kind: StageKind.CHIP;
+}
 
 /** Reveal settings for ranking stage. */
 export interface RankingRevealItem extends BaseRevealItem {
@@ -77,6 +82,8 @@ export function createNewRevealItem(
   kind: StageKind
 ): RevealItem|null {
   switch (kind) {
+    case StageKind.CHIP:
+      return createChipRevealItem({id});
     case StageKind.RANKING:
       return createRankingRevealItem({id});
     case StageKind.SURVEY:
@@ -84,6 +91,17 @@ export function createNewRevealItem(
     default:
       return null;
   }
+}
+
+/** Create chip reveal item. */
+export function createChipRevealItem(
+  config: Partial<ChipRevealItem> = {},
+): ChipRevealItem {
+  return {
+    id: config.id ?? generateId(),
+    kind: StageKind.CHIP,
+    revealAudience: config.revealAudience ?? RevealAudience.ALL_PARTICIPANTS,
+  };
 }
 
 /** Create ranking reveal item. */

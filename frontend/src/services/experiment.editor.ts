@@ -76,7 +76,7 @@ export class ExperimentEditor extends Service {
 
   @computed get isCreator() {
     return (
-      this.sp.authService.userId === this.experiment.metadata.creator ||
+      this.sp.authService.userEmail === this.experiment.metadata.creator ||
       this.experiment.metadata.creator === ''
     );
   }

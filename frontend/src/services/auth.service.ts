@@ -11,10 +11,12 @@ import {
   getDoc,
   setDoc,
   onSnapshot,
+  Timestamp,
   Unsubscribe
 } from 'firebase/firestore';
 
 import { Service } from "./service";
+import { AdminService } from "./admin.service";
 import { FirebaseService } from "./firebase.service";
 import { HomeService } from "./home.service";
 
@@ -25,6 +27,7 @@ import {
 } from '@deliberation-lab/utils';
 
 interface ServiceProvider {
+  adminService: AdminService;
   firebaseService: FirebaseService;
   homeService: HomeService;
 }
@@ -49,8 +52,17 @@ export class AuthService extends Service {
           this.subscribe();
           this.writeExperimenterProfile(user);
           this.sp.homeService.subscribe();
+
+          // Check if admin
+          if (allowlistDoc.data().isAdmin) {
+            this.sp.adminService.subscribe();
+            this.isAdmin = true;
+          } else {
+            this.isAdmin = false;
+          }
         } else {
           this.isExperimenter = false;
+          this.isAdmin = false;
         }
       } else {
         // User is signed out
@@ -61,6 +73,7 @@ export class AuthService extends Service {
   }
 
   @observable user: User|null|undefined = undefined;
+  @observable isAdmin: boolean|null = null;
   @observable isExperimenter: boolean|null = null;
   @observable canEdit = false;
 
@@ -72,6 +85,10 @@ export class AuthService extends Service {
 
   @computed get userId() {
     return this.user?.uid;
+  }
+
+  @computed get userEmail() {
+    return this.user?.email;
   }
 
   @computed get initialAuthCheck() {
@@ -97,13 +114,15 @@ export class AuthService extends Service {
     this.isExperimentDataLoading = true;
 
     // Subscribe to user's experimenter data
-    if (!this.userId) return;
+    if (!this.userId || !this.userEmail) return;
     this.unsubscribe.push(
       onSnapshot(
-        doc(this.sp.firebaseService.firestore, 'experimenterData', this.userId),
+        doc(this.sp.firebaseService.firestore, 'experimenterData', this.userEmail),
         (doc) => {
           if (!doc.exists()) {
-            this.writeExperimenterData(createExperimenterData(this.userId!));
+            this.writeExperimenterData(
+              createExperimenterData(this.userId!, this.userEmail!)
+            );
           } else {
             this.experimenterData = doc.data() as ExperimenterData;
           }
@@ -141,16 +160,16 @@ export class AuthService extends Service {
   /** Update experimenter profile. */
   async writeExperimenterProfile(user: User) {
     const profile: ExperimenterProfile = {
-      id: user.uid,
       name: user.displayName ?? '',
       email: user.email ?? '',
+      lastLogin: Timestamp.now(),
     };
 
     setDoc(
       doc(
         this.sp.firebaseService.firestore,
         'experimenters',
-        profile.id
+        profile.email
       ),
       profile
     );
@@ -162,7 +181,7 @@ export class AuthService extends Service {
       doc(
         this.sp.firebaseService.firestore,
         'experimenterData',
-        data.id
+        data.email
       ),
       data
     );

@@ -1,12 +1,16 @@
 import '../../pair-components/button';
 import '../../pair-components/icon_button';
 import '../../pair-components/info_popup';
+import '../../pair-components/tooltip';
+
+import '../participant_profile/profile_avatar';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
-import {StageConfig} from '@deliberation-lab/utils';
+import {ParticipantProfile, StageConfig} from '@deliberation-lab/utils';
+import {getParticipantName} from '../../shared/participant.utils';
 
 import {styles} from './participant_header.scss';
 
@@ -16,6 +20,7 @@ export class Header extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   @property() stage: StageConfig|undefined = undefined;
+  @property() profile: ParticipantProfile|undefined = undefined;
 
   override render() {
     if (!this.stage) {
@@ -30,8 +35,26 @@ export class Header extends MobxLitElement {
         <div class="right">
           ${this.renderInfo()}
           ${this.renderHelp()}
+          ${this.renderProfile()}
         </div>
       </div>
+    `;
+  }
+
+  private renderProfile() {
+    if (!this.profile) return nothing;
+    const name = getParticipantName(this.profile);
+    return html`
+      <pr-tooltip
+        text="You are playing as ${this.profile.avatar} ${name}"
+        position="BOTTOM_END"
+      >
+        <div class="profile">
+          <profile-avatar .small=${true} .emoji=${this.profile.avatar}>
+          </profile-avatar>
+          <div>${name}</div>
+        </div>
+      </pr-tooltip>
     `;
   }
 

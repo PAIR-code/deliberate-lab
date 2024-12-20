@@ -2,6 +2,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import {
   awaitTypingDelay,
+  getTypingDelayInMs,
   ChatMessage,
   ChatMessageType,
   ChatStagePublicData,
@@ -11,7 +12,7 @@ import {
   getChatHistory,
   getTimeElapsed,
   createAgentMediatorChatMessage,
-  MediatorConfig,
+  AgentConfig,
   ChatStageConfig,
 } from '@deliberation-lab/utils';
 
@@ -19,39 +20,17 @@ import { app } from '../app';
 import { getGeminiAPIResponse } from '../api/gemini.api';
 import { getOpenAIAPITextCompletionResponse } from '../api/openai.api';
 
-export interface MediatorMessage {
-  mediator: MediatorConfig;
+export interface AgentMessage {
+  agent: AgentConfig;
   parsed: any;
   message: string;
 }
 
-// Function to get the chat stage configuration based on the event.
-async function getChatStage(event: any): Promise<ChatStageConfig | null> {
-  const stageRef = app
-    .firestore()
-    .doc(`experiments/${event.params.experimentId}/stages/${event.params.stageId}`);
+// ************************************************************************* //
+// TRIGGER FUNCTIONS                                                         //
+// ************************************************************************* //
 
-  const stageDoc = await stageRef.get();
-  if (!stageDoc.exists) return null; // Return null if the stage doesn't exist.
-
-  return stageDoc.data() as ChatStageConfig; // Return the stage data.
-}
-
-// Function to get the public data for the chat stage.
-async function getChatStagePublicData(event: any): Promise<ChatStagePublicData | null> {
-  const publicStageRef = app
-    .firestore()
-    .doc(
-      `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
-    );
-
-  const publicStageDoc = await publicStageRef.get();
-  if (!publicStageDoc.exists) return null; // Return null if the public stage data doesn't exist.
-
-  return publicStageDoc.data() as ChatStagePublicData; // Return the public stage data.
-}
-
-// Function to start tracking elapsed time when a chat is created
+/** When a chat message is created, start tracking elapsed time. */
 export const startTimeElapsed = onDocumentCreated(
   'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}',
   async (event) => {
@@ -79,32 +58,10 @@ export const startTimeElapsed = onDocumentCreated(
   },
 );
 
-// Checks whether the chat has ended, returning true if ending chat.
-async function hasEndedChat(
-  event: any,
-  stage: ChatStageConfig | null,
-  stageData: ChatStagePublicData | null,
-): Promise<boolean> {
-  const chatStage = stage || (await getChatStage(event));
-  const publicStageData = stageData || (await getChatStagePublicData(event));
-  if (!chatStage || !publicStageData || !chatStage.timeLimitInMinutes) return false;
-
-  const elapsedMinutes = getTimeElapsed(publicStageData.discussionStartTimestamp!, 'm');
-
-  // Check if the elapsed time has reached or exceeded the time limit
-  if (elapsedMinutes >= chatStage.timeLimitInMinutes) {
-    await app
-      .firestore()
-      .doc(
-        `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
-      )
-      .update({ discussionEndTimestamp: Timestamp.now() });
-    return true; // Indicate that the chat has ended.
-  }
-  return false;
-}
-
-// Function to update elapsed time and potentially end the discussion.
+/**
+ * When chat public stage data is updated, update elapsed time
+ * and potentially end the discussion.
+ */
 export const updateTimeElapsed = onDocumentUpdated(
   {
     document: 'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/',
@@ -139,8 +96,8 @@ export const updateTimeElapsed = onDocumentUpdated(
   },
 );
 
-/** When chat message is created, generate mediator response if relevant. */
-export const createMediatorMessage = onDocumentCreated(
+/** When chat message is created, generate agent response if relevant. */
+export const createAgentMessage = onDocumentCreated(
   {
     document:
       'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}',
@@ -149,7 +106,7 @@ export const createMediatorMessage = onDocumentCreated(
   async (event) => {
     const data = event.data?.data() as ChatMessage | undefined;
 
-    // Use experiment config to get ChatStageConfig with mediators.
+    // Use experiment config to get ChatStageConfig with agents.
     let stage = await getChatStage(event);
     if (!stage) {
       return;
@@ -179,10 +136,10 @@ export const createMediatorMessage = onDocumentCreated(
         .get()
     ).docs.map((doc) => doc.data() as ChatMessage);
 
-    // Fetch messages from all mediators
-    const mediatorMessages: MediatorMessage[] = [];
-    for (const mediator of stage.mediators) {
-      const prompt = `${getPreface(mediator)}\n${getChatHistory(chatMessages, mediator)}\n${mediator.responseConfig.formattingInstructions}`;
+    // Fetch messages from all agents
+    const agentMessages: AgentMessage[] = [];
+    for (const agent of stage.agents) {
+      const prompt = `${getPreface(agent, stage)}\n${getChatHistory(chatMessages, agent)}\n${agent.responseConfig.formattingInstructions}`;
 
       // Call API with given modelCall info
       const response = process.env.OPENAI_BASE_URL ?
@@ -192,11 +149,11 @@ export const createMediatorMessage = onDocumentCreated(
           prompt) :
         await getGeminiAPIResponse(apiKeys.geminiKey, prompt);
 
-      // Add mediator message if non-empty
+      // Add agent message if non-empty
       let message = response.text;
       let parsed = '';
 
-      if (mediator.responseConfig.isJSON) {
+      if (agent.responseConfig.isJSON) {
         // Reset message to empty before trying to fill with JSON response
         message = '';
 
@@ -207,29 +164,44 @@ export const createMediatorMessage = onDocumentCreated(
           // Response is already logged in console during Gemini API call
           console.log('Could not parse JSON!');
         }
-        message = parsed[mediator.responseConfig.messageField] ?? '';
+        message = parsed[agent.responseConfig.messageField] ?? '';
       }
 
       const trimmed = message.trim();
       if (trimmed === '' || trimmed === '""' || trimmed === "''") continue;
-      mediatorMessages.push({ mediator, parsed, message });
+      agentMessages.push({ agent, parsed, message });
     }
 
-    if (mediatorMessages.length === 0) return;
+    if (agentMessages.length === 0) return;
 
     // Show all of the potential messages.
     console.log('The following participants wish to speak:');
-    mediatorMessages.forEach((message) => {
-      console.log(`\t${message.mediator.name}: ${message.message}`);
+    agentMessages.forEach((message) => {
+      console.log(
+        `\t${message.agent.name}: ${message.message} (${message.agent.wordsPerMinute} WPM, ${getTypingDelayInMs(message.message, message.agent.wordsPerMinute) / 1000})`,
+      );
     });
 
+    // Weighted sampling based on wordsPerMinute (WPM)
+    const totalWPM = agentMessages.reduce(
+      (sum, message) => sum + (message.agent.wordsPerMinute || 0),
+      0,
+    );
+    const cumulativeWeights: number[] = [];
+    let cumulativeSum = 0;
+    for (const message of agentMessages) {
+      cumulativeSum += message.agent.wordsPerMinute || 0;
+      cumulativeWeights.push(cumulativeSum / totalWPM);
+    }
+    const random = Math.random();
+    const chosenIndex = cumulativeWeights.findIndex((weight) => random <= weight);
+    const agentMessage = agentMessages[chosenIndex];
     // Randomly sample a message.
-    const mediatorMessage = mediatorMessages[Math.floor(Math.random() * mediatorMessages.length)];
-    const mediator = mediatorMessage.mediator;
-    const message = mediatorMessage.message;
-    const parsed = mediatorMessage.parsed;
-
-    await awaitTypingDelay(message);
+    const agent = agentMessage.agent;
+    const message = agentMessage.message;
+    const parsed = agentMessage.parsed;
+    console.log(`${agent.name} has been chosen to speak.`);
+    await awaitTypingDelay(message, agent.wordsPerMinute);
 
     // Refresh the stage to check if the conversation has ended.
     stage = await getChatStage(event);
@@ -244,8 +216,8 @@ export const createMediatorMessage = onDocumentCreated(
       return;
 
     // Don't send a message if the conversation has moved on.
-    const numChatsBeforeMediator = chatMessages.length;
-    const numChatsAfterMediator = (
+    const numChatsBeforeAgent = chatMessages.length;
+    const numChatsAfterAgent = (
       await app
         .firestore()
         .collection(
@@ -254,21 +226,21 @@ export const createMediatorMessage = onDocumentCreated(
         .count()
         .get()
     ).data().count;
-    if (numChatsAfterMediator > numChatsBeforeMediator) {
+    if (numChatsAfterAgent > numChatsBeforeAgent) {
       return;
     }
 
     const chatMessage = createAgentMediatorChatMessage({
-      profile: { name: mediator.name, avatar: mediator.avatar, pronouns: null },
+      profile: { name: agent.name, avatar: agent.avatar, pronouns: null },
       discussionId: data.discussionId,
       message,
       timestamp: Timestamp.now(),
-      mediatorId: mediator.id,
-      explanation: mediator.responseConfig.isJSON
-        ? (parsed[mediator.responseConfig.explanationField] ?? '')
+      agentId: agent.id,
+      explanation: agent.responseConfig.isJSON
+        ? (parsed[agent.responseConfig.explanationField] ?? '')
         : '',
     });
-    const mediatorDocument = app
+    const agentDocument = app
       .firestore()
       .collection('experiments')
       .doc(event.params.experimentId)
@@ -280,7 +252,62 @@ export const createMediatorMessage = onDocumentCreated(
       .doc(chatMessage.id);
 
     await app.firestore().runTransaction(async (transaction) => {
-      transaction.set(mediatorDocument, chatMessage);
+      transaction.set(agentDocument, chatMessage);
     });
   },
 );
+
+// ************************************************************************* //
+// HELPER FUNCTIONS                                                          //
+// ************************************************************************* //
+
+/** Get the chat stage configuration based on the event. */
+async function getChatStage(event: any): Promise<ChatStageConfig | null> {
+  const stageRef = app
+    .firestore()
+    .doc(`experiments/${event.params.experimentId}/stages/${event.params.stageId}`);
+
+  const stageDoc = await stageRef.get();
+  if (!stageDoc.exists) return null; // Return null if the stage doesn't exist.
+
+  return stageDoc.data() as ChatStageConfig; // Return the stage data.
+}
+
+/** Get public data for the given chat stage. */
+async function getChatStagePublicData(event: any): Promise<ChatStagePublicData | null> {
+  const publicStageRef = app
+    .firestore()
+    .doc(
+      `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
+    );
+
+  const publicStageDoc = await publicStageRef.get();
+  if (!publicStageDoc.exists) return null; // Return null if the public stage data doesn't exist.
+
+  return publicStageDoc.data() as ChatStagePublicData; // Return the public stage data.
+}
+
+/** Checks whether the chat has ended, returning true if ending chat. */
+async function hasEndedChat(
+  event: any,
+  stage: ChatStageConfig | null,
+  stageData: ChatStagePublicData | null,
+): Promise<boolean> {
+  const chatStage = stage || (await getChatStage(event));
+  const publicStageData = stageData || (await getChatStagePublicData(event));
+  if (!chatStage || !publicStageData || !chatStage.timeLimitInMinutes) return false;
+
+  const elapsedMinutes = getTimeElapsed(publicStageData.discussionStartTimestamp!, 'm');
+
+  // Check if the elapsed time has reached or exceeded the time limit
+  if (elapsedMinutes >= chatStage.timeLimitInMinutes) {
+    await app
+      .firestore()
+      .doc(
+        `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
+      )
+      .update({ discussionEndTimestamp: Timestamp.now() });
+    return true; // Indicate that the chat has ended.
+  }
+  return false;
+}

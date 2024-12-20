@@ -169,6 +169,7 @@ export class Settings extends MobxLitElement {
     return html`
       <div class="section">
         <h2>Account</h2>
+        <p><b>Email:</b> ${this.authService.userEmail}</p>
         <p><b>User ID:</b> ${this.authService.userId}</p>
         <p>
           <b>Role:</b>

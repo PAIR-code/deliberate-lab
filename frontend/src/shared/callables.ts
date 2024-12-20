@@ -8,8 +8,12 @@ import {
   ExperimentDeletionData,
   ExperimentDownloadResponse,
   ParticipantProfileExtendedData,
+  SendChipOfferData,
+  SendChipResponseData,
+  SetChipTurnData,
   SimpleResponse,
-  UpdateChatMediatorsData,
+  SuccessResponse,
+  UpdateChatAgentsData,
   UpdateChatStageParticipantAnswerData,
   UpdateRankingStageParticipantAnswerData,
   UpdateSurveyPerParticipantStageParticipantAnswerData,
@@ -28,7 +32,7 @@ export const writeExperimentCallable = async (functions: Functions, experiment: 
 
 /** Generic endpoint to delete experiments or experiment templates */
 export const deleteExperimentCallable = async (functions: Functions, deletion: ExperimentDeletionData) => {
-  const { data } = await httpsCallable<ExperimentDeletionData, never>(functions, 'deleteExperiment')(deletion);
+  const { data } = await httpsCallable<ExperimentDeletionData, SuccessResponse>(functions, 'deleteExperiment')(deletion);
   return data;
 }
 
@@ -46,7 +50,7 @@ export const updateCohortCallable = async (functions: Functions, cohort: CohortC
 
 /** Generic endpoint to delete cohorts */
 export const deleteCohortCallable = async (functions: Functions, cohort: CohortDeletionData) => {
-  const { data } = await httpsCallable<CohortDeletionData, CreationResponse>(functions, 'deleteCohort')(cohort);
+  const { data } = await httpsCallable<CohortDeletionData, SuccessResponse>(functions, 'deleteCohort')(cohort);
   return data;
 }
 
@@ -70,11 +74,11 @@ export const updateChatStageParticipantAnswerCallable = async(
   return data;
 }
 
-/** Generic endpoint to update chat stage mediators */
-export const updateChatMediatorsCallable = async(
-  functions: Functions, config: UpdateChatMediatorsData
+/** Generic endpoint to update chat stage agents */
+export const updateChatAgentsCallable = async(
+  functions: Functions, config: UpdateChatAgentsData
 ) => {
-  const { data } = await httpsCallable<UpdateChatMediatorsData, CreationResponse>(functions, 'updateChatMediators')(config);
+  const { data } = await httpsCallable<UpdateChatAgentsData, SuccessResponse>(functions, 'updateChatAgents')(config);
   return data;
 }
 
@@ -105,5 +109,29 @@ export const updateRankingStageParticipantAnswerCallable = async(
 /** Generic endpoint to write chat message. */
 export const createChatMessageCallable = async(functions: Functions, config: CreateChatMessageData) => {
   const { data } = await httpsCallable<CreateChatMessageData, CreationResponse>(functions, 'createChatMessage')(config);
+  return data;
+}
+
+/** Generic endpoint for sending chip negotiation offer. */
+export const sendChipOfferCallable = async(
+  functions: Functions, config: SendChipOfferData
+) => {
+  const { data } = await httpsCallable<SendChipOfferData, SuccessResponse>(functions, 'sendChipOffer')(config);
+  return data;
+}
+
+/** Generic endpoint for sending chip negotiation response. */
+export const sendChipResponseCallable = async(
+  functions: Functions, config: SendChipResponseData
+) => {
+  const { data } = await httpsCallable<SendChipResponseData, SuccessResponse>(functions, 'sendChipResponse')(config);
+  return data;
+}
+
+/** Generic endpoint for setting chip turn. */
+export const setChipTurnCallable = async(
+  functions: Functions, config: SetChipTurnData
+) => {
+  const { data } = await httpsCallable<SetChipTurnData, SuccessResponse>(functions, 'setChipTurn')(config);
   return data;
 }

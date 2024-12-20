@@ -8,6 +8,8 @@ import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
 import {
+  ChipPayoutItemResult,
+  ChipPayoutValueItem,
   DefaultPayoutItem,
   DefaultPayoutItemResult,
   MultipleChoiceSurveyAnswer,
@@ -26,9 +28,8 @@ import {
   SurveyPayoutQuestionResult,
   SurveyQuestionKind,
   calculatePayoutResult,
-  calculatePayoutTotal
+  calculatePayoutTotal,
 } from '@deliberation-lab/utils';
-
 import {styles} from './payout_view.scss';
 
 /** Payout stage summary view. */
@@ -95,6 +96,8 @@ export class PayoutView extends MobxLitElement {
     currency: PayoutCurrency
   ) {
     switch (item.type) {
+      case PayoutItemType.CHIP:
+        return this.renderChipPayoutItemResult(item, currency);
       case PayoutItemType.DEFAULT:
         return this.renderDefaultPayoutItemResult(item, currency);
       case PayoutItemType.SURVEY:
@@ -108,9 +111,90 @@ export class PayoutView extends MobxLitElement {
     item: DefaultPayoutItemResult,
     currency: PayoutCurrency
   ) {
+    return html` ${this.renderBaseAmountEarned(item, currency)} `;
+  }
+
+  private renderChipPayoutItemResult(
+    item: ChipPayoutItemResult,
+    currency: PayoutCurrency
+  ) {
+    const getInitialTotal = () => {
+      let total = 0;
+      item.chipResults.forEach((result) => {
+        total += Math.floor(result.chip.startingQuantity * result.value * 100) / 100;
+      });
+      return Math.floor(total * 100) / 100;
+    };
+
+    const getTotal = () => {
+      let total = 0;
+      for (const result of item.chipResults) {
+        total += Math.floor(result.quantity * result.value * 100) / 100;
+      }
+      return Math.floor(total * 100) / 100;
+    };
+
+    const renderChipValue = (result: ChipPayoutValueItem) => {
+      const quantity = result.quantity;
+      const value = result.value;
+      const total = Math.floor(quantity * value * 100) / 100;
+      const chipName = `${result.chip.avatar} ${result.chip.name}`;
+
+      return html`
+        <div class="row">
+          <div class="chip secondary">
+            ${this.renderCurrency(total, currency)}
+          </div>
+          <div>
+            ${chipName} chips (${quantity} chips x
+            ${this.renderCurrency(value, currency)})
+          </div>
+        </div>
+      `;
+    };
+
+    const bonusPayout = parseFloat(
+      Math.max(0, getTotal() - getInitialTotal()).toFixed(2)
+    );
     return html`
-      <div class="scoring-item">
+      <div class="scoring-bundle">
+        <h2>${item.name}</h2>
+        <div class="scoring-description">${item.description}</div>
         ${this.renderBaseAmountEarned(item, currency)}
+        <div class="scoring-item">
+          <h2>Chip payout</h2>
+          ${item.chipResults.map((result) => renderChipValue(result))}
+
+          <div class="row">
+            <div>Initial chip value</div>
+            <div class="chip secondary">
+              ${this.renderCurrency(getInitialTotal(), currency)}
+            </div>
+          </div>
+
+          <div class="row">
+            <div>Final chip value</div>
+            <div class="chip secondary">
+              ${this.renderCurrency(getTotal(), currency)}
+            </div>
+          </div>
+
+          <div class="row">
+            <div>Final payout (change in value, 0 if negative)</div>
+            <div class="chip secondary">
+              ${this.renderCurrency(bonusPayout, currency)}
+            </div>
+          </div>
+        </div>
+        <div class="scoring-item row">
+          <h2>Stage payout</h2>
+          <div class="chip primary">
+            ${this.renderCurrency(
+              bonusPayout + item.baseAmountEarned,
+              currency
+            )}
+          </div>
+        </div>
       </div>
     `;
   }
@@ -122,6 +206,9 @@ export class PayoutView extends MobxLitElement {
     return html`
       <div class="scoring-item">
         <h2>Payout for completing stage</h2>
+        ${item.description.length > 0
+          ? html`<div>${item.description}</div>`
+          : nothing}
         <div class="row">
           <div>Stage completed?</div>
           <div class="chip secondary">

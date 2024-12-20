@@ -136,7 +136,7 @@ export class ExperimentManager extends Service {
   }
 
   @computed get isCreator() {
-    return this.sp.authService.userId === this.sp.experimentService.experiment?.metadata.creator
+    return this.sp.authService.userEmail === this.sp.experimentService.experiment?.metadata.creator
       || !this.sp.experimentService.experiment;
   }
 
@@ -546,7 +546,7 @@ export class ExperimentManager extends Service {
     return data;
   }
 
-  /** Create a manual (human) mediator chat message. */
+  /** Create a manual (human) agent chat message. */
   async createManualChatMessage(
     stageId: string,
     config: Partial<HumanMediatorChatMessage> = {}

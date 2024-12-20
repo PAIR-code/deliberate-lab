@@ -44,9 +44,9 @@ export class ChatMessageComponent extends MobxLitElement {
     switch (this.chat.type) {
       case ChatMessageType.PARTICIPANT:
         return this.renderParticipantMessage(this.chat);
-      case ChatMessageType.HUMAN_MEDIATOR:
+      case ChatMessageType.HUMAN_AGENT:
         return this.renderHumanMediatorMessage(this.chat);
-      case ChatMessageType.AGENT_MEDIATOR:
+      case ChatMessageType.AGENT_AGENT:
         return this.renderAgentMediatorMessage(this.chat);
       default:
         return nothing;

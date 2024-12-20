@@ -48,7 +48,7 @@ export const writeExperiment = onCall(async (request) => {
   );
 
   // Use current experimenter as creator
-  experimentConfig.metadata.creator = request.auth!.uid;
+  experimentConfig.metadata.creator = request.auth.token.email;
 
   // Define document reference
   const document = app.firestore().collection(data.collectionName).doc(
