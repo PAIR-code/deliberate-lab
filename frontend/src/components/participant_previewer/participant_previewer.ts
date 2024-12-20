@@ -7,6 +7,7 @@ import '../progress/progress_stage_waiting';
 import '../stages/chat_interface';
 import '../stages/chat_panel';
 import '../stages/chip_participant_view';
+import '../stages/comprehension_participant_view';
 import '../stages/ranking_participant_view';
 import '../stages/info_view';
 import '../stages/payout_participant_view';
@@ -219,6 +220,11 @@ export class ParticipantPreviewer extends MobxLitElement {
         return html`
           <chip-participant-view .stage=${stage} .answer=${answer}>
           </chip-participant-view>
+        `;
+      case StageKind.COMPREHENSION:
+        return html`
+          <comprehension-participant-view .stage=${stage}>
+          </comprehension-participant-view>
         `;
       case StageKind.RANKING:
         return html`

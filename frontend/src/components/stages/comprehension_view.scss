@@ -1,0 +1,43 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+  height: 100%;
+  overflow: auto;
+  width: 100%;
+}
+
+.stage-content {
+  @include common.flex-column;
+  flex-grow: 1;
+  gap: common.$spacing-xxl;
+  max-width: common.$info-content-max-width;
+  padding: common.$main-content-padding;
+}
+
+.question-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.error-text {
+  @include typescale.label-small;
+  color: var(--md-sys-color-error);
+}
+
+.radio-question {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.radio-question-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+
+  &.image {
+    @include common.flex-row;
+    flex-wrap: wrap;
+  }
+}

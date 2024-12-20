@@ -5,8 +5,11 @@ import {
   createCheckSurveyQuestion,
   createChipPayoutItem,
   createChipStage,
+  createComprehensionStage,
   createInfoStage,
   createMetadataConfig,
+  createMultipleChoiceItem,
+  createMultipleChoiceComprehensionQuestion,
   createPayoutStage,
   createProfileStage,
   createSurveyStage,
@@ -48,6 +51,9 @@ export function getChipNegotiationStageConfigs(): StageConfig[] {
   stages.push(CHIP_INFO_STAGE_INSTRUCTIONS);
   stages.push(CHIP_INFO_STAGE_INSTRUCTIONS2);
   stages.push(CHIP_INFO_STAGE_PAYOUT);
+
+  // Comprehension check
+  stages.push(CHIP_COMPREHENSION_CHECK);
 
   // Round 1
   stages.push(CHIP_NEGOTIATION_STAGE);
@@ -178,6 +184,41 @@ const CHIP_INFO_TRANSFER_STAGE = createInfoStage({
     'All players participating in this round are also playing for their second time. **Enjoy the game!**',
   ],
 });
+
+// ****************************************************************************
+// Comprehension stages
+// ****************************************************************************/
+export const CHIP_COMPREHENSION_CHECK = createComprehensionStage({
+  game: StageGame.CHP,
+  name: 'Comprehension check',
+  questions: [
+    createMultipleChoiceComprehensionQuestion(
+      {
+        questionTitle: 'How many 🔴 red chips will **you** start with?',
+        options: [
+          createMultipleChoiceItem({ id: 'a', text: '5' }),
+          createMultipleChoiceItem({ id: 'b', text: '10' }),
+          createMultipleChoiceItem({ id: 'c', text: '8' }),
+          createMultipleChoiceItem({ id: 'd', text: '15' }),
+        ],
+      },
+      'b' // correct answer ID
+    ),
+    createMultipleChoiceComprehensionQuestion(
+      {
+        questionTitle: 'How many 🟢 green chips will each **other** player start with?',
+        options: [
+          createMultipleChoiceItem({ id: 'a', text: '20' }),
+          createMultipleChoiceItem({ id: 'b', text: '5' }),
+          createMultipleChoiceItem({ id: 'c', text: '50' }),
+          createMultipleChoiceItem({ id: 'd', text: '10' }),
+        ]
+      },
+      'd' // correct answer ID
+    )
+  ],
+});
+
 // ****************************************************************************
 // Transfer stages
 // ****************************************************************************/
