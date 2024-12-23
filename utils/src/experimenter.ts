@@ -14,21 +14,21 @@ export interface ExperimenterProfile {
 /** Experimenter data (written to Firestore under experimenterData/{id}). */
 export interface ExperimenterData {
   /* 
-  Currently supports either all Llama or all gemini
+  Currently supports either all ollama or all gemini
   TODO: refactor this as a list of types and values for each mediator(see design document)
   */
   id: string;
   geminiApiKey: string, // distinct types since we don't want to lose information when switching between them
-  llamaApiKey: LlamaServerConfig
+  ollamaApiKey: OllamaServerConfig
   activeApiKeyType: ApiKeyType // keeps track of model type selection
 }
 
 export enum ApiKeyType {
   GEMINI_API_KEY = 'Gemini',
-  LLAMA_CUSTOM_URL = 'Llama',
+  OLLAMA_CUSTOM_URL = 'ollama',
 }
 
-export interface LlamaServerConfig {
+export interface OllamaServerConfig {
   url: string;
   /*
   * The type of llm running in the server (e.g. "llama3.2"). 
@@ -57,7 +57,7 @@ export function createExperimenterData(
   return {
     id: experimenterId,
     geminiApiKey: INVALID_API_KEY,
-    llamaApiKey: { url: INVALID_API_KEY, llmType: INVALID_LLM_TYPE},
+    ollamaApiKey: { url: INVALID_API_KEY, llmType: INVALID_LLM_TYPE},
     activeApiKeyType: ApiKeyType.GEMINI_API_KEY
   };
 }
@@ -73,12 +73,12 @@ export function checkApiKeyExists(experimenterData: ExperimenterData | null | un
     return experimenterData.geminiApiKey !== INVALID_API_KEY
   }
 
-  // if active API key type is Llama
-  if (experimenterData.activeApiKeyType === ApiKeyType.LLAMA_CUSTOM_URL) {
+  // if active API key type is Ollama
+  if (experimenterData.activeApiKeyType === ApiKeyType.OLLAMA_CUSTOM_URL) {
     // implicitly checks if llamaApiKey exists
     return (
-      (experimenterData.llamaApiKey.url !== INVALID_API_KEY) &&
-      (experimenterData.llamaApiKey.llmType !== INVALID_LLM_TYPE)
+      (experimenterData.ollamaApiKey.url !== INVALID_API_KEY) &&
+      (experimenterData.ollamaApiKey.llmType !== INVALID_LLM_TYPE)
     );
   }
 

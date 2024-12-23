@@ -34,7 +34,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
       </h2>
       <div class="action-buttons">
         ${this.renderServerTypeButton('Gemini', ApiKeyType.GEMINI_API_KEY)}
-        ${this.renderServerTypeButton('Ollama Server', ApiKeyType.LLAMA_CUSTOM_URL)}
+        ${this.renderServerTypeButton('Ollama Server', ApiKeyType.OLLAMA_CUSTOM_URL)}
       </div>
     </div>`;
   }
@@ -75,7 +75,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
     switch(activeType) {
       case ApiKeyType.GEMINI_API_KEY:
         return this.renderGeminiKey();
-      case ApiKeyType.LLAMA_CUSTOM_URL:
+      case ApiKeyType.OLLAMA_CUSTOM_URL:
         return this.renderServerSettings();
       default:
         console.error("Error: invalid server setting selected :", activeType);
@@ -93,7 +93,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
       const newData = {
         id: oldData.id,
         geminiApiKey: geminiKey,
-        llamaApiKey: oldData.llamaApiKey,
+        llamaApiKey: oldData.ollamaApiKey,
         activeApiKeyType: ApiKeyType.GEMINI_API_KEY
       };
       this.authService.writeExperimenterData(newData);
@@ -115,7 +115,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
     `;
   }
 
-  // ============ Llama server ============ 
+  // ============ Local Ollama server ============ 
   private renderServerSettings() {
     const updateServerSettings = (e: InputEvent, field: 'serverUrl' | 'llmType') => {
       const oldData = this.authService.experimenterData;
@@ -128,10 +128,10 @@ export class ExperimenterDataEditor extends MobxLitElement {
         case "serverUrl":
           newData = {
             id: oldData.id,
-            activeApiKeyType: ApiKeyType.LLAMA_CUSTOM_URL,
-            llamaApiKey: {
+            activeApiKeyType: ApiKeyType.OLLAMA_CUSTOM_URL,
+            ollamaApiKey: {
               url: serverSettings,
-              llmType: oldData.llamaApiKey.llmType
+              llmType: oldData.ollamaApiKey.llmType
             },
             geminiApiKey: oldData.geminiApiKey
           }
@@ -139,9 +139,9 @@ export class ExperimenterDataEditor extends MobxLitElement {
         case "llmType":
           newData = {
             id: oldData.id,
-            activeApiKeyType: ApiKeyType.LLAMA_CUSTOM_URL,
-            llamaApiKey: {
-              url: oldData.llamaApiKey.url,
+            activeApiKeyType: ApiKeyType.OLLAMA_CUSTOM_URL,
+            ollamaApiKey: {
+              url: oldData.ollamaApiKey.url,
               llmType: serverSettings
             },
             geminiApiKey: oldData.geminiApiKey
@@ -150,7 +150,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
         // more configs may be added in the future (e.g. server auth)
 
         default:
-          console.log("No field associated with llama server settings: ", field);
+          console.log("No field associated with ollama server settings: ", field);
           return;
       };
       this.authService.writeExperimenterData(newData);
@@ -164,7 +164,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
           label="Server URL"
           placeholder="http://example:80/api/chat"
           variant="outlined"
-          .value=${data?.llamaApiKey?.url ?? ""} 
+          .value=${data?.ollamaApiKey?.url ?? ""} 
           @input=${(e: InputEvent) => updateServerSettings(e, 'serverUrl')}
         >
         </pr-textarea>
@@ -176,7 +176,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
           label="LLM type"
           placeholder="llama3.2"
           variant="outlined"
-          .value=${data?.llamaApiKey?.llmType ?? ""} 
+          .value=${data?.ollamaApiKey?.llmType ?? ""} 
           @input=${(e: InputEvent) => updateServerSettings(e, 'llmType')}
         >
         </pr-textarea>

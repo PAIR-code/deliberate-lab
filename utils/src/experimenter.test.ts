@@ -31,23 +31,23 @@ describe('checkApiKeyExists', () => {
         expect(checkApiKeyExists(experimenterData)).toBe(true);
     });
 
-    test('returns false if active API key type is Llama and llamaApiKey is invalid', () => {
-        experimenterData.activeApiKeyType = ApiKeyType.LLAMA_CUSTOM_URL;
-        experimenterData.llamaApiKey = { url: '' , llmType: "llama3.2"};
+    test('returns false if active API key type is Ollama and ollamaApiKey is invalid', () => {
+        experimenterData.activeApiKeyType = ApiKeyType.OLLAMA_CUSTOM_URL;
+        experimenterData.ollamaApiKey = { url: '' , llmType: "llama3.2"};
 
         expect(checkApiKeyExists(experimenterData)).toBe(false);
     });
 
-    test('returns true if active API key type is Llama and llamaApiKey is valid', () => {
-        experimenterData.activeApiKeyType = ApiKeyType.LLAMA_CUSTOM_URL;
-        experimenterData.llamaApiKey = { url: 'http://valid-url.com' , llmType: "llama3.2" };
+    test('returns true if active API key type is Ollama and ollamaApiKey is valid', () => {
+        experimenterData.activeApiKeyType = ApiKeyType.OLLAMA_CUSTOM_URL;
+        experimenterData.ollamaApiKey = { url: 'http://valid-url.com' , llmType: "llama3.2" };
 
         expect(checkApiKeyExists(experimenterData)).toBe(true);
     });
 
-    test('returns false if active API key type is Llama and llamaApiKey is invalid', () => {
-        experimenterData.activeApiKeyType = ApiKeyType.LLAMA_CUSTOM_URL;
-        experimenterData.llamaApiKey = { url: 'http://valid-url.com' , llmType: '' };
+    test('returns false if active API key type is Ollama and ollamaApiKey is invalid', () => {
+        experimenterData.activeApiKeyType = ApiKeyType.OLLAMA_CUSTOM_URL;
+        experimenterData.ollamaApiKey = { url: 'http://valid-url.com' , llmType: '' };
 
         expect(checkApiKeyExists(experimenterData)).toBe(false);
     });

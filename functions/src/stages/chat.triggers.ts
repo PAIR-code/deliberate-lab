@@ -329,5 +329,5 @@ async function getGeminiResponse(data: ExperimenterData, prompt: string): Promis
 }
 
 async function getOllamaResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
-  return await ollamaChat([prompt], data.llamaApiKey);
+  return await ollamaChat([prompt], data.ollamaApiKey);
 }

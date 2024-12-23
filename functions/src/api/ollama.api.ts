@@ -1,14 +1,14 @@
 /**
  * Client handling communications with an Ollama server.
  * 
- * Code assumes that the LLaMa instance is hosted on the provided IP address,
+ * Code assumes that the ollama instance is hosted on the provided IP address,
  * and is managed through the `ollama` framework (https://github.com/ollama/ollama).
  * Example docker instance hosting an ollama server: https://github.com/dimits-ts/deliberate-lab-utils/tree/master/llm_server
  * 
  * Note: there already exists a client library for JavaScript, but not for Typescript.
  */
 
-import { LlamaServerConfig } from "@deliberation-lab/utils"
+import { OllamaServerConfig } from "@deliberation-lab/utils"
 
 
 /**
@@ -37,7 +37,7 @@ type OllamaMessage = {
  * @returns the model's response as a string, or empty string if an error occured
  */
 export async function ollamaChat(messages: string[],
-                                serverConfig: LlamaServerConfig)
+                                serverConfig: OllamaServerConfig)
                                 : Promise<ModelResponse> {
     const messageObjects = encodeMessages(messages, serverConfig.llmType);
     const response = await fetch(serverConfig.url, { method: "POST", body: JSON.stringify(messageObjects) });
