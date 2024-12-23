@@ -40,7 +40,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
   }
 
   private renderServerTypeButton(serverTypeName: string, apiKeyType: ApiKeyType) {
-    const isActive = this.authService.experimenterData?.apiConfig.activeApiKeyType === apiKeyType;
+    const isActive = this.authService.experimenterData?.apiKeys.activeApiKeyType === apiKeyType;
 
     return html`
       <pr-button
@@ -58,7 +58,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
     if (!oldData) return;
 
     const newData = updateExperimenterData(oldData, {
-      apiConfig: { ...oldData.apiConfig, activeApiKeyType: serverType },
+      apiKeys: { ...oldData.apiKeys, activeApiKeyType: serverType },
     });
 
     this.authService.writeExperimenterData(newData);
@@ -66,7 +66,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
   }
 
   private renderApiKeys() {
-    const activeType = this.authService.experimenterData?.apiConfig.activeApiKeyType;
+    const activeType = this.authService.experimenterData?.apiKeys.activeApiKeyType;
 
     switch (activeType) {
       case ApiKeyType.GEMINI_API_KEY:
@@ -87,7 +87,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
 
       const geminiKey = (e.target as HTMLTextAreaElement).value;
       const newData = updateExperimenterData(oldData, {
-        apiConfig: { ...oldData.apiConfig, geminiApiKey: geminiKey },
+        apiKeys: { ...oldData.apiKeys, geminiApiKey: geminiKey },
       });
 
       this.authService.writeExperimenterData(newData);
@@ -99,7 +99,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
           label="Gemini API key"
           placeholder="Add Gemini API key"
           variant="outlined"
-          .value=${this.authService.experimenterData?.apiConfig.geminiApiKey ?? ''}
+          .value=${this.authService.experimenterData?.apiKeys.geminiApiKey ?? ''}
           @input=${updateKey}
         ></pr-textarea>
       </div>
@@ -115,10 +115,10 @@ export class ExperimenterDataEditor extends MobxLitElement {
       const llmType = (e.target as HTMLInputElement).value;
 
       const newData = updateExperimenterData(oldData, {
-        apiConfig: {
-          ...oldData.apiConfig,
+        apiKeys: {
+          ...oldData.apiKeys,
           ollamaApiKey: {
-            ...oldData.apiConfig.ollamaApiKey,
+            ...oldData.apiKeys.ollamaApiKey,
             llmType: llmType, // Update only the `llmType`
           },
         },
@@ -135,7 +135,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
           label="Server URL"
           placeholder="http://example:80/api/chat"
           variant="outlined"
-          .value=${data?.apiConfig.ollamaApiKey?.url ?? ""} 
+          .value=${data?.apiKeys.ollamaApiKey?.url ?? ""} 
           @input=${(e: InputEvent) => updateServerSettings(e, 'url')}
         ></pr-textarea>
         <p>Please ensure that the URL is valid before proceeding.</p>
@@ -144,7 +144,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
           label="LLM type"
           placeholder="llama3.2"
           variant="outlined"
-          .value=${data?.apiConfig.ollamaApiKey?.llmType ?? ""} 
+          .value=${data?.apiKeys.ollamaApiKey?.llmType ?? ""} 
           @input=${(e: InputEvent) => updateServerSettings(e, 'llmType')}
         ></pr-textarea>
         <p>
@@ -166,12 +166,12 @@ function updateExperimenterData(
   return {
     ...oldData,
     ...updatedFields,
-    apiConfig: {
-      ...oldData.apiConfig,
-      ...updatedFields.apiConfig,
+    apiKeys: {
+      ...oldData.apiKeys,
+      ...updatedFields.apiKeys,
       ollamaApiKey: {
-        ...oldData.apiConfig.ollamaApiKey,
-        ...(updatedFields.apiConfig?.ollamaApiKey || {}),
+        ...oldData.apiKeys.ollamaApiKey,
+        ...(updatedFields.apiKeys?.ollamaApiKey || {}),
       },
     },
   };

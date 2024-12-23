@@ -310,7 +310,7 @@ async function hasEndedChat(
 }
 
 async function getAgentResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
-  const keyType = data.apiConfig.activeApiKeyType;
+  const keyType = data.apiKeys.activeApiKeyType;
   let response;
 
   if (keyType === ApiKeyType.GEMINI_API_KEY) {
@@ -326,9 +326,9 @@ async function getAgentResponse(data: ExperimenterData, prompt: string): Promise
 }
 
 async function getGeminiResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
-  return await getGeminiAPIResponse(data.apiConfig.geminiApiKey, prompt);
+  return await getGeminiAPIResponse(data.apiKeys.geminiApiKey, prompt);
 }
 
 async function getOllamaResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
-  return await ollamaChat([prompt], data.apiConfig.ollamaApiKey);
+  return await ollamaChat([prompt], data.apiKeys.ollamaApiKey);
 }

@@ -79,12 +79,38 @@ export function getFullExperimenterConfig(
 }
 
 export function createExperimenterData(
-  experimenterId: string,
-  experimenterEmail: string
+  experimenterId: string, experimenterEmail: string
 ): ExperimenterData {
   return {
     id: experimenterId,
-    email: experimenterEmail,
-    apiKeys: { geminiKey: '' }
+    apiKeys: {
+      geminiApiKey: INVALID_API_KEY,
+      ollamaApiKey: { url: INVALID_API_KEY, llmType: INVALID_LLM_TYPE },
+      activeApiKeyType: ApiKeyType.GEMINI_API_KEY
+    },
+    email: experimenterEmail
   };
+}
+
+
+export function checkApiKeyExists(experimenterData: ExperimenterData | null | undefined): boolean {
+  if (experimenterData === null || experimenterData === undefined) {
+    return false
+  }
+  // if active API key type is Gemini
+  if (experimenterData.apiKeys.activeApiKeyType === ApiKeyType.GEMINI_API_KEY) {
+    // implicitly checks if geminiApiKey exists
+    return experimenterData.apiKeys.geminiApiKey !== INVALID_API_KEY
+  }
+
+  // if active API key type is Ollama
+  if (experimenterData.apiKeys.activeApiKeyType === ApiKeyType.OLLAMA_CUSTOM_URL) {
+    // implicitly checks if llamaApiKey exists
+    return (
+      (experimenterData.apiKeys.ollamaApiKey.url !== INVALID_API_KEY) &&
+      (experimenterData.apiKeys.ollamaApiKey.llmType !== INVALID_LLM_TYPE)
+    );
+  }
+
+  return false; // false if no valid condition is met
 }
