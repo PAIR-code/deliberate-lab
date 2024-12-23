@@ -7,10 +7,9 @@ export async function callOpenAITextCompletion(
   prompt: string,
   modelName: string
 ) {
-  console.log('callOpenAITextCompletion')
   const baseURL = process.env.OPENAI_BASE_URL;
   if (!baseURL) {
-    console.log(
+    console.error(
       'OpenAI error: base URL not set. Please configure the environment variable OPENAI_BASE_URL.');
     return { text: '' };
   }
