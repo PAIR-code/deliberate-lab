@@ -112,19 +112,38 @@ export class ExperimenterDataEditor extends MobxLitElement {
       const oldData = this.authService.experimenterData;
       if (!oldData) return;
 
-      const llmType = (e.target as HTMLInputElement).value;
+      const value = (e.target as HTMLInputElement).value;
+      let newData;
 
-      const newData = updateExperimenterData(oldData, {
-        apiKeys: {
-          ...oldData.apiKeys,
-          ollamaApiKey: {
-            ...oldData.apiKeys.ollamaApiKey,
-            llmType: llmType, // Update only the `llmType`
-          },
-        },
-      });
-
-
+      switch (field){
+        case "url":
+          newData = updateExperimenterData(oldData, {
+            apiKeys: {
+              ...oldData.apiKeys,
+              ollamaApiKey: {
+                ...oldData.apiKeys.ollamaApiKey,
+                url: value,
+              },
+            },
+          });
+          break;
+  
+        case "llmType":
+          newData = updateExperimenterData(oldData, {
+            apiKeys: {
+              ...oldData.apiKeys,
+              ollamaApiKey: {
+                ...oldData.apiKeys.ollamaApiKey,
+                llmType: value,
+              },
+            },
+          });
+          break;
+        default:
+          console.error("Error: field type not found: ", field);
+          return;
+      }
+    
       this.authService.writeExperimenterData(newData);
     };
 
