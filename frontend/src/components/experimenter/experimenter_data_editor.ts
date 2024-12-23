@@ -29,7 +29,9 @@ export class ExperimenterDataEditor extends MobxLitElement {
   private renderServerTypeButtons() {
     return html`
     <div class="section">
-      <h2>Select LLM host</h2>
+      <div class="title">
+        LLM Host Selection
+      </div>
       <div class="action-buttons">
         ${this.renderServerTypeButton('Gemini', ApiKeyType.GEMINI_API_KEY)}
         ${this.renderServerTypeButton('Ollama Server', ApiKeyType.OLLAMA_CUSTOM_URL)}
@@ -93,7 +95,6 @@ export class ExperimenterDataEditor extends MobxLitElement {
 
     return html`
       <div class="section">
-        <div class="title">Gemini</div>
         <pr-textarea
           label="Gemini API key"
           placeholder="Add Gemini API key"
@@ -130,7 +131,6 @@ export class ExperimenterDataEditor extends MobxLitElement {
     const data = this.authService.experimenterData;
     return html`
       <div class="section">
-        <div class="title">Ollama Server</div>
         <pr-textarea
           label="Server URL"
           placeholder="http://example:80/api/chat"
