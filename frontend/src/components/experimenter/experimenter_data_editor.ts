@@ -29,9 +29,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
   private renderServerTypeButtons() {
     return html`
     <div class="section">
-      <h2>
-        Select LLM host
-      </h2>
+      <h2>Select LLM host</h2>
       <div class="action-buttons">
         ${this.renderServerTypeButton('Gemini', ApiKeyType.GEMINI_API_KEY)}
         ${this.renderServerTypeButton('Ollama Server', ApiKeyType.OLLAMA_CUSTOM_URL)}
@@ -57,28 +55,15 @@ export class ExperimenterDataEditor extends MobxLitElement {
     const oldData = this.authService.experimenterData;
     if (!oldData) return;
 
-    //TODO: automate manual type creation for updates 
-    const newData: ExperimenterData = {
-      id: oldData.id,
-      apiConfig: {
-        activeApiKeyType: serverType,
-        ollamaApiKey: {
-          url: oldData.apiConfig.ollamaApiKey.url,
-          llmType: oldData.apiConfig.ollamaApiKey.llmType
-        },
-        geminiApiKey: oldData.apiConfig.geminiApiKey
-      },
-      email: oldData.email
-    }
+    const newData = updateExperimenterData(oldData, {
+      apiConfig: { ...oldData.apiConfig, activeApiKeyType: serverType },
+    });
 
     this.authService.writeExperimenterData(newData);
-    this.requestUpdate(); // change visibility of relevant api key sections 
+    this.requestUpdate(); // Change visibility of relevant API key sections
   }
 
-
   private renderApiKeys() {
-    // hide or show relevant input sections, according to which server type
-    // the user has selected
     const activeType = this.authService.experimenterData?.apiConfig.activeApiKeyType;
 
     switch (activeType) {
@@ -99,21 +84,12 @@ export class ExperimenterDataEditor extends MobxLitElement {
       if (!oldData) return;
 
       const geminiKey = (e.target as HTMLTextAreaElement).value;
-      const newData = {
-        id: oldData.id,
-        apiConfig: {
-          activeApiKeyType: oldData.apiConfig.activeApiKeyType,
-          ollamaApiKey: {
-            url: oldData.apiConfig.ollamaApiKey.url,
-            llmType: oldData.apiConfig.ollamaApiKey.llmType
-          },
-          geminiApiKey: geminiKey
-        },
-        email: oldData.email
-      }
+      const newData = updateExperimenterData(oldData, {
+        apiConfig: { ...oldData.apiConfig, geminiApiKey: geminiKey },
+      });
+
       this.authService.writeExperimenterData(newData);
     };
-
 
     return html`
       <div class="section">
@@ -124,56 +100,30 @@ export class ExperimenterDataEditor extends MobxLitElement {
           variant="outlined"
           .value=${this.authService.experimenterData?.apiConfig.geminiApiKey ?? ''}
           @input=${updateKey}
-        >
-        </pr-textarea>
+        ></pr-textarea>
       </div>
     `;
   }
 
   // ============ Local Ollama server ============ 
   private renderServerSettings() {
-    const updateServerSettings = (e: InputEvent, field: 'serverUrl' | 'llmType') => {
+    const updateServerSettings = (e: InputEvent, field: 'url' | 'llmType') => {
       const oldData = this.authService.experimenterData;
       if (!oldData) return;
 
-      const serverSettings = (e.target as HTMLInputElement).value;
+      const llmType = (e.target as HTMLInputElement).value;
 
-      let newData: ExperimenterData;
-      switch (field) {
-        case "serverUrl":
-          newData = {
-            id: oldData.id,
-            apiConfig: {
-              activeApiKeyType: oldData.apiConfig.activeApiKeyType,
-              ollamaApiKey: {
-                url: serverSettings,
-                llmType: oldData.apiConfig.ollamaApiKey.llmType
-              },
-              geminiApiKey: oldData.apiConfig.geminiApiKey
-            },
-            email: oldData.email
-          }
-          break;
-        case "llmType":
-          newData = {
-            id: oldData.id,
-            apiConfig: {
-              activeApiKeyType: oldData.apiConfig.activeApiKeyType,
-              ollamaApiKey: {
-                url: oldData.apiConfig.ollamaApiKey.url,
-                llmType: serverSettings
-              },
-              geminiApiKey: oldData.apiConfig.geminiApiKey
-            },
-            email: oldData.email
-          }
-          break;
-        // more configs may be added in the future (e.g. server auth)
+      const newData = updateExperimenterData(oldData, {
+        apiConfig: {
+          ...oldData.apiConfig,
+          ollamaApiKey: {
+            ...oldData.apiConfig.ollamaApiKey,
+            llmType: llmType, // Update only the `llmType`
+          },
+        },
+      });
 
-        default:
-          console.log("No field associated with ollama server settings: ", field);
-          return;
-      };
+
       this.authService.writeExperimenterData(newData);
     };
 
@@ -186,12 +136,9 @@ export class ExperimenterDataEditor extends MobxLitElement {
           placeholder="http://example:80/api/chat"
           variant="outlined"
           .value=${data?.apiConfig.ollamaApiKey?.url ?? ""} 
-          @input=${(e: InputEvent) => updateServerSettings(e, 'serverUrl')}
-        >
-        </pr-textarea>
-        <p>
-          Please ensure that the URL is valid before proceeding.
-        </p>
+          @input=${(e: InputEvent) => updateServerSettings(e, 'url')}
+        ></pr-textarea>
+        <p>Please ensure that the URL is valid before proceeding.</p>
 
         <pr-textarea
           label="LLM type"
@@ -199,10 +146,10 @@ export class ExperimenterDataEditor extends MobxLitElement {
           variant="outlined"
           .value=${data?.apiConfig.ollamaApiKey?.llmType ?? ""} 
           @input=${(e: InputEvent) => updateServerSettings(e, 'llmType')}
-        >
-        </pr-textarea>
+        ></pr-textarea>
         <p>
-          All supported LLM types can be found <a target="_blank" href=https://ollama.com/library>here</a>. 
+          All supported LLM types can be found 
+          <a target="_blank" href="https://ollama.com/library">here</a>.
           Make sure the LLM type has been deployed on the server prior to selecting it here.
         </p>
       </div>
@@ -210,8 +157,22 @@ export class ExperimenterDataEditor extends MobxLitElement {
   }
 }
 
-declare global {
-  interface HTMLElementTagNameMap {
-    'experimenter-data-editor': ExperimenterDataEditor;
-  }
+
+// Utility function to create updated ExperimenterData
+function updateExperimenterData(
+  oldData: ExperimenterData,
+  updatedFields: Partial<ExperimenterData>
+): ExperimenterData {
+  return {
+    ...oldData,
+    ...updatedFields,
+    apiConfig: {
+      ...oldData.apiConfig,
+      ...updatedFields.apiConfig,
+      ollamaApiKey: {
+        ...oldData.apiConfig.ollamaApiKey,
+        ...(updatedFields.apiConfig?.ollamaApiKey || {}),
+      },
+    },
+  };
 }
