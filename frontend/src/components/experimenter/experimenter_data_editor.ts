@@ -40,7 +40,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
   }
 
   private renderServerTypeButton(serverTypeName: string, apiKeyType: ApiKeyType) {
-    const isActive = this.authService.experimenterData?.activeApiKeyType === apiKeyType;
+    const isActive = this.authService.experimenterData?.apiConfig.activeApiKeyType === apiKeyType;
 
     return html`
       <pr-button
@@ -57,10 +57,19 @@ export class ExperimenterDataEditor extends MobxLitElement {
     const oldData = this.authService.experimenterData;
     if (!oldData) return;
 
-    let newData: ExperimenterData = {
-      ...oldData,
-      activeApiKeyType: serverType,
-    };
+    //TODO: automate manual type creation for updates 
+    const newData: ExperimenterData = {
+      id: oldData.id,
+      apiConfig: {
+        activeApiKeyType: serverType,
+        ollamaApiKey: {
+          url: oldData.apiConfig.ollamaApiKey.url,
+          llmType: oldData.apiConfig.ollamaApiKey.llmType
+        },
+        geminiApiKey: oldData.apiConfig.geminiApiKey
+      },
+      email: oldData.email
+    }
 
     this.authService.writeExperimenterData(newData);
     this.requestUpdate(); // change visibility of relevant api key sections 
@@ -70,9 +79,9 @@ export class ExperimenterDataEditor extends MobxLitElement {
   private renderApiKeys() {
     // hide or show relevant input sections, according to which server type
     // the user has selected
-    const activeType = this.authService.experimenterData?.activeApiKeyType;
-  
-    switch(activeType) {
+    const activeType = this.authService.experimenterData?.apiConfig.activeApiKeyType;
+
+    switch (activeType) {
       case ApiKeyType.GEMINI_API_KEY:
         return this.renderGeminiKey();
       case ApiKeyType.OLLAMA_CUSTOM_URL:
@@ -80,7 +89,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
       default:
         console.error("Error: invalid server setting selected :", activeType);
         return this.renderGeminiKey();
-    }    
+    }
   }
 
   // ============ Gemini ============ 
@@ -92,14 +101,20 @@ export class ExperimenterDataEditor extends MobxLitElement {
       const geminiKey = (e.target as HTMLTextAreaElement).value;
       const newData = {
         id: oldData.id,
-        geminiApiKey: geminiKey,
-        llamaApiKey: oldData.ollamaApiKey,
-        activeApiKeyType: ApiKeyType.GEMINI_API_KEY
-      };
+        apiConfig: {
+          activeApiKeyType: oldData.apiConfig.activeApiKeyType,
+          ollamaApiKey: {
+            url: oldData.apiConfig.ollamaApiKey.url,
+            llmType: oldData.apiConfig.ollamaApiKey.llmType
+          },
+          geminiApiKey: geminiKey
+        },
+        email: oldData.email
+      }
       this.authService.writeExperimenterData(newData);
     };
 
-    
+
     return html`
       <div class="section">
         <div class="title">Gemini</div>
@@ -107,7 +122,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
           label="Gemini API key"
           placeholder="Add Gemini API key"
           variant="outlined"
-          .value=${this.authService.experimenterData?.geminiApiKey ?? ''}
+          .value=${this.authService.experimenterData?.apiConfig.geminiApiKey ?? ''}
           @input=${updateKey}
         >
         </pr-textarea>
@@ -128,23 +143,29 @@ export class ExperimenterDataEditor extends MobxLitElement {
         case "serverUrl":
           newData = {
             id: oldData.id,
-            activeApiKeyType: ApiKeyType.OLLAMA_CUSTOM_URL,
-            ollamaApiKey: {
-              url: serverSettings,
-              llmType: oldData.ollamaApiKey.llmType
+            apiConfig: {
+              activeApiKeyType: oldData.apiConfig.activeApiKeyType,
+              ollamaApiKey: {
+                url: serverSettings,
+                llmType: oldData.apiConfig.ollamaApiKey.llmType
+              },
+              geminiApiKey: oldData.apiConfig.geminiApiKey
             },
-            geminiApiKey: oldData.geminiApiKey
+            email: oldData.email
           }
           break;
         case "llmType":
           newData = {
             id: oldData.id,
-            activeApiKeyType: ApiKeyType.OLLAMA_CUSTOM_URL,
-            ollamaApiKey: {
-              url: oldData.ollamaApiKey.url,
-              llmType: serverSettings
+            apiConfig: {
+              activeApiKeyType: oldData.apiConfig.activeApiKeyType,
+              ollamaApiKey: {
+                url: oldData.apiConfig.ollamaApiKey.url,
+                llmType: serverSettings
+              },
+              geminiApiKey: oldData.apiConfig.geminiApiKey
             },
-            geminiApiKey: oldData.geminiApiKey
+            email: oldData.email
           }
           break;
         // more configs may be added in the future (e.g. server auth)
@@ -164,7 +185,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
           label="Server URL"
           placeholder="http://example:80/api/chat"
           variant="outlined"
-          .value=${data?.ollamaApiKey?.url ?? ""} 
+          .value=${data?.apiConfig.ollamaApiKey?.url ?? ""} 
           @input=${(e: InputEvent) => updateServerSettings(e, 'serverUrl')}
         >
         </pr-textarea>
@@ -176,7 +197,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
           label="LLM type"
           placeholder="llama3.2"
           variant="outlined"
-          .value=${data?.ollamaApiKey?.llmType ?? ""} 
+          .value=${data?.apiConfig.ollamaApiKey?.llmType ?? ""} 
           @input=${(e: InputEvent) => updateServerSettings(e, 'llmType')}
         >
         </pr-textarea>

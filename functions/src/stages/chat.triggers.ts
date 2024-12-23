@@ -309,12 +309,12 @@ async function hasEndedChat(
 }
 
 async function getAgentResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
-  const keyType = data.activeApiKeyType;
+  const keyType = data.apiConfig.activeApiKeyType;
   let response;
 
   if (keyType === ApiKeyType.GEMINI_API_KEY) {
     response =  getGeminiResponse(data, prompt);
-  } else if (keyType === ApiKeyType.LLAMA_CUSTOM_URL) {
+  } else if (keyType === ApiKeyType.OLLAMA_CUSTOM_URL) {
     response = await getOllamaResponse(data, prompt);
   } else {
     console.error("Error: invalid apiKey type: ", keyType)
@@ -325,9 +325,9 @@ async function getAgentResponse(data: ExperimenterData, prompt: string): Promise
 }
 
 async function getGeminiResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
-  return await getGeminiAPIResponse(data.geminiApiKey, prompt);
+  return await getGeminiAPIResponse(data.apiConfig.geminiApiKey, prompt);
 }
 
 async function getOllamaResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
-  return await ollamaChat([prompt], data.ollamaApiKey);
+  return await ollamaChat([prompt], data.apiConfig.ollamaApiKey);
 }

@@ -18,9 +18,14 @@ export interface ExperimenterData {
   TODO: refactor this as a list of types and values for each mediator(see design document)
   */
   id: string;
+  apiConfig: APIKeyConfig;
+  email: string;
+}
+
+export interface APIKeyConfig {
   geminiApiKey: string, // distinct types since we don't want to lose information when switching between them
   ollamaApiKey: OllamaServerConfig
-  activeApiKeyType: ApiKeyType // keeps track of model type selection
+  activeApiKeyType: ApiKeyType; // keeps track of model type selection
 }
 
 export enum ApiKeyType {
@@ -56,9 +61,12 @@ export function createExperimenterData(
 ): ExperimenterData {
   return {
     id: experimenterId,
-    geminiApiKey: INVALID_API_KEY,
-    ollamaApiKey: { url: INVALID_API_KEY, llmType: INVALID_LLM_TYPE},
-    activeApiKeyType: ApiKeyType.GEMINI_API_KEY
+    apiConfig: {
+      geminiApiKey: INVALID_API_KEY,
+      ollamaApiKey: { url: INVALID_API_KEY, llmType: INVALID_LLM_TYPE },
+      activeApiKeyType: ApiKeyType.GEMINI_API_KEY
+    },
+    email: ""
   };
 }
 
@@ -68,17 +76,17 @@ export function checkApiKeyExists(experimenterData: ExperimenterData | null | un
     return false
   }
   // if active API key type is Gemini
-  if (experimenterData.activeApiKeyType === ApiKeyType.GEMINI_API_KEY) {
+  if (experimenterData.apiConfig.activeApiKeyType === ApiKeyType.GEMINI_API_KEY) {
     // implicitly checks if geminiApiKey exists
-    return experimenterData.geminiApiKey !== INVALID_API_KEY
+    return experimenterData.apiConfig.geminiApiKey !== INVALID_API_KEY
   }
 
   // if active API key type is Ollama
-  if (experimenterData.activeApiKeyType === ApiKeyType.OLLAMA_CUSTOM_URL) {
+  if (experimenterData.apiConfig.activeApiKeyType === ApiKeyType.OLLAMA_CUSTOM_URL) {
     // implicitly checks if llamaApiKey exists
     return (
-      (experimenterData.ollamaApiKey.url !== INVALID_API_KEY) &&
-      (experimenterData.ollamaApiKey.llmType !== INVALID_LLM_TYPE)
+      (experimenterData.apiConfig.ollamaApiKey.url !== INVALID_API_KEY) &&
+      (experimenterData.apiConfig.ollamaApiKey.llmType !== INVALID_LLM_TYPE)
     );
   }
 
