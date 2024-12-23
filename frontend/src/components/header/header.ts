@@ -80,7 +80,7 @@ export class Header extends MobxLitElement {
     const activePage = this.routerService.activePage;
     const params = this.routerService.activeRoute.params;
 
-    if (activePage == Pages.HOME) {
+    if (activePage === Pages.HOME || activePage === Pages.ADMIN) {
       return nothing;
     }
 
@@ -172,6 +172,8 @@ export class Header extends MobxLitElement {
     switch (activePage) {
       case Pages.HOME:
         return 'Home';
+      case Pages.ADMIN:
+        return 'Admin dashboard';
       case Pages.SETTINGS:
         return 'Settings';
       case Pages.EXPERIMENT:

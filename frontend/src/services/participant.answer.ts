@@ -21,6 +21,7 @@ import {
   SurveyStageParticipantAnswer,
   SurveyQuestionKind,
   createChipOffer,
+  createComprehensionStageParticipantAnswer,
   createRankingStageParticipantAnswer,
   createSurveyPerParticipantStageParticipantAnswer,
   createSurveyStageParticipantAnswer,
@@ -124,6 +125,30 @@ export class ParticipantAnswerService extends Service {
     const answer = this.answerMap[stageId];
     if (!answer || answer.kind !== StageKind.RANKING) return 0;
     return answer.rankingList.length;
+  }
+
+  getComprehensionAnswerMap(stageId: string) {
+    const answer = this.answerMap[stageId];
+    if (!answer || answer.kind !== StageKind.COMPREHENSION) return {};
+    return answer.answerMap;
+  }
+
+  getComprehensionAnswer(stageId: string, questionId: string) {
+    const answerMap = this.getComprehensionAnswerMap(stageId);
+    if (!answerMap) return null;
+    return answerMap[questionId];
+  }
+
+  updateComprehensionAnswer(stageId: string, questionId: string, answer: string) {
+    let answerData = this.answerMap[stageId];
+    if (!answerData || answerData.kind !== StageKind.COMPREHENSION) {
+      answerData = createComprehensionStageParticipantAnswer(
+        { id: stageId }
+      );
+    }
+
+    answerData.answerMap[questionId] = answer
+    this.answerMap[stageId] = answerData;
   }
 
   getNumSurveyAnswers(stageId: string) {

@@ -42,8 +42,8 @@ export class HomeGallery extends MobxLitElement {
     .slice() 
     .sort((a, b) => a.metadata.dateCreated.seconds - b.metadata.dateCreated.seconds);
 
-    const yourExperiments = experiments.filter(e => e.metadata.creator === this.authService.userId);
-    const otherExperiments = experiments.filter(e => e.metadata.creator !== this.authService.userId);
+    const yourExperiments = experiments.filter(e => e.metadata.creator === this.authService.userEmail);
+    const otherExperiments = experiments.filter(e => e.metadata.creator !== this.authService.userEmail);
  
     return html`
       ${this.renderEmptyMessage()}

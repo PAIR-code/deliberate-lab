@@ -1,3 +1,4 @@
+import {createProfileStage} from '@deliberation-lab/utils';
 import {createAgentResponseConfig} from '@deliberation-lab/utils';
 import {
   createAgentConfig,
@@ -5,6 +6,7 @@ import {
   StageGame,
   createChatStage,
   createMetadataConfig,
+  ProfileType,
 } from '@deliberation-lab/utils';
 // ****************************************************************************
 // Experiment config
@@ -12,17 +14,24 @@ import {
 export const RTV_METADATA = createMetadataConfig({
   name: 'Reality TV Chat',
   publicName: 'Reality TV Chat',
-  description: 'A conversation between multiple agents who discuss reality TV shows.'
+  description:
+    'A debate scenario that showcases multi-agent conversation and facilitation.',
 });
 export function getRTVStageConfigs(): StageConfig[] {
   const stages: StageConfig[] = [];
   stages.push(
+    createProfileStage({
+      game: StageGame.RTV,
+      name: 'View your profile',
+      profileType: ProfileType.ANONYMOUS_ANIMAL,
+    }),
     createChatStage({
       game: StageGame.RTV,
       name: 'Group discussion',
       descriptions: {
-        primaryText: '',
-        infoText: `In this discussion, participants are discussing which is the best TV show.`,
+        primaryText:
+          'In this discussion, you will debate with other participants to agree upon the best TV show. Keep an open mind! You can end the conversation and progress to the next stage when you have reached agreement.',
+        infoText: '',
         helpText: '',
       },
       agents: [
@@ -31,7 +40,7 @@ export function getRTVStageConfigs(): StageConfig[] {
           avatar: '🤦🏻‍♂️',
           prompt:
             'You are engaged in a debate about which reality TV show is the best. Your goal is to convince the others in the conversation that Love is Blind is the best reality TV show. You are sure about this and your mind will not be changed. When you feel that a consensus has been made about which reality TV show is the best, you can stop responding.\n ',
-          wordsPerMinute: 150,
+          wordsPerMinute: 300,
           responseConfig: createAgentResponseConfig({
             isJSON: true,
             messageField: 'response',
@@ -63,23 +72,11 @@ export function getRTVStageConfigs(): StageConfig[] {
           }),
         }),
         createAgentConfig({
-          name: 'FriendlyFrancine',
-          avatar: '😻',
+          name: 'Moderator',
+          avatar: '👩‍⚖️',
           prompt:
-            "You are engaged in a debate about which reality TV show is best. You don't really care about the outcome, you want everybody to be friends. If you sense that the conversation is getting heated, do your best to mediate the situation.\n ",
-          wordsPerMinute: 50,
-          responseConfig: createAgentResponseConfig({
-            isJSON: true,
-            messageField: 'response',
-            explanationField: 'explanation',
-          }),
-        }),
-        createAgentConfig({
-          name: 'QuietQuinton',
-          avatar: '🙈',
-          prompt:
-            "You are engaged in a debate about which reality TV show is best. You are shy and don't talk that much. However, your best friend is 😻 FriendlyFrancine, and you will jump into the conversation to support her.\n ",
-          wordsPerMinute: 40,
+            'You are facilitating a debate on the best reality TV show. Intervene only if the conversation stalls or veers off-track, and only to help participants reach consensus.',
+          wordsPerMinute: 300,
           responseConfig: createAgentResponseConfig({
             isJSON: true,
             messageField: 'response',

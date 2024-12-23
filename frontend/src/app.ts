@@ -1,5 +1,6 @@
 import './pair-components/button';
 
+import './components/admin/admin_dashboard';
 import './components/experiment_builder/experiment_builder';
 import './components/experiment_manager/experiment_manager';
 import './components/experimenter/experimenter_panel';
@@ -51,6 +52,12 @@ export class App extends MobxLitElement {
         return html`
           <div class="content">
             <home-gallery></home-gallery>
+          </div>
+        `;
+      case Pages.ADMIN:
+        return html`
+          <div class="content">
+            <admin-dashboard></admin-dashboard>
           </div>
         `;
       case Pages.SETTINGS:

@@ -1,7 +1,10 @@
+import {createTextSurveyQuestion} from '@deliberation-lab/utils';
+import {createSurveyPerParticipantStage} from '@deliberation-lab/utils';
 import {
   Experiment,
   MultipleChoiceSurveyQuestion,
   PayoutCurrency,
+  ProfileType,
   StageConfig,
   StageGame,
   SurveyQuestion,
@@ -37,10 +40,10 @@ import {
 // Experiment config
 // ****************************************************************************
 export const LAS_METADATA = createMetadataConfig({
-  name: 'Lost at Sea',
+  name: 'Lost at Sea (v2)',
   publicName: 'Adrift in the Atlantic',
   description:
-    'An election scenario where participants deliberate together to elect a leader responsible for completing a survival task. This is an implementation of the Lost at Sea task (Born 2022) with pairwise elements.',
+    'A complex election scenario (Born 2022) that showcases pseudonoymous participants and many different experiment stages.',
 });
 
 export function getLASStageConfigs(): StageConfig[] {
@@ -49,25 +52,38 @@ export function getLASStageConfigs(): StageConfig[] {
   stages.push(LAS_TOS_STAGE);
   // Intro
   stages.push(LAS_INTRO_STAGE);
+  stages.push(LAS_PERSONAL_INFO_STAGE);
   // Profile
   stages.push(LAS_PROFILE_STAGE);
   // Part 1
   stages.push(LAS_PART_1_INSTRUCTIONS_STAGE);
   stages.push(LAS_PART_1_SURVIVAL_SURVEY_STAGE);
   stages.push(LAS_PART_1_WTL_SURVEY_STAGE);
+
   // Transfer
   stages.push(LAS_TRANSFER_STAGE);
+
   // Part 2
   stages.push(LAS_PART_2_INSTRUCTIONS_STAGE);
   stages.push(LAS_PART_2_PERFORMANCE_ESTIMATION_SURVEY_STAGE);
   stages.push(LAS_PART_2_GROUP_INSTRUCTIONS_STAGE);
   stages.push(LAS_PART_2_CHAT_STAGE);
+
   stages.push(LAS_PART_2_UPDATED_TASK_INFO_STAGE);
   stages.push(LAS_PART_2_UPDATED_TASK_SURVEY_STAGE);
-  stages.push(LAS_PART_2_UPDATED_PERFORMANCE_ESTIMATION_SURVEY_STAGE);
-  stages.push(LAS_PART_2_ELECTION_INFO_STAGE);
+
   stages.push(LAS_PART_2_WTL_SURVEY_STAGE);
+  stages.push(LAS_PART_2_ELECTION_INFO_STAGE);
   stages.push(LAS_PART_2_ELECTION_STAGE);
+
+  // Rankings
+  stages.push(LAS_PART_2_ACCURACY_RANK);
+  stages.push(LAS_PART_2_CONFIDENCE_RANK);
+  stages.push(LAS_PART_2_WTL_RANK);
+  stages.push(LAS_PART_2_ELECTION_RANK);
+
+  stages.push(LAS_PART_2_GENDER_GUESS);
+
   // Part 3
   stages.push(LAS_PART_3_INSTRUCTIONS_STAGE);
   stages.push(LAS_PART_3_LEADER_TASK_SURVEY_STAGE);
@@ -203,7 +219,7 @@ export function createLASMultipleChoiceQuestion(
 }
 
 // ****************************************************************************
-// Terms of Service stage
+// Terms of service stage
 // ****************************************************************************
 const LAS_TOS_LINES = [
   'Thank you for participating in this study.',
@@ -243,11 +259,50 @@ const LAS_INTRO_STAGE = createInfoStage({
   infoLines: LAS_INTRO_INFO_LINES,
 });
 
+const LAS_PERSONAL_INFO_STAGE = createSurveyStage({
+  game: StageGame.LAS,
+  name: 'Personal information',
+  descriptions: createStageTextConfig({
+    primaryText:
+      'Please fill out the folloiwng. Your gender will remain anonymous throughout this experiment.',
+  }),
+  questions: [
+    createMultipleChoiceSurveyQuestion({
+      questionTitle: 'What is your gender?',
+      options: [
+        {
+          id: '1',
+          imageId: '',
+          text: 'Female',
+        },
+        {
+          id: '2',
+          imageId: '',
+          text: 'Male',
+        },
+        {
+          id: '3',
+          imageId: '',
+          text: 'Other',
+        },
+        {
+          id: '4',
+          imageId: '',
+          text: 'Prefer not to say',
+        },
+      ],
+    }),
+  ],
+});
+
 // ****************************************************************************
 // Profile stage
 // ****************************************************************************
 const LAS_PROFILE_STAGE = createProfileStage({
+  id: 'profile',
   game: StageGame.LAS,
+  name: 'View randomly assigned profile',
+  profileType: ProfileType.ANONYMOUS_ANIMAL,
 });
 
 // ****************************************************************************
@@ -311,7 +366,7 @@ const LAS_PART_1_WTL_SURVEY_STAGE = createSurveyStage({
 // "Lobby" - transfer stage
 // ****************************************************************************
 export const LAS_TRANSFER_DESCRIPTION_PRIMARY =
-  'Please wait on this page for 10 minutes. There may be attention checks to make sure that you are waiting. If you leave this page before the time is up, you will not be approved for the payout. A link may appear offering you the option to continue to parts 2 and 3 of the experiment. These additional parts will take an estimated *45 minutes*. If you complete these additional parts, you wil earn an additional **£6 fixed fee, as well as up to a £2 bonus**. Thank you for your patience.';
+  'Please wait on this page for up to 10 minutes. There may be attention checks to make sure that you are waiting. If you leave this page before the time is up, you will not be approved for the payout. A link may appear offering you the option to continue to parts 2 and 3 of the experiment. These additional parts will take an estimated *45 minutes*. If you complete these additional parts, you wil earn an additional **£6 fixed fee, as well as up to a £2 bonus**. Thank you for your patience.';
 
 export const LAS_TRANSFER_STAGE = createTransferStage({
   game: StageGame.LAS,
@@ -475,46 +530,6 @@ export const LAS_PART_2_UPDATED_TASK_SURVEY_STAGE = createSurveyStage({
 });
 
 // ****************************************************************************
-// Part 2 Updated Performance Estimation survey stage
-// ****************************************************************************
-const LAS_PART_2_UPDATED_PERFORMANCE_ESTIMATION_SURVEY_STAGE =
-  createSurveyStage({
-    game: StageGame.LAS,
-    name: 'Update performance estimation',
-    descriptions: createStageTextConfig({
-      primaryText: LAS_PART_2_PERFORMANCE_ESTIMATION_DESCRIPTION_PRIMARY,
-    }),
-    questions: [
-      createMultipleChoiceSurveyQuestion({
-        questionTitle:
-          'We also give you the opportunity to update your guess about how well you did in Part 1 compared to the other 3 members of your group. Please indicate your answer by clicking on one of the options below. If you think you earned the highest number of good answers in your group, click on the first option. If you think you earned the second highest number of good answers, click on the second option, and so on.',
-        options: [
-          {
-            id: '1',
-            imageId: '',
-            text: 'My score was the best',
-          },
-          {
-            id: '2',
-            imageId: '',
-            text: 'My score was the second best',
-          },
-          {
-            id: '3',
-            imageId: '',
-            text: 'My score was the third best',
-          },
-          {
-            id: '4',
-            imageId: '',
-            text: 'My score was the fourth best',
-          },
-        ],
-      }),
-    ],
-  });
-
-// ****************************************************************************
 // Part 2 Election Instructions info stage
 // ****************************************************************************
 export const LAS_PART_2_ELECTION_INFO_LINES = [
@@ -534,24 +549,20 @@ export const LAS_PART_2_ELECTION_INFO_LINES = [
 const LAS_PART_2_ELECTION_INFO_STAGE = createInfoStage({
   game: StageGame.LAS,
   name: 'Election instructions',
-  infoLines: LAS_PART_2_UPDATED_TASK_INFO_LINES,
+  infoLines: LAS_PART_2_ELECTION_INFO_LINES,
 });
 
 // ****************************************************************************
 // Part 2 updated willingness to lead - survey stage
 // ****************************************************************************
 export const LAS_PART_2_WTL_DESCRIPTION_PRIMARY =
-  'Please indicate your willingness to become the group leader';
-
-export const LAS_PART_2_WTL_DESCRIPTION_INFO =
-  'Your group must elect a leader whose role is to answer on behalf of the group the same types of questions you have just seen. In this scenario, the leader is the only one who chooses the most useful items for survival from pairs, and their answers determine the payment for each member of the group.';
+  'Please indicate your willingness to become the group leader, which may or may not have changed. As a reminder, your group must elect a leader whose role is to answer on behalf of the group the same types of questions you have just seen. In this scenario, the leader is the only one who chooses the most useful items for survival from pairs, and their answers determine the payment for each member of the group.';
 
 const LAS_PART_2_WTL_SURVEY_STAGE = createSurveyStage({
   id: LAS_WTL_STAGE_ID,
   game: StageGame.LAS,
-  name: 'Willingness to lead survey',
+  name: 'Willingness to lead update',
   descriptions: createStageTextConfig({
-    infoText: LAS_PART_2_WTL_DESCRIPTION_INFO,
     primaryText: LAS_PART_2_WTL_DESCRIPTION_PRIMARY,
   }),
   questions: [
@@ -579,6 +590,87 @@ export const LAS_PART_2_ELECTION_STAGE = createRankingStage({
   descriptions: createStageTextConfig({
     primaryText: LAS_PART_2_ELECTION_DESCRIPTION_PRIMARY,
   }),
+});
+
+// Rankings
+export const LAS_PART_2_ACCURACY_RANK = createRankingStage({
+  id: 'accuracy_ranking',
+  game: StageGame.LAS,
+  name: 'Accuracy ranking',
+  descriptions: createStageTextConfig({
+    primaryText:
+      'Now, we will ask a few questions about your evaluation of the group. Please rank the members of your group in order of who you think performed the best on the task, from top performing (top) to lowest performing (bottom).',
+  }),
+  enableSelfVoting: true,
+});
+
+export const LAS_PART_2_CONFIDENCE_RANK = createRankingStage({
+  id: 'confidence_ranking',
+  game: StageGame.LAS,
+  name: 'Confidence ranking',
+  descriptions: createStageTextConfig({
+    primaryText:
+      'Please rank the members of your group in order of how confident you think they were in their answers to the task, from most confident (top) to least confident (bottom).',
+  }),
+  enableSelfVoting: true,
+});
+
+export const LAS_PART_2_WTL_RANK = createRankingStage({
+  id: 'willingness_to_lead_ranking',
+  game: StageGame.LAS,
+  name: 'Willingness to lead ranking',
+  descriptions: createStageTextConfig({
+    primaryText:
+      'Earlier, you were asked your willingness to become the group leader, on a scale from 1 to 10. Please rank the members of your group in order of how much you think they are willing to lead, from most willing (top) to least willing (bottom).',
+  }),
+  enableSelfVoting: true,
+});
+
+export const LAS_PART_2_ELECTION_RANK = createRankingStage({
+  id: 'election_rank',
+  game: StageGame.LAS,
+  name: 'Hypothesized election ranking',
+  descriptions: createStageTextConfig({
+    primaryText:
+      "Earlier, you cast a vote for who you think should become the group leader. Now, we would d like for you to think about how others might vote. Please rank the members of your group in the order of how likely you believe each individual is to be elected as the group's leader, from most likely (top) to least likely (bottom).",
+  }),
+  enableSelfVoting: true,
+});
+
+export const LAS_PART_2_GENDER_GUESS = createSurveyPerParticipantStage({
+  id: 'gender_guess',
+  game: StageGame.LAS,
+  name: 'Gender survey',
+  descriptions: createStageTextConfig({
+    primaryText:
+      'Everyone\'s gender remains anonymous throughout this experiment. However, we now ask you to indicate the gender you believe other participants in your group identify as. If you need help recalling group members, you can revisit previous stages of the experiment, such as Stage 11: "Group Discussion," by using the menu on the left.',
+  }),
+  questions: [
+    createMultipleChoiceSurveyQuestion({
+      questionTitle:
+        'Which gender do you think that this participant identifies as?',
+      options: [
+        {
+          id: '1',
+          imageId: '',
+          text: 'Male',
+        },
+        {
+          id: '2',
+          imageId: '',
+          text: 'Female',
+        },
+        {
+          id: '3',
+          imageId: '',
+          text: 'Neither / prefer not to say',
+        },
+      ],
+    }),
+    createTextSurveyQuestion({
+      questionTitle: 'Explain your reasoning for your guess of gender.',
+    }),
+  ],
 });
 
 // ****************************************************************************
@@ -609,7 +701,7 @@ export const LAS_PART_3_LEADER_TASK_SURVEY_STAGE = createSurveyStage({
   descriptions: createStageTextConfig({infoText: LAS_SCENARIO_REMINDER}),
   questions: createLASSurvivalSurvey(
     LAS_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS
-  )
+  ),
 });
 
 // ****************************************************************************
@@ -690,7 +782,10 @@ export function createLASPayoutItems() {
   const part2 = createSurveyPayoutItem({
     isActive: part2Selected,
     name: 'Parts 2 and 3 payoff - Part 2 selected',
-    description: [LAS_PAYMENT_PARTS_2_AND_3_DESCRIPTION, LAS_PAYMENT_PART_2_DESCRIPTION].join('\n\n'),
+    description: [
+      LAS_PAYMENT_PARTS_2_AND_3_DESCRIPTION,
+      LAS_PAYMENT_PART_2_DESCRIPTION,
+    ].join('\n\n'),
     stageId: LAS_PART_2_UPDATED_TASK_SURVEY_STAGE_ID,
     baseCurrencyAmount: 6,
   });
@@ -700,7 +795,10 @@ export function createLASPayoutItems() {
   const part3 = createSurveyPayoutItem({
     isActive: !part2Selected,
     name: 'Parts 2 and 3 payoff - Part 3 selected',
-    description: [LAS_PAYMENT_PARTS_2_AND_3_DESCRIPTION, LAS_PAYMENT_PART_3_DESCRIPTION].join('\n\n'),
+    description: [
+      LAS_PAYMENT_PARTS_2_AND_3_DESCRIPTION,
+      LAS_PAYMENT_PART_3_DESCRIPTION,
+    ].join('\n\n'),
     stageId: LAS_PART_3_LEADER_TASK_SURVEY_ID,
     baseCurrencyAmount: 6,
     rankingStageId: LAS_PART_2_ELECTION_STAGE_ID,

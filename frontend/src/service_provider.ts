@@ -1,4 +1,5 @@
 import { Core } from "./core/core";
+import { AdminService } from "./services/admin.service";
 import { AnalyticsService } from "./services/analytics.service";
 import { AuthService } from "./services/auth.service";
 import { CohortService } from "./services/cohort.service";
@@ -19,6 +20,9 @@ import { ExperimentManager } from "./services/experiment.manager";
  */
 export function makeServiceProvider(self: Core) {
   const serviceProvider = {
+    get adminService() {
+      return self.getService(AdminService);
+    },
     get analyticsService() {
       return self.getService(AnalyticsService);
     },

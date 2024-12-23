@@ -60,9 +60,7 @@ export class ChatEditor extends MobxLitElement {
       <div class="divider"></div>
       <div class="title">Agent settings</div>
       ${apiCheck}
-      ${this.stage.agents.map((agent, index) =>
-        this.renderAgent(agent, index)
-      )}
+      ${this.stage.agents.map((agent, index) => this.renderAgent(agent, index))}
       <pr-button
         color="secondary"
         variant="tonal"
@@ -311,10 +309,7 @@ export class ChatEditor extends MobxLitElement {
     `;
   }
 
-  private renderAgentWordsPerMinute(
-    agent: AgentConfig,
-    index: number
-  ) {
+  private renderAgentWordsPerMinute(agent: AgentConfig, index: number) {
     const updateWordsPerMinute = (e: InputEvent) => {
       const wordsPerMinute = Number((e.target as HTMLInputElement).value);
       if (!isNaN(wordsPerMinute)) {
@@ -331,7 +326,8 @@ export class ChatEditor extends MobxLitElement {
     return html`
       <div class="question-label">Words per minute</div>
       <div class="description">
-        The higher this value, the faster the agent will respond.
+        The higher this value, the faster the agent will respond. This can also
+        be used to set a priority on which agent should respond first.
       </div>
       <div class="number-input">
         <input
@@ -343,16 +339,15 @@ export class ChatEditor extends MobxLitElement {
           @input=${updateWordsPerMinute}
         />
         ${agent.wordsPerMinute < 1 || agent.wordsPerMinute > 1000
-          ? html`<div class="error-message">Please enter a value between 1 and 1000.</div>`
+          ? html`<div class="error-message">
+              Please enter a value between 1 and 1000.
+            </div>`
           : nothing}
       </div>
     `;
   }
 
-  private renderAgentResponseConfig(
-    agent: AgentConfig,
-    index: number
-  ) {
+  private renderAgentResponseConfig(agent: AgentConfig, index: number) {
     const config = agent.responseConfig;
     const updateConfig = (responseConfig: AgentResponseConfig) => {
       this.updateAgent({...agent, responseConfig}, index);

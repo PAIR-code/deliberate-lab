@@ -1,14 +1,24 @@
 /** Experimenter types and functions. */
 
+import {Timestamp} from 'firebase/firestore';
+import {UnifiedTimestamp} from './shared';
+
 // ************************************************************************* //
 // TYPES                                                                     //
 // ************************************************************************* //
 
-/** Experimenter profile (written to Firestore under experimenters/{id}). */
+
+/** Experimenter public profile (written to Firestore under experimenters/{id}). */
 export interface ExperimenterProfile {
-  id: string;
   name: string;
   email: string;
+  lastLogin: UnifiedTimestamp|null; // null if never logged in
+}
+
+/** Full experimenter profile built from allowlist and experimenter data. */
+export interface ExperimenterProfileExtended extends ExperimenterProfile {
+  id: string;
+  isAdmin: boolean;
 }
 
 /** Experimenter data (written to Firestore under experimenterData/{id}). */
@@ -18,8 +28,8 @@ export interface ExperimenterData {
   TODO: refactor this as a list of types and values for each mediator(see design document)
   */
   id: string;
-  apiConfig: APIKeyConfig;
   email: string;
+  apiKeys: APIKeyConfig;
 }
 
 export interface APIKeyConfig {
@@ -56,39 +66,25 @@ const INVALID_LLM_TYPE = ''
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
 
-export function createExperimenterData(
-  experimenterId: string
-): ExperimenterData {
+export function getFullExperimenterConfig(
+  experimenter: Partial<ExperimenterProfileExtended> = {},
+): ExperimenterProfileExtended {
   return {
-    id: experimenterId,
-    apiConfig: {
-      geminiApiKey: INVALID_API_KEY,
-      ollamaApiKey: { url: INVALID_API_KEY, llmType: INVALID_LLM_TYPE },
-      activeApiKeyType: ApiKeyType.GEMINI_API_KEY
-    },
-    email: ""
+    id: experimenter.id ?? '',
+    name: experimenter.name ?? '',
+    email: experimenter.email ?? '',
+    isAdmin: experimenter.isAdmin ?? false,
+    lastLogin: experimenter.lastLogin ?? null
   };
 }
 
-
-export function checkApiKeyExists(experimenterData: ExperimenterData | null | undefined): boolean {
-  if (experimenterData === null || experimenterData === undefined) {
-    return false
-  }
-  // if active API key type is Gemini
-  if (experimenterData.apiConfig.activeApiKeyType === ApiKeyType.GEMINI_API_KEY) {
-    // implicitly checks if geminiApiKey exists
-    return experimenterData.apiConfig.geminiApiKey !== INVALID_API_KEY
-  }
-
-  // if active API key type is Ollama
-  if (experimenterData.apiConfig.activeApiKeyType === ApiKeyType.OLLAMA_CUSTOM_URL) {
-    // implicitly checks if llamaApiKey exists
-    return (
-      (experimenterData.apiConfig.ollamaApiKey.url !== INVALID_API_KEY) &&
-      (experimenterData.apiConfig.ollamaApiKey.llmType !== INVALID_LLM_TYPE)
-    );
-  }
-
-  return false; // false if no valid condition is met
+export function createExperimenterData(
+  experimenterId: string,
+  experimenterEmail: string
+): ExperimenterData {
+  return {
+    id: experimenterId,
+    email: experimenterEmail,
+    apiKeys: { geminiKey: '' }
+  };
 }

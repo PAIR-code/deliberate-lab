@@ -23,12 +23,12 @@ import {
   CreateChatMessageData,
   Experiment,
   ExperimentDownload,
-  HumanAgentChatMessage,
+  HumanMediatorChatMessage,
   ParticipantProfileExtended,
   ParticipantStatus,
   StageConfig,
   createCohortConfig,
-  createHumanAgentChatMessage,
+  createHumanMediatorChatMessage,
   generateId,
 } from '@deliberation-lab/utils';
 import {
@@ -49,6 +49,7 @@ import {
   downloadCSV,
   downloadJSON,
   getChatHistoryData,
+  getChipNegotiationData,
   getExperimentDownload,
   getParticipantData
 } from '../shared/file.utils';
@@ -136,7 +137,7 @@ export class ExperimentManager extends Service {
   }
 
   @computed get isCreator() {
-    return this.sp.authService.userId === this.sp.experimentService.experiment?.metadata.creator
+    return this.sp.authService.userEmail === this.sp.experimentService.experiment?.metadata.creator
       || !this.sp.experimentService.experiment;
   }
 
@@ -531,6 +532,14 @@ export class ExperimentManager extends Service {
 
       if (result) {
         downloadJSON(result, result.experiment.metadata.name);
+
+        // Download JSONs for each chip negotiation game
+        const chipData = getChipNegotiationData(result);
+        chipData.forEach(data => {
+          downloadJSON(data.data, `${data.experimentName}_ChipNegotiation_${data.cohortName}_${data.stageName}`);
+        });
+
+        // Download chat data for each group chat
         const chatData = getChatHistoryData(result);
         chatData.forEach(data => {
           downloadCSV(data.data, `${data.experimentName}_ChatHistory_Cohort-${data.cohortId}_Stage-${data.stageId}`);
@@ -549,14 +558,14 @@ export class ExperimentManager extends Service {
   /** Create a manual (human) agent chat message. */
   async createManualChatMessage(
     stageId: string,
-    config: Partial<HumanAgentChatMessage> = {}
+    config: Partial<HumanMediatorChatMessage> = {}
   ) {
     let response = {};
     const experimentId = this.sp.routerService.activeRoute.params['experiment'];
     const cohortId = this.sp.cohortService.cohortId;
 
     if (experimentId && cohortId) {
-      const chatMessage = createHumanAgentChatMessage({
+      const chatMessage = createHumanMediatorChatMessage({
         ...config,
         discussionId: this.sp.cohortService.getChatDiscussionId(stageId),
       });
