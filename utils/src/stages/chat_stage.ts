@@ -99,12 +99,22 @@ export interface AgentMediatorChatMessage extends BaseChatMessage {
 }
 
 /** LLM agent config. */
+export interface CustomRequestBodyField {
+  name: string;
+  value: string;
+}
+
 export interface AgentConfig {
   id: string;
   name: string;
   avatar: string; // emoji avatar for agent
   prompt: string;
   wordsPerMinute: number; // Typing speed
+  temperature: number;
+  topP: number;
+  frequencyPenalty: number;
+  presencePenalty: number;
+  customRequestBodyFields: CustomRequestBodyField[];
   responseConfig: AgentResponseConfig;
   // TODO: Add more settings, e.g., model, temperature, context window
 }
@@ -328,6 +338,11 @@ export function createAgentConfig(config: Partial<AgentConfig> = {}): AgentConfi
     avatar: config.avatar ?? '🤖',
     prompt: config.prompt ?? DEFAULT_AGENT_PROMPT.trim(),
     wordsPerMinute: config.wordsPerMinute ?? 80, // Default 80 WPM.
+    temperature: config.temperature ?? 0.7,
+    topP: config.topP ?? 1.0,
+    frequencyPenalty: config.frequencyPenalty ?? 0.0,
+    presencePenalty: config.presencePenalty ?? 1.0,
+    customRequestBodyFields: config.customRequestBodyFields ?? [],
     responseConfig: config.responseConfig ?? createAgentResponseConfig(),
   };
 }

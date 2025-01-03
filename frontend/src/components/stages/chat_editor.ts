@@ -304,6 +304,8 @@ export class ChatEditor extends MobxLitElement {
           ${this.renderAgentPrompt(agent, index)}
           ${this.renderAgentResponseConfig(agent, index)}
           ${this.renderAgentWordsPerMinute(agent, index)}
+          ${this.renderAgentSamplingParameters(agent, index)}
+          ${this.renderAgentCustomRequestBodyFields(agent, index)}
         </div>
       </div>
     `;
@@ -346,6 +348,160 @@ export class ChatEditor extends MobxLitElement {
       </div>
     `;
   }
+
+  private renderAgentSamplingParameters(agent: AgentConfig, index: number) {
+    const updateTemperature = (e: InputEvent) => {
+      const temperature = Number((e.target as HTMLInputElement).value);
+      if (!isNaN(temperature)) {
+        this.updateAgent(
+          {
+            ...agent,
+            temperature,
+          },
+          index
+        );
+      }
+    };
+
+    const updateTopP = (e: InputEvent) => {
+      const topP = Number((e.target as HTMLInputElement).value);
+      if (!isNaN(topP)) {
+        this.updateAgent(
+          {
+            ...agent,
+            topP,
+          },
+          index
+        );
+      }
+    };
+
+    const updateFrequencyPenalty = (e: InputEvent) => {
+      const frequencyPenalty = Number((e.target as HTMLInputElement).value);
+      if (!isNaN(frequencyPenalty)) {
+        this.updateAgent(
+          {
+            ...agent,
+            frequencyPenalty,
+          },
+          index
+        );
+      }
+    };
+
+    const updatePresencePenalty = (e: InputEvent) => {
+      const presencePenalty = Number((e.target as HTMLInputElement).value);
+      if (!isNaN(presencePenalty)) {
+        this.updateAgent(
+          {
+            ...agent,
+            presencePenalty,
+          },
+          index
+        );
+      }
+    };
+
+    return html`
+      <div class="question-label">Sampling parameters</div>
+      <div class="number-input">
+        <label for="temperature">Temperature (0.0 - 1.0):</label>
+          <div class="description">
+            The lower this value, the more deterministic the model's outcome will be.
+          </div>
+        <input
+          .disabled=${!this.experimentEditor.canEditStages}
+          type="number"
+          min="0.0"
+          max="1.0"
+          step="0.1"
+          .value=${agent.temperature}
+          @input=${updateTemperature}
+        />
+        <label for="topP">Top P (0.0 - 1.0):</label>
+          <div class="description">
+            If this value is less than 1.0, the model will discard unlikely tokens and sample from only tokens comprising that much probability mass.
+          </div>
+        <input
+          .disabled=${!this.experimentEditor.canEditStages}
+          type="number"
+          min="0.0"
+          max="1.0"
+          step="0.1"
+          .value=${agent.topP}
+          @input=${updateTopP}
+        />
+        <label for="frequencyPenalty">Frequency penalty (-2.0 - 2.0):</label>
+          <div class="description">
+            Positive values will penalize tokens based on how frequently they have appeared in the text.
+          </div>
+        <input
+          .disabled=${!this.experimentEditor.canEditStages}
+          type="number"
+          min="-2.0"
+          max="2.0"
+          step="0.1"
+          .value=${agent.frequencyPenalty}
+          @input=${updateFrequencyPenalty}
+        />
+        <label for="presencePenalty">Presence penalty (-2.0 - 2.0):</label>
+          <div class="description">
+            Positive values will penalize tokens that have already appeared in the text (regardless of frequency).
+          </div>
+        <input
+          .disabled=${!this.experimentEditor.canEditStages}
+          type="number"
+          min="-2.0"
+          max="2.0"
+          step="0.1"
+          .value=${agent.presencePenalty}
+          @input=${updatePresencePenalty}
+        />
+      </div>
+     `;
+   }
+
+   private renderAgentCustomRequestBodyFields(
+     agent: AgentConfig,
+     index: number
+   ) {
+     const addField = () => {
+       this.updateAgent(
+         {
+           ...agent,
+           customRequestBodyFields: [
+             ...agent.customRequestBodyFields,
+             {name: '', value: ''},
+           ],
+         },
+         index
+       );
+     };
+
+     return html`
+       <div class="question-label">Custom request body fields</div>
+       <div class="description">
+         Add custom fields to the request body.
+       </div>
+       ${agent.customRequestBodyFields.map((field, fieldIndex) => html`
+         <div class="custom-field">
+           <pr-textarea
+             label="Field name"
+             variant="outlined"
+             .value=${field.name}
+           >
+           </pr-textarea>
+           <pr-textarea
+             label="Field value"
+             variant="outlined"
+             .value=${field.value}
+           >
+           </pr-textarea>
+         </div>
+       `)}
+       <pr-button @click=${addField}>Add field</pr-button>
+     `;
+   }
 
   private renderAgentResponseConfig(agent: AgentConfig, index: number) {
     const config = agent.responseConfig;
