@@ -180,7 +180,7 @@ export class PayoutView extends MobxLitElement {
           </div>
 
           <div class="row">
-            <div>Final payout (change in value, 0 if negative)</div>
+            <div>Final payout (0 if negative)</div>
             <div class="chip secondary">
               ${this.renderCurrency(bonusPayout, currency)}
             </div>

@@ -212,7 +212,7 @@ export class ChipReveal extends MobxLitElement {
 
           <div class="table-row">
           <div class="table-cell">
-          Current payout<br />(change in value, 0 if negative)
+          Current payout<br />(0 if negative)
         </div>
             ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
             <div
