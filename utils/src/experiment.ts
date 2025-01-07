@@ -24,8 +24,9 @@ import { StageConfig } from './stages/stage';
   * VERSION 8 - updated in PR #372; MediatorConfig is now AgentConfig
   * VERSION 9 - updated in PR #373 to add avatar (emoji) field to ChipItem
   *             and rename chip quantity field to startingQuantity
+  * VERSION 10 - add baseCurrencyAmount to PayoutItemResult (PR #384)
   */
-export const EXPERIMENT_VERSION_ID = 8;
+export const EXPERIMENT_VERSION_ID = 10;
 
 /** Experiment. */
 export interface Experiment {
