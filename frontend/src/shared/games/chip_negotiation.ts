@@ -68,15 +68,13 @@ export function getChipNegotiationStageConfigs(): StageConfig[] {
   stages.push(CHIP_INITIAL_TRANSFER_STAGE);
 
   // Round 1
-  stages.push(CHIP_NEGOTIATION_STAGE);
-  stages.push(CHIP_PAYOUT_STAGE);
-
+  stages.push(CHIP_NEGOTIATION_STAGE1);
   stages.push(TRANSFER_STAGE);
   stages.push(CHIP_INFO_TRANSFER_STAGE);
 
   // Round 2
   stages.push(CHIP_NEGOTIATION_STAGE2);
-  stages.push(CHIP_PAYOUT_STAGE2);
+  stages.push(CHIP_PAYOUT_STAGE);
 
   // Post-negotiation survey stage
   stages.push(CHIP_SURVEY_STAGE);
@@ -154,9 +152,10 @@ const CHIP_INFO_STAGE_OVERVIEW2 = createInfoStage({
 });
 
 // ****************************************************************************
-// Comprehension checks 1
+// Comprehension checks
 // ****************************************************************************
 export const CHIP_COMPREHENSION_CHECK = createComprehensionStage({
+  id: 'comprehension_check1',
   game: StageGame.CHP,
   name: 'Comprehension check',
   descriptions: createStageTextConfig({
@@ -192,6 +191,102 @@ export const CHIP_COMPREHENSION_CHECK = createComprehensionStage({
     ),
   ],
 });
+
+export const CHIP_COMPREHENSION_CHECK2 = createComprehensionStage({
+  id: 'comprehension_check2',
+  game: StageGame.CHP,
+  name: 'Comprehension check 2',
+  descriptions: createStageTextConfig({
+    primaryText:
+      'Please answer the following questions to verify your understanding of the instructions. You may proceed once you have answered the questions correctly.',
+  }),
+
+  questions: [
+    createMultipleChoiceComprehensionQuestion(
+      {
+        questionTitle:
+          'True or false: A player can propose multiple trades during their turn in a round.',
+        options: [
+          createMultipleChoiceItem({id: 'a', text: 'True'}),
+          createMultipleChoiceItem({id: 'b', text: 'False'}),
+        ],
+      },
+      'b' // correct answer ID
+    ),
+    createMultipleChoiceComprehensionQuestion(
+      {
+        questionTitle: 'Which of the following trades is NOT allowed?',
+        options: [
+          createMultipleChoiceItem({
+            id: 'a',
+            text: 'Trading 🔴 3 red chips for 🟢 2 green chips',
+          }),
+          createMultipleChoiceItem({
+            id: 'b',
+            text: 'Trading 🟢 4 green chips for 🔴 4 red chips',
+          }),
+          createMultipleChoiceItem({
+            id: 'c',
+            text: 'Trading 🔴 2 red chips for 🔴 4 red chips',
+          }),
+          createMultipleChoiceItem({
+            id: 'd',
+            text: 'Trading 🟢 5 green chips for 🔴 3 red chips',
+          }),
+        ],
+      },
+      'c' // correct answer ID
+    ),
+    createMultipleChoiceComprehensionQuestion(
+      {
+        questionTitle:
+          'True or false: The number of chips offered must equal the number of chips requested.',
+        options: [
+          createMultipleChoiceItem({id: 'a', text: 'True'}),
+          createMultipleChoiceItem({id: 'b', text: 'False'}),
+        ],
+      },
+      'b' // correct answer ID
+    ),
+    createMultipleChoiceComprehensionQuestion(
+      {
+        questionTitle:
+          'True or False: Players who accept a trade proposal **do not know** at the time of accepting the proposal whether they will be the one chosen to complete the trade.',
+        options: [
+          createMultipleChoiceItem({id: 'a', text: 'True'}),
+          createMultipleChoiceItem({id: 'b', text: 'False'}),
+        ],
+      },
+      'a' // correct answer ID
+    ),
+    createMultipleChoiceComprehensionQuestion(
+      {
+        questionTitle:
+          'Say that a player proposes trading 🔴 3 red chips for 🟢 4 green chips. Who can accept this trade?',
+        options: [
+          createMultipleChoiceItem({
+            id: 'a',
+            text: 'Any player with 4 or more green chips',
+          }),
+          createMultipleChoiceItem({
+            id: 'b',
+            text: 'Only players with exactly 4 green chips',
+          }),
+          createMultipleChoiceItem({
+            id: 'c',
+            text: 'Only the player with the most green chips',
+          }),
+          createMultipleChoiceItem({
+            id: 'd',
+            text: 'Any player with any number of green chips',
+          }),
+        ],
+      },
+      'a' // correct answer ID
+    ),
+  ],
+});
+
 
 // ****************************************************************************
 // Gameplay instructions
@@ -303,104 +398,6 @@ const CHIP_INFO_STAGE_GAMEPLAY5 = createInfoStage({
 });
 
 // ****************************************************************************
-// Comprehension stage 2
-// ****************************************************************************/
-export const CHIP_COMPREHENSION_CHECK2 = createComprehensionStage({
-  game: StageGame.CHP,
-  name: 'Comprehension check 2',
-  descriptions: createStageTextConfig({
-    primaryText:
-      'Please answer the following questions to verify your understanding of the instructions. You may proceed once you have answered the questions correctly.',
-  }),
-
-  questions: [
-    createMultipleChoiceComprehensionQuestion(
-      {
-        questionTitle:
-          'True or false: A player can propose multiple trades during their turn in a round.',
-        options: [
-          createMultipleChoiceItem({id: 'a', text: 'True'}),
-          createMultipleChoiceItem({id: 'b', text: 'False'}),
-        ],
-      },
-      'b' // correct answer ID
-    ),
-    createMultipleChoiceComprehensionQuestion(
-      {
-        questionTitle: 'Which of the following trades is NOT allowed?',
-        options: [
-          createMultipleChoiceItem({
-            id: 'a',
-            text: 'Trading 🔴 3 red chips for 🟢 2 green chips',
-          }),
-          createMultipleChoiceItem({
-            id: 'b',
-            text: 'Trading 🟢 4 green chips for 🔴 4 red chips',
-          }),
-          createMultipleChoiceItem({
-            id: 'c',
-            text: 'Trading 🔴 2 red chips for 🔴 4 red chips',
-          }),
-          createMultipleChoiceItem({
-            id: 'd',
-            text: 'Trading 🟢 5 green chips for 🔴 3 red chips',
-          }),
-        ],
-      },
-      'c' // correct answer ID
-    ),
-    createMultipleChoiceComprehensionQuestion(
-      {
-        questionTitle:
-          'True or false: The number of chips offered must equal the number of chips requested.',
-        options: [
-          createMultipleChoiceItem({id: 'a', text: 'True'}),
-          createMultipleChoiceItem({id: 'b', text: 'False'}),
-        ],
-      },
-      'b' // correct answer ID
-    ),
-    createMultipleChoiceComprehensionQuestion(
-      {
-        questionTitle:
-          'True or False: Players who accept a trade proposal **do not know** at the time of accepting the proposal whether they will be the one chosen to complete the trade.',
-        options: [
-          createMultipleChoiceItem({id: 'a', text: 'True'}),
-          createMultipleChoiceItem({id: 'b', text: 'False'}),
-        ],
-      },
-      'a' // correct answer ID
-    ),
-
-    createMultipleChoiceComprehensionQuestion(
-      {
-        questionTitle:
-          'Say that a player proposes trading 🔴 3 red chips for 🟢 4 green chips. Who can accept this trade?',
-        options: [
-          createMultipleChoiceItem({
-            id: 'a',
-            text: 'Any player with 4 or more green chips',
-          }),
-          createMultipleChoiceItem({
-            id: 'b',
-            text: 'Only players with exactly 4 green chips',
-          }),
-          createMultipleChoiceItem({
-            id: 'c',
-            text: 'Only the player with the most green chips',
-          }),
-          createMultipleChoiceItem({
-            id: 'd',
-            text: 'Any player with any number of green chips',
-          }),
-        ],
-      },
-      'a' // correct answer ID
-    ),
-  ],
-});
-
-// ****************************************************************************
 // Payment information
 // ****************************************************************************/
 
@@ -410,15 +407,16 @@ const CHIP_INFO_STAGE_PAYOUT = createInfoStage({
   name: 'Payment information',
   infoLines: [
     'At the end of the study, we will calculate your earnings based on the final chip holdings from **one** of the two negotiation games you participate in. Here’s how it works:',
-    '* Out of the two negotiation games you played, we will **randomly select one** for payment.',
-    '* We will pay you a bonus of how much you made over the initial endowment.',
+    '* For each of the two negotiation games, we will pay you a bonus of how much you made over the initial endowment.',
     '\n**Example:**',
-    ' Suppose that the second game is chosen for your payout. You initially started with 10 chips in each color, worth (10 * 0.03 + 10 * 0.05 + 10 * 0.07) = **$1.50**.',
+    ' Suppose that for the first game, you initially started with 10 chips in each color, worth (10 * 0.03 + 10 * 0.05 + 10 * 0.07) = **$1.50**.',
     'At the end of that game, you have:',
     '  * 🔴 8 red chips valued at $0.03 each',
     '  * 🟢 7 green chips valued at $0.05 each',
     '  * 🔵 21 blue chips valued at $0.07 each',
-    'This adds up to **$2.06**. You would receive $2.06 - $1.50 = **$0.56** as a bonus. If you did not increase the value of your chips, you will not receive a bonus.',
+    'This adds up to **$2.06**. You would receive $2.06 - $1.50 = **$0.56** as a bonus for the first game.',
+    'If you did not increase the value of your chips, you would not receive a bonus.',
+    '\nYour total bonus will be the sum of the first game\'s bonus and the second game\'s bonus.',
     '\nThe exact values will depend on your random chip valuations and your final holdings, so your payment may differ from this example.',
     '\nThis payment is in addition to the $8 base payment for participating.',
   ],
@@ -436,10 +434,12 @@ const CHIP_INFO_TRANSFER_STAGE = createInfoStage({
     'All players participating in this round are also playing for their second time. **Enjoy the game!**',
   ],
 });
+
 // ****************************************************************************
 // Transfer stages
 // ****************************************************************************/
 export const CHIP_INITIAL_TRANSFER_STAGE = createTransferStage({
+  id: 'transfer1',
   game: StageGame.CHP,
   name: 'Initial transfer stage',
   descriptions: createStageTextConfig({
@@ -451,6 +451,7 @@ export const CHIP_INITIAL_TRANSFER_STAGE = createTransferStage({
 });
 
 export const TRANSFER_STAGE = createTransferStage({
+  id: 'transfer2',
   game: StageGame.CHP,
   name: 'Transfer stage',
   descriptions: createStageTextConfig({
@@ -497,8 +498,11 @@ const CHIPS = [
   },
 ];
 
-const CHIP_NEGOTIATION_STAGE = createChipStage({
-  id: 'negotiation1',
+const CHIP_NEGOTIATION_STAGE1_ID = 'negotiation1';
+const CHIP_NEGOTIATION_STAGE2_ID = 'negotiation2';
+
+const CHIP_NEGOTIATION_STAGE1 = createChipStage({
+  id: CHIP_NEGOTIATION_STAGE1_ID,
   game: StageGame.CHP,
   name: 'First negotiation game',
   descriptions: createStageTextConfig({
@@ -508,7 +512,7 @@ const CHIP_NEGOTIATION_STAGE = createChipStage({
 });
 
 const CHIP_NEGOTIATION_STAGE2 = createChipStage({
-  id: 'negotiation2',
+  id: CHIP_NEGOTIATION_STAGE2_ID,
   game: StageGame.CHP,
   name: 'Second negotiation game',
   descriptions: createStageTextConfig({
@@ -521,15 +525,20 @@ const CHIP_NEGOTIATION_STAGE2 = createChipStage({
 // Payout stage
 // ****************************************************************************
 const CHIP_PAYOUT_STAGE = createPayoutStage({
-  id: 'payout1',
+  id: 'payout',
   game: StageGame.CHP,
-  payoutItems: [],
-});
-
-const CHIP_PAYOUT_STAGE2 = createPayoutStage({
-  id: 'payout2',
-  game: StageGame.CHP,
-  payoutItems: [],
+  payoutItems: [
+    createChipPayoutItem({
+      name: 'Payout from game 1',
+      stageId: CHIP_NEGOTIATION_STAGE1_ID,
+      baseCurrencyAmount: 0,
+    }),
+    createChipPayoutItem({
+      name: 'Payout from game 2',
+      stageId: CHIP_NEGOTIATION_STAGE2_ID,
+      baseCurrencyAmount: 0,
+    }),
+  ],
 });
 
 // ****************************************************************************
