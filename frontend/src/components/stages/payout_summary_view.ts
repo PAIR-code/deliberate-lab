@@ -203,6 +203,10 @@ export class PayoutView extends MobxLitElement {
     item: PayoutItemResult,
     currency: PayoutCurrency
   ) {
+    if (item.baseCurrencyAmount === 0) {
+      return nothing;
+    }
+
     return html`
       <div class="scoring-item">
         <h2>Payout for completing stage</h2>
