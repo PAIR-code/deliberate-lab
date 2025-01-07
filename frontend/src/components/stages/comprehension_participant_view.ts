@@ -92,7 +92,7 @@ export class ComprehensionView extends MobxLitElement {
     return html`
       <div class="radio-question">
         <div class="radio-question-wrapper">
-          ${question.questionTitle}
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle))}
         </div>
         <div class="radio-question-wrapper">
           ${question.options.map((option) =>
