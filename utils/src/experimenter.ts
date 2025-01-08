@@ -39,8 +39,8 @@ export interface APIKeyConfig {
 }
 
 export enum ApiKeyType {
-  GEMINI_API_KEY = 'Gemini',
-  OLLAMA_CUSTOM_URL = 'ollama',
+  GEMINI_API_KEY = 'GEMINI',
+  OLLAMA_CUSTOM_URL = 'OLLAMA',
 }
 
 export interface OllamaServerConfig {
