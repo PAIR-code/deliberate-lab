@@ -617,6 +617,15 @@ export function getParticipantProfileCSVColumns(
   // Prolific ID
   columns.push(!profile ? 'Prolific ID' : profile.prolificId ?? '');
 
+  // Profile name
+  columns.push(!profile ? 'Name' : profile.name ?? '');
+
+  // Profile avatar
+  columns.push(!profile ? 'Avatar' : profile.avatar ?? '');
+
+  // Profile pronouns
+  columns.push(!profile ? 'Pronouns' : profile.pronouns ?? '');
+
   // Current status
   columns.push(!profile ? 'Current status' : profile.currentStatus);
 
