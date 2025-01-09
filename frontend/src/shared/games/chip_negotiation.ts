@@ -335,10 +335,10 @@ const CHIP_INFO_STAGE_GAMEPLAY4 = createInfoStage({
     `## Trade completion`,
     `When an offer is presented, all other active participants get a chance to accept or decline. Note: Active participants are those not currently making the offer.`,
     '![Example of receiving an offer](https://i.imgur.com/NJL4AvQ.png)',
-    `Participants make their decisions simultaneously and privately. Some possible outcomes:`,
+    `Participants make their decisions simultaneously and privately. The participant who receives the offer is not dependent on who accepts the trade first. Some possible outcomes:`,
     `* If no one accepts, the trade does not happen, and the turn ends.`,
-    `* If one participant accepts, that participant trades their chips as stated in the offer with the offering participant.`,
     `* If multiple participants accept, one accepting participant is *chosen at random* to complete the trade with the offering participant. This means that participants cannot choose who they trade with.`,
+    `* If only one participant accepts, the trade will happen.`,
   ],
 });
 
