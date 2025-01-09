@@ -486,7 +486,7 @@ export function getChipNegotiationData(
         const metadata = getChipNegotiationGameMetadata(stage, publicStage);
 
         // track each player's chip quantities from start to end of game
-        const currentChipMap = getChipNegotiationStartingQuantityMap(
+        let currentChipMap = getChipNegotiationStartingQuantityMap(
           stage, metadata.players
         );
 
@@ -495,12 +495,14 @@ export function getChipNegotiationData(
         let roundNumber = 0;
         while (roundNumber < stage.numRounds) {
           if (publicStage.participantOfferMap[roundNumber]) {
-            roundData.push(getChipNegotiationRoundData(
+            const { data, updatedChipMap } = getChipNegotiationRoundData(
               roundNumber,
               publicStage.participantOfferMap[roundNumber],
               metadata,
               currentChipMap
-            ));
+            );
+            roundData.push(data);
+            currentChipMap = updatedChipMap;
           } // end if statement checking for round
           roundNumber += 1;
         } // end loop over game rounds
@@ -567,7 +569,7 @@ function getChipNegotiationRoundData(
   roundMap: Record<string, ChipTransaction>, // participant ID to transaction
   playerMetadata: ChipNegotiationGameMetadata,
   currentChipMap: Record<string, Record<string, number>>,
-): ChipNegotiationRoundData {
+): { data: ChipNegotiationRoundData, updatedChipMap: Record<string, Record<string, number>> } {
   const transactions = Object.values(roundMap).sort(
     (a: ChipTransaction, b: ChipTransaction) => {
       const timeA =
@@ -587,7 +589,7 @@ function getChipNegotiationRoundData(
     turns.push(response.turn);
   });
 
-  return { round: roundNumber, turns };
+  return { data: { round: roundNumber, turns }, updatedChipMap: currentChipMap };
 }
 
 // TODO: Create utils function for transactions to use across frontend/backend
