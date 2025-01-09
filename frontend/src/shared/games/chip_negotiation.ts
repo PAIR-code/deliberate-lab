@@ -383,7 +383,7 @@ const CHIP_INFO_STAGE_PAYOUT = createInfoStage({
     '  * 🔴 8 red chips valued at $0.30 each',
     '  * 🟢 7 green chips valued at $0.50 each',
     '  * 🔵 21 blue chips valued at $0.70 each',
-    'This adds up to **$20.60**. You would receive $20.60 - $15.00 = **$05.60** as a bonus for the first game.',
+    'This adds up to **$20.60**. You would receive $20.60 - $15.00 = **$5.60** as a bonus for the first game.',
     'If you did not increase the value of your chips, you would not receive a bonus.',
     "\nYour total bonus will be the sum of the first game's bonus and the second game's bonus.",
     '\nThe exact values will depend on your random chip valuations and your final holdings, so your payment may differ from this example.',

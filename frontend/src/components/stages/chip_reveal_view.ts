@@ -200,7 +200,7 @@ export class ChipReveal extends MobxLitElement {
             ${this.makeCell('Current chip value')}
             ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
             <div class="table-cell">
-              ${totalPayout!.toFixed(2)}
+              $${totalPayout!.toFixed(2)}
             </div>
           </div>
 

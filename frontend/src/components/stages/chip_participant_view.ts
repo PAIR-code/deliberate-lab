@@ -102,7 +102,7 @@ export class ChipView extends MobxLitElement {
       return html`
         <div class="panel">
           <div class="status">
-            This game has ended. Please continue to the next stage.
+            ‼️ This game has ended. Please continue to the next stage.
           </div>
           <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
           </chip-reveal-view>
@@ -116,7 +116,7 @@ export class ChipView extends MobxLitElement {
       return html`
         <div class="panel">
           <div class="status">
-            This game has ended. Please continue to the next stage.
+            ‼️ This game has ended. Please continue to the next stage.
           </div>
         </div>
       `;
