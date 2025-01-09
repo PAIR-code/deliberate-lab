@@ -124,7 +124,7 @@ const CHIP_PROFILE_STAGE = createProfileStage({
 const CHIP_INFO_STAGE_OVERVIEW = createInfoStage({
   id: 'info_overview',
   game: StageGame.CHP,
-  name: 'Overview (1/2)',
+  name: 'Instructions: overview',
   infoLines: [
     'In this experiment, you will be playing a trading game with other participants. All of you will be given the same initial amount of 🔴 red chips, 🟢 green chips, and 🔵 blue chips, but you may value the different colors of chips differently.',
     'By making and accepting offers, you will try to exchange chips with the other players to increase the total value of chips that you end up holding at the end of the game.',
@@ -135,15 +135,15 @@ const CHIP_INFO_STAGE_OVERVIEW = createInfoStage({
 const CHIP_INFO_STAGE_OVERVIEW2 = createInfoStage({
   id: 'info_overview2',
   game: StageGame.CHP,
-  name: 'Overview (2/2)',
+  name: 'Instructions: chip valuations',
   infoLines: [
     'You will play this trading game two times, against different groups of participants. In each game, you and the other participants will start with:',
     `* 🔴 ${N_INITIAL_RED_CHIPS} **red** chips`,
     `* 🟢 ${N_INITIAL_GREEN_CHIPS} **green** chips`,
     `* 🔵 ${N_INITIAL_BLUE_CHIPS} **blue** chips`,
     '**Valuations:**',
-    'Each 🟢 green chip is worth $0.05 to each participant. However, you will all have different valuations for the red and blue chips, randomly chosen between $0.01 and $0.10. For example, Cat might value 🔴 red chips at $0.03 each and 🔵 blue chips at $0.07 each, while Mouse might value 🔴 red chips at $0.08 each and 🔵 blue chips at $0.03 each.',
-    "You know your own chip valuation and that everyone values 🟢 green chips the same, at $0.05 per chip. However, you do not know the other players' valuations for red and blue chips.",
+    'Each 🟢 green chip is worth $0.50 to each participant. However, you will all have different valuations for the red and blue chips, randomly chosen between $0.10 and $1.00. For example, Cat might value 🔴 red chips at $0.30 each and 🔵 blue chips at $0.70 each, while Mouse might value 🔴 red chips at $0.80 each and 🔵 blue chips at $0.30 each.',
+    "You know your own chip valuation and that everyone values 🟢 green chips the same, at $0.50 per chip. However, you do not know the other players' valuations for red and blue chips.",
     '![Example of chip count table](https://i.imgur.com/ImUM14D.png)',
     'The table above is shown to you during the game, and provides the number of chips everyone has as well as a reminder of your own valuation.',
     '\n**What this means:**',
@@ -295,7 +295,7 @@ export const CHIP_COMPREHENSION_CHECK2 = createComprehensionStage({
 const CHIP_INFO_STAGE_GAMEPLAY = createInfoStage({
   id: 'info_gameplay',
   game: StageGame.CHP,
-  name: 'Gameplay (1/5)',
+  name: 'Gameplay: rounds',
   infoLines: [
     `## How the game works`,
     `The game consists of **3 rounds** of trading. During each round, each player will have a turn to propose **1 trade**. These turns are pre-determined in a random order.`,
@@ -305,7 +305,7 @@ const CHIP_INFO_STAGE_GAMEPLAY = createInfoStage({
 const CHIP_INFO_STAGE_GAMEPLAY2 = createInfoStage({
   id: 'info_gameplay2',
   game: StageGame.CHP,
-  name: 'Gameplay (2/5)',
+  name: 'Gameplay: proposing a trade',
   infoLines: [
     `## Trade proposals`,
     `To propose a trade, a player must:`,
@@ -317,7 +317,7 @@ const CHIP_INFO_STAGE_GAMEPLAY2 = createInfoStage({
 const CHIP_INFO_STAGE_GAMEPLAY3 = createInfoStage({
   id: 'info_gameplay3',
   game: StageGame.CHP,
-  name: 'Gameplay (3/5)',
+  name: 'Gameplay: trading rules',
   infoLines: [
     `## Trade rules`,
     `* Players can trade quantities of chips. For example, a player can trade 5 🔴 red chips for 6 🟢 green chips.`,
@@ -330,7 +330,7 @@ const CHIP_INFO_STAGE_GAMEPLAY3 = createInfoStage({
 const CHIP_INFO_STAGE_GAMEPLAY4 = createInfoStage({
   id: 'info_gameplay4',
   game: StageGame.CHP,
-  name: 'Gameplay (4/5)',
+  name: 'Gameplay: completing a trade',
   infoLines: [
     `## Trade completion`,
     `When an offer is presented, all other active participants get a chance to accept or decline. Note: Active participants are those not currently making the offer.`,
@@ -345,12 +345,13 @@ const CHIP_INFO_STAGE_GAMEPLAY4 = createInfoStage({
 const CHIP_INFO_STAGE_GAMEPLAY5 = createInfoStage({
   id: 'info_gameplay5',
   game: StageGame.CHP,
-  name: 'Gameplay (5/5)',
+  name: 'Gameplay: summary',
   infoLines: [
     `## Key points to remember`,
     `* In each round, each player gets to propose one trade and respond to other player's trades`,
     `* You can only propose trades between different colored chips, and cannot offer to give a chip amount that you do not have`,
     `* When multiple players accept a trade, the trading partner is randomly selected`,
+    `\nFeel free to click back to previous sections to review the instructions.`,
   ],
 });
 
