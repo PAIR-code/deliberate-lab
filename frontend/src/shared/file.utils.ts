@@ -439,7 +439,7 @@ export function getChipNegotiationPlayerMapCSV(
     let gameNumber = 0;
     while (gameNumber < maxGames) {
       columns.push(
-        !player ? `Game ${gameNumber + 1}` : playerGames[gameNumber] ?? ''
+        !player ? `Game ${gameNumber + 1}` : gameNumber < playerGames.length ? playerGames[gameNumber] : ''
       );
       gameNumber += 1;
     }
