@@ -259,8 +259,99 @@ export interface ChipNegotiationResponderData {
 }
 
 // ****************************************************************************
-// JSON DATA FUNCTIONS
+// CHIP NEGOTIATION DATA FUNCTIONS
 // ****************************************************************************
+export function getChipNegotiationCSV(game: ChipNegotiationData): string[][] {
+  const columns: string[][] = [];
+  return columns;
+}
+
+export function getChipNegotiationPlayerMapCSV(
+  data: ExperimentDownload,
+  games: ChipNegotiationData[]
+): string[][] {
+  const columns: string[][] = [];
+
+  // Hacky solution since cohort history isn't currently tracked:
+  // use timestamp to order games
+
+  const getGameTimestamp = (game: ChipNegotiationData) => {
+    return game.data.history[0].turns[0].transaction.offer.timestamp;
+  };
+
+  const sortedGames = games.sort(
+    (gameA: ChipNegotiationData, gameB: ChipNegotiationData) => {
+      const timestampA = getGameTimestamp(gameA);
+      const timestampB = getGameTimestamp(gameB);
+      const timeA = timestampA.seconds * 1000 + timestampA.nanoseconds / 1e6;
+      const timeB = timestampB.seconds * 1000 + timestampB.nanoseconds / 1e6;
+      return timeA - timeB;
+    }
+  );
+
+  // Maps from participant ID to games played
+  const playerMap: Record<string, string[]> = {};
+  let maxGames = 0;
+  for (const game of sortedGames) {
+    game.data.metadata.players.forEach((player) => {
+      if (!playerMap[player]) {
+        playerMap[player] = [];
+      }
+      playerMap[player].push(game.cohortName);
+      if (playerMap[player]?.length ?? 0 > maxGames) {
+        maxGames = playerMap[player]?.length;
+      }
+    })
+  }
+
+  const getPlayerColumns = (player: string|null): string[] => {
+    const columns: string[] = [];
+    const playerGames = !player ? [] : playerMap[player] ?? [];
+
+    // Add player IDs, name, avatar, pronouns
+    columns.push(
+      !player ? 'Private ID' :
+      data.participantMap[player]?.profile.privateId ?? ''
+    );
+    columns.push(
+      !player ? 'Public ID' :
+      data.participantMap[player]?.profile.publicId ?? ''
+    );
+    columns.push(
+      !player ? 'Name' :
+      data.participantMap[player]?.profile.name ?? ''
+    );
+    columns.push(
+      !player ? 'Avatar' :
+      data.participantMap[player]?.profile.avatar ?? ''
+    );
+    columns.push(
+      !player ? 'Pronouns' :
+      data.participantMap[player]?.profile.pronouns ?? ''
+    );
+
+    // Add column for each game
+    let gameNumber = 0;
+    while (gameNumber < maxGames) {
+      columns.push(
+        !player ? `Game ${gameNumber + 1}` : playerGames[gameNumber] ?? ''
+      );
+      gameNumber += 1;
+    }
+
+    return columns;
+  };
+
+  // Add headers
+  columns.push(getPlayerColumns(null));
+  // Add players
+  Object.keys(playerMap).sort().forEach((player) => {
+    columns.push(getPlayerColumns(player));
+  });
+
+  return columns;
+}
+
 export function getChipNegotiationData(
   data: ExperimentDownload
 ): ChipNegotiationData[] {

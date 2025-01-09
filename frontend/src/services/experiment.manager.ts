@@ -50,6 +50,7 @@ import {
   downloadJSON,
   getChatHistoryData,
   getChipNegotiationData,
+  getChipNegotiationPlayerMapCSV,
   getExperimentDownload,
   getParticipantData
 } from '../shared/file.utils';
@@ -535,11 +536,16 @@ export class ExperimentManager extends Service {
       if (result) {
         downloadJSON(result, result.experiment.metadata.name);
 
-        // Download JSONs for each chip negotiation game
+        // Download JSONs and CSVs for each chip negotiation game
+        // as well as CSV mapping players to cohort games
         const chipData = getChipNegotiationData(result);
         chipData.forEach(data => {
           downloadJSON(data.data, `${data.experimentName}_ChipNegotiation_${data.cohortName}_${data.stageName}`);
         });
+        downloadCSV(
+          getChipNegotiationPlayerMapCSV(result, chipData),
+          `${result.experiment.metadata.name}_ChipNegotiation_PlayerMap`
+        );
 
         // Download chat data for each group chat
         const chatData = getChatHistoryData(result);
