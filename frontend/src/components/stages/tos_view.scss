@@ -10,6 +10,8 @@
 
 .html-wrapper {
   @include common.flex-column;
+  @include typescale.body-medium;
+  
   gap: common.$spacing-xl;
   padding: common.$main-content-padding;
 }

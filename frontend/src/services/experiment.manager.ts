@@ -504,6 +504,8 @@ export class ExperimentManager extends Service {
     };
 
     this.updateParticipant(config);
+
+    // TODO: Handle if they're on the chip stage.
   }
 
   /** Initiate participant transfer. */

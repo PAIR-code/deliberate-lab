@@ -14,10 +14,11 @@ import {classMap} from 'lit/directives/class-map.js';
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentManager} from '../../services/experiment.manager';
+import {ExperimentService} from '../../services/experiment.service';
 import {Pages, RouterService} from '../../services/router.service';
 
 import {
-  CohortConfig
+  CohortConfig, ParticipantProfile, StageKind
 } from '@deliberation-lab/utils';
 import {
   getCohortDescription,
@@ -33,6 +34,7 @@ export class CohortSummary extends MobxLitElement {
 
   private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentManager = core.getService(ExperimentManager);
+  private readonly experimentService = core.getService(ExperimentService);
   private readonly routerService = core.getService(RouterService);
 
   @property() cohort: CohortConfig|undefined = undefined;
@@ -206,11 +208,21 @@ export class CohortSummary extends MobxLitElement {
       `;
     }
 
+    const isOnTransferStage = (participant: ParticipantProfile) => {
+      const stage = this.experimentService.getStage(participant.currentStageId);
+      if (!stage) return false; // Return false instead of 'nothing' to ensure it's a boolean
+      return stage.kind === StageKind.TRANSFER;
+    };
+    
     return html`
       <div class="body">
       ${participants
         .slice()
-        .sort((a, b) => a.publicId.localeCompare(b.publicId))
+        .sort((a, b) => {
+          const aIsTransfer = isOnTransferStage(a) ? 0 : 1; // 0 if true, 1 if false
+          const bIsTransfer = isOnTransferStage(b) ? 0 : 1;
+          return aIsTransfer - bIsTransfer || a.publicId.localeCompare(b.publicId);
+        })
         .map(participant => 
           html`
             <participant-summary .participant=${participant}></participant-summary>
