@@ -55,7 +55,6 @@ export function getChipNegotiationStageConfigs(): StageConfig[] {
   // Gameplay stages
   stages.push(CHIP_INFO_STAGE_GAMEPLAY);
   stages.push(CHIP_INFO_STAGE_GAMEPLAY2);
-  stages.push(CHIP_INFO_STAGE_GAMEPLAY3);
   stages.push(CHIP_INFO_STAGE_GAMEPLAY4);
   stages.push(CHIP_INFO_STAGE_GAMEPLAY5);
 
@@ -311,19 +310,11 @@ const CHIP_INFO_STAGE_GAMEPLAY2 = createInfoStage({
     `To propose a trade, a player must:`,
     `1. Request a certain quantity of chips of a single color from any other player to **get**`,
     `2. Specify a certain quantity of chips of a different color to **give** in return`,
-  ],
-});
-
-const CHIP_INFO_STAGE_GAMEPLAY3 = createInfoStage({
-  id: 'info_gameplay3',
-  game: StageGame.CHP,
-  name: 'Gameplay: trading rules',
-  infoLines: [
-    `## Trade rules`,
-    `* Players can trade quantities of chips. For example, a player can trade 5 🔴 red chips for 6 🟢 green chips.`,
+    `\n## Trade rules`,
     `* Players cannot offer more chips than they currently hold. For example, if you only have 5 🔴 red chips, you cannot offer 6 🔴 red chips.`,
     `* Players cannot trade chips of the same color. You cannot trade 🔴 red chips for 🔴 red chips, for example.`,
     '![Example of offering a trade](https://i.imgur.com/Jzah8Ot.png)',
+
   ],
 });
 
