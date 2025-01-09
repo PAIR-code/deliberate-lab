@@ -760,10 +760,10 @@ export class ChipView extends MobxLitElement {
         );
       case ChipTransactionStatus.DECLINED:
         if (!transaction.recipientId) {
-          return renderStatus(`❌ No deal: No one accepted ${sender}'s offer'`);
+          return renderStatus(`❌ No deal: No one accepted ${sender}'s offer.`);
         } else {
           return renderStatus(
-            `❌ No deal: There was an error processing ${sender}'s' offer`
+            `❌ No deal: There was an error processing ${sender}'s' offer.`
           );
         }
       default:
