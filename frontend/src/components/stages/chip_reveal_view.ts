@@ -98,7 +98,9 @@ export class ChipReveal extends MobxLitElement {
             (chip) =>
               html`<div class="table-cell">
                 ${chip.chip.avatar} ${chip.chip.name}<br />($${chip.value} for
-                ${chip.chip.upperValue === chip.chip.lowerValue ? 'all' : 'you'})
+                ${chip.chip.upperValue === chip.chip.lowerValue
+                  ? 'all'
+                  : 'you'})
               </div>`
           )}
         </div>
@@ -115,9 +117,7 @@ export class ChipReveal extends MobxLitElement {
     const isCurrentTurn = (participant: ParticipantProfile) => {
       if (this.publicData?.kind !== StageKind.CHIP) return false;
 
-      return (
-        this.publicData.currentTurn === participant.publicId
-      );
+      return this.publicData.currentTurn === participant.publicId;
     };
 
     const renderChip = (chip: ChipItem, isCurrentUser: boolean) => {
@@ -191,29 +191,21 @@ export class ChipReveal extends MobxLitElement {
         </div>
         <div class="table-foot">
           <div class="table-row">
-            ${this.makeCell('Initial total')}
+            ${this.makeCell('Initial chip value')}
             ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
             ${this.makeCell(`$${initialPayout!.toFixed(2)}`)}
           </div>
 
           <div class="table-row">
-            ${this.makeCell('Current total')}
+            ${this.makeCell('Current chip value')}
             ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
-            <div
-              class="table-cell ${diff > 0
-                ? 'positive'
-                : diff < 0
-                ? 'negative'
-                : ''}"
-            >
-              <b>$${totalPayout!.toFixed(2)}</b>
+            <div class="table-cell">
+              ${totalPayout!.toFixed(2)}
             </div>
           </div>
 
           <div class="table-row">
-          <div class="table-cell">
-          Current payout<br />(0 if negative)
-        </div>
+            <div class="table-cell">Current payout<br />(0 if negative)</div>
             ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
             <div
               class="table-cell ${payout > 0

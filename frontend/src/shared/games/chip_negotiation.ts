@@ -188,6 +188,29 @@ export const CHIP_COMPREHENSION_CHECK = createComprehensionStage({
       },
       'd' // correct answer ID
     ),
+    createMultipleChoiceComprehensionQuestion(
+      {
+        questionTitle:
+          'True or false: you and the other players value 🟢 green chips at the same amount, $0.50 per chip.',
+        options: [
+          createMultipleChoiceItem({id: 'a', text: 'True'}),
+          createMultipleChoiceItem({id: 'b', text: 'False'}),
+        ],
+      },
+      'a' // correct answer ID)
+    ),
+
+    createMultipleChoiceComprehensionQuestion(
+      {
+        questionTitle:
+          'True or false: you and the other players value 🔵 blue chips at the same amount, $0.50 per chip.',
+        options: [
+          createMultipleChoiceItem({id: 'a', text: 'True'}),
+          createMultipleChoiceItem({id: 'b', text: 'False'}),
+        ],
+      },
+      'b' // correct answer ID)
+    ),
   ],
 });
 
@@ -286,7 +309,6 @@ export const CHIP_COMPREHENSION_CHECK2 = createComprehensionStage({
   ],
 });
 
-
 // ****************************************************************************
 // Gameplay instructions
 // ****************************************************************************
@@ -314,7 +336,6 @@ const CHIP_INFO_STAGE_GAMEPLAY2 = createInfoStage({
     `* Players cannot offer more chips than they currently hold. For example, if you only have 5 🔴 red chips, you cannot offer 6 🔴 red chips.`,
     `* Players cannot trade chips of the same color. You cannot trade 🔴 red chips for 🔴 red chips, for example.`,
     '![Example of offering a trade](https://i.imgur.com/Jzah8Ot.png)',
-
   ],
 });
 
@@ -355,17 +376,16 @@ const CHIP_INFO_STAGE_PAYOUT = createInfoStage({
   game: StageGame.CHP,
   name: 'Payment information',
   infoLines: [
-    'At the end of the study, we will calculate your earnings based on the final chip holdings from **one** of the two negotiation games you participate in. Here’s how it works:',
-    '* For each of the two negotiation games, we will pay you a bonus of how much you made over the initial endowment.',
+    'At the end of the study, we will randomly pick **one** of the two negotiation games you played and give you a bonus payment from that game. *If you do not complete both games, you will not receive a bonus payment.*',
     '\n**Example:**',
-    ' Suppose that for the first game, you initially started with 10 chips in each color, worth (10 * 0.03 + 10 * 0.05 + 10 * 0.07) = **$1.50**.',
+    ' Suppose that for the first game, you initially started with 10 chips in each color, worth (10 * 0.30 + 10 * 0.50 + 10 * 0.70) = **$15.00**.',
     'At the end of that game, you have:',
-    '  * 🔴 8 red chips valued at $0.03 each',
-    '  * 🟢 7 green chips valued at $0.05 each',
-    '  * 🔵 21 blue chips valued at $0.07 each',
-    'This adds up to **$2.06**. You would receive $2.06 - $1.50 = **$0.56** as a bonus for the first game.',
+    '  * 🔴 8 red chips valued at $0.30 each',
+    '  * 🟢 7 green chips valued at $0.50 each',
+    '  * 🔵 21 blue chips valued at $0.70 each',
+    'This adds up to **$20.60**. You would receive $20.60 - $15.00 = **$05.60** as a bonus for the first game.',
     'If you did not increase the value of your chips, you would not receive a bonus.',
-    '\nYour total bonus will be the sum of the first game\'s bonus and the second game\'s bonus.',
+    "\nYour total bonus will be the sum of the first game's bonus and the second game's bonus.",
     '\nThe exact values will depend on your random chip valuations and your final holdings, so your payment may differ from this example.',
     '\nThis payment is in addition to the $8 base payment for participating.',
   ],
@@ -498,12 +518,6 @@ const CHIP_SURVEY_STAGE = createSurveyStage({
   name: 'Final survey',
   game: StageGame.CHP,
   questions: [
-    createScaleSurveyQuestion({
-      questionTitle:
-        'How certain are you that you made the best possible trades during the experiment?',
-      upperText: 'Very confident',
-      lowerText: 'Not at all confident',
-    }),
     createTextSurveyQuestion({
       questionTitle:
         'Please describe your strategy in the game in a few sentences.',
@@ -513,20 +527,28 @@ const CHIP_SURVEY_STAGE = createSurveyStage({
         'Please describe any experiences or background that may have influenced your performance in the game.',
     }),
     createScaleSurveyQuestion({
-      questionTitle: 'On a scale from 1 to 10, how aggressive are you?',
+      questionTitle:
+        "On a scale from 1 to 10, how would you rate your trading strategy, where 1 is highly **competive** (focused mainly on your own gains) and 10 is highly **collaborative** (focused on other players's potential gains and mutual benefits?",
       upperText: 'Very aggressive',
       lowerText: 'Not at all aggressive',
     }),
     createScaleSurveyQuestion({
-      questionTitle: 'On a scale from 1 to 10, how cooperative are you?',
-      upperText: 'Very cooperative',
-      lowerText: 'Not at all cooperative',
+      questionTitle:
+        'On a scale from 1 to 10, how certain are you that you made the best possible trades during the experiment?',
+      upperText: 'Very confident',
+      lowerText: 'Not at all confident',
     }),
     createScaleSurveyQuestion({
       questionTitle:
         'On a scale from 1 to 10, how satisfied are you with your final trading outcomes?',
       upperText: 'Very satisfied',
       lowerText: 'Not at all satisfied',
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "On a scale of 1 to 10, how would you rate the mental effort you put into today's trading games, where 1 means 'I barely engaged in any thinking' and 10 means 'I put in significant mental effort'?",
+      upperText: 'Very high mental exertion',
+      lowerText: 'No mental exertion at all',
     }),
     createTextSurveyQuestion({
       questionTitle:
