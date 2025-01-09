@@ -49,6 +49,7 @@ import {
   downloadCSV,
   downloadJSON,
   getChatHistoryData,
+  getChipNegotiationCSV,
   getChipNegotiationData,
   getChipNegotiationPlayerMapCSV,
   getExperimentDownload,
@@ -540,7 +541,9 @@ export class ExperimentManager extends Service {
         // as well as CSV mapping players to cohort games
         const chipData = getChipNegotiationData(result);
         chipData.forEach(data => {
-          downloadJSON(data.data, `${data.experimentName}_ChipNegotiation_${data.cohortName}_${data.stageName}`);
+          const title = `${data.experimentName}_ChipNegotiation_${data.cohortName}_${data.stageName}`;
+          downloadJSON(data.data, title);
+          downloadCSV(getChipNegotiationCSV(result, data), title);
         });
         downloadCSV(
           getChipNegotiationPlayerMapCSV(result, chipData),
