@@ -430,8 +430,8 @@ const CHIPS = [
     canBuy: true,
     canSell: true,
     startingQuantity: N_INITIAL_RED_CHIPS,
-    lowerValue: 0.01,
-    upperValue: 0.1,
+    lowerValue: 0.1,
+    upperValue: 1,
   },
   {
     id: 'BLUE',
@@ -440,8 +440,8 @@ const CHIPS = [
     canBuy: true,
     canSell: true,
     startingQuantity: N_INITIAL_BLUE_CHIPS,
-    lowerValue: 0.01,
-    upperValue: 0.1,
+    lowerValue: 0.1,
+    upperValue: 1,
   },
   {
     id: 'GREEN',
@@ -450,8 +450,8 @@ const CHIPS = [
     canBuy: true,
     canSell: true,
     startingQuantity: N_INITIAL_GREEN_CHIPS,
-    lowerValue: 0.05,
-    upperValue: 0.05,
+    lowerValue: 0.5,
+    upperValue: 0.5,
   },
 ];
 
