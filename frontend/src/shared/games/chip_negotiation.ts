@@ -46,8 +46,9 @@ export function getChipNegotiationStageConfigs(): StageConfig[] {
   stages.push(CHIP_PROFILE_STAGE);
 
   // Overview stages
-  stages.push(CHIP_INFO_STAGE_OVERVIEW);
+  stages.push(CHIP_INFO_STAGE_OVERVIEW1);
   stages.push(CHIP_INFO_STAGE_OVERVIEW2);
+  stages.push(CHIP_INFO_STAGE_OVERVIEW3);
 
   // Comprehension check
   stages.push(CHIP_COMPREHENSION_CHECK);
@@ -62,6 +63,7 @@ export function getChipNegotiationStageConfigs(): StageConfig[] {
   stages.push(CHIP_COMPREHENSION_CHECK2);
 
   stages.push(CHIP_INFO_STAGE_PAYOUT);
+  stages.push(CHIP_INFO_STAGE_PAYOUT2);
 
   // First transfer
   stages.push(CHIP_INITIAL_TRANSFER_STAGE);
@@ -385,7 +387,7 @@ const CHIP_INFO_STAGE_PAYOUT = createInfoStage({
   name: 'Payment information',
   infoLines: [
     '## Bonus payment',
-    'At the end of the study, we will randomly pick **one** of the two negotiation games you played and give you a bonus payment from that game.
+    'At the end of the study, we will randomly pick **one** of the two negotiation games you played and give you a bonus payment from that game.',
     'There are two important features to remember about the bonus:',
         '  * The bonus will be equivalent to how much money you earn through trading *beyond* what you start with.',
         '  * If you do not complete both games, you will not receive a bonus payment.',
@@ -393,7 +395,7 @@ const CHIP_INFO_STAGE_PAYOUT = createInfoStage({
   ],
 });
 
-const CHIP_INFO_STAGE_PAYOUT = createInfoStage({
+const CHIP_INFO_STAGE_PAYOUT2 = createInfoStage({
   id: 'info_payment2',
   game: StageGame.CHP,
   name: 'Payment information examples',
