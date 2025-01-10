@@ -7,19 +7,14 @@ const MAX_TOKENS_FINISH_REASON = "length";
 
 export async function callOpenAITextCompletion(
   apiKey: string,
-  prompt: string,
+  baseUrl: string | null,
   modelName: string,
+  prompt: string,
   generationConfig: agentGenerationConfig
 ) {
-  const baseURL = process.env.OPENAI_BASE_URL;
-  if (!baseURL) {
-    console.error(
-      'OpenAI error: base URL not set. Please configure the environment variable OPENAI_BASE_URL.');
-    return { text: '' };
-  }
   const client = new OpenAI({
-    baseURL: baseURL,
-    apiKey: process.env.OPENAI_API_KEY
+    apiKey: apiKey,
+    baseURL: baseUrl
   });
 
   const customFields = Object.fromEntries(
@@ -54,17 +49,18 @@ export async function callOpenAITextCompletion(
 
 export async function getOpenAIAPITextCompletionResponse(
   apiKey: string,
+  baseUrl: string | null,
   modelName: string,
   promptText: string,
   generationConfig: AgentGenerationConfig
 ): Promise<ModelResponse> {
   if (!modelName) {
     console.warn(
-      'Environment variable OPENAI_MODEL_NAME not set.');
+      'OpenAI API model name not set.');
   }
   if (!apiKey) {
     console.warn(
-      'Environment variable OPENAI_API_KEY not set.');
+      'OpenAI API key not set.');
   }
   // Log the request
   console.log(
@@ -81,8 +77,9 @@ export async function getOpenAIAPITextCompletionResponse(
   try {
     response = await callOpenAITextCompletion(
       apiKey,
-      promptText,
+      baseUrl,
       modelName,
+      promptText,
       generationConfig
     );
   } catch (error: any) {

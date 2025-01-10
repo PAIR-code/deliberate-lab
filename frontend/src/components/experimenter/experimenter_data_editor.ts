@@ -25,7 +25,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
     `;
   }
 
-  // ============ Server Type selection ============ 
+  // ============ Server Type selection ============
   private renderServerTypeButtons() {
     return html`
     <div class="section">
@@ -34,6 +34,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
       </div>
       <div class="action-buttons">
         ${this.renderServerTypeButton('Gemini', ApiKeyType.GEMINI_API_KEY)}
+        ${this.renderServerTypeButton('OpenAI or compatible API', ApiKeyType.OPENAI_API_KEY)}
         ${this.renderServerTypeButton('Ollama Server', ApiKeyType.OLLAMA_CUSTOM_URL)}
       </div>
     </div>`;
@@ -71,6 +72,8 @@ export class ExperimenterDataEditor extends MobxLitElement {
     switch (activeType) {
       case ApiKeyType.GEMINI_API_KEY:
         return this.renderGeminiKey();
+      case ApiKeyType.OPENAI_API_KEY:
+        return this.renderOpenAISettings();
       case ApiKeyType.OLLAMA_CUSTOM_URL:
         return this.renderServerSettings();
       default:
@@ -79,7 +82,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
     }
   }
 
-  // ============ Gemini ============ 
+  // ============ Gemini ============
   private renderGeminiKey() {
     const updateKey = (e: InputEvent) => {
       const oldData = this.authService.experimenterData;
@@ -106,7 +109,73 @@ export class ExperimenterDataEditor extends MobxLitElement {
     `;
   }
 
-  // ============ Local Ollama server ============ 
+  // ============ OpenAI-compatible API ============
+  private renderOpenAISettings() {
+    const updateOpenAISettings = (e: InputEvent, field: 'apiKey' | 'baseUrl') => {
+      const oldData = this.authService.experimenterData;
+      if (!oldData) return;
+
+      const value = (e.target as HTMLInputElement).value;
+      let newData;
+
+      switch (field){
+        case "apiKey":
+          newData = updateExperimenterData(oldData, {
+            apiKeys: {
+              ...oldData.apiKeys,
+              openAIApiKey: {
+                ...oldData.apiKeys.openAIApiKey,
+                apiKey: value,
+              },
+            },
+          });
+          break;
+
+        case "baseUrl":
+          newData = updateExperimenterData(oldData, {
+            apiKeys: {
+              ...oldData.apiKeys,
+              openAIApiKey: {
+                ...oldData.apiKeys.openAIApiKey,
+                baseUrl: value,
+              },
+            },
+          });
+          break;
+        default:
+          console.error("Error: field type not found: ", field);
+          return;
+      }
+
+      this.authService.writeExperimenterData(newData);
+    };
+
+    const data = this.authService.experimenterData;
+    return html`
+      <div class="section">
+        <pr-textarea
+          label="API Key"
+          placeholder=""
+          variant="outlined"
+          .value=${data?.apiKeys.openAIApiKey?.apiKey ?? ""}
+          @input=${(e: InputEvent) => updateOpenAISettings(e, 'apiKey')}
+        ></pr-textarea>
+
+        <pr-textarea
+          label="Base URL"
+          placeholder="http://example:14434/v1"
+          variant="outlined"
+          .value=${data?.apiKeys.openAIApiKey?.baseUrl ?? ""}
+          @input=${(e: InputEvent) => updateOpenAISettings(e, 'baseUrl')}
+        ></pr-textarea>
+        <p>
+          If blank, uses OpenAI's servers.
+        </p>
+      </div>
+    `;
+  }
+
+  // ============ Local Ollama server ============
   private renderServerSettings() {
     const updateServerSettings = (e: InputEvent, field: 'url' | 'llmType') => {
       const oldData = this.authService.experimenterData;
@@ -127,7 +196,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
             },
           });
           break;
-  
+
         case "llmType":
           newData = updateExperimenterData(oldData, {
             apiKeys: {
@@ -143,7 +212,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
           console.error("Error: field type not found: ", field);
           return;
       }
-    
+
       this.authService.writeExperimenterData(newData);
     };
 
@@ -154,7 +223,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
           label="Server URL"
           placeholder="http://example:80/api/chat"
           variant="outlined"
-          .value=${data?.apiKeys.ollamaApiKey?.url ?? ""} 
+          .value=${data?.apiKeys.ollamaApiKey?.url ?? ""}
           @input=${(e: InputEvent) => updateServerSettings(e, 'url')}
         ></pr-textarea>
         <p>Please ensure that the URL is valid before proceeding.</p>
@@ -163,11 +232,11 @@ export class ExperimenterDataEditor extends MobxLitElement {
           label="LLM type"
           placeholder="llama3.2"
           variant="outlined"
-          .value=${data?.apiKeys.ollamaApiKey?.llmType ?? ""} 
+          .value=${data?.apiKeys.ollamaApiKey?.llmType ?? ""}
           @input=${(e: InputEvent) => updateServerSettings(e, 'llmType')}
         ></pr-textarea>
         <p>
-          All supported LLM types can be found 
+          All supported LLM types can be found
           <a target="_blank" href="https://ollama.com/library">here</a>.
           Make sure the LLM type has been deployed on the server prior to selecting it here.
         </p>

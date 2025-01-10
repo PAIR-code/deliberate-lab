@@ -34,13 +34,20 @@ export interface ExperimenterData {
 
 export interface APIKeyConfig {
   geminiApiKey: string, // distinct types since we don't want to lose information when switching between them
+  openAIApiKey: OpenAIServerConfig
   ollamaApiKey: OllamaServerConfig
   activeApiKeyType: ApiKeyType; // keeps track of model type selection
 }
 
 export enum ApiKeyType {
   GEMINI_API_KEY = 'GEMINI',
+  OPENAI_API_KEY = 'OPENAI',
   OLLAMA_CUSTOM_URL = 'OLLAMA',
+}
+
+export interface OpenAIServerConfig {
+  apiKey: string;
+  baseUrl: string;
 }
 
 export interface OllamaServerConfig {
@@ -61,6 +68,7 @@ export interface OllamaServerConfig {
 
 const INVALID_API_KEY = ''
 const INVALID_LLM_TYPE = ''
+const EMPTY_BASE_URL = ''
 
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
@@ -101,6 +109,13 @@ export function checkApiKeyExists(experimenterData: ExperimenterData | null | un
   if (experimenterData.apiKeys.activeApiKeyType === ApiKeyType.GEMINI_API_KEY) {
     // implicitly checks if geminiApiKey exists
     return experimenterData.apiKeys.geminiApiKey !== INVALID_API_KEY
+  }
+
+  if (experimenterData.apiKeys.activeApiKeyType === ApiKeyType.OPENAI_API_KEY) {
+    // A custom server could require no API key, and the default OpenAI server
+    // requires no base URL setting, but leaving both blank is invalid.
+    return (experimenterData.apiKeys.openAIApiKey.apiKey !== INVALID_API_KEY ||
+            experimenterData.apiKeys.openAIBaseURL !== EMPTY_BASE_URL)
   }
 
   // if active API key type is Ollama
