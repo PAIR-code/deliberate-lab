@@ -5,8 +5,11 @@ import {
   createCheckSurveyQuestion,
   createChipPayoutItem,
   createChipStage,
+  createComprehensionStage,
   createInfoStage,
   createMetadataConfig,
+  createMultipleChoiceItem,
+  createMultipleChoiceComprehensionQuestion,
   createPayoutStage,
   createProfileStage,
   createSurveyStage,
@@ -20,9 +23,9 @@ import {
 // ****************************************************************************
 // Game parameters
 // ****************************************************************************
-export const N_INITIAL_GREEN_CHIPS = 100;
-export const N_INITIAL_BLUE_CHIPS = 100;
-export const N_INITIAL_RED_CHIPS = 100;
+export const N_INITIAL_GREEN_CHIPS = 10;
+export const N_INITIAL_BLUE_CHIPS = 10;
+export const N_INITIAL_RED_CHIPS = 10;
 
 // ****************************************************************************
 // Experiment config
@@ -42,23 +45,35 @@ export function getChipNegotiationStageConfigs(): StageConfig[] {
   // Anonymized profiles
   stages.push(CHIP_PROFILE_STAGE);
 
-  stages.push(CHIP_INITIAL_TRANSFER_STAGE);
+  // Overview stages
+  stages.push(CHIP_INFO_STAGE_OVERVIEW);
+  stages.push(CHIP_INFO_STAGE_OVERVIEW2);
 
-  // Info stage for chip negotiation
-  stages.push(CHIP_INFO_STAGE_INSTRUCTIONS);
-  stages.push(CHIP_INFO_STAGE_INSTRUCTIONS2);
+  // Comprehension check
+  stages.push(CHIP_COMPREHENSION_CHECK);
+
+  // Gameplay stages
+  stages.push(CHIP_INFO_STAGE_GAMEPLAY);
+  stages.push(CHIP_INFO_STAGE_GAMEPLAY2);
+  stages.push(CHIP_INFO_STAGE_GAMEPLAY4);
+  stages.push(CHIP_INFO_STAGE_GAMEPLAY5);
+
+  // Comprehension check
+  stages.push(CHIP_COMPREHENSION_CHECK2);
+
   stages.push(CHIP_INFO_STAGE_PAYOUT);
 
-  // Round 1
-  stages.push(CHIP_NEGOTIATION_STAGE);
-  stages.push(CHIP_PAYOUT_STAGE);
+  // First transfer
+  stages.push(CHIP_INITIAL_TRANSFER_STAGE);
 
+  // Round 1
+  stages.push(CHIP_NEGOTIATION_STAGE1);
   stages.push(TRANSFER_STAGE);
   stages.push(CHIP_INFO_TRANSFER_STAGE);
 
   // Round 2
   stages.push(CHIP_NEGOTIATION_STAGE2);
-  stages.push(CHIP_PAYOUT_STAGE2);
+  stages.push(CHIP_PAYOUT_STAGE);
 
   // Post-negotiation survey stage
   stages.push(CHIP_SURVEY_STAGE);
@@ -74,15 +89,15 @@ const CHIP_TOS_STAGE = createTOSStage({
   game: StageGame.CHP,
   name: 'Terms of service',
   tosLines: [
-    'Thank you for your interest in this research. If you choose to participate, you will be asked to play a negotiation game with other Prolific Workers. In total, this will take about YY minutes.',
+    'Thank you for your interest in this research. If you choose to participate, you will be asked to play negotiation games with other participants. In total, this will take no more than 60 minutes.',
     '\n**Compensation**',
-    'You will be paid $ZZ for playing the games and completing the survey. You will have a chance to win up to $AA in additional compensation based on your performance in the games.',
+    'You will be paid $8 for playing the games and completing the survey. You may receive an additional bonus on your performance in the games.',
     '\n**IRB**',
     'The results of this study will be used solely for research purposes. Our team will keep all your information from this study strictly confidential, as required by law. The IRB at the Massachusetts Institute of Technology is responsible for protecting the rights and welfare of research volunteers like you.',
     '\n**Voluntary participation**',
     'Your participation is voluntary, which means you can choose whether or not to participate. You may choose not to participate by exiting the survey at any point. There are no known costs to you for participating in this research study except for your time.',
     '\n**Contact**',
-    'Please feel free to contact us if you have any questions, concerns, or complaints about this study. You may contact a member of the research team at BB@XYZ.com.',
+    'Please feel free to contact us through Prolific or your game administrator if you have any questions, concerns, or complaints about this study.',
     '\nBy checking the box below and proceeding, you are acknowledging that you are over the age of 18 and that you consent to participate. Clicking the arrow will bring you to the beginning of the task.',
   ],
 });
@@ -93,6 +108,10 @@ const CHIP_TOS_STAGE = createTOSStage({
 const CHIP_PROFILE_STAGE = createProfileStage({
   id: 'profile',
   name: 'View randomly generated profile',
+  descriptions: createStageTextConfig({
+    primaryText:
+      "This identity is how other players will see you during today's experiment.",
+  }),
   game: StageGame.CHP,
   profileType: ProfileType.ANONYMOUS_ANIMAL,
 });
@@ -100,69 +119,275 @@ const CHIP_PROFILE_STAGE = createProfileStage({
 // ****************************************************************************
 // Info stage for chip negotiation
 // ****************************************************************************
-const CHIP_INFO_STAGE_INSTRUCTIONS = createInfoStage({
-  id: 'info_instructions',
+
+const CHIP_INFO_STAGE_OVERVIEW = createInfoStage({
+  id: 'info_overview',
   game: StageGame.CHP,
-  name: 'Overview and gameplay (1/2)',
+  name: 'Instructions: overview',
   infoLines: [
-    'Today, you will be playing two rounds of a trading game with other participants. In each game, you and the other participants will start with:',
+    'In this experiment, you will be playing a trading game with other participants. All of you will be given the same initial amount of 🔴 red chips, 🟢 green chips, and 🔵 blue chips, but you may value the different colors of chips differently.',
+    'By making and accepting offers, you will try to exchange chips with the other players to increase the total value of chips that you end up holding at the end of the game.',
+    'You may receive a bonus payment depending on the final value of your chips.',
+  ],
+});
+
+const CHIP_INFO_STAGE_OVERVIEW2 = createInfoStage({
+  id: 'info_overview2',
+  game: StageGame.CHP,
+  name: 'Instructions: chip valuations',
+  infoLines: [
+    'You will play this trading game two times, against different groups of participants. In each game, you and the other participants will start with:',
     `* 🔴 ${N_INITIAL_RED_CHIPS} **red** chips`,
     `* 🟢 ${N_INITIAL_GREEN_CHIPS} **green** chips`,
     `* 🔵 ${N_INITIAL_BLUE_CHIPS} **blue** chips`,
     '**Valuations:**',
-    'Each 🟢 green chip is worth $0.05 to each participant. However, you will all have different valuations for the red and blue chips, randomly chosen between $0.01 and $0.10. For example, Cat might value 🔴 red chips at $0.03 each and 🔵 blue chips at $0.07 each, while Mouse might value 🔴 red chips at $0.08 each and 🔵 blue chips at $0.03 each.',
-    "You know your own chip valuation and that everyone values 🟢 green chips the same, at $0.05 per chip. However, you do not know the other players' valuations for red and blue chips.",
-    '![Example of chip count table](https://i.imgur.com/fMPRf2X.png)',
+    'Each 🟢 green chip is worth $0.50 to each participant. However, you will all have different valuations for the red and blue chips, randomly chosen between $0.10 and $1.00. For example, Cat might value 🔴 red chips at $0.30 each and 🔵 blue chips at $0.70 each, while Mouse might value 🔴 red chips at $0.80 each and 🔵 blue chips at $0.30 each.',
+    "You know your own chip valuation and that everyone values 🟢 green chips the same, at $0.50 per chip. However, you do not know the other players' valuations for red and blue chips.",
+    '![Example of chip count table](https://i.imgur.com/ImUM14D.png)',
     'The table above is shown to you during the game, and provides the number of chips everyone has as well as a reminder of your own valuation.',
     '\n**What this means:**',
     'Because each participant values the chips differently, there may be good reasons to trade. For instance, if you don’t care much about 🔴 red chips but someone else does, you might offer your red chips to them in exchange for 🔵 blue chips, which you like more. In this way, both you and the other participant can end up with chips that you find more valuable. This is what creates the opportunity to gain from trading.',
   ],
 });
 
-const CHIP_INFO_STAGE_INSTRUCTIONS2 = createInfoStage({
-  id: 'info_instructions2',
+// ****************************************************************************
+// Comprehension checks
+// ****************************************************************************
+export const CHIP_COMPREHENSION_CHECK = createComprehensionStage({
+  id: 'comprehension_check1',
   game: StageGame.CHP,
-  name: 'Overview and gameplay (2/2)',
-  infoLines: [
-    '**Number of rounds:**',
-    'The game consists of **3 rounds** of trading. During each round, you will have an opportunity to propose a trade to the other participants, and to evaluate trades offerred by the other participants. Within each round, every participant will get exactly one turn to make an offer in a fixed, randomly assigned order.',
-    '\n**Offers:**',
-    '* On your turn, you may propose **one offer** to all other active participants.',
-    '* An offer consists of 1) specifying a certain quantity of chips of a single color that the offering participant will give up, and requesting a certain quantity of chips of a different single color in return.',
-    'For example, a participant might offer to give 🔵 100 blue chips for 🔴 10 red chips. This is shown below.',
-    '![Example of sending an offer](https://i.imgur.com/WSw1Qu9.png)',
-    '\n**Constraints on offers:**',
-    '* You cannot offer more chips than you currently hold. For instance, if you only have 50 red chips, you cannot offer 60 red chips.',
-    '* The color you request in return can be different from the one you’re offering, as is the point of the trade.',
-    '\n**Accepting an offer**',
-    'Once an offer is presented, **every other active participant** (i.e., those not currently making the offer) gets a chance to **accept or decline**. Participants make their decisions simultaneously and privately.',
-    '* If **no one accepts**, the trade does not happen, and the turn ends.',
-    '* If **one participant accepts**, that participant trades their chips as stated in the offer with the offering participant.',
-    '* If **multiple participants accept**, **one of these accepting participants is chosen at random** to complete the trade with the offering participant. **This means that participants cannot choose who they trade with**.',
-    '![Example of receiving an offer](https://i.imgur.com/X0vW8GP.png)',
-    '\n**After an offer:**',
-    'If a trade occurs, the involved participants adjust their chip holdings accordingly. If no trade occurs (because no one accepted), nothing changes. After the offer is concluded (regardless of outcome), the turn passes to the next participant.',
-    '\n**End of round and game conclusion:**',
-    'After all 3 participants have made an offer, the round ends. The game proceeds for a total of 3 rounds (each participant making an offer each round). Once all 3 rounds are completed, the game ends.',
+  name: 'Comprehension check',
+  descriptions: createStageTextConfig({
+    primaryText:
+      'Please answer the following questions to verify your understanding of the instructions. You may proceed once you have answered the questions correctly.',
+  }),
+
+  questions: [
+    createMultipleChoiceComprehensionQuestion(
+      {
+        questionTitle: 'How many 🔴 red chips will **you** start with?',
+        options: [
+          createMultipleChoiceItem({id: 'a', text: '5'}),
+          createMultipleChoiceItem({id: 'b', text: '10'}),
+          createMultipleChoiceItem({id: 'c', text: '8'}),
+          createMultipleChoiceItem({id: 'd', text: '15'}),
+        ],
+      },
+      'b' // correct answer ID
+    ),
+    createMultipleChoiceComprehensionQuestion(
+      {
+        questionTitle:
+          'How many 🟢 green chips will each **other** player start with?',
+        options: [
+          createMultipleChoiceItem({id: 'a', text: '20'}),
+          createMultipleChoiceItem({id: 'b', text: '5'}),
+          createMultipleChoiceItem({id: 'c', text: '50'}),
+          createMultipleChoiceItem({id: 'd', text: '10'}),
+        ],
+      },
+      'd' // correct answer ID
+    ),
+    createMultipleChoiceComprehensionQuestion(
+      {
+        questionTitle:
+          'True or false: you and the other players value 🟢 green chips at the same amount, $0.50 per chip.',
+        options: [
+          createMultipleChoiceItem({id: 'a', text: 'True'}),
+          createMultipleChoiceItem({id: 'b', text: 'False'}),
+        ],
+      },
+      'a' // correct answer ID)
+    ),
+
+    createMultipleChoiceComprehensionQuestion(
+      {
+        questionTitle:
+          'True or false: you and the other players value 🔵 blue chips at the same amount, $0.50 per chip.',
+        options: [
+          createMultipleChoiceItem({id: 'a', text: 'True'}),
+          createMultipleChoiceItem({id: 'b', text: 'False'}),
+        ],
+      },
+      'b' // correct answer ID)
+    ),
   ],
 });
+
+export const CHIP_COMPREHENSION_CHECK2 = createComprehensionStage({
+  id: 'comprehension_check2',
+  game: StageGame.CHP,
+  name: 'Comprehension check 2',
+  descriptions: createStageTextConfig({
+    primaryText:
+      'Please answer the following questions to verify your understanding of the instructions. You may proceed once you have answered the questions correctly.',
+  }),
+
+  questions: [
+    createMultipleChoiceComprehensionQuestion(
+      {
+        questionTitle:
+          'True or false: A player can propose multiple trades during their turn in a round.',
+        options: [
+          createMultipleChoiceItem({id: 'a', text: 'True'}),
+          createMultipleChoiceItem({id: 'b', text: 'False'}),
+        ],
+      },
+      'b' // correct answer ID
+    ),
+    createMultipleChoiceComprehensionQuestion(
+      {
+        questionTitle: 'Which of the following trades is NOT allowed?',
+        options: [
+          createMultipleChoiceItem({
+            id: 'a',
+            text: 'Trading 🔴 3 red chips for 🟢 2 green chips',
+          }),
+          createMultipleChoiceItem({
+            id: 'b',
+            text: 'Trading 🟢 4 green chips for 🔴 4 red chips',
+          }),
+          createMultipleChoiceItem({
+            id: 'c',
+            text: 'Trading 🔴 2 red chips for 🔴 4 red chips',
+          }),
+          createMultipleChoiceItem({
+            id: 'd',
+            text: 'Trading 🟢 5 green chips for 🔴 3 red chips',
+          }),
+        ],
+      },
+      'c' // correct answer ID
+    ),
+    createMultipleChoiceComprehensionQuestion(
+      {
+        questionTitle:
+          'True or false: The number of chips offered must equal the number of chips requested.',
+        options: [
+          createMultipleChoiceItem({id: 'a', text: 'True'}),
+          createMultipleChoiceItem({id: 'b', text: 'False'}),
+        ],
+      },
+      'b' // correct answer ID
+    ),
+    createMultipleChoiceComprehensionQuestion(
+      {
+        questionTitle:
+          'True or False: Players who accept a trade proposal **do not know** at the time of accepting the proposal whether they will be the one chosen to complete the trade.',
+        options: [
+          createMultipleChoiceItem({id: 'a', text: 'True'}),
+          createMultipleChoiceItem({id: 'b', text: 'False'}),
+        ],
+      },
+      'a' // correct answer ID
+    ),
+    createMultipleChoiceComprehensionQuestion(
+      {
+        questionTitle:
+          'Say that a player proposes trading 🔴 3 red chips for 🟢 4 green chips. Who can accept this trade?',
+        options: [
+          createMultipleChoiceItem({
+            id: 'a',
+            text: 'Any player with 4 or more green chips',
+          }),
+          createMultipleChoiceItem({
+            id: 'b',
+            text: 'Only players with exactly 4 green chips',
+          }),
+          createMultipleChoiceItem({
+            id: 'c',
+            text: 'Only the player with the most green chips',
+          }),
+          createMultipleChoiceItem({
+            id: 'd',
+            text: 'Any player with any number of green chips',
+          }),
+        ],
+      },
+      'a' // correct answer ID
+    ),
+  ],
+});
+
+// ****************************************************************************
+// Gameplay instructions
+// ****************************************************************************
+
+const CHIP_INFO_STAGE_GAMEPLAY = createInfoStage({
+  id: 'info_gameplay',
+  game: StageGame.CHP,
+  name: 'Gameplay: rounds',
+  infoLines: [
+    `## How the game works`,
+    `The game consists of **3 rounds** of trading. During each round, each player will have a turn to propose **1 trade**. These turns are pre-determined in a random order.`,
+  ],
+});
+
+const CHIP_INFO_STAGE_GAMEPLAY2 = createInfoStage({
+  id: 'info_gameplay2',
+  game: StageGame.CHP,
+  name: 'Gameplay: proposing a trade',
+  infoLines: [
+    `## Trade proposals`,
+    `To propose a trade, a player must:`,
+    `1. Request a certain quantity of chips of a single color from any other player to **get**`,
+    `2. Specify a certain quantity of chips of a different color to **give** in return`,
+    `\n## Trade rules`,
+    `* Players cannot offer more chips than they currently hold. For example, if you only have 5 🔴 red chips, you cannot offer 6 🔴 red chips.`,
+    `* Players cannot trade chips of the same color. You cannot trade 🔴 red chips for 🔴 red chips, for example.`,
+    '![Example of offering a trade](https://i.imgur.com/Jzah8Ot.png)',
+  ],
+});
+
+const CHIP_INFO_STAGE_GAMEPLAY4 = createInfoStage({
+  id: 'info_gameplay4',
+  game: StageGame.CHP,
+  name: 'Gameplay: completing a trade',
+  infoLines: [
+    `## Trade completion`,
+    `When an offer is presented, all other active participants get a chance to accept or decline. Note: Active participants are those not currently making the offer.`,
+    '![Example of receiving an offer](https://i.imgur.com/NJL4AvQ.png)',
+    `Participants make their decisions simultaneously and privately. The participant who receives the offer is not dependent on who accepts the trade first. Some possible outcomes:`,
+    `* If no one accepts, the trade does not happen, and the turn ends.`,
+    `* If multiple participants accept, one accepting participant is *chosen at random* to complete the trade with the offering participant. This means that participants cannot choose who they trade with.`,
+    `* If only one participant accepts, the trade will happen.`,
+  ],
+});
+
+const CHIP_INFO_STAGE_GAMEPLAY5 = createInfoStage({
+  id: 'info_gameplay5',
+  game: StageGame.CHP,
+  name: 'Gameplay: summary',
+  infoLines: [
+    `## Key points to remember`,
+    `* In each round, each player gets to propose one trade and respond to other player's trades`,
+    `* You can only propose trades between different colored chips, and cannot offer to give a chip amount that you do not have`,
+    `* When multiple players accept a trade, the trading partner is randomly selected`,
+    `\nFeel free to click back to previous sections to review the instructions.`,
+  ],
+});
+
+// ****************************************************************************
+// Payment information
+// ****************************************************************************/
 
 const CHIP_INFO_STAGE_PAYOUT = createInfoStage({
   id: 'info_payment',
   game: StageGame.CHP,
   name: 'Payment information',
   infoLines: [
-    'At the end of the study, we will calculate your earnings based on the final chip holdings from **one** of the two negotiation games you participate in. Here’s how it works:',
-    '* Out of the two negotiation games you played, we will **randomly select one** for payment.',
-    '* We will use the **valuations and final chip counts** from the chosen game. For each color of chip you hold at the end of that game, we will multiply the number of chips by your assigned valuation for that color. We will then add up these amounts across Red, Green, and Blue chips.',
+    'At the end of the study, we will randomly pick **one** of the two negotiation games you played and give you a bonus payment from that game. *If you do not complete both games, you will not receive a bonus payment.*',
     '\n**Example:**',
-    ' Suppose that the second game is chosen for your payout. At the end of that game, you have:',
-    '  * 🔴 80 red chips valued at $0.03 each',
-    '  * 🟢 120 green chips valued at $0.05 each',
-    '  * 🔵 90 blue chips valued at $0.07 each',
-    '  Your bonus payment would **$14.70**: (80 x $0.03) + (120 x $0.05) + (90 x $0.07) = $2.40 + $6.00 + $6.30 = $14.70.',
+    ' Suppose that for the first game, you initially started with 10 chips in each color, worth (10 * 0.30 + 10 * 0.50 + 10 * 0.70) = **$15.00**.',
+    'At the end of that game, you have:',
+    '  * 🔴 8 red chips valued at $0.30 each',
+    '  * 🟢 7 green chips valued at $0.50 each',
+    '  * 🔵 21 blue chips valued at $0.70 each',
+    'This adds up to **$20.60**. You would receive $20.60 - $15.00 = **$5.60** as a bonus for the first game.',
+    'If you did not increase the value of your chips, you would not receive a bonus.',
+    "\nYour total bonus will be the sum of the first game's bonus and the second game's bonus.",
     '\nThe exact values will depend on your random chip valuations and your final holdings, so your payment may differ from this example.',
-    '\nThis payment is in addition to the $XX base payment for participating.',
+    '\nThis payment is in addition to the $8 base payment for participating.',
   ],
 });
 
@@ -178,21 +403,24 @@ const CHIP_INFO_TRANSFER_STAGE = createInfoStage({
     'All players participating in this round are also playing for their second time. **Enjoy the game!**',
   ],
 });
+
 // ****************************************************************************
 // Transfer stages
 // ****************************************************************************/
 export const CHIP_INITIAL_TRANSFER_STAGE = createTransferStage({
+  id: 'transfer1',
   game: StageGame.CHP,
   name: 'Initial transfer stage',
   descriptions: createStageTextConfig({
     primaryText:
-      'Welcome to the experiment! Please wait as we add you to an experiment room with other participants.',
+      'Please wait on this page as we re-route you to your first game with other participants.',
   }),
   enableTimeout: true,
   timeoutSeconds: 600, // 10 minutes
 });
 
 export const TRANSFER_STAGE = createTransferStage({
+  id: 'transfer2',
   game: StageGame.CHP,
   name: 'Transfer stage',
   descriptions: createStageTextConfig({
@@ -214,8 +442,8 @@ const CHIPS = [
     canBuy: true,
     canSell: true,
     startingQuantity: N_INITIAL_RED_CHIPS,
-    lowerValue: 0.01,
-    upperValue: 0.1,
+    lowerValue: 0.1,
+    upperValue: 1,
   },
   {
     id: 'BLUE',
@@ -224,8 +452,8 @@ const CHIPS = [
     canBuy: true,
     canSell: true,
     startingQuantity: N_INITIAL_BLUE_CHIPS,
-    lowerValue: 0.01,
-    upperValue: 0.1,
+    lowerValue: 0.1,
+    upperValue: 1,
   },
   {
     id: 'GREEN',
@@ -234,56 +462,50 @@ const CHIPS = [
     canBuy: true,
     canSell: true,
     startingQuantity: N_INITIAL_GREEN_CHIPS,
-    lowerValue: 0.05,
-    upperValue: 0.05,
+    lowerValue: 0.5,
+    upperValue: 0.5,
   },
 ];
 
-const CHIP_NEGOTIATION_STAGE = createChipStage({
-  id: 'negotiation1',
+const CHIP_NEGOTIATION_STAGE1_ID = 'negotiation1';
+const CHIP_NEGOTIATION_STAGE2_ID = 'negotiation2';
+
+const CHIP_NEGOTIATION_STAGE1 = createChipStage({
+  id: CHIP_NEGOTIATION_STAGE1_ID,
   game: StageGame.CHP,
   name: 'First negotiation game',
   descriptions: createStageTextConfig({
     infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
   }),
-  chips: CHIPS
+  chips: CHIPS,
 });
 
 const CHIP_NEGOTIATION_STAGE2 = createChipStage({
-  id: 'negotiation2',
+  id: CHIP_NEGOTIATION_STAGE2_ID,
   game: StageGame.CHP,
   name: 'Second negotiation game',
   descriptions: createStageTextConfig({
     infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
   }),
-  chips: CHIPS
+  chips: CHIPS,
 });
 
 // ****************************************************************************
 // Payout stage
 // ****************************************************************************
 const CHIP_PAYOUT_STAGE = createPayoutStage({
-  id: 'payout1',
+  id: 'payout',
   game: StageGame.CHP,
   payoutItems: [
     createChipPayoutItem({
-      name: 'Negotiation completion',
-      description: 'You earn $5 for completing the chip negotiation',
-      stageId: 'negotiation1',
-      baseCurrencyAmount: 5,
+      name: 'Payout from game 1',
+      stageId: CHIP_NEGOTIATION_STAGE1_ID,
+      baseCurrencyAmount: 0,
     }),
-  ],
-});
-
-const CHIP_PAYOUT_STAGE2 = createPayoutStage({
-  id: 'payout2',
-  game: StageGame.CHP,
-  payoutItems: [
     createChipPayoutItem({
-      name: 'Negotiation completion',
-      description: 'You earn $5 for completing the chip negotiation',
-      stageId: 'negotiation2',
-      baseCurrencyAmount: 5,
+      name: 'Payout from game 2',
+      stageId: CHIP_NEGOTIATION_STAGE2_ID,
+      baseCurrencyAmount: 0,
     }),
   ],
 });
@@ -296,12 +518,6 @@ const CHIP_SURVEY_STAGE = createSurveyStage({
   name: 'Final survey',
   game: StageGame.CHP,
   questions: [
-    createScaleSurveyQuestion({
-      questionTitle:
-        'How certain are you that you made the best possible trades during the experiment?',
-      upperText: 'Very confident',
-      lowerText: 'Not at all confident',
-    }),
     createTextSurveyQuestion({
       questionTitle:
         'Please describe your strategy in the game in a few sentences.',
@@ -311,14 +527,36 @@ const CHIP_SURVEY_STAGE = createSurveyStage({
         'Please describe any experiences or background that may have influenced your performance in the game.',
     }),
     createScaleSurveyQuestion({
-      questionTitle: 'On a scale from 1 to 10, how aggressive are you?',
+      questionTitle:
+        "On a scale from 1 to 10, how would you rate your trading strategy, where 1 is highly **competive** (focused mainly on your own gains) and 10 is highly **collaborative** (focused on other players's potential gains and mutual benefits?",
       upperText: 'Very aggressive',
       lowerText: 'Not at all aggressive',
     }),
     createScaleSurveyQuestion({
-      questionTitle: 'On a scale from 1 to 10, how cooperative are you?',
-      upperText: 'Very cooperative',
-      lowerText: 'Not at all cooperative',
+      questionTitle:
+        'On a scale from 1 to 10, how certain are you that you made the best possible trades during the experiment?',
+      upperText: 'Very confident',
+      lowerText: 'Not at all confident',
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        'On a scale from 1 to 10, how satisfied are you with your final trading outcomes?',
+      upperText: 'Very satisfied',
+      lowerText: 'Not at all satisfied',
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "On a scale of 1 to 10, how would you rate the mental effort you put into today's trading games, where 1 means 'I barely engaged in any thinking' and 10 means 'I put in significant mental effort'?",
+      upperText: 'Very high mental exertion',
+      lowerText: 'No mental exertion at all',
+    }),
+    createTextSurveyQuestion({
+      questionTitle:
+        'Please provide any additional context on your answers above.',
+    }),
+    createTextSurveyQuestion({
+      questionTitle:
+        'Please help us to improve this experiment. How was your experience today? Were there any elements of the instructions or gameplay that you found confusing?',
     }),
   ],
 });

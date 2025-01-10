@@ -90,6 +90,7 @@ export interface BasePayoutItemResult {
   description: string;
   stageName: string;
   completedStage: boolean;
+  baseCurrencyAmount: number;
   baseAmountEarned: number;
 }
 
@@ -276,6 +277,7 @@ export function calculateDefaultPayoutItemResult(
     description: item.description,
     stageName: stage.name,
     completedStage,
+    baseCurrencyAmount: item.baseCurrencyAmount,
     baseAmountEarned: completedStage ? item.baseCurrencyAmount : 0,
   };
 }
@@ -316,6 +318,7 @@ export function calculateChipPayoutItemResult(
     description: item.description,
     stageName: stage.name,
     completedStage,
+    baseCurrencyAmount: item.baseCurrencyAmount,
     baseAmountEarned: completedStage ? item.baseCurrencyAmount : 0,
     chipResults,
   };
@@ -389,6 +392,7 @@ export function calculateSurveyPayoutItemResult(
     description: item.description,
     stageName: stage.name,
     completedStage,
+    baseCurrencyAmount: item.baseCurrencyAmount,
     baseAmountEarned: completedStage ? item.baseCurrencyAmount : 0,
     rankingWinner,
     questionResults,

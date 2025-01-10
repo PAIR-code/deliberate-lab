@@ -10,10 +10,6 @@ const DEFAULT_FETCH_TIMEOUT = 300 * 1000; // This is the Chrome default
 const MAX_TOKENS_FINISH_REASON = "MAX_TOKENS";
 const QUOTA_ERROR_CODE = 429;
 
-interface ModelResponse {
-  score?: number;
-  text: string;
-}
 
 const SAFETY_SETTINGS = [
   {
@@ -52,13 +48,13 @@ export async function callGemini(
   const response = await result.response;
 
   if (!response || !response.candidates) {
-    console.log('Error: No response');
+    console.error('Error: No response');
     return { text: '' };
   }
 
   const finishReason = response.candidates[0].finishReason;
   if (finishReason === MAX_TOKENS_FINISH_REASON) {
-    console.log(
+    console.error(
       `Error: Token limit (${generationConfig.maxOutputTokens}) exceeded`
     );
   }
@@ -76,17 +72,6 @@ export async function getGeminiAPIResponse(
   topP = 0.1,
   topK = 16
 ): Promise<ModelResponse> {
-  // Log the request
-  console.log(
-    "call",
-    "prompt:",
-    promptText,
-    "stopTokens:",
-    stopSequences,
-    "maxTokens:",
-    maxOutputTokens
-  );
-
   const generationConfig = {
     stopSequences,
     maxOutputTokens,
@@ -105,14 +90,12 @@ export async function getGeminiAPIResponse(
     );
   } catch (error: any) {
     if (error.message.includes(QUOTA_ERROR_CODE.toString())) {
-      console.log("API quota exceeded");
+      console.error("API quota exceeded");
     } else {
-      console.log("API error");
+      console.error("API error");
     }
-    console.log(error);
+    console.error(error);
   }
 
-  // Log the response
-  console.log(response);
   return response;
 }
