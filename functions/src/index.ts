@@ -23,3 +23,4 @@ export * from './stages/survey.endpoints';
 
 // API functions
 export * from './api/gemini.api';
+export * from './api/openai.api';

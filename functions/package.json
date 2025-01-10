@@ -21,6 +21,7 @@
     "@sinclair/typebox": "^0.32.30",
     "firebase-admin": "^12.1.0",
     "firebase-functions": "^5.0.0",
+    "openai": "^4.77.0",
     "unique-names-generator": "^4.7.1",
     "uuid": "^9.0.1"
   },
