@@ -13,5 +13,7 @@
 }
 
 .transfer-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
   padding: common.$main-content-padding;
 }
