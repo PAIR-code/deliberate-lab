@@ -200,6 +200,34 @@ export class ChatEditor extends MobxLitElement {
     `;
   }
 
+  private renderAgentModel(agent: AgentConfig, index: number) {
+    const updateModel = (e: InputEvent) => {
+      const model = (e.target as HTMLTextAreaElement).value;
+      this.updateAgent(
+        {
+          ...agent,
+          model,
+        },
+        index
+      );
+    };
+
+    return html`
+      <div class="question-label">Model</div>
+      <div class="description">
+        Model ID for the agent. TODO: Currently only used for OpenAI and compatible APIs.
+      </div>
+      <pr-textarea
+        placeholder="Model ID"
+        variant="outlined"
+        .value=${agent.model}
+        ?disabled=${!this.experimentEditor.canEditStages}
+        @input=${updateModel}
+      >
+      </pr-textarea>
+    `;
+  }
+
   private renderAgentPrompt(agent: AgentConfig, index: number) {
     const updatePrompt = (e: InputEvent) => {
       const prompt = (e.target as HTMLTextAreaElement).value;
@@ -301,6 +329,7 @@ export class ChatEditor extends MobxLitElement {
             </pr-icon-button>
           </div>
           ${this.renderAvatars(agent, index)}
+          ${this.renderAgentModel(agent, index)}
           ${this.renderAgentPrompt(agent, index)}
           ${this.renderAgentResponseConfig(agent, index)}
           ${this.renderAgentWordsPerMinute(agent, index)}
