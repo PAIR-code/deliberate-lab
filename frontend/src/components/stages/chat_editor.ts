@@ -356,7 +356,10 @@ export class ChatEditor extends MobxLitElement {
         this.updateAgent(
           {
             ...agent,
-            temperature,
+            generationConfig: {
+              ...agent.generationConfig,
+              temperature
+            },
           },
           index
         );
@@ -369,7 +372,10 @@ export class ChatEditor extends MobxLitElement {
         this.updateAgent(
           {
             ...agent,
-            topP,
+            generationConfig: {
+              ...agent.generationConfig,
+              topP
+            },
           },
           index
         );
@@ -382,7 +388,10 @@ export class ChatEditor extends MobxLitElement {
         this.updateAgent(
           {
             ...agent,
-            frequencyPenalty,
+            generationConfig: {
+              ...agent.generationConfig,
+              frequencyPenalty
+            },
           },
           index
         );
@@ -395,7 +404,10 @@ export class ChatEditor extends MobxLitElement {
         this.updateAgent(
           {
             ...agent,
-            presencePenalty,
+            generationConfig: {
+              ...agent.generationConfig,
+              presencePenalty
+            },
           },
           index
         );
@@ -415,7 +427,7 @@ export class ChatEditor extends MobxLitElement {
           min="0.0"
           max="1.0"
           step="0.1"
-          .value=${agent.temperature}
+          .value=${agent.generationConfig.temperature}
           @input=${updateTemperature}
         />
         <label for="topP">Top P (0.0 - 1.0):</label>
@@ -428,7 +440,7 @@ export class ChatEditor extends MobxLitElement {
           min="0.0"
           max="1.0"
           step="0.1"
-          .value=${agent.topP}
+          .value=${agent.generationConfig.topP}
           @input=${updateTopP}
         />
         <label for="frequencyPenalty">Frequency penalty (-2.0 - 2.0):</label>
@@ -441,7 +453,7 @@ export class ChatEditor extends MobxLitElement {
           min="-2.0"
           max="2.0"
           step="0.1"
-          .value=${agent.frequencyPenalty}
+          .value=${agent.generationConfig.frequencyPenalty}
           @input=${updateFrequencyPenalty}
         />
         <label for="presencePenalty">Presence penalty (-2.0 - 2.0):</label>
@@ -454,7 +466,7 @@ export class ChatEditor extends MobxLitElement {
           min="-2.0"
           max="2.0"
           step="0.1"
-          .value=${agent.presencePenalty}
+          .value=${agent.generationConfig.presencePenalty}
           @input=${updatePresencePenalty}
         />
       </div>
@@ -469,10 +481,13 @@ export class ChatEditor extends MobxLitElement {
        this.updateAgent(
          {
            ...agent,
-           customRequestBodyFields: [
-             ...agent.customRequestBodyFields,
-             {name: '', value: ''},
-           ],
+           generationConfig: {
+               ...agent.generationConfig,
+             customRequestBodyFields: [
+               ...agent.generationConfig.customRequestBodyFields,
+               {name: '', value: ''},
+             ],
+           }
          },
          index
        );
@@ -483,7 +498,7 @@ export class ChatEditor extends MobxLitElement {
        <div class="description">
          Add custom fields to the request body.
        </div>
-       ${agent.customRequestBodyFields.map((field, fieldIndex) => html`
+       ${agent.generationConfig.customRequestBodyFields.map((field, fieldIndex) => html`
          <div class="custom-field">
            <pr-textarea
              label="Field name"

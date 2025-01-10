@@ -1,11 +1,15 @@
 import OpenAI from "openai"
+import {
+  AgentGenerationConfig
+} from '@deliberation-lab/utils';
 
 const MAX_TOKENS_FINISH_REASON = "length";
 
 export async function callOpenAITextCompletion(
   apiKey: string,
   prompt: string,
-  modelName: string
+  modelName: string,
+  generationConfig: agentGenerationConfig
 ) {
   const baseURL = process.env.OPENAI_BASE_URL;
   if (!baseURL) {
@@ -18,9 +22,18 @@ export async function callOpenAITextCompletion(
     apiKey: process.env.OPENAI_API_KEY
   });
 
+  const customFields = Object.fromEntries(
+    generationConfig.customRequestBodyFields.map((field) => [field.name, field.value])
+  );
   const response = await client.completions.create({
     model: modelName,
-    prompt: prompt
+    prompt: prompt,
+    temperature: generationConfig.temperature,
+    top_p: generationConfig.topP,
+    frequency_penalty: generationConfig.frequencyPenalty,
+    presence_penalty: generationConfig.presencePenalty,
+    // @ts-expect-error allow extra request fields
+    ...customFields
   });
 
   if (!response || !response.choices) {
@@ -42,7 +55,8 @@ export async function callOpenAITextCompletion(
 export async function getOpenAIAPITextCompletionResponse(
   apiKey: string,
   modelName: string,
-  promptText: string
+  promptText: string,
+  generationConfig: AgentGenerationConfig
 ): Promise<ModelResponse> {
   if (!modelName) {
     console.warn(
@@ -58,7 +72,9 @@ export async function getOpenAIAPITextCompletionResponse(
     "modelName:",
     modelName,
     "prompt:",
-    promptText
+    promptText,
+    "generationConfig:",
+    generationConfig
   );
 
   let response = { text: "" };
@@ -66,7 +82,8 @@ export async function getOpenAIAPITextCompletionResponse(
     response = await callOpenAITextCompletion(
       apiKey,
       promptText,
-      modelName
+      modelName,
+      generationConfig
     );
   } catch (error: any) {
     console.error("API error:", error);

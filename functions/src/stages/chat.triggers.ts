@@ -13,6 +13,7 @@ import {
   getTimeElapsed,
   createAgentMediatorChatMessage,
   AgentConfig,
+  AgentGenerationConfig,
   ChatStageConfig,
   ApiKeyType,
   ExperimenterData,
@@ -145,7 +146,7 @@ export const createAgentMessage = onDocumentCreated(
       const prompt = `${getPreface(agent, stage)}\n${getChatHistory(chatMessages, agent)}\n${agent.responseConfig.formattingInstructions}`;
 
       // Call LLM API with given modelCall info
-      const response = await getAgentResponse(experimenterData, prompt);
+      const response = await getAgentResponse(experimenterData, prompt, agent);
 
       // Add agent message if non-empty
       let message = response.text;
@@ -310,7 +311,7 @@ async function hasEndedChat(
   return false;
 }
 
-async function getAgentResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
+async function getAgentResponse(data: ExperimenterData, prompt: string, agent: AgentConfig): Promise<ModelResponse> {
   const keyType = data.apiKeys.activeApiKeyType;
   let response;
 
@@ -318,7 +319,9 @@ async function getAgentResponse(data: ExperimenterData, prompt: string): Promise
     response = getOpenAIAPITextCompletionResponse(
       process.env.OPENAI_API_KEY,
       process.env.OPENAI_MODEL_NAME,
-      prompt)
+      prompt,
+      agent.generationConfig
+    )
   } else if (keyType === ApiKeyType.GEMINI_API_KEY) {
     response =  getGeminiResponse(data, prompt);
   } else if (keyType === ApiKeyType.OLLAMA_CUSTOM_URL) {

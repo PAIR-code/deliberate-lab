@@ -98,25 +98,30 @@ export interface AgentMediatorChatMessage extends BaseChatMessage {
   explanation: string;
 }
 
-/** LLM agent config. */
+
 export interface CustomRequestBodyField {
   name: string;
   value: string;
 }
 
+export interface AgentGenerationConfig {
+  temperature: number;
+  topP: number;
+  frequencyPenalty: number;
+  presencePenalty: number;
+  customRequestBodyFields: CustomRequestBodyField[];
+}
+
+/** LLM agent config. */
 export interface AgentConfig {
   id: string;
   name: string;
   avatar: string; // emoji avatar for agent
   prompt: string;
   wordsPerMinute: number; // Typing speed
-  temperature: number;
-  topP: number;
-  frequencyPenalty: number;
-  presencePenalty: number;
-  customRequestBodyFields: CustomRequestBodyField[];
+  generationConfig: AgentGenerationConfig
   responseConfig: AgentResponseConfig;
-  // TODO: Add more settings, e.g., model, temperature, context window
+  // TODO: Add more settings, e.g. context window
 }
 
 /** Settings for formatting agent response
@@ -338,13 +343,19 @@ export function createAgentConfig(config: Partial<AgentConfig> = {}): AgentConfi
     avatar: config.avatar ?? '🤖',
     prompt: config.prompt ?? DEFAULT_AGENT_PROMPT.trim(),
     wordsPerMinute: config.wordsPerMinute ?? 80, // Default 80 WPM.
+    generationConfig: config.generationConfig ?? createAgentGenerationConfig(),
+    responseConfig: config.responseConfig ?? createAgentResponseConfig(),
+  };
+}
+
+export function createAgentGenerationConfig(config: Partial<AgentGenerationConfig> = {}): AgentGenerationConfig {
+  return {
     temperature: config.temperature ?? 0.7,
     topP: config.topP ?? 1.0,
     frequencyPenalty: config.frequencyPenalty ?? 0.0,
-    presencePenalty: config.presencePenalty ?? 1.0,
+    presencePenalty: config.presencePenalty ?? 0.0,
     customRequestBodyFields: config.customRequestBodyFields ?? [],
-    responseConfig: config.responseConfig ?? createAgentResponseConfig(),
-  };
+  }
 }
 
 /** Create agent response config. */
