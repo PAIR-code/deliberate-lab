@@ -502,7 +502,7 @@ export class ChatEditor extends MobxLitElement {
      `;
    }
 
-   private renderAgentCustomRequestBodyFields(
+  private renderAgentCustomRequestBodyFields(
      agent: AgentConfig,
      index: number
    ) {
@@ -522,6 +522,22 @@ export class ChatEditor extends MobxLitElement {
        );
      };
 
+    const updateField = (fieldIndex: number, field: Partial<{ name: string; value: string }>) => {
+      this.updateAgent(
+        {
+          ...agent,
+          generationConfig: {
+            ...agent.generationConfig,
+            customRequestBodyFields: agent.generationConfig.customRequestBodyFields.map((f, i) =>
+              i === fieldIndex ? { ...f, ...field } : f
+            ),
+          },
+        },
+        index
+      );
+    };
+
+
      return html`
        <div class="question-label">Custom request body fields</div>
        <div class="description">
@@ -533,12 +549,14 @@ export class ChatEditor extends MobxLitElement {
              label="Field name"
              variant="outlined"
              .value=${field.name}
+             @input=${(e: InputEvent) => updateField(fieldIndex, { name: (e.target as HTMLInputElement).value })}
            >
            </pr-textarea>
            <pr-textarea
              label="Field value"
              variant="outlined"
              .value=${field.value}
+             @input=${(e: InputEvent) => updateField(fieldIndex, { value: (e.target as HTMLInputElement).value })}
            >
            </pr-textarea>
          </div>
