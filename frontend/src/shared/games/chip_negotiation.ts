@@ -46,8 +46,9 @@ export function getChipNegotiationStageConfigs(): StageConfig[] {
   stages.push(CHIP_PROFILE_STAGE);
 
   // Overview stages
-  stages.push(CHIP_INFO_STAGE_OVERVIEW);
+  stages.push(CHIP_INFO_STAGE_OVERVIEW1);
   stages.push(CHIP_INFO_STAGE_OVERVIEW2);
+  stages.push(CHIP_INFO_STAGE_OVERVIEW3);
 
   // Comprehension check
   stages.push(CHIP_COMPREHENSION_CHECK);
@@ -62,6 +63,7 @@ export function getChipNegotiationStageConfigs(): StageConfig[] {
   stages.push(CHIP_COMPREHENSION_CHECK2);
 
   stages.push(CHIP_INFO_STAGE_PAYOUT);
+  stages.push(CHIP_INFO_STAGE_PAYOUT2);
 
   // First transfer
   stages.push(CHIP_INITIAL_TRANSFER_STAGE);
@@ -120,8 +122,8 @@ const CHIP_PROFILE_STAGE = createProfileStage({
 // Info stage for chip negotiation
 // ****************************************************************************
 
-const CHIP_INFO_STAGE_OVERVIEW = createInfoStage({
-  id: 'info_overview',
+const CHIP_INFO_STAGE_OVERVIEW1 = createInfoStage({
+  id: 'info_overview1',
   game: StageGame.CHP,
   name: 'Instructions: overview',
   infoLines: [
@@ -134,7 +136,7 @@ const CHIP_INFO_STAGE_OVERVIEW = createInfoStage({
 const CHIP_INFO_STAGE_OVERVIEW2 = createInfoStage({
   id: 'info_overview2',
   game: StageGame.CHP,
-  name: 'Instructions: chip valuations',
+  name: 'Instructions: chip valuations 1',
   infoLines: [
     'You will play this trading game two times, against different groups of participants. In each game, you and the other participants will start with:',
     `* 🔴 ${N_INITIAL_RED_CHIPS} **red** chips`,
@@ -142,11 +144,19 @@ const CHIP_INFO_STAGE_OVERVIEW2 = createInfoStage({
     `* 🔵 ${N_INITIAL_BLUE_CHIPS} **blue** chips`,
     '**Valuations:**',
     'Each 🟢 green chip is worth $0.50 to each participant. However, you will all have different valuations for the red and blue chips, randomly chosen between $0.10 and $1.00. For example, Cat might value 🔴 red chips at $0.30 each and 🔵 blue chips at $0.70 each, while Mouse might value 🔴 red chips at $0.80 each and 🔵 blue chips at $0.30 each.',
-    "You know your own chip valuation and that everyone values 🟢 green chips the same, at $0.50 per chip. However, you do not know the other players' valuations for red and blue chips.",
-    '![Example of chip count table](https://i.imgur.com/ImUM14D.png)',
-    'The table above is shown to you during the game, and provides the number of chips everyone has as well as a reminder of your own valuation.',
     '\n**What this means:**',
-    'Because each participant values the chips differently, there may be good reasons to trade. For instance, if you don’t care much about 🔴 red chips but someone else does, you might offer your red chips to them in exchange for 🔵 blue chips, which you like more. In this way, both you and the other participant can end up with chips that you find more valuable. This is what creates the opportunity to gain from trading.',
+    'Because each participant values the chips differently, there may be good reasons to trade. For instance, if you don’t care much about 🔴 red chips but someone else does, you might offer your red chips to them in exchange for 🔵 blue chips, which you like more. In this way, both you and the other participant can end up with chips that you find more valuable.',
+    "You know your own chip valuation and that everyone values 🟢 green chips the same, at $0.50 per chip. However, you do not know the other players' valuations for red and blue chips.",
+  ],
+});
+
+const CHIP_INFO_STAGE_OVERVIEW3 = createInfoStage({
+  id: 'info_overview3',
+  game: StageGame.CHP,
+  name: 'Instructions: chip valuations 2',
+  infoLines: [
+    'The following table is shown to you during the game. It provides the number of chips everyone has as well as a reminder of your own valuations.',
+    '![Example of chip count table](https://i.imgur.com/ImUM14D.png)',
   ],
 });
 
@@ -334,7 +344,7 @@ const CHIP_INFO_STAGE_GAMEPLAY2 = createInfoStage({
     `2. Specify a certain quantity of chips of a different color to **give** in return`,
     `\n## Trade rules`,
     `* Players cannot offer more chips than they currently hold. For example, if you only have 5 🔴 red chips, you cannot offer 6 🔴 red chips.`,
-    `* Players cannot trade chips of the same color. You cannot trade 🔴 red chips for 🔴 red chips, for example.`,
+    `* Players cannot trade chips of the same color. For example, you cannot trade 🔴 red chips for 🔴 red chips.`,
     '![Example of offering a trade](https://i.imgur.com/Jzah8Ot.png)',
   ],
 });
@@ -372,20 +382,33 @@ const CHIP_INFO_STAGE_GAMEPLAY5 = createInfoStage({
 // ****************************************************************************/
 
 const CHIP_INFO_STAGE_PAYOUT = createInfoStage({
-  id: 'info_payment',
+  id: 'info_payment1',
   game: StageGame.CHP,
   name: 'Payment information',
   infoLines: [
-    'At the end of the study, we will randomly pick **one** of the two negotiation games you played and give you a bonus payment from that game. *If you do not complete both games, you will not receive a bonus payment.*',
-    '\n**Example:**',
-    ' Suppose that for the first game, you initially started with 10 chips in each color, worth (10 * 0.30 + 10 * 0.50 + 10 * 0.70) = **$15.00**.',
+    '## Bonus payment',
+    'At the end of the study, we will randomly pick **one** of the two negotiation games you played and give you a bonus payment from that game.',
+    'There are two important features to remember about the bonus:',
+        '  * The bonus will be equivalent to how much money you earn through trading *beyond* what you start with.',
+        '  * If you do not complete both games, you will not receive a bonus payment.',
+    'In short, you want to make as much money as you can through trading!'
+  ],
+});
+
+const CHIP_INFO_STAGE_PAYOUT2 = createInfoStage({
+  id: 'info_payment2',
+  game: StageGame.CHP,
+  name: 'Payment information examples',
+  infoLines: [
+    '## Bonus payment example calculation',
+    ' Suppose that for the first game, you started with 10 chips of each color, worth (10 * 0.30 + 10 * 0.50 + 10 * 0.70) = **$15.00**.',
     'At the end of that game, you have:',
     '  * 🔴 8 red chips valued at $0.30 each',
     '  * 🟢 7 green chips valued at $0.50 each',
     '  * 🔵 21 blue chips valued at $0.70 each',
     'This adds up to **$20.60**. You would receive $20.60 - $15.00 = **$5.60** as a bonus for the first game.',
     'If you did not increase the value of your chips, you would not receive a bonus.',
-    "\nYour total bonus will be the sum of the first game's bonus and the second game's bonus.",
+    "\nYour total bonus will be randomly selected from either the first or the second game",
     '\nThe exact values will depend on your random chip valuations and your final holdings, so your payment may differ from this example.',
     '\nThis payment is in addition to the $8 base payment for participating.',
   ],
