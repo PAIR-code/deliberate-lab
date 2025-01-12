@@ -55,6 +55,11 @@ export const createParticipant = onCall(async (request) => {
     .collection('participants')
     .doc(participantConfig.privateId);
 
+  // Set random timeout to avoid data contention with transaction
+  await new Promise((resolve) => {
+    setTimeout(resolve, Math.random() * 2000);
+  });
+
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     // Get number of participants in collection
