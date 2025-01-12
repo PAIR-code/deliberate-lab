@@ -71,6 +71,16 @@ export enum ParticipantStatus {
 // ************************************************************************* //
 // CONSTANTS                                                                 //
 // ************************************************************************* //
+export const COLORS: string[] = [
+  'Red',
+  'Orange',
+  'Yellow',
+  'Green',
+  'Blue',
+  'Purple',
+  'Pink'
+];
+
 export const ANIMAL_PROFILES: {name: string, avatar: string}[] = [
   {name: 'Dog', avatar: '🐶'},
   {name: 'Cat', avatar: '🐱'},
@@ -110,10 +120,6 @@ export const ANIMAL_PROFILES: {name: string, avatar: string}[] = [
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
-
-export function generateParticipantPublicId(index: number) {
-  return `participant-${index}`;
-}
 
 /** Create ProgressTimestamps config. */
 export function createProgressTimestamps(
@@ -159,23 +165,28 @@ export function createParticipantProfileExtended(
   }
 }
 
-/** Set anonymous profile fields based on participant number. */
-export function setAnonymousProfile(
+/** Set profile fields based on participant number. */
+export function setProfile(
   participantNumber: number,
   config: ParticipantProfileExtended,
+  setAnonymousProfile = false,
 ) {
   // Get name/avatar based on participant number
   const { name, avatar } = ANIMAL_PROFILES[
     participantNumber % ANIMAL_PROFILES.length
   ];
 
-  // Use, e.g., "Cat 2" if second time "Cat" is being used
-  const animalNum = Math.floor(participantNumber / ANIMAL_PROFILES.length);
-  config.name = `${name}${animalNum === 0 ? '' : ` ${animalNum + 1}`}`;
+  const color = COLORS[Math.floor(Math.random() * COLORS.length)]
+  const randomNumber = Math.floor(Math.random() * 10000);
 
-  config.avatar = avatar;
-  config.pronouns = '';
+  config.publicId = `${name}-${color}-${randomNumber}`.toLowerCase();
 
-  // Set public ID based on participant number
-  config.publicId = generateParticipantPublicId(participantNumber);
+  if (setAnonymousProfile) {
+    // Use, e.g., "Cat 2" if second time "Cat" is being used
+    const animalNum = Math.floor(participantNumber / ANIMAL_PROFILES.length);
+    config.name = `${name}${animalNum === 0 ? '' : ` ${animalNum + 1}`}`;
+
+    config.avatar = avatar;
+    config.pronouns = '';
+  }
 }
