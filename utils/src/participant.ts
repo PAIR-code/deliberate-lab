@@ -1,4 +1,5 @@
 import { UnifiedTimestamp, generateId } from './shared';
+import { PROFILE_SET_ANIMALS_1 } from './profile_sets';
 
 /** Participant profile types and functions. */
 
@@ -81,42 +82,6 @@ export const COLORS: string[] = [
   'Pink'
 ];
 
-export const ANIMAL_PROFILES: {name: string, avatar: string}[] = [
-  {name: 'Dog', avatar: '🐶'},
-  {name: 'Cat', avatar: '🐱'},
-  {name: 'Mouse', avatar: '🐭'},
-  {name: 'Hamster', avatar: '🐹'},
-  {name: 'Rabbit', avatar: '🐰'},
-  {name: 'Fox', avatar: '🦊'},
-  {name: 'Bear', avatar: '🐻'},
-  {name: 'Panda', avatar: '🐼'},
-  {name: 'Koala', avatar: '🐨'},
-  {name: 'Lion', avatar: '🦁'},
-  {name: 'Tiger', avatar: '🐯'},
-  {name: 'Unicorn', avatar: '🦄'},
-  {name: 'Zebra', avatar: '🦓'},
-  {name: 'Giraffe', avatar: '🦒'},
-  {name: 'Pig', avatar: '🐷'},
-  {name: 'Cow', avatar: '🐮'},
-  {name: 'Frog', avatar: '🐸'},
-  {name: 'Chicken', avatar: '🐔'},
-  {name: 'Penguin', avatar: '🐧'},
-  {name: 'Owl', avatar: '🦉'},
-  {name: 'Bird', avatar: '🐦'},
-  {name: 'Eagle', avatar: '🦅'},
-  {name: 'Lizard', avatar: '🦎'},
-  {name: 'Butterfly', avatar: '🦋'},
-  {name: 'Fish', avatar: '🐟'},
-  {name: 'Shark', avatar: '🦈'},
-  {name: 'Dolphin', avatar: '🐬'},
-  {name: 'Turtle', avatar: '🐢'},
-  {name: 'Parrot', avatar: '🦜'},
-  {name: 'Kangaroo', avatar: '🦘'},
-  {name: 'Rhinoceros', avatar: '🦏'},
-  {name: 'Elephant', avatar: '🐘'},
-  {name: 'Monkey', avatar: '🐒'},
-];
-
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
@@ -171,9 +136,12 @@ export function setProfile(
   config: ParticipantProfileExtended,
   setAnonymousProfile = false,
 ) {
+  // Use ANIMALS_1 as primary set (for public ID)
+  const PUBLIC_ID_SET = PROFILE_SET_ANIMALS_1;
+
   // Get name/avatar based on participant number
-  const { name, avatar } = ANIMAL_PROFILES[
-    participantNumber % ANIMAL_PROFILES.length
+  const { name, avatar } = PUBLIC_ID_SET[
+    participantNumber % PUBLIC_ID_SET.length
   ];
 
   const color = COLORS[Math.floor(Math.random() * COLORS.length)]
@@ -183,7 +151,7 @@ export function setProfile(
 
   if (setAnonymousProfile) {
     // Use, e.g., "Cat 2" if second time "Cat" is being used
-    const animalNum = Math.floor(participantNumber / ANIMAL_PROFILES.length);
+    const animalNum = Math.floor(participantNumber / PUBLIC_ID_SET.length);
     config.name = `${name}${animalNum === 0 ? '' : ` ${animalNum + 1}`}`;
 
     config.avatar = avatar;
