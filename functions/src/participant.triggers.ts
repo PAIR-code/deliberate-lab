@@ -13,8 +13,8 @@ import { app } from './app';
 export const setParticipantStageData = onDocumentCreated(
   { document: 'experiments/{experimentId}/participants/{participantId}' },
   async (event) => {
-    const participantDoc = app.
-      firestore()
+    const participantDoc = app
+      .firestore()
       .doc(`experiments/${event.params.experimentId}/participants/${event.params.participantId}`);
 
     await app.firestore().runTransaction(async (transaction) => {
@@ -23,12 +23,7 @@ export const setParticipantStageData = onDocumentCreated(
 
       // Get all stage configs
       const stageConfigs = (
-        await app
-          .firestore()
-          .collection(
-            `experiments/${event.params.experimentId}/stages`,
-          )
-          .get()
+        await app.firestore().collection(`experiments/${event.params.experimentId}/stages`).get()
       ).docs.map((doc) => doc.data() as StageConfig);
 
       for (const stage of stageConfigs) {
@@ -52,21 +47,18 @@ export const setParticipantStageData = onDocumentCreated(
               chipMap[chip.id] = chip.startingQuantity;
               chipValueMap[chip.id] =
                 Math.floor(
-                  Math.random() * (chip.upperValue - chip.lowerValue) * 100
-                  + chip.lowerValue * 100
+                  Math.random() * ((chip.upperValue - chip.lowerValue) * 100 + 1) +
+                    chip.lowerValue * 100,
                 ) / 100;
             });
 
-            const chipAnswer = createChipStageParticipantAnswer(
-              stage.id,
-              chipMap,
-              chipValueMap
-            );
+            const chipAnswer = createChipStageParticipantAnswer(stage.id, chipMap, chipValueMap);
 
             transaction.set(stageDoc, chipAnswer);
 
             // Set public stage data
-            const publicChipDoc = app.firestore()
+            const publicChipDoc = app
+              .firestore()
               .collection('experiments')
               .doc(event.params.experimentId)
               .collection('cohorts')
@@ -82,9 +74,9 @@ export const setParticipantStageData = onDocumentCreated(
             transaction.set(publicChipDoc, publicChipData);
             break;
           default:
-            break;          
+            break;
         }
       } // end stage config logic
     }); // end transaction
-  }
-)
+  },
+);
