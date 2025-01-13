@@ -38,10 +38,13 @@ export class Progress extends MobxLitElement {
   }
 
   private renderParticipant(participant: ParticipantProfile) {
+    const stageId = this.routerService.activeRoute.params['stage'];
+
     return html`
       <participant-profile-display
         class="participant"
         .profile=${participant}
+        .stageId=${stageId}
         displayType="progress">
       </participant-profile-display>
     `;

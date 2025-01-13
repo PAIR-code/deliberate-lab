@@ -34,7 +34,10 @@ export class ProfileViewer extends MobxLitElement {
       <div class="html-wrapper">
         <div>${info}</div>
         <div class="profile-wrapper">
-          <participant-profile-display .profile=${profile} displayType="stage">
+          <participant-profile-display
+            .profile=${profile}
+            .stageId=${this.stage.id}
+            displayType="stage">
           </participant-profile-display>
         </div>
       </div>

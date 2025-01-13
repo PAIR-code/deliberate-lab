@@ -46,7 +46,10 @@ export class Header extends MobxLitElement {
         text="You are playing as this avatar"
         position="BOTTOM_END"
       >
-        <profile-display .profile=${this.profile}></profile-display>
+        <participant-profile-display
+          .profile=${this.profile}
+          .stageId=${this.stage?.id ?? ''}>
+        </participant-profile-display>
       </pr-tooltip>
     `;
   }

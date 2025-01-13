@@ -1,5 +1,9 @@
 /** Profile sets to use for anonymous profiles. */
 
+// Temporary hack: include this ID in stage ID in order to use
+// anonymous profile set for display
+export const ALTERNATE_PROFILE_SET_ID = 'alternate_profile';
+
 /** First set of animals. */
 export const PROFILE_SET_ANIMALS_1_ID = 'animals-1';
 

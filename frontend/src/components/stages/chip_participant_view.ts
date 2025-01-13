@@ -573,7 +573,7 @@ export class ChipView extends MobxLitElement {
       .getAllParticipants()
       .find((p) => p.publicId === offer.senderId);
     if (!senderParticipant) return nothing;
-    const senderName = `${getParticipantInlineDisplay(senderParticipant)}`;
+    const senderName = `${getParticipantInlineDisplay(senderParticipant, false, this.stage?.id ?? '')}`;
 
     return html`
       <div class="offer-panel">
@@ -673,11 +673,7 @@ export class ChipView extends MobxLitElement {
   }
 
   private getParticipantDisplay(participant: ParticipantProfile) {
-    if (participant.avatar && participant.name) {
-      return `${participant.avatar} ${participant.name}`;
-    }
-
-    return participant.name ?? participant.publicId;
+    return getParticipantInlineDisplay(participant, false, this.stage?.id ?? '');
   }
 
   private renderLogEntry(entry: ChipLogEntry, isLatestEntry: boolean = false) {

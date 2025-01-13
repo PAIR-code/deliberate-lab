@@ -1,4 +1,6 @@
 import {
+  ALTERNATE_PROFILE_SET_ID,
+  PROFILE_SET_ANIMALS_2_ID,
   ParticipantProfile,
   ParticipantStatus,
   ProfileType,
@@ -15,7 +17,16 @@ import {
 export function getParticipantInlineDisplay(
   participant: ParticipantProfile,
   showIsSelf = false, // add (you) to the end
+  stageId = '',
 ) {
+  if (
+    stageId.includes(ALTERNATE_PROFILE_SET_ID) &&
+    participant.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID]
+  ) {
+    const anon = participant.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID];
+    return `${anon.avatar} ${anon.name}${showIsSelf ? ' (you)' : ''}`;
+  }
+
   return `
     ${participant.avatar ?? ''} ${participant.name ?? participant.publicId}${showIsSelf ? ' (you)' : ''}
   `;

@@ -132,7 +132,7 @@ export class ChipReveal extends MobxLitElement {
       <span class="indicator ${isCurrentTurn(participant) ? '' : 'hidden'}">
         👉
       </span>
-      ${getParticipantInlineDisplay(participant, isCurrentUser)}
+      ${getParticipantInlineDisplay(participant, isCurrentUser, this.stage?.id ?? '')}
     `;
 
     return html`

@@ -7,6 +7,8 @@ import {customElement, property} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {
+  ALTERNATE_PROFILE_SET_ID,
+  PROFILE_SET_ANIMALS_2_ID,
   ParticipantProfile,
   ParticipantProfileBase
 } from '@deliberation-lab/utils';
@@ -44,6 +46,7 @@ enum ProfileDisplayType {
 export class ParticipantProfileDisplay extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  @property() stageId = '';
   @property() profile: ParticipantProfile|undefined = undefined;
   @property() displayType: ProfileDisplayType = ProfileDisplayType.DEFAULT;
 
@@ -72,9 +75,22 @@ export class ParticipantProfileDisplay extends MobxLitElement {
       return getColor(this.profile?.publicId);
     };
 
+    // If alternate profile ID in stage ID, use anonymous profile
+    let baseProfile: ParticipantProfileBase = this.profile;
+    if (this.stageId.includes(ALTERNATE_PROFILE_SET_ID)) {
+      const anon = this.profile.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID];
+      if (anon) {
+        baseProfile = {
+          name: `${anon.name}`,
+          avatar: `${anon.avatar}`,
+          pronouns: null,
+        };
+      }
+    }
+
     return html`
       <profile-display
-        .profile=${this.profile}
+        .profile=${baseProfile}
         .displayType=${this.displayType}
         .isDisabled=${this.isDisabled}
         .nameFallback=${nameFallback}

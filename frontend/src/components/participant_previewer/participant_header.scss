@@ -29,7 +29,7 @@ pr-icon {
   cursor: default;
 }
 
-profile-display {
+participant-profile-display {
   @include common.flex-row-align-center;
   @include typescale.title-medium;
   border: 2px solid var(--md-sys-color-outline-variant);

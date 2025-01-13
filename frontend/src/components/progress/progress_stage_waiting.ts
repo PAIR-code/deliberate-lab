@@ -103,9 +103,14 @@ export class Progress extends MobxLitElement {
       tooltipText = 'This participant is no longer in the experiment';
     }
 
+    const stageId = this.routerService.activeRoute.params['stage'];
+
     return html`
       <pr-tooltip text=${tooltipText} position="BOTTOM_END">
-        <participant-profile-display .profile=${participant} displayType="waiting">
+        <participant-profile-display
+          .profile=${participant}
+          .stageId=${stageId}
+          displayType="waiting">
         </participant-profile-display>
        </pr-tooltip>
     `;
