@@ -43,6 +43,34 @@
     background: var(--md-sys-color-avatar-person);
   }
 
+  &.red {
+    background: var(--md-sys-color-avatar-red);
+  }
+
+  &.orange {
+    background: var(--md-sys-color-avatar-orange);
+  }
+
+  &.yellow {
+    background: var(--md-sys-color-avatar-yellow);
+  }
+
+  &.green {
+    background: var(--md-sys-color-avatar-green);
+  }
+
+  &.blue {
+    background: var(--md-sys-color-avatar-blue);
+  }
+
+  &.purple {
+    background: var(--md-sys-color-avatar-purple);
+  }
+
+  &.pink {
+    background: var(--md-sys-color-avatar-pink);
+  }
+
   &.selected {
     border: 2px solid var(--md-sys-color-outline);
   }

@@ -7,13 +7,12 @@ import {customElement, property} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {styles} from './profile_avatar.scss';
-import {getHashIntegerFromString} from '@deliberation-lab/utils';
+import {getColor} from '../../shared/utils';
 import {
   MAN_EMOJIS,
   WOMAN_EMOJIS,
   PERSON_EMOJIS
 } from '../../shared/constants';
-import {getAvatarBackgroundColor} from '../../shared/participant.utils';
 
 /** Participant profile avatar */
 @customElement('profile-avatar')
@@ -25,8 +24,14 @@ export class ProfileAvatar extends MobxLitElement {
   @property() small = false;
   @property() disabled = false;
   @property() tooltip = '';
+  @property() color = '';
 
   override render() {
+    if (!this.emoji) return;
+
+    // TODO: Remove temporary hash-based color assignment
+    this.color = getColor(this.emoji);
+
     const classes = classMap({
       avatar: true,
       small: this.small,
@@ -35,24 +40,20 @@ export class ProfileAvatar extends MobxLitElement {
       man: MAN_EMOJIS.indexOf(this.emoji) > -1,
       woman: WOMAN_EMOJIS.indexOf(this.emoji) > -1,
       person: PERSON_EMOJIS.indexOf(this.emoji) > -1,
+      red: this.color === 'red',
+      orange: this.color === 'orange',
+      yellow: this.color === 'yellow',
+      blue: this.color === 'blue',
+      green: this.color === 'green',
+      purple: this.color === 'purple',
+      pink: this.color === 'pink',
     });
-    if (!this.emoji) return;
 
-    // Set background color for non-person emoji
-    const isOther =
-      MAN_EMOJIS.indexOf(this.emoji) === -1 &&
-      WOMAN_EMOJIS.indexOf(this.emoji) === -1 &&
-      PERSON_EMOJIS.indexOf(this.emoji) === -1;
-
-    const style = isOther ? `background:${getAvatarBackgroundColor(this.emoji)}` : '';
-    const emojiHtml = html`
-      <div class=${classes} style="${style}">${this.emoji}</div>
+    return html`
+      <pr-tooltip text=${this.tooltip}>
+        <div class=${classes}>${this.emoji}</div>
+      </pr-tooltip>
     `;
-
-    if (this.tooltip.length > 0) {
-      return html` <pr-tooltip text=${this.tooltip}>${emojiHtml}</pr-tooltip> `;
-    }
-    return emojiHtml;
   }
 }
 
