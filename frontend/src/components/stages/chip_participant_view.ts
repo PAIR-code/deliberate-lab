@@ -150,13 +150,14 @@ export class ChipView extends MobxLitElement {
     };
 
     return html`
-      <div class="panel panel-left">
+      <div class="panel left">
         ${isCurrentTurn()
           ? this.renderSenderView()
           : this.renderRecipientView()}
-        <div class="divider"></div>
-        <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
-        </chip-reveal-view>
+        <div class="subpanel">
+          <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
+          </chip-reveal-view>
+        </div>
       </div>
     `;
   }
@@ -279,7 +280,7 @@ export class ChipView extends MobxLitElement {
     const renderOfferPayout = () => {
       let payoutHtml = html``;
       if (!this.isOfferIncomplete() && this.isOfferValid()) {
-        if (!this.stage || !this.participantService.profile) return 0;
+        if (!this.stage || !this.participantService.profile) return nothing;
         const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
         if (publicData?.kind !== StageKind.CHIP) return 0;
 
@@ -303,17 +304,17 @@ export class ChipView extends MobxLitElement {
           class=${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}
           ><b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b></span
         >`;
-        payoutHtml = html`<p>
+        payoutHtml = html`
           If this offer is accepted, your updated payout will be
           <b>$${newTotalPayout.toFixed(2)}</b> ${diffDisplay}.
-        </p>`;
+        `;
       }
       return html`<div class="payout-panel">${payoutHtml}</div>`;
     };
 
     const renderValidationMessages = () => {
       if (this.isOfferIncomplete()) {
-        return html`<div class="warnings-panel"></div>`;
+        return nothing;
       }
 
       const errors = [];
@@ -378,8 +379,6 @@ export class ChipView extends MobxLitElement {
             })}
           </div>
         </div>
-
-        ${renderOfferPayout()} ${renderValidationMessages()}
         <div class="buttons">
           <pr-button
             ?loading=${this.isOfferLoading}
@@ -393,6 +392,7 @@ export class ChipView extends MobxLitElement {
               : 'Submit offer'}
           </pr-button>
         </div>
+        ${renderOfferPayout()} ${renderValidationMessages()}
       </div>
     `;
   }

@@ -59,7 +59,6 @@ export class ChipReveal extends MobxLitElement {
 
     return html`
       ${renderTitle()} ${this.renderGlobalTable(participants)}
-      <div class="divider"></div>
     `;
   }
 
