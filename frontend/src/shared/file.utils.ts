@@ -259,8 +259,245 @@ export interface ChipNegotiationResponderData {
 }
 
 // ****************************************************************************
-// JSON DATA FUNCTIONS
+// CHIP NEGOTIATION DATA FUNCTIONS
 // ****************************************************************************
+export function getChipNegotiationCSV(
+  data: ExperimentDownload,
+  games: ChipNegotiationData[],
+): string[][] {
+  let columns: string[][] = [];
+
+  // Calculate max players across all games (needed for header columns)
+  let maxPlayers = 0;
+  games.forEach((game) => {
+    const numPlayers = game.data.metadata.players.length;
+    console.log(numPlayers);
+    if (numPlayers > maxPlayers) {
+      maxPlayers = numPlayers;
+    }
+  });
+
+  // Add headers
+  columns.push(getChipNegotiationTurnColumns(maxPlayers, data, games[0], null));
+
+  games.forEach((game) => {
+    game.data.history.forEach((round) => {
+      round.turns.forEach((turn) => {
+        columns.push(getChipNegotiationTurnColumns(maxPlayers, data, game, turn));
+      });
+    });
+  });
+
+  return columns;
+}
+
+export function getChipNegotiationTurnColumns(
+  maxPlayers: number, // needed for player column headers
+  data: ExperimentDownload,
+  game: ChipNegotiationData,
+  turn: ChipNegotiationTurnData|null,
+): string[] {
+  // Start with player list that is maxPlayers long and populate in order.
+  // Players have turns in order of their ID
+  // NOTE: Keep in sync with player turn logic on backend
+  let players: string[] = [];
+  const playerList: string[] = game.data.metadata.players.sort();
+  let index = 0;
+  while (index < maxPlayers) {
+    if (index < playerList.length) {
+      players.push(playerList[index]);
+    } else {
+      players.push('');
+    }
+    index += 1;
+  }
+
+  const chips = game.data.metadata.chips;
+  const columns: string[] = [];
+  const roundNumber = turn?.transaction.offer.round ?? -1;
+  const senderId = turn?.senderData.participantId ?? '';
+  const recipientId = turn?.transaction.recipientId ?? '';
+  const getPlayerNumber = () => {
+    const index = playerList.findIndex(p => p === senderId);
+    if (index === -1) return '';
+    return `${index + 1}`;
+  }
+
+  columns.push(!turn ? 'Cohort' : game.cohortName);
+  columns.push(!turn ? 'Stage ID' : game.stageName);
+  columns.push(!turn ? 'Round' : roundNumber.toString());
+  columns.push(!turn ? 'Turn (player number)' : getPlayerNumber());
+  columns.push(!turn ? 'Turn (sender ID)' : senderId);
+  columns.push(!turn ? 'Turn (sender name)' : data.participantMap[senderId]?.profile.name ?? '');
+  columns.push(!turn ? 'Turn (avatar)' : data.participantMap[senderId]?.profile.avatar ?? '')
+
+  columns.push(
+    !turn ? 'Offer (timestamp)' :
+    convertUnifiedTimestampToDate(turn.transaction.offer.timestamp)
+  );
+  chips.forEach((chip) => {
+    columns.push(!turn ? `Buy offer (${chip.id})` : turn.transaction.offer.buy[chip.id]?.toString() ?? '0');
+  });
+  chips.forEach((chip) => {
+    columns.push(!turn ? `Sell offer (${chip.id})` : turn.transaction.offer.sell[chip.id]?.toString() ?? '0');
+  });
+  columns.push(!turn ? 'Offer status' : turn.transaction.status);
+  columns.push(!turn ? 'Offer recipient' : recipientId);
+  columns.push(
+    !turn ? `Sender payout before turn` :
+    turn.senderData.payoutBeforeTurn.toString()
+  );
+  columns.push(
+    !turn ? `Sender payout after turn` :
+    turn.senderData.payoutAfterTurn.toString()
+  );
+  columns.push(
+    !turn ? `Recipient payout before turn` :
+    turn.responseData[recipientId]?.payoutBeforeTurn?.toString() ?? ''
+  );
+  columns.push(
+    !turn ? `Recipient payout after turn` :
+    turn.responseData[recipientId]?.payoutAfterTurn?.toString() ?? ''
+  );
+
+  // Map player number to player ID
+  players.forEach((player, index) => {
+    columns.push(!turn ? `player ${index + 1}` : player);
+  });
+
+  players.forEach((player, index) => {
+    columns.push(!turn ? `player ${index + 1} (is sender)` : (player === senderId).toString());
+    columns.push(!turn ? `player ${index + 1} (is selected recipient)` : (player === recipientId).toString());
+    columns.push(
+      !turn ? `player ${index + 1} offer timestamp` :
+      player === senderId ? 'n/a' :
+      turn.responseData[player] ? convertUnifiedTimestampToDate(turn.responseData[player]?.offerResponseTimestamp) : ''
+    );
+    columns.push(
+      !turn ? `player ${index + 1} offer response` :
+      player === senderId ? 'n/a' :
+      turn.responseData[player]?.offerResponse.toString() ?? ''
+    );
+    chips.forEach((chip) => {
+      columns.push(
+        !turn ? `player ${index + 1} ${chip.id} before turn` :
+        player == senderId ? turn.senderData.chipsBeforeTurn[chip.id]?.toString() ?? '' :
+        turn.responseData[player]?.chipsBeforeTurn[chip.id]?.toString() ?? ''
+      );
+      columns.push(
+        !turn ? `player ${index + 1} ${chip.id} after turn` :
+        player == senderId ? turn.senderData.chipsAfterTurn[chip.id]?.toString() ?? '' :
+        turn.responseData[player]?.chipsAfterTurn[chip.id]?.toString() ?? ''
+      )
+    });
+    chips.forEach((chip) => {
+      columns.push(
+        !turn ? `player ${index + 1} ${chip.id} value` :
+        player == senderId ? turn.senderData.chipValues[chip.id]?.toString() ?? '' :
+        turn.responseData[player]?.chipValues[chip.id]?.toString() ?? ''
+      )
+    });
+    columns.push(
+      !turn ? `player ${index + 1} payout before turn` :
+      player == senderId ? turn.senderData.payoutBeforeTurn.toString() :
+      turn.responseData[player]?.payoutBeforeTurn?.toString() ?? ''
+    );
+    columns.push(
+      !turn ? `player ${index + 1} payout after turn` :
+      player == senderId ? turn.senderData.payoutAfterTurn.toString() :
+      turn.responseData[player]?.payoutAfterTurn?.toString() ?? ''
+    );
+  });
+
+  return columns;
+}
+
+export function getChipNegotiationPlayerMapCSV(
+  data: ExperimentDownload,
+  games: ChipNegotiationData[]
+): string[][] {
+  const columns: string[][] = [];
+
+  // Hacky solution since cohort history isn't currently tracked:
+  // use timestamp to order games
+
+  const getGameTimestamp = (game: ChipNegotiationData) => {
+    return game.data.history[0].turns[0].transaction.offer.timestamp;
+  };
+
+  const sortedGames = games.sort(
+    (gameA: ChipNegotiationData, gameB: ChipNegotiationData) => {
+      const timestampA = getGameTimestamp(gameA);
+      const timestampB = getGameTimestamp(gameB);
+      const timeA = timestampA.seconds * 1000 + timestampA.nanoseconds / 1e6;
+      const timeB = timestampB.seconds * 1000 + timestampB.nanoseconds / 1e6;
+      return timeA - timeB;
+    }
+  );
+
+  // Maps from participant ID to games played
+  const playerMap: Record<string, string[]> = {};
+  let maxGames = 0;
+  for (const game of sortedGames) {
+    game.data.metadata.players.forEach((player) => {
+      if (!playerMap[player]) {
+        playerMap[player] = [];
+      }
+      playerMap[player].push(game.cohortName);
+      if (playerMap[player]?.length ?? 0 > maxGames) {
+        maxGames = playerMap[player]?.length;
+      }
+    })
+  }
+
+  const getPlayerColumns = (player: string|null): string[] => {
+    const columns: string[] = [];
+    const playerGames = !player ? [] : playerMap[player] ?? [];
+
+    // Add player IDs, name, avatar, pronouns
+    columns.push(
+      !player ? 'Private ID' :
+      data.participantMap[player]?.profile.privateId ?? ''
+    );
+    columns.push(
+      !player ? 'Public ID' :
+      data.participantMap[player]?.profile.publicId ?? ''
+    );
+    columns.push(
+      !player ? 'Name' :
+      data.participantMap[player]?.profile.name ?? ''
+    );
+    columns.push(
+      !player ? 'Avatar' :
+      data.participantMap[player]?.profile.avatar ?? ''
+    );
+    columns.push(
+      !player ? 'Pronouns' :
+      data.participantMap[player]?.profile.pronouns ?? ''
+    );
+
+    // Add column for each game
+    let gameNumber = 0;
+    while (gameNumber < maxGames) {
+      columns.push(
+        !player ? `Game ${gameNumber + 1}` : gameNumber < playerGames.length ? playerGames[gameNumber] : ''
+      );
+      gameNumber += 1;
+    }
+
+    return columns;
+  };
+
+  // Add headers
+  columns.push(getPlayerColumns(null));
+  // Add players
+  Object.keys(playerMap).sort().forEach((player) => {
+    columns.push(getPlayerColumns(player));
+  });
+
+  return columns;
+}
+
 export function getChipNegotiationData(
   data: ExperimentDownload
 ): ChipNegotiationData[] {
@@ -290,7 +527,7 @@ export function getChipNegotiationData(
         const metadata = getChipNegotiationGameMetadata(stage, publicStage);
 
         // track each player's chip quantities from start to end of game
-        const currentChipMap = getChipNegotiationStartingQuantityMap(
+        let currentChipMap = getChipNegotiationStartingQuantityMap(
           stage, metadata.players
         );
 
@@ -299,12 +536,14 @@ export function getChipNegotiationData(
         let roundNumber = 0;
         while (roundNumber < stage.numRounds) {
           if (publicStage.participantOfferMap[roundNumber]) {
-            roundData.push(getChipNegotiationRoundData(
+            const { data, updatedChipMap } = getChipNegotiationRoundData(
               roundNumber,
               publicStage.participantOfferMap[roundNumber],
               metadata,
               currentChipMap
-            ));
+            );
+            roundData.push(data);
+            currentChipMap = updatedChipMap;
           } // end if statement checking for round
           roundNumber += 1;
         } // end loop over game rounds
@@ -371,7 +610,7 @@ function getChipNegotiationRoundData(
   roundMap: Record<string, ChipTransaction>, // participant ID to transaction
   playerMetadata: ChipNegotiationGameMetadata,
   currentChipMap: Record<string, Record<string, number>>,
-): ChipNegotiationRoundData {
+): { data: ChipNegotiationRoundData, updatedChipMap: Record<string, Record<string, number>> } {
   const transactions = Object.values(roundMap).sort(
     (a: ChipTransaction, b: ChipTransaction) => {
       const timeA =
@@ -391,7 +630,7 @@ function getChipNegotiationRoundData(
     turns.push(response.turn);
   });
 
-  return { round: roundNumber, turns };
+  return { data: { round: roundNumber, turns }, updatedChipMap: currentChipMap };
 }
 
 // TODO: Create utils function for transactions to use across frontend/backend
@@ -616,6 +855,15 @@ export function getParticipantProfileCSVColumns(
 
   // Prolific ID
   columns.push(!profile ? 'Prolific ID' : profile.prolificId ?? '');
+
+  // Profile name
+  columns.push(!profile ? 'Name' : profile.name ?? '');
+
+  // Profile avatar
+  columns.push(!profile ? 'Avatar' : profile.avatar ?? '');
+
+  // Profile pronouns
+  columns.push(!profile ? 'Pronouns' : profile.pronouns ?? '');
 
   // Current status
   columns.push(!profile ? 'Current status' : profile.currentStatus);
