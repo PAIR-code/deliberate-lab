@@ -317,10 +317,16 @@ export function getChipNegotiationTurnColumns(
   const roundNumber = turn?.transaction.offer.round ?? -1;
   const senderId = turn?.senderData.participantId ?? '';
   const recipientId = turn?.transaction.recipientId ?? '';
+  const getPlayerNumber = () => {
+    const index = playerList.findIndex(p => p === senderId);
+    if (index === -1) return '';
+    return `${index + 1}`;
+  }
 
   columns.push(!turn ? 'Cohort' : game.cohortName);
   columns.push(!turn ? 'Stage ID' : game.stageName);
   columns.push(!turn ? 'Round' : roundNumber.toString());
+  columns.push(!turn ? 'Turn (player number)' : getPlayerNumber());
   columns.push(!turn ? 'Turn (sender ID)' : senderId);
   columns.push(!turn ? 'Turn (sender name)' : data.participantMap[senderId]?.profile.name ?? '');
   columns.push(!turn ? 'Turn (avatar)' : data.participantMap[senderId]?.profile.avatar ?? '')
