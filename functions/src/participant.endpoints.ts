@@ -8,7 +8,7 @@ import {
   SurveyStagePublicData,
   createParticipantProfileExtended,
   generateParticipantPublicId,
-  setAnonymousProfile,
+  setProfile,
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
@@ -55,9 +55,14 @@ export const createParticipant = onCall(async (request) => {
     .collection('participants')
     .doc(participantConfig.privateId);
 
+  // Set random timeout to avoid data contention with transaction
+  await new Promise((resolve) => {
+    setTimeout(resolve, Math.random() * 2000);
+  });
+
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
-    // Get number of participants in collection
+    // Set participant profile fields
     const numParticipants = (
       await app
       .firestore()
@@ -65,24 +70,16 @@ export const createParticipant = onCall(async (request) => {
       .count().get())
     .data().count;
 
-    // Use experiment config to get currentStageId
+    setProfile(numParticipants, participantConfig, data.isAnonymous);
+
+    // Set current stage ID in participant config
     const experiment = (
       await app.firestore().doc(`experiments/${data.experimentId}`).get()
     ).data() as Experiment;
 
-    // Set participant config fields
-    if (data.isAnonymous) {
-      // If anonymous, set public ID, name, avatar, etc.
-      setAnonymousProfile(numParticipants, participantConfig);
-    } else {
-      // Else, just set public ID
-      const publicId = generateParticipantPublicId(numParticipants);
-      participantConfig.publicId = publicId;
-    }
-
-    // Set current stage ID in participant config
     participantConfig.currentStageId = experiment.stageIds[0];
 
+    // Write new participant document
     transaction.set(document, participantConfig);
   });
 

@@ -5,7 +5,7 @@ import {customElement, property} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
 import {ParticipantService} from '../../services/participant.service';
-import {getParticipantName} from '../../shared/participant.utils';
+import {getParticipantInlineDisplay} from '../../shared/participant.utils';
 
 import {
   ChipItem,
@@ -59,7 +59,6 @@ export class ChipReveal extends MobxLitElement {
 
     return html`
       ${renderTitle()} ${this.renderGlobalTable(participants)}
-      <div class="divider"></div>
     `;
   }
 
@@ -128,11 +127,12 @@ export class ChipReveal extends MobxLitElement {
       return this.makeCell(cellContent);
     };
 
-    const participantIndicator = html`<span
-        class="indicator ${isCurrentTurn(participant) ? '' : 'hidden'}"
-        >👉</span
-      >${participant.avatar}
-      ${getParticipantName(participant)}${isCurrentUser ? ' (you)' : ''}`;
+    const participantIndicator = html`
+      <span class="indicator ${isCurrentTurn(participant) ? '' : 'hidden'}">
+        👉
+      </span>
+      ${getParticipantInlineDisplay(participant, isCurrentUser, this.stage?.id ?? '')}
+    `;
 
     return html`
       <div class="table-row ${isCurrentUser ? 'highlight' : ''}">

@@ -1,5 +1,5 @@
 import '../../pair-components/tooltip';
-import '../participant_profile/profile_avatar';
+import '../participant_profile/profile_display';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -12,10 +12,6 @@ import {RouterService} from '../../services/router.service';
 import {
   ParticipantProfile,
 } from '@deliberation-lab/utils';
-import {
-  getParticipantName,
-  getParticipantPronouns
-} from '../../shared/participant.utils';
 
 import {styles} from './progress_stage_completed.scss';
 
@@ -42,14 +38,15 @@ export class Progress extends MobxLitElement {
   }
 
   private renderParticipant(participant: ParticipantProfile) {
+    const stageId = this.routerService.activeRoute.params['stage'];
+
     return html`
-      <profile-avatar
+      <participant-profile-display
         class="participant"
-        .small=${true}
-        .emoji=${participant.avatar}
-        .tooltip=${getParticipantName(participant)}
-      >
-      </profile-avatar>
+        .profile=${participant}
+        .stageId=${stageId}
+        displayType="progress">
+      </participant-profile-display>
     `;
   }
 

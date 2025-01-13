@@ -1,0 +1,36 @@
+@use "../../sass/common";
+@use "../../sass/typescale";
+
+:host {
+  @include common.flex-column;
+  height: min-content;
+  width: min-content;
+}
+
+profile-display {
+  @include common.flex-column;
+  height: min-content;
+  width: min-content;
+}
+
+.horizontal-profile {
+  @include common.flex-row-align-center;
+  flex-wrap: wrap;
+  gap: common.$spacing-large;
+  width: max-content;
+}
+
+.waiting-profile {
+  @include typescale.body-small;
+  @include common.flex-column-align-center;
+  flex-wrap: wrap;
+  gap: common.$spacing-medium;
+  max-width: 100px;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.display-name-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+}

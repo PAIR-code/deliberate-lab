@@ -15,6 +15,7 @@ import {
   UnifiedTimestamp,
 } from '@deliberation-lab/utils';
 import {getCohortName} from '../../shared/cohort.utils';
+import {getParticipantInlineDisplay} from '../../shared/participant.utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
 import '../stages/payout_summary_view';
 import '../stages/reveal_summary_view';
@@ -22,12 +23,12 @@ import '../stages/ranking_summary_view';
 import '../stages/survey_summary_view';
 import '../stages/survey_per_participant_summary_view';
 
-import {styles} from './profile_preview.scss';
+import {styles} from './participant_stats.scss';
 
 import {isUnlockedStage} from '../../shared/participant.utils';
 
-/** ParticipantProfile preview (for experiment manager) */
-@customElement('participant-profile-preview')
+/** Participant profile status/stats (for experiment manager) */
+@customElement('participant-stats')
 export class Preview extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -63,18 +64,16 @@ export class Preview extends MobxLitElement {
       <div><b>Private ID:</b> ${this.profile.privateId}</div>
       <div><b>Public ID:</b> ${this.profile.publicId}</div>
       <div>
-        <b>Profile:</b> ${this.profile.avatar ?? ''} ${this.profile.name ?? ''}
+        <b>Profile:</b> ${getParticipantInlineDisplay(this.profile)}
         ${this.profile.pronouns ? `(${this.profile.pronouns})` : ''}
+      </div>
+      <div>
+        <b>Anonymous profiles:</b> ${this.renderAnonymousProfiles()}
       </div>
       <div><b>Status:</b> ${this.profile.currentStatus}</div>
       <div>
         <b>Current stage:</b> ${this.getStageName(this.profile.currentStageId)}
       </div>
-      <!--
-      <div>
-        <b>Current cohort:</b> ${getCohort(this.profile.currentCohortId)}
-      </div>
-      -->
       <div><b>Prolific ID:</b> ${this.profile.prolificId ?? 'NONE'}</div>
       ${this.profile.transferCohortId
         ? html`<div>
@@ -96,6 +95,16 @@ export class Preview extends MobxLitElement {
         this.profile.timestamps.acceptedTOS
       )}
       ${this.renderStageDatas()}
+    `;
+  }
+
+  private renderAnonymousProfiles() {
+    if (!this.profile || !this.profile.anonymousProfiles) return;
+    return html`
+      <ul>
+        ${Object.values(this.profile.anonymousProfiles).map(p =>
+          html`<li>${p.avatar} ${p.name} ${p.repeat + 1}</li>`)}
+      </ul>
     `;
   }
 
@@ -172,6 +181,6 @@ export class Preview extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'participant-profile-preview': Preview;
+    'participant-stats': Preview;
   }
 }

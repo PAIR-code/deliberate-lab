@@ -1,10 +1,11 @@
 import {
+  ALTERNATE_PROFILE_SET_ID,
+  PROFILE_SET_ANIMALS_2_ID,
   ParticipantProfile,
   ParticipantStatus,
   ProfileType,
   StageConfig,
-  StageKind,
-  getHashIntegerFromString,
+  StageKind
 } from '@deliberation-lab/utils';
 
 /**
@@ -12,22 +13,23 @@ import {
  * For utils shared between frontend and backend, see @deliberation-lab/utils
  */
 
-/** Returns profile name if exists, else public ID. */
-export function getParticipantName(participant: ParticipantProfile) {
-  return participant.name ?? participant.publicId;
-}
-
-/** Returns pronouns if exists, else empty. */
-export function getParticipantPronouns(
+/** Get participant avatar/name string based on active profile. */
+export function getParticipantInlineDisplay(
   participant: ParticipantProfile,
-  includeParentheses = true
+  showIsSelf = false, // add (you) to the end
+  stageId = '',
 ) {
-  if (participant.pronouns) {
-    return includeParentheses
-      ? `(${participant.pronouns})`
-      : participant.pronouns;
+  if (
+    stageId.includes(ALTERNATE_PROFILE_SET_ID) &&
+    participant.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID]
+  ) {
+    const anon = participant.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID];
+    return `${anon.avatar} ${anon.name}${showIsSelf ? ' (you)' : ''}`;
   }
-  return '';
+
+  return `
+    ${participant.avatar ?? ''} ${participant.name ?? participant.publicId}${showIsSelf ? ' (you)' : ''}
+  `;
 }
 
 /** Returns the start timestamp of the current stage. */
@@ -163,21 +165,4 @@ export function requiresAnonymousProfiles(stages: StageConfig[]): boolean {
 
   if (!profileStage || profileStage.kind !== StageKind.PROFILE) return false;
   return profileStage.profileType === ProfileType.ANONYMOUS_ANIMAL;
-}
-
-export function getAvatarBackgroundColor(emoji: string): string {
-  const BACKGROUND_COLORS = [
-    '#FF6F61',
-    '#A0E8D5',
-    '#FFD1A9',
-    '#C3B1E1',
-    '#B7E4C7',
-    '#ADE8F4',
-    '#F4D6A9',
-    '#D8A7B1',
-    '#A3B9D3',
-    '#FFC1CC',
-  ];
-  const index = getHashIntegerFromString(emoji) % 10;
-  return BACKGROUND_COLORS[index];
 }

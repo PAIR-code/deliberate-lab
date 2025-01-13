@@ -3,7 +3,7 @@ import '../../pair-components/icon_button';
 import '../../pair-components/textarea';
 import '../../pair-components/tooltip';
 
-import '../participant_profile/profile_avatar';
+import '../participant_profile/avatar_icon';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -17,6 +17,7 @@ import {RouterService} from '../../services/router.service';
 import {
   LLM_AGENT_AVATARS
 } from '../../shared/constants';
+import {getColor} from '../../shared/utils';
 
 import {styles} from './experimenter_manual_chat.scss';
 
@@ -138,7 +139,8 @@ export class Chat extends MobxLitElement {
             @change=${handleAvatarClick}
           >
           </md-radio>
-          <profile-avatar .emoji=${emoji} .square=${true}></profile-avatar>
+          <avatar-icon .emoji=${emoji} .square=${true} .color=${getColor(emoji)}>
+          </avatar-icon>
         </div>
       `;
     };

@@ -1,9 +1,9 @@
 import '../experiment_builder/experiment_builder';
 import '../experiment_builder/experiment_settings_dialog';
-import '../participant_profile/profile_preview';
 
 import './cohort_settings_dialog';
 import './experiment_manager_nav';
+import './participant_stats';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -178,10 +178,10 @@ export class ExperimentManagerComponent extends MobxLitElement {
 
   private renderContent() {
     return html`
-      <participant-profile-preview
+      <participant-stats
         .profile=${this.experimentManager.currentParticipant}
       >
-      </participant-profile-preview>
+      </participant-stats>
       <code>
         ${JSON.stringify(this.experimentManager.currentParticipant)}
       </code>

@@ -21,6 +21,7 @@ export * from './cohort.validation';
 // Participant
 export * from './participant';
 export * from './participant.validation';
+export * from './profile_sets';
 
 // Stages
 export * from './stages/stage';

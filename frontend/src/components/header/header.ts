@@ -18,7 +18,7 @@ import {ParticipantService} from '../../services/participant.service';
 import {Pages, RouterService} from '../../services/router.service';
 
 import {
-  getParticipantName,
+  getParticipantInlineDisplay,
   getParticipantStatusDetailText,
 } from '../../shared/participant.utils';
 import {
@@ -160,7 +160,7 @@ export class Header extends MobxLitElement {
     const detailText = getParticipantStatusDetailText(profile);
 
     return html`
-      Previewing as: ${profile.avatar} ${getParticipantName(profile)}.
+      Previewing as: ${getParticipantInlineDisplay(profile)}.
       ${detailText.length > 0 ? detailText : getStageWaitingText()}
     `;
   }

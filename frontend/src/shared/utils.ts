@@ -1,6 +1,6 @@
 import {micromark} from 'micromark';
 import {gfm, gfmHtml} from 'micromark-extension-gfm';
-import {UnifiedTimestamp} from '@deliberation-lab/utils';
+import {UnifiedTimestamp, getHashIntegerFromString} from '@deliberation-lab/utils';
 import {Snapshot} from './types';
 
 /**
@@ -52,4 +52,14 @@ export function convertUnifiedTimestampToDate(
       .toString()
       .padStart(2, '0')}`;
   }
+}
+
+/** Get random or hash-based color (e.g., for avatar backgroud). */
+export function getColor(hashString = ''): string {
+  const COLORS = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink'];
+  const index = hashString.length > 0 ?
+    getHashIntegerFromString(hashString) % COLORS.length
+    : Math.floor(Math.random() * COLORS.length);
+
+  return COLORS[index];
 }

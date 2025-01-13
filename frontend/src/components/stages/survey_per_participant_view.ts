@@ -1,6 +1,6 @@
 import '../../pair-components/textarea';
 
-import '../participant_profile/profile_avatar';
+import '../participant_profile/profile_display';
 import '../progress/progress_stage_completed';
 import './stage_description';
 import './stage_footer';
@@ -36,11 +36,6 @@ import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
-
-import {
-  getParticipantName,
-  getParticipantPronouns
-} from '../../shared/participant.utils';
 import {
   isSurveyComplete
 } from '../../shared/stage.utils';
@@ -79,19 +74,15 @@ export class SurveyView extends MobxLitElement {
   }
 
   private renderParticipant(profile: ParticipantProfile) {
+    const isCurrent =
+      profile.publicId === this.participantService.profile?.publicId;
+
     return html`
-      <div class="item">
-        <profile-avatar .emoji=${profile.avatar} .square=${true}>
-        </profile-avatar>
-        <div class="right">
-          <div class="title">${getParticipantName(profile)}</div>
-          <div class="subtitle">${getParticipantPronouns(profile)}</div>
-          ${
-            profile.publicId === this.participantService.profile?.publicId ?
-            html`<div>(you)</div>` : nothing
-          }
-        </div>
-      </div>
+      <participant-profile-display
+        .profile=${profile}
+        displayType="stage"
+        .showIsSelf=${isCurrent}>
+      </participant-profile-display>
     `;
   }
 

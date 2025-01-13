@@ -1,4 +1,5 @@
 import {
+  ALTERNATE_PROFILE_SET_ID,
   ProfileType,
   StageConfig,
   StageGame,
@@ -65,15 +66,15 @@ export function getChipNegotiationStageConfigs(): StageConfig[] {
   stages.push(CHIP_INFO_STAGE_PAYOUT);
   stages.push(CHIP_INFO_STAGE_PAYOUT2);
 
-  // First transfer
-  stages.push(CHIP_INITIAL_TRANSFER_STAGE);
+  // Transfer
+  stages.push(TRANSFER_STAGE);
 
   // Round 1
   stages.push(CHIP_NEGOTIATION_STAGE1);
-  stages.push(TRANSFER_STAGE);
-  stages.push(CHIP_INFO_TRANSFER_STAGE);
 
   // Round 2
+  stages.push(CHIP_INFO_PART2);
+  stages.push(CHIP_ALTERNATE_PROFILE_STAGE);
   stages.push(CHIP_NEGOTIATION_STAGE2);
   stages.push(CHIP_PAYOUT_STAGE);
 
@@ -113,6 +114,17 @@ const CHIP_PROFILE_STAGE = createProfileStage({
   descriptions: createStageTextConfig({
     primaryText:
       "This identity is how other players will see you during today's experiment.",
+  }),
+  game: StageGame.CHP,
+  profileType: ProfileType.ANONYMOUS_ANIMAL,
+});
+
+const CHIP_ALTERNATE_PROFILE_STAGE = createProfileStage({
+  id: `profile_${ALTERNATE_PROFILE_SET_ID}`,
+  name: 'View secondary randomly generated profile',
+  descriptions: createStageTextConfig({
+    primaryText:
+      "This identity is how other players will see you during the second game.",
   }),
   game: StageGame.CHP,
   profileType: ProfileType.ANONYMOUS_ANIMAL,
@@ -414,8 +426,8 @@ const CHIP_INFO_STAGE_PAYOUT2 = createInfoStage({
   ],
 });
 
-const CHIP_INFO_TRANSFER_STAGE = createInfoStage({
-  id: 'info_transfer',
+const CHIP_INFO_PART2 = createInfoStage({
+  id: 'info_part2',
   game: StageGame.CHP,
   name: 'Instructions for part 2',
   infoLines: [
@@ -430,20 +442,8 @@ const CHIP_INFO_TRANSFER_STAGE = createInfoStage({
 // ****************************************************************************
 // Transfer stages
 // ****************************************************************************/
-export const CHIP_INITIAL_TRANSFER_STAGE = createTransferStage({
-  id: 'transfer1',
-  game: StageGame.CHP,
-  name: 'Initial transfer stage',
-  descriptions: createStageTextConfig({
-    primaryText:
-      'Please wait on this page as we re-route you to your first game with other participants.',
-  }),
-  enableTimeout: true,
-  timeoutSeconds: 600, // 10 minutes
-});
-
 export const TRANSFER_STAGE = createTransferStage({
-  id: 'transfer2',
+  id: 'transfer',
   game: StageGame.CHP,
   name: 'Transfer stage',
   descriptions: createStageTextConfig({
@@ -491,7 +491,7 @@ const CHIPS = [
 ];
 
 const CHIP_NEGOTIATION_STAGE1_ID = 'negotiation1';
-const CHIP_NEGOTIATION_STAGE2_ID = 'negotiation2';
+const CHIP_NEGOTIATION_STAGE2_ID = `negotiation2_${ALTERNATE_PROFILE_SET_ID}`;
 
 const CHIP_NEGOTIATION_STAGE1 = createChipStage({
   id: CHIP_NEGOTIATION_STAGE1_ID,

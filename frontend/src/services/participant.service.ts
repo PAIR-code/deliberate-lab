@@ -14,7 +14,6 @@ import {
   UpdateChatStageParticipantAnswerData,
   createChatStageParticipantAnswer,
   createParticipantChatMessage,
-  createParticipantProfileExtended,
   createSurveyPerParticipantStageParticipantAnswer,
   createSurveyStageParticipantAnswer,
 } from '@deliberation-lab/utils';
@@ -498,7 +497,7 @@ export class ParticipantService extends Service {
         discussionId: this.sp.cohortService.getChatDiscussionId(this.profile.currentStageId),
         participantPublicId: this.profile.publicId,
         profile: {
-          name: this.profile.name ?? this.profile.publicId,
+          name: this.profile.name,
           avatar: this.profile.avatar,
           pronouns: this.profile.pronouns,
         }

@@ -24,7 +24,6 @@ import {
   ChipLogEntry,
   CohortConfig,
   ParticipantProfile,
-  ParticipantProfileExtended,
   ParticipantStatus,
   StageConfig,
   StageKind,
@@ -472,19 +471,7 @@ export class CohortService extends Service {
           }
 
           changedDocs.forEach((doc) => {
-            const data = doc.data() as ParticipantProfileExtended;
-            const profile = {
-              pronouns: data.pronouns,
-              avatar: data.avatar,
-              name: data.name,
-              publicId: data.publicId,
-              prolificId: data.prolificId,
-              currentStageId: data.currentStageId,
-              currentCohortId: data.currentCohortId,
-              transferCohortId: data.transferCohortId,
-              currentStatus: data.currentStatus,
-              timestamps: data.timestamps,
-            };
+            const profile = doc.data() as ParticipantProfile;
             if (profile.currentCohortId === this.cohortId) {
               this.participantMap[profile.publicId] = profile;
             } else if (profile.transferCohortId === this.cohortId) {

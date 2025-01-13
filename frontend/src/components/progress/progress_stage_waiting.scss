@@ -50,13 +50,3 @@ h2 {
   flex-wrap: wrap;
   gap: common.$spacing-medium;
 }
-
-.participant {
-  @include typescale.body-small;
-  @include common.flex-column-align-center;
-  flex-wrap: wrap;
-  gap: common.$spacing-medium;
-  max-width: 100px;
-  overflow-wrap: anywhere;
-  text-align: center;
-}

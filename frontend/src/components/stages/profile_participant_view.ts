@@ -1,6 +1,6 @@
 import '../stages/stage_description';
 import '../stages/stage_footer';
-import './profile_avatar'; 
+import '../participant_profile/profile_display';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -9,10 +9,10 @@ import {customElement, property} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {ParticipantService} from '../../services/participant.service';
 import {ProfileType, ProfileStageConfig} from '@deliberation-lab/utils';
-import {styles} from './profile_viewer.scss';
+import {styles} from './profile_participant_view.scss';
 
 /** Viewer for participants to see their profile. */
-@customElement('profile-viewer')
+@customElement('profile-participant-view')
 export class ProfileViewer extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -32,16 +32,13 @@ export class ProfileViewer extends MobxLitElement {
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="html-wrapper">
-        ${info}
+        <div>${info}</div>
         <div class="profile-wrapper">
-          <div class="reveal">
-            <profile-avatar .emoji=${profile.avatar} .square=${true}>
-            </profile-avatar>
-            <div class="info">
-              <div class="title">${profile.name}</div>
-              <div class="subtitle">${profile.pronouns}</div>
-            </div>
-          </div>
+          <participant-profile-display
+            .profile=${profile}
+            .stageId=${this.stage.id}
+            displayType="stage">
+          </participant-profile-display>
         </div>
       </div>
       <stage-footer></stage-footer>
@@ -51,6 +48,6 @@ export class ProfileViewer extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'profile-viewer': ProfileViewer;
+    'profile-participant-view': ProfileViewer;
   }
 }

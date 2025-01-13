@@ -31,16 +31,32 @@
     border-radius: common.$spacing-small;
   }
 
-  &.man {
-    background: var(--md-sys-color-avatar-man);
+  &.red {
+    background: var(--md-sys-color-avatar-red);
   }
 
-  &.woman {
-    background: var(--md-sys-color-avatar-woman);
+  &.orange {
+    background: var(--md-sys-color-avatar-orange);
   }
 
-  &.person {
-    background: var(--md-sys-color-avatar-person);
+  &.yellow {
+    background: var(--md-sys-color-avatar-yellow);
+  }
+
+  &.green {
+    background: var(--md-sys-color-avatar-green);
+  }
+
+  &.blue {
+    background: var(--md-sys-color-avatar-blue);
+  }
+
+  &.purple {
+    background: var(--md-sys-color-avatar-purple);
+  }
+
+  &.pink {
+    background: var(--md-sys-color-avatar-pink);
   }
 
   &.selected {
