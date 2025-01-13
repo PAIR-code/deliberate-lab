@@ -14,7 +14,6 @@ import {
   UpdateChatStageParticipantAnswerData,
   createChatStageParticipantAnswer,
   createParticipantChatMessage,
-  createParticipantProfileExtended,
   createSurveyPerParticipantStageParticipantAnswer,
   createSurveyStageParticipantAnswer,
 } from '@deliberation-lab/utils';
