@@ -67,15 +67,13 @@ export class Preview extends MobxLitElement {
         <b>Profile:</b> ${getParticipantInlineDisplay(this.profile)}
         ${this.profile.pronouns ? `(${this.profile.pronouns})` : ''}
       </div>
+      <div>
+        <b>Anonymous profiles:</b> ${this.renderAnonymousProfiles()}
+      </div>
       <div><b>Status:</b> ${this.profile.currentStatus}</div>
       <div>
         <b>Current stage:</b> ${this.getStageName(this.profile.currentStageId)}
       </div>
-      <!--
-      <div>
-        <b>Current cohort:</b> ${getCohort(this.profile.currentCohortId)}
-      </div>
-      -->
       <div><b>Prolific ID:</b> ${this.profile.prolificId ?? 'NONE'}</div>
       ${this.profile.transferCohortId
         ? html`<div>
@@ -97,6 +95,16 @@ export class Preview extends MobxLitElement {
         this.profile.timestamps.acceptedTOS
       )}
       ${this.renderStageDatas()}
+    `;
+  }
+
+  private renderAnonymousProfiles() {
+    if (!this.profile || !this.profile.anonymousProfiles) return;
+    return html`
+      <ul>
+        ${Object.values(this.profile.anonymousProfiles).map(p =>
+          html`<li>${p.avatar} ${p.name} ${p.repeat + 1}</li>`)}
+      </ul>
     `;
   }
 

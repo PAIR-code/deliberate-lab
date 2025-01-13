@@ -1,5 +1,12 @@
 import { UnifiedTimestamp, generateId } from './shared';
-import { PROFILE_SET_ANIMALS_1 } from './profile_sets';
+import {
+  PROFILE_SET_ANIMALS_1,
+  PROFILE_SET_ANIMALS_1_ID,
+  PROFILE_SET_ANIMALS_2,
+  PROFILE_SET_ANIMALS_2_ID,
+  PROFILE_SET_NATURE,
+  PROFILE_SET_NATURE_ID
+} from './profile_sets';
 
 /** Participant profile types and functions. */
 
@@ -23,6 +30,14 @@ export interface ParticipantProfile extends ParticipantProfileBase {
   transferCohortId: string|null; // set if pending transfer, else null
   currentStatus: ParticipantStatus;
   timestamps: ProgressTimestamps;
+  anonymousProfiles: Record<string, AnonymousProfileMetadata>;
+}
+
+/** Anonymous profile data generated from profile set. */
+export interface AnonymousProfileMetadata {
+  name: string;
+  repeat: number; // e.g., if 1, then profile is Cat 2; if 2, then Cat 3
+  avatar: string;
 }
 
 /** Participant profile available in private participants collection. */
@@ -127,6 +142,7 @@ export function createParticipantProfileExtended(
     transferCohortId: config.transferCohortId ?? null,
     currentStatus: config.currentStatus ?? ParticipantStatus.IN_PROGRESS,
     timestamps: config.timestamps ?? createProgressTimestamps(),
+    anonymousProfiles: {},
   }
 }
 
@@ -136,25 +152,38 @@ export function setProfile(
   config: ParticipantProfileExtended,
   setAnonymousProfile = false,
 ) {
-  // Use ANIMALS_1 as primary set (for public ID)
-  const PUBLIC_ID_SET = PROFILE_SET_ANIMALS_1;
+  const generateProfileFromSet = (
+    profileSet: {name: string, avatar: string}[]
+  ): AnonymousProfileMetadata => {
+    // TODO: Randomly select from set
+    const { name, avatar } = profileSet[participantNumber % profileSet.length];
+    return {
+      name,
+      avatar,
+      repeat: Math.floor(participantNumber / profileSet.length)
+    };
+  };
 
-  // Get name/avatar based on participant number
-  const { name, avatar } = PUBLIC_ID_SET[
-    participantNumber % PUBLIC_ID_SET.length
-  ];
+  // Set anonymous profiles
+  const profileAnimal1 = generateProfileFromSet(PROFILE_SET_ANIMALS_1);
+  const profileAnimal2 = generateProfileFromSet(PROFILE_SET_ANIMALS_2);
+  const profileNature = generateProfileFromSet(PROFILE_SET_NATURE);
 
+  config.anonymousProfiles[PROFILE_SET_ANIMALS_1_ID] = profileAnimal1;
+  config.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID] = profileAnimal2;
+  config.anonymousProfiles[PROFILE_SET_NATURE_ID] = profileNature;
+
+  // Define public ID (using anonymous animal 1 set)
+  const mainProfile = profileAnimal1;
   const color = COLORS[Math.floor(Math.random() * COLORS.length)]
   const randomNumber = Math.floor(Math.random() * 10000);
 
-  config.publicId = `${name}-${color}-${randomNumber}`.toLowerCase();
+  config.publicId = `${mainProfile.name}-${color}-${randomNumber}`.toLowerCase();
 
   if (setAnonymousProfile) {
     // Use, e.g., "Cat 2" if second time "Cat" is being used
-    const animalNum = Math.floor(participantNumber / PUBLIC_ID_SET.length);
-    config.name = `${name}${animalNum === 0 ? '' : ` ${animalNum + 1}`}`;
-
-    config.avatar = avatar;
+    config.name = `${mainProfile.name}${mainProfile.repeat === 0 ? '' : ` ${mainProfile.repeat + 1}`}`;
+    config.avatar = mainProfile.avatar;
     config.pronouns = '';
   }
 }

@@ -73,6 +73,12 @@ export const ProgressTimestampsSchema = Type.Object({
   )
 });
 
+export const AnonymousProfileSchema = Type.Object({
+  name: Type.String(),
+  repeat: Type.Number(),
+  avatar: Type.String(),
+});
+
 export const ParticipantProfileExtendedData = Type.Object(
   {
     experimentId: Type.String(),
@@ -90,6 +96,7 @@ export const ParticipantProfileExtendedData = Type.Object(
         transferCohortId: Type.Union([Type.Null(), Type.String()]),
         currentStatus: ParticipantStatusData,
         timestamps: ProgressTimestampsSchema,
+        anonymousProfiles: Type.Record(Type.String(), AnonymousProfileSchema),
       },
       strict,
     )

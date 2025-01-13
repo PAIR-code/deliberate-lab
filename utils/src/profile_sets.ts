@@ -1,6 +1,8 @@
 /** Profile sets to use for anonymous profiles. */
 
 /** First set of animals. */
+export const PROFILE_SET_ANIMALS_1_ID = 'animals-1';
+
 export const PROFILE_SET_ANIMALS_1: {name: string, avatar: string}[] = 
 [
   {name: 'Alligator', avatar: '🐊'},
@@ -46,6 +48,8 @@ export const PROFILE_SET_ANIMALS_1: {name: string, avatar: string}[] =
 ];
 
 /* Second set of animals. */
+export const PROFILE_SET_ANIMALS_2_ID = 'animals-2';
+
 export const PROFILE_SET_ANIMALS_2: {name: string, avatar: string}[] = 
 [
   {name: 'Beaver', avatar: '🦫'},
@@ -91,6 +95,8 @@ export const PROFILE_SET_ANIMALS_2: {name: string, avatar: string}[] =
 ];
 
 /** Nature set with flowers, rocks, etc. */
+export const PROFILE_SET_NATURE_ID = 'nature';
+
 export const PROFILE_SET_NATURE: {name: string, avatar: string}[] =
 [
   {name: 'Amber', avatar: '🍯'},
