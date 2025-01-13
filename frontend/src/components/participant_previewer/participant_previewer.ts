@@ -1,5 +1,3 @@
-import '../participant_profile/profile_editor';
-import '../participant_profile/profile_viewer';
 import '../popup/accept_transfer_popup';
 import '../popup/attention_check_popup';
 import '../popup/booted_popup';
@@ -11,6 +9,8 @@ import '../stages/comprehension_participant_view';
 import '../stages/ranking_participant_view';
 import '../stages/info_view';
 import '../stages/payout_participant_view';
+import '../stages/profile_participant_editor';
+import '../stages/profile_participant_view';
 import '../stages/reveal_participant_view';
 import '../stages/survey_view';
 import '../stages/survey_per_participant_view';
@@ -206,9 +206,15 @@ export class ParticipantPreviewer extends MobxLitElement {
         return html`<info-view .stage=${stage}></info-view>`;
       case StageKind.PROFILE:
         if (stage.profileType === ProfileType.ANONYMOUS_ANIMAL) {
-          return html`<profile-viewer .stage=${stage}></profile-viewer>`;
+          return html`
+            <profile-participant-view .stage=${stage}>
+            </profile-participant-view>
+          `;
         }
-        return html`<profile-editor .stage=${stage}></profile-editor>`;
+        return html`
+          <profile-participant-editor .stage=${stage}>
+          </profile-participant-editor>
+        `;
       case StageKind.CHAT:
         return html`
           <div class="content chat">

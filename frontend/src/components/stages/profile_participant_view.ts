@@ -1,6 +1,6 @@
 import '../stages/stage_description';
 import '../stages/stage_footer';
-import './profile_avatar'; 
+import '../participant_profile/profile_avatar'; 
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -9,10 +9,10 @@ import {customElement, property} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {ParticipantService} from '../../services/participant.service';
 import {ProfileType, ProfileStageConfig} from '@deliberation-lab/utils';
-import {styles} from './profile_viewer.scss';
+import {styles} from './profile_participant_view.scss';
 
 /** Viewer for participants to see their profile. */
-@customElement('profile-viewer')
+@customElement('profile-participant-view')
 export class ProfileViewer extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -51,6 +51,6 @@ export class ProfileViewer extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'profile-viewer': ProfileViewer;
+    'profile-participant-view': ProfileViewer;
   }
 }

@@ -3,7 +3,7 @@ import '../../pair-components/textarea';
 import '../progress/progress_stage_completed';
 import '../stages/stage_description';
 import '../stages/stage_footer';
-import './profile_avatar';
+import '../participant_profile/profile_avatar';
 
 import '@material/web/radio/radio.js';
 
@@ -18,10 +18,10 @@ import {ParticipantAnswerService} from '../../services/participant.answer';
 import {PROFILE_AVATARS} from '../../shared/constants';
 import {ProfileStageConfig} from '@deliberation-lab/utils';
 
-import {styles} from './profile_editor.scss';
+import {styles} from './profile_participant_editor.scss';
 
 /** Editor for participants to adjust their profile. */
-@customElement('profile-editor')
+@customElement('profile-participant-editor')
 export class ProfileEditor extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -224,6 +224,6 @@ export class ProfileEditor extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'profile-editor': ProfileEditor;
+    'profile-participant-editor': ProfileEditor;
   }
 }
