@@ -551,7 +551,7 @@ const CHIP_SURVEY_STAGE = createSurveyStage({
     }),
     createScaleSurveyQuestion({
       questionTitle:
-        "On a scale from 1 to 10, how would you rate your trading strategy, where 1 is highly **competive** (focused mainly on your own gains) and 10 is highly **collaborative** (focused on other players's potential gains and mutual benefits?",
+        "On a scale from 1 to 10, how would you rate your trading strategy, where 1 is highly **competitive** (focused mainly on your own gains) and 10 is highly **collaborative** (focused on other players's potential gains and mutual benefits?",
       upperText: 'Very aggressive',
       lowerText: 'Not at all aggressive',
     }),

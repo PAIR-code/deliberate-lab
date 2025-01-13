@@ -26,6 +26,14 @@ export const setParticipantStageData = onDocumentCreated(
         await app.firestore().collection(`experiments/${event.params.experimentId}/stages`).get()
       ).docs.map((doc) => doc.data() as StageConfig);
 
+      const getRandomChipValue = (chip) => {
+        const step = 0.1;
+        const lower = Math.round(chip.lowerValue / step);
+        const upper = Math.round(chip.upperValue / step);
+        const randomStep = Math.floor(Math.random() * (upper - lower + 1)) + lower;
+        return randomStep * step;
+      };
+
       for (const stage of stageConfigs) {
         // Define doc reference for stage
         const stageDoc = app
@@ -45,10 +53,7 @@ export const setParticipantStageData = onDocumentCreated(
             const chipValueMap = {};
             stage.chips.forEach((chip) => {
               chipMap[chip.id] = chip.startingQuantity;
-              chipValueMap[chip.id] =
-                Math.floor(Math.random() * ((chip.upperValue - chip.lowerValue) / step + 1)) *
-                  step +
-                chip.lowerValue;
+              chipValueMap[chip.id] = getRandomChipValue(chip);
             });
 
             const chipAnswer = createChipStageParticipantAnswer(stage.id, chipMap, chipValueMap);
