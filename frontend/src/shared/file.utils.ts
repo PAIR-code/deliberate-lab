@@ -271,7 +271,6 @@ export function getChipNegotiationCSV(
   let maxPlayers = 0;
   games.forEach((game) => {
     const numPlayers = game.data.metadata.players.length;
-    console.log(numPlayers);
     if (numPlayers > maxPlayers) {
       maxPlayers = numPlayers;
     }

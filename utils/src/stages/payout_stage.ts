@@ -231,7 +231,7 @@ export function calculatePayoutTotal(resultConfig: PayoutResultConfig) {
       total += Math.max(0, chipTotal - initialChipTotal);
     }
   });
-  return total;
+  return Math.floor(total * 100) / 100;
 }
 
 /** Calculate payout results for a single item (or null if can't calculate). */
