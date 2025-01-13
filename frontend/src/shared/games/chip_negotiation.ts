@@ -92,7 +92,7 @@ const CHIP_TOS_STAGE = createTOSStage({
   game: StageGame.CHP,
   name: 'Terms of service',
   tosLines: [
-    'Thank you for your interest in this research. If you choose to participate, you will be asked to play negotiation games with other participants. In total, this will take no more than 60 minutes.',
+    'Thank you for your interest in this research. If you choose to participate, you will be asked to play negotiation games with other participants. In total, this will take no more about 45 minutes.',
     '\n**Compensation**',
     'You will be paid $8 for playing the games and completing the survey. You may receive an additional bonus on your performance in the games.',
     '\n**IRB**',
