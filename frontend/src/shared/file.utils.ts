@@ -263,109 +263,144 @@ export interface ChipNegotiationResponderData {
 // ****************************************************************************
 export function getChipNegotiationCSV(
   data: ExperimentDownload,
-  game: ChipNegotiationData
+  games: ChipNegotiationData[],
 ): string[][] {
-  const columns: string[][] = [];
-  const chips = game.data.metadata.chips;
-  const players = game.data.metadata.players;
+  let columns: string[][] = [];
 
-  const getChipNegotiationTurnColumns = (
-    turn: ChipNegotiationTurnData|null
-  ) => {
-    const columns: string[] = [];
-    const roundNumber = turn?.transaction.offer.round ?? -1;
-    const senderId = turn?.senderData.participantId ?? '';
-    const recipientId = turn?.transaction.recipientId ?? '';
-
-    columns.push(!turn ? 'Round' : roundNumber.toString());
-    columns.push(!turn ? 'Turn (sender ID)' : senderId);
-    columns.push(!turn ? 'Turn (sender name)' : data.participantMap[senderId]?.profile.name ?? '');
-    columns.push(!turn ? 'Turn (avatar)' : data.participantMap[senderId]?.profile.avatar ?? '')
-
-    columns.push(
-      !turn ? 'Offer (timestamp)' :
-      convertUnifiedTimestampToDate(turn.transaction.offer.timestamp)
-    );
-    chips.forEach((chip) => {
-      columns.push(!turn ? `Buy offer (${chip.id})` : turn.transaction.offer.buy[chip.id]?.toString() ?? '0');
-    });
-    chips.forEach((chip) => {
-      columns.push(!turn ? `Sell offer (${chip.id})` : turn.transaction.offer.sell[chip.id]?.toString() ?? '0');
-    });
-    columns.push(!turn ? 'Offer status' : turn.transaction.status);
-    columns.push(!turn ? 'Offer recipient' : recipientId);
-    columns.push(
-      !turn ? `Sender payout before turn` :
-      turn.senderData.payoutBeforeTurn.toString()
-    );
-    columns.push(
-      !turn ? `Sender payout after turn` :
-      turn.senderData.payoutAfterTurn.toString()
-    );
-    columns.push(
-      !turn ? `Recipient payout before turn` :
-      turn.responseData[recipientId]?.payoutBeforeTurn?.toString() ?? ''
-    );
-    columns.push(
-      !turn ? `Recipient payout after turn` :
-      turn.responseData[recipientId]?.payoutAfterTurn?.toString() ?? ''
-    );
-
-    players.forEach((player) => {
-      columns.push(!turn ? `${player} (is sender)` : (player === senderId).toString());
-      columns.push(!turn ? `${player} (is selected recipient)` : (player === recipientId).toString());
-      columns.push(
-        !turn ? `${player} offer timestamp` :
-        player === senderId ? 'n/a' :
-        turn.responseData[player] ? convertUnifiedTimestampToDate(turn.responseData[player]?.offerResponseTimestamp) : ''
-      );
-      columns.push(
-        !turn ? `${player} offer response` :
-        player === senderId ? 'n/a' :
-        turn.responseData[player]?.offerResponse.toString() ?? ''
-      );
-      chips.forEach((chip) => {
-        columns.push(
-          !turn ? `${player} ${chip.id} before turn` :
-          player == senderId ? turn.senderData.chipsBeforeTurn[chip.id]?.toString() ?? '' :
-          turn.responseData[player]?.chipsBeforeTurn[chip.id]?.toString() ?? ''
-        );
-        columns.push(
-          !turn ? `${player} ${chip.id} after turn` :
-          player == senderId ? turn.senderData.chipsAfterTurn[chip.id]?.toString() ?? '' :
-          turn.responseData[player]?.chipsAfterTurn[chip.id]?.toString() ?? ''
-        )
-      });
-      chips.forEach((chip) => {
-        columns.push(
-          !turn ? `${player} ${chip.id} value` :
-          player == senderId ? turn.senderData.chipValues[chip.id]?.toString() ?? '' :
-          turn.responseData[player]?.chipValues[chip.id]?.toString() ?? ''
-        )
-      });
-      columns.push(
-        !turn ? `${player} payout before turn` :
-        player == senderId ? turn.senderData.payoutBeforeTurn.toString() :
-        turn.responseData[player]?.payoutBeforeTurn?.toString() ?? ''
-      );
-      columns.push(
-        !turn ? `${player} payout after turn` :
-        player == senderId ? turn.senderData.payoutAfterTurn.toString() :
-        turn.responseData[player]?.payoutAfterTurn?.toString() ?? ''
-      );
-    });
-
-    return columns;
-  };
+  // Calculate max players across all games (needed for header columns)
+  let maxPlayers = 0;
+  games.forEach((game) => {
+    const numPlayers = game.data.metadata.players.length;
+    console.log(numPlayers);
+    if (numPlayers > maxPlayers) {
+      maxPlayers = numPlayers;
+    }
+  });
 
   // Add headers
-  columns.push(getChipNegotiationTurnColumns(null));
+  columns.push(getChipNegotiationTurnColumns(maxPlayers, data, games[0], null));
 
-  // For each round, add turns
-  game.data.history.forEach((round) => {
-    round.turns.forEach((turn) => {
-      columns.push(getChipNegotiationTurnColumns(turn));
+  games.forEach((game) => {
+    game.data.history.forEach((round) => {
+      round.turns.forEach((turn) => {
+        columns.push(getChipNegotiationTurnColumns(maxPlayers, data, game, turn));
+      });
     });
+  });
+
+  return columns;
+}
+
+export function getChipNegotiationTurnColumns(
+  maxPlayers: number, // needed for player column headers
+  data: ExperimentDownload,
+  game: ChipNegotiationData,
+  turn: ChipNegotiationTurnData|null,
+): string[] {
+  // Start with player list that is maxPlayers long and populate in order.
+  // Players have turns in order of their ID
+  // NOTE: Keep in sync with player turn logic on backend
+  let players: string[] = [];
+  const playerList: string[] = game.data.metadata.players.sort();
+  let index = 0;
+  while (index < maxPlayers) {
+    if (index < playerList.length) {
+      players.push(playerList[index]);
+    } else {
+      players.push('');
+    }
+    index += 1;
+  }
+
+  const chips = game.data.metadata.chips;
+  const columns: string[] = [];
+  const roundNumber = turn?.transaction.offer.round ?? -1;
+  const senderId = turn?.senderData.participantId ?? '';
+  const recipientId = turn?.transaction.recipientId ?? '';
+
+  columns.push(!turn ? 'Cohort' : game.cohortName);
+  columns.push(!turn ? 'Stage ID' : game.stageName);
+  columns.push(!turn ? 'Round' : roundNumber.toString());
+  columns.push(!turn ? 'Turn (sender ID)' : senderId);
+  columns.push(!turn ? 'Turn (sender name)' : data.participantMap[senderId]?.profile.name ?? '');
+  columns.push(!turn ? 'Turn (avatar)' : data.participantMap[senderId]?.profile.avatar ?? '')
+
+  columns.push(
+    !turn ? 'Offer (timestamp)' :
+    convertUnifiedTimestampToDate(turn.transaction.offer.timestamp)
+  );
+  chips.forEach((chip) => {
+    columns.push(!turn ? `Buy offer (${chip.id})` : turn.transaction.offer.buy[chip.id]?.toString() ?? '0');
+  });
+  chips.forEach((chip) => {
+    columns.push(!turn ? `Sell offer (${chip.id})` : turn.transaction.offer.sell[chip.id]?.toString() ?? '0');
+  });
+  columns.push(!turn ? 'Offer status' : turn.transaction.status);
+  columns.push(!turn ? 'Offer recipient' : recipientId);
+  columns.push(
+    !turn ? `Sender payout before turn` :
+    turn.senderData.payoutBeforeTurn.toString()
+  );
+  columns.push(
+    !turn ? `Sender payout after turn` :
+    turn.senderData.payoutAfterTurn.toString()
+  );
+  columns.push(
+    !turn ? `Recipient payout before turn` :
+    turn.responseData[recipientId]?.payoutBeforeTurn?.toString() ?? ''
+  );
+  columns.push(
+    !turn ? `Recipient payout after turn` :
+    turn.responseData[recipientId]?.payoutAfterTurn?.toString() ?? ''
+  );
+
+  // Map player number to player ID
+  players.forEach((player, index) => {
+    columns.push(!turn ? `player ${index + 1}` : player);
+  });
+
+  players.forEach((player, index) => {
+    columns.push(!turn ? `player ${index + 1} (is sender)` : (player === senderId).toString());
+    columns.push(!turn ? `player ${index + 1} (is selected recipient)` : (player === recipientId).toString());
+    columns.push(
+      !turn ? `player ${index + 1} offer timestamp` :
+      player === senderId ? 'n/a' :
+      turn.responseData[player] ? convertUnifiedTimestampToDate(turn.responseData[player]?.offerResponseTimestamp) : ''
+    );
+    columns.push(
+      !turn ? `player ${index + 1} offer response` :
+      player === senderId ? 'n/a' :
+      turn.responseData[player]?.offerResponse.toString() ?? ''
+    );
+    chips.forEach((chip) => {
+      columns.push(
+        !turn ? `player ${index + 1} ${chip.id} before turn` :
+        player == senderId ? turn.senderData.chipsBeforeTurn[chip.id]?.toString() ?? '' :
+        turn.responseData[player]?.chipsBeforeTurn[chip.id]?.toString() ?? ''
+      );
+      columns.push(
+        !turn ? `player ${index + 1} ${chip.id} after turn` :
+        player == senderId ? turn.senderData.chipsAfterTurn[chip.id]?.toString() ?? '' :
+        turn.responseData[player]?.chipsAfterTurn[chip.id]?.toString() ?? ''
+      )
+    });
+    chips.forEach((chip) => {
+      columns.push(
+        !turn ? `player ${index + 1} ${chip.id} value` :
+        player == senderId ? turn.senderData.chipValues[chip.id]?.toString() ?? '' :
+        turn.responseData[player]?.chipValues[chip.id]?.toString() ?? ''
+      )
+    });
+    columns.push(
+      !turn ? `player ${index + 1} payout before turn` :
+      player == senderId ? turn.senderData.payoutBeforeTurn.toString() :
+      turn.responseData[player]?.payoutBeforeTurn?.toString() ?? ''
+    );
+    columns.push(
+      !turn ? `player ${index + 1} payout after turn` :
+      player == senderId ? turn.senderData.payoutAfterTurn.toString() :
+      turn.responseData[player]?.payoutAfterTurn?.toString() ?? ''
+    );
   });
 
   return columns;
