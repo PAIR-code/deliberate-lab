@@ -62,9 +62,12 @@ export class ChatMessageComponent extends MobxLitElement {
     });
 
     const profile = chatMessage.profile;
-
     // Use profile ID to determine color
     const color = () => {
+      // If no name, use default background
+      if (!chatMessage.profile?.name) {
+        return '';
+      }
       // If publicId is in format animal-color-number, extract color
       const splitId = (chatMessage.participantPublicId ?? '').split('-');
       if (splitId.length >= 3) {

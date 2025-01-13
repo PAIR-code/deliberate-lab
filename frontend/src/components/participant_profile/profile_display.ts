@@ -56,7 +56,9 @@ export class ParticipantProfileDisplay extends MobxLitElement {
   override render() {
     if (!this.profile) return nothing;
 
-    const nameFallback = this.displayType === ProfileDisplayType.DEFAULT ?
+    const nameFallback =
+      this.displayType === ProfileDisplayType.DEFAULT ||
+      this.displayType === ProfileDisplayType.CHAT ?
       this.profile.publicId : '';
 
     // Use profile ID to determine color
