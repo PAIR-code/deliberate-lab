@@ -22,12 +22,12 @@ import '../stages/ranking_summary_view';
 import '../stages/survey_summary_view';
 import '../stages/survey_per_participant_summary_view';
 
-import {styles} from './profile_preview.scss';
+import {styles} from './participant_stats.scss';
 
 import {isUnlockedStage} from '../../shared/participant.utils';
 
-/** ParticipantProfile preview (for experiment manager) */
-@customElement('participant-profile-preview')
+/** Participant profile status/stats (for experiment manager) */
+@customElement('participant-stats')
 export class Preview extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -172,6 +172,6 @@ export class Preview extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'participant-profile-preview': Preview;
+    'participant-stats': Preview;
   }
 }
