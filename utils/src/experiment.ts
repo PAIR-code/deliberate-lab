@@ -25,8 +25,9 @@ import { StageConfig } from './stages/stage';
   * VERSION 9 - updated in PR #373 to add avatar (emoji) field to ChipItem
   *             and rename chip quantity field to startingQuantity
   * VERSION 10 - add baseCurrencyAmount to PayoutItemResult (PR #384)
+  * VERSION 11 - add anonymous profile map to ParticipantProfile (PR #391)
   */
-export const EXPERIMENT_VERSION_ID = 10;
+export const EXPERIMENT_VERSION_ID = 11;
 
 /** Experiment. */
 export interface Experiment {
