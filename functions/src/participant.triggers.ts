@@ -31,7 +31,8 @@ export const setParticipantStageData = onDocumentCreated(
         const lower = Math.round(chip.lowerValue / step);
         const upper = Math.round(chip.upperValue / step);
         const randomStep = Math.floor(Math.random() * (upper - lower + 1)) + lower;
-        return randomStep * step;
+
+        return parseFloat((randomStep * step).toFixed(2));
       };
 
       for (const stage of stageConfigs) {
