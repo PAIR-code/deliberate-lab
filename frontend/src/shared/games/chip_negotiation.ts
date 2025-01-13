@@ -213,7 +213,7 @@ export const CHIP_COMPREHENSION_CHECK = createComprehensionStage({
     createMultipleChoiceComprehensionQuestion(
       {
         questionTitle:
-          'True or false: you and the other players value 🟢 green chips at the same amount, $0.50 per chip.',
+          'True or false: you and the other players will always value 🟢 green chips at the same amount, $0.50 per chip.',
         options: [
           createMultipleChoiceItem({id: 'a', text: 'True'}),
           createMultipleChoiceItem({id: 'b', text: 'False'}),
@@ -225,7 +225,7 @@ export const CHIP_COMPREHENSION_CHECK = createComprehensionStage({
     createMultipleChoiceComprehensionQuestion(
       {
         questionTitle:
-          'True or false: you and the other players value 🔵 blue chips at the same amount, $0.50 per chip.',
+          'True or false: you and the other players will always value 🔵 blue chips at the same amount, $0.50 per chip.',
         options: [
           createMultipleChoiceItem({id: 'a', text: 'True'}),
           createMultipleChoiceItem({id: 'b', text: 'False'}),
