@@ -46,10 +46,9 @@ export const setParticipantStageData = onDocumentCreated(
             stage.chips.forEach((chip) => {
               chipMap[chip.id] = chip.startingQuantity;
               chipValueMap[chip.id] =
-                Math.floor(
-                  Math.random() * ((chip.upperValue - chip.lowerValue) * 100 + 1) +
-                    chip.lowerValue * 100,
-                ) / 100;
+                Math.floor(Math.random() * ((chip.upperValue - chip.lowerValue) / step + 1)) *
+                  step +
+                chip.lowerValue;
             });
 
             const chipAnswer = createChipStageParticipantAnswer(stage.id, chipMap, chipValueMap);
