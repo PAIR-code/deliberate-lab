@@ -1,4 +1,4 @@
-import '../participant_profile/profile_avatar';
+import '../participant_profile/avatar_icon';
 
 import {observable} from 'mobx';
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -21,7 +21,7 @@ import {
   HumanMediatorChatMessage,
   ParticipantChatMessage,
 } from '@deliberation-lab/utils';
-import {convertUnifiedTimestampToDate} from '../../shared/utils';
+import {convertUnifiedTimestampToDate, getColor} from '../../shared/utils';
 
 import {styles} from './chat_message.scss';
 
@@ -63,9 +63,21 @@ export class ChatMessageComponent extends MobxLitElement {
 
     const profile = chatMessage.profile;
 
+    // Use profile ID to determine color
+    const color = () => {
+      // If publicId is in format animal-color-number, extract color
+      const splitId = (chatMessage.participantPublicId ?? '').split('-');
+      if (splitId.length >= 3) {
+        return splitId[1];
+      }
+      // Otherwise, use publicId as hash
+      return getColor(chatMessage.participantPublicId);
+    };
+
     return html`
       <div class=${classes}>
-        <profile-avatar .emoji=${profile.avatar}></profile-avatar>
+        <avatar-icon .emoji=${profile.avatar} .color=${color()}>
+        </avatar-icon>
         <div class="content">
           <div class="label">
             ${profile.name ?? chatMessage.participantPublicId}
@@ -89,7 +101,8 @@ export class ChatMessageComponent extends MobxLitElement {
 
     return html`
       <div class="chat-message">
-        <profile-avatar .emoji=${profile.avatar}></profile-avatar>
+        <avatar-icon .emoji=${profile.avatar} .color=${getColor(profile?.avatar ?? '')}>
+        </avatar-icon>
         <div class="content">
           <div class="label">
             ${profile.name}
@@ -111,7 +124,8 @@ export class ChatMessageComponent extends MobxLitElement {
 
     return html`
       <div class="chat-message">
-        <profile-avatar .emoji=${profile.avatar}></profile-avatar>
+        <avatar-icon .emoji=${profile.avatar} .color=${getColor(profile?.avatar ?? '')}>
+        </avatar-icon>
         <div class="content">
           <div class="label">
             ${profile.name}

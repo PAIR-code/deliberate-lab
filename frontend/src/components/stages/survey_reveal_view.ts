@@ -6,8 +6,7 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
-import {getParticipantName} from '../../shared/participant.utils';
-
+import {getParticipantInlineDisplay} from '../../shared/participant.utils';
 import {
   CheckSurveyAnswer,
   MultipleChoiceSurveyAnswer,
@@ -86,7 +85,7 @@ export class SurveyReveal extends MobxLitElement {
         })
         .map((participantId) =>
           this.makeCell(
-            getParticipantName(this.cohortService.participantMap[participantId])
+            getParticipantInlineDisplay(this.cohortService.participantMap[participantId])
           )
         )}`;
     };

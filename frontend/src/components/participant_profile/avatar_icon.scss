@@ -31,18 +31,6 @@
     border-radius: common.$spacing-small;
   }
 
-  &.man {
-    background: var(--md-sys-color-avatar-man);
-  }
-
-  &.woman {
-    background: var(--md-sys-color-avatar-woman);
-  }
-
-  &.person {
-    background: var(--md-sys-color-avatar-person);
-  }
-
   &.red {
     background: var(--md-sys-color-avatar-red);
   }

@@ -15,6 +15,7 @@ import {
   UnifiedTimestamp,
 } from '@deliberation-lab/utils';
 import {getCohortName} from '../../shared/cohort.utils';
+import {getParticipantInlineDisplay} from '../../shared/participant.utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
 import '../stages/payout_summary_view';
 import '../stages/reveal_summary_view';
@@ -63,7 +64,7 @@ export class Preview extends MobxLitElement {
       <div><b>Private ID:</b> ${this.profile.privateId}</div>
       <div><b>Public ID:</b> ${this.profile.publicId}</div>
       <div>
-        <b>Profile:</b> ${this.profile.avatar ?? ''} ${this.profile.name ?? ''}
+        <b>Profile:</b> ${getParticipantInlineDisplay(this.profile)}
         ${this.profile.pronouns ? `(${this.profile.pronouns})` : ''}
       </div>
       <div><b>Status:</b> ${this.profile.currentStatus}</div>

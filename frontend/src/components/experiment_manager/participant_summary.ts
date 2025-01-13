@@ -2,7 +2,7 @@ import '../../pair-components/button';
 import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 
-import '../participant_profile/profile_avatar';
+import '../participant_profile/profile_display';
 import '../progress/participant_progress_bar';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -26,7 +26,6 @@ import {
 
 import {
   getCurrentStageStartTime,
-  getParticipantName,
   isObsoleteParticipant,
   isPendingParticipant,
   isParticipantEndedExperiment,
@@ -68,9 +67,8 @@ export class ParticipantSummary extends MobxLitElement {
     return html`
       <div class=${classes} @click=${setCurrentParticipant}>
         <div class="left">
-          <profile-avatar .emoji=${this.participant.avatar} .small=${true}>
-          </profile-avatar>
-          <div>${getParticipantName(this.participant)}</div>
+          <participant-profile-display .profile=${this.participant}>
+          </participant-profile-display>
           ${this.renderStatus()} ${this.renderAttentionStatus()}
           ${this.renderTimeElapsed()}
         </div>

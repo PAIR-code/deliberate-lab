@@ -1,6 +1,6 @@
 import '../stages/stage_description';
 import '../stages/stage_footer';
-import '../participant_profile/profile_avatar'; 
+import '../participant_profile/profile_display';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -32,16 +32,10 @@ export class ProfileViewer extends MobxLitElement {
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="html-wrapper">
-        ${info}
+        <div>${info}</div>
         <div class="profile-wrapper">
-          <div class="reveal">
-            <profile-avatar .emoji=${profile.avatar} .square=${true}>
-            </profile-avatar>
-            <div class="info">
-              <div class="title">${profile.name}</div>
-              <div class="subtitle">${profile.pronouns}</div>
-            </div>
-          </div>
+          <participant-profile-display .profile=${profile} displayType="stage">
+          </participant-profile-display>
         </div>
       </div>
       <stage-footer></stage-footer>

@@ -1,4 +1,6 @@
 import '../../pair-components/tooltip';
+import '../participant_profile/avatar_icon';
+import '../participant_profile/profile_display';
 import './stage_description';
 import './stage_footer';
 
@@ -21,7 +23,7 @@ import {
   getTimeElapsed,
 } from '@deliberation-lab/utils';
 import {isActiveParticipant} from '../../shared/participant.utils';
-import {convertUnifiedTimestampToDate} from '../../shared/utils';
+import {convertUnifiedTimestampToDate, getColor} from '../../shared/utils';
 import {styles} from './chat_panel.scss';
 
 /** Chat panel view with stage info, participants. */
@@ -195,7 +197,8 @@ export class ChatPanel extends MobxLitElement {
         position="BOTTOM_END"
       >
         <div class="profile">
-          <profile-avatar .emoji=${agent.avatar}></profile-avatar>
+          <avatar-icon .emoji=${agent.avatar} .color=${getColor(agent?.avatar ?? '')}>
+          </avatar-icon>
           <div class="name">
             ${agent.name}${this.authService.isDebugMode ? ` 🤖` : ''}
           </div>
@@ -205,21 +208,14 @@ export class ChatPanel extends MobxLitElement {
   }
 
   private renderProfile(profile: ParticipantProfile) {
+    const isCurrent = profile.publicId === this.participantService.profile?.publicId;
     return html`
-      <div class="profile">
-        <profile-avatar
-          .emoji=${profile.avatar}
-          ?disabled=${isActiveParticipant(profile)}
-        >
-        </profile-avatar>
-        <div class="name">
-          ${profile.name ? profile.name : profile.publicId}
-          ${profile.pronouns ? `(${profile.pronouns})` : ''}
-          ${profile.publicId === this.participantService.profile?.publicId
-            ? `(you)`
-            : ''}
-        </div>
-      </div>
+      <participant-profile-display
+        .profile=${profile}
+        .showIsSelf=${isCurrent}
+        displayType="chat"
+      >
+      </participant-profile-display>
     `;
   }
 }

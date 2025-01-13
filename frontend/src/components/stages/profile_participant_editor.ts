@@ -3,7 +3,7 @@ import '../../pair-components/textarea';
 import '../progress/progress_stage_completed';
 import '../stages/stage_description';
 import '../stages/stage_footer';
-import '../participant_profile/profile_avatar';
+import '../participant_profile/avatar_icon';
 
 import '@material/web/radio/radio.js';
 
@@ -15,7 +15,12 @@ import {core} from '../../core/core';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 
-import {PROFILE_AVATARS} from '../../shared/constants';
+import {
+  PROFILE_AVATARS,
+  MAN_EMOJIS,
+  WOMAN_EMOJIS,
+  PERSON_EMOJIS
+} from '../../shared/constants';
 import {ProfileStageConfig} from '@deliberation-lab/utils';
 
 import {styles} from './profile_participant_editor.scss';
@@ -193,6 +198,18 @@ export class ProfileEditor extends MobxLitElement {
     };
 
     const renderAvatarRadio = (emoji: string, index: number) => {
+      const getColor = () => {
+        if (MAN_EMOJIS.indexOf(emoji) > -1) {
+          return 'blue';
+        } else if (WOMAN_EMOJIS.indexOf(emoji) > -1) {
+          return 'pink';
+        } else if (PERSON_EMOJIS.indexOf(emoji) > -1) {
+          return 'purple';
+        } else {
+          return '';
+        }
+      };
+
       return html`
         <div class="radio-button">
           <md-radio
@@ -204,7 +221,8 @@ export class ProfileEditor extends MobxLitElement {
             @change=${handleAvatarClick}
           >
           </md-radio>
-          <profile-avatar .emoji=${emoji} .square=${true}></profile-avatar>
+          <avatar-icon .emoji=${emoji} .square=${true} .color=${getColor()}>
+          </avatar-icon>
         </div>
       `;
     };

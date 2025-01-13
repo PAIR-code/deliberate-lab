@@ -3,15 +3,13 @@ import '../../pair-components/icon_button';
 import '../../pair-components/info_popup';
 import '../../pair-components/tooltip';
 
-import '../participant_profile/profile_avatar';
+import '../participant_profile/profile_display';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
 import {ParticipantProfile, StageConfig} from '@deliberation-lab/utils';
-import {getParticipantName} from '../../shared/participant.utils';
-
 import {styles} from './participant_header.scss';
 
 /** Header component for participant preview */
@@ -43,17 +41,12 @@ export class Header extends MobxLitElement {
 
   private renderProfile() {
     if (!this.profile) return nothing;
-    const name = getParticipantName(this.profile);
     return html`
       <pr-tooltip
-        text="You are playing as ${this.profile.avatar} ${name}"
+        text="You are playing as this avatar"
         position="BOTTOM_END"
       >
-        <div class="profile">
-          <profile-avatar .small=${true} .emoji=${this.profile.avatar}>
-          </profile-avatar>
-          <div>${name}</div>
-        </div>
+        <profile-display .profile=${this.profile}></profile-display>
       </pr-tooltip>
     `;
   }

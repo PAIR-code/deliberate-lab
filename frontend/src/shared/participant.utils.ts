@@ -11,22 +11,14 @@ import {
  * For utils shared between frontend and backend, see @deliberation-lab/utils
  */
 
-/** Returns profile name if exists, else public ID. */
-export function getParticipantName(participant: ParticipantProfile) {
-  return participant.name ?? participant.publicId;
-}
-
-/** Returns pronouns if exists, else empty. */
-export function getParticipantPronouns(
+/** Get participant avatar/name string based on active profile. */
+export function getParticipantInlineDisplay(
   participant: ParticipantProfile,
-  includeParentheses = true
+  showIsSelf = false, // add (you) to the end
 ) {
-  if (participant.pronouns) {
-    return includeParentheses
-      ? `(${participant.pronouns})`
-      : participant.pronouns;
-  }
-  return '';
+  return `
+    ${participant.avatar ?? ''} ${participant.name ?? participant.publicId}${showIsSelf ? ' (you)' : ''}
+  `;
 }
 
 /** Returns the start timestamp of the current stage. */

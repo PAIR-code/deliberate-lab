@@ -15,7 +15,7 @@ import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
-import {getParticipantName} from '../../shared/participant.utils';
+import {getParticipantInlineDisplay} from '../../shared/participant.utils';
 import {
   ChipItem,
   ChipLogEntry,
@@ -572,9 +572,8 @@ export class ChipView extends MobxLitElement {
     const senderParticipant = this.cohortService
       .getAllParticipants()
       .find((p) => p.publicId === offer.senderId);
-    const senderName = `${senderParticipant!.avatar} ${getParticipantName(
-      senderParticipant!
-    )}`;
+    if (!senderParticipant) return nothing;
+    const senderName = `${getParticipantInlineDisplay(senderParticipant)}`;
 
     return html`
       <div class="offer-panel">

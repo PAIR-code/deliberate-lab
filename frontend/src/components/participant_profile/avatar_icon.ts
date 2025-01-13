@@ -1,22 +1,15 @@
-import '../../pair-components/textarea';
 import '../../pair-components/tooltip';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
-import {CSSResultGroup, html} from 'lit';
+import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
-import {styles} from './profile_avatar.scss';
-import {getColor} from '../../shared/utils';
-import {
-  MAN_EMOJIS,
-  WOMAN_EMOJIS,
-  PERSON_EMOJIS
-} from '../../shared/constants';
+import {styles} from './avatar_icon.scss';
 
-/** Participant profile avatar */
-@customElement('profile-avatar')
-export class ProfileAvatar extends MobxLitElement {
+/** Avatar icon */
+@customElement('avatar-icon')
+export class Avatar extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   @property() emoji = '';
@@ -27,19 +20,11 @@ export class ProfileAvatar extends MobxLitElement {
   @property() color = '';
 
   override render() {
-    if (!this.emoji) return;
-
-    // TODO: Remove temporary hash-based color assignment
-    this.color = getColor(this.emoji);
-
     const classes = classMap({
       avatar: true,
       small: this.small,
       square: this.square,
       disabled: this.disabled,
-      man: MAN_EMOJIS.indexOf(this.emoji) > -1,
-      woman: WOMAN_EMOJIS.indexOf(this.emoji) > -1,
-      person: PERSON_EMOJIS.indexOf(this.emoji) > -1,
       red: this.color === 'red',
       orange: this.color === 'orange',
       yellow: this.color === 'yellow',
@@ -59,6 +44,6 @@ export class ProfileAvatar extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'profile-avatar': ProfileAvatar;
+    'avatar-icon': Avatar;
   }
 }
