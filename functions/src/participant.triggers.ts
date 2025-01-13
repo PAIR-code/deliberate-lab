@@ -26,14 +26,13 @@ export const setParticipantStageData = onDocumentCreated(
         await app.firestore().collection(`experiments/${event.params.experimentId}/stages`).get()
       ).docs.map((doc) => doc.data() as StageConfig);
 
-      const getRandomChipValue = (chip) => {
+      function getRandomChipValue(chip) {
         const step = 0.1;
-        const lower = Math.round(chip.lowerValue / step);
-        const upper = Math.round(chip.upperValue / step);
-        const randomStep = Math.floor(Math.random() * (upper - lower + 1)) + lower;
-
-        return parseFloat((randomStep * step).toFixed(2));
-      };
+        const lower = Math.round(chip.lowerValue * 100);
+        const upper = Math.round(chip.upperValue * 100);
+        const randomStep = Math.floor(Math.random() * ((upper - lower) / (step * 100) + 1)) + lower;
+        return randomStep / 100;
+      }
 
       for (const stage of stageConfigs) {
         // Define doc reference for stage
