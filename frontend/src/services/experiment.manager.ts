@@ -36,12 +36,11 @@ import {
 import {
   bootParticipantCallable,
   createChatMessageCallable,
+  createCohortCallable,
   createParticipantCallable,
+  deleteCohortCallable,
   deleteExperimentCallable,
   initiateParticipantTransferCallable,
-  updateParticipantCallable,
-  createCohortCallable,
-  deleteCohortCallable,
   sendParticipantCheckCallable,
   updateCohortMetadataCallable,
   writeExperimentCallable
