@@ -318,6 +318,40 @@ export const acceptParticipantTransfer = onCall(async (request) => {
 
     // Set document
     transaction.set(document, participant);
+
+    // Migrate shared cohort data
+    const publicId = participant.publicId;
+    const stageData =
+      await app.firestore().collection(`experiments/${data.experimentId}/participants/${privateId}/stageData`)
+      .get();
+
+    const stageAnswers = stageData.docs.map(stage => stage.data());
+    // For each relevant answer, add to current cohort's public stage data
+    for (const stage of stageAnswers) {
+      const publicDocument = app.firestore()
+        .collection('experiments')
+        .doc(data.experimentId)
+        .collection('cohorts')
+        .doc(participant.currentCohortId)
+        .collection('publicStageData')
+        .doc(stage.id);
+
+      switch (stage.kind) {
+        case StageKind.SURVEY:
+          const publicSurveyData = (await publicDocument.get()).data() as SurveyStagePublicData;
+          publicSurveyData.participantAnswerMap[publicId] = stage.answerMap;
+          transaction.set(publicDocument, publicSurveyData);
+          break;
+        case StageKind.CHIP:
+          const publicChipData = (await publicDocument.get()).data() as ChipStagePublicData;
+          publicChipData.participantChipMap[publicId] = stage.chipMap;
+          publicChipData.participantChipValueMap[publicId] = stage.chipValueMap;
+          transaction.set(publicDocument, publicChipData);
+          break;
+        default:
+          break;
+      }
+    }
   });
 
   return response;
