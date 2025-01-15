@@ -24,6 +24,7 @@ import {
   UpdateParticipantAcceptedTOSData,
   UpdateParticipantFailureData,
   UpdateParticipantProfileData,
+  UpdateParticipantWaitingData,
   UpdateRankingStageParticipantAnswerData,
   UpdateSurveyPerParticipantStageParticipantAnswerData,
   UpdateSurveyStageParticipantAnswerData
@@ -78,6 +79,12 @@ export const updateParticipantCallable = async(functions: Functions, config: Par
 /** Generic endpoint to update participant's TOS response */
 export const updateParticipantAcceptedTOSCallable = async(functions: Functions, config: UpdateParticipantAcceptedTOSData) => {
   const { data } = await httpsCallable<UpdateParticipantAcceptedTOSData, SuccessResponse>(functions, 'updateParticipantAcceptedTOS')(config);
+  return data;
+}
+
+/** Generic endpoint to update participant's waiting timestamp */
+export const updateParticipantWaitingCallable = async(functions: Functions, config: UpdateParticipantWaitingData) => {
+  const { data } = await httpsCallable<UpdateParticipantWaitingData, SuccessResponse>(functions, 'updateParticipantWaiting')(config);
   return data;
 }
 

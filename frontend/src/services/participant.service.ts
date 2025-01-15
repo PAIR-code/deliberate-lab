@@ -44,11 +44,11 @@ import {
   sendChipOfferCallable,
   sendChipResponseCallable,
   setChipTurnCallable,
-  updateParticipantCallable,
   updateParticipantAcceptedTOSCallable,
   updateParticipantFailureCallable,
   updateParticipantProfileCallable,
   updateParticipantToNextStageCallable,
+  updateParticipantWaitingCallable,
   updateChatStageParticipantAnswerCallable,
   updateSurveyPerParticipantStageParticipantAnswerCallable,
   updateSurveyStageParticipantAnswerCallable,
@@ -328,22 +328,14 @@ export class ParticipantService extends Service {
   /** Complete waiting phase for stage. */
   async updateWaitingPhaseCompletion(stageId: string) {
     if (!this.experimentId || !this.profile) return false;
-
-    // Add waiting completion timestamp
-    const completedWaiting = this.profile.timestamps.completedWaiting;
-    completedWaiting[stageId] = Timestamp.now();
-    const timestamps = {
-      ...this.profile.timestamps,
-      completedWaiting
-    };
-
-    await this.updateProfile(
+    await updateParticipantWaitingCallable(
+      this.sp.firebaseService.functions,
       {
-        ...this.profile,
-        timestamps
+        experimentId: this.experimentId,
+        participantId: this.profile.privateId,
+        stageId
       }
     );
-    return true;
   }
 
   /** Move to next stage. */
@@ -472,30 +464,6 @@ export class ParticipantService extends Service {
         participantId: this.profile.privateId
       }
     );
-  }
-
-  /** Update participant profile */
-  async updateProfile(
-    config: Partial<ParticipantProfileExtended>,
-    isTransfer = false
-  ) {
-    if (!this.profile) {
-      return;
-    }
-
-    const participantConfig = {...this.profile, ...config};
-    let response = {};
-
-    if (this.experimentId) {
-      response = await updateParticipantCallable(
-        this.sp.firebaseService.functions, {
-          experimentId: this.experimentId,
-          isTransfer,
-          participantConfig
-        }
-      );
-    }
-    return response;
   }
 
   /** Send chat message. */

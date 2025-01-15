@@ -64,6 +64,20 @@ const UpdateParticipantFailureData = Type.Object(
 export type UpdateParticipantFailureData = Static<typeof UpdateParticipantFailureData>;
 
 // ************************************************************************* //
+// updateParticipantWaiting endpoint for participants                        //
+// ************************************************************************* //
+const UpdateParticipantWaitingData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    participantId: Type.String({ minLength: 1 }),
+    stageId: Type.String({ minLength: 1 })
+  },
+  strict,
+);
+
+export type UpdateParticipantWaitingData = Static<typeof UpdateParticipantWaitingData>;
+
+// ************************************************************************* //
 // updateParticipantToNextStage, acceptParticipantTransfer, etc. endpoints   //
 // (anything where just the participant document path is needed)             //
 // ************************************************************************* //

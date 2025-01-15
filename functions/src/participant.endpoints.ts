@@ -132,6 +132,33 @@ export const updateParticipantAcceptedTOS = onCall(async (request) => {
 });
 
 // ************************************************************************* //
+// updateParticipantWaiting for participants                                 //
+//                                                                           //
+// Input structure: { experimentId, participantId, stageId }                 //
+// Validation: utils/src/participant.validation.ts                           //
+// ************************************************************************* //
+export const updateParticipantWaiting = onCall(async (request) => {
+  const { data } = request;
+  const privateId = data.participantId;
+
+  // Define document reference
+  const document = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('participants')
+    .doc(privateId);
+
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    const participant = (await document.get()).data() as ParticipantProfileExtended;
+    participant.timestamps.completedWaiting[data.stageId] = Timestamp.now();
+    transaction.set(document, participant);
+  });
+
+  return { success: true };
+});
+
+// ************************************************************************* //
 // updateParticipantFailure for participants                                 //
 //                                                                           //
 // Input structure: { experimentId, participantId, status }                  //
