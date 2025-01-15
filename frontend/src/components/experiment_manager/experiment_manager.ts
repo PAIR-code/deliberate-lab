@@ -140,6 +140,16 @@ export class ExperimentManagerComponent extends MobxLitElement {
         return;
       }
 
+      const stage = this.experimentService.getStage(
+        this.experimentManager.currentParticipant.currentStageId
+      );
+      if (!stage || !(stage.kind === StageKind.TRANSFER)) {
+        const isConfirmed = window.confirm(
+          `Participant is not in a transfer stage. Are you sure you want to transfer them?`
+        );
+        if (!isConfirmed) return;
+      }
+
       this.analyticsService.trackButtonClick(ButtonClick.TRANSFER_INITIATE);
       this.experimentManager.initiateParticipantTransfer(
         this.experimentManager.currentParticipant.privateId,
