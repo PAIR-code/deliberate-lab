@@ -16,6 +16,8 @@ import {
   UpdateChatAgentsData,
   UpdateChatStageParticipantAnswerData,
   UpdateCohortMetadataData,
+  UpdateParticipantAcceptedTOSData,
+  UpdateParticipantProfileData,
   UpdateRankingStageParticipantAnswerData,
   UpdateSurveyPerParticipantStageParticipantAnswerData,
   UpdateSurveyStageParticipantAnswerData
@@ -64,6 +66,18 @@ export const createParticipantCallable = async(functions: Functions, config: Cre
 /** Generic endpoint to update participant profiles */
 export const updateParticipantCallable = async(functions: Functions, config: ParticipantProfileExtendedData) => {
   const { data } = await httpsCallable<ParticipantProfileExtendedData, CreationResponse>(functions, 'updateParticipant')(config);
+  return data;
+}
+
+/** Generic endpoint to update participant's TOS response */
+export const updateParticipantAcceptedTOSCallable = async(functions: Functions, config: UpdateParticipantAcceptedTOSData) => {
+  const { data } = await httpsCallable<UpdateParticipantAcceptedTOSData, SuccessResponse>(functions, 'updateParticipantAcceptedTOS')(config);
+  return data;
+}
+
+/** Generic endpoint to update participant base profile (name, avatar, pronouns). */
+export const updateParticipantProfileCallable = async(functions: Functions, config: UpdateParticipantProfileData) => {
+  const { data } = await httpsCallable<UpdateParticipantProfileData, SuccessResponse>(functions, 'updateParticipantProfile')(config);
   return data;
 }
 

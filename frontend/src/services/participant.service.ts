@@ -4,6 +4,7 @@ import {
   CreateChatMessageData,
   RankingItem,
   ParticipantChatMessage,
+  ParticipantProfileBase,
   ParticipantProfileExtended,
   ParticipantStatus,
   StageKind,
@@ -11,6 +12,7 @@ import {
   SurveyAnswer,
   SurveyPerParticipantStageParticipantAnswer,
   SurveyStageParticipantAnswer,
+  UnifiedTimestamp,
   UpdateChatStageParticipantAnswerData,
   createChatStageParticipantAnswer,
   createParticipantChatMessage,
@@ -40,6 +42,8 @@ import {
   sendChipResponseCallable,
   setChipTurnCallable,
   updateParticipantCallable,
+  updateParticipantAcceptedTOSCallable,
+  updateParticipantProfileCallable,
   updateChatStageParticipantAnswerCallable,
   updateSurveyPerParticipantStageParticipantAnswerCallable,
   updateSurveyStageParticipantAnswerCallable,
@@ -270,9 +274,7 @@ export class ParticipantService extends Service {
 
   /** Save last stage and complete experiment with success. */
   async completeLastStage() {
-    // Use participant answer service verison of profile,
-    // which might have updates that need to be written to Firestore
-    const profile = this.sp.participantAnswerService.profile;
+    const profile = this.profile;
     if (!profile) {
       return;
     }
@@ -383,9 +385,7 @@ export class ParticipantService extends Service {
 
   /** Move to next stage. */
   async progressToNextStage() {
-    // Use participant answer profile (as it may include frontend-only
-    // updates that should be written to Firestore)
-    const profile = this.sp.participantAnswerService.profile;
+    const profile = this.profile;
     if (!this.experimentId || !profile) {
       return;
     }
@@ -413,6 +413,55 @@ export class ParticipantService extends Service {
     );
     return currentStageId; // return new stage
   }
+
+  /** Update participant TOS response. */
+  async updateParticipantTOS(acceptedTOS: UnifiedTimestamp|null) {
+    if (!this.profile) {
+      return;
+    }
+
+    let response = {};
+
+    if (this.experimentId) {
+      response = await updateParticipantAcceptedTOSCallable(
+        this.sp.firebaseService.functions, {
+          experimentId: this.experimentId,
+          participantId: this.profile.privateId,
+          acceptedTOS
+        }
+      );
+    }
+    return response;
+  }
+
+  /** Update participant base profile. */
+  async updateParticipantProfile(
+    baseProfile: ParticipantProfileBase,
+    progressToNextStage = true
+  ) {
+    if (!this.profile) {
+      return;
+    }
+    const participantProfileBase = baseProfile;
+    const participantId = this.profile.privateId;
+    let response = {};
+
+    if (this.experimentId) {
+      response = await updateParticipantProfileCallable(
+        this.sp.firebaseService.functions, {
+          experimentId: this.experimentId,
+          participantId,
+          participantProfileBase
+        }
+      );
+    }
+
+    if (progressToNextStage) {
+      await this.progressToNextStage();
+    }
+
+    return response;
+  };
 
   /** Update participant profile */
   async updateProfile(

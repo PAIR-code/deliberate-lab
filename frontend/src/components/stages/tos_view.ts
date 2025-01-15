@@ -11,7 +11,6 @@ import '@material/web/checkbox/checkbox.js';
 import {Timestamp} from 'firebase/firestore';
 
 import {core} from '../../core/core';
-import {ParticipantAnswerService} from '../../services/participant.answer';
 import {ParticipantService} from '../../services/participant.service';
 
 import {TOSStageConfig} from '@deliberation-lab/utils';
@@ -26,7 +25,6 @@ import {styles} from './tos_view.scss';
 export class TOSView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  private readonly participantAnswerService = core.getService(ParticipantAnswerService);
   private readonly participantService = core.getService(ParticipantService);
 
   @property() stage: TOSStageConfig | null = null;
@@ -36,16 +34,11 @@ export class TOSView extends MobxLitElement {
       return nothing;
     }
 
-    const timestamp = this.participantAnswerService.profile?.timestamps.acceptedTOS;
+    const timestamp = this.participantService.profile?.timestamps.acceptedTOS;
     const handleTOSClick = () => {
       if (!this.participantService.profile) return;
       const acceptedTOS = timestamp ? null : Timestamp.now();
-      // Update participant progress timestamps
-      const timestamps = {
-        ...this.participantService.profile.timestamps,
-        acceptedTOS
-      };
-      this.participantAnswerService.updateProfile({timestamps});
+      this.participantService.updateParticipantTOS(acceptedTOS);
     };
 
     const tosLinesJoined = this.stage?.tosLines.join('\n\n');

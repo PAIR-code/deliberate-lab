@@ -3,6 +3,7 @@ import {
   ChipStagePublicData,
   CreateParticipantData,
   Experiment,
+  ParticipantProfileExtended,
   ParticipantProfileExtendedData,
   StageKind,
   SurveyStagePublicData,
@@ -41,6 +42,8 @@ export const createParticipant = onCall(async (request) => {
   if (!validInput) {
     handleCreateParticipantValidationErrors(data);
   }
+
+  // TODO: Confirm that cohort is not locked or at max capacity
 
   // Create initial participant config
   const participantConfig = createParticipantProfileExtended({
@@ -100,12 +103,79 @@ function handleCreateParticipantValidationErrors(data: any) {
 }
 
 // ************************************************************************* //
+// updateParticipantAcceptedTOS for participants                             //
+//                                                                           //
+// Input structure: { experimentId, participantId, acceptedTOS }             //
+// Validation: utils/src/participant.validation.ts                           //
+// ************************************************************************* //
+
+export const updateParticipantAcceptedTOS = onCall(async (request) => {
+  const { data } = request;
+  const privateId = data.participantId;
+  const acceptedTOS = data.acceptedTOS;
+
+  // Define document reference
+  const document = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('participants')
+    .doc(privateId);
+
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    const participant = (await document.get()).data() as ParticipantProfileExtended;
+    participant.timestamps.acceptedTOS = acceptedTOS;
+    transaction.set(document, participant);
+  });
+
+  return { success: true };
+});
+
+// ************************************************************************* //
+// updateParticipantProfile endpoint for participants                        //
+//                                                                           //
+// Input structure: { experimentId, participantId, participantProfileBase }  //
+// Validation: utils/src/participant.validation.ts                           //
+// ************************************************************************* //
+
+export const updateParticipantProfile = onCall(async (request) => {
+  const { data } = request;
+  const privateId = data.participantId;
+  const profile = data.participantProfileBase;
+
+  // Define document reference
+  const document = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('participants')
+    .doc(privateId);
+
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    const participant = (await document.get()).data() as ParticipantProfileExtended;
+
+    if (profile.name) {
+      participant.name = profile.name;
+    }
+    if (profile.avatar) {
+      participant.avatar = profile.avatar;
+    }
+    if (profile.pronouns) {
+      participant.pronouns = profile.pronouns;
+    }
+
+    transaction.set(document, participant);
+  });
+
+  return { success: true };
+});
+
+// ************************************************************************* //
 // updateParticipant endpoint for experimenters                              //
 //                                                                           //
 // Input structure: { experimentId, isTransfer, participantConfig }          //
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
-
 
 export const updateParticipant = onCall(async (request) => {
   // TODO: Only allow experimenters to update full profiles

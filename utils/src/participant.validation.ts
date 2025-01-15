@@ -22,6 +22,32 @@ export const ParticipantProfileBaseData = Type.Object(
 
 export type ParticipantProfileBaseData = Static<typeof ParticipantProfileBaseData>;
 
+export const UpdateParticipantProfileData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    participantId: Type.String({ minLength: 1 }),
+    participantProfileBase: ParticipantProfileBaseData,
+  },
+  strict
+);
+
+export type UpdateParticipantProfileData = Static<typeof UpdateParticipantProfileData>;
+
+
+// ************************************************************************* //
+// updateParticipantAcceptedTOS endpoint for participants                    //
+// ************************************************************************* //
+const UpdateParticipantAcceptedTOSData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    participantId: Type.String({ minLength: 1 }),
+    acceptedTOS: Type.Union([Type.Null(), UnifiedTimestampSchema]),
+  },
+  strict,
+);
+
+export type UpdateParticipantAcceptedTOSData = Static<typeof UpdateParticipantAcceptedTOSData>;
+
 // ************************************************************************* //
 // createParticipant endpoint for participants and experimenters             //
 // ************************************************************************* //
