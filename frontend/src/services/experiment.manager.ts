@@ -37,6 +37,7 @@ import {
   createChatMessageCallable,
   createParticipantCallable,
   deleteExperimentCallable,
+  initiateParticipantTransferCallable,
   updateParticipantCallable,
   createCohortCallable,
   deleteCohortCallable,
@@ -515,16 +516,19 @@ export class ExperimentManager extends Service {
 
   /** Initiate participant transfer. */
   async initiateParticipantTransfer(
-    participant: ParticipantProfileExtended,
-    transferCohortId: string
+    participantId: string,
+    cohortId: string
   ) {
-    this.updateParticipant(
-      {
-        ...participant,
-        transferCohortId,
-        currentStatus: ParticipantStatus.TRANSFER_PENDING,
-      }
-    );
+    if (this.experimentId) {
+      await initiateParticipantTransferCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId,
+          participantId
+        }
+      );
+    }
   }
 
   /** Download experiment. */

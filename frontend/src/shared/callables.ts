@@ -7,6 +7,7 @@ import {
   ExperimentCreationData,
   ExperimentDeletionData,
   ExperimentDownloadResponse,
+  InitiateParticipantTransferData,
   ParticipantNextStageResponse,
   ParticipantProfile,
   ParticipantProfileExtendedData,
@@ -87,6 +88,12 @@ export const updateParticipantProfileCallable = async(functions: Functions, conf
 /** Generic endpoint to progress participant to next stage */
 export const updateParticipantToNextStageCallable = async(functions: Functions, config: UpdateParticipantToNextStageData) => {
   const { data } = await httpsCallable<UpdateParticipantToNextStageData, ParticipantNextStageResponse>(functions, 'updateParticipantToNextStage')(config);
+  return data;
+}
+
+/** Generic endpoint to initiate participant transfer. */
+export const initiateParticipantTransferCallable = async(functions: Functions, config: InitiateParticipantTransferData) => {
+  const { data } = await httpsCallable<InitiateParticipantTransferData, SuccessResponse>(functions, 'initiateParticipantTransfer')(config);
   return data;
 }
 

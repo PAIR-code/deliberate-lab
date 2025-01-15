@@ -62,6 +62,20 @@ const UpdateParticipantToNextStageData = Type.Object(
 export type UpdateParticipantToNextStageData = Static<typeof UpdateParticipantToNextStageData>;
 
 // ************************************************************************* //
+// initiateParticipantTransfer endpoint for experimenters                    //
+// ************************************************************************* //
+const InitiateParticipantTransferData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    cohortId: Type.String({ minLength: 1 }),
+    participantId: Type.String({ minLength: 1 }),
+  },
+  strict,
+);
+
+export type InitiateParticipantTransferData = Static<typeof InitiateParticipantTransferData>;
+
+// ************************************************************************* //
 // createParticipant endpoint for participants and experimenters             //
 // ************************************************************************* //
 export const CreateParticipantData = Type.Object(
