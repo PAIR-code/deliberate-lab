@@ -15,6 +15,20 @@ export const FirestoreCollectionData = Type.Union([
 ]);
 
 // ************************************************************************* //
+// writeExperimentCohortLock endpoint                                        //
+// ************************************************************************* //
+export const ExperimentCohortLockData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1}),
+    cohortId: Type.String({ minLength: 1 }),
+    isLock: Type.Boolean(),
+  },
+  strict,
+);
+
+export type ExperimentCohortLockData = Static<typeof ExperimentCohortLockData>;
+
+// ************************************************************************* //
 // deleteExperiment endpoint                                                 //
 // ************************************************************************* //
 export const ExperimentDeletionData = Type.Object(
@@ -60,6 +74,7 @@ export const ExperimentCreationData = Type.Object(
         defaultCohortConfig: CohortParticipantConfigSchema,
         prolificConfig: ProlificConfigSchema,
         stageIds: Type.Array(Type.String()),
+        cohortLockMap: Type.Record(Type.String(), Type.Boolean()),
       },
       strict,
     ),

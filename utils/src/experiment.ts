@@ -26,8 +26,9 @@ import { StageConfig } from './stages/stage';
   *             and rename chip quantity field to startingQuantity
   * VERSION 10 - add baseCurrencyAmount to PayoutItemResult (PR #384)
   * VERSION 11 - add anonymous profile map to ParticipantProfile (PR #391)
+  * VERSION 12 - add cohortLockMap to Experiment
   */
-export const EXPERIMENT_VERSION_ID = 11;
+export const EXPERIMENT_VERSION_ID = 12;
 
 /** Experiment. */
 export interface Experiment {
@@ -39,6 +40,7 @@ export interface Experiment {
   defaultCohortConfig: CohortParticipantConfig; // used by default for cohorts
   prolificConfig: ProlificConfig;
   stageIds: string[]; // Ordered list of stage IDs
+  cohortLockMap: Record<string, boolean>; // maps cohort ID to is locked
 }
 
 /** Experiment config for participant options. */
@@ -82,6 +84,7 @@ export function createExperimentConfig(
     defaultCohortConfig: config.defaultCohortConfig ?? createCohortParticipantConfig(),
     prolificConfig: config.prolificConfig ?? createProlificConfig(),
     stageIds: stages.map(stage => stage.id),
+    cohortLockMap: config.cohortLockMap ?? {},
   };
 }
 

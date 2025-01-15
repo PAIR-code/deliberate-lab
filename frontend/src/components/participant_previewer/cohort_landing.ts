@@ -32,13 +32,30 @@ export class CohortLanding extends MobxLitElement {
   @state() isLoading = false;
 
   override render() {
+    const isLockedCohort = () => {
+      const params = this.routerService.activeRoute.params;
+      if (!this.experimentService.experiment) return false;
+      if (this.experimentService.experiment.cohortLockMap[params['cohort']]) {
+        return true;
+      }
+      return false;
+    };
+
+    const renderText = () => {
+      if (isLockedCohort()) {
+        return html`<div>This experiment is currently closed.</div>`;
+      }
+      return html`<div>You've been invited to join this experiment. Please click the button below to begin.</div>`;
+    };
+
     return html`
       <div class="main">
         <h1>${this.experimentService.experimentPublicName}</h1>
-        <div>You've been invited to join this experiment. Please click the button below to begin.</div>
+        ${renderText()}
         <div class="action-buttons">
           <pr-button
             ?loading=${this.isLoading}
+            ?disabled=${isLockedCohort()}
             @click=${this.joinExperiment}>
             Join experiment
           </pr-button>

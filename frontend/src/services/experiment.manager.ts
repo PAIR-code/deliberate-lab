@@ -42,6 +42,7 @@ import {
   deleteExperimentCallable,
   initiateParticipantTransferCallable,
   sendParticipantCheckCallable,
+  setExperimentCohortLockCallable,
   updateCohortMetadataCallable,
   writeExperimentCallable
 } from '../shared/callables';
@@ -321,6 +322,20 @@ export class ExperimentManager extends Service {
   // FIRESTORE                                                               //
   // *********************************************************************** //
 
+  /** Set cohort lock. */
+  async setCohortLock(cohortId: string, isLock: boolean) {
+    const experiment = this.sp.experimentService.experiment;
+    if (!experiment) return;
+    await setExperimentCohortLockCallable(
+      this.sp.firebaseService.functions,
+      {
+        experimentId: experiment.id,
+        cohortId,
+        isLock
+      }
+    );
+  }
+
   /** Fork the current experiment. */
   // TODO: Add forkExperiment cloud function on backend
   // that takes in ID of experiment to fork (instead of experiment copy)
@@ -388,7 +403,7 @@ export class ExperimentManager extends Service {
   /** Create a new cohort
    * @rights Experimenter
    */
-  async createCohort(config: Partial<CohortConfig> = {}) {
+  async createCohort(config: Partial<CohortConfig> = {}, name = '') {
     if (!this.sp.experimentService.experiment) return;
 
     this.isWritingCohort = true;
@@ -396,6 +411,7 @@ export class ExperimentManager extends Service {
       participantConfig: this.sp.experimentService.experiment.defaultCohortConfig,
       ...config
     });
+    cohortConfig.metadata.name = name;
 
     let response = {};
 

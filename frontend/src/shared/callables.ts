@@ -5,6 +5,7 @@ import {
   CohortDeletionData,
   CreateParticipantData,
   CreationResponse,
+  ExperimentCohortLockData,
   ExperimentCreationData,
   ExperimentDeletionData,
   ExperimentDownloadResponse,
@@ -42,6 +43,12 @@ export const writeExperimentCallable = async (functions: Functions, experiment: 
 /** Generic endpoint to delete experiments or experiment templates */
 export const deleteExperimentCallable = async (functions: Functions, deletion: ExperimentDeletionData) => {
   const { data } = await httpsCallable<ExperimentDeletionData, SuccessResponse>(functions, 'deleteExperiment')(deletion);
+  return data;
+}
+
+/** Generic endpoint to set experiment cohort lock */
+export const setExperimentCohortLockCallable = async(functions: Functions, config: ExperimentCohortLockData) => {
+  const { data } = await httpsCallable<ExperimentCohortLockData, SuccessResponse>(functions, 'setExperimentCohortLock')(config);
   return data;
 }
 

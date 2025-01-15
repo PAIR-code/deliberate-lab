@@ -144,7 +144,7 @@ export const updateCohortMetadata = onCall(async (request) => {
 // Validation: utils/src/cohort.validation.ts                                //
 // ************************************************************************* //
 export const deleteCohort = onCall(async (request) => {
-  // TODO: Allow admins and readers to delete cohorts?
+  // TODO: Only allow creator, admins, and readers to delete cohorts
   await AuthGuard.isExperimenter(request);
   const { data } = request;
 
