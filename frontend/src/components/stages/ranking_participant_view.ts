@@ -74,6 +74,7 @@ export class RankingView extends MobxLitElement {
         this.stage.id,
         this.participantAnswerService.getRankingList(this.stage.id)
       );
+      await this.participantService.progressToNextStage();
     };
 
     return html`

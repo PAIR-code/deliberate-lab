@@ -44,6 +44,7 @@ import {
   updateParticipantCallable,
   updateParticipantAcceptedTOSCallable,
   updateParticipantProfileCallable,
+  updateParticipantToNextStageCallable,
   updateChatStageParticipantAnswerCallable,
   updateSurveyPerParticipantStageParticipantAnswerCallable,
   updateSurveyStageParticipantAnswerCallable,
@@ -272,39 +273,6 @@ export class ParticipantService extends Service {
   // FIRESTORE                                                               //
   // *********************************************************************** //
 
-  /** Save last stage and complete experiment with success. */
-  async completeLastStage() {
-    const profile = this.profile;
-    if (!profile) {
-      return;
-    }
-
-    // Add progress timestamps
-    const timestamp = Timestamp.now();
-
-    const completedStages = profile.timestamps.completedStages;
-    completedStages[profile.currentStageId] = timestamp;
-
-    const endExperiment = timestamp;
-
-    const timestamps = {
-      ...profile.timestamps,
-      completedStages,
-      endExperiment
-    };
-
-    // Update status
-    const currentStatus = ParticipantStatus.SUCCESS;
-
-    return await this.updateProfile(
-      {
-        ...profile,
-        currentStatus,
-        timestamps
-      }
-    );
-  }
-
   /** End experiment due to failure. */
   async updateExperimentFailure(
     currentStatus: ParticipantStatus,
@@ -337,7 +305,7 @@ export class ParticipantService extends Service {
   async routeToEndExperiment(currentStatus: ParticipantStatus) {
     const config = this.sp.experimentService.experiment?.prolificConfig;
 
-    // Redirect to Prolific
+    // Redirect to Prolific if prolific integration is set up
     if (config && config.enableProlificIntegration) {
       let redirectCode = config.defaultRedirectCode;
       if (currentStatus === ParticipantStatus.ATTENTION_TIMEOUT && config.attentionFailRedirectCode.length > 0) {
@@ -348,18 +316,15 @@ export class ParticipantService extends Service {
 
      // Navigate to Prolific with completion code
       window.location.href = PROLIFIC_COMPLETION_URL_PREFIX + redirectCode;
+      return;
     }
 
-    else {
-      if (currentStatus === ParticipantStatus.BOOTED_OUT) {
-        this.sp.routerService.navigate(Pages.HOME);
-      } else {
-        this.sp.routerService.navigate(Pages.PARTICIPANT, {
-          'experiment': this.experimentId!,
-          'participant': this.profile!.privateId,
-        });
-      }
-    }
+    // Otherwise, route to main participant page
+    if (!this.experimentId || !this.profile) return;
+    this.sp.routerService.navigate(Pages.PARTICIPANT, {
+      'experiment': this.experimentId,
+      'participant': this.profile.privateId,
+    });
   }
 
   /** Complete waiting phase for stage. */
@@ -385,33 +350,30 @@ export class ParticipantService extends Service {
 
   /** Move to next stage. */
   async progressToNextStage() {
-    const profile = this.profile;
-    if (!this.experimentId || !profile) {
+    if (!this.experimentId || !this.profile) {
       return;
     }
 
-    // Get new stage ID
-    const currentStageId = this.sp.experimentService.getNextStageId(
-      profile.currentStageId
-    );
-    if (currentStageId === null) return;
-
-    // Add progress timestamp
-    const completedStages = profile.timestamps.completedStages;
-    completedStages[profile.currentStageId] = Timestamp.now();
-    const timestamps = {
-      ...profile.timestamps,
-      completedStages
-    };
-
-    await this.updateProfile(
+    const result = await updateParticipantToNextStageCallable(
+      this.sp.firebaseService.functions,
       {
-        ...profile,
-        currentStageId,
-        timestamps
+        experimentId: this.experimentId,
+        participantId: this.profile.privateId,
       }
     );
-    return currentStageId; // return new stage
+
+    if (result.endExperiment) {
+      this.routeToEndExperiment(ParticipantStatus.SUCCESS);
+    } else if (result.currentStageId) {
+      // Route to next stage
+      this.sp.routerService.navigate(Pages.PARTICIPANT_STAGE, {
+        experiment: this.sp.routerService.activeRoute.params['experiment'],
+        participant: this.sp.routerService.activeRoute.params['participant'],
+        stage: result.currentStageId,
+      });
+    }
+
+    return result.currentStageId ?? '';
   }
 
   /** Update participant TOS response. */

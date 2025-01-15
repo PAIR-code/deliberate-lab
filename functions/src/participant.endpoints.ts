@@ -1,3 +1,4 @@
+import { Timestamp } from 'firebase-admin/firestore';
 import { Value } from '@sinclair/typebox/value';
 import {
   ChipStagePublicData,
@@ -5,6 +6,7 @@ import {
   Experiment,
   ParticipantProfileExtended,
   ParticipantProfileExtendedData,
+  ParticipantStatus,
   StageKind,
   SurveyStagePublicData,
   createParticipantProfileExtended,
@@ -33,7 +35,6 @@ import {
 // Input structure: { experimentId, cohortId, isAnonymous }                  //
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
-
 export const createParticipant = onCall(async (request) => {
   const { data } = request;
 
@@ -108,7 +109,6 @@ function handleCreateParticipantValidationErrors(data: any) {
 // Input structure: { experimentId, participantId, acceptedTOS }             //
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
-
 export const updateParticipantAcceptedTOS = onCall(async (request) => {
   const { data } = request;
   const privateId = data.participantId;
@@ -137,7 +137,6 @@ export const updateParticipantAcceptedTOS = onCall(async (request) => {
 // Input structure: { experimentId, participantId, participantProfileBase }  //
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
-
 export const updateParticipantProfile = onCall(async (request) => {
   const { data } = request;
   const privateId = data.participantId;
@@ -171,12 +170,73 @@ export const updateParticipantProfile = onCall(async (request) => {
 });
 
 // ************************************************************************* //
+// updateParticipantToNextStage endpoint for participants                    //
+//                                                                           //
+// Input structure: { experimentId, participantId }                          //
+// Validation: utils/src/participant.validation.ts                           //
+// ************************************************************************* //
+export const updateParticipantToNextStage = onCall(async (request) => {
+  const { data } = request;
+  const privateId = data.participantId;
+
+  // Define document references
+  const experimentDoc = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId);
+
+  const participantDoc = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('participants')
+    .doc(privateId);
+
+  // Function to find next stage ID given experiment list of stage IDs
+  const getNextStageId = (stageId: string, stageIds: string[]) => {
+    const currentIndex = stageIds.indexOf(stageId);
+    if (currentIndex >= 0 && currentIndex < stageIds.length - 1) {
+      return stageIds[currentIndex + 1];
+    }
+    return null;
+  };
+
+  let response = { currentStageId: null, endExperiment: false };
+
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    const experiment = (await experimentDoc.get()).data() as Experiment;
+    const participant = (await participantDoc.get()).data() as ParticipantProfileExtended;
+    const currentStageId = participant.currentStageId;
+    const currentStageIndex = experiment.stageIds.indexOf(currentStageId);
+
+    // Mark current stage as completed
+    const timestamp = Timestamp.now();
+    participant.timestamps.completedStages[currentStageId] = timestamp;
+
+    // If at end of experiment
+    if (currentStageIndex + 1 === experiment.stageIds.length) {
+      // Update end of experiment fields
+      participant.timestamps.endExperiment = timestamp;
+      participant.currentStatus = ParticipantStatus.SUCCESS;
+      response.endExperiment = true;
+    } else {
+      // Else, progress to next stage
+      const nextStageId = experiment.stageIds[currentStageIndex + 1];
+      participant.currentStageId = nextStageId;
+      response.currentStageId = nextStageId;
+    }
+
+    transaction.set(participantDoc, participant);
+  });
+
+  return response;
+});
+
+// ************************************************************************* //
 // updateParticipant endpoint for experimenters                              //
 //                                                                           //
 // Input structure: { experimentId, isTransfer, participantConfig }          //
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
-
 export const updateParticipant = onCall(async (request) => {
   // TODO: Only allow experimenters to update full profiles
   // and use separate updateParticipantProfile (with base profile only)

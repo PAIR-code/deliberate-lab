@@ -7,6 +7,8 @@ import {
   ExperimentCreationData,
   ExperimentDeletionData,
   ExperimentDownloadResponse,
+  ParticipantNextStageResponse,
+  ParticipantProfile,
   ParticipantProfileExtendedData,
   SendChipOfferData,
   SendChipResponseData,
@@ -18,6 +20,7 @@ import {
   UpdateCohortMetadataData,
   UpdateParticipantAcceptedTOSData,
   UpdateParticipantProfileData,
+  UpdateParticipantToNextStageData,
   UpdateRankingStageParticipantAnswerData,
   UpdateSurveyPerParticipantStageParticipantAnswerData,
   UpdateSurveyStageParticipantAnswerData
@@ -78,6 +81,12 @@ export const updateParticipantAcceptedTOSCallable = async(functions: Functions, 
 /** Generic endpoint to update participant base profile (name, avatar, pronouns). */
 export const updateParticipantProfileCallable = async(functions: Functions, config: UpdateParticipantProfileData) => {
   const { data } = await httpsCallable<UpdateParticipantProfileData, SuccessResponse>(functions, 'updateParticipantProfile')(config);
+  return data;
+}
+
+/** Generic endpoint to progress participant to next stage */
+export const updateParticipantToNextStageCallable = async(functions: Functions, config: UpdateParticipantToNextStageData) => {
+  const { data } = await httpsCallable<UpdateParticipantToNextStageData, ParticipantNextStageResponse>(functions, 'updateParticipantToNextStage')(config);
   return data;
 }
 

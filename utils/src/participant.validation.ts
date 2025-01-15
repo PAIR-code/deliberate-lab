@@ -49,6 +49,19 @@ const UpdateParticipantAcceptedTOSData = Type.Object(
 export type UpdateParticipantAcceptedTOSData = Static<typeof UpdateParticipantAcceptedTOSData>;
 
 // ************************************************************************* //
+// updateParticipantToNextStage endpoint for participants                    //
+// ************************************************************************* //
+const UpdateParticipantToNextStageData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    participantId: Type.String({ minLength: 1 }),
+  },
+  strict,
+);
+
+export type UpdateParticipantToNextStageData = Static<typeof UpdateParticipantToNextStageData>;
+
+// ************************************************************************* //
 // createParticipant endpoint for participants and experimenters             //
 // ************************************************************************* //
 export const CreateParticipantData = Type.Object(
