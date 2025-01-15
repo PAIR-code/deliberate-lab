@@ -14,17 +14,9 @@ import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
 
-import {
-  CohortConfig,
-  StageKind
-} from '@deliberation-lab/utils';
-import {
-  getCohortDescription,
-  getCohortName
-} from '../../shared/cohort.utils';
-import {
-  isObsoleteParticipant
-} from '../../shared/participant.utils';
+import {CohortConfig, StageKind} from '@deliberation-lab/utils';
+import {getCohortDescription, getCohortName} from '../../shared/cohort.utils';
+import {isObsoleteParticipant} from '../../shared/participant.utils';
 
 import {styles} from './experiment_manager.scss';
 
@@ -48,9 +40,7 @@ export class ExperimentManagerComponent extends MobxLitElement {
 
     return html`
       ${this.renderNav()}
-      <div class="experiment-manager">
-        ${this.renderManager()}
-      </div>
+      <div class="experiment-manager">${this.renderManager()}</div>
       ${this.renderCohortSettingsDialog()}
       ${this.renderExperimentSettingsDialog()}
     `;
@@ -60,9 +50,9 @@ export class ExperimentManagerComponent extends MobxLitElement {
     if (Object.keys(this.experimentService.stageConfigMap).length === 0) {
       return html`
         <div class="empty-nav">
-          ⚠️ WARNING: Your experiment has no stages.
-          Use the edit button in the top right to add stages
-          in order to unlock cohort and participant creation.
+          ⚠️ WARNING: Your experiment has no stages. Use the edit button in the
+          top right to add stages in order to unlock cohort and participant
+          creation.
         </div>
       `;
     }
@@ -74,9 +64,7 @@ export class ExperimentManagerComponent extends MobxLitElement {
       return nothing;
     }
 
-    return html`
-      <experiment-settings-dialog></experiment-settings-dialog>
-    `;
+    return html` <experiment-settings-dialog></experiment-settings-dialog> `;
   }
 
   private renderCohortSettingsDialog() {
@@ -84,15 +72,11 @@ export class ExperimentManagerComponent extends MobxLitElement {
       return nothing;
     }
 
-    return html`
-      <cohort-settings-dialog></cohort-settings-dialog>
-    `;
+    return html` <cohort-settings-dialog></cohort-settings-dialog> `;
   }
 
   private renderEditor() {
-    return html`
-      <experiment-builder></experiment-builder>
-    `;
+    return html` <experiment-builder></experiment-builder> `;
   }
 
   private renderManager() {
@@ -105,9 +89,7 @@ export class ExperimentManagerComponent extends MobxLitElement {
     }
 
     return html`
-      <div class="header">
-        ${this.renderHeader()}
-      </div>
+      <div class="header">${this.renderHeader()}</div>
       <div class="content">${this.renderContent()}</div>
     `;
   }
@@ -116,7 +98,9 @@ export class ExperimentManagerComponent extends MobxLitElement {
     return html`
       <div class="left">
         ${this.experimentManager.currentParticipant?.name ?? ''}
-        ${this.experimentManager.currentParticipant?.publicId ? `(${this.experimentManager.currentParticipant?.publicId})` : ''}
+        ${this.experimentManager.currentParticipant?.publicId
+          ? `(${this.experimentManager.currentParticipant?.publicId})`
+          : ''}
       </div>
       ${this.renderTransferMenu()}
     `;
@@ -132,16 +116,20 @@ export class ExperimentManagerComponent extends MobxLitElement {
     return html`
       <pr-menu name="Transfer">
         <div class="menu-wrapper">
-          ${this.experimentManager.availableCohorts.map(
-            cohort => this.renderTransferOption(cohort)
-          )}
+          ${this.experimentManager.availableCohorts
+            .filter(
+              (cohort) =>
+                !this.experimentService.experiment!.cohortLockMap[cohort.id]
+            )
+            .map((cohort) => this.renderTransferOption(cohort))}
         </div>
       </pr-menu>
     `;
   }
 
   private renderTransferOption(cohort: CohortConfig) {
-    const currentCohortId = this.experimentManager.currentParticipant?.currentCohortId;
+    const currentCohortId =
+      this.experimentManager.currentParticipant?.currentCohortId;
     // Don't allow transferring to the current cohort.
     if (cohort.id == currentCohortId) {
       return;
@@ -156,19 +144,17 @@ export class ExperimentManagerComponent extends MobxLitElement {
       this.experimentManager.initiateParticipantTransfer(
         this.experimentManager.currentParticipant.privateId,
         cohort.id
-      )
-    }
+      );
+    };
 
     return html`
       <div class="menu-item" role="button" @click=${initiateTransfer}>
         <div>${getCohortName(cohort)}</div>
-        <div class="subtitle">
-          ${getCohortDescription(cohort)}
-        </div>
+        <div class="subtitle">${getCohortDescription(cohort)}</div>
         <div class="subtitle">
           ${this.experimentManager.getCohortParticipants(
             cohort.id,
-            cohort.participantConfig.includeAllParticipantsInCohortCount,
+            cohort.participantConfig.includeAllParticipantsInCohortCount
           ).length}
           participants
         </div>
@@ -178,9 +164,7 @@ export class ExperimentManagerComponent extends MobxLitElement {
 
   private renderContent() {
     return html`
-      <participant-stats
-        .profile=${this.experimentManager.currentParticipant}
-      >
+      <participant-stats .profile=${this.experimentManager.currentParticipant}>
       </participant-stats>
       <code>
         ${JSON.stringify(this.experimentManager.currentParticipant)}

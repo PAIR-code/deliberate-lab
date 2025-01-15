@@ -178,7 +178,7 @@ export class CohortSummary extends MobxLitElement {
       await this.experimentManager.setCohortLock(this.cohort.id, !isLocked);
     };
 
-    const text = `Click to ${isLocked ? 'unlock' : 'lock'} this cohort`;
+    const text = `${isLocked ? 'Unlock' : 'Lock'} this cohort to ${isLocked ? 'enable' : 'disable'} participants joining`;
     return html`
       <pr-tooltip text=${text} position="BOTTOM_END">
         <pr-icon-button
