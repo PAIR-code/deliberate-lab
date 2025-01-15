@@ -13,8 +13,8 @@ import { app } from './app';
 export const setParticipantStageData = onDocumentCreated(
   { document: 'experiments/{experimentId}/participants/{participantId}' },
   async (event) => {
-    const participantDoc = app.
-      firestore()
+    const participantDoc = app
+      .firestore()
       .doc(`experiments/${event.params.experimentId}/participants/${event.params.participantId}`);
 
     await app.firestore().runTransaction(async (transaction) => {
@@ -23,13 +23,17 @@ export const setParticipantStageData = onDocumentCreated(
 
       // Get all stage configs
       const stageConfigs = (
-        await app
-          .firestore()
-          .collection(
-            `experiments/${event.params.experimentId}/stages`,
-          )
-          .get()
+        await app.firestore().collection(`experiments/${event.params.experimentId}/stages`).get()
       ).docs.map((doc) => doc.data() as StageConfig);
+
+      const getRandomChipValue = (chip) => {
+        const step = 0.1;
+        const lower = Math.round(chip.lowerValue / step);
+        const upper = Math.round(chip.upperValue / step);
+        const randomStep = Math.floor(Math.random() * (upper - lower + 1)) + lower;
+
+        return parseFloat((randomStep * step).toFixed(2));
+      };
 
       for (const stage of stageConfigs) {
         // Define doc reference for stage
@@ -50,23 +54,16 @@ export const setParticipantStageData = onDocumentCreated(
             const chipValueMap = {};
             stage.chips.forEach((chip) => {
               chipMap[chip.id] = chip.startingQuantity;
-              chipValueMap[chip.id] =
-                Math.floor(
-                  Math.random() * (chip.upperValue - chip.lowerValue) * 100
-                  + chip.lowerValue * 100
-                ) / 100;
+              chipValueMap[chip.id] = getRandomChipValue(chip);
             });
 
-            const chipAnswer = createChipStageParticipantAnswer(
-              stage.id,
-              chipMap,
-              chipValueMap
-            );
+            const chipAnswer = createChipStageParticipantAnswer(stage.id, chipMap, chipValueMap);
 
             transaction.set(stageDoc, chipAnswer);
 
             // Set public stage data
-            const publicChipDoc = app.firestore()
+            const publicChipDoc = app
+              .firestore()
               .collection('experiments')
               .doc(event.params.experimentId)
               .collection('cohorts')
@@ -82,9 +79,9 @@ export const setParticipantStageData = onDocumentCreated(
             transaction.set(publicChipDoc, publicChipData);
             break;
           default:
-            break;          
+            break;
         }
       } // end stage config logic
     }); // end transaction
-  }
-)
+  },
+);

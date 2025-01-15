@@ -57,9 +57,7 @@ export class ChipReveal extends MobxLitElement {
           : []
         : this.cohortService.getAllParticipants();
 
-    return html`
-      ${renderTitle()} ${this.renderGlobalTable(participants)}
-    `;
+    return html` ${renderTitle()} ${this.renderGlobalTable(participants)} `;
   }
 
   private makeCell(content: string) {
@@ -96,7 +94,10 @@ export class ChipReveal extends MobxLitElement {
           ${chipValues.map(
             (chip) =>
               html`<div class="table-cell">
-                ${chip.chip.avatar} ${chip.chip.name}<br />($${chip.value} for
+                ${chip.chip.avatar} ${chip.chip.name}<br />($${chip.value.toFixed(
+                  2
+                )}
+                for
                 ${chip.chip.upperValue === chip.chip.lowerValue
                   ? 'all'
                   : 'you'})
@@ -131,7 +132,11 @@ export class ChipReveal extends MobxLitElement {
       <span class="indicator ${isCurrentTurn(participant) ? '' : 'hidden'}">
         👉
       </span>
-      ${getParticipantInlineDisplay(participant, isCurrentUser, this.stage?.id ?? '')}
+      ${getParticipantInlineDisplay(
+        participant,
+        isCurrentUser,
+        this.stage?.id ?? ''
+      )}
     `;
 
     return html`
@@ -199,9 +204,7 @@ export class ChipReveal extends MobxLitElement {
           <div class="table-row">
             ${this.makeCell('Current chip value')}
             ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
-            <div class="table-cell">
-              $${totalPayout!.toFixed(2)}
-            </div>
+            <div class="table-cell">$${totalPayout!.toFixed(2)}</div>
           </div>
 
           <div class="table-row">

@@ -92,7 +92,7 @@ const CHIP_TOS_STAGE = createTOSStage({
   game: StageGame.CHP,
   name: 'Terms of service',
   tosLines: [
-    'Thank you for your interest in this research. If you choose to participate, you will be asked to play negotiation games with other participants. In total, this will take no more than 60 minutes.',
+    'Thank you for your interest in this research. If you choose to participate, you will be asked to play negotiation games with other participants. In total, this will take no more about 45 minutes.',
     '\n**Compensation**',
     'You will be paid $8 for playing the games and completing the survey. You may receive an additional bonus on your performance in the games.',
     '\n**IRB**',
@@ -213,7 +213,7 @@ export const CHIP_COMPREHENSION_CHECK = createComprehensionStage({
     createMultipleChoiceComprehensionQuestion(
       {
         questionTitle:
-          'True or false: you and the other players value 🟢 green chips at the same amount, $0.50 per chip.',
+          'True or false: you and the other players will always value 🟢 green chips at the same amount, $0.50 per chip.',
         options: [
           createMultipleChoiceItem({id: 'a', text: 'True'}),
           createMultipleChoiceItem({id: 'b', text: 'False'}),
@@ -225,7 +225,7 @@ export const CHIP_COMPREHENSION_CHECK = createComprehensionStage({
     createMultipleChoiceComprehensionQuestion(
       {
         questionTitle:
-          'True or false: you and the other players value 🔵 blue chips at the same amount, $0.50 per chip.',
+          'True or false: you and the other players will always value 🔵 blue chips at the same amount, $0.50 per chip.',
         options: [
           createMultipleChoiceItem({id: 'a', text: 'True'}),
           createMultipleChoiceItem({id: 'b', text: 'False'}),
@@ -420,7 +420,7 @@ const CHIP_INFO_STAGE_PAYOUT2 = createInfoStage({
     '  * 🔵 21 blue chips valued at $0.70 each',
     'This adds up to **$20.60**. You would receive $20.60 - $15.00 = **$5.60** as a bonus for the first game.',
     'If you did not increase the value of your chips, you would not receive a bonus.',
-    "\nYour total bonus will be randomly selected from either the first or the second game",
+    "\n**Your total bonus will be randomly selected from either the first or the second game.**",
     '\nThe exact values will depend on your random chip valuations and your final holdings, so your payment may differ from this example.',
     '\nThis payment is in addition to the $8 base payment for participating.',
   ],
@@ -433,8 +433,8 @@ const CHIP_INFO_PART2 = createInfoStage({
   infoLines: [
     '# Congratulations!',
     'You’ve successfully completed your first game! Now, it’s time to play again with all the **same rules**. However, for this second round, please note the following changes:',
-    '* **New players**: You may be playing with different players.',
-    '* **New chip values:** You will receive a different valuation for your chips this time, with the **exception of the Green chip**, which remains the same for everyone.',
+    '* **New profile:** You will be playing as a new profile, and you will be playing against different animal profiles.',
+    '* **New chip values:** You will receive a different valuation for your red and blue chips. The value of the 🟢 green chip will remain the same for everyone ($0.50).',
     'All players participating in this round are also playing for their second time. **Enjoy the game!**',
   ],
 });
@@ -551,7 +551,7 @@ const CHIP_SURVEY_STAGE = createSurveyStage({
     }),
     createScaleSurveyQuestion({
       questionTitle:
-        "On a scale from 1 to 10, how would you rate your trading strategy, where 1 is highly **competive** (focused mainly on your own gains) and 10 is highly **collaborative** (focused on other players's potential gains and mutual benefits?",
+        "On a scale from 1 to 10, how would you rate your trading strategy, where 1 is highly **competitive** (focused mainly on your own gains) and 10 is highly **collaborative** (focused on other players's potential gains and mutual benefits?",
       upperText: 'Very aggressive',
       lowerText: 'Not at all aggressive',
     }),
