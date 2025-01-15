@@ -15,6 +15,7 @@ import {
   SuccessResponse,
   UpdateChatAgentsData,
   UpdateChatStageParticipantAnswerData,
+  UpdateCohortMetadataData,
   UpdateRankingStageParticipantAnswerData,
   UpdateSurveyPerParticipantStageParticipantAnswerData,
   UpdateSurveyStageParticipantAnswerData
@@ -43,8 +44,8 @@ export const createCohortCallable = async (functions: Functions, cohort: CohortC
 }
 
 /** Generic endpoint to update existing cohorts */
-export const updateCohortCallable = async (functions: Functions, cohort: CohortCreationData) => {
-  const { data } = await httpsCallable<CohortCreationData, CreationResponse>(functions, 'updateCohort')(cohort);
+export const updateCohortMetadataCallable = async (functions: Functions, cohort: UpdateCohortMetadataData) => {
+  const { data } = await httpsCallable<UpdateCohortMetadataData, SuccessResponse>(functions, 'updateCohortMetadata')(cohort);
   return data;
 }
 

@@ -20,10 +20,12 @@ import {Service} from './service';
 
 import {
   CohortConfig,
+  CohortParticipantConfig,
   CreateChatMessageData,
   Experiment,
   ExperimentDownload,
   HumanMediatorChatMessage,
+  MetadataConfig,
   ParticipantProfileExtended,
   ParticipantStatus,
   StageConfig,
@@ -38,7 +40,7 @@ import {
   updateParticipantCallable,
   createCohortCallable,
   deleteCohortCallable,
-  updateCohortCallable,
+  updateCohortMetadataCallable,
   writeExperimentCallable
 } from '../shared/callables';
 import {
@@ -407,25 +409,26 @@ export class ExperimentManager extends Service {
     return response;
   }
 
-  /** Update existing cohort
+  /** Update existing cohort metadata
    * @rights Experimenter
    */
-  async updateCohort(config: Partial<CohortConfig> = {}) {
+  async updateCohortMetadata(
+    cohortId: string,
+    metadata: MetadataConfig,
+    participantConfig: CohortParticipantConfig,
+  ) {
     if (!this.sp.experimentService.experiment) return;
 
     this.isWritingCohort = true;
-    const cohortConfig = createCohortConfig({
-      participantConfig: this.sp.experimentService.experiment.defaultCohortConfig,
-      ...config
-    });
-
     let response = {};
 
     if (this.experimentId) {
-      response = await updateCohortCallable(
+      response = await updateCohortMetadataCallable(
         this.sp.firebaseService.functions, {
           experimentId: this.experimentId,
-          cohortConfig,
+          cohortId,
+          metadata,
+          participantConfig
         }
       );
     }
