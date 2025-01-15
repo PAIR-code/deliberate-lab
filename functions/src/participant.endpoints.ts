@@ -270,6 +270,33 @@ function updateParticipantNextStage(
 }
 
 // ************************************************************************* //
+// acceptParticipantExperimentStart endpoint for participants                //
+//                                                                           //
+// Input structure: { experimentId, participantId }                          //
+// Validation: utils/src/participant.validation.ts                           //
+// ************************************************************************* //
+export const acceptParticipantExperimentStart = onCall(async (request) => {
+  const { data } = request;
+  const privateId = data.participantId;
+
+  // Define document reference
+  const document = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('participants')
+    .doc(privateId);
+
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    const participant = (await document.get()).data() as ParticipantProfileExtended;
+    participant.timestamps.startExperiment = Timestamp.now();
+    transaction.set(document, participant);
+  });
+
+  return { success: true };
+});
+
+// ************************************************************************* //
 // acceptParticipantTransfer endpoint for participants                       //
 //                                                                           //
 // Input structure: { experimentId, participantId }                          //

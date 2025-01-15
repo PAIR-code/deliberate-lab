@@ -123,6 +123,12 @@ export const acceptParticipantTransferCallable = async(functions: Functions, con
   return data;
 }
 
+/** Generic endpoint to start experiment for participants. */
+export const acceptParticipantExperimentStartCallable = async(functions: Functions, config: BaseParticipantData) => {
+  const { data } = await httpsCallable<BaseParticipantData, SuccessResponse>(functions, 'acceptParticipantExperimentStart')(config);
+  return data;
+}
+
 /** Generic endpoint to update chat stage participant answers */
 export const updateChatStageParticipantAnswerCallable = async(
   functions: Functions, config: UpdateChatStageParticipantAnswerData

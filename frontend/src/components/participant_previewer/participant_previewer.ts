@@ -116,12 +116,7 @@ export class ParticipantPreviewer extends MobxLitElement {
     if (!profile.timestamps.startExperiment) {
       const onStartExperiment = async () => {
         this.isStartExperimentLoading = true;
-        const startExperiment = Timestamp.now();
-        const timestamps = {
-          ...profile.timestamps,
-          startExperiment,
-        };
-        await this.participantService.updateProfile({timestamps});
+        await this.participantService.startExperiment();
         this.isStartExperimentLoading = false;
       };
 

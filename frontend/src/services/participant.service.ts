@@ -37,6 +37,7 @@ import {ParticipantAnswerService} from './participant.answer';
 import {Service} from './service';
 
 import {
+  acceptParticipantExperimentStartCallable,
   acceptParticipantTransferCallable,
   createChatMessageCallable,
   sendChipOfferCallable,
@@ -447,6 +448,18 @@ export class ParticipantService extends Service {
 
     return response;
   };
+
+  /** Start experiment. */
+  async startExperiment() {
+    if (!this.experimentId || !this.profile) return;
+    await acceptParticipantExperimentStartCallable(
+      this.sp.firebaseService.functions,
+      {
+        experimentId: this.experimentId,
+        participantId: this.profile.privateId
+      }
+    );
+  }
 
   /** Update participant profile */
   async updateProfile(
