@@ -178,30 +178,3 @@ export const AnonymousProfileSchema = Type.Object({
   repeat: Type.Number(),
   avatar: Type.String(),
 });
-
-export const ParticipantProfileExtendedData = Type.Object(
-  {
-    experimentId: Type.String(),
-    isTransfer: Type.Boolean(),
-    participantConfig: Type.Object(
-      {
-        pronouns: Type.Union([Type.Null(), Type.String()]),
-        name: Type.Union([Type.Null(), Type.String()]),
-        avatar: Type.Union([Type.Null(), Type.String()]),
-        privateId: Type.String(),
-        publicId: Type.String(),
-        prolificId: Type.Union([Type.Null(), Type.String()]),
-        currentStageId: Type.String(),
-        currentCohortId: Type.String(),
-        transferCohortId: Type.Union([Type.Null(), Type.String()]),
-        currentStatus: ParticipantStatusData,
-        timestamps: ProgressTimestampsSchema,
-        anonymousProfiles: Type.Record(Type.String(), AnonymousProfileSchema),
-      },
-      strict,
-    )
-  },
-  strict,
-);
-
-export type ParticipantProfileExtendedData = Static<typeof ParticipantProfileExtendedData>;
