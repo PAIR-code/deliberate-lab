@@ -17,18 +17,13 @@ class AttentionPopup extends MobxLitElement {
   private readonly analyticsService = core.getService(AnalyticsService);
   private readonly participantService = core.getService(ParticipantService);
 
-  private handleAttentionCheckResponse = async () => {
-    this.analyticsService.trackButtonClick(ButtonClick.ATTENTION_ACCEPT);
+  @state() isLoading = false;
 
-    // When resolving attention check, participant status
-    // changes to TRANSFER_PENDING if pending transfer, else IN_PROGRESS
-    await this.participantService.updateProfile({
-      currentStatus: (
-        this.participantService.isPendingTransfer ?
-        ParticipantStatus.TRANSFER_PENDING :
-        ParticipantStatus.IN_PROGRESS
-      )
-    });
+  private handleAttentionCheckResponse = async () => {
+    this.isLoading = true;
+    this.analyticsService.trackButtonClick(ButtonClick.ATTENTION_ACCEPT);
+    await this.participantService.resolveAttentionCheck();
+    this.isLoading = false;
   };
 
   render() {
@@ -43,6 +38,7 @@ class AttentionPopup extends MobxLitElement {
               <pr-button
                 color="primary"
                 variant="tonal"
+                ?disabled=${this.isLoading}
                 @click=${this.handleAttentionCheckResponse}
               >
                 Yes, continue experiment

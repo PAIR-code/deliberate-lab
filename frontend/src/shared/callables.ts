@@ -124,6 +124,12 @@ export const acceptParticipantTransferCallable = async(functions: Functions, con
 }
 
 /** Generic endpoint to start experiment for participants. */
+export const acceptParticipantCheckCallable = async(functions: Functions, config: BaseParticipantData) => {
+  const { data } = await httpsCallable<BaseParticipantData, SuccessResponse>(functions, 'acceptParticipantCheck')(config);
+  return data;
+}
+
+/** Generic endpoint to start experiment for participants. */
 export const acceptParticipantExperimentStartCallable = async(functions: Functions, config: BaseParticipantData) => {
   const { data } = await httpsCallable<BaseParticipantData, SuccessResponse>(functions, 'acceptParticipantExperimentStart')(config);
   return data;

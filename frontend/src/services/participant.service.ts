@@ -37,6 +37,7 @@ import {ParticipantAnswerService} from './participant.answer';
 import {Service} from './service';
 
 import {
+  acceptParticipantCheckCallable,
   acceptParticipantExperimentStartCallable,
   acceptParticipantTransferCallable,
   createChatMessageCallable,
@@ -453,6 +454,18 @@ export class ParticipantService extends Service {
   async startExperiment() {
     if (!this.experimentId || !this.profile) return;
     await acceptParticipantExperimentStartCallable(
+      this.sp.firebaseService.functions,
+      {
+        experimentId: this.experimentId,
+        participantId: this.profile.privateId
+      }
+    );
+  }
+
+  /** Accept attention check. */
+  async resolveAttentionCheck() {
+    if (!this.experimentId || !this.profile) return;
+    await acceptParticipantCheckCallable(
       this.sp.firebaseService.functions,
       {
         experimentId: this.experimentId,
