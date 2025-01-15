@@ -32,6 +32,22 @@ export const CohortCreationData = Type.Object(
 export type CohortCreationData = Static<typeof CohortCreationData>;
 
 // ************************************************************************* //
+// updateCohortMetadata endpoint                                             //
+// ************************************************************************* //
+
+export const UpdateCohortMetadataData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    cohortId: Type.String({ minLength: 1 }),
+    metadata: MetadataConfigSchema,
+    participantConfig: CohortParticipantConfigSchema,
+  },
+  strict,
+);
+
+export type UpdateCohortMetadataData = Static<typeof UpdateCohortMetadataData>;
+
+// ************************************************************************* //
 // deleteCohort endpoint                                                     //
 // ************************************************************************* //
 

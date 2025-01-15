@@ -1,4 +1,3 @@
-
 import { Type, type Static } from '@sinclair/typebox';
 import { ParticipantStatus } from './participant';
 import { UnifiedTimestampSchema } from './shared.validation';
@@ -21,6 +20,107 @@ export const ParticipantProfileBaseData = Type.Object(
 );
 
 export type ParticipantProfileBaseData = Static<typeof ParticipantProfileBaseData>;
+
+export const UpdateParticipantProfileData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    participantId: Type.String({ minLength: 1 }),
+    participantProfileBase: ParticipantProfileBaseData,
+  },
+  strict
+);
+
+export type UpdateParticipantProfileData = Static<typeof UpdateParticipantProfileData>;
+
+// ************************************************************************* //
+// updateParticipantAcceptedTOS endpoint for participants                    //
+// ************************************************************************* //
+const UpdateParticipantAcceptedTOSData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    participantId: Type.String({ minLength: 1 }),
+    acceptedTOS: Type.Union([Type.Null(), UnifiedTimestampSchema]),
+  },
+  strict,
+);
+
+export type UpdateParticipantAcceptedTOSData = Static<typeof UpdateParticipantAcceptedTOSData>;
+
+// ************************************************************************* //
+// updateParticipantFailure endpoint for participants                        //
+// ************************************************************************* //
+const UpdateParticipantFailureData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    participantId: Type.String({ minLength: 1 }),
+    status: Type.Union([
+      Type.Literal(ParticipantStatus.TRANSFER_DECLINED),
+      Type.Literal(ParticipantStatus.TRANSFER_TIMEOUT)
+    ])
+  },
+  strict,
+);
+
+export type UpdateParticipantFailureData = Static<typeof UpdateParticipantFailureData>;
+
+// ************************************************************************* //
+// updateParticipantWaiting endpoint for participants                        //
+// ************************************************************************* //
+const UpdateParticipantWaitingData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    participantId: Type.String({ minLength: 1 }),
+    stageId: Type.String({ minLength: 1 })
+  },
+  strict,
+);
+
+export type UpdateParticipantWaitingData = Static<typeof UpdateParticipantWaitingData>;
+
+// ************************************************************************* //
+// updateParticipantToNextStage, acceptParticipantTransfer, etc. endpoints   //
+// (anything where just the participant document path is needed)             //
+// ************************************************************************* //
+const BaseParticipantData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    participantId: Type.String({ minLength: 1 }),
+  },
+  strict,
+);
+
+export type BaseParticipantData = Static<typeof BaseParticipantData>;
+
+// ************************************************************************* //
+// initiateParticipantTransfer endpoint for experimenters                    //
+// ************************************************************************* //
+const InitiateParticipantTransferData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    cohortId: Type.String({ minLength: 1 }),
+    participantId: Type.String({ minLength: 1 }),
+  },
+  strict,
+);
+
+export type InitiateParticipantTransferData = Static<typeof InitiateParticipantTransferData>;
+
+// ************************************************************************* //
+// sendParticipantCheck endpoint for experimenters                           //
+// ************************************************************************* //
+const SendParticipantCheckData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    participantId: Type.String({ minLength: 1 }),
+    status: Type.Union([
+      Type.Literal(ParticipantStatus.ATTENTION_CHECK),
+    ]),
+    customMessage: Type.String()
+  },
+  strict,
+);
+
+export type SendParticipantCheckData = Static<typeof SendParticipantCheckData>;
 
 // ************************************************************************* //
 // createParticipant endpoint for participants and experimenters             //
@@ -78,30 +178,3 @@ export const AnonymousProfileSchema = Type.Object({
   repeat: Type.Number(),
   avatar: Type.String(),
 });
-
-export const ParticipantProfileExtendedData = Type.Object(
-  {
-    experimentId: Type.String(),
-    isTransfer: Type.Boolean(),
-    participantConfig: Type.Object(
-      {
-        pronouns: Type.Union([Type.Null(), Type.String()]),
-        name: Type.Union([Type.Null(), Type.String()]),
-        avatar: Type.Union([Type.Null(), Type.String()]),
-        privateId: Type.String(),
-        publicId: Type.String(),
-        prolificId: Type.Union([Type.Null(), Type.String()]),
-        currentStageId: Type.String(),
-        currentCohortId: Type.String(),
-        transferCohortId: Type.Union([Type.Null(), Type.String()]),
-        currentStatus: ParticipantStatusData,
-        timestamps: ProgressTimestampsSchema,
-        anonymousProfiles: Type.Record(Type.String(), AnonymousProfileSchema),
-      },
-      strict,
-    )
-  },
-  strict,
-);
-
-export type ParticipantProfileExtendedData = Static<typeof ParticipantProfileExtendedData>;

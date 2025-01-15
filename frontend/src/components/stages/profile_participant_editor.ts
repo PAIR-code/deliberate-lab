@@ -42,12 +42,21 @@ export class ProfileEditor extends MobxLitElement {
 
     const filled = this.participantAnswerService.isProfileCompleted;
 
+    const updateProfile = async () => {
+      const profile = this.participantAnswerService.profile;
+      if (profile) {
+        this.participantService.updateParticipantProfile(profile);
+      }
+    };
+
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="profile-wrapper">
         ${this.renderName()} ${this.renderPronouns()} ${this.renderAvatars()}
       </div>
-      <stage-footer .disabled=${!filled}>
+      <stage-footer
+        .disabled=${!filled}
+        .onNextClick=${updateProfile}>
         ${this.stage.progress.showParticipantProgress ?
           html`<progress-stage-completed></progress-stage-completed>`
           : nothing}

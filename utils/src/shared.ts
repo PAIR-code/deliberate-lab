@@ -21,6 +21,11 @@ export interface CreationResponse {
   id: string;
 }
 
+export interface ParticipantNextStageResponse {
+  currentStageId: string|null;
+  endExperiment: boolean;
+}
+
 export interface ExperimentDownloadResponse {
   data: ExperimentDownload | null;
 }

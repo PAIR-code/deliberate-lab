@@ -154,7 +154,7 @@ export class ExperimentManagerComponent extends MobxLitElement {
 
       this.analyticsService.trackButtonClick(ButtonClick.TRANSFER_INITIATE);
       this.experimentManager.initiateParticipantTransfer(
-        this.experimentManager.currentParticipant,
+        this.experimentManager.currentParticipant.privateId,
         cohort.id
       )
     }

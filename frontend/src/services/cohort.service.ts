@@ -31,9 +31,6 @@ import {
   UnifiedTimestamp
 } from '@deliberation-lab/utils';
 import {
-  updateCohortCallable,
-} from '../shared/callables';
-import {
   isActiveParticipant,
   isObsoleteParticipant,
   isUnlockedStage

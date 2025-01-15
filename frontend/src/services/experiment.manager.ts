@@ -20,10 +20,12 @@ import {Service} from './service';
 
 import {
   CohortConfig,
+  CohortParticipantConfig,
   CreateChatMessageData,
   Experiment,
   ExperimentDownload,
   HumanMediatorChatMessage,
+  MetadataConfig,
   ParticipantProfileExtended,
   ParticipantStatus,
   StageConfig,
@@ -32,13 +34,15 @@ import {
   generateId,
 } from '@deliberation-lab/utils';
 import {
+  bootParticipantCallable,
   createChatMessageCallable,
-  createParticipantCallable,
-  deleteExperimentCallable,
-  updateParticipantCallable,
   createCohortCallable,
+  createParticipantCallable,
   deleteCohortCallable,
-  updateCohortCallable,
+  deleteExperimentCallable,
+  initiateParticipantTransferCallable,
+  sendParticipantCheckCallable,
+  updateCohortMetadataCallable,
   writeExperimentCallable
 } from '../shared/callables';
 import {
@@ -407,25 +411,26 @@ export class ExperimentManager extends Service {
     return response;
   }
 
-  /** Update existing cohort
+  /** Update existing cohort metadata
    * @rights Experimenter
    */
-  async updateCohort(config: Partial<CohortConfig> = {}) {
+  async updateCohortMetadata(
+    cohortId: string,
+    metadata: MetadataConfig,
+    participantConfig: CohortParticipantConfig,
+  ) {
     if (!this.sp.experimentService.experiment) return;
 
     this.isWritingCohort = true;
-    const cohortConfig = createCohortConfig({
-      participantConfig: this.sp.experimentService.experiment.defaultCohortConfig,
-      ...config
-    });
-
     let response = {};
 
     if (this.experimentId) {
-      response = await updateCohortCallable(
+      response = await updateCohortMetadataCallable(
         this.sp.firebaseService.functions, {
           experimentId: this.experimentId,
-          cohortConfig,
+          cohortId,
+          metadata,
+          participantConfig
         }
       );
     }
@@ -456,72 +461,56 @@ export class ExperimentManager extends Service {
     return response;
   }
 
-  /** Update a participant */
-  async updateParticipant(
-    participantConfig: ParticipantProfileExtended,
-    isTransfer = false
+  /** Send check to participant. */
+  async sendCheckToParticipant(
+    participantId: string,
+    status: ParticipantStatus.ATTENTION_CHECK, // TODO: Add other checks
+    customMessage = ''
   ) {
-    this.isWritingParticipant = true;
-    let response = {};
-
-    if (this.experimentId) {
-      response = await updateParticipantCallable(
-        this.sp.firebaseService.functions, {
-          experimentId: this.experimentId,
-          isTransfer,
-          participantConfig
-        }
-      );
+    if (!this.experimentId) {
+      return;
     }
-    this.isWritingParticipant = false;
-    return response;
-  }
 
-  /** Send attention check to participant. */
-  async sendAttentionCheckToParticipant(
-    participant: ParticipantProfileExtended,
-  ) {
-    this.updateParticipant({
-      ...participant,
-      currentStatus: ParticipantStatus.ATTENTION_CHECK
-    });
+    await sendParticipantCheckCallable(
+      this.sp.firebaseService.functions,
+      {
+        experimentId: this.experimentId,
+        participantId,
+        status,
+        customMessage
+      }
+    );
   }
 
   /** Boot participant from experiment. */
   async bootParticipant(
-    participant: ParticipantProfileExtended
+    participantId: string
   ) {
-    const timestamps = {
-      ...participant.timestamps,
-      endExperiment: Timestamp.now(),
-    };
-
-    const currentStatus = participant.currentStatus === ParticipantStatus.ATTENTION_CHECK ?
-      ParticipantStatus.ATTENTION_TIMEOUT : ParticipantStatus.BOOTED_OUT;
-
-    const config = {
-      ...participant,
-      currentStatus,
-      timestamps,
-    };
-
-    this.updateParticipant(config);
-
-    // TODO: Handle if they're on the chip stage.
+    if (!this.experimentId) return;
+    await bootParticipantCallable(
+      this.sp.firebaseService.functions,
+      {
+        experimentId: this.experimentId,
+        participantId
+      }
+    );
   }
 
   /** Initiate participant transfer. */
   async initiateParticipantTransfer(
-    participant: ParticipantProfileExtended,
-    transferCohortId: string
+    participantId: string,
+    cohortId: string
   ) {
-    this.updateParticipant(
-      {
-        ...participant,
-        transferCohortId,
-        currentStatus: ParticipantStatus.TRANSFER_PENDING,
-      }
-    );
+    if (this.experimentId) {
+      await initiateParticipantTransferCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId,
+          participantId
+        }
+      );
+    }
   }
 
   /** Download experiment. */

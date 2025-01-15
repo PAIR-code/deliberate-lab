@@ -65,8 +65,12 @@ export class CohortSettingsDialog extends MobxLitElement {
               this.analyticsService.trackButtonClick(
                 ButtonClick.COHORT_SAVE_EXISTING
               );
-              this.experimentManager.updateCohort(
-                this.experimentManager.cohortEditing
+              const cohort = this.experimentManager.cohortEditing;
+              if (!cohort) return;
+              this.experimentManager.updateCohortMetadata(
+                cohort.id,
+                cohort.metadata,
+                cohort.participantConfig
               );
               this.experimentManager.setCohortEditing(undefined);
             }}

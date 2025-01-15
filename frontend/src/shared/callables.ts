@@ -1,4 +1,5 @@
 import {
+  BaseParticipantData,
   CreateChatMessageData,
   CohortCreationData,
   CohortDeletionData,
@@ -7,14 +8,22 @@ import {
   ExperimentCreationData,
   ExperimentDeletionData,
   ExperimentDownloadResponse,
-  ParticipantProfileExtendedData,
+  InitiateParticipantTransferData,
+  ParticipantNextStageResponse,
+  ParticipantProfile,
   SendChipOfferData,
   SendChipResponseData,
+  SendParticipantCheckData,
   SetChipTurnData,
   SimpleResponse,
   SuccessResponse,
   UpdateChatAgentsData,
   UpdateChatStageParticipantAnswerData,
+  UpdateCohortMetadataData,
+  UpdateParticipantAcceptedTOSData,
+  UpdateParticipantFailureData,
+  UpdateParticipantProfileData,
+  UpdateParticipantWaitingData,
   UpdateRankingStageParticipantAnswerData,
   UpdateSurveyPerParticipantStageParticipantAnswerData,
   UpdateSurveyStageParticipantAnswerData
@@ -43,8 +52,8 @@ export const createCohortCallable = async (functions: Functions, cohort: CohortC
 }
 
 /** Generic endpoint to update existing cohorts */
-export const updateCohortCallable = async (functions: Functions, cohort: CohortCreationData) => {
-  const { data } = await httpsCallable<CohortCreationData, CreationResponse>(functions, 'updateCohort')(cohort);
+export const updateCohortMetadataCallable = async (functions: Functions, cohort: UpdateCohortMetadataData) => {
+  const { data } = await httpsCallable<UpdateCohortMetadataData, SuccessResponse>(functions, 'updateCohortMetadata')(cohort);
   return data;
 }
 
@@ -60,9 +69,69 @@ export const createParticipantCallable = async(functions: Functions, config: Cre
   return data;
 }
 
-/** Generic endpoint to update participant profiles */
-export const updateParticipantCallable = async(functions: Functions, config: ParticipantProfileExtendedData) => {
-  const { data } = await httpsCallable<ParticipantProfileExtendedData, CreationResponse>(functions, 'updateParticipant')(config);
+/** Generic endpoint to update participant's TOS response */
+export const updateParticipantAcceptedTOSCallable = async(functions: Functions, config: UpdateParticipantAcceptedTOSData) => {
+  const { data } = await httpsCallable<UpdateParticipantAcceptedTOSData, SuccessResponse>(functions, 'updateParticipantAcceptedTOS')(config);
+  return data;
+}
+
+/** Generic endpoint to update participant's waiting timestamp */
+export const updateParticipantWaitingCallable = async(functions: Functions, config: UpdateParticipantWaitingData) => {
+  const { data } = await httpsCallable<UpdateParticipantWaitingData, SuccessResponse>(functions, 'updateParticipantWaiting')(config);
+  return data;
+}
+
+/** Generic endpoint to update participant's failed status */
+export const updateParticipantFailureCallable = async(functions: Functions, config: UpdateParticipantFailureData) => {
+  const { data } = await httpsCallable<UpdateParticipantFailureData, SuccessResponse>(functions, 'updateParticipantFailure')(config);
+  return data;
+}
+
+/** Generic endpoint to update participant base profile (name, avatar, pronouns). */
+export const updateParticipantProfileCallable = async(functions: Functions, config: UpdateParticipantProfileData) => {
+  const { data } = await httpsCallable<UpdateParticipantProfileData, SuccessResponse>(functions, 'updateParticipantProfile')(config);
+  return data;
+}
+
+/** Generic endpoint to progress participant to next stage */
+export const updateParticipantToNextStageCallable = async(functions: Functions, config: BaseParticipantData) => {
+  const { data } = await httpsCallable<BaseParticipantData, ParticipantNextStageResponse>(functions, 'updateParticipantToNextStage')(config);
+  return data;
+}
+
+/** Generic endpoint to send participant checks. */
+export const sendParticipantCheckCallable = async(functions: Functions, config: SendParticipantCheckData) => {
+  const { data } = await httpsCallable<SendParticipantCheckData, SuccessResponse>(functions, 'sendParticipantCheck')(config);
+  return data;
+}
+
+/** Generic endpoint to initiate participant transfer. */
+export const initiateParticipantTransferCallable = async(functions: Functions, config: InitiateParticipantTransferData) => {
+  const { data } = await httpsCallable<InitiateParticipantTransferData, SuccessResponse>(functions, 'initiateParticipantTransfer')(config);
+  return data;
+}
+
+/** Generic endpoint to boot participant. */
+export const bootParticipantCallable = async(functions: Functions, config: BaseParticipantData) => {
+  const { data } = await httpsCallable<BaseParticipantData, SuccessResponse>(functions, 'bootParticipant')(config);
+  return data;
+}
+
+/** Generic endpoint to accept participant transfer. */
+export const acceptParticipantTransferCallable = async(functions: Functions, config: BaseParticipantData) => {
+  const { data } = await httpsCallable<BaseParticipantData, ParticipantNextStageResponse>(functions, 'acceptParticipantTransfer')(config);
+  return data;
+}
+
+/** Generic endpoint to start experiment for participants. */
+export const acceptParticipantCheckCallable = async(functions: Functions, config: BaseParticipantData) => {
+  const { data } = await httpsCallable<BaseParticipantData, SuccessResponse>(functions, 'acceptParticipantCheck')(config);
+  return data;
+}
+
+/** Generic endpoint to start experiment for participants. */
+export const acceptParticipantExperimentStartCallable = async(functions: Functions, config: BaseParticipantData) => {
+  const { data } = await httpsCallable<BaseParticipantData, SuccessResponse>(functions, 'acceptParticipantExperimentStart')(config);
   return data;
 }
 
