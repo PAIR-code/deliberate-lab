@@ -15,9 +15,7 @@ import {AuthService} from '../../services/auth.service';
 import {HomeService} from '../../services/home.service';
 import {Pages, RouterService} from '../../services/router.service';
 
-import {
-  StageConfig
-} from '@deliberation-lab/utils';
+import {StageConfig} from '@deliberation-lab/utils';
 import {ExperimentManager} from '../../services/experiment.manager';
 
 import {styles} from './experiment_manager_nav.scss';
@@ -33,21 +31,23 @@ export class ExperimentManagerNav extends MobxLitElement {
   override render() {
     return html`
       <div class="experiment-manager">
-        ${this.renderHeader()}
-        ${this.renderContent()}
+        ${this.renderHeader()} ${this.renderContent()}
       </div>
     `;
   }
 
   private renderHeader() {
+    const getCohortName = (length: number) => {
+      return `Cohort ${String(length).padStart(2, '0')}`;
+    };
+
     return html`
       <div class="header">
         <div class="left">
-          <div>
-            ${this.experimentManager.numCohorts} cohorts
-          </div>
+          <div>${this.experimentManager.numCohorts} cohorts</div>
           <small>
-            (${this.experimentManager.getNumExperimentParticipants(false)} participants)
+            (${this.experimentManager.getNumExperimentParticipants(false)}
+            participants)
           </small>
         </div>
         <div class="right">
@@ -58,7 +58,9 @@ export class ExperimentManagerNav extends MobxLitElement {
               ?loading=${this.experimentManager.isWritingCohort}
               @click=${() => {
                 this.analyticsService.trackButtonClick(ButtonClick.COHORT_ADD);
-                const name = `Cohort ${this.experimentManager.cohortList.length}`;
+                const name = getCohortName(
+                  this.experimentManager.cohortList.length
+                );
                 this.experimentManager.createCohort({}, name);
               }}
             >
@@ -73,8 +75,12 @@ export class ExperimentManagerNav extends MobxLitElement {
               @click=${() => {
                 const numCohorts = this.experimentManager.cohortList.length;
                 [...Array(5).keys()].forEach((key) => {
-                  this.analyticsService.trackButtonClick(ButtonClick.COHORT_ADD);
-                  const name = `Cohort ${numCohorts + key}`;
+                  this.analyticsService.trackButtonClick(
+                    ButtonClick.COHORT_ADD
+                  );
+                  const name = getCohortName(
+                    numCohorts + key
+                  );
                   this.experimentManager.createCohort({}, name);
                 });
               }}
@@ -90,8 +96,12 @@ export class ExperimentManagerNav extends MobxLitElement {
               @click=${() => {
                 const numCohorts = this.experimentManager.cohortList.length;
                 [...Array(10).keys()].forEach((key) => {
-                  this.analyticsService.trackButtonClick(ButtonClick.COHORT_ADD);
-                  const name = `Cohort ${numCohorts + key}`;
+                  this.analyticsService.trackButtonClick(
+                    ButtonClick.COHORT_ADD
+                  );
+                  const name = getCohortName(
+                    numCohorts + key
+                  );
                   this.experimentManager.createCohort({}, name);
                 });
               }}
@@ -109,12 +119,12 @@ export class ExperimentManagerNav extends MobxLitElement {
       return html`
         <div class="empty-message">
           <div>
-            To run your experiment, create a cohort and share
-            the link with participants.
+            To run your experiment, create a cohort and share the link with
+            participants.
           </div>
           <div>
-            Note that participants can only interact (group chats,
-            elections) with participants in the same cohort.
+            Note that participants can only interact (group chats, elections)
+            with participants in the same cohort.
           </div>
         </div>
       `;
@@ -122,10 +132,20 @@ export class ExperimentManagerNav extends MobxLitElement {
 
     return html`
       <div class="content">
-      ${this.experimentManager.cohortList
-        .slice()
-        .sort((a, b) => a.id.localeCompare(b.id))  // Sort cohorts by ID for stability.
-        .map(cohort => html`<cohort-summary .cohort=${cohort}></cohort-summary>`)}
+        ${this.experimentManager.cohortList
+          .slice()
+          .sort((a, b) => {
+            const nameComparison = a.metadata.name.localeCompare(
+              b.metadata.name
+            );
+            return nameComparison !== 0
+              ? nameComparison
+              : a.id.localeCompare(b.id);
+          })
+          .map(
+            (cohort) =>
+              html`<cohort-summary .cohort=${cohort}></cohort-summary>`
+          )}
       </div>
     `;
   }
