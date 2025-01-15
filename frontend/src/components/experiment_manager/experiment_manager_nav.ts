@@ -78,9 +78,7 @@ export class ExperimentManagerNav extends MobxLitElement {
                   this.analyticsService.trackButtonClick(
                     ButtonClick.COHORT_ADD
                   );
-                  const name = getCohortName(
-                    numCohorts + key
-                  );
+                  const name = getCohortName(numCohorts + key);
                   this.experimentManager.createCohort({}, name);
                 });
               }}
@@ -99,9 +97,7 @@ export class ExperimentManagerNav extends MobxLitElement {
                   this.analyticsService.trackButtonClick(
                     ButtonClick.COHORT_ADD
                   );
-                  const name = getCohortName(
-                    numCohorts + key
-                  );
+                  const name = getCohortName(numCohorts + key);
                   this.experimentManager.createCohort({}, name);
                 });
               }}
@@ -138,9 +134,13 @@ export class ExperimentManagerNav extends MobxLitElement {
             const nameComparison = a.metadata.name.localeCompare(
               b.metadata.name
             );
-            return nameComparison !== 0
-              ? nameComparison
-              : a.id.localeCompare(b.id);
+            if (
+              a.metadata.name.startsWith('Cohort') &&
+              b.metadata.name.startsWith('Cohort')
+            ) {
+              return nameComparison;
+            }
+            return a.id.localeCompare(b.id);
           })
           .map(
             (cohort) =>
