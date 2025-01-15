@@ -116,12 +116,9 @@ export class ExperimentManagerComponent extends MobxLitElement {
     return html`
       <pr-menu name="Transfer">
         <div class="menu-wrapper">
-          ${this.experimentManager.availableCohorts
-            .filter(
-              (cohort) =>
-                !this.experimentService.experiment!.cohortLockMap[cohort.id]
-            )
-            .map((cohort) => this.renderTransferOption(cohort))}
+          ${this.experimentManager.availableCohorts.map(
+            (cohort) => this.renderTransferOption(cohort)
+          )}
         </div>
       </pr-menu>
     `;
@@ -132,6 +129,13 @@ export class ExperimentManagerComponent extends MobxLitElement {
       this.experimentManager.currentParticipant?.currentCohortId;
     // Don't allow transferring to the current cohort.
     if (cohort.id == currentCohortId) {
+      return;
+    }
+    // Don't allow transferring to locked cohors
+    if (
+      this.experimentService.experiment &&
+      this.experimentService.experiment.cohortLockMap[cohort.id]
+    ) {
       return;
     }
 
