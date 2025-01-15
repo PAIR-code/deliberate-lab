@@ -44,6 +44,7 @@ import {
   setChipTurnCallable,
   updateParticipantCallable,
   updateParticipantAcceptedTOSCallable,
+  updateParticipantFailureCallable,
   updateParticipantProfileCallable,
   updateParticipantToNextStageCallable,
   updateChatStageParticipantAnswerCallable,
@@ -276,31 +277,25 @@ export class ParticipantService extends Service {
 
   /** End experiment due to failure. */
   async updateExperimentFailure(
-    currentStatus: ParticipantStatus,
+    status: ParticipantStatus.TRANSFER_DECLINED|ParticipantStatus.TRANSFER_TIMEOUT,
     navigateToFailurePage = false
   ) {
-    if (!this.profile) {
+    if (!this.experimentId || !this.profile) {
       return;
     }
 
-    // Update endExperiment timestamp and currentStatus
-    const endExperiment = Timestamp.now();
-    const timestamps = {
-      ...this.profile.timestamps,
-      endExperiment
-    };
-
-    await this.updateProfile(
+    await updateParticipantFailureCallable(
+      this.sp.firebaseService.functions,
       {
-        ...this.profile,
-        timestamps,
-        currentStatus,
+        experimentId: this.experimentId,
+        participantId: this.profile.privateId,
+        status,
       }
     );
 
     // Route to experiment landing (or redirect to Prolific)
     if (!navigateToFailurePage) return;
-    this.routeToEndExperiment(currentStatus);
+    this.routeToEndExperiment(status);
   }
 
   async routeToEndExperiment(currentStatus: ParticipantStatus) {

@@ -1,4 +1,3 @@
-
 import { Type, type Static } from '@sinclair/typebox';
 import { ParticipantStatus } from './participant';
 import { UnifiedTimestampSchema } from './shared.validation';
@@ -33,7 +32,6 @@ export const UpdateParticipantProfileData = Type.Object(
 
 export type UpdateParticipantProfileData = Static<typeof UpdateParticipantProfileData>;
 
-
 // ************************************************************************* //
 // updateParticipantAcceptedTOS endpoint for participants                    //
 // ************************************************************************* //
@@ -47,6 +45,23 @@ const UpdateParticipantAcceptedTOSData = Type.Object(
 );
 
 export type UpdateParticipantAcceptedTOSData = Static<typeof UpdateParticipantAcceptedTOSData>;
+
+// ************************************************************************* //
+// updateParticipantFailure endpoint for participants                        //
+// ************************************************************************* //
+const UpdateParticipantFailureData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    participantId: Type.String({ minLength: 1 }),
+    status: Type.Union([
+      Type.Literal(ParticipantStatus.TRANSFER_DECLINED),
+      Type.Literal(ParticipantStatus.TRANSFER_TIMEOUT)
+    ])
+  },
+  strict,
+);
+
+export type UpdateParticipantFailureData = Static<typeof UpdateParticipantFailureData>;
 
 // ************************************************************************* //
 // updateParticipantToNextStage, acceptParticipantTransfer, etc. endpoints   //

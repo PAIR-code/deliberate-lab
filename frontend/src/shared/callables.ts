@@ -21,6 +21,7 @@ import {
   UpdateChatStageParticipantAnswerData,
   UpdateCohortMetadataData,
   UpdateParticipantAcceptedTOSData,
+  UpdateParticipantFailureData,
   UpdateParticipantProfileData,
   UpdateRankingStageParticipantAnswerData,
   UpdateSurveyPerParticipantStageParticipantAnswerData,
@@ -76,6 +77,12 @@ export const updateParticipantCallable = async(functions: Functions, config: Par
 /** Generic endpoint to update participant's TOS response */
 export const updateParticipantAcceptedTOSCallable = async(functions: Functions, config: UpdateParticipantAcceptedTOSData) => {
   const { data } = await httpsCallable<UpdateParticipantAcceptedTOSData, SuccessResponse>(functions, 'updateParticipantAcceptedTOS')(config);
+  return data;
+}
+
+/** Generic endpoint to update participant's failed status */
+export const updateParticipantFailureCallable = async(functions: Functions, config: UpdateParticipantFailureData) => {
+  const { data } = await httpsCallable<UpdateParticipantFailureData, SuccessResponse>(functions, 'updateParticipantFailure')(config);
   return data;
 }
 
