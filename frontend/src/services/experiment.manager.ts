@@ -403,7 +403,7 @@ export class ExperimentManager extends Service {
   /** Create a new cohort
    * @rights Experimenter
    */
-  async createCohort(config: Partial<CohortConfig> = {}) {
+  async createCohort(config: Partial<CohortConfig> = {}, name = '') {
     if (!this.sp.experimentService.experiment) return;
 
     this.isWritingCohort = true;
@@ -411,6 +411,7 @@ export class ExperimentManager extends Service {
       participantConfig: this.sp.experimentService.experiment.defaultCohortConfig,
       ...config
     });
+    cohortConfig.metadata.name = name;
 
     let response = {};
 

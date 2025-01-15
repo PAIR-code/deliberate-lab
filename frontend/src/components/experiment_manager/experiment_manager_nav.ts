@@ -51,17 +51,54 @@ export class ExperimentManagerNav extends MobxLitElement {
           </small>
         </div>
         <div class="right">
-          <pr-button
-            color="secondary"
-            variant="tonal"
-            ?loading=${this.experimentManager.isWritingCohort}
-            @click=${() => {
-              this.analyticsService.trackButtonClick(ButtonClick.COHORT_ADD);
-              this.experimentManager.createCohort()
-            }}
-          >
-            Add cohort
-          </pr-button>
+          <pr-tooltip text="Add 1 cohort" position="BOTTOM_END">
+            <pr-button
+              color="secondary"
+              variant="tonal"
+              ?loading=${this.experimentManager.isWritingCohort}
+              @click=${() => {
+                this.analyticsService.trackButtonClick(ButtonClick.COHORT_ADD);
+                const name = `Cohort ${this.experimentManager.cohortList.length}`;
+                this.experimentManager.createCohort({}, name);
+              }}
+            >
+              Add cohort
+            </pr-button>
+          </pr-tooltip>
+          <pr-tooltip text="Add 5 cohorts" position="BOTTOM_END">
+            <pr-button
+              color="secondary"
+              variant="tonal"
+              ?loading=${this.experimentManager.isWritingCohort}
+              @click=${() => {
+                const numCohorts = this.experimentManager.cohortList.length;
+                [...Array(5).keys()].forEach((key) => {
+                  this.analyticsService.trackButtonClick(ButtonClick.COHORT_ADD);
+                  const name = `Cohort ${numCohorts + key}`;
+                  this.experimentManager.createCohort({}, name);
+                });
+              }}
+            >
+              +5
+            </pr-button>
+          </pr-tooltip>
+          <pr-tooltip text="Add 10 cohorts" position="BOTTOM_END">
+            <pr-button
+              color="secondary"
+              variant="tonal"
+              ?loading=${this.experimentManager.isWritingCohort}
+              @click=${() => {
+                const numCohorts = this.experimentManager.cohortList.length;
+                [...Array(10).keys()].forEach((key) => {
+                  this.analyticsService.trackButtonClick(ButtonClick.COHORT_ADD);
+                  const name = `Cohort ${numCohorts + key}`;
+                  this.experimentManager.createCohort({}, name);
+                });
+              }}
+            >
+              +10
+            </pr-button>
+          </pr-tooltip>
         </div>
       </div>
     `;
