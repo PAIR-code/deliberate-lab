@@ -49,9 +49,10 @@ const UpdateParticipantAcceptedTOSData = Type.Object(
 export type UpdateParticipantAcceptedTOSData = Static<typeof UpdateParticipantAcceptedTOSData>;
 
 // ************************************************************************* //
-// updateParticipantToNextStage endpoint for participants                    //
+// updateParticipantToNextStage, acceptParticipantTransfer, etc. endpoints   //
+// (anything where just the participant document path is needed)             //
 // ************************************************************************* //
-const UpdateParticipantToNextStageData = Type.Object(
+const BaseParticipantData = Type.Object(
   {
     experimentId: Type.String({ minLength: 1 }),
     participantId: Type.String({ minLength: 1 }),
@@ -59,7 +60,7 @@ const UpdateParticipantToNextStageData = Type.Object(
   strict,
 );
 
-export type UpdateParticipantToNextStageData = Static<typeof UpdateParticipantToNextStageData>;
+export type BaseParticipantData = Static<typeof BaseParticipantData>;
 
 // ************************************************************************* //
 // initiateParticipantTransfer endpoint for experimenters                    //

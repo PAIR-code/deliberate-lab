@@ -37,6 +37,7 @@ import {ParticipantAnswerService} from './participant.answer';
 import {Service} from './service';
 
 import {
+  acceptParticipantTransferCallable,
   createChatMessageCallable,
   sendChipOfferCallable,
   sendChipResponseCallable,
@@ -396,6 +397,33 @@ export class ParticipantService extends Service {
     return response;
   }
 
+  /** Accept participant transfer. */
+  async acceptParticipantTransfer() {
+    if (!this.experimentId || !this.profile) {
+      return;
+    }
+
+    const result = await acceptParticipantTransferCallable(
+      this.sp.firebaseService.functions, {
+        experimentId: this.experimentId,
+        participantId: this.profile.privateId
+      }
+    );
+
+    if (result.endExperiment) {
+      this.routeToEndExperiment(ParticipantStatus.SUCCESS);
+    } else if (result.currentStageId) {
+      // Route to next stage
+      this.sp.routerService.navigate(Pages.PARTICIPANT_STAGE, {
+        experiment: this.sp.routerService.activeRoute.params['experiment'],
+        participant: this.sp.routerService.activeRoute.params['participant'],
+        stage: result.currentStageId,
+      });
+    }
+
+    return result.currentStageId ?? '';
+  }
+
   /** Update participant base profile. */
   async updateParticipantProfile(
     baseProfile: ParticipantProfileBase,
@@ -447,55 +475,6 @@ export class ParticipantService extends Service {
       );
     }
     return response;
-  }
-
-  /** Accept participant transfer. */
-  async acceptParticipantTransfer() {
-    if (!this.profile || !this.profile.transferCohortId) {
-      return;
-    }
-
-    // Update transfer timestamp
-    const cohortTransfers = this.profile.timestamps.completedStages;
-    cohortTransfers[this.profile.currentCohortId] = Timestamp.now();
-
-    // If transfer stage, progress to next stage
-    const completedStages = this.profile.timestamps.completedStages;
-    let currentStageId = this.profile.currentStageId;
-
-    const stage = this.sp.experimentService.getStage(this.profile.currentStageId);
-    if (stage.kind === StageKind.TRANSFER) {
-      completedStages[this.profile.currentStageId] = Timestamp.now();
-      currentStageId = this.sp.experimentService.getNextStageId(
-        this.profile.currentStageId
-      ) ?? '';
-    }
-
-    const timestamps = {
-      ...this.profile.timestamps,
-      cohortTransfers,
-      completedStages,
-    };
-
-    const accepted = await this.updateProfile(
-      {
-        ...this.profile,
-        currentCohortId: this.profile.transferCohortId,
-        transferCohortId: null,
-        currentStageId,
-        currentStatus: ParticipantStatus.IN_PROGRESS,
-      },
-      true
-    );
-
-    // Once profile is updated, route the participant accordingly
-    // (to the current stage)
-    this.sp.routerService.navigate(Pages.PARTICIPANT, {
-      'experiment': this.experimentId!,
-      'participant': this.profile!.privateId,
-    });
-
-    return accepted;
   }
 
   /** Send chat message. */

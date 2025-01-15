@@ -205,27 +205,91 @@ export const updateParticipantToNextStage = onCall(async (request) => {
   await app.firestore().runTransaction(async (transaction) => {
     const experiment = (await experimentDoc.get()).data() as Experiment;
     const participant = (await participantDoc.get()).data() as ParticipantProfileExtended;
-    const currentStageId = participant.currentStageId;
-    const currentStageIndex = experiment.stageIds.indexOf(currentStageId);
 
-    // Mark current stage as completed
-    const timestamp = Timestamp.now();
-    participant.timestamps.completedStages[currentStageId] = timestamp;
+    response = updateParticipantNextStage(participant, experiment.stageIds);
+    transaction.set(participantDoc, participant);
+  });
 
-    // If at end of experiment
-    if (currentStageIndex + 1 === experiment.stageIds.length) {
-      // Update end of experiment fields
-      participant.timestamps.endExperiment = timestamp;
-      participant.currentStatus = ParticipantStatus.SUCCESS;
-      response.endExperiment = true;
-    } else {
-      // Else, progress to next stage
-      const nextStageId = experiment.stageIds[currentStageIndex + 1];
-      participant.currentStageId = nextStageId;
-      response.currentStageId = nextStageId;
+  return response;
+});
+
+function updateParticipantNextStage(
+  participant: ParticipantProfileExtended, stageIds: string[]
+) {
+  let response = { currentStageId: null, endExperiment: false };
+
+  const currentStageId = participant.currentStageId;
+  const currentStageIndex = stageIds.indexOf(currentStageId);
+
+  // Mark current stage as completed
+  const timestamp = Timestamp.now();
+  participant.timestamps.completedStages[currentStageId] = timestamp;
+
+  // If at end of experiment
+  if (currentStageIndex + 1 === stageIds.length) {
+    // Update end of experiment fields
+    participant.timestamps.endExperiment = timestamp;
+    participant.currentStatus = ParticipantStatus.SUCCESS;
+    response.endExperiment = true;
+  } else {
+    // Else, progress to next stage
+    const nextStageId = stageIds[currentStageIndex + 1];
+    participant.currentStageId = nextStageId;
+    response.currentStageId = nextStageId;
+  }
+
+  return response;
+}
+
+// ************************************************************************* //
+// acceptParticipantTransfer endpoint for participants                       //
+//                                                                           //
+// Input structure: { experimentId, participantId }                          //
+// Validation: utils/src/participant.validation.ts                           //
+// ************************************************************************* //
+export const acceptParticipantTransfer = onCall(async (request) => {
+  const { data } = request;
+  const privateId = data.participantId;
+
+  // Define document reference
+  const document = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('participants')
+    .doc(privateId);
+
+  const experimentDoc = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId);
+
+  let response = { currentStageId: null, endExperiment: false };
+
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    const participant = (await document.get()).data() as ParticipantProfileExtended;
+    if (!participant.transferCohortId) {
+      success = false;
+      return;
     }
 
-    transaction.set(participantDoc, participant);
+    // Update cohort ID
+    // TODO: Validate cohort ID?
+    const timestamp = Timestamp.now();
+    participant.timestamps.cohortTransfers[participant.currentCohortId] = timestamp;
+    participant.currentCohortId = participant.transferCohortId;
+    participant.transferCohortId = null;
+    participant.currentStatus = ParticipantStatus.IN_PROGRESS;
+
+    // If participant is currently on a transfer stage,
+    // proceed to the next stage
+    const currentStage = (await app.firestore().doc(`experiments/${data.experimentId}/stages/${participant.currentStageId}`).get()).data() as StageConfig;
+    if (currentStage.kind === StageKind.TRANSFER) {
+      const experiment = (await experimentDoc.get()).data() as Experiment;
+      response = updateParticipantNextStage(participant, experiment.stageIds);
+    }
+
+    // Set document
+    transaction.set(document, participant);
   });
 
   return response;
@@ -254,6 +318,7 @@ export const initiateParticipantTransfer = onCall(async (request) => {
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     const participant = (await document.get()).data() as ParticipantProfileExtended;
+    // TODO: Validate transfer cohort ID?
     participant.transferCohortId = data.cohortId;
     participant.currentStatus = ParticipantStatus.TRANSFER_PENDING;
     transaction.set(document, participant);

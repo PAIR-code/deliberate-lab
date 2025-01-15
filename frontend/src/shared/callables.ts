@@ -1,4 +1,5 @@
 import {
+  BaseParticipantData,
   CreateChatMessageData,
   CohortCreationData,
   CohortDeletionData,
@@ -21,7 +22,6 @@ import {
   UpdateCohortMetadataData,
   UpdateParticipantAcceptedTOSData,
   UpdateParticipantProfileData,
-  UpdateParticipantToNextStageData,
   UpdateRankingStageParticipantAnswerData,
   UpdateSurveyPerParticipantStageParticipantAnswerData,
   UpdateSurveyStageParticipantAnswerData
@@ -86,14 +86,20 @@ export const updateParticipantProfileCallable = async(functions: Functions, conf
 }
 
 /** Generic endpoint to progress participant to next stage */
-export const updateParticipantToNextStageCallable = async(functions: Functions, config: UpdateParticipantToNextStageData) => {
-  const { data } = await httpsCallable<UpdateParticipantToNextStageData, ParticipantNextStageResponse>(functions, 'updateParticipantToNextStage')(config);
+export const updateParticipantToNextStageCallable = async(functions: Functions, config: BaseParticipantData) => {
+  const { data } = await httpsCallable<BaseParticipantData, ParticipantNextStageResponse>(functions, 'updateParticipantToNextStage')(config);
   return data;
 }
 
 /** Generic endpoint to initiate participant transfer. */
 export const initiateParticipantTransferCallable = async(functions: Functions, config: InitiateParticipantTransferData) => {
   const { data } = await httpsCallable<InitiateParticipantTransferData, SuccessResponse>(functions, 'initiateParticipantTransfer')(config);
+  return data;
+}
+
+/** Generic endpoint to accept participant transfer. */
+export const acceptParticipantTransferCallable = async(functions: Functions, config: BaseParticipantData) => {
+  const { data } = await httpsCallable<BaseParticipantData, ParticipantNextStageResponse>(functions, 'acceptParticipantTransfer')(config);
   return data;
 }
 
