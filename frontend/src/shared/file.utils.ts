@@ -639,6 +639,8 @@ function runChipTransaction(
   removeChipMap: Record<string, number>
 ) {
   const newChipMap: Record<string, number> = {};
+  if (!currentChipMap) return {};
+
   Object.keys(currentChipMap).forEach((chipId) => {
     newChipMap[chipId] = currentChipMap[chipId];
   });
@@ -661,6 +663,8 @@ function getChipPayout(
   chipValueMap: Record<string, number>
 ): number {
   let payout = 0;
+  if (!currentChipMap) return 0;
+
   Object.keys(currentChipMap).forEach((chipId) => {
     const value = chipValueMap[chipId] ?? 0;
     payout += value * currentChipMap[chipId]
@@ -698,8 +702,8 @@ function getChipNegotiationTurnData(
   const senderData: ChipNegotiationSenderData = {
     participantId: senderId,
     chipValues: playerMetadata.participantChipValueMap[senderId],
-    chipsBeforeTurn: before[senderId],
-    chipsAfterTurn: after[senderId],
+    chipsBeforeTurn: before[senderId] ?? {},
+    chipsAfterTurn: after[senderId] ?? {},
     payoutBeforeTurn: getChipPayout(before[senderId], senderChipValueMap),
     payoutAfterTurn: getChipPayout(after[senderId], senderChipValueMap)
   };
@@ -719,8 +723,8 @@ function getChipNegotiationTurnData(
       offerResponse: offerResponse.response,
       offerResponseTimestamp: offerResponse.timestamp,
       chipValues: playerMetadata.participantChipValueMap[responderId],
-      chipsBeforeTurn: before[responderId],
-      chipsAfterTurn: after[responderId],
+      chipsBeforeTurn: before[responderId] ?? {},
+      chipsAfterTurn: after[responderId] ?? {},
       payoutBeforeTurn: getChipPayout(before[responderId], responderChipValueMap),
       payoutAfterTurn: getChipPayout(after[responderId], responderChipValueMap)
     };
