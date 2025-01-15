@@ -92,6 +92,23 @@ const InitiateParticipantTransferData = Type.Object(
 export type InitiateParticipantTransferData = Static<typeof InitiateParticipantTransferData>;
 
 // ************************************************************************* //
+// sendParticipantCheck endpoint for experimenters                           //
+// ************************************************************************* //
+const SendParticipantCheckData = Type.Object(
+  {
+    experimentId: Type.String({ minLength: 1 }),
+    participantId: Type.String({ minLength: 1 }),
+    status: Type.Union([
+      Type.Literal(ParticipantStatus.ATTENTION_CHECK),
+    ]),
+    customMessage: Type.String()
+  },
+  strict,
+);
+
+export type SendParticipantCheckData = Static<typeof SendParticipantCheckData>;
+
+// ************************************************************************* //
 // createParticipant endpoint for participants and experimenters             //
 // ************************************************************************* //
 export const CreateParticipantData = Type.Object(

@@ -324,6 +324,37 @@ export const acceptParticipantTransfer = onCall(async (request) => {
 });
 
 // ************************************************************************* //
+// sendParticipantCheck endpoint for experimenters                           //
+//                                                                           //
+// Input structure: { experimentId, participantId, status, customMessage }   //
+// Validation: utils/src/participant.validation.ts                           //
+// ************************************************************************* //
+export const sendParticipantCheck = onCall(async (request) => {
+  // TODO: Only allow creator, admins, and readers to manage transfers
+  await AuthGuard.isExperimenter(request);
+
+  const { data } = request;
+  const privateId = data.participantId;
+
+  // Define document reference
+  const document = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('participants')
+    .doc(privateId);
+
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    const participant = (await document.get()).data() as ParticipantProfileExtended;
+    participant.currentStatus = data.status;
+    // TODO: Set custom message once field is available
+    transaction.set(document, participant);
+  });
+
+  return { success: true };
+});
+
+// ************************************************************************* //
 // initiateParticipantTransfer endpoint for experimenters                    //
 //                                                                           //
 // Input structure: { experimentId, cohortId, participantId }                //

@@ -14,6 +14,7 @@ import {
   ParticipantProfileExtendedData,
   SendChipOfferData,
   SendChipResponseData,
+  SendParticipantCheckData,
   SetChipTurnData,
   SimpleResponse,
   SuccessResponse,
@@ -95,6 +96,12 @@ export const updateParticipantProfileCallable = async(functions: Functions, conf
 /** Generic endpoint to progress participant to next stage */
 export const updateParticipantToNextStageCallable = async(functions: Functions, config: BaseParticipantData) => {
   const { data } = await httpsCallable<BaseParticipantData, ParticipantNextStageResponse>(functions, 'updateParticipantToNextStage')(config);
+  return data;
+}
+
+/** Generic endpoint to send participant checks. */
+export const sendParticipantCheckCallable = async(functions: Functions, config: SendParticipantCheckData) => {
+  const { data } = await httpsCallable<SendParticipantCheckData, SuccessResponse>(functions, 'sendParticipantCheck')(config);
   return data;
 }
 

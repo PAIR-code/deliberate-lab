@@ -212,7 +212,10 @@ export class ParticipantSummary extends MobxLitElement {
       if (!isConfirmed) return;
 
       this.analyticsService.trackButtonClick(ButtonClick.ATTENTION_CHECK_SEND);
-      this.experimentManager.sendAttentionCheckToParticipant(this.participant);
+      this.experimentManager.sendCheckToParticipant(
+        this.participant.privateId,
+        ParticipantStatus.ATTENTION_CHECK
+      );
     };
 
     return html`

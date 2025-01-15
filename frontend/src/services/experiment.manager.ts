@@ -41,6 +41,7 @@ import {
   updateParticipantCallable,
   createCohortCallable,
   deleteCohortCallable,
+  sendParticipantCheckCallable,
   updateCohortMetadataCallable,
   writeExperimentCallable
 } from '../shared/callables';
@@ -481,14 +482,25 @@ export class ExperimentManager extends Service {
     return response;
   }
 
-  /** Send attention check to participant. */
-  async sendAttentionCheckToParticipant(
-    participant: ParticipantProfileExtended,
+  /** Send check to participant. */
+  async sendCheckToParticipant(
+    participantId: string,
+    status: ParticipantStatus.ATTENTION_CHECK, // TODO: Add other checks
+    customMessage = ''
   ) {
-    this.updateParticipant({
-      ...participant,
-      currentStatus: ParticipantStatus.ATTENTION_CHECK
-    });
+    if (!this.experimentId) {
+      return;
+    }
+
+    await sendParticipantCheckCallable(
+      this.sp.firebaseService.functions,
+      {
+        experimentId: this.experimentId,
+        participantId,
+        status,
+        customMessage
+      }
+    );
   }
 
   /** Boot participant from experiment. */
