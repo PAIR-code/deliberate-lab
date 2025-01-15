@@ -97,6 +97,7 @@ export class CohortSummary extends MobxLitElement {
         </div>
         <div class="right">
           ${this.renderAddParticipantButton()}
+          ${this.renderLockButton()}
           ${this.renderCopyButton()}
           ${this.renderPreviewButton()}
           ${this.renderSettingsButton()}
@@ -135,13 +136,21 @@ export class CohortSummary extends MobxLitElement {
       return nothing;
     }
 
+    const isDisabled = () => {
+      if (!this.experimentService.experiment || !this.cohort) {
+        return true;
+      }
+      return this.experimentManager.isFullCohort(this.cohort) ||
+        this.experimentService.experiment.cohortLockMap[this.cohort.id];
+    };
+
     return html`
       <pr-tooltip text="Add participant" position="BOTTOM_END">
         <pr-icon-button
           icon="person_add"
           color="tertiary"
           variant="default"
-          ?disabled=${this.experimentManager.isFullCohort(this.cohort)}
+          ?disabled=${isDisabled()}
           ?loading=${this.experimentManager.isWritingParticipant}
           @click=${async () => {
             if (!this.cohort) return;
@@ -150,6 +159,33 @@ export class CohortSummary extends MobxLitElement {
             this.isExpanded = true;
           }}
         >
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
+  }
+
+  private renderLockButton() {
+    if (!this.cohort) {
+      return nothing;
+    }
+
+    const isLocked = this.experimentService.experiment ?
+      this.experimentService.experiment.cohortLockMap[this.cohort.id]
+      : false;
+
+    const onClick = async () => {
+      if (!this.cohort) return;
+      await this.experimentManager.setCohortLock(this.cohort.id, !isLocked);
+    };
+
+    const text = `Click to ${isLocked ? 'unlock' : 'lock'} this cohort`;
+    return html`
+      <pr-tooltip text=${text} position="BOTTOM_END">
+        <pr-icon-button
+          icon=${isLocked ? 'lock' : 'lock_open'}
+          color=${isLocked ? 'tertiary' : 'secondary'}
+          variant="default"
+          @click=${onClick}>
         </pr-icon-button>
       </pr-tooltip>
     `;

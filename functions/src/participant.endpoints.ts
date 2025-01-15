@@ -44,8 +44,6 @@ export const createParticipant = onCall(async (request) => {
     handleCreateParticipantValidationErrors(data);
   }
 
-  // TODO: Confirm that cohort is not locked or at max capacity
-
   // Create initial participant config
   const participantConfig = createParticipantProfileExtended({
     currentCohortId: data.cohortId,
@@ -66,6 +64,16 @@ export const createParticipant = onCall(async (request) => {
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
+    // TODO: Confirm that cohort is not at max capacity
+    // Confirm that cohort is not locked
+    const experiment = (
+      await app.firestore().doc(`experiments/${data.experimentId}`).get()
+    ).data() as Experiment;
+    if (experiment.cohortLockMap[data.cohortId]) {
+      // TODO: Return failure and handle accordingly on frontend
+      return;
+    }
+
     // Set participant profile fields
     const numParticipants = (
       await app
@@ -77,10 +85,6 @@ export const createParticipant = onCall(async (request) => {
     setProfile(numParticipants, participantConfig, data.isAnonymous);
 
     // Set current stage ID in participant config
-    const experiment = (
-      await app.firestore().doc(`experiments/${data.experimentId}`).get()
-    ).data() as Experiment;
-
     participantConfig.currentStageId = experiment.stageIds[0];
 
     // Write new participant document
