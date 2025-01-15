@@ -19,6 +19,7 @@ import {
   createStageTextConfig,
   createScaleSurveyQuestion,
   createTextSurveyQuestion,
+  randint,
 } from '@deliberation-lab/utils';
 
 // ****************************************************************************
@@ -124,7 +125,7 @@ const CHIP_ALTERNATE_PROFILE_STAGE = createProfileStage({
   name: 'View secondary randomly generated profile',
   descriptions: createStageTextConfig({
     primaryText:
-      "This identity is how other players will see you during the second game.",
+      'This identity is how other players will see you during the second game.',
   }),
   game: StageGame.CHP,
   profileType: ProfileType.ANONYMOUS_ANIMAL,
@@ -401,9 +402,9 @@ const CHIP_INFO_STAGE_PAYOUT = createInfoStage({
     '## Bonus payment',
     'At the end of the study, we will randomly pick **one** of the two negotiation games you played and give you a bonus payment from that game.',
     'There are two important features to remember about the bonus:',
-        '  * The bonus will be equivalent to how much money you earn through trading *beyond* what you start with.',
-        '  * If you do not complete both games, you will not receive a bonus payment.',
-    'In short, you want to make as much money as you can through trading!'
+    '  * The bonus will be equivalent to how much money you earn through trading *beyond* what you start with.',
+    '  * If you do not complete both games, you will not receive a bonus payment.',
+    'In short, you want to make as much money as you can through trading!',
   ],
 });
 
@@ -420,7 +421,7 @@ const CHIP_INFO_STAGE_PAYOUT2 = createInfoStage({
     '  * 🔵 21 blue chips valued at $0.70 each',
     'This adds up to **$20.60**. You would receive $20.60 - $15.00 = **$5.60** as a bonus for the first game.',
     'If you did not increase the value of your chips, you would not receive a bonus.',
-    "\n**Your total bonus will be randomly selected from either the first or the second game.**",
+    '\n**Your total bonus will be randomly selected from either the first or the second game.**',
     '\nThe exact values will depend on your random chip valuations and your final holdings, so your payment may differ from this example.',
     '\nThis payment is in addition to the $8 base payment for participating.',
   ],
@@ -516,21 +517,29 @@ const CHIP_NEGOTIATION_STAGE2 = createChipStage({
 // ****************************************************************************
 // Payout stage
 // ****************************************************************************
+export function createPayoutItems() {
+  const game1Selected = randint(0, 1) === 1;
+
+  const game1 = createChipPayoutItem({
+    isActive: game1Selected,
+    name: 'Payout from game 1 (one game was randomly selected)',
+    stageId: CHIP_NEGOTIATION_STAGE1_ID,
+    baseCurrencyAmount: 0,
+  });
+
+  const game2 = createChipPayoutItem({
+    isActive: !game1Selected,
+    name: 'Payout from game 2 (one game was randomly selected)',
+    stageId: CHIP_NEGOTIATION_STAGE2_ID,
+    baseCurrencyAmount: 0,
+  });
+  return [game1, game2];
+}
+
 const CHIP_PAYOUT_STAGE = createPayoutStage({
-  id: 'payout',
+  id: 'random_payout',
   game: StageGame.CHP,
-  payoutItems: [
-    createChipPayoutItem({
-      name: 'Payout from game 1',
-      stageId: CHIP_NEGOTIATION_STAGE1_ID,
-      baseCurrencyAmount: 0,
-    }),
-    createChipPayoutItem({
-      name: 'Payout from game 2',
-      stageId: CHIP_NEGOTIATION_STAGE2_ID,
-      baseCurrencyAmount: 0,
-    }),
-  ],
+  payoutItems: createPayoutItems(),
 });
 
 // ****************************************************************************
