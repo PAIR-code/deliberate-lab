@@ -111,6 +111,12 @@ export const initiateParticipantTransferCallable = async(functions: Functions, c
   return data;
 }
 
+/** Generic endpoint to boot participant. */
+export const bootParticipantCallable = async(functions: Functions, config: BaseParticipantData) => {
+  const { data } = await httpsCallable<BaseParticipantData, SuccessResponse>(functions, 'bootParticipant')(config);
+  return data;
+}
+
 /** Generic endpoint to accept participant transfer. */
 export const acceptParticipantTransferCallable = async(functions: Functions, config: BaseParticipantData) => {
   const { data } = await httpsCallable<BaseParticipantData, ParticipantNextStageResponse>(functions, 'acceptParticipantTransfer')(config);

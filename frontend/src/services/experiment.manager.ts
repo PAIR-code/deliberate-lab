@@ -34,6 +34,7 @@ import {
   generateId,
 } from '@deliberation-lab/utils';
 import {
+  bootParticipantCallable,
   createChatMessageCallable,
   createParticipantCallable,
   deleteExperimentCallable,
@@ -461,27 +462,6 @@ export class ExperimentManager extends Service {
     return response;
   }
 
-  /** Update a participant */
-  async updateParticipant(
-    participantConfig: ParticipantProfileExtended,
-    isTransfer = false
-  ) {
-    this.isWritingParticipant = true;
-    let response = {};
-
-    if (this.experimentId) {
-      response = await updateParticipantCallable(
-        this.sp.firebaseService.functions, {
-          experimentId: this.experimentId,
-          isTransfer,
-          participantConfig
-        }
-      );
-    }
-    this.isWritingParticipant = false;
-    return response;
-  }
-
   /** Send check to participant. */
   async sendCheckToParticipant(
     participantId: string,
@@ -505,25 +485,16 @@ export class ExperimentManager extends Service {
 
   /** Boot participant from experiment. */
   async bootParticipant(
-    participant: ParticipantProfileExtended
+    participantId: string
   ) {
-    const timestamps = {
-      ...participant.timestamps,
-      endExperiment: Timestamp.now(),
-    };
-
-    const currentStatus = participant.currentStatus === ParticipantStatus.ATTENTION_CHECK ?
-      ParticipantStatus.ATTENTION_TIMEOUT : ParticipantStatus.BOOTED_OUT;
-
-    const config = {
-      ...participant,
-      currentStatus,
-      timestamps,
-    };
-
-    this.updateParticipant(config);
-
-    // TODO: Handle if they're on the chip stage.
+    if (!this.experimentId) return;
+    await bootParticipantCallable(
+      this.sp.firebaseService.functions,
+      {
+        experimentId: this.experimentId,
+        participantId
+      }
+    );
   }
 
   /** Initiate participant transfer. */

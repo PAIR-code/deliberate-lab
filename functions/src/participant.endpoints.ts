@@ -389,6 +389,46 @@ export const sendParticipantCheck = onCall(async (request) => {
 });
 
 // ************************************************************************* //
+// bootParticipant endpoint for experimenters                                //
+//                                                                           //
+// Input structure: { experimentId, participantId }                          //
+// Validation: utils/src/participant.validation.ts                           //
+// ************************************************************************* //
+export const bootParticipant = onCall(async (request) => {
+  // TODO: Only allow creator, admins, and readers to manage transfers
+  await AuthGuard.isExperimenter(request);
+
+  const { data } = request;
+  const privateId = data.participantId;
+
+  // Define document reference
+  const document = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('participants')
+    .doc(privateId);
+
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    const participant = (await document.get()).data() as ParticipantProfileExtended;
+
+    if (participant.currentStatus === ParticipantStatus.ATTENTION_CHECK) {
+      participant.currentStatus = ParticipantStatus.ATTENTION_TIMEOUT;
+    } else {
+      participant.currentStatus = ParticipantStatus.BOOTED_OUT;
+    }
+
+    participant.timestamps.endExperiment = Timestamp.now();
+    transaction.set(document, participant);
+  });
+
+  // TODO: If currently participating in chip stage,
+  // handle accordingly.
+
+  return { success: true };
+});
+
+// ************************************************************************* //
 // initiateParticipantTransfer endpoint for experimenters                    //
 //                                                                           //
 // Input structure: { experimentId, cohortId, participantId }                //

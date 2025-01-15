@@ -250,7 +250,7 @@ export class ParticipantSummary extends MobxLitElement {
       if (!isConfirmed) return;
 
       this.analyticsService.trackButtonClick(ButtonClick.PARTICIPANT_BOOT);
-      this.experimentManager.bootParticipant(this.participant);
+      this.experimentManager.bootParticipant(this.participant.privateId);
     };
 
     return html`
