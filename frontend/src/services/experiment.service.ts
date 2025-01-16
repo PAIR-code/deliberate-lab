@@ -71,7 +71,11 @@ export class ExperimentService extends Service {
       onSnapshot(
         doc(this.sp.firebaseService.firestore, 'experiments', id),
         (doc) => {
-          this.experiment = {id: doc.id, ...doc.data()} as Experiment;
+          this.experiment = {
+            id: doc.id,
+            cohortLockMap: {}, // for experiments version <= 11
+            ...doc.data()
+          } as Experiment;
           this.sp.agentEditor.setExperimentId(doc.id);
           this.isExperimentLoading = false;
         }
