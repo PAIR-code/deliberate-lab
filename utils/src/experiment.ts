@@ -26,7 +26,7 @@ import { StageConfig } from './stages/stage';
   *             and rename chip quantity field to startingQuantity
   * VERSION 10 - add baseCurrencyAmount to PayoutItemResult (PR #384)
   * VERSION 11 - add anonymous profile map to ParticipantProfile (PR #391)
-  * VERSION 12 - add cohortLockMap to Experiment
+  * VERSION 12 - add cohortLockMap to Experiment (PR #402)
   */
 export const EXPERIMENT_VERSION_ID = 12;
 
