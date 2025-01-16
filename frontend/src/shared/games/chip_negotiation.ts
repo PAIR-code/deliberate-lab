@@ -13,6 +13,7 @@ import {
   createMultipleChoiceComprehensionQuestion,
   createPayoutStage,
   createProfileStage,
+  createStageProgressConfig,
   createSurveyStage,
   createTransferStage,
   createTOSStage,
@@ -502,6 +503,7 @@ const CHIP_NEGOTIATION_STAGE1 = createChipStage({
     infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
   }),
   chips: CHIPS,
+  progress: createStageProgressConfig({ minParticipants: 3 }),
 });
 
 const CHIP_NEGOTIATION_STAGE2 = createChipStage({
