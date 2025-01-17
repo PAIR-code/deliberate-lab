@@ -106,7 +106,7 @@ export class CohortSummary extends MobxLitElement {
         </div>
         <div class="right">
           ${this.renderAddParticipantButton()} ${this.renderLockButton()}
-          ${this.renderCopyButton()} ${this.renderPreviewButton()}
+          ${this.renderCopyButton()} 
           ${this.renderSettingsButton()}
         </div>
       </div>
@@ -197,41 +197,6 @@ export class CohortSummary extends MobxLitElement {
           color=${isLocked ? 'tertiary' : 'secondary'}
           variant="default"
           @click=${onClick}
-        >
-        </pr-icon-button>
-      </pr-tooltip>
-    `;
-  }
-
-  private renderPreviewButton() {
-    const navigate = () => {
-      if (!this.cohort) return;
-      const participants = this.experimentManager.getCohortParticipants(
-        this.cohort.id
-      );
-      if (!participants.length) {
-        this.routerService.navigate(Pages.PARTICIPANT_JOIN_COHORT, {
-          experiment: this.experimentManager.experimentId ?? '',
-          cohort: this.cohort?.id,
-        });
-      } else {
-        const randomIndex = Math.floor(Math.random() * participants.length);
-        this.routerService.navigate(Pages.PARTICIPANT, {
-          experiment: this.experimentManager.experimentId ?? '',
-          participant: (participants[randomIndex] as ParticipantProfileExtended)
-            .privateId,
-        });
-      }
-    };
-
-    return html`
-      <pr-tooltip text="Preview as random participant" position="BOTTOM_END">
-        <pr-icon-button
-          icon="slideshow"
-          color="neutral"
-          variant="default"
-          ?disabled=${!this.cohort}
-          @click=${navigate}
         >
         </pr-icon-button>
       </pr-tooltip>
