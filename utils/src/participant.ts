@@ -170,7 +170,7 @@ export function setProfile(
 
   const generateRandomHashProfile = (): AnonymousProfileMetadata => {
     return {
-      name: Math.random().toString(),
+      name: generateId(),
       avatar: '',
       repeat: 0
     };
