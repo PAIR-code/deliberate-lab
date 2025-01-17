@@ -15,6 +15,7 @@ import {
   ParticipantProfile,
   RevealAudience,
   StageKind,
+  sortParticipantsByRandomProfile
 } from '@deliberation-lab/utils';
 import {isActiveParticipant} from '../../shared/participant.utils';
 import {styles} from './chip_reveal_view.scss';
@@ -189,9 +190,7 @@ export class ChipReveal extends MobxLitElement {
       <div class="table">
         ${this.renderGlobalTableHeader()}
         <div class="table-body">
-          ${participants
-            .filter((p) => isActiveParticipant(p))
-            .sort((a, b) => a.publicId.localeCompare(b.publicId))
+          ${sortParticipantsByRandomProfile(participants, this.stage?.id ?? '')
             .map((p) => this.renderParticipantRow(p))}
         </div>
         <div class="table-foot">

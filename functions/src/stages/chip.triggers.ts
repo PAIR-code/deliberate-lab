@@ -21,7 +21,7 @@ import {
 
 import { app } from '../app';
 import {
-  getChipParticipantIds,
+  getChipParticipants,
   updateChipCurrentTurn,
   updateParticipantChipQuantities,
 } from './chip.utils';
@@ -97,10 +97,11 @@ export const completeChipTurn = onDocumentUpdated(
       }
 
       // Check all cohort participants for response to offer
-      const participantIds = await getChipParticipantIds(
+      const participants = await getChipParticipants(
         event.params.experimentId,
         event.params.cohortId
       );
+      const participantIds = participants.map(p => p.publicId);
 
       const acceptedOffer: string[] = [];
       for (const participantId of participantIds) {
@@ -154,7 +155,7 @@ export const completeChipTurn = onDocumentUpdated(
       publicStage.currentTurn = null;
       const oldCurrentRound = currentRound;
       const newData = updateChipCurrentTurn(
-        publicStage, participantIds, numRounds
+        publicStage, participants, numRounds
       );
 
       // Write logs

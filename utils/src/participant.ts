@@ -1,11 +1,15 @@
 import { UnifiedTimestamp, generateId } from './shared';
 import {
+  ALTERNATE_PROFILE_SET_ID,
   PROFILE_SET_ANIMALS_1,
   PROFILE_SET_ANIMALS_1_ID,
   PROFILE_SET_ANIMALS_2,
   PROFILE_SET_ANIMALS_2_ID,
   PROFILE_SET_NATURE,
-  PROFILE_SET_NATURE_ID
+  PROFILE_SET_NATURE_ID,
+  PROFILE_SET_RANDOM_1_ID,
+  PROFILE_SET_RANDOM_2_ID,
+  PROFILE_SET_RANDOM_3_ID
 } from './profile_sets';
 
 /** Participant profile types and functions. */
@@ -164,6 +168,14 @@ export function setProfile(
     };
   };
 
+  const generateRandomHashProfile = (): AnonymousProfileMetadata => {
+    return {
+      name: Math.random().toString(),
+      avatar: '',
+      repeat: 0
+    };
+  };
+
   // Set anonymous profiles
   const profileAnimal1 = generateProfileFromSet(PROFILE_SET_ANIMALS_1);
   const profileAnimal2 = generateProfileFromSet(PROFILE_SET_ANIMALS_2);
@@ -172,6 +184,11 @@ export function setProfile(
   config.anonymousProfiles[PROFILE_SET_ANIMALS_1_ID] = profileAnimal1;
   config.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID] = profileAnimal2;
   config.anonymousProfiles[PROFILE_SET_NATURE_ID] = profileNature;
+
+  // Set random hashes (can be used for random ordering, etc.)
+  config.anonymousProfiles[PROFILE_SET_RANDOM_1_ID] = generateRandomHashProfile();
+  config.anonymousProfiles[PROFILE_SET_RANDOM_2_ID] = generateRandomHashProfile();
+  config.anonymousProfiles[PROFILE_SET_RANDOM_3_ID] = generateRandomHashProfile();
 
   // Define public ID (using anonymous animal 1 set)
   const mainProfile = profileAnimal1;
@@ -186,4 +203,28 @@ export function setProfile(
     config.avatar = mainProfile.avatar;
     config.pronouns = '';
   }
+}
+
+/** Randomly sort participants using random hash anonymous profiles.
+  * If random hash is not available, use public ID.
+  */
+export function sortParticipantsByRandomProfile(
+  participants: ParticipantProfile[],
+  stageId: string
+) {
+  participants.sort((p1: ParticipantProfile, p2: ParticipantProfile) => {
+    let sortKey1 = '';
+    let sortKey2 = '';
+    // If alternate profile, use random 2 ID
+    if (stageId.includes(ALTERNATE_PROFILE_SET_ID)) {
+      sortKey1 = p1.anonymousProfiles[PROFILE_SET_RANDOM_2_ID]?.name ?? p1.publicId;
+      sortKey2 = p2.anonymousProfiles[PROFILE_SET_RANDOM_2_ID]?.name ?? p2.publicId;
+    } else {
+      // Else, use random 1 ID
+      sortKey1 = p1.anonymousProfiles[PROFILE_SET_RANDOM_1_ID]?.name ?? p1.publicId;
+      sortKey2 = p2.anonymousProfiles[PROFILE_SET_RANDOM_1_ID]?.name ?? p2.publicId;
+    }
+    return sortKey1.localeCompare(sortKey2);
+  });
+  return participants;
 }
