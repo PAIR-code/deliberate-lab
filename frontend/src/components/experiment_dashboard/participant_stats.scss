@@ -1,5 +1,5 @@
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -10,6 +10,80 @@
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
-h3, h4 {
+h3,
+h4 {
   margin: common.$spacing-small;
+}
+
+.table {
+  @include common.table;
+}
+
+.chip-container {
+  display: flex;
+  gap: 8px; /* Add space between chips */
+}
+
+.chip {
+  @include typescale.label-medium;
+  @include common.chip;
+  border-radius: common.$spacing-small;
+  display: inline-block;
+}
+
+.success {
+  background-color: var(--md-sys-color-success);
+}
+.pending {
+  background-color: var(--md-sys-color-primary-container);
+}
+.neutral {
+  background-color: var(--md-sys-color-secondary-container);
+}
+.warning {
+  background-color: var(--md-sys-color-tertiary-container);
+}
+
+.chip-attention-check {
+  background-color: orange;
+}
+
+.chip-in-progress {
+  background-color: blue;
+}
+
+.chip-success {
+  background-color: green;
+}
+
+.chip-transfer-pending {
+  background-color: purple;
+}
+
+.chip-transfer-timeout {
+  background-color: red;
+}
+
+.chip-transfer-failed {
+  background-color: darkred;
+}
+
+.chip-transfer-declined {
+  background-color: crimson;
+}
+
+.chip-attention-timeout {
+  background-color: darkorange;
+}
+
+.chip-booted-out {
+  background-color: gray;
+}
+
+.chip-deleted {
+  background-color: black;
+}
+
+.chip-unknown {
+  background-color: darkgray;
 }

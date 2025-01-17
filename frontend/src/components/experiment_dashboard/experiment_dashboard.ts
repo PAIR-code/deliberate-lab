@@ -163,6 +163,7 @@ export class Component extends MobxLitElement {
     return html`
       <div class="header">
         <div class="left">
+          ${this.experimentManager.currentParticipant?.avatar ?? ''}
           ${this.experimentManager.currentParticipant?.name ?? ''}
           ${this.experimentManager.currentParticipant?.publicId
             ? `(${this.experimentManager.currentParticipant?.publicId})`

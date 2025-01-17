@@ -11,6 +11,7 @@ import {ParticipantAnswerService} from '../../services/participant.answer';
 import {
   ParticipantProfileExtended,
   ParticipantProfile,
+  ParticipantStatus,
   StageKind,
   UnifiedTimestamp,
 } from '@deliberation-lab/utils';
@@ -61,20 +62,49 @@ export class Preview extends MobxLitElement {
     };
 
     return html`
-      <div><b>Private ID:</b> ${this.profile.privateId}</div>
-      <div><b>Public ID:</b> ${this.profile.publicId}</div>
-      <div>
-        <b>Profile:</b> ${getParticipantInlineDisplay(this.profile)}
-        ${this.profile.pronouns ? `(${this.profile.pronouns})` : ''}
+      <div class="chip-container">
+        ${this.renderStatusChip()} ${this.renderStageChip()}
+
+        <div
+          class="chip ${this.profile.timestamps.acceptedTOS
+            ? 'success'
+            : 'warning'}"
+        >
+          ${this.profile.timestamps.acceptedTOS
+            ? html`<b>✅ Accepted TOS:</b> ${convertUnifiedTimestampToDate(
+                  this.profile.timestamps.acceptedTOS
+                )}`
+            : html`<b>⚠️ Accepted TOS:</b> N/A`}
+        </div>
       </div>
-      <div>
-        <b>Anonymous profiles:</b> ${this.renderAnonymousProfiles()}
+      <div class="table">
+        <div class="table-head">
+          <div class="table-row">
+            <div class="table-cell">Profile</div>
+            <div class="table-cell">Public ID</div>
+            <div class="table-cell">Private ID</div>
+            <div class="table-cell">Anonymous IDs</div>
+            ${this.experimentService.experiment?.prolificConfig
+              ?.enableProlificIntegration
+              ? `<div class="table-cell">Prolific ID</div>`
+              : ''}
+          </div>
+        </div>
+        <div class="table-row">
+          <div class="table-cell">
+            ${getParticipantInlineDisplay(this.profile)}
+            ${this.profile.pronouns ? `(${this.profile.pronouns})` : ''}
+          </div>
+          <div class="table-cell">${this.profile.publicId}</div>
+          <div class="table-cell">${this.profile.privateId}</div>
+          <div class="table-cell">${this.renderAnonymousProfiles()}</div>
+          ${this.experimentService.experiment?.prolificConfig
+            ?.enableProlificIntegration
+            ? `<div class="table-cell">${this.profile.prolificId ?? '⦰'}</div>`
+            : ''}
+        </div>
       </div>
-      <div><b>Status:</b> ${this.profile.currentStatus}</div>
-      <div>
-        <b>Current stage:</b> ${this.getStageName(this.profile.currentStageId)}
-      </div>
-      <div><b>Prolific ID:</b> ${this.profile.prolificId ?? 'NONE'}</div>
+
       ${this.profile.transferCohortId
         ? html`<div>
             <b>Pending transfer to cohort:</b> ${getCohort(
@@ -90,22 +120,76 @@ export class Preview extends MobxLitElement {
         'Ended experiment',
         this.profile.timestamps.endExperiment
       )}
-      ${this.renderTimestamp(
-        'Accepted TOS',
-        this.profile.timestamps.acceptedTOS
-      )}
       ${this.renderStageDatas()}
+    `;
+  }
+  private getStatusChipStyle(status: ParticipantStatus): {
+    emoji: string;
+    className: string;
+  } {
+    switch (status) {
+      case ParticipantStatus.ATTENTION_CHECK:
+        return {emoji: '⚠️', className: 'warning'};
+      case ParticipantStatus.IN_PROGRESS:
+        return {emoji: '⏳', className: 'pending'};
+      case ParticipantStatus.SUCCESS:
+        return {emoji: '✅', className: 'success'};
+      case ParticipantStatus.TRANSFER_PENDING:
+        return {emoji: '📤', className: 'warning'};
+      case ParticipantStatus.TRANSFER_TIMEOUT:
+        return {emoji: '⏰', className: 'error'};
+      case ParticipantStatus.TRANSFER_FAILED:
+        return {emoji: '❌', className: 'error'};
+      case ParticipantStatus.TRANSFER_DECLINED:
+        return {emoji: '🚫', className: 'error'};
+      case ParticipantStatus.ATTENTION_TIMEOUT:
+        return {emoji: '⏰', className: 'error'};
+      case ParticipantStatus.BOOTED_OUT:
+        return {emoji: '🚷', className: 'error'};
+      case ParticipantStatus.DELETED:
+        return {emoji: '🗑️', className: 'error'};
+      default:
+        return {emoji: '❓', className: 'neutral'};
+    }
+  }
+
+  private renderStatusChip() {
+    if (!this.profile) {
+      return nothing;
+    }
+    const {currentStatus} = this.profile;
+    const {emoji, className} = this.getStatusChipStyle(currentStatus);
+
+    return html`
+      <div class="chip ${className}">
+        <b>${emoji} Status:</b> ${currentStatus}
+      </div>
+    `;
+  }
+
+  private renderStageChip() {
+    if (!this.profile) {
+      return nothing;
+    }
+    const {currentStatus} = this.profile;
+
+    return html`
+      <div class="chip neutral">
+        <b>Current stage:</b> ${this.getStageName(
+          this.profile.currentStageId
+        )}
+      </div>
     `;
   }
 
   private renderAnonymousProfiles() {
     if (!this.profile || !this.profile.anonymousProfiles) return;
-    return html`
-      <ul>
-        ${Object.values(this.profile.anonymousProfiles).map(p =>
-          html`<li>${p.avatar} ${p.name} ${p.repeat + 1}</li>`)}
-      </ul>
-    `;
+
+    const profiles = Object.values(this.profile.anonymousProfiles)
+      .map((p) => `${p.avatar} ${p.name} ${p.repeat + 1}`)
+      .join(' / ');
+
+    return html`${profiles}`;
   }
 
   private renderStageDatas() {
@@ -113,7 +197,10 @@ export class Preview extends MobxLitElement {
 
     const renderStageData = (stageId: string) => {
       const stage = this.experimentService.getStage(stageId);
-      if (!stage || !isUnlockedStage(this.profile as ParticipantProfile, stageId)) {
+      if (
+        !stage ||
+        !isUnlockedStage(this.profile as ParticipantProfile, stageId)
+      ) {
         return nothing;
       }
 
@@ -165,7 +252,7 @@ export class Preview extends MobxLitElement {
     if (stages.length === 0) return nothing;
     return html`
       <h3>Stage responses</h3>
-      ${stages.map(stageId => renderStageData(stageId))}
+      ${stages.map((stageId) => renderStageData(stageId))}
     `;
   }
 
