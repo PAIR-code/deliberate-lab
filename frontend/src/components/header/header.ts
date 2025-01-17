@@ -50,6 +50,7 @@ export class Header extends MobxLitElement {
       return nothing;
     }
 
+    const isDashboard = this.routerService.activePage === Pages.EXPERIMENT;
     const headerClasses = classMap({
       header: true,
       banner: this.isBanner(),
@@ -59,7 +60,7 @@ export class Header extends MobxLitElement {
       <div class=${headerClasses}>
         <div class="left">
           ${this.renderBackButton()}
-          <h1>${this.renderTitle()}</h1>
+          <h1 class=${isDashboard ? 'short': ''}>${this.renderTitle()}</h1>
         </div>
         <div class="right">${this.renderActions()}</div>
       </div>

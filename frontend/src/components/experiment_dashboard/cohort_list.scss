@@ -4,12 +4,8 @@
 
 :host {
   @include common.flex-column;
-  border-right: 2px solid var(--md-sys-color-outline-variant);
-  flex-shrink: 0;
-  gap: common.$spacing-medium;
-  max-height: calc(100vh - common.$header-height);
+  flex-grow: 1;
   overflow: auto;
-  width: calc(min(65%, 600px));
 }
 
 .experiment-manager {

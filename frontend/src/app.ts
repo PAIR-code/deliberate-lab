@@ -50,18 +50,21 @@ export class App extends MobxLitElement {
           return this.render403();
         }
         return html`
+          <page-header></page-header>
           <div class="content">
             <home-gallery></home-gallery>
           </div>
         `;
       case Pages.ADMIN:
         return html`
+          <page-header></page-header>
           <div class="content">
             <admin-dashboard></admin-dashboard>
           </div>
         `;
       case Pages.SETTINGS:
         return html`
+          <page-header></page-header>
           <div class="content">
             <settings-page .showAccount=${true}></settings-page>
           </div>
@@ -78,10 +81,12 @@ export class App extends MobxLitElement {
           return this.render403();
         }
         return html`
+          <page-header></page-header>
           <experiment-builder></experiment-builder>
         `;
       case Pages.PARTICIPANT:
         return html`
+          <page-header></page-header>
           <participant-view></participant-view>
         `;
       case Pages.PARTICIPANT_STAGE:
@@ -96,6 +101,7 @@ export class App extends MobxLitElement {
         return nothing;
       case Pages.PARTICIPANT_JOIN_COHORT:
         return html`
+          <page-header></page-header>
           <cohort-landing></cohort-landing>
         `;
       default:
@@ -182,7 +188,6 @@ export class App extends MobxLitElement {
         <main>
           <experimenter-sidenav></experimenter-sidenav>
           <div class="content-wrapper">
-            <page-header></page-header>
             ${this.renderPageContent()}
           </div>
           <experimenter-panel></experimenter-panel>

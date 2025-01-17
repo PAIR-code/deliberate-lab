@@ -48,6 +48,13 @@
 h1 {
   @include typescale.title-large;
   margin: 0;
+
+  &.short {
+    max-width: 200px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
 }
 
 .banner {

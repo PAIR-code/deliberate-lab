@@ -1,6 +1,8 @@
+import '../../pair-components/button';
 import '../experiment_builder/experiment_builder';
 import '../experiment_builder/experiment_settings_dialog';
-
+import '../header/header';
+import '../participant_view/participant_view';
 import './cohort_settings_dialog';
 import './cohort_list';
 import './participant_stats';
@@ -39,8 +41,11 @@ export class Component extends MobxLitElement {
     }
 
     return html`
-      ${this.renderCohortList()}
-      <div class="experiment-manager">${this.renderManager()}</div>
+      <div class="left-panel">
+        <page-header></page-header>
+        ${this.renderCohortList()}
+      </div>
+      ${this.renderRightPanel()}
       ${this.renderCohortSettingsDialog()}
       ${this.renderExperimentSettingsDialog()}
     `;
@@ -79,30 +84,77 @@ export class Component extends MobxLitElement {
     return html` <experiment-builder></experiment-builder> `;
   }
 
-  private renderManager() {
+  private renderRightPanel() {
     if (!this.experimentManager.currentParticipantId) {
       return html`
-        <div class="empty-message">
-          Use the left panel to manage and select participants.
+        <div class="experiment-manager">
+          <div class="empty-message">
+            Use the left panel to manage and select participants.
+          </div>
         </div>
       `;
     }
 
+    const renderContent = () => {
+      if (this.experimentManager.showParticipantPreview) {
+        return html`<participant-view></participant-view>`;
+      } else {
+        return html`
+          <div class="content-wrapper">
+            <participant-stats .profile=${this.experimentManager.currentParticipant}>
+            </participant-stats>
+            <code>
+              ${JSON.stringify(this.experimentManager.currentParticipant)}
+            </code>
+          </div>
+        `;
+      }
+    };
+
     return html`
-      <div class="header">${this.renderHeader()}</div>
-      <div class="content">${this.renderContent()}</div>
+      <div class="experiment-manager">
+        ${this.renderHeader()} ${renderContent()}
+      </div>
     `;
   }
 
   private renderHeader() {
+    const show = this.experimentManager.showParticipantPreview;
+
+    const renderSummaryButton = () => {
+      return html`
+        <pr-button
+          color="tertiary"
+          variant=${!show ? 'tonal' : 'default'}
+          @click=${() => { this.experimentManager.setShowParticipantPreview(false) }}>
+          Stats
+        </pr-button>
+      `;
+    };
+
+    const renderPreviewButton = () => {
+      return html`
+        <pr-button
+          color="tertiary"
+          variant=${show ? 'tonal' : 'default'}
+          @click=${() => { this.experimentManager.setShowParticipantPreview(true) }}>
+          Preview
+        </pr-button>
+      `;
+    };
+
     return html`
-      <div class="left">
-        ${this.experimentManager.currentParticipant?.name ?? ''}
-        ${this.experimentManager.currentParticipant?.publicId
-          ? `(${this.experimentManager.currentParticipant?.publicId})`
-          : ''}
+      <div class="header">
+        <div class="left">
+          ${this.experimentManager.currentParticipant?.name ?? ''}
+          ${this.experimentManager.currentParticipant?.publicId
+            ? `(${this.experimentManager.currentParticipant?.publicId})`
+            : ''}
+          ${renderSummaryButton()}
+          ${renderPreviewButton()}
+        </div>
+        ${this.renderTransferMenu()}
       </div>
-      ${this.renderTransferMenu()}
     `;
   }
 
@@ -173,16 +225,6 @@ export class Component extends MobxLitElement {
           participants
         </div>
       </div>
-    `;
-  }
-
-  private renderContent() {
-    return html`
-      <participant-stats .profile=${this.experimentManager.currentParticipant}>
-      </participant-stats>
-      <code>
-        ${JSON.stringify(this.experimentManager.currentParticipant)}
-      </code>
     `;
   }
 }
