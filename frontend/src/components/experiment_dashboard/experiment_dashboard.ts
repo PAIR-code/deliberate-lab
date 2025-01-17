@@ -21,7 +21,7 @@ import {CohortConfig, StageKind} from '@deliberation-lab/utils';
 import {getCohortDescription, getCohortName} from '../../shared/cohort.utils';
 import {
   getParticipantStatusDetailText,
-  isObsoleteParticipant
+  isObsoleteParticipant,
 } from '../../shared/participant.utils';
 
 import {styles} from './experiment_dashboard.scss';
@@ -50,8 +50,7 @@ export class Component extends MobxLitElement {
         <page-header></page-header>
         ${this.renderCohortList()}
       </div>
-      ${this.renderRightPanel()}
-      ${this.renderCohortSettingsDialog()}
+      ${this.renderRightPanel()} ${this.renderCohortSettingsDialog()}
       ${this.renderExperimentSettingsDialog()}
     `;
   }
@@ -110,7 +109,8 @@ export class Component extends MobxLitElement {
       } else {
         return html`
           <div class="content-wrapper">
-            <participant-stats .profile=${this.experimentManager.currentParticipant}>
+            <participant-stats
+              .profile=${this.experimentManager.currentParticipant}>
             </participant-stats>
             <code>
               ${JSON.stringify(this.experimentManager.currentParticipant)}
@@ -130,26 +130,21 @@ export class Component extends MobxLitElement {
   private renderHeader() {
     const show = this.experimentManager.showParticipantPreview;
 
-    const renderSummaryButton = () => {
+    const renderToggleButton = () => {
       return html`
-        <pr-button
-          color="tertiary"
-          variant=${!show ? 'tonal' : 'default'}
+      <div class="toggle-slider">
+        <div 
+          class="toggle-option ${!show ? 'active' : ''}" 
           @click=${() => { this.experimentManager.setShowParticipantPreview(false) }}>
-          Stats
-        </pr-button>
-      `;
-    };
-
-    const renderPreviewButton = () => {
-      return html`
-        <pr-button
-          color="tertiary"
-          variant=${show ? 'tonal' : 'default'}
+          ℹ️ Details
+        </div>
+        <div 
+          class="toggle-option ${show ? 'active' : ''}" 
           @click=${() => { this.experimentManager.setShowParticipantPreview(true) }}>
-          Preview
-        </pr-button>
-      `;
+          ▶️ Preview
+        </div>
+      </div>
+    `;
     };
 
     const renderStatusBanner = () => {
@@ -168,8 +163,8 @@ export class Component extends MobxLitElement {
           ${this.experimentManager.currentParticipant?.publicId
             ? `(${this.experimentManager.currentParticipant?.publicId})`
             : ''}
-          ${renderSummaryButton()}
-          ${renderPreviewButton()}
+
+          ${renderToggleButton()}
           ${renderStatusBanner()}
         </div>
         ${this.renderTransferMenu()}

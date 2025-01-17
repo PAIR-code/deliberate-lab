@@ -78,7 +78,7 @@ export class ParticipantSummary extends MobxLitElement {
             .stageIds=${this.experimentService.experiment?.stageIds ?? []}
           >
           </participant-progress-bar>
-          ${this.renderCopyButton()} ${this.renderPreviewButton()}
+          ${this.renderCopyButton()}
           ${this.renderAttentionButton()} ${this.renderBootButton()}
         </div>
       </div>
@@ -174,30 +174,7 @@ export class ParticipantSummary extends MobxLitElement {
     await navigator.clipboard.writeText(link);
     alert('Link copied to clipboard!');
   }
-
-  private renderPreviewButton() {
-    const navigate = () => {
-      if (!this.participant) return;
-      this.routerService.navigate(Pages.PARTICIPANT, {
-        experiment: this.experimentManager.experimentId ?? '',
-        participant: this.participant?.privateId,
-      });
-    };
-
-    return html`
-      <pr-tooltip text="Preview as participant" position="LEFT_START">
-        <pr-icon-button
-          icon="slideshow"
-          color="neutral"
-          variant="default"
-          ?disabled=${!this.participant}
-          @click=${navigate}
-        >
-        </pr-icon-button>
-      </pr-tooltip>
-    `;
-  }
-
+  
   private renderAttentionButton() {
     const sendAttentionCheck = () => {
       if (!this.participant) return;
