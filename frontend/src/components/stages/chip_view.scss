@@ -54,7 +54,7 @@
 }
 
 .status {
-  background: var(--md-sys-color-surface);
+  background: var(--md-sys-color-surface-variant);
   border-radius: common.$spacing-medium;
   padding: common.$spacing-medium;
 }
@@ -78,7 +78,7 @@
 
 .offer-panel {
   @include common.flex-column;
-  background-color: var(--md-sys-color-surface);
+  background-color: var(--md-sys-color-surface-variant);
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   flex-shrink: 0;
   gap: common.$spacing-medium;

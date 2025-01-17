@@ -20,7 +20,7 @@ h1 {
 
 .main {
   @include common.flex-column;
-  background: var(--md-sys-color-surface);
+  background: var(--md-sys-color-surface-variant);
   border-radius: common.$spacing-medium;
   gap: common.$spacing-xxl;
   max-width: 500px;

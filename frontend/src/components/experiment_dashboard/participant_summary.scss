@@ -16,11 +16,11 @@
 
   &:focus,
   &:hover {
-    background: var(--md-sys-color-surface-container-highest);
+    background: var(--md-sys-color-surface-container);
   }
 
   &.selected {
-    background: var(--md-sys-color-surface-container);
+    background: var(--md-sys-color-primary-container-low);
   }
 
   &.old {
