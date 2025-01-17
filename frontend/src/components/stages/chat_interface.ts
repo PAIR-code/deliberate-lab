@@ -65,7 +65,7 @@ export class ChatInterface extends MobxLitElement {
   }
 
   private isConversationOver() {
-    const stageId = this.routerService.activeRoute.params['stage'];
+    const stageId = this.participantService.currentStageViewId ?? '';
     const stage = this.experimentService.getStage(stageId);
 
     if (!stage || stage.kind !== StageKind.CHAT) return false; // Changed `nothing` to `false`
@@ -77,7 +77,7 @@ export class ChatInterface extends MobxLitElement {
   }
 
   private renderChatHistory(currentDiscussionId: string | null) {
-    const stageId = this.routerService.activeRoute.params['stage'];
+    const stageId = this.participantService.currentStageViewId ?? '';
     const stage = this.experimentService.getStage(stageId);
     if (!stage || stage.kind !== StageKind.CHAT) return nothing;
 

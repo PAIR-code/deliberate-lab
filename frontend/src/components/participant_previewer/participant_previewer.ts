@@ -56,7 +56,9 @@ export class ParticipantPreviewer extends MobxLitElement {
   @state() isStartExperimentLoading = false;
 
   override render() {
-    if (this.routerService.activePage === Pages.PARTICIPANT) {
+    const stageId = this.participantService.currentStageViewId;
+
+    if (!stageId) {
       return html`
         <participant-nav></participant-nav>
         <div
@@ -71,7 +73,6 @@ export class ParticipantPreviewer extends MobxLitElement {
       `;
     }
 
-    const stageId = this.routerService.activeRoute.params['stage'];
     const stage = this.experimentService.getStage(stageId);
 
     return html`
@@ -132,11 +133,7 @@ export class ParticipantPreviewer extends MobxLitElement {
     }
 
     // Otherwise, route to current stage
-    this.routerService.navigate(Pages.PARTICIPANT_STAGE, {
-      experiment: this.routerService.activeRoute.params['experiment'],
-      participant: this.routerService.activeRoute.params['participant'],
-      stage: profile.currentStageId,
-    });
+    this.participantService.setCurrentStageView(profile.currentStageId);
   }
 
   private renderAttentionPopup() {

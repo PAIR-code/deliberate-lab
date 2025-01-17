@@ -12,8 +12,6 @@ import {AuthService} from '../../services/auth.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {HomeService} from '../../services/home.service';
 import {ParticipantService} from '../../services/participant.service';
-import {Pages, RouterService} from '../../services/router.service';
-
 import {
   StageConfig
 } from '@deliberation-lab/utils';
@@ -28,15 +26,10 @@ export class ParticipantNav extends MobxLitElement {
   private readonly authService = core.getService(AuthService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
-  private readonly routerService = core.getService(RouterService);
 
   override render() {
     const navigateToLanding = () => {
-      const params = this.routerService.activeRoute.params;
-      this.routerService.navigate(Pages.PARTICIPANT, {
-        'experiment': params['experiment'],
-        'participant': params['participant'],
-      });
+      this.participantService.setCurrentStageView(undefined);
     };
 
     return html`
@@ -70,16 +63,11 @@ export class ParticipantNav extends MobxLitElement {
     const navItemClasses = classMap({
       'nav-item': true,
       'experimenter-only': !this.participantService.canAccessStage(stage.id),
-      selected: this.routerService.activeRoute.params['stage'] === stage.id,
+      selected: this.participantService.currentStageViewId === stage.id,
     });
 
     const navigate = () => {
-      const params = this.routerService.activeRoute.params;
-      this.routerService.navigate(Pages.PARTICIPANT_STAGE, {
-        'experiment': params['experiment'],
-        'participant': params['participant'],
-        'stage': stage.id,
-      });
+      this.participantService.setCurrentStageView(stage.id);
     };
 
     return html`

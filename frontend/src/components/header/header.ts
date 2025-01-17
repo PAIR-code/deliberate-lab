@@ -71,7 +71,6 @@ export class Header extends MobxLitElement {
     return (
       this.experimentManager.isEditingFull ||
       activePage === Pages.PARTICIPANT ||
-      activePage === Pages.PARTICIPANT_STAGE ||
       activePage === Pages.PARTICIPANT_JOIN_COHORT
     );
   }
@@ -110,11 +109,6 @@ export class Header extends MobxLitElement {
             participant: params['participant'],
           });
           break;
-        case Pages.PARTICIPANT_STAGE:
-          this.routerService.navigate(Pages.EXPERIMENT, {
-            experiment: params['experiment'],
-          });
-          break;
         default:
           break;
       }
@@ -146,7 +140,7 @@ export class Header extends MobxLitElement {
     if (!profile) return;
 
     const getStageWaitingText = () => {
-      const stageId = this.routerService.activeRoute.params['stage'];
+      const stageId = this.participantService.currentStageViewId ?? '';
       const stage = this.experimentService.getStage(stageId);
       if (!stage || !profile) return '';
 
@@ -183,8 +177,6 @@ export class Header extends MobxLitElement {
       case Pages.PARTICIPANT_JOIN_COHORT:
         return 'Previewing experiment cohort';
       case Pages.PARTICIPANT:
-        return this.renderParticipantProfileBanner(profile);
-      case Pages.PARTICIPANT_STAGE:
         return this.renderParticipantProfileBanner(profile);
       default:
         return '';
@@ -349,7 +341,7 @@ export class Header extends MobxLitElement {
             </pr-icon-button>
           </pr-tooltip>
         `;
-      case Pages.PARTICIPANT_STAGE:
+      case Pages.PARTICIPANT:
         return this.renderDebugModeButton();
       default:
         return nothing;

@@ -85,9 +85,15 @@ export class App extends MobxLitElement {
           <participant-previewer></participant-previewer>
         `;
       case Pages.PARTICIPANT_STAGE:
-        return html`
-          <participant-previewer></participant-previewer>
-        `;
+        // This ensures backwards compatibility
+        // from when PARTICIPANT_STAGE was a different route than PARTICIPANT
+        const params = this.routerService.activeRoute.params;
+        this.routerService.navigate(Pages.PARTICIPANT, {
+          experiment: params['experiment'],
+          participant: params['participant'],
+          stage: params['stage']
+        });
+        return nothing;
       case Pages.PARTICIPANT_JOIN_COHORT:
         return html`
           <cohort-landing></cohort-landing>

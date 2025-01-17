@@ -16,6 +16,7 @@ import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {AgentEditor} from '../../services/agent.editor';
+import {ParticipantService} from '../../services/participant.service';
 import {RouterService} from '../../services/router.service';
 
 import {AgentConfig, StageKind} from '@deliberation-lab/utils';
@@ -38,6 +39,7 @@ export class Panel extends MobxLitElement {
   private readonly authService = core.getService(AuthService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly agentEditor = core.getService(AgentEditor);
+  private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
   @state() panelView: PanelView = PanelView.MANUAL_CHAT;
@@ -49,7 +51,7 @@ export class Panel extends MobxLitElement {
     }
 
     // Check if chat stage
-    const stageId = this.routerService.activeRoute.params['stage'];
+    const stageId = this.participantService.currentStageViewId ?? '';
     const stage = this.experimentService.getStage(stageId);
 
     if (stage?.kind !== StageKind.CHAT) {

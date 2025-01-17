@@ -7,6 +7,7 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
+import {ParticipantService} from '../../services/participant.service';
 import {RouterService} from '../../services/router.service';
 
 import {
@@ -21,10 +22,11 @@ export class Progress extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly cohortService = core.getService(CohortService);
+  private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
   override render() {
-    const stageId = this.routerService.activeRoute.params['stage'];
+    const stageId = this.participantService.currentStageViewId ?? '';
     const completed = this.cohortService.getStageCompletedParticipants(stageId);
 
     return html`
@@ -38,7 +40,7 @@ export class Progress extends MobxLitElement {
   }
 
   private renderParticipant(participant: ParticipantProfile) {
-    const stageId = this.routerService.activeRoute.params['stage'];
+    const stageId = this.participantService.currentStageViewId ?? '';
 
     return html`
       <participant-profile-display

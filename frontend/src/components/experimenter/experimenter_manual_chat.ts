@@ -12,7 +12,7 @@ import {customElement, state} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentManager} from '../../services/experiment.manager';
-import {RouterService} from '../../services/router.service';
+import {ParticipantService} from '../../services/participant.service';
 
 import {
   LLM_AGENT_AVATARS
@@ -28,7 +28,7 @@ export class Chat extends MobxLitElement {
 
   private readonly authService = core.getService(AuthService);
   private readonly experimentManager = core.getService(ExperimentManager);
-  private readonly routerService = core.getService(RouterService);
+  private readonly participantService = core.getService(ParticipantService);
 
   @state() value = '';
   @state() name = 'Agent';
@@ -41,7 +41,7 @@ export class Chat extends MobxLitElement {
 
     // Send chat message
     await this.experimentManager.createManualChatMessage(
-      this.routerService.activeRoute.params['stage'],
+      this.participantService.currentStageViewId ?? '',
       {
         message: this.value.trim(),
         profile: { name: this.name, avatar: this.avatar, pronouns: null }
@@ -160,7 +160,7 @@ export class Chat extends MobxLitElement {
   override render() {
     if (!this.authService.isExperimenter) return nothing;
 
-    const stageId = this.routerService.activeRoute.params['stage'];
+    const stageId = this.participantService.currentStageViewId ?? '';
 
     return html`
       ${this.renderName()}
