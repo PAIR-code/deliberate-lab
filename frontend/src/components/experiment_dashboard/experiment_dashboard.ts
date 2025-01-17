@@ -2,7 +2,7 @@ import '../experiment_builder/experiment_builder';
 import '../experiment_builder/experiment_settings_dialog';
 
 import './cohort_settings_dialog';
-import './experiment_manager_nav';
+import './cohort_list';
 import './participant_stats';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -18,11 +18,11 @@ import {CohortConfig, StageKind} from '@deliberation-lab/utils';
 import {getCohortDescription, getCohortName} from '../../shared/cohort.utils';
 import {isObsoleteParticipant} from '../../shared/participant.utils';
 
-import {styles} from './experiment_manager.scss';
+import {styles} from './experiment_dashboard.scss';
 
-/** Experiment manager used to view/update cohorts, participants */
-@customElement('experiment-manager')
-export class ExperimentManagerComponent extends MobxLitElement {
+/** Experiment dashboard used to view/update cohorts, participants */
+@customElement('experiment-dashboard')
+export class Component extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly analyticsService = core.getService(AnalyticsService);
@@ -39,24 +39,24 @@ export class ExperimentManagerComponent extends MobxLitElement {
     }
 
     return html`
-      ${this.renderNav()}
+      ${this.renderCohortList()}
       <div class="experiment-manager">${this.renderManager()}</div>
       ${this.renderCohortSettingsDialog()}
       ${this.renderExperimentSettingsDialog()}
     `;
   }
 
-  private renderNav() {
+  private renderCohortList() {
     if (Object.keys(this.experimentService.stageConfigMap).length === 0) {
       return html`
-        <div class="empty-nav">
+        <div>
           ⚠️ WARNING: Your experiment has no stages. Use the edit button in the
           top right to add stages in order to unlock cohort and participant
           creation.
         </div>
       `;
     }
-    return html`<experiment-manager-nav></experiment-manager-nav>`;
+    return html`<cohort-list></cohort-list>`;
   }
 
   private renderExperimentSettingsDialog() {
@@ -189,6 +189,6 @@ export class ExperimentManagerComponent extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'experiment-manager': ExperimentManagerComponent;
+    'experiment-dashboard': Component;
   }
 }

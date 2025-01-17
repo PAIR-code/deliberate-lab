@@ -2,7 +2,7 @@ import './pair-components/button';
 
 import './components/admin/admin_dashboard';
 import './components/experiment_builder/experiment_builder';
-import './components/experiment_manager/experiment_manager';
+import './components/experiment_dashboard/experiment_dashboard';
 import './components/experimenter/experimenter_panel';
 import './components/gallery/home_gallery';
 import './components/header/header';
@@ -71,7 +71,7 @@ export class App extends MobxLitElement {
           return this.render403();
         }
         return html`
-          <experiment-manager></experiment-manager>
+          <experiment-dashboard></experiment-dashboard>
         `;
       case Pages.EXPERIMENT_CREATE:
         if (!this.authService.isExperimenter) {

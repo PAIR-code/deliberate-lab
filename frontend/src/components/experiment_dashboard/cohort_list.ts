@@ -18,11 +18,11 @@ import {Pages, RouterService} from '../../services/router.service';
 import {StageConfig} from '@deliberation-lab/utils';
 import {ExperimentManager} from '../../services/experiment.manager';
 
-import {styles} from './experiment_manager_nav.scss';
+import {styles} from './cohort_list.scss';
 
-/** Sidenav for experiment manager */
-@customElement('experiment-manager-nav')
-export class ExperimentManagerNav extends MobxLitElement {
+/** Cohort accordions for experiment dashboard */
+@customElement('cohort-list')
+export class Component extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly analyticsService = core.getService(AnalyticsService);
@@ -153,6 +153,6 @@ export class ExperimentManagerNav extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'experiment-manager-nav': ExperimentManagerNav;
+    'cohort-list': Component;
   }
 }
