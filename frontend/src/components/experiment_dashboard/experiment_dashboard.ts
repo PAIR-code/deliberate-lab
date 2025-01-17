@@ -13,12 +13,16 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
+import {CohortService} from '../../services/cohort.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
 
 import {CohortConfig, StageKind} from '@deliberation-lab/utils';
 import {getCohortDescription, getCohortName} from '../../shared/cohort.utils';
-import {isObsoleteParticipant} from '../../shared/participant.utils';
+import {
+  getParticipantStatusDetailText,
+  isObsoleteParticipant
+} from '../../shared/participant.utils';
 
 import {styles} from './experiment_dashboard.scss';
 
@@ -28,6 +32,7 @@ export class Component extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly analyticsService = core.getService(AnalyticsService);
+  private readonly cohortService = core.getService(CohortService);
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentService = core.getService(ExperimentService);
 
@@ -96,8 +101,12 @@ export class Component extends MobxLitElement {
     }
 
     const renderContent = () => {
+      const popupStatus = this.getParticipantStatusText() !== '';
       if (this.experimentManager.showParticipantPreview) {
-        return html`<participant-view></participant-view>`;
+        return html`
+          <participant-view class="${popupStatus ? 'sepia' : ''}">
+          </participant-view>
+        `;
       } else {
         return html`
           <div class="content-wrapper">
@@ -143,6 +152,14 @@ export class Component extends MobxLitElement {
       `;
     };
 
+    const renderStatusBanner = () => {
+      const text = this.getParticipantStatusText();
+      if (text === '') return nothing;
+      return html`
+        <div class="participant-status-banner">${text}</div>
+      `;
+    }
+
     return html`
       <div class="header">
         <div class="left">
@@ -152,10 +169,23 @@ export class Component extends MobxLitElement {
             : ''}
           ${renderSummaryButton()}
           ${renderPreviewButton()}
+          ${renderStatusBanner()}
         </div>
         ${this.renderTransferMenu()}
       </div>
     `;
+  }
+
+  private getParticipantStatusText() {
+    const profile = this.experimentManager.currentParticipant;
+    const stageId = profile?.currentStageId ?? '';
+    const stage = this.experimentService.getStage(stageId);
+    if (!stage || !profile) return '';
+
+    return getParticipantStatusDetailText(
+      profile,
+      this.cohortService.isStageInWaitingPhase(stage.id)
+    );
   }
 
   private renderTransferMenu() {

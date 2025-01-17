@@ -178,7 +178,14 @@ export class Header extends MobxLitElement {
       case Pages.PARTICIPANT_JOIN_COHORT:
         return 'Previewing experiment cohort';
       case Pages.PARTICIPANT:
-        return this.renderParticipantProfileBanner(profile);
+        const stageId = this.participantService.currentStageViewId ?? '';
+        const stage = this.experimentService.getStage(stageId);
+        if (!stage || !profile) return '';
+        return getParticipantStatusDetailText(
+          profile,
+          this.cohortService.isStageInWaitingPhase(stage.id),
+          `Previewing as: ${getParticipantInlineDisplay(profile)}.`
+        );
       default:
         return '';
     }

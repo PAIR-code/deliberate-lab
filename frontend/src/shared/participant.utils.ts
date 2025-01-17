@@ -55,7 +55,15 @@ export function getCurrentStageStartTime(
 }
 
 /** Returns an explanation text about the participant status. */
-export function getParticipantStatusDetailText(profile: ParticipantProfile) {
+export function getParticipantStatusDetailText(
+  profile: ParticipantProfile,
+  isStageInWaitingPhase = false,
+  defaultText = ''
+) {
+  if (isStageInWaitingPhase) {
+    return '⏸️ This participant currently sees a wait stage; they are waiting for others in the cohort to catch up.'
+  }
+
   if (profile.currentStatus === ParticipantStatus.BOOTED_OUT) {
     return '‼️  This participant has been booted from the experiment and can no longer participate.';
   } else if (profile.currentStatus === ParticipantStatus.ATTENTION_TIMEOUT) {
@@ -66,7 +74,7 @@ export function getParticipantStatusDetailText(profile: ParticipantProfile) {
     return '⚠️ This participant has been sent an attention check.';
   }
 
-  return '';
+  return defaultText;
 }
 
 /** True if participating in experiment (not dropped out, not transfer pending)

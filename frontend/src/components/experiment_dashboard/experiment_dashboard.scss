@@ -27,6 +27,10 @@
 participant-view {
   opacity: .8;
   overflow: auto;
+
+  &.sepia {
+    filter: sepia(80%);
+  }
 }
 
 .header {
@@ -44,6 +48,15 @@ participant-view {
     @include common.flex-row-align-center;
     gap: common.$spacing-medium;
   }
+}
+
+.participant-status-banner {
+  @include typescale.body-small;
+  background: var(--md-sys-color-error-container);
+  border-radius: common.$spacing-small;
+  color: var(--md-sys-color-on-error-container);
+  max-width: 400px;
+  padding: common.$spacing-small;
 }
 
 .content {
