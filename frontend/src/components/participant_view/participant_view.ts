@@ -40,11 +40,11 @@ import {
 } from '@deliberation-lab/utils';
 import {isParticipantEndedExperiment} from '../../shared/participant.utils';
 
-import {styles} from './participant_previewer.scss';
+import {styles} from './participant_view.scss';
 
 /** Participant's view of experiment */
-@customElement('participant-previewer')
-export class ParticipantPreviewer extends MobxLitElement {
+@customElement('participant-view')
+export class ParticipantView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly authService = core.getService(AuthService);
@@ -251,6 +251,6 @@ export class ParticipantPreviewer extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'participant-previewer': ParticipantPreviewer;
+    'participant-view': ParticipantView;
   }
 }

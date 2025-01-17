@@ -7,8 +7,8 @@ import './components/experimenter/experimenter_panel';
 import './components/gallery/home_gallery';
 import './components/header/header';
 import './components/login/login';
-import './components/participant_previewer/cohort_landing';
-import './components/participant_previewer/participant_previewer';
+import './components/participant_view/cohort_landing';
+import './components/participant_view/participant_view';
 import './components/settings/settings';
 import './components/sidenav/experimenter_sidenav';
 
@@ -82,7 +82,7 @@ export class App extends MobxLitElement {
         `;
       case Pages.PARTICIPANT:
         return html`
-          <participant-previewer></participant-previewer>
+          <participant-view></participant-view>
         `;
       case Pages.PARTICIPANT_STAGE:
         // This ensures backwards compatibility
