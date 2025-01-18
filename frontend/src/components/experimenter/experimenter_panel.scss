@@ -17,6 +17,7 @@
 
 .checkbox-wrapper {
   @include common.flex-row-align-center;
+  cursor: pointer;
   gap: common.$spacing-small;
   overflow-wrap: break-word;
 
@@ -48,9 +49,11 @@
 
 .header {
   @include common.flex-row-align-center;
-  @include typescale.label-large;
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
   flex-shrink: 0;
-  height: 40px;
+  font-weight: 500;
+  text-transform: uppercase;
 }
 
 .top {

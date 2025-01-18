@@ -65,8 +65,6 @@ export class Panel extends MobxLitElement {
               <div class="main">
                 <div class="top">
                   <div class="header">Manual chat</div>
-                </div>
-                <div class="bottom">
                   <div>Navigate to a chat stage preview to send a message.</div>
                 </div>
               </div>
@@ -76,8 +74,6 @@ export class Panel extends MobxLitElement {
             <div class="main">
               <div class="top">
                 <div class="header">Manual chat</div>
-              </div>
-              <div class="bottom">
                 <experimenter-manual-chat></experimenter-manual-chat>
               </div>
             </div>
@@ -98,7 +94,7 @@ export class Panel extends MobxLitElement {
               <div class="top">
                 <div class="header">Agent config</div>
                 ${agents.length === 0
-                  ? html`<div>No agents configured</div>`
+                  ? html`<div>No agents configured in the current stage</div>`
                   : nothing}
                 ${agents.map((agent, index) =>
                   this.renderAgentEditor(stageId, agent, index)
@@ -112,36 +108,47 @@ export class Panel extends MobxLitElement {
           const showStats = this.experimentManager.showParticipantStats;
           return html`
             <div class="main">
-              <div class="bottom">
-                <div class="checkbox-wrapper">
-                  <md-checkbox
-                    touch-target="wrapper"
-                    ?checked=${showCohortList}
-                    @click=${() => { this.experimentManager.setShowCohortList(!showCohortList) }}>
+              <div class="top">
+                <div class="header">Cohort Panel</div>
+                <div class="checkbox-wrapper"
+                  @click=${() => { this.experimentManager.setShowCohortList(!showCohortList) }}
+                >
+                  <pr-icon-button
+                    color="secondary"
+                    size="medium"
+                    variant="default"
+                    icon=${showCohortList ? 'check_box' : 'check_box_outline_blank'}
                   >
-                  </md-checkbox>
+                  </pr-icon-button>
                   <div>
                     Show cohort list
                   </div>
                 </div>
-                <div class="checkbox-wrapper">
-                  <md-checkbox
-                    touch-target="wrapper"
-                    ?checked=${showStats}
-                    @click=${() => { this.experimentManager.setShowParticipantStats(!showStats) }}>
+                <div class="header">Participant panels</div>
+                <div class="checkbox-wrapper"
+                  @click=${() => { this.experimentManager.setShowParticipantStats(!showStats) }}
+                >
+                  <pr-icon-button
+                    color="secondary"
+                    size="medium"
+                    variant="default"
+                    icon=${showStats ? 'check_box' : 'check_box_outline_blank'}
                   >
-                  </md-checkbox>
+                  </pr-icon-button>
                   <div>
                     Show participant details
                   </div>
                 </div>
-                <div class="checkbox-wrapper">
-                  <md-checkbox
-                    touch-target="wrapper"
-                    ?checked=${showPreview}
-                    @click=${() => { this.experimentManager.setShowParticipantPreview(!showPreview) }}>
+                <div class="checkbox-wrapper"
+                  @click=${() => { this.experimentManager.setShowParticipantPreview(!showPreview) }}
+                >
+                  <pr-icon-button
+                    color="secondary"
+                    size="medium"
+                    variant="default"
+                    icon=${showPreview ? 'check_box' : 'check_box_outline_blank'}
                   >
-                  </md-checkbox>
+                  </pr-icon-button>
                   <div>
                     Show participant preview
                   </div>
