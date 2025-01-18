@@ -2,9 +2,7 @@ import { action, computed, makeObservable, observable } from "mobx";
 import { Service } from "./service";
 
 import {
-  ColorMode,
-  ColorTheme,
-  TextSize,
+  ColorMode
 } from "../shared/types";
 
 interface ServiceProvider {}
@@ -19,18 +17,8 @@ export class SettingsService extends Service {
   }
 
   @observable colorMode: ColorMode = ColorMode.DEFAULT;
-  @observable colorTheme: ColorTheme = ColorTheme.KAMINO;
-  @observable textSize: TextSize = TextSize.SMALL;
 
   @action setColorMode(colorMode: ColorMode) {
     this.colorMode = colorMode;
-  }
-
-  @action setColorTheme(colorTheme: ColorTheme) {
-    this.colorTheme = colorTheme;
-  }
-
-  @action setTextSize(textSize: TextSize) {
-    this.textSize = textSize;
   }
 }

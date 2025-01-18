@@ -20,18 +20,6 @@
   height: 100%;
 }
 
-.size--small {
-  @include typescale.app-small;
-}
-
-.size--medium {
-  @include typescale.app-medium;
-}
-
-.size--large {
-  @include typescale.app-large;
-}
-
 .mode--light {
   @include colors.light;
 }

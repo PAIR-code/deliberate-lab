@@ -10,7 +10,7 @@ import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
 import {SettingsService} from '../../services/settings.service';
 
-import {ColorMode, ColorTheme, TextSize} from '../../shared/types';
+import {ColorMode} from '../../shared/types';
 
 import {styles} from './settings.scss';
 
@@ -27,8 +27,7 @@ export class Settings extends MobxLitElement {
   override render() {
     return html`
       <div class="settings">
-        ${this.renderColorModeSection()} ${this.renderColorThemeSection()}
-        ${this.renderTextSizeSection()} ${this.renderAccountSection()}
+        ${this.renderColorModeSection()} ${this.renderAccountSection()}
         ${this.authService.isExperimenter
           ? this.renderExperimenterData()
           : nothing}
@@ -79,78 +78,6 @@ export class Settings extends MobxLitElement {
             }}
           >
             System Default
-          </pr-button>
-        </div>
-      </div>
-    `;
-  }
-
-  private renderColorThemeSection() {
-    const handleClick = (theme: ColorTheme) => {
-      this.settingsService.setColorTheme(theme);
-    };
-
-    const isTheme = (theme: ColorTheme) => {
-      return this.settingsService.colorTheme === theme;
-    };
-
-    return html`
-      <div class="section">
-        <h2>Color Theme</h2>
-        <div class="action-buttons">
-          <pr-button
-            color=${isTheme(ColorTheme.KAMINO) ? 'primary' : 'neutral'}
-            variant=${isTheme(ColorTheme.KAMINO) ? 'tonal' : 'default'}
-            @click=${() => {
-              handleClick(ColorTheme.KAMINO);
-            }}
-          >
-            Kamino
-          </pr-button>
-        </div>
-      </div>
-    `;
-  }
-
-  private renderTextSizeSection() {
-    const handleClick = (size: TextSize) => {
-      this.settingsService.setTextSize(size);
-    };
-
-    const isSize = (size: TextSize) => {
-      return this.settingsService.textSize === size;
-    };
-
-    return html`
-      <div class="section">
-        <h2>Text Size</h2>
-        <div class="action-buttons">
-          <pr-button
-            color=${isSize(TextSize.SMALL) ? 'primary' : 'neutral'}
-            variant=${isSize(TextSize.SMALL) ? 'tonal' : 'default'}
-            @click=${() => {
-              handleClick(TextSize.SMALL);
-            }}
-          >
-            Small
-          </pr-button>
-          <pr-button
-            color=${isSize(TextSize.MEDIUM) ? 'primary' : 'neutral'}
-            variant=${isSize(TextSize.MEDIUM) ? 'tonal' : 'default'}
-            @click=${() => {
-              handleClick(TextSize.MEDIUM);
-            }}
-          >
-            Medium
-          </pr-button>
-          <pr-button
-            color=${isSize(TextSize.LARGE) ? 'primary' : 'neutral'}
-            variant=${isSize(TextSize.LARGE) ? 'tonal' : 'default'}
-            @click=${() => {
-              handleClick(TextSize.LARGE);
-            }}
-          >
-            Large
           </pr-button>
         </div>
       </div>

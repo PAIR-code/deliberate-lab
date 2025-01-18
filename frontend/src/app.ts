@@ -24,7 +24,7 @@ import {HomeService} from './services/home.service';
 import {Pages, RouterService} from './services/router.service';
 import {SettingsService} from './services/settings.service';
 
-import {ColorMode, ColorTheme, TextSize} from './shared/types';
+import {ColorMode} from './shared/types';
 
 import {styles} from './app.scss';
 
@@ -144,28 +144,6 @@ export class App extends MobxLitElement {
   }
 
   override render() {
-    const isMode = (mode: ColorMode) => {
-      return this.settingsService.colorMode === mode;
-    };
-
-    const isTheme = (theme: ColorTheme) => {
-      return this.settingsService.colorTheme === theme;
-    };
-
-    const isSize = (size: TextSize) => {
-      return this.settingsService.textSize === size;
-    };
-
-    const classes = classMap({
-      'app-wrapper': true,
-      'mode--dark': isMode(ColorMode.DARK),
-      'mode--light': isMode(ColorMode.LIGHT),
-      'mode--default': isMode(ColorMode.DEFAULT),
-      'size--small': isSize(TextSize.SMALL),
-      'size--medium': isSize(TextSize.MEDIUM),
-      'size--large': isSize(TextSize.LARGE),
-    });
-
     if (
       !this.authService.authenticated &&
       !this.routerService.isParticipantPage &&
@@ -173,7 +151,7 @@ export class App extends MobxLitElement {
     ) {
       // Render login screen if relevant after initial auth check
       return html`
-        <div class=${classes}>
+        <div class="app-wrapper mode--${this.settingsService.colorMode}">
           <div class="content">
             ${this.authService.initialAuthCheck
               ? html`<login-page></login-page>`
@@ -184,7 +162,7 @@ export class App extends MobxLitElement {
     }
 
     return html`
-      <div class=${classes}>
+      <div class="app-wrapper mode--${this.settingsService.colorMode}">
         <main>
           <experimenter-sidenav></experimenter-sidenav>
           <div class="content-wrapper">
