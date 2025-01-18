@@ -123,10 +123,12 @@ export class Component extends MobxLitElement {
     return html`
       <div class="stats-panel">
         ${this.renderHeader()}
-        <div class="content-wrapper">
+        <div>
           <participant-stats
             .profile=${this.experimentManager.currentParticipant}>
           </participant-stats>
+        </div>
+        <div class="content-wrapper">
           <code>
             ${JSON.stringify(this.experimentManager.currentParticipant)}
           </code>

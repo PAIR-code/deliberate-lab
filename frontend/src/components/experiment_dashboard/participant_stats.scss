@@ -13,78 +13,31 @@
 
 h3,
 h4 {
-  margin: common.$spacing-small;
+  margin: 0;
+  padding: 0 common.$spacing-large;
 }
 
 .table {
   @include common.table;
+
+  .table-cell.small {
+    width: 120px;
+  }
 }
 
 .chip-container {
-  display: flex;
-  gap: 8px; /* Add space between chips */
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-large;
 }
 
 .chip {
   @include typescale.label-medium;
   @include common.chip;
-  border-radius: common.$spacing-small;
-  display: inline-block;
+  width: max-content;
 }
 
-.success {
-  background-color: var(--md-sys-color-success);
-}
-.pending {
-  background-color: var(--md-sys-color-primary-container);
-}
-.neutral {
-  background-color: var(--md-sys-color-secondary-container);
-}
-.warning {
-  background-color: var(--md-sys-color-tertiary-container);
-}
-
-.chip-attention-check {
-  background-color: orange;
-}
-
-.chip-in-progress {
-  background-color: blue;
-}
-
-.chip-success {
-  background-color: green;
-}
-
-.chip-transfer-pending {
-  background-color: purple;
-}
-
-.chip-transfer-timeout {
-  background-color: red;
-}
-
-.chip-transfer-failed {
-  background-color: darkred;
-}
-
-.chip-transfer-declined {
-  background-color: crimson;
-}
-
-.chip-attention-timeout {
-  background-color: darkorange;
-}
-
-.chip-booted-out {
-  background-color: gray;
-}
-
-.chip-deleted {
-  background-color: black;
-}
-
-.chip-unknown {
-  background-color: darkgray;
+.table-wrapper,
+.stats-wrapper {
+  padding: 0 common.$spacing-large;
 }

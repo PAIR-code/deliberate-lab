@@ -107,7 +107,7 @@ export class ExperimentManager extends Service {
   // Current participant, view in dashboard
   @observable currentParticipantId: string|undefined = undefined;
   @observable showCohortList = true;
-  @observable showParticipantStats = false;
+  @observable showParticipantStats = true;
   @observable showParticipantPreview = true;
 
   // Copy of cohort being edited in settings dialog

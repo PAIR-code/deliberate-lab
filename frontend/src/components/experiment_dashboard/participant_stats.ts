@@ -52,90 +52,92 @@ export class Preview extends MobxLitElement {
       return nothing;
     }
 
-    // TODO: add toolbar for previewing, copying links, etc.
-    // TODO: add progress bar
-    // TODO: add completed stages
-    // TODO: add current/past transfer log
+    return html`
+      ${this.renderChips()}
+      ${this.renderTable()}
+      ${this.renderStats()}
+      <div class="divider"></div>
+      ${this.renderStageDatas()}
+    `;
+  }
+
+  private renderStats() {
+    if (!this.profile) return nothing;
+
+    const transfer = this.profile.transferCohortId;
+    const timestamps = this.profile.timestamps;
+
     const getCohort = (id: string) => {
       const cohort = this.experimentManager.getCohort(id);
       return cohort ? getCohortName(cohort) : '';
     };
 
     return html`
-      <div class="chip-container">
-        ${this.renderStatusChip()} ${this.renderStageChip()}
-
-        <div
-          class="chip ${this.profile.timestamps.acceptedTOS
-            ? 'success'
-            : 'warning'}"
-        >
-          ${this.profile.timestamps.acceptedTOS
-            ? html`<b>✅ Accepted TOS:</b> ${convertUnifiedTimestampToDate(
-                  this.profile.timestamps.acceptedTOS
-                )}`
-            : html`<b>⚠️ Accepted TOS:</b> N/A`}
-        </div>
+      <div class="stats-wrapper">
+        ${transfer ? html`<div>Pending transfer: ${getCohort(transfer)}</div>` : nothing}
+        ${this.renderTimestamp('Started experiment', timestamps.startExperiment)}
+        ${this.renderTimestamp('Ended experiment', timestamps.endExperiment)}
       </div>
-      <div class="table">
-        <div class="table-head">
-          <div class="table-row">
-            <div class="table-cell">Profile</div>
-            <div class="table-cell">Public ID</div>
-            <div class="table-cell">Private ID</div>
-            <div class="table-cell">Anonymous IDs</div>
-            ${this.experimentService.experiment?.prolificConfig
-              ?.enableProlificIntegration
-              ? `<div class="table-cell">Prolific ID</div>`
-              : ''}
-          </div>
-        </div>
-        <div class="table-row">
-          <div class="table-cell">
-            ${getParticipantInlineDisplay(this.profile)}
-            ${this.profile.pronouns ? `(${this.profile.pronouns})` : ''}
-          </div>
-          <div class="table-cell">${this.profile.publicId}</div>
-          <div class="table-cell">${this.profile.privateId}</div>
-          <div class="table-cell">${this.renderAnonymousProfiles()}</div>
-          ${this.experimentService.experiment?.prolificConfig
-            ?.enableProlificIntegration
-            ? `<div class="table-cell">${this.profile.prolificId ?? '⦰'}</div>`
-            : ''}
-        </div>
-      </div>
-
-      ${this.profile.transferCohortId
-        ? html`<div>
-            <b>Pending transfer to cohort:</b> ${getCohort(
-              this.profile.transferCohortId
-            )}
-          </div>`
-        : nothing}
-      ${this.renderTimestamp(
-        'Started experiment',
-        this.profile.timestamps.startExperiment
-      )}
-      ${this.renderTimestamp(
-        'Ended experiment',
-        this.profile.timestamps.endExperiment
-      )}
-      ${this.renderStageDatas()}
     `;
   }
+
+  private renderChips() {
+    return html`
+      <div class="chip-container">
+        ${this.renderStatusChip()} ${this.renderStageChip()}
+        ${this.renderTOSChip()}
+      </div>
+    `;
+  }
+
+  private renderTable() {
+    if (!this.profile) {
+      return nothing;
+    }
+
+    const isProlific = this.experimentService.experiment?.prolificConfig?.enableProlificIntegration;
+
+    return html`
+      <div class="table-wrapper">
+        <div class="table">
+          <div class="table-row">
+            <div class="table-cell small">Profile</div>
+            <div class="table-cell">
+              ${getParticipantInlineDisplay(this.profile)}
+              ${this.profile.pronouns ? `(${this.profile.pronouns})` : ''}
+            </div>
+          </div>
+          <div class="table-row">
+            <div class="table-cell small">Public ID</div>
+            <div class="table-cell">${this.profile.publicId}</div>
+          </div>
+          <div class="table-row">
+            <div class="table-cell small">Private ID</div>
+            <div class="table-cell">${this.profile.privateId}</div>
+          </div>
+          ${this.renderAnonymousProfileTableCells()}
+          <div class="table-row">
+            <div class="table-cell small">Prolific ID</div>
+            <div class="table-cell">${isProlific ? `${this.profile?.prolificId}` : 'N/A'}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   private getStatusChipStyle(status: ParticipantStatus): {
     emoji: string;
     className: string;
   } {
     switch (status) {
       case ParticipantStatus.ATTENTION_CHECK:
-        return {emoji: '⚠️', className: 'warning'};
+        return {emoji: '⚠️', className: 'progress'};
       case ParticipantStatus.IN_PROGRESS:
-        return {emoji: '⏳', className: 'pending'};
+        return {emoji: '⏳', className: 'primary'};
       case ParticipantStatus.SUCCESS:
         return {emoji: '✅', className: 'success'};
       case ParticipantStatus.TRANSFER_PENDING:
-        return {emoji: '📤', className: 'warning'};
+        return {emoji: '📤', className: 'progress'};
       case ParticipantStatus.TRANSFER_TIMEOUT:
         return {emoji: '⏰', className: 'error'};
       case ParticipantStatus.TRANSFER_FAILED:
@@ -149,8 +151,27 @@ export class Preview extends MobxLitElement {
       case ParticipantStatus.DELETED:
         return {emoji: '🗑️', className: 'error'};
       default:
-        return {emoji: '❓', className: 'neutral'};
+        return {emoji: '❓', className: 'secondary'};
     }
+  }
+
+  private renderTOSChip() {
+    if (!this.profile) {
+      return nothing;
+    }
+    const accepted = this.profile.timestamps.acceptedTOS;
+    if (accepted) {
+      return html`
+        <div class="chip success">
+          <b>✅ Accepted TOS:</b> ${convertUnifiedTimestampToDate(accepted)}
+        </div>
+      `;
+    }
+    return html`
+      <div class="chip progress">
+        <b>⚠️ Accepted TOS:</b> N/A
+      </div>
+    `;
   }
 
   private renderStatusChip() {
@@ -182,14 +203,28 @@ export class Preview extends MobxLitElement {
     `;
   }
 
-  private renderAnonymousProfiles() {
-    if (!this.profile || !this.profile.anonymousProfiles) return;
+  private renderAnonymousProfileTableCells() {
+    if (!this.profile || !this.profile.anonymousProfiles) return nothing;
 
-    const profiles = Object.values(this.profile.anonymousProfiles)
-      .map((p) => `${p.avatar} ${p.name} ${p.repeat + 1}`)
-      .join(' / ');
+    const renderProfile = (key: string) => {
+      if (!this.profile || !this.profile.anonymousProfiles) return nothing;
+      const p = this.profile?.anonymousProfiles[key];
 
-    return html`${profiles}`;
+      return html`
+        <div class="table-row">
+          <div class="table-cell small">${key}</div>
+          <div class="table-cell">
+            ${p?.avatar} ${p?.name} ${(p?.repeat ?? 0) + 1}
+          </div>
+        </div>
+      `;
+    };
+
+    return html`
+      ${Object.keys(this.profile.anonymousProfiles).map(
+        profile => renderProfile(profile)
+      )}
+    `;
   }
 
   private renderStageDatas() {
