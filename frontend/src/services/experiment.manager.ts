@@ -545,16 +545,18 @@ export class ExperimentManager extends Service {
         // Download JSONs and CSVs for each chip negotiation game
         // as well as CSV mapping players to cohort games
         const chipData = getChipNegotiationData(result);
-        // Temporarily download a single JSON because of browser
-        // limitations on number of downloads (will eventually solve this
-        // via zip)
-        const chipDataTitle = `${result.experiment.metadata.name}_ChipNegotiation_all`;
-        downloadJSON({ games: chipData }, chipDataTitle);
-        downloadCSV(getChipNegotiationCSV(result, chipData), chipDataTitle);
-        downloadCSV(
-          getChipNegotiationPlayerMapCSV(result, chipData),
-          `${result.experiment.metadata.name}_ChipNegotiation_PlayerMap`
-        );
+        if (chipData.length > 0) {
+          // Temporarily download a single JSON because of browser
+          // limitations on number of downloads (will eventually solve this
+          // via zip)
+          const chipDataTitle = `${result.experiment.metadata.name}_ChipNegotiation_all`;
+          downloadJSON({ games: chipData }, chipDataTitle);
+          downloadCSV(getChipNegotiationCSV(result, chipData), chipDataTitle);
+          downloadCSV(
+            getChipNegotiationPlayerMapCSV(result, chipData),
+            `${result.experiment.metadata.name}_ChipNegotiation_PlayerMap`
+          );
+        }
 
         // Download chat data for each group chat
         const chatData = getChatHistoryData(result);
