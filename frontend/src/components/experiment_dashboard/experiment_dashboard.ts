@@ -16,6 +16,7 @@ import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {CohortService} from '../../services/cohort.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
+import {ParticipantService} from '../../services/participant.service';
 
 import {CohortConfig, StageKind} from '@deliberation-lab/utils';
 import {getCohortDescription, getCohortName} from '../../shared/cohort.utils';
@@ -35,6 +36,7 @@ export class Component extends MobxLitElement {
   private readonly cohortService = core.getService(CohortService);
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentService = core.getService(ExperimentService);
+  private readonly participantService = core.getService(ParticipantService);
 
   override render() {
     if (this.experimentManager.isEditingFull) {
@@ -174,7 +176,7 @@ export class Component extends MobxLitElement {
 
   private getParticipantStatusText() {
     const profile = this.experimentManager.currentParticipant;
-    const stageId = profile?.currentStageId ?? '';
+    const stageId = this.participantService.currentStageViewId ?? '';
     const stage = this.experimentService.getStage(stageId);
     if (!stage || !profile) return '';
 
