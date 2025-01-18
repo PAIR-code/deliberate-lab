@@ -8,6 +8,11 @@
   width: 100%;
 }
 
+.editor-wrapper {
+  @include common.flex-column;
+  flex-grow: 1;
+}
+
 .main-panel {
   border-right: 2px solid var(--md-sys-color-outline);
   flex-shrink: 0;

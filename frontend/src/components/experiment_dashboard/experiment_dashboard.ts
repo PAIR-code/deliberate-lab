@@ -102,7 +102,12 @@ export class Component extends MobxLitElement {
   }
 
   private renderEditor() {
-    return html` <experiment-builder></experiment-builder> `;
+    return html`
+      <div class="editor-wrapper">
+        <page-header></page-header>
+        <experiment-builder></experiment-builder>
+      </div>
+    `;
   }
 
   private renderParticipantStatsPanel() {
