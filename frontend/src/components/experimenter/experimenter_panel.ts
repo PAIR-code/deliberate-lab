@@ -1,3 +1,4 @@
+import '../../pair-components/button';
 import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
@@ -14,6 +15,7 @@ import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
+import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
 import {AgentEditor} from '../../services/agent.editor';
 import {ParticipantService} from '../../services/participant.service';
@@ -26,6 +28,7 @@ import {DEFAULT_STRING_FORMATTING_INSTRUCTIONS} from '@deliberation-lab/utils';
 import {DEFAULT_JSON_FORMATTING_INSTRUCTIONS} from '@deliberation-lab/utils';
 
 enum PanelView {
+  DEFAULT = 'default',
   MANUAL_CHAT = 'manual_chat',
   LLM_SETTINGS = 'llm_settings',
   API_KEY = 'api_key',
@@ -37,12 +40,13 @@ export class Panel extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly authService = core.getService(AuthService);
+  private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly agentEditor = core.getService(AgentEditor);
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
-  @state() panelView: PanelView = PanelView.MANUAL_CHAT;
+  @state() panelView: PanelView = PanelView.DEFAULT;
   @state() isLoading = false;
 
   override render() {
@@ -50,27 +54,24 @@ export class Panel extends MobxLitElement {
       return nothing;
     }
 
-    // Check if chat stage
     const stageId = this.participantService.currentStageViewId ?? '';
     const stage = this.experimentService.getStage(stageId);
 
-    if (stage?.kind !== StageKind.CHAT) {
-      return nothing;
-    }
-
-    const panelClasses = classMap({
-      'panel-wrapper': true,
-      closed: !this.routerService.isExperimenterPanelOpen,
-    });
-
-    const isPanelOpen = this.routerService.isExperimenterPanelOpen;
-
     const renderPanelView = () => {
-      if (!isPanelOpen) {
-        return nothing;
-      }
       switch (this.panelView) {
         case PanelView.MANUAL_CHAT:
+          if (stage?.kind !== StageKind.CHAT) {
+            return html`
+              <div class="main">
+                <div class="top">
+                  <div class="header">Manual chat</div>
+                </div>
+                <div class="bottom">
+                  <div>Navigate to a chat stage preview to send a message.</div>
+                </div>
+              </div>
+            `;
+          }
           return html`
             <div class="main">
               <div class="top">
@@ -106,41 +107,83 @@ export class Panel extends MobxLitElement {
             </div>
           `;
         default:
-          return nothing;
+          const showCohortList = this.experimentManager.showCohortList;
+          const showPreview = this.experimentManager.showParticipantPreview;
+          const showStats = this.experimentManager.showParticipantStats;
+          return html`
+            <div class="main">
+              <div class="bottom">
+                <div class="checkbox-wrapper">
+                  <md-checkbox
+                    touch-target="wrapper"
+                    ?checked=${showCohortList}
+                    @click=${() => { this.experimentManager.setShowCohortList(!showCohortList) }}>
+                  >
+                  </md-checkbox>
+                  <div>
+                    Show cohort list
+                  </div>
+                </div>
+                <div class="checkbox-wrapper">
+                  <md-checkbox
+                    touch-target="wrapper"
+                    ?checked=${showStats}
+                    @click=${() => { this.experimentManager.setShowParticipantStats(!showStats) }}>
+                  >
+                  </md-checkbox>
+                  <div>
+                    Show participant details
+                  </div>
+                </div>
+                <div class="checkbox-wrapper">
+                  <md-checkbox
+                    touch-target="wrapper"
+                    ?checked=${showPreview}
+                    @click=${() => { this.experimentManager.setShowParticipantPreview(!showPreview) }}>
+                  >
+                  </md-checkbox>
+                  <div>
+                    Show participant preview
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
       }
     };
 
     const isSelected = (panelView: PanelView) => {
-      return isPanelOpen && this.panelView === panelView;
+      return this.panelView === panelView;
     };
 
     return html`
-      <div class=${panelClasses}>
+      <div class="panel-wrapper">
         <div class="sidebar">
-          <pr-tooltip text="Toggle experimenter panel" position="LEFT_END">
+          <pr-tooltip text="Dashboard settings" position="RIGHT_END">
             <pr-icon-button
               color="secondary"
-              icon=${isPanelOpen ? 'chevron_right' : 'chevron_left'}
+              icon="tune"
               size="medium"
-              variant="default"
-              @click=${this.togglePanel}
-            >
-            </pr-icon-button>
-          </pr-tooltip>
-          <pr-tooltip text="Send manual chat" position="LEFT_END">
-            <pr-icon-button
-              color="secondary"
-              icon="chat"
-              size="medium"
-              variant=${isSelected(PanelView.MANUAL_CHAT) ? 'tonal' : 'default'}
+              variant=${isSelected(PanelView.DEFAULT) ? 'tonal' : 'default'}
               @click=${() => {
-                this.panelView = PanelView.MANUAL_CHAT;
-                this.routerService.setExperimenterPanel(true);
+                this.panelView = PanelView.DEFAULT;
               }}
             >
             </pr-icon-button>
           </pr-tooltip>
-          <pr-tooltip text="Edit API key" position="LEFT_END">
+          <pr-tooltip text="Send manual chat" position="RIGHT_END">
+            <pr-icon-button
+              color="secondary"
+              icon="forum"
+              size="medium"
+              variant=${isSelected(PanelView.MANUAL_CHAT) ? 'tonal' : 'default'}
+              @click=${() => {
+                this.panelView = PanelView.MANUAL_CHAT;
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
+          <pr-tooltip text="Edit API key" position="RIGHT_END">
             <pr-icon-button
               color="secondary"
               icon="key"
@@ -148,22 +191,20 @@ export class Panel extends MobxLitElement {
               variant=${isSelected(PanelView.API_KEY) ? 'tonal' : 'default'}
               @click=${() => {
                 this.panelView = PanelView.API_KEY;
-                this.routerService.setExperimenterPanel(true);
               }}
             >
             </pr-icon-button>
           </pr-tooltip>
-          <pr-tooltip text="Coming soon: Edit LLM config" position="LEFT_END">
+          <pr-tooltip text="Edit agent configs" position="RIGHT_END">
             <pr-icon-button
               color="secondary"
-              icon="edit_note"
+              icon="robot_2"
               size="medium"
               variant=${isSelected(PanelView.LLM_SETTINGS)
                 ? 'tonal'
                 : 'default'}
               @click=${() => {
                 this.panelView = PanelView.LLM_SETTINGS;
-                this.routerService.setExperimenterPanel(true);
               }}
             >
             </pr-icon-button>
@@ -172,12 +213,6 @@ export class Panel extends MobxLitElement {
         ${renderPanelView()}
       </div>
     `;
-  }
-
-  private togglePanel() {
-    this.routerService.setExperimenterPanel(
-      !this.routerService.isExperimenterPanelOpen
-    );
   }
 
   private renderAgentEditor(

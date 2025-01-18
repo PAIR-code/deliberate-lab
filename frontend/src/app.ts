@@ -3,7 +3,6 @@ import './pair-components/button';
 import './components/admin/admin_dashboard';
 import './components/experiment_builder/experiment_builder';
 import './components/experiment_dashboard/experiment_dashboard';
-import './components/experimenter/experimenter_panel';
 import './components/gallery/home_gallery';
 import './components/header/header';
 import './components/login/login';
@@ -168,7 +167,6 @@ export class App extends MobxLitElement {
           <div class="content-wrapper">
             ${this.renderPageContent()}
           </div>
-          <experimenter-panel></experimenter-panel>
         </main>
       </div>
     `;

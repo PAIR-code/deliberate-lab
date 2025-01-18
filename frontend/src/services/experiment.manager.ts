@@ -106,7 +106,9 @@ export class ExperimentManager extends Service {
 
   // Current participant, view in dashboard
   @observable currentParticipantId: string|undefined = undefined;
-  @observable showParticipantPreview = false;
+  @observable showCohortList = true;
+  @observable showParticipantStats = false;
+  @observable showParticipantPreview = true;
 
   // Copy of cohort being edited in settings dialog
   @observable cohortEditing: CohortConfig|undefined = undefined;
@@ -164,8 +166,16 @@ export class ExperimentManager extends Service {
     this.cohortEditing = cohort;
   }
 
+  setShowCohortList(showCohortList: boolean) {
+    this.showCohortList = showCohortList;
+  }
+
   setShowParticipantPreview(showParticipantPreview: boolean) {
     this.showParticipantPreview = showParticipantPreview;
+  }
+
+  setShowParticipantStats(showParticipantStats: boolean) {
+    this.showParticipantStats = showParticipantStats;
   }
 
   setCurrentParticipantId(id: string|undefined) {

@@ -8,20 +8,42 @@
   width: 100%;
 }
 
-.left-panel {
+.main-panel {
+  border-right: 2px solid var(--md-sys-color-outline);
+  flex-shrink: 0;
+  height: 100vh;
+  width: 340px;
+}
+
+.cohort-panel {
   @include common.flex-column;
-  border-right: 4px solid var(--md-sys-color-outline);
+  border-right: 2px solid var(--md-sys-color-outline-variant);
   flex-shrink: 0;
   max-height: 100vh;
   overflow: auto;
-  width: calc(min(60%, 560px));
+  width: calc(min(60%, 500px));
 }
 
-.experiment-manager {
+.experiment-manager,
+.preview-panel {
   @include common.flex-column;
   flex-grow: 1;
   height: 100vh;
   overflow: auto;
+}
+
+.stats-panel {
+  @include common.flex-column;
+  border-right: 1px solid var(--md-sys-color-outline-variant);
+  flex-grow: 0;
+  flex-shrink: 0;
+  height: 100vh;
+  overflow: auto;
+  width: 400px;
+}
+
+experimenter-panel {
+  height: calc(100vh - common.$header-height);
 }
 
 participant-view {
@@ -35,7 +57,7 @@ participant-view {
 
 .header {
   @include common.flex-row-align-center;
-  @include typescale.title-large;
+  @include typescale.title-medium;
   background: var(--md-sys-color-surface);
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   flex-shrink: 0;
@@ -55,7 +77,7 @@ participant-view {
 }
 
 .participant-status-banner {
-  @include typescale.body-small;
+  @include typescale.label-small;
   background: var(--md-sys-color-error-container);
   border-radius: common.$spacing-small;
   color: var(--md-sys-color-on-error-container);

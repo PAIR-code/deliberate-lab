@@ -9,14 +9,19 @@
 
 .panel-wrapper {
   @include common.flex-row;
-  background: var(--md-sys-color-surface);
   border-left: 1px solid var(--md-sys-color-outline-variant-high);
   flex-shrink: 0;
   height: 100%;
-  width: calc(common.$sidenav-width + common.$sidenav-closed-width);
+  width: 100%;
+}
 
-  &.closed {
-    width: common.$sidenav-closed-width;
+.checkbox-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+  overflow-wrap: break-word;
+
+  md-checkbox {
+    flex-shrink: 0;
   }
 }
 
@@ -39,7 +44,6 @@
 .main {
   @include common.flex-column;
   flex-grow: 1;
-  gap: common.$spacing-large;
 }
 
 .header {

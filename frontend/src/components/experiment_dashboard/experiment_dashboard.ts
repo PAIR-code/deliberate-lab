@@ -1,6 +1,7 @@
 import '../../pair-components/button';
 import '../experiment_builder/experiment_builder';
 import '../experiment_builder/experiment_settings_dialog';
+import '../experimenter/experimenter_panel';
 import '../header/header';
 import '../participant_view/participant_view';
 import './cohort_settings_dialog';
@@ -48,26 +49,40 @@ export class Component extends MobxLitElement {
     }
 
     return html`
-      <div class="left-panel">
+      <div class="main-panel">
         <page-header></page-header>
-        ${this.renderCohortList()}
+        <experimenter-panel></experimenter-panel>
       </div>
-      ${this.renderRightPanel()} ${this.renderCohortSettingsDialog()}
+      ${this.renderCohortListPanel()}
+      ${this.renderParticipantStatsPanel()}
+      ${this.renderParticipantPreviewPanel()}
+      ${this.renderCohortSettingsDialog()}
       ${this.renderExperimentSettingsDialog()}
     `;
   }
 
-  private renderCohortList() {
+  private renderCohortListPanel() {
+    if (!this.experimentManager.showCohortList) {
+      return nothing;
+    }
+
     if (Object.keys(this.experimentService.stageConfigMap).length === 0) {
       return html`
-        <div>
-          ⚠️ WARNING: Your experiment has no stages. Use the edit button in the
-          top right to add stages in order to unlock cohort and participant
-          creation.
+        <div class="cohort-panel">
+          <div>
+            ⚠️ WARNING: Your experiment has no stages. Use the edit button in the
+            settings panel to add stages in order to unlock cohort and participant
+            creation.
+          </div>
         </div>
       `;
     }
-    return html`<cohort-list></cohort-list>`;
+    return html`
+      <div class="cohort-panel">
+        <div class="header"></div>
+        <cohort-list></cohort-list>
+      </div>
+    `;
   }
 
   private renderExperimentSettingsDialog() {
@@ -90,10 +105,14 @@ export class Component extends MobxLitElement {
     return html` <experiment-builder></experiment-builder> `;
   }
 
-  private renderRightPanel() {
+  private renderParticipantStatsPanel() {
+    if (!this.experimentManager.showParticipantStats) {
+      return nothing;
+    }
+
     if (!this.experimentManager.currentParticipantId) {
       return html`
-        <div class="experiment-manager">
+        <div class="stats-panel">
           <div class="empty-message">
             Use the left panel to manage and select participants.
           </div>
@@ -101,57 +120,61 @@ export class Component extends MobxLitElement {
       `;
     }
 
-    const renderContent = () => {
-      const popupStatus = this.getParticipantStatusText() !== '';
-      if (this.experimentManager.showParticipantPreview) {
-        return html`
-          <participant-view class="${popupStatus ? 'sepia' : ''}">
-          </participant-view>
-        `;
-      } else {
-        return html`
-          <div class="content-wrapper">
-            <participant-stats
-              .profile=${this.experimentManager.currentParticipant}>
-            </participant-stats>
-            <code>
-              ${JSON.stringify(this.experimentManager.currentParticipant)}
-            </code>
-          </div>
-        `;
-      }
-    };
-
     return html`
-      <div class="experiment-manager">
-        ${this.renderHeader()} ${renderContent()}
+      <div class="stats-panel">
+        ${this.renderHeader()}
+        <div class="content-wrapper">
+          <participant-stats
+            .profile=${this.experimentManager.currentParticipant}>
+          </participant-stats>
+          <code>
+            ${JSON.stringify(this.experimentManager.currentParticipant)}
+          </code>
+        </div>
       </div>
     `;
   }
 
-  private renderHeader() {
-    const show = this.experimentManager.showParticipantPreview;
+  private renderParticipantPreviewPanel() {
+    if (!this.experimentManager.showParticipantPreview) {
+      return nothing;
+    }
 
-    const renderToggleButton = () => {
+    if (!this.experimentManager.currentParticipantId) {
       return html`
-      <div class="toggle-slider">
-        <div 
-          class="toggle-option ${!show ? 'active' : ''}" 
-          @click=${() => { this.experimentManager.setShowParticipantPreview(false) }}>
-          ℹ️ Details
+        <div class="preview-panel">
+          <div class="empty-message">
+            Use the left panel to manage and select participants.
+          </div>
         </div>
-        <div 
-          class="toggle-option ${show ? 'active' : ''}" 
-          @click=${() => { this.experimentManager.setShowParticipantPreview(true) }}>
-          ▶️ Preview
-        </div>
+      `;
+    }
+
+    const popupStatus = this.getParticipantStatusText() !== '';
+    return html`
+      <div class="preview-panel">
+        ${this.renderHeader(true)}
+        <participant-view class="${popupStatus ? 'sepia' : ''}">
+        </participant-view>
       </div>
     `;
+  }
+
+  private renderHeader(showStatusBanner = false) {
+    const getProfileString = () => {
+      return `
+        ${this.experimentManager.currentParticipant?.avatar ?? ''}
+        ${this.experimentManager.currentParticipant?.name ?? ''}
+        ${this.experimentManager.currentParticipant?.publicId
+          ? `(${this.experimentManager.currentParticipant?.publicId})`
+          : ''}
+      `;
     };
 
     const renderStatusBanner = () => {
+      if (!showStatusBanner) return nothing;
       const text = this.getParticipantStatusText();
-      if (text === '') return nothing;
+      if (text === '') return getProfileString();
       return html`
         <div class="participant-status-banner">${text}</div>
       `;
@@ -160,13 +183,7 @@ export class Component extends MobxLitElement {
     return html`
       <div class="header">
         <div class="left">
-          ${this.experimentManager.currentParticipant?.avatar ?? ''}
-          ${this.experimentManager.currentParticipant?.name ?? ''}
-          ${this.experimentManager.currentParticipant?.publicId
-            ? `(${this.experimentManager.currentParticipant?.publicId})`
-            : ''}
-
-          ${renderToggleButton()}
+          ${!showStatusBanner ? getProfileString() : ''}
           ${renderStatusBanner()}
         </div>
         ${this.renderTransferMenu()}
