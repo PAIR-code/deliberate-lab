@@ -59,16 +59,20 @@
 .top {
   @include common.flex-column;
   gap: common.$spacing-large;
-  overflow: auto;
   padding: common.$sidenav-padding;
 }
 
 .bottom {
   @include common.flex-column;
-  flex-grow: 1;
-  gap: common.$spacing-small;
-  overflow: auto;
+  gap: common.$spacing-large;
+  margin-bottom: 0;
+  margin-top: auto;
   padding: common.$sidenav-padding;
+  padding-bottom: calc(common.$spacing-xxl * 2);
+}
+
+pr-button pr-icon {
+  margin-right: common.$spacing-medium;
 }
 
 .agent {

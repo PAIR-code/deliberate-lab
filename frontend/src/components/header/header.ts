@@ -43,8 +43,6 @@ export class Header extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
-  @property() isDownloading = false;
-
   override render() {
     if (!this.authService.isExperimenter) {
       return nothing;
@@ -295,60 +293,7 @@ export class Header extends MobxLitElement {
             </pr-button>
           `;
         }
-        return html`
-          <pr-tooltip text="Download experiment data" position="BOTTOM_END">
-            <pr-icon-button
-              icon="download"
-              color="neutral"
-              variant="default"
-              ?loading=${this.isDownloading}
-              @click=${async () => {
-                this.isDownloading = true;
-                await this.experimentManager.downloadExperiment();
-                this.isDownloading = false;
-              }}
-            >
-            </pr-icon-button>
-          </pr-tooltip>
-          <pr-icon-button
-            icon="fork_right"
-            color="neutral"
-            variant="default"
-            @click=${() => {
-              // Display confirmation dialog
-              const isConfirmed = window.confirm(
-                'This will create a copy of this experiment. Are you sure you want to proceed?'
-              );
-              if (!isConfirmed) return;
-              this.analyticsService.trackButtonClick(
-                ButtonClick.EXPERIMENT_FORK
-              );
-              this.experimentManager.forkExperiment();
-            }}
-          >
-          </pr-icon-button>
-          <pr-tooltip
-            text="Experiment creators can edit metadata, and can edit stages if users have not joined the experiment."
-            position="BOTTOM_END"
-          >
-            <pr-icon-button
-              icon=${this.experimentManager.isCreator
-                ? 'edit_note'
-                : 'overview'}
-              color="primary"
-              variant="default"
-              @click=${() => {
-                this.analyticsService.trackButtonClick(
-                  this.experimentManager.isCreator
-                    ? ButtonClick.EXPERIMENT_EDIT
-                    : ButtonClick.EXPERIMENT_PREVIEW_CONFIG
-                );
-                this.experimentManager.setIsEditing(true);
-              }}
-            >
-            </pr-icon-button>
-          </pr-tooltip>
-        `;
+        return nothing;
       case Pages.PARTICIPANT:
         return this.renderDebugModeButton();
       default:

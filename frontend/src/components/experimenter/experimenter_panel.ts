@@ -14,6 +14,7 @@ import {customElement, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
+import {ButtonClick, AnalyticsService} from '../../services/analytics.service';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
@@ -39,6 +40,7 @@ enum PanelView {
 export class Panel extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly authService = core.getService(AuthService);
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentService = core.getService(ExperimentService);
@@ -48,6 +50,7 @@ export class Panel extends MobxLitElement {
 
   @state() panelView: PanelView = PanelView.DEFAULT;
   @state() isLoading = false;
+  @state() isDownloading = false;
 
   override render() {
     if (!this.authService.isExperimenter) {
@@ -114,7 +117,7 @@ export class Panel extends MobxLitElement {
                   @click=${() => { this.experimentManager.setShowCohortList(!showCohortList) }}
                 >
                   <pr-icon-button
-                    color="secondary"
+                    color="tertiary"
                     size="medium"
                     variant="default"
                     icon=${showCohortList ? 'check_box' : 'check_box_outline_blank'}
@@ -129,7 +132,7 @@ export class Panel extends MobxLitElement {
                   @click=${() => { this.experimentManager.setShowParticipantStats(!showStats) }}
                 >
                   <pr-icon-button
-                    color="secondary"
+                    color="tertiary"
                     size="medium"
                     variant="default"
                     icon=${showStats ? 'check_box' : 'check_box_outline_blank'}
@@ -143,7 +146,7 @@ export class Panel extends MobxLitElement {
                   @click=${() => { this.experimentManager.setShowParticipantPreview(!showPreview) }}
                 >
                   <pr-icon-button
-                    color="secondary"
+                    color="tertiary"
                     size="medium"
                     variant="default"
                     icon=${showPreview ? 'check_box' : 'check_box_outline_blank'}
@@ -153,6 +156,10 @@ export class Panel extends MobxLitElement {
                     Show participant preview
                   </div>
                 </div>
+              </div>
+              <div class="bottom">
+                <div class="header">Actions</div>
+                ${this.renderExperimentActions()}
               </div>
             </div>
           `;
@@ -335,6 +342,102 @@ export class Panel extends MobxLitElement {
           cohorts
         </div>
       </div>
+    `;
+  }
+
+  private renderExperimentDownloadButton() {
+    const onClick = async () => {
+      this.isDownloading = true;
+      await this.experimentManager.downloadExperiment();
+      this.isDownloading = false;
+    };
+
+    return html`
+      <pr-button
+        color="secondary"
+        variant="outlined"
+        ?loading=${this.isDownloading}
+        @click=${onClick}
+      >
+        <pr-icon
+          icon="download"
+          color="secondary"
+          variant="default"
+        >
+        </pr-icon>
+        <div>Download experiment data</div>
+      </pr-button>
+    `;
+  }
+
+  private renderExperimentForkButton() {
+    const onClick = () => {
+      // Display confirmation dialog
+      const isConfirmed = window.confirm(
+        'This will create a copy of this experiment. Are you sure you want to proceed?'
+      );
+      if (!isConfirmed) return;
+      this.analyticsService.trackButtonClick(
+        ButtonClick.EXPERIMENT_FORK
+      );
+      this.experimentManager.forkExperiment();
+    };
+
+    return html`
+      <pr-button
+        color="secondary"
+        variant="outlined"
+        @click=${onClick}
+      >
+        <pr-icon
+          icon="fork_right"
+          color="secondary"
+          variant="default"
+        >
+        </pr-icon>
+        <div>Fork experiment</div>
+      </pr-button>
+    `;
+  }
+
+  private renderExperimentEditButton() {
+    const tooltip = `
+      Experiment creators can edit metadata any time
+      + can edit stages if users have not joined the experiment.`;
+
+    const onClick = () => {
+      this.analyticsService.trackButtonClick(
+        this.experimentManager.isCreator
+          ? ButtonClick.EXPERIMENT_EDIT
+          : ButtonClick.EXPERIMENT_PREVIEW_CONFIG
+      );
+      this.experimentManager.setIsEditing(true);
+    };
+
+    return html`
+      <pr-tooltip text=${tooltip} position="TOP_START">
+        <pr-button
+          color="secondary"
+          variant="outlined"
+          @click=${onClick}
+        >
+          <pr-icon
+            icon=${this.experimentManager.isCreator ? 'edit_note' : 'overview'}
+            color="secondary"
+            variant="default"
+          >
+          </pr-icon>
+          <div>Edit experiment</div>
+        </pr-button>
+      </pr-tooltip>
+    `;
+  }
+
+  private renderExperimentActions() {
+    return html`
+      ${this.renderExperimentDownloadButton()}
+      ${this.renderExperimentForkButton()}
+      ${this.renderExperimentEditButton()}
     `;
   }
 }
