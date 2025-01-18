@@ -46,15 +46,15 @@
 @mixin app-small {
   /* body - large */
   --md-sys-typescale-body-large-font-size: 18px;
-  --md-sys-typescale-body-large-line-height: 28px;
+  --md-sys-typescale-body-large-line-height: 24px;
   --md-sys-typescale-body-large-letter-spacing: 0px;
   /* body - medium */
   --md-sys-typescale-body-medium-font-size: 16px;
-  --md-sys-typescale-body-medium-line-height: 24px;
+  --md-sys-typescale-body-medium-line-height: 20px;
   --md-sys-typescale-body-medium-letter-spacing: 0.5px;
   /* body - small */
   --md-sys-typescale-body-small-font-size: 14px;
-  --md-sys-typescale-body-small-line-height: 20px;
+  --md-sys-typescale-body-small-line-height: 18px;
   --md-sys-typescale-body-small-letter-spacing: 0.25px;
   /* label - large */
   --md-sys-typescale-label-large-font-size: 18px;
@@ -69,16 +69,16 @@
   --md-sys-typescale-label-small-line-height: 16px;
   --md-sys-typescale-label-small-letter-spacing: 0.5px;
   /* title - large */
-  --md-sys-typescale-title-large-font-size: 22px;
-  --md-sys-typescale-title-large-line-height: 28px;
+  --md-sys-typescale-title-large-font-size: 20px;
+  --md-sys-typescale-title-large-line-height: 24px;
   --md-sys-typescale-title-large-letter-spacing: 0px;
   /* title - medium */
   --md-sys-typescale-title-medium-font-size: 16px;
-  --md-sys-typescale-title-medium-line-height: 24px;
+  --md-sys-typescale-title-medium-line-height: 20px;
   --md-sys-typescale-title-medium-letter-spacing: 0.15px;
   /* title - small */
   --md-sys-typescale-title-small-font-size: 14px;
-  --md-sys-typescale-title-small-line-height: 20px;
+  --md-sys-typescale-title-small-line-height: 18px;
   --md-sys-typescale-title-small-letter-spacing: 0.1px;
 }
 
