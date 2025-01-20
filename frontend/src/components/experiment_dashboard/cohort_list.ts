@@ -1,6 +1,7 @@
 import '../../pair-components/button';
 import '../../pair-components/icon';
 import '../../pair-components/icon_button';
+import '../../pair-components/tooltip';
 
 import './cohort_summary';
 
@@ -44,6 +45,16 @@ export class Component extends MobxLitElement {
     return html`
       <div class="header">
         <div class="left">
+          <pr-tooltip text="Hide panel" position="RIGHT">
+            <pr-icon-button
+              icon="hide"
+              size="small"
+              color="neutral"
+              variant="default"
+              @click=${() => { this.experimentManager.setShowCohortList(false) }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
           <div>${this.experimentManager.numCohorts} cohorts</div>
           <small>
             (${this.experimentManager.getNumExperimentParticipants(false)}

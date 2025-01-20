@@ -79,7 +79,6 @@ export class Component extends MobxLitElement {
     }
     return html`
       <div class="cohort-panel">
-        <div class="header"></div>
         <cohort-list></cohort-list>
       </div>
     `;
@@ -118,6 +117,7 @@ export class Component extends MobxLitElement {
     if (!this.experimentManager.currentParticipantId) {
       return html`
         <div class="stats-panel">
+          ${this.renderParticipantHeader()}
           <div class="empty-message">
             Use the left panel to manage and select participants.
           </div>
@@ -127,7 +127,7 @@ export class Component extends MobxLitElement {
 
     return html`
       <div class="stats-panel">
-        ${this.renderHeader()}
+        ${this.renderParticipantHeader()}
         <div>
           <participant-stats
             .profile=${this.experimentManager.currentParticipant}>
@@ -150,6 +150,7 @@ export class Component extends MobxLitElement {
     if (!this.experimentManager.currentParticipantId) {
       return html`
         <div class="preview-panel">
+          ${this.renderParticipantHeader(true)}
           <div class="empty-message">
             Use the left panel to manage and select participants.
           </div>
@@ -160,26 +161,32 @@ export class Component extends MobxLitElement {
     const popupStatus = this.getParticipantStatusText() !== '';
     return html`
       <div class="preview-panel">
-        ${this.renderHeader(true)}
+        ${this.renderParticipantHeader(true)}
         <participant-view class="${popupStatus ? 'sepia' : ''}">
         </participant-view>
       </div>
     `;
   }
 
-  private renderHeader(showStatusBanner = false) {
+  private renderParticipantHeader(isPreview = false) {
     const getProfileString = () => {
+      const currentParticipant = this.experimentManager.currentParticipant;
+      if (!currentParticipant) {
+        if (isPreview) {
+          return 'Participant preview';
+        } else {
+          return 'Participant details';
+        }
+      }
       return `
-        ${this.experimentManager.currentParticipant?.avatar ?? ''}
-        ${this.experimentManager.currentParticipant?.name ?? ''}
-        ${this.experimentManager.currentParticipant?.publicId
-          ? `(${this.experimentManager.currentParticipant?.publicId})`
-          : ''}
+        ${currentParticipant.avatar ?? ''}
+        ${currentParticipant?.name ?? ''}
+        (${currentParticipant?.publicId})
       `;
     };
 
     const renderStatusBanner = () => {
-      if (!showStatusBanner) return nothing;
+      if (!isPreview) return nothing;
       const text = this.getParticipantStatusText();
       if (text === '') return getProfileString();
       return html`
@@ -190,7 +197,23 @@ export class Component extends MobxLitElement {
     return html`
       <div class="header">
         <div class="left">
-          ${!showStatusBanner ? getProfileString() : ''}
+          <pr-tooltip text="Hide panel" position="RIGHT">
+            <pr-icon-button
+              icon="hide"
+              size="small"
+              color="neutral"
+              variant="default"
+              @click=${() => {
+                if (isPreview) {
+                  this.experimentManager.setShowParticipantPreview(false);
+                } else {
+                  this.experimentManager.setShowParticipantStats(false);
+                }
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
+          ${!isPreview ? getProfileString() : ''}
           ${renderStatusBanner()}
         </div>
         ${this.renderTransferMenu()}
