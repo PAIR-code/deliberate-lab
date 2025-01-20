@@ -120,11 +120,11 @@ export class Panel extends MobxLitElement {
                     color="tertiary"
                     size="medium"
                     variant="default"
-                    icon=${showCohortList ? 'check_box' : 'check_box_outline_blank'}
+                    icon=${showCohortList ? 'visibility_off' : 'visibility'}
                   >
                   </pr-icon-button>
                   <div>
-                    Show cohort list
+                    ${showCohortList ? 'Hide' : 'Show'} cohort list
                   </div>
                 </div>
                 <div class="header">Participant panels</div>
@@ -135,11 +135,11 @@ export class Panel extends MobxLitElement {
                     color="tertiary"
                     size="medium"
                     variant="default"
-                    icon=${showStats ? 'check_box' : 'check_box_outline_blank'}
+                    icon=${showStats ? 'visibility_off' : 'visibility'}
                   >
                   </pr-icon-button>
                   <div>
-                    Show participant details
+                    ${showCohortList ? 'Hide' : 'Show'} participant details
                   </div>
                 </div>
                 <div class="checkbox-wrapper"
@@ -149,11 +149,11 @@ export class Panel extends MobxLitElement {
                     color="tertiary"
                     size="medium"
                     variant="default"
-                    icon=${showPreview ? 'check_box' : 'check_box_outline_blank'}
+                    icon=${showPreview ? 'visibility_off' : 'visibility'}
                   >
                   </pr-icon-button>
                   <div>
-                    Show participant preview
+                    ${showCohortList ? 'Hide' : 'Show'} participant preview
                   </div>
                 </div>
               </div>
