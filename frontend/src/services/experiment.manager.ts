@@ -109,6 +109,7 @@ export class ExperimentManager extends Service {
   @observable showCohortList = true;
   @observable showParticipantStats = true;
   @observable showParticipantPreview = true;
+  @observable hideLockedCohorts = false;
 
   // Copy of cohort being edited in settings dialog
   @observable cohortEditing: CohortConfig|undefined = undefined;
@@ -178,6 +179,10 @@ export class ExperimentManager extends Service {
     this.showParticipantStats = showParticipantStats;
   }
 
+  setHideLockedCohorts(hideLockedCohorts: boolean) {
+    this.hideLockedCohorts = hideLockedCohorts;
+  }
+
   setCurrentParticipantId(id: string|undefined) {
     this.currentParticipantId = id;
 
@@ -239,6 +244,11 @@ export class ExperimentManager extends Service {
   }
 
   @computed get cohortList() {
+    if (this.hideLockedCohorts) {
+      return Object.values(this.cohortMap).filter(
+        cohort => this.sp.experimentService.experiment?.cohortLockMap[cohort.id]
+      );
+    }
     return Object.values(this.cohortMap);
   }
 
