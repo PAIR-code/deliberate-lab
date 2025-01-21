@@ -3,6 +3,7 @@ import {
   ParticipantProfile,
   ParticipantStatus,
   createChipTurn,
+  sortParticipantsByRandomProfile
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
@@ -16,7 +17,7 @@ import { app } from '../app';
  * Get relevant (active), ordered participant public IDs for given cohort.
  * (used to check, e.g., if all participants have made an offer)
  */
-export async function getChipParticipantIds(
+export async function getChipParticipants(
   experimentId: string,
   cohortId: string
 ) {
@@ -39,7 +40,7 @@ export async function getChipParticipantIds(
     }
   });
 
-  return participants.map(p => p.publicId);
+  return participants;
 }
 
 /** Update chip negotiation public data current turn
@@ -47,12 +48,19 @@ export async function getChipParticipantIds(
   */
 export function updateChipCurrentTurn(
   publicStageData: ChipStagePublicData,
-  participantIds: string[],
+  participants: ParticipantProfile[],
   numRounds = 3,
 ) {
-  if (participantIds.length === 0) {
+  if (participants.length === 0) {
     return publicStageData;
   }
+
+  // Sort participants based on random hash
+  // (if random hash not available, use public ID)
+  const participantIds = sortParticipantsByRandomProfile(
+    participants,
+    publicStageData.id,
+  ).map(p => p.publicId);
 
   // Find first participant who has not yet made an offer
   const getTurnParticipant: string|null = (

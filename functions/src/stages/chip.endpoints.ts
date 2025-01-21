@@ -28,7 +28,7 @@ import {
   prettyPrintErrors,
 } from '../utils/validation';
 
-import { getChipParticipantIds, updateChipCurrentTurn } from './chip.utils';
+import { getChipParticipants, updateChipCurrentTurn } from './chip.utils';
 
 /** Manage chip negotiation offers. */
 
@@ -90,16 +90,16 @@ export const setChipTurn = onCall(async (request) => {
     }
 
     // Get relevant (active, in cohort) participant IDs
-    const participantIds = await getChipParticipantIds(data.experimentId, data.cohortId);
+    const participants = await getChipParticipants(data.experimentId, data.cohortId);
 
     // If no participants, then no action needed
-    if (participantIds.length === 0) {
+    if (participants.length === 0) {
       return { success: false };
     }
 
     const stageConfig = (await stageDoc.get()).data() as ChipStageConfig;
 
-    const newData = updateChipCurrentTurn(publicStageData, participantIds, stageConfig.numRounds);
+    const newData = updateChipCurrentTurn(publicStageData, participants, stageConfig.numRounds);
 
     transaction.set(publicDoc, newData);
     transaction.set(

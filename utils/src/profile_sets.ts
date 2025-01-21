@@ -4,6 +4,11 @@
 // anonymous profile set for display
 export const ALTERNATE_PROFILE_SET_ID = 'alternate_profile';
 
+// Set names for random hashes
+export const PROFILE_SET_RANDOM_1_ID = 'random-1';
+export const PROFILE_SET_RANDOM_2_ID = 'random-2';
+export const PROFILE_SET_RANDOM_3_ID = 'random-3';
+
 /** First set of animals. */
 export const PROFILE_SET_ANIMALS_1_ID = 'animals-1';
 
