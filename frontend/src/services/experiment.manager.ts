@@ -17,6 +17,7 @@ import {FirebaseService} from './firebase.service';
 import {ParticipantService} from './participant.service';
 import {Pages, RouterService} from './router.service';
 import {Service} from './service';
+import JSZip from 'jszip';
 
 import {
   CohortConfig,
@@ -44,7 +45,7 @@ import {
   sendParticipantCheckCallable,
   setExperimentCohortLockCallable,
   updateCohortMetadataCallable,
-  writeExperimentCallable
+  writeExperimentCallable,
 } from '../shared/callables';
 import {
   getCohortParticipants,
@@ -58,11 +59,11 @@ import {
   getChipNegotiationData,
   getChipNegotiationPlayerMapCSV,
   getExperimentDownload,
-  getParticipantData
+  getParticipantData,
 } from '../shared/file.utils';
 import {
   isObsoleteParticipant,
-  requiresAnonymousProfiles
+  requiresAnonymousProfiles,
 } from '../shared/participant.utils';
 
 interface ServiceProvider {
@@ -87,7 +88,7 @@ export class ExperimentManager extends Service {
   }
 
   // Experimenter-only data
-  @observable experimentId: string|undefined = undefined;
+  @observable experimentId: string | undefined = undefined;
   @observable cohortMap: Record<string, CohortConfig> = {};
   @observable participantMap: Record<string, ParticipantProfileExtended> = {};
 
@@ -105,14 +106,14 @@ export class ExperimentManager extends Service {
   @observable isEditingSettingsDialog = false; // is in settings dialog
 
   // Current participant, view in dashboard
-  @observable currentParticipantId: string|undefined = undefined;
+  @observable currentParticipantId: string | undefined = undefined;
   @observable showCohortList = true;
   @observable showParticipantStats = true;
   @observable showParticipantPreview = true;
   @observable hideLockedCohorts = false;
 
   // Copy of cohort being edited in settings dialog
-  @observable cohortEditing: CohortConfig|undefined = undefined;
+  @observable cohortEditing: CohortConfig | undefined = undefined;
 
   async setIsEditing(isEditing: boolean, saveChanges = false) {
     if (!isEditing) {
@@ -133,7 +134,7 @@ export class ExperimentManager extends Service {
       if (!experiment) return;
 
       const stages: StageConfig[] = [];
-      experiment.stageIds.forEach(id => {
+      experiment.stageIds.forEach((id) => {
         const stage = this.sp.experimentService.stageConfigMap[id];
         if (stage) stages.push(stage);
       });
@@ -148,14 +149,19 @@ export class ExperimentManager extends Service {
   }
 
   @computed get isCreator() {
-    return this.sp.authService.userEmail === this.sp.experimentService.experiment?.metadata.creator
-      || !this.sp.experimentService.experiment;
+    return (
+      this.sp.authService.userEmail ===
+        this.sp.experimentService.experiment?.metadata.creator ||
+      !this.sp.experimentService.experiment
+    );
   }
 
   // Can edit if (no cohorts exist AND is creator) OR new experiment
   @computed get canEditExperimentStages() {
-    return (this.isCreator && Object.keys(this.cohortMap).length === 0)
-      || this.sp.routerService.activePage === Pages.EXPERIMENT_CREATE;
+    return (
+      (this.isCreator && Object.keys(this.cohortMap).length === 0) ||
+      this.sp.routerService.activePage === Pages.EXPERIMENT_CREATE
+    );
   }
 
   // Is editing full experiment, not settings dialog
@@ -166,7 +172,7 @@ export class ExperimentManager extends Service {
   getParticipantSearchResults(rawQuery: string) {
     const query = rawQuery.toLowerCase();
 
-    return Object.values(this.participantMap).filter(participant => {
+    return Object.values(this.participantMap).filter((participant) => {
       if (participant.publicId.includes(query)) return true;
       if (participant.privateId.includes(query)) return true;
       if (participant.name?.toLowerCase().includes(query)) return true;
@@ -184,7 +190,7 @@ export class ExperimentManager extends Service {
     });
   }
 
-  setCohortEditing(cohort: CohortConfig|undefined) {
+  setCohortEditing(cohort: CohortConfig | undefined) {
     this.cohortEditing = cohort;
   }
 
@@ -204,16 +210,13 @@ export class ExperimentManager extends Service {
     this.hideLockedCohorts = hideLockedCohorts;
   }
 
-  setCurrentParticipantId(id: string|undefined) {
+  setCurrentParticipantId(id: string | undefined) {
     this.currentParticipantId = id;
 
     // Update participant service in order to load correct participant answers
     // (Note: This also updates participant answer service accordingly)
     if (this.experimentId && id) {
-      this.sp.participantService.updateForRoute(
-        this.experimentId,
-        id
-      );
+      this.sp.participantService.updateForRoute(this.experimentId, id);
     }
   }
 
@@ -235,15 +238,12 @@ export class ExperimentManager extends Service {
     }
 
     return participants.filter(
-      participant => !isObsoleteParticipant(participant)
+      (participant) => !isObsoleteParticipant(participant)
     ).length;
   }
 
   // Get participants for specified cohort
-  getCohortParticipants(
-    cohortId: string,
-    countObsoleteParticipants = true,
-  ) {
+  getCohortParticipants(cohortId: string, countObsoleteParticipants = true) {
     return getCohortParticipants(
       Object.values(this.participantMap),
       cohortId,
@@ -258,12 +258,14 @@ export class ExperimentManager extends Service {
   isFullCohort(cohort: CohortConfig) {
     return hasMaxParticipantsInCohort(
       cohort,
-      Object.values(this.participantMap),
-    )
+      Object.values(this.participantMap)
+    );
   }
 
   @computed get availableCohorts() {
-    return Object.values(this.cohortMap).filter(cohort => !this.isFullCohort(cohort));
+    return Object.values(this.cohortMap).filter(
+      (cohort) => !this.isFullCohort(cohort)
+    );
   }
 
   @computed get numCohorts() {
@@ -273,17 +275,15 @@ export class ExperimentManager extends Service {
   @computed get cohortList() {
     if (this.hideLockedCohorts) {
       return Object.values(this.cohortMap).filter(
-        cohort => !this.sp.experimentService.experiment?.cohortLockMap[cohort.id]
+        (cohort) =>
+          !this.sp.experimentService.experiment?.cohortLockMap[cohort.id]
       );
     }
     return Object.values(this.cohortMap);
   }
 
   @computed get isLoading() {
-    return (
-      this.isCohortsLoading ||
-      this.isParticipantsLoading
-    );
+    return this.isCohortsLoading || this.isParticipantsLoading;
   }
 
   set isLoading(value: boolean) {
@@ -378,14 +378,11 @@ export class ExperimentManager extends Service {
   async setCohortLock(cohortId: string, isLock: boolean) {
     const experiment = this.sp.experimentService.experiment;
     if (!experiment) return;
-    await setExperimentCohortLockCallable(
-      this.sp.firebaseService.functions,
-      {
-        experimentId: experiment.id,
-        cohortId,
-        isLock
-      }
-    );
+    await setExperimentCohortLockCallable(this.sp.firebaseService.functions, {
+      experimentId: experiment.id,
+      cohortId,
+      isLock,
+    });
   }
 
   /** Fork the current experiment. */
@@ -401,7 +398,7 @@ export class ExperimentManager extends Service {
 
     // Get ordered list of stages
     const stages: StageConfig[] = [];
-    experiment.stageIds.forEach(id => {
+    experiment.stageIds.forEach((id) => {
       const stage = this.sp.experimentService.stageConfigMap[id];
       if (stage) stages.push(stage);
     });
@@ -412,27 +409,30 @@ export class ExperimentManager extends Service {
       {
         collectionName: 'experiments',
         experimentConfig: experiment,
-        stageConfigs: stages
+        stageConfigs: stages,
       }
     );
 
     // Route to new experiment and reload to update changes
     this.sp.routerService.navigate(Pages.EXPERIMENT, {
-        experiment: experiment.id
+      experiment: experiment.id,
     });
 
     return response;
-}
-  
+  }
+
   /** Deletes the current experiment.
    * @rights Creator of experiment
    */
   async deleteExperiment() {
     if (!this.experimentId || !this.isCreator) return;
-    const response = await deleteExperimentCallable(this.sp.firebaseService.functions, {
-      collectionName: 'experiments',
-      experimentId: this.experimentId,
-    });
+    const response = await deleteExperimentCallable(
+      this.sp.firebaseService.functions,
+      {
+        collectionName: 'experiments',
+        experimentId: this.experimentId,
+      }
+    );
     this.isEditingSettingsDialog = false;
     this.sp.routerService.navigate(Pages.HOME);
     return response;
@@ -443,10 +443,13 @@ export class ExperimentManager extends Service {
    */
   async deleteCohort(cohortId: string) {
     if (!this.experimentId) return;
-    const response = await deleteCohortCallable(this.sp.firebaseService.functions, {
-      experimentId: this.experimentId,
-      cohortId
-    });
+    const response = await deleteCohortCallable(
+      this.sp.firebaseService.functions,
+      {
+        experimentId: this.experimentId,
+        cohortId,
+      }
+    );
     this.loadExperimentData(this.experimentId);
     this.cohortEditing = undefined;
     return response;
@@ -460,20 +463,19 @@ export class ExperimentManager extends Service {
 
     this.isWritingCohort = true;
     const cohortConfig = createCohortConfig({
-      participantConfig: this.sp.experimentService.experiment.defaultCohortConfig,
-      ...config
+      participantConfig:
+        this.sp.experimentService.experiment.defaultCohortConfig,
+      ...config,
     });
     cohortConfig.metadata.name = name;
 
     let response = {};
 
     if (this.experimentId) {
-      response = await createCohortCallable(
-        this.sp.firebaseService.functions, {
-          experimentId: this.experimentId,
-          cohortConfig,
-        }
-      );
+      response = await createCohortCallable(this.sp.firebaseService.functions, {
+        experimentId: this.experimentId,
+        cohortConfig,
+      });
     }
     this.isWritingCohort = false;
     return response;
@@ -485,7 +487,7 @@ export class ExperimentManager extends Service {
   async updateCohortMetadata(
     cohortId: string,
     metadata: MetadataConfig,
-    participantConfig: CohortParticipantConfig,
+    participantConfig: CohortParticipantConfig
   ) {
     if (!this.sp.experimentService.experiment) return;
 
@@ -494,11 +496,12 @@ export class ExperimentManager extends Service {
 
     if (this.experimentId) {
       response = await updateCohortMetadataCallable(
-        this.sp.firebaseService.functions, {
+        this.sp.firebaseService.functions,
+        {
           experimentId: this.experimentId,
           cohortId,
           metadata,
-          participantConfig
+          participantConfig,
         }
       );
     }
@@ -518,10 +521,11 @@ export class ExperimentManager extends Service {
       );
 
       response = await createParticipantCallable(
-        this.sp.firebaseService.functions, {
+        this.sp.firebaseService.functions,
+        {
           experimentId: this.experimentId,
           cohortId,
-          isAnonymous
+          isAnonymous,
         }
       );
     }
@@ -539,49 +543,38 @@ export class ExperimentManager extends Service {
       return;
     }
 
-    await sendParticipantCheckCallable(
-      this.sp.firebaseService.functions,
-      {
-        experimentId: this.experimentId,
-        participantId,
-        status,
-        customMessage
-      }
-    );
+    await sendParticipantCheckCallable(this.sp.firebaseService.functions, {
+      experimentId: this.experimentId,
+      participantId,
+      status,
+      customMessage,
+    });
   }
 
   /** Boot participant from experiment. */
-  async bootParticipant(
-    participantId: string
-  ) {
+  async bootParticipant(participantId: string) {
     if (!this.experimentId) return;
-    await bootParticipantCallable(
-      this.sp.firebaseService.functions,
-      {
-        experimentId: this.experimentId,
-        participantId
-      }
-    );
+    await bootParticipantCallable(this.sp.firebaseService.functions, {
+      experimentId: this.experimentId,
+      participantId,
+    });
   }
 
   /** Initiate participant transfer. */
-  async initiateParticipantTransfer(
-    participantId: string,
-    cohortId: string
-  ) {
+  async initiateParticipantTransfer(participantId: string, cohortId: string) {
     if (this.experimentId) {
       await initiateParticipantTransferCallable(
         this.sp.firebaseService.functions,
         {
           experimentId: this.experimentId,
           cohortId,
-          participantId
+          participantId,
         }
       );
     }
   }
 
-  /** Download experiment. */
+  /** Download experiment as a zip file. */
   async downloadExperiment() {
     let data = {};
     const experimentId = this.sp.routerService.activeRoute.params['experiment'];
@@ -592,39 +585,49 @@ export class ExperimentManager extends Service {
       );
 
       if (result) {
-        downloadJSON(result, result.experiment.metadata.name);
+        const zip = new JSZip();
+        const experimentName = result.experiment.metadata.name;
 
-        // Download JSONs and CSVs for each chip negotiation game
-        // as well as CSV mapping players to cohort games
+        // Add experiment JSON to zip
+        zip.file(`${experimentName}.json`, JSON.stringify(result, null, 2));
+
+        // Add chip negotiation data
         const chipData = getChipNegotiationData(result);
         if (chipData.length > 0) {
-          // Temporarily download a single JSON because of browser
-          // limitations on number of downloads (will eventually solve this
-          // via zip)
-          const chipDataTitle = `${result.experiment.metadata.name}_ChipNegotiation_all`;
-          downloadJSON({ games: chipData }, chipDataTitle);
-          downloadCSV(getChipNegotiationCSV(result, chipData), chipDataTitle);
-          downloadCSV(
-            getChipNegotiationPlayerMapCSV(result, chipData),
-            `${result.experiment.metadata.name}_ChipNegotiation_PlayerMap`
+          const chipDataTitle = `${experimentName}_ChipNegotiation_all`;
+          zip.file(`${chipDataTitle}.json`, JSON.stringify({ games: chipData }, null, 2));
+          zip.file(`${chipDataTitle}.csv`, new Blob([getChipNegotiationCSV(result, chipData).map(row => row.join(",")).join("\n")], { type: 'text/csv' }));
+          zip.file(
+            `${experimentName}_ChipNegotiation_PlayerMap.csv`,
+            new Blob([getChipNegotiationPlayerMapCSV(result, chipData).map(row => row.join(",")).join("\n")], { type: 'text/csv' })
           );
         }
 
-        // Download chat data for each group chat
+        // Add chat data to zip
         const chatData = getChatHistoryData(result);
         chatData.forEach(data => {
-          downloadCSV(data.data, `${data.experimentName}_ChatHistory_Cohort-${data.cohortId}_Stage-${data.stageId}`);
+          const chatFileName = `${data.experimentName}_ChatHistory_Cohort-${data.cohortId}_Stage-${data.stageId}.csv`;
+          zip.file(chatFileName, new Blob([data.data.map(row => row.join(",")).join("\n")], { type: 'text/csv' }));
         });
-        downloadCSV(
-          getParticipantData(result),
-          result.experiment.metadata.name
-        );
+
+        // Add participant data to zip
+        zip.file(`${experimentName}_ParticipantData.csv`, new Blob([getParticipantData(result).map(row => row.join(",")).join("\n")], { type: 'text/csv' }));
+
+        // Generate zip and trigger download
+        zip.generateAsync({ type: 'blob' }).then(blob => {
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = `${experimentName}_data.zip`;
+          link.click();
+          URL.revokeObjectURL(link.href);
+        });
 
         data = result;
       }
     }
     return data;
   }
+
 
   /** Create a manual (human) agent chat message. */
   async createManualChatMessage(
@@ -645,11 +648,12 @@ export class ExperimentManager extends Service {
         experimentId,
         cohortId,
         stageId,
-        chatMessage
+        chatMessage,
       };
 
       response = await createChatMessageCallable(
-        this.sp.firebaseService.functions, createData
+        this.sp.firebaseService.functions,
+        createData
       );
     }
 
