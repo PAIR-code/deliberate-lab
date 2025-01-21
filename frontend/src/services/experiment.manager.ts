@@ -273,7 +273,7 @@ export class ExperimentManager extends Service {
   @computed get cohortList() {
     if (this.hideLockedCohorts) {
       return Object.values(this.cohortMap).filter(
-        cohort => this.sp.experimentService.experiment?.cohortLockMap[cohort.id]
+        cohort => !this.sp.experimentService.experiment?.cohortLockMap[cohort.id]
       );
     }
     return Object.values(this.cohortMap);
