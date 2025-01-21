@@ -57,130 +57,6 @@ export class Panel extends MobxLitElement {
       return nothing;
     }
 
-    const stageId = this.participantService.currentStageViewId ?? '';
-    const stage = this.experimentService.getStage(stageId);
-
-    const renderPanelView = () => {
-      switch (this.panelView) {
-        case PanelView.MANUAL_CHAT:
-          if (stage?.kind !== StageKind.CHAT) {
-            return html`
-              <div class="main">
-                <div class="top">
-                  <div class="header">Manual chat</div>
-                  <div>Navigate to a chat stage preview to send a message.</div>
-                </div>
-              </div>
-            `;
-          }
-          return html`
-            <div class="main">
-              <div class="top">
-                <div class="header">Manual chat</div>
-                <experimenter-manual-chat></experimenter-manual-chat>
-              </div>
-            </div>
-          `;
-        case PanelView.API_KEY:
-          return html`
-            <div class="main">
-              <div class="top">
-                <div class="header">Experimenter settings</div>
-                <experimenter-data-editor></experimenter-data-editor>
-              </div>
-            </div>
-          `;
-        case PanelView.LLM_SETTINGS:
-          const agents = this.agentEditor.getAgents(stageId);
-          return html`
-            <div class="main">
-              <div class="top">
-                <div class="header">Agent config</div>
-                ${agents.length === 0
-                  ? html`<div>No agents configured in the current stage</div>`
-                  : nothing}
-                ${agents.map((agent, index) =>
-                  this.renderAgentEditor(stageId, agent, index)
-                )}
-              </div>
-            </div>
-          `;
-        default:
-          const showCohortList = this.experimentManager.showCohortList;
-          const hideLockedCohorts = this.experimentManager.hideLockedCohorts;
-          const showPreview = this.experimentManager.showParticipantPreview;
-          const showStats = this.experimentManager.showParticipantStats;
-          return html`
-            <div class="main">
-              <div class="top">
-                <div class="header">Cohort Panel</div>
-                <div class="checkbox-wrapper"
-                  @click=${() => { this.experimentManager.setShowCohortList(!showCohortList) }}
-                >
-                  <pr-icon-button
-                    color="tertiary"
-                    size="medium"
-                    variant="default"
-                    icon=${showCohortList ? 'visibility_off' : 'visibility'}
-                  >
-                  </pr-icon-button>
-                  <div>
-                    ${showCohortList ? 'Hide' : 'Show'} cohort list
-                  </div>
-                </div>
-                <div class="checkbox-wrapper"
-                  @click=${() => { this.experimentManager.setHideLockedCohorts(!hideLockedCohorts) }}
-                >
-                  <pr-icon-button
-                    color="tertiary"
-                    size="medium"
-                    variant="default"
-                    icon=${hideLockedCohorts ? 'filter_list' : 'filter_list_off'}
-                  >
-                  </pr-icon-button>
-                  <div>
-                    ${hideLockedCohorts ? 'Show all cohorts' : 'Hide locked cohorts'}
-                  </div>
-                </div>
-                <div class="header">Participant panels</div>
-                <div class="checkbox-wrapper"
-                  @click=${() => { this.experimentManager.setShowParticipantStats(!showStats) }}
-                >
-                  <pr-icon-button
-                    color="tertiary"
-                    size="medium"
-                    variant="default"
-                    icon=${showStats ? 'visibility_off' : 'visibility'}
-                  >
-                  </pr-icon-button>
-                  <div>
-                    ${showCohortList ? 'Hide' : 'Show'} participant details
-                  </div>
-                </div>
-                <div class="checkbox-wrapper"
-                  @click=${() => { this.experimentManager.setShowParticipantPreview(!showPreview) }}
-                >
-                  <pr-icon-button
-                    color="tertiary"
-                    size="medium"
-                    variant="default"
-                    icon=${showPreview ? 'visibility_off' : 'visibility'}
-                  >
-                  </pr-icon-button>
-                  <div>
-                    ${showCohortList ? 'Hide' : 'Show'} participant preview
-                  </div>
-                </div>
-              </div>
-              <div class="bottom">
-                <div class="header">Actions</div>
-                ${this.renderExperimentActions()}
-              </div>
-            </div>
-          `;
-      }
-    };
-
     const isSelected = (panelView: PanelView) => {
       return this.panelView === panelView;
     };
@@ -239,11 +115,154 @@ export class Panel extends MobxLitElement {
             </pr-icon-button>
           </pr-tooltip>
         </div>
-        ${renderPanelView()}
+        ${this.renderPanelView()}
       </div>
     `;
   }
 
+  private renderPanelView() {
+    switch (this.panelView) {
+      case PanelView.MANUAL_CHAT:
+        return this.renderManualChatPanel();
+      case PanelView.API_KEY:
+        return this.renderApiKeyPanel();
+      case PanelView.LLM_SETTINGS:
+        return this.renderAgentEditorPanel();
+      default:
+        return this.renderDefaultPanel();
+    }
+  }
+
+  private renderDefaultPanel() {
+    const showCohortList = this.experimentManager.showCohortList;
+    const hideLockedCohorts = this.experimentManager.hideLockedCohorts;
+    const showPreview = this.experimentManager.showParticipantPreview;
+    const showStats = this.experimentManager.showParticipantStats;
+    return html`
+      <div class="main">
+        <div class="top">
+          <div class="header">Cohort Panel</div>
+          <div class="checkbox-wrapper"
+            @click=${() => { this.experimentManager.setShowCohortList(!showCohortList) }}
+          >
+            <pr-icon-button
+              color="tertiary"
+              size="medium"
+              variant="default"
+              icon=${showCohortList ? 'visibility_off' : 'visibility'}
+            >
+            </pr-icon-button>
+            <div>
+              ${showCohortList ? 'Hide' : 'Show'} cohort list
+            </div>
+          </div>
+          <div class="checkbox-wrapper"
+            @click=${() => { this.experimentManager.setHideLockedCohorts(!hideLockedCohorts) }}
+          >
+            <pr-icon-button
+              color="tertiary"
+              size="medium"
+              variant="default"
+              icon=${hideLockedCohorts ? 'filter_list' : 'filter_list_off'}
+            >
+            </pr-icon-button>
+            <div>
+              ${hideLockedCohorts ? 'Show all cohorts' : 'Hide locked cohorts'}
+            </div>
+          </div>
+          <div class="header">Participant panels</div>
+          <div class="checkbox-wrapper"
+            @click=${() => { this.experimentManager.setShowParticipantStats(!showStats) }}
+          >
+            <pr-icon-button
+              color="tertiary"
+              size="medium"
+              variant="default"
+              icon=${showStats ? 'visibility_off' : 'visibility'}
+            >
+            </pr-icon-button>
+            <div>
+              ${showCohortList ? 'Hide' : 'Show'} participant details
+            </div>
+          </div>
+          <div class="checkbox-wrapper"
+            @click=${() => { this.experimentManager.setShowParticipantPreview(!showPreview) }}
+          >
+            <pr-icon-button
+              color="tertiary"
+              size="medium"
+              variant="default"
+              icon=${showPreview ? 'visibility_off' : 'visibility'}
+            >
+            </pr-icon-button>
+            <div>
+              ${showCohortList ? 'Hide' : 'Show'} participant preview
+            </div>
+          </div>
+        </div>
+        <div class="bottom">
+          <div class="header">Actions</div>
+          ${this.renderExperimentActions()}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderManualChatPanel() {
+    const stageId = this.participantService.currentStageViewId ?? '';
+    const stage = this.experimentService.getStage(stageId);
+
+    if (stage?.kind !== StageKind.CHAT) {
+      return html`
+        <div class="main">
+          <div class="top">
+            <div class="header">Manual chat</div>
+            <div>Navigate to a chat stage preview to send a message.</div>
+          </div>
+        </div>
+      `;
+    }
+
+    return html`
+      <div class="main">
+        <div class="top">
+          <div class="header">Manual chat</div>
+          <experimenter-manual-chat></experimenter-manual-chat>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderApiKeyPanel() {
+    return html`
+      <div class="main">
+        <div class="top">
+          <div class="header">Experimenter settings</div>
+          <experimenter-data-editor></experimenter-data-editor>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderAgentEditorPanel() {
+    const stageId = this.participantService.currentStageViewId ?? '';
+    const agents = this.agentEditor.getAgents(stageId);
+    return html`
+      <div class="main">
+        <div class="top">
+          <div class="header">Agent config</div>
+          ${agents.length === 0
+            ? html`<div>No agents configured in the current stage</div>`
+            : nothing}
+          ${agents.map((agent, index) =>
+            this.renderAgentEditor(stageId, agent, index)
+          )}
+        </div>
+      </div>
+    `;
+  }
+
+  // TODO: Refactor into separate component
   private renderAgentEditor(
     stageId: string,
     agent: AgentConfig,
