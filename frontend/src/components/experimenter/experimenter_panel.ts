@@ -22,7 +22,11 @@ import {AgentEditor} from '../../services/agent.editor';
 import {ParticipantService} from '../../services/participant.service';
 import {RouterService} from '../../services/router.service';
 
-import {AgentConfig, StageKind} from '@deliberation-lab/utils';
+import {
+  AgentConfig,
+  ParticipantProfileExtended,
+  StageKind
+} from '@deliberation-lab/utils';
 
 import {styles} from './experimenter_panel.scss';
 import {DEFAULT_STRING_FORMATTING_INSTRUCTIONS} from '@deliberation-lab/utils';
@@ -30,6 +34,7 @@ import {DEFAULT_JSON_FORMATTING_INSTRUCTIONS} from '@deliberation-lab/utils';
 
 enum PanelView {
   DEFAULT = 'default',
+  PARTICIPANT_SEARCH = 'participant_search',
   MANUAL_CHAT = 'manual_chat',
   LLM_SETTINGS = 'llm_settings',
   API_KEY = 'api_key',
@@ -51,6 +56,7 @@ export class Panel extends MobxLitElement {
   @state() panelView: PanelView = PanelView.DEFAULT;
   @state() isLoading = false;
   @state() isDownloading = false;
+  @state() participantSearchQuery = '';
 
   override render() {
     if (!this.authService.isExperimenter) {
@@ -72,6 +78,18 @@ export class Panel extends MobxLitElement {
               variant=${isSelected(PanelView.DEFAULT) ? 'tonal' : 'default'}
               @click=${() => {
                 this.panelView = PanelView.DEFAULT;
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
+          <pr-tooltip text="Participant search" position="RIGHT_END">
+            <pr-icon-button
+              color="secondary"
+              icon="search"
+              size="medium"
+              variant=${isSelected(PanelView.PARTICIPANT_SEARCH) ? 'tonal' : 'default'}
+              @click=${() => {
+                this.panelView = PanelView.PARTICIPANT_SEARCH;
               }}
             >
             </pr-icon-button>
@@ -122,6 +140,8 @@ export class Panel extends MobxLitElement {
 
   private renderPanelView() {
     switch (this.panelView) {
+      case PanelView.PARTICIPANT_SEARCH:
+        return this.renderParticipantSearchPanel();
       case PanelView.MANUAL_CHAT:
         return this.renderManualChatPanel();
       case PanelView.API_KEY:
@@ -203,6 +223,59 @@ export class Panel extends MobxLitElement {
         <div class="bottom">
           <div class="header">Actions</div>
           ${this.renderExperimentActions()}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderParticipantSearchPanel() {
+    const handleInput = (e: Event) => {
+      this.participantSearchQuery = (e.target as HTMLTextAreaElement).value;
+    };
+
+    const searchResults = this.participantSearchQuery === '' ? []
+      : this.experimentManager.getParticipantSearchResults(this.participantSearchQuery);
+
+    const renderResult = (participant: ParticipantProfileExtended) => {
+      const cohortName = this.experimentManager.getCurrentParticipantCohort(
+        participant
+      )?.metadata.name ?? '';
+
+      const onResultClick = () => {
+        this.experimentManager.setCurrentParticipantId(
+          participant.privateId
+        );
+      };
+
+      const isCurrent = participant.privateId ===
+        this.experimentManager.currentParticipant?.privateId;
+
+      return html`
+        <div class="search-result ${isCurrent ? 'current' : ''}"
+          role="button"
+          @click=${onResultClick}
+        >
+          <div class="title">${participant.publicId}</div>
+          <div>${cohortName}</div>
+        </div>
+      `;
+    };
+
+    return html`
+      <div class="main">
+        <div class="top">
+          <div class="header">Participant search</div>
+          <pr-textarea
+            variant="outlined"
+            label="Search by any participant ID (public, private, Prolific) or name"
+            @input=${handleInput}
+          >
+          </pr-textarea>
+          <div class="header">Search results</div>
+          <div class="search-results">
+            ${searchResults.length === 0 ? html`<div>No results</div>` : nothing}
+            ${searchResults.map(participant => renderResult(participant))}
+          </div>
         </div>
       </div>
     `;

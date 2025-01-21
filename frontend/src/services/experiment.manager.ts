@@ -163,6 +163,27 @@ export class ExperimentManager extends Service {
     return this.isEditing && !this.isEditingSettingsDialog;
   }
 
+  getParticipantSearchResults(rawQuery: string) {
+    const query = rawQuery.toLowerCase();
+
+    return Object.values(this.participantMap).filter(participant => {
+      if (participant.publicId.includes(query)) return true;
+      if (participant.privateId.includes(query)) return true;
+      if (participant.name?.toLowerCase().includes(query)) return true;
+      if (participant.prolificId?.includes(query)) return true;
+      for (const key of Object.keys(participant.anonymousProfiles)) {
+        const profile = participant.anonymousProfiles[key];
+        if (
+          profile &&
+          `${profile.name} ${profile.repeat + 1}`.toLowerCase().includes(query)
+        ) {
+          return true;
+        }
+      }
+      return false;
+    });
+  }
+
   setCohortEditing(cohort: CohortConfig|undefined) {
     this.cohortEditing = cohort;
   }
@@ -199,6 +220,12 @@ export class ExperimentManager extends Service {
   @computed get currentParticipant() {
     if (!this.currentParticipantId) return null;
     return this.participantMap[this.currentParticipantId];
+  }
+
+  getCurrentParticipantCohort(participant: ParticipantProfileExtended) {
+    return this.getCohort(
+      participant.transferCohortId ?? participant.currentCohortId
+    );
   }
 
   getNumExperimentParticipants(countObsoleteParticipants = true) {
