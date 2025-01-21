@@ -49,7 +49,7 @@ export class Progress extends MobxLitElement {
     ).length;
 
     return html`
-      <pr-tooltip text="${numSuccessParticipants} of ${total} participants completed" position="BOTTOM_START">
+      <pr-tooltip text="${numSuccessParticipants} of ${total} participants completed" position="RIGHT">
         <div class="progress-bar large">
           <div
             class="progress completed"

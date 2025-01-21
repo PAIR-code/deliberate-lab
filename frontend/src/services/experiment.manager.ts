@@ -104,8 +104,12 @@ export class ExperimentManager extends Service {
   @observable isEditing = false; // is on an edit page
   @observable isEditingSettingsDialog = false; // is in settings dialog
 
-  // Current participant in display panel
+  // Current participant, view in dashboard
   @observable currentParticipantId: string|undefined = undefined;
+  @observable showCohortList = true;
+  @observable showParticipantStats = true;
+  @observable showParticipantPreview = true;
+  @observable hideLockedCohorts = false;
 
   // Copy of cohort being edited in settings dialog
   @observable cohortEditing: CohortConfig|undefined = undefined;
@@ -159,8 +163,45 @@ export class ExperimentManager extends Service {
     return this.isEditing && !this.isEditingSettingsDialog;
   }
 
+  getParticipantSearchResults(rawQuery: string) {
+    const query = rawQuery.toLowerCase();
+
+    return Object.values(this.participantMap).filter(participant => {
+      if (participant.publicId.includes(query)) return true;
+      if (participant.privateId.includes(query)) return true;
+      if (participant.name?.toLowerCase().includes(query)) return true;
+      if (participant.prolificId?.includes(query)) return true;
+      for (const key of Object.keys(participant.anonymousProfiles)) {
+        const profile = participant.anonymousProfiles[key];
+        if (
+          profile &&
+          `${profile.name} ${profile.repeat + 1}`.toLowerCase().includes(query)
+        ) {
+          return true;
+        }
+      }
+      return false;
+    });
+  }
+
   setCohortEditing(cohort: CohortConfig|undefined) {
     this.cohortEditing = cohort;
+  }
+
+  setShowCohortList(showCohortList: boolean) {
+    this.showCohortList = showCohortList;
+  }
+
+  setShowParticipantPreview(showParticipantPreview: boolean) {
+    this.showParticipantPreview = showParticipantPreview;
+  }
+
+  setShowParticipantStats(showParticipantStats: boolean) {
+    this.showParticipantStats = showParticipantStats;
+  }
+
+  setHideLockedCohorts(hideLockedCohorts: boolean) {
+    this.hideLockedCohorts = hideLockedCohorts;
   }
 
   setCurrentParticipantId(id: string|undefined) {
@@ -179,6 +220,12 @@ export class ExperimentManager extends Service {
   @computed get currentParticipant() {
     if (!this.currentParticipantId) return null;
     return this.participantMap[this.currentParticipantId];
+  }
+
+  getCurrentParticipantCohort(participant: ParticipantProfileExtended) {
+    return this.getCohort(
+      participant.transferCohortId ?? participant.currentCohortId
+    );
   }
 
   getNumExperimentParticipants(countObsoleteParticipants = true) {
@@ -224,6 +271,11 @@ export class ExperimentManager extends Service {
   }
 
   @computed get cohortList() {
+    if (this.hideLockedCohorts) {
+      return Object.values(this.cohortMap).filter(
+        cohort => !this.sp.experimentService.experiment?.cohortLockMap[cohort.id]
+      );
+    }
     return Object.values(this.cohortMap);
   }
 

@@ -7,7 +7,7 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
-import {RouterService} from '../../services/router.service';
+import {ParticipantService} from '../../services/participant.service';
 
 import {
   ParticipantProfile,
@@ -23,14 +23,14 @@ export class Progress extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly cohortService = core.getService(CohortService);
-  private readonly routerService = core.getService(RouterService);
+  private readonly participantService = core.getService(ParticipantService);
 
   @property() discussionId: string|null = null;
 
   override render() {
     if (!this.discussionId) return nothing;
 
-    const stageId = this.routerService.activeRoute.params['stage'];
+    const stageId = this.participantService.currentStageViewId ?? '';
     const { completed, notCompleted } =
       this.cohortService.getParticipantsByChatDiscussionCompletion(
         stageId, this.discussionId

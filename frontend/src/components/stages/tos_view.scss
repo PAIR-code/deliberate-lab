@@ -24,7 +24,7 @@
 
 .ack-wrapper {
   @include common.flex-column;
-  background: var(--md-sys-color-surface-variant);
+  background: var(--md-sys-color-surface);
   bottom: common.$footer-height;
   flex-shrink: 0;
   margin-bottom: 0;

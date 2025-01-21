@@ -3,7 +3,7 @@
 
 :host {
   @include common.flex-column;
-  background: var(--md-sys-color-surface-container);
+  background: var(--md-sys-color-surface-variant);
   border-radius: common.$spacing-medium;
   height: 100%;
   justify-content: end;
@@ -11,7 +11,7 @@
 }
 
 .chat-content {
-  background: var(--md-sys-color-surface-container);
+  background: var(--md-sys-color-surface-variant);
   border-radius: common.$spacing-medium;
   display: flex;
   flex-direction: column-reverse;
@@ -22,28 +22,6 @@
 .chat-scroll {
   display: flex;
   flex-direction: column-reverse;
-}
-
-.chat-info {
-  @include common.flex-column-align-center;
-  border-bottom: 1px solid var(--md-sys-color-surface);
-  color: var(--md-sys-color-outline);
-  margin-bottom: common.$spacing-xl;
-  padding: common.$spacing-xl common.$spacing-xl 0;
-  text-align: center;
-
-  .title {
-    @include typescale.title-large;
-  }
-
-  .label {
-    @include typescale.label-small;
-    border-radius: common.$spacing-small;
-    background: var(--md-sys-color-surface);
-    padding: common.$spacing-small common.$spacing-medium;
-    text-transform: uppercase;
-    transform: translateY(calc(common.$spacing-large));
-  }
 }
 
 .chat-participants-wrapper {
@@ -94,7 +72,7 @@
 
 .input {
   align-items: center;
-  background: var(--md-sys-color-surface-container);
+  background: var(--md-sys-color-surface);
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: 50px;
   box-sizing: border-box;
@@ -117,7 +95,7 @@ stage-footer {
 
 .discussion {
   @include common.flex-column-align-center;
-  border-top: 1px solid var(--md-sys-color-surface);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
   justify-content: center;
   margin-top: common.$spacing-large;
   padding: 0 common.$spacing-large common.$spacing-large;
@@ -125,7 +103,7 @@ stage-footer {
 
 .discussion-title {
   @include typescale.label-small;
-  background: var(--md-sys-color-surface);
+  background: var(--md-sys-color-outline-variant);
   border-radius: common.$spacing-small;
   color: var(--md-sys-color-outline);
   padding: common.$spacing-small common.$spacing-medium;
@@ -148,7 +126,7 @@ stage-footer {
 .img-wrapper {
   @include common.flex-row-align-center;
   aspect-ratio: 1 / 1;
-  background: var(--md-sys-color-surface);
+  background: var(--md-sys-color-outline-variant);
   border-radius: 100%;
   overflow: hidden;
   width: 30px;

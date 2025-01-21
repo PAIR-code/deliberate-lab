@@ -143,7 +143,7 @@
     @include flex-row;
 
     &:nth-of-type(2n) {
-      background: var(--md-sys-color-surface-container-high);
+      background: var(--md-sys-color-surface-variant);
     }
   }
 
@@ -310,13 +310,13 @@ $spacing-large: 12px;
 $spacing-xl: 16px;
 $spacing-xxl: 24px;
 
-$header-height: 60px;
-$footer-height: 60px;
+$header-height: 48px;
+$footer-height: 48px;
 $info-content-max-width: 800px;
 $main-content-max-width: 1500px;
 $main-content-padding: $spacing-xl;
 $sidenav-header-height: 40px;
 $sidenav-padding: $spacing-large;
 $sidenav-width: 300px;
-$sidenav-closed-width: 72px;
+$sidenav-closed-width: 54px;
 $panel-width: 240px;

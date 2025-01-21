@@ -35,7 +35,7 @@ export class Progress extends MobxLitElement {
   @state() completeWaitingLoading = false;
 
   override render() {
-    const stageId = this.routerService.activeRoute.params['stage'];
+    const stageId = this.participantService.currentStageViewId ?? '';
     const stage = this.experimentService.getStage(stageId);
     if (!stage) return nothing;
 

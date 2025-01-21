@@ -64,10 +64,7 @@ export class TransferView extends MobxLitElement {
   private renderCompletedStage() {
     const onClick = () => {
       // Route to current stage
-      this.routerService.navigate(Pages.PARTICIPANT, {
-        'experiment': this.participantService.experimentId!,
-        'participant': this.participantService.profile!.privateId,
-      });
+      this.participantService.setCurrentStageView(undefined);
     };
 
     if (this.participantService.completedStage(this.stage?.id ?? '')) {

@@ -19,18 +19,6 @@ export enum ColorMode {
   DEFAULT = "default",
 }
 
-/** Color themes. */
-export enum ColorTheme {
-  KAMINO = "kamino",
-}
-
-/** Text sizes. */
-export enum TextSize {
-  SMALL = "small",
-  MEDIUM = "medium",
-  LARGE = "large",
-}
-
 /** Gallery item (rendered as card). */
 export interface GalleryItem {
   title: string;

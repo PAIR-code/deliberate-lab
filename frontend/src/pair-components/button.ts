@@ -29,7 +29,7 @@ export class Button extends LitElement {
 
   // Custom styles
   @property({ type: String }) color: ComponentColor = "primary";
-  @property({ type: String }) padding: ComponentSize = "medium";
+  @property({ type: String }) padding: ComponentSize = "small";
   @property({ type: String }) shape: ButtonShape = "default";
   @property({ type: String }) size: ComponentSize = "small";
   @property({ type: String }) variant: ComponentVariant = "filled";

@@ -40,11 +40,11 @@ import {
 } from '@deliberation-lab/utils';
 import {isParticipantEndedExperiment} from '../../shared/participant.utils';
 
-import {styles} from './participant_previewer.scss';
+import {styles} from './participant_view.scss';
 
 /** Participant's view of experiment */
-@customElement('participant-previewer')
-export class ParticipantPreviewer extends MobxLitElement {
+@customElement('participant-view')
+export class ParticipantView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly authService = core.getService(AuthService);
@@ -56,7 +56,9 @@ export class ParticipantPreviewer extends MobxLitElement {
   @state() isStartExperimentLoading = false;
 
   override render() {
-    if (this.routerService.activePage === Pages.PARTICIPANT) {
+    const stageId = this.participantService.currentStageViewId;
+
+    if (!stageId) {
       return html`
         <participant-nav></participant-nav>
         <div
@@ -71,7 +73,6 @@ export class ParticipantPreviewer extends MobxLitElement {
       `;
     }
 
-    const stageId = this.routerService.activeRoute.params['stage'];
     const stage = this.experimentService.getStage(stageId);
 
     return html`
@@ -132,16 +133,11 @@ export class ParticipantPreviewer extends MobxLitElement {
     }
 
     // Otherwise, route to current stage
-    this.routerService.navigate(Pages.PARTICIPANT_STAGE, {
-      experiment: this.routerService.activeRoute.params['experiment'],
-      participant: this.routerService.activeRoute.params['participant'],
-      stage: profile.currentStageId,
-    });
+    this.participantService.setCurrentStageView(profile.currentStageId);
   }
 
   private renderAttentionPopup() {
     if (
-      this.authService.isExperimenter ||
       this.participantService.profile?.currentStatus !==
       ParticipantStatus.ATTENTION_CHECK
     ) {
@@ -254,6 +250,6 @@ export class ParticipantPreviewer extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'participant-previewer': ParticipantPreviewer;
+    'participant-view': ParticipantView;
   }
 }

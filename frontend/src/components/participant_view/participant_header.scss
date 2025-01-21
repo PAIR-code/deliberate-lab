@@ -34,6 +34,6 @@ participant-profile-display {
   @include typescale.title-medium;
   border: 2px solid var(--md-sys-color-outline-variant);
   border-radius: common.$spacing-medium;
-  height: calc(common.$header-height - common.$spacing-large * 2);
+  height: calc(common.$header-height - common.$spacing-large);
   padding: 0 common.$spacing-medium;
 }

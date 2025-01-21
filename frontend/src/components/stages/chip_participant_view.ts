@@ -197,7 +197,7 @@ export class ChipView extends MobxLitElement {
   }
 
   private isOfferAcceptable() {
-    const publicData = this.cohortService.stagePublicDataMap[this.stage!.id];
+    const publicData = this.cohortService.stagePublicDataMap[this.stage?.id ?? ''];
     if (publicData?.kind !== StageKind.CHIP) return true;
 
     const currentParticipant = this.participantService.profile;
@@ -227,7 +227,7 @@ export class ChipView extends MobxLitElement {
 
   private getAvailableSell() {
     /* Returns how many chips of the current selected chip we can sell. */
-    const publicData = this.cohortService.stagePublicDataMap[this.stage!.id];
+    const publicData = this.cohortService.stagePublicDataMap[this.stage?.id ?? ''];
     if (publicData?.kind !== StageKind.CHIP) return 0;
 
     const publicId = this.participantService.profile?.publicId ?? '';
@@ -669,10 +669,11 @@ export class ChipView extends MobxLitElement {
   private getParticipant(participantId: string) {
     return this.cohortService
       .getAllParticipants()
-      .find((p) => p.publicId === participantId)!;
+      .find((p) => p.publicId === participantId);
   }
 
-  private getParticipantDisplay(participant: ParticipantProfile) {
+  private getParticipantDisplay(participant: ParticipantProfile|undefined) {
+    if (!participant) return '';
     return getParticipantInlineDisplay(participant, false, this.stage?.id ?? '');
   }
 
@@ -708,7 +709,7 @@ export class ChipView extends MobxLitElement {
       case ChipLogType.NEW_TURN:
         participant = this.getParticipant(entry.participantId);
         const isCurrentUser =
-          participant.publicId! === this.participantService.profile!.publicId;
+          participant?.publicId === this.participantService.profile?.publicId;
 
         if (isCurrentUser) {
           return renderEntry(

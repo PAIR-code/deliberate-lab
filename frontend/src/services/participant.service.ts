@@ -28,11 +28,10 @@ import {
   setDoc,
   updateDoc,
 } from 'firebase/firestore';
-import {computed, makeObservable, observable} from 'mobx';
+import {action, computed, makeObservable, observable} from 'mobx';
 import {CohortService} from './cohort.service';
 import {ExperimentService} from './experiment.service';
 import {FirebaseService} from './firebase.service';
-import {Pages, RouterService} from './router.service';
 import {ParticipantAnswerService} from './participant.answer';
 import {Service} from './service';
 
@@ -68,7 +67,6 @@ interface ServiceProvider {
   cohortService: CohortService;
   experimentService: ExperimentService;
   firebaseService: FirebaseService;
-  routerService: RouterService;
   participantAnswerService: ParticipantAnswerService;
 }
 
@@ -80,6 +78,9 @@ export class ParticipantService extends Service {
 
   @observable experimentId: string | null = null;
   @observable participantId: string | null = null;
+
+  // current stage being viewed by participant/experimenter
+  @observable currentStageViewId: string | undefined = undefined;
 
   @observable profile: ParticipantProfileExtended | undefined = undefined;
   @observable answerMap: Record<string, StageParticipantAnswer | undefined> = {};
@@ -135,15 +136,11 @@ export class ParticipantService extends Service {
     return this.profile?.transferCohortId !== null;
   }
 
-  isCurrentStage(
-    stageId: string = this.sp.routerService.activeRoute.params['stage']
-  ) {
+  isCurrentStage(stageId: string = (this.currentStageViewId ?? '')) {
     return this.profile?.currentStageId === stageId;
   }
 
-  isLastStage(
-    stageId: string = this.sp.routerService.activeRoute.params['stage']
-  ) {
+  isLastStage(stageId: string = (this.currentStageViewId ?? '')) {
     const ids = this.sp.experimentService.stageIds;
     return ids.length > 0 && ids[ids.length - 1] === stageId;
   }
@@ -178,12 +175,22 @@ export class ParticipantService extends Service {
     return stageAnswer.discussionTimestampMap[discussionId];
   }
 
+  @action setCurrentStageView(stageId: string|undefined) {
+    this.currentStageViewId = stageId;
+  }
+
   updateForRoute(
-    eid: string, // experiment ID
-    pid: string // participant ID
+    experimentId: string, // experiment ID
+    participantId: string, // participant ID
+    stageId: string|undefined = undefined // stage ID
   ) {
-    if (eid !== this.experimentId || pid !== this.participantId) {
-      this.setParticipant(eid, pid);
+    // If stage params exist, set current stage view to stage ID
+    if (stageId) {
+      this.currentStageViewId = stageId;
+    }
+
+    if (experimentId !== this.experimentId || participantId !== this.participantId) {
+      this.setParticipant(experimentId, participantId);
     }
   }
 
@@ -223,6 +230,8 @@ export class ParticipantService extends Service {
 
           // Load profile to participant answer service
           this.sp.participantAnswerService.setProfile(this.profile);
+          // Set current stage
+          this.currentStageViewId = this.profile.currentStageId;
 
           this.isProfileLoading = false;
         }
@@ -319,10 +328,7 @@ export class ParticipantService extends Service {
 
     // Otherwise, route to main participant page
     if (!this.experimentId || !this.profile) return;
-    this.sp.routerService.navigate(Pages.PARTICIPANT, {
-      'experiment': this.experimentId,
-      'participant': this.profile.privateId,
-    });
+    this.currentStageViewId = undefined;
   }
 
   /** Complete waiting phase for stage. */
@@ -356,11 +362,7 @@ export class ParticipantService extends Service {
       this.routeToEndExperiment(ParticipantStatus.SUCCESS);
     } else if (result.currentStageId) {
       // Route to next stage
-      this.sp.routerService.navigate(Pages.PARTICIPANT_STAGE, {
-        experiment: this.sp.routerService.activeRoute.params['experiment'],
-        participant: this.sp.routerService.activeRoute.params['participant'],
-        stage: result.currentStageId,
-      });
+      this.currentStageViewId = result.currentStageId;
     }
 
     return result.currentStageId ?? '';
@@ -403,11 +405,7 @@ export class ParticipantService extends Service {
       this.routeToEndExperiment(ParticipantStatus.SUCCESS);
     } else if (result.currentStageId) {
       // Route to next stage
-      this.sp.routerService.navigate(Pages.PARTICIPANT_STAGE, {
-        experiment: this.sp.routerService.activeRoute.params['experiment'],
-        participant: this.sp.routerService.activeRoute.params['participant'],
-        stage: result.currentStageId,
-      });
+      this.currentStageViewId = result.currentStageId;
     }
 
     return result.currentStageId ?? '';

@@ -60,6 +60,8 @@ export class RouterService extends Service {
       path: "/e/:experiment/c/:cohort",
     },
     {
+      // Deprecated (but included for backwards compatibility):
+      // Use PARTICIPANT page instead
       name: Pages.PARTICIPANT_STAGE,
       path: "/e/:experiment/p/:participant/:stage",
     }
@@ -112,6 +114,7 @@ export class RouterService extends Service {
       this.sp.participantService.updateForRoute(
         params['experiment'],
         params['participant'],
+        params['stage'] // if defined, this sets current stage viewed
       );
       this.sp.experimentManager.updateForRoute(params['experiment']);
       this.sp.experimentService.updateForRoute(params['experiment']);
@@ -180,6 +183,8 @@ export enum Pages {
   EXPERIMENT_CREATE = "EXPERIMENT_CREATE",
   PARTICIPANT = "PARTICIPANT",
   PARTICIPANT_JOIN_COHORT = "PARTICIPANT_JOIN_COHORT",
+  // Deprecated (but included for backwards compatibility):
+  // Use PARTICIPANT page instead
   PARTICIPANT_STAGE = "PARTICIPANT_STAGE",
   SETTINGS = "SETTINGS",
 }
