@@ -5,7 +5,7 @@ import {
   ParticipantStatus,
   ProfileType,
   StageConfig,
-  StageKind
+  StageKind,
 } from '@deliberation-lab/utils';
 
 /**
@@ -17,7 +17,7 @@ import {
 export function getParticipantInlineDisplay(
   participant: ParticipantProfile,
   showIsSelf = false, // add (you) to the end
-  stageId = '',
+  stageId = ''
 ) {
   if (
     stageId.includes(ALTERNATE_PROFILE_SET_ID) &&
@@ -28,7 +28,9 @@ export function getParticipantInlineDisplay(
   }
 
   return `
-    ${participant.avatar ?? ''} ${participant.name ?? participant.publicId}${showIsSelf ? ' (you)' : ''}
+    ${participant.avatar ?? ''} ${participant.name ?? participant.publicId}${
+    showIsSelf ? ' (you)' : ''
+  }
   `;
 }
 
@@ -61,7 +63,7 @@ export function getParticipantStatusDetailText(
   defaultText = ''
 ) {
   if (isStageInWaitingPhase) {
-    return '⏸️ This participant currently sees a wait stage; they are waiting for others in the cohort to catch up.'
+    return '⏸️ This participant currently sees a wait stage; they are waiting for others in the cohort to catch up.';
   }
 
   if (profile.currentStatus === ParticipantStatus.BOOTED_OUT) {
@@ -72,6 +74,8 @@ export function getParticipantStatusDetailText(
     return '🛑 This participant declined a transfer and can no longer participate.';
   } else if (profile.currentStatus === ParticipantStatus.ATTENTION_CHECK) {
     return '⚠️ This participant has been sent an attention check.';
+  } else if (profile.currentStatus === ParticipantStatus.TRANSFER_PENDING) {
+    return '⚠️ This participant has been sent a transfer invitation.';
   }
 
   return defaultText;

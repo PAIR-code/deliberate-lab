@@ -138,7 +138,6 @@ export class ParticipantView extends MobxLitElement {
 
   private renderAttentionPopup() {
     if (
-      this.authService.isExperimenter ||
       this.participantService.profile?.currentStatus !==
       ParticipantStatus.ATTENTION_CHECK
     ) {
