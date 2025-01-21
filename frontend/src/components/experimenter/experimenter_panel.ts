@@ -25,7 +25,7 @@ import {RouterService} from '../../services/router.service';
 import {
   AgentConfig,
   ParticipantProfileExtended,
-  StageKind
+  StageKind,
 } from '@deliberation-lab/utils';
 
 import {styles} from './experimenter_panel.scss';
@@ -87,7 +87,9 @@ export class Panel extends MobxLitElement {
               color="secondary"
               icon="search"
               size="medium"
-              variant=${isSelected(PanelView.PARTICIPANT_SEARCH) ? 'tonal' : 'default'}
+              variant=${isSelected(PanelView.PARTICIPANT_SEARCH)
+                ? 'tonal'
+                : 'default'}
               @click=${() => {
                 this.panelView = PanelView.PARTICIPANT_SEARCH;
               }}
@@ -156,14 +158,16 @@ export class Panel extends MobxLitElement {
   private renderDefaultPanel() {
     const showCohortList = this.experimentManager.showCohortList;
     const hideLockedCohorts = this.experimentManager.hideLockedCohorts;
-    const showPreview = this.experimentManager.showParticipantPreview;
-    const showStats = this.experimentManager.showParticipantStats;
+
     return html`
       <div class="main">
         <div class="top">
           <div class="header">Cohort Panel</div>
-          <div class="checkbox-wrapper"
-            @click=${() => { this.experimentManager.setShowCohortList(!showCohortList) }}
+          <div
+            class="checkbox-wrapper"
+            @click=${() => {
+              this.experimentManager.setShowCohortList(!showCohortList);
+            }}
           >
             <pr-icon-button
               color="tertiary"
@@ -172,12 +176,13 @@ export class Panel extends MobxLitElement {
               icon=${showCohortList ? 'visibility_off' : 'visibility'}
             >
             </pr-icon-button>
-            <div>
-              ${showCohortList ? 'Hide' : 'Show'} cohort list
-            </div>
+            <div>${showCohortList ? 'Hide' : 'Show'} cohort list</div>
           </div>
-          <div class="checkbox-wrapper"
-            @click=${() => { this.experimentManager.setHideLockedCohorts(!hideLockedCohorts) }}
+          <div
+            class="checkbox-wrapper"
+            @click=${() => {
+              this.experimentManager.setHideLockedCohorts(!hideLockedCohorts);
+            }}
           >
             <pr-icon-button
               color="tertiary"
@@ -190,35 +195,7 @@ export class Panel extends MobxLitElement {
               ${hideLockedCohorts ? 'Show all cohorts' : 'Hide locked cohorts'}
             </div>
           </div>
-          <div class="header">Participant panels</div>
-          <div class="checkbox-wrapper"
-            @click=${() => { this.experimentManager.setShowParticipantStats(!showStats) }}
-          >
-            <pr-icon-button
-              color="tertiary"
-              size="medium"
-              variant="default"
-              icon=${showStats ? 'visibility_off' : 'visibility'}
-            >
-            </pr-icon-button>
-            <div>
-              ${showCohortList ? 'Hide' : 'Show'} participant details
-            </div>
-          </div>
-          <div class="checkbox-wrapper"
-            @click=${() => { this.experimentManager.setShowParticipantPreview(!showPreview) }}
-          >
-            <pr-icon-button
-              color="tertiary"
-              size="medium"
-              variant="default"
-              icon=${showPreview ? 'visibility_off' : 'visibility'}
-            >
-            </pr-icon-button>
-            <div>
-              ${showCohortList ? 'Hide' : 'Show'} participant preview
-            </div>
-          </div>
+          ${this.renderParticipantSettingsPanel()}
         </div>
         <div class="bottom">
           <div class="header">Actions</div>
@@ -228,30 +205,73 @@ export class Panel extends MobxLitElement {
     `;
   }
 
+  private renderParticipantSettingsPanel() {
+    if (!this.experimentManager.currentParticipantId) {
+      return;
+    }
+    const showCohortList = this.experimentManager.showCohortList;
+    const showPreview = this.experimentManager.showParticipantPreview;
+    const showStats = this.experimentManager.showParticipantStats;
+    return html`<div class="header">Participant panels</div>
+      <div
+        class="checkbox-wrapper"
+        @click=${() => {
+          this.experimentManager.setShowParticipantStats(!showStats);
+        }}
+      >
+        <pr-icon-button
+          color="tertiary"
+          size="medium"
+          variant="default"
+          icon=${showStats ? 'visibility_off' : 'visibility'}
+        >
+        </pr-icon-button>
+        <div>${showCohortList ? 'Hide' : 'Show'} participant details</div>
+      </div>
+      <div
+        class="checkbox-wrapper"
+        @click=${() => {
+          this.experimentManager.setShowParticipantPreview(!showPreview);
+        }}
+      >
+        <pr-icon-button
+          color="tertiary"
+          size="medium"
+          variant="default"
+          icon=${showPreview ? 'visibility_off' : 'visibility'}
+        >
+        </pr-icon-button>
+        <div>${showCohortList ? 'Hide' : 'Show'} participant preview</div>
+      </div>`;
+  }
   private renderParticipantSearchPanel() {
     const handleInput = (e: Event) => {
       this.participantSearchQuery = (e.target as HTMLTextAreaElement).value;
     };
 
-    const searchResults = this.participantSearchQuery === '' ? []
-      : this.experimentManager.getParticipantSearchResults(this.participantSearchQuery);
+    const searchResults =
+      this.participantSearchQuery === ''
+        ? []
+        : this.experimentManager.getParticipantSearchResults(
+            this.participantSearchQuery
+          );
 
     const renderResult = (participant: ParticipantProfileExtended) => {
-      const cohortName = this.experimentManager.getCurrentParticipantCohort(
-        participant
-      )?.metadata.name ?? '';
+      const cohortName =
+        this.experimentManager.getCurrentParticipantCohort(participant)
+          ?.metadata.name ?? '';
 
       const onResultClick = () => {
-        this.experimentManager.setCurrentParticipantId(
-          participant.privateId
-        );
+        this.experimentManager.setCurrentParticipantId(participant.privateId);
       };
 
-      const isCurrent = participant.privateId ===
+      const isCurrent =
+        participant.privateId ===
         this.experimentManager.currentParticipant?.privateId;
 
       return html`
-        <div class="search-result ${isCurrent ? 'current' : ''}"
+        <div
+          class="search-result ${isCurrent ? 'current' : ''}"
           role="button"
           @click=${onResultClick}
         >
@@ -273,8 +293,10 @@ export class Panel extends MobxLitElement {
           </pr-textarea>
           <div class="header">Search results</div>
           <div class="search-results">
-            ${searchResults.length === 0 ? html`<div>No results</div>` : nothing}
-            ${searchResults.map(participant => renderResult(participant))}
+            ${searchResults.length === 0
+              ? html`<div>No results</div>`
+              : nothing}
+            ${searchResults.map((participant) => renderResult(participant))}
           </div>
         </div>
       </div>
@@ -351,11 +373,7 @@ export class Panel extends MobxLitElement {
         ...agent.responseConfig,
         formattingInstructions: instructions,
       };
-      this.agentEditor.updateAgent(
-        stageId,
-        {...agent, responseConfig},
-        index
-      );
+      this.agentEditor.updateAgent(stageId, {...agent, responseConfig}, index);
     };
 
     const updateJSON = () => {
@@ -366,11 +384,7 @@ export class Panel extends MobxLitElement {
           ? DEFAULT_STRING_FORMATTING_INSTRUCTIONS
           : DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
       };
-      this.agentEditor.updateAgent(
-        stageId,
-        {...agent, responseConfig},
-        index
-      );
+      this.agentEditor.updateAgent(stageId, {...agent, responseConfig}, index);
     };
 
     const updateWPM = (e: InputEvent) => {
@@ -466,12 +480,7 @@ export class Panel extends MobxLitElement {
         ?loading=${this.isDownloading}
         @click=${onClick}
       >
-        <pr-icon
-          icon="download"
-          color="secondary"
-          variant="default"
-        >
-        </pr-icon>
+        <pr-icon icon="download" color="secondary" variant="default"> </pr-icon>
         <div>Download experiment data</div>
       </pr-button>
     `;
@@ -484,23 +493,13 @@ export class Panel extends MobxLitElement {
         'This will create a copy of this experiment. Are you sure you want to proceed?'
       );
       if (!isConfirmed) return;
-      this.analyticsService.trackButtonClick(
-        ButtonClick.EXPERIMENT_FORK
-      );
+      this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_FORK);
       this.experimentManager.forkExperiment();
     };
 
     return html`
-      <pr-button
-        color="secondary"
-        variant="outlined"
-        @click=${onClick}
-      >
-        <pr-icon
-          icon="fork_right"
-          color="secondary"
-          variant="default"
-        >
+      <pr-button color="secondary" variant="outlined" @click=${onClick}>
+        <pr-icon icon="fork_right" color="secondary" variant="default">
         </pr-icon>
         <div>Fork experiment</div>
       </pr-button>
@@ -523,11 +522,7 @@ export class Panel extends MobxLitElement {
 
     return html`
       <pr-tooltip text=${tooltip} position="TOP_START">
-        <pr-button
-          color="secondary"
-          variant="outlined"
-          @click=${onClick}
-        >
+        <pr-button color="secondary" variant="outlined" @click=${onClick}>
           <pr-icon
             icon=${this.experimentManager.isCreator ? 'edit_note' : 'overview'}
             color="secondary"
@@ -543,8 +538,7 @@ export class Panel extends MobxLitElement {
   private renderExperimentActions() {
     return html`
       ${this.renderExperimentDownloadButton()}
-      ${this.renderExperimentForkButton()}
-      ${this.renderExperimentEditButton()}
+      ${this.renderExperimentForkButton()} ${this.renderExperimentEditButton()}
     `;
   }
 }
