@@ -2,7 +2,9 @@ import { Value } from '@sinclair/typebox/value';
 import {
   ExperimenterData,
   StageConfig,
-  ParticipantProfileExtended
+  StageKind,
+  ParticipantProfileExtended,
+  createAgentParticipantRankingStagePrompt
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from './agent.utils';
 
@@ -58,6 +60,9 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
   // TODO: Use utils functions to construct prompt based on stage type
   let prompt = '';
   switch (stage.kind) {
+    case StageKind.RANKING:
+      prompt = createAgentParticipantRankingStagePrompt(participant, stage);
+      break;
     default:
       prompt = `This is a test prompt. Please output a funny joke.`;
   }
