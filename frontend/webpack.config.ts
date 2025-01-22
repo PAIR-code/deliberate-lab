@@ -45,6 +45,7 @@ const config: webpack.Configuration = {
           {
             loader: 'sass-loader',
             options: {
+              api: 'modern-compiler',
               sassOptions: {
                 outputStyle: 'compressed',
               },
