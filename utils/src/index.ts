@@ -23,6 +23,9 @@ export * from './participant';
 export * from './participant.validation';
 export * from './profile_sets';
 
+// Agent
+export * from './agent.validation';
+
 // Stages
 export * from './stages/stage';
 export * from './stages/stage.validation';
@@ -33,6 +36,7 @@ export * from './stages/chip_stage.validation';
 export * from './stages/comprehension_stage';
 export * from './stages/comprehension_stage.validation';
 export * from './stages/ranking_stage';
+export * from './stages/ranking_stage.prompts';
 export * from './stages/ranking_stage.validation';
 export * from './stages/info_stage';
 export * from './stages/info_stage.validation';

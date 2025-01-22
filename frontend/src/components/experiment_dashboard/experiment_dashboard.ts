@@ -185,6 +185,29 @@ export class Component extends MobxLitElement {
       `;
     };
 
+    const renderAgentParticipantButton = () => {
+      const currentParticipant = this.experimentManager.currentParticipant;
+      const currentStageId = this.participantService.currentStageViewId;
+      if (!currentParticipant || !currentStageId) return nothing;
+
+      return html`
+        <pr-tooltip text="Experimental feature: Test agent participant prompt" position="BOTTOM_END">
+          <pr-icon-button
+            icon="robot_2"
+            size="small"
+            color="tertiary"
+            variant="default"
+            @click=${() => {
+              this.experimentManager.testAgentParticipantPrompt(
+                currentParticipant.privateId, currentStageId
+              );
+            }}
+          >
+          </pr-icon-button>
+        </pr-tooltip>
+      `;
+    }
+
     const renderStatusBanner = () => {
       if (!isPreview) return nothing;
       const text = this.getParticipantStatusText();
@@ -216,7 +239,10 @@ export class Component extends MobxLitElement {
           ${!isPreview ? getProfileString() : ''}
           ${renderStatusBanner()}
         </div>
-        ${this.renderTransferMenu()}
+        <div class="right">
+          ${renderAgentParticipantButton()}
+          ${this.renderTransferMenu()}
+        </div>
       </div>
     `;
   }
