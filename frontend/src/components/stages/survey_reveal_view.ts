@@ -214,9 +214,9 @@ export class SurveyReveal extends MobxLitElement {
         question.correctAnswerId
       ) {
         const correctAnswer = question.options.find(
-          (option) => option.id === question.correctAnswerId ?? ''
+          (option) => option.id === question.correctAnswerId
         );
-        return this.makeCell(correctAnswer!.text);
+        return this.makeCell(correctAnswer?.text ?? '');
       } else {
         return nothing;
       }
