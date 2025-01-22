@@ -10,6 +10,8 @@ export * from './cohort.endpoints';
 export * from './participant.endpoints';
 export * from './participant.triggers';
 
+export * from './agent.utils';
+
 export * from './stages/chat.endpoints';
 export * from './stages/chat.triggers';
 
