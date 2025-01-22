@@ -1,4 +1,5 @@
 import {
+  AgentParticipantPromptTestData,
   BaseParticipantData,
   CreateChatMessageData,
   CohortCreationData,
@@ -209,5 +210,13 @@ export const setChipTurnCallable = async(
   functions: Functions, config: SetChipTurnData
 ) => {
   const { data } = await httpsCallable<SetChipTurnData, SuccessResponse>(functions, 'setChipTurn')(config);
+  return data;
+}
+
+/** Generic endpoint for testing agent participant stage prompts. */
+export const testAgentParticipantPromptCallable = async(
+  functions: Functions, config: AgentParticipantPromptTestData
+) => {
+  const { data } = await httpsCallable<AgentParticipantPromptTestData, SimpleResponse<string>>(functions, 'testAgentParticipantPrompt')(config);
   return data;
 }

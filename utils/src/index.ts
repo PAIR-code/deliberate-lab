@@ -23,6 +23,9 @@ export * from './participant';
 export * from './participant.validation';
 export * from './profile_sets';
 
+// Agent
+export * from './agent.validation';
+
 // Stages
 export * from './stages/stage';
 export * from './stages/stage.validation';
