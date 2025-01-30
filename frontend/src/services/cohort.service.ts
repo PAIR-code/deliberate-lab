@@ -436,6 +436,10 @@ export class CohortService extends Service {
             changedDocs = snapshot.docs;
           }
 
+          // Clear participant maps before repopulating
+          this.participantMap = {};
+          this.transferParticipantMap = {};
+
           changedDocs.forEach((doc) => {
             const profile = doc.data() as ParticipantProfile;
             if (profile.currentCohortId === this.cohortId) {
