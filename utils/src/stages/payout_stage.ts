@@ -45,10 +45,11 @@ export interface BasePayoutItem {
   stageId: string;
   // Fixed payout added if stage is completed
   baseCurrencyAmount: number;
-  // Only select one payout item for each random selection ID
+  // Only select one payout item for each (non-empty) random selection ID
   // e.g., if two payout items have random selection ID 'survival-task',
-  // one of them will be randomly selected (on participant creation)
-  randomSelectionId: string|null;
+  // one of them will be randomly selected (on participant creation).
+  // Leave empty if item should always be selected.
+  randomSelectionId: string;
 }
 
 export enum PayoutItemType {
@@ -166,7 +167,7 @@ export function createDefaultPayoutItem(
     isActive: config.isActive ?? true,
     stageId: config.stageId ?? '',
     baseCurrencyAmount: config.baseCurrencyAmount ?? 0,
-    randomSelectionId: config.randomSelectionId ?? null,
+    randomSelectionId: config.randomSelectionId ?? '',
   };
 }
 
@@ -180,7 +181,7 @@ export function createChipPayoutItem(config: Partial<ChipPayoutItem> = {}): Chip
     isActive: config.isActive ?? true,
     stageId: config.stageId ?? '',
     baseCurrencyAmount: config.baseCurrencyAmount ?? 0,
-    randomSelectionId: config.randomSelectionId ?? null,
+    randomSelectionId: config.randomSelectionId ?? '',
   };
 }
 
@@ -194,7 +195,7 @@ export function createSurveyPayoutItem(config: Partial<SurveyPayoutItem> = {}): 
     isActive: config.isActive ?? true,
     stageId: config.stageId ?? '',
     baseCurrencyAmount: config.baseCurrencyAmount ?? 0,
-    randomSelectionId: config.randomSelectionId ?? null,
+    randomSelectionId: config.randomSelectionId ?? '',
     rankingStageId: config.rankingStageId ?? null,
     questionMap: config.questionMap ?? {},
   };
@@ -224,7 +225,7 @@ export function generatePayoutRandomSelectionMap(
   // Group payout items by their random selection IDs (if applicable)
   payoutItems.forEach((item) => {
     const randomSelectionId = item.randomSelectionId;
-    if (randomSelectionId === null) return;
+    if (!randomSelectionId) return;
 
     if (!randomSelectionGroups[randomSelectionId]) {
       randomSelectionGroups[randomSelectionId] = [];
@@ -261,7 +262,7 @@ export function calculatePayoutResult(
       return;
     }
     if (
-      item.randomSelectionId !== null &&
+      item.randomSelectionId !== '' &&
       payoutAnswer.randomSelectionMap[item.randomSelectionId] !== item.id
     ) {
       return;

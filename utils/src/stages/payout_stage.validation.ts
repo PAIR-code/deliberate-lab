@@ -34,7 +34,7 @@ export const DefaultPayoutItemData = Type.Object(
     isActive: Type.Boolean(),
     stageId: Type.String(),
     baseCurrencyAmount: Type.Number(),
-    randomSelectionId: Type.Union([Type.String(), Type.Null()]),
+    randomSelectionId: Type.String(),
   },
   strict
 );
