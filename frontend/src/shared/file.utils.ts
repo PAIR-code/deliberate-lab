@@ -1009,6 +1009,9 @@ export function getPayoutStageCSVColumns(
     const resultItem =
       resultConfig?.results.find((result) => result.id === item.id) ?? null;
 
+    // Name of payout item
+    const name = `${item?.name} (${item?.id})`;
+
     // Column for amount earned if stage completed
     columns.push(
       !participant
@@ -1022,7 +1025,7 @@ export function getPayoutStageCSVColumns(
       // (or null if using current participant's answers)
       columns.push(
         !participant
-          ? `Ranking stage used for payout- ${name} - Stage ${payoutStage.id}`
+          ? `Ranking stage used for payout - ${name} - Stage ${payoutStage.id}`
           : item.rankingStageId ?? ''
       );
 
@@ -1040,7 +1043,7 @@ export function getPayoutStageCSVColumns(
               : null;
           columns.push(
             !participant
-              ? `Correct answer payout - ${question.questionTitle} - Stage ${payoutStage.id}`
+              ? `Correct answer payout - ${question.questionTitle} - ${name} - Stage ${payoutStage.id}`
               : questionResult?.amountEarned.toString() ?? ''
           );
         }
