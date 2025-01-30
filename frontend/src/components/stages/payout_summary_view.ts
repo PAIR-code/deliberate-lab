@@ -114,7 +114,13 @@ export class PayoutView extends MobxLitElement {
     item: DefaultPayoutItemResult,
     currency: PayoutCurrency
   ) {
-    return html` ${this.renderBaseAmountEarned(item, currency)} `;
+    return html`
+      <div class="scoring-bundle">
+        <h2>${item.name}</h2>
+        <div class="scoring-description">${item.description}</div>
+        ${this.renderBaseAmountEarned(item, currency)}
+      </div>
+    `;
   }
 
   private renderChipPayoutItemResult(
