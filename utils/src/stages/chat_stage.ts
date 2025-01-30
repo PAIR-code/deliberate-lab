@@ -146,6 +146,8 @@ export interface ChatStageParticipantAnswer extends BaseStageParticipantAnswer {
  */
 export interface ChatStagePublicData extends BaseStagePublicData {
   kind: StageKind.CHAT;
+  // null if no current discussion (e.g., all discussions over or 0 discussions)
+  currentDiscussionId: string|null;
   // discussionId --> map of participant public ID to readyToEndDiscussion timestamp
   discussionTimestampMap: Record<string, Record<string, UnifiedTimestamp | null>>;
   // The timestamp of the first message, or null if not started.
@@ -361,11 +363,16 @@ export function createChatStageParticipantAnswer(
 
 /** Create chat stage public data. */
 export function createChatStagePublicData(
-  id: string, // stage ID
+  config: ChatStageConfig,
 ): ChatStagePublicData {
+  const id = config.id;
+  const currentDiscussionId = config.discussions.length === 0 ? null
+    : config.discussions[0].id;
+
   return {
     id,
     kind: StageKind.CHAT,
+    currentDiscussionId,
     discussionTimestampMap: {},
     discussionStartTimestamp: null,
     discussionCheckpointTimestamp: null,

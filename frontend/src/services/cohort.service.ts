@@ -238,43 +238,12 @@ export class CohortService extends Service {
 
   // Returns chat discussion ID (or null if none or finished with all chats)
   getChatDiscussionId(stageId: string): string|null {
-    const stageConfig = this.sp.experimentService.getStage(stageId);
-    if (!stageConfig || stageConfig.kind !== StageKind.CHAT || stageConfig.discussions.length === 0) {
+    const stageData = this.stagePublicDataMap[stageId];
+    if (!stageData || stageData.kind !== StageKind.CHAT) {
       return null;
     }
 
-    const stageData = this.stagePublicDataMap[stageId];
-    // If no public stage data yet, return first discussion
-    if (!stageData || stageData.kind !== StageKind.CHAT) {
-      return stageConfig.discussions[0].id;
-    }
-
-    // Find latest chat with messages, then check if everyone
-    // is ready to end that chat
-    const getLatestDiscussion = () => {
-      const reverseIndex = [...stageConfig.discussions].reverse().findIndex(
-        discussion => isReadyToEndDiscussion(discussion)
-      );
-
-      if (reverseIndex < 0) return stageConfig.discussions[0].id;
-      const completedIndex = stageConfig.discussions.length - reverseIndex - 1;
-
-      // If the last discussion is ready to end, return null
-      if (completedIndex === stageConfig.discussions.length - 1) return null;
-
-      // Otherwise, return the next discussion
-      return stageConfig.discussions[completedIndex + 1].id;
-    };
-
-    const isReadyToEndDiscussion = (discussion: ChatDiscussion) => {
-      if (!stageData.discussionTimestampMap[discussion.id]) return false;
-      for (const participant of this.activeParticipants) {
-        if (!stageData.discussionTimestampMap[discussion.id][participant.publicId]) return false;
-      }
-      return true;
-    };
-
-    return getLatestDiscussion();
+    return stageData.currentDiscussionId;
   }
 
   getChipLogEntries(stageId: string) {

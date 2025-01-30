@@ -187,7 +187,7 @@ export function createPublicDataFromStageConfigs(stages: StageConfig[]) {
   stages.forEach((stage) => {
     switch (stage.kind) {
       case StageKind.CHAT:
-        publicData.push(createChatStagePublicData(stage.id));
+        publicData.push(createChatStagePublicData(stage));
         break;
       case StageKind.CHIP:
         publicData.push(createChipStagePublicData(stage.id));

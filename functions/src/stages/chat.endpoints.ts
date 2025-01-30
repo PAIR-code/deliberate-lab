@@ -7,6 +7,7 @@ import {
   StageKind,
   UpdateChatStageParticipantAnswerData,
 } from '@deliberation-lab/utils';
+import {updateCurrentDiscussionIndex} from './chat.utils';
 
 import * as admin from 'firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
@@ -155,6 +156,15 @@ export const updateChatStageParticipantAnswer = onCall(async (request) => {
       }
       publicStageData.discussionTimestampMap[discussionId][data.participantPublicId] = discussionStatusMap[discussionId];
     }
+
+    // Update current discussion ID if applicable
+    await updateCurrentDiscussionIndex(
+      data.experimentId,
+      data.cohortId,
+      data.chatStageParticipantAnswer.id,
+      publicStageData
+    );
+
     transaction.set(publicDocument, publicStageData);
   });
 
