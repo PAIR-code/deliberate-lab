@@ -18,6 +18,7 @@ import {
   PayoutItem,
   PayoutItemType,
   PayoutStageConfig,
+  PayoutStageParticipantAnswer,
   PayoutResultConfig,
   PayoutItemResult,
   StageConfig,
@@ -42,16 +43,16 @@ export class PayoutView extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
 
   @property() stage: PayoutStageConfig | null = null;
+  @property() answer: PayoutStageParticipantAnswer | null = null;
 
   override render() {
-    if (!this.stage || !this.participantService.profile) {
+    if (!this.stage || !this.answer || !this.participantService.profile) {
       return nothing;
     }
 
-    // TODO: Pass in participant answer so that random selection items
-    // can be included accordingly
     const resultConfig = calculatePayoutResult(
       this.stage,
+      this.answer,
       this.experimentService.stageConfigMap,
       this.cohortService.stagePublicDataMap,
       this.participantService.profile

@@ -27,6 +27,7 @@ import {
   ParticipantProfileExtended,
   PayoutItemType,
   PayoutStageConfig,
+  PayoutStageParticipantAnswer,
   RankingStageConfig,
   RankingStagePublicData,
   StageConfig,
@@ -985,12 +986,16 @@ export function getPayoutStageCSVColumns(
   const cohortId = participant ? participant.profile.currentCohortId : null;
   const publicDataMap = cohortId ? data.cohortMap[cohortId]?.dataMap : {};
 
+  // Get participant answer (which specifies which random selection
+  // payout items to use)
+  const answer = !participant ? null :
+    participant.answerMap[payoutStage.id] as PayoutStageParticipantAnswer;
+
   // Get payout results
-  // TODO: Pass in participant answer so that random selection items
-  // can be included accordingly
-  const resultConfig = participant
+  const resultConfig = participant && answer
     ? calculatePayoutResult(
         payoutStage,
+        answer,
         data.stageMap,
         publicDataMap,
         participant.profile

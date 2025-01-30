@@ -245,22 +245,31 @@ export function generatePayoutRandomSelectionMap(
 /** Calculate payout results. */
 export function calculatePayoutResult(
   payoutConfig: PayoutStageConfig,
+  // Participant answer map contains random selection of relevant payout items
+  payoutAnswer: PayoutStageParticipantAnswer,
   stageConfigMap: Record<string, StageConfig>, // stage ID to config
   publicDataMap: Record<string, StagePublicData>, // stage ID to public data
   profile: ParticipantProfile, // current participant profile
 ): PayoutResultConfig {
   let results: PayoutItemResult[] = [];
 
-  // TODO: For each payout item with a randomSelectionId,
+  // For each payout item, only add result to list if item is active;
+  // if the payout item has a randomSelectionId,
   // only add the item if it was randomly selected for that participant
-
-  // For each payout item, add result to list if item is active
   payoutConfig.payoutItems.forEach((item) => {
-    if (item.isActive) {
-      const result = calculatePayoutItemResult(item, stageConfigMap, publicDataMap, profile);
-      if (result) {
-        results.push(result);
-      }
+    if (!item.isActive) {
+      return;
+    }
+    if (
+      item.randomSelectionId !== null &&
+      payoutAnswer.randomSelectionMap[item.randomSelectionId] !== item.id
+    ) {
+      return;
+    }
+    // Item is active and (if randomSelectionId) is selected
+    const result = calculatePayoutItemResult(item, stageConfigMap, publicDataMap, profile);
+    if (result) {
+      results.push(result);
     }
   });
 
