@@ -5,6 +5,7 @@ import {
   StageConfig,
   StageKind,
   createChipStageParticipantAnswer,
+  createPayoutStageParticipantAnswer
 } from '@deliberation-lab/utils';
 
 import { app } from './app';
@@ -79,9 +80,9 @@ export const setParticipantStageData = onDocumentCreated(
             transaction.set(publicChipDoc, publicChipData);
             break;
           case StageKind.PAYOUT:
-            // TODO: Create utils function to create map of
-            // random selection ID to chosen payout item
-            // and store in new PayoutStageParticipantAnswer
+            // If payout stage, set random selection of payout items
+            const payoutAnswer = createPayoutStageParticipantAnswer(stage);
+            transaction.set(stageDoc, payoutAnswer);
           default:
             break;
         }

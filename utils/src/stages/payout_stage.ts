@@ -2,6 +2,7 @@ import { generateId } from '../shared';
 import { ParticipantProfile } from '../participant';
 import {
   BaseStageConfig,
+  BaseStageParticipantAnswer,
   StageConfig,
   StageGame,
   StageKind,
@@ -71,6 +72,13 @@ export interface SurveyPayoutItem extends BasePayoutItem {
   rankingStageId: string | null;
   // Map of question ID to payout amount if correct (or null if no payout)
   questionMap: Record<string, number | null>;
+}
+
+/** Participant settings for payout stage (e.g., random selection). */
+export interface PayoutStageParticipantAnswer extends BaseStageParticipantAnswer {
+  kind: StageKind.PAYOUT;
+  // maps from random selection ID to ID of randomly selected payout item
+  randomSelectionMap: Record<string, string>;
 }
 
 /** Payout result config (containing payout information for each item).
@@ -190,6 +198,48 @@ export function createSurveyPayoutItem(config: Partial<SurveyPayoutItem> = {}): 
     rankingStageId: config.rankingStageId ?? null,
     questionMap: config.questionMap ?? {},
   };
+}
+
+/** Create payout participant answer. */
+export function createPayoutStageParticipantAnswer(
+  stage: PayoutStageConfig
+): PayoutStageParticipantAnswer {
+  return {
+    id: stage.id,
+    kind: StageKind.PAYOUT,
+    randomSelectionMap: generatePayoutRandomSelectionMap(stage.payoutItems)
+  };
+}
+
+/**
+  * Return a map of random selection ID to the ID of a randomly selected payout
+  * item (out of all the payout items with that random selection ID)
+  */
+export function generatePayoutRandomSelectionMap(
+  payoutItems: PayoutItem[]
+): Record<string, string> {
+  const randomSelectionGroups: Record<string, string[]> = {};
+  const payoutMap: Record<string, string> = {};
+
+  // Group payout items by their random selection IDs (if applicable)
+  payoutItems.forEach((item) => {
+    const randomSelectionId = item.randomSelectionId;
+    if (randomSelectionId === null) return;
+
+    if (!randomSelectionGroups[randomSelectionId]) {
+      randomSelectionGroups[randomSelectionId] = [];
+    }
+    randomSelectionGroups[randomSelectionId].push(item.id);
+  });
+
+  // For each random selection ID, randomly select one payout item
+  Object.keys(randomSelectionGroups).forEach((groupId) => {
+    const items = randomSelectionGroups[groupId];
+    const randomItem = items[Math.floor(Math.random() * items.length)];
+    payoutMap[groupId] = randomItem;
+  });
+
+  return payoutMap;
 }
 
 /** Calculate payout results. */
