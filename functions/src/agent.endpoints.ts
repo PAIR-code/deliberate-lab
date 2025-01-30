@@ -3,10 +3,10 @@ import {
   ExperimenterData,
   StageConfig,
   StageKind,
-  ParticipantProfileExtended,
-  createAgentParticipantRankingStagePrompt
+  ParticipantProfileExtended
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from './agent.utils';
+import {getAgentParticipantRankingStageResponse} from './stages/ranking.utils';
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
@@ -61,8 +61,13 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
   let prompt = '';
   switch (stage.kind) {
     case StageKind.RANKING:
-      prompt = createAgentParticipantRankingStagePrompt(participant, stage);
-      break;
+      // Call utils function to generate ranking answer via LLM call
+      return await getAgentParticipantRankingStageResponse(
+        experimentId,
+        experimenterData,
+        participant,
+        stage
+      );
     default:
       prompt = `This is a test prompt. Please output a funny joke.`;
   }

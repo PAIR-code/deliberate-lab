@@ -1,5 +1,6 @@
 /** Prompt constants and utils for interacting with ranking stage. */
 import {
+  ParticipantProfile,
   ParticipantProfileExtended
 } from '../participant';
 import {
@@ -70,7 +71,8 @@ export const EXAMPLE_RANKING_PARTICIPANTS: { name: string, publicId: string }[] 
 // ranking stage prompts for agent participants!
 export function createAgentParticipantRankingStagePrompt(
   participant: ParticipantProfileExtended,
-  rankingStage: RankingStageConfig
+  rankingStage: RankingStageConfig,
+  participantList: ParticipantProfile[], // other participants to rank
 ) {
   // If ranking items, use items listed in stage config
   if (rankingStage.rankingType === RankingType.ITEMS) {
@@ -84,11 +86,11 @@ export function createAgentParticipantRankingStagePrompt(
     `;
     return prompt;
   }
-  // TODO: If ranking participants, use given list of participants
-  // (this temporarily uses example participants + current given participant
-  // instead of passing in the list of actual cohort participants)
+
+  // Otherwise, use provided list of participants
+  // TODO: Only include current participant if enableSelfVoting is true
   const participants: { name: string, id: string }[] =
-    [...EXAMPLE_RANKING_PARTICIPANTS, participant].map(
+    participantList.map(
       participant => {
         return { name: participant.name ?? '', id: participant.publicId };
       }

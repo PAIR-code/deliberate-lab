@@ -21,6 +21,7 @@ export * from './stages/chip.triggers';
 export * from './stages/chip.utils';
 
 export * from './stages/ranking.endpoints';
+export * from './stages/ranking.utils';
 
 export * from './stages/survey.endpoints';
 
