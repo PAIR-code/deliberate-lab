@@ -986,6 +986,8 @@ export function getPayoutStageCSVColumns(
   const publicDataMap = cohortId ? data.cohortMap[cohortId]?.dataMap : {};
 
   // Get payout results
+  // TODO: Pass in participant answer so that random selection items
+  // can be included accordingly
   const resultConfig = participant
     ? calculatePayoutResult(
         payoutStage,

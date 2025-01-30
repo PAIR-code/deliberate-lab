@@ -44,6 +44,10 @@ export interface BasePayoutItem {
   stageId: string;
   // Fixed payout added if stage is completed
   baseCurrencyAmount: number;
+  // Only select one payout item for each random selection ID
+  // e.g., if two payout items have random selection ID 'survival-task',
+  // one of them will be randomly selected (on participant creation)
+  randomSelectionId: string|null;
 }
 
 export enum PayoutItemType {
@@ -154,6 +158,7 @@ export function createDefaultPayoutItem(
     isActive: config.isActive ?? true,
     stageId: config.stageId ?? '',
     baseCurrencyAmount: config.baseCurrencyAmount ?? 0,
+    randomSelectionId: config.randomSelectionId ?? null,
   };
 }
 
@@ -167,6 +172,7 @@ export function createChipPayoutItem(config: Partial<ChipPayoutItem> = {}): Chip
     isActive: config.isActive ?? true,
     stageId: config.stageId ?? '',
     baseCurrencyAmount: config.baseCurrencyAmount ?? 0,
+    randomSelectionId: config.randomSelectionId ?? null,
   };
 }
 
@@ -180,6 +186,7 @@ export function createSurveyPayoutItem(config: Partial<SurveyPayoutItem> = {}): 
     isActive: config.isActive ?? true,
     stageId: config.stageId ?? '',
     baseCurrencyAmount: config.baseCurrencyAmount ?? 0,
+    randomSelectionId: config.randomSelectionId ?? null,
     rankingStageId: config.rankingStageId ?? null,
     questionMap: config.questionMap ?? {},
   };
@@ -193,6 +200,9 @@ export function calculatePayoutResult(
   profile: ParticipantProfile, // current participant profile
 ): PayoutResultConfig {
   let results: PayoutItemResult[] = [];
+
+  // TODO: For each payout item with a randomSelectionId,
+  // only add the item if it was randomly selected for that participant
 
   // For each payout item, add result to list if item is active
   payoutConfig.payoutItems.forEach((item) => {

@@ -78,6 +78,10 @@ export const setParticipantStageData = onDocumentCreated(
             publicChipData.participantChipValueMap[publicId] = chipAnswer.chipValueMap;
             transaction.set(publicChipDoc, publicChipData);
             break;
+          case StageKind.PAYOUT:
+            // TODO: Create utils function to create map of
+            // random selection ID to chosen payout item
+            // and store in new PayoutStageParticipantAnswer
           default:
             break;
         }

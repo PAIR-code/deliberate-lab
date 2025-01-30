@@ -48,6 +48,8 @@ export class PayoutView extends MobxLitElement {
       return nothing;
     }
 
+    // TODO: Pass in participant answer so that random selection items
+    // can be included accordingly
     const resultConfig = calculatePayoutResult(
       this.stage,
       this.experimentService.stageConfigMap,
