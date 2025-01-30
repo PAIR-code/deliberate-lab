@@ -769,6 +769,7 @@ const LAS_PAYOUT_INFO_STAGE = createInfoStage({
 
 export function createLASPayoutItems() {
   const part1 = createSurveyPayoutItem({
+    id: 'payout-part-1',
     name: 'Part 1 payoff',
     description: LAS_PAYMENT_PART_1_DESCRIPTION,
     stageId: LAS_PART_1_SURVIVAL_SURVEY_STAGE_ID,
@@ -782,6 +783,7 @@ export function createLASPayoutItems() {
   const RANDOM_SELECTION_ID = 'las-part';
 
   const part2 = createSurveyPayoutItem({
+    id: 'payout-part-2',
     randomSelectionId: RANDOM_SELECTION_ID,
     name: 'Parts 2 and 3 payoff - Part 2 selected',
     description: [
@@ -795,6 +797,7 @@ export function createLASPayoutItems() {
   part2.questionMap[part2Question.id] = 2;
 
   const part3 = createSurveyPayoutItem({
+    id: 'payout-part-3',
     randomSelectionId: RANDOM_SELECTION_ID,
     name: 'Parts 2 and 3 payoff - Part 3 selected',
     description: [
@@ -812,6 +815,7 @@ export function createLASPayoutItems() {
 }
 
 const LAS_PAYOUT_STAGE = createPayoutStage({
+  id: 'payout',
   game: StageGame.LAS,
   currency: PayoutCurrency.GBP,
   descriptions: createStageTextConfig({
