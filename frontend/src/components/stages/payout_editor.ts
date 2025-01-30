@@ -392,6 +392,11 @@ export class PayoutEditor extends MobxLitElement {
       this.updatePayoutItem({...item, name}, index);
     };
 
+    const updateRandomSelectionId = (e: InputEvent) => {
+      const randomSelectionId = (e.target as HTMLTextAreaElement).value;
+      this.updatePayoutItem({...item, randomSelectionId}, index);
+    }
+
     const updateDescription = (e: InputEvent) => {
       const description = (e.target as HTMLTextAreaElement).value;
       this.updatePayoutItem({...item, description}, index);
@@ -405,6 +410,11 @@ export class PayoutEditor extends MobxLitElement {
     };
 
     const basePayoutId = `${item.id}-base`;
+    const randomSelectionLabel = `
+      Random selection group ID: Out of all payout items that share the
+      same group ID, one will be randomly selected to use for payout.
+      (Leave this field blank if the payout item should always be selected.)
+    `;
 
     return html`
       <div class="base-editor">
@@ -423,6 +433,14 @@ export class PayoutEditor extends MobxLitElement {
           .value=${item.name}
           ?disabled=${!this.experimentEditor.canEditStages}
           @input=${updateName}
+        >
+        </pr-textarea>
+        <pr-textarea
+          label=${randomSelectionLabel}
+          variant="outlined"
+          .value=${item.randomSelectionId}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @input=${updateRandomSelectionId}
         >
         </pr-textarea>
         <pr-textarea
