@@ -387,11 +387,6 @@ export class PayoutEditor extends MobxLitElement {
   private renderBasePayoutEditor(item: PayoutItem, index: number) {
     if (!this.stage) return nothing;
 
-    const updateIsActive = () => {
-      const isActive = !item.isActive;
-      this.updatePayoutItem({...item, isActive}, index);
-    };
-
     const updateName = (e: InputEvent) => {
       const name = (e.target as HTMLTextAreaElement).value;
       this.updatePayoutItem({...item, name}, index);
@@ -417,16 +412,6 @@ export class PayoutEditor extends MobxLitElement {
           <div class="left">
             <div class="subtitle">
               Stage payout for: ${this.experimentEditor.getStage(item.stageId)?.name}
-            </div>
-            <div class="checkbox-wrapper">
-              <md-checkbox
-                touch-target="wrapper"
-                ?checked=${item.isActive}
-                ?disabled=${!this.experimentEditor.canEditStages}
-                @click=${updateIsActive}
-              >
-              </md-checkbox>
-              <div>Include this payout in experiment</div>
             </div>
           </div>
           ${this.renderPayoutItemNav(index)}
