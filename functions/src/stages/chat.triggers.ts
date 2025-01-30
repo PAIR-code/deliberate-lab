@@ -16,6 +16,11 @@ import {
   ChatStageConfig,
   ExperimenterData,
 } from '@deliberation-lab/utils';
+import {
+  getChatStage,
+  getChatStagePublicData,
+  hasEndedChat
+} from './chat.utils';
 
 import { app } from '../app';
 import {
@@ -38,10 +43,17 @@ export interface AgentMessage {
 export const startTimeElapsed = onDocumentCreated(
   'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}',
   async (event) => {
-    const stage = await getChatStage(event);
+    const stage = await getChatStage(
+      event.params.experimentId,
+      event.params.stageId
+    );
     if (!stage) return;
 
-    const publicStageData = await getChatStagePublicData(event);
+    const publicStageData = await getChatStagePublicData(
+      event.params.experimentId,
+      event.params.cohortId,
+      event.params.stageId
+    );
     if (!publicStageData) return;
 
     // Exit if discussion has already ended.
@@ -72,16 +84,23 @@ export const updateTimeElapsed = onDocumentUpdated(
     timeoutSeconds: 360, // Maximum timeout of 6 minutes.
   },
   async (event) => {
-    const publicStageData = await getChatStagePublicData(event);
+    const publicStageData = await getChatStagePublicData(
+      event.params.experimentId,
+      event.params.cohortId,
+      event.params.stageId
+    );
     if (!publicStageData) return;
 
     // Only update time if the conversation is in progress.
     if (!publicStageData.discussionStartTimestamp || publicStageData.discussionEndTimestamp) return;
 
-    const stage = await getChatStage(event);
+    const stage = await getChatStage(
+      event.params.experimentId,
+      event.params.stageId
+    );
     if (!stage || !stage.timeLimitInMinutes) return;
     // Maybe end the chat.
-    if (await hasEndedChat(event, stage, publicStageData)) return;
+    if (await hasEndedChat(stage, publicStageData)) return;
 
     // Calculate how long to wait.
     const elapsedMinutes = getTimeElapsed(publicStageData.discussionStartTimestamp!, 'm');
@@ -111,12 +130,19 @@ export const createAgentMessage = onDocumentCreated(
     const data = event.data?.data() as ChatMessage | undefined;
 
     // Use experiment config to get ChatStageConfig with agents.
-    let stage = await getChatStage(event);
+    let stage = await getChatStage(
+      event.params.experimentId,
+      event.params.stageId
+    );
     if (!stage) {
       return;
     }
 
-    let publicStageData = await getChatStagePublicData(event);
+    let publicStageData = await getChatStagePublicData(
+      event.params.experimentId,
+      event.params.cohortId,
+      event.params.stageId
+    );
     // Make sure the conversation hasn't ended.
     if (!publicStageData || Boolean(publicStageData.discussionEndTimestamp)) return;
 
@@ -182,6 +208,7 @@ export const createAgentMessage = onDocumentCreated(
     });
 
     // Weighted sampling based on wordsPerMinute (WPM)
+    // TODO (#426): Refactor WPM logic into separate utils function
     const totalWPM = agentMessages.reduce(
       (sum, message) => sum + (message.agent.wordsPerMinute || 0),
       0,
@@ -203,14 +230,22 @@ export const createAgentMessage = onDocumentCreated(
     await awaitTypingDelay(message, agent.wordsPerMinute);
 
     // Refresh the stage to check if the conversation has ended.
-    stage = await getChatStage(event);
-    publicStageData = await getChatStagePublicData(event);
+    // TODO: Instead of doing this, run inside transaction?
+    stage = await getChatStage(
+      event.params.experimentId,
+      event.params.stageId
+    );
+    publicStageData = await getChatStagePublicData(
+      event.params.experimentId,
+      event.params.cohortId,
+      event.params.stageId,
+    );
 
     if (
       !stage ||
       !publicStageData ||
       Boolean(publicStageData.discussionEndTimestamp) ||
-      (await hasEndedChat(event, stage, publicStageData))
+      (await hasEndedChat(stage, publicStageData))
     )
       return;
 
@@ -255,58 +290,3 @@ export const createAgentMessage = onDocumentCreated(
     });
   },
 );
-
-// ************************************************************************* //
-// HELPER FUNCTIONS                                                          //
-// ************************************************************************* //
-
-/** Get the chat stage configuration based on the event. */
-async function getChatStage(event: any): Promise<ChatStageConfig | null> {
-  const stageRef = app
-    .firestore()
-    .doc(`experiments/${event.params.experimentId}/stages/${event.params.stageId}`);
-
-  const stageDoc = await stageRef.get();
-  if (!stageDoc.exists) return null; // Return null if the stage doesn't exist.
-
-  return stageDoc.data() as ChatStageConfig; // Return the stage data.
-}
-
-/** Get public data for the given chat stage. */
-async function getChatStagePublicData(event: any): Promise<ChatStagePublicData | null> {
-  const publicStageRef = app
-    .firestore()
-    .doc(
-      `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
-    );
-
-  const publicStageDoc = await publicStageRef.get();
-  if (!publicStageDoc.exists) return null; // Return null if the public stage data doesn't exist.
-
-  return publicStageDoc.data() as ChatStagePublicData; // Return the public stage data.
-}
-
-/** Checks whether the chat has ended, returning true if ending chat. */
-async function hasEndedChat(
-  event: any,
-  stage: ChatStageConfig | null,
-  stageData: ChatStagePublicData | null,
-): Promise<boolean> {
-  const chatStage = stage || (await getChatStage(event));
-  const publicStageData = stageData || (await getChatStagePublicData(event));
-  if (!chatStage || !publicStageData || !chatStage.timeLimitInMinutes) return false;
-
-  const elapsedMinutes = getTimeElapsed(publicStageData.discussionStartTimestamp!, 'm');
-
-  // Check if the elapsed time has reached or exceeded the time limit
-  if (elapsedMinutes >= chatStage.timeLimitInMinutes) {
-    await app
-      .firestore()
-      .doc(
-        `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
-      )
-      .update({ discussionEndTimestamp: Timestamp.now() });
-    return true; // Indicate that the chat has ended.
-  }
-  return false;
-}
