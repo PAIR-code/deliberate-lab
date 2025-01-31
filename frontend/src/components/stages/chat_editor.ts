@@ -525,18 +525,11 @@ export class ChatEditor extends MobxLitElement {
      };
 
     const updateField = (fieldIndex: number, field: Partial<{ name: string; value: string }>) => {
-      this.updateAgent(
-        {
-          ...agent,
-          generationConfig: {
-            ...agent.generationConfig,
-            customRequestBodyFields: agent.generationConfig.customRequestBodyFields.map((f, i) =>
-              i === fieldIndex ? { ...f, ...field } : f
-            ),
-          },
-        },
-        index
-      );
+      agent.generationConfig.customRequestBodyFields[fieldIndex] = {
+        ...agent.generationConfig.customRequestBodyFields[fieldIndex],
+        ...field,
+      };
+      this.updateAgent(agent, index);
     };
 
 
