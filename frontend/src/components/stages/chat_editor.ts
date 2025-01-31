@@ -532,6 +532,14 @@ export class ChatEditor extends MobxLitElement {
       this.updateAgent(agent, index);
     };
 
+    const deleteField = (fieldIndex: number) => {
+      agent.generationConfig.customRequestBodyFields = [
+        ...agent.generationConfig.customRequestBodyFields.slice(0, index),
+        ...agent.generationConfig.customRequestBodyFields.slice(index+1),
+      ];
+      this.updateAgent(agent, index);
+    }
+
 
      return html`
        <div class="question-label">Custom request body fields</div>
@@ -554,6 +562,14 @@ export class ChatEditor extends MobxLitElement {
              @input=${(e: InputEvent) => updateField(fieldIndex, { value: (e.target as HTMLInputElement).value })}
            >
            </pr-textarea>
+           <pr-icon-button
+              icon="close"
+              color="neutral"
+              padding="small"
+              variant="default"
+              ?disabled=${!this.experimentEditor.canEditStages}
+              @click=${(e: InputEvent) => deleteField(fieldIndex)}
+           >
          </div>
        `)}
        <pr-button @click=${addField}>Add field</pr-button>
