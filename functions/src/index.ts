@@ -15,6 +15,7 @@ export * from './agent.utils';
 
 export * from './stages/chat.endpoints';
 export * from './stages/chat.triggers';
+export * from './stages/chat.utils';
 
 export * from './stages/chip.endpoints';
 export * from './stages/chip.triggers';

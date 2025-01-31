@@ -7,6 +7,7 @@ import {
   StageKind,
   UpdateChatStageParticipantAnswerData,
 } from '@deliberation-lab/utils';
+import {updateCurrentDiscussionIndex} from './chat.utils';
 
 import * as admin from 'firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
@@ -35,12 +36,6 @@ import {
 export const createChatMessage = onCall(async (request) => {
   const { data } = request;
 
-  // Validate input
-  /* const validInput = Value.Check(CreateChatMessageData, data);
-  if (!validInput) {
-    handleCreateChatMessageValidationErrors(data);
-  } */
-
   // Define document reference
   const document = app.firestore()
     .collection('experiments')
@@ -64,19 +59,6 @@ export const createChatMessage = onCall(async (request) => {
   return { id: document.id };
 });
 
-function handleCreateChatMessageValidationErrors(data: any) {
-  for (const error of Value.Errors(CreateChatMessageData, data)) {
-    if (isUnionError(error)) {
-      const nested = checkConfigDataUnionOnPath(data, error.path);
-      prettyPrintErrors(nested);
-    } else {
-      prettyPrintError(error);
-    }
-  }
-
-  throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
-}
-
 // ************************************************************************* //
 // updateChatAgents endpoint                                              //
 //                                                                           //
@@ -87,7 +69,6 @@ function handleCreateChatMessageValidationErrors(data: any) {
 export const updateChatAgents = onCall(async (request) => {
   const { data } = request;
 
-  // TODO: Validate input
   const document = app.firestore()
     .collection('experiments')
     .doc(data.experimentId)
@@ -155,6 +136,15 @@ export const updateChatStageParticipantAnswer = onCall(async (request) => {
       }
       publicStageData.discussionTimestampMap[discussionId][data.participantPublicId] = discussionStatusMap[discussionId];
     }
+
+    // Update current discussion ID if applicable
+    await updateCurrentDiscussionIndex(
+      data.experimentId,
+      data.cohortId,
+      data.chatStageParticipantAnswer.id,
+      publicStageData
+    );
+
     transaction.set(publicDocument, publicStageData);
   });
 

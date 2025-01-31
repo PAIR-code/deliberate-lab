@@ -226,7 +226,7 @@ export class Panel extends MobxLitElement {
           icon=${showStats ? 'visibility_off' : 'visibility'}
         >
         </pr-icon-button>
-        <div>${showCohortList ? 'Hide' : 'Show'} participant details</div>
+        <div>${showStats ? 'Hide' : 'Show'} participant details</div>
       </div>
       <div
         class="checkbox-wrapper"
@@ -241,7 +241,7 @@ export class Panel extends MobxLitElement {
           icon=${showPreview ? 'visibility_off' : 'visibility'}
         >
         </pr-icon-button>
-        <div>${showCohortList ? 'Hide' : 'Show'} participant preview</div>
+        <div>${showPreview ? 'Hide' : 'Show'} participant preview</div>
       </div>`;
   }
   private renderParticipantSearchPanel() {
