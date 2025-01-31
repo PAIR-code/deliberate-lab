@@ -216,7 +216,7 @@ export class ChatEditor extends MobxLitElement {
     return html`
       <div class="question-label">Model</div>
       <div class="description">
-        Model ID for the agent. TODO: Currently only used for OpenAI and compatible APIs.
+        Model ID for the agent. Currently only used for OpenAI and compatible APIs.
       </div>
       <pr-textarea
         placeholder="Model ID"
