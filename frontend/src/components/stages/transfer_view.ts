@@ -8,6 +8,7 @@ import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
+import {Pages, RouterService} from '../../services/router.service';
 import {
   getTimeElapsed,
   ParticipantStatus,
@@ -27,6 +28,7 @@ export class TransferView extends MobxLitElement {
   private readonly authService = core.getService(AuthService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
+  private readonly routerService = core.getService(RouterService);
 
   @property() stage: TransferStageConfig | null = null;
 
@@ -54,9 +56,26 @@ export class TransferView extends MobxLitElement {
 
     return html`
       <stage-description .stage=${this.stage}></stage-description>
-
+      ${this.renderCompletedStage()}
       ${this.renderCountdown()}
     `;
+  }
+
+  private renderCompletedStage() {
+    const onClick = () => {
+      // Route to current stage
+      this.participantService.setCurrentStageView(undefined);
+    };
+
+    if (this.participantService.completedStage(this.stage?.id ?? '')) {
+      return html`
+        <div class="transfer-wrapper">
+          <div>Your transfer is complete.</div>
+          <pr-button @click=${onClick}>Proceed to current stage</pr-button>
+        </div>
+      `;
+    }
+    return nothing;
   }
 
   private renderCountdown() {
@@ -78,10 +97,10 @@ export class TransferView extends MobxLitElement {
 
     return html`
       <div class="transfer-wrapper">
-        If the transfer cannot be completed, the experiment will end in:
+        <div>If the transfer cannot be completed, the experiment will end in:
         <span style="font-weight: bold; color: ${timeColor};">
           ${minutes}:${seconds.toString().padStart(2, '0')} (mm:ss) </span
-        >.
+        >.</div>
       </div>
     `;
   }

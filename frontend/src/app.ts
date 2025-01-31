@@ -2,13 +2,12 @@ import './pair-components/button';
 
 import './components/admin/admin_dashboard';
 import './components/experiment_builder/experiment_builder';
-import './components/experiment_manager/experiment_manager';
-import './components/experimenter/experimenter_panel';
+import './components/experiment_dashboard/experiment_dashboard';
 import './components/gallery/home_gallery';
 import './components/header/header';
 import './components/login/login';
-import './components/participant_previewer/cohort_landing';
-import './components/participant_previewer/participant_previewer';
+import './components/participant_view/cohort_landing';
+import './components/participant_view/participant_view';
 import './components/settings/settings';
 import './components/sidenav/experimenter_sidenav';
 
@@ -24,7 +23,7 @@ import {HomeService} from './services/home.service';
 import {Pages, RouterService} from './services/router.service';
 import {SettingsService} from './services/settings.service';
 
-import {ColorMode, ColorTheme, TextSize} from './shared/types';
+import {ColorMode} from './shared/types';
 
 import {styles} from './app.scss';
 
@@ -50,18 +49,21 @@ export class App extends MobxLitElement {
           return this.render403();
         }
         return html`
+          <page-header></page-header>
           <div class="content">
             <home-gallery></home-gallery>
           </div>
         `;
       case Pages.ADMIN:
         return html`
+          <page-header></page-header>
           <div class="content">
             <admin-dashboard></admin-dashboard>
           </div>
         `;
       case Pages.SETTINGS:
         return html`
+          <page-header></page-header>
           <div class="content">
             <settings-page .showAccount=${true}></settings-page>
           </div>
@@ -71,25 +73,34 @@ export class App extends MobxLitElement {
           return this.render403();
         }
         return html`
-          <experiment-manager></experiment-manager>
+          <experiment-dashboard></experiment-dashboard>
         `;
       case Pages.EXPERIMENT_CREATE:
         if (!this.authService.isExperimenter) {
           return this.render403();
         }
         return html`
+          <page-header></page-header>
           <experiment-builder></experiment-builder>
         `;
       case Pages.PARTICIPANT:
         return html`
-          <participant-previewer></participant-previewer>
+          <page-header></page-header>
+          <participant-view></participant-view>
         `;
       case Pages.PARTICIPANT_STAGE:
-        return html`
-          <participant-previewer></participant-previewer>
-        `;
+        // This ensures backwards compatibility
+        // from when PARTICIPANT_STAGE was a different route than PARTICIPANT
+        const params = this.routerService.activeRoute.params;
+        this.routerService.navigate(Pages.PARTICIPANT, {
+          experiment: params['experiment'],
+          participant: params['participant'],
+          stage: params['stage']
+        });
+        return nothing;
       case Pages.PARTICIPANT_JOIN_COHORT:
         return html`
+          <page-header></page-header>
           <cohort-landing></cohort-landing>
         `;
       default:
@@ -132,28 +143,6 @@ export class App extends MobxLitElement {
   }
 
   override render() {
-    const isMode = (mode: ColorMode) => {
-      return this.settingsService.colorMode === mode;
-    };
-
-    const isTheme = (theme: ColorTheme) => {
-      return this.settingsService.colorTheme === theme;
-    };
-
-    const isSize = (size: TextSize) => {
-      return this.settingsService.textSize === size;
-    };
-
-    const classes = classMap({
-      'app-wrapper': true,
-      'mode--dark': isMode(ColorMode.DARK),
-      'mode--light': isMode(ColorMode.LIGHT),
-      'mode--default': isMode(ColorMode.DEFAULT),
-      'size--small': isSize(TextSize.SMALL),
-      'size--medium': isSize(TextSize.MEDIUM),
-      'size--large': isSize(TextSize.LARGE),
-    });
-
     if (
       !this.authService.authenticated &&
       !this.routerService.isParticipantPage &&
@@ -161,7 +150,7 @@ export class App extends MobxLitElement {
     ) {
       // Render login screen if relevant after initial auth check
       return html`
-        <div class=${classes}>
+        <div class="app-wrapper mode--${this.settingsService.colorMode}">
           <div class="content">
             ${this.authService.initialAuthCheck
               ? html`<login-page></login-page>`
@@ -172,14 +161,12 @@ export class App extends MobxLitElement {
     }
 
     return html`
-      <div class=${classes}>
+      <div class="app-wrapper mode--${this.settingsService.colorMode}">
         <main>
           <experimenter-sidenav></experimenter-sidenav>
           <div class="content-wrapper">
-            <page-header></page-header>
             ${this.renderPageContent()}
           </div>
-          <experimenter-panel></experimenter-panel>
         </main>
       </div>
     `;

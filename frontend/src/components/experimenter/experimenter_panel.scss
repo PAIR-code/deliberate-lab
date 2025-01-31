@@ -9,14 +9,20 @@
 
 .panel-wrapper {
   @include common.flex-row;
-  background: var(--md-sys-color-surface);
   border-left: 1px solid var(--md-sys-color-outline-variant-high);
   flex-shrink: 0;
   height: 100%;
-  width: calc(common.$sidenav-width + common.$sidenav-closed-width);
+  width: 100%;
+}
 
-  &.closed {
-    width: common.$sidenav-closed-width;
+.checkbox-wrapper {
+  @include common.flex-row-align-center;
+  cursor: pointer;
+  gap: common.$spacing-small;
+  overflow-wrap: break-word;
+
+  md-checkbox {
+    flex-shrink: 0;
   }
 }
 
@@ -39,29 +45,64 @@
 .main {
   @include common.flex-column;
   flex-grow: 1;
-  gap: common.$spacing-large;
 }
 
 .header {
   @include common.flex-row-align-center;
-  @include typescale.label-large;
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
   flex-shrink: 0;
-  height: 40px;
+  font-weight: 500;
+  text-transform: uppercase;
 }
 
 .top {
   @include common.flex-column;
   gap: common.$spacing-large;
-  overflow: auto;
   padding: common.$sidenav-padding;
 }
 
 .bottom {
   @include common.flex-column;
-  flex-grow: 1;
-  gap: common.$spacing-small;
-  overflow: auto;
+  gap: common.$spacing-large;
+  margin-bottom: 0;
+  margin-top: auto;
   padding: common.$sidenav-padding;
+  padding-bottom: calc(common.$spacing-xxl * 2);
+}
+
+pr-button pr-icon {
+  margin-right: common.$spacing-medium;
+}
+
+.search-results {
+  @include common.flex-column;
+  color: var(--md-sys-color-outline);
+  gap: common.$spacing-medium;
+}
+
+.search-result {
+  @include common.flex-column;
+  @include typescale.label-small;
+  background: var(--md-sys-color-surface-variant);
+  border-radius: common.$spacing-medium;
+  gap: common.$spacing-small;
+  padding: common.$spacing-medium;
+
+  &:focus,
+  &:hover {
+    background: var(--md-sys-color-surface-container-high);
+    cursor: pointer;
+  }
+
+  &.current {
+    background: var(--md-sys-color-primary-container-low);
+  }
+
+  .title {
+    @include typescale.label-medium;
+    color: var(--md-sys-color-on-surface-variant);
+  }
 }
 
 .agent {

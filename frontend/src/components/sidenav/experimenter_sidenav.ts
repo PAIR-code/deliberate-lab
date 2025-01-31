@@ -30,7 +30,10 @@ export class SideNav extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   override render() {
-    if (!this.authService.isExperimenter) {
+    if (
+      !this.authService.isExperimenter ||
+      this.routerService.activePage === Pages.EXPERIMENT
+    ) {
       return nothing;
     }
 

@@ -3,7 +3,7 @@
 @use "../../sass/typescale";
 
 :host {
-  background: var(--md-sys-color-surface-variant);
+  background: var(--md-sys-color-surface);
   position: sticky;
   top: 0;
   width: 100%;
@@ -48,6 +48,13 @@
 h1 {
   @include typescale.title-large;
   margin: 0;
+
+  &.short {
+    max-width: 200px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
 }
 
 .banner {
@@ -78,21 +85,6 @@ h1 {
   @include common.flex-column;
   gap: common.$spacing-medium;
   padding: common.$spacing-medium;
-}
-
-.template-item {
-  @include common.flex-column;
-  border: 1px solid transparent;
-  border-radius: common.$spacing-medium;
-  cursor: pointer;
-  gap: common.$spacing-small;
-  padding: common.$spacing-medium;
-
-  &:focus,
-  &:hover {
-    background: var(--md-sys-color-surface-container);
-    border-color: var(--md-sys-color-outline-variant);
-  }
 }
 
 .subtitle {

@@ -1,4 +1,4 @@
-import '../participant_profile/profile_avatar';
+import '../participant_profile/profile_display';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -10,10 +10,7 @@ import {
   RankingRevealItem,
   RevealAudience,
 } from '@deliberation-lab/utils';
-import {
-  getParticipantName,
-  getParticipantPronouns,
-} from '../../shared/participant.utils';
+import {getParticipantInlineDisplay} from '../../shared/participant.utils';
 
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
@@ -48,14 +45,8 @@ export class RankingReveal extends MobxLitElement {
     return html`
       <div class="reveal-wrapper">
         <h3>The winner of the election is:</h3>
-        <div class="reveal">
-          <profile-avatar .emoji=${leader.avatar} .square=${true}>
-          </profile-avatar>
-          <div class="info">
-            <div class="title">${getParticipantName(leader)}</div>
-            <div class="subtitle">${getParticipantPronouns(leader)}</div>
-          </div>
-        </div>
+        <participant-profile-display .profile=${leader} displayType="stage">
+        </participant-profile-display>
       </div>
     `;
   }
@@ -121,7 +112,7 @@ export class RankingReveal extends MobxLitElement {
       } else {
         const participant = this.cohortService.participantMap[entry];
         return participant
-          ? getParticipantName(participant)
+          ? getParticipantInlineDisplay(participant)
           : 'Unknown participant';
       }
     };
@@ -150,7 +141,7 @@ export class RankingReveal extends MobxLitElement {
               const profile = this.cohortService.participantMap[publicId];
               return html`
                 <div class="table-cell">
-                  ${profile ? getParticipantName(profile) : publicId}
+                  ${profile ? getParticipantInlineDisplay(profile) : publicId}
                 </div>
               `;
             })}

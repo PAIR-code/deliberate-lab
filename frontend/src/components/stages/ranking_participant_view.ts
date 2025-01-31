@@ -2,7 +2,7 @@ import '../../pair-components/icon_button';
 
 import './stage_description';
 import './stage_footer';
-import '../participant_profile/profile_avatar';
+import '../participant_profile/profile_display';
 import '../progress/progress_stage_completed';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -25,10 +25,6 @@ import {
 import {
   getCohortRankingItems
 } from '../../shared/cohort.utils';
-import {
-  getParticipantName,
-  getParticipantPronouns,
-} from '../../shared/participant.utils';
 
 import {styles} from './ranking_view.scss';
 
@@ -78,6 +74,7 @@ export class RankingView extends MobxLitElement {
         this.stage.id,
         this.participantAnswerService.getRankingList(this.stage.id)
       );
+      await this.participantService.progressToNextStage();
     };
 
     return html`
@@ -124,14 +121,8 @@ export class RankingView extends MobxLitElement {
 
   private renderParticipant(profile: ParticipantProfile) {
     return html`
-      <div class="item">
-        <profile-avatar .emoji=${profile.avatar} .square=${true}>
-        </profile-avatar>
-        <div class="right">
-          <div class="title">${getParticipantName(profile)}</div>
-          <div class="subtitle">${getParticipantPronouns(profile)}</div>
-        </div>
-      </div>
+      <participant-profile-display .profile=${profile} displayType="stage">
+      </participant-profile-display>
     `;
   }
 

@@ -30,9 +30,11 @@ import {
 } from '@deliberation-lab/utils';
 import {
   isSurveyComplete,
-  isSurveyAnswerComplete
+  isSurveyAnswerComplete,
 } from '../../shared/stage.utils';
 
+import {unsafeHTML} from 'lit/directives/unsafe-html.js';
+import {convertMarkdownToHTML} from '../../shared/utils';
 import {core} from '../../core/core';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
@@ -69,6 +71,7 @@ export class SurveyView extends MobxLitElement {
 
       // Save all answers for this stage
       await this.participantAnswerService.saveSurveyAnswers(this.stage.id);
+      await this.participantService.progressToNextStage();
     };
 
     return html`
@@ -127,7 +130,7 @@ export class SurveyView extends MobxLitElement {
     };
 
     const titleClasses = classMap({
-      'required': question.isRequired && !isChecked(),
+      required: question.isRequired && !isChecked(),
     });
 
     return html`
@@ -142,7 +145,7 @@ export class SurveyView extends MobxLitElement {
           >
           </md-checkbox>
           <div class=${titleClasses}>
-            ${question.questionTitle}
+            ${unsafeHTML(convertMarkdownToHTML(question.questionTitle))}*
           </div>
         </label>
       </div>
@@ -174,13 +177,13 @@ export class SurveyView extends MobxLitElement {
       answer && answer.kind === SurveyQuestionKind.TEXT ? answer.answer : '';
 
     const titleClasses = classMap({
-      'required': !isSurveyAnswerComplete(answer),
+      required: !isSurveyAnswerComplete(answer),
     });
 
     return html`
       <div class="question">
         <div class=${titleClasses}>
-          ${question.questionTitle}*
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle))}*
         </div>
         <pr-textarea
           variant="outlined"
@@ -201,16 +204,17 @@ export class SurveyView extends MobxLitElement {
     });
 
     const titleClasses = classMap({
-      'required': !isSurveyAnswerComplete(
-        this.participantAnswerService.getSurveyAnswer(this.stage?.id ?? '', question.id)
+      required: !isSurveyAnswerComplete(
+        this.participantAnswerService.getSurveyAnswer(
+          this.stage?.id ?? '',
+          question.id
+        )
       ),
     });
 
     return html`
       <div class="radio-question">
-        <div class=${titleClasses}>
-          ${question.questionTitle}*
-        </div>
+        <div class=${titleClasses}>${question.questionTitle}*</div>
         <div class=${questionWrapperClasses}>
           ${question.options.map((option) =>
             this.renderRadioButton(option, question.id)
@@ -297,15 +301,18 @@ export class SurveyView extends MobxLitElement {
     );
 
     const titleClasses = classMap({
-      'required': !isSurveyAnswerComplete(
-        this.participantAnswerService.getSurveyAnswer(this.stage?.id ?? '', question.id)
+      required: !isSurveyAnswerComplete(
+        this.participantAnswerService.getSurveyAnswer(
+          this.stage?.id ?? '',
+          question.id
+        )
       ),
     });
 
     return html`
       <div class="question">
         <div class=${titleClasses}>
-          ${question.questionTitle}*
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle))}*
         </div>
         <div class="scale labels">
           <div>${question.lowerText}</div>

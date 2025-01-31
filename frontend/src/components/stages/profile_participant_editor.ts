@@ -3,7 +3,7 @@ import '../../pair-components/textarea';
 import '../progress/progress_stage_completed';
 import '../stages/stage_description';
 import '../stages/stage_footer';
-import './profile_avatar';
+import '../participant_profile/avatar_icon';
 
 import '@material/web/radio/radio.js';
 
@@ -15,13 +15,18 @@ import {core} from '../../core/core';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 
-import {PROFILE_AVATARS} from '../../shared/constants';
+import {
+  PROFILE_AVATARS,
+  MAN_EMOJIS,
+  WOMAN_EMOJIS,
+  PERSON_EMOJIS
+} from '../../shared/constants';
 import {ProfileStageConfig} from '@deliberation-lab/utils';
 
-import {styles} from './profile_editor.scss';
+import {styles} from './profile_participant_editor.scss';
 
 /** Editor for participants to adjust their profile. */
-@customElement('profile-editor')
+@customElement('profile-participant-editor')
 export class ProfileEditor extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -37,12 +42,21 @@ export class ProfileEditor extends MobxLitElement {
 
     const filled = this.participantAnswerService.isProfileCompleted;
 
+    const updateProfile = async () => {
+      const profile = this.participantAnswerService.profile;
+      if (profile) {
+        this.participantService.updateParticipantProfile(profile);
+      }
+    };
+
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="profile-wrapper">
         ${this.renderName()} ${this.renderPronouns()} ${this.renderAvatars()}
       </div>
-      <stage-footer .disabled=${!filled}>
+      <stage-footer
+        .disabled=${!filled}
+        .onNextClick=${updateProfile}>
         ${this.stage.progress.showParticipantProgress ?
           html`<progress-stage-completed></progress-stage-completed>`
           : nothing}
@@ -193,6 +207,18 @@ export class ProfileEditor extends MobxLitElement {
     };
 
     const renderAvatarRadio = (emoji: string, index: number) => {
+      const getColor = () => {
+        if (MAN_EMOJIS.indexOf(emoji) > -1) {
+          return 'blue';
+        } else if (WOMAN_EMOJIS.indexOf(emoji) > -1) {
+          return 'pink';
+        } else if (PERSON_EMOJIS.indexOf(emoji) > -1) {
+          return 'purple';
+        } else {
+          return '';
+        }
+      };
+
       return html`
         <div class="radio-button">
           <md-radio
@@ -204,7 +230,8 @@ export class ProfileEditor extends MobxLitElement {
             @change=${handleAvatarClick}
           >
           </md-radio>
-          <profile-avatar .emoji=${emoji} .square=${true}></profile-avatar>
+          <avatar-icon .emoji=${emoji} .square=${true} .color=${getColor()}>
+          </avatar-icon>
         </div>
       `;
     };
@@ -224,6 +251,6 @@ export class ProfileEditor extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'profile-editor': ProfileEditor;
+    'profile-participant-editor': ProfileEditor;
   }
 }

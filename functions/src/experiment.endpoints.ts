@@ -1,5 +1,6 @@
 import { Value } from '@sinclair/typebox/value';
 import {
+  Experiment,
   ExperimentCreationData,
   ExperimentDeletionData,
   createExperimentConfig,
@@ -110,5 +111,31 @@ export const deleteExperiment = onCall(async (request) => {
   // Delete document
   const doc = app.firestore().doc(`${data.collectionName}/${data.experimentId}`);
   app.firestore().recursiveDelete(doc);
+  return { success: true };
+});
+
+// ************************************************************************* //
+// setExperimentCohortLock for experimenters                                 //
+//                                                                           //
+// Input structure: { experimentId, cohortId, isLock }                       //
+// Validation: utils/src/experiment.validation.ts                            //
+// ************************************************************************* //
+export const setExperimentCohortLock = onCall(async (request) => {
+  // TODO: Only allow creator, admins, and readers to set lock
+  await AuthGuard.isExperimenter(request);
+  const { data } = request;
+
+  // Define document reference
+  const document = app.firestore()
+    .collection('experiments')
+    .doc(data.experimentId);
+
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    const experiment = (await document.get()).data() as Experiment;
+    experiment.cohortLockMap[data.cohortId] = data.isLock;
+    transaction.set(document, experiment);
+  });
+
   return { success: true };
 });

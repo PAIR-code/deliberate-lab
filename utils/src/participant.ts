@@ -1,4 +1,16 @@
 import { UnifiedTimestamp, generateId } from './shared';
+import {
+  ALTERNATE_PROFILE_SET_ID,
+  PROFILE_SET_ANIMALS_1,
+  PROFILE_SET_ANIMALS_1_ID,
+  PROFILE_SET_ANIMALS_2,
+  PROFILE_SET_ANIMALS_2_ID,
+  PROFILE_SET_NATURE,
+  PROFILE_SET_NATURE_ID,
+  PROFILE_SET_RANDOM_1_ID,
+  PROFILE_SET_RANDOM_2_ID,
+  PROFILE_SET_RANDOM_3_ID
+} from './profile_sets';
 
 /** Participant profile types and functions. */
 
@@ -22,6 +34,14 @@ export interface ParticipantProfile extends ParticipantProfileBase {
   transferCohortId: string|null; // set if pending transfer, else null
   currentStatus: ParticipantStatus;
   timestamps: ProgressTimestamps;
+  anonymousProfiles: Record<string, AnonymousProfileMetadata>;
+}
+
+/** Anonymous profile data generated from profile set. */
+export interface AnonymousProfileMetadata {
+  name: string;
+  repeat: number; // e.g., if 1, then profile is Cat 2; if 2, then Cat 3
+  avatar: string;
 }
 
 /** Participant profile available in private participants collection. */
@@ -71,49 +91,19 @@ export enum ParticipantStatus {
 // ************************************************************************* //
 // CONSTANTS                                                                 //
 // ************************************************************************* //
-export const ANIMAL_PROFILES: {name: string, avatar: string}[] = [
-  {name: 'Dog', avatar: '🐶'},
-  {name: 'Cat', avatar: '🐱'},
-  {name: 'Mouse', avatar: '🐭'},
-  {name: 'Hamster', avatar: '🐹'},
-  {name: 'Rabbit', avatar: '🐰'},
-  {name: 'Fox', avatar: '🦊'},
-  {name: 'Bear', avatar: '🐻'},
-  {name: 'Panda', avatar: '🐼'},
-  {name: 'Koala', avatar: '🐨'},
-  {name: 'Lion', avatar: '🦁'},
-  {name: 'Tiger', avatar: '🐯'},
-  {name: 'Unicorn', avatar: '🦄'},
-  {name: 'Zebra', avatar: '🦓'},
-  {name: 'Giraffe', avatar: '🦒'},
-  {name: 'Pig', avatar: '🐷'},
-  {name: 'Cow', avatar: '🐮'},
-  {name: 'Frog', avatar: '🐸'},
-  {name: 'Chicken', avatar: '🐔'},
-  {name: 'Penguin', avatar: '🐧'},
-  {name: 'Owl', avatar: '🦉'},
-  {name: 'Bird', avatar: '🐦'},
-  {name: 'Eagle', avatar: '🦅'},
-  {name: 'Lizard', avatar: '🦎'},
-  {name: 'Butterfly', avatar: '🦋'},
-  {name: 'Fish', avatar: '🐟'},
-  {name: 'Shark', avatar: '🦈'},
-  {name: 'Dolphin', avatar: '🐬'},
-  {name: 'Turtle', avatar: '🐢'},
-  {name: 'Parrot', avatar: '🦜'},
-  {name: 'Kangaroo', avatar: '🦘'},
-  {name: 'Rhinoceros', avatar: '🦏'},
-  {name: 'Elephant', avatar: '🐘'},
-  {name: 'Monkey', avatar: '🐒'},
+export const COLORS: string[] = [
+  'Red',
+  'Orange',
+  'Yellow',
+  'Green',
+  'Blue',
+  'Purple',
+  'Pink'
 ];
 
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
-
-export function generateParticipantPublicId(index: number) {
-  return `participant-${index}`;
-}
 
 /** Create ProgressTimestamps config. */
 export function createProgressTimestamps(
@@ -156,26 +146,85 @@ export function createParticipantProfileExtended(
     transferCohortId: config.transferCohortId ?? null,
     currentStatus: config.currentStatus ?? ParticipantStatus.IN_PROGRESS,
     timestamps: config.timestamps ?? createProgressTimestamps(),
+    anonymousProfiles: {},
   }
 }
 
-/** Set anonymous profile fields based on participant number. */
-export function setAnonymousProfile(
+/** Set profile fields based on participant number. */
+export function setProfile(
   participantNumber: number,
   config: ParticipantProfileExtended,
+  setAnonymousProfile = false,
 ) {
-  // Get name/avatar based on participant number
-  const { name, avatar } = ANIMAL_PROFILES[
-    participantNumber % ANIMAL_PROFILES.length
-  ];
+  const generateProfileFromSet = (
+    profileSet: {name: string, avatar: string}[]
+  ): AnonymousProfileMetadata => {
+    // TODO: Randomly select from set
+    const { name, avatar } = profileSet[participantNumber % profileSet.length];
+    return {
+      name,
+      avatar,
+      repeat: Math.floor(participantNumber / profileSet.length)
+    };
+  };
 
-  // Use, e.g., "Cat 2" if second time "Cat" is being used
-  const animalNum = Math.floor(participantNumber / ANIMAL_PROFILES.length);
-  config.name = `${name}${animalNum === 0 ? '' : ` ${animalNum + 1}`}`;
+  const generateRandomHashProfile = (): AnonymousProfileMetadata => {
+    return {
+      name: generateId(),
+      avatar: '',
+      repeat: 0
+    };
+  };
 
-  config.avatar = avatar;
-  config.pronouns = '';
+  // Set anonymous profiles
+  const profileAnimal1 = generateProfileFromSet(PROFILE_SET_ANIMALS_1);
+  const profileAnimal2 = generateProfileFromSet(PROFILE_SET_ANIMALS_2);
+  const profileNature = generateProfileFromSet(PROFILE_SET_NATURE);
 
-  // Set public ID based on participant number
-  config.publicId = generateParticipantPublicId(participantNumber);
+  config.anonymousProfiles[PROFILE_SET_ANIMALS_1_ID] = profileAnimal1;
+  config.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID] = profileAnimal2;
+  config.anonymousProfiles[PROFILE_SET_NATURE_ID] = profileNature;
+
+  // Set random hashes (can be used for random ordering, etc.)
+  config.anonymousProfiles[PROFILE_SET_RANDOM_1_ID] = generateRandomHashProfile();
+  config.anonymousProfiles[PROFILE_SET_RANDOM_2_ID] = generateRandomHashProfile();
+  config.anonymousProfiles[PROFILE_SET_RANDOM_3_ID] = generateRandomHashProfile();
+
+  // Define public ID (using anonymous animal 1 set)
+  const mainProfile = profileAnimal1;
+  const color = COLORS[Math.floor(Math.random() * COLORS.length)]
+  const randomNumber = Math.floor(Math.random() * 10000);
+
+  config.publicId = `${mainProfile.name}-${color}-${randomNumber}`.toLowerCase();
+
+  if (setAnonymousProfile) {
+    // Use, e.g., "Cat 2" if second time "Cat" is being used
+    config.name = `${mainProfile.name}${mainProfile.repeat === 0 ? '' : ` ${mainProfile.repeat + 1}`}`;
+    config.avatar = mainProfile.avatar;
+    config.pronouns = '';
+  }
+}
+
+/** Randomly sort participants using random hash anonymous profiles.
+  * If random hash is not available, use public ID.
+  */
+export function sortParticipantsByRandomProfile(
+  participants: ParticipantProfile[],
+  stageId: string
+) {
+  participants.sort((p1: ParticipantProfile, p2: ParticipantProfile) => {
+    let sortKey1 = '';
+    let sortKey2 = '';
+    // If alternate profile, use random 2 ID
+    if (stageId.includes(ALTERNATE_PROFILE_SET_ID)) {
+      sortKey1 = p1.anonymousProfiles[PROFILE_SET_RANDOM_2_ID]?.name ?? p1.publicId;
+      sortKey2 = p2.anonymousProfiles[PROFILE_SET_RANDOM_2_ID]?.name ?? p2.publicId;
+    } else {
+      // Else, use random 1 ID
+      sortKey1 = p1.anonymousProfiles[PROFILE_SET_RANDOM_1_ID]?.name ?? p1.publicId;
+      sortKey2 = p2.anonymousProfiles[PROFILE_SET_RANDOM_1_ID]?.name ?? p2.publicId;
+    }
+    return sortKey1.localeCompare(sortKey2);
+  });
+  return participants;
 }

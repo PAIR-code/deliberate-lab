@@ -2,7 +2,7 @@ import '../../pair-components/button';
 import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 
-import '../participant_profile/profile_avatar';
+import '../participant_profile/profile_display';
 import '../progress/participant_progress_bar';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -26,7 +26,6 @@ import {
 
 import {
   getCurrentStageStartTime,
-  getParticipantName,
   isObsoleteParticipant,
   isPendingParticipant,
   isParticipantEndedExperiment,
@@ -68,9 +67,8 @@ export class ParticipantSummary extends MobxLitElement {
     return html`
       <div class=${classes} @click=${setCurrentParticipant}>
         <div class="left">
-          <profile-avatar .emoji=${this.participant.avatar} .small=${true}>
-          </profile-avatar>
-          <div>${getParticipantName(this.participant)}</div>
+          <participant-profile-display .profile=${this.participant}>
+          </participant-profile-display>
           ${this.renderStatus()} ${this.renderAttentionStatus()}
           ${this.renderTimeElapsed()}
         </div>
@@ -80,7 +78,7 @@ export class ParticipantSummary extends MobxLitElement {
             .stageIds=${this.experimentService.experiment?.stageIds ?? []}
           >
           </participant-progress-bar>
-          ${this.renderCopyButton()} ${this.renderPreviewButton()}
+          ${this.renderCopyButton()}
           ${this.renderAttentionButton()} ${this.renderBootButton()}
         </div>
       </div>
@@ -176,30 +174,7 @@ export class ParticipantSummary extends MobxLitElement {
     await navigator.clipboard.writeText(link);
     alert('Link copied to clipboard!');
   }
-
-  private renderPreviewButton() {
-    const navigate = () => {
-      if (!this.participant) return;
-      this.routerService.navigate(Pages.PARTICIPANT, {
-        experiment: this.experimentManager.experimentId ?? '',
-        participant: this.participant?.privateId,
-      });
-    };
-
-    return html`
-      <pr-tooltip text="Preview as participant" position="LEFT_START">
-        <pr-icon-button
-          icon="slideshow"
-          color="neutral"
-          variant="default"
-          ?disabled=${!this.participant}
-          @click=${navigate}
-        >
-        </pr-icon-button>
-      </pr-tooltip>
-    `;
-  }
-
+  
   private renderAttentionButton() {
     const sendAttentionCheck = () => {
       if (!this.participant) return;
@@ -214,7 +189,10 @@ export class ParticipantSummary extends MobxLitElement {
       if (!isConfirmed) return;
 
       this.analyticsService.trackButtonClick(ButtonClick.ATTENTION_CHECK_SEND);
-      this.experimentManager.sendAttentionCheckToParticipant(this.participant);
+      this.experimentManager.sendCheckToParticipant(
+        this.participant.privateId,
+        ParticipantStatus.ATTENTION_CHECK
+      );
     };
 
     return html`
@@ -249,7 +227,7 @@ export class ParticipantSummary extends MobxLitElement {
       if (!isConfirmed) return;
 
       this.analyticsService.trackButtonClick(ButtonClick.PARTICIPANT_BOOT);
-      this.experimentManager.bootParticipant(this.participant);
+      this.experimentManager.bootParticipant(this.participant.privateId);
     };
 
     return html`

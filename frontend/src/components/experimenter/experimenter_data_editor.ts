@@ -8,7 +8,7 @@ import { core } from '../../core/core';
 import { AuthService } from '../../services/auth.service';
 
 import { styles } from './experimenter_data_editor.scss';
-import { ApiKeyType, ExperimenterData } from '@deliberation-lab/utils';
+import { ApiKeyType, ExperimenterData, createOpenAIServerConfig } from '@deliberation-lab/utils';
 
 
 /** Editor for adjusting experimenter data */
@@ -124,7 +124,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
             apiKeys: {
               ...oldData.apiKeys,
               openAIApiKey: {
-                ...oldData.apiKeys.openAIApiKey,
+                ...(oldData.apiKeys?.openAIApiKey ?? createOpenAIServerConfig()),
                 apiKey: value,
               },
             },
@@ -136,7 +136,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
             apiKeys: {
               ...oldData.apiKeys,
               openAIApiKey: {
-                ...oldData.apiKeys.openAIApiKey,
+                ...(oldData.apiKeys?.openAIApiKey ?? createOpenAIServerConfig()),
                 baseUrl: value,
               },
             },

@@ -5,7 +5,7 @@ import {customElement, property} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
 import {ParticipantService} from '../../services/participant.service';
-import {getParticipantName} from '../../shared/participant.utils';
+import {getParticipantInlineDisplay} from '../../shared/participant.utils';
 
 import {
   ChipItem,
@@ -15,6 +15,7 @@ import {
   ParticipantProfile,
   RevealAudience,
   StageKind,
+  sortParticipantsByRandomProfile
 } from '@deliberation-lab/utils';
 import {isActiveParticipant} from '../../shared/participant.utils';
 import {styles} from './chip_reveal_view.scss';
@@ -57,10 +58,7 @@ export class ChipReveal extends MobxLitElement {
           : []
         : this.cohortService.getAllParticipants();
 
-    return html`
-      ${renderTitle()} ${this.renderGlobalTable(participants)}
-      <div class="divider"></div>
-    `;
+    return html` ${renderTitle()} ${this.renderGlobalTable(participants)} `;
   }
 
   private makeCell(content: string) {
@@ -97,7 +95,10 @@ export class ChipReveal extends MobxLitElement {
           ${chipValues.map(
             (chip) =>
               html`<div class="table-cell">
-                ${chip.chip.avatar} ${chip.chip.name}<br />($${chip.value} for
+                ${chip.chip.avatar} ${chip.chip.name}<br />($${chip.value.toFixed(
+                  2
+                )}
+                for
                 ${chip.chip.upperValue === chip.chip.lowerValue
                   ? 'all'
                   : 'you'})
@@ -128,11 +129,16 @@ export class ChipReveal extends MobxLitElement {
       return this.makeCell(cellContent);
     };
 
-    const participantIndicator = html`<span
-        class="indicator ${isCurrentTurn(participant) ? '' : 'hidden'}"
-        >👉</span
-      >${participant.avatar}
-      ${getParticipantName(participant)}${isCurrentUser ? ' (you)' : ''}`;
+    const participantIndicator = html`
+      <span class="indicator ${isCurrentTurn(participant) ? '' : 'hidden'}">
+        👉
+      </span>
+      ${getParticipantInlineDisplay(
+        participant,
+        isCurrentUser,
+        this.stage?.id ?? ''
+      )}
+    `;
 
     return html`
       <div class="table-row ${isCurrentUser ? 'highlight' : ''}">
@@ -184,9 +190,7 @@ export class ChipReveal extends MobxLitElement {
       <div class="table">
         ${this.renderGlobalTableHeader()}
         <div class="table-body">
-          ${participants
-            .filter((p) => isActiveParticipant(p))
-            .sort((a, b) => a.publicId.localeCompare(b.publicId))
+          ${sortParticipantsByRandomProfile(participants, this.stage?.id ?? '')
             .map((p) => this.renderParticipantRow(p))}
         </div>
         <div class="table-foot">
@@ -199,9 +203,7 @@ export class ChipReveal extends MobxLitElement {
           <div class="table-row">
             ${this.makeCell('Current chip value')}
             ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
-            <div class="table-cell">
-              $${totalPayout!.toFixed(2)}
-            </div>
+            <div class="table-cell">$${totalPayout!.toFixed(2)}</div>
           </div>
 
           <div class="table-row">

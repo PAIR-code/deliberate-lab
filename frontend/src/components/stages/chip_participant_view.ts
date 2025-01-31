@@ -15,7 +15,7 @@ import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
-import {getParticipantName} from '../../shared/participant.utils';
+import {getParticipantInlineDisplay} from '../../shared/participant.utils';
 import {
   ChipItem,
   ChipLogEntry,
@@ -150,13 +150,14 @@ export class ChipView extends MobxLitElement {
     };
 
     return html`
-      <div class="panel panel-left">
+      <div class="panel left">
         ${isCurrentTurn()
           ? this.renderSenderView()
           : this.renderRecipientView()}
-        <div class="divider"></div>
-        <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
-        </chip-reveal-view>
+        <div class="subpanel">
+          <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
+          </chip-reveal-view>
+        </div>
       </div>
     `;
   }
@@ -196,7 +197,7 @@ export class ChipView extends MobxLitElement {
   }
 
   private isOfferAcceptable() {
-    const publicData = this.cohortService.stagePublicDataMap[this.stage!.id];
+    const publicData = this.cohortService.stagePublicDataMap[this.stage?.id ?? ''];
     if (publicData?.kind !== StageKind.CHIP) return true;
 
     const currentParticipant = this.participantService.profile;
@@ -226,7 +227,7 @@ export class ChipView extends MobxLitElement {
 
   private getAvailableSell() {
     /* Returns how many chips of the current selected chip we can sell. */
-    const publicData = this.cohortService.stagePublicDataMap[this.stage!.id];
+    const publicData = this.cohortService.stagePublicDataMap[this.stage?.id ?? ''];
     if (publicData?.kind !== StageKind.CHIP) return 0;
 
     const publicId = this.participantService.profile?.publicId ?? '';
@@ -279,7 +280,7 @@ export class ChipView extends MobxLitElement {
     const renderOfferPayout = () => {
       let payoutHtml = html``;
       if (!this.isOfferIncomplete() && this.isOfferValid()) {
-        if (!this.stage || !this.participantService.profile) return 0;
+        if (!this.stage || !this.participantService.profile) return nothing;
         const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
         if (publicData?.kind !== StageKind.CHIP) return 0;
 
@@ -303,17 +304,17 @@ export class ChipView extends MobxLitElement {
           class=${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}
           ><b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b></span
         >`;
-        payoutHtml = html`<p>
+        payoutHtml = html`
           If this offer is accepted, your updated payout will be
           <b>$${newTotalPayout.toFixed(2)}</b> ${diffDisplay}.
-        </p>`;
+        `;
       }
       return html`<div class="payout-panel">${payoutHtml}</div>`;
     };
 
     const renderValidationMessages = () => {
       if (this.isOfferIncomplete()) {
-        return html`<div class="warnings-panel"></div>`;
+        return nothing;
       }
 
       const errors = [];
@@ -378,8 +379,6 @@ export class ChipView extends MobxLitElement {
             })}
           </div>
         </div>
-
-        ${renderOfferPayout()} ${renderValidationMessages()}
         <div class="buttons">
           <pr-button
             ?loading=${this.isOfferLoading}
@@ -393,6 +392,7 @@ export class ChipView extends MobxLitElement {
               : 'Submit offer'}
           </pr-button>
         </div>
+        ${renderOfferPayout()} ${renderValidationMessages()}
       </div>
     `;
   }
@@ -572,9 +572,8 @@ export class ChipView extends MobxLitElement {
     const senderParticipant = this.cohortService
       .getAllParticipants()
       .find((p) => p.publicId === offer.senderId);
-    const senderName = `${senderParticipant!.avatar} ${getParticipantName(
-      senderParticipant!
-    )}`;
+    if (!senderParticipant) return nothing;
+    const senderName = `${getParticipantInlineDisplay(senderParticipant, false, this.stage?.id ?? '')}`;
 
     return html`
       <div class="offer-panel">
@@ -670,15 +669,12 @@ export class ChipView extends MobxLitElement {
   private getParticipant(participantId: string) {
     return this.cohortService
       .getAllParticipants()
-      .find((p) => p.publicId === participantId)!;
+      .find((p) => p.publicId === participantId);
   }
 
-  private getParticipantDisplay(participant: ParticipantProfile) {
-    if (participant.avatar && participant.name) {
-      return `${participant.avatar} ${participant.name}`;
-    }
-
-    return participant.name ?? participant.publicId;
+  private getParticipantDisplay(participant: ParticipantProfile|undefined) {
+    if (!participant) return '';
+    return getParticipantInlineDisplay(participant, false, this.stage?.id ?? '');
   }
 
   private renderLogEntry(entry: ChipLogEntry, isLatestEntry: boolean = false) {
@@ -713,7 +709,7 @@ export class ChipView extends MobxLitElement {
       case ChipLogType.NEW_TURN:
         participant = this.getParticipant(entry.participantId);
         const isCurrentUser =
-          participant.publicId! === this.participantService.profile!.publicId;
+          participant?.publicId === this.participantService.profile?.publicId;
 
         if (isCurrentUser) {
           return renderEntry(

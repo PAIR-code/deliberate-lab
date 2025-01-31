@@ -3,7 +3,7 @@
 
 :host {
   @include common.flex-row-align-center;
-  background: var(--md-sys-color-surface-variant);
+  background: var(--md-sys-color-surface);
   border-top: 1px solid var(--md-sys-color-outline-variant);
   bottom: 0;
   flex-shrink: 0;

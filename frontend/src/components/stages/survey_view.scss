@@ -8,18 +8,6 @@
   overflow: auto;
 }
 
-/** For per-participant. */
-.item {
-  @include common.flex-row-align-center;
-  flex-wrap: wrap;
-  gap: common.$spacing-large;
-
-  .right {
-    @include common.flex-row-align-center;
-    gap: common.$spacing-small;
-  }
-}
-
 .empty-message {
   color: var(--md-sys-color-outline);
   font-style: italic;

@@ -18,14 +18,14 @@ import {ExperimentService} from '../../services/experiment.service';
 import {Pages, RouterService} from '../../services/router.service';
 
 import {
-  CohortConfig, ParticipantProfile, StageKind
+  CohortConfig,
+  ParticipantProfile,
+  StageKind,
 } from '@deliberation-lab/utils';
-import {
-  getCohortDescription,
-  getCohortName
-} from '../../shared/cohort.utils';
+import {getCohortDescription, getCohortName} from '../../shared/cohort.utils';
 
 import {styles} from './cohort_summary.scss';
+import {ParticipantProfileExtended} from '@deliberation-lab/utils';
 
 /** Cohort summary for experimenters. */
 @customElement('cohort-summary')
@@ -37,7 +37,7 @@ export class CohortSummary extends MobxLitElement {
   private readonly experimentService = core.getService(ExperimentService);
   private readonly routerService = core.getService(RouterService);
 
-  @property() cohort: CohortConfig|undefined = undefined;
+  @property() cohort: CohortConfig | undefined = undefined;
   @property() isExpanded = true;
 
   override render() {
@@ -47,8 +47,7 @@ export class CohortSummary extends MobxLitElement {
 
     return html`
       <div class="cohort-summary">
-        ${this.renderHeader()}
-        ${this.renderBody()}
+        ${this.renderHeader()} ${this.renderBody()}
       </div>
     `;
   }
@@ -75,30 +74,39 @@ export class CohortSummary extends MobxLitElement {
       <div class="header">
         <div class="left">
           <pr-icon-button
-            icon=${this.isExpanded ? "keyboard_arrow_up" : "keyboard_arrow_down"}
+            icon=${this.isExpanded
+              ? 'keyboard_arrow_up'
+              : 'keyboard_arrow_down'}
             color="neutral"
             variant="default"
-            @click=${() => { this.isExpanded = !this.isExpanded; }}
+            @click=${() => {
+              this.isExpanded = !this.isExpanded;
+            }}
           >
           </pr-icon-button>
           <div class="header-details">
             <div class="top">
-            ${this.cohort ? getCohortName(this.cohort) : ''}
-            <span class="subtitle">
-              (${this.experimentManager.getCohortParticipants(this.cohort.id, false).length} participants)
-            </span>
+              ${this.cohort ? getCohortName(this.cohort) : ''}
+              <span class="subtitle">
+                (${this.experimentManager.getCohortParticipants(
+                  this.cohort.id,
+                  false
+                ).length}
+                participants)
+              </span>
             </div>
             <cohort-progress-bar
               .cohortId=${this.cohort.id}
-              .participantList=${this.experimentManager.getCohortParticipants(this.cohort.id)}
+              .participantList=${this.experimentManager.getCohortParticipants(
+                this.cohort.id
+              )}
             >
             </cohort-progress-bar>
           </div>
         </div>
         <div class="right">
-          ${this.renderAddParticipantButton()}
-          ${this.renderCopyButton()}
-          ${this.renderPreviewButton()}
+          ${this.renderAddParticipantButton()} ${this.renderLockButton()}
+          ${this.renderCopyButton()} 
           ${this.renderSettingsButton()}
         </div>
       </div>
@@ -135,13 +143,23 @@ export class CohortSummary extends MobxLitElement {
       return nothing;
     }
 
+    const isDisabled = () => {
+      if (!this.experimentService.experiment || !this.cohort) {
+        return true;
+      }
+      return (
+        this.experimentManager.isFullCohort(this.cohort) ||
+        this.experimentService.experiment.cohortLockMap[this.cohort.id]
+      );
+    };
+
     return html`
       <pr-tooltip text="Add participant" position="BOTTOM_END">
         <pr-icon-button
           icon="person_add"
           color="tertiary"
           variant="default"
-          ?disabled=${this.experimentManager.isFullCohort(this.cohort)}
+          ?disabled=${isDisabled()}
           ?loading=${this.experimentManager.isWritingParticipant}
           @click=${async () => {
             if (!this.cohort) return;
@@ -155,23 +173,30 @@ export class CohortSummary extends MobxLitElement {
     `;
   }
 
-  private renderPreviewButton() {
-    const navigate = () => {
+  private renderLockButton() {
+    if (!this.cohort) {
+      return nothing;
+    }
+
+    const isLocked = this.experimentService.experiment
+      ? this.experimentService.experiment.cohortLockMap[this.cohort.id]
+      : false;
+
+    const onClick = async () => {
       if (!this.cohort) return;
-      this.routerService.navigate(Pages.PARTICIPANT_JOIN_COHORT, {
-        experiment: this.experimentManager.experimentId ?? '',
-        cohort: this.cohort?.id,
-      })
+      await this.experimentManager.setCohortLock(this.cohort.id, !isLocked);
     };
 
+    const text = `${isLocked ? 'Unlock' : 'Lock'} this cohort to ${
+      isLocked ? 'enable' : 'disable'
+    } participants joining`;
     return html`
-      <pr-tooltip text="Preview cohort page as participant" position="BOTTOM_END">
+      <pr-tooltip text=${text} position="BOTTOM_END">
         <pr-icon-button
-          icon="slideshow"
-          color="neutral"
+          icon=${isLocked ? 'lock' : 'lock_open'}
+          color=${isLocked ? 'tertiary' : 'secondary'}
           variant="default"
-          ?disabled=${!this.cohort}
-          @click=${navigate}
+          @click=${onClick}
         >
         </pr-icon-button>
       </pr-tooltip>
@@ -203,9 +228,7 @@ export class CohortSummary extends MobxLitElement {
     );
 
     if (participants.length === 0) {
-      return html`
-        <div class="empty-message">No participants yet.</div>
-      `;
+      return html` <div class="empty-message">No participants yet.</div> `;
     }
 
     const isOnTransferStage = (participant: ParticipantProfile) => {
@@ -213,21 +236,26 @@ export class CohortSummary extends MobxLitElement {
       if (!stage) return false; // Return false instead of 'nothing' to ensure it's a boolean
       return stage.kind === StageKind.TRANSFER;
     };
-    
+
     return html`
       <div class="body">
-      ${participants
-        .slice()
-        .sort((a, b) => {
-          const aIsTransfer = isOnTransferStage(a) ? 0 : 1; // 0 if true, 1 if false
-          const bIsTransfer = isOnTransferStage(b) ? 0 : 1;
-          return aIsTransfer - bIsTransfer || a.publicId.localeCompare(b.publicId);
-        })
-        .map(participant => 
-          html`
-            <participant-summary .participant=${participant}></participant-summary>
-          `
-        )}
+        ${participants
+          .slice()
+          .sort((a, b) => {
+            const aIsTransfer = isOnTransferStage(a) ? 0 : 1; // 0 if true, 1 if false
+            const bIsTransfer = isOnTransferStage(b) ? 0 : 1;
+            return (
+              aIsTransfer - bIsTransfer || a.publicId.localeCompare(b.publicId)
+            );
+          })
+          .map(
+            (participant) =>
+              html`
+                <participant-summary
+                  .participant=${participant}
+                ></participant-summary>
+              `
+          )}
       </div>
     `;
   }

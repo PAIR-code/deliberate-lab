@@ -1,3 +1,4 @@
+import '../../pair-components/button';
 import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
@@ -13,18 +14,27 @@ import {customElement, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
+import {ButtonClick, AnalyticsService} from '../../services/analytics.service';
 import {AuthService} from '../../services/auth.service';
+import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
 import {AgentEditor} from '../../services/agent.editor';
+import {ParticipantService} from '../../services/participant.service';
 import {RouterService} from '../../services/router.service';
 
-import {AgentConfig, StageKind} from '@deliberation-lab/utils';
+import {
+  AgentConfig,
+  ParticipantProfileExtended,
+  StageKind,
+} from '@deliberation-lab/utils';
 
 import {styles} from './experimenter_panel.scss';
 import {DEFAULT_STRING_FORMATTING_INSTRUCTIONS} from '@deliberation-lab/utils';
 import {DEFAULT_JSON_FORMATTING_INSTRUCTIONS} from '@deliberation-lab/utils';
 
 enum PanelView {
+  DEFAULT = 'default',
+  PARTICIPANT_SEARCH = 'participant_search',
   MANUAL_CHAT = 'manual_chat',
   LLM_SETTINGS = 'llm_settings',
   API_KEY = 'api_key',
@@ -35,110 +45,70 @@ enum PanelView {
 export class Panel extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly authService = core.getService(AuthService);
+  private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly agentEditor = core.getService(AgentEditor);
+  private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
-  @state() panelView: PanelView = PanelView.MANUAL_CHAT;
+  @state() panelView: PanelView = PanelView.DEFAULT;
   @state() isLoading = false;
+  @state() isDownloading = false;
+  @state() participantSearchQuery = '';
 
   override render() {
     if (!this.authService.isExperimenter) {
       return nothing;
     }
 
-    // Check if chat stage
-    const stageId = this.routerService.activeRoute.params['stage'];
-    const stage = this.experimentService.getStage(stageId);
-
-    if (stage?.kind !== StageKind.CHAT) {
-      return nothing;
-    }
-
-    const panelClasses = classMap({
-      'panel-wrapper': true,
-      closed: !this.routerService.isExperimenterPanelOpen,
-    });
-
-    const isPanelOpen = this.routerService.isExperimenterPanelOpen;
-
-    const renderPanelView = () => {
-      if (!isPanelOpen) {
-        return nothing;
-      }
-      switch (this.panelView) {
-        case PanelView.MANUAL_CHAT:
-          return html`
-            <div class="main">
-              <div class="top">
-                <div class="header">Manual chat</div>
-              </div>
-              <div class="bottom">
-                <experimenter-manual-chat></experimenter-manual-chat>
-              </div>
-            </div>
-          `;
-        case PanelView.API_KEY:
-          return html`
-            <div class="main">
-              <div class="top">
-                <div class="header">Experimenter settings</div>
-                <experimenter-data-editor></experimenter-data-editor>
-              </div>
-            </div>
-          `;
-        case PanelView.LLM_SETTINGS:
-          const agents = this.agentEditor.getAgents(stageId);
-          return html`
-            <div class="main">
-              <div class="top">
-                <div class="header">Agent config</div>
-                ${agents.length === 0
-                  ? html`<div>No agents configured</div>`
-                  : nothing}
-                ${agents.map((agent, index) =>
-                  this.renderAgentEditor(stageId, agent, index)
-                )}
-              </div>
-            </div>
-          `;
-        default:
-          return nothing;
-      }
-    };
-
     const isSelected = (panelView: PanelView) => {
-      return isPanelOpen && this.panelView === panelView;
+      return this.panelView === panelView;
     };
 
     return html`
-      <div class=${panelClasses}>
+      <div class="panel-wrapper">
         <div class="sidebar">
-          <pr-tooltip text="Toggle experimenter panel" position="LEFT_END">
+          <pr-tooltip text="Dashboard settings" position="RIGHT_END">
             <pr-icon-button
               color="secondary"
-              icon=${isPanelOpen ? 'chevron_right' : 'chevron_left'}
+              icon="tune"
               size="medium"
-              variant="default"
-              @click=${this.togglePanel}
-            >
-            </pr-icon-button>
-          </pr-tooltip>
-          <pr-tooltip text="Send manual chat" position="LEFT_END">
-            <pr-icon-button
-              color="secondary"
-              icon="chat"
-              size="medium"
-              variant=${isSelected(PanelView.MANUAL_CHAT) ? 'tonal' : 'default'}
+              variant=${isSelected(PanelView.DEFAULT) ? 'tonal' : 'default'}
               @click=${() => {
-                this.panelView = PanelView.MANUAL_CHAT;
-                this.routerService.setExperimenterPanel(true);
+                this.panelView = PanelView.DEFAULT;
               }}
             >
             </pr-icon-button>
           </pr-tooltip>
-          <pr-tooltip text="Edit API key" position="LEFT_END">
+          <pr-tooltip text="Participant search" position="RIGHT_END">
+            <pr-icon-button
+              color="secondary"
+              icon="search"
+              size="medium"
+              variant=${isSelected(PanelView.PARTICIPANT_SEARCH)
+                ? 'tonal'
+                : 'default'}
+              @click=${() => {
+                this.panelView = PanelView.PARTICIPANT_SEARCH;
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
+          <pr-tooltip text="Send manual chat" position="RIGHT_END">
+            <pr-icon-button
+              color="secondary"
+              icon="forum"
+              size="medium"
+              variant=${isSelected(PanelView.MANUAL_CHAT) ? 'tonal' : 'default'}
+              @click=${() => {
+                this.panelView = PanelView.MANUAL_CHAT;
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
+          <pr-tooltip text="Edit API key" position="RIGHT_END">
             <pr-icon-button
               color="secondary"
               icon="key"
@@ -146,38 +116,248 @@ export class Panel extends MobxLitElement {
               variant=${isSelected(PanelView.API_KEY) ? 'tonal' : 'default'}
               @click=${() => {
                 this.panelView = PanelView.API_KEY;
-                this.routerService.setExperimenterPanel(true);
               }}
             >
             </pr-icon-button>
           </pr-tooltip>
-          <pr-tooltip text="Coming soon: Edit LLM config" position="LEFT_END">
+          <pr-tooltip text="Edit agent configs" position="RIGHT_END">
             <pr-icon-button
               color="secondary"
-              icon="edit_note"
+              icon="robot_2"
               size="medium"
               variant=${isSelected(PanelView.LLM_SETTINGS)
                 ? 'tonal'
                 : 'default'}
               @click=${() => {
                 this.panelView = PanelView.LLM_SETTINGS;
-                this.routerService.setExperimenterPanel(true);
               }}
             >
             </pr-icon-button>
           </pr-tooltip>
         </div>
-        ${renderPanelView()}
+        ${this.renderPanelView()}
       </div>
     `;
   }
 
-  private togglePanel() {
-    this.routerService.setExperimenterPanel(
-      !this.routerService.isExperimenterPanelOpen
-    );
+  private renderPanelView() {
+    switch (this.panelView) {
+      case PanelView.PARTICIPANT_SEARCH:
+        return this.renderParticipantSearchPanel();
+      case PanelView.MANUAL_CHAT:
+        return this.renderManualChatPanel();
+      case PanelView.API_KEY:
+        return this.renderApiKeyPanel();
+      case PanelView.LLM_SETTINGS:
+        return this.renderAgentEditorPanel();
+      default:
+        return this.renderDefaultPanel();
+    }
   }
 
+  private renderDefaultPanel() {
+    const showCohortList = this.experimentManager.showCohortList;
+    const hideLockedCohorts = this.experimentManager.hideLockedCohorts;
+
+    return html`
+      <div class="main">
+        <div class="top">
+          <div class="header">Cohort Panel</div>
+          <div
+            class="checkbox-wrapper"
+            @click=${() => {
+              this.experimentManager.setShowCohortList(!showCohortList);
+            }}
+          >
+            <pr-icon-button
+              color="tertiary"
+              size="medium"
+              variant="default"
+              icon=${showCohortList ? 'visibility_off' : 'visibility'}
+            >
+            </pr-icon-button>
+            <div>${showCohortList ? 'Hide' : 'Show'} cohort list</div>
+          </div>
+          <div
+            class="checkbox-wrapper"
+            @click=${() => {
+              this.experimentManager.setHideLockedCohorts(!hideLockedCohorts);
+            }}
+          >
+            <pr-icon-button
+              color="tertiary"
+              size="medium"
+              variant="default"
+              icon=${hideLockedCohorts ? 'filter_list' : 'filter_list_off'}
+            >
+            </pr-icon-button>
+            <div>
+              ${hideLockedCohorts ? 'Show all cohorts' : 'Hide locked cohorts'}
+            </div>
+          </div>
+          ${this.renderParticipantSettingsPanel()}
+        </div>
+        <div class="bottom">
+          <div class="header">Actions</div>
+          ${this.renderExperimentActions()}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderParticipantSettingsPanel() {
+    if (!this.experimentManager.currentParticipantId) {
+      return;
+    }
+    const showCohortList = this.experimentManager.showCohortList;
+    const showPreview = this.experimentManager.showParticipantPreview;
+    const showStats = this.experimentManager.showParticipantStats;
+    return html`<div class="header">Participant panels</div>
+      <div
+        class="checkbox-wrapper"
+        @click=${() => {
+          this.experimentManager.setShowParticipantStats(!showStats);
+        }}
+      >
+        <pr-icon-button
+          color="tertiary"
+          size="medium"
+          variant="default"
+          icon=${showStats ? 'visibility_off' : 'visibility'}
+        >
+        </pr-icon-button>
+        <div>${showCohortList ? 'Hide' : 'Show'} participant details</div>
+      </div>
+      <div
+        class="checkbox-wrapper"
+        @click=${() => {
+          this.experimentManager.setShowParticipantPreview(!showPreview);
+        }}
+      >
+        <pr-icon-button
+          color="tertiary"
+          size="medium"
+          variant="default"
+          icon=${showPreview ? 'visibility_off' : 'visibility'}
+        >
+        </pr-icon-button>
+        <div>${showCohortList ? 'Hide' : 'Show'} participant preview</div>
+      </div>`;
+  }
+  private renderParticipantSearchPanel() {
+    const handleInput = (e: Event) => {
+      this.participantSearchQuery = (e.target as HTMLTextAreaElement).value;
+    };
+
+    const searchResults =
+      this.participantSearchQuery === ''
+        ? []
+        : this.experimentManager.getParticipantSearchResults(
+            this.participantSearchQuery
+          );
+
+    const renderResult = (participant: ParticipantProfileExtended) => {
+      const cohortName =
+        this.experimentManager.getCurrentParticipantCohort(participant)
+          ?.metadata.name ?? '';
+
+      const onResultClick = () => {
+        this.experimentManager.setCurrentParticipantId(participant.privateId);
+      };
+
+      const isCurrent =
+        participant.privateId ===
+        this.experimentManager.currentParticipant?.privateId;
+
+      return html`
+        <div
+          class="search-result ${isCurrent ? 'current' : ''}"
+          role="button"
+          @click=${onResultClick}
+        >
+          <div class="title">${participant.publicId}</div>
+          <div>${cohortName}</div>
+        </div>
+      `;
+    };
+
+    return html`
+      <div class="main">
+        <div class="top">
+          <div class="header">Participant search</div>
+          <pr-textarea
+            variant="outlined"
+            label="Search by any participant ID (public, private, Prolific) or name"
+            @input=${handleInput}
+          >
+          </pr-textarea>
+          <div class="header">Search results</div>
+          <div class="search-results">
+            ${searchResults.length === 0
+              ? html`<div>No results</div>`
+              : nothing}
+            ${searchResults.map((participant) => renderResult(participant))}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderManualChatPanel() {
+    const stageId = this.participantService.currentStageViewId ?? '';
+    const stage = this.experimentService.getStage(stageId);
+
+    if (stage?.kind !== StageKind.CHAT) {
+      return html`
+        <div class="main">
+          <div class="top">
+            <div class="header">Manual chat</div>
+            <div>Navigate to a chat stage preview to send a message.</div>
+          </div>
+        </div>
+      `;
+    }
+
+    return html`
+      <div class="main">
+        <div class="top">
+          <div class="header">Manual chat</div>
+          <experimenter-manual-chat></experimenter-manual-chat>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderApiKeyPanel() {
+    return html`
+      <div class="main">
+        <div class="top">
+          <div class="header">Experimenter settings</div>
+          <experimenter-data-editor></experimenter-data-editor>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderAgentEditorPanel() {
+    const stageId = this.participantService.currentStageViewId ?? '';
+    const agents = this.agentEditor.getAgents(stageId);
+    return html`
+      <div class="main">
+        <div class="top">
+          <div class="header">Agent config</div>
+          ${agents.length === 0
+            ? html`<div>No agents configured in the current stage</div>`
+            : nothing}
+          ${agents.map((agent, index) =>
+            this.renderAgentEditor(stageId, agent, index)
+          )}
+        </div>
+      </div>
+    `;
+  }
+
+  // TODO: Refactor into separate component
   private renderAgentEditor(
     stageId: string,
     agent: AgentConfig,
@@ -193,11 +373,7 @@ export class Panel extends MobxLitElement {
         ...agent.responseConfig,
         formattingInstructions: instructions,
       };
-      this.agentEditor.updateAgent(
-        stageId,
-        {...agent, responseConfig},
-        index
-      );
+      this.agentEditor.updateAgent(stageId, {...agent, responseConfig}, index);
     };
 
     const updateJSON = () => {
@@ -208,11 +384,7 @@ export class Panel extends MobxLitElement {
           ? DEFAULT_STRING_FORMATTING_INSTRUCTIONS
           : DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
       };
-      this.agentEditor.updateAgent(
-        stageId,
-        {...agent, responseConfig},
-        index
-      );
+      this.agentEditor.updateAgent(stageId, {...agent, responseConfig}, index);
     };
 
     const updateWPM = (e: InputEvent) => {
@@ -291,6 +463,82 @@ export class Panel extends MobxLitElement {
           cohorts
         </div>
       </div>
+    `;
+  }
+
+  private renderExperimentDownloadButton() {
+    const onClick = async () => {
+      this.isDownloading = true;
+      await this.experimentManager.downloadExperiment();
+      this.isDownloading = false;
+    };
+
+    return html`
+      <pr-button
+        color="secondary"
+        variant="outlined"
+        ?loading=${this.isDownloading}
+        @click=${onClick}
+      >
+        <pr-icon icon="download" color="secondary" variant="default"> </pr-icon>
+        <div>Download experiment data</div>
+      </pr-button>
+    `;
+  }
+
+  private renderExperimentForkButton() {
+    const onClick = () => {
+      // Display confirmation dialog
+      const isConfirmed = window.confirm(
+        'This will create a copy of this experiment. Are you sure you want to proceed?'
+      );
+      if (!isConfirmed) return;
+      this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_FORK);
+      this.experimentManager.forkExperiment();
+    };
+
+    return html`
+      <pr-button color="secondary" variant="outlined" @click=${onClick}>
+        <pr-icon icon="fork_right" color="secondary" variant="default">
+        </pr-icon>
+        <div>Fork experiment</div>
+      </pr-button>
+    `;
+  }
+
+  private renderExperimentEditButton() {
+    const tooltip = `
+      Experiment creators can edit metadata any time
+      + can edit stages if users have not joined the experiment.`;
+
+    const onClick = () => {
+      this.analyticsService.trackButtonClick(
+        this.experimentManager.isCreator
+          ? ButtonClick.EXPERIMENT_EDIT
+          : ButtonClick.EXPERIMENT_PREVIEW_CONFIG
+      );
+      this.experimentManager.setIsEditing(true);
+    };
+
+    return html`
+      <pr-tooltip text=${tooltip} position="TOP_START">
+        <pr-button color="secondary" variant="outlined" @click=${onClick}>
+          <pr-icon
+            icon=${this.experimentManager.isCreator ? 'edit_note' : 'overview'}
+            color="secondary"
+            variant="default"
+          >
+          </pr-icon>
+          <div>Edit experiment</div>
+        </pr-button>
+      </pr-tooltip>
+    `;
+  }
+
+  private renderExperimentActions() {
+    return html`
+      ${this.renderExperimentDownloadButton()}
+      ${this.renderExperimentForkButton()} ${this.renderExperimentEditButton()}
     `;
   }
 }

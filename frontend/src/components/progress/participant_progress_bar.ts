@@ -29,7 +29,7 @@ export class Progress extends MobxLitElement {
     const ratio = progress / total;
 
     return html`
-      <pr-tooltip text="${progress} of ${total} stages completed" position="BOTTOM_END">
+      <pr-tooltip text="${progress} of ${total} stages completed" position="LEFT">
         <div class="progress-bar">
           <div
             class="progress completed"

@@ -226,12 +226,12 @@ export function calculatePayoutTotal(resultConfig: PayoutResultConfig) {
       let initialChipTotal = 0;
       result.chipResults.forEach((result) => {
         chipTotal += Math.floor(result.quantity * result.value * 100) / 100;
-        initialChipTotal += Math.floor(100 * result.value * 100) / 100;
+        initialChipTotal += Math.floor(result.chip.startingQuantity * result.value * 100) / 100;
       });
       total += Math.max(0, chipTotal - initialChipTotal);
     }
   });
-  return total;
+  return Math.floor(total * 100) / 100;
 }
 
 /** Calculate payout results for a single item (or null if can't calculate). */

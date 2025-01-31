@@ -1,5 +1,7 @@
+import { Timestamp } from 'firebase-admin/firestore';
 import { Value } from '@sinclair/typebox/value';
 import {
+  CohortConfig,
   CohortCreationData,
   CohortDeletionData,
   ParticipantStatus,
@@ -31,12 +33,11 @@ import {
 // ************************************************************************* //
 
 export const createCohort = onCall(async (request) => {
+  // TODO: Verify that the experimenter is an admin OR creator/reader
+  // of the cohort's experiment
   await AuthGuard.isExperimenter(request);
   const { data } = request;
   const cohortConfig = data.cohortConfig;
-
-  // TODO: If experiment exists, verify that the experimenter is the creator
-  // before updating.
 
   // Validate input
   const validInput = Value.Check(CohortCreationData, data);
@@ -96,44 +97,43 @@ function handleCohortCreationValidationErrors(data: any) {
 }
 
 // ************************************************************************* //
-// updateCohort endpoint                                                     //
-// WARNING: Do not use this endpoint to creare cohorts,                      //
-//          as it will not set public stage data.                            //
+// updateCohortMetadata endpoint                                             //
 //                                                                           //
-// Input structure: { experimentId, cohortConfig }                           //
+// Input structure: { experimentId, cohortId, metadata, participantConfig }  //
 // Validation: utils/src/cohort.validation.ts                                //
 // ************************************************************************* //
 
-export const updateCohort = onCall(async (request) => {
+export const updateCohortMetadata = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
   const { data } = request;
-  const cohortConfig = data.cohortConfig;
-
-  // Verify that the experimenter is the creator
-  // before updating.
-  if (cohortConfig.metadata.creator !== request.auth?.token.email) {
-    return;
-  }
-
-  // Validate input
-  const validInput = Value.Check(CohortCreationData, data);
-  if (!validInput) {
-    handleCohortCreationValidationErrors(data);
-  }
 
   // Define document reference
   const document = app.firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('cohorts')
-    .doc(cohortConfig.id);
+    .doc(data.cohortId);
 
+  let success = true;
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
-    transaction.set(document, cohortConfig);
+    const cohortConfig = (await document.get()).data() as CohortConfig;
+
+    // Verify that the experimenter is the creator
+    // before updating.
+    if (cohortConfig.metadata.creator !== request.auth?.token.email) {
+      success = false;
+      return;
+    }
+
+    // Update date edited
+    const metadata = {...data.metadata, dateModified: Timestamp.now()};
+    const participantConfig = data.participantConfig;
+
+    transaction.set(document, {...cohortConfig, metadata, participantConfig});
   });
 
-  return { id: document.id };
+  return { success };
 });
 
 // ************************************************************************* //
@@ -144,6 +144,7 @@ export const updateCohort = onCall(async (request) => {
 // Validation: utils/src/cohort.validation.ts                                //
 // ************************************************************************* //
 export const deleteCohort = onCall(async (request) => {
+  // TODO: Only allow creator, admins, and readers to delete cohorts
   await AuthGuard.isExperimenter(request);
   const { data } = request;
 

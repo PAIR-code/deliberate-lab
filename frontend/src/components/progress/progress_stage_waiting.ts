@@ -1,6 +1,6 @@
 import '../../pair-components/button';
 import '../../pair-components/tooltip';
-import '../participant_profile/profile_avatar';
+import '../participant_profile/profile_display';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -14,8 +14,6 @@ import {RouterService} from '../../services/router.service';
 
 import {ParticipantProfile} from '@deliberation-lab/utils';
 import {
-  getParticipantName,
-  getParticipantPronouns,
   isActiveParticipant,
 } from '../../shared/participant.utils';
 
@@ -37,7 +35,7 @@ export class Progress extends MobxLitElement {
   @state() completeWaitingLoading = false;
 
   override render() {
-    const stageId = this.routerService.activeRoute.params['stage'];
+    const stageId = this.participantService.currentStageViewId ?? '';
     const stage = this.experimentService.getStage(stageId);
     if (!stage) return nothing;
 
@@ -100,31 +98,21 @@ export class Progress extends MobxLitElement {
   private renderParticipant(participant: ParticipantProfile) {
     const isDisabled = !isActiveParticipant(participant);
 
-    const participantName = getParticipantName(participant);
-    const isTruncated = participantName.length > 14;
-    const displayName = isTruncated
-      ? participantName.substring(0, 11) + '...'
-      : participantName;
-
     let tooltipText = '';
-    if (isTruncated && isDisabled) {
-      tooltipText = `${participantName} is no longer in the experiment`;
-    } else if (isTruncated) {
-      tooltipText = participantName;
-    } else if (isDisabled) {
+    if (isDisabled) {
       tooltipText = 'This participant is no longer in the experiment';
     }
 
+    const stageId = this.routerService.activeRoute.params['stage'];
+
     return html`
       <pr-tooltip text=${tooltipText} position="BOTTOM_END">
-        <div class="participant">
-          <profile-avatar
-            .emoji=${participant.avatar}
-            .disabled=${isDisabled}
-          ></profile-avatar>
-          <div>${displayName} ${getParticipantPronouns(participant)}</div>
-        </div>
-      </pr-tooltip>
+        <participant-profile-display
+          .profile=${participant}
+          .stageId=${stageId}
+          displayType="waiting">
+        </participant-profile-display>
+       </pr-tooltip>
     `;
   }
 

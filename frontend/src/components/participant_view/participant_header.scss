@@ -29,12 +29,11 @@ pr-icon {
   cursor: default;
 }
 
-.profile {
+participant-profile-display {
   @include common.flex-row-align-center;
   @include typescale.title-medium;
   border: 2px solid var(--md-sys-color-outline-variant);
   border-radius: common.$spacing-medium;
-  gap: common.$spacing-medium;
-  height: calc(common.$header-height - common.$spacing-large * 2);
+  height: calc(common.$header-height - common.$spacing-large);
   padding: 0 common.$spacing-medium;
 }

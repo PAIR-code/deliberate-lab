@@ -12,7 +12,7 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import {
-  ParticipantProfileExtended,
+  ParticipantProfileBase,
   RankingStageParticipantAnswer,
   StageKind,
   StageParticipantAnswer,
@@ -51,7 +51,7 @@ export class ParticipantAnswerService extends Service {
   // Map of stage ID to current chat input
   @observable chatInputMap: Record<string, string> = {};
   // Profile
-  @observable profile: ParticipantProfileExtended | null = null;
+  @observable profile: ParticipantProfileBase | null = null;
 
   // Loading
   @observable areAnswersLoading = false;
@@ -105,7 +105,7 @@ export class ParticipantAnswerService extends Service {
     this.profile = null;
   }
 
-  setProfile(profile: ParticipantProfileExtended) {
+  setProfile(profile: ParticipantProfileBase) {
     this.profile = profile;
   }
 
@@ -199,7 +199,7 @@ export class ParticipantAnswerService extends Service {
     return this.chatInputMap[stageId] ?? '';
   }
 
-  updateProfile(config: Partial<ParticipantProfileExtended>) {
+  updateProfile(config: Partial<ParticipantProfileBase>) {
     if (!this.profile) return;
     this.profile = {...this.profile, ...config};
   }

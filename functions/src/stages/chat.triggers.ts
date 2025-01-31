@@ -15,14 +15,15 @@ import {
   AgentConfig,
   AgentGenerationConfig,
   ChatStageConfig,
-  ApiKeyType,
   ExperimenterData,
 } from '@deliberation-lab/utils';
 
 import { app } from '../app';
-import { getGeminiAPIResponse } from '../api/gemini.api';
-import { getOpenAIAPITextCompletionResponse } from '../api/openai.api';
-import { ollamaChat } from '../api/ollama.api';
+import {
+  getAgentResponse,
+  getGeminiResponse,
+  getOllamaResponse
+} from '../agent.utils';
 
 export interface AgentMessage {
   agent: AgentConfig;
@@ -309,42 +310,4 @@ async function hasEndedChat(
     return true; // Indicate that the chat has ended.
   }
   return false;
-}
-
-async function getAgentResponse(data: ExperimenterData, prompt: string, agent: AgentConfig): Promise<ModelResponse> {
-  const keyType = data.apiKeys.activeApiKeyType;
-  let response;
-
-  if (keyType === ApiKeyType.GEMINI_API_KEY) {
-    response =  getGeminiResponse(data, prompt);
-  } else if (keyType === ApiKeyType.OPENAI_API_KEY) {
-    response = getOpenAIAPIResponse(data, agent.model, prompt, agent.generationConfig);
-  } else if (keyType === ApiKeyType.OLLAMA_CUSTOM_URL) {
-    response = await getOllamaResponse(data, prompt);
-  } else {
-    console.error("Error: invalid apiKey type: ", keyType)
-    response = {text: ""};
-  }
-
-  return response
-}
-
-async function getGeminiResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
-  return await getGeminiAPIResponse(data.apiKeys.geminiApiKey, prompt);
-}
-
-async function getOpenAIAPIResponse(
-  data: ExperimenterData, model: string, prompt: string, generationConfig: GenerationConfig
-): Promise<ModelResponse> {
-  return await getOpenAIAPITextCompletionResponse(
-    data.apiKeys.openAIApiKey.apiKey,
-    data.apiKeys.openAIApiKey.baseUrl || null,
-    model,
-    prompt,
-    generationConfig
-  );
-}
-
-async function getOllamaResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
-  return await ollamaChat([prompt], data.apiKeys.ollamaApiKey);
 }

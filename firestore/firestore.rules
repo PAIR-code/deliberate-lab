@@ -28,7 +28,7 @@ service cloud.firestore {
 
     // Function: checks if can edit experiment
     function canEditExperiment(id) {
-      return isExperimenter() && (isExperimentCreator(id) || isPublicExperiment(id) || isExperimentReader(id));
+      return isExperimenter() && (isExperimentCreator(id) || isPublicExperiment(id) || isExperimentReader(id) || isAdmin());
     }
 
     // Function: checks if creator of experiment
@@ -55,7 +55,7 @@ service cloud.firestore {
     // Experiment templates (experimenter only)
     match /experimentTemplates/{templateId} {
       allow list: if isExperimenter();
-      allow get: if isExperimenter() && (isPublic() || isCreator() || isReader() || isAdmin(request.auth.token.email));
+      allow get: if isExperimenter() && (isPublic() || isCreator() || isReader() || isAdmin());
 
       // Experiments can use `writeExperiment`, `deleteExperiment` endpoints
       allow write: if false;
@@ -64,7 +64,7 @@ service cloud.firestore {
     // Agent templates (experimenter only)
     match /agentTemplates/{agentId} {
       allow list: if isExperimenter();
-      allow get: if isExperimenter() && (isPublic() || isCreator() || isReader() || isAdmin(request.auth.token.email));
+      allow get: if isExperimenter() && (isPublic() || isCreator() || isReader() || isAdmin());
       allow write: if isExperimenter() && isCreator();
     }
 

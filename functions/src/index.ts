@@ -10,6 +10,9 @@ export * from './cohort.endpoints';
 export * from './participant.endpoints';
 export * from './participant.triggers';
 
+export * from './agent.endpoints';
+export * from './agent.utils';
+
 export * from './stages/chat.endpoints';
 export * from './stages/chat.triggers';
 
@@ -18,6 +21,7 @@ export * from './stages/chip.triggers';
 export * from './stages/chip.utils';
 
 export * from './stages/ranking.endpoints';
+export * from './stages/ranking.utils';
 
 export * from './stages/survey.endpoints';
 

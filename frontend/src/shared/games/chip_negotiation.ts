@@ -1,4 +1,5 @@
 import {
+  ALTERNATE_PROFILE_SET_ID,
   ProfileType,
   StageConfig,
   StageGame,
@@ -12,12 +13,14 @@ import {
   createMultipleChoiceComprehensionQuestion,
   createPayoutStage,
   createProfileStage,
+  createStageProgressConfig,
   createSurveyStage,
   createTransferStage,
   createTOSStage,
   createStageTextConfig,
   createScaleSurveyQuestion,
   createTextSurveyQuestion,
+  randint,
 } from '@deliberation-lab/utils';
 
 // ****************************************************************************
@@ -46,8 +49,9 @@ export function getChipNegotiationStageConfigs(): StageConfig[] {
   stages.push(CHIP_PROFILE_STAGE);
 
   // Overview stages
-  stages.push(CHIP_INFO_STAGE_OVERVIEW);
+  stages.push(CHIP_INFO_STAGE_OVERVIEW1);
   stages.push(CHIP_INFO_STAGE_OVERVIEW2);
+  stages.push(CHIP_INFO_STAGE_OVERVIEW3);
 
   // Comprehension check
   stages.push(CHIP_COMPREHENSION_CHECK);
@@ -62,16 +66,17 @@ export function getChipNegotiationStageConfigs(): StageConfig[] {
   stages.push(CHIP_COMPREHENSION_CHECK2);
 
   stages.push(CHIP_INFO_STAGE_PAYOUT);
+  stages.push(CHIP_INFO_STAGE_PAYOUT2);
 
-  // First transfer
-  stages.push(CHIP_INITIAL_TRANSFER_STAGE);
+  // Transfer
+  stages.push(TRANSFER_STAGE);
 
   // Round 1
   stages.push(CHIP_NEGOTIATION_STAGE1);
-  stages.push(TRANSFER_STAGE);
-  stages.push(CHIP_INFO_TRANSFER_STAGE);
 
   // Round 2
+  stages.push(CHIP_INFO_PART2);
+  stages.push(CHIP_ALTERNATE_PROFILE_STAGE);
   stages.push(CHIP_NEGOTIATION_STAGE2);
   stages.push(CHIP_PAYOUT_STAGE);
 
@@ -89,7 +94,7 @@ const CHIP_TOS_STAGE = createTOSStage({
   game: StageGame.CHP,
   name: 'Terms of service',
   tosLines: [
-    'Thank you for your interest in this research. If you choose to participate, you will be asked to play negotiation games with other participants. In total, this will take no more than 60 minutes.',
+    'Thank you for your interest in this research. If you choose to participate, you will be asked to play negotiation games with other participants. In total, this will take no more about 45 minutes.',
     '\n**Compensation**',
     'You will be paid $8 for playing the games and completing the survey. You may receive an additional bonus on your performance in the games.',
     '\n**IRB**',
@@ -116,12 +121,23 @@ const CHIP_PROFILE_STAGE = createProfileStage({
   profileType: ProfileType.ANONYMOUS_ANIMAL,
 });
 
+const CHIP_ALTERNATE_PROFILE_STAGE = createProfileStage({
+  id: `profile_${ALTERNATE_PROFILE_SET_ID}`,
+  name: 'View secondary randomly generated profile',
+  descriptions: createStageTextConfig({
+    primaryText:
+      'This identity is how other players will see you during the second game.',
+  }),
+  game: StageGame.CHP,
+  profileType: ProfileType.ANONYMOUS_ANIMAL,
+});
+
 // ****************************************************************************
 // Info stage for chip negotiation
 // ****************************************************************************
 
-const CHIP_INFO_STAGE_OVERVIEW = createInfoStage({
-  id: 'info_overview',
+const CHIP_INFO_STAGE_OVERVIEW1 = createInfoStage({
+  id: 'info_overview1',
   game: StageGame.CHP,
   name: 'Instructions: overview',
   infoLines: [
@@ -134,7 +150,7 @@ const CHIP_INFO_STAGE_OVERVIEW = createInfoStage({
 const CHIP_INFO_STAGE_OVERVIEW2 = createInfoStage({
   id: 'info_overview2',
   game: StageGame.CHP,
-  name: 'Instructions: chip valuations',
+  name: 'Instructions: chip valuations 1',
   infoLines: [
     'You will play this trading game two times, against different groups of participants. In each game, you and the other participants will start with:',
     `* 🔴 ${N_INITIAL_RED_CHIPS} **red** chips`,
@@ -142,11 +158,19 @@ const CHIP_INFO_STAGE_OVERVIEW2 = createInfoStage({
     `* 🔵 ${N_INITIAL_BLUE_CHIPS} **blue** chips`,
     '**Valuations:**',
     'Each 🟢 green chip is worth $0.50 to each participant. However, you will all have different valuations for the red and blue chips, randomly chosen between $0.10 and $1.00. For example, Cat might value 🔴 red chips at $0.30 each and 🔵 blue chips at $0.70 each, while Mouse might value 🔴 red chips at $0.80 each and 🔵 blue chips at $0.30 each.',
-    "You know your own chip valuation and that everyone values 🟢 green chips the same, at $0.50 per chip. However, you do not know the other players' valuations for red and blue chips.",
-    '![Example of chip count table](https://i.imgur.com/ImUM14D.png)',
-    'The table above is shown to you during the game, and provides the number of chips everyone has as well as a reminder of your own valuation.',
     '\n**What this means:**',
-    'Because each participant values the chips differently, there may be good reasons to trade. For instance, if you don’t care much about 🔴 red chips but someone else does, you might offer your red chips to them in exchange for 🔵 blue chips, which you like more. In this way, both you and the other participant can end up with chips that you find more valuable. This is what creates the opportunity to gain from trading.',
+    'Because each participant values the chips differently, there may be good reasons to trade. For instance, if you don’t care much about 🔴 red chips but someone else does, you might offer your red chips to them in exchange for 🔵 blue chips, which you like more. In this way, both you and the other participant can end up with chips that you find more valuable.',
+    "You know your own chip valuation and that everyone values 🟢 green chips the same, at $0.50 per chip. However, you do not know the other players' valuations for red and blue chips.",
+  ],
+});
+
+const CHIP_INFO_STAGE_OVERVIEW3 = createInfoStage({
+  id: 'info_overview3',
+  game: StageGame.CHP,
+  name: 'Instructions: chip valuations 2',
+  infoLines: [
+    'The following table is shown to you during the game. It provides the number of chips everyone has as well as a reminder of your own valuations.',
+    '![Example of chip count table](https://i.imgur.com/ImUM14D.png)',
   ],
 });
 
@@ -191,7 +215,7 @@ export const CHIP_COMPREHENSION_CHECK = createComprehensionStage({
     createMultipleChoiceComprehensionQuestion(
       {
         questionTitle:
-          'True or false: you and the other players value 🟢 green chips at the same amount, $0.50 per chip.',
+          'True or false: you and the other players will always value 🟢 green chips at the same amount, $0.50 per chip.',
         options: [
           createMultipleChoiceItem({id: 'a', text: 'True'}),
           createMultipleChoiceItem({id: 'b', text: 'False'}),
@@ -203,7 +227,7 @@ export const CHIP_COMPREHENSION_CHECK = createComprehensionStage({
     createMultipleChoiceComprehensionQuestion(
       {
         questionTitle:
-          'True or false: you and the other players value 🔵 blue chips at the same amount, $0.50 per chip.',
+          'True or false: you and the other players will always value 🔵 blue chips at the same amount, $0.50 per chip.',
         options: [
           createMultipleChoiceItem({id: 'a', text: 'True'}),
           createMultipleChoiceItem({id: 'b', text: 'False'}),
@@ -334,7 +358,7 @@ const CHIP_INFO_STAGE_GAMEPLAY2 = createInfoStage({
     `2. Specify a certain quantity of chips of a different color to **give** in return`,
     `\n## Trade rules`,
     `* Players cannot offer more chips than they currently hold. For example, if you only have 5 🔴 red chips, you cannot offer 6 🔴 red chips.`,
-    `* Players cannot trade chips of the same color. You cannot trade 🔴 red chips for 🔴 red chips, for example.`,
+    `* Players cannot trade chips of the same color. For example, you cannot trade 🔴 red chips for 🔴 red chips.`,
     '![Example of offering a trade](https://i.imgur.com/Jzah8Ot.png)',
   ],
 });
@@ -372,34 +396,47 @@ const CHIP_INFO_STAGE_GAMEPLAY5 = createInfoStage({
 // ****************************************************************************/
 
 const CHIP_INFO_STAGE_PAYOUT = createInfoStage({
-  id: 'info_payment',
+  id: 'info_payment1',
   game: StageGame.CHP,
   name: 'Payment information',
   infoLines: [
-    'At the end of the study, we will randomly pick **one** of the two negotiation games you played and give you a bonus payment from that game. *If you do not complete both games, you will not receive a bonus payment.*',
-    '\n**Example:**',
-    ' Suppose that for the first game, you initially started with 10 chips in each color, worth (10 * 0.30 + 10 * 0.50 + 10 * 0.70) = **$15.00**.',
+    '## Bonus payment',
+    'At the end of the study, we will randomly pick **one** of the two negotiation games you played and give you a bonus payment from that game.',
+    'There are two important features to remember about the bonus:',
+    '  * The bonus will be equivalent to how much money you earn through trading *beyond* what you start with.',
+    '  * If you do not complete both games, you will not receive a bonus payment.',
+    'In short, you want to make as much money as you can through trading!',
+  ],
+});
+
+const CHIP_INFO_STAGE_PAYOUT2 = createInfoStage({
+  id: 'info_payment2',
+  game: StageGame.CHP,
+  name: 'Payment information examples',
+  infoLines: [
+    '## Bonus payment example calculation',
+    ' Suppose that for the first game, you started with 10 chips of each color, worth (10 * 0.30 + 10 * 0.50 + 10 * 0.70) = **$15.00**.',
     'At the end of that game, you have:',
     '  * 🔴 8 red chips valued at $0.30 each',
     '  * 🟢 7 green chips valued at $0.50 each',
     '  * 🔵 21 blue chips valued at $0.70 each',
     'This adds up to **$20.60**. You would receive $20.60 - $15.00 = **$5.60** as a bonus for the first game.',
     'If you did not increase the value of your chips, you would not receive a bonus.',
-    "\nYour total bonus will be the sum of the first game's bonus and the second game's bonus.",
+    '\n**Your total bonus will be randomly selected from either the first or the second game.**',
     '\nThe exact values will depend on your random chip valuations and your final holdings, so your payment may differ from this example.',
     '\nThis payment is in addition to the $8 base payment for participating.',
   ],
 });
 
-const CHIP_INFO_TRANSFER_STAGE = createInfoStage({
-  id: 'info_transfer',
+const CHIP_INFO_PART2 = createInfoStage({
+  id: 'info_part2',
   game: StageGame.CHP,
   name: 'Instructions for part 2',
   infoLines: [
     '# Congratulations!',
     'You’ve successfully completed your first game! Now, it’s time to play again with all the **same rules**. However, for this second round, please note the following changes:',
-    '* **New players**: You may be playing with different players.',
-    '* **New chip values:** You will receive a different valuation for your chips this time, with the **exception of the Green chip**, which remains the same for everyone.',
+    '* **New profile:** You will be playing as a new profile, and you will be playing against different animal profiles.',
+    '* **New chip values:** You will receive a different valuation for your red and blue chips. The value of the 🟢 green chip will remain the same for everyone ($0.50).',
     'All players participating in this round are also playing for their second time. **Enjoy the game!**',
   ],
 });
@@ -407,20 +444,8 @@ const CHIP_INFO_TRANSFER_STAGE = createInfoStage({
 // ****************************************************************************
 // Transfer stages
 // ****************************************************************************/
-export const CHIP_INITIAL_TRANSFER_STAGE = createTransferStage({
-  id: 'transfer1',
-  game: StageGame.CHP,
-  name: 'Initial transfer stage',
-  descriptions: createStageTextConfig({
-    primaryText:
-      'Please wait on this page as we re-route you to your first game with other participants.',
-  }),
-  enableTimeout: true,
-  timeoutSeconds: 600, // 10 minutes
-});
-
 export const TRANSFER_STAGE = createTransferStage({
-  id: 'transfer2',
+  id: 'transfer',
   game: StageGame.CHP,
   name: 'Transfer stage',
   descriptions: createStageTextConfig({
@@ -468,7 +493,7 @@ const CHIPS = [
 ];
 
 const CHIP_NEGOTIATION_STAGE1_ID = 'negotiation1';
-const CHIP_NEGOTIATION_STAGE2_ID = 'negotiation2';
+const CHIP_NEGOTIATION_STAGE2_ID = `negotiation2_${ALTERNATE_PROFILE_SET_ID}`;
 
 const CHIP_NEGOTIATION_STAGE1 = createChipStage({
   id: CHIP_NEGOTIATION_STAGE1_ID,
@@ -478,6 +503,7 @@ const CHIP_NEGOTIATION_STAGE1 = createChipStage({
     infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
   }),
   chips: CHIPS,
+  progress: createStageProgressConfig({ minParticipants: 3 }),
 });
 
 const CHIP_NEGOTIATION_STAGE2 = createChipStage({
@@ -493,21 +519,29 @@ const CHIP_NEGOTIATION_STAGE2 = createChipStage({
 // ****************************************************************************
 // Payout stage
 // ****************************************************************************
+export function createPayoutItems() {
+  const game1Selected = randint(0, 1) === 1;
+
+  const game1 = createChipPayoutItem({
+    isActive: game1Selected,
+    name: 'Payout from game 1 (one game was randomly selected)',
+    stageId: CHIP_NEGOTIATION_STAGE1_ID,
+    baseCurrencyAmount: 0,
+  });
+
+  const game2 = createChipPayoutItem({
+    isActive: !game1Selected,
+    name: 'Payout from game 2 (one game was randomly selected)',
+    stageId: CHIP_NEGOTIATION_STAGE2_ID,
+    baseCurrencyAmount: 0,
+  });
+  return [game1, game2];
+}
+
 const CHIP_PAYOUT_STAGE = createPayoutStage({
-  id: 'payout',
+  id: 'random_payout',
   game: StageGame.CHP,
-  payoutItems: [
-    createChipPayoutItem({
-      name: 'Payout from game 1',
-      stageId: CHIP_NEGOTIATION_STAGE1_ID,
-      baseCurrencyAmount: 0,
-    }),
-    createChipPayoutItem({
-      name: 'Payout from game 2',
-      stageId: CHIP_NEGOTIATION_STAGE2_ID,
-      baseCurrencyAmount: 0,
-    }),
-  ],
+  payoutItems: createPayoutItems(),
 });
 
 // ****************************************************************************
@@ -528,7 +562,7 @@ const CHIP_SURVEY_STAGE = createSurveyStage({
     }),
     createScaleSurveyQuestion({
       questionTitle:
-        "On a scale from 1 to 10, how would you rate your trading strategy, where 1 is highly **competive** (focused mainly on your own gains) and 10 is highly **collaborative** (focused on other players's potential gains and mutual benefits?",
+        "On a scale from 1 to 10, how would you rate your trading strategy, where 1 is highly **competitive** (focused mainly on your own gains) and 10 is highly **collaborative** (focused on other players's potential gains and mutual benefits?",
       upperText: 'Very aggressive',
       lowerText: 'Not at all aggressive',
     }),

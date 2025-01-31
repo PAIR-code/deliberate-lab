@@ -1,5 +1,5 @@
 import '../../pair-components/tooltip';
-import '../participant_profile/profile_avatar';
+import '../participant_profile/profile_display';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -7,15 +7,12 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
+import {ParticipantService} from '../../services/participant.service';
 import {RouterService} from '../../services/router.service';
 
 import {
   ParticipantProfile,
 } from '@deliberation-lab/utils';
-import {
-  getParticipantName,
-  getParticipantPronouns
-} from '../../shared/participant.utils';
 
 import {styles} from './progress_stage_completed.scss';
 
@@ -25,10 +22,11 @@ export class Progress extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly cohortService = core.getService(CohortService);
+  private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 
   override render() {
-    const stageId = this.routerService.activeRoute.params['stage'];
+    const stageId = this.participantService.currentStageViewId ?? '';
     const completed = this.cohortService.getStageCompletedParticipants(stageId);
 
     return html`
@@ -42,14 +40,15 @@ export class Progress extends MobxLitElement {
   }
 
   private renderParticipant(participant: ParticipantProfile) {
+    const stageId = this.participantService.currentStageViewId ?? '';
+
     return html`
-      <profile-avatar
+      <participant-profile-display
         class="participant"
-        .small=${true}
-        .emoji=${participant.avatar}
-        .tooltip=${getParticipantName(participant)}
-      >
-      </profile-avatar>
+        .profile=${participant}
+        .stageId=${stageId}
+        displayType="progress">
+      </participant-profile-display>
     `;
   }
 

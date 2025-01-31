@@ -1,5 +1,5 @@
 import '../../pair-components/tooltip';
-import '../participant_profile/profile_avatar';
+import '../participant_profile/profile_display';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -7,15 +7,11 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
-import {RouterService} from '../../services/router.service';
+import {ParticipantService} from '../../services/participant.service';
 
 import {
   ParticipantProfile,
 } from '@deliberation-lab/utils';
-import {
-  getParticipantName,
-  getParticipantPronouns
-} from '../../shared/participant.utils';
 
 import {styles} from './progress_stage_completed.scss';
 
@@ -27,14 +23,14 @@ export class Progress extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly cohortService = core.getService(CohortService);
-  private readonly routerService = core.getService(RouterService);
+  private readonly participantService = core.getService(ParticipantService);
 
   @property() discussionId: string|null = null;
 
   override render() {
     if (!this.discussionId) return nothing;
 
-    const stageId = this.routerService.activeRoute.params['stage'];
+    const stageId = this.participantService.currentStageViewId ?? '';
     const { completed, notCompleted } =
       this.cohortService.getParticipantsByChatDiscussionCompletion(
         stageId, this.discussionId
@@ -52,13 +48,12 @@ export class Progress extends MobxLitElement {
 
   private renderParticipant(participant: ParticipantProfile) {
     return html`
-      <profile-avatar
+      <participant-profile-display
         class="participant"
-        .small=${true}
-        .emoji=${participant.avatar}
-        .tooltip=${getParticipantName(participant)}
+        .profile=${participant}
+        displayType="progress"
       >
-      </profile-avatar>
+      </participant-profile-display>
     `;
   }
 

@@ -12,24 +12,12 @@
   @include typescale.app-small;
 
   align-items: center;
-  background: var(--md-sys-color-surface-bright);
+  background: var(--md-sys-color-surface);
   color: var(--md-sys-color-on-surface);
   display: flex;
   flex-direction: column;
   justify-content: center;
   height: 100%;
-}
-
-.size--small {
-  @include typescale.app-small;
-}
-
-.size--medium {
-  @include typescale.app-medium;
-}
-
-.size--large {
-  @include typescale.app-large;
 }
 
 .mode--light {
@@ -60,7 +48,7 @@ main {
 .content-wrapper {
   @include common.flex-column;
   align-items: center;
-  background: var(--md-sys-color-surface-variant);
+  background: var(--md-sys-color-surface);
   flex-grow: 1;
   overflow: auto;
 }
@@ -95,7 +83,7 @@ main {
 
 .error {
   @include common.flex-column;
-  background: var(--md-sys-color-surface);
+  background: var(--md-sys-color-surface-variant);
   border-radius: common.$spacing-medium;
   gap: common.$spacing-small;
   max-width: 600px;

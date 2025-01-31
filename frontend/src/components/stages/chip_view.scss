@@ -13,14 +13,22 @@
   overflow: auto;
 }
 
-.panel-left {
-  max-width: 45%;
-}
-
 .panel {
   @include common.flex-column;
   flex-grow: 1;
   gap: common.$spacing-xl;
+  overflow: auto;
+  padding: common.$main-content-padding;
+
+  &.left {
+    flex-shrink: 0;
+    gap: 0;
+    padding: 0;
+    width: 65%;
+  }
+}
+
+.subpanel {
   overflow: auto;
   padding: common.$main-content-padding;
 }
@@ -46,7 +54,7 @@
 }
 
 .status {
-  background: var(--md-sys-color-surface);
+  background: var(--md-sys-color-surface-variant);
   border-radius: common.$spacing-medium;
   padding: common.$spacing-medium;
 }
@@ -70,14 +78,13 @@
 
 .offer-panel {
   @include common.flex-column;
-  background-color: var(--md-sys-color-surface); /* Light gray background */
-  border-radius: common.$spacing-small;
+  background-color: var(--md-sys-color-surface-variant);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  flex-shrink: 0;
   gap: common.$spacing-medium;
-  padding: common.$spacing-medium; /* Padding for inner spacing */
-  box-shadow: var(--md-sys-color-box-shadow-3); /* Subtle shadow for depth */
-  margin-bottom: common.$spacing-medium;
-  height: 50%;
-  justify-content: space-between;
+  height: 240px;
+  overflow: auto;
+  padding: common.$main-content-padding;
 }
 
 .offer-description {
@@ -96,13 +103,6 @@
   width: 80px;
 }
 
-.payout-panel {
-  height: 15%;
-}
-.warnings-panel {
-  height: 30%;
-}
-
 select {
   @include typescale.body-small;
   background: none;
@@ -112,10 +112,15 @@ select {
   padding: common.$spacing-small;
 }
 
+.warnings-panel {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
 .warning {
+  background: var(--md-sys-color-secondary-container);
+  border-radius: common.$spacing-medium;
   padding: common.$spacing-small;
-  font-style: italic;
-  background-color: var(--md-sys-color-tertiary-container);
 }
 
 .divider {
