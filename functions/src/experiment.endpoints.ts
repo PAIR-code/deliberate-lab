@@ -120,6 +120,7 @@ export const deleteExperiment = onCall(async (request) => {
 // Input structure: { experimentId, cohortId, isLock }                       //
 // Validation: utils/src/experiment.validation.ts                            //
 // ************************************************************************* //
+// TODO: Move isLock under CohortConfig instead of Experiment config?
 export const setExperimentCohortLock = onCall(async (request) => {
   // TODO: Only allow creator, admins, and readers to set lock
   await AuthGuard.isExperimenter(request);
