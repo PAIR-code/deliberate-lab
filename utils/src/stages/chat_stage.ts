@@ -10,6 +10,7 @@ import {
   createStageProgressConfig,
 } from './stage';
 import { ParticipantProfileBase, createParticipantProfileBase } from '../participant';
+import { AgentGenerationConfig } from '../agent';
 
 /** Group chat stage types and functions. */
 
@@ -98,19 +99,6 @@ export interface AgentMediatorChatMessage extends BaseChatMessage {
   explanation: string;
 }
 
-
-export interface CustomRequestBodyField {
-  name: string;
-  value: string;
-}
-
-export interface AgentGenerationConfig {
-  temperature: number;
-  topP: number;
-  frequencyPenalty: number;
-  presencePenalty: number;
-  customRequestBodyFields: CustomRequestBodyField[];
-}
 
 /** LLM agent config. */
 export interface AgentConfig {
