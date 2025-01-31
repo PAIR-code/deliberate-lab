@@ -21,7 +21,10 @@ import {
   createRankingStagePublicData,
 } from './ranking_stage';
 import { InfoStageConfig } from './info_stage';
-import { PayoutStageConfig } from './payout_stage';
+import {
+  PayoutStageConfig,
+  PayoutStageParticipantAnswer
+} from './payout_stage';
 import { ProfileStageConfig } from './profile_stage';
 import { RevealStageConfig } from './reveal_stage';
 import {
@@ -123,6 +126,7 @@ export type StageParticipantAnswer =
  | ChatStageParticipantAnswer
  | ChipStageParticipantAnswer
  | ComprehensionStageParticipantAnswer
+ | PayoutStageParticipantAnswer
  | RankingStageParticipantAnswer
  | SurveyStageParticipantAnswer
  | SurveyPerParticipantStageParticipantAnswer;

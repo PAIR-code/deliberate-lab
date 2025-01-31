@@ -2,6 +2,7 @@ import { generateId } from '../shared';
 import { ParticipantProfile } from '../participant';
 import {
   BaseStageConfig,
+  BaseStageParticipantAnswer,
   StageConfig,
   StageGame,
   StageKind,
@@ -44,6 +45,11 @@ export interface BasePayoutItem {
   stageId: string;
   // Fixed payout added if stage is completed
   baseCurrencyAmount: number;
+  // Only select one payout item for each (non-empty) random selection ID
+  // e.g., if two payout items have random selection ID 'survival-task',
+  // one of them will be randomly selected (on participant creation).
+  // Leave empty if item should always be selected.
+  randomSelectionId: string;
 }
 
 export enum PayoutItemType {
@@ -67,6 +73,13 @@ export interface SurveyPayoutItem extends BasePayoutItem {
   rankingStageId: string | null;
   // Map of question ID to payout amount if correct (or null if no payout)
   questionMap: Record<string, number | null>;
+}
+
+/** Participant settings for payout stage (e.g., random selection). */
+export interface PayoutStageParticipantAnswer extends BaseStageParticipantAnswer {
+  kind: StageKind.PAYOUT;
+  // maps from random selection ID to ID of randomly selected payout item
+  randomSelectionMap: Record<string, string>;
 }
 
 /** Payout result config (containing payout information for each item).
@@ -154,6 +167,7 @@ export function createDefaultPayoutItem(
     isActive: config.isActive ?? true,
     stageId: config.stageId ?? '',
     baseCurrencyAmount: config.baseCurrencyAmount ?? 0,
+    randomSelectionId: config.randomSelectionId ?? '',
   };
 }
 
@@ -167,6 +181,7 @@ export function createChipPayoutItem(config: Partial<ChipPayoutItem> = {}): Chip
     isActive: config.isActive ?? true,
     stageId: config.stageId ?? '',
     baseCurrencyAmount: config.baseCurrencyAmount ?? 0,
+    randomSelectionId: config.randomSelectionId ?? '',
   };
 }
 
@@ -180,27 +195,82 @@ export function createSurveyPayoutItem(config: Partial<SurveyPayoutItem> = {}): 
     isActive: config.isActive ?? true,
     stageId: config.stageId ?? '',
     baseCurrencyAmount: config.baseCurrencyAmount ?? 0,
+    randomSelectionId: config.randomSelectionId ?? '',
     rankingStageId: config.rankingStageId ?? null,
     questionMap: config.questionMap ?? {},
   };
 }
 
+/** Create payout participant answer. */
+export function createPayoutStageParticipantAnswer(
+  stage: PayoutStageConfig
+): PayoutStageParticipantAnswer {
+  return {
+    id: stage.id,
+    kind: StageKind.PAYOUT,
+    randomSelectionMap: generatePayoutRandomSelectionMap(stage.payoutItems)
+  };
+}
+
+/**
+  * Return a map of random selection ID to the ID of a randomly selected payout
+  * item (out of all the payout items with that random selection ID)
+  */
+export function generatePayoutRandomSelectionMap(
+  payoutItems: PayoutItem[]
+): Record<string, string> {
+  const randomSelectionGroups: Record<string, string[]> = {};
+  const payoutMap: Record<string, string> = {};
+
+  // Group payout items by their random selection IDs (if applicable)
+  payoutItems.forEach((item) => {
+    const randomSelectionId = item.randomSelectionId;
+    if (!randomSelectionId) return;
+
+    if (!randomSelectionGroups[randomSelectionId]) {
+      randomSelectionGroups[randomSelectionId] = [];
+    }
+    randomSelectionGroups[randomSelectionId].push(item.id);
+  });
+
+  // For each random selection ID, randomly select one payout item
+  Object.keys(randomSelectionGroups).forEach((groupId) => {
+    const items = randomSelectionGroups[groupId];
+    const randomItem = items[Math.floor(Math.random() * items.length)];
+    payoutMap[groupId] = randomItem;
+  });
+
+  return payoutMap;
+}
+
 /** Calculate payout results. */
 export function calculatePayoutResult(
   payoutConfig: PayoutStageConfig,
+  // Participant answer map contains random selection of relevant payout items
+  payoutAnswer: PayoutStageParticipantAnswer,
   stageConfigMap: Record<string, StageConfig>, // stage ID to config
   publicDataMap: Record<string, StagePublicData>, // stage ID to public data
   profile: ParticipantProfile, // current participant profile
 ): PayoutResultConfig {
   let results: PayoutItemResult[] = [];
 
-  // For each payout item, add result to list if item is active
+  // For each payout item, only add result to list if item is active;
+  // if the payout item has a randomSelectionId,
+  // only add the item if it was randomly selected for that participant
   payoutConfig.payoutItems.forEach((item) => {
-    if (item.isActive) {
-      const result = calculatePayoutItemResult(item, stageConfigMap, publicDataMap, profile);
-      if (result) {
-        results.push(result);
-      }
+    if (!item.isActive) {
+      return;
+    }
+    if (
+      item.randomSelectionId !== '' &&
+      payoutAnswer.randomSelectionMap[item.randomSelectionId] !== item.id
+    ) {
+      return;
+    }
+    // Item is active and (if randomSelectionId) is selected
+    const result = calculatePayoutItemResult(item, stageConfigMap, publicDataMap, profile);
+    if (result) {
+      results.push(result);
     }
   });
 

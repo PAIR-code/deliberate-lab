@@ -230,7 +230,8 @@ export class ParticipantView extends MobxLitElement {
         `;
       case StageKind.PAYOUT:
         return html`
-          <payout-participant-view .stage=${stage}></payout-participant-view>
+          <payout-participant-view .stage=${stage} .answer=${answer}>
+          </payout-participant-view>
         `;
       case StageKind.REVEAL:
         return html`

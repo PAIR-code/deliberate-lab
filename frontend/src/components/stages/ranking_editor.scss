@@ -34,7 +34,7 @@ md-checkbox {
   @include common.flex-row-align-center;
   justify-content: space-between;
   padding: common.$spacing-medium;
-  background-color: var(--md-sys-color-surface);
+  background-color: var(--md-sys-color-surface-variant);
   border-radius: common.$spacing-medium;
 
   pr-textarea {

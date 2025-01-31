@@ -18,7 +18,7 @@
 
 .question {
   @include common.flex-column;
-  background: var(--md-sys-color-surface);
+  background: var(--md-sys-color-surface-variant);
   border-radius: common.$spacing-medium;
   gap: common.$spacing-medium;
   padding: common.$spacing-xl;

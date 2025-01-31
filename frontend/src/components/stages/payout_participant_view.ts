@@ -8,6 +8,7 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 import {
   PayoutStageConfig,
+  PayoutStageParticipantAnswer
 } from '@deliberation-lab/utils';
 
 import {styles} from './payout_view.scss';
@@ -18,6 +19,7 @@ export class PayoutView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   @property() stage: PayoutStageConfig | null = null;
+  @property() answer: PayoutStageParticipantAnswer | null = null;
 
   override render() {
     if (!this.stage) {
@@ -26,7 +28,8 @@ export class PayoutView extends MobxLitElement {
 
     return html`
       <stage-description .stage=${this.stage}></stage-description>
-      <payout-summary-view .stage=${this.stage}></payout-summary-view>
+      <payout-summary-view .stage=${this.stage} .answer=${this.answer}>
+      </payout-summary-view>
       <stage-footer>
         ${this.stage.progress.showParticipantProgress
           ? html`<progress-stage-completed></progress-stage-completed>`

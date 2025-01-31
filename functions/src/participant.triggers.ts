@@ -5,6 +5,7 @@ import {
   StageConfig,
   StageKind,
   createChipStageParticipantAnswer,
+  createPayoutStageParticipantAnswer
 } from '@deliberation-lab/utils';
 
 import { app } from './app';
@@ -78,6 +79,10 @@ export const setParticipantStageData = onDocumentCreated(
             publicChipData.participantChipValueMap[publicId] = chipAnswer.chipValueMap;
             transaction.set(publicChipDoc, publicChipData);
             break;
+          case StageKind.PAYOUT:
+            // If payout stage, set random selection of payout items
+            const payoutAnswer = createPayoutStageParticipantAnswer(stage);
+            transaction.set(stageDoc, payoutAnswer);
           default:
             break;
         }

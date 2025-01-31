@@ -27,6 +27,7 @@ import {
   ParticipantProfileExtended,
   PayoutItemType,
   PayoutStageConfig,
+  PayoutStageParticipantAnswer,
   RankingStageConfig,
   RankingStagePublicData,
   StageConfig,
@@ -82,6 +83,13 @@ export function downloadJSON(data: object, filename: string) {
 
   const blob = new Blob([jsonData], {type: 'application/json'});
   downloadBlob(blob, filename);
+}
+
+/** Make text CSV-compatibile. */
+export function toCSV(text: string|null) {
+  if (!text) return '';
+
+  return text.replaceAll(',', ''); // remove commas
 }
 
 // ****************************************************************************
@@ -313,15 +321,15 @@ export function getChipNegotiationTurnColumns(
     return `${index + 1}`;
   };
 
-  columns.push(!turn ? 'Cohort' : game.cohortName);
-  columns.push(!turn ? 'Stage ID' : game.stageName);
+  columns.push(!turn ? 'Cohort' : toCSV(game.cohortName));
+  columns.push(!turn ? 'Stage ID' : toCSV(game.stageName));
   columns.push(!turn ? 'Round' : roundNumber.toString());
   columns.push(!turn ? 'Turn (player number)' : getPlayerNumber());
   columns.push(!turn ? 'Turn (sender ID)' : senderId);
   columns.push(
     !turn
       ? 'Turn (sender name)'
-      : data.participantMap[senderId]?.profile.name ?? ''
+      : toCSV(data.participantMap[senderId]?.profile.name) ?? ''
   );
   columns.push(
     !turn
@@ -504,13 +512,13 @@ export function getChipNegotiationPlayerMapCSV(
         : data.participantMap[player]?.profile.publicId ?? ''
     );
     columns.push(
-      !player ? 'Name' : data.participantMap[player]?.profile.name ?? ''
+      !player ? 'Name' : toCSV(data.participantMap[player]?.profile.name)
     );
     columns.push(
-      !player ? 'Avatar' : data.participantMap[player]?.profile.avatar ?? ''
+      !player ? 'Avatar' : toCSV(data.participantMap[player]?.profile.avatar)
     );
     columns.push(
-      !player ? 'Pronouns' : data.participantMap[player]?.profile.pronouns ?? ''
+      !player ? 'Pronouns' : toCSV(data.participantMap[player]?.profile.pronouns)
     );
 
     // Add column for each game
@@ -927,13 +935,13 @@ export function getParticipantProfileCSVColumns(
   columns.push(!profile ? 'Prolific ID' : profile.prolificId ?? '');
 
   // Profile name
-  columns.push(!profile ? 'Name' : profile.name ?? '');
+  columns.push(!profile ? 'Name' : toCSV(profile.name));
 
   // Profile avatar
-  columns.push(!profile ? 'Avatar' : profile.avatar ?? '');
+  columns.push(!profile ? 'Avatar' : toCSV(profile.avatar));
 
   // Profile pronouns
-  columns.push(!profile ? 'Pronouns' : profile.pronouns ?? '');
+  columns.push(!profile ? 'Pronouns' : toCSV(profile.pronouns));
 
   // Current status
   columns.push(!profile ? 'Current status' : profile.currentStatus);
@@ -985,10 +993,16 @@ export function getPayoutStageCSVColumns(
   const cohortId = participant ? participant.profile.currentCohortId : null;
   const publicDataMap = cohortId ? data.cohortMap[cohortId]?.dataMap : {};
 
+  // Get participant answer (which specifies which random selection
+  // payout items to use)
+  const answer = !participant ? null :
+    participant.answerMap[payoutStage.id] as PayoutStageParticipantAnswer;
+
   // Get payout results
-  const resultConfig = participant
+  const resultConfig = participant && answer
     ? calculatePayoutResult(
         payoutStage,
+        answer,
         data.stageMap,
         publicDataMap,
         participant.profile
@@ -1001,6 +1015,9 @@ export function getPayoutStageCSVColumns(
 
     const resultItem =
       resultConfig?.results.find((result) => result.id === item.id) ?? null;
+
+    // Name of payout item
+    const name = `${toCSV(item?.name)} (${item?.id})`;
 
     // Column for amount earned if stage completed
     columns.push(
@@ -1015,7 +1032,7 @@ export function getPayoutStageCSVColumns(
       // (or null if using current participant's answers)
       columns.push(
         !participant
-          ? `Ranking stage used for payout- ${name} - Stage ${payoutStage.id}`
+          ? `Ranking stage used for payout - ${name} - Stage ${payoutStage.id}`
           : item.rankingStageId ?? ''
       );
 
@@ -1033,7 +1050,7 @@ export function getPayoutStageCSVColumns(
               : null;
           columns.push(
             !participant
-              ? `Correct answer payout - ${question.questionTitle} - Stage ${payoutStage.id}`
+              ? `Correct answer payout - "${toCSV(question.questionTitle)}" - ${name} - Stage ${payoutStage.id}`
               : questionResult?.amountEarned.toString() ?? ''
           );
         }
@@ -1132,8 +1149,8 @@ export function getSurveyStageCSVColumns(
           answer?.kind === SurveyQuestionKind.TEXT ? answer?.answer : '';
         columns.push(
           !participant
-            ? `${question.questionTitle} - Survey ${surveyStage.id}`
-            : textAnswer
+            ? `"${toCSV(question.questionTitle)}" - Survey ${surveyStage.id}`
+            : toCSV(textAnswer)
         );
         break;
       case SurveyQuestionKind.CHECK:
@@ -1143,7 +1160,7 @@ export function getSurveyStageCSVColumns(
             : '';
         columns.push(
           !participant
-            ? `${question.questionTitle} - Survey ${surveyStage.id}`
+            ? `"${toCSV(question.questionTitle)}" - Survey ${surveyStage.id}`
             : checkAnswer
         );
         break;
@@ -1156,9 +1173,9 @@ export function getSurveyStageCSVColumns(
         question.options.forEach((item, index) => {
           columns.push(
             !participant
-              ? `Option ${index + 1} (${item.id}) - ${
-                  question.questionTitle
-                } - Survey ${surveyStage.id}`
+              ? `Option ${index + 1} (${item.id}) - "${
+                  toCSV(question.questionTitle)
+                }" - Survey ${surveyStage.id}`
               : item.text
           );
         });
@@ -1166,7 +1183,7 @@ export function getSurveyStageCSVColumns(
         if (question.correctAnswerId) {
           columns.push(
             !participant
-              ? `Correct answer - ${question.questionTitle} - Survey ${surveyStage.id}`
+              ? `Correct answer - "${toCSV(question.questionTitle)}" - Survey ${surveyStage.id}`
               : question.options.find(
                   (item) => item.id === question.correctAnswerId
                 )?.text ?? ''
@@ -1175,20 +1192,20 @@ export function getSurveyStageCSVColumns(
         // Add column for participant answer ID
         columns.push(
           !participant
-            ? `Participant answer (ID) - ${question.questionTitle} - Survey ${surveyStage.id}`
+            ? `Participant answer (ID) - "${toCSV(question.questionTitle)}" - Survey ${surveyStage.id}`
             : mcAnswer
         );
         // Add column for participant text answer
         columns.push(
           !participant
-            ? `Participant answer (text) - ${question.questionTitle} - Survey ${surveyStage.id}`
+            ? `Participant answer (text) - "${toCSV(question.questionTitle)}" - Survey ${surveyStage.id}`
             : question.options.find((item) => item.id === mcAnswer)?.text ?? ''
         );
         // If correct answer, add column for if answer was correct
         if (question.correctAnswerId) {
           columns.push(
             !participant
-              ? `Is participant correct? - ${question.questionTitle} - Survey ${surveyStage.id}`
+              ? `Is participant correct? - "${toCSV(question.questionTitle)}" - Survey ${surveyStage.id}`
               : (mcAnswer === question.correctAnswerId).toString()
           );
         }
@@ -1200,7 +1217,7 @@ export function getSurveyStageCSVColumns(
             : '';
         columns.push(
           !participant
-            ? `${question.questionTitle} - Survey ${surveyStage.id}`
+            ? `"${toCSV(question.questionTitle)}" - Survey ${surveyStage.id}`
             : scaleAnswer
         );
         break;
@@ -1236,8 +1253,8 @@ export function getSurveyPerParticipantStageCSVColumns(
             answer?.kind === SurveyQuestionKind.TEXT ? answer?.answer : '';
           columns.push(
             !participant
-              ? `${question.questionTitle} - ${participantId} - Per-Participant Survey ${stage.id}`
-              : textAnswer
+              ? `"${toCSV(question.questionTitle)}" - ${participantId} - Per-Participant Survey ${stage.id}`
+              : toCSV(textAnswer)
           );
           break;
         case SurveyQuestionKind.CHECK:
@@ -1247,7 +1264,7 @@ export function getSurveyPerParticipantStageCSVColumns(
               : '';
           columns.push(
             !participant
-              ? `${question.questionTitle} - ${participantId} - Per-Participant Survey ${stage.id}`
+              ? `"${toCSV(question.questionTitle)}" - ${participantId} - Per-Participant Survey ${stage.id}`
               : checkAnswer
           );
           break;
@@ -1260,9 +1277,9 @@ export function getSurveyPerParticipantStageCSVColumns(
           question.options.forEach((item, index) => {
             columns.push(
               !participant
-                ? `Option ${index + 1} (${item.id}) - ${
-                    question.questionTitle
-                  } - ${participantId} - Per-Participant Survey ${stage.id}`
+                ? `Option ${index + 1} (${item.id}) - "${
+                    toCSV(question.questionTitle)
+                  }" - ${participantId} - Per-Participant Survey ${stage.id}`
                 : item.text
             );
           });
@@ -1270,7 +1287,7 @@ export function getSurveyPerParticipantStageCSVColumns(
           if (question.correctAnswerId) {
             columns.push(
               !participant
-                ? `Correct answer - ${question.questionTitle} - ${participantId} - Per-Participant Survey ${stage.id}`
+                ? `Correct answer - "${toCSV(question.questionTitle)}" - ${participantId} - Per-Participant Survey ${stage.id}`
                 : question.options.find(
                     (item) => item.id === question.correctAnswerId
                   )?.text ?? ''
@@ -1279,13 +1296,13 @@ export function getSurveyPerParticipantStageCSVColumns(
           // Add column for participant answer ID
           columns.push(
             !participant
-              ? `Participant answer (ID) - ${question.questionTitle} - ${participantId} - Per-Participant Survey ${stage.id}`
+              ? `Participant answer (ID) - "${toCSV(question.questionTitle)}" - ${participantId} - Per-Participant Survey ${stage.id}`
               : mcAnswer
           );
           // Add column for participant text answer
           columns.push(
             !participant
-              ? `Participant answer (text) - ${question.questionTitle} - ${participantId} - Per-Participant Survey ${stage.id}`
+              ? `Participant answer (text) - "${toCSV(question.questionTitle)}" - ${participantId} - Per-Participant Survey ${stage.id}`
               : question.options.find((item) => item.id === mcAnswer)?.text ??
                   ''
           );
@@ -1293,7 +1310,7 @@ export function getSurveyPerParticipantStageCSVColumns(
           if (question.correctAnswerId) {
             columns.push(
               !participant
-                ? `Is participant correct? - ${question.questionTitle} - ${participantId} - Per-Participant Survey ${stage.id}`
+                ? `Is participant correct? - "${toCSV(question.questionTitle)}" - ${participantId} - Per-Participant Survey ${stage.id}`
                 : (mcAnswer === question.correctAnswerId).toString()
             );
           }
@@ -1305,7 +1322,7 @@ export function getSurveyPerParticipantStageCSVColumns(
               : '';
           columns.push(
             !participant
-              ? `${question.questionTitle} - ${participantId} - Per-Participant Survey ${stage.id}`
+              ? `"${toCSV(question.questionTitle)}" - ${participantId} - Per-Participant Survey ${stage.id}`
               : scaleAnswer
           );
           break;
@@ -1346,16 +1363,16 @@ export function getChatMessageCSVColumns(
   columns.push(!message ? 'Participant public ID' : publicId);
 
   // Profile name
-  columns.push(!message ? 'Sender name' : message.profile.name ?? '');
+  columns.push(!message ? 'Sender name' : toCSV(message.profile.name));
 
   // Profile avatar
-  columns.push(!message ? 'Sender avatar' : message.profile.avatar ?? '');
+  columns.push(!message ? 'Sender avatar' : toCSV(message.profile.avatar));
 
   // Profile pronouns
-  columns.push(!message ? 'Sender pronouns' : message.profile.pronouns ?? '');
+  columns.push(!message ? 'Sender pronouns' : toCSV(message.profile.pronouns));
 
   // Message content
-  columns.push(!message ? 'Message content' : message.message);
+  columns.push(!message ? 'Message content' : toCSV(message.message));
 
   return columns;
 }

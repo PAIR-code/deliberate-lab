@@ -27,8 +27,9 @@ import { StageConfig } from './stages/stage';
   * VERSION 10 - add baseCurrencyAmount to PayoutItemResult (PR #384)
   * VERSION 11 - add anonymous profile map to ParticipantProfile (PR #391)
   * VERSION 12 - add cohortLockMap to Experiment (PR #402)
+  * VERSION 13 - add randomSelectionId to payout stage (PR #430)
   */
-export const EXPERIMENT_VERSION_ID = 12;
+export const EXPERIMENT_VERSION_ID = 13;
 
 /** Experiment. */
 export interface Experiment {

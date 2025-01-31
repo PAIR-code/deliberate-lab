@@ -62,7 +62,7 @@
 
 .payout-item {
   @include common.flex-column;
-  background: var(--md-sys-color-surface);
+  background: var(--md-sys-color-surface-variant);
   border-radius: common.$spacing-medium;
   gap: common.$spacing-xl;
   padding: common.$spacing-large;

@@ -520,17 +520,19 @@ const CHIP_NEGOTIATION_STAGE2 = createChipStage({
 // Payout stage
 // ****************************************************************************
 export function createPayoutItems() {
-  const game1Selected = randint(0, 1) === 1;
+  // Only one payout item with this ID will be selected (at random)
+  // for each participant
+  const RANDOM_SELECTION_ID = 'negotiation-payout';
 
   const game1 = createChipPayoutItem({
-    isActive: game1Selected,
+    randomSelectionId: RANDOM_SELECTION_ID,
     name: 'Payout from game 1 (one game was randomly selected)',
     stageId: CHIP_NEGOTIATION_STAGE1_ID,
     baseCurrencyAmount: 0,
   });
 
   const game2 = createChipPayoutItem({
-    isActive: !game1Selected,
+    randomSelectionId: RANDOM_SELECTION_ID,
     name: 'Payout from game 2 (one game was randomly selected)',
     stageId: CHIP_NEGOTIATION_STAGE2_ID,
     baseCurrencyAmount: 0,

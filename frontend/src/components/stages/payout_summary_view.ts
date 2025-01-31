@@ -18,6 +18,7 @@ import {
   PayoutItem,
   PayoutItemType,
   PayoutStageConfig,
+  PayoutStageParticipantAnswer,
   PayoutResultConfig,
   PayoutItemResult,
   StageConfig,
@@ -42,14 +43,16 @@ export class PayoutView extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
 
   @property() stage: PayoutStageConfig | null = null;
+  @property() answer: PayoutStageParticipantAnswer | null = null;
 
   override render() {
-    if (!this.stage || !this.participantService.profile) {
+    if (!this.stage || !this.answer || !this.participantService.profile) {
       return nothing;
     }
 
     const resultConfig = calculatePayoutResult(
       this.stage,
+      this.answer,
       this.experimentService.stageConfigMap,
       this.cohortService.stagePublicDataMap,
       this.participantService.profile
@@ -111,7 +114,13 @@ export class PayoutView extends MobxLitElement {
     item: DefaultPayoutItemResult,
     currency: PayoutCurrency
   ) {
-    return html` ${this.renderBaseAmountEarned(item, currency)} `;
+    return html`
+      <div class="scoring-bundle">
+        <h2>${item.name}</h2>
+        <div class="scoring-description">${item.description}</div>
+        ${this.renderBaseAmountEarned(item, currency)}
+      </div>
+    `;
   }
 
   private renderChipPayoutItemResult(

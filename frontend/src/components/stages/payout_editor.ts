@@ -387,15 +387,15 @@ export class PayoutEditor extends MobxLitElement {
   private renderBasePayoutEditor(item: PayoutItem, index: number) {
     if (!this.stage) return nothing;
 
-    const updateIsActive = () => {
-      const isActive = !item.isActive;
-      this.updatePayoutItem({...item, isActive}, index);
-    };
-
     const updateName = (e: InputEvent) => {
       const name = (e.target as HTMLTextAreaElement).value;
       this.updatePayoutItem({...item, name}, index);
     };
+
+    const updateRandomSelectionId = (e: InputEvent) => {
+      const randomSelectionId = (e.target as HTMLTextAreaElement).value;
+      this.updatePayoutItem({...item, randomSelectionId}, index);
+    }
 
     const updateDescription = (e: InputEvent) => {
       const description = (e.target as HTMLTextAreaElement).value;
@@ -410,6 +410,11 @@ export class PayoutEditor extends MobxLitElement {
     };
 
     const basePayoutId = `${item.id}-base`;
+    const randomSelectionLabel = `
+      Random selection group ID: Out of all payout items that share the
+      same group ID, one will be randomly selected to use for payout.
+      (Leave this field blank if the payout item should always be selected.)
+    `;
 
     return html`
       <div class="base-editor">
@@ -417,16 +422,6 @@ export class PayoutEditor extends MobxLitElement {
           <div class="left">
             <div class="subtitle">
               Stage payout for: ${this.experimentEditor.getStage(item.stageId)?.name}
-            </div>
-            <div class="checkbox-wrapper">
-              <md-checkbox
-                touch-target="wrapper"
-                ?checked=${item.isActive}
-                ?disabled=${!this.experimentEditor.canEditStages}
-                @click=${updateIsActive}
-              >
-              </md-checkbox>
-              <div>Include this payout in experiment</div>
             </div>
           </div>
           ${this.renderPayoutItemNav(index)}
@@ -438,6 +433,14 @@ export class PayoutEditor extends MobxLitElement {
           .value=${item.name}
           ?disabled=${!this.experimentEditor.canEditStages}
           @input=${updateName}
+        >
+        </pr-textarea>
+        <pr-textarea
+          label=${randomSelectionLabel}
+          variant="outlined"
+          .value=${item.randomSelectionId}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @input=${updateRandomSelectionId}
         >
         </pr-textarea>
         <pr-textarea
