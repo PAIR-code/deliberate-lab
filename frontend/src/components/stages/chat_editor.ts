@@ -216,7 +216,7 @@ export class ChatEditor extends MobxLitElement {
     return html`
       <div class="question-label">Model</div>
       <div class="description">
-        Model ID for the agent. Currently only used for OpenAI and compatible APIs.
+        Model ID for the agent. Currently only used for OpenAI and OAI-compatible APIs.
       </div>
       <pr-textarea
         placeholder="Model ID"
@@ -447,8 +447,11 @@ export class ChatEditor extends MobxLitElement {
 
     return html`
       <div class="question-label">Sampling parameters</div>
+      <div class="description">
+        Currently only used for OpenAI and OAI-compatible APIs.
+      </div>
       <div class="number-input">
-        <label for="temperature">Temperature (0.0 - 1.0):</label>
+        <label for="temperature">Temperature</label>
           <div class="description">
             The lower this value, the more deterministic the model's outcome will be.
           </div>
@@ -461,7 +464,7 @@ export class ChatEditor extends MobxLitElement {
           .value=${agent.generationConfig.temperature}
           @input=${updateTemperature}
         />
-        <label for="topP">Top P (0.0 - 1.0):</label>
+        <label for="topP">Top P</label>
           <div class="description">
             If this value is less than 1.0, the model will discard unlikely tokens and sample from only tokens comprising that much probability mass.
           </div>
@@ -474,7 +477,7 @@ export class ChatEditor extends MobxLitElement {
           .value=${agent.generationConfig.topP}
           @input=${updateTopP}
         />
-        <label for="frequencyPenalty">Frequency penalty (-2.0 - 2.0):</label>
+        <label for="frequencyPenalty">Frequency penalty</label>
           <div class="description">
             Positive values will penalize tokens based on how frequently they have appeared in the text.
           </div>
@@ -487,7 +490,7 @@ export class ChatEditor extends MobxLitElement {
           .value=${agent.generationConfig.frequencyPenalty}
           @input=${updateFrequencyPenalty}
         />
-        <label for="presencePenalty">Presence penalty (-2.0 - 2.0):</label>
+        <label for="presencePenalty">Presence penalty</label>
           <div class="description">
             Positive values will penalize tokens that have already appeared in the text (regardless of frequency).
           </div>
