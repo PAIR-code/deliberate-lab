@@ -223,6 +223,9 @@ export class Panel extends MobxLitElement {
         <div class="bottom">
           <div class="header">Actions</div>
           ${this.renderExperimentActions()}
+          <div class="subtitle">
+            Experiment Version: ${this.experimentService.experiment?.versionId}
+          </div>
         </div>
       </div>
     `;
