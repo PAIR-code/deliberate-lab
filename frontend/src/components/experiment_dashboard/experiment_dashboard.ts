@@ -53,29 +53,34 @@ export class Component extends MobxLitElement {
         <page-header></page-header>
         <experimenter-panel></experimenter-panel>
       </div>
+      ${this.renderPanels()}
+      ${this.renderCohortSettingsDialog()}
+      ${this.renderExperimentSettingsDialog()}
+    `;
+  }
+
+  private renderPanels() {
+    if (Object.keys(this.experimentService.stageConfigMap).length === 0) {
+      return html`
+        <div class="cohort-panel">
+          <div class="warning">
+            ⚠️ Your experiment has no stages. Use the edit button in the
+            left panel to add stages in order to unlock cohort and participant
+            creation.
+          </div>
+        </div>
+      `;
+    }
+    return html`
       ${this.renderCohortListPanel()}
       ${this.renderParticipantStatsPanel()}
       ${this.renderParticipantPreviewPanel()}
-      ${this.renderCohortSettingsDialog()}
-      ${this.renderExperimentSettingsDialog()}
     `;
   }
 
   private renderCohortListPanel() {
     if (!this.experimentManager.showCohortList) {
       return nothing;
-    }
-
-    if (Object.keys(this.experimentService.stageConfigMap).length === 0) {
-      return html`
-        <div class="cohort-panel">
-          <div>
-            ⚠️ WARNING: Your experiment has no stages. Use the edit button in the
-            settings panel to add stages in order to unlock cohort and participant
-            creation.
-          </div>
-        </div>
-      `;
     }
     return html`
       <div class="cohort-panel">
