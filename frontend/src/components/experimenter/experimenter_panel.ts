@@ -561,10 +561,38 @@ export class Panel extends MobxLitElement {
     `;
   }
 
+  private renderExperimentDeleteButton() {
+    return html`
+      <pr-button
+        color="error"
+        variant="outlined"
+        ?disabled=${!this.experimentManager.isCreator}
+        @click=${() => {
+          const isConfirmed = window.confirm(
+            `Are you sure you want to delete this experiment?`
+          );
+          if (!isConfirmed) return;
+
+          this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_DELETE);
+          this.experimentManager.deleteExperiment();
+        }}
+      >
+        <pr-icon
+          icon="delete"
+          color="error"
+          variant="default"
+        >
+        </pr-icon>
+        <div>Delete experiment</div>
+      </pr-button>
+    `;
+  }
+
   private renderExperimentActions() {
     return html`
       ${this.renderExperimentDownloadButton()}
       ${this.renderExperimentForkButton()} ${this.renderExperimentEditButton()}
+      ${this.renderExperimentDeleteButton()}
     `;
   }
 }
