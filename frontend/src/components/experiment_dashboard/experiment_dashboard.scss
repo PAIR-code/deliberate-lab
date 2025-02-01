@@ -27,6 +27,10 @@
   max-height: 100vh;
   overflow: auto;
   width: calc(min(60%, 500px));
+
+  .warning {
+    padding: common.$spacing-large;
+  }
 }
 
 .experiment-manager,

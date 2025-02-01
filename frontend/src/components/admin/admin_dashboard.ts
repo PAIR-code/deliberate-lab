@@ -95,6 +95,9 @@ export class AdminDashboard extends MobxLitElement {
           <div class="subtitle">
             ${convertUnifiedTimestampToDate(experiment.metadata.dateModified)}
           </div>
+          <div class="subtitle">
+            v${experiment.versionId}
+          </div>
         </div>
       </div>
     `;
