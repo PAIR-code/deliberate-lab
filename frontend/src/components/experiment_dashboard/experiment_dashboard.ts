@@ -19,7 +19,7 @@ import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
-import {CohortConfig, StageKind} from '@deliberation-lab/utils';
+import {CohortConfig,StageKind} from '@deliberation-lab/utils';
 import {getCohortDescription, getCohortName} from '../../shared/cohort.utils';
 import {
   getParticipantStatusDetailText,

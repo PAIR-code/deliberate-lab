@@ -26,6 +26,7 @@ import {
   AgentConfig,
   ParticipantProfileExtended,
   StageKind,
+  EXPERIMENT_VERSION_ID,
 } from '@deliberation-lab/utils';
 
 import {styles} from './experimenter_panel.scss';
@@ -140,6 +141,27 @@ export class Panel extends MobxLitElement {
     `;
   }
 
+  private renderOutdatedWarning() {
+    if (!this.experimentService.experiment) return nothing;
+
+    if (this.experimentService.experiment.versionId < EXPERIMENT_VERSION_ID) {
+      return html`
+        <div class="banner warning">
+          <p>
+            ⚠️ Warning: This experiment was created with a previous version of
+            Deliberate Lab and may not be compatible with the current version
+            (e.g., some stages or features may not load or function properly).
+          </p>
+          <p>
+            Contact the deployment owners if you would like to upgrade this
+            experiment to the latest version.
+          </p>
+        </div>
+      `;
+    }
+    return nothing;
+  }
+
   private renderPanelView() {
     switch (this.panelView) {
       case PanelView.PARTICIPANT_SEARCH:
@@ -161,6 +183,7 @@ export class Panel extends MobxLitElement {
 
     return html`
       <div class="main">
+        ${this.renderOutdatedWarning()}
         <div class="top">
           <div class="header">Cohort Panel</div>
           <div
