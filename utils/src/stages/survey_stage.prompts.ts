@@ -28,31 +28,31 @@ export function createAgentParticipantSurveyStagePrompt(questions: BaseSurveyQue
 function createQuestionPrompt(question: BaseSurveyQuestion): string {
     switch (question.kind) {
         case SurveyQuestionKind.TEXT:
-            return createTextQuestionPrompt(question as TextSurveyQuestion);
+            return _createTextQuestionPrompt(question as TextSurveyQuestion);
         case SurveyQuestionKind.CHECK:
-            return createCheckQuestionPrompt(question as CheckSurveyQuestion);
+            return _createCheckQuestionPrompt(question as CheckSurveyQuestion);
         case SurveyQuestionKind.MULTIPLE_CHOICE:
-            return createMultipleChoiceQuestionPrompt(question as MultipleChoiceSurveyQuestion);
+            return _createMultipleChoiceQuestionPrompt(question as MultipleChoiceSurveyQuestion);
         case SurveyQuestionKind.SCALE:
-            return createScaleQuestionPrompt(question as ScaleSurveyQuestion);
+            return _createScaleQuestionPrompt(question as ScaleSurveyQuestion);
         default:
             console.error(`Unknown survey question type: ${question.kind}`);
             return "";
     }
 }
 
-function createTextQuestionPrompt(question: TextSurveyQuestion): string {
+export function _createTextQuestionPrompt(question: TextSurveyQuestion): string {
     return `Answer freely: ${question.questionTitle}`;
 }
 
-function createCheckQuestionPrompt(question: CheckSurveyQuestion): string {
+export function _createCheckQuestionPrompt(question: CheckSurveyQuestion): string {
     return `Answer with True/False: ${question.questionTitle}`;
 }
 
-function createMultipleChoiceQuestionPrompt(question: MultipleChoiceSurveyQuestion): string {
+export function _createMultipleChoiceQuestionPrompt(question: MultipleChoiceSurveyQuestion): string {
     let prompt = `Multiple Choice Question: ${question.questionTitle}\n Options: \n`;
     for (let i in question.options) {
-        const option = question.options[i]
+        const option = question.options[i].text
         prompt += `${i}. ${option}\n`;
     }
     prompt += "Select one or more of the options above."
@@ -60,7 +60,7 @@ function createMultipleChoiceQuestionPrompt(question: MultipleChoiceSurveyQuesti
     return prompt;
 }
 
-function createScaleQuestionPrompt(question: ScaleSurveyQuestion): string {
+export function _createScaleQuestionPrompt(question: ScaleSurveyQuestion): string {
     return `How much do you agree with the following statement: ${question.questionTitle}, 
     from a scale of ${question.lowerValue} (${question.lowerText}) to ${question.upperValue} (${question.upperText})?`;
 }
