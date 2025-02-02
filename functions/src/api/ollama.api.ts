@@ -40,7 +40,10 @@ export async function ollamaChat(messages: string[],
                                 serverConfig: OllamaServerConfig)
                                 : Promise<ModelResponse> {
     const messageObjects = encodeMessages(messages, serverConfig.llmType);
-    const response = await fetch(serverConfig.url, { method: "POST", body: JSON.stringify(messageObjects) });
+    const requestHeaders: HeadersInit = new Headers();
+    requestHeaders.set('Content-Type', 'application/json');
+
+    const response = await fetch(serverConfig.url, { method: "POST", headers: requestHeaders, body: JSON.stringify(messageObjects) });
     const responseMessage = await decodeResponse(response);
     return { text: responseMessage };
 }
