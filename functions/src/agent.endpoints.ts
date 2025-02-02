@@ -1,4 +1,3 @@
-import { Value } from '@sinclair/typebox/value';
 import {
   ExperimenterData,
   StageConfig,
@@ -8,8 +7,6 @@ import {
 import {getAgentResponse} from './agent.utils';
 import {getAgentParticipantRankingStageResponse} from './stages/ranking.utils';
 
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
 import { onCall } from 'firebase-functions/v2/https';
 
 import { app } from './app';
@@ -33,7 +30,7 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
   // Fetch experiment creator's API key and other experiment data.
   const creatorId = (
     await app.firestore().collection('experiments').doc(experimentId).get()
-  ).data().metadata.creator;
+  ).data()?.metadata.creator;
   const creatorDoc = await app.firestore().collection('experimenterData').doc(creatorId).get();
   if (!creatorDoc.exists) return;
 
