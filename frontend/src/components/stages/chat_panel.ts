@@ -156,14 +156,17 @@ export class ChatPanel extends MobxLitElement {
   }
 
   private renderApiCheck() {
-    if (!checkApiKeyExists(this.authService.experimenterData)) {
+    if (
+      !checkApiKeyExists(this.authService.experimenterData)
+      && this.authService.isExperimenter
+    ) {
       return html`
         <div class="warning">
           <b>Note:</b> In order for LLM calls to work, you must add an API key or server configuration under Experimenter Settings.
         </div>
       `;
     }
-    return '';
+    return nothing;
   }
 
   private renderParticipantList() {
