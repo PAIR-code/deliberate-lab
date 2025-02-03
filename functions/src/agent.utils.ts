@@ -38,8 +38,8 @@ async function getOpenAIAPIResponse(
   data: ExperimenterData, model: string, prompt: string, generationConfig: GenerationConfig
 ): Promise<ModelResponse> {
   return await getOpenAIAPITextCompletionResponse(
-    data.apiKeys.openAIApiKey.apiKey,
-    data.apiKeys.openAIApiKey.baseUrl || null,
+    data.apiKeys.openAIApiKey?.apiKey || '',
+    data.apiKeys.openAIApiKey?.baseUrl || null,
     model,
     prompt,
     generationConfig
