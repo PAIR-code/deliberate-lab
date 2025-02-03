@@ -58,6 +58,7 @@ export class CohortService extends Service {
 
   @observable experimentId: string|null = null;
   @observable cohortId: string|null = null;
+  @observable cohortConfig: CohortConfig|null = null;
 
   // Participants currently in the cohort
   @observable participantMap: Record<string, ParticipantProfile> = {};
@@ -246,6 +247,8 @@ export class CohortService extends Service {
     return this.chipLogMap[stageId] ?? [];
   }
 
+  // Called from participant service on participant snapshot listener
+  // (i.e., when participant's current cohort may have changed)
   async loadCohortData(experimentId: string, id: string) {
     if (id === this.cohortId) {
       return;
@@ -257,10 +260,33 @@ export class CohortService extends Service {
     this.unsubscribeAll();
 
     // Subscribe to data
+    this.loadCohortConfig();
     this.loadPublicStageData();
     this.loadChatMessages();
     this.loadChipLogEntries();
     this.loadParticipantProfiles();
+  }
+
+  /** Subscribe to current cohort config. */
+  private loadCohortConfig() {
+    if (!this.experimentId || !this.cohortId) return;
+
+    this.isCohortConfigLoading = true;
+    this.unsubscribe.push(
+      onSnapshot(
+        doc(
+          this.sp.firebaseService.firestore,
+          'experiments',
+          this.experimentId,
+          'cohorts',
+          this.cohortId,
+        ),
+        async (doc) => {
+          this.cohortConfig = doc.data() as CohortConfig;
+          this.isCohortConfigLoading = false;
+        }
+      )
+    )
   }
 
   /** Subscribe to public stage data. */
@@ -455,6 +481,7 @@ export class CohortService extends Service {
     this.unsubscribe = [];
 
     // Reset stage configs
+    this.cohortConfig = null;
     this.participantMap = {};
     this.chatMap = {};
     this.chatDiscussionMap = {};
