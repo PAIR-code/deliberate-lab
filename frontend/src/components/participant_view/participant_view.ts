@@ -60,8 +60,12 @@ export class ParticipantView extends MobxLitElement {
     const stage = this.experimentService.getStage(stageId ?? '');
 
     const renderContent = () => {
-      // Render landing if no stage ID or hasn't started experiment
-      if (!stageId || !this.participantService.profile?.timestamps.startExperiment) {
+      // Render landing if (no stage ID or hasn't started experiment)
+      // AND not experimenter
+      if (
+        (!stageId || !this.participantService.profile?.timestamps.startExperiment)
+        && !this.authService.isExperimenter
+      ) {
         return html`
           <div class="content">${this.renderLanding()}</div>
         `;
