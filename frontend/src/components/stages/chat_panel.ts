@@ -23,7 +23,10 @@ import {
   getTimeElapsed,
 } from '@deliberation-lab/utils';
 import {isActiveParticipant} from '../../shared/participant.utils';
-import {convertUnifiedTimestampToDate, getColor} from '../../shared/utils';
+import {
+  convertUnifiedTimestampToDate,
+  getHashBasedColor
+} from '../../shared/utils';
 import {styles} from './chat_panel.scss';
 
 /** Chat panel view with stage info, participants. */
@@ -153,14 +156,17 @@ export class ChatPanel extends MobxLitElement {
   }
 
   private renderApiCheck() {
-    if (!checkApiKeyExists(this.authService.experimenterData)) {
+    if (
+      !checkApiKeyExists(this.authService.experimenterData)
+      && this.authService.isExperimenter
+    ) {
       return html`
         <div class="warning">
           <b>Note:</b> In order for LLM calls to work, you must add an API key or server configuration under Experimenter Settings.
         </div>
       `;
     }
-    return '';
+    return nothing;
   }
 
   private renderParticipantList() {
@@ -197,7 +203,7 @@ export class ChatPanel extends MobxLitElement {
         position="BOTTOM_END"
       >
         <div class="profile">
-          <avatar-icon .emoji=${agent.avatar} .color=${getColor(agent?.avatar ?? '')}>
+          <avatar-icon .emoji=${agent.avatar} .color=${getHashBasedColor(agent?.avatar ?? '')}>
           </avatar-icon>
           <div class="name">
             ${agent.name}${this.authService.isDebugMode ? ` 🤖` : ''}

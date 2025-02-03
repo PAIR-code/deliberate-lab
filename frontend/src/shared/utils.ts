@@ -2,6 +2,11 @@ import {micromark} from 'micromark';
 import {gfm, gfmHtml} from 'micromark-extension-gfm';
 import {UnifiedTimestamp, getHashIntegerFromString} from '@deliberation-lab/utils';
 import {Snapshot} from './types';
+import {
+  MAN_EMOJIS,
+  WOMAN_EMOJIS,
+  PERSON_EMOJIS
+} from './constants';
 
 /**
  * General utils for frontend only.
@@ -70,8 +75,30 @@ export function convertUnifiedTimestampToISO(timestamp: UnifiedTimestamp) {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
 }
 
+/** Get color based on profile ID and avatar
+ *  (e.g., use pronoun colors if avatar matches
+ */
+export function getProfileBasedColor(publicId: string, avatar: string) {
+  if (MAN_EMOJIS.indexOf(avatar) > -1) {
+    return 'blue';
+  } else if (WOMAN_EMOJIS.indexOf(avatar) > -1) {
+    return 'pink';
+  } else if (PERSON_EMOJIS.indexOf(avatar) > -1) {
+    return 'purple';
+  }
+
+  // If publicId is in format animal-color-number, extract color
+  const splitId = (publicId ?? '').split('-');
+  if (splitId.length >= 3) {
+    return splitId[1];
+  }
+
+  // Else, return hash-based color
+  return getHashBasedColor(publicId);
+}
+
 /** Get random or hash-based color (e.g., for avatar backgroud). */
-export function getColor(hashString = ''): string {
+export function getHashBasedColor(hashString = ''): string {
   const COLORS = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink'];
   const index = hashString.length > 0 ?
     getHashIntegerFromString(hashString) % COLORS.length

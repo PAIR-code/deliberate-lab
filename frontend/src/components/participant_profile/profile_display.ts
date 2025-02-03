@@ -14,7 +14,7 @@ import {
 } from '@deliberation-lab/utils';
 
 import {styles} from './profile_display.scss';
-import {getColor} from '../../shared/utils';
+import {getHashBasedColor} from '../../shared/utils';
 import {
   MAN_EMOJIS,
   WOMAN_EMOJIS,
@@ -72,7 +72,7 @@ export class ParticipantProfileDisplay extends MobxLitElement {
         return splitId[1];
       }
       // Otherwise, use publicId as hash
-      return getColor(this.profile?.publicId);
+      return getHashBasedColor(this.profile?.publicId);
     };
 
     // If alternate profile ID in stage ID, use anonymous profile

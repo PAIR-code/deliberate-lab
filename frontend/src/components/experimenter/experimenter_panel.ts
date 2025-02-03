@@ -26,6 +26,7 @@ import {
   AgentConfig,
   ParticipantProfileExtended,
   StageKind,
+  EXPERIMENT_VERSION_ID,
 } from '@deliberation-lab/utils';
 
 import {styles} from './experimenter_panel.scss';
@@ -140,6 +141,27 @@ export class Panel extends MobxLitElement {
     `;
   }
 
+  private renderOutdatedWarning() {
+    if (!this.experimentService.experiment) return nothing;
+
+    if (this.experimentService.experiment.versionId < EXPERIMENT_VERSION_ID) {
+      return html`
+        <div class="banner warning">
+          <p>
+            ⚠️ Warning: This experiment was created with a previous version of
+            Deliberate Lab and may not be compatible with the current version
+            (e.g., some stages or features may not load or function properly).
+          </p>
+          <p>
+            Contact the deployment owners if you would like to upgrade this
+            experiment to the latest version.
+          </p>
+        </div>
+      `;
+    }
+    return nothing;
+  }
+
   private renderPanelView() {
     switch (this.panelView) {
       case PanelView.PARTICIPANT_SEARCH:
@@ -161,6 +183,7 @@ export class Panel extends MobxLitElement {
 
     return html`
       <div class="main">
+        ${this.renderOutdatedWarning()}
         <div class="top">
           <div class="header">Cohort Panel</div>
           <div
@@ -200,6 +223,9 @@ export class Panel extends MobxLitElement {
         <div class="bottom">
           <div class="header">Actions</div>
           ${this.renderExperimentActions()}
+          <div class="subtitle">
+            Experiment Version: ${this.experimentService.experiment?.versionId}
+          </div>
         </div>
       </div>
     `;
@@ -535,10 +561,38 @@ export class Panel extends MobxLitElement {
     `;
   }
 
+  private renderExperimentDeleteButton() {
+    return html`
+      <pr-button
+        color="error"
+        variant="outlined"
+        ?disabled=${!this.experimentManager.isCreator}
+        @click=${() => {
+          const isConfirmed = window.confirm(
+            `Are you sure you want to delete this experiment?`
+          );
+          if (!isConfirmed) return;
+
+          this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_DELETE);
+          this.experimentManager.deleteExperiment();
+        }}
+      >
+        <pr-icon
+          icon="delete"
+          color="error"
+          variant="default"
+        >
+        </pr-icon>
+        <div>Delete experiment</div>
+      </pr-button>
+    `;
+  }
+
   private renderExperimentActions() {
     return html`
       ${this.renderExperimentDownloadButton()}
       ${this.renderExperimentForkButton()} ${this.renderExperimentEditButton()}
+      ${this.renderExperimentDeleteButton()}
     `;
   }
 }

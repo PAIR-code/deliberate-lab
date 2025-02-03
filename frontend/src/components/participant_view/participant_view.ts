@@ -57,23 +57,29 @@ export class ParticipantView extends MobxLitElement {
 
   override render() {
     const stageId = this.participantService.currentStageViewId;
+    const stage = this.experimentService.getStage(stageId ?? '');
 
-    if (!stageId) {
-      return html`
-        <participant-nav></participant-nav>
-        <div
-          class="participant-previewer ${!this.authService.isExperimenter
-            ? 'full-view'
-            : ''}"
-        >
+    const renderContent = () => {
+      // Render landing if (no stage ID or hasn't started experiment)
+      // AND not experimenter
+      if (
+        (!stageId || !this.participantService.profile?.timestamps.startExperiment)
+        && !this.authService.isExperimenter
+      ) {
+        return html`
           <div class="content">${this.renderLanding()}</div>
-        </div>
+        `;
+      }
 
-        ${this.renderPopups()}
+      return html`
+        <participant-header
+          .stage=${stage}
+          .profile=${this.participantService.profile}
+        >
+        </participant-header>
+        ${this.renderStageContent(stage)}
       `;
-    }
-
-    const stage = this.experimentService.getStage(stageId);
+    };
 
     return html`
       <participant-nav></participant-nav>
@@ -82,12 +88,7 @@ export class ParticipantView extends MobxLitElement {
           ? 'full-view'
           : ''}"
       >
-        <participant-header
-          .stage=${stage}
-          .profile=${this.participantService.profile}
-        >
-        </participant-header>
-        ${this.renderStageContent(stage)}
+        ${renderContent()}
       </div>
       ${this.renderPopups()}
     `;
@@ -181,7 +182,18 @@ export class ParticipantView extends MobxLitElement {
       !this.participantService.canAccessStage(stage.id) &&
       !this.authService.isExperimenter
     ) {
-      return html`<div class="content">Stage not available yet</div>`;
+      return html`
+        <div class="content">
+          <div>Stage not available yet</div>
+          <pr-button @click=${() => {
+            this.participantService.setCurrentStageView(
+              this.participantService.profile?.currentStageId ?? undefined
+            );
+          }}>
+            Go to current stage
+          </pr-button>
+        </div>
+      `;
     }
 
     const isWaiting = this.cohortService.isStageInWaitingPhase(stage.id);
