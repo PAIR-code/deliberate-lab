@@ -13,6 +13,7 @@ import {
   getTimeElapsed,
   createAgentMediatorChatMessage,
   AgentConfig,
+  AgentGenerationConfig,
   ChatStageConfig,
   ExperimenterData,
 } from '@deliberation-lab/utils';
@@ -172,7 +173,7 @@ export const createAgentMessage = onDocumentCreated(
       const prompt = `${getPreface(agent, stage)}\n${getChatHistory(chatMessages, agent)}\n${agent.responseConfig.formattingInstructions}`;
 
       // Call LLM API with given modelCall info
-      const response = await getAgentResponse(experimenterData, prompt);
+      const response = await getAgentResponse(experimenterData, prompt, agent);
 
       // Add agent message if non-empty
       let message = response.text;

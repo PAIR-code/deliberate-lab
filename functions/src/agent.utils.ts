@@ -7,7 +7,7 @@ import { getGeminiAPIResponse } from './api/gemini.api';
 import { getOpenAIAPITextCompletionResponse } from './api/openai.api';
 import { ollamaChat } from './api/ollama.api';
 
-export async function getAgentResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
+export async function getAgentResponse(data: ExperimenterData, prompt: string, agent: AgentConfig): Promise<ModelResponse> {
   const keyType = data.apiKeys.activeApiKeyType;
   let response;
 
@@ -18,6 +18,8 @@ export async function getAgentResponse(data: ExperimenterData, prompt: string): 
       prompt)
   } else if (keyType === ApiKeyType.GEMINI_API_KEY) {
     response =  getGeminiResponse(data, prompt);
+  } else if (keyType === ApiKeyType.OPENAI_API_KEY) {
+    response = getOpenAIAPIResponse(data, agent.model, prompt, agent.generationConfig);
   } else if (keyType === ApiKeyType.OLLAMA_CUSTOM_URL) {
     response = await getOllamaResponse(data, prompt);
   } else {
@@ -30,6 +32,18 @@ export async function getAgentResponse(data: ExperimenterData, prompt: string): 
 
 export async function getGeminiResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {
   return await getGeminiAPIResponse(data.apiKeys.geminiApiKey, prompt);
+}
+
+async function getOpenAIAPIResponse(
+  data: ExperimenterData, model: string, prompt: string, generationConfig: GenerationConfig
+): Promise<ModelResponse> {
+  return await getOpenAIAPITextCompletionResponse(
+    data.apiKeys.openAIApiKey?.apiKey || '',
+    data.apiKeys.openAIApiKey?.baseUrl || null,
+    model,
+    prompt,
+    generationConfig
+  );
 }
 
 export async function getOllamaResponse(data: ExperimenterData, prompt: string): Promise<ModelResponse> {

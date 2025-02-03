@@ -10,6 +10,7 @@ import {
   createStageProgressConfig,
 } from './stage';
 import { ParticipantProfileBase, createParticipantProfileBase } from '../participant';
+import { AgentGenerationConfig } from '../agent';
 
 /** Group chat stage types and functions. */
 
@@ -98,15 +99,18 @@ export interface AgentMediatorChatMessage extends BaseChatMessage {
   explanation: string;
 }
 
+
 /** LLM agent config. */
 export interface AgentConfig {
   id: string;
   name: string;
   avatar: string; // emoji avatar for agent
+  model: string;
   prompt: string;
   wordsPerMinute: number; // Typing speed
+  generationConfig: AgentGenerationConfig
   responseConfig: AgentResponseConfig;
-  // TODO: Add more settings, e.g., model, temperature, context window
+  // TODO: Add more settings, e.g. context window
 }
 
 /** Settings for formatting agent response
@@ -161,6 +165,7 @@ export interface ChatStagePublicData extends BaseStagePublicData {
 // ************************************************************************* //
 // CONSTANTS                                                                 //
 // ************************************************************************* //
+export const DEFAULT_MODEL = "gemini-1.5-pro-latest";
 export const DEFAULT_AGENT_PROMPT = `You are a agent for a chat conversation. Your task is to ensure that the conversation is polite.
 If you notice that participants are being rude, step in to make sure that everyone is respectful. 
 Otherwise, do not respond.`;
@@ -328,10 +333,22 @@ export function createAgentConfig(config: Partial<AgentConfig> = {}): AgentConfi
     id: config.id ?? generateId(),
     name: config.name ?? 'Agent',
     avatar: config.avatar ?? '🤖',
+    model: config.model ?? DEFAULT_MODEL,
     prompt: config.prompt ?? DEFAULT_AGENT_PROMPT.trim(),
     wordsPerMinute: config.wordsPerMinute ?? 80, // Default 80 WPM.
+    generationConfig: config.generationConfig ?? createAgentGenerationConfig(),
     responseConfig: config.responseConfig ?? createAgentResponseConfig(),
   };
+}
+
+export function createAgentGenerationConfig(config: Partial<AgentGenerationConfig> = {}): AgentGenerationConfig {
+  return {
+    temperature: config.temperature ?? 0.7,
+    topP: config.topP ?? 1.0,
+    frequencyPenalty: config.frequencyPenalty ?? 0.0,
+    presencePenalty: config.presencePenalty ?? 0.0,
+    customRequestBodyFields: config.customRequestBodyFields ?? [],
+  }
 }
 
 /** Create agent response config. */
