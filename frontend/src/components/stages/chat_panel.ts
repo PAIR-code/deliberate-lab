@@ -23,7 +23,10 @@ import {
   getTimeElapsed,
 } from '@deliberation-lab/utils';
 import {isActiveParticipant} from '../../shared/participant.utils';
-import {convertUnifiedTimestampToDate, getColor} from '../../shared/utils';
+import {
+  convertUnifiedTimestampToDate,
+  getHashBasedColor
+} from '../../shared/utils';
 import {styles} from './chat_panel.scss';
 
 /** Chat panel view with stage info, participants. */
@@ -197,7 +200,7 @@ export class ChatPanel extends MobxLitElement {
         position="BOTTOM_END"
       >
         <div class="profile">
-          <avatar-icon .emoji=${agent.avatar} .color=${getColor(agent?.avatar ?? '')}>
+          <avatar-icon .emoji=${agent.avatar} .color=${getHashBasedColor(agent?.avatar ?? '')}>
           </avatar-icon>
           <div class="name">
             ${agent.name}${this.authService.isDebugMode ? ` 🤖` : ''}

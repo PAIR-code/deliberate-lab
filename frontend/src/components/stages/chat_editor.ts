@@ -20,7 +20,7 @@ import {
   checkApiKeyExists,
 } from '@deliberation-lab/utils';
 import {LLM_AGENT_AVATARS} from '../../shared/constants';
-import {getColor} from '../../shared/utils';
+import {getHashBasedColor} from '../../shared/utils';
 
 import {styles} from './chat_editor.scss';
 
@@ -264,7 +264,7 @@ export class ChatEditor extends MobxLitElement {
             @change=${handleAvatarClick}
           >
           </md-radio>
-          <avatar-icon .emoji=${emoji} .square=${true} .color=${getColor(emoji)}>
+          <avatar-icon .emoji=${emoji} .square=${true} .color=${getHashBasedColor(emoji)}>
           </avatar-icon>
         </div>
       `;

@@ -17,7 +17,7 @@ import {ParticipantService} from '../../services/participant.service';
 import {
   LLM_AGENT_AVATARS
 } from '../../shared/constants';
-import {getColor} from '../../shared/utils';
+import {getHashBasedColor} from '../../shared/utils';
 
 import {styles} from './experimenter_manual_chat.scss';
 
@@ -139,7 +139,7 @@ export class Chat extends MobxLitElement {
             @change=${handleAvatarClick}
           >
           </md-radio>
-          <avatar-icon .emoji=${emoji} .square=${true} .color=${getColor(emoji)}>
+          <avatar-icon .emoji=${emoji} .square=${true} .color=${getHashBasedColor(emoji)}>
           </avatar-icon>
         </div>
       `;
