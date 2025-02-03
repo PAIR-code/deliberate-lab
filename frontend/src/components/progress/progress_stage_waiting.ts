@@ -45,13 +45,27 @@ export class Progress extends MobxLitElement {
     const numWaiting =
       this.cohortService.getWaitingPhaseMinParticipants(stageId) - unlocked.length;
 
-    const completeWaiting = async () => {
+    const onReadyToStart = async () => {
       this.completeWaitingLoading = true;
-
+      // completedWaiting is now used to track "ready to start"
       await this.participantService.updateWaitingPhaseCompletion(stageId);
-
       this.completeWaitingLoading = false;
     };
+
+    const renderReadyToStartButton = () => {
+      // TODO: Only show if participant is not ready to start
+
+      return html`
+        <pr-button
+          color=${numWaiting > 0 ? 'neutral' : 'primary'}
+          ?disabled=${numWaiting > 0}
+          ?loading=${this.completeWaitingLoading}
+          @click=${onReadyToStart}
+        >
+          I'm ready to start this stage
+        </pr-button>
+      `;
+    }
 
     const renderWaitingStatus = () => {
       if (numWaiting === 0) return nothing;
@@ -71,6 +85,7 @@ export class Progress extends MobxLitElement {
       `;
     };
 
+    // TODO: Add "refresh cohort" button to check if cohort should be unlocked
     return html`
       ${renderWaitingStatus()}
       <div class="status">
@@ -84,14 +99,7 @@ export class Progress extends MobxLitElement {
         NOTE: If you have been waiting for a long time, please refresh to
         ensure your page is up to date!
       </div>
-      <pr-button
-        color=${numWaiting > 0 ? 'neutral' : 'primary'}
-        ?disabled=${numWaiting > 0}
-        ?loading=${this.completeWaitingLoading}
-        @click=${completeWaiting}
-      >
-        ${numWaiting > 0 ? 'Waiting on participants...' : 'Continue to stage'}
-      </pr-button>
+      ${renderReadyToStartButton()}
     `;
   }
 

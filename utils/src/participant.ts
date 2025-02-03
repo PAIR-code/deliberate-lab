@@ -59,6 +59,9 @@ export interface ProgressTimestamps {
   // Stage ID to time that stage was marked completed
   completedStages: Record<string, UnifiedTimestamp>;
   // Stage ID to time that stage's waiting phase was marked completed
+  // NOTE: This field is now being used to track time that the participant
+  // arrived at the stage. Waiting is now "completed" when the stage (for
+  // that cohort) is "unlocked" in CohortConfig
   completedWaiting: Record<string, UnifiedTimestamp>;
   // Cohort ID to time participant left that cohort
   cohortTransfers: Record<string, UnifiedTimestamp>;

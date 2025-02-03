@@ -141,6 +141,10 @@ export const updateParticipantAcceptedTOS = onCall(async (request) => {
 // Input structure: { experimentId, participantId, stageId }                 //
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
+// TODO: The "completedWaiting" map now tracks when the participant has
+// reached each stage --> this endpoint updates whether the participant
+// is ready to begin the stage. (Waiting is now determined by whether
+// or not the stage is unlocked in CohortConfig)
 export const updateParticipantWaiting = onCall(async (request) => {
   const { data } = request;
   const privateId = data.participantId;
@@ -156,6 +160,10 @@ export const updateParticipantWaiting = onCall(async (request) => {
   await app.firestore().runTransaction(async (transaction) => {
     const participant = (await document.get()).data() as ParticipantProfileExtended;
     participant.timestamps.completedWaiting[data.stageId] = Timestamp.now();
+
+    // TODO: Unlock the given stage for this cohort if all active participants
+    // have reached the stage
+
     transaction.set(document, participant);
   });
 
@@ -295,6 +303,13 @@ function updateParticipantNextStage(
     const nextStageId = stageIds[currentStageIndex + 1];
     participant.currentStageId = nextStageId;
     response.currentStageId = nextStageId;
+
+    // Mark next stage as reached
+    // (NOTE: this currently uses the participants' "completedWaiting" map)
+    participant.timestamps.completedWaiting[nextStageId] = timestamp;
+
+    // TODO: If all active participants have reached the next stage,
+    // unlock that stage in CohortConfig
   }
 
   return response;
@@ -321,6 +336,15 @@ export const acceptParticipantExperimentStart = onCall(async (request) => {
   await app.firestore().runTransaction(async (transaction) => {
     const participant = (await document.get()).data() as ParticipantProfileExtended;
     participant.timestamps.startExperiment = Timestamp.now();
+
+    // Set current stage as ready to start
+    // (NOTE: currently tracked via "completedWaiting" map)
+    const currentStageId = participant.currentStageId;
+    participant.timestamps.completedWaiting[currentStageId] = Timestamp.now();
+
+    // TODO: If all active participants have reached the next stage,
+    // unlock that stage in CohortConfig
+
     transaction.set(document, participant);
   });
 

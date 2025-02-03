@@ -180,11 +180,8 @@ export class CohortService extends Service {
     return { completed, notCompleted };
   }
 
-  // If stage is in a waiting phase, i.e.,
-  // if the stage requires waiting and no participant has
-  // completed the waiting phase before
-  // (If a participant has unlocked a stage with waiting but not
-  // yet completed its waiting phase, then that participant is waiting)
+  // If stage is in a waiting phase
+  // TODO: Update to check if stage is locked for cohort
   isStageInWaitingPhase(stageId: string) {
     const stageConfig = this.sp.experimentService.getStage(stageId);
     if (!stageConfig) return true;
@@ -197,16 +194,15 @@ export class CohortService extends Service {
       return false;
     }
 
-    // If any participant in the cohort has completed the waiting phase
-    // before, then waiting is false (as we never want to revert
-    // participants from "in stage" back to pre-stage "waiting")
-    for (const participant of this.getAllParticipants(false)) {
-      if (participant.timestamps.completedWaiting[stageId]) {
-        return false;
+    // Check if all participants have reached this stage
+    // TODO: Update to check if stage is unlocked for cohort
+    for (const participant of this.activeParticipants) {
+      if (!participant.timestamps.completedWaiting[stageId]) {
+        return true;
       }
     }
 
-    return true;
+    return false;
   }
 
   // Get number of participants needed to pass waiting phase

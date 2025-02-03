@@ -139,13 +139,12 @@ export function isParticipantEndedExperiment(participant: ParticipantProfile) {
 }
 
 /** If participant is on or past the given stage. */
+// NOTE: "completedWaiting" map is now used to track when a participant reaches
+// a stage
 export function isUnlockedStage(
   participant: ParticipantProfile,
   stageId: string
 ) {
-  // The participant must start experiment to unlock stages
-  if (!participant.timestamps.startExperiment) return false;
-
   // If the participant has a transfer pending for the current stage,
   // they are "locked" until they accept
   if (
@@ -154,7 +153,7 @@ export function isUnlockedStage(
   ) {
     return true;
   }
-  return participant.timestamps.completedStages[stageId];
+  return participant.timestamps.completedWaiting[stageId];
 }
 
 /** Return number of stages that participant completed. */
