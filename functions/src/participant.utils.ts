@@ -94,5 +94,9 @@ export async function updateCohortStageUnlocked(
     const cohortConfig = (await cohortDoc.get()).data() as CohortConfig;
     cohortConfig.stageUnlockMap[stageId] = true;
     transaction.set(cohortDoc, cohortConfig);
+
+    // TODO: Now that the given stage is unlocked, active any agent
+    // participants that are ready to start (and have not yet completed)
+    // the current stage
   });
 }
