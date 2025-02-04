@@ -46,7 +46,8 @@ export async function updateParticipantNextStage(
     await updateCohortStageUnlocked(
       experimentId,
       participant.currentCohortId,
-      participant.currentStageId
+      participant.currentStageId,
+      participant.privateId
     );
   }
 
@@ -60,7 +61,8 @@ export async function updateParticipantNextStage(
 export async function updateCohortStageUnlocked(
   experimentId: string,
   cohortId: string,
-  stageId: string
+  stageId: string,
+  currentParticipantId: string,
 ) {
   await app.firestore().runTransaction(async (transaction) => {
     // Get active participants for given cohort
@@ -102,7 +104,12 @@ export async function updateCohortStageUnlocked(
       }
 
       for (const participant of activeParticipants) {
-        if (!participant.timestamps.completedWaiting[stageId]) {
+        // If current participant, assume completed
+        // (Firestore may not have updated yet)
+        if (
+          !participant.timestamps.completedWaiting[stageId] &&
+          participant.privateId !== currentParticipantId
+        ) {
           return false;
         }
       }

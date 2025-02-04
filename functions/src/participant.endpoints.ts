@@ -172,6 +172,7 @@ export const updateParticipantWaiting = onCall(async (request) => {
       data.experimentId,
       participant.currentCohortId,
       participant.currentStageId,
+      participant.privateId,
     );
 
     transaction.set(document, participant);
@@ -326,7 +327,8 @@ export const acceptParticipantExperimentStart = onCall(async (request) => {
     await updateCohortStageUnlocked(
       data.experimentId,
       participant.currentCohortId,
-      participant.currentStageId
+      participant.currentStageId,
+      participant.privateId
     );
 
     transaction.set(document, participant);
