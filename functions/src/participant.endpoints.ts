@@ -66,6 +66,7 @@ export const createParticipant = onCall(async (request) => {
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     // TODO: Confirm that cohort is not at max capacity
+
     // Confirm that cohort is not locked
     const experiment = (
       await app.firestore().doc(`experiments/${data.experimentId}`).get()
@@ -142,7 +143,7 @@ export const updateParticipantAcceptedTOS = onCall(async (request) => {
 // Input structure: { experimentId, participantId, stageId }                 //
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
-// TODO: The "completedWaiting" map now tracks when the participant has
+// The "completedWaiting" map now tracks when the participant has
 // reached each stage --> this endpoint updates whether the participant
 // is ready to begin the stage. (Waiting is now determined by whether
 // or not the stage is unlocked in CohortConfig)
@@ -162,8 +163,13 @@ export const updateParticipantWaiting = onCall(async (request) => {
     const participant = (await document.get()).data() as ParticipantProfileExtended;
     participant.timestamps.completedWaiting[data.stageId] = Timestamp.now();
 
-    // TODO: Unlock the given stage for this cohort if all active participants
+    // Unlock the given stage for this cohort if all active participants
     // have reached the stage
+    await updateCohortStageUnlocked(
+      data.experimentId,
+      participant.currentCohortId,
+      participant.currentStageId,
+    );
 
     transaction.set(document, participant);
   });
@@ -274,7 +280,11 @@ export const updateParticipantToNextStage = onCall(async (request) => {
     const experiment = (await experimentDoc.get()).data() as Experiment;
     const participant = (await participantDoc.get()).data() as ParticipantProfileExtended;
 
-    response = updateParticipantNextStage(participant, experiment.stageIds);
+    response = await updateParticipantNextStage(
+      data.experimentId,
+      participant,
+      experiment.stageIds
+    );
     transaction.set(participantDoc, participant);
   });
 
@@ -308,8 +318,13 @@ export const acceptParticipantExperimentStart = onCall(async (request) => {
     const currentStageId = participant.currentStageId;
     participant.timestamps.completedWaiting[currentStageId] = Timestamp.now();
 
-    // TODO: If all active participants have reached the next stage,
+    // If all active participants have reached the next stage,
     // unlock that stage in CohortConfig
+    await updateCohortStageUnlocked(
+      data.experimentId,
+      participant.currentCohortId,
+      participant.currentStageId
+    );
 
     transaction.set(document, participant);
   });
@@ -396,7 +411,11 @@ export const acceptParticipantTransfer = onCall(async (request) => {
     const currentStage = (await app.firestore().doc(`experiments/${data.experimentId}/stages/${participant.currentStageId}`).get()).data() as StageConfig;
     if (currentStage.kind === StageKind.TRANSFER) {
       const experiment = (await experimentDoc.get()).data() as Experiment;
-      response = updateParticipantNextStage(participant, experiment.stageIds);
+      response = await updateParticipantNextStage(
+        data.experimentId,
+        participant,
+        experiment.stageIds
+      );
     }
 
     // Set document

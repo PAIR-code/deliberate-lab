@@ -3,9 +3,17 @@ import {
   ParticipantProfileExtended,
 } from '@deliberation-lab/utils';
 
+import * as admin from 'firebase-admin';
+import * as functions from 'firebase-functions';
+import { onCall } from 'firebase-functions/v2/https';
+
+import { app } from './app';
+
 /** Update participant's current stage to next stage (or end experiment). */
-export function updateParticipantNextStage(
-  participant: ParticipantProfileExtended, stageIds: string[]
+export async function updateParticipantNextStage(
+  experimentId: string,
+  participant: ParticipantProfileExtended,
+  stageIds: string[]
 ) {
   let response = { currentStageId: null, endExperiment: false };
 
@@ -32,9 +40,59 @@ export function updateParticipantNextStage(
     // (NOTE: this currently uses the participants' "completedWaiting" map)
     participant.timestamps.completedWaiting[nextStageId] = timestamp;
 
-    // TODO: If all active participants have reached the next stage,
+    // If all active participants have reached the next stage,
     // unlock that stage in CohortConfig
+    await updateCohortStageUnlocked(
+      experimentId,
+      participant.currentCohortId,
+      participant.currentStageId
+    );
   }
 
   return response;
+}
+
+/** If given stage in a cohort can be unlocked (all active participants
+ *  are ready to start), set the stage as unlocked in CohortConfig.
+ */
+export async function updateCohortStageUnlocked(
+  experimentId: string,
+  cohortId: string,
+  stageId: string
+) {
+  await app.firestore().runTransaction(async (transction) => {
+    // Get active participants for given cohort
+    // TODO: Create shared utils under /utils for isActiveParticipant
+    const activeStatuses = [
+      ParticipantStatus.IN_PROGRESS,
+      ParticipantStatus.COMPLETED,
+      ParticipantStatus.ATTENTION_CHECK
+    ];
+    const activeParticipants = (await app.firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('participants')
+      .where('currentCohortId', '==', cohortId)
+      .get()
+    ).docs.map(doc => doc.data() as ParticipantProfile)
+    .filter(participant => !(participant.currentStatus in activeStatuses));
+
+    // Check if active participants are ready to start stage
+    // NOTE: completedWaiting is currently used for readyToStart
+    for (const participant of activeParticipants) {
+      if (!participant.timestamps.completedWaiting[stageId]) {
+        return;
+      }
+    }
+    // If all active participants are ready to start, unlock cohort
+    const cohortDoc = app.firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('cohorts')
+      .doc(cohortId);
+
+    const cohortConfig = (await cohortDoc.get()).data() as CohortConfig;
+    cohortConfig.stageUnlockMap[stageId] = true;
+    transaction.set(cohortDoc, cohortConfig);
+  });
 }

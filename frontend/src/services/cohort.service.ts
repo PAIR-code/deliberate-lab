@@ -182,7 +182,6 @@ export class CohortService extends Service {
   }
 
   // If stage is in a waiting phase
-  // TODO: Update to check if stage is locked for cohort
   isStageInWaitingPhase(stageId: string) {
     const stageConfig = this.sp.experimentService.getStage(stageId);
     if (!stageConfig) return true;
@@ -195,15 +194,8 @@ export class CohortService extends Service {
       return false;
     }
 
-    // Check if all participants have reached this stage
-    // TODO: Update to check if stage is unlocked for cohort
-    for (const participant of this.activeParticipants) {
-      if (!participant.timestamps.completedWaiting[stageId]) {
-        return true;
-      }
-    }
-
-    return false;
+    // Return false if stage is unlocked for cohort, else true
+    return !this.cohortConfig?.stageUnlockMap[stageId];
   }
 
   // Get number of participants needed to pass waiting phase
@@ -282,7 +274,10 @@ export class CohortService extends Service {
           this.cohortId,
         ),
         async (doc) => {
-          this.cohortConfig = doc.data() as CohortConfig;
+          this.cohortConfig = {
+            stageUnlockMap: {}, // for backwards compatibility
+            ...doc.data(),
+          } as CohortConfig;
           this.isCohortConfigLoading = false;
         }
       )

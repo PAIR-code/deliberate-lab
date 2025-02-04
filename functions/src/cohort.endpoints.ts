@@ -78,6 +78,9 @@ export const createCohort = onCall(async (request) => {
         .doc(dataItem.id);
       transaction.set(dataDoc, dataItem);
     }
+
+    // TODO: Set relevant stages (e.g., with no min participants)
+    // as unlocked (right now, this is checked on client side)
   });
 
   return { id: document.id };

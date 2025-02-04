@@ -20,6 +20,8 @@ export interface CohortConfig {
   id: string;
   metadata: MetadataConfig;
   participantConfig: CohortParticipantConfig;
+  // Maps stage ID to whether stage is unlocked (i.e., participants are ready)
+  stageUnlockMap: Record<string, boolean>;
 }
 
 // ************************************************************************* //
@@ -34,5 +36,6 @@ export function createCohortConfig(
     id: config.id ?? generateId(true), // Alphanumeric sorting.
     metadata: config.metadata ?? createMetadataConfig(),
     participantConfig: config.participantConfig ?? createCohortParticipantConfig(),
+    stageUnlockMap: config.stageUnlockMap ?? {}
   };
 }
