@@ -179,6 +179,9 @@ export class ParticipantView extends MobxLitElement {
       !this.participantService.canAccessStage(stage.id)) &&
       !this.authService.isExperimenter
     ) {
+      // When clicked, this button routes to the participant "landing,"
+      // which either shows the "start experiment" button (if relevant)
+      // or routes to the current stage.
       return html`
         <div class="content">
           <div>Stage not available yet</div>
