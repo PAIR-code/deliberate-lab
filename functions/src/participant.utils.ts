@@ -55,6 +55,7 @@ export async function updateParticipantNextStage(
 /** If given stage in a cohort can be unlocked (all active participants
  *  are ready to start), set the stage as unlocked in CohortConfig.
  */
+// TODO: Move to cohort.utils file?
 export async function updateCohortStageUnlocked(
   experimentId: string,
   cohortId: string,
@@ -77,14 +78,42 @@ export async function updateCohortStageUnlocked(
     ).docs.map(doc => doc.data() as ParticipantProfile)
     .filter(participant => !(participant.currentStatus in activeStatuses));
 
-    // Check if active participants are ready to start stage
-    // NOTE: completedWaiting is currently used for readyToStart
-    for (const participant of activeParticipants) {
-      if (!participant.timestamps.completedWaiting[stageId]) {
-        return;
+    // Get current stage config
+    const stage = (await app.firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('stages')
+      .doc(stageId)
+      .get()
+    ).data() as StageConfig;
+
+    // Check if min participants requirement is met
+    const hasMinParticipants = () => {
+      return stage.progress.minParticipants <= activeParticipants.length;
+    };
+
+    // If waitForAllParticipants, check if active participants are ready to
+    // start stage ("completedWaiting" is currently used for readyToStart)
+    // If not waitForAllParticipants, return true
+    const isParticipantsReady = () => {
+      if (!stage.progress.waitForAllParticipants) {
+        return true;
       }
+
+      for (const participant of activeParticipants) {
+        if (!participant.timestamps.completedWaiting[stageId]) {
+          return false;
+        }
+      }
+      return true;
     }
-    // If all active participants are ready to start, unlock cohort
+
+    // If all active participants are ready to start
+    // AND min participants requirement is met, unlock cohort
+    if (!hasMinParticipants() || !isParticipantsReady()) {
+      return;
+    }
+
     const cohortDoc = app.firestore()
       .collection('experiments')
       .doc(experimentId)
@@ -92,6 +121,10 @@ export async function updateCohortStageUnlocked(
       .doc(cohortId);
 
     const cohortConfig = (await cohortDoc.get()).data() as CohortConfig;
+    if (cohortConfig.stageUnlockMap[stageId]) {
+      return; // already marked as true
+    }
+
     cohortConfig.stageUnlockMap[stageId] = true;
     transaction.set(cohortDoc, cohortConfig);
 

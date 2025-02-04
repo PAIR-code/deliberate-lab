@@ -57,16 +57,13 @@ export const createCohort = onCall(async (request) => {
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
-    transaction.set(document, cohortConfig);
-
     // For relevant stages, initialize public stage data documents
-    const stageConfigs =
+    const stageDocs =
       await app.firestore().collection(`experiments/${data.experimentId}/stages`)
       .get();
+    const stages = stageDocs.docs.map(stageDoc => stageDoc.data());
 
-    const publicData = createPublicDataFromStageConfigs(
-      stageConfigs.docs.map(stageDoc => stageDoc.data())
-    );
+    const publicData = createPublicDataFromStageConfigs(stages);
 
     for (const dataItem of publicData) {
       const dataDoc = app.firestore()
@@ -79,8 +76,19 @@ export const createCohort = onCall(async (request) => {
       transaction.set(dataDoc, dataItem);
     }
 
-    // TODO: Set relevant stages (e.g., with no min participants)
-    // as unlocked (right now, this is checked on client side)
+    // Set relevant stages (e.g., with no min participants and no wait for all
+    // participants) as unlocked
+    for (const stage of stages) {
+      if (
+        stage.progress.minParticipants === 0 &&
+        !stage.progress.waitForAllParticipants
+      ) {
+        cohortConfig.stageUnlockMap[stage.id] = true;
+      }
+    }
+
+    // Write cohort config
+    transaction.set(document, cohortConfig);
   });
 
   return { id: document.id };
