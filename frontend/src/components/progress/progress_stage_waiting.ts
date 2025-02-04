@@ -49,6 +49,7 @@ export class Progress extends MobxLitElement {
       this.completeWaitingLoading = true;
       // completedWaiting is now used to track "ready to start"
       await this.participantService.updateWaitingPhaseCompletion(stageId);
+      window.location.reload();
       this.completeWaitingLoading = false;
     };
 
@@ -62,8 +63,7 @@ export class Progress extends MobxLitElement {
 
       return html`
         <pr-button
-          color=${numWaiting > 0 ? 'neutral' : 'primary'}
-          ?disabled=${numWaiting > 0}
+          color="primary"
           ?loading=${this.completeWaitingLoading}
           @click=${onUpdateStatus}
         >
