@@ -183,17 +183,6 @@ export class CohortService extends Service {
 
   // If stage is in a waiting phase
   isStageInWaitingPhase(stageId: string) {
-    const stageConfig = this.sp.experimentService.getStage(stageId);
-    if (!stageConfig) return true;
-
-    // If stage does not require waiting, then false
-    if (
-      stageConfig.progress.minParticipants === 0 &&
-      !stageConfig.progress.waitForAllParticipants
-    ) {
-      return false;
-    }
-
     // Return false if stage is unlocked for cohort, else true
     return !this.cohortConfig?.stageUnlockMap[stageId];
   }
