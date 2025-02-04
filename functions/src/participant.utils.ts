@@ -1,6 +1,7 @@
 import { Timestamp } from 'firebase-admin/firestore';
 import {
   ParticipantProfileExtended,
+  ParticipantStatus
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
@@ -61,7 +62,7 @@ export async function updateCohortStageUnlocked(
   cohortId: string,
   stageId: string
 ) {
-  await app.firestore().runTransaction(async (transction) => {
+  await app.firestore().runTransaction(async (transaction) => {
     // Get active participants for given cohort
     // TODO: Create shared utils under /utils for isActiveParticipant
     const activeStatuses = [

@@ -13,7 +13,10 @@ import {
   generateParticipantPublicId,
   setProfile,
 } from '@deliberation-lab/utils';
-import {updateParticipantNextStage} from './participant.utils';
+import {
+  updateCohortStageUnlocked,
+  updateParticipantNextStage
+} from './participant.utils';
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
