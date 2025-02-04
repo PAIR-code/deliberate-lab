@@ -60,12 +60,8 @@ export class ParticipantView extends MobxLitElement {
     const stage = this.experimentService.getStage(stageId ?? '');
 
     const renderContent = () => {
-      // Render landing if (no stage ID or hasn't started experiment)
-      // AND not experimenter
-      if (
-        (!stageId || !this.participantService.profile?.timestamps.startExperiment)
-        && !this.authService.isExperimenter
-      ) {
+      // Render landing if stage ID is undefined
+      if (!stageId) {
         return html`
           <div class="content">${this.renderLanding()}</div>
         `;
@@ -179,16 +175,15 @@ export class ParticipantView extends MobxLitElement {
 
     // If stage not yet unlocked, do not show to participants
     if (
-      !this.participantService.canAccessStage(stage.id) &&
+      (!this.participantService.profile?.timestamps.startExperiment ||
+      !this.participantService.canAccessStage(stage.id)) &&
       !this.authService.isExperimenter
     ) {
       return html`
         <div class="content">
           <div>Stage not available yet</div>
           <pr-button @click=${() => {
-            this.participantService.setCurrentStageView(
-              this.participantService.profile?.currentStageId ?? undefined
-            );
+            this.participantService.setCurrentStageView(undefined);
           }}>
             Go to current stage
           </pr-button>

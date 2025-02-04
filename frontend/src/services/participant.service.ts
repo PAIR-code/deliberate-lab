@@ -230,8 +230,12 @@ export class ParticipantService extends Service {
 
           // Load profile to participant answer service
           this.sp.participantAnswerService.setProfile(this.profile);
-          // Set current stage
-          this.currentStageViewId = this.profile.currentStageId;
+          // Set current stage (use undefined if experiment not started)
+          if (this.profile.timestamps.startExperiment) {
+            this.currentStageViewId = this.profile.currentStageId;
+          } else {
+            this.currentStageViewId = undefined;
+          }
 
           this.isProfileLoading = false;
         }
