@@ -289,7 +289,7 @@ const reproductiveRightsSurveyConfig = {
 
     createMultipleChoiceSurveyQuestion({
       questionTitle:
-        'How strongly do you feel about your views on the issue of abortion legality?',
+        'Thinking about the issue of abortion legality, how likely is it that you might change your views on this issue in the future?',
       options: createMultipleChoiceItems([
         'Very likely',
         'Somewhat likely',
