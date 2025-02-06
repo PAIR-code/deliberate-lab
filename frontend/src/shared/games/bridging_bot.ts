@@ -19,6 +19,8 @@ import {
   createMultipleChoiceSurveyQuestion,
   ScaleSurveyQuestion,
   MultipleChoiceItem,
+  SurveyStageConfig,
+  SurveyQuestion,
 } from '@deliberation-lab/utils';
 
 export const BBOT_METADATA = createMetadataConfig({
@@ -206,8 +208,30 @@ const BBOT_DEMOGRAPHIC_SURVEY_STAGE = createSurveyStage({
   ],
 });
 
+const pastActionQuestions: SurveyQuestion[] = [
+  createCheckSurveyQuestion({
+    questionTitle:
+      'I have donated to an abortion rights or anti-abortion organization',
+  }),
+  createCheckSurveyQuestion({
+    questionTitle:
+      'I have attended a protest or rally related to abortion policy',
+  }),
+  createCheckSurveyQuestion({
+    questionTitle: 'I have contacted an elected official about abortion policy',
+  }),
+  createCheckSurveyQuestion({
+    questionTitle:
+      'I have discussed abortion rights extensively with friends or family',
+  }),
+  createCheckSurveyQuestion({
+    questionTitle:
+      'I have made a decision about whether to vote for a political candidate due to their beliefs on abortion',
+  }),
+];
+
 // we use this twice
-const reproductiveRightsSurveyConfig = {
+const reproductiveRightsSurveyConfig: Partial<SurveyStageConfig> = {
   name: 'Beliefs about abortion',
   game: StageGame.BBOT,
   questions: [
@@ -297,40 +321,25 @@ const reproductiveRightsSurveyConfig = {
         'Very unlikely',
       ]),
     }),
-
-    createCheckSurveyQuestion({
-      questionTitle:
-        'I have donated to an abortion rights or anti-abortion organization',
-    }),
-    createCheckSurveyQuestion({
-      questionTitle:
-        'I have attended a protest or rally related to abortion policy',
-    }),
-    createCheckSurveyQuestion({
-      questionTitle:
-        'I have contacted an elected official about abortion policy',
-    }),
-    createCheckSurveyQuestion({
-      questionTitle:
-        'I have discussed abortion rights extensively with friends or family',
-    }),
-    createCheckSurveyQuestion({
-      questionTitle:
-        'I have made a decision about whether to vote for a political candidate due to their beliefs on abortion',
-    }),
   ],
 };
-const BBOT_REPRODUCTIVE_RIGHTS_SURVEY_STAGE_PRE = createSurveyStage({
-  id: 'reproductive_rights_survey_pre',
-  ...reproductiveRightsSurveyConfig,
-});
+
 const BBOT_REPRODUCTIVE_RIGHTS_SURVEY_STAGE_POST = createSurveyStage({
   id: 'reproductive_rights_survey_post',
   ...reproductiveRightsSurveyConfig,
 });
+reproductiveRightsSurveyConfig.questions = [
+  ...(reproductiveRightsSurveyConfig.questions as SurveyQuestion[]),
+  ...pastActionQuestions,
+];
+
+const BBOT_REPRODUCTIVE_RIGHTS_SURVEY_STAGE_PRE = createSurveyStage({
+  id: 'reproductive_rights_survey_pre',
+  ...reproductiveRightsSurveyConfig,
+});
 
 // we use this twice
-const democraticResiprocitySurveyConfig = {
+const democraticResiprocitySurveyConfig: Partial<SurveyStageConfig> = {
   name: "Beliefs about abortion (cont'd)",
   descriptions: createStageTextConfig({
     primaryText: 'Indicate how much you agree or disagree with each statement.',
