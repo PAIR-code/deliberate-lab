@@ -67,6 +67,7 @@ export enum StageGame {
   LAS = 'las', // Lost at Sea
   RTV = 'rtv', // Reality TV Debate.
   CHP = 'chp', // Chip Negotiation
+  BBOT = 'bbot', // Bridging Bot
 }
 
 /**

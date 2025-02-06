@@ -37,6 +37,10 @@ import {
   RTV_METADATA,
   getRTVStageConfigs,
 } from '../../shared/games/reality_tv_chat';
+import {
+  BBOT_METADATA,
+  getBbotStageConfigs,
+} from '../../shared/games/bridging_bot';
 
 import {styles} from './stage_builder_dialog.scss';
 
@@ -114,7 +118,7 @@ export class StageBuilderDialog extends MobxLitElement {
       </div>
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()} ${this.renderRealityTVCard()}
-        ${this.renderChipNegotiationCard()}
+        ${this.renderChipNegotiationCard()} ${this.renderBbotCard()}
       </div>
     `;
   }
@@ -182,6 +186,19 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addGame}>
         <div class="title">🪙 ${CHIP_GAME_METADATA.name}</div>
         <div>${CHIP_GAME_METADATA.description}</div>
+      </div>
+    `;
+  }
+
+  private renderBbotCard() {
+    const addGame = () => {
+      this.addGame(BBOT_METADATA, getBbotStageConfigs());
+    };
+
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">🪙 ${BBOT_METADATA.name}</div>
+        <div>${BBOT_METADATA.description}</div>
       </div>
     `;
   }
