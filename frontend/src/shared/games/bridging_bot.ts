@@ -230,112 +230,107 @@ const pastActionQuestions: SurveyQuestion[] = [
   }),
 ];
 
-// we use this twice
-const reproductiveRightsSurveyConfig: Partial<SurveyStageConfig> = {
-  name: 'Beliefs about abortion',
-  game: StageGame.BBOT,
-  questions: [
-    createMultipleChoiceSurveyQuestion({
-      questionTitle: 'Do you think that abortion should be...',
-      options: createMultipleChoiceItems([
-        'Legal in all cases',
-        'Legal in most cases',
-        'Illegal in most cases',
-        'Illegal in all cases',
-      ]),
-    }),
+const beliefQuestions: SurveyQuestion[] = [
+  createMultipleChoiceSurveyQuestion({
+    questionTitle: 'Do you think that abortion should be...',
+    options: createMultipleChoiceItems([
+      'Legal in all cases',
+      'Legal in most cases',
+      'Illegal in most cases',
+      'Illegal in all cases',
+    ]),
+  }),
 
-    createMultipleChoiceSurveyQuestion({
-      questionTitle:
-        'Thinking about the area where you live, how easy or difficult do you think it would be for someone to obtain an abortion near you?',
-      options: createMultipleChoiceItems([
-        'Very difficult',
-        'Somewhat difficult',
-        'Somewhat easy',
-        'Very easy',
-      ]),
-    }),
+  createMultipleChoiceSurveyQuestion({
+    questionTitle:
+      'Thinking about the area where you live, how easy or difficult do you think it would be for someone to obtain an abortion near you?',
+    options: createMultipleChoiceItems([
+      'Very difficult',
+      'Somewhat difficult',
+      'Somewhat easy',
+      'Very easy',
+    ]),
+  }),
 
-    createMultipleChoiceSurveyQuestion({
-      questionTitle:
-        'Still thinking about the area where you live, do you think that obtaining an abortion should be...',
-      options: createMultipleChoiceItems([
-        'Harder than it is now ',
-        'Easier than it is now ',
-        'About the same difficulty as it is now',
-      ]),
-    }),
+  createMultipleChoiceSurveyQuestion({
+    questionTitle:
+      'Still thinking about the area where you live, do you think that obtaining an abortion should be...',
+    options: createMultipleChoiceItems([
+      'Harder than it is now ',
+      'Easier than it is now ',
+      'About the same difficulty as it is now',
+    ]),
+  }),
 
-    createMultipleChoiceSurveyQuestion({
-      questionTitle:
-        'Regardless of whether you think abortion should be legal or illegal, how well does this statement describe your views? "The decision about whether to have an abortion should belong solely to the pregnant woman."',
-      options: createMultipleChoiceItems([
-        'Extremely well',
-        'Very well',
-        'Somewhat well',
-        'Not too well',
-        'Not at all well',
-      ]),
-    }),
+  createMultipleChoiceSurveyQuestion({
+    questionTitle:
+      'Regardless of whether you think abortion should be legal or illegal, how well does this statement describe your views? "The decision about whether to have an abortion should belong solely to the pregnant woman."',
+    options: createMultipleChoiceItems([
+      'Extremely well',
+      'Very well',
+      'Somewhat well',
+      'Not too well',
+      'Not at all well',
+    ]),
+  }),
 
-    createMultipleChoiceSurveyQuestion({
-      questionTitle:
-        'Regardless of whether you think abortion should be legal or illegal, how well does this statement describe your views? "Human life begins at conception, so a fetus is a person with rights."',
-      options: createMultipleChoiceItems([
-        'Extremely well',
-        'Very well',
-        'Somewhat well',
-        'Not too well',
-        'Not at all well',
-      ]),
-    }),
+  createMultipleChoiceSurveyQuestion({
+    questionTitle:
+      'Regardless of whether you think abortion should be legal or illegal, how well does this statement describe your views? "Human life begins at conception, so a fetus is a person with rights."',
+    options: createMultipleChoiceItems([
+      'Extremely well',
+      'Very well',
+      'Somewhat well',
+      'Not too well',
+      'Not at all well',
+    ]),
+  }),
 
-    createMultipleChoiceSurveyQuestion({
-      questionTitle:
-        'How certain are you about your views on the issue of abortion legality?',
-      options: createMultipleChoiceItems([
-        'Very certain',
-        'Somewhat certain',
-        'Somewhat uncertain',
-        'Very uncertain',
-      ]),
-    }),
+  createMultipleChoiceSurveyQuestion({
+    questionTitle:
+      'How certain are you about your views on the issue of abortion legality?',
+    options: createMultipleChoiceItems([
+      'Very certain',
+      'Somewhat certain',
+      'Somewhat uncertain',
+      'Very uncertain',
+    ]),
+  }),
 
-    createMultipleChoiceSurveyQuestion({
-      questionTitle:
-        'How strongly do you feel about your views on the issue of abortion legality?',
-      options: createMultipleChoiceItems([
-        'Very strongly',
-        'Somewhat strongly',
-        'Not at all strongly',
-      ]),
-    }),
+  createMultipleChoiceSurveyQuestion({
+    questionTitle:
+      'How strongly do you feel about your views on the issue of abortion legality?',
+    options: createMultipleChoiceItems([
+      'Very strongly',
+      'Somewhat strongly',
+      'Not at all strongly',
+    ]),
+  }),
 
-    createMultipleChoiceSurveyQuestion({
-      questionTitle:
-        'Thinking about the issue of abortion legality, how likely is it that you might change your views on this issue in the future?',
-      options: createMultipleChoiceItems([
-        'Very likely',
-        'Somewhat likely',
-        'Somewhat unlikely',
-        'Very unlikely',
-      ]),
-    }),
-  ],
-};
-
-const BBOT_REPRODUCTIVE_RIGHTS_SURVEY_STAGE_POST = createSurveyStage({
-  id: 'reproductive_rights_survey_post',
-  ...reproductiveRightsSurveyConfig,
-});
-reproductiveRightsSurveyConfig.questions = [
-  ...(reproductiveRightsSurveyConfig.questions as SurveyQuestion[]),
-  ...pastActionQuestions,
+  createMultipleChoiceSurveyQuestion({
+    questionTitle:
+      'Thinking about the issue of abortion legality, how likely is it that you might change your views on this issue in the future?',
+    options: createMultipleChoiceItems([
+      'Very likely',
+      'Somewhat likely',
+      'Somewhat unlikely',
+      'Very unlikely',
+    ]),
+  }),
 ];
 
 const BBOT_REPRODUCTIVE_RIGHTS_SURVEY_STAGE_PRE = createSurveyStage({
   id: 'reproductive_rights_survey_pre',
-  ...reproductiveRightsSurveyConfig,
+  name: 'Beliefs about abortion',
+  game: StageGame.BBOT,
+  questions: [...beliefQuestions, ...pastActionQuestions],
+});
+
+const BBOT_REPRODUCTIVE_RIGHTS_SURVEY_STAGE_POST = createSurveyStage({
+  id: 'reproductive_rights_survey_post',
+  name: 'Beliefs about abortion',
+  game: StageGame.BBOT,
+  questions: beliefQuestions,
 });
 
 // we use this twice
