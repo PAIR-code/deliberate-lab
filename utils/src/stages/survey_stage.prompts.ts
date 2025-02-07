@@ -27,15 +27,15 @@ export function createSurveyQuestionPrompt(question: BaseSurveyQuestion): string
     }
 }
 
-export function _createTextQuestionPrompt(question: TextSurveyQuestion): string {
+function _createTextQuestionPrompt(question: TextSurveyQuestion): string {
     return `Answer the following question freely: "${question.questionTitle}"`;
 }
 
-export function _createCheckQuestionPrompt(question: CheckSurveyQuestion): string {
+function _createCheckQuestionPrompt(question: CheckSurveyQuestion): string {
     return `Answer the following question with only "yes" or "no": "${question.questionTitle}"`;
 }
 
-export function _createMultipleChoiceQuestionPrompt(question: MultipleChoiceSurveyQuestion): string {
+function _createMultipleChoiceQuestionPrompt(question: MultipleChoiceSurveyQuestion): string {
     let prompt = `Multiple Choice Question: ${question.questionTitle}\n Options: \n`;
     for (let i in question.options) {
         const option = question.options[i].text
@@ -46,7 +46,7 @@ export function _createMultipleChoiceQuestionPrompt(question: MultipleChoiceSurv
     return prompt;
 }
 
-export function _createScaleQuestionPrompt(question: ScaleSurveyQuestion): string {
+function _createScaleQuestionPrompt(question: ScaleSurveyQuestion): string {
     return `From a scale of ${question.lowerValue} (${question.lowerText}) to ${question.upperValue} (${question.upperText})
     rate the following question: "${question.questionTitle}"?
     Answer with a single number only.`;
