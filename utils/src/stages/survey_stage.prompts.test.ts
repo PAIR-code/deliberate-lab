@@ -1,9 +1,5 @@
 import {  
-    _createTextQuestionPrompt, 
-    _createCheckQuestionPrompt, 
-    _createMultipleChoiceQuestionPrompt, 
-    _createScaleQuestionPrompt,
-    createSurveyQuestionPrompt
+        createSurveyQuestionPrompt
 } from "./survey_stage.prompts";
 
 import { 
@@ -16,17 +12,17 @@ import {
 
 
 describe("Ensure relevant information is included in the LLM input prompts", () => {
-    test("_createTextQuestionPrompt should include question title", () => {
+    test("Free Text prompt should include question title", () => {
         const question: TextSurveyQuestion = { id: "q1", kind: SurveyQuestionKind.TEXT, questionTitle: "What is your name?" };
-        expect(_createTextQuestionPrompt(question)).toContain("What is your name?");
+        expect(createSurveyQuestionPrompt(question)).toContain("What is your name?");
     });
 
-    test("_createCheckQuestionPrompt should include question title", () => {
+    test("Single Check prompt should include question title", () => {
         const question: CheckSurveyQuestion = { id: "q2", kind: SurveyQuestionKind.CHECK, questionTitle: "Do you agree?", isRequired: true };
-        expect(_createCheckQuestionPrompt(question)).toContain("Do you agree?");
+        expect(createSurveyQuestionPrompt(question)).toContain("Do you agree?");
     });
 
-    test("_createMultipleChoiceQuestionPrompt should include question title and options", () => {
+    test("Multiple Choice prompt should include question title and options", () => {
         const question: MultipleChoiceSurveyQuestion = { 
             id: "q3",
             kind: SurveyQuestionKind.MULTIPLE_CHOICE, 
@@ -43,7 +39,7 @@ describe("Ensure relevant information is included in the LLM input prompts", () 
         expect(prompt).toContain("Green");
     });
 
-    test("_createScaleQuestionPrompt should include question title and scale values", () => {
+    test("Scale prompt should include question title and scale values", () => {
         const question: ScaleSurveyQuestion = { 
             id: "q4",
             kind: SurveyQuestionKind.SCALE, 
@@ -53,7 +49,7 @@ describe("Ensure relevant information is included in the LLM input prompts", () 
             upperValue: 5, 
             upperText: "Excellent" 
         };
-        const prompt = _createScaleQuestionPrompt(question);
+        const prompt = createSurveyQuestionPrompt(question);
         expect(prompt).toContain("Rate your experience");
         expect(prompt).toContain("1");
         expect(prompt).toContain("Bad");
