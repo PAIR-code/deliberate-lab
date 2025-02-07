@@ -2,7 +2,7 @@ import {
   ExperimenterData,
   StageConfig,
   StageKind,
-  ParticipantProfileExtended
+  ParticipantProfileExtended,
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from './agent.utils';
 import {getAgentParticipantRankingStageResponse} from './stages/ranking.utils';
@@ -65,6 +65,8 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
         participant,
         stage
       );
+    case StageKind.SURVEY:
+      return await createAgentParticipantSurveyStagePrompt()
     default:
       prompt = `This is a test prompt. Please output a funny joke.`;
   }
