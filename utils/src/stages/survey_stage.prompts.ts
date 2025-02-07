@@ -28,11 +28,11 @@ export function createQuestionPrompt(question: BaseSurveyQuestion): string {
 }
 
 export function _createTextQuestionPrompt(question: TextSurveyQuestion): string {
-    return `Answer the following question freely: ${question.questionTitle}`;
+    return `Answer the following question freely: "${question.questionTitle}"`;
 }
 
 export function _createCheckQuestionPrompt(question: CheckSurveyQuestion): string {
-    return `Answer the following question with "yes" or "no": ${question.questionTitle}`;
+    return `Answer the following question with only "yes" or "no": "${question.questionTitle}"`;
 }
 
 export function _createMultipleChoiceQuestionPrompt(question: MultipleChoiceSurveyQuestion): string {
@@ -41,12 +41,13 @@ export function _createMultipleChoiceQuestionPrompt(question: MultipleChoiceSurv
         const option = question.options[i].text
         prompt += `${i}. ${option}\n`;
     }
-    prompt += "Select one or more of the options above."
+    prompt += "Select one of the options above. Answer with a single number only."
 
     return prompt;
 }
 
 export function _createScaleQuestionPrompt(question: ScaleSurveyQuestion): string {
-    return `How much do you agree with the following statement: ${question.questionTitle}, 
-    from a scale of ${question.lowerValue} (${question.lowerText}) to ${question.upperValue} (${question.upperText})?`;
+    return `From a scale of ${question.lowerValue} (${question.lowerText}) to ${question.upperValue} (${question.upperText})
+    rate the following question: "${question.questionTitle}"?
+    Answer with a single number only.`;
 }
