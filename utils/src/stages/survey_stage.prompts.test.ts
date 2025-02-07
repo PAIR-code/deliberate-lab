@@ -11,8 +11,7 @@ import {
     TextSurveyQuestion, 
     CheckSurveyQuestion, 
     MultipleChoiceSurveyQuestion, 
-    ScaleSurveyQuestion, 
-    MultipleChoiceItem
+    ScaleSurveyQuestion
 } from "./survey_stage";
 
 describe("Survey Prompt Functions", () => {

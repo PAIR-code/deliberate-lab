@@ -25,7 +25,7 @@ export function createAgentParticipantSurveyStagePrompt(questions: BaseSurveyQue
  * @param {BaseSurveyQuestion} question - A survey question object.
  * @returns {string} - The formatted question prompt.
  */
-function createQuestionPrompt(question: BaseSurveyQuestion): string {
+export function createQuestionPrompt(question: BaseSurveyQuestion): string {
     switch (question.kind) {
         case SurveyQuestionKind.TEXT:
             return _createTextQuestionPrompt(question as TextSurveyQuestion);
