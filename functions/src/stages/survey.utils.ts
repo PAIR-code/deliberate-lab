@@ -18,7 +18,7 @@ export async function getAgentParticipantSurveyResponse(
     // Build prompt
     for (let question of stage.questions) {
         const prompt = createQuestionPrompt(question);
-
+        console.debug("Prompt:", prompt)
         // Call LLM API
         const response = await getAgentResponse(experimenterData, prompt);
         answers.push(response);
