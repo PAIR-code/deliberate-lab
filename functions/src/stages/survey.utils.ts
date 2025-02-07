@@ -1,8 +1,8 @@
 import {
-    createAgentParticipantSurveyStagePrompt, 
-    SurveyStageConfig, 
+    SurveyStageConfig,
     ExperimenterData,
     ParticipantProfileExtended,
+    createQuestionPrompt,
 } from "@deliberation-lab/utils";
 import { getAgentResponse } from '../agent.utils';
 
@@ -13,19 +13,25 @@ export async function getAgentParticipantSurveyResponse(
     experimenterData: ExperimenterData, // for making LLM call
     participant: ParticipantProfileExtended,
     stage: SurveyStageConfig) {
+    
+    const answers = []
     // Build prompt
-    const prompt = createAgentParticipantSurveyStagePrompt(stage.questions);
+    for (let question of stage.questions) {
+        const prompt = createQuestionPrompt(question);
 
-    // Call LLM API
-    const response = await getAgentResponse(experimenterData, prompt);
+        // Call LLM API
+        const response = await getAgentResponse(experimenterData, prompt);
+        answers.push(response);
+    }
+
     // Check console log for response
     console.log(
         'TESTING AGENT PARTICIPANT PROMPT FOR RANKING STAGE\n',
         `Experiment: ${experimentId}\n`,
         `Participant: ${participant.publicId}\n`,
         `Stage: ${stage.name} (${stage.kind})\n`,
-        response
+        answers
     );
 
-    return response;
+    return answers;
 }
