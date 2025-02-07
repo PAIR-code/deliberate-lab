@@ -85,6 +85,8 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
         participant,
         stage,
       );
+    case StageKind.SURVEY:
+      return await createAgentParticipantSurveyStagePrompt()
     default:
       prompt = `This is a test prompt. Please output a funny joke.`;
   }
