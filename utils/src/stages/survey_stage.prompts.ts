@@ -11,7 +11,7 @@ import {
  * @param {BaseSurveyQuestion} question - A survey question object.
  * @returns {string} - The formatted question prompt.
  */
-export function createQuestionPrompt(question: BaseSurveyQuestion): string {
+export function createSurveyQuestionPrompt(question: BaseSurveyQuestion): string {
     switch (question.kind) {
         case SurveyQuestionKind.TEXT:
             return _createTextQuestionPrompt(question as TextSurveyQuestion);

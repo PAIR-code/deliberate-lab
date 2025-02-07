@@ -2,7 +2,8 @@ import {
     _createTextQuestionPrompt, 
     _createCheckQuestionPrompt, 
     _createMultipleChoiceQuestionPrompt, 
-    _createScaleQuestionPrompt
+    _createScaleQuestionPrompt,
+    createSurveyQuestionPrompt
 } from "./survey_stage.prompts";
 
 import { 
@@ -13,7 +14,8 @@ import {
     ScaleSurveyQuestion
 } from "./survey_stage";
 
-describe("Survey Prompt Functions", () => {
+
+describe("Ensure relevant information is included in the LLM input prompts", () => {
     test("_createTextQuestionPrompt should include question title", () => {
         const question: TextSurveyQuestion = { id: "q1", kind: SurveyQuestionKind.TEXT, questionTitle: "What is your name?" };
         expect(_createTextQuestionPrompt(question)).toContain("What is your name?");
@@ -34,7 +36,7 @@ describe("Survey Prompt Functions", () => {
                  {id: "id2", text: "Blue", imageId: "image-id2"}, 
                  {id: "id3", text: "Green", imageId: "image-id3"}] 
         };
-        const prompt = _createMultipleChoiceQuestionPrompt(question);
+        const prompt = createSurveyQuestionPrompt(question);
         expect(prompt).toContain("Choose a color");
         expect(prompt).toContain("Red");
         expect(prompt).toContain("Blue");
