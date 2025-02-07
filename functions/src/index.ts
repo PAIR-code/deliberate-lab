@@ -25,6 +25,7 @@ export * from './stages/ranking.endpoints';
 export * from './stages/ranking.utils';
 
 export * from './stages/survey.endpoints';
+export * from './stages/survey.utils';
 
 // API functions
 export * from './api/gemini.api';

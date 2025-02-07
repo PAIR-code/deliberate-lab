@@ -6,6 +6,7 @@ import {
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from './agent.utils';
 import {getAgentParticipantRankingStageResponse} from './stages/ranking.utils';
+import {getAgentParticipantSurveyResponse} from './stages/survey.utils';
 
 import { onCall } from 'firebase-functions/v2/https';
 
@@ -66,7 +67,11 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
         stage
       );
     case StageKind.SURVEY:
-      return await createAgentParticipantSurveyStagePrompt()
+      return await getAgentParticipantSurveyResponse(
+        experimentId, 
+        experimenterData, 
+        participant,
+        stage);
     default:
       prompt = `This is a test prompt. Please output a funny joke.`;
   }
