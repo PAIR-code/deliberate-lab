@@ -9,6 +9,7 @@
  */
 
 import { OllamaServerConfig } from "@deliberation-lab/utils"
+import { ModelResponse } from './model.response';
 
 
 /**
@@ -56,7 +57,7 @@ async function decodeResponse(response: Response): Promise<string> {
         throw new Error("Failed to read response body");
     }
 
-    const { done, value } = await reader.read();
+    const { done: _, value } = await reader.read();
     const rawjson = new TextDecoder().decode(value);
 
     if (isError(rawjson)) {
