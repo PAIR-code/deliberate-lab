@@ -6,20 +6,6 @@ import {
     SurveyQuestionKind, 
     TextSurveyQuestion } from "./survey_stage";
 
-
-/**
- * Generates a full prompt to be given to an LLM agent for a given set of survey questions.
- * @param {BaseSurveyQuestion[]} questions - An array of survey questions.
- * @returns {string} - A prompt describing the entire survey.
- */
-export function createAgentParticipantSurveyStagePrompt(questions: BaseSurveyQuestion[]): string {
-    let fullPrompt = "";
-    for (let question of questions) {
-        fullPrompt += createQuestionPrompt(question);
-    }
-    return fullPrompt;
-}
-
 /**
  * Determines the appropriate prompt format for a given survey question.
  * @param {BaseSurveyQuestion} question - A survey question object.
@@ -42,11 +28,11 @@ export function createQuestionPrompt(question: BaseSurveyQuestion): string {
 }
 
 export function _createTextQuestionPrompt(question: TextSurveyQuestion): string {
-    return `Answer freely: ${question.questionTitle}`;
+    return `Answer the following question freely: ${question.questionTitle}`;
 }
 
 export function _createCheckQuestionPrompt(question: CheckSurveyQuestion): string {
-    return `Answer with True/False: ${question.questionTitle}`;
+    return `Answer the following question with "yes" or "no": ${question.questionTitle}`;
 }
 
 export function _createMultipleChoiceQuestionPrompt(question: MultipleChoiceSurveyQuestion): string {

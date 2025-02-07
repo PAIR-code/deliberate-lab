@@ -1,9 +1,8 @@
-import { 
-    createAgentParticipantSurveyStagePrompt, 
+import {  
     _createTextQuestionPrompt, 
     _createCheckQuestionPrompt, 
     _createMultipleChoiceQuestionPrompt, 
-    _createScaleQuestionPrompt 
+    _createScaleQuestionPrompt
 } from "./survey_stage.prompts";
 
 import { 
@@ -60,17 +59,4 @@ describe("Survey Prompt Functions", () => {
         expect(prompt).toContain("Excellent");
     });
 
-    test("createAgentParticipantSurveyStagePrompt should include all question prompts", () => {
-        const questions = [
-            { id: "q5", kind: SurveyQuestionKind.TEXT, questionTitle: "What is your name?" },
-            { id: "q6", kind: SurveyQuestionKind.CHECK, questionTitle: "Do you agree?" }
-        ];
-        const prompt = createAgentParticipantSurveyStagePrompt(questions);
-        expect(prompt).toContain("What is your name?");
-        expect(prompt).toContain("Do you agree?");
-    });
-
-    test("createAgentParticipantSurveyStagePrompt should return empty string for empty input", () => {
-        expect(createAgentParticipantSurveyStagePrompt([])).toBe("");
-    });
 });
