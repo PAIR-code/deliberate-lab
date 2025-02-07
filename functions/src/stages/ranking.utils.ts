@@ -1,4 +1,6 @@
 import {
+  ExperimenterData,
+  ParticipantProfile,
   ParticipantProfileExtended,
   ParticipantStatus,
   RankingStageConfig,
