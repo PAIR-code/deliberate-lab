@@ -38,9 +38,10 @@ type OllamaMessage = {
  * @returns the model's response as a string, or empty string if an error occured
  */
 export async function ollamaChat(messages: string[],
+                                 modelName: string,
                                 serverConfig: OllamaServerConfig)
                                 : Promise<ModelResponse> {
-    const messageObjects = encodeMessages(messages, serverConfig.llmType);
+    const messageObjects = encodeMessages(messages, modelName);
     const response = await fetch(serverConfig.url, { method: "POST", body: JSON.stringify(messageObjects) });
     const responseMessage = await decodeResponse(response);
     return { text: responseMessage };
@@ -73,14 +74,14 @@ async function decodeResponse(response: Response): Promise<string> {
 /**
  * Transform string-messages to JSON objects appropriate for the model's API. 
  * @param messages a list of string-messages to be sent to the LLM
- * @param modelType the type of llm running in the server (e.g. "llama3.2"). 
+ * @param modelName the type of llm running in the server (e.g. "llama3.2").
  * Keep in mind that the model must have been loaded server-side in order to be used.
  * @returns appropriate JSON objects which the model can understand
  */
-function encodeMessages(messages: string[], modelType: string): OutgoingMessage {
+function encodeMessages(messages: string[], modelName: string): OutgoingMessage {
     const messageObjs: OllamaMessage[] = messages.map((message) => ({ role: "user", content: message }));
     return {
-        model: modelType,
+        model: modelName,
         messages: messageObjs,
         stream: false
     };
