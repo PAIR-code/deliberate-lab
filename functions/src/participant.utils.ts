@@ -115,9 +115,7 @@ export async function updateCohortStageUnlocked(
     // start stage ("completedWaiting" is currently used for readyToStart)
     // If not waitForAllParticipants, return true
     const isParticipantsReady = () => {
-      if (!stage.progress.waitForAllParticipants) {
-        return true;
-      }
+      let numReady = 0;
 
       for (const participant of participants) {
         // If current participant, assume completed
@@ -128,13 +126,15 @@ export async function updateCohortStageUnlocked(
         const isReadyToStart = participant.timestamps.startExperiment &&
           participant.timestamps.completedWaiting[stageId];
         const isCurrent = participant.privateId === currentParticipantId;
-        if (
-          (isTransfer || !isReadyToStart) && !isCurrent
-        ) {
-          return false;
+        if (!isTransfer && isReadyToStart || isCurrent) {
+          numReady += 1;
         }
       }
-      return true;
+
+      if (stage.progress.waitForAllParticipants) {
+        return numReady >= participants.length
+      }
+      return numReady >= stage.progress.minParticipants;
     }
 
     // If all active participants are ready to start
