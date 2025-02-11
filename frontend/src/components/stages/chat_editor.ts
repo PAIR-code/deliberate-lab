@@ -450,11 +450,11 @@ export class ChatEditor extends MobxLitElement {
       <div class="description">
         Currently only used for OpenAI and OAI-compatible APIs.
       </div>
+      <label for="temperature">Temperature</label>
+        <div class="description">
+          The lower this value, the more deterministic the model's outcome will be.
+        </div>
       <div class="number-input">
-        <label for="temperature">Temperature</label>
-          <div class="description">
-            The lower this value, the more deterministic the model's outcome will be.
-          </div>
         <input
           .disabled=${!this.experimentEditor.canEditStages}
           type="number"
@@ -464,10 +464,12 @@ export class ChatEditor extends MobxLitElement {
           .value=${agent.generationConfig.temperature}
           @input=${updateTemperature}
         />
-        <label for="topP">Top P</label>
-          <div class="description">
-            If this value is less than 1.0, the model will discard unlikely tokens and sample from only tokens comprising that much probability mass.
-          </div>
+       </div>
+       <label for="topP">Top P</label>
+         <div class="description">
+           If this value is less than 1.0, the model will discard unlikely tokens and sample from only tokens comprising that much probability mass.
+         </div>
+      <div class="number-input">
         <input
           .disabled=${!this.experimentEditor.canEditStages}
           type="number"
@@ -477,27 +479,31 @@ export class ChatEditor extends MobxLitElement {
           .value=${agent.generationConfig.topP}
           @input=${updateTopP}
         />
-        <label for="frequencyPenalty">Frequency penalty</label>
-          <div class="description">
-            Positive values will penalize tokens based on how frequently they have appeared in the text.
-          </div>
+      </div>
+      <label for="frequencyPenalty">Frequency penalty</label>
+        <div class="description">
+          Positive values will penalize tokens based on how frequently they have appeared in the text.
+        </div>
+      <div class="number-input">
         <input
           .disabled=${!this.experimentEditor.canEditStages}
           type="number"
-          min="-2.0"
+          min="0.0"
           max="2.0"
           step="0.1"
           .value=${agent.generationConfig.frequencyPenalty}
           @input=${updateFrequencyPenalty}
         />
+      </div>
         <label for="presencePenalty">Presence penalty</label>
           <div class="description">
             Positive values will penalize tokens that have already appeared in the text (regardless of frequency).
           </div>
+      <div class="number-input">
         <input
           .disabled=${!this.experimentEditor.canEditStages}
           type="number"
-          min="-2.0"
+          min="0.0"
           max="2.0"
           step="0.1"
           .value=${agent.generationConfig.presencePenalty}
@@ -550,7 +556,7 @@ export class ChatEditor extends MobxLitElement {
          Add custom fields to the request body.
        </div>
        ${agent.generationConfig.customRequestBodyFields.map((field, fieldIndex) => html`
-         <div class="custom-field">
+         <div class="name-value-input">
            <pr-textarea
              label="Field name"
              variant="outlined"

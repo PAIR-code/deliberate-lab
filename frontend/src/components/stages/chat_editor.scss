@@ -101,6 +101,15 @@ pr-textarea {
   width: max-content;
 }
 
+.name-value-input {
+  @include common.flex-row;
+  background: var(--md-sys-color-surface-variant);
+  border-radius: common.$spacing-small;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+  width: max-content;
+}
+
 .divider {
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
