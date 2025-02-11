@@ -81,6 +81,22 @@ export async function updateCohortStageUnlocked(
     ).docs.map(doc => doc.data() as ParticipantProfile)
     .filter(participant => !(participant.currentStatus in activeStatuses));
 
+    // Get participant pending transfer into current cohort
+    const transferParticipants = (await app.firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('participants')
+      .where('transferCohortId', '==', cohortId)
+      .get()
+    ).docs.map(doc => doc.data() as ParticipantProfile)
+    .filter(
+      participant => participant.currentStatus
+        !== ParticipantStatus.TRANSFER_PENDING
+    );
+
+    // Consider both participants actively in cohort and pending transfer
+    const participants = [...activeParticipants, ...transferParticipants];
+
     // Get current stage config
     const stage = (await app.firestore()
       .collection('experiments')
@@ -92,7 +108,7 @@ export async function updateCohortStageUnlocked(
 
     // Check if min participants requirement is met
     const hasMinParticipants = () => {
-      return stage.progress.minParticipants <= activeParticipants.length;
+      return stage.progress.minParticipants <= participants.length;
     };
 
     // If waitForAllParticipants, check if active participants are ready to
@@ -103,14 +119,17 @@ export async function updateCohortStageUnlocked(
         return true;
       }
 
-      for (const participant of activeParticipants) {
+      for (const participant of participants) {
         // If current participant, assume completed
         // (Firestore may not have updated yet)
-        // Otherwise, check if started experiment and completed waiting
+        // Otherwise, check if ready to start / transferring in current stage
+        const isTransfer = participant.currentStageId === stageId &&
+          participant.currentStatus === ParticipantStatus.TRANSFER_PENDING;
+        const isReadyToStart = participant.timestamps.startExperiment &&
+          participant.timestamps.completedWaiting[stageId];
+        const isCurrent = participant.privateId === currentParticipantId;
         if (
-          (!participant.timestamps.startExperiment ||
-          !participant.timestamps.completedWaiting[stageId]) &&
-          participant.privateId !== currentParticipantId
+          (isTransfer || !isReadyToStart) && !isCurrent
         ) {
           return false;
         }

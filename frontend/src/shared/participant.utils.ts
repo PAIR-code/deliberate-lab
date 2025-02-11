@@ -149,9 +149,9 @@ export function isUnlockedStage(
   // they are "locked" until they accept
   if (
     participant.currentStageId === stageId &&
-    participant.currentStatus !== ParticipantStatus.TRANSFER_PENDING
+    participant.currentStatus === ParticipantStatus.TRANSFER_PENDING
   ) {
-    return true;
+    return false;
   }
 
   return participant.timestamps.startExperiment &&
