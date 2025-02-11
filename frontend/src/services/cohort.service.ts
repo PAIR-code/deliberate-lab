@@ -420,6 +420,11 @@ export class CohortService extends Service {
     if (!this.experimentId || !this.cohortId) return;
 
     this.isParticipantsLoading = true;
+
+    // Clear participant maps before repopulating
+    this.participantMap = {};
+    this.transferParticipantMap = {};
+
     // TODO: Use participantPublicData collection once available
     // so that privateIds are not surfaced
     this.unsubscribe.push(
@@ -442,14 +447,11 @@ export class CohortService extends Service {
             changedDocs = snapshot.docs;
           }
 
-          // Clear participant maps before repopulating
-          this.participantMap = {};
-          this.transferParticipantMap = {};
-
           changedDocs.forEach((doc) => {
             const profile = doc.data() as ParticipantProfile;
             if (profile.currentCohortId === this.cohortId) {
               this.participantMap[profile.publicId] = profile;
+              delete this.transferParticipantMap[profile.publicId];
             } else if (profile.transferCohortId === this.cohortId) {
               this.transferParticipantMap[profile.publicId] = profile;
             }
