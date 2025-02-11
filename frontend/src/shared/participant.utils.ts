@@ -153,7 +153,9 @@ export function isUnlockedStage(
   ) {
     return true;
   }
-  return participant.timestamps.completedWaiting[stageId];
+
+  return participant.timestamps.startExperiment &&
+    participant.timestamps.completedWaiting[stageId];
 }
 
 /** Return number of stages that participant completed. */

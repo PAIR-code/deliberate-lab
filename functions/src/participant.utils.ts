@@ -106,8 +106,10 @@ export async function updateCohortStageUnlocked(
       for (const participant of activeParticipants) {
         // If current participant, assume completed
         // (Firestore may not have updated yet)
+        // Otherwise, check if started experiment and completed waiting
         if (
-          !participant.timestamps.completedWaiting[stageId] &&
+          (!participant.timestamps.startExperiment ||
+          !participant.timestamps.completedWaiting[stageId]) &&
           participant.privateId !== currentParticipantId
         ) {
           return false;
