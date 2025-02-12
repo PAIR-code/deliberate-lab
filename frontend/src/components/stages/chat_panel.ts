@@ -25,7 +25,7 @@ import {
 import {isActiveParticipant} from '../../shared/participant.utils';
 import {
   convertUnifiedTimestampToDate,
-  getHashBasedColor
+  getHashBasedColor,
 } from '../../shared/utils';
 import {styles} from './chat_panel.scss';
 
@@ -112,21 +112,21 @@ export class ChatPanel extends MobxLitElement {
         Discussion ended at
         ${convertUnifiedTimestampToDate(
           publicStageData.discussionEndTimestamp,
-          false
+          false,
         )}.
       </div>`;
     } else if (!publicStageData.discussionStartTimestamp) {
       const timeText = `Time remaining: ${this.formatTime(
-        this.stage.timeLimitInMinutes * 60
+        this.stage.timeLimitInMinutes * 60,
       )}`;
       timerHtml = html`<div class="countdown">${timeText}</div>`;
     } else {
       const startText = `Conversation started at: ${convertUnifiedTimestampToDate(
         publicStageData.discussionStartTimestamp,
-        false
+        false,
       )}`;
       const timeText = `Time remaining: ${this.formatTime(
-        this.timeRemainingInSeconds!
+        this.timeRemainingInSeconds!,
       )}`;
       timerHtml = html`<div class="countdown">
         ${startText}<br />${timeText}
@@ -157,12 +157,13 @@ export class ChatPanel extends MobxLitElement {
 
   private renderApiCheck() {
     if (
-      !checkApiKeyExists(this.authService.experimenterData)
-      && this.authService.isExperimenter
+      !checkApiKeyExists(this.authService.experimenterData) &&
+      this.authService.isExperimenter
     ) {
       return html`
         <div class="warning">
-          <b>Note:</b> In order for LLM calls to work, you must add an API key or server configuration under Experimenter Settings.
+          <b>Note:</b> In order for LLM calls to work, you must add an API key
+          or server configuration under Experimenter Settings.
         </div>
       `;
     }
@@ -177,9 +178,6 @@ export class ChatPanel extends MobxLitElement {
     }
 
     const agents = this.stage.agents;
-    if (agents && agents.length === 0) {
-    }
-
     return html`
       <div class="panel-item">
         <div class="panel-item-title">
@@ -187,7 +185,7 @@ export class ChatPanel extends MobxLitElement {
         </div>
         ${agents && agents.length > 0 ? this.renderApiCheck() : ''}
         ${activeParticipants.map((participant) =>
-          this.renderProfile(participant)
+          this.renderProfile(participant),
         )}
         ${agents.map((agent) => this.renderAgent(agent))}
       </div>
@@ -203,7 +201,10 @@ export class ChatPanel extends MobxLitElement {
         position="BOTTOM_END"
       >
         <div class="profile">
-          <avatar-icon .emoji=${agent.avatar} .color=${getHashBasedColor(agent?.avatar ?? '')}>
+          <avatar-icon
+            .emoji=${agent.avatar}
+            .color=${getHashBasedColor(agent?.avatar ?? '')}
+          >
           </avatar-icon>
           <div class="name">
             ${agent.name}${this.authService.isDebugMode ? ` 🤖` : ''}
@@ -214,7 +215,8 @@ export class ChatPanel extends MobxLitElement {
   }
 
   private renderProfile(profile: ParticipantProfile) {
-    const isCurrent = profile.publicId === this.participantService.profile?.publicId;
+    const isCurrent =
+      profile.publicId === this.participantService.profile?.publicId;
     return html`
       <participant-profile-display
         .profile=${profile}

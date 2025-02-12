@@ -1,17 +1,17 @@
-import { Type, type Static } from '@sinclair/typebox';
+import {Type, type Static} from '@sinclair/typebox';
 import {
   MetadataConfigSchema,
-  PermissionsConfigSchema
+  PermissionsConfigSchema,
 } from './shared.validation';
-import { StageConfigData } from './stages/stage.validation';
+import {StageConfigData} from './stages/stage.validation';
 
 /** Shorthand for strict TypeBox object validation */
-const strict = { additionalProperties: false } as const;
+const strict = {additionalProperties: false} as const;
 
 /** Firestore collections that experiments can be written to. */
 export const FirestoreCollectionData = Type.Union([
-    Type.Literal('experimentTemplates'),
-    Type.Literal('experiments')
+  Type.Literal('experimentTemplates'),
+  Type.Literal('experiments'),
 ]);
 
 // ************************************************************************* //
@@ -19,8 +19,8 @@ export const FirestoreCollectionData = Type.Union([
 // ************************************************************************* //
 export const ExperimentCohortLockData = Type.Object(
   {
-    experimentId: Type.String({ minLength: 1}),
-    cohortId: Type.String({ minLength: 1 }),
+    experimentId: Type.String({minLength: 1}),
+    cohortId: Type.String({minLength: 1}),
     isLock: Type.Boolean(),
   },
   strict,
@@ -36,7 +36,7 @@ export const ExperimentDeletionData = Type.Object(
     // Firestore collection name to save experiment under
     // (e.g., 'experimentTemplates' if the experiment is a template)
     collectionName: FirestoreCollectionData,
-    experimentId: Type.String({ minLength: 1}),
+    experimentId: Type.String({minLength: 1}),
   },
   strict,
 );
@@ -47,8 +47,14 @@ export type ExperimentDeletionData = Static<typeof ExperimentDeletionData>;
 // writeExperiment endpoint                                                  //
 // ************************************************************************* //
 export const CohortParticipantConfigSchema = Type.Object({
-  minParticipantsPerCohort: Type.Union([Type.Null(), Type.Number({ minimum: 0 })]),
-  maxParticipantsPerCohort: Type.Union([Type.Null(), Type.Number({ minimum: 1 })]),
+  minParticipantsPerCohort: Type.Union([
+    Type.Null(),
+    Type.Number({minimum: 0}),
+  ]),
+  maxParticipantsPerCohort: Type.Union([
+    Type.Null(),
+    Type.Number({minimum: 1}),
+  ]),
   includeAllParticipantsInCohortCount: Type.Boolean(),
 });
 

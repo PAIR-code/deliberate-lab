@@ -1,19 +1,11 @@
-import {
-  CohortConfig
-} from './cohort';
-import {
-  Experiment
-} from './experiment';
-import {
-  ParticipantProfileExtended
-} from './participant';
-import {
-  ChatMessage
-} from './stages/chat_stage';
+import {CohortConfig} from './cohort';
+import {Experiment} from './experiment';
+import {ParticipantProfileExtended} from './participant';
+import {ChatMessage} from './stages/chat_stage';
 import {
   StageConfig,
   StageParticipantAnswer,
-  StagePublicData
+  StagePublicData,
 } from './stages/stage';
 
 /** Experiment data download types and functions. */
@@ -50,7 +42,7 @@ export interface CohortDownload {
 
 /** Create experiment download object. */
 export function createExperimentDownload(
-  experiment: Experiment
+  experiment: Experiment,
 ): ExperimentDownload {
   return {
     experiment,
@@ -62,7 +54,7 @@ export function createExperimentDownload(
 
 /** Create participant download object. */
 export function createParticipantDownload(
-  profile: ParticipantProfileExtended
+  profile: ParticipantProfileExtended,
 ): ParticipantDownload {
   return {
     profile,
@@ -71,9 +63,7 @@ export function createParticipantDownload(
 }
 
 /** Create cohort download object. */
-export function createCohortDownload(
-  cohort: CohortConfig
-): CohortDownload {
+export function createCohortDownload(cohort: CohortConfig): CohortDownload {
   return {
     cohort,
     dataMap: {},

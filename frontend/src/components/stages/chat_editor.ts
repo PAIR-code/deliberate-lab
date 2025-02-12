@@ -44,7 +44,8 @@ export class ChatEditor extends MobxLitElement {
     if (!checkApiKeyExists(this.authService.experimenterData)) {
       apiCheck = html`
         <div class="warning">
-          <b>Note:</b> In order for LLM calls to work, you must add an API key or server configuration under Experimenter Settings.
+          <b>Note:</b> In order for LLM calls to work, you must add an API key
+          or server configuration under Experimenter Settings.
         </div>
       `;
     } else {
@@ -184,7 +185,7 @@ export class ChatEditor extends MobxLitElement {
           ...agent,
           name,
         },
-        index
+        index,
       );
     };
 
@@ -209,16 +210,13 @@ export class ChatEditor extends MobxLitElement {
           ...agent,
           model,
         },
-        index
+        index,
       );
     };
 
     return html`
-      <div class="question-label">Model</div>
-      <div class="description">
-        Model ID for the agent. Currently only used for OpenAI and OAI-compatible APIs.
-      </div>
       <pr-textarea
+        label="Model"
         placeholder="Model ID"
         variant="outlined"
         .value=${agent.model}
@@ -237,7 +235,7 @@ export class ChatEditor extends MobxLitElement {
           ...agent,
           prompt,
         },
-        index
+        index,
       );
     };
 
@@ -275,7 +273,7 @@ export class ChatEditor extends MobxLitElement {
           ...agent,
           avatar,
         },
-        index
+        index,
       );
     };
 
@@ -292,7 +290,11 @@ export class ChatEditor extends MobxLitElement {
             @change=${handleAvatarClick}
           >
           </md-radio>
-          <avatar-icon .emoji=${emoji} .square=${true} .color=${getHashBasedColor(emoji)}>
+          <avatar-icon
+            .emoji=${emoji}
+            .square=${true}
+            .color=${getHashBasedColor(emoji)}
+          >
           </avatar-icon>
         </div>
       `;
@@ -303,7 +305,7 @@ export class ChatEditor extends MobxLitElement {
         <div class="question-label">Avatar</div>
         <div class="radio-wrapper">
           ${LLM_AGENT_AVATARS.map((avatar, index) =>
-            renderAvatarRadio(avatar, index)
+            renderAvatarRadio(avatar, index),
           )}
         </div>
       </div>
@@ -351,7 +353,7 @@ export class ChatEditor extends MobxLitElement {
             ...agent,
             wordsPerMinute,
           },
-          index
+          index,
         );
       }
     };
@@ -389,10 +391,10 @@ export class ChatEditor extends MobxLitElement {
             ...agent,
             generationConfig: {
               ...agent.generationConfig,
-              temperature
+              temperature,
             },
           },
-          index
+          index,
         );
       }
     };
@@ -405,10 +407,10 @@ export class ChatEditor extends MobxLitElement {
             ...agent,
             generationConfig: {
               ...agent.generationConfig,
-              topP
+              topP,
             },
           },
-          index
+          index,
         );
       }
     };
@@ -421,10 +423,10 @@ export class ChatEditor extends MobxLitElement {
             ...agent,
             generationConfig: {
               ...agent.generationConfig,
-              frequencyPenalty
+              frequencyPenalty,
             },
           },
-          index
+          index,
         );
       }
     };
@@ -437,10 +439,10 @@ export class ChatEditor extends MobxLitElement {
             ...agent,
             generationConfig: {
               ...agent.generationConfig,
-              presencePenalty
+              presencePenalty,
             },
           },
-          index
+          index,
         );
       }
     };
@@ -451,9 +453,10 @@ export class ChatEditor extends MobxLitElement {
         Currently only used for OpenAI and OAI-compatible APIs.
       </div>
       <label for="temperature">Temperature</label>
-        <div class="description">
-          The lower this value, the more deterministic the model's outcome will be.
-        </div>
+      <div class="description">
+        The lower this value, the more deterministic the model's outcome will
+        be.
+      </div>
       <div class="number-input">
         <input
           .disabled=${!this.experimentEditor.canEditStages}
@@ -464,11 +467,12 @@ export class ChatEditor extends MobxLitElement {
           .value=${agent.generationConfig.temperature}
           @input=${updateTemperature}
         />
-       </div>
-       <label for="topP">Top P</label>
-         <div class="description">
-           If this value is less than 1.0, the model will discard unlikely tokens and sample from only tokens comprising that much probability mass.
-         </div>
+      </div>
+      <label for="topP">Top P</label>
+      <div class="description">
+        If this value is less than 1.0, the model will discard unlikely tokens
+        and sample from only tokens comprising that much probability mass.
+      </div>
       <div class="number-input">
         <input
           .disabled=${!this.experimentEditor.canEditStages}
@@ -481,9 +485,10 @@ export class ChatEditor extends MobxLitElement {
         />
       </div>
       <label for="frequencyPenalty">Frequency penalty</label>
-        <div class="description">
-          Positive values will penalize tokens based on how frequently they have appeared in the text.
-        </div>
+      <div class="description">
+        Positive values will penalize tokens based on how frequently they have
+        appeared in the text.
+      </div>
       <div class="number-input">
         <input
           .disabled=${!this.experimentEditor.canEditStages}
@@ -495,10 +500,11 @@ export class ChatEditor extends MobxLitElement {
           @input=${updateFrequencyPenalty}
         />
       </div>
-        <label for="presencePenalty">Presence penalty</label>
-          <div class="description">
-            Positive values will penalize tokens that have already appeared in the text (regardless of frequency).
-          </div>
+      <label for="presencePenalty">Presence penalty</label>
+      <div class="description">
+        Positive values will penalize tokens that have already appeared in the
+        text (regardless of frequency).
+      </div>
       <div class="number-input">
         <input
           .disabled=${!this.experimentEditor.canEditStages}
@@ -510,30 +516,33 @@ export class ChatEditor extends MobxLitElement {
           @input=${updatePresencePenalty}
         />
       </div>
-     `;
-   }
+    `;
+  }
 
   private renderAgentCustomRequestBodyFields(
-     agent: AgentConfig,
-     index: number
-   ) {
-     const addField = () => {
-       this.updateAgent(
-         {
-           ...agent,
-           generationConfig: {
-               ...agent.generationConfig,
-             customRequestBodyFields: [
-               ...agent.generationConfig.customRequestBodyFields,
-               {name: '', value: ''},
-             ],
-           }
-         },
-         index
-       );
-     };
+    agent: AgentConfig,
+    index: number,
+  ) {
+    const addField = () => {
+      this.updateAgent(
+        {
+          ...agent,
+          generationConfig: {
+            ...agent.generationConfig,
+            customRequestBodyFields: [
+              ...agent.generationConfig.customRequestBodyFields,
+              {name: '', value: ''},
+            ],
+          },
+        },
+        index,
+      );
+    };
 
-    const updateField = (fieldIndex: number, field: Partial<{ name: string; value: string }>) => {
+    const updateField = (
+      fieldIndex: number,
+      field: Partial<{name: string; value: string}>,
+    ) => {
       agent.generationConfig.customRequestBodyFields[fieldIndex] = {
         ...agent.generationConfig.customRequestBodyFields[fieldIndex],
         ...field,
@@ -544,31 +553,29 @@ export class ChatEditor extends MobxLitElement {
     const deleteField = (fieldIndex: number) => {
       agent.generationConfig.customRequestBodyFields = [
         ...agent.generationConfig.customRequestBodyFields.slice(0, index),
-        ...agent.generationConfig.customRequestBodyFields.slice(index+1),
+        ...agent.generationConfig.customRequestBodyFields.slice(index + 1),
       ];
       this.updateAgent(agent, index);
-    }
+    };
 
-
-     return html`
-       <div class="question-label">Custom request body fields</div>
-       <div class="description">
-         Add custom fields to the request body.
-       </div>
-       ${agent.generationConfig.customRequestBodyFields.map((field, fieldIndex) => html`
+    return html`
+      <div class="question-label">Custom request body fields</div>
+      <div class="description">Add custom fields to the request body.</div>
+      ${agent.generationConfig.customRequestBodyFields.map(
+        (field, fieldIndex) => html`
          <div class="name-value-input">
            <pr-textarea
              label="Field name"
              variant="outlined"
              .value=${field.name}
-             @input=${(e: InputEvent) => updateField(fieldIndex, { name: (e.target as HTMLInputElement).value })}
+             @input=${(e: InputEvent) => updateField(fieldIndex, {name: (e.target as HTMLInputElement).value})}
            >
            </pr-textarea>
            <pr-textarea
              label="Field value"
              variant="outlined"
              .value=${field.value}
-             @input=${(e: InputEvent) => updateField(fieldIndex, { value: (e.target as HTMLInputElement).value })}
+             @input=${(e: InputEvent) => updateField(fieldIndex, {value: (e.target as HTMLInputElement).value})}
            >
            </pr-textarea>
            <pr-icon-button
@@ -580,10 +587,11 @@ export class ChatEditor extends MobxLitElement {
               @click=${(e: InputEvent) => deleteField(fieldIndex)}
            >
          </div>
-       `)}
-       <pr-button @click=${addField}>Add field</pr-button>
-     `;
-   }
+       `,
+      )}
+      <pr-button @click=${addField}>Add field</pr-button>
+    `;
+  }
 
   private renderAgentResponseConfig(agent: AgentConfig, index: number) {
     const config = agent.responseConfig;

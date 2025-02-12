@@ -2,7 +2,7 @@ import {
   Experiment,
   ExperimenterProfileExtended,
   StageConfig,
-  getFullExperimenterConfig
+  getFullExperimenterConfig,
 } from '@deliberation-lab/utils';
 import {
   Unsubscribe,
@@ -53,35 +53,39 @@ export class AdminService extends Service {
     this.unsubscribeAll();
 
     // Load experimenters based on allowlist
-    const allowlistQuery = collection(this.sp.firebaseService.firestore, 'allowlist');
+    const allowlistQuery = collection(
+      this.sp.firebaseService.firestore,
+      'allowlist',
+    );
     this.unsubscribe.push(
       onSnapshot(
         allowlistQuery,
         (snapshot) => {
-          this.experimenters = snapshot.docs.map(
-            doc => getFullExperimenterConfig(
-              {...doc.data(), email: doc.id} as Partial<ExperimenterProfileExtended>
-            )
+          this.experimenters = snapshot.docs.map((doc) =>
+            getFullExperimenterConfig({
+              ...doc.data(),
+              email: doc.id,
+            } as Partial<ExperimenterProfileExtended>),
           );
 
           this.isAllowlistLoading = false;
         },
-        error => {
+        (error) => {
           console.log(error);
-        }
-      )
+        },
+      ),
     );
 
     // Subscribe to relevant experiment documents
-    const experimentQuery = collection(this.sp.firebaseService.firestore, 'experiments');
+    const experimentQuery = collection(
+      this.sp.firebaseService.firestore,
+      'experiments',
+    );
     this.unsubscribe.push(
-      onSnapshot(
-        experimentQuery,
-        (snapshot) => {
-          this.experiments = collectSnapshotWithId<Experiment>(snapshot, 'id');
-          this.areExperimentsLoading = false;
-        }
-      )
+      onSnapshot(experimentQuery, (snapshot) => {
+        this.experiments = collectSnapshotWithId<Experiment>(snapshot, 'id');
+        this.areExperimentsLoading = false;
+      }),
     );
   }
 

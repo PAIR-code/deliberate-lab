@@ -16,7 +16,7 @@ import {
   ComprehensionQuestion,
   ComprehensionQuestionKind,
   MultipleChoiceComprehensionQuestion,
-  MultipleChoiceItem
+  MultipleChoiceItem,
 } from '@deliberation-lab/utils';
 
 import {unsafeHTML} from 'lit/directives/unsafe-html.js';
@@ -28,11 +28,9 @@ import {styles} from './comprehension_view.scss';
 export class ComprehensionView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  private readonly participantService = core.getService(
-    ParticipantService
-  );
+  private readonly participantService = core.getService(ParticipantService);
   private readonly participantAnswerService = core.getService(
-    ParticipantAnswerService
+    ParticipantAnswerService,
   );
 
   @property() stage: ComprehensionStageConfig | null = null;
@@ -55,7 +53,7 @@ export class ComprehensionView extends MobxLitElement {
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="stage-content">
-        ${this.stage.questions.map(question => this.renderQuestion(question))}
+        ${this.stage.questions.map((question) => this.renderQuestion(question))}
       </div>
       <stage-footer .disabled=${!checksComplete()}>
         ${this.stage.progress.showParticipantProgress
@@ -71,7 +69,9 @@ export class ComprehensionView extends MobxLitElement {
         return nothing;
       }
       return html`
-        <div class="error-text">This answer is incorrect. Please try again.</div>
+        <div class="error-text">
+          This answer is incorrect. Please try again.
+        </div>
       `;
     };
 
@@ -79,16 +79,17 @@ export class ComprehensionView extends MobxLitElement {
       case ComprehensionQuestionKind.MULTIPLE_CHOICE:
         return html`
           <div class="question-wrapper">
-            ${this.renderMultipleChoiceQuestion(question)}
-            ${renderError()}
+            ${this.renderMultipleChoiceQuestion(question)} ${renderError()}
           </div>
-      `;
+        `;
       default:
         return nothing;
     }
   }
 
-  private renderMultipleChoiceQuestion(question: MultipleChoiceComprehensionQuestion) {
+  private renderMultipleChoiceQuestion(
+    question: MultipleChoiceComprehensionQuestion,
+  ) {
     return html`
       <div class="radio-question">
         <div class="radio-question-wrapper">
@@ -96,7 +97,7 @@ export class ComprehensionView extends MobxLitElement {
         </div>
         <div class="radio-question-wrapper">
           ${question.options.map((option) =>
-            this.renderRadioButton(option, question.id)
+            this.renderRadioButton(option, question.id),
           )}
         </div>
       </div>
@@ -107,7 +108,7 @@ export class ComprehensionView extends MobxLitElement {
     if (!this.stage) return;
     const answer = this.participantAnswerService.getComprehensionAnswer(
       this.stage.id,
-      questionId
+      questionId,
     );
     return answer === choiceId;
   }
@@ -118,7 +119,9 @@ export class ComprehensionView extends MobxLitElement {
     const handleMultipleChoiceClick = (e: Event) => {
       if (!this.stage) return;
       this.participantAnswerService.updateComprehensionAnswer(
-        this.stage.id, questionId, choice.id
+        this.stage.id,
+        questionId,
+        choice.id,
       );
     };
 
@@ -143,7 +146,8 @@ export class ComprehensionView extends MobxLitElement {
     if (!this.stage) return false;
 
     const answer = this.participantAnswerService.getComprehensionAnswer(
-      this.stage.id, question.id
+      this.stage.id,
+      question.id,
     );
     return answer;
   }
@@ -152,7 +156,8 @@ export class ComprehensionView extends MobxLitElement {
     if (!this.stage) return false;
 
     const answer = this.participantAnswerService.getComprehensionAnswer(
-      this.stage.id, question.id
+      this.stage.id,
+      question.id,
     );
 
     if (

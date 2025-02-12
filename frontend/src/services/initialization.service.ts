@@ -1,9 +1,9 @@
-import { observable } from "mobx";
+import {observable} from 'mobx';
 
-import { AnalyticsService } from "./analytics.service";
-import { FirebaseService } from "./firebase.service";
-import { RouterService } from "./router.service";
-import { Service } from "./service";
+import {AnalyticsService} from './analytics.service';
+import {FirebaseService} from './firebase.service';
+import {RouterService} from './router.service';
+import {Service} from './service';
 
 interface ServiceProvider {
   analyticsService: AnalyticsService;

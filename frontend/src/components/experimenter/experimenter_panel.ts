@@ -279,7 +279,7 @@ export class Panel extends MobxLitElement {
       this.participantSearchQuery === ''
         ? []
         : this.experimentManager.getParticipantSearchResults(
-            this.participantSearchQuery
+            this.participantSearchQuery,
           );
 
     const renderResult = (participant: ParticipantProfileExtended) => {
@@ -376,7 +376,7 @@ export class Panel extends MobxLitElement {
             ? html`<div>No agents configured in the current stage</div>`
             : nothing}
           ${agents.map((agent, index) =>
-            this.renderAgentEditor(stageId, agent, index)
+            this.renderAgentEditor(stageId, agent, index),
           )}
         </div>
       </div>
@@ -387,7 +387,7 @@ export class Panel extends MobxLitElement {
   private renderAgentEditor(
     stageId: string,
     agent: AgentConfig,
-    index: number
+    index: number,
   ) {
     const updatePrompt = (e: InputEvent) => {
       const prompt = (e.target as HTMLTextAreaElement).value;
@@ -419,7 +419,7 @@ export class Panel extends MobxLitElement {
         this.agentEditor.updateAgent(
           stageId,
           {...agent, wordsPerMinute: wpm},
-          index
+          index,
         );
       }
     };
@@ -516,7 +516,7 @@ export class Panel extends MobxLitElement {
     const onClick = () => {
       // Display confirmation dialog
       const isConfirmed = window.confirm(
-        'This will create a copy of this experiment. Are you sure you want to proceed?'
+        'This will create a copy of this experiment. Are you sure you want to proceed?',
       );
       if (!isConfirmed) return;
       this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_FORK);
@@ -541,7 +541,7 @@ export class Panel extends MobxLitElement {
       this.analyticsService.trackButtonClick(
         this.experimentManager.isCreator
           ? ButtonClick.EXPERIMENT_EDIT
-          : ButtonClick.EXPERIMENT_PREVIEW_CONFIG
+          : ButtonClick.EXPERIMENT_PREVIEW_CONFIG,
       );
       this.experimentManager.setIsEditing(true);
     };
@@ -569,7 +569,7 @@ export class Panel extends MobxLitElement {
         ?disabled=${!this.experimentManager.isCreator}
         @click=${() => {
           const isConfirmed = window.confirm(
-            `Are you sure you want to delete this experiment?`
+            `Are you sure you want to delete this experiment?`,
           );
           if (!isConfirmed) return;
 
@@ -577,12 +577,7 @@ export class Panel extends MobxLitElement {
           this.experimentManager.deleteExperiment();
         }}
       >
-        <pr-icon
-          icon="delete"
-          color="error"
-          variant="default"
-        >
-        </pr-icon>
+        <pr-icon icon="delete" color="error" variant="default"> </pr-icon>
         <div>Delete experiment</div>
       </pr-button>
     `;

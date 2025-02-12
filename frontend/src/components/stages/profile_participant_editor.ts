@@ -19,7 +19,7 @@ import {
   PROFILE_AVATARS,
   MAN_EMOJIS,
   WOMAN_EMOJIS,
-  PERSON_EMOJIS
+  PERSON_EMOJIS,
 } from '../../shared/constants';
 import {ProfileStageConfig} from '@deliberation-lab/utils';
 
@@ -31,7 +31,9 @@ export class ProfileEditor extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly participantService = core.getService(ParticipantService);
-  private readonly participantAnswerService = core.getService(ParticipantAnswerService);
+  private readonly participantAnswerService = core.getService(
+    ParticipantAnswerService,
+  );
 
   @property() stage: ProfileStageConfig | null = null;
 
@@ -54,11 +56,9 @@ export class ProfileEditor extends MobxLitElement {
       <div class="profile-wrapper">
         ${this.renderName()} ${this.renderPronouns()} ${this.renderAvatars()}
       </div>
-      <stage-footer
-        .disabled=${!filled}
-        .onNextClick=${updateProfile}>
-        ${this.stage.progress.showParticipantProgress ?
-          html`<progress-stage-completed></progress-stage-completed>`
+      <stage-footer .disabled=${!filled} .onNextClick=${updateProfile}>
+        ${this.stage.progress.showParticipantProgress
+          ? html`<progress-stage-completed></progress-stage-completed>`
           : nothing}
       </stage-footer>
     `;
@@ -67,7 +67,7 @@ export class ProfileEditor extends MobxLitElement {
   private renderName() {
     const handleNameInput = (e: Event) => {
       const name = (e.target as HTMLTextAreaElement).value;
-      this.participantAnswerService.updateProfile({ name });
+      this.participantAnswerService.updateProfile({name});
     };
 
     return html`
@@ -114,12 +114,14 @@ export class ProfileEditor extends MobxLitElement {
 
     const isMatch = (pronouns: string) => {
       return (
-        this.participantAnswerService.profile?.pronouns?.toLowerCase() === pronouns
+        this.participantAnswerService.profile?.pronouns?.toLowerCase() ===
+        pronouns
       );
     };
 
     const isCustom = () => {
-      const pronouns = this.participantAnswerService.profile?.pronouns?.toLowerCase();
+      const pronouns =
+        this.participantAnswerService.profile?.pronouns?.toLowerCase();
       if (
         pronouns === 'she/her' ||
         pronouns === 'he/him' ||
@@ -241,7 +243,7 @@ export class ProfileEditor extends MobxLitElement {
         <div class="title">Avatar</div>
         <div class="avatars-wrapper">
           ${PROFILE_AVATARS.map((avatar, index) =>
-            renderAvatarRadio(avatar, index)
+            renderAvatarRadio(avatar, index),
           )}
         </div>
       </div>

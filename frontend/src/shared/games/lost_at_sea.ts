@@ -161,16 +161,16 @@ export const ITEMS_SET_3: Array<[string, string]> = [
 
 export const LAS_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS: MultipleChoiceSurveyQuestion[] =
   ITEMS_SET_1.map((itemSet) =>
-    createLASMultipleChoiceQuestion(itemSet[0], itemSet[1])
+    createLASMultipleChoiceQuestion(itemSet[0], itemSet[1]),
   );
 
 export const LAS_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS: MultipleChoiceSurveyQuestion[] =
   ITEMS_SET_2.map((itemSet) =>
-    createLASMultipleChoiceQuestion(itemSet[0], itemSet[1])
+    createLASMultipleChoiceQuestion(itemSet[0], itemSet[1]),
   );
 
 export function createLASSurvivalSurvey(
-  itemQuestions: MultipleChoiceSurveyQuestion[]
+  itemQuestions: MultipleChoiceSurveyQuestion[],
 ) {
   const questions: SurveyQuestion[] = [];
   itemQuestions.forEach((question) => {
@@ -180,7 +180,7 @@ export function createLASSurvivalSurvey(
         questionTitle: LAS_ITEM_SCALE_QUESTION_TITLE,
         upperText: 'Very confident',
         lowerText: 'Not confident',
-      })
+      }),
     );
   });
   return questions;
@@ -196,7 +196,7 @@ export function getCorrectLASAnswer(id1: string, id2: string): string {
 
 export function createLASMultipleChoiceQuestion(
   id1: string,
-  id2: string
+  id2: string,
 ): MultipleChoiceSurveyQuestion {
   return {
     id: `las-${id1}-${id2}`,
@@ -336,7 +336,7 @@ const LAS_PART_1_SURVIVAL_SURVEY_STAGE = createSurveyStage({
   name: 'Initial survival task',
   descriptions: createStageTextConfig({infoText: LAS_SCENARIO_REMINDER}),
   questions: createLASSurvivalSurvey(
-    LAS_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS
+    LAS_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS,
   ),
 });
 
@@ -485,7 +485,7 @@ const LAS_PART_2_CHAT_DISCUSSIONS = ITEMS_SET_1.map((itemSet) =>
         name: LAS_ITEMS[itemSet[1]]?.name ?? '',
       },
     ],
-  })
+  }),
 );
 
 const LAS_PART_2_CHAT_STAGE = createChatStage({
@@ -525,7 +525,7 @@ export const LAS_PART_2_UPDATED_TASK_SURVEY_STAGE = createSurveyStage({
   name: 'Updated survival task',
   descriptions: createStageTextConfig({infoText: LAS_SCENARIO_REMINDER}),
   questions: createLASSurvivalSurvey(
-    LAS_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS
+    LAS_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS,
   ),
 });
 
@@ -700,7 +700,7 @@ export const LAS_PART_3_LEADER_TASK_SURVEY_STAGE = createSurveyStage({
   name: 'Representative task',
   descriptions: createStageTextConfig({infoText: LAS_SCENARIO_REMINDER}),
   questions: createLASSurvivalSurvey(
-    LAS_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS
+    LAS_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS,
   ),
 });
 

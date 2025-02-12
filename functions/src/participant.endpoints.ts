@@ -1,5 +1,5 @@
-import { Timestamp } from 'firebase-admin/firestore';
-import { Value } from '@sinclair/typebox/value';
+import {Timestamp} from 'firebase-admin/firestore';
+import {Value} from '@sinclair/typebox/value';
 import {
   ChipStagePublicData,
   CreateParticipantData,
@@ -13,13 +13,17 @@ import {
   generateParticipantPublicId,
   setProfile,
 } from '@deliberation-lab/utils';
+import {
+  updateCohortStageUnlocked,
+  updateParticipantNextStage,
+} from './participant.utils';
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
-import { onCall } from 'firebase-functions/v2/https';
+import {onCall} from 'firebase-functions/v2/https';
 
-import { app } from './app';
-import { AuthGuard } from './utils/auth-guard';
+import {app} from './app';
+import {AuthGuard} from './utils/auth-guard';
 import {
   checkConfigDataUnionOnPath,
   isUnionError,
@@ -36,7 +40,7 @@ import {
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
 export const createParticipant = onCall(async (request) => {
-  const { data } = request;
+  const {data} = request;
 
   // Validate input
   const validInput = Value.Check(CreateParticipantData, data);
@@ -51,7 +55,8 @@ export const createParticipant = onCall(async (request) => {
   });
 
   // Define document reference
-  const document = app.firestore()
+  const document = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('participants')
@@ -65,6 +70,7 @@ export const createParticipant = onCall(async (request) => {
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     // TODO: Confirm that cohort is not at max capacity
+
     // Confirm that cohort is not locked
     const experiment = (
       await app.firestore().doc(`experiments/${data.experimentId}`).get()
@@ -77,10 +83,11 @@ export const createParticipant = onCall(async (request) => {
     // Set participant profile fields
     const numParticipants = (
       await app
-      .firestore()
-      .collection(`experiments/${data.experimentId}/participants`)
-      .count().get())
-    .data().count;
+        .firestore()
+        .collection(`experiments/${data.experimentId}/participants`)
+        .count()
+        .get()
+    ).data().count;
 
     setProfile(numParticipants, participantConfig, data.isAnonymous);
 
@@ -91,7 +98,7 @@ export const createParticipant = onCall(async (request) => {
     transaction.set(document, participantConfig);
   });
 
-  return { id: document.id };
+  return {id: document.id};
 });
 
 function handleCreateParticipantValidationErrors(data: any) {
@@ -114,12 +121,13 @@ function handleCreateParticipantValidationErrors(data: any) {
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
 export const updateParticipantAcceptedTOS = onCall(async (request) => {
-  const { data } = request;
+  const {data} = request;
   const privateId = data.participantId;
   const acceptedTOS = data.acceptedTOS;
 
   // Define document reference
-  const document = app.firestore()
+  const document = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('participants')
@@ -127,12 +135,14 @@ export const updateParticipantAcceptedTOS = onCall(async (request) => {
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
-    const participant = (await document.get()).data() as ParticipantProfileExtended;
+    const participant = (
+      await document.get()
+    ).data() as ParticipantProfileExtended;
     participant.timestamps.acceptedTOS = acceptedTOS;
     transaction.set(document, participant);
   });
 
-  return { success: true };
+  return {success: true};
 });
 
 // ************************************************************************* //
@@ -141,12 +151,17 @@ export const updateParticipantAcceptedTOS = onCall(async (request) => {
 // Input structure: { experimentId, participantId, stageId }                 //
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
+// The "completedWaiting" map now tracks when the participant has
+// reached each stage --> this endpoint updates whether the participant
+// is ready to begin the stage. (Waiting is now determined by whether
+// or not the stage is unlocked in CohortConfig)
 export const updateParticipantWaiting = onCall(async (request) => {
-  const { data } = request;
+  const {data} = request;
   const privateId = data.participantId;
 
   // Define document reference
-  const document = app.firestore()
+  const document = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('participants')
@@ -154,12 +169,24 @@ export const updateParticipantWaiting = onCall(async (request) => {
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
-    const participant = (await document.get()).data() as ParticipantProfileExtended;
-    participant.timestamps.completedWaiting[data.stageId] = Timestamp.now();
+    const participant = (
+      await document.get()
+    ).data() as ParticipantProfileExtended;
+    participant.timestamps.readyStages[data.stageId] = Timestamp.now();
+
+    // Unlock the given stage for this cohort if all active participants
+    // have reached the stage
+    await updateCohortStageUnlocked(
+      data.experimentId,
+      participant.currentCohortId,
+      participant.currentStageId,
+      participant.privateId,
+    );
+
     transaction.set(document, participant);
   });
 
-  return { success: true };
+  return {success: true};
 });
 
 // ************************************************************************* //
@@ -169,11 +196,12 @@ export const updateParticipantWaiting = onCall(async (request) => {
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
 export const updateParticipantFailure = onCall(async (request) => {
-  const { data } = request;
+  const {data} = request;
   const privateId = data.participantId;
 
   // Define document reference
-  const document = app.firestore()
+  const document = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('participants')
@@ -181,13 +209,15 @@ export const updateParticipantFailure = onCall(async (request) => {
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
-    const participant = (await document.get()).data() as ParticipantProfileExtended;
+    const participant = (
+      await document.get()
+    ).data() as ParticipantProfileExtended;
     participant.currentStatus = data.status;
     participant.timestamps.endExperiment = Timestamp.now();
     transaction.set(document, participant);
   });
 
-  return { success: true };
+  return {success: true};
 });
 
 // ************************************************************************* //
@@ -197,12 +227,13 @@ export const updateParticipantFailure = onCall(async (request) => {
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
 export const updateParticipantProfile = onCall(async (request) => {
-  const { data } = request;
+  const {data} = request;
   const privateId = data.participantId;
   const profile = data.participantProfileBase;
 
   // Define document reference
-  const document = app.firestore()
+  const document = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('participants')
@@ -210,7 +241,9 @@ export const updateParticipantProfile = onCall(async (request) => {
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
-    const participant = (await document.get()).data() as ParticipantProfileExtended;
+    const participant = (
+      await document.get()
+    ).data() as ParticipantProfileExtended;
 
     if (profile.name) {
       participant.name = profile.name;
@@ -225,7 +258,7 @@ export const updateParticipantProfile = onCall(async (request) => {
     transaction.set(document, participant);
   });
 
-  return { success: true };
+  return {success: true};
 });
 
 // ************************************************************************* //
@@ -235,15 +268,17 @@ export const updateParticipantProfile = onCall(async (request) => {
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
 export const updateParticipantToNextStage = onCall(async (request) => {
-  const { data } = request;
+  const {data} = request;
   const privateId = data.participantId;
 
   // Define document references
-  const experimentDoc = app.firestore()
+  const experimentDoc = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId);
 
-  const participantDoc = app.firestore()
+  const participantDoc = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('participants')
@@ -258,47 +293,25 @@ export const updateParticipantToNextStage = onCall(async (request) => {
     return null;
   };
 
-  let response = { currentStageId: null, endExperiment: false };
+  let response = {currentStageId: null, endExperiment: false};
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     const experiment = (await experimentDoc.get()).data() as Experiment;
-    const participant = (await participantDoc.get()).data() as ParticipantProfileExtended;
+    const participant = (
+      await participantDoc.get()
+    ).data() as ParticipantProfileExtended;
 
-    response = updateParticipantNextStage(participant, experiment.stageIds);
+    response = await updateParticipantNextStage(
+      data.experimentId,
+      participant,
+      experiment.stageIds,
+    );
     transaction.set(participantDoc, participant);
   });
 
   return response;
 });
-
-function updateParticipantNextStage(
-  participant: ParticipantProfileExtended, stageIds: string[]
-) {
-  let response = { currentStageId: null, endExperiment: false };
-
-  const currentStageId = participant.currentStageId;
-  const currentStageIndex = stageIds.indexOf(currentStageId);
-
-  // Mark current stage as completed
-  const timestamp = Timestamp.now();
-  participant.timestamps.completedStages[currentStageId] = timestamp;
-
-  // If at end of experiment
-  if (currentStageIndex + 1 === stageIds.length) {
-    // Update end of experiment fields
-    participant.timestamps.endExperiment = timestamp;
-    participant.currentStatus = ParticipantStatus.SUCCESS;
-    response.endExperiment = true;
-  } else {
-    // Else, progress to next stage
-    const nextStageId = stageIds[currentStageIndex + 1];
-    participant.currentStageId = nextStageId;
-    response.currentStageId = nextStageId;
-  }
-
-  return response;
-}
 
 // ************************************************************************* //
 // acceptParticipantExperimentStart endpoint for participants                //
@@ -307,11 +320,12 @@ function updateParticipantNextStage(
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
 export const acceptParticipantExperimentStart = onCall(async (request) => {
-  const { data } = request;
+  const {data} = request;
   const privateId = data.participantId;
 
   // Define document reference
-  const document = app.firestore()
+  const document = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('participants')
@@ -319,12 +333,28 @@ export const acceptParticipantExperimentStart = onCall(async (request) => {
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
-    const participant = (await document.get()).data() as ParticipantProfileExtended;
+    const participant = (
+      await document.get()
+    ).data() as ParticipantProfileExtended;
     participant.timestamps.startExperiment = Timestamp.now();
+
+    // Set current stage as ready to start
+    const currentStageId = participant.currentStageId;
+    participant.timestamps.readyStages[currentStageId] = Timestamp.now();
+
+    // If all active participants have reached the next stage,
+    // unlock that stage in CohortConfig
+    await updateCohortStageUnlocked(
+      data.experimentId,
+      participant.currentCohortId,
+      participant.currentStageId,
+      participant.privateId,
+    );
+
     transaction.set(document, participant);
   });
 
-  return { success: true };
+  return {success: true};
 });
 
 // ************************************************************************* //
@@ -334,11 +364,12 @@ export const acceptParticipantExperimentStart = onCall(async (request) => {
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
 export const acceptParticipantCheck = onCall(async (request) => {
-  const { data } = request;
+  const {data} = request;
   const privateId = data.participantId;
 
   // Define document reference
-  const document = app.firestore()
+  const document = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('participants')
@@ -346,7 +377,9 @@ export const acceptParticipantCheck = onCall(async (request) => {
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
-    const participant = (await document.get()).data() as ParticipantProfileExtended;
+    const participant = (
+      await document.get()
+    ).data() as ParticipantProfileExtended;
 
     if (participant.transferCohortId) {
       participant.currentStatus = ParticipantStatus.TRANSFER_PENDING;
@@ -359,7 +392,7 @@ export const acceptParticipantCheck = onCall(async (request) => {
     transaction.set(document, participant);
   });
 
-  return { success: true };
+  return {success: true};
 });
 
 // ************************************************************************* //
@@ -369,25 +402,29 @@ export const acceptParticipantCheck = onCall(async (request) => {
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
 export const acceptParticipantTransfer = onCall(async (request) => {
-  const { data } = request;
+  const {data} = request;
   const privateId = data.participantId;
 
   // Define document reference
-  const document = app.firestore()
+  const document = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('participants')
     .doc(privateId);
 
-  const experimentDoc = app.firestore()
+  const experimentDoc = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId);
 
-  let response = { currentStageId: null, endExperiment: false };
+  let response = {currentStageId: null, endExperiment: false};
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
-    const participant = (await document.get()).data() as ParticipantProfileExtended;
+    const participant = (
+      await document.get()
+    ).data() as ParticipantProfileExtended;
     if (!participant.transferCohortId) {
       success = false;
       return;
@@ -396,17 +433,29 @@ export const acceptParticipantTransfer = onCall(async (request) => {
     // Update cohort ID
     // TODO: Validate cohort ID?
     const timestamp = Timestamp.now();
-    participant.timestamps.cohortTransfers[participant.currentCohortId] = timestamp;
+    participant.timestamps.cohortTransfers[participant.currentCohortId] =
+      timestamp;
     participant.currentCohortId = participant.transferCohortId;
     participant.transferCohortId = null;
     participant.currentStatus = ParticipantStatus.IN_PROGRESS;
 
     // If participant is currently on a transfer stage,
     // proceed to the next stage
-    const currentStage = (await app.firestore().doc(`experiments/${data.experimentId}/stages/${participant.currentStageId}`).get()).data() as StageConfig;
+    const currentStage = (
+      await app
+        .firestore()
+        .doc(
+          `experiments/${data.experimentId}/stages/${participant.currentStageId}`,
+        )
+        .get()
+    ).data() as StageConfig;
     if (currentStage.kind === StageKind.TRANSFER) {
       const experiment = (await experimentDoc.get()).data() as Experiment;
-      response = updateParticipantNextStage(participant, experiment.stageIds);
+      response = await updateParticipantNextStage(
+        data.experimentId,
+        participant,
+        experiment.stageIds,
+      );
     }
 
     // Set document
@@ -414,14 +463,18 @@ export const acceptParticipantTransfer = onCall(async (request) => {
 
     // Migrate shared cohort data
     const publicId = participant.publicId;
-    const stageData =
-      await app.firestore().collection(`experiments/${data.experimentId}/participants/${privateId}/stageData`)
+    const stageData = await app
+      .firestore()
+      .collection(
+        `experiments/${data.experimentId}/participants/${privateId}/stageData`,
+      )
       .get();
 
-    const stageAnswers = stageData.docs.map(stage => stage.data());
+    const stageAnswers = stageData.docs.map((stage) => stage.data());
     // For each relevant answer, add to current cohort's public stage data
     for (const stage of stageAnswers) {
-      const publicDocument = app.firestore()
+      const publicDocument = app
+        .firestore()
         .collection('experiments')
         .doc(data.experimentId)
         .collection('cohorts')
@@ -431,12 +484,16 @@ export const acceptParticipantTransfer = onCall(async (request) => {
 
       switch (stage.kind) {
         case StageKind.SURVEY:
-          const publicSurveyData = (await publicDocument.get()).data() as SurveyStagePublicData;
+          const publicSurveyData = (
+            await publicDocument.get()
+          ).data() as SurveyStagePublicData;
           publicSurveyData.participantAnswerMap[publicId] = stage.answerMap;
           transaction.set(publicDocument, publicSurveyData);
           break;
         case StageKind.CHIP:
-          const publicChipData = (await publicDocument.get()).data() as ChipStagePublicData;
+          const publicChipData = (
+            await publicDocument.get()
+          ).data() as ChipStagePublicData;
           publicChipData.participantChipMap[publicId] = stage.chipMap;
           publicChipData.participantChipValueMap[publicId] = stage.chipValueMap;
           transaction.set(publicDocument, publicChipData);
@@ -460,11 +517,12 @@ export const sendParticipantCheck = onCall(async (request) => {
   // TODO: Only allow creator, admins, and readers to manage transfers
   await AuthGuard.isExperimenter(request);
 
-  const { data } = request;
+  const {data} = request;
   const privateId = data.participantId;
 
   // Define document reference
-  const document = app.firestore()
+  const document = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('participants')
@@ -472,13 +530,15 @@ export const sendParticipantCheck = onCall(async (request) => {
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
-    const participant = (await document.get()).data() as ParticipantProfileExtended;
+    const participant = (
+      await document.get()
+    ).data() as ParticipantProfileExtended;
     participant.currentStatus = data.status;
     // TODO: Set custom message once field is available
     transaction.set(document, participant);
   });
 
-  return { success: true };
+  return {success: true};
 });
 
 // ************************************************************************* //
@@ -491,11 +551,12 @@ export const bootParticipant = onCall(async (request) => {
   // TODO: Only allow creator, admins, and readers to manage transfers
   await AuthGuard.isExperimenter(request);
 
-  const { data } = request;
+  const {data} = request;
   const privateId = data.participantId;
 
   // Define document reference
-  const document = app.firestore()
+  const document = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('participants')
@@ -503,7 +564,9 @@ export const bootParticipant = onCall(async (request) => {
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
-    const participant = (await document.get()).data() as ParticipantProfileExtended;
+    const participant = (
+      await document.get()
+    ).data() as ParticipantProfileExtended;
 
     if (participant.currentStatus === ParticipantStatus.ATTENTION_CHECK) {
       participant.currentStatus = ParticipantStatus.ATTENTION_TIMEOUT;
@@ -518,7 +581,7 @@ export const bootParticipant = onCall(async (request) => {
   // TODO: If currently participating in chip stage,
   // handle accordingly.
 
-  return { success: true };
+  return {success: true};
 });
 
 // ************************************************************************* //
@@ -531,11 +594,12 @@ export const initiateParticipantTransfer = onCall(async (request) => {
   // TODO: Only allow creator, admins, and readers to manage transfers
   await AuthGuard.isExperimenter(request);
 
-  const { data } = request;
+  const {data} = request;
   const privateId = data.participantId;
 
   // Define document reference
-  const document = app.firestore()
+  const document = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('participants')
@@ -543,12 +607,14 @@ export const initiateParticipantTransfer = onCall(async (request) => {
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
-    const participant = (await document.get()).data() as ParticipantProfileExtended;
+    const participant = (
+      await document.get()
+    ).data() as ParticipantProfileExtended;
     // TODO: Validate transfer cohort ID?
     participant.transferCohortId = data.cohortId;
     participant.currentStatus = ParticipantStatus.TRANSFER_PENDING;
     transaction.set(document, participant);
   });
 
-  return { success: true };
+  return {success: true};
 });

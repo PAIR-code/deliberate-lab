@@ -17,7 +17,7 @@ import {
 export function getParticipantInlineDisplay(
   participant: ParticipantProfile,
   showIsSelf = false, // add (you) to the end
-  stageId = ''
+  stageId = '',
 ) {
   if (
     stageId.includes(ALTERNATE_PROFILE_SET_ID) &&
@@ -29,15 +29,15 @@ export function getParticipantInlineDisplay(
 
   return `
     ${participant.avatar ?? ''} ${participant.name ?? participant.publicId}${
-    showIsSelf ? ' (you)' : ''
-  }
+      showIsSelf ? ' (you)' : ''
+    }
   `;
 }
 
 /** Returns the start timestamp of the current stage. */
 export function getCurrentStageStartTime(
   participant: ParticipantProfile,
-  stageIds: string[] // An ordered list of stages in the experiment.
+  stageIds: string[], // An ordered list of stages in the experiment.
 ) {
   // Get the index of this.participant.currentStageId in this.experimentService.stageIds.
   const index = stageIds.indexOf(participant.currentStageId);
@@ -60,7 +60,7 @@ export function getCurrentStageStartTime(
 export function getParticipantStatusDetailText(
   profile: ParticipantProfile,
   isStageInWaitingPhase = false,
-  defaultText = ''
+  defaultText = '',
 ) {
   if (isStageInWaitingPhase) {
     return '⏸️ This participant currently sees a wait stage; they are waiting for others in the cohort to catch up.';
@@ -121,7 +121,7 @@ export function isPendingParticipant(participant: ParticipantProfile) {
 /** If pending transfer to given cohort ID. */
 export function isParticipantPendingTransfer(
   participant: ParticipantProfile,
-  cohortId: string
+  cohortId: string,
 ) {
   return (
     participant.currentStatus === ParticipantStatus.TRANSFER_PENDING &&
@@ -139,28 +139,35 @@ export function isParticipantEndedExperiment(participant: ParticipantProfile) {
 }
 
 /** If participant is on or past the given stage. */
+// NOTE: "completedWaiting" map is now used to track when a participant reaches
+// a stage
 export function isUnlockedStage(
   participant: ParticipantProfile,
-  stageId: string
+  stageId: string,
 ) {
-  // The participant must start experiment to unlock stages
-  if (!participant.timestamps.startExperiment) return false;
-
   // If the participant has a transfer pending for the current stage,
   // they are "locked" until they accept
   if (
     participant.currentStageId === stageId &&
-    participant.currentStatus !== ParticipantStatus.TRANSFER_PENDING
+    participant.currentStatus === ParticipantStatus.TRANSFER_PENDING
   ) {
+    return false;
+  }
+
+  // Backwards compatibility: If readyStages does not exist in timestamps,
+  // return true
+  if (!('readyStages' in participant.timestamps)) {
     return true;
   }
-  return participant.timestamps.completedStages[stageId];
+
+  return participant.timestamps.startExperiment &&
+    participant.timestamps.readyStages[stageId];
 }
 
 /** Return number of stages that participant completed. */
 export function getParticipantProgress(
   participant: ParticipantProfile,
-  stageIds: string[] // stages that count towards progress
+  stageIds: string[], // stages that count towards progress
 ) {
   let count = 0;
   stageIds.forEach((id) => {

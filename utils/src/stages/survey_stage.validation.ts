@@ -1,14 +1,14 @@
-import { Type, type Static } from '@sinclair/typebox';
-import { StageKind } from './stage';
+import {Type, type Static} from '@sinclair/typebox';
+import {StageKind} from './stage';
 import {
   StageGameSchema,
   StageProgressConfigSchema,
   StageTextConfigSchema,
 } from './stage.validation';
-import { SurveyQuestionKind } from './survey_stage';
+import {SurveyQuestionKind} from './survey_stage';
 
 /** Shorthand for strict TypeBox object validation */
-const strict = { additionalProperties: false } as const;
+const strict = {additionalProperties: false} as const;
 
 // ************************************************************************* //
 // writeExperiment, updateStageConfig endpoints                              //
@@ -17,7 +17,7 @@ const strict = { additionalProperties: false } as const;
 /** TextSurveyQuestion input validation. */
 export const TextSurveyQuestionData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(SurveyQuestionKind.TEXT),
     questionTitle: Type.String(),
   },
@@ -27,7 +27,7 @@ export const TextSurveyQuestionData = Type.Object(
 /** CheckSurveyQuestion input validation. */
 export const CheckSurveyQuestionData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(SurveyQuestionKind.CHECK),
     questionTitle: Type.String(),
     isRequired: Type.Boolean(),
@@ -38,7 +38,7 @@ export const CheckSurveyQuestionData = Type.Object(
 /** MultipleChoiceItem input validation. */
 export const MultipleChoiceItemData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     imageId: Type.String(),
     text: Type.String(),
   },
@@ -48,7 +48,7 @@ export const MultipleChoiceItemData = Type.Object(
 /** MultipleChoiceSurveyQuestion input validation. */
 export const MultipleChoiceSurveyQuestionData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(SurveyQuestionKind.MULTIPLE_CHOICE),
     questionTitle: Type.String(),
     options: Type.Array(MultipleChoiceItemData),
@@ -60,7 +60,7 @@ export const MultipleChoiceSurveyQuestionData = Type.Object(
 /** ScaleSurveyQuestion input validation. */
 export const ScaleSurveyQuestionData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(SurveyQuestionKind.SCALE),
     questionTitle: Type.String(),
     upperValue: Type.Number(),
@@ -82,10 +82,10 @@ export const SurveyQuestionData = Type.Union([
 /** SurveyStageConfig input validation. */
 export const SurveyStageConfigData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.SURVEY),
     game: StageGameSchema,
-    name: Type.String({ minLength: 1 }),
+    name: Type.String({minLength: 1}),
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,
     questions: Type.Array(SurveyQuestionData),
@@ -96,10 +96,10 @@ export const SurveyStageConfigData = Type.Object(
 /** SurveyPerParticipantStageConfig input validation. */
 export const SurveyPerParticipantStageConfigData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.SURVEY_PER_PARTICIPANT),
     game: StageGameSchema,
-    name: Type.String({ minLength: 1 }),
+    name: Type.String({minLength: 1}),
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,
     questions: Type.Array(SurveyQuestionData),
@@ -115,7 +115,7 @@ export const SurveyPerParticipantStageConfigData = Type.Object(
 /** TextSurveyAnswer input validation. */
 export const TextSurveyAnswerData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(SurveyQuestionKind.TEXT),
     answer: Type.String(),
   },
@@ -125,7 +125,7 @@ export const TextSurveyAnswerData = Type.Object(
 /** CheckSurveyAnswer input validation. */
 export const CheckSurveyAnswerData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(SurveyQuestionKind.CHECK),
     isChecked: Type.Boolean(),
   },
@@ -135,9 +135,9 @@ export const CheckSurveyAnswerData = Type.Object(
 /** MultipleChoiceSurveyAnswer input validation. */
 export const MultipleChoiceSurveyAnswerData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(SurveyQuestionKind.MULTIPLE_CHOICE),
-    choiceId: Type.String({ minLength: 1 }),
+    choiceId: Type.String({minLength: 1}),
   },
   strict,
 );
@@ -145,7 +145,7 @@ export const MultipleChoiceSurveyAnswerData = Type.Object(
 /** ScaleSurveyAnswer input validation. */
 export const ScaleSurveyAnswerData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(SurveyQuestionKind.SCALE),
     value: Type.Number(),
   },
@@ -163,9 +163,9 @@ export const SurveyAnswerData = Type.Union([
 /** SurveyStageParticipantAnswer input validation. */
 export const SurveyStageParticipantAnswerData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.SURVEY),
-    answerMap: Type.Record(Type.String({ minLength: 1 }), SurveyAnswerData),
+    answerMap: Type.Record(Type.String({minLength: 1}), SurveyAnswerData),
   },
   strict,
 );
@@ -173,12 +173,12 @@ export const SurveyStageParticipantAnswerData = Type.Object(
 /** SurveyPerParticipantStageParticipantAnswer input validation. */
 export const SurveyPerParticipantStageParticipantAnswerData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.SURVEY_PER_PARTICIPANT),
-    answerMap: Type.Record(Type.String({ minLength: 1 }), Type.Record(
-      Type.String({ minLength: 1 }),
-      SurveyAnswerData
-    )),
+    answerMap: Type.Record(
+      Type.String({minLength: 1}),
+      Type.Record(Type.String({minLength: 1}), SurveyAnswerData),
+    ),
   },
   strict,
 );
@@ -186,10 +186,10 @@ export const SurveyPerParticipantStageParticipantAnswerData = Type.Object(
 /** Update survey stage endpoint validation. */
 export const UpdateSurveyStageParticipantAnswerData = Type.Object(
   {
-    experimentId: Type.String({ minLength: 1 }),
-    cohortId: Type.String({ minLength: 1 }),
-    participantPrivateId: Type.String({ minLength: 1 }),
-    participantPublicId: Type.String({ minLength: 1 }),
+    experimentId: Type.String({minLength: 1}),
+    cohortId: Type.String({minLength: 1}),
+    participantPrivateId: Type.String({minLength: 1}),
+    participantPublicId: Type.String({minLength: 1}),
     surveyStageParticipantAnswer: SurveyStageParticipantAnswerData,
   },
   strict,
@@ -202,9 +202,10 @@ export type UpdateSurveyStageParticipantAnswerData = Static<
 /** Update survey-per-participant stage endpoint validation. */
 export const UpdateSurveyPerParticipantStageParticipantAnswerData = Type.Object(
   {
-    experimentId: Type.String({ minLength: 1 }),
-    participantPrivateId: Type.String({ minLength: 1 }),
-    surveyPerParticipantStageParticipantAnswer: SurveyPerParticipantStageParticipantAnswerData,
+    experimentId: Type.String({minLength: 1}),
+    participantPrivateId: Type.String({minLength: 1}),
+    surveyPerParticipantStageParticipantAnswer:
+      SurveyPerParticipantStageParticipantAnswerData,
   },
   strict,
 );

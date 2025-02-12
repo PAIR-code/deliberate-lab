@@ -1,29 +1,29 @@
-import { CSSResultGroup, LitElement, html } from "lit";
+import {CSSResultGroup, LitElement, html} from 'lit';
 
-import { customElement, property, state } from "lit/decorators.js";
-import { classMap } from "lit/directives/class-map.js";
-import { Ref, createRef, ref } from "lit/directives/ref.js";
-import { styleMap } from "lit/directives/style-map.js";
-import { styles as sharedStyles } from "./shared.css";
+import {customElement, property, state} from 'lit/decorators.js';
+import {classMap} from 'lit/directives/class-map.js';
+import {Ref, createRef, ref} from 'lit/directives/ref.js';
+import {styleMap} from 'lit/directives/style-map.js';
+import {styles as sharedStyles} from './shared.css';
 
-import { styles } from "./tooltip.css";
+import {styles} from './tooltip.css';
 
-import type { ComponentColor } from "./types";
+import type {ComponentColor} from './types';
 
 /** Specifies tooltip position */
 export const TOOLTIP_POSITIONS = [
-  "TOP_START",
-  "TOP",
-  "TOP_END",
-  "BOTTOM_START",
-  "BOTTOM",
-  "BOTTOM_END",
-  "LEFT_START",
-  "LEFT",
-  "LEFT_END",
-  "RIGHT_START",
-  "RIGHT",
-  "RIGHT_END",
+  'TOP_START',
+  'TOP',
+  'TOP_END',
+  'BOTTOM_START',
+  'BOTTOM',
+  'BOTTOM_END',
+  'LEFT_START',
+  'LEFT',
+  'LEFT_END',
+  'RIGHT_START',
+  'RIGHT',
+  'RIGHT_END',
 ];
 
 /** Specifies tooltip position */
@@ -31,14 +31,14 @@ export type TooltipPosition = (typeof TOOLTIP_POSITIONS)[number];
 
 /** Specifies display mode */
 export type DisplayMode =
-  | "block"
-  | "inline"
-  | "inline-block"
-  | "flex"
-  | "inline-flex"
-  | "grid"
-  | "inline-grid"
-  | "flow-root";
+  | 'block'
+  | 'inline'
+  | 'inline-block'
+  | 'flex'
+  | 'inline-flex'
+  | 'grid'
+  | 'inline-grid'
+  | 'flow-root';
 
 const TOOLTIP_POSITIONS_OFFSET_DEFAULT = 4;
 const TOOLTIP_DELAY_DEFAULT = 500; // in milliseconds
@@ -47,24 +47,24 @@ const TOOLTIP_DELAY_LONG = 1000;
 /**
  * Renders a tooltip
  */
-@customElement("pr-tooltip")
+@customElement('pr-tooltip')
 export class Tooltip extends LitElement {
   static override styles: CSSResultGroup = [sharedStyles, styles];
 
   // Component settings
-  @property({ type: String }) text = "";
-  @property({ type: Number }) delay = TOOLTIP_DELAY_DEFAULT; // in milliseconds
-  @property({ type: Boolean }) longDelay = false;
+  @property({type: String}) text = '';
+  @property({type: Number}) delay = TOOLTIP_DELAY_DEFAULT; // in milliseconds
+  @property({type: Boolean}) longDelay = false;
 
-  @property({ type: Boolean }) shouldRenderAriaLabel = true;
-  @property({ type: Boolean }) disabled = false;
+  @property({type: Boolean}) shouldRenderAriaLabel = true;
+  @property({type: Boolean}) disabled = false;
 
-  @property({ type: Number }) positionOffset = TOOLTIP_POSITIONS_OFFSET_DEFAULT;
+  @property({type: Number}) positionOffset = TOOLTIP_POSITIONS_OFFSET_DEFAULT;
   @property() zIndex: number | undefined = undefined;
   @property() displayMode: DisplayMode | undefined = undefined;
 
-  @property({ type: String }) color: ComponentColor = "neutral";
-  @property({ type: String }) position: TooltipPosition = "TOP_START";
+  @property({type: String}) color: ComponentColor = 'neutral';
+  @property({type: String}) position: TooltipPosition = 'TOP_START';
 
   private readonly tooltipRef: Ref<HTMLDivElement> = createRef();
 
@@ -74,7 +74,7 @@ export class Tooltip extends LitElement {
   @state() bottom: number | undefined = undefined;
 
   renderAriaLabel() {
-    return this.shouldRenderAriaLabel ? html`aria-label=${this.text}` : "";
+    return this.shouldRenderAriaLabel ? html`aria-label=${this.text}` : '';
   }
 
   override firstUpdated() {
@@ -85,42 +85,42 @@ export class Tooltip extends LitElement {
     const tooltip = this.tooltipRef.value;
     if (!tooltip) return;
 
-    const { width, height } = tooltip.getBoundingClientRect();
+    const {width, height} = tooltip.getBoundingClientRect();
 
-    if (this.position === "TOP_START") {
+    if (this.position === 'TOP_START') {
       this.left = 0;
       this.bottom = height + this.positionOffset;
-    } else if (this.position === "TOP_END") {
+    } else if (this.position === 'TOP_END') {
       this.right = 0;
       this.bottom = height + this.positionOffset;
-    } else if (this.position === "BOTTOM_START") {
+    } else if (this.position === 'BOTTOM_START') {
       this.left = 0;
       this.top = height + this.positionOffset;
-    } else if (this.position === "BOTTOM_END") {
+    } else if (this.position === 'BOTTOM_END') {
       this.right = 0;
       this.top = height + this.positionOffset;
-    } else if (this.position === "LEFT_START") {
+    } else if (this.position === 'LEFT_START') {
       this.right = width + this.positionOffset;
       this.top = 0;
-    } else if (this.position === "LEFT_END") {
+    } else if (this.position === 'LEFT_END') {
       this.right = width + this.positionOffset;
       this.bottom = 0;
-    } else if (this.position === "RIGHT_START") {
+    } else if (this.position === 'RIGHT_START') {
       this.left = width + this.positionOffset;
       this.top = 0;
-    } else if (this.position === "RIGHT_END") {
+    } else if (this.position === 'RIGHT_END') {
       this.left = width + this.positionOffset;
       this.bottom = 0;
-    } else if (this.position === "TOP") {
+    } else if (this.position === 'TOP') {
       this.left = width / 2;
       this.bottom = height + this.positionOffset;
-    } else if (this.position === "BOTTOM") {
+    } else if (this.position === 'BOTTOM') {
       this.top = height + this.positionOffset;
       this.left = width / 2;
-    } else if (this.position === "LEFT") {
+    } else if (this.position === 'LEFT') {
       this.right = width + this.positionOffset;
       this.top = height / 2;
-    } else if (this.position === "RIGHT") {
+    } else if (this.position === 'RIGHT') {
       this.left = width + this.positionOffset;
       this.top = height / 2;
     }
@@ -129,16 +129,16 @@ export class Tooltip extends LitElement {
   private getTooltipStyles() {
     const delay = this.longDelay ? TOOLTIP_DELAY_LONG : this.delay;
 
-    const styleObject: { [key: string]: string } = {
-      "--transition-delay": `${delay}ms`,
+    const styleObject: {[key: string]: string} = {
+      '--transition-delay': `${delay}ms`,
     };
 
     if (this.zIndex !== undefined) {
-      styleObject["--z-index"] = `${this.zIndex}`;
+      styleObject['--z-index'] = `${this.zIndex}`;
     }
 
     if (this.displayMode !== undefined) {
-      styleObject["--display-mode"] = this.displayMode;
+      styleObject['--display-mode'] = this.displayMode;
     }
 
     const formatPixel = (value: number) => {
@@ -146,16 +146,16 @@ export class Tooltip extends LitElement {
     };
 
     if (this.left !== undefined) {
-      styleObject["--left"] = formatPixel(this.left);
+      styleObject['--left'] = formatPixel(this.left);
     }
     if (this.right !== undefined) {
-      styleObject["--right"] = formatPixel(this.right);
+      styleObject['--right'] = formatPixel(this.right);
     }
     if (this.top !== undefined) {
-      styleObject["--top"] = formatPixel(this.top);
+      styleObject['--top'] = formatPixel(this.top);
     }
     if (this.bottom !== undefined) {
-      styleObject["--bottom"] = formatPixel(this.bottom);
+      styleObject['--bottom'] = formatPixel(this.bottom);
     }
 
     return styleMap(styleObject);
@@ -166,10 +166,10 @@ export class Tooltip extends LitElement {
 
     const tooltipClasses = classMap({
       tooltip: true,
-      "centered-horizontal":
-        this.position === "TOP" || this.position === "BOTTOM",
-      "centered-vertical":
-        this.position === "LEFT" || this.position === "RIGHT",
+      'centered-horizontal':
+        this.position === 'TOP' || this.position === 'BOTTOM',
+      'centered-vertical':
+        this.position === 'LEFT' || this.position === 'RIGHT',
     });
 
     return html`
@@ -190,6 +190,6 @@ export class Tooltip extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "pr-tooltip": Tooltip;
+    'pr-tooltip': Tooltip;
   }
 }

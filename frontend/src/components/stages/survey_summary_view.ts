@@ -24,7 +24,7 @@ import {
 } from '@deliberation-lab/utils';
 import {
   isSurveyComplete,
-  isSurveyAnswerComplete
+  isSurveyAnswerComplete,
 } from '../../shared/stage.utils';
 
 import {unsafeHTML} from 'lit/directives/unsafe-html.js';
@@ -42,7 +42,7 @@ export class SurveyView extends MobxLitElement {
 
   private readonly participantService = core.getService(ParticipantService);
   private readonly participantAnswerService = core.getService(
-    ParticipantAnswerService
+    ParticipantAnswerService,
   );
 
   @property() stage: SurveyStageConfig | undefined = undefined;
@@ -79,7 +79,7 @@ export class SurveyView extends MobxLitElement {
       if (!this.stage) return;
       const answer = this.participantAnswerService.getSurveyAnswer(
         this.stage.id,
-        question.id
+        question.id,
       );
       if (answer && answer.kind === SurveyQuestionKind.CHECK) {
         return answer.isChecked;
@@ -88,7 +88,7 @@ export class SurveyView extends MobxLitElement {
     };
 
     const titleClasses = classMap({
-      'required': question.isRequired && !isChecked(),
+      required: question.isRequired && !isChecked(),
     });
 
     return html`
@@ -114,13 +114,13 @@ export class SurveyView extends MobxLitElement {
 
     const answer = this.participantAnswerService.getSurveyAnswer(
       this.stage.id,
-      question.id
+      question.id,
     );
     const textAnswer =
       answer && answer.kind === SurveyQuestionKind.TEXT ? answer.answer : '';
 
     const titleClasses = classMap({
-      'required': !isSurveyAnswerComplete(answer),
+      required: !isSurveyAnswerComplete(answer),
     });
 
     return html`
@@ -128,9 +128,9 @@ export class SurveyView extends MobxLitElement {
         <div class=${titleClasses}>
           ${unsafeHTML(convertMarkdownToHTML(question.questionTitle))}*
         </div>
-        ${textAnswer.trim().length > 0 ?
-          html`<div>${textAnswer}</div>` :
-          html`<div class="empty-message">No answer yet</div>`}
+        ${textAnswer.trim().length > 0
+          ? html`<div>${textAnswer}</div>`
+          : html`<div class="empty-message">No answer yet</div>`}
       </div>
     `;
   }
@@ -142,8 +142,11 @@ export class SurveyView extends MobxLitElement {
     });
 
     const titleClasses = classMap({
-      'required': !isSurveyAnswerComplete(
-        this.participantAnswerService.getSurveyAnswer(this.stage?.id ?? '', question.id)
+      required: !isSurveyAnswerComplete(
+        this.participantAnswerService.getSurveyAnswer(
+          this.stage?.id ?? '',
+          question.id,
+        ),
       ),
     });
 
@@ -154,7 +157,7 @@ export class SurveyView extends MobxLitElement {
         </div>
         <div class=${questionWrapperClasses}>
           ${question.options.map((option) =>
-            this.renderRadioButton(option, question.id)
+            this.renderRadioButton(option, question.id),
           )}
         </div>
       </div>
@@ -165,7 +168,7 @@ export class SurveyView extends MobxLitElement {
     if (!this.stage) return;
     const answer = this.participantAnswerService.getSurveyAnswer(
       this.stage.id,
-      questionId
+      questionId,
     );
     if (answer && answer.kind === SurveyQuestionKind.MULTIPLE_CHOICE) {
       return answer?.choiceId === choiceId;
@@ -194,12 +197,15 @@ export class SurveyView extends MobxLitElement {
 
   private renderScaleQuestion(question: ScaleSurveyQuestion) {
     const scale = [...Array(question.upperValue + 1).keys()].slice(
-      question.lowerValue
+      question.lowerValue,
     );
 
     const titleClasses = classMap({
-      'required': !isSurveyAnswerComplete(
-        this.participantAnswerService.getSurveyAnswer(this.stage?.id ?? '', question.id)
+      required: !isSurveyAnswerComplete(
+        this.participantAnswerService.getSurveyAnswer(
+          this.stage?.id ?? '',
+          question.id,
+        ),
       ),
     });
 
@@ -227,7 +233,7 @@ export class SurveyView extends MobxLitElement {
       if (!this.stage) return;
       const answer = this.participantAnswerService.getSurveyAnswer(
         this.stage.id,
-        question.id
+        question.id,
       );
       if (answer && answer.kind === SurveyQuestionKind.SCALE) {
         return answer.value === value;

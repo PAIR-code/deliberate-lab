@@ -1,5 +1,5 @@
-import { Type } from '@sinclair/typebox';
-import { Visibility } from './shared';
+import {Type} from '@sinclair/typebox';
+import {Visibility} from './shared';
 
 /** UnifiedTimestamp input validation. */
 export const UnifiedTimestampSchema = Type.Object({

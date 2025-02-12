@@ -23,7 +23,9 @@ export class StageDescription extends MobxLitElement {
     return html`
       <div class="description-wrapper">
         <div class="description html-wrapper">
-          ${unsafeHTML(convertMarkdownToHTML(this.stage.descriptions.primaryText))}
+          ${unsafeHTML(
+            convertMarkdownToHTML(this.stage.descriptions.primaryText),
+          )}
         </div>
       </div>
     `;

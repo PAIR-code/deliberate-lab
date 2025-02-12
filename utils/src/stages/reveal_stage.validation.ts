@@ -1,16 +1,14 @@
-import { Type, type Static } from '@sinclair/typebox';
-import { StageKind } from './stage';
+import {Type, type Static} from '@sinclair/typebox';
+import {StageKind} from './stage';
 import {
   StageGameSchema,
   StageProgressConfigSchema,
-  StageTextConfigSchema
+  StageTextConfigSchema,
 } from './stage.validation';
-import {
-  RevealAudience
-} from './reveal_stage';
+import {RevealAudience} from './reveal_stage';
 
 /** Shorthand for strict TypeBox object validation */
-const strict = { additionalProperties: false } as const;
+const strict = {additionalProperties: false} as const;
 
 // ************************************************************************* //
 // writeExperiment, updateStageConfig endpoints                              //
@@ -19,20 +17,20 @@ const strict = { additionalProperties: false } as const;
 /** Ranking reveal item input validation. */
 export const RankingRevealItemData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.REVEAL),
     revealAudience: Type.Union([
       Type.Literal(RevealAudience.CURRENT_PARTICIPANT),
       Type.Literal(RevealAudience.ALL_PARTICIPANTS),
     ]),
   },
-  strict
+  strict,
 );
 
 /** Survey reveal item input validation. */
 export const SurveyRevealItemData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.SURVEY),
     revealAudience: Type.Union([
       Type.Literal(RevealAudience.CURRENT_PARTICIPANT),
@@ -40,7 +38,7 @@ export const SurveyRevealItemData = Type.Object(
     ]),
     revealScorableOnly: Type.Boolean(),
   },
-  strict
+  strict,
 );
 
 /** Reveal item input validation. */
@@ -52,10 +50,10 @@ export const RevealItemData = Type.Any([
 /** RevealStageConfig input validation. */
 export const RevealStageConfigData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.REVEAL),
     game: StageGameSchema,
-    name: Type.String({ minLength: 1 }),
+    name: Type.String({minLength: 1}),
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,
     items: Type.Array(RevealItemData),

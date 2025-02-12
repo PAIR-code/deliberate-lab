@@ -7,9 +7,7 @@ import {Pages, RouterService} from '../../services/router.service';
 import {styles} from './popup.scss';
 import {PROLIFIC_COMPLETION_URL_PREFIX} from '../../shared/constants';
 
-import {
-    ParticipantStatus
-  } from '@deliberation-lab/utils';
+import {ParticipantStatus} from '@deliberation-lab/utils';
 
 @customElement('booted-popup')
 class BootedPopup extends MobxLitElement {
@@ -28,7 +26,11 @@ class BootedPopup extends MobxLitElement {
           </p>
           <div class="button-row">
             <div class="button-container">
-              <pr-button color="primary" variant="tonal" @click=${this.handleExit}>
+              <pr-button
+                color="primary"
+                variant="tonal"
+                @click=${this.handleExit}
+              >
                 Exit experiment
               </pr-button>
             </div>
@@ -40,8 +42,8 @@ class BootedPopup extends MobxLitElement {
 
   private async handleExit() {
     await this.participantService.routeToEndExperiment(
-        ParticipantStatus.BOOTED_OUT,
-      );
+      ParticipantStatus.BOOTED_OUT,
+    );
   }
 }
 
@@ -50,4 +52,3 @@ declare global {
     'booted-popup': BootedPopup;
   }
 }
-

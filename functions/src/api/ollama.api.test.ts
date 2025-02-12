@@ -1,22 +1,36 @@
-import { ollamaChat } from "./ollama.api";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+import nock = require('nock');
 
-/**
- * Test assumes a container with ollama is running on port 11434
- * Download the docker image to run :
- * https://ollama.com/blog/ollama-is-now-available-as-an-official-docker-image
- * 
- * Example docker instance hosting an ollama server: https://github.com/dimits-ts/deliberate-lab-utils/tree/master/llm_server
- */
+import {ollamaChat} from './ollama.api';
 
-const MODEL_TYPE = "llama3.2";
-const LLM_SERVER_ENDPOINT = "http://localhost:11434/api/chat";
-const TEST_MESSAGE = "Say hello!";
+const MODEL_NAME = 'llama3.2';
+const LLM_SERVER_ENDPOINT = 'http://localhost:11434/api/chat';
+const LLM_SERVER_HOST = 'http://localhost:11434';
+const LLM_SERVER_PATH = '/api/chat';
+const TEST_MESSAGE = 'Say hello!';
 
+describe('OllamaChat Client', () => {
+  it("should return a response containing 'hello' (case insensitive)", async () => {
+    nock(LLM_SERVER_HOST)
+      .post(LLM_SERVER_PATH, body => body.model == MODEL_NAME)
+      .reply(200, {
+        'created_at': Date.now(),
+        'model': MODEL_NAME,
+        'message': {
+          'role': 'assistant',
+          'content': 'Hello!',
+        },
+        done: true,
+      });
 
-describe("OllamaChat Client", () => {
-    it("should return a response containing 'hello' (case insensitive)", async () => {
-        const response = await ollamaChat([TEST_MESSAGE], {url: LLM_SERVER_ENDPOINT, llmType: MODEL_TYPE});
-        expect(response.text.toLowerCase()).toContain("hello");
-        console.log(response);
-    });
+    const response = await ollamaChat(
+      [TEST_MESSAGE],
+      MODEL_NAME,
+      {url: LLM_SERVER_ENDPOINT}
+    );
+    expect(response.text.toLowerCase()).toContain('hello');
+    console.log(response);
+
+    nock.cleanAll();
+  });
 });

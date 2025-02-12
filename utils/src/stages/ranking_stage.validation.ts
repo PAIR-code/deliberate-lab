@@ -1,14 +1,14 @@
-import { Type, type Static } from '@sinclair/typebox';
-import { StageKind } from './stage';
+import {Type, type Static} from '@sinclair/typebox';
+import {StageKind} from './stage';
 import {
   StageGameSchema,
   StageProgressConfigSchema,
   StageTextConfigSchema,
 } from './stage.validation';
-import { RankingItem, ElectionStrategy, RankingType } from './ranking_stage';
+import {RankingItem, ElectionStrategy, RankingType} from './ranking_stage';
 
 /** Shorthand for strict TypeBox object validation */
-const strict = { additionalProperties: false } as const;
+const strict = {additionalProperties: false} as const;
 
 // ************************************************************************* //
 // writeExperiment, updateStageConfig endpoints                              //
@@ -17,7 +17,7 @@ const strict = { additionalProperties: false } as const;
 /** RankingItem input validation. */
 export const RankingItemData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     imageId: Type.String(),
     text: Type.String(),
   },
@@ -27,10 +27,10 @@ export const RankingItemData = Type.Object(
 /** RankingStageConfig input validation. */
 export const ItemRankingStageConfigData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.RANKING),
     game: StageGameSchema,
-    name: Type.String({ minLength: 1 }),
+    name: Type.String({minLength: 1}),
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,
     rankingType: Type.Literal(RankingType.ITEMS),
@@ -45,10 +45,10 @@ export const ItemRankingStageConfigData = Type.Object(
 
 export const ParticipantRankingStageConfigData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.RANKING),
     game: StageGameSchema,
-    name: Type.String({ minLength: 1 }),
+    name: Type.String({minLength: 1}),
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,
     rankingType: Type.Literal(RankingType.PARTICIPANTS),
@@ -73,7 +73,7 @@ export const RankingStageConfigData = Type.Union([
 /** RankingStageParticipantAnswer input validation. */
 export const RankingStageParticipantAnswerData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.RANKING),
     rankingList: Type.Array(Type.String()),
   },
@@ -82,11 +82,11 @@ export const RankingStageParticipantAnswerData = Type.Object(
 
 export const UpdateRankingStageParticipantAnswerData = Type.Object(
   {
-    experimentId: Type.String({ minLength: 1 }),
-    cohortId: Type.String({ minLength: 1 }),
-    participantPublicId: Type.String({ minLength: 1 }),
-    participantPrivateId: Type.String({ minLength: 1 }),
-    stageId: Type.String({ minLength: 1 }),
+    experimentId: Type.String({minLength: 1}),
+    cohortId: Type.String({minLength: 1}),
+    participantPublicId: Type.String({minLength: 1}),
+    participantPrivateId: Type.String({minLength: 1}),
+    stageId: Type.String({minLength: 1}),
     rankingList: Type.Array(Type.String()),
   },
   strict,

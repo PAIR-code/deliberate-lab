@@ -40,7 +40,10 @@ export class BaseStageEditorComponent extends MobxLitElement {
         <div class="title">Metadata</div>
         ${this.renderName()}
         ${this.stage.kind === StageKind.CHAT
-          ? html`<i>If there are agents active in this stage, they will see the fields below:</i>`
+          ? html`<i
+              >If there are agents active in this stage, they will see the
+              fields below:</i
+            >`
           : ``}
         ${this.renderPrimaryText()} ${this.renderInfoText()}
         ${this.renderHelpText()}
@@ -159,7 +162,7 @@ export class BaseStageEditorComponent extends MobxLitElement {
 
     const mustWait = mustWaitForAllParticipants(
       this.stage,
-      this.experimentEditor.stages
+      this.experimentEditor.stages,
     );
 
     return html`

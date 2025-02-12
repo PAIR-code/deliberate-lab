@@ -12,8 +12,7 @@ export const PROFILE_SET_RANDOM_3_ID = 'random-3';
 /** First set of animals. */
 export const PROFILE_SET_ANIMALS_1_ID = 'animals-1';
 
-export const PROFILE_SET_ANIMALS_1: {name: string, avatar: string}[] = 
-[
+export const PROFILE_SET_ANIMALS_1: {name: string; avatar: string}[] = [
   {name: 'Bear', avatar: '🐻'},
   {name: 'Goose', avatar: '🪿'},
   {name: 'Buffalo', avatar: '🐃'},
@@ -53,14 +52,13 @@ export const PROFILE_SET_ANIMALS_1: {name: string, avatar: string}[] =
   {name: 'Mouse', avatar: '🐭'},
   {name: 'Monkey', avatar: '🐵'},
   {name: 'Rabbit', avatar: '🐰'},
-  {name: 'Parrot', avatar: '🦜'}
+  {name: 'Parrot', avatar: '🦜'},
 ];
 
 /* Second set of animals. */
 export const PROFILE_SET_ANIMALS_2_ID = 'animals-2';
 
-export const PROFILE_SET_ANIMALS_2: {name: string, avatar: string}[] = 
-[
+export const PROFILE_SET_ANIMALS_2: {name: string; avatar: string}[] = [
   {name: 'Panda', avatar: '🐼'},
   {name: 'Giraffe', avatar: '🦒'},
   {name: 'Cow', avatar: '🐮'},
@@ -100,14 +98,13 @@ export const PROFILE_SET_ANIMALS_2: {name: string, avatar: string}[] =
   {name: 'Moose', avatar: '🫎'},
   {name: 'Leopard', avatar: '🐆'},
   {name: 'Dragon', avatar: '🐉'},
-  {name: 'Horse', avatar: '🐴'}
+  {name: 'Horse', avatar: '🐴'},
 ];
 
 /** Nature set with flowers, rocks, etc. */
 export const PROFILE_SET_NATURE_ID = 'nature';
 
-export const PROFILE_SET_NATURE: {name: string, avatar: string}[] =
-[
+export const PROFILE_SET_NATURE: {name: string; avatar: string}[] = [
   {name: 'Sunstone', avatar: '☀️'},
   {name: 'Halite', avatar: '🧂'},
   {name: 'Amber', avatar: '🍯'},
@@ -147,5 +144,5 @@ export const PROFILE_SET_NATURE: {name: string, avatar: string}[] =
   {name: 'Tulip', avatar: '🌷'},
   {name: 'Rose', avatar: '🌹'},
   {name: 'Forest', avatar: '🌲'},
-  {name: 'Moonstone', avatar: '🌙'}
+  {name: 'Moonstone', avatar: '🌙'},
 ];

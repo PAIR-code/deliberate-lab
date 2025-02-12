@@ -218,7 +218,7 @@ export class ExperimentEditor extends Service {
         collectionName: 'experiments',
         experimentConfig: this.experiment,
         stageConfigs: this.stages,
-      }
+      },
     );
 
     this.isWritingExperiment = false;

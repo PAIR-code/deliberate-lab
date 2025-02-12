@@ -30,7 +30,10 @@ export class SurveyEditor extends MobxLitElement {
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
-  @property() stage: SurveyStageConfig | SurveyPerParticipantStageConfig | undefined = undefined;
+  @property() stage:
+    | SurveyStageConfig
+    | SurveyPerParticipantStageConfig
+    | undefined = undefined;
 
   override render() {
     if (this.stage === undefined) {
@@ -44,7 +47,7 @@ export class SurveyEditor extends MobxLitElement {
           <survey-editor-menu .stage=${this.stage}></survey-editor-menu>
         </div>
         ${this.stage.questions.map((question, index) =>
-          this.renderQuestion(question, index)
+          this.renderQuestion(question, index),
         )}
       </div>
     `;
@@ -53,9 +56,11 @@ export class SurveyEditor extends MobxLitElement {
   private renderQuestion(question: SurveyQuestion, index: number) {
     return html`
       <div class="question-wrapper">
-        <div class="question-label ${question.questionTitle === ''
-        ? 'required'
-        : ''}">
+        <div
+          class="question-label ${question.questionTitle === ''
+            ? 'required'
+            : ''}"
+        >
           Question ${index + 1} (${this.renderQuestionType(question)})*
         </div>
         <div class="question">
@@ -163,7 +168,7 @@ export class SurveyEditor extends MobxLitElement {
           ...question,
           questionTitle,
         },
-        index
+        index,
       );
     };
 
@@ -259,7 +264,7 @@ export class SurveyEditor extends MobxLitElement {
 
   private renderMultipleChoiceQuestion(
     question: MultipleChoiceSurveyQuestion,
-    index: number
+    index: number,
   ) {
     const renderItem = (item: MultipleChoiceItem, itemIndex: number) => {
       const deleteItem = () => {
@@ -335,7 +340,7 @@ export class SurveyEditor extends MobxLitElement {
 
   private addMultipleChoiceItem(
     question: MultipleChoiceSurveyQuestion,
-    index: number
+    index: number,
   ) {
     const options = [...question.options, createMultipleChoiceItem()];
     this.updateQuestion({...question, options}, index);
@@ -345,7 +350,7 @@ export class SurveyEditor extends MobxLitElement {
     item: MultipleChoiceItem,
     itemIndex: number,
     question: MultipleChoiceSurveyQuestion,
-    questionIndex: number
+    questionIndex: number,
   ) {
     const options = [
       ...question.options.slice(0, itemIndex),
@@ -358,7 +363,7 @@ export class SurveyEditor extends MobxLitElement {
   private deleteMultipleChoiceItem(
     itemIndex: number,
     question: MultipleChoiceSurveyQuestion,
-    questionIndex: number
+    questionIndex: number,
   ) {
     // If this was the correct answer, reset correct answer ID to null
     const itemId = question.options[itemIndex].id;
