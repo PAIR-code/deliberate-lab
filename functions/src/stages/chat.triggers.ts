@@ -170,6 +170,8 @@ export const createAgentMessage = onDocumentCreated(
     // Fetch messages from all agents
     const agentMessages: AgentMessage[] = [];
     for (const agent of stage.agents) {
+      if(!shouldAgentRespond(chatMessages, agent)) continue;
+
       const prompt = `${getPreface(agent, stage)}\n${getChatHistory(chatMessages, agent)}\n${agent.responseConfig.formattingInstructions}`;
 
       // Call LLM API with given modelCall info
@@ -291,3 +293,18 @@ export const createAgentMessage = onDocumentCreated(
     });
   },
 );
+
+const shouldAgentRespond = function (chatMessages: ChatMessage[], agent: AgentConfig): boolean {
+  // If this agent just responded, don't let them respond again.
+  if (chatMessages.length > 0) {
+    const lastChatMessage = chatMessages[chatMessages.length - 1];
+    if (
+      lastChatMessage.type == ChatMessageType.AGENT_AGENT &&
+      lastChatMessage.agentId == agent.id
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+};
