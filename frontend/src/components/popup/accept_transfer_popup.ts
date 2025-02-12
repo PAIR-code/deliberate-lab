@@ -69,7 +69,7 @@ class TransferPopup extends MobxLitElement {
     this.analyticsService.trackButtonClick(ButtonClick.TRANSFER_REJECT);
     await this.participantService.updateExperimentFailure(
       ParticipantStatus.TRANSFER_DECLINED,
-      true
+      true,
     );
   }
 }

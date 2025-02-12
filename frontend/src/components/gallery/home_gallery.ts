@@ -18,7 +18,7 @@ import {styles} from './home_gallery.scss';
 @customElement('home-gallery')
 export class HomeGallery extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
-  
+
   private readonly authService = core.getService(AuthService);
   private readonly homeService = core.getService(HomeService);
   private readonly routerService = core.getService(RouterService);
@@ -29,7 +29,7 @@ export class HomeGallery extends MobxLitElement {
 
       const navigate = () => {
         this.routerService.navigate(Pages.EXPERIMENT, {
-          'experiment': experiment.id,
+          experiment: experiment.id,
         });
       };
 
@@ -39,31 +39,37 @@ export class HomeGallery extends MobxLitElement {
     };
 
     const experiments = this.homeService.experiments
-    .slice() 
-    .sort((a, b) => a.metadata.dateCreated.seconds - b.metadata.dateCreated.seconds);
+      .slice()
+      .sort(
+        (a, b) =>
+          a.metadata.dateCreated.seconds - b.metadata.dateCreated.seconds,
+      );
 
-    const yourExperiments = experiments.filter(e => e.metadata.creator === this.authService.userEmail);
-    const otherExperiments = experiments.filter(e => e.metadata.creator !== this.authService.userEmail);
- 
+    const yourExperiments = experiments.filter(
+      (e) => e.metadata.creator === this.authService.userEmail,
+    );
+    const otherExperiments = experiments.filter(
+      (e) => e.metadata.creator !== this.authService.userEmail,
+    );
+
     return html`
       ${this.renderEmptyMessage()}
-      ${yourExperiments.length ? 
-        html`
-       <h1>Your experiments</h1>
-        <div class="gallery-wrapper">
-        ${yourExperiments.map(e => renderExperiment(e))}
-        </div>
-        ` : ''
-      }
-      ${otherExperiments.length ? 
-        html`
-       <h1>Other public experiments</h1>
-        <div class="gallery-wrapper">
-        ${otherExperiments.map(e => renderExperiment(e))}
-        </div>
-        ` : ''
-      }
-
+      ${yourExperiments.length
+        ? html`
+            <h1>Your experiments</h1>
+            <div class="gallery-wrapper">
+              ${yourExperiments.map((e) => renderExperiment(e))}
+            </div>
+          `
+        : ''}
+      ${otherExperiments.length
+        ? html`
+            <h1>Other public experiments</h1>
+            <div class="gallery-wrapper">
+              ${otherExperiments.map((e) => renderExperiment(e))}
+            </div>
+          `
+        : ''}
     `;
   }
 

@@ -19,7 +19,7 @@ import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
-import {CohortConfig,StageKind} from '@deliberation-lab/utils';
+import {CohortConfig, StageKind} from '@deliberation-lab/utils';
 import {getCohortDescription, getCohortName} from '../../shared/cohort.utils';
 import {
   getParticipantStatusDetailText,
@@ -53,8 +53,7 @@ export class Component extends MobxLitElement {
         <page-header></page-header>
         <experimenter-panel></experimenter-panel>
       </div>
-      ${this.renderPanels()}
-      ${this.renderCohortSettingsDialog()}
+      ${this.renderPanels()} ${this.renderCohortSettingsDialog()}
       ${this.renderExperimentSettingsDialog()}
     `;
   }
@@ -64,16 +63,15 @@ export class Component extends MobxLitElement {
       return html`
         <div class="cohort-panel">
           <div class="warning">
-            ⚠️ Your experiment has no stages. Use the edit button in the
-            left panel to add stages in order to unlock cohort and participant
+            ⚠️ Your experiment has no stages. Use the edit button in the left
+            panel to add stages in order to unlock cohort and participant
             creation.
           </div>
         </div>
       `;
     }
     return html`
-      ${this.renderCohortListPanel()}
-      ${this.renderParticipantStatsPanel()}
+      ${this.renderCohortListPanel()} ${this.renderParticipantStatsPanel()}
       ${this.renderParticipantPreviewPanel()}
     `;
   }
@@ -135,7 +133,8 @@ export class Component extends MobxLitElement {
         ${this.renderParticipantHeader()}
         <div>
           <participant-stats
-            .profile=${this.experimentManager.currentParticipant}>
+            .profile=${this.experimentManager.currentParticipant}
+          >
           </participant-stats>
         </div>
         <div class="content-wrapper">
@@ -196,7 +195,10 @@ export class Component extends MobxLitElement {
       if (!currentParticipant || !currentStageId) return nothing;
 
       return html`
-        <pr-tooltip text="Experimental feature: Test agent participant prompt" position="BOTTOM_END">
+        <pr-tooltip
+          text="Experimental feature: Test agent participant prompt"
+          position="BOTTOM_END"
+        >
           <pr-icon-button
             icon="robot_2"
             size="small"
@@ -204,23 +206,22 @@ export class Component extends MobxLitElement {
             variant="default"
             @click=${() => {
               this.experimentManager.testAgentParticipantPrompt(
-                currentParticipant.privateId, currentStageId
+                currentParticipant.privateId,
+                currentStageId,
               );
             }}
           >
           </pr-icon-button>
         </pr-tooltip>
       `;
-    }
+    };
 
     const renderStatusBanner = () => {
       if (!isPreview) return nothing;
       const text = this.getParticipantStatusText();
       if (text === '') return getProfileString();
-      return html`
-        <div class="participant-status-banner">${text}</div>
-      `;
-    }
+      return html` <div class="participant-status-banner">${text}</div> `;
+    };
 
     return html`
       <div class="header">
@@ -241,12 +242,10 @@ export class Component extends MobxLitElement {
             >
             </pr-icon-button>
           </pr-tooltip>
-          ${!isPreview ? getProfileString() : ''}
-          ${renderStatusBanner()}
+          ${!isPreview ? getProfileString() : ''} ${renderStatusBanner()}
         </div>
         <div class="right">
-          ${renderAgentParticipantButton()}
-          ${this.renderTransferMenu()}
+          ${renderAgentParticipantButton()} ${this.renderTransferMenu()}
         </div>
       </div>
     `;
@@ -260,7 +259,7 @@ export class Component extends MobxLitElement {
 
     return getParticipantStatusDetailText(
       profile,
-      this.cohortService.isStageInWaitingPhase(stage.id)
+      this.cohortService.isStageInWaitingPhase(stage.id),
     );
   }
 
@@ -274,8 +273,8 @@ export class Component extends MobxLitElement {
     return html`
       <pr-menu name="Transfer">
         <div class="menu-wrapper">
-          ${this.experimentManager.availableCohorts.map(
-            (cohort) => this.renderTransferOption(cohort)
+          ${this.experimentManager.availableCohorts.map((cohort) =>
+            this.renderTransferOption(cohort),
           )}
         </div>
       </pr-menu>
@@ -303,11 +302,11 @@ export class Component extends MobxLitElement {
       }
 
       const stage = this.experimentService.getStage(
-        this.experimentManager.currentParticipant.currentStageId
+        this.experimentManager.currentParticipant.currentStageId,
       );
       if (!stage || !(stage.kind === StageKind.TRANSFER)) {
         const isConfirmed = window.confirm(
-          `Participant is not in a transfer stage. Are you sure you want to transfer them?`
+          `Participant is not in a transfer stage. Are you sure you want to transfer them?`,
         );
         if (!isConfirmed) return;
       }
@@ -315,7 +314,7 @@ export class Component extends MobxLitElement {
       this.analyticsService.trackButtonClick(ButtonClick.TRANSFER_INITIATE);
       this.experimentManager.initiateParticipantTransfer(
         this.experimentManager.currentParticipant.privateId,
-        cohort.id
+        cohort.id,
       );
     };
 
@@ -326,7 +325,7 @@ export class Component extends MobxLitElement {
         <div class="subtitle">
           ${this.experimentManager.getCohortParticipants(
             cohort.id,
-            cohort.participantConfig.includeAllParticipantsInCohortCount
+            cohort.participantConfig.includeAllParticipantsInCohortCount,
           ).length}
           participants
         </div>

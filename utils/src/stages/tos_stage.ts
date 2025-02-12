@@ -1,4 +1,4 @@
-import { generateId } from '../shared';
+import {generateId} from '../shared';
 import {
   BaseStageConfig,
   StageGame,
@@ -24,7 +24,7 @@ export interface TOSStageConfig extends BaseStageConfig {
 
 /** Create TOS stage. */
 export function createTOSStage(
-  config: Partial<TOSStageConfig> = {}
+  config: Partial<TOSStageConfig> = {},
 ): TOSStageConfig {
   return {
     id: config.id ?? generateId(),

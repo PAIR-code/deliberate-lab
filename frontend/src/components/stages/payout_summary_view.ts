@@ -55,13 +55,13 @@ export class PayoutView extends MobxLitElement {
       this.answer,
       this.experimentService.stageConfigMap,
       this.cohortService.stagePublicDataMap,
-      this.participantService.profile
+      this.participantService.profile,
     );
 
     return html`
       <div class="stages-wrapper">
         ${resultConfig.results.map((result) =>
-          this.renderPayoutItemResult(result, resultConfig.currency)
+          this.renderPayoutItemResult(result, resultConfig.currency),
         )}
         ${this.renderTotalPayout(resultConfig)}
       </div>
@@ -96,7 +96,7 @@ export class PayoutView extends MobxLitElement {
 
   private renderPayoutItemResult(
     item: PayoutItemResult,
-    currency: PayoutCurrency
+    currency: PayoutCurrency,
   ) {
     switch (item.type) {
       case PayoutItemType.CHIP:
@@ -112,7 +112,7 @@ export class PayoutView extends MobxLitElement {
 
   private renderDefaultPayoutItemResult(
     item: DefaultPayoutItemResult,
-    currency: PayoutCurrency
+    currency: PayoutCurrency,
   ) {
     return html`
       <div class="scoring-bundle">
@@ -125,12 +125,13 @@ export class PayoutView extends MobxLitElement {
 
   private renderChipPayoutItemResult(
     item: ChipPayoutItemResult,
-    currency: PayoutCurrency
+    currency: PayoutCurrency,
   ) {
     const getInitialTotal = () => {
       let total = 0;
       item.chipResults.forEach((result) => {
-        total += Math.floor(result.chip.startingQuantity * result.value * 100) / 100;
+        total +=
+          Math.floor(result.chip.startingQuantity * result.value * 100) / 100;
       });
       return Math.floor(total * 100) / 100;
     };
@@ -163,7 +164,7 @@ export class PayoutView extends MobxLitElement {
     };
 
     const bonusPayout = parseFloat(
-      Math.max(0, getTotal() - getInitialTotal()).toFixed(2)
+      Math.max(0, getTotal() - getInitialTotal()).toFixed(2),
     );
     return html`
       <div class="scoring-bundle">
@@ -200,7 +201,7 @@ export class PayoutView extends MobxLitElement {
           <div class="chip primary">
             ${this.renderCurrency(
               bonusPayout + item.baseAmountEarned,
-              currency
+              currency,
             )}
           </div>
         </div>
@@ -210,7 +211,7 @@ export class PayoutView extends MobxLitElement {
 
   private renderBaseAmountEarned(
     item: PayoutItemResult,
-    currency: PayoutCurrency
+    currency: PayoutCurrency,
   ) {
     if (item.baseCurrencyAmount === 0) {
       return nothing;
@@ -240,7 +241,7 @@ export class PayoutView extends MobxLitElement {
 
   private renderSurveyPayoutItemResult(
     item: SurveyPayoutItemResult,
-    currency: PayoutCurrency
+    currency: PayoutCurrency,
   ) {
     let total = item.baseAmountEarned;
     item.questionResults.forEach((result) => {
@@ -256,8 +257,8 @@ export class PayoutView extends MobxLitElement {
           this.renderSurveyPayoutQuestionResult(
             result,
             item.rankingWinner,
-            currency
-          )
+            currency,
+          ),
         )}
         <div class="scoring-item row">
           <h2>Stage payout</h2>
@@ -272,13 +273,13 @@ export class PayoutView extends MobxLitElement {
   private renderSurveyPayoutQuestionResult(
     result: SurveyPayoutQuestionResult,
     rankingWinner: string | null,
-    currency: PayoutCurrency
+    currency: PayoutCurrency,
   ) {
     const correctAnswer = result.question.options.find(
-      (option) => option.id === result.question.correctAnswerId
+      (option) => option.id === result.question.correctAnswerId,
     );
     const participantAnswer = result.question.options.find(
-      (option) => option.id === result.answerId
+      (option) => option.id === result.answerId,
     );
 
     return html`

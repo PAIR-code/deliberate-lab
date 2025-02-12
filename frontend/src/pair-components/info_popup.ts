@@ -1,13 +1,13 @@
 /* Note: This is not a PAIR component. This is an element. */
-import "./icon";
-import "./icon_button";
+import './icon';
+import './icon_button';
 
-import { html, LitElement } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
-import { styles } from "./info_popup.scss";
+import {html, LitElement} from 'lit';
+import {customElement, property, state} from 'lit/decorators.js';
+import {styles} from './info_popup.scss';
 
-import { unsafeHTML } from "lit/directives/unsafe-html.js";
-import { convertMarkdownToHTML } from "./../shared/utils";
+import {unsafeHTML} from 'lit/directives/unsafe-html.js';
+import {convertMarkdownToHTML} from './../shared/utils';
 
 /**
  * Renders a info popup component.
@@ -19,7 +19,7 @@ export class InfoPopupComponent extends LitElement {
   }
 
   @property({type: Object}) handleClose: () => void = () => {};
-  @property() popupText: string = "";
+  @property() popupText: string = '';
   @property() showHelpIcon: boolean = false;
   @state() private showModal: boolean = false;
 
@@ -34,14 +34,24 @@ export class InfoPopupComponent extends LitElement {
   }
 
   override render() {
-    const icon = this.showHelpIcon ? "help" : "info";
+    const icon = this.showHelpIcon ? 'help' : 'info';
     return html`
-    <pr-icon-button variant="default" color="secondary" icon="${icon}" @click=${this.handleButtonClick}>${icon}</pr-icon-button>
-    <div class="modal" style=${this.showModal ? 'display: block;' : 'display: none;'} @click=${this.handleOutsideClick}>
-      <div class="modal-content">
-        <p>${this.popupText}</p>
+      <pr-icon-button
+        variant="default"
+        color="secondary"
+        icon="${icon}"
+        @click=${this.handleButtonClick}
+        >${icon}</pr-icon-button
+      >
+      <div
+        class="modal"
+        style=${this.showModal ? 'display: block;' : 'display: none;'}
+        @click=${this.handleOutsideClick}
+      >
+        <div class="modal-content">
+          <p>${this.popupText}</p>
+        </div>
       </div>
-    </div>
     `;
   }
 }

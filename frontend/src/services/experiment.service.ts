@@ -11,11 +11,7 @@ import {AgentEditor} from './agent.editor';
 import {Pages, RouterService} from './router.service';
 import {Service} from './service';
 
-import {
-  Experiment,
-  StageConfig,
-  StageKind
-} from '@deliberation-lab/utils';
+import {Experiment, StageConfig, StageKind} from '@deliberation-lab/utils';
 import {getPublicExperimentName} from '../shared/experiment.utils';
 
 interface ServiceProvider {
@@ -45,10 +41,7 @@ export class ExperimentService extends Service {
   @observable isStageConfigsLoading = false;
 
   @computed get isLoading() {
-    return (
-      this.isExperimentLoading ||
-      this.isStageConfigsLoading
-    );
+    return this.isExperimentLoading || this.isStageConfigsLoading;
   }
 
   set isLoading(value: boolean) {
@@ -74,12 +67,12 @@ export class ExperimentService extends Service {
           this.experiment = {
             id: doc.id,
             cohortLockMap: {}, // for experiments version <= 11
-            ...doc.data()
+            ...doc.data(),
           } as Experiment;
           this.sp.agentEditor.setExperimentId(doc.id);
           this.isExperimentLoading = false;
-        }
-      )
+        },
+      ),
     );
 
     // Fetch the experiment config
@@ -89,7 +82,7 @@ export class ExperimentService extends Service {
           this.sp.firebaseService.firestore,
           'experiments',
           id,
-          'stages'
+          'stages',
         ),
         (snapshot) => {
           let changedDocs = snapshot.docChanges().map((change) => change.doc);
@@ -107,8 +100,8 @@ export class ExperimentService extends Service {
           });
 
           this.isStageConfigsLoading = false;
-        }
-      )
+        },
+      ),
     );
   }
 

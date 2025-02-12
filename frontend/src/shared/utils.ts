@@ -1,12 +1,11 @@
 import {micromark} from 'micromark';
 import {gfm, gfmHtml} from 'micromark-extension-gfm';
-import {UnifiedTimestamp, getHashIntegerFromString} from '@deliberation-lab/utils';
-import {Snapshot} from './types';
 import {
-  MAN_EMOJIS,
-  WOMAN_EMOJIS,
-  PERSON_EMOJIS
-} from './constants';
+  UnifiedTimestamp,
+  getHashIntegerFromString,
+} from '@deliberation-lab/utils';
+import {Snapshot} from './types';
+import {MAN_EMOJIS, WOMAN_EMOJIS, PERSON_EMOJIS} from './constants';
 
 /**
  * General utils for frontend only.
@@ -16,7 +15,7 @@ import {
 /** Use micromark to convert Git-flavored markdown to HTML. */
 export function convertMarkdownToHTML(
   markdown: string | null,
-  sanitize = true
+  sanitize = true,
 ) {
   if (!markdown) {
     return '';
@@ -35,7 +34,7 @@ export function convertMarkdownToHTML(
  * including the document Firestore ID within the field with the given key.
  */
 export function collectSnapshotWithId<T>(snapshot: Snapshot, idKey: keyof T) {
-  return snapshot.docs.map((doc) => ({[idKey]: doc.id, ...doc.data()} as T));
+  return snapshot.docs.map((doc) => ({[idKey]: doc.id, ...doc.data()}) as T);
 }
 
 /**
@@ -43,7 +42,7 @@ export function collectSnapshotWithId<T>(snapshot: Snapshot, idKey: keyof T) {
  */
 export function convertUnifiedTimestampToDate(
   timestamp: UnifiedTimestamp,
-  showLongFormat: boolean = true
+  showLongFormat: boolean = true,
 ) {
   const date = new Date(timestamp.seconds * 1000);
   if (showLongFormat) {
@@ -100,9 +99,10 @@ export function getProfileBasedColor(publicId: string, avatar: string) {
 /** Get random or hash-based color (e.g., for avatar backgroud). */
 export function getHashBasedColor(hashString = ''): string {
   const COLORS = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink'];
-  const index = hashString.length > 0 ?
-    getHashIntegerFromString(hashString) % COLORS.length
-    : Math.floor(Math.random() * COLORS.length);
+  const index =
+    hashString.length > 0
+      ? getHashIntegerFromString(hashString) % COLORS.length
+      : Math.floor(Math.random() * COLORS.length);
 
   return COLORS[index];
 }

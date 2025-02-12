@@ -84,7 +84,7 @@ export function getRTVStageConfigs(): StageConfig[] {
           }),
         }),
       ],
-    })
+    }),
   );
   return stages;
 }

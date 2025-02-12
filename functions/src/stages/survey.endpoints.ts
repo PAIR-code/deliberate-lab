@@ -1,4 +1,4 @@
-import { Value } from '@sinclair/typebox/value';
+import {Value} from '@sinclair/typebox/value';
 import {
   UpdateSurveyPerParticipantStageParticipantAnswerData,
   UpdateSurveyStageParticipantAnswerData,
@@ -6,9 +6,9 @@ import {
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
-import { onCall } from 'firebase-functions/v2/https';
+import {onCall} from 'firebase-functions/v2/https';
 
-import { app } from '../app';
+import {app} from '../app';
 import {
   checkConfigDataUnionOnPath,
   isUnionError,
@@ -27,7 +27,7 @@ import {
 // ************************************************************************* //
 
 export const updateSurveyStageParticipantAnswer = onCall(async (request) => {
-  const { data } = request;
+  const {data} = request;
 
   // Validate input
   const validInput = Value.Check(UpdateSurveyStageParticipantAnswerData, data);
@@ -36,7 +36,8 @@ export const updateSurveyStageParticipantAnswer = onCall(async (request) => {
   }
 
   // Define document reference
-  const document = app.firestore()
+  const document = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('participants')
@@ -45,7 +46,8 @@ export const updateSurveyStageParticipantAnswer = onCall(async (request) => {
     .doc(data.surveyStageParticipantAnswer.id);
 
   // Define public stage document reference
-  const publicDocument = app.firestore()
+  const publicDocument = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('cohorts')
@@ -58,16 +60,22 @@ export const updateSurveyStageParticipantAnswer = onCall(async (request) => {
     transaction.set(document, data.surveyStageParticipantAnswer);
 
     // Update public stage data
-    const publicStageData = (await publicDocument.get()).data() as StagePublicData;
-    publicStageData.participantAnswerMap[data.participantPublicId] = data.surveyStageParticipantAnswer.answerMap;
+    const publicStageData = (
+      await publicDocument.get()
+    ).data() as StagePublicData;
+    publicStageData.participantAnswerMap[data.participantPublicId] =
+      data.surveyStageParticipantAnswer.answerMap;
     transaction.set(publicDocument, publicStageData);
   });
 
-  return { id: document.id };
+  return {id: document.id};
 });
 
 function handleUpdateSurveyStageParticipantAnswerValidationErrors(data: any) {
-  for (const error of Value.Errors(UpdateSurveyStageParticipantAnswerData, data)) {
+  for (const error of Value.Errors(
+    UpdateSurveyStageParticipantAnswerData,
+    data,
+  )) {
     if (isUnionError(error)) {
       const nested = checkConfigDataUnionOnPath(data, error.path);
       prettyPrintErrors(nested);
@@ -88,35 +96,50 @@ function handleUpdateSurveyStageParticipantAnswerValidationErrors(data: any) {
 // Validation: utils/src/stages/survey_stage.validation.ts                   //
 // ************************************************************************* //
 
-export const updateSurveyPerParticipantStageParticipantAnswer = onCall(async (request) => {
-  const { data } = request;
+export const updateSurveyPerParticipantStageParticipantAnswer = onCall(
+  async (request) => {
+    const {data} = request;
 
-  // Validate input
-  const validInput = Value.Check(UpdateSurveyPerParticipantStageParticipantAnswerData, data);
-  if (!validInput) {
-    handleUpdateSurveyPerParticipantStageParticipantAnswerValidationErrors(data);
-  }
+    // Validate input
+    const validInput = Value.Check(
+      UpdateSurveyPerParticipantStageParticipantAnswerData,
+      data,
+    );
+    if (!validInput) {
+      handleUpdateSurveyPerParticipantStageParticipantAnswerValidationErrors(
+        data,
+      );
+    }
 
-  // Define document reference
-  const document = app.firestore()
-    .collection('experiments')
-    .doc(data.experimentId)
-    .collection('participants')
-    .doc(data.participantPrivateId)
-    .collection('stageData')
-    .doc(data.surveyPerParticipantStageParticipantAnswer.id);
+    // Define document reference
+    const document = app
+      .firestore()
+      .collection('experiments')
+      .doc(data.experimentId)
+      .collection('participants')
+      .doc(data.participantPrivateId)
+      .collection('stageData')
+      .doc(data.surveyPerParticipantStageParticipantAnswer.id);
 
-  // Run document write as transaction to ensure consistency
-  await app.firestore().runTransaction(async (transaction) => {
-    transaction.set(document, data.surveyPerParticipantStageParticipantAnswer);
-  });
+    // Run document write as transaction to ensure consistency
+    await app.firestore().runTransaction(async (transaction) => {
+      transaction.set(
+        document,
+        data.surveyPerParticipantStageParticipantAnswer,
+      );
+    });
 
-  return { id: document.id };
-});
+    return {id: document.id};
+  },
+);
 
-
-function handleUpdateSurveyPerParticipantStageParticipantAnswerValidationErrors(data: any) {
-  for (const error of Value.Errors(UpdateSurveyPerParticipantStageParticipantAnswerData, data)) {
+function handleUpdateSurveyPerParticipantStageParticipantAnswerValidationErrors(
+  data: any,
+) {
+  for (const error of Value.Errors(
+    UpdateSurveyPerParticipantStageParticipantAnswerData,
+    data,
+  )) {
     if (isUnionError(error)) {
       const nested = checkConfigDataUnionOnPath(data, error.path);
       prettyPrintErrors(nested);

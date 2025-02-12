@@ -60,15 +60,9 @@ export class ParticipantView extends MobxLitElement {
     const stage = this.experimentService.getStage(stageId ?? '');
 
     const renderContent = () => {
-      // Render landing if (no stage ID or hasn't started experiment)
-      // AND not experimenter
-      if (
-        (!stageId || !this.participantService.profile?.timestamps.startExperiment)
-        && !this.authService.isExperimenter
-      ) {
-        return html`
-          <div class="content">${this.renderLanding()}</div>
-        `;
+      // Render landing if stage ID is undefined
+      if (!stageId) {
+        return html` <div class="content">${this.renderLanding()}</div> `;
       }
 
       return html`
@@ -144,10 +138,7 @@ export class ParticipantView extends MobxLitElement {
     ) {
       return nothing;
     }
-    return html`
-      <attention-check-popup>
-      </attention-check-popup>
-    `;
+    return html` <attention-check-popup> </attention-check-popup> `;
   }
 
   private renderBootedPopup() {
@@ -179,17 +170,21 @@ export class ParticipantView extends MobxLitElement {
 
     // If stage not yet unlocked, do not show to participants
     if (
-      !this.participantService.canAccessStage(stage.id) &&
+      (!this.participantService.profile?.timestamps.startExperiment ||
+        !this.participantService.canAccessStage(stage.id)) &&
       !this.authService.isExperimenter
     ) {
+      // When clicked, this button routes to the participant "landing,"
+      // which either shows the "start experiment" button (if relevant)
+      // or routes to the current stage.
       return html`
         <div class="content">
           <div>Stage not available yet</div>
-          <pr-button @click=${() => {
-            this.participantService.setCurrentStageView(
-              this.participantService.profile?.currentStageId ?? undefined
-            );
-          }}>
+          <pr-button
+            @click=${() => {
+              this.participantService.setCurrentStageView(undefined);
+            }}
+          >
             Go to current stage
           </pr-button>
         </div>

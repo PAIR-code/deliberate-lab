@@ -1,4 +1,4 @@
-import { DocumentData, QuerySnapshot } from 'firebase/firestore';
+import {DocumentData, QuerySnapshot} from 'firebase/firestore';
 
 /**
  * Generic wrapper type for constructors, used in the DI system.
@@ -14,9 +14,9 @@ export type Snapshot = QuerySnapshot<DocumentData, DocumentData>;
 
 /** Color modes. */
 export enum ColorMode {
-  LIGHT = "light",
-  DARK = "dark",
-  DEFAULT = "default",
+  LIGHT = 'light',
+  DARK = 'dark',
+  DEFAULT = 'default',
 }
 
 /** Gallery item (rendered as card). */

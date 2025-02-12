@@ -21,9 +21,7 @@ import {
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
-import {
-  getPrecedingRevealableStages,
-} from '../../shared/experiment.utils';
+import {getPrecedingRevealableStages} from '../../shared/experiment.utils';
 
 import {styles} from './reveal_editor.scss';
 
@@ -45,7 +43,7 @@ export class RevealEditor extends MobxLitElement {
         ${this.renderAddMenu()}
       </div>
       ${this.stage.items.map((item, index) =>
-        this.renderRevealStageItem(item, index)
+        this.renderRevealStageItem(item, index),
       )}
     `;
   }
@@ -55,7 +53,7 @@ export class RevealEditor extends MobxLitElement {
 
     const stageOptions = getPrecedingRevealableStages(
       this.stage?.id,
-      this.experimentEditor.stages
+      this.experimentEditor.stages,
     );
     const noAvailableStages = stageOptions.length === 0;
     const tooltipText = noAvailableStages
@@ -92,7 +90,7 @@ export class RevealEditor extends MobxLitElement {
     };
 
     const stageIndex = this.experimentEditor.stages.findIndex(
-      (s) => s.id === stage.id
+      (s) => s.id === stage.id,
     );
 
     return html`
@@ -166,7 +164,7 @@ export class RevealEditor extends MobxLitElement {
 
     const stage = this.experimentEditor.getStage(item.id);
     const stageIndex = this.experimentEditor.stages.findIndex(
-      (stage) => stage.id === item.id
+      (stage) => stage.id === item.id,
     );
     if (!this.stage || !stage) return nothing;
 
@@ -244,7 +242,7 @@ export class RevealEditor extends MobxLitElement {
     const toggleRevealScorableOnly = () => {
       this.updateRevealItem(
         {...item, revealScorableOnly: !revealScorableOnly},
-        index
+        index,
       );
     };
 

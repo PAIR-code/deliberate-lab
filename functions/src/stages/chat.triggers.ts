@@ -1,5 +1,8 @@
-import { Timestamp } from 'firebase-admin/firestore';
-import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
+import {Timestamp} from 'firebase-admin/firestore';
+import {
+  onDocumentCreated,
+  onDocumentUpdated,
+} from 'firebase-functions/v2/firestore';
 import {
   awaitTypingDelay,
   getTypingDelayInMs,
@@ -17,17 +20,13 @@ import {
   ChatStageConfig,
   ExperimenterData,
 } from '@deliberation-lab/utils';
-import {
-  getChatStage,
-  getChatStagePublicData,
-  hasEndedChat
-} from './chat.utils';
+import {getChatStage, getChatStagePublicData, hasEndedChat} from './chat.utils';
 
-import { app } from '../app';
+import {app} from '../app';
 import {
   getAgentResponse,
   getGeminiResponse,
-  getOllamaResponse
+  getOllamaResponse,
 } from '../agent.utils';
 
 export interface AgentMessage {
@@ -46,14 +45,14 @@ export const startTimeElapsed = onDocumentCreated(
   async (event) => {
     const stage = await getChatStage(
       event.params.experimentId,
-      event.params.stageId
+      event.params.stageId,
     );
     if (!stage) return;
 
     const publicStageData = await getChatStagePublicData(
       event.params.experimentId,
       event.params.cohortId,
-      event.params.stageId
+      event.params.stageId,
     );
     if (!publicStageData) return;
 
@@ -81,42 +80,52 @@ export const startTimeElapsed = onDocumentCreated(
  */
 export const updateTimeElapsed = onDocumentUpdated(
   {
-    document: 'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/',
+    document:
+      'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/',
     timeoutSeconds: 360, // Maximum timeout of 6 minutes.
   },
   async (event) => {
     const publicStageData = await getChatStagePublicData(
       event.params.experimentId,
       event.params.cohortId,
-      event.params.stageId
+      event.params.stageId,
     );
     if (!publicStageData) return;
 
     // Only update time if the conversation is in progress.
-    if (!publicStageData.discussionStartTimestamp || publicStageData.discussionEndTimestamp) return;
+    if (
+      !publicStageData.discussionStartTimestamp ||
+      publicStageData.discussionEndTimestamp
+    )
+      return;
 
     const stage = await getChatStage(
       event.params.experimentId,
-      event.params.stageId
+      event.params.stageId,
     );
     if (!stage || !stage.timeLimitInMinutes) return;
     // Maybe end the chat.
     if (await hasEndedChat(stage, publicStageData)) return;
 
     // Calculate how long to wait.
-    const elapsedMinutes = getTimeElapsed(publicStageData.discussionStartTimestamp!, 'm');
+    const elapsedMinutes = getTimeElapsed(
+      publicStageData.discussionStartTimestamp!,
+      'm',
+    );
     const maxWaitTimeInMinutes = 5;
     const remainingTime = stage.timeLimitInMinutes - elapsedMinutes;
     const intervalTime = Math.min(maxWaitTimeInMinutes, remainingTime);
 
     // Wait for the determined interval time, and then re-trigger the function.
-    await new Promise((resolve) => setTimeout(resolve, intervalTime * 60 * 1000));
+    await new Promise((resolve) =>
+      setTimeout(resolve, intervalTime * 60 * 1000),
+    );
     await app
       .firestore()
       .doc(
         `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
       )
-      .update({ discussionCheckpointTimestamp: Timestamp.now() });
+      .update({discussionCheckpointTimestamp: Timestamp.now()});
   },
 );
 
@@ -133,7 +142,7 @@ export const createAgentMessage = onDocumentCreated(
     // Use experiment config to get ChatStageConfig with agents.
     let stage = await getChatStage(
       event.params.experimentId,
-      event.params.stageId
+      event.params.stageId,
     );
     if (!stage) {
       return;
@@ -142,16 +151,25 @@ export const createAgentMessage = onDocumentCreated(
     let publicStageData = await getChatStagePublicData(
       event.params.experimentId,
       event.params.cohortId,
-      event.params.stageId
+      event.params.stageId,
     );
     // Make sure the conversation hasn't ended.
-    if (!publicStageData || Boolean(publicStageData.discussionEndTimestamp)) return;
+    if (!publicStageData || Boolean(publicStageData.discussionEndTimestamp))
+      return;
 
     // Fetch experiment creator's API key.
     const creatorId = (
-      await app.firestore().collection('experiments').doc(event.params.experimentId).get()
+      await app
+        .firestore()
+        .collection('experiments')
+        .doc(event.params.experimentId)
+        .get()
     ).data().metadata.creator;
-    const creatorDoc = await app.firestore().collection('experimenterData').doc(creatorId).get();
+    const creatorDoc = await app
+      .firestore()
+      .collection('experimenterData')
+      .doc(creatorId)
+      .get();
     if (!creatorDoc.exists) return;
 
     const experimenterData = creatorDoc.data() as ExperimenterData;
@@ -186,7 +204,9 @@ export const createAgentMessage = onDocumentCreated(
         message = '';
 
         try {
-          const cleanedText = response.text.replace(/```json\s*|\s*```/g, '').trim();
+          const cleanedText = response.text
+            .replace(/```json\s*|\s*```/g, '')
+            .trim();
           parsed = JSON.parse(cleanedText);
         } catch {
           // Response is already logged in console during Gemini API call
@@ -197,7 +217,7 @@ export const createAgentMessage = onDocumentCreated(
 
       const trimmed = message.trim();
       if (trimmed === '' || trimmed === '""' || trimmed === "''") continue;
-      agentMessages.push({ agent, parsed, message });
+      agentMessages.push({agent, parsed, message});
     }
 
     if (agentMessages.length === 0) return;
@@ -223,7 +243,9 @@ export const createAgentMessage = onDocumentCreated(
       cumulativeWeights.push(cumulativeSum / totalWPM);
     }
     const random = Math.random();
-    const chosenIndex = cumulativeWeights.findIndex((weight) => random <= weight);
+    const chosenIndex = cumulativeWeights.findIndex(
+      (weight) => random <= weight,
+    );
     const agentMessage = agentMessages[chosenIndex];
     // Randomly sample a message.
     const agent = agentMessage.agent;
@@ -234,10 +256,7 @@ export const createAgentMessage = onDocumentCreated(
 
     // Refresh the stage to check if the conversation has ended.
     // TODO: Instead of doing this, run inside transaction?
-    stage = await getChatStage(
-      event.params.experimentId,
-      event.params.stageId
-    );
+    stage = await getChatStage(event.params.experimentId, event.params.stageId);
     publicStageData = await getChatStagePublicData(
       event.params.experimentId,
       event.params.cohortId,
@@ -268,7 +287,7 @@ export const createAgentMessage = onDocumentCreated(
     }
 
     const chatMessage = createAgentMediatorChatMessage({
-      profile: { name: agent.name, avatar: agent.avatar, pronouns: null },
+      profile: {name: agent.name, avatar: agent.avatar, pronouns: null},
       discussionId: data.discussionId,
       message,
       timestamp: Timestamp.now(),

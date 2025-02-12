@@ -197,7 +197,7 @@ export const CHIP_COMPREHENSION_CHECK = createComprehensionStage({
           createMultipleChoiceItem({id: 'd', text: '15'}),
         ],
       },
-      'b' // correct answer ID
+      'b', // correct answer ID
     ),
     createMultipleChoiceComprehensionQuestion(
       {
@@ -210,7 +210,7 @@ export const CHIP_COMPREHENSION_CHECK = createComprehensionStage({
           createMultipleChoiceItem({id: 'd', text: '10'}),
         ],
       },
-      'd' // correct answer ID
+      'd', // correct answer ID
     ),
     createMultipleChoiceComprehensionQuestion(
       {
@@ -221,7 +221,7 @@ export const CHIP_COMPREHENSION_CHECK = createComprehensionStage({
           createMultipleChoiceItem({id: 'b', text: 'False'}),
         ],
       },
-      'a' // correct answer ID)
+      'a', // correct answer ID)
     ),
 
     createMultipleChoiceComprehensionQuestion(
@@ -233,7 +233,7 @@ export const CHIP_COMPREHENSION_CHECK = createComprehensionStage({
           createMultipleChoiceItem({id: 'b', text: 'False'}),
         ],
       },
-      'b' // correct answer ID)
+      'b', // correct answer ID)
     ),
   ],
 });
@@ -257,7 +257,7 @@ export const CHIP_COMPREHENSION_CHECK2 = createComprehensionStage({
           createMultipleChoiceItem({id: 'b', text: 'False'}),
         ],
       },
-      'b' // correct answer ID
+      'b', // correct answer ID
     ),
     createMultipleChoiceComprehensionQuestion(
       {
@@ -281,7 +281,7 @@ export const CHIP_COMPREHENSION_CHECK2 = createComprehensionStage({
           }),
         ],
       },
-      'c' // correct answer ID
+      'c', // correct answer ID
     ),
     createMultipleChoiceComprehensionQuestion(
       {
@@ -292,7 +292,7 @@ export const CHIP_COMPREHENSION_CHECK2 = createComprehensionStage({
           createMultipleChoiceItem({id: 'b', text: 'False'}),
         ],
       },
-      'b' // correct answer ID
+      'b', // correct answer ID
     ),
     createMultipleChoiceComprehensionQuestion(
       {
@@ -303,7 +303,7 @@ export const CHIP_COMPREHENSION_CHECK2 = createComprehensionStage({
           createMultipleChoiceItem({id: 'b', text: 'False'}),
         ],
       },
-      'a' // correct answer ID
+      'a', // correct answer ID
     ),
     createMultipleChoiceComprehensionQuestion(
       {
@@ -328,7 +328,7 @@ export const CHIP_COMPREHENSION_CHECK2 = createComprehensionStage({
           }),
         ],
       },
-      'a' // correct answer ID
+      'a', // correct answer ID
     ),
   ],
 });
@@ -503,7 +503,7 @@ const CHIP_NEGOTIATION_STAGE1 = createChipStage({
     infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
   }),
   chips: CHIPS,
-  progress: createStageProgressConfig({ minParticipants: 3 }),
+  progress: createStageProgressConfig({minParticipants: 3}),
 });
 
 const CHIP_NEGOTIATION_STAGE2 = createChipStage({

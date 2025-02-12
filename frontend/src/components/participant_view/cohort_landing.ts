@@ -10,9 +10,7 @@ import {ExperimentService} from '../../services/experiment.service';
 import {FirebaseService} from '../../services/firebase.service';
 import {Pages, RouterService} from '../../services/router.service';
 
-import {
-  StageKind
-} from '@deliberation-lab/utils';
+import {StageKind} from '@deliberation-lab/utils';
 
 import {createParticipantCallable} from '../../shared/callables';
 import {requiresAnonymousProfiles} from '../../shared/participant.utils';
@@ -45,7 +43,10 @@ export class CohortLanding extends MobxLitElement {
       if (isLockedCohort()) {
         return html`<div>This experiment is currently closed.</div>`;
       }
-      return html`<div>You've been invited to join this experiment. Please click the button below to begin.</div>`;
+      return html`<div>
+        You've been invited to join this experiment. Please click the button
+        below to begin.
+      </div>`;
     };
 
     return html`
@@ -56,7 +57,8 @@ export class CohortLanding extends MobxLitElement {
           <pr-button
             ?loading=${this.isLoading}
             ?disabled=${isLockedCohort()}
-            @click=${this.joinExperiment}>
+            @click=${this.joinExperiment}
+          >
             Join experiment
           </pr-button>
         </div>
@@ -70,31 +72,31 @@ export class CohortLanding extends MobxLitElement {
 
     const params = this.routerService.activeRoute.params;
     const isAnonymous = requiresAnonymousProfiles(
-      this.experimentService.stages
+      this.experimentService.stages,
     );
 
     const prolificIdMatch = window.location.href.match(
-      /[?&]PROLIFIC_PID=([^&]+)/
+      /[?&]PROLIFIC_PID=([^&]+)/,
     );
-    const prolificId = prolificIdMatch
-      ? prolificIdMatch[1]
-      : null;
+    const prolificId = prolificIdMatch ? prolificIdMatch[1] : null;
     if (
-      this.experimentService.experiment!.prolificConfig!.enableProlificIntegration &&
+      this.experimentService.experiment!.prolificConfig!
+        .enableProlificIntegration &&
       !prolificIdMatch
     ) {
       console.warn(
-        'Warning: Participant joining a Prolific experiment without a Prolific code.'
+        'Warning: Participant joining a Prolific experiment without a Prolific code.',
       );
     }
 
     const response = await createParticipantCallable(
-      this.firebaseService.functions, {
+      this.firebaseService.functions,
+      {
         experimentId: params['experiment'],
         cohortId: params['cohort'],
         isAnonymous,
         prolificId,
-      }
+      },
     );
 
     // Route to participant page

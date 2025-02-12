@@ -24,7 +24,7 @@ import {
 import {
   convertUnifiedTimestampToDate,
   getHashBasedColor,
-  getProfileBasedColor
+  getProfileBasedColor,
 } from '../../shared/utils';
 
 import {styles} from './chat_message.scss';
@@ -81,8 +81,7 @@ export class ChatMessageComponent extends MobxLitElement {
 
     return html`
       <div class=${classes}>
-        <avatar-icon .emoji=${profile.avatar} .color=${color()}>
-        </avatar-icon>
+        <avatar-icon .emoji=${profile.avatar} .color=${color()}> </avatar-icon>
         <div class="content">
           <div class="label">
             ${profile.name ?? chatMessage.participantPublicId}
@@ -91,7 +90,7 @@ export class ChatMessageComponent extends MobxLitElement {
             <span class="date"
               >${convertUnifiedTimestampToDate(
                 chatMessage.timestamp,
-                false
+                false,
               )}</span
             >
           </div>
@@ -106,7 +105,10 @@ export class ChatMessageComponent extends MobxLitElement {
 
     return html`
       <div class="chat-message">
-        <avatar-icon .emoji=${profile.avatar} .color=${getHashBasedColor(profile?.avatar ?? '')}>
+        <avatar-icon
+          .emoji=${profile.avatar}
+          .color=${getHashBasedColor(profile?.avatar ?? '')}
+        >
         </avatar-icon>
         <div class="content">
           <div class="label">
@@ -114,7 +116,7 @@ export class ChatMessageComponent extends MobxLitElement {
             <span class="date"
               >${convertUnifiedTimestampToDate(
                 chatMessage.timestamp,
-                false
+                false,
               )}</span
             >
           </div>
@@ -129,7 +131,10 @@ export class ChatMessageComponent extends MobxLitElement {
 
     return html`
       <div class="chat-message">
-        <avatar-icon .emoji=${profile.avatar} .color=${getHashBasedColor(profile?.avatar ?? '')}>
+        <avatar-icon
+          .emoji=${profile.avatar}
+          .color=${getHashBasedColor(profile?.avatar ?? '')}
+        >
         </avatar-icon>
         <div class="content">
           <div class="label">
@@ -137,7 +142,7 @@ export class ChatMessageComponent extends MobxLitElement {
             <span class="date"
               >${convertUnifiedTimestampToDate(
                 chatMessage.timestamp,
-                false
+                false,
               )}</span
             >
           </div>

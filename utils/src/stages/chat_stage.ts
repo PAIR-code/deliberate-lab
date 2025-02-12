@@ -1,5 +1,5 @@
-import { Timestamp } from 'firebase/firestore';
-import { generateId, UnifiedTimestamp } from '../shared';
+import {Timestamp} from 'firebase/firestore';
+import {generateId, UnifiedTimestamp} from '../shared';
 import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
@@ -9,8 +9,11 @@ import {
   createStageTextConfig,
   createStageProgressConfig,
 } from './stage';
-import { ParticipantProfileBase, createParticipantProfileBase } from '../participant';
-import { AgentGenerationConfig } from '../agent';
+import {
+  ParticipantProfileBase,
+  createParticipantProfileBase,
+} from '../participant';
+import {AgentGenerationConfig} from '../agent';
 
 /** Group chat stage types and functions. */
 
@@ -99,7 +102,6 @@ export interface AgentMediatorChatMessage extends BaseChatMessage {
   explanation: string;
 }
 
-
 /** LLM agent config. */
 export interface AgentConfig {
   id: string;
@@ -108,7 +110,7 @@ export interface AgentConfig {
   model: string;
   prompt: string;
   wordsPerMinute: number; // Typing speed
-  generationConfig: AgentGenerationConfig
+  generationConfig: AgentGenerationConfig;
   responseConfig: AgentResponseConfig;
   // TODO: Add more settings, e.g. context window
 }
@@ -151,9 +153,12 @@ export interface ChatStageParticipantAnswer extends BaseStageParticipantAnswer {
 export interface ChatStagePublicData extends BaseStagePublicData {
   kind: StageKind.CHAT;
   // null if no current discussion (e.g., all discussions over or 0 discussions)
-  currentDiscussionId: string|null;
+  currentDiscussionId: string | null;
   // discussionId --> map of participant public ID to readyToEndDiscussion timestamp
-  discussionTimestampMap: Record<string, Record<string, UnifiedTimestamp | null>>;
+  discussionTimestampMap: Record<
+    string,
+    Record<string, UnifiedTimestamp | null>
+  >;
   // The timestamp of the first message, or null if not started.
   discussionStartTimestamp: UnifiedTimestamp | null;
   // A timestamp used for in progress checkpoint.
@@ -165,7 +170,7 @@ export interface ChatStagePublicData extends BaseStagePublicData {
 // ************************************************************************* //
 // CONSTANTS                                                                 //
 // ************************************************************************* //
-export const DEFAULT_MODEL = "gemini-1.5-pro-latest";
+export const DEFAULT_MODEL = 'gemini-1.5-pro-latest';
 export const DEFAULT_AGENT_PROMPT = `You are a agent for a chat conversation. Your task is to ensure that the conversation is polite.
 If you notice that participants are being rude, step in to make sure that everyone is respectful. 
 Otherwise, do not respond.`;
@@ -202,14 +207,18 @@ export const DEFAULT_STRING_FORMATTING_INSTRUCTIONS = `If you would like to resp
 // ************************************************************************* //
 
 /** Create chat stage. */
-export function createChatStage(config: Partial<ChatStageConfig> = {}): ChatStageConfig {
+export function createChatStage(
+  config: Partial<ChatStageConfig> = {},
+): ChatStageConfig {
   return {
     id: config.id ?? generateId(),
     kind: StageKind.CHAT,
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Group chat',
     descriptions: config.descriptions ?? createStageTextConfig(),
-    progress: config.progress ?? createStageProgressConfig({ waitForAllParticipants: true }),
+    progress:
+      config.progress ??
+      createStageProgressConfig({waitForAllParticipants: true}),
     discussions: config.discussions ?? [],
     agents: config.agents ?? [],
     timeLimitInMinutes: config.timeLimitInMinutes ?? 20,
@@ -264,7 +273,7 @@ export function createHumanMediatorChatMessage(
     type: ChatMessageType.HUMAN_AGENT,
     message: config.message ?? '',
     timestamp: config.timestamp ?? Timestamp.now(),
-    profile: config.profile ?? { name: 'Agent', avatar: '⭐', pronouns: null },
+    profile: config.profile ?? {name: 'Agent', avatar: '⭐', pronouns: null},
   };
 }
 
@@ -278,7 +287,7 @@ export function createAgentMediatorChatMessage(
     type: ChatMessageType.AGENT_AGENT,
     message: config.message ?? '',
     timestamp: config.timestamp ?? Timestamp.now(),
-    profile: config.profile ?? { name: 'Agent', avatar: '🤖', pronouns: null },
+    profile: config.profile ?? {name: 'Agent', avatar: '🤖', pronouns: null},
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
   };
@@ -292,12 +301,18 @@ export function buildChatHistoryForPrompt(messages: ChatMessage[]) {
   };
 
   return messages
-    .map((message) => `${getTime(message.timestamp)} ${message.profile.name}: ${message.message}`)
+    .map(
+      (message) =>
+        `${getTime(message.timestamp)} ${message.profile.name}: ${message.message}`,
+    )
     .join('\n');
 }
 
 /** Add chat messages (as history) to given prompt. */
-export function addChatHistoryToPrompt(messages: ChatMessage[], prompt: string) {
+export function addChatHistoryToPrompt(
+  messages: ChatMessage[],
+  prompt: string,
+) {
   return `${buildChatHistoryForPrompt(messages)}\n\n${prompt}`;
 }
 
@@ -305,13 +320,19 @@ export function getPreface(agent: AgentConfig, stage: ChatStageConfig) {
   const descriptions = [];
 
   if (stage.descriptions.primaryText) {
-    descriptions.push(`- Conversation description: ${stage.descriptions.primaryText}`);
+    descriptions.push(
+      `- Conversation description: ${stage.descriptions.primaryText}`,
+    );
   }
   if (stage.descriptions.infoText) {
-    descriptions.push(`- Additional information: ${stage.descriptions.infoText}`);
+    descriptions.push(
+      `- Additional information: ${stage.descriptions.infoText}`,
+    );
   }
   if (stage.descriptions.helpText) {
-    descriptions.push(`- If you need assistance: ${stage.descriptions.helpText}`);
+    descriptions.push(
+      `- If you need assistance: ${stage.descriptions.helpText}`,
+    );
   }
 
   const descriptionHtml = descriptions.length
@@ -328,7 +349,9 @@ export function getChatHistory(messages: ChatMessage[], agent: AgentConfig) {
 }
 
 /** Create agent agent. */
-export function createAgentConfig(config: Partial<AgentConfig> = {}): AgentConfig {
+export function createAgentConfig(
+  config: Partial<AgentConfig> = {},
+): AgentConfig {
   return {
     id: config.id ?? generateId(),
     name: config.name ?? 'Agent',
@@ -341,14 +364,16 @@ export function createAgentConfig(config: Partial<AgentConfig> = {}): AgentConfi
   };
 }
 
-export function createAgentGenerationConfig(config: Partial<AgentGenerationConfig> = {}): AgentGenerationConfig {
+export function createAgentGenerationConfig(
+  config: Partial<AgentGenerationConfig> = {},
+): AgentGenerationConfig {
   return {
     temperature: config.temperature ?? 0.7,
     topP: config.topP ?? 1.0,
     frequencyPenalty: config.frequencyPenalty ?? 0.0,
     presencePenalty: config.presencePenalty ?? 0.0,
     customRequestBodyFields: config.customRequestBodyFields ?? [],
-  }
+  };
 }
 
 /** Create agent response config. */
@@ -361,7 +386,7 @@ export function createAgentResponseConfig(
     messageField: config.messageField ?? DEFAULT_RESPONSE_FIELD,
     explanationField: config.explanationField ?? DEFAULT_EXPLANATION_FIELD,
     formattingInstructions:
-      config.formattingInstructions ?? isJSON
+      (config.formattingInstructions ?? isJSON)
         ? DEFAULT_JSON_FORMATTING_INSTRUCTIONS
         : DEFAULT_STRING_FORMATTING_INSTRUCTIONS,
   };
@@ -383,8 +408,8 @@ export function createChatStagePublicData(
   config: ChatStageConfig,
 ): ChatStagePublicData {
   const id = config.id;
-  const currentDiscussionId = config.discussions.length === 0 ? null
-    : config.discussions[0].id;
+  const currentDiscussionId =
+    config.discussions.length === 0 ? null : config.discussions[0].id;
 
   return {
     id,

@@ -3,15 +3,15 @@ import {
   ParticipantProfile,
   ParticipantStatus,
   createChipTurn,
-  sortParticipantsByRandomProfile
+  sortParticipantsByRandomProfile,
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
-import { Timestamp } from 'firebase-admin/firestore';
+import {Timestamp} from 'firebase-admin/firestore';
 import * as functions from 'firebase-functions';
-import { onCall } from 'firebase-functions/v2/https';
+import {onCall} from 'firebase-functions/v2/https';
 
-import { app } from '../app';
+import {app} from '../app';
 
 /**
  * Get relevant (active), ordered participant public IDs for given cohort.
@@ -19,9 +19,10 @@ import { app } from '../app';
  */
 export async function getChipParticipants(
   experimentId: string,
-  cohortId: string
+  cohortId: string,
 ) {
-  const cohortParticipantsRef = app.firestore()
+  const cohortParticipantsRef = app
+    .firestore()
     .collection('experiments')
     .doc(experimentId)
     .collection('participants')
@@ -29,7 +30,7 @@ export async function getChipParticipants(
     .orderBy('publicId', 'asc');
 
   const participants: ParticipantProfile = [];
-  (await cohortParticipantsRef.get()).forEach(doc => {
+  (await cohortParticipantsRef.get()).forEach((doc) => {
     // Check that participant is active for negotiation stage
     const participant = doc.data() as ParticipantProfile;
     if (
@@ -44,8 +45,8 @@ export async function getChipParticipants(
 }
 
 /** Update chip negotiation public data current turn
-  * (and round if applicable)
-  */
+ * (and round if applicable)
+ */
 export function updateChipCurrentTurn(
   publicStageData: ChipStagePublicData,
   participants: ParticipantProfile[],
@@ -60,12 +61,12 @@ export function updateChipCurrentTurn(
   const participantIds = sortParticipantsByRandomProfile(
     participants,
     publicStageData.id,
-  ).map(p => p.publicId);
+  ).map((p) => p.publicId);
 
   // Find first participant who has not yet made an offer
-  const getTurnParticipant: string|null = (
+  const getTurnParticipant: string | null = (
     publicStageData: ChipStagePublicData,
-    participantIds: string[]
+    participantIds: string[],
   ) => {
     const round = publicStageData.currentRound;
     const roundMap = publicStageData.participantOfferMap[round];
@@ -108,9 +109,7 @@ export async function updateParticipantChipQuantities(
   const profiles = (
     await app
       .firestore()
-      .collection(
-        `experiments/${experimentId}/participants`,
-      )
+      .collection(`experiments/${experimentId}/participants`)
       .where('publicId', '==', publicId)
       .get()
   ).docs.map((doc) => doc.data() as ParticipantProfileExtended);
@@ -122,10 +121,10 @@ export async function updateParticipantChipQuantities(
 
   const privateId = profiles[0].privateId;
   const answerDoc = app
-      .firestore()
-      .doc(
-        `experiments/${experimentId}/participants/${privateId}/stageData/${stageId}`
-      );
+    .firestore()
+    .doc(
+      `experiments/${experimentId}/participants/${privateId}/stageData/${stageId}`,
+    );
   const answer = (await answerDoc.get()).data() as ChipStageParticipantAnswer;
 
   // Remove map items
@@ -150,5 +149,5 @@ export async function updateParticipantChipQuantities(
   // Update public stage data
   publicStageData.participantChipMap[publicId] = answer.chipMap;
 
-  return { answerDoc, answer, publicStageData };
+  return {answerDoc, answer, publicStageData};
 }
