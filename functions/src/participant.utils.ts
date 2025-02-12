@@ -38,8 +38,7 @@ export async function updateParticipantNextStage(
     response.currentStageId = nextStageId;
 
     // Mark next stage as reached
-    // (NOTE: this currently uses the participants' "completedWaiting" map)
-    participant.timestamps.completedWaiting[nextStageId] = timestamp;
+    participant.timestamps.readyStages[nextStageId] = timestamp;
 
     // If all active participants have reached the next stage,
     // unlock that stage in CohortConfig
@@ -112,7 +111,7 @@ export async function updateCohortStageUnlocked(
     };
 
     // If waitForAllParticipants, check if active participants are ready to
-    // start stage ("completedWaiting" is currently used for readyToStart)
+    // start stage
     // If not waitForAllParticipants, return true
     const isParticipantsReady = () => {
       let numReady = 0;
@@ -124,7 +123,7 @@ export async function updateCohortStageUnlocked(
         const isTransfer = participant.currentStageId === stageId &&
           participant.currentStatus === ParticipantStatus.TRANSFER_PENDING;
         const isReadyToStart = participant.timestamps.startExperiment &&
-          participant.timestamps.completedWaiting[stageId];
+          participant.timestamps.readyStages[stageId];
         const isCurrent = participant.privateId === currentParticipantId;
         if (!isTransfer && isReadyToStart || isCurrent) {
           numReady += 1;

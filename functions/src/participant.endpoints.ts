@@ -164,7 +164,7 @@ export const updateParticipantWaiting = onCall(async (request) => {
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     const participant = (await document.get()).data() as ParticipantProfileExtended;
-    participant.timestamps.completedWaiting[data.stageId] = Timestamp.now();
+    participant.timestamps.readyStages[data.stageId] = Timestamp.now();
 
     // Unlock the given stage for this cohort if all active participants
     // have reached the stage
@@ -318,9 +318,8 @@ export const acceptParticipantExperimentStart = onCall(async (request) => {
     participant.timestamps.startExperiment = Timestamp.now();
 
     // Set current stage as ready to start
-    // (NOTE: currently tracked via "completedWaiting" map)
     const currentStageId = participant.currentStageId;
-    participant.timestamps.completedWaiting[currentStageId] = Timestamp.now();
+    participant.timestamps.readyStages[currentStageId] = Timestamp.now();
 
     // If all active participants have reached the next stage,
     // unlock that stage in CohortConfig

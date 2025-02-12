@@ -32,7 +32,7 @@ export class Progress extends MobxLitElement {
   @property() showReadyAvatars = true;
   @property() showWaitingAvatars = false;
 
-  @state() completeWaitingLoading = false;
+  @state() refreshReadyToStartLoading = false;
 
   override render() {
     const stageId = this.participantService.currentStageViewId ?? '';
@@ -46,11 +46,11 @@ export class Progress extends MobxLitElement {
       this.cohortService.getWaitingPhaseMinParticipants(stageId) - unlocked.length;
 
     const onUpdateStatus = async () => {
-      this.completeWaitingLoading = true;
-      // completedWaiting is now used to track "ready to start"
+      this.refreshReadyToStartLoading = true;
+      // Update "ready to start" for current participant
       await this.participantService.updateWaitingPhaseCompletion(stageId);
       window.location.reload();
-      this.completeWaitingLoading = false;
+      this.refreshReadyToStartLoading = false;
     };
 
     const renderUpdateStatusButton = () => {
@@ -64,7 +64,7 @@ export class Progress extends MobxLitElement {
       return html`
         <pr-button
           color="primary"
-          ?loading=${this.completeWaitingLoading}
+          ?loading=${this.refreshReadyToStartLoading}
           @click=${onUpdateStatus}
         >
           Refresh this stage
