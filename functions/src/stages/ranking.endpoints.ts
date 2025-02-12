@@ -1,4 +1,4 @@
-import { Value } from '@sinclair/typebox/value';
+import {Value} from '@sinclair/typebox/value';
 import {
   RankingStageParticipantAnswer,
   RankingStagePublicData,
@@ -14,9 +14,9 @@ import {
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
-import { onCall } from 'firebase-functions/v2/https';
+import {onCall} from 'firebase-functions/v2/https';
 
-import { app } from '../app';
+import {app} from '../app';
 import {
   checkConfigDataUnionOnPath,
   isUnionError,
@@ -34,7 +34,7 @@ import {
 // Validation: utils/src/stages/ranking_stage.validation.ts                 //
 // ************************************************************************* //
 export const updateRankingStageParticipantAnswer = onCall(async (request) => {
-  const { data } = request;
+  const {data} = request;
 
   // Validate input
   const validInput = Value.Check(UpdateRankingStageParticipantAnswerData, data);
@@ -49,7 +49,8 @@ export const updateRankingStageParticipantAnswer = onCall(async (request) => {
   };
 
   // Define document reference
-  const document = app.firestore()
+  const document = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('participants')
@@ -57,7 +58,8 @@ export const updateRankingStageParticipantAnswer = onCall(async (request) => {
     .collection('stageData')
     .doc(data.stageId);
 
-  const publicDocument = app.firestore()
+  const publicDocument = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('cohorts')
@@ -65,7 +67,8 @@ export const updateRankingStageParticipantAnswer = onCall(async (request) => {
     .collection('publicStageData')
     .doc(data.stageId);
 
-  const wtlDoc = app.firestore()
+  const wtlDoc = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('cohorts')
@@ -79,22 +82,26 @@ export const updateRankingStageParticipantAnswer = onCall(async (request) => {
     transaction.set(document, answer);
 
     // Update public stage data (current participant rankings, current winner)
-    const publicStageData = (await publicDocument.get()).data() as RankingStagePublicData;
-    publicStageData.participantAnswerMap[data.participantPublicId] = data.rankingList
+    const publicStageData = (
+      await publicDocument.get()
+    ).data() as RankingStagePublicData;
+    publicStageData.participantAnswerMap[data.participantPublicId] =
+      data.rankingList;
 
     // Calculate rankings
     let participantAnswerMap = publicStageData.participantAnswerMap;
 
     // If experiment has hardcoded WTL stage (for LAS game), use the WTL
     // stage/question IDs to only consider top ranking participants
-    const wtlResponse = (await wtlDoc.get());
+    const wtlResponse = await wtlDoc.get();
     if (wtlResponse.exists) {
       const wtlData = wtlResponse.data() as SurveyStagePublicData;
 
       if (wtlData?.kind === StageKind.SURVEY) {
         const candidateList = getRankingCandidatesFromWTL(wtlData);
         participantAnswerMap = filterRankingsByCandidates(
-          participantAnswerMap, candidateList
+          participantAnswerMap,
+          candidateList,
         );
       }
     }
@@ -105,11 +112,14 @@ export const updateRankingStageParticipantAnswer = onCall(async (request) => {
     transaction.set(publicDocument, publicStageData);
   });
 
-  return { id: document.id };
+  return {id: document.id};
 });
 
 function handleUpdateRankingStageParticipantAnswerValidationErrors(data: any) {
-  for (const error of Value.Errors(UpdateRankingStageParticipantAnswerData, data)) {
+  for (const error of Value.Errors(
+    UpdateRankingStageParticipantAnswerData,
+    data,
+  )) {
     if (isUnionError(error)) {
       const nested = checkConfigDataUnionOnPath(data, error.path);
       prettyPrintErrors(nested);

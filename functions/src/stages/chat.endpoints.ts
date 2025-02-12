@@ -1,4 +1,4 @@
-import { Value } from '@sinclair/typebox/value';
+import {Value} from '@sinclair/typebox/value';
 import {
   ChatStageConfig,
   ChatStageParticipantAnswer,
@@ -10,11 +10,11 @@ import {
 import {updateCurrentDiscussionIndex} from './chat.utils';
 
 import * as admin from 'firebase-admin';
-import { Timestamp } from 'firebase-admin/firestore';
+import {Timestamp} from 'firebase-admin/firestore';
 import * as functions from 'firebase-functions';
-import { onCall } from 'firebase-functions/v2/https';
+import {onCall} from 'firebase-functions/v2/https';
 
-import { app } from '../app';
+import {app} from '../app';
 import {
   checkConfigDataUnionOnPath,
   isUnionError,
@@ -34,10 +34,11 @@ import {
 // ************************************************************************* //
 
 export const createChatMessage = onCall(async (request) => {
-  const { data } = request;
+  const {data} = request;
 
   // Define document reference
-  const document = app.firestore()
+  const document = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('cohorts')
@@ -56,7 +57,7 @@ export const createChatMessage = onCall(async (request) => {
     transaction.set(document, chatMessage);
   });
 
-  return { id: document.id };
+  return {id: document.id};
 });
 
 // ************************************************************************* //
@@ -67,9 +68,10 @@ export const createChatMessage = onCall(async (request) => {
 // ************************************************************************* //
 
 export const updateChatAgents = onCall(async (request) => {
-  const { data } = request;
+  const {data} = request;
 
-  const document = app.firestore()
+  const document = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('stages')
@@ -84,7 +86,7 @@ export const updateChatAgents = onCall(async (request) => {
     transaction.set(document, stageConfig);
   });
 
-  return { success: true };
+  return {success: true};
 });
 
 // ************************************************************************* //
@@ -96,7 +98,7 @@ export const updateChatAgents = onCall(async (request) => {
 // ************************************************************************* //
 
 export const updateChatStageParticipantAnswer = onCall(async (request) => {
-  const { data } = request;
+  const {data} = request;
 
   // Validate input
   const validInput = Value.Check(UpdateChatStageParticipantAnswerData, data);
@@ -105,7 +107,8 @@ export const updateChatStageParticipantAnswer = onCall(async (request) => {
   }
 
   // Define document reference
-  const document = app.firestore()
+  const document = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('participants')
@@ -114,7 +117,8 @@ export const updateChatStageParticipantAnswer = onCall(async (request) => {
     .doc(data.chatStageParticipantAnswer.id);
 
   // Define public stage document reference
-  const publicDocument = app.firestore()
+  const publicDocument = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('cohorts')
@@ -127,14 +131,19 @@ export const updateChatStageParticipantAnswer = onCall(async (request) => {
     transaction.set(document, data.chatStageParticipantAnswer);
 
     // Update public stage data
-    const publicStageData = (await publicDocument.get()).data() as StagePublicData;
-    const discussionStatusMap = data.chatStageParticipantAnswer.discussionTimestampMap;
+    const publicStageData = (
+      await publicDocument.get()
+    ).data() as StagePublicData;
+    const discussionStatusMap =
+      data.chatStageParticipantAnswer.discussionTimestampMap;
 
     for (const discussionId of Object.keys(discussionStatusMap)) {
       if (!publicStageData.discussionTimestampMap[discussionId]) {
         publicStageData.discussionTimestampMap[discussionId] = {};
       }
-      publicStageData.discussionTimestampMap[discussionId][data.participantPublicId] = discussionStatusMap[discussionId];
+      publicStageData.discussionTimestampMap[discussionId][
+        data.participantPublicId
+      ] = discussionStatusMap[discussionId];
     }
 
     // Update current discussion ID if applicable
@@ -142,17 +151,20 @@ export const updateChatStageParticipantAnswer = onCall(async (request) => {
       data.experimentId,
       data.cohortId,
       data.chatStageParticipantAnswer.id,
-      publicStageData
+      publicStageData,
     );
 
     transaction.set(publicDocument, publicStageData);
   });
 
-  return { id: document.id };
+  return {id: document.id};
 });
 
 function handleUpdateChatStageParticipantAnswerValidationErrors(data: any) {
-  for (const error of Value.Errors(UpdateChatStageParticipantAnswerData, data)) {
+  for (const error of Value.Errors(
+    UpdateChatStageParticipantAnswerData,
+    data,
+  )) {
     if (isUnionError(error)) {
       const nested = checkConfigDataUnionOnPath(data, error.path);
       prettyPrintErrors(nested);

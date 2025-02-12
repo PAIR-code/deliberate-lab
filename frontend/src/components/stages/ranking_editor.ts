@@ -184,7 +184,7 @@ export class RankingEditorComponent extends MobxLitElement {
                 @click=${() => deleteItem(index)}
               ></pr-icon-button>
             </div>
-          `
+          `,
         )}
         <pr-button
           color="secondary"

@@ -1,4 +1,4 @@
-import { generateId } from '../shared';
+import {generateId} from '../shared';
 import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
@@ -60,7 +60,8 @@ export type RankingStageConfig = ParticipantRankingStage | ItemRankingStage;
  * This is saved as a stage doc (with stage ID as doc ID) under
  * experiments/{experimentId}/participants/{participantPrivateId}/stageData
  */
-export interface RankingStageParticipantAnswer extends BaseStageParticipantAnswer {
+export interface RankingStageParticipantAnswer
+  extends BaseStageParticipantAnswer {
   kind: StageKind.RANKING;
   // ordered answer list of either participant IDs or ranking item IDs
   rankingList: string[];
@@ -93,8 +94,10 @@ export function createRankingStage(
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Ranking',
     descriptions: config.descriptions ?? createStageTextConfig(),
-    progress: config.progress ?? createStageProgressConfig({ waitForAllParticipants: true }),
-    strategy: config.strategy ?? ElectionStrategy.CONDORCET
+    progress:
+      config.progress ??
+      createStageProgressConfig({waitForAllParticipants: true}),
+    strategy: config.strategy ?? ElectionStrategy.CONDORCET,
   };
 
   config.rankingType = config.rankingType ?? RankingType.PARTICIPANTS;
@@ -116,7 +119,9 @@ export function createRankingStage(
 }
 
 /** Create item for ranking. */
-export function createRankingItem(config: Partial<RankingItem> = {}): RankingItem {
+export function createRankingItem(
+  config: Partial<RankingItem> = {},
+): RankingItem {
   return {
     id: config.id ?? generateId(),
     imageId: config.imageId ?? '',
@@ -126,13 +131,13 @@ export function createRankingItem(config: Partial<RankingItem> = {}): RankingIte
 
 /** Create ranking stage particiapnt answer. */
 export function createRankingStageParticipantAnswer(
-  config: Partial<RankingStageParticipantAnswer> = {}
+  config: Partial<RankingStageParticipantAnswer> = {},
 ): RankingStageParticipantAnswer {
   return {
     id: config.id ?? generateId(),
     kind: StageKind.RANKING,
     rankingList: config.rankingList ?? [],
-  }
+  };
 }
 
 /** Create ranking stage public data. */

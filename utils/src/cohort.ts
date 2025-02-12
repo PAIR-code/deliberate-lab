@@ -2,7 +2,7 @@ import {
   MetadataConfig,
   UnifiedTimestamp,
   createMetadataConfig,
-  generateId
+  generateId,
 } from './shared';
 import {
   CohortParticipantConfig,
@@ -30,12 +30,13 @@ export interface CohortConfig {
 
 /** Create CohortConfig. */
 export function createCohortConfig(
-  config: Partial<CohortConfig>
+  config: Partial<CohortConfig>,
 ): CohortConfig {
   return {
     id: config.id ?? generateId(true), // Alphanumeric sorting.
     metadata: config.metadata ?? createMetadataConfig(),
-    participantConfig: config.participantConfig ?? createCohortParticipantConfig(),
-    stageUnlockMap: config.stageUnlockMap ?? {}
+    participantConfig:
+      config.participantConfig ?? createCohortParticipantConfig(),
+    stageUnlockMap: config.stageUnlockMap ?? {},
   };
 }

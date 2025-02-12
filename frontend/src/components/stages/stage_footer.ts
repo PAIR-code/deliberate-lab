@@ -8,7 +8,7 @@ import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 import {Pages, RouterService} from '../../services/router.service';
 import {styles} from './stage_footer.scss';
-import { ParticipantStatus } from '@deliberation-lab/utils';
+import {ParticipantStatus} from '@deliberation-lab/utils';
 
 /** Experiment stage footer */
 @customElement('stage-footer')
@@ -51,7 +51,8 @@ export class Footer extends MobxLitElement {
       this.isLoadingNext = false;
     };
 
-    const preventNextClick = this.disabled || this.participantService.disableStage;
+    const preventNextClick =
+      this.disabled || this.participantService.disableStage;
 
     return html`
       <pr-button

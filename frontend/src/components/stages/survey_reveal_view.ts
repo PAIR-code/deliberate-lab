@@ -44,7 +44,7 @@ export class SurveyReveal extends MobxLitElement {
     }
 
     const scorableQuestions: SurveyQuestion[] = this.stage.questions.filter(
-      (question) => 'correctAnswerId' in question && question.correctAnswerId
+      (question) => 'correctAnswerId' in question && question.correctAnswerId,
     );
 
     const questions: SurveyQuestion[] = this.item.revealScorableOnly
@@ -56,7 +56,9 @@ export class SurveyReveal extends MobxLitElement {
 
     const hasScorableQuestions = scorableQuestions.length > 0;
     return html`
-      <h2>Results for <b><i>${this.stage.name}</i></b> stage</h2>
+      <h2>
+        Results for <b><i>${this.stage.name}</i></b> stage
+      </h2>
       ${this.renderTable(questions, showAllParticipants, hasScorableQuestions)}
       <div class="divider"></div>
     `;
@@ -68,7 +70,7 @@ export class SurveyReveal extends MobxLitElement {
 
   private renderTableHeader(
     showAllParticipants: boolean,
-    hasScorableQuestions: boolean
+    hasScorableQuestions: boolean,
   ) {
     const surveyAnswers = this.cohortService.stagePublicDataMap[this.stage!.id];
     if (!surveyAnswers || surveyAnswers.kind !== StageKind.SURVEY) {
@@ -85,8 +87,10 @@ export class SurveyReveal extends MobxLitElement {
         })
         .map((participantId) =>
           this.makeCell(
-            getParticipantInlineDisplay(this.cohortService.participantMap[participantId])
-          )
+            getParticipantInlineDisplay(
+              this.cohortService.participantMap[participantId],
+            ),
+          ),
         )}`;
     };
 
@@ -105,7 +109,7 @@ export class SurveyReveal extends MobxLitElement {
   private renderTable(
     questions: SurveyQuestion[],
     showAllParticipants: boolean,
-    hasScorableQuestions: boolean
+    hasScorableQuestions: boolean,
   ) {
     const surveyAnswers = this.cohortService.stagePublicDataMap[this.stage!.id];
     if (!surveyAnswers || surveyAnswers.kind !== StageKind.SURVEY) {
@@ -120,12 +124,12 @@ export class SurveyReveal extends MobxLitElement {
               answers &&
               Object.values(answers).some((answer) => answer !== null)
             );
-          }
+          },
         )
       : [];
 
     const allParticipantIds = Object.keys(
-      this.cohortService.participantMap || {}
+      this.cohortService.participantMap || {},
     );
     const hasFilteredParticipants =
       allParticipantIds.length > filteredParticipantIds.length;
@@ -139,8 +143,8 @@ export class SurveyReveal extends MobxLitElement {
               question,
               showAllParticipants,
               hasScorableQuestions,
-              index + 1
-            )
+              index + 1,
+            ),
           )}
         </div>
       </div>
@@ -163,7 +167,7 @@ export class SurveyReveal extends MobxLitElement {
     question: SurveyQuestion,
     showAllParticipants: boolean,
     hasScorableQuestions: boolean,
-    rowIndex: number
+    rowIndex: number,
   ) {
     if (!this.stage || !this.cohortService.stagePublicDataMap) {
       return '';
@@ -214,7 +218,7 @@ export class SurveyReveal extends MobxLitElement {
         question.correctAnswerId
       ) {
         const correctAnswer = question.options.find(
-          (option) => option.id === question.correctAnswerId
+          (option) => option.id === question.correctAnswerId,
         );
         return this.makeCell(correctAnswer?.text ?? '');
       } else {
@@ -256,7 +260,7 @@ export class SurveyReveal extends MobxLitElement {
 
   private renderCell(
     question: SurveyQuestion | null,
-    answer: SurveyAnswer | null
+    answer: SurveyAnswer | null,
   ) {
     let answerText: string | null = null;
 
@@ -281,7 +285,7 @@ export class SurveyReveal extends MobxLitElement {
           question as MultipleChoiceSurveyQuestion
         ).options.find(
           (option) =>
-            option.id === (answer as MultipleChoiceSurveyAnswer).choiceId
+            option.id === (answer as MultipleChoiceSurveyAnswer).choiceId,
         );
 
         const selectedText = selectedOption
@@ -289,7 +293,7 @@ export class SurveyReveal extends MobxLitElement {
           : 'No selection';
         const iconText = this.renderIcon(
           (question as MultipleChoiceSurveyQuestion).correctAnswerId ?? '',
-          (answer as MultipleChoiceSurveyAnswer).choiceId ?? null
+          (answer as MultipleChoiceSurveyAnswer).choiceId ?? null,
         );
 
         return html` <div class="table-cell">${iconText} ${selectedText}</div>`;

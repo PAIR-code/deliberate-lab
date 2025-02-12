@@ -1,19 +1,19 @@
-import { Type } from '@sinclair/typebox';
-import { StageGame } from './stage';
-import { ChatStageConfigData } from './chat_stage.validation';
-import { ChipStageConfigData } from './chip_stage.validation';
-import { ComprehensionStageConfigData } from './comprehension_stage.validation';
-import { RankingStageConfigData } from './ranking_stage.validation';
-import { InfoStageConfigData } from './info_stage.validation';
-import { PayoutStageConfigData } from './payout_stage.validation';
-import { ProfileStageConfigData } from './profile_stage.validation';
-import { RevealStageConfigData } from './reveal_stage.validation';
+import {Type} from '@sinclair/typebox';
+import {StageGame} from './stage';
+import {ChatStageConfigData} from './chat_stage.validation';
+import {ChipStageConfigData} from './chip_stage.validation';
+import {ComprehensionStageConfigData} from './comprehension_stage.validation';
+import {RankingStageConfigData} from './ranking_stage.validation';
+import {InfoStageConfigData} from './info_stage.validation';
+import {PayoutStageConfigData} from './payout_stage.validation';
+import {ProfileStageConfigData} from './profile_stage.validation';
+import {RevealStageConfigData} from './reveal_stage.validation';
 import {
   SurveyPerParticipantStageConfigData,
   SurveyStageConfigData,
 } from './survey_stage.validation';
-import { TransferStageConfigData } from './transfer_stage.validation';
-import { TOSStageConfigData } from './tos_stage.validation';
+import {TransferStageConfigData} from './transfer_stage.validation';
+import {TOSStageConfigData} from './tos_stage.validation';
 
 // ************************************************************************* //
 // writeExperiment, updateStageConfig endpoints                              //

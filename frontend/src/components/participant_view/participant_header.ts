@@ -17,8 +17,8 @@ import {styles} from './participant_header.scss';
 export class Header extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  @property() stage: StageConfig|undefined = undefined;
-  @property() profile: ParticipantProfile|undefined = undefined;
+  @property() stage: StageConfig | undefined = undefined;
+  @property() profile: ParticipantProfile | undefined = undefined;
 
   override render() {
     if (!this.stage) {
@@ -27,13 +27,9 @@ export class Header extends MobxLitElement {
 
     return html`
       <div class="header">
-        <div class="left">
-          ${this.stage.name}
-        </div>
+        <div class="left">${this.stage.name}</div>
         <div class="right">
-          ${this.renderInfo()}
-          ${this.renderHelp()}
-          ${this.renderProfile()}
+          ${this.renderInfo()} ${this.renderHelp()} ${this.renderProfile()}
         </div>
       </div>
     `;
@@ -42,13 +38,11 @@ export class Header extends MobxLitElement {
   private renderProfile() {
     if (!this.profile) return nothing;
     return html`
-      <pr-tooltip
-        text="You are playing as this avatar"
-        position="BOTTOM_END"
-      >
+      <pr-tooltip text="You are playing as this avatar" position="BOTTOM_END">
         <participant-profile-display
           .profile=${this.profile}
-          .stageId=${this.stage?.id ?? ''}>
+          .stageId=${this.stage?.id ?? ''}
+        >
         </participant-profile-display>
       </pr-tooltip>
     `;
@@ -68,7 +62,10 @@ export class Header extends MobxLitElement {
       return nothing;
     }
     return html`
-      <info-popup .showHelpIcon=${true} .popupText=${this.stage.descriptions.helpText}></info-popup>
+      <info-popup
+        .showHelpIcon=${true}
+        .popupText=${this.stage.descriptions.helpText}
+      ></info-popup>
     `;
   }
 }

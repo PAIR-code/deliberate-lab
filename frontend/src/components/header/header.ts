@@ -24,7 +24,7 @@ import {
 import {
   ChatStageConfig,
   ParticipantProfile,
-  ParticipantStatus
+  ParticipantStatus,
 } from '@deliberation-lab/utils';
 
 import {styles} from './header.scss';
@@ -58,7 +58,7 @@ export class Header extends MobxLitElement {
       <div class=${headerClasses}>
         <div class="left">
           ${this.renderBackButton()}
-          <h1 class=${isDashboard ? 'short': ''}>${this.renderTitle()}</h1>
+          <h1 class=${isDashboard ? 'short' : ''}>${this.renderTitle()}</h1>
         </div>
         <div class="right">${this.renderActions()}</div>
       </div>
@@ -128,14 +128,16 @@ export class Header extends MobxLitElement {
     if (this.experimentManager.isCreator) {
       // Display confirmation dialog
       const isConfirmed = window.confirm(
-        'You may have unsaved changes. Are you sure you want to exit?'
+        'You may have unsaved changes. Are you sure you want to exit?',
       );
       if (!isConfirmed) return;
     }
     this.experimentManager.setIsEditing(false);
   }
 
-  private renderParticipantProfileBanner(profile: ParticipantProfile|undefined) {
+  private renderParticipantProfileBanner(
+    profile: ParticipantProfile | undefined,
+  ) {
     if (!profile) return;
 
     const getStageWaitingText = () => {
@@ -145,7 +147,7 @@ export class Header extends MobxLitElement {
 
       const isWaiting = this.cohortService.isStageInWaitingPhase(stage.id);
       if (isWaiting) {
-        return '⏸️ This participant currently sees a wait stage; they are waiting for others in the cohort to catch up.'
+        return '⏸️ This participant currently sees a wait stage; they are waiting for others in the cohort to catch up.';
       }
       return undefined;
     };
@@ -182,7 +184,7 @@ export class Header extends MobxLitElement {
         return getParticipantStatusDetailText(
           profile,
           this.cohortService.isStageInWaitingPhase(stage.id),
-          `Previewing as: ${getParticipantInlineDisplay(profile)}.`
+          `Previewing as: ${getParticipantInlineDisplay(profile)}.`,
         );
       default:
         return '';
@@ -233,7 +235,7 @@ export class Header extends MobxLitElement {
             ?disabled=${!this.experimentEditor.isValidExperimentConfig}
             @click=${async () => {
               this.analyticsService.trackButtonClick(
-                ButtonClick.EXPERIMENT_SAVE_NEW
+                ButtonClick.EXPERIMENT_SAVE_NEW,
               );
               const response = await this.experimentEditor.writeExperiment();
               this.experimentEditor.resetExperiment();
@@ -284,7 +286,7 @@ export class Header extends MobxLitElement {
               ?disabled=${!this.experimentManager.isCreator}
               @click=${() => {
                 this.analyticsService.trackButtonClick(
-                  ButtonClick.EXPERIMENT_SAVE_EXISTING
+                  ButtonClick.EXPERIMENT_SAVE_EXISTING,
                 );
                 this.experimentManager.setIsEditing(false, true);
               }}

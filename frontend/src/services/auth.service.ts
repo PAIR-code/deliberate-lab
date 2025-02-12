@@ -1,10 +1,10 @@
-import { computed, makeObservable, observable } from "mobx";
+import {computed, makeObservable, observable} from 'mobx';
 import {
   Auth,
   onAuthStateChanged,
   signInWithPopup,
   signOut,
-  User
+  User,
 } from 'firebase/auth';
 import {
   doc,
@@ -12,18 +12,18 @@ import {
   setDoc,
   onSnapshot,
   Timestamp,
-  Unsubscribe
+  Unsubscribe,
 } from 'firebase/firestore';
 
-import { Service } from "./service";
-import { AdminService } from "./admin.service";
-import { FirebaseService } from "./firebase.service";
-import { HomeService } from "./home.service";
+import {Service} from './service';
+import {AdminService} from './admin.service';
+import {FirebaseService} from './firebase.service';
+import {HomeService} from './home.service';
 
 import {
   ExperimenterProfile,
   ExperimenterData,
-  createExperimenterData
+  createExperimenterData,
 } from '@deliberation-lab/utils';
 
 interface ServiceProvider {
@@ -37,50 +37,57 @@ export class AuthService extends Service {
     super();
     makeObservable(this);
 
-    onAuthStateChanged(this.sp.firebaseService.auth, async (user: User | null) => {
-      if (user) {
-        // User is signed in, see docs for a list of available properties
-        // https://firebase.google.com/docs/reference/js/auth.user
-        this.user = user;
+    onAuthStateChanged(
+      this.sp.firebaseService.auth,
+      async (user: User | null) => {
+        if (user) {
+          // User is signed in, see docs for a list of available properties
+          // https://firebase.google.com/docs/reference/js/auth.user
+          this.user = user;
 
-        const allowlistDoc = await getDoc(
-          doc(this.sp.firebaseService.firestore, 'allowlist', user.email ?? '')
-        );
+          const allowlistDoc = await getDoc(
+            doc(
+              this.sp.firebaseService.firestore,
+              'allowlist',
+              user.email ?? '',
+            ),
+          );
 
-        if (allowlistDoc.exists()) {
-          this.isExperimenter = true;
-          this.subscribe();
-          this.writeExperimenterProfile(user);
-          this.sp.homeService.subscribe();
+          if (allowlistDoc.exists()) {
+            this.isExperimenter = true;
+            this.subscribe();
+            this.writeExperimenterProfile(user);
+            this.sp.homeService.subscribe();
 
-          // Check if admin
-          if (allowlistDoc.data().isAdmin) {
-            this.sp.adminService.subscribe();
-            this.isAdmin = true;
+            // Check if admin
+            if (allowlistDoc.data().isAdmin) {
+              this.sp.adminService.subscribe();
+              this.isAdmin = true;
+            } else {
+              this.isAdmin = false;
+            }
           } else {
+            this.isExperimenter = false;
             this.isAdmin = false;
           }
         } else {
-          this.isExperimenter = false;
-          this.isAdmin = false;
+          // User is signed out
+          this.user = null;
+          this.isExperimenter = null;
         }
-      } else {
-        // User is signed out
-        this.user = null;
-        this.isExperimenter = null;
-      }
-    });
+      },
+    );
   }
 
-  @observable user: User|null|undefined = undefined;
-  @observable isAdmin: boolean|null = null;
-  @observable isExperimenter: boolean|null = null;
+  @observable user: User | null | undefined = undefined;
+  @observable isAdmin: boolean | null = null;
+  @observable isExperimenter: boolean | null = null;
   @observable canEdit = false;
 
   @observable private debugMode = true;
 
   @observable unsubscribe: Unsubscribe[] = [];
-  @observable experimenterData: ExperimenterData|null = null;
+  @observable experimenterData: ExperimenterData | null = null;
   @observable isExperimentDataLoading = false;
 
   @computed get userId() {
@@ -117,18 +124,22 @@ export class AuthService extends Service {
     if (!this.userId || !this.userEmail) return;
     this.unsubscribe.push(
       onSnapshot(
-        doc(this.sp.firebaseService.firestore, 'experimenterData', this.userEmail),
+        doc(
+          this.sp.firebaseService.firestore,
+          'experimenterData',
+          this.userEmail,
+        ),
         (doc) => {
           if (!doc.exists()) {
             this.writeExperimenterData(
-              createExperimenterData(this.userId!, this.userEmail!)
+              createExperimenterData(this.userId!, this.userEmail!),
             );
           } else {
             this.experimenterData = doc.data() as ExperimenterData;
           }
           this.isExperimentDataLoading = false;
-        }
-      )
+        },
+      ),
     );
   }
 
@@ -144,7 +155,8 @@ export class AuthService extends Service {
 
   signInWithGoogle() {
     signInWithPopup(
-      this.sp.firebaseService.auth, this.sp.firebaseService.provider
+      this.sp.firebaseService.auth,
+      this.sp.firebaseService.provider,
     );
   }
 
@@ -166,24 +178,16 @@ export class AuthService extends Service {
     };
 
     setDoc(
-      doc(
-        this.sp.firebaseService.firestore,
-        'experimenters',
-        profile.email
-      ),
-      profile
+      doc(this.sp.firebaseService.firestore, 'experimenters', profile.email),
+      profile,
     );
   }
 
   /** Update experimenter private data, e.g., API key. */
   async writeExperimenterData(data: ExperimenterData) {
     setDoc(
-      doc(
-        this.sp.firebaseService.firestore,
-        'experimenterData',
-        data.email
-      ),
-      data
+      doc(this.sp.firebaseService.firestore, 'experimenterData', data.email),
+      data,
     );
   }
 }

@@ -1,13 +1,13 @@
-import { Type, type Static } from '@sinclair/typebox';
-import { StageKind } from './stage';
+import {Type, type Static} from '@sinclair/typebox';
+import {StageKind} from './stage';
 import {
   StageGameSchema,
   StageProgressConfigSchema,
-  StageTextConfigSchema
+  StageTextConfigSchema,
 } from './stage.validation';
 
 /** Shorthand for strict TypeBox object validation */
-const strict = { additionalProperties: false } as const;
+const strict = {additionalProperties: false} as const;
 
 // ************************************************************************* //
 // writeExperiment, updateStageConfig endpoints                              //
@@ -16,10 +16,10 @@ const strict = { additionalProperties: false } as const;
 /** InfoStageConfig input validation. */
 export const InfoStageConfigData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.INFO),
     game: StageGameSchema,
-    name: Type.String({ minLength: 1 }),
+    name: Type.String({minLength: 1}),
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,
     infoLines: Type.Array(Type.String()),

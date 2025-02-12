@@ -8,7 +8,7 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 import {
   PayoutStageConfig,
-  PayoutStageParticipantAnswer
+  PayoutStageParticipantAnswer,
 } from '@deliberation-lab/utils';
 
 import {styles} from './payout_view.scss';

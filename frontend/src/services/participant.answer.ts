@@ -79,7 +79,7 @@ export class ParticipantAnswerService extends Service {
   getSurveyPerParticipantAnswer(
     stageId: string,
     questionId: string,
-    participantId: string
+    participantId: string,
   ) {
     const answer = this.answerMap[stageId];
     if (!answer || answer.kind !== StageKind.SURVEY_PER_PARTICIPANT)
@@ -139,15 +139,17 @@ export class ParticipantAnswerService extends Service {
     return answerMap[questionId];
   }
 
-  updateComprehensionAnswer(stageId: string, questionId: string, answer: string) {
+  updateComprehensionAnswer(
+    stageId: string,
+    questionId: string,
+    answer: string,
+  ) {
     let answerData = this.answerMap[stageId];
     if (!answerData || answerData.kind !== StageKind.COMPREHENSION) {
-      answerData = createComprehensionStageParticipantAnswer(
-        { id: stageId }
-      );
+      answerData = createComprehensionStageParticipantAnswer({id: stageId});
     }
 
-    answerData.answerMap[questionId] = answer
+    answerData.answerMap[questionId] = answer;
     this.answerMap[stageId] = answerData;
   }
 
@@ -224,7 +226,7 @@ export class ParticipantAnswerService extends Service {
   updateSurveyPerParticipantAnswer(
     stageId: string,
     surveyAnswer: SurveyAnswer,
-    participantId: string
+    participantId: string,
   ) {
     let answer = this.answerMap[stageId];
     if (!answer || answer.kind !== StageKind.SURVEY_PER_PARTICIPANT) {
@@ -247,7 +249,7 @@ export class ParticipantAnswerService extends Service {
     if (!answer || answer.kind !== StageKind.SURVEY) return;
     await this.sp.participantService.updateSurveyStageParticipantAnswerMap(
       stageId,
-      answer.answerMap
+      answer.answerMap,
     );
   }
 
@@ -256,13 +258,13 @@ export class ParticipantAnswerService extends Service {
     if (!answer || answer.kind !== StageKind.SURVEY_PER_PARTICIPANT) return;
     await this.sp.participantService.updateSurveyPerParticipantStageParticipantAnswerMap(
       stageId,
-      answer.answerMap
+      answer.answerMap,
     );
   }
 
   updateForRoute(
     eid: string, // experiment ID
-    pid: string // participant ID
+    pid: string, // participant ID
   ) {
     if (eid !== this.experimentId || pid !== this.participantId) {
       this.setIds(eid, pid);

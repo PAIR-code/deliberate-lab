@@ -7,12 +7,11 @@ import {UnifiedTimestamp} from './shared';
 // TYPES                                                                     //
 // ************************************************************************* //
 
-
 /** Experimenter public profile (written to Firestore under experimenters/{id}). */
 export interface ExperimenterProfile {
   name: string;
   email: string;
-  lastLogin: UnifiedTimestamp|null; // null if never logged in
+  lastLogin: UnifiedTimestamp | null; // null if never logged in
 }
 
 /** Full experimenter profile built from allowlist and experimenter data. */
@@ -33,9 +32,9 @@ export interface ExperimenterData {
 }
 
 export interface APIKeyConfig {
-  geminiApiKey: string, // distinct types since we don't want to lose information when switching between them
-  openAIApiKey?: OpenAIServerConfig
-  ollamaApiKey: OllamaServerConfig
+  geminiApiKey: string; // distinct types since we don't want to lose information when switching between them
+  openAIApiKey?: OpenAIServerConfig;
+  ollamaApiKey: OllamaServerConfig;
   activeApiKeyType: ApiKeyType; // keeps track of model type selection
 }
 
@@ -56,13 +55,12 @@ export interface OllamaServerConfig {
   // will probably need more data for server-side auth?
 }
 
-
 // ************************************************************************* //
 // CONSTANTS                                                                 //
 // ************************************************************************* //
 
-const INVALID_API_KEY = ''
-const EMPTY_BASE_URL = ''
+const INVALID_API_KEY = '';
+const EMPTY_BASE_URL = '';
 
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
@@ -76,19 +74,20 @@ export function getFullExperimenterConfig(
     name: experimenter.name ?? '',
     email: experimenter.email ?? '',
     isAdmin: experimenter.isAdmin ?? false,
-    lastLogin: experimenter.lastLogin ?? null
+    lastLogin: experimenter.lastLogin ?? null,
   };
 }
 
 export function createOpenAIServerConfig(): OpenAIServerConfig {
   return {
     apiKey: INVALID_API_KEY,
-    baseUrl: EMPTY_BASE_URL
-  }
+    baseUrl: EMPTY_BASE_URL,
+  };
 }
 
 export function createExperimenterData(
-  experimenterId: string, experimenterEmail: string
+  experimenterId: string,
+  experimenterEmail: string,
 ): ExperimenterData {
   return {
     id: experimenterId,
@@ -98,33 +97,38 @@ export function createExperimenterData(
       ollamaApiKey: { url: INVALID_API_KEY },
       activeApiKeyType: ApiKeyType.GEMINI_API_KEY
     },
-    email: experimenterEmail
+    email: experimenterEmail,
   };
 }
 
-
-export function checkApiKeyExists(experimenterData: ExperimenterData | null | undefined): boolean {
+export function checkApiKeyExists(
+  experimenterData: ExperimenterData | null | undefined,
+): boolean {
   if (experimenterData === null || experimenterData === undefined) {
-    return false
+    return false;
   }
   // if active API key type is Gemini
   if (experimenterData.apiKeys.activeApiKeyType === ApiKeyType.GEMINI_API_KEY) {
     // implicitly checks if geminiApiKey exists
-    return experimenterData.apiKeys.geminiApiKey !== INVALID_API_KEY
+    return experimenterData.apiKeys.geminiApiKey !== INVALID_API_KEY;
   }
 
   if (experimenterData.apiKeys.activeApiKeyType === ApiKeyType.OPENAI_API_KEY) {
     if (!experimenterData.apiKeys.openAIApiKey) {
-      return false
+      return false;
     }
     // A custom server could require no API key, and the default OpenAI server
     // requires no base URL setting, but leaving both blank is invalid.
-    return (experimenterData.apiKeys.openAIApiKey.apiKey !== INVALID_API_KEY ||
-            experimenterData.apiKeys.openAIApiKey.baseUrl !== EMPTY_BASE_URL)
+    return (
+      experimenterData.apiKeys.openAIApiKey.apiKey !== INVALID_API_KEY ||
+      experimenterData.apiKeys.openAIApiKey.baseUrl !== EMPTY_BASE_URL
+    );
   }
 
   // if active API key type is Ollama
-  if (experimenterData.apiKeys.activeApiKeyType === ApiKeyType.OLLAMA_CUSTOM_URL) {
+  if (
+    experimenterData.apiKeys.activeApiKeyType === ApiKeyType.OLLAMA_CUSTOM_URL
+  ) {
     // implicitly checks if llamaApiKey exists
     return (
       (experimenterData.apiKeys.ollamaApiKey.url !== INVALID_API_KEY)

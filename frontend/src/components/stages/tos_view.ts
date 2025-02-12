@@ -16,7 +16,7 @@ import {ParticipantService} from '../../services/participant.service';
 import {TOSStageConfig} from '@deliberation-lab/utils';
 import {
   convertMarkdownToHTML,
-  convertUnifiedTimestampToDate
+  convertUnifiedTimestampToDate,
 } from '../../shared/utils';
 import {styles} from './tos_view.scss';
 
@@ -60,14 +60,16 @@ export class TOSView extends MobxLitElement {
           <div class="timestamp-wrapper">
             <div>I accept the Terms of Service</div>
             ${timestamp
-              ? html`<div class="ack">Accepted at ${convertUnifiedTimestampToDate(timestamp)}</div>`
+              ? html`<div class="ack">
+                  Accepted at ${convertUnifiedTimestampToDate(timestamp)}
+                </div>`
               : nothing}
           </div>
         </label>
       </div>
       <stage-footer .disabled=${!timestamp}>
-        ${this.stage.progress.showParticipantProgress ?
-          html`<progress-stage-completed></progress-stage-completed>`
+        ${this.stage.progress.showParticipantProgress
+          ? html`<progress-stage-completed></progress-stage-completed>`
           : nothing}
       </stage-footer>
     `;

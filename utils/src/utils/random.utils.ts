@@ -26,7 +26,8 @@ const next = (a = 1664525, b = 1013904223, m = 2 ** 32) => {
 export const random = () => next() / 2 ** 32;
 
 /** Returns a random integer in [min, max] */
-export const randint = (min: number, max: number) => Math.floor(random() * (max - min + 1)) + min;
+export const randint = (min: number, max: number) =>
+  Math.floor(random() * (max - min + 1)) + min;
 
 /** Chooses a random value from an array. The array is not modified. */
 export const choice = <T>(array: readonly T[]): T => {
@@ -40,7 +41,9 @@ export const choice = <T>(array: readonly T[]): T => {
 /** Chooses n random distinct values from an array. The array is not modified. */
 export const choices = <T>(array: readonly T[], n: number): T[] => {
   if (array.length <= n) {
-    throw new Error(`Cannot choose ${n} distinct values from an array of length ${array.length}`);
+    throw new Error(
+      `Cannot choose ${n} distinct values from an array of length ${array.length}`,
+    );
   }
 
   const copy = [...array];
@@ -54,10 +57,10 @@ export const choices = <T>(array: readonly T[], n: number): T[] => {
   return result;
 };
 
-
 /** Generates a random alphanumeric string of length n. */
 export const randstr = (n: number): string => {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const characters =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
   const charactersLength = characters.length;
 
@@ -67,4 +70,4 @@ export const randstr = (n: number): string => {
   }
 
   return result;
-}
+};

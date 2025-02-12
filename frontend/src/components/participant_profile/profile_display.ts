@@ -10,16 +10,12 @@ import {
   ALTERNATE_PROFILE_SET_ID,
   PROFILE_SET_ANIMALS_2_ID,
   ParticipantProfile,
-  ParticipantProfileBase
+  ParticipantProfileBase,
 } from '@deliberation-lab/utils';
 
 import {styles} from './profile_display.scss';
 import {getHashBasedColor} from '../../shared/utils';
-import {
-  MAN_EMOJIS,
-  WOMAN_EMOJIS,
-  PERSON_EMOJIS
-} from '../../shared/constants';
+import {MAN_EMOJIS, WOMAN_EMOJIS, PERSON_EMOJIS} from '../../shared/constants';
 
 enum ProfileDisplayType {
   // horizontal with small circle avatar + name (no pronouns)
@@ -47,7 +43,7 @@ export class ParticipantProfileDisplay extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   @property() stageId = '';
-  @property() profile: ParticipantProfile|undefined = undefined;
+  @property() profile: ParticipantProfile | undefined = undefined;
   @property() displayType: ProfileDisplayType = ProfileDisplayType.DEFAULT;
 
   // Disable profile
@@ -61,8 +57,9 @@ export class ParticipantProfileDisplay extends MobxLitElement {
 
     const nameFallback =
       this.displayType === ProfileDisplayType.DEFAULT ||
-      this.displayType === ProfileDisplayType.CHAT ?
-      this.profile.publicId : '';
+      this.displayType === ProfileDisplayType.CHAT
+        ? this.profile.publicId
+        : '';
 
     // Use profile ID to determine color
     const color = () => {
@@ -95,7 +92,8 @@ export class ParticipantProfileDisplay extends MobxLitElement {
         .isDisabled=${this.isDisabled}
         .nameFallback=${nameFallback}
         .color=${color()}
-        .showIsSelf=${this.showIsSelf}>
+        .showIsSelf=${this.showIsSelf}
+      >
       </profile-display>
     `;
   }
@@ -106,7 +104,7 @@ export class ParticipantProfileDisplay extends MobxLitElement {
 export class ProfileDisplay extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  @property() profile: ParticipantProfileBase|undefined = undefined;
+  @property() profile: ParticipantProfileBase | undefined = undefined;
   @property() displayType: ProfileDisplayType = ProfileDisplayType.DEFAULT;
   @property() color = '';
 
@@ -161,11 +159,11 @@ export class ProfileDisplay extends MobxLitElement {
             .emoji=${this.profile.avatar}
             .isDisabled=${this.isDisabled}
             .color=${getColor()}
-            .small=${true}>
+            .small=${true}
+          >
           </avatar-icon>
           <div class="display-name-wrapper">
-            ${getName()}
-            ${this.showIsSelf ? html`<div>(you)</div>` : nothing}
+            ${getName()} ${this.showIsSelf ? html`<div>(you)</div>` : nothing}
           </div>
         </div>
       `;
@@ -177,11 +175,11 @@ export class ProfileDisplay extends MobxLitElement {
           <avatar-icon
             .emoji=${this.profile.avatar}
             .color=${getColor()}
-            .isDisabled=${this.isDisabled}>
+            .isDisabled=${this.isDisabled}
+          >
           </avatar-icon>
           <div class="display-name-wrapper">
-            ${getName()}
-            ${renderPronouns()}
+            ${getName()} ${renderPronouns()}
             ${this.showIsSelf ? html`<div>(you)</div>` : nothing}
           </div>
         </div>
@@ -195,11 +193,11 @@ export class ProfileDisplay extends MobxLitElement {
           <avatar-icon
             .emoji=${this.profile.avatar}
             .color=${getColor()}
-            .isDisabled=${this.isDisabled}>
+            .isDisabled=${this.isDisabled}
+          >
           </avatar-icon>
           <div class="display-name-wrapper">
-            ${getName()}
-            ${renderPronouns()}
+            ${getName()} ${renderPronouns()}
             ${this.showIsSelf ? html`<div>(you)</div>` : nothing}
           </div>
         </div>
@@ -225,12 +223,11 @@ export class ProfileDisplay extends MobxLitElement {
           .emoji=${this.profile.avatar}
           .isDisabled=${this.isDisabled}
           .color=${getColor()}
-          .square=${this.displayType === ProfileDisplayType.STAGE}>
+          .square=${this.displayType === ProfileDisplayType.STAGE}
+        >
         </avatar-icon>
         <div class="display-name-wrapper">
-          <div class="name">
-            ${getName()}
-          </div>
+          <div class="name">${getName()}</div>
           ${renderPronouns()}
           ${this.showIsSelf ? html`<div>(you)</div>` : nothing}
         </div>

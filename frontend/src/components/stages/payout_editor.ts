@@ -26,7 +26,7 @@ import {
   SurveyQuestionKind,
   createChipPayoutItem,
   createDefaultPayoutItem,
-  createSurveyPayoutItem
+  createSurveyPayoutItem,
 } from '@deliberation-lab/utils';
 
 import {styles} from './payout_editor.scss';
@@ -38,14 +38,16 @@ export class PayoutEditor extends MobxLitElement {
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
-  @property() stage: PayoutStageConfig|undefined = undefined;
+  @property() stage: PayoutStageConfig | undefined = undefined;
 
   override render() {
     if (!this.stage) {
       return nothing;
     }
 
-    const index = this.experimentEditor.stages.findIndex(stage => stage.id === this.stage?.id);
+    const index = this.experimentEditor.stages.findIndex(
+      (stage) => stage.id === this.stage?.id,
+    );
 
     return html`
       ${this.renderPayoutCurrency()}
@@ -54,13 +56,13 @@ export class PayoutEditor extends MobxLitElement {
         ?disabled=${!this.experimentEditor.canEditStages}
       >
         <div class="menu-wrapper">
-          ${this.experimentEditor.stages.slice(0, index).map(
-            stage => this.renderPayoutStageOption(stage)
-          )}
+          ${this.experimentEditor.stages
+            .slice(0, index)
+            .map((stage) => this.renderPayoutStageOption(stage))}
         </div>
       </pr-menu>
-      ${this.stage.payoutItems.map(
-        (item, index) => this.renderPayoutItem(item, index)
+      ${this.stage.payoutItems.map((item, index) =>
+        this.renderPayoutItem(item, index),
       )}
     `;
   }
@@ -85,9 +87,9 @@ export class PayoutEditor extends MobxLitElement {
 
     this.experimentEditor.updateStage({
       ...this.stage,
-      payoutItems
+      payoutItems,
     });
-  };
+  }
 
   updatePayoutItem(item: PayoutItem, index: number) {
     if (!this.stage) return;
@@ -95,7 +97,7 @@ export class PayoutEditor extends MobxLitElement {
     const payoutItems = [
       ...this.stage.payoutItems.slice(0, index),
       item,
-      ...this.stage.payoutItems.slice(index + 1)
+      ...this.stage.payoutItems.slice(index + 1),
     ];
 
     this.experimentEditor.updateStage({
@@ -109,7 +111,7 @@ export class PayoutEditor extends MobxLitElement {
 
     const payoutItems = [
       ...this.stage.payoutItems.slice(0, index),
-      ...this.stage.payoutItems.slice(index + 1)
+      ...this.stage.payoutItems.slice(index + 1),
     ];
 
     this.experimentEditor.updateStage({
@@ -125,7 +127,7 @@ export class PayoutEditor extends MobxLitElement {
       ...this.stage.payoutItems.slice(0, index - 1),
       ...this.stage.payoutItems.slice(index, index + 1),
       ...this.stage.payoutItems.slice(index - 1, index),
-      ...this.stage.payoutItems.slice(index + 1)
+      ...this.stage.payoutItems.slice(index + 1),
     ];
 
     this.experimentEditor.updateStage({
@@ -152,10 +154,13 @@ export class PayoutEditor extends MobxLitElement {
 
   private renderPayoutStageOption(stage: StageConfig) {
     return html`
-      <div class="menu-item"
+      <div
+        class="menu-item"
         role="button"
         ?disabled=${!this.experimentEditor.canEditStages}
-        @click=${() => {this.addPayout(stage)}}
+        @click=${() => {
+          this.addPayout(stage);
+        }}
       >
         <div>${stage.name}</div>
       </div>
@@ -178,33 +183,51 @@ export class PayoutEditor extends MobxLitElement {
         <div class="options-title">Currency</div>
         <div class="options">
           <pr-button
-            color=${this.stage.currency === PayoutCurrency.USD ? 'primary': 'neutral'}
-            variant=${this.stage.currency === PayoutCurrency.USD ? 'tonal' : 'default'}
+            color=${this.stage.currency === PayoutCurrency.USD
+              ? 'primary'
+              : 'neutral'}
+            variant=${this.stage.currency === PayoutCurrency.USD
+              ? 'tonal'
+              : 'default'}
             variant="tonal"
             ?disabled=${!this.experimentEditor.canEditStages}
-            @click=${() => { handleCurrency(PayoutCurrency.USD)}}
+            @click=${() => {
+              handleCurrency(PayoutCurrency.USD);
+            }}
           >
             US Dollar (USD)
           </pr-button>
           <pr-button
-            color=${this.stage.currency === PayoutCurrency.EUR ? 'primary' : 'neutral'}
-            variant=${this.stage.currency === PayoutCurrency.EUR ? 'tonal' : 'default'}
+            color=${this.stage.currency === PayoutCurrency.EUR
+              ? 'primary'
+              : 'neutral'}
+            variant=${this.stage.currency === PayoutCurrency.EUR
+              ? 'tonal'
+              : 'default'}
             ?disabled=${!this.experimentEditor.canEditStages}
-            @click=${() => { handleCurrency(PayoutCurrency.EUR)}}
+            @click=${() => {
+              handleCurrency(PayoutCurrency.EUR);
+            }}
           >
             Euro (EUR)
           </pr-button>
           <pr-button
-            color=${this.stage.currency === PayoutCurrency.GBP ? 'primary' : 'neutral'}
-            variant=${this.stage.currency === PayoutCurrency.GBP ? 'tonal' : 'default'}
+            color=${this.stage.currency === PayoutCurrency.GBP
+              ? 'primary'
+              : 'neutral'}
+            variant=${this.stage.currency === PayoutCurrency.GBP
+              ? 'tonal'
+              : 'default'}
             variant="tonal"
             ?disabled=${!this.experimentEditor.canEditStages}
-            @click=${() => { handleCurrency(PayoutCurrency.GBP)}}
+            @click=${() => {
+              handleCurrency(PayoutCurrency.GBP);
+            }}
           >
             British pound (GBP)
           </pr-button>
         </div>
-      </div>    
+      </div>
     `;
   }
 
@@ -225,16 +248,17 @@ export class PayoutEditor extends MobxLitElement {
     return html`
       <div class="payout-item">
         ${this.renderBasePayoutEditor(item, index)}
-        <div>Additional chip payout will be calculated based on changes in chip quantities/values.</div>
+        <div>
+          Additional chip payout will be calculated based on changes in chip
+          quantities/values.
+        </div>
       </div>
     `;
   }
 
   private renderDefaultPayoutItem(item: DefaultPayoutItem, index: number) {
     return html`
-      <div class="payout-item">
-        ${this.renderBasePayoutEditor(item, index)}
-      </div>
+      <div class="payout-item">${this.renderBasePayoutEditor(item, index)}</div>
     `;
   }
 
@@ -252,11 +276,15 @@ export class PayoutEditor extends MobxLitElement {
               color=${!item.rankingStageId ? 'primary' : 'neutral'}
               variant=${!item.rankingStageId ? 'tonal' : 'default'}
               ?disabled=${!this.experimentEditor.canEditStages}
-              @click=${() => { this.updatePayoutItem({...item, rankingStageId: null }, index); }}
+              @click=${() => {
+                this.updatePayoutItem({...item, rankingStageId: null}, index);
+              }}
             >
               Current participant
             </pr-button>
-            ${this.experimentEditor.stages.map(stage => this.renderRankingStageOption(stage, item, index))}
+            ${this.experimentEditor.stages.map((stage) =>
+              this.renderRankingStageOption(stage, item, index),
+            )}
           </div>
         </div>
         <div class="options-wrapper">
@@ -264,23 +292,29 @@ export class PayoutEditor extends MobxLitElement {
             Select survey questions to use for payout and set payout amount
           </div>
           <div class="survey-questions">
-            ${stage.questions.map(question => this.renderSurveyQuestion(item, question, index))}
+            ${stage.questions.map((question) =>
+              this.renderSurveyQuestion(item, question, index),
+            )}
           </div>
         </div>
       </div>
     `;
   }
 
-  private renderRankingStageOption(stage: StageConfig, item: SurveyPayoutItem, index: number) {
+  private renderRankingStageOption(
+    stage: StageConfig,
+    item: SurveyPayoutItem,
+    index: number,
+  ) {
     if (stage.kind !== StageKind.RANKING) return nothing;
 
     const updateRankingStageId = () => {
-      this.updatePayoutItem({...item, rankingStageId: stage.id }, index);
+      this.updatePayoutItem({...item, rankingStageId: stage.id}, index);
     };
 
     return html`
       <pr-button
-        color=${item.rankingStageId === stage.id ? 'primary': 'neutral'}
+        color=${item.rankingStageId === stage.id ? 'primary' : 'neutral'}
         variant=${item.rankingStageId === stage.id ? 'tonal' : 'default'}
         ?disabled=${!this.experimentEditor.canEditStages}
         @click=${updateRankingStageId}
@@ -290,7 +324,11 @@ export class PayoutEditor extends MobxLitElement {
     `;
   }
 
-  private renderSurveyQuestion(item: SurveyPayoutItem, question: SurveyQuestion, index: number) {
+  private renderSurveyQuestion(
+    item: SurveyPayoutItem,
+    question: SurveyQuestion,
+    index: number,
+  ) {
     if (question.kind !== SurveyQuestionKind.MULTIPLE_CHOICE) return nothing;
 
     const updateQuestion = () => {
@@ -326,14 +364,12 @@ export class PayoutEditor extends MobxLitElement {
           <div>
             ${question.questionTitle}
             <span class="subtitle">
-              (${question.options.map(option => option.text).join(', ')})
+              (${question.options.map((option) => option.text).join(', ')})
             </span>
           </div>
         </div>
         <div class="number-input">
-          <label for="base-payout">
-            Base payout for stage
-          </label>
+          <label for="base-payout"> Base payout for stage </label>
           <input
             type="number"
             id=${id}
@@ -359,7 +395,9 @@ export class PayoutEditor extends MobxLitElement {
           size="small"
           variant="default"
           ?disabled=${index === 0 || !this.experimentEditor.canEditStages}
-          @click=${() => { this.movePayoutUp(index) }}
+          @click=${() => {
+            this.movePayoutUp(index);
+          }}
         >
         </pr-icon-button>
         <pr-icon-button
@@ -368,8 +406,11 @@ export class PayoutEditor extends MobxLitElement {
           padding="small"
           size="small"
           variant="default"
-          ?disabled=${index === this.stage.payoutItems.length - 1 || !this.experimentEditor.canEditStages}
-          @click=${() => { this.movePayoutDown(index) }}
+          ?disabled=${index === this.stage.payoutItems.length - 1 ||
+          !this.experimentEditor.canEditStages}
+          @click=${() => {
+            this.movePayoutDown(index);
+          }}
         >
         </pr-icon-button>
         <pr-icon-button
@@ -378,7 +419,10 @@ export class PayoutEditor extends MobxLitElement {
           padding="small"
           variant="default"
           ?disabled=${!this.experimentEditor.canEditStages}
-          @click=${() => { this.deletePayout(index) }}>
+          @click=${() => {
+            this.deletePayout(index);
+          }}
+        >
         </pr-icon-button>
       </div>
     `;
@@ -395,7 +439,7 @@ export class PayoutEditor extends MobxLitElement {
     const updateRandomSelectionId = (e: InputEvent) => {
       const randomSelectionId = (e.target as HTMLTextAreaElement).value;
       this.updatePayoutItem({...item, randomSelectionId}, index);
-    }
+    };
 
     const updateDescription = (e: InputEvent) => {
       const description = (e.target as HTMLTextAreaElement).value;
@@ -405,7 +449,9 @@ export class PayoutEditor extends MobxLitElement {
     const updateBasePayout = (e: InputEvent) => {
       if (!this.stage) return;
 
-      const baseCurrencyAmount = Number((e.target as HTMLTextAreaElement).value);
+      const baseCurrencyAmount = Number(
+        (e.target as HTMLTextAreaElement).value,
+      );
       this.updatePayoutItem({...item, baseCurrencyAmount}, index);
     };
 
@@ -421,7 +467,8 @@ export class PayoutEditor extends MobxLitElement {
         <div class="payout-item-header">
           <div class="left">
             <div class="subtitle">
-              Stage payout for: ${this.experimentEditor.getStage(item.stageId)?.name}
+              Stage payout for:
+              ${this.experimentEditor.getStage(item.stageId)?.name}
             </div>
           </div>
           ${this.renderPayoutItemNav(index)}
@@ -453,9 +500,7 @@ export class PayoutEditor extends MobxLitElement {
         >
         </pr-textarea>
         <div class="number-input">
-          <label for="base-payout">
-            Payout for completing stage
-          </label>
+          <label for="base-payout"> Payout for completing stage </label>
           <input
             type="number"
             id=${basePayoutId}

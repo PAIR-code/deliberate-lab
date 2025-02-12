@@ -2,7 +2,7 @@
  * Tsup compilation config. Produce both esm and cjs outputs.
  */
 
-import { defineConfig } from 'tsup';
+import {defineConfig} from 'tsup';
 
 export default defineConfig({
   entry: ['src/index.ts'],

@@ -1,22 +1,22 @@
-import { Timestamp } from 'firebase-admin/firestore';
+import {Timestamp} from 'firebase-admin/firestore';
 import {
   ParticipantProfileExtended,
-  ParticipantStatus
+  ParticipantStatus,
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
-import { onCall } from 'firebase-functions/v2/https';
+import {onCall} from 'firebase-functions/v2/https';
 
-import { app } from './app';
+import {app} from './app';
 
 /** Update participant's current stage to next stage (or end experiment). */
 export async function updateParticipantNextStage(
   experimentId: string,
   participant: ParticipantProfileExtended,
-  stageIds: string[]
+  stageIds: string[],
 ) {
-  let response = { currentStageId: null, endExperiment: false };
+  const response = {currentStageId: null, endExperiment: false};
 
   const currentStageId = participant.currentStageId;
   const currentStageIndex = stageIds.indexOf(currentStageId);
@@ -46,7 +46,7 @@ export async function updateParticipantNextStage(
       experimentId,
       participant.currentCohortId,
       participant.currentStageId,
-      participant.privateId
+      participant.privateId,
     );
   }
 
@@ -69,40 +69,48 @@ export async function updateCohortStageUnlocked(
     const activeStatuses = [
       ParticipantStatus.IN_PROGRESS,
       ParticipantStatus.COMPLETED,
-      ParticipantStatus.ATTENTION_CHECK
+      ParticipantStatus.ATTENTION_CHECK,
     ];
-    const activeParticipants = (await app.firestore()
-      .collection('experiments')
-      .doc(experimentId)
-      .collection('participants')
-      .where('currentCohortId', '==', cohortId)
-      .get()
-    ).docs.map(doc => doc.data() as ParticipantProfile)
-    .filter(participant => !(participant.currentStatus in activeStatuses));
+    const activeParticipants = (
+      await app
+        .firestore()
+        .collection('experiments')
+        .doc(experimentId)
+        .collection('participants')
+        .where('currentCohortId', '==', cohortId)
+        .get()
+    ).docs
+      .map((doc) => doc.data() as ParticipantProfile)
+      .filter((participant) => !(participant.currentStatus in activeStatuses));
 
     // Get participant pending transfer into current cohort
-    const transferParticipants = (await app.firestore()
-      .collection('experiments')
-      .doc(experimentId)
-      .collection('participants')
-      .where('transferCohortId', '==', cohortId)
-      .get()
-    ).docs.map(doc => doc.data() as ParticipantProfile)
-    .filter(
-      participant => participant.currentStatus
-        !== ParticipantStatus.TRANSFER_PENDING
-    );
+    const transferParticipants = (
+      await app
+        .firestore()
+        .collection('experiments')
+        .doc(experimentId)
+        .collection('participants')
+        .where('transferCohortId', '==', cohortId)
+        .get()
+    ).docs
+      .map((doc) => doc.data() as ParticipantProfile)
+      .filter(
+        (participant) =>
+          participant.currentStatus !== ParticipantStatus.TRANSFER_PENDING,
+      );
 
     // Consider both participants actively in cohort and pending transfer
     const participants = [...activeParticipants, ...transferParticipants];
 
     // Get current stage config
-    const stage = (await app.firestore()
-      .collection('experiments')
-      .doc(experimentId)
-      .collection('stages')
-      .doc(stageId)
-      .get()
+    const stage = (
+      await app
+        .firestore()
+        .collection('experiments')
+        .doc(experimentId)
+        .collection('stages')
+        .doc(stageId)
+        .get()
     ).data() as StageConfig;
 
     // Check if min participants requirement is met
@@ -120,21 +128,23 @@ export async function updateCohortStageUnlocked(
         // If current participant, assume completed
         // (Firestore may not have updated yet)
         // Otherwise, check if ready to start / transferring in current stage
-        const isTransfer = participant.currentStageId === stageId &&
+        const isTransfer =
+          participant.currentStageId === stageId &&
           participant.currentStatus === ParticipantStatus.TRANSFER_PENDING;
-        const isReadyToStart = participant.timestamps.startExperiment &&
+        const isReadyToStart =
+          participant.timestamps.startExperiment &&
           participant.timestamps.readyStages[stageId];
         const isCurrent = participant.privateId === currentParticipantId;
-        if (!isTransfer && isReadyToStart || isCurrent) {
+        if ((!isTransfer && isReadyToStart) || isCurrent) {
           numReady += 1;
         }
       }
 
       if (stage.progress.waitForAllParticipants) {
-        return numReady >= participants.length
+        return numReady >= participants.length;
       }
       return numReady >= stage.progress.minParticipants;
-    }
+    };
 
     // If all active participants are ready to start
     // AND min participants requirement is met, unlock cohort
@@ -142,7 +152,8 @@ export async function updateCohortStageUnlocked(
       return;
     }
 
-    const cohortDoc = app.firestore()
+    const cohortDoc = app
+      .firestore()
       .collection('experiments')
       .doc(experimentId)
       .collection('cohorts')

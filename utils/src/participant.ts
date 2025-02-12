@@ -1,4 +1,4 @@
-import { UnifiedTimestamp, generateId } from './shared';
+import {UnifiedTimestamp, generateId} from './shared';
 import {
   ALTERNATE_PROFILE_SET_ID,
   PROFILE_SET_ANIMALS_1,
@@ -9,7 +9,7 @@ import {
   PROFILE_SET_NATURE_ID,
   PROFILE_SET_RANDOM_1_ID,
   PROFILE_SET_RANDOM_2_ID,
-  PROFILE_SET_RANDOM_3_ID
+  PROFILE_SET_RANDOM_3_ID,
 } from './profile_sets';
 
 /** Participant profile types and functions. */
@@ -20,18 +20,18 @@ import {
 
 /** Profile data that the participant can edit. */
 export interface ParticipantProfileBase {
-  pronouns: string|null;
-  avatar: string|null; // emoji used as avatar
-  name: string|null;
+  pronouns: string | null;
+  avatar: string | null; // emoji used as avatar
+  name: string | null;
 }
 
 /** Participant profile available in publicParticipantData collection. */
 export interface ParticipantProfile extends ParticipantProfileBase {
   publicId: string;
-  prolificId: string|null;
+  prolificId: string | null;
   currentStageId: string;
   currentCohortId: string;
-  transferCohortId: string|null; // set if pending transfer, else null
+  transferCohortId: string | null; // set if pending transfer, else null
   currentStatus: ParticipantStatus;
   timestamps: ProgressTimestamps;
   anonymousProfiles: Record<string, AnonymousProfileMetadata>;
@@ -51,11 +51,11 @@ export interface ParticipantProfileExtended extends ParticipantProfile {
 
 export interface ProgressTimestamps {
   // Time participant accepted the terms of service
-  acceptedTOS: UnifiedTimestamp|null;
+  acceptedTOS: UnifiedTimestamp | null;
   // Time participant joined the experiment (i.e., was created)
-  startExperiment: UnifiedTimestamp|null;
+  startExperiment: UnifiedTimestamp | null;
   // Time participant completed the experiment
-  endExperiment: UnifiedTimestamp|null;
+  endExperiment: UnifiedTimestamp | null;
   // Stage ID to time that stage was marked completed
   completedStages: Record<string, UnifiedTimestamp>;
   // Stage ID to time participant is ready to start it
@@ -86,7 +86,7 @@ export enum ParticipantStatus {
   BOOTED_OUT = 'BOOTED_OUT',
   // Deleted (e.g., if cohort was deleted).
   // The participant will not be part of dashboard, data download, etc.
-  DELETED = 'DELETED'
+  DELETED = 'DELETED',
 }
 
 // ************************************************************************* //
@@ -99,7 +99,7 @@ export const COLORS: string[] = [
   'Green',
   'Blue',
   'Purple',
-  'Pink'
+  'Pink',
 ];
 
 // ************************************************************************* //
@@ -128,7 +128,7 @@ export function createParticipantProfileBase(
     name: config.name ?? null,
     avatar: config.avatar ?? null,
     pronouns: config.pronouns ?? null,
-  }
+  };
 }
 
 /** Create private participant config. */
@@ -148,7 +148,7 @@ export function createParticipantProfileExtended(
     currentStatus: config.currentStatus ?? ParticipantStatus.IN_PROGRESS,
     timestamps: config.timestamps ?? createProgressTimestamps(),
     anonymousProfiles: {},
-  }
+  };
 }
 
 /** Set profile fields based on participant number. */
@@ -158,14 +158,14 @@ export function setProfile(
   setAnonymousProfile = false,
 ) {
   const generateProfileFromSet = (
-    profileSet: {name: string, avatar: string}[]
+    profileSet: {name: string; avatar: string}[],
   ): AnonymousProfileMetadata => {
     // TODO: Randomly select from set
-    const { name, avatar } = profileSet[participantNumber % profileSet.length];
+    const {name, avatar} = profileSet[participantNumber % profileSet.length];
     return {
       name,
       avatar,
-      repeat: Math.floor(participantNumber / profileSet.length)
+      repeat: Math.floor(participantNumber / profileSet.length),
     };
   };
 
@@ -173,7 +173,7 @@ export function setProfile(
     return {
       name: generateId(),
       avatar: '',
-      repeat: 0
+      repeat: 0,
     };
   };
 
@@ -187,16 +187,20 @@ export function setProfile(
   config.anonymousProfiles[PROFILE_SET_NATURE_ID] = profileNature;
 
   // Set random hashes (can be used for random ordering, etc.)
-  config.anonymousProfiles[PROFILE_SET_RANDOM_1_ID] = generateRandomHashProfile();
-  config.anonymousProfiles[PROFILE_SET_RANDOM_2_ID] = generateRandomHashProfile();
-  config.anonymousProfiles[PROFILE_SET_RANDOM_3_ID] = generateRandomHashProfile();
+  config.anonymousProfiles[PROFILE_SET_RANDOM_1_ID] =
+    generateRandomHashProfile();
+  config.anonymousProfiles[PROFILE_SET_RANDOM_2_ID] =
+    generateRandomHashProfile();
+  config.anonymousProfiles[PROFILE_SET_RANDOM_3_ID] =
+    generateRandomHashProfile();
 
   // Define public ID (using anonymous animal 1 set)
   const mainProfile = profileAnimal1;
-  const color = COLORS[Math.floor(Math.random() * COLORS.length)]
+  const color = COLORS[Math.floor(Math.random() * COLORS.length)];
   const randomNumber = Math.floor(Math.random() * 10000);
 
-  config.publicId = `${mainProfile.name}-${color}-${randomNumber}`.toLowerCase();
+  config.publicId =
+    `${mainProfile.name}-${color}-${randomNumber}`.toLowerCase();
 
   if (setAnonymousProfile) {
     // Use, e.g., "Cat 2" if second time "Cat" is being used
@@ -207,23 +211,27 @@ export function setProfile(
 }
 
 /** Randomly sort participants using random hash anonymous profiles.
-  * If random hash is not available, use public ID.
-  */
+ * If random hash is not available, use public ID.
+ */
 export function sortParticipantsByRandomProfile(
   participants: ParticipantProfile[],
-  stageId: string
+  stageId: string,
 ) {
   participants.sort((p1: ParticipantProfile, p2: ParticipantProfile) => {
     let sortKey1 = '';
     let sortKey2 = '';
     // If alternate profile, use random 2 ID
     if (stageId.includes(ALTERNATE_PROFILE_SET_ID)) {
-      sortKey1 = p1.anonymousProfiles[PROFILE_SET_RANDOM_2_ID]?.name ?? p1.publicId;
-      sortKey2 = p2.anonymousProfiles[PROFILE_SET_RANDOM_2_ID]?.name ?? p2.publicId;
+      sortKey1 =
+        p1.anonymousProfiles[PROFILE_SET_RANDOM_2_ID]?.name ?? p1.publicId;
+      sortKey2 =
+        p2.anonymousProfiles[PROFILE_SET_RANDOM_2_ID]?.name ?? p2.publicId;
     } else {
       // Else, use random 1 ID
-      sortKey1 = p1.anonymousProfiles[PROFILE_SET_RANDOM_1_ID]?.name ?? p1.publicId;
-      sortKey2 = p2.anonymousProfiles[PROFILE_SET_RANDOM_1_ID]?.name ?? p2.publicId;
+      sortKey1 =
+        p1.anonymousProfiles[PROFILE_SET_RANDOM_1_ID]?.name ?? p1.publicId;
+      sortKey2 =
+        p2.anonymousProfiles[PROFILE_SET_RANDOM_1_ID]?.name ?? p2.publicId;
     }
     return sortKey1.localeCompare(sortKey2);
   });

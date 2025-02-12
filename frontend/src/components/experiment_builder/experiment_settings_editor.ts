@@ -43,7 +43,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
         ?disabled=${!this.experimentManager.isCreator}
         @click=${() => {
           const isConfirmed = window.confirm(
-            `Are you sure you want to delete this experiment?`
+            `Are you sure you want to delete this experiment?`,
           );
           if (!isConfirmed) return;
 
