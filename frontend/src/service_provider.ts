@@ -1,19 +1,19 @@
-import { Core } from "./core/core";
-import { AdminService } from "./services/admin.service";
-import { AnalyticsService } from "./services/analytics.service";
-import { AuthService } from "./services/auth.service";
-import { CohortService } from "./services/cohort.service";
-import { ExperimentService } from "./services/experiment.service";
-import { FirebaseService } from "./services/firebase.service";
-import { HomeService } from "./services/home.service";
-import { InitializationService } from "./services/initialization.service";
-import { AgentEditor } from "./services/agent.editor";
-import { ParticipantService } from "./services/participant.service";
-import { ParticipantAnswerService } from "./services/participant.answer";
-import { RouterService } from "./services/router.service";
-import { SettingsService } from "./services/settings.service";
-import { ExperimentEditor } from "./services/experiment.editor";
-import { ExperimentManager } from "./services/experiment.manager";
+import {Core} from './core/core';
+import {AdminService} from './services/admin.service';
+import {AnalyticsService} from './services/analytics.service';
+import {AuthService} from './services/auth.service';
+import {CohortService} from './services/cohort.service';
+import {ExperimentService} from './services/experiment.service';
+import {FirebaseService} from './services/firebase.service';
+import {HomeService} from './services/home.service';
+import {InitializationService} from './services/initialization.service';
+import {AgentEditor} from './services/agent.editor';
+import {ParticipantService} from './services/participant.service';
+import {ParticipantAnswerService} from './services/participant.answer';
+import {RouterService} from './services/router.service';
+import {SettingsService} from './services/settings.service';
+import {ExperimentEditor} from './services/experiment.editor';
+import {ExperimentManager} from './services/experiment.manager';
 
 /**
  * Defines a map of services to their identifier

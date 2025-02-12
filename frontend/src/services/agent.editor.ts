@@ -2,9 +2,9 @@ import {
   ChatStageConfig,
   Experiment,
   StageConfig,
-  StageKind
+  StageKind,
 } from '@deliberation-lab/utils';
-import { Timestamp } from 'firebase/firestore';
+import {Timestamp} from 'firebase/firestore';
 import {computed, makeObservable, observable} from 'mobx';
 
 import {FirebaseService} from './firebase.service';
@@ -27,7 +27,7 @@ export class AgentEditor extends Service {
   }
 
   // Experiment ID
-  @observable experimentId: string|null = null;
+  @observable experimentId: string | null = null;
   // Stage ID to chat config
   // TODO: Map from stage ID to AgentConfig list?
   @observable configMap: Record<string, ChatStageConfig> = {};
@@ -48,18 +48,14 @@ export class AgentEditor extends Service {
     this.configMap[config.id] = config;
   }
 
-  updateAgent(
-    stageId: string,
-    agent: AgentConfig,
-    index: number
-  ) {
+  updateAgent(stageId: string, agent: AgentConfig, index: number) {
     const config = this.configMap[stageId];
     if (!config) return;
 
     const agents = [
       ...config.agents.slice(0, index),
       agent,
-      ...config.agents.slice(index + 1)
+      ...config.agents.slice(index + 1),
     ];
 
     this.updateConfig({
@@ -81,13 +77,10 @@ export class AgentEditor extends Service {
   async saveChatAgents(stageId: string) {
     if (!this.experimentId || !this.configMap[stageId]) return;
 
-    await updateChatAgentsCallable(
-      this.sp.firebaseService.functions,
-      {
-        experimentId: this.experimentId,
-        stageId,
-        agentList: this.configMap[stageId].agents,
-      }
-    );
+    await updateChatAgentsCallable(this.sp.firebaseService.functions, {
+      experimentId: this.experimentId,
+      stageId,
+      agentList: this.configMap[stageId].agents,
+    });
   }
 }

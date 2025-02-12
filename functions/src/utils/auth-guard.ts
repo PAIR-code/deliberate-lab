@@ -1,14 +1,19 @@
-import { CallableRequest } from 'firebase-functions/v2/https';
-import { app } from '../app';
+import {CallableRequest} from 'firebase-functions/v2/https';
+import {app} from '../app';
 
 import * as functions from 'firebase-functions';
 
 /** Extract claims for the user who made the request. */
 const getClaims = async (request: CallableRequest) => {
   const uid = request.auth?.uid;
-  if (!uid) throw new functions.https.HttpsError('unauthenticated', 'User is not authenticated');
+  if (!uid)
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'User is not authenticated',
+    );
 
-  const allowlistDoc = await app.firestore()
+  const allowlistDoc = await app
+    .firestore()
     .collection('allowlist')
     .doc(request.auth.token.email)
     .get();

@@ -70,8 +70,8 @@ export class HomeService extends Service {
           changedDocs.forEach((doc) => {
             this.experimenterMap[doc.id] = doc.data() as ExperimenterProfile;
           });
-        }
-      )
+        },
+      ),
     );
 
     // Subscribe to relevant experiment documents
@@ -79,36 +79,30 @@ export class HomeService extends Service {
       collection(this.sp.firebaseService.firestore, 'experiments'),
       or(
         where('metadata.creator', '==', this.sp.authService.userEmail),
-        where('permissions.visibility', '==', 'public')
-      )
+        where('permissions.visibility', '==', 'public'),
+      ),
     );
 
     this.unsubscribe.push(
-      onSnapshot(
-        experimentQuery,
-        (snapshot) => {
-          this.experiments = collectSnapshotWithId<Experiment>(snapshot, 'id');
-          this.areExperimentsLoading = false;
-        }
-      )
+      onSnapshot(experimentQuery, (snapshot) => {
+        this.experiments = collectSnapshotWithId<Experiment>(snapshot, 'id');
+        this.areExperimentsLoading = false;
+      }),
     );
 
     // Subscribe to all experiment template documents
     const experimentTemplateQuery = query(
       collection(this.sp.firebaseService.firestore, 'experimentTemplates'),
-      where('metadata.creator', '==', this.sp.authService.userEmail)
+      where('metadata.creator', '==', this.sp.authService.userEmail),
     );
     this.unsubscribe.push(
-      onSnapshot(
-        experimentTemplateQuery,
-        (snapshot) => {
-          this.experimentTemplates = collectSnapshotWithId<Experiment>(
-            snapshot,
-            'id'
-          );
-          this.areExperimentTemplatesLoading = false;
-        }
-      )
+      onSnapshot(experimentTemplateQuery, (snapshot) => {
+        this.experimentTemplates = collectSnapshotWithId<Experiment>(
+          snapshot,
+          'id',
+        );
+        this.areExperimentTemplatesLoading = false;
+      }),
     );
   }
 

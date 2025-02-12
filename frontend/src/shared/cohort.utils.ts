@@ -2,11 +2,9 @@ import {
   CohortConfig,
   ParticipantProfile,
   RankingStageConfig,
-  RankingType
+  RankingType,
 } from '@deliberation-lab/utils';
-import {
-  isObsoleteParticipant
-} from './participant.utils';
+import {isObsoleteParticipant} from './participant.utils';
 
 /**
  * Cohort utils for frontend only.
@@ -37,21 +35,20 @@ export function getCohortParticipants(
   // who left the experiment before completing
   if (!countObsoleteParticipants) {
     participantList = participants.filter(
-      participant => !isObsoleteParticipant(participant)
+      (participant) => !isObsoleteParticipant(participant),
     );
   }
 
-  return participantList.filter(
-    participant => {
-      if (includeParticipantsPendingTransferToCohort
-        && participant.transferCohortId
-      ) {
-        return participant.transferCohortId === cohortId;
-      } else {
-        return participant.currentCohortId === cohortId;
-      }
+  return participantList.filter((participant) => {
+    if (
+      includeParticipantsPendingTransferToCohort &&
+      participant.transferCohortId
+    ) {
+      return participant.transferCohortId === cohortId;
+    } else {
+      return participant.currentCohortId === cohortId;
     }
-  )
+  });
 }
 
 /** Determine if cohort is full given cohort config and all participants. */
@@ -65,10 +62,12 @@ export function hasMaxParticipantsInCohort(
     participants,
     cohort.id,
     cohort.participantConfig.includeAllParticipantsInCohortCount,
-    true // include participants pending transfer into this stage
+    true, // include participants pending transfer into this stage
   ).length;
 
-  return numParticipants >= Number(cohort.participantConfig.maxParticipantsPerCohort);
+  return (
+    numParticipants >= Number(cohort.participantConfig.maxParticipantsPerCohort)
+  );
 }
 
 /** Determine if cohort meets min participants requirement
@@ -84,10 +83,12 @@ export function hasMinParticipantsInCohort(
     participants,
     cohort.id,
     cohort.participantConfig.includeAllParticipantsInCohortCount,
-    true // include participants pending transfer into this stage
+    true, // include participants pending transfer into this stage
   ).length;
 
-  return numParticipants >= Number(cohort.participantConfig.minParticipantsPerCohort);
+  return (
+    numParticipants >= Number(cohort.participantConfig.minParticipantsPerCohort)
+  );
 }
 
 /** Given cohort participants, return list of ranking items. */
@@ -105,6 +106,6 @@ export function getCohortRankingItems(
   }
 
   return participants.filter(
-    profile => profile.publicId !== currentParticipantPublicId
+    (profile) => profile.publicId !== currentParticipantPublicId,
   );
 }

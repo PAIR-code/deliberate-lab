@@ -1,34 +1,32 @@
 /**
  * Client handling communications with an Ollama server.
- * 
+ *
  * Code assumes that the ollama instance is hosted on the provided IP address,
  * and is managed through the `ollama` framework (https://github.com/ollama/ollama).
  * Example docker instance hosting an ollama server: https://github.com/dimits-ts/deliberate-lab-utils/tree/master/llm_server
- * 
+ *
  * Note: there already exists a client library for JavaScript, but not for Typescript.
  */
 
-import { OllamaServerConfig } from "@deliberation-lab/utils"
-import { ModelResponse } from './model.response';
-
+import {OllamaServerConfig} from '@deliberation-lab/utils';
+import {ModelResponse} from './model.response';
 
 /**
  * The JSON schema for LLM input understood by Ollama.
  */
 type OutgoingMessage = {
-    model: string,
-    messages: OllamaMessage[],
-    stream: boolean
-}
+  model: string;
+  messages: OllamaMessage[];
+  stream: boolean;
+};
 
 /**
  * The JSON schema for LLM prompts enforced by the Ollama Chat API.
  */
 type OllamaMessage = {
-    role: string,
-    content: string
-}
-
+  role: string;
+  content: string;
+};
 
 /**
  * Send a list of string-messages to the hosted LLM and receive its response.
@@ -37,13 +35,17 @@ type OllamaMessage = {
  * @param serverConfig the url and other necessary data of the Ollama server
  * @returns the model's response as a string, or empty string if an error occured
  */
-export async function ollamaChat(messages: string[],
-                                serverConfig: OllamaServerConfig)
-                                : Promise<ModelResponse> {
-    const messageObjects = encodeMessages(messages, serverConfig.llmType);
-    const response = await fetch(serverConfig.url, { method: "POST", body: JSON.stringify(messageObjects) });
-    const responseMessage = await decodeResponse(response);
-    return { text: responseMessage };
+export async function ollamaChat(
+  messages: string[],
+  serverConfig: OllamaServerConfig,
+): Promise<ModelResponse> {
+  const messageObjects = encodeMessages(messages, serverConfig.llmType);
+  const response = await fetch(serverConfig.url, {
+    method: 'POST',
+    body: JSON.stringify(messageObjects),
+  });
+  const responseMessage = await decodeResponse(response);
+  return {text: responseMessage};
 }
 
 /**
@@ -52,38 +54,44 @@ export async function ollamaChat(messages: string[],
  * @returns a string representing the model's response
  */
 async function decodeResponse(response: Response): Promise<string> {
-    const reader = response.body?.getReader();
-    if (!reader) {
-        throw new Error("Failed to read response body");
-    }
+  const reader = response.body?.getReader();
+  if (!reader) {
+    throw new Error('Failed to read response body');
+  }
 
-    const { done: _, value } = await reader.read();
-    const rawjson = new TextDecoder().decode(value);
+  const {done: _, value} = await reader.read();
+  const rawjson = new TextDecoder().decode(value);
 
-    if (isError(rawjson)) {
-        // this should probably throw an Error, but Gemini's API just logs it
-        console.error("Error:", rawjson)
-        return ""
-    } else {
-        const json = JSON.parse(rawjson);
-        return json.message.content;
-    }
+  if (isError(rawjson)) {
+    // this should probably throw an Error, but Gemini's API just logs it
+    console.error('Error:', rawjson);
+    return '';
+  } else {
+    const json = JSON.parse(rawjson);
+    return json.message.content;
+  }
 }
 
 /**
- * Transform string-messages to JSON objects appropriate for the model's API. 
+ * Transform string-messages to JSON objects appropriate for the model's API.
  * @param messages a list of string-messages to be sent to the LLM
- * @param modelType the type of llm running in the server (e.g. "llama3.2"). 
+ * @param modelType the type of llm running in the server (e.g. "llama3.2").
  * Keep in mind that the model must have been loaded server-side in order to be used.
  * @returns appropriate JSON objects which the model can understand
  */
-function encodeMessages(messages: string[], modelType: string): OutgoingMessage {
-    const messageObjs: OllamaMessage[] = messages.map((message) => ({ role: "user", content: message }));
-    return {
-        model: modelType,
-        messages: messageObjs,
-        stream: false
-    };
+function encodeMessages(
+  messages: string[],
+  modelType: string,
+): OutgoingMessage {
+  const messageObjs: OllamaMessage[] = messages.map((message) => ({
+    role: 'user',
+    content: message,
+  }));
+  return {
+    model: modelType,
+    messages: messageObjs,
+    stream: false,
+  };
 }
 
 /**
@@ -93,5 +101,5 @@ function encodeMessages(messages: string[], modelType: string): OutgoingMessage 
  * @returns true if the response indicates an error
  */
 function isError(rawjson: string): boolean {
-    return rawjson.startsWith('{"error"');
+  return rawjson.startsWith('{"error"');
 }

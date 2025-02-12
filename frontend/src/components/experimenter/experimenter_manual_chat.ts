@@ -14,9 +14,7 @@ import {AuthService} from '../../services/auth.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ParticipantService} from '../../services/participant.service';
 
-import {
-  LLM_AGENT_AVATARS
-} from '../../shared/constants';
+import {LLM_AGENT_AVATARS} from '../../shared/constants';
 import {getHashBasedColor} from '../../shared/utils';
 
 import {styles} from './experimenter_manual_chat.scss';
@@ -44,8 +42,8 @@ export class Chat extends MobxLitElement {
       this.participantService.currentStageViewId ?? '',
       {
         message: this.value.trim(),
-        profile: { name: this.name, avatar: this.avatar, pronouns: null }
-      }
+        profile: {name: this.name, avatar: this.avatar, pronouns: null},
+      },
     );
 
     this.value = '';
@@ -139,7 +137,11 @@ export class Chat extends MobxLitElement {
             @change=${handleAvatarClick}
           >
           </md-radio>
-          <avatar-icon .emoji=${emoji} .square=${true} .color=${getHashBasedColor(emoji)}>
+          <avatar-icon
+            .emoji=${emoji}
+            .square=${true}
+            .color=${getHashBasedColor(emoji)}
+          >
           </avatar-icon>
         </div>
       `;
@@ -149,8 +151,8 @@ export class Chat extends MobxLitElement {
       <div class="radio-question">
         <div class="title">Avatar</div>
         <div class="radio-wrapper">
-          ${LLM_AGENT_AVATARS.map(
-            (avatar, index) => renderAvatarRadio(avatar, index)
+          ${LLM_AGENT_AVATARS.map((avatar, index) =>
+            renderAvatarRadio(avatar, index),
           )}
         </div>
       </div>
@@ -163,8 +165,7 @@ export class Chat extends MobxLitElement {
     const stageId = this.participantService.currentStageViewId ?? '';
 
     return html`
-      ${this.renderName()}
-      ${this.renderAvatars()}
+      ${this.renderName()} ${this.renderAvatars()}
       <div class="input-row-wrapper">
         <div class="input-row">${this.renderInput()}</div>
       </div>

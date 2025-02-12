@@ -3,20 +3,20 @@ import {
   ChatStagePublicData,
   ParticipantProfile,
   ParticipantStatus,
-  getTimeElapsed
+  getTimeElapsed,
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
-import { Timestamp } from 'firebase-admin/firestore';
-import { onCall } from 'firebase-functions/v2/https';
+import {Timestamp} from 'firebase-admin/firestore';
+import {onCall} from 'firebase-functions/v2/https';
 
-import { app } from '../app';
+import {app} from '../app';
 
 /** Get the chat stage configuration based on the event. */
 export async function getChatStage(
   experimentId: string,
-  stageId: string
+  stageId: string,
 ): Promise<ChatStageConfig | null> {
   const stageRef = app
     .firestore()
@@ -61,16 +61,19 @@ export async function updateCurrentDiscussionIndex(
   const activeStatuses = [
     ParticipantStatus.IN_PROGRESS,
     ParticipantStatus.COMPLETED,
-    ParticipantStatus.ATTENTION_CHECK
+    ParticipantStatus.ATTENTION_CHECK,
   ];
-  const activeParticipants = (await app.firestore()
-    .collection('experiments')
-    .doc(experimentId)
-    .collection('participants')
-    .where('currentCohortId', '==', cohortId)
-    .get()
-  ).docs.map(doc => doc.data() as ParticipantProfile)
-  .filter(participant => !(participant.currentStatus in activeStatuses));
+  const activeParticipants = (
+    await app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('participants')
+      .where('currentCohortId', '==', cohortId)
+      .get()
+  ).docs
+    .map((doc) => doc.data() as ParticipantProfile)
+    .filter((participant) => !(participant.currentStatus in activeStatuses));
 
   // Check if active participants are ready to end current discussion
   const currentDiscussionId = publicStageData.currentDiscussionId;
@@ -91,21 +94,24 @@ export async function updateCurrentDiscussionIndex(
 
   // If ready, get next discussion ID from stage config
   // and update currentDiscussionId accordingly
-  const stage = (await app.firestore()
-    .collection('experiments')
-    .doc(experimentId)
-    .collection('stages')
-    .doc(stageId)
-    .get()
+  const stage = (
+    await app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('stages')
+      .doc(stageId)
+      .get()
   ).data() as ChatStageConfig;
   const currentIndex = stage.discussions.findIndex(
-    item => item.id === currentDiscussionId
+    (item) => item.id === currentDiscussionId,
   );
   if (currentIndex === stage.discussions.length - 1) {
     // If invalid or last discussion completed, set null
     publicStageData.currentDiscussionId = null;
   } else {
-    publicStageData.currentDiscussionId = stage.discussions[currentIndex + 1].id;
+    publicStageData.currentDiscussionId =
+      stage.discussions[currentIndex + 1].id;
   }
 
   return publicStageData;
@@ -116,9 +122,13 @@ export async function hasEndedChat(
   chatStage: ChatStageConfig | null,
   publicStageData: ChatStagePublicData | null,
 ): Promise<boolean> {
-  if (!chatStage || !publicStageData || !chatStage.timeLimitInMinutes) return false;
+  if (!chatStage || !publicStageData || !chatStage.timeLimitInMinutes)
+    return false;
 
-  const elapsedMinutes = getTimeElapsed(publicStageData.discussionStartTimestamp!, 'm');
+  const elapsedMinutes = getTimeElapsed(
+    publicStageData.discussionStartTimestamp!,
+    'm',
+  );
 
   // Check if the elapsed time has reached or exceeded the time limit
   if (elapsedMinutes >= chatStage.timeLimitInMinutes) {
@@ -127,7 +137,7 @@ export async function hasEndedChat(
       .doc(
         `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
       )
-      .update({ discussionEndTimestamp: Timestamp.now() });
+      .update({discussionEndTimestamp: Timestamp.now()});
     return true; // Indicate that the chat has ended.
   }
   return false;

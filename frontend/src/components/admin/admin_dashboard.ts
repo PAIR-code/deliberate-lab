@@ -8,10 +8,7 @@ import {AdminService} from '../../services/admin.service';
 import {HomeService} from '../../services/home.service';
 import {Pages, RouterService} from '../../services/router.service';
 
-import {
-  Experiment,
-  ExperimenterProfileExtended,
-} from '@deliberation-lab/utils';
+import {Experiment, ExperimenterProfileExtended} from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
 import {styles} from './admin_dashboard.scss';
@@ -20,7 +17,7 @@ import {styles} from './admin_dashboard.scss';
 @customElement('admin-dashboard')
 export class AdminDashboard extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
-  
+
   private readonly authService = core.getService(AuthService);
   private readonly adminService = core.getService(AdminService);
   private readonly homeService = core.getService(HomeService);
@@ -34,31 +31,43 @@ export class AdminDashboard extends MobxLitElement {
       return html`<div>Only admins have access to this page.</div>`;
     }
 
-    const toggle = () => { this.showExperiments = !this.showExperiments };
+    const toggle = () => {
+      this.showExperiments = !this.showExperiments;
+    };
 
     return html`
       <div class="tabs">
-        <div class="tab ${this.showExperiments ? 'active' : ''}" @click=${toggle}>
+        <div
+          class="tab ${this.showExperiments ? 'active' : ''}"
+          @click=${toggle}
+        >
           Experiments (${this.adminService.experiments.length})
         </div>
-        <div class="tab ${!this.showExperiments ? 'active' : ''}" @click=${toggle}>
+        <div
+          class="tab ${!this.showExperiments ? 'active' : ''}"
+          @click=${toggle}
+        >
           Experimenters (${this.adminService.experimenters.length})
         </div>
       </div>
-      ${this.showExperiments ? this.renderExperimentList() :
-        this.renderExperimenterList()}
+      ${this.showExperiments
+        ? this.renderExperimentList()
+        : this.renderExperimenterList()}
     `;
   }
 
   private renderExperimentList() {
     const experiments = this.adminService.experiments
-    .slice() 
-    .sort((a, b) => b.metadata.dateModified.seconds - a.metadata.dateModified.seconds);
- 
+      .slice()
+      .sort(
+        (a, b) =>
+          b.metadata.dateModified.seconds - a.metadata.dateModified.seconds,
+      );
+
     return html`
       ${this.renderEmptyMessage(experiments.length)}
       <div class="list">
-        ${experiments.map(e => this.renderExperimentItem(e))}
+        ${experiments.map((e) => this.renderExperimentItem(e))}
       </div>
     `;
   }
@@ -69,7 +78,7 @@ export class AdminDashboard extends MobxLitElement {
     return html`
       ${this.renderEmptyMessage(experimenters.length, true)}
       <div class="list">
-        ${experimenters.map(e => this.renderExperimenterItem(e))}
+        ${experimenters.map((e) => this.renderExperimenterItem(e))}
       </div>
     `;
   }
@@ -77,10 +86,9 @@ export class AdminDashboard extends MobxLitElement {
   // TODO: Refactor into separate component
   private renderExperimentItem(experiment: Experiment) {
     const onClick = () => {
-      this.routerService.navigate(
-        Pages.EXPERIMENT,
-        { experiment: experiment.id }
-      );
+      this.routerService.navigate(Pages.EXPERIMENT, {
+        experiment: experiment.id,
+      });
     };
 
     return html`
@@ -95,9 +103,7 @@ export class AdminDashboard extends MobxLitElement {
           <div class="subtitle">
             ${convertUnifiedTimestampToDate(experiment.metadata.dateModified)}
           </div>
-          <div class="subtitle">
-            v${experiment.versionId}
-          </div>
+          <div class="subtitle">v${experiment.versionId}</div>
         </div>
       </div>
     `;
@@ -106,10 +112,12 @@ export class AdminDashboard extends MobxLitElement {
   // TODO: Refactor into separate component
   private renderExperimenterItem(experimenter: ExperimenterProfileExtended) {
     const numExperiments = this.adminService.experiments.filter(
-      experiment => experiment.metadata.creator === experimenter.email
+      (experiment) => experiment.metadata.creator === experimenter.email,
     ).length;
 
-    const fullExperimenter = this.homeService.getExperimenter(experimenter.email);
+    const fullExperimenter = this.homeService.getExperimenter(
+      experimenter.email,
+    );
     const lastLogin = fullExperimenter?.lastLogin ?? null;
 
     return html`
@@ -119,12 +127,15 @@ export class AdminDashboard extends MobxLitElement {
             ${this.homeService.getExperimenterName(experimenter.email)}
             <div class="subtitle">(${experimenter.email})</div>
           </div>
-          ${experimenter.isAdmin ? html`<div class="chip">admin</div>` : nothing}
+          ${experimenter.isAdmin
+            ? html`<div class="chip">admin</div>`
+            : nothing}
         </div>
         <div class="right">
           <div class="subtitle">${numExperiments} experiments</div>
           <div class="subtitle" style="min-width: 180px">
-            ${lastLogin ? convertUnifiedTimestampToDate(lastLogin) : nothing}</div>
+            ${lastLogin ? convertUnifiedTimestampToDate(lastLogin) : nothing}
+          </div>
         </div>
       </div>
     `;

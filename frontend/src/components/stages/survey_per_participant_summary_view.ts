@@ -34,7 +34,7 @@ export class SurveySummary extends MobxLitElement {
   private readonly cohortService = core.getService(CohortService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly participantAnswerService = core.getService(
-    ParticipantAnswerService
+    ParticipantAnswerService,
   );
 
   @property() stage: SurveyPerParticipantStageConfig | undefined = undefined;
@@ -44,9 +44,7 @@ export class SurveySummary extends MobxLitElement {
       return nothing;
     }
 
-    return html`
-      ${this.renderTable(this.stage.questions)}
-    `;
+    return html` ${this.renderTable(this.stage.questions)} `;
   }
 
   private makeCell(content: string) {
@@ -58,7 +56,9 @@ export class SurveySummary extends MobxLitElement {
       <div class="table-head">
         <div class="table-row">
           <div class="table-cell number-row">#</div>
-          ${participants.map(p => html`<div class="table-cell">${p.publicId}</div>`)}
+          ${participants.map(
+            (p) => html`<div class="table-cell">${p.publicId}</div>`,
+          )}
         </div>
       </div>
     `;
@@ -67,7 +67,9 @@ export class SurveySummary extends MobxLitElement {
   private renderTable(questions: SurveyQuestion[]) {
     let participants = this.cohortService.activeParticipants;
     if (!this.stage?.enableSelfSurvey) {
-      participants = participants.filter(p => p.publicId !== this.participantService.profile?.publicId)
+      participants = participants.filter(
+        (p) => p.publicId !== this.participantService.profile?.publicId,
+      );
     }
 
     return html`
@@ -75,11 +77,7 @@ export class SurveySummary extends MobxLitElement {
         ${this.renderTableHeader(participants)}
         <div class="table-body">
           ${questions.map((question, index) =>
-            this.renderQuestionRow(
-              question,
-              participants,
-              index + 1
-            )
+            this.renderQuestionRow(question, participants, index + 1),
           )}
         </div>
       </div>
@@ -101,7 +99,7 @@ export class SurveySummary extends MobxLitElement {
   private renderQuestionRow(
     question: SurveyQuestion,
     participants: ParticipantProfile[],
-    rowIndex: number
+    rowIndex: number,
   ) {
     if (!this.stage) {
       return '';
@@ -110,9 +108,12 @@ export class SurveySummary extends MobxLitElement {
     const renderCell = (participant: ParticipantProfile) => {
       if (!this.stage) return this.makeCell('');
 
-      const answer = this.participantAnswerService.getSurveyPerParticipantAnswer(
-        this.stage.id, question.id, participant.publicId
-      );
+      const answer =
+        this.participantAnswerService.getSurveyPerParticipantAnswer(
+          this.stage.id,
+          question.id,
+          participant.publicId,
+        );
       if (!answer) {
         return this.makeCell('');
       }
@@ -123,14 +124,14 @@ export class SurveySummary extends MobxLitElement {
     return html`
       <div class="table-row">
         <div class="table-cell number-row">${rowIndex}</div>
-        ${participants.map(p => renderCell(p))}
+        ${participants.map((p) => renderCell(p))}
       </div>
     `;
   }
 
   private renderCell(
     question: SurveyQuestion | null,
-    answer: SurveyAnswer | null
+    answer: SurveyAnswer | null,
   ) {
     let answerText: string | null = null;
 
@@ -155,7 +156,7 @@ export class SurveySummary extends MobxLitElement {
           question as MultipleChoiceSurveyQuestion
         ).options.find(
           (option) =>
-            option.id === (answer as MultipleChoiceSurveyAnswer).choiceId
+            option.id === (answer as MultipleChoiceSurveyAnswer).choiceId,
         );
 
         const selectedText = selectedOption
@@ -163,7 +164,7 @@ export class SurveySummary extends MobxLitElement {
           : 'No selection';
         const iconText = this.renderIcon(
           (question as MultipleChoiceSurveyQuestion).correctAnswerId ?? '',
-          (answer as MultipleChoiceSurveyAnswer).choiceId ?? null
+          (answer as MultipleChoiceSurveyAnswer).choiceId ?? null,
         );
 
         return html` <div class="table-cell">${iconText} ${selectedText}</div>`;

@@ -13,9 +13,7 @@ import {ParticipantService} from '../../services/participant.service';
 import {RouterService} from '../../services/router.service';
 
 import {ParticipantProfile} from '@deliberation-lab/utils';
-import {
-  isActiveParticipant,
-} from '../../shared/participant.utils';
+import {isActiveParticipant} from '../../shared/participant.utils';
 
 import {styles} from './progress_stage_waiting.scss';
 
@@ -43,7 +41,8 @@ export class Progress extends MobxLitElement {
     const unlocked = this.cohortService.getUnlockedStageParticipants(stageId);
 
     const numWaiting =
-      this.cohortService.getWaitingPhaseMinParticipants(stageId) - unlocked.length;
+      this.cohortService.getWaitingPhaseMinParticipants(stageId) -
+      unlocked.length;
 
     const onUpdateStatus = async () => {
       this.refreshReadyToStartLoading = true;
@@ -70,7 +69,7 @@ export class Progress extends MobxLitElement {
           Refresh this stage
         </pr-button>
       `;
-    }
+    };
 
     const renderWaitingStatus = () => {
       if (numWaiting === 0) return nothing;
@@ -79,10 +78,7 @@ export class Progress extends MobxLitElement {
         <div class="status">
           <h2 class="secondary">
             <div class="chip secondary">Waiting on</div>
-            <div>
-              ${numWaiting}
-              participant${numWaiting > 1 ? 's' : ''}
-            </div>
+            <div>${numWaiting} participant${numWaiting > 1 ? 's' : ''}</div>
           </h2>
           ${this.showWaitingAvatars ? this.renderParticipants(locked) : nothing}
         </div>
@@ -123,9 +119,10 @@ export class Progress extends MobxLitElement {
         <participant-profile-display
           .profile=${participant}
           .stageId=${stageId}
-          displayType="waiting">
+          displayType="waiting"
+        >
         </participant-profile-display>
-       </pr-tooltip>
+      </pr-tooltip>
     `;
   }
 

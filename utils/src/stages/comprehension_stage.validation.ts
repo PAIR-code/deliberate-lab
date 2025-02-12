@@ -1,19 +1,15 @@
-import { Type, type Static } from '@sinclair/typebox';
-import { StageKind } from './stage';
-import {
-  ComprehensionQuestionKind
-} from './comprehension_stage';
+import {Type, type Static} from '@sinclair/typebox';
+import {StageKind} from './stage';
+import {ComprehensionQuestionKind} from './comprehension_stage';
 import {
   StageGameSchema,
   StageProgressConfigSchema,
-  StageTextConfigSchema
+  StageTextConfigSchema,
 } from './stage.validation';
-import {
-  MultipleChoiceItemData
-} from './survey_stage.validation';
+import {MultipleChoiceItemData} from './survey_stage.validation';
 
 /** Shorthand for strict TypeBox object validation */
-const strict = { additionalProperties: false } as const;
+const strict = {additionalProperties: false} as const;
 
 // ************************************************************************* //
 // writeExperiment, updateStageConfig endpoints                              //
@@ -22,7 +18,7 @@ const strict = { additionalProperties: false } as const;
 /** TextComprehensionQuestion input validation. */
 export const TextComprehensionQuestionData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(ComprehensionQuestionKind.TEXT),
     questionTitle: Type.String(),
     correctAnswer: Type.String(),
@@ -33,7 +29,7 @@ export const TextComprehensionQuestionData = Type.Object(
 /** MultipleChoiceComprehensionQuestion input validation. */
 export const MultipleChoiceComprehensionQuestionData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(ComprehensionQuestionKind.MULTIPLE_CHOICE),
     questionTitle: Type.String(),
     options: Type.Array(MultipleChoiceItemData),
@@ -51,10 +47,10 @@ export const ComprehensionQuestionData = Type.Union([
 /** ComprehensionStageConfig input validation. */
 export const ComprehensionStageConfigData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.COMPREHENSION),
     game: StageGameSchema,
-    name: Type.String({ minLength: 1 }),
+    name: Type.String({minLength: 1}),
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,
     questions: Type.Array(ComprehensionQuestionData),

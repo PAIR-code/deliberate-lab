@@ -43,6 +43,8 @@ export class App extends MobxLitElement {
   }
 
   private renderPageContent() {
+    const params = this.routerService.activeRoute.params;
+
     switch (this.routerService.activePage) {
       case Pages.HOME:
         if (!this.authService.isExperimenter) {
@@ -72,9 +74,7 @@ export class App extends MobxLitElement {
         if (!this.authService.isExperimenter) {
           return this.render403();
         }
-        return html`
-          <experiment-dashboard></experiment-dashboard>
-        `;
+        return html` <experiment-dashboard></experiment-dashboard> `;
       case Pages.EXPERIMENT_CREATE:
         if (!this.authService.isExperimenter) {
           return this.render403();
@@ -91,11 +91,10 @@ export class App extends MobxLitElement {
       case Pages.PARTICIPANT_STAGE:
         // This ensures backwards compatibility
         // from when PARTICIPANT_STAGE was a different route than PARTICIPANT
-        const params = this.routerService.activeRoute.params;
         this.routerService.navigate(Pages.PARTICIPANT, {
           experiment: params['experiment'],
           participant: params['participant'],
-          stage: params['stage']
+          stage: params['stage'],
         });
         return nothing;
       case Pages.PARTICIPANT_JOIN_COHORT:
@@ -120,7 +119,9 @@ export class App extends MobxLitElement {
           <pr-button
             color="error"
             variant="outlined"
-            @click=${() => { this.authService.signOut() }}
+            @click=${() => {
+              this.authService.signOut();
+            }}
           >
             Log out
           </pr-button>
@@ -133,8 +134,8 @@ export class App extends MobxLitElement {
         <div class="error">
           <div>Participants do not have access to this page.</div>
           <div>
-            If you are a researcher, contact the owner(s) of this deployment
-            and have them add your email address to the allowlist.
+            If you are a researcher, contact the owner(s) of this deployment and
+            have them add your email address to the allowlist.
           </div>
           ${renderLogoutButton()}
         </div>
@@ -164,9 +165,7 @@ export class App extends MobxLitElement {
       <div class="app-wrapper mode--${this.settingsService.colorMode}">
         <main>
           <experimenter-sidenav></experimenter-sidenav>
-          <div class="content-wrapper">
-            ${this.renderPageContent()}
-          </div>
+          <div class="content-wrapper">${this.renderPageContent()}</div>
         </main>
       </div>
     `;

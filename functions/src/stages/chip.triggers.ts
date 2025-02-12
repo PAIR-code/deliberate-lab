@@ -1,7 +1,7 @@
-import { Timestamp } from 'firebase-admin/firestore';
+import {Timestamp} from 'firebase-admin/firestore';
 import {
   onDocumentCreated,
-  onDocumentUpdated
+  onDocumentUpdated,
 } from 'firebase-functions/v2/firestore';
 import {
   ChipStageParticipantAnswer,
@@ -19,26 +19,26 @@ import {
   createChipTurnLogEntry,
 } from '@deliberation-lab/utils';
 
-import { app } from '../app';
+import {app} from '../app';
 import {
   getChipParticipants,
   updateChipCurrentTurn,
   updateParticipantChipQuantities,
 } from './chip.utils';
 
-
 /**
-  * When chip negotiation public data is updated,
-  * update current turn/round if all participants have responded to current
-  * offer
-  */
+ * When chip negotiation public data is updated,
+ * update current turn/round if all participants have responded to current
+ * offer
+ */
 export const completeChipTurn = onDocumentUpdated(
   {
     document:
-    'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}'
+      'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}',
   },
   async (event) => {
-    const publicDoc = app.firestore()
+    const publicDoc = app
+      .firestore()
       .collection('experiments')
       .doc(event.params.experimentId)
       .collection('cohorts')
@@ -46,14 +46,16 @@ export const completeChipTurn = onDocumentUpdated(
       .collection('publicStageData')
       .doc(event.params.stageId);
 
-    const stageDoc = app.firestore()
+    const stageDoc = app
+      .firestore()
       .collection('experiments')
       .doc(event.params.experimentId)
       .collection('stages')
       .doc(event.params.stageId);
 
     // Define log entry collection reference
-    const logCollection = app.firestore()
+    const logCollection = app
+      .firestore()
       .collection('experiments')
       .doc(event.params.experimentId)
       .collection('cohorts')
@@ -63,7 +65,8 @@ export const completeChipTurn = onDocumentUpdated(
       .collection('logs');
 
     // Define chip transaction collection reference
-    const transactionCollection = app.firestore()
+    const transactionCollection = app
+      .firestore()
       .collection('experiments')
       .doc(event.params.experimentId)
       .collection('cohorts')
@@ -99,9 +102,9 @@ export const completeChipTurn = onDocumentUpdated(
       // Check all cohort participants for response to offer
       const participants = await getChipParticipants(
         event.params.experimentId,
-        event.params.cohortId
+        event.params.cohortId,
       );
-      const participantIds = participants.map(p => p.publicId);
+      const participantIds = participants.map((p) => p.publicId);
 
       const acceptedOffer: string[] = [];
       for (const participantId of participantIds) {
@@ -126,8 +129,10 @@ export const completeChipTurn = onDocumentUpdated(
       // If all (non-offer) participants have responded to the offer,
       // execute chip transaction
       const senderId = currentTurn;
-      const recipientId = acceptedOffer.length > 0 ?
-        acceptedOffer[Math.floor(Math.random() * acceptedOffer.length)] : null;
+      const recipientId =
+        acceptedOffer.length > 0
+          ? acceptedOffer[Math.floor(Math.random() * acceptedOffer.length)]
+          : null;
 
       publicStage.participantOfferMap[currentRound][currentTurn].recipientId =
         recipientId;
@@ -145,9 +150,7 @@ export const completeChipTurn = onDocumentUpdated(
           currentTransaction;
         transaction.set(
           logCollection.doc(),
-          createChipOfferDeclinedLogEntry(
-            currentTransaction.offer, timestamp
-          )
+          createChipOfferDeclinedLogEntry(currentTransaction.offer, timestamp),
         );
       }
 
@@ -155,21 +158,23 @@ export const completeChipTurn = onDocumentUpdated(
       publicStage.currentTurn = null;
       const oldCurrentRound = currentRound;
       const newData = updateChipCurrentTurn(
-        publicStage, participants, numRounds
+        publicStage,
+        participants,
+        numRounds,
       );
 
       // Write logs
       if (newData.isGameOver) {
         transaction.set(
           logCollection.doc(),
-          createChipInfoLogEntry('The game has ended.', timestamp)
+          createChipInfoLogEntry('The game has ended.', timestamp),
         );
       } else {
         // Write new round log entry if applicable
         if (oldCurrentRound !== newData.currentRound) {
           transaction.set(
             logCollection.doc(),
-            createChipRoundLogEntry(newData.currentRound, timestamp)
+            createChipRoundLogEntry(newData.currentRound, timestamp),
           );
         }
         // Write new turn entry
@@ -178,8 +183,8 @@ export const completeChipTurn = onDocumentUpdated(
           createChipTurnLogEntry(
             newData.currentRound,
             newData.currentTurn,
-            timestamp
-          )
+            timestamp,
+          ),
         );
       }
 
@@ -188,20 +193,21 @@ export const completeChipTurn = onDocumentUpdated(
     }); // end transaction
 
     return true;
-  }
+  },
 );
 
 /**
-  * When chip transaction doc is written,
-  * update sender/recipient chip quantities and write log
-  */
+ * When chip transaction doc is written,
+ * update sender/recipient chip quantities and write log
+ */
 export const completeChipTransaction = onDocumentCreated(
   {
     document:
-    'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/transactions/{transactionId}'
+      'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/transactions/{transactionId}',
   },
   async (event) => {
-    const publicDoc = app.firestore()
+    const publicDoc = app
+      .firestore()
       .collection('experiments')
       .doc(event.params.experimentId)
       .collection('cohorts')
@@ -209,7 +215,8 @@ export const completeChipTransaction = onDocumentCreated(
       .collection('publicStageData')
       .doc(event.params.stageId);
 
-    const transactionDoc = app.firestore()
+    const transactionDoc = app
+      .firestore()
       .collection('experiments')
       .doc(event.params.experimentId)
       .collection('cohorts')
@@ -220,7 +227,8 @@ export const completeChipTransaction = onDocumentCreated(
       .doc(event.params.transactionId);
 
     // Define log entry collection reference
-    const logCollection = app.firestore()
+    const logCollection = app
+      .firestore()
       .collection('experiments')
       .doc(event.params.experimentId)
       .collection('cohorts')
@@ -230,14 +238,18 @@ export const completeChipTransaction = onDocumentCreated(
       .collection('logs');
 
     await app.firestore().runTransaction(async (transaction) => {
-      const chipTransaction = (await transactionDoc.get()).data() as ChipTransaction;
+      const chipTransaction = (
+        await transactionDoc.get()
+      ).data() as ChipTransaction;
       const senderId = chipTransaction.offer.senderId;
       const recipientId = chipTransaction.recipientId;
       const buyMap = chipTransaction.offer.buy;
       const sellMap = chipTransaction.offer.sell;
 
       // Get public stage data
-      const publicStageData = (await publicDoc.get()).data() as ChipStagePublicData;
+      const publicStageData = (
+        await publicDoc.get()
+      ).data() as ChipStagePublicData;
 
       // Update sender chip quantities
       const senderResult = await updateParticipantChipQuantities(
@@ -247,7 +259,7 @@ export const completeChipTransaction = onDocumentCreated(
         buyMap,
         sellMap,
         publicStageData,
-        transaction
+        transaction,
       );
       if (senderResult) {
         transaction.set(senderResult.answerDoc, senderResult.answer);
@@ -261,7 +273,7 @@ export const completeChipTransaction = onDocumentCreated(
         sellMap,
         buyMap,
         publicStageData,
-        transaction
+        transaction,
       );
       if (recipientResult) {
         transaction.set(recipientResult.answerDoc, recipientResult.answer);
@@ -270,7 +282,7 @@ export const completeChipTransaction = onDocumentCreated(
       // Write success log.
       transaction.set(
         logCollection.doc(),
-        createChipTransactionLogEntry(chipTransaction, Timestamp.now())
+        createChipTransactionLogEntry(chipTransaction, Timestamp.now()),
       );
 
       // Update public stage data
@@ -278,5 +290,5 @@ export const completeChipTransaction = onDocumentCreated(
     }); // end transaction
 
     return true;
-  }
+  },
 );

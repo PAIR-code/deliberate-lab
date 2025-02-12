@@ -15,7 +15,7 @@ import {
   ParticipantProfile,
   RevealAudience,
   StageKind,
-  sortParticipantsByRandomProfile
+  sortParticipantsByRandomProfile,
 } from '@deliberation-lab/utils';
 import {isActiveParticipant} from '../../shared/participant.utils';
 import {styles} from './chip_reveal_view.scss';
@@ -96,13 +96,13 @@ export class ChipReveal extends MobxLitElement {
             (chip) =>
               html`<div class="table-cell">
                 ${chip.chip.avatar} ${chip.chip.name}<br />($${chip.value.toFixed(
-                  2
+                  2,
                 )}
                 for
                 ${chip.chip.upperValue === chip.chip.lowerValue
                   ? 'all'
                   : 'you'})
-              </div>`
+              </div>`,
           )}
         </div>
       </div>
@@ -136,7 +136,7 @@ export class ChipReveal extends MobxLitElement {
       ${getParticipantInlineDisplay(
         participant,
         isCurrentUser,
-        this.stage?.id ?? ''
+        this.stage?.id ?? '',
       )}
     `;
 
@@ -173,7 +173,7 @@ export class ChipReveal extends MobxLitElement {
 
     const totalPayout = chipValues?.reduce(
       (total, {quantity, value}) => total + quantity * value,
-      0
+      0,
     );
     const diff = totalPayout! - initialPayout!;
     const payout = Math.max(0, diff);
@@ -190,8 +190,10 @@ export class ChipReveal extends MobxLitElement {
       <div class="table">
         ${this.renderGlobalTableHeader()}
         <div class="table-body">
-          ${sortParticipantsByRandomProfile(participants, this.stage?.id ?? '')
-            .map((p) => this.renderParticipantRow(p))}
+          ${sortParticipantsByRandomProfile(
+            participants,
+            this.stage?.id ?? '',
+          ).map((p) => this.renderParticipantRow(p))}
         </div>
         <div class="table-foot">
           <div class="table-row">
@@ -213,8 +215,8 @@ export class ChipReveal extends MobxLitElement {
               class="table-cell ${payout > 0
                 ? 'positive'
                 : payout < 0
-                ? 'negative'
-                : ''}"
+                  ? 'negative'
+                  : ''}"
             >
               <b>$${payout.toFixed(2)}</b>
             </div>

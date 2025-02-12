@@ -1,6 +1,6 @@
-import { Type, type Static } from '@sinclair/typebox';
-import { UnifiedTimestampSchema } from '../shared.validation';
-import { StageKind } from './stage';
+import {Type, type Static} from '@sinclair/typebox';
+import {UnifiedTimestampSchema} from '../shared.validation';
+import {StageKind} from './stage';
 import {
   StageGameSchema,
   StageTextConfigSchema,
@@ -8,7 +8,7 @@ import {
 } from './stage.validation';
 
 /** Shorthand for strict TypeBox object validation */
-const strict = { additionalProperties: false } as const;
+const strict = {additionalProperties: false} as const;
 
 /** Chip item data. */
 export const ChipItemData = Type.Object(
@@ -22,7 +22,7 @@ export const ChipItemData = Type.Object(
     lowerValue: Type.Number(),
     upperValue: Type.Number(),
   },
-  strict
+  strict,
 );
 
 /** Chip stage config data. */
@@ -38,7 +38,7 @@ export const ChipStageConfigData = Type.Object(
     numRounds: Type.Number(),
     chips: Type.Array(ChipItemData),
   },
-  strict
+  strict,
 );
 
 /** Chip offer data. */
@@ -46,25 +46,25 @@ export const ChipOfferData = Type.Object(
   {
     id: Type.String(),
     round: Type.Number(),
-    senderId: Type.String({ minLength: 1 }),
+    senderId: Type.String({minLength: 1}),
     buy: Type.Record(Type.String(), Type.Number()),
     sell: Type.Record(Type.String(), Type.Number()),
     timestamp: UnifiedTimestampSchema,
   },
-  strict
+  strict,
 );
 
 /** sendChipOffer endpoint data validation. */
 export const SendChipOfferData = Type.Object(
   {
-    experimentId: Type.String({ minLength: 1 }),
-    participantPrivateId: Type.String({ minLength: 1 }),
-    participantPublicId: Type.String({ minLength: 1 }),
-    cohortId: Type.String({ minLength: 1 }),
-    stageId: Type.String({ minLength: 1 }),
+    experimentId: Type.String({minLength: 1}),
+    participantPrivateId: Type.String({minLength: 1}),
+    participantPublicId: Type.String({minLength: 1}),
+    cohortId: Type.String({minLength: 1}),
+    stageId: Type.String({minLength: 1}),
     chipOffer: ChipOfferData,
   },
-  strict
+  strict,
 );
 
 export type SendChipOfferData = Static<typeof SendChipOfferData>;
@@ -72,14 +72,14 @@ export type SendChipOfferData = Static<typeof SendChipOfferData>;
 /** sendChipResponse endpoint data validation. */
 export const SendChipResponseData = Type.Object(
   {
-    experimentId: Type.String({ minLength: 1 }),
-    participantPrivateId: Type.String({ minLength: 1 }),
-    participantPublicId: Type.String({ minLength: 1 }),
-    cohortId: Type.String({ minLength: 1 }),
-    stageId: Type.String({ minLength: 1 }),
+    experimentId: Type.String({minLength: 1}),
+    participantPrivateId: Type.String({minLength: 1}),
+    participantPublicId: Type.String({minLength: 1}),
+    cohortId: Type.String({minLength: 1}),
+    stageId: Type.String({minLength: 1}),
     chipResponse: Type.Boolean(),
   },
-  strict
+  strict,
 );
 
 export type SendChipResponseData = Static<typeof SendChipResponseData>;
@@ -87,11 +87,11 @@ export type SendChipResponseData = Static<typeof SendChipResponseData>;
 /** setChipTurn endpoint data validation. */
 export const SetChipTurnData = Type.Object(
   {
-    experimentId: Type.String({ minLength: 1 }),
-    cohortId: Type.String({ minLength: 1 }),
-    stageId: Type.String({ minLength: 1 }),
+    experimentId: Type.String({minLength: 1}),
+    cohortId: Type.String({minLength: 1}),
+    stageId: Type.String({minLength: 1}),
   },
-  strict
+  strict,
 );
 
 export type SetChipTurnData = Static<typeof SetChipTurnData>;

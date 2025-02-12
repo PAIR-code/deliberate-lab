@@ -14,7 +14,7 @@ import {
   createCheckSurveyQuestion,
   createMultipleChoiceSurveyQuestion,
   createScaleSurveyQuestion,
-  createTextSurveyQuestion
+  createTextSurveyQuestion,
 } from '@deliberation-lab/utils';
 
 import {styles} from './survey_editor_menu.scss';
@@ -26,7 +26,7 @@ export class SurveyEditorMenu extends MobxLitElement {
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
-  @property() stage: SurveyStageConfig|undefined = undefined;
+  @property() stage: SurveyStageConfig | undefined = undefined;
 
   override render() {
     if (this.stage === undefined) {
@@ -34,7 +34,10 @@ export class SurveyEditorMenu extends MobxLitElement {
     }
 
     return html`
-      <pr-menu name="Add survey question" ?disabled=${!this.experimentEditor.canEditStages}>
+      <pr-menu
+        name="Add survey question"
+        ?disabled=${!this.experimentEditor.canEditStages}
+      >
         <div class="menu-wrapper">
           <div class="menu-item" role="button" @click=${this.addText}>
             Freeform
@@ -56,10 +59,7 @@ export class SurveyEditorMenu extends MobxLitElement {
   private addQuestion(question: SurveyQuestion) {
     if (!this.stage) return;
 
-    const questions = [
-      ...this.stage.questions,
-      question
-    ];
+    const questions = [...this.stage.questions, question];
 
     this.experimentEditor.updateStage({
       ...this.stage,

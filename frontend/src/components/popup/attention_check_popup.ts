@@ -4,9 +4,7 @@ import {customElement, property, state} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ParticipantService} from '../../services/participant.service';
-import {
-  ParticipantStatus
-} from '@deliberation-lab/utils';
+import {ParticipantStatus} from '@deliberation-lab/utils';
 
 import {styles} from './popup.scss';
 
@@ -30,9 +28,7 @@ class AttentionPopup extends MobxLitElement {
     return html`
       <div class="overlay">
         <div class="popup">
-          <div class="title">
-            Are you still there?
-          </div>
+          <div class="title">Are you still there?</div>
           <div class="button-row">
             <div class="button-container">
               <pr-button

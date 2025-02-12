@@ -1,26 +1,26 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import nock = require('nock');
 
-import { AgentGenerationConfig } from '@deliberation-lab/utils';
-import { getOpenAIAPITextCompletionResponse } from './openai.api';
-import { ModelResponse } from './model.response';
-
+import {AgentGenerationConfig} from '@deliberation-lab/utils';
+import {getOpenAIAPITextCompletionResponse} from './openai.api';
+import {ModelResponse} from './model.response';
 
 describe('OpenAI-compatible API', () => {
   it('handles text completion request', async () => {
     nock('https://test.uri')
       .post('/v1/completions')
       .reply(200, {
-        'id': 'test-id',
-        'object': 'text_completion',
-        'created': Date.now(),
-        'model': 'test-model',
-        'choices': [
+        id: 'test-id',
+        object: 'text_completion',
+        created: Date.now(),
+        model: 'test-model',
+        choices: [
           {
-            'text': 'test output',
-            'index': 0,
-            'logprobs': null,
-            'finish_reason': 'stop',
-          }
+            text: 'test output',
+            index: 0,
+            logprobs: null,
+            finish_reason: 'stop',
+          },
         ],
       });
 
@@ -29,7 +29,7 @@ describe('OpenAI-compatible API', () => {
       topP: 1,
       frequencyPenalty: 0,
       presencePenalty: 0,
-      customRequestBodyFields: [ {name: 'foo', value: 'bar'} ]
+      customRequestBodyFields: [{name: 'foo', value: 'bar'}],
     };
 
     const response: ModelResponse = await getOpenAIAPITextCompletionResponse(
@@ -37,7 +37,7 @@ describe('OpenAI-compatible API', () => {
       'https://test.uri/v1/',
       'test-model',
       'This is a test prompt.',
-      generationConfig
+      generationConfig,
     );
 
     expect(response.text).toEqual('test output');

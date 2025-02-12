@@ -52,7 +52,7 @@ export class ParticipantSummary extends MobxLitElement {
     const setCurrentParticipant = () => {
       if (!this.participant) return;
       this.experimentManager.setCurrentParticipantId(
-        this.participant.privateId
+        this.participant.privateId,
       );
     };
 
@@ -78,8 +78,8 @@ export class ParticipantSummary extends MobxLitElement {
             .stageIds=${this.experimentService.experiment?.stageIds ?? []}
           >
           </participant-progress-bar>
-          ${this.renderCopyButton()}
-          ${this.renderAttentionButton()} ${this.renderBootButton()}
+          ${this.renderCopyButton()} ${this.renderAttentionButton()}
+          ${this.renderBootButton()}
         </div>
       </div>
     `;
@@ -89,14 +89,14 @@ export class ParticipantSummary extends MobxLitElement {
     if (
       this.participant === undefined ||
       (this.participant.currentStatus !== ParticipantStatus.IN_PROGRESS &&
-      this.participant.currentStatus !== ParticipantStatus.ATTENTION_CHECK)
+        this.participant.currentStatus !== ParticipantStatus.ATTENTION_CHECK)
     ) {
       return;
     }
 
     const startTime = getCurrentStageStartTime(
       this.participant,
-      this.experimentService.stageIds
+      this.experimentService.stageIds,
     );
     if (!startTime) {
       return;
@@ -107,7 +107,7 @@ export class ParticipantSummary extends MobxLitElement {
       '#A8DAB5',
       '#FBA9D6',
       numMinutes,
-      30
+      30,
     );
 
     const getTimeElapsedText = (numMinutes: number) => {
@@ -117,10 +117,10 @@ export class ParticipantSummary extends MobxLitElement {
       return numMinutes < 120
         ? `${numMinutes}m`
         : numHours < 24
-        ? `${numHours}h`
-        : numDays <= maxDays
-        ? `${numDays}d`
-        : `${maxDays}+ days`;
+          ? `${numHours}h`
+          : numDays <= maxDays
+            ? `${numDays}d`
+            : `${maxDays}+ days`;
     };
 
     return html`
@@ -152,7 +152,7 @@ export class ParticipantSummary extends MobxLitElement {
 
     // If in transfer stage, return "ready for transfer" chip
     const stage = this.experimentService.getStage(
-      this.participant.currentStageId
+      this.participant.currentStageId,
     );
     if (!stage) return nothing;
     if (stage.kind === StageKind.TRANSFER) {
@@ -167,14 +167,14 @@ export class ParticipantSummary extends MobxLitElement {
 
     const basePath = window.location.href.substring(
       0,
-      window.location.href.indexOf('/#')
+      window.location.href.indexOf('/#'),
     );
     const link = `${basePath}/#/e/${this.experimentManager.experimentId}/p/${this.participant.privateId}`;
 
     await navigator.clipboard.writeText(link);
     alert('Link copied to clipboard!');
   }
-  
+
   private renderAttentionButton() {
     const sendAttentionCheck = () => {
       if (!this.participant) return;
@@ -184,14 +184,14 @@ export class ParticipantSummary extends MobxLitElement {
           this.participant.name
             ? this.participant.name
             : this.participant.publicId
-        }?`
+        }?`,
       );
       if (!isConfirmed) return;
 
       this.analyticsService.trackButtonClick(ButtonClick.ATTENTION_CHECK_SEND);
       this.experimentManager.sendCheckToParticipant(
         this.participant.privateId,
-        ParticipantStatus.ATTENTION_CHECK
+        ParticipantStatus.ATTENTION_CHECK,
       );
     };
 
@@ -222,7 +222,7 @@ export class ParticipantSummary extends MobxLitElement {
           this.participant.name
             ? this.participant.name
             : this.participant.publicId
-        }?`
+        }?`,
       );
       if (!isConfirmed) return;
 

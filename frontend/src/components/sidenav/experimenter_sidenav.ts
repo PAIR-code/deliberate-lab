@@ -17,7 +17,7 @@ import {
   RouterService,
 } from '../../services/router.service';
 
-import { APP_NAME } from '../../shared/constants';
+import {APP_NAME} from '../../shared/constants';
 
 import {styles} from './experimenter_sidenav.scss';
 
@@ -39,7 +39,7 @@ export class SideNav extends MobxLitElement {
 
     const toggleNav = () => {
       this.routerService.setExperimenterNav(
-        !this.routerService.isExperimenterNavOpen
+        !this.routerService.isExperimenterNavOpen,
       );
     };
 
@@ -63,12 +63,12 @@ export class SideNav extends MobxLitElement {
             ${renderTitle()}
           </div>
           ${NAV_ITEMS.filter(
-            (navItem) => navItem.isExperimenterPage && navItem.isPrimaryPage
+            (navItem) => navItem.isExperimenterPage && navItem.isPrimaryPage,
           ).map((navItem) => this.renderNavItem(navItem))}
         </div>
         <div class="bottom">
           ${NAV_ITEMS.filter(
-            (navItem) => navItem.isExperimenterPage && !navItem.isPrimaryPage
+            (navItem) => navItem.isExperimenterPage && !navItem.isPrimaryPage,
           ).map((navItem) => this.renderNavItem(navItem))}
         </div>
       </div>

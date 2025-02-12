@@ -1,19 +1,19 @@
-import { Value } from '@sinclair/typebox/value';
+import {Value} from '@sinclair/typebox/value';
 import {
   ExperimenterData,
   StageConfig,
   StageKind,
-  ParticipantProfileExtended
+  ParticipantProfileExtended,
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from './agent.utils';
 import {getAgentParticipantRankingStageResponse} from './stages/ranking.utils';
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
-import { onCall } from 'firebase-functions/v2/https';
+import {onCall} from 'firebase-functions/v2/https';
 
-import { app } from './app';
-import { AuthGuard } from './utils/auth-guard';
+import {app} from './app';
+import {AuthGuard} from './utils/auth-guard';
 
 // ****************************************************************************
 // Test agent participant prompts
@@ -21,7 +21,7 @@ import { AuthGuard } from './utils/auth-guard';
 // Validation: utils/src/agent.validation.ts
 // ****************************************************************************
 export const testAgentParticipantPrompt = onCall(async (request) => {
-  const { data } = request;
+  const {data} = request;
 
   // Only allow experimenters to use this test endpoint for now
   await AuthGuard.isExperimenter(request);
@@ -34,27 +34,35 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
   const creatorId = (
     await app.firestore().collection('experiments').doc(experimentId).get()
   ).data().metadata.creator;
-  const creatorDoc = await app.firestore().collection('experimenterData').doc(creatorId).get();
+  const creatorDoc = await app
+    .firestore()
+    .collection('experimenterData')
+    .doc(creatorId)
+    .get();
   if (!creatorDoc.exists) return;
 
   const experimenterData = creatorDoc.data() as ExperimenterData;
 
   // Fetch participant config (in case needed to help construct prompt)
-  const participant = (await app.firestore()
-    .collection('experiments')
-    .doc(experimentId)
-    .collection('participants')
-    .doc(participantPrivateId)
-    .get()
+  const participant = (
+    await app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('participants')
+      .doc(participantPrivateId)
+      .get()
   ).data() as ParticipantProfileExtended;
 
   // Fetch stage config (to determine which prompt to send)
-  const stage = (await app.firestore()
-    .collection('experiments')
-    .doc(experimentId)
-    .collection('stages')
-    .doc(stageId)
-    .get()
+  const stage = (
+    await app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('stages')
+      .doc(stageId)
+      .get()
   ).data() as StageConfig;
 
   // TODO: Use utils functions to construct prompt based on stage type
@@ -66,7 +74,7 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
         experimentId,
         experimenterData,
         participant,
-        stage
+        stage,
       );
     default:
       prompt = `This is a test prompt. Please output a funny joke.`;
@@ -80,8 +88,8 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
     `Experiment: ${experimentId}\n`,
     `Participant: ${participant.publicId}\n`,
     `Stage: ${stage.name} (${stage.kind})\n`,
-    response
+    response,
   );
 
-  return { data: response };
+  return {data: response};
 });

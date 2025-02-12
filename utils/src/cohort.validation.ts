@@ -1,14 +1,10 @@
-import { Type, type Static } from '@sinclair/typebox';
-import {
-  MetadataConfigSchema
-} from './shared.validation';
-import {
-  CohortParticipantConfigSchema
-} from './experiment.validation';
-import { StageConfigData } from './stages/stage.validation';
+import {Type, type Static} from '@sinclair/typebox';
+import {MetadataConfigSchema} from './shared.validation';
+import {CohortParticipantConfigSchema} from './experiment.validation';
+import {StageConfigData} from './stages/stage.validation';
 
 /** Shorthand for strict TypeBox object validation */
-const strict = { additionalProperties: false } as const;
+const strict = {additionalProperties: false} as const;
 
 // ************************************************************************* //
 // writeCohort endpoint                                                      //
@@ -16,13 +12,13 @@ const strict = { additionalProperties: false } as const;
 
 export const CohortCreationData = Type.Object(
   {
-    experimentId: Type.String({ minLength: 1 }),
+    experimentId: Type.String({minLength: 1}),
     cohortConfig: Type.Object(
       {
         id: Type.String(),
         metadata: MetadataConfigSchema,
         participantConfig: CohortParticipantConfigSchema,
-        stageUnlockMap: Type.Record(Type.String(), Type.Boolean())
+        stageUnlockMap: Type.Record(Type.String(), Type.Boolean()),
       },
       strict,
     ),
@@ -38,8 +34,8 @@ export type CohortCreationData = Static<typeof CohortCreationData>;
 
 export const UpdateCohortMetadataData = Type.Object(
   {
-    experimentId: Type.String({ minLength: 1 }),
-    cohortId: Type.String({ minLength: 1 }),
+    experimentId: Type.String({minLength: 1}),
+    cohortId: Type.String({minLength: 1}),
     metadata: MetadataConfigSchema,
     participantConfig: CohortParticipantConfigSchema,
   },
@@ -54,8 +50,8 @@ export type UpdateCohortMetadataData = Static<typeof UpdateCohortMetadataData>;
 
 export const CohortDeletionData = Type.Object(
   {
-    experimentId: Type.String({ minLength: 1 }),
-    cohortId: Type.String({ minLength: 1 }),
+    experimentId: Type.String({minLength: 1}),
+    cohortId: Type.String({minLength: 1}),
   },
   strict,
 );
