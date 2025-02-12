@@ -65,6 +65,7 @@ export async function callGemini(
 /** Constructs Gemini API query and returns response. */
 export async function getGeminiAPIResponse(
   apiKey: string,
+  modelName: string,
   promptText: string,
   stopSequences: string[] = [],
   maxOutputTokens = 300,
@@ -86,7 +87,7 @@ export async function getGeminiAPIResponse(
       apiKey,
       promptText,
       generationConfig,
-      GEMINI_DEFAULT_MODEL
+      modelName
     );
   } catch (error: any) {
     if (error.message.includes(QUOTA_ERROR_CODE.toString())) {
