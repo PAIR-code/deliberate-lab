@@ -14,7 +14,7 @@
     "prettier": "^3.5.0"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,md,html,css}": "prettier --write"
+    "*.{json,ts,html,scss,css}": "prettier --write"
   },
   "scripts": {
     "prepare": "husky"
