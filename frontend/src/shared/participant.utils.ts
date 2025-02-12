@@ -154,6 +154,12 @@ export function isUnlockedStage(
     return false;
   }
 
+  // Backwards compatibility: If readyStages does not exist in timestamps,
+  // return true
+  if (!('readyStages' in participant.timestamps)) {
+    return true;
+  }
+
   return participant.timestamps.startExperiment &&
     participant.timestamps.readyStages[stageId];
 }
