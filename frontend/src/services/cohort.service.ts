@@ -58,6 +58,7 @@ export class CohortService extends Service {
 
   @observable experimentId: string|null = null;
   @observable cohortId: string|null = null;
+  @observable cohortConfig: CohortConfig|null = null;
 
   // Participants currently in the cohort
   @observable participantMap: Record<string, ParticipantProfile> = {};
@@ -180,33 +181,10 @@ export class CohortService extends Service {
     return { completed, notCompleted };
   }
 
-  // If stage is in a waiting phase, i.e.,
-  // if the stage requires waiting and no participant has
-  // completed the waiting phase before
-  // (If a participant has unlocked a stage with waiting but not
-  // yet completed its waiting phase, then that participant is waiting)
+  // If stage is in a waiting phase
   isStageInWaitingPhase(stageId: string) {
-    const stageConfig = this.sp.experimentService.getStage(stageId);
-    if (!stageConfig) return true;
-
-    // If stage does not require waiting, then false
-    if (
-      stageConfig.progress.minParticipants === 0 &&
-      !stageConfig.progress.waitForAllParticipants
-    ) {
-      return false;
-    }
-
-    // If any participant in the cohort has completed the waiting phase
-    // before, then waiting is false (as we never want to revert
-    // participants from "in stage" back to pre-stage "waiting")
-    for (const participant of this.getAllParticipants(false)) {
-      if (participant.timestamps.completedWaiting[stageId]) {
-        return false;
-      }
-    }
-
-    return true;
+    // Return false if stage is unlocked for cohort, else true
+    return !this.cohortConfig?.stageUnlockMap[stageId];
   }
 
   // Get number of participants needed to pass waiting phase
@@ -250,6 +228,8 @@ export class CohortService extends Service {
     return this.chipLogMap[stageId] ?? [];
   }
 
+  // Called from participant service on participant snapshot listener
+  // (i.e., when participant's current cohort may have changed)
   async loadCohortData(experimentId: string, id: string) {
     if (id === this.cohortId) {
       return;
@@ -261,10 +241,36 @@ export class CohortService extends Service {
     this.unsubscribeAll();
 
     // Subscribe to data
+    this.loadCohortConfig();
     this.loadPublicStageData();
     this.loadChatMessages();
     this.loadChipLogEntries();
     this.loadParticipantProfiles();
+  }
+
+  /** Subscribe to current cohort config. */
+  private loadCohortConfig() {
+    if (!this.experimentId || !this.cohortId) return;
+
+    this.isCohortConfigLoading = true;
+    this.unsubscribe.push(
+      onSnapshot(
+        doc(
+          this.sp.firebaseService.firestore,
+          'experiments',
+          this.experimentId,
+          'cohorts',
+          this.cohortId,
+        ),
+        async (doc) => {
+          this.cohortConfig = {
+            stageUnlockMap: {}, // for backwards compatibility
+            ...doc.data(),
+          } as CohortConfig;
+          this.isCohortConfigLoading = false;
+        }
+      )
+    )
   }
 
   /** Subscribe to public stage data. */
@@ -414,6 +420,11 @@ export class CohortService extends Service {
     if (!this.experimentId || !this.cohortId) return;
 
     this.isParticipantsLoading = true;
+
+    // Clear participant maps before repopulating
+    this.participantMap = {};
+    this.transferParticipantMap = {};
+
     // TODO: Use participantPublicData collection once available
     // so that privateIds are not surfaced
     this.unsubscribe.push(
@@ -436,14 +447,11 @@ export class CohortService extends Service {
             changedDocs = snapshot.docs;
           }
 
-          // Clear participant maps before repopulating
-          this.participantMap = {};
-          this.transferParticipantMap = {};
-
           changedDocs.forEach((doc) => {
             const profile = doc.data() as ParticipantProfile;
             if (profile.currentCohortId === this.cohortId) {
               this.participantMap[profile.publicId] = profile;
+              delete this.transferParticipantMap[profile.publicId];
             } else if (profile.transferCohortId === this.cohortId) {
               this.transferParticipantMap[profile.publicId] = profile;
             }
@@ -459,6 +467,7 @@ export class CohortService extends Service {
     this.unsubscribe = [];
 
     // Reset stage configs
+    this.cohortConfig = null;
     this.participantMap = {};
     this.chatMap = {};
     this.chatDiscussionMap = {};

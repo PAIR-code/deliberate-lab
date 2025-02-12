@@ -32,7 +32,7 @@ export class Progress extends MobxLitElement {
   @property() showReadyAvatars = true;
   @property() showWaitingAvatars = false;
 
-  @state() completeWaitingLoading = false;
+  @state() refreshReadyToStartLoading = false;
 
   override render() {
     const stageId = this.participantService.currentStageViewId ?? '';
@@ -45,13 +45,32 @@ export class Progress extends MobxLitElement {
     const numWaiting =
       this.cohortService.getWaitingPhaseMinParticipants(stageId) - unlocked.length;
 
-    const completeWaiting = async () => {
-      this.completeWaitingLoading = true;
-
+    const onUpdateStatus = async () => {
+      this.refreshReadyToStartLoading = true;
+      // Update "ready to start" for current participant
       await this.participantService.updateWaitingPhaseCompletion(stageId);
-
-      this.completeWaitingLoading = false;
+      window.location.reload();
+      this.refreshReadyToStartLoading = false;
     };
+
+    const renderUpdateStatusButton = () => {
+      // Describe this button (used for fallbacks) as a "refresh" button;
+      // when clicked, it updates the participant's current state AND
+      // updates cohort unlock conditions.
+      //
+      // Participants should not have to click this, but we include it
+      // just in case there is an issue with Firestore updating.
+
+      return html`
+        <pr-button
+          color="primary"
+          ?loading=${this.refreshReadyToStartLoading}
+          @click=${onUpdateStatus}
+        >
+          Refresh this stage
+        </pr-button>
+      `;
+    }
 
     const renderWaitingStatus = () => {
       if (numWaiting === 0) return nothing;
@@ -71,6 +90,7 @@ export class Progress extends MobxLitElement {
       `;
     };
 
+    // TODO: Add "refresh cohort" button to check if cohort should be unlocked
     return html`
       ${renderWaitingStatus()}
       <div class="status">
@@ -81,17 +101,10 @@ export class Progress extends MobxLitElement {
         ${this.showReadyAvatars ? this.renderParticipants(unlocked) : nothing}
       </div>
       <div class="note">
-        NOTE: If you have been waiting for a long time, please refresh to
+        NOTE: If you have been waiting for a long time, please refresh below to
         ensure your page is up to date!
       </div>
-      <pr-button
-        color=${numWaiting > 0 ? 'neutral' : 'primary'}
-        ?disabled=${numWaiting > 0}
-        ?loading=${this.completeWaitingLoading}
-        @click=${completeWaiting}
-      >
-        ${numWaiting > 0 ? 'Waiting on participants...' : 'Continue to stage'}
-      </pr-button>
+      ${renderUpdateStatusButton()}
     `;
   }
 

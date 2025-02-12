@@ -29,8 +29,9 @@ import { StageConfig } from './stages/stage';
   * VERSION 12 - add cohortLockMap to Experiment (PR #402)
   * VERSION 13 - add randomSelectionId to payout stage (PR #430)
   * VERSION 14 - add currentDiscussionId to chat public data (PR #431)
+  * VERSION 15 - add stageUnlockMap, readyStages timestamps (PR #442)
   */
-export const EXPERIMENT_VERSION_ID = 14;
+export const EXPERIMENT_VERSION_ID = 15;
 
 /** Experiment. */
 export interface Experiment {

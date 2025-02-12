@@ -163,7 +163,7 @@ export const ProgressTimestampsSchema = Type.Object({
     Type.String(),
     UnifiedTimestampSchema
   ),
-  completedWaiting: Type.Record(
+  readyStages: Type.Record(
     Type.String(),
     UnifiedTimestampSchema
   ),
