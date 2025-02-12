@@ -2,6 +2,7 @@ import OpenAI from "openai"
 import {
   AgentGenerationConfig
 } from '@deliberation-lab/utils';
+import { ModelResponse } from './model.response';
 
 const MAX_TOKENS_FINISH_REASON = "length";
 
@@ -10,7 +11,7 @@ export async function callOpenAITextCompletion(
   baseUrl: string | null,
   modelName: string,
   prompt: string,
-  generationConfig: agentGenerationConfig
+  generationConfig: AgentGenerationConfig
 ) {
   const client = new OpenAI({
     apiKey: apiKey,
@@ -27,7 +28,6 @@ export async function callOpenAITextCompletion(
     top_p: generationConfig.topP,
     frequency_penalty: generationConfig.frequencyPenalty,
     presence_penalty: generationConfig.presencePenalty,
-    // @ts-expect-error allow extra request fields
     ...customFields
   });
 
@@ -37,7 +37,7 @@ export async function callOpenAITextCompletion(
     return { text: '' };
   }
 
-  const finishReason = response.choices[0].finishReason;
+  const finishReason = response.choices[0].finish_reason;
   if (finishReason === MAX_TOKENS_FINISH_REASON) {
     console.error(
       `Error: Token limit exceeded`
