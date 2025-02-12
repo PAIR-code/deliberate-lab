@@ -8,7 +8,7 @@ import {ModelResponse} from './model.response';
 describe('OpenAI-compatible API', () => {
   it('handles text completion request', async () => {
     nock('https://test.uri')
-      .post('/v1/completions')
+      .post('/v1/completions', body => body.model == 'test-model')
       .reply(200, {
         id: 'test-id',
         object: 'text_completion',

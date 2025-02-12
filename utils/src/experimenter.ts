@@ -51,11 +51,6 @@ export interface OpenAIServerConfig {
 
 export interface OllamaServerConfig {
   url: string;
-  /*
-   * The type of llm running in the server (e.g. "llama3.2").
-   * Keep in mind that the model must have been loaded server-side in order to be used.
-   */
-  llmType: string;
   // port: number; // apparently not needed? https://github.com/ollama/ollama/blob/main/docs/api.md#generate-a-completion
   // will probably need more data for server-side auth?
 }
@@ -65,7 +60,6 @@ export interface OllamaServerConfig {
 // ************************************************************************* //
 
 const INVALID_API_KEY = '';
-const INVALID_LLM_TYPE = '';
 const EMPTY_BASE_URL = '';
 
 // ************************************************************************* //
@@ -100,8 +94,8 @@ export function createExperimenterData(
     apiKeys: {
       geminiApiKey: INVALID_API_KEY,
       openAIApiKey: createOpenAIServerConfig(),
-      ollamaApiKey: {url: INVALID_API_KEY, llmType: INVALID_LLM_TYPE},
-      activeApiKeyType: ApiKeyType.GEMINI_API_KEY,
+      ollamaApiKey: { url: INVALID_API_KEY },
+      activeApiKeyType: ApiKeyType.GEMINI_API_KEY
     },
     email: experimenterEmail,
   };
@@ -137,8 +131,7 @@ export function checkApiKeyExists(
   ) {
     // implicitly checks if llamaApiKey exists
     return (
-      experimenterData.apiKeys.ollamaApiKey.url !== INVALID_API_KEY &&
-      experimenterData.apiKeys.ollamaApiKey.llmType !== INVALID_LLM_TYPE
+      (experimenterData.apiKeys.ollamaApiKey.url !== INVALID_API_KEY)
     );
   }
 

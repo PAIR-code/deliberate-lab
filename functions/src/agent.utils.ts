@@ -19,7 +19,7 @@ export async function getAgentResponse(
       prompt,
     );
   } else if (keyType === ApiKeyType.GEMINI_API_KEY) {
-    response = getGeminiResponse(data, prompt);
+    response =  getGeminiResponse(data, agent.model, prompt);
   } else if (keyType === ApiKeyType.OPENAI_API_KEY) {
     response = getOpenAIAPIResponse(
       data,
@@ -28,7 +28,7 @@ export async function getAgentResponse(
       agent.generationConfig,
     );
   } else if (keyType === ApiKeyType.OLLAMA_CUSTOM_URL) {
-    response = await getOllamaResponse(data, prompt);
+    response = await getOllamaResponse(data, agent.model, prompt);
   } else {
     console.error('Error: invalid apiKey type: ', keyType);
     response = {text: ''};
@@ -39,9 +39,14 @@ export async function getAgentResponse(
 
 export async function getGeminiResponse(
   data: ExperimenterData,
-  prompt: string,
-): Promise<ModelResponse> {
-  return await getGeminiAPIResponse(data.apiKeys.geminiApiKey, prompt);
+   modelName: string,
+   prompt: string
+  ): Promise<ModelResponse> {
+  return await getGeminiAPIResponse(
+    data.apiKeys.geminiApiKey,
+    modelName,
+    prompt
+  );
 }
 
 async function getOpenAIAPIResponse(
@@ -61,7 +66,8 @@ async function getOpenAIAPIResponse(
 
 export async function getOllamaResponse(
   data: ExperimenterData,
-  prompt: string,
+  modelName: string,
+  prompt: string
 ): Promise<ModelResponse> {
   return await ollamaChat([prompt], data.apiKeys.ollamaApiKey);
 }

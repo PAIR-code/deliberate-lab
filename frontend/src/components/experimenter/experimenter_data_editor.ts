@@ -190,7 +190,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
 
   // ============ Local Ollama server ============
   private renderServerSettings() {
-    const updateServerSettings = (e: InputEvent, field: 'url' | 'llmType') => {
+    const updateServerSettings = (e: InputEvent, field: 'url') => {
       const oldData = this.authService.experimenterData;
       if (!oldData) return;
 
@@ -205,18 +205,6 @@ export class ExperimenterDataEditor extends MobxLitElement {
               ollamaApiKey: {
                 ...oldData.apiKeys.ollamaApiKey,
                 url: value,
-              },
-            },
-          });
-          break;
-
-        case 'llmType':
-          newData = updateExperimenterData(oldData, {
-            apiKeys: {
-              ...oldData.apiKeys,
-              ollamaApiKey: {
-                ...oldData.apiKeys.ollamaApiKey,
-                llmType: value,
               },
             },
           });
@@ -240,20 +228,6 @@ export class ExperimenterDataEditor extends MobxLitElement {
           @input=${(e: InputEvent) => updateServerSettings(e, 'url')}
         ></pr-textarea>
         <p>Please ensure that the URL is valid before proceeding.</p>
-
-        <pr-textarea
-          label="LLM type"
-          placeholder="llama3.2"
-          variant="outlined"
-          .value=${data?.apiKeys.ollamaApiKey?.llmType ?? ''}
-          @input=${(e: InputEvent) => updateServerSettings(e, 'llmType')}
-        ></pr-textarea>
-        <p>
-          All supported LLM types can be found
-          <a target="_blank" href="https://ollama.com/library">here</a>. Make
-          sure the LLM type has been deployed on the server prior to selecting
-          it here.
-        </p>
       </div>
     `;
   }
