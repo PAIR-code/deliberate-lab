@@ -1,15 +1,13 @@
-import { Value } from '@sinclair/typebox/value';
 import {
   ExperimenterData,
   StageConfig,
   StageKind,
-  ParticipantProfileExtended
+  ParticipantProfileExtended,
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from './agent.utils';
 import {getAgentParticipantRankingStageResponse} from './stages/ranking.utils';
+import {getAgentParticipantSurveyResponse} from './stages/survey.utils';
 
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
 import { onCall } from 'firebase-functions/v2/https';
 
 import { app } from './app';
@@ -33,7 +31,7 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
   // Fetch experiment creator's API key and other experiment data.
   const creatorId = (
     await app.firestore().collection('experiments').doc(experimentId).get()
-  ).data().metadata.creator;
+  ).data()?.metadata.creator;
   const creatorDoc = await app.firestore().collection('experimenterData').doc(creatorId).get();
   if (!creatorDoc.exists) return;
 
@@ -68,6 +66,12 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
         participant,
         stage
       );
+    case StageKind.SURVEY:
+      return await getAgentParticipantSurveyResponse(
+        experimentId, 
+        experimenterData, 
+        participant,
+        stage);
     default:
       prompt = `This is a test prompt. Please output a funny joke.`;
   }
