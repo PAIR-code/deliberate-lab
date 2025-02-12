@@ -1,0 +1,22 @@
+{
+  "name": "deliberate-lab",
+  "author": "Google PAIR",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "website": "https://github.com/PAIR-code/deliberate-lab",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PAIR-code/deliberate-lab.git"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
+    "prettier": "^3.5.0"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,md,html,css}": "prettier --write"
+  },
+  "scripts": {
+    "prepare": "husky"
+  }
+}
