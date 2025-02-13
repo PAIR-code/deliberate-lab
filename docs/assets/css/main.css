@@ -3,6 +3,8 @@
 }
 
 body {
+  --md-sys-color-error-container: var(--md-ref-palette-red90);
+  --md-sys-color-on-error-container: var(--md-ref-palette-red10);
   --md-sys-color-outline: var(--md-ref-palette-gray70);
   --md-sys-color-outline-variant: var(--md-ref-palette-gray80);
   --md-sys-color-on-surface: var(--md-ref-palette-gray5);
@@ -53,6 +55,13 @@ article {
   gap: 1em;
   max-width: 800px;
   width: 100%;
+}
+
+.banner {
+  background: var(--md-sys-color-error-container);
+  border-radius: 4px;
+  color: var(--md-sys-color-on-error-container);
+  padding: 0.35em;
 }
 
 .side-nav {
