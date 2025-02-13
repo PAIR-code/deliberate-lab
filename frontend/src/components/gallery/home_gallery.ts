@@ -42,7 +42,7 @@ export class HomeGallery extends MobxLitElement {
       .slice()
       .sort(
         (a, b) =>
-          a.metadata.dateCreated.seconds - b.metadata.dateCreated.seconds,
+          b.metadata.dateCreated.seconds - a.metadata.dateCreated.seconds,
       );
 
     const yourExperiments = experiments.filter(
