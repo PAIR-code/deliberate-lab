@@ -3,6 +3,11 @@
 }
 
 body {
+  --md-sys-color-outline: var(--md-ref-palette-gray60);
+  --md-sys-color-on-surface: var(--md-ref-palette-gray5);
+  --md-sys-color-blue: var(--md-ref-palette-blue40);
+  --md-sys-color-blue-light: var(--md-ref-palette-blue50);
+
   background: #fefefe;
   font-family: 'Roboto', Helvetica, sans-serif;
   font-size: 16px;
@@ -18,30 +23,99 @@ body {
   padding: 0 1.5em;
 }
 
+.main-wrapper {
+  display: flex;
+  flex-grow: 1;
+  justify-content: start;
+  gap: 2em;
+  width: 100%;
+}
+
+@media screen and (max-width: 500px) {
+  .main-wrapper {
+    flex-direction: column-reverse;
+  }
+}
+
 .content-wrapper {
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
   gap: 1em;
   max-width: 800px;
   width: 100%;
 }
 
-nav {
+.side-nav {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 1em;
+  width: 180px;
+}
+
+@media screen and (max-width: 500px) {
+  .side-nav {
+    border-top: 1px solid var(--md-sys-color-outline);
+    padding-top: 1em;
+    width: 100%;
+  }
+}
+
+.side-nav .section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+}
+
+.top-nav {
   align-items: center;
   display: flex;
   font-family: 'Roboto Mono';
   font-size: 0.9em;
   font-weight: 500;
   height: 40px;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--md-sys-color-outline);
   width: 100%;
 }
 
-.title {
+.nav-title {
   display: block;
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+}
+
+.nav-section-title {
+  color: var(--md-sys-color-outline);
+  font-family: 'Roboto Mono';
+  font-size: 0.7em;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+a.nav-link {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+a.nav-link:focus,
+a.nav-link:hover {
+  color: var(--md-sys-color-blue);
+}
+
+.nav-item {
+  cursor: pointer;
+}
+
+.nav-item:focus,
+.nav-item:hover {
+  color: var(--md-sys-color-blue-light);
+}
+
+.nav-item.active {
+  cursor: auto;
+  color: var(--md-sys-color-blue);
 }
 
 header {
@@ -60,7 +134,7 @@ h1 {
 }
 
 a {
-  color: #222;
+  color: var(--md-sys-color-on-surface);
 }
 
 li {
