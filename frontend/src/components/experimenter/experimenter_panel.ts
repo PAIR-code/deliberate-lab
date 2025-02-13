@@ -241,6 +241,7 @@ export class Panel extends MobxLitElement {
           ${this.renderExperimentActions()}
           <div class="subtitle">
             Experiment Version: ${this.experimentService.experiment?.versionId}
+            (latest version: ${EXPERIMENT_VERSION_ID})
           </div>
         </div>
       </div>
