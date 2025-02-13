@@ -157,7 +157,11 @@ export class Component extends MobxLitElement {
           })
           .map(
             (cohort) =>
-              html`<cohort-summary .cohort=${cohort}></cohort-summary>`,
+              html`<cohort-summary
+                .cohort=${cohort}
+                .isExpanded=${this.experimentManager.expandAllCohorts}
+              >
+              </cohort-summary>`,
           )}
       </div>
     `;

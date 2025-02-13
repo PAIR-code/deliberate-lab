@@ -112,6 +112,7 @@ export class ExperimentManager extends Service {
   @observable showParticipantStats = true;
   @observable showParticipantPreview = true;
   @observable hideLockedCohorts = false;
+  @observable expandAllCohorts = true;
 
   // Copy of cohort being edited in settings dialog
   @observable cohortEditing: CohortConfig | undefined = undefined;
@@ -209,6 +210,10 @@ export class ExperimentManager extends Service {
 
   setHideLockedCohorts(hideLockedCohorts: boolean) {
     this.hideLockedCohorts = hideLockedCohorts;
+  }
+
+  setExpandAllCohorts(expandAllCohorts: boolean) {
+    this.expandAllCohorts = expandAllCohorts;
   }
 
   setCurrentParticipantId(id: string | undefined) {

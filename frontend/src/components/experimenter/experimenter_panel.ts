@@ -180,6 +180,7 @@ export class Panel extends MobxLitElement {
   private renderDefaultPanel() {
     const showCohortList = this.experimentManager.showCohortList;
     const hideLockedCohorts = this.experimentManager.hideLockedCohorts;
+    const expandAllCohorts = this.experimentManager.expandAllCohorts;
 
     return html`
       <div class="main">
@@ -217,6 +218,21 @@ export class Panel extends MobxLitElement {
             <div>
               ${hideLockedCohorts ? 'Show all cohorts' : 'Hide locked cohorts'}
             </div>
+          </div>
+          <div
+            class="checkbox-wrapper"
+            @click=${() => {
+              this.experimentManager.setExpandAllCohorts(!expandAllCohorts);
+            }}
+          >
+            <pr-icon-button
+              color="tertiary"
+              size="medium"
+              variant="default"
+              icon=${expandAllCohorts ? 'collapse_all' : 'expand_all'}
+            >
+            </pr-icon-button>
+            <div>${expandAllCohorts ? 'Collapse' : 'Expand'} all cohorts</div>
           </div>
           ${this.renderParticipantSettingsPanel()}
         </div>
