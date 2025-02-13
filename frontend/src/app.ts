@@ -66,7 +66,7 @@ export class App extends MobxLitElement {
       case Pages.SETTINGS:
         return html`
           <page-header></page-header>
-          <div class="content">
+          <div class="content info">
             <settings-page .showAccount=${true}></settings-page>
           </div>
         `;
