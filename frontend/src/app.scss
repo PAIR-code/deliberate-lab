@@ -1,6 +1,6 @@
-@use "./sass/colors";
-@use "./sass/common";
-@use "./sass/typescale";
+@use './sass/colors';
+@use './sass/common';
+@use './sass/typescale';
 
 * {
   @include common.default;
@@ -57,6 +57,7 @@ main {
   @include common.full-percentage;
   flex-grow: 1;
   max-width: common.$main-content-max-width;
+  overflow: auto;
   padding: common.$main-content-padding;
 }
 

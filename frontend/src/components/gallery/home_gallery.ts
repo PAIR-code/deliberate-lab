@@ -52,35 +52,66 @@ export class HomeGallery extends MobxLitElement {
       (e) => e.metadata.creator !== this.authService.userEmail,
     );
 
+    if (this.homeService.showMyExperiments) {
+      return html`
+        ${this.renderEmptyMessage(yourExperiments)}
+        <div class="gallery-wrapper">
+          ${yourExperiments.map((e) => renderExperiment(e))}
+        </div>
+      `;
+    }
+
     return html`
-      ${this.renderEmptyMessage()}
-      ${yourExperiments.length
-        ? html`
-            <h1>Your experiments</h1>
-            <div class="gallery-wrapper">
-              ${yourExperiments.map((e) => renderExperiment(e))}
-            </div>
-          `
-        : ''}
-      ${otherExperiments.length
-        ? html`
-            <h1>Other public experiments</h1>
-            <div class="gallery-wrapper">
-              ${otherExperiments.map((e) => renderExperiment(e))}
-            </div>
-          `
-        : ''}
+      ${this.renderEmptyMessage(otherExperiments)}
+      <div class="gallery-wrapper">
+        ${otherExperiments.map((e) => renderExperiment(e))}
+      </div>
     `;
   }
 
-  private renderEmptyMessage() {
-    if (this.homeService.experiments.length > 0) return nothing;
+  private renderEmptyMessage(experiments: Experiment[]) {
+    if (experiments.length > 0) return nothing;
     return html`<div class="empty-message">No experiments yet</div>`;
+  }
+}
+
+/** Tabs for home/landing page */
+@customElement('home-gallery-tabs')
+export class HomeGalleryTabs extends MobxLitElement {
+  static override styles: CSSResultGroup = [styles];
+  private readonly homeService = core.getService(HomeService);
+
+  override render() {
+    return html`
+      <div class="gallery-tabs">
+        <div
+          class="gallery-tab ${this.homeService.showMyExperiments
+            ? 'active'
+            : ''}"
+          @click=${() => {
+            this.homeService.setShowMyExperiments(true);
+          }}
+        >
+          My experiments
+        </div>
+        <div
+          class="gallery-tab ${!this.homeService.showMyExperiments
+            ? 'active'
+            : ''}"
+          @click=${() => {
+            this.homeService.setShowMyExperiments(false);
+          }}
+        >
+          Shared with me
+        </div>
+      </div>
+    `;
   }
 }
 
 declare global {
   interface HTMLElementTagNameMap {
     'home-gallery': HomeGallery;
+    'home-gallery-tabs': HomeGalleryTabs;
   }
 }

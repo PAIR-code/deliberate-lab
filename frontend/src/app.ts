@@ -51,6 +51,7 @@ export class App extends MobxLitElement {
         }
         return html`
           <page-header></page-header>
+          <home-gallery-tabs></home-gallery-tabs>
           <div class="content">
             <home-gallery></home-gallery>
           </div>

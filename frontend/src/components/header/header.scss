@@ -38,6 +38,10 @@
     background: var(--md-sys-color-tertiary-container);
   }
 
+  &.no-border {
+    border-color: transparent;
+  }
+
   .left,
   .right {
     @include common.flex-row-align-center;
