@@ -29,6 +29,8 @@ export interface ExperimenterData {
   id: string;
   email: string;
   apiKeys: APIKeyConfig;
+  // List of experiment IDs that the user has clicked on
+  viewedExperiments: string[];
 }
 
 export interface APIKeyConfig {
@@ -94,10 +96,11 @@ export function createExperimenterData(
     apiKeys: {
       geminiApiKey: INVALID_API_KEY,
       openAIApiKey: createOpenAIServerConfig(),
-      ollamaApiKey: { url: INVALID_API_KEY },
-      activeApiKeyType: ApiKeyType.GEMINI_API_KEY
+      ollamaApiKey: {url: INVALID_API_KEY},
+      activeApiKeyType: ApiKeyType.GEMINI_API_KEY,
     },
     email: experimenterEmail,
+    viewedExperiments: [],
   };
 }
 
@@ -130,9 +133,7 @@ export function checkApiKeyExists(
     experimenterData.apiKeys.activeApiKeyType === ApiKeyType.OLLAMA_CUSTOM_URL
   ) {
     // implicitly checks if llamaApiKey exists
-    return (
-      (experimenterData.apiKeys.ollamaApiKey.url !== INVALID_API_KEY)
-    );
+    return experimenterData.apiKeys.ollamaApiKey.url !== INVALID_API_KEY;
   }
 
   return false; // false if no valid condition is met

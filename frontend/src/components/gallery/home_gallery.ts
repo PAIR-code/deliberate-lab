@@ -49,21 +49,29 @@ export class HomeGallery extends MobxLitElement {
       (e) => e.metadata.creator === this.authService.userEmail,
     );
     const otherExperiments = experiments.filter(
-      (e) => e.metadata.creator !== this.authService.userEmail,
+      (e) =>
+        e.metadata.creator !== this.authService.userEmail &&
+        this.authService.isViewedExperiment(e.id),
     );
 
     if (this.homeService.showMyExperiments) {
       return html`
-        ${this.renderEmptyMessage(yourExperiments)}
         <div class="gallery-wrapper">
+          ${this.renderEmptyMessage(yourExperiments)}
           ${yourExperiments.map((e) => renderExperiment(e))}
         </div>
       `;
     }
 
     return html`
-      ${this.renderEmptyMessage(otherExperiments)}
       <div class="gallery-wrapper">
+        <div class="banner">
+          Experiments by others will only be shown in this tab if they are
+          shared publicly and have been viewed by you before. To view an
+          experiment, ask the creator to make the experiment public and share
+          the link with you.
+        </div>
+        ${this.renderEmptyMessage(otherExperiments)}
         ${otherExperiments.map((e) => renderExperiment(e))}
       </div>
     `;

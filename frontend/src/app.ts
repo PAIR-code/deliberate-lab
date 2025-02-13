@@ -74,6 +74,9 @@ export class App extends MobxLitElement {
         if (!this.authService.isExperimenter) {
           return this.render403();
         }
+        // Update viewed experiments for current experimenter
+        this.authService.updateViewedExperiments(params['experiment']);
+
         return html` <experiment-dashboard></experiment-dashboard> `;
       case Pages.EXPERIMENT_CREATE:
         if (!this.authService.isExperimenter) {
