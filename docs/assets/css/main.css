@@ -154,6 +154,9 @@ h1 {
 
 h2 {
   color: var(--md-sys-color-blue);
+  border-bottom: 2px solid var(--md-sys-color-blue-light);
+  margin-top: 2em;
+  padding-bottom: 4px;
   font-family: 'Roboto Mono';
 }
 
