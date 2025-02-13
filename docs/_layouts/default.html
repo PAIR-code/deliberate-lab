@@ -3,10 +3,22 @@
   {% include head.html %}
   <div class="page-container">
     <body>
-      <nav>
-        <div class="title">{{ site.title }} / {{ page.title }}</div>
+      <nav class="top-nav">
+        {%- if page.url == "/" -%}
+        <div class="nav-title">{{ site.title }}</div>
+        {%- else -%}
+        <div class="nav-title">
+          <a class="nav-link" href="{{ '/' | relative_url }}"
+            >{{ site.title }}</a
+          >
+          / {{ page.title }}
+        </div>
+        {%- endif -%}
       </nav>
-      <main class="content-wrapper">{{ content }}</main>
+      <main class="main-wrapper">
+        {% include sidenav.html %}
+        <article class="content-wrapper">{{ content }}</article>
+      </main>
     </body>
   </div>
 </html>
