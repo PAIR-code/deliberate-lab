@@ -3,8 +3,10 @@
 }
 
 body {
-  --md-sys-color-outline: var(--md-ref-palette-gray60);
+  --md-sys-color-outline: var(--md-ref-palette-gray70);
+  --md-sys-color-outline-variant: var(--md-ref-palette-gray80);
   --md-sys-color-on-surface: var(--md-ref-palette-gray5);
+  --md-sys-color-gray: var(--md-ref-palette-gray40);
   --md-sys-color-blue: var(--md-ref-palette-blue40);
   --md-sys-color-blue-light: var(--md-ref-palette-blue50);
 
@@ -20,14 +22,13 @@ body {
   flex-direction: column;
   height: 100vh;
   overflow: auto;
-  padding: 0 1.5em;
 }
 
 .main-wrapper {
   display: flex;
   flex-grow: 1;
   justify-content: start;
-  gap: 2em;
+  overflow: auto;
   width: 100%;
 }
 
@@ -37,26 +38,38 @@ body {
   }
 }
 
+article {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1em;
+  overflow: auto;
+  padding: 1em;
+  width: 100%;
+}
+
 .content-wrapper {
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
   gap: 1em;
   max-width: 800px;
   width: 100%;
 }
 
 .side-nav {
+  border-right: 1px solid var(--md-sys-color-outline-variant);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   gap: 1em;
-  width: 180px;
+  overflow: auto;
+  padding: 1em;
+  width: 240px;
 }
 
 @media screen and (max-width: 500px) {
   .side-nav {
     border-top: 1px solid var(--md-sys-color-outline);
+    flex-shrink: unset;
     padding-top: 1em;
     width: 100%;
   }
@@ -65,17 +78,19 @@ body {
 .side-nav .section {
   display: flex;
   flex-direction: column;
-  gap: 0.25em;
+  gap: 0.35em;
 }
 
 .top-nav {
   align-items: center;
   display: flex;
+  flex-shrink: 0;
   font-family: 'Roboto Mono';
   font-size: 0.9em;
   font-weight: 500;
   height: 40px;
   border-bottom: 1px solid var(--md-sys-color-outline);
+  padding: 0 1em;
   width: 100%;
 }
 
@@ -122,14 +137,21 @@ header {
   padding: 0.75em;
 }
 
-main {
-  flex-grow: 1;
-  padding: 0.75em 0;
-}
-
 h1 {
   font-family: 'Roboto Mono';
   font-size: 1.2em;
+  font-weight: 500;
+}
+
+h2 {
+  color: var(--md-sys-color-blue);
+  font-family: 'Roboto Mono';
+}
+
+h3 {
+  color: var(--md-sys-color-outline);
+  font-family: 'Roboto Mono';
+  font-size: 0.9em;
   font-weight: 500;
 }
 
@@ -137,7 +159,23 @@ a {
   color: var(--md-sys-color-on-surface);
 }
 
+b {
+  font-weight: 500;
+}
+
 li {
   list-style: disc;
   margin-left: 1.25em;
+}
+
+blockquote {
+  border-left: 3px solid var(--md-sys-color-outline-variant);
+  color: var(--md-sys-color-gray);
+  font-size: 0.95em;
+  line-height: 1.1em;
+  padding-left: 1em;
+}
+
+blockquote a {
+  color: var(--md-sys-color-gray);
 }
