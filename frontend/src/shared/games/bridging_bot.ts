@@ -356,6 +356,9 @@ const BBOT_REPRODUCTIVE_RIGHTS_SURVEY_STAGE_PRE = createSurveyStage({
 const BBOT_REPRODUCTIVE_RIGHTS_SURVEY_STAGE_POST = createSurveyStage({
   id: 'reproductive_rights_survey_post',
   name: 'Beliefs about abortion',
+  descriptions: createStageTextConfig({
+    primaryText: 'These questions are repeated intentionally',
+  }),
   game: StageGame.BBOT,
   questions: beliefQuestions,
 });
@@ -399,6 +402,9 @@ const BBOT_DEMOCRATIC_RECIPROCITY_SURVEY_STAGE_PRE = createSurveyStage({
 });
 const BBOT_DEMOCRATIC_RECIPROCITY_SURVEY_STAGE_POST = createSurveyStage({
   id: 'democratic_reciprocity_survey_post',
+  descriptions: createStageTextConfig({
+    primaryText: 'These questions are repeated intentionally',
+  }),
   ...democraticResiprocitySurveyConfig,
 });
 
@@ -480,6 +486,7 @@ const BBOT_TRANSFER_STAGE = createTransferStage({
 const BBOT_CHAT_STAGE = createChatStage({
   game: StageGame.BBOT,
   name: 'Group discussion',
+  timeLimitInMinutes: 10,
   descriptions: {
     primaryText:
       'In this discussion, you will have a conversation with one other participant about reproductive rights. A facilitator bot may sometimes chime in as well.',
