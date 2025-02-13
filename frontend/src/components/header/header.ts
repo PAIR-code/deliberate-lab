@@ -166,7 +166,7 @@ export class Header extends MobxLitElement {
 
     switch (activePage) {
       case Pages.HOME:
-        return 'Home';
+        return 'Deliberate Lab';
       case Pages.ADMIN:
         return 'Admin dashboard';
       case Pages.SETTINGS:
@@ -207,6 +207,30 @@ export class Header extends MobxLitElement {
 
     // TODO: Refactor pr-buttons into separate render stages
     switch (activePage) {
+      case Pages.HOME:
+        return html`
+          <pr-button
+            color="primary"
+            variant="tonal"
+            @click=${() => {
+              this.routerService.navigate(Pages.EXPERIMENT_CREATE);
+            }}
+          >
+            <pr-icon icon="add" color="primary" variant="tonal"></pr-icon>
+            New experiment
+          </pr-button>
+          <pr-tooltip text="View experimenter settings" position="BOTTOM_END">
+            <pr-icon-button
+              icon="settings"
+              color="secondary"
+              variant="default"
+              @click=${() => {
+                this.routerService.navigate(Pages.SETTINGS);
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
+        `;
       case Pages.EXPERIMENT_CREATE:
         return html`
           <pr-button

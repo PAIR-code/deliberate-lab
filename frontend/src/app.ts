@@ -9,7 +9,6 @@ import './components/login/login';
 import './components/participant_view/cohort_landing';
 import './components/participant_view/participant_view';
 import './components/settings/settings';
-import './components/sidenav/experimenter_sidenav';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
@@ -164,7 +163,6 @@ export class App extends MobxLitElement {
     return html`
       <div class="app-wrapper mode--${this.settingsService.colorMode}">
         <main>
-          <experimenter-sidenav></experimenter-sidenav>
           <div class="content-wrapper">${this.renderPageContent()}</div>
         </main>
       </div>
