@@ -98,17 +98,10 @@ export class ChipView extends MobxLitElement {
       return nothing;
     }
 
-    if (publicData.isGameOver) {
-      return html`
-        <div class="panel">
-          <div class="status">
-            ‼️ This game has ended. Please continue to the next stage.
-          </div>
-          <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
-          </chip-reveal-view>
-        </div>
-      `;
-    } else if (this.participantService.completedStage(this.stage.id)) {
+    if (
+      !publicData.isGameOver &&
+      this.participantService.completedStage(this.stage.id)
+    ) {
       // If game was never started because participants transferred
       // from different stage
       // TODO: Show results from the cohort game that participant
@@ -149,11 +142,25 @@ export class ChipView extends MobxLitElement {
       );
     };
 
+    const renderTopLeftPanel = () => {
+      if (publicData.isGameOver) {
+        return html`
+          <div class="offer-panel">
+            <div class="status">
+              ‼️ This game has ended. Please continue to the next stage.
+            </div>
+          </div>
+        `;
+      }
+      if (isCurrentTurn()) {
+        return this.renderSenderView();
+      }
+      return this.renderRecipientView();
+    };
+
     return html`
       <div class="panel left">
-        ${isCurrentTurn()
-          ? this.renderSenderView()
-          : this.renderRecipientView()}
+        ${renderTopLeftPanel()}
         <div class="subpanel">
           <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
           </chip-reveal-view>
@@ -302,10 +309,11 @@ export class ChipView extends MobxLitElement {
         const currentTotalPayout = payouts.before;
         const newTotalPayout = payouts.after;
         const diff = newTotalPayout - currentTotalPayout;
-        const diffDisplay = html`<span
-          class=${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}
-          ><b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b></span
-        >`;
+        const diffDisplay = html`
+          <span class=${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}>
+            <b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b>
+          </span>
+        `;
         payoutHtml = html`
           If this offer is accepted, your updated payout will be
           <b>$${newTotalPayout.toFixed(2)}</b> ${diffDisplay}.

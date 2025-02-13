@@ -135,7 +135,11 @@ export class AuthService extends Service {
               createExperimenterData(this.userId!, this.userEmail!),
             );
           } else {
-            this.experimenterData = doc.data() as ExperimenterData;
+            const viewedExperiments: string[] = [];
+            this.experimenterData = {
+              viewedExperiments, // backwards compatibility
+              ...doc.data(),
+            } as ExperimenterData;
           }
           this.isExperimentDataLoading = false;
         },
@@ -163,6 +167,30 @@ export class AuthService extends Service {
   signOut() {
     signOut(this.sp.firebaseService.auth);
     this.sp.homeService.unsubscribeAll();
+  }
+
+  /** Experimenter has viewed this experiment before. */
+  isViewedExperiment(experimentId: string) {
+    return this.experimenterData?.viewedExperiments.find(
+      (experiment) => experiment === experimentId,
+    );
+  }
+
+  /** Update viewed experiments list in ExperimenterData. */
+  updateViewedExperiments(experimentId: string) {
+    if (!this.experimenterData) {
+      return;
+    }
+
+    const viewedExperiments = this.experimenterData.viewedExperiments;
+    if (viewedExperiments.find((experiment) => experiment === experimentId)) {
+      return;
+    }
+
+    this.writeExperimenterData({
+      ...this.experimenterData,
+      viewedExperiments: [...viewedExperiments, experimentId],
+    });
   }
 
   // *********************************************************************** //

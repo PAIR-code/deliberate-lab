@@ -52,6 +52,7 @@ export class Header extends MobxLitElement {
     const headerClasses = classMap({
       header: true,
       banner: this.isBanner(),
+      'no-border': this.routerService.activePage === Pages.HOME,
     });
 
     return html`
@@ -166,7 +167,7 @@ export class Header extends MobxLitElement {
 
     switch (activePage) {
       case Pages.HOME:
-        return 'Home';
+        return 'Deliberate Lab';
       case Pages.ADMIN:
         return 'Admin dashboard';
       case Pages.SETTINGS:
@@ -207,29 +208,32 @@ export class Header extends MobxLitElement {
 
     // TODO: Refactor pr-buttons into separate render stages
     switch (activePage) {
-      case Pages.EXPERIMENT_CREATE:
+      case Pages.HOME:
         return html`
           <pr-button
             color="primary"
-            variant="outlined"
-            ?disabled=${!this.experimentEditor.canEditStages}
+            variant="tonal"
             @click=${() => {
-              this.experimentEditor.toggleStageBuilderDialog(false);
+              this.routerService.navigate(Pages.EXPERIMENT_CREATE);
             }}
           >
-            Add stage
+            <pr-icon icon="add" color="primary" variant="tonal"></pr-icon>
+            New experiment
           </pr-button>
-
-          <pr-button
-            color="primary"
-            variant="outlined"
-            ?disabled=${!this.experimentEditor.canEditStages}
-            @click=${() => {
-              this.experimentEditor.toggleStageBuilderDialog(true);
-            }}
-          >
-            Load game
-          </pr-button>
+          <pr-tooltip text="View experimenter settings" position="BOTTOM_END">
+            <pr-icon-button
+              icon="settings"
+              color="secondary"
+              variant="default"
+              @click=${() => {
+                this.routerService.navigate(Pages.SETTINGS);
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
+        `;
+      case Pages.EXPERIMENT_CREATE:
+        return html`
           <pr-button
             ?loading=${this.experimentEditor.isWritingExperiment}
             ?disabled=${!this.experimentEditor.isValidExperimentConfig}
@@ -252,27 +256,6 @@ export class Header extends MobxLitElement {
           if (!this.experimentManager.isCreator) return nothing;
 
           return html`
-            <pr-button
-              color="tertiary"
-              variant="outlined"
-              ?disabled=${!this.experimentEditor.canEditStages}
-              @click=${() => {
-                this.experimentEditor.toggleStageBuilderDialog(false);
-              }}
-            >
-              Add stage
-            </pr-button>
-
-            <pr-button
-              color="tertiary"
-              variant="outlined"
-              ?disabled=${!this.experimentEditor.canEditStages}
-              @click=${() => {
-                this.experimentEditor.toggleStageBuilderDialog(true);
-              }}
-            >
-              Load game
-            </pr-button>
             <pr-button
               color="tertiary"
               variant="default"

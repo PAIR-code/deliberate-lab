@@ -29,30 +29,15 @@ export class ExperimentSettingsEditor extends MobxLitElement {
 
   override render() {
     return html`
-      ${this.renderMetadata()}
-      <div class="divider"></div>
-      ${this.renderPermissions()}
-      <div class="divider"></div>
-      ${this.renderCohortParticipantConfig()}
-      <div class="divider"></div>
-      ${this.renderProlificConfig()}
-      <div class="spacer"></div>
-      <pr-button
-        color="error"
-        variant="tonal"
-        ?disabled=${!this.experimentManager.isCreator}
-        @click=${() => {
-          const isConfirmed = window.confirm(
-            `Are you sure you want to delete this experiment?`,
-          );
-          if (!isConfirmed) return;
-
-          this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_DELETE);
-          this.experimentManager.deleteExperiment();
-        }}
-      >
-        Delete experiment
-      </pr-button>
+      <div class="inner-wrapper">
+        ${this.renderMetadata()}
+        <div class="divider"></div>
+        ${this.renderPermissions()}
+        <div class="divider"></div>
+        ${this.renderCohortParticipantConfig()}
+        <div class="divider"></div>
+        ${this.renderProlificConfig()}
+      </div>
     `;
   }
 
