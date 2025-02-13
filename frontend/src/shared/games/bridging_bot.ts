@@ -54,6 +54,7 @@ export function getBbotStageConfigs(): StageConfig[] {
   stages.push(BBOT_REPRODUCTIVE_RIGHTS_SURVEY_STAGE_POST);
   stages.push(BBOT_DEMOCRATIC_RECIPROCITY_SURVEY_STAGE_POST);
   stages.push(BBOT_DEMOGRAPHIC_SURVEY_STAGE);
+  stages.push(BBOT_FEEDBACK_SURVEY_STAGE);
 
   // Payout?
 
@@ -78,22 +79,48 @@ You should be deeply thoughtful, empathetic, and clear in your response; keep in
 You should not express any personal beliefs or feelings about abortion, abortion rights, or any other topics. You should not bring any new facts or opinions into the conversation. You should focus only on summarizing what the other conversation participants have said so far.
 If you would like to intervene in the conversation, respond with the message that you would like to send only (no timestamps or metadata). This will be sent immediately to the participants in the chat conversation. If you do not wish to intervene, respond with an empty string. If you have intervened in the conversation previously, you should not respond again.`;
 
+const BBOT_CONSENT = `**You must read and agree to these terms to participate in the study.**
+
+**Researchers:** Jeffrey Fossett: Harvard University, Ian Baker: UC Berkeley
+**Sponsors/Supporters:** Plurality Institute, Jigsaw
+
+We are a team of researchers investigating ways to improve the quality of online discussions. You are being invited to participate in a technical pilot to improve the design of a research project that will be conducted in the future. Results from this pilot will not be published.
+
+If you agree to participate, you will be asked to have a text-based conversation about abortion and reproductive rights with another research participant who disagrees with you on this issue. An AI bot will also be present in the chat, and may interject in the conversation from time to time. Researchers will be able to see the content of your messages, but they will never be shared outside of the research team.
+
+If you proceed, you will be asked to complete a survey, followed by a chat conversation, and then an additional survey. You will be paid at the rate specified on Prolific when you have completed the second survey.
+
+This study will take approximately 30 minutes to complete. With your permission, we may contact you for a further paid followup study opportunity. Participation in that study is optional, and your payment for this study is not contingent on your agreement to participate in future research.
+
+A single individual may not participate in this study more than once. You will be ineligible for payment if we detect that you attempted to participate a second time.
+
+**Risks and Benefits**
+
+A risk of taking part in this study is the possibility of a loss of confidentiality or privacy. Loss of privacy means having your personal information shared with someone who is not on the study team and was not supposed to see or know about your information. The study team plans to protect your privacy. Their plans for keeping your information private are described in the Confidentiality section.
+
+You may or may not receive personal (direct) benefit from taking part in this study. The possible benefits of taking part in this study include an opportunity to debate or learn new information about an issue that may be important to you.
+
+**Privacy and Confidentiality**
+
+Your privacy and confidentiality of your responses are of paramount importance both to us and to our universities. We do not collect information about your identity, and we cannot re-contact you except through the Prolific platform. Your conversation transcripts and survey answers will never be shared outside the research team. Please contact us if you have any doubts or concerns.
+
+The researchers listed above will be able to look at, copy, use, and share your research information.
+
+**Participant's Rights**
+
+Participation is voluntary. Refusal to participate or withdrawing from the research will involve no penalty or loss of benefits to which you might otherwise be entitled.
+
+**Contact Details**
+
+If you have any questions, doubts, or would like us to remove your data from our database, please contact Jeffrey Fossett at jeff@plurality.institute.
+
+By selecting “I accept the terms of service” below, you certify that you are at least 18 years old and a resident of the United States, and that you agree to participate in this research study.`
+
 const BBOT_TOS_STAGE = createTOSStage({
   id: 'tos',
   game: StageGame.CHP,
   name: 'Consent',
-  tosLines: [
-    'Thank you for your interest in this research.',
-    '\n**Compensation**',
-    'Compensation details go here',
-    '\n**IRB**',
-    'IRB details go here',
-    '\n**Voluntary participation**',
-    'Your participation is voluntary, which means you can choose whether or not to participate. You may choose not to participate by exiting the survey at any point. There are no known costs to you for participating in this research study except for your time.',
-    '\n**Contact**',
-    'Here is the contact information for the researchers',
-    '\nBy checking the box below and proceeding, you are acknowledging that you are over the age of 18 and that you consent to participate. Clicking the arrow will bring you to the beginning of the task.',
-  ],
+  tosLines: BBOT_CONSENT.split('\n'),
 });
 
 const BBOT_PROFILE_STAGE = createProfileStage({
@@ -413,6 +440,38 @@ const BBOT_CONVERSATION_QUALITY_SURVEY_STAGE = createSurveyStage({
       ...AGREE_LIKERT_SCALE,
     }),
   ],
+});
+
+const BBOT_FEEDBACK_SURVEY_STAGE = createSurveyStage({
+  id: 'feedback_survey',
+  name: 'Feedback for researchers',
+  descriptions: createStageTextConfig({
+    primaryText:
+      'This has been a pilot for a larger study. The researchers are interested in your opinions about how to make future versions of it better. Enter "n/a" if you prefer not to answer.',
+  }),
+  game: StageGame.BBOT,
+  questions: [
+    createTextSurveyQuestion({
+      questionTitle:
+        'Tell us in your own words, what are the researchers trying to learn about in this study?',
+    }),
+    createTextSurveyQuestion({
+      questionTitle:
+        'Regarding the chat: Was the task clear? Is there anything we should change about the bot, or the setup for the conversation? Was it too long or too short?',
+    }),
+    createTextSurveyQuestion({
+      questionTitle:
+        'What about the surveys you\'ve answered? Did they capture the relevant information? Did they feel like a good use of your time?',
+    }),
+    createTextSurveyQuestion({
+      questionTitle:
+        'Anything else we should know?',
+    }),
+    createCheckSurveyQuestion({
+      questionTitle:
+        'We would like permission to contact you in the future for a more in-depth paid interview about this study? Check here if you consent to be contacted.',
+    }),
+  ]
 });
 
 const BBOT_TRANSFER_STAGE = createTransferStage({
