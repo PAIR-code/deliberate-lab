@@ -457,11 +457,7 @@ const BBOT_FEEDBACK_SURVEY_STAGE = createSurveyStage({
     }),
     createTextSurveyQuestion({
       questionTitle:
-        'Regarding the chat: Was the task clear? Is there anything we should change about the bot, or the setup for the conversation? Was it too long or too short?',
-    }),
-    createTextSurveyQuestion({
-      questionTitle:
-        'What about the surveys you\'ve answered? Did they capture the relevant information? Did they feel like a good use of your time?',
+        'Do you have feedback for the research team on the task or surveys you just completed? Is there anything that was unclear or that didn\'t work as expected?',
     }),
     createTextSurveyQuestion({
       questionTitle:
