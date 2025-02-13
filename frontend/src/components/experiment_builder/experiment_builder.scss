@@ -1,11 +1,62 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-row;
   flex-grow: 1;
+  overflow: auto;
   width: 100%;
+}
+
+.panel-wrapper {
+  @include common.flex-row;
+  border-right: 3px solid var(--md-sys-color-outline-variant);
+  flex-shrink: 0;
+  height: 100%;
+  overflow: auto;
+  width: common.$sidenav-width;
+}
+
+.panel-view {
+  @include common.flex-column;
+  color: var(--md-sys-color-outline);
+  flex-grow: 1;
+  overflow: auto;
+
+  .top {
+    @include common.flex-column;
+    gap: common.$spacing-large;
+    padding: common.$sidenav-padding;
+  }
+
+  .bottom {
+    @include common.flex-column;
+    gap: common.$spacing-large;
+    margin-bottom: 0;
+    margin-top: auto;
+    padding: common.$sidenav-padding;
+    padding-bottom: calc(common.$spacing-xxl * 2);
+  }
+}
+
+.panel-view-header {
+  @include common.flex-row-align-center;
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
+  flex-shrink: 0;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.sidebar {
+  @include common.flex-column-align-center;
+  border-right: 1px solid var(--md-sys-color-outline-variant);
+  flex-shrink: 0;
+  gap: common.$spacing-medium;
+  overflow: auto;
+  padding: common.$sidenav-padding;
+  width: common.$sidenav-closed-width;
 }
 
 .experiment-builder {
@@ -36,12 +87,17 @@
   @include common.flex-column;
   flex-grow: 1;
   gap: common.$spacing-xxl;
-  overflow: auto;
+  max-width: common.$info-content-max-width;
   padding: common.$main-content-padding;
+  padding-bottom: calc(common.$main-content-padding * 2);
 }
 
 .chip {
   @include typescale.label-medium;
   @include common.chip;
   padding: common.$spacing-small common.$spacing-medium;
+}
+
+pr-button pr-icon {
+  margin-right: common.$spacing-medium;
 }

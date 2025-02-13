@@ -235,27 +235,6 @@ export class Header extends MobxLitElement {
       case Pages.EXPERIMENT_CREATE:
         return html`
           <pr-button
-            color="primary"
-            variant="outlined"
-            ?disabled=${!this.experimentEditor.canEditStages}
-            @click=${() => {
-              this.experimentEditor.toggleStageBuilderDialog(false);
-            }}
-          >
-            Add stage
-          </pr-button>
-
-          <pr-button
-            color="primary"
-            variant="outlined"
-            ?disabled=${!this.experimentEditor.canEditStages}
-            @click=${() => {
-              this.experimentEditor.toggleStageBuilderDialog(true);
-            }}
-          >
-            Load game
-          </pr-button>
-          <pr-button
             ?loading=${this.experimentEditor.isWritingExperiment}
             ?disabled=${!this.experimentEditor.isValidExperimentConfig}
             @click=${async () => {
@@ -277,27 +256,6 @@ export class Header extends MobxLitElement {
           if (!this.experimentManager.isCreator) return nothing;
 
           return html`
-            <pr-button
-              color="tertiary"
-              variant="outlined"
-              ?disabled=${!this.experimentEditor.canEditStages}
-              @click=${() => {
-                this.experimentEditor.toggleStageBuilderDialog(false);
-              }}
-            >
-              Add stage
-            </pr-button>
-
-            <pr-button
-              color="tertiary"
-              variant="outlined"
-              ?disabled=${!this.experimentEditor.canEditStages}
-              @click=${() => {
-                this.experimentEditor.toggleStageBuilderDialog(true);
-              }}
-            >
-              Load game
-            </pr-button>
             <pr-button
               color="tertiary"
               variant="default"
