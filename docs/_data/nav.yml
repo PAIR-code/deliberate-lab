@@ -1,7 +1,11 @@
-- title: Experimenters
+- title: Researchers
   pages:
-  - title: 404
-    url: /404
-  - title: This page does not exist
-    url: /test
+  - title: Getting started
+    url: /researchers/getting_started
+  - title: Create an experiment
+    url: /researchers/create_experiment
+  - title: Edit experiments and cohorts
+    url: /researchers/edit_experiment
+  - title: Run experiment cohorts
+    url: /researchers/run_experiment
 - title: Developers
