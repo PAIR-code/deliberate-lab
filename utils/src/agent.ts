@@ -93,7 +93,7 @@ export interface AgentMediatorConfig {
   name: string; // display name
   avatar: string;
   modelSettings: AgentMediatorModelSettings;
-  promptSettings: AgentChatPromptConfig;
+  promptConfig: AgentChatPromptConfig;
 }
 
 // ************************************************************************* //
@@ -158,6 +158,6 @@ export function createAgentMediatorConfig(
     name: config.name ?? 'Agent',
     avatar: config.avatar ?? '🤖',
     modelSettings: config.modelSettings ?? createAgentMediatorModelSettings(),
-    promptSettings: config.promptSettings ?? createAgentChatPromptConfig(),
+    promptConfig: config.promptConfig ?? createAgentChatPromptConfig(),
   };
 }
