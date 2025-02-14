@@ -117,7 +117,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           </md-checkbox>
           <div>
             Make experiment public (all researchers on platform can view and
-            edit)
+            edit if you share the link with them)
           </div>
         </div>
       </div>

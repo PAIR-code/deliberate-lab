@@ -1,4 +1,5 @@
 import {
+  AgentConfigTestData,
   AgentParticipantPromptTestData,
   BaseParticipantData,
   CreateChatMessageData,
@@ -403,6 +404,21 @@ export const testAgentParticipantPromptCallable = async (
   >(
     functions,
     'testAgentParticipantPrompt',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for testing agent config. */
+export const testAgentConfigCallable = async (
+  functions: Functions,
+  config: AgentConfigTestData,
+) => {
+  const {data} = await httpsCallable<
+    AgentConfigTestData,
+    SimpleResponse<string>
+  >(
+    functions,
+    'testAgentConfig',
   )(config);
   return data;
 };

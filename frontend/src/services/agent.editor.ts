@@ -10,7 +10,13 @@ import {computed, makeObservable, observable} from 'mobx';
 import {FirebaseService} from './firebase.service';
 import {Service} from './service';
 
-import {AgentConfig} from '@deliberation-lab/utils';
+import {
+  AgentConfig,
+  AgentPromptConfig,
+  AgentMediatorConfig,
+  AgentMediatorModelSettings,
+  createAgentMediatorConfig,
+} from '@deliberation-lab/utils';
 import {updateChatAgentsCallable} from '../shared/callables';
 
 interface ServiceProvider {
@@ -25,6 +31,11 @@ export class AgentEditor extends Service {
     super();
     makeObservable(this);
   }
+
+  // *********************************************************************** //
+  // WARNING: Variables/functions for old chat agent config are soon to be   //
+  //          deprecated.                                                    //
+  // *********************************************************************** //
 
   // Experiment ID
   @observable experimentId: string | null = null;
@@ -67,6 +78,103 @@ export class AgentEditor extends Service {
   reset() {
     this.experimentId = null;
     this.configMap = {};
+  }
+
+  // *********************************************************************** //
+  // TODO: VARIABLES/FUNCTIONS FOR NEW AGENT MEDIATOR/PARTICIPANT CONFIGS    //
+  // *********************************************************************** //
+  // TODO: Instead of creating a single test agent mediator,
+  // enable users to create multiple mediators for specific stages
+  @observable agentMediators: AgentMediatorConfig[] = [
+    createAgentMediatorConfig('testChatId', {id: 'test'}),
+  ];
+
+  addAgentMediator(chatStageId: string = '') {
+    this.agentMediators.push(createAgentMediatorConfig(chatStageId));
+  }
+
+  getAgentMediator(id: string) {
+    return this.agentMediators.find((agent) => agent.id === id);
+  }
+
+  updateAgentMediatorName(id: string, name: string) {
+    const agent = this.getAgentMediator(id);
+    if (agent) {
+      agent.name = name;
+    }
+  }
+
+  updateAgentMediatorAvatar(id: string, avatar: string) {
+    const agent = this.getAgentMediator(id);
+    if (agent) {
+      agent.avatar = avatar;
+    }
+  }
+
+  updateAgentMediatorModelSettings(
+    id: string,
+    modelSettings: Partial<AgentMediatorModelSettings>,
+  ) {
+    const agent = this.getAgentMediator(id);
+    if (agent) {
+      agent.modelSettings = {...agent.modelSettings, ...modelSettings};
+    }
+  }
+
+  updateAgentMediatorPromptConfig(
+    id: string,
+    promptConfig: Partial<AgentPromptConfig>,
+  ) {
+    const agent = this.getAgentMediator(id);
+    if (agent) {
+      agent.promptConfig = {...agent.promptConfig, ...promptConfig};
+    }
+  }
+
+  addAgentMediatorCustomRequestBodyField(agentId: string) {
+    const agent = this.getAgentMediator(agentId);
+    if (agent) {
+      const fields = agent.modelSettings.customRequestBodyFields;
+      const newField = {name: '', value: ''};
+      const customRequestBodyFields = [...fields, newField];
+      agent.modelSettings = {...agent.modelSettings, customRequestBodyFields};
+    }
+  }
+
+  updateAgentMediatorCustomRequestBodyField(
+    agentId: string,
+    fieldIndex: number,
+    field: Partial<{name: string; value: string}>,
+  ) {
+    const agent = this.getAgentMediator(agentId);
+    if (agent) {
+      const customRequestBodyFields =
+        agent.modelSettings.customRequestBodyFields;
+      customRequestBodyFields[fieldIndex] = {
+        ...customRequestBodyFields[fieldIndex],
+        ...field,
+      };
+      agent.modelSettings = {...agent.modelSettings, customRequestBodyFields};
+    }
+  }
+
+  deleteAgentMediatorCustomRequestBodyField(
+    agentId: string,
+    fieldIndex: number,
+  ) {
+    const agent = this.getAgentMediator(agentId);
+    if (agent) {
+      const fields = agent.modelSettings.customRequestBodyFields;
+      const customRequestBodyFields = [
+        ...fields.slice(0, fieldIndex),
+        ...fields.slice(fieldIndex + 1),
+      ];
+      agent.modelSettings = {...agent.modelSettings, customRequestBodyFields};
+    }
+  }
+
+  resetAgents() {
+    this.agentMediators = [];
   }
 
   // *********************************************************************** //

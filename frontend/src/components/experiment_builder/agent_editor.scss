@@ -1,0 +1,105 @@
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.flex-column;
+  overflow: auto;
+  padding: common.$main-content-padding;
+}
+
+.agent-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-xl;
+  max-width: common.$info-content-max-width;
+}
+
+.section-header {
+  @include common.flex-column;
+}
+
+.section-title {
+  @include typescale.title-medium;
+}
+
+.section {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+.field {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
+.field-title,
+.radio-question-label {
+  @include typescale.label-small;
+}
+
+.description {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
+  font-style: italic;
+}
+
+.radio-question {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.radio-button {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  min-height: calc(var(--md-sys-typescale-body-small-line-height) * 1.5);
+}
+
+.radio-wrapper {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-xl;
+  max-width: 500px;
+}
+
+.checkbox-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+  overflow-wrap: break-word;
+
+  md-checkbox {
+    flex-shrink: 0;
+  }
+}
+
+pr-textarea {
+  flex-grow: 1;
+  width: 100%;
+}
+
+.number-input {
+  @include common.number-input;
+  width: max-content;
+}
+
+.name-value-input {
+  @include common.flex-row;
+  background: var(--md-sys-color-surface-variant);
+  border-radius: common.$spacing-small;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+  width: max-content;
+}
+
+.divider {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.tab {
+  margin-top: 0px;
+  margin-left: calc(48px + common.$spacing-medium);
+}
+
+.error-message {
+  font-style: italic;
+  color: red;
+}
