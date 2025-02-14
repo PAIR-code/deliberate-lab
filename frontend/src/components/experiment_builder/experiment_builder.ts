@@ -159,7 +159,7 @@ export class ExperimentBuilder extends MobxLitElement {
                   await this.experimentManager.testAgentConfig();
               }}
             >
-              Test default agent mediator
+              Test agent mediator
             </pr-button>
             <div>${this.testAgentConfigResponse}</div>
           </div>
