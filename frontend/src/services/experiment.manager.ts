@@ -9,6 +9,7 @@ import {
   Unsubscribe,
   where,
 } from 'firebase/firestore';
+import {AgentEditor} from './agent.editor';
 import {AuthService} from './auth.service';
 import {CohortService} from './cohort.service';
 import {ExperimentEditor} from './experiment.editor';
@@ -30,7 +31,6 @@ import {
   ParticipantProfileExtended,
   ParticipantStatus,
   StageConfig,
-  createAgentMediatorConfig,
   createCohortConfig,
   createHumanMediatorChatMessage,
   generateId,
@@ -70,6 +70,7 @@ import {
 } from '../shared/participant.utils';
 
 interface ServiceProvider {
+  agentEditor: AgentEditor;
   authService: AuthService;
   cohortService: CohortService;
   experimentEditor: ExperimentEditor;
@@ -688,12 +689,14 @@ export class ExperimentManager extends Service {
   /** TEMPORARY: Test new agent config. */
   async testAgentConfig() {
     let response = '';
-    if (this.sp.authService.experimenterData) {
+    const creatorId = this.sp.authService.experimenterData?.email;
+    const agentConfig = this.sp.agentEditor.getAgentMediator('test');
+    if (creatorId && agentConfig) {
       response =
         (
           await testAgentConfigCallable(this.sp.firebaseService.functions, {
-            creatorId: this.sp.authService.experimenterData.email,
-            agentConfig: createAgentMediatorConfig('test-id'),
+            creatorId,
+            agentConfig,
           })
         ).data ?? '';
     }
