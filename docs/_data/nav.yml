@@ -1,0 +1,11 @@
+- title: Researchers
+  pages:
+  - title: Getting started
+    url: /researchers/getting_started
+  - title: Create an experiment
+    url: /researchers/create_experiment
+  - title: Edit experiments and cohorts
+    url: /researchers/edit_experiment
+  - title: Run experiment cohorts
+    url: /researchers/run_experiment
+- title: Developers
