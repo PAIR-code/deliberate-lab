@@ -30,6 +30,7 @@ import {
   ParticipantProfileExtended,
   ParticipantStatus,
   StageConfig,
+  createAgentMediatorConfig,
   createCohortConfig,
   createHumanMediatorChatMessage,
   generateId,
@@ -44,6 +45,7 @@ import {
   initiateParticipantTransferCallable,
   sendParticipantCheckCallable,
   setExperimentCohortLockCallable,
+  testAgentConfigCallable,
   testAgentParticipantPromptCallable,
   updateCohortMetadataCallable,
   writeExperimentCallable,
@@ -681,6 +683,21 @@ export class ExperimentManager extends Service {
         },
       );
     }
+  }
+
+  /** TEMPORARY: Test new agent config. */
+  async testAgentConfig() {
+    let response = '';
+    if (this.sp.authService.experimenterData) {
+      response =
+        (
+          await testAgentConfigCallable(this.sp.firebaseService.functions, {
+            creatorId: this.sp.authService.experimenterData.email,
+            agentConfig: createAgentMediatorConfig('test-id'),
+          })
+        ).data ?? '';
+    }
+    return response;
   }
 
   /** Create a manual (human) agent chat message. */

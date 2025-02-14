@@ -32,6 +32,7 @@ import {StageConfig, StageKind, generateId} from '@deliberation-lab/utils';
 import {styles} from './experiment_builder.scss';
 
 enum PanelView {
+  AGENTS = 'agents',
   DEFAULT = 'default',
   STAGES = 'stages',
 }
@@ -47,6 +48,7 @@ export class ExperimentBuilder extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   @state() panelView: PanelView = PanelView.DEFAULT;
+  @state() testAgentConfigResponse = '';
 
   override render() {
     return html`
@@ -87,6 +89,18 @@ export class ExperimentBuilder extends MobxLitElement {
             >
             </pr-icon-button>
           </pr-tooltip>
+          <pr-tooltip text="Agents" position="RIGHT_END">
+            <pr-icon-button
+              color="secondary"
+              icon="robot_2"
+              size="medium"
+              variant=${isSelected(PanelView.AGENTS) ? 'tonal' : 'default'}
+              @click=${() => {
+                this.panelView = PanelView.AGENTS;
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
         </div>
         ${this.renderPanelView()}
       </div>
@@ -119,6 +133,31 @@ export class ExperimentBuilder extends MobxLitElement {
         </div>
       `;
     }
+    if (this.panelView === PanelView.AGENTS) {
+      return html`
+        <div class="panel-view">
+          <div class="banner warning">
+            <p>
+              For testing only! Settings on this page do not yet connect to the
+              saved experiment.
+            </p>
+          </div>
+          <div class="top">
+            <div class="panel-view-header">Agents</div>
+            <pr-button
+              @click=${async () => {
+                this.testAgentConfigResponse =
+                  await this.experimentManager.testAgentConfig();
+              }}
+            >
+              Test default agent mediator
+            </pr-button>
+            <div>${this.testAgentConfigResponse}</div>
+          </div>
+        </div>
+      `;
+    }
+    return nothing;
   }
 
   private renderStageButtons() {

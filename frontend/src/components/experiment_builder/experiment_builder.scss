@@ -101,3 +101,19 @@
 pr-button pr-icon {
   margin-right: common.$spacing-medium;
 }
+
+.banner {
+  @include typescale.label-small;
+  @include common.flex-column;
+  gap: common.$spacing-small;
+  padding: common.$spacing-medium;
+
+  &.warning {
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+  }
+
+  p {
+    margin: 0;
+  }
+}
