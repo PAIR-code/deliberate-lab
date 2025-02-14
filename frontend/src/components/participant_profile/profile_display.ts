@@ -74,7 +74,7 @@ export class ParticipantProfileDisplay extends MobxLitElement {
 
     // If alternate profile ID in stage ID, use anonymous profile
     let baseProfile: ParticipantProfileBase = this.profile;
-    if (this.stageId.includes(ALTERNATE_PROFILE_SET_ID)) {
+    if (this.stageId?.includes(ALTERNATE_PROFILE_SET_ID)) {
       const anon = this.profile.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID];
       if (anon) {
         baseProfile = {
