@@ -1,11 +1,18 @@
 import {Value} from '@sinclair/typebox/value';
 import {
+  AgentGenerationConfig,
+  ApiKeyType,
   ExperimenterData,
   StageConfig,
   StageKind,
   ParticipantProfileExtended,
 } from '@deliberation-lab/utils';
-import {getAgentResponse} from './agent.utils';
+import {
+  getAgentResponse,
+  getGeminiResponse,
+  getOpenAIAPIResponse,
+  getOllamaResponse,
+} from './agent.utils';
 import {getAgentParticipantRankingStageResponse} from './stages/ranking.utils';
 
 import * as admin from 'firebase-admin';
@@ -92,4 +99,62 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
   );
 
   return {data: response};
+});
+
+// ****************************************************************************
+// Test new agent configs
+// Input structure: { creatorId, agentConfig }
+// Validation: utils/src/agent.validation.ts
+// ****************************************************************************
+export const testAgentConfig = onCall(async (request) => {
+  const {data} = request;
+  const agentConfig = data.agentConfig;
+  const creatorId = data.creatorId;
+
+  // Only allow experimenters to use this test endpoint
+  await AuthGuard.isExperimenter(request);
+
+  // Fetch experiment creator's API key and other experiment data
+  const creatorDoc = await app
+    .firestore()
+    .collection('experimenterData')
+    .doc(creatorId)
+    .get();
+  if (!creatorDoc.exists) return;
+
+  const experimenterData = creatorDoc.data() as ExperimenterData;
+
+  // TODO: Use utils functions to construct prompt based on stage type
+  const prompt = agentConfig.promptConfig.prompt;
+  const apiType = agentConfig.modelSettings.apiType;
+  const model = agentConfig.modelSettings.model;
+
+  // Call LLM API
+  const callModel = async () => {
+    if (apiType === ApiKeyType.GEMINI_API_KEY) {
+      return await getGeminiResponse(experimenterData, model, prompt);
+    }
+    if (apiType === ApiKeyType.OPEN_AI_API_KEY) {
+      const generationConfig =
+        agentConfig.modelSettings as AgentGenerationConfig;
+      return await getOpenAIAPIResponse(
+        experimenterData,
+        model,
+        prompt,
+        generationConfig,
+      );
+    }
+    if (apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
+      return await getOllamaResponse(experimenterData, model, prompt);
+    }
+    console.error('Error: Invalid API type');
+    return {text: ''};
+  };
+
+  const response = await callModel();
+
+  // Check console log for response
+  console.log('TESTING AGENT CONFIG\n', JSON.stringify(agentConfig), response);
+
+  return {data: response.text};
 });
