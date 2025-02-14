@@ -12,13 +12,7 @@ export async function getAgentResponse(
   const keyType = data.apiKeys.activeApiKeyType;
   let response;
 
-  if (process.env.OPENAI_BASE_URL) {
-    response = getOpenAIAPITextCompletionResponse(
-      process.env.OPENAI_API_KEY,
-      process.env.OPENAI_MODEL_NAME,
-      prompt,
-    );
-  } else if (keyType === ApiKeyType.GEMINI_API_KEY) {
+  if (keyType === ApiKeyType.GEMINI_API_KEY) {
     response =  getGeminiResponse(data, agent.model, prompt);
   } else if (keyType === ApiKeyType.OPENAI_API_KEY) {
     response = getOpenAIAPIResponse(
