@@ -1,5 +1,6 @@
 import {generateId} from './shared';
 import {StageKind} from './stages/stage';
+import {DEFAULT_AGENT_MEDIATOR_PROMPT} from './stages/chat_stage';
 
 /** Agent types and functions. */
 
@@ -141,7 +142,7 @@ export function createAgentChatPromptConfig(
 ): AgentChatPromptConfig {
   return {
     type: StageKind.CHAT,
-    prompt: config.prompt ?? '', // TODO: Set default chat prompt
+    prompt: config.prompt ?? DEFAULT_AGENT_MEDIATOR_PROMPT,
     includeStageHistory: config.includeStageHistory ?? false,
     includeStageInfo: config.includeStageInfo ?? false,
   };

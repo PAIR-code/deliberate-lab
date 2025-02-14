@@ -171,7 +171,9 @@ export interface ChatStagePublicData extends BaseStagePublicData {
 // CONSTANTS                                                                 //
 // ************************************************************************* //
 export const DEFAULT_MODEL = 'gemini-1.5-pro-latest';
-export const DEFAULT_AGENT_PROMPT = `You are a agent for a chat conversation. Your task is to ensure that the conversation is polite.
+
+// TODO: Refactor chat prompts into chat_stage.prompts.ts file
+export const DEFAULT_AGENT_MEDIATOR_PROMPT = `You are a agent for a chat conversation. Your task is to ensure that the conversation is polite.
 If you notice that participants are being rude, step in to make sure that everyone is respectful. 
 Otherwise, do not respond.`;
 
@@ -357,7 +359,7 @@ export function createAgentConfig(
     name: config.name ?? 'Agent',
     avatar: config.avatar ?? '🤖',
     model: config.model ?? DEFAULT_MODEL,
-    prompt: config.prompt ?? DEFAULT_AGENT_PROMPT.trim(),
+    prompt: config.prompt ?? DEFAULT_AGENT_MEDIATOR_PROMPT.trim(),
     wordsPerMinute: config.wordsPerMinute ?? 80, // Default 80 WPM.
     generationConfig: config.generationConfig ?? createAgentGenerationConfig(),
     responseConfig: config.responseConfig ?? createAgentResponseConfig(),
