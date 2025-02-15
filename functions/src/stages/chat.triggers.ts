@@ -31,6 +31,7 @@ import {
 
 export interface AgentMessage {
   agent: AgentConfig;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   parsed: any;
   message: string;
 }
@@ -105,11 +106,20 @@ export const updateTimeElapsed = onDocumentUpdated(
     );
     if (!stage || !stage.timeLimitInMinutes) return;
     // Maybe end the chat.
-    if (await hasEndedChat(stage, publicStageData)) return;
+    if (
+      await hasEndedChat(
+        event.params.experimentId,
+        event.params.cohortId,
+        event.params.stageId,
+        stage,
+        publicStageData,
+      )
+    )
+      return;
 
     // Calculate how long to wait.
     const elapsedMinutes = getTimeElapsed(
-      publicStageData.discussionStartTimestamp!,
+      publicStageData.discussionStartTimestamp,
       'm',
     );
     const maxWaitTimeInMinutes = 5;
@@ -265,7 +275,13 @@ export const createAgentMessage = onDocumentCreated(
       !stage ||
       !publicStageData ||
       Boolean(publicStageData.discussionEndTimestamp) ||
-      (await hasEndedChat(stage, publicStageData))
+      (await hasEndedChat(
+        event.params.experimentId,
+        event.params.cohortId,
+        event.params.stageId,
+        stage,
+        publicStageData,
+      ))
     )
       return;
 
