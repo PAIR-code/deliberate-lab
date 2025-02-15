@@ -25,6 +25,11 @@ import {PayoutStageConfig, PayoutStageParticipantAnswer} from './payout_stage';
 import {ProfileStageConfig} from './profile_stage';
 import {RevealStageConfig} from './reveal_stage';
 import {
+  SalespersonStageConfig,
+  SalespersonStagePublicData,
+  createSalespersonStagePublicData,
+} from './salesperson_stage';
+import {
   SurveyPerParticipantStageConfig,
   SurveyPerParticipantStageParticipantAnswer,
   SurveyStageConfig,
@@ -53,6 +58,7 @@ export enum StageKind {
   RANKING = 'ranking',
   PAYOUT = 'payout',
   REVEAL = 'reveal',
+  SALESPERSON = 'salesperson', // co-op traveling salesperson game
   SURVEY = 'survey',
   SURVEY_PER_PARTICIPANT = 'surveyPerParticipant',
   TRANSFER = 'transfer',
@@ -64,6 +70,7 @@ export enum StageGame {
   LAS = 'las', // Lost at Sea
   RTV = 'rtv', // Reality TV Debate.
   CHP = 'chp', // Chip Negotiation
+  CTS = 'cts', // Co-op Traveling Salesperson
 }
 
 /**
@@ -102,6 +109,7 @@ export type StageConfig =
   | PayoutStageConfig
   | ProfileStageConfig
   | RevealStageConfig
+  | SalespersonStageConfig
   | SurveyStageConfig
   | SurveyPerParticipantStageConfig
   | TOSStageConfig
@@ -145,6 +153,7 @@ export type StagePublicData =
   | ChatStagePublicData
   | ChipStagePublicData
   | RankingStagePublicData
+  | SalespersonStagePublicData
   | SurveyStagePublicData;
 
 // ************************************************************************* //
@@ -191,6 +200,11 @@ export function createPublicDataFromStageConfigs(stages: StageConfig[]) {
         break;
       case StageKind.RANKING:
         publicData.push(createRankingStagePublicData(stage.id));
+        break;
+      case StageKind.SALESPERSON:
+        publicData.push(
+          createSalespersonStagePublicData(stage.id, stage.board.startCoord),
+        );
         break;
       case StageKind.SURVEY:
         publicData.push(createSurveyStagePublicData(stage.id));
