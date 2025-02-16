@@ -1,0 +1,29 @@
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.flex-column;
+  height: 100%;
+  overflow: auto;
+}
+
+.panel-wrapper {
+  @include common.flex-row;
+  flex-grow: 1;
+  overflow: auto;
+}
+
+.panel {
+  @include common.flex-column;
+  flex-grow: 1;
+  gap: common.$spacing-xl;
+  overflow: auto;
+  padding: common.$main-content-padding;
+
+  &.left {
+    flex-shrink: 0;
+    gap: 0;
+    padding: 0;
+    width: 65%;
+  }
+}
