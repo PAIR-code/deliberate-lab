@@ -19,6 +19,7 @@ import {Service} from './service';
 import {AdminService} from './admin.service';
 import {FirebaseService} from './firebase.service';
 import {HomeService} from './home.service';
+import {ExperimentManager} from './experiment.manager';
 
 import {
   ExperimenterProfile,
@@ -28,6 +29,7 @@ import {
 
 interface ServiceProvider {
   adminService: AdminService;
+  experimentManager: ExperimentManager;
   firebaseService: FirebaseService;
   homeService: HomeService;
 }
@@ -58,6 +60,10 @@ export class AuthService extends Service {
             this.subscribe();
             this.writeExperimenterProfile(user);
             this.sp.homeService.subscribe();
+            const experimentId = this.sp.experimentManager.experimentId;
+            if (experimentId) {
+              this.sp.experimentManager.loadExperimentData(experimentId);
+            }
 
             // Check if admin
             if (allowlistDoc.data().isAdmin) {
