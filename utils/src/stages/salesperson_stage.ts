@@ -57,6 +57,21 @@ export interface SalespersonStagePublicData extends BaseStagePublicData {
   currentCoord: SalespersonBoardCoord;
 }
 
+export interface SalespersonBoardCellView {
+  row: number;
+  column: number;
+  content: string; // empty if no coin/exit/etc.
+  canMove: boolean; // whether or not can move to this cell
+  status: SalespersonBoardCellStatus;
+}
+
+export enum SalespersonBoardCellStatus {
+  PROPOSED = 'proposed',
+  CURRENT = 'current',
+  VISITED = 'visited',
+  NONE = 'none',
+}
+
 export interface SalespersonMove {
   proposedCoord: SalespersonBoardCoord;
   // maps from participant public ID --> their response to the proposed coords
@@ -66,9 +81,9 @@ export interface SalespersonMove {
 }
 
 export enum SalespersonMoveStatus {
-  ACCEPTED = 'ACCEPTED',
-  DECLINED = 'DECLINED',
-  PENDING = 'PENDING',
+  ACCEPTED = 'accepted',
+  DECLINED = 'declined',
+  PENDING = 'pending',
 }
 
 export interface SalespersonMoveResponse {
@@ -123,4 +138,126 @@ export function createSalespersonStagePublicData(
     coinsCollected: [],
     currentCoord,
   };
+}
+
+/** Construct board view. */
+export function buildBoardView(
+  boardConfig: SalespersonBoardConfig,
+  role: string, // player role that the board should build for
+  moveHistory: SalespersonMove[],
+): SalespersonBoardCellView[][] {
+  const getProposedCoord = (): SalespersonBoardCoord | null => {
+    if (moveHistory.length === 0) {
+      return null;
+    }
+    const current = moveHistory[moveHistory.length - 1];
+    if (current.status === SalespersonMoveStatus.PENDING) {
+      return current.proposedCoord;
+    }
+    return null;
+  };
+
+  const getCurrentCoord = (): SalespersonBoardCoord => {
+    const history = moveHistory.filter(
+      (move) => move.status === SalespersonMoveStatus.ACCEPTED,
+    );
+    if (history.length === 0) {
+      return boardConfig.startCoord;
+    }
+    return history[history.length - 1].proposedCoord;
+  };
+
+  const isCurrent = (row: number, column: number) => {
+    return row === currentCoord.row && column === currentCoord.column;
+  };
+
+  const hasCoin = (row: number, column: number) => {
+    const coins = boardConfig.coinMap[role] ?? [];
+    const coinHistory = moveHistory.filter(
+      (move) => move.status === SalespersonMoveStatus.ACCEPTED,
+    );
+    for (const coin of coins) {
+      // Return true if coin is visible to current role and has not been
+      // collected in the move history of accepted moves
+      if (coin.row === row && coin.column === column) {
+        return !coinHistory.find(
+          (move) =>
+            move.proposedCoord.row === row &&
+            move.proposedCoord.column === column,
+        );
+      }
+    }
+    return false;
+  };
+
+  const isExit = (row: number, column: number) => {
+    return (
+      boardConfig.endCoord.row === row && boardConfig.endCoord.column === column
+    );
+  };
+
+  const getStatus = (row: number, column: number) => {
+    if (isCurrent(row, column)) {
+      return SalespersonBoardCellStatus.CURRENT;
+    } else if (row === proposedCoord?.row && column === proposedCoord?.column) {
+      return SalespersonBoardCellStatus.PROPOSED;
+    }
+    const visitedCell = moveHistory.find(
+      (cell) =>
+        cell.proposedCoord.row === row &&
+        cell.proposedCoord.column === column &&
+        cell.status === SalespersonMoveStatus.ACCEPTED,
+    );
+    if (visitedCell) {
+      return SalespersonBoardCellStatus.VISITED;
+    }
+    return SalespersonBoardCellStatus.NONE;
+  };
+
+  const getContent = (row: number, column: number) => {
+    if (isCurrent(row, column)) {
+      return '🙋';
+    }
+    // Don't show exit to controller player
+    if (isExit(row, column) && role !== SALESPERSON_ROLE_CONTROLLER_ID) {
+      return '🚪';
+    }
+    if (hasCoin(row, column)) {
+      return '🪙';
+    }
+    return '';
+  };
+
+  const inRange = (row: number, column: number) => {
+    return (
+      (Math.abs(row - currentCoord.row) === 1 &&
+        column - currentCoord.column === 0) ||
+      (row - currentCoord.row === 0 &&
+        Math.abs(column - currentCoord.column) === 1)
+    );
+  };
+
+  const board: SalespersonBoardCellView[][] = [];
+  const proposedCoord = getProposedCoord();
+  const currentCoord = getCurrentCoord();
+
+  let row = 0;
+  while (row < boardConfig.numRows) {
+    const boardRow: SalespersonBoardCellView[] = [];
+    let column = 0;
+    while (column < boardConfig.numColumns) {
+      boardRow.push({
+        row,
+        column,
+        content: getContent(row, column),
+        canMove: inRange(row, column),
+        status: getStatus(row, column),
+      });
+      column += 1;
+    }
+    board.push(boardRow);
+    row += 1;
+  }
+
+  return board;
 }
