@@ -16,14 +16,65 @@
 .panel {
   @include common.flex-column;
   flex-grow: 1;
-  gap: common.$spacing-xl;
+  gap: common.$spacing-large;
   overflow: auto;
   padding: common.$main-content-padding;
 
-  &.left {
+  &:first-of-type {
     flex-shrink: 0;
-    gap: 0;
-    padding: 0;
     width: 65%;
+  }
+}
+
+.status-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+  min-height: 100px;
+}
+
+.button-wrapper {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-medium;
+}
+
+.table {
+  @include common.table;
+  border-radius: 0;
+  flex-shrink: 0;
+  overflow: hidden;
+  width: max-content;
+
+  .table-row {
+    background: none;
+    flex-shrink: 0;
+    width: max-content;
+
+    &:nth-of-type(2n) {
+      background: none;
+    }
+  }
+
+  .table-cell {
+    @include typescale.body-large;
+    @include common.flex-row;
+    align-items: center;
+    border: 1px solid var(--md-sys-color-outline);
+    flex-shrink: 0;
+    height: 36px;
+    width: 36px;
+
+    &.eligible {
+      background: var(--md-sys-color-secondary-container);
+      cursor: pointer;
+    }
+
+    &.proposed {
+      background: var(--md-sys-color-tertiary-container);
+    }
+
+    &.current {
+      background: var(--md-sys-color-primary-container);
+    }
   }
 }
