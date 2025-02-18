@@ -43,7 +43,7 @@ import {
 // Experiment config
 // ****************************************************************************
 export const ANON_LAS_METADATA = createMetadataConfig({
-  name: 'Anonymous Lost at Sea (v3)',
+  name: '🐱 Anonymous Lost at Sea (v3)',
   publicName: 'Adrift in the Atlantic',
   description:
     'A complex election scenario (Born 2022) that showcases pseudonoymous participants and many different experiment stages.',
@@ -51,7 +51,7 @@ export const ANON_LAS_METADATA = createMetadataConfig({
 
 
 export const LAS_METADATA = createMetadataConfig({
-  name: 'Lost at Sea (v3)',
+  name: '🌊 Lost at Sea (v3)',
   publicName: 'Adrift in the Atlantic',
   description:
     'A complex election scenario (Born 2022) that showcases participants and many different experiment stages.',
