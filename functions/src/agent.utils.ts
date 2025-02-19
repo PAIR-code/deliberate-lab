@@ -31,22 +31,27 @@ export async function getAgentResponse(
   return response;
 }
 
+// TODO: Refactor model call functions to take in direct API configs,
+// not full ExperimenterData
+
 export async function getGeminiResponse(
   data: ExperimenterData,
-   modelName: string,
-   prompt: string
-  ): Promise<ModelResponse> {
+  modelName: string,
+  prompt: string,
+  // TODO: Add new agent model settings
+): Promise<ModelResponse> {
   return await getGeminiAPIResponse(
     data.apiKeys.geminiApiKey,
     modelName,
-    prompt
+    prompt,
   );
 }
 
-async function getOpenAIAPIResponse(
+export async function getOpenAIAPIResponse(
   data: ExperimenterData,
   model: string,
   prompt: string,
+  // TODO: Replace with new agent model settings
   generationConfig: GenerationConfig,
 ): Promise<ModelResponse> {
   return await getOpenAIAPITextCompletionResponse(
@@ -61,7 +66,8 @@ async function getOpenAIAPIResponse(
 export async function getOllamaResponse(
   data: ExperimenterData,
   modelName: string,
-  prompt: string
+  prompt: string,
+  // TODO: Add new agent model settings
 ): Promise<ModelResponse> {
   return await ollamaChat([prompt], data.apiKeys.ollamaApiKey);
 }

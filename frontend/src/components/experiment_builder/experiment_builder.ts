@@ -13,6 +13,7 @@ import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
 import '../stages/tos_editor';
 import '../stages/transfer_editor';
+import './agent_editor';
 import './experiment_builder_nav';
 import './experiment_settings_editor';
 import './stage_builder_dialog';
@@ -23,15 +24,22 @@ import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
+import {AgentEditor} from '../../services/agent.editor';
 import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {Pages, RouterService} from '../../services/router.service';
 
-import {StageConfig, StageKind, generateId} from '@deliberation-lab/utils';
+import {
+  StageConfig,
+  StageKind,
+  generateId,
+  createAgentMediatorConfig,
+} from '@deliberation-lab/utils';
 
 import {styles} from './experiment_builder.scss';
 
 enum PanelView {
+  AGENTS = 'agents',
   DEFAULT = 'default',
   STAGES = 'stages',
 }
@@ -41,17 +49,20 @@ enum PanelView {
 export class ExperimentBuilder extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly agentEditor = core.getService(AgentEditor);
   private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly routerService = core.getService(RouterService);
 
   @state() panelView: PanelView = PanelView.DEFAULT;
+  @state() testAgentConfigResponse = '';
 
   override render() {
     return html`
       ${this.renderNavPanel()} ${this.renderExperimentConfigBuilder()}
-      ${this.renderStageBuilder()} ${this.renderStageBuilderDialog()}
+      ${this.renderAgentBuilder()} ${this.renderStageBuilder()}
+      ${this.renderStageBuilderDialog()}
     `;
   }
 
@@ -83,6 +94,18 @@ export class ExperimentBuilder extends MobxLitElement {
               variant=${isSelected(PanelView.STAGES) ? 'tonal' : 'default'}
               @click=${() => {
                 this.panelView = PanelView.STAGES;
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
+          <pr-tooltip text="Agents" position="RIGHT_END">
+            <pr-icon-button
+              color="secondary"
+              icon="robot_2"
+              size="medium"
+              variant=${isSelected(PanelView.AGENTS) ? 'tonal' : 'default'}
+              @click=${() => {
+                this.panelView = PanelView.AGENTS;
               }}
             >
             </pr-icon-button>
@@ -119,6 +142,31 @@ export class ExperimentBuilder extends MobxLitElement {
         </div>
       `;
     }
+    if (this.panelView === PanelView.AGENTS) {
+      return html`
+        <div class="panel-view">
+          <div class="banner warning">
+            <p>
+              For testing only! Settings on this page do not yet connect to the
+              saved experiment.
+            </p>
+          </div>
+          <div class="top">
+            <div class="panel-view-header">Agents</div>
+            <pr-button
+              @click=${async () => {
+                this.testAgentConfigResponse =
+                  await this.experimentManager.testAgentConfig();
+              }}
+            >
+              Test agent mediator
+            </pr-button>
+            <div>${this.testAgentConfigResponse}</div>
+          </div>
+        </div>
+      `;
+    }
+    return nothing;
   }
 
   private renderStageButtons() {
@@ -170,6 +218,20 @@ export class ExperimentBuilder extends MobxLitElement {
         <pr-icon color="error" icon="delete"></pr-icon>
         Delete experiment
       </pr-button>
+    `;
+  }
+
+  private renderAgentBuilder() {
+    if (this.panelView !== PanelView.AGENTS) {
+      return nothing;
+    }
+
+    const agent = this.agentEditor.getAgentMediator('test');
+
+    return html`
+      <div class="experiment-builder">
+        <agent-editor .agent=${agent}></agent-editor>
+      </div>
     `;
   }
 
