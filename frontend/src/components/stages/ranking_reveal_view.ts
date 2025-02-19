@@ -91,6 +91,7 @@ export class RankingReveal extends MobxLitElement {
   private renderResultsTable() {
     if (!this.publicData || !this.item) return;
 
+    // TODO: Fix broken logic
     const showAllParticipants =
       this.item.revealAudience === RevealAudience.ALL_PARTICIPANTS;
 
@@ -180,7 +181,7 @@ export class RankingReveal extends MobxLitElement {
       <h2>
         Results for <b><i>${electionName}</i></b> stage
       </h2>
-      ${this.renderWinner()} ${this.renderResultsTable()}
+      ${this.renderWinner()}
       <div class="divider"></div>
     `;
   }
