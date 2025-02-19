@@ -8,6 +8,7 @@ import {InfoStageConfigData} from './info_stage.validation';
 import {PayoutStageConfigData} from './payout_stage.validation';
 import {ProfileStageConfigData} from './profile_stage.validation';
 import {RevealStageConfigData} from './reveal_stage.validation';
+import {SalespersonStageConfigData} from './salesperson_stage.validation';
 import {
   SurveyPerParticipantStageConfigData,
   SurveyStageConfigData,
@@ -29,6 +30,7 @@ export const StageConfigData = Type.Union([
   ProfileStageConfigData,
   RankingStageConfigData,
   RevealStageConfigData,
+  SalespersonStageConfigData,
   SurveyPerParticipantStageConfigData,
   SurveyStageConfigData,
   TOSStageConfigData,
@@ -41,6 +43,7 @@ export const StageGameSchema = Type.Union([
   Type.Literal(StageGame.LAS),
   Type.Literal(StageGame.RTV),
   Type.Literal(StageGame.CHP),
+  Type.Literal(StageGame.CTS),
 ]);
 
 /** StageTextConfig input validation. */

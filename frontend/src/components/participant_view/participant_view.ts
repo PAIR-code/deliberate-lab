@@ -12,6 +12,7 @@ import '../stages/payout_participant_view';
 import '../stages/profile_participant_editor';
 import '../stages/profile_participant_view';
 import '../stages/reveal_participant_view';
+import '../stages/salesperson_participant_view';
 import '../stages/survey_view';
 import '../stages/survey_per_participant_view';
 import '../stages/tos_view';
@@ -243,6 +244,11 @@ export class ParticipantView extends MobxLitElement {
       case StageKind.REVEAL:
         return html`
           <reveal-participant-view .stage=${stage}></reveal-participant-view>
+        `;
+      case StageKind.SALESPERSON:
+        return html`
+          <salesperson-participant-view .stage=${stage}>
+          </salesperson-participant-view>
         `;
       case StageKind.SURVEY:
         return html`<survey-view .stage=${stage}></survey-view>`;
