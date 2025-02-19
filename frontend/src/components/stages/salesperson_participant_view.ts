@@ -11,10 +11,12 @@ import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
+import {ParticipantAnswerService} from '../../services/participant.answer';
 import {ParticipantService} from '../../services/participant.service';
 import {
   SALESPERSON_ROLE_CONTROLLER_ID,
   SALESPERSON_ROLE_RESPONDER_ID,
+  ChatMessage,
   SalespersonBoardCellStatus,
   SalespersonBoardCellView,
   SalespersonMoveStatus,
@@ -33,6 +35,9 @@ export class SalespersonView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly cohortService = core.getService(CohortService);
+  private readonly participantAnswerService = core.getService(
+    ParticipantAnswerService,
+  );
   private readonly participantService = core.getService(ParticipantService);
 
   @property() stage: SalespersonStageConfig | null = null;
@@ -56,6 +61,7 @@ export class SalespersonView extends MobxLitElement {
         ${this.renderControllerPanel(publicData)}
         ${this.renderResponderPanel(publicData)}
         ${this.renderGameOverPanel(publicData)}
+        ${this.renderChatPanel(publicData)}
       </div>
       <stage-footer .disabled=${!publicData.isGameOver}>
         ${this.stage.progress.showParticipantProgress
@@ -295,6 +301,97 @@ export class SalespersonView extends MobxLitElement {
         ${cell.content}
       </div>
     `;
+  }
+
+  private renderChatMessage(chatMessage: ChatMessage) {
+    return html`
+      <div class="chat-message-wrapper">
+        <chat-message .chat=${chatMessage}></chat-message>
+      </div>
+    `;
+  }
+
+  renderChatPanel(publicData: SalespersonStagePublicData) {
+    if (!this.stage) return nothing;
+    const messages = this.cohortService.chatMap[this.stage.id] ?? [];
+
+    return html`
+      <div class="panel">
+        <div class="chat-scroll">
+          <div class="chat-history">
+            ${messages.map(this.renderChatMessage.bind(this))}
+          </div>
+        </div>
+        ${this.renderInput(publicData)}
+      </div>
+    `;
+  }
+
+  private renderInput(publicData: SalespersonStagePublicData) {
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        sendInput();
+        e.stopPropagation();
+      }
+    };
+
+    const sendInput = () => {
+      if (!this.stage) return;
+
+      const value = this.participantAnswerService.getChatInput(this.stage.id);
+      if (value.trim() === '') return;
+      this.participantService.createChatMessage({message: value.trim()});
+      this.participantAnswerService.updateChatInput(this.stage.id, '');
+    };
+
+    const handleInput = (e: Event) => {
+      if (!this.stage) return;
+
+      const value = (e.target as HTMLTextAreaElement).value;
+      this.participantAnswerService.updateChatInput(this.stage.id, value);
+    };
+
+    const autoFocus = () => {
+      // Only auto-focus chat input if on desktop
+      return navigator.maxTouchPoints === 0;
+    };
+
+    return html`<div class="input-wrapper">
+      <div class="input">
+        <pr-textarea
+          size="small"
+          placeholder="Send message"
+          .value=${this.participantAnswerService.getChatInput(
+            this.stage?.id ?? '',
+          )}
+          ?focused=${autoFocus()}
+          ?disabled=${this.participantService.disableStage ||
+          publicData.isGameOver}
+          @keyup=${handleKeyUp}
+          @input=${handleInput}
+        >
+        </pr-textarea>
+        <pr-tooltip
+          text="Send message"
+          color="tertiary"
+          variant="outlined"
+          position="TOP_END"
+        >
+          <pr-icon-button
+            icon="send"
+            variant="tonal"
+            .disabled=${this.participantAnswerService
+              .getChatInput(this.stage?.id ?? '')
+              .trim() === '' ||
+            this.participantService.disableStage ||
+            publicData.isGameOver}
+            ?loading=${this.participantService.isSendingChat}
+            @click=${sendInput}
+          >
+          </pr-icon-button>
+        </pr-tooltip>
+      </div>
+    </div>`;
   }
 }
 
