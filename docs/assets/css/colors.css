@@ -1,0 +1,137 @@
+html {
+  /* Blue */
+  --md-ref-palette-blue0: #000;
+  --md-ref-palette-blue10: #001944;
+  --md-ref-palette-blue20: #012c6f;
+  --md-ref-palette-blue30: #04409f;
+  --md-ref-palette-blue40: #1157ce;
+  --md-ref-palette-blue50: #3271ea;
+  --md-ref-palette-blue60: #4e8ff8;
+  --md-ref-palette-blue70: #76acff;
+  --md-ref-palette-blue80: #a1c9ff;
+  --md-ref-palette-blue90: #d0e4ff;
+  --md-ref-palette-blue95: #e7f2ff;
+  --md-ref-palette-blue98: #f5faff;
+  --md-ref-palette-blue100: #fff;
+
+  /* Orange */
+  --md-ref-palette-orange0: #000;
+  --md-ref-palette-orange10: #321200;
+  --md-ref-palette-orange20: #522302;
+  --md-ref-palette-orange30: #753403;
+  --md-ref-palette-orange40: #9a4600;
+  --md-ref-palette-orange50: #c05a01;
+  --md-ref-palette-orange60: #e86e00;
+  --md-ref-palette-orange70: #ff8d41;
+  --md-ref-palette-orange80: #ffb683;
+  --md-ref-palette-orange90: #ffdcc3;
+  --md-ref-palette-orange95: #ffede1;
+  --md-ref-palette-orange98: #fff8f4;
+  --md-ref-palette-orange100: #fff;
+
+  /* Yellow */
+  --md-ref-palette-yellow0: #000;
+  --md-ref-palette-yellow10: #2f1400;
+  --md-ref-palette-yellow20: #4d2600;
+  --md-ref-palette-yellow30: #6d3a01;
+  --md-ref-palette-yellow40: #8f4e06;
+  --md-ref-palette-yellow50: #b16300;
+  --md-ref-palette-yellow60: #d37b00;
+  --md-ref-palette-yellow70: #ef9800;
+  --md-ref-palette-yellow80: #fcbd00;
+  --md-ref-palette-yellow90: #ffe07c;
+  --md-ref-palette-yellow95: #fff2b4;
+  --md-ref-palette-yellow98: #fffae0;
+  --md-ref-palette-yellow100: #fff;
+
+  /* Purple */
+  --md-ref-palette-purple0: #000;
+  --md-ref-palette-purple10: #280255;
+  --md-ref-palette-purple20: #400b84;
+  --md-ref-palette-purple30: #5629a4;
+  --md-ref-palette-purple40: #7438d2;
+  --md-ref-palette-purple50: #9254ea;
+  --md-ref-palette-purple60: #ad72ff;
+  --md-ref-palette-purple70: #c597ff;
+  --md-ref-palette-purple80: #d9bafd;
+  --md-ref-palette-purple90: #eedcfe;
+  --md-ref-palette-purple95: #f7ecfe;
+  --md-ref-palette-purple98: #fdf8ff;
+  --md-ref-palette-purple100: #fff;
+
+  /* Red */
+  --md-ref-palette-red0: #000;
+  --md-ref-palette-red10: #3a0907;
+  --md-ref-palette-red20: #60150f;
+  --md-ref-palette-red30: #8a1a16;
+  --md-ref-palette-red40: #b3251e;
+  --md-ref-palette-red50: #db372d;
+  --md-ref-palette-red60: #f55e57;
+  --md-ref-palette-red70: #ff8983;
+  --md-ref-palette-red80: #ffb3ae;
+  --md-ref-palette-red90: #ffdadc;
+  --md-ref-palette-red95: #ffecee;
+  --md-ref-palette-red98: #fff8f8;
+  --md-ref-palette-red100: #fff;
+
+  /* Pink */
+  --md-ref-palette-pink0: #000;
+  --md-ref-palette-pink10: #3d0023;
+  --md-ref-palette-pink20: #620438;
+  --md-ref-palette-pink30: #8d0053;
+  --md-ref-palette-pink40: #b60d6e;
+  --md-ref-palette-pink50: #dc258d;
+  --md-ref-palette-pink60: #f94aab;
+  --md-ref-palette-pink70: #ff7dd2;
+  --md-ref-palette-pink80: #ffaee4;
+  --md-ref-palette-pink90: #ffd8ef;
+  --md-ref-palette-pink95: #ffecf6;
+  --md-ref-palette-pink98: #fff7fc;
+  --md-ref-palette-pink100: #fff;
+
+  /* Green */
+  --md-ref-palette-green0: #000;
+  --md-ref-palette-green10: #002110;
+  --md-ref-palette-green20: #00381f;
+  --md-ref-palette-green30: #00522c;
+  --md-ref-palette-green40: #006c35;
+  --md-ref-palette-green50: #128937;
+  --md-ref-palette-green60: #1aa64a;
+  --md-ref-palette-green70: #44c265;
+  --md-ref-palette-green80: #80da88;
+  --md-ref-palette-green90: #beefbb;
+  --md-ref-palette-green95: #ddf8d8;
+  --md-ref-palette-green98: #f2fcef;
+  --md-ref-palette-green100: #fff;
+
+  /* Gray */
+  --md-ref-palette-gray0: #000;
+  --md-ref-palette-gray5: #111;
+  --md-ref-palette-gray10: #1b1b1c;
+  --md-ref-palette-gray20: #303030;
+  --md-ref-palette-gray30: #474747;
+  --md-ref-palette-gray40: #5e5e5e;
+  --md-ref-palette-gray50: #777;
+  --md-ref-palette-gray60: #919191;
+  --md-ref-palette-gray70: #ababab;
+  --md-ref-palette-gray80: #c7c7c7;
+  --md-ref-palette-gray90: #e3e3e3;
+  --md-ref-palette-gray95: #f2f2f2;
+  --md-ref-palette-gray98: #f9f9f9;
+  --md-ref-palette-gray100: #fff;
+
+  /* Cyan */
+  --md-ref-palette-cyan0: #000;
+  --md-ref-palette-cyan10: #001f26;
+  --md-ref-palette-cyan20: #003641;
+  --md-ref-palette-cyan30: #004e5d;
+  --md-ref-palette-cyan40: #00687c;
+  --md-ref-palette-cyan50: #00839b;
+  --md-ref-palette-cyan60: #009ebb;
+  --md-ref-palette-cyan70: #00bbdf;
+  --md-ref-palette-cyan80: #60d5f3;
+  --md-ref-palette-cyan90: #acedff;
+  --md-ref-palette-cyan95: #d8f6ff;
+  --md-ref-palette-cyan98: #f0fbff;
+  --md-ref-palette-cyan100: #fff;
+}
