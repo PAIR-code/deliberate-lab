@@ -49,14 +49,12 @@ export const ANON_LAS_METADATA = createMetadataConfig({
     'A complex election scenario (Born 2022) that showcases pseudonoymous participants and many different experiment stages.',
 });
 
-
 export const LAS_METADATA = createMetadataConfig({
   name: '🌊 Lost at Sea (v3)',
   publicName: 'Adrift in the Atlantic',
   description:
     'A complex election scenario (Born 2022) that showcases participants and many different experiment stages.',
 });
-
 
 export function getAnonLASStageConfigs(): StageConfig[] {
   const stages: StageConfig[] = [];
@@ -109,7 +107,6 @@ export function getAnonLASStageConfigs(): StageConfig[] {
 
   return stages;
 }
-
 
 export function getLASStageConfigs(): StageConfig[] {
   const stages: StageConfig[] = [];
@@ -375,7 +372,7 @@ const LAS_PROFILE_STAGE = createProfileStage({
   id: 'profile',
   game: StageGame.LAS,
   name: 'Set your profile',
-descriptions: createStageTextConfig({
+  descriptions: createStageTextConfig({
     primaryText: 'This information may be visible to other participants.',
   }),
   profileType: ProfileType.DEFAULT,
@@ -469,22 +466,37 @@ export const COMPREHENSION_CHECK = createComprehensionStage({
   questions: [
     createMultipleChoiceComprehensionQuestion(
       {
-        questionTitle: 'In the next stage, you will discuss your responses to the survival task with other participants. What is your objective in this discussion?',
+        questionTitle:
+          'In the next stage, you will discuss your responses to the survival task with other participants. What is your objective in this discussion?',
         options: [
-          createMultipleChoiceItem({id: 'a', text: 'Come to a consensus, as a team, on which items to prioritize.'}),
-          createMultipleChoiceItem({id: 'b', text: 'Evaluate the other participants for their decision-making abilities, as you will vote on who to represent your group in a following stage.'}),
+          createMultipleChoiceItem({
+            id: 'a',
+            text: 'Come to a consensus, as a team, on which items to prioritize.',
+          }),
+          createMultipleChoiceItem({
+            id: 'b',
+            text: 'Evaluate the other participants for their decision-making abilities, as you will vote on who to represent your group in a following stage.',
+          }),
         ],
       },
       'b', // correct answer ID
     ),
     createMultipleChoiceComprehensionQuestion(
       {
-        questionTitle:
-          'What will your bonus payout depend on?',
+        questionTitle: 'What will your bonus payout depend on?',
         options: [
-          createMultipleChoiceItem({id: 'a', text: 'Your score on the survival task.'}),
-          createMultipleChoiceItem({id: 'b', text: 'The elected leader\'s score on the survival task.'}),
-          createMultipleChoiceItem({id: 'c', text: 'Either your score or the elected leader\'s score on the survival task, randomly selected.'}),
+          createMultipleChoiceItem({
+            id: 'a',
+            text: 'Your score on the survival task.',
+          }),
+          createMultipleChoiceItem({
+            id: 'b',
+            text: "The elected leader's score on the survival task.",
+          }),
+          createMultipleChoiceItem({
+            id: 'c',
+            text: "Either your score or the elected leader's score on the survival task, randomly selected.",
+          }),
         ],
       },
       'c', // correct answer ID
@@ -907,7 +919,7 @@ export function createLASPayoutItems() {
     stageId: LAS_PART_2_UPDATED_TASK_SURVEY_STAGE_ID,
     baseCurrencyAmount: 6,
   });
-  const part2Question = choice(LAS_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
+  const part2Question = choice(LAS_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
   part2.questionMap[part2Question.id] = 2;
 
   const part3 = createSurveyPayoutItem({
