@@ -115,12 +115,7 @@ export class ChatPanel extends MobxLitElement {
           false,
         )}.
       </div>`;
-    } else if (!publicStageData.discussionStartTimestamp) {
-      const timeText = `Time remaining: ${this.formatTime(
-        this.stage.timeLimitInMinutes * 60,
-      )}`;
-      timerHtml = html`<div class="countdown">${timeText}</div>`;
-    } else {
+    } else if (publicStageData.discussionStartTimestamp) {
       const startText = `Conversation started at: ${convertUnifiedTimestampToDate(
         publicStageData.discussionStartTimestamp,
         false,
@@ -128,8 +123,9 @@ export class ChatPanel extends MobxLitElement {
       const timeText = `Time remaining: ${this.formatTime(
         this.timeRemainingInSeconds!,
       )}`;
+      // TODO: Remove timer in favor of "end conversation" button
       timerHtml = html`<div class="countdown">
-        ${startText}<br />${timeText}
+        ${startText} (time limit: ${this.stage.timeLimitInMinutes} minutes)
       </div>`;
     }
 
