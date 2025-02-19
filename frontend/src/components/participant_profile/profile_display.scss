@@ -1,5 +1,5 @@
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -25,9 +25,9 @@ profile-display {
   @include common.flex-column-align-center;
   flex-wrap: wrap;
   gap: common.$spacing-medium;
-  max-width: 100px;
   overflow-wrap: anywhere;
   text-align: center;
+  width: 100px;
 }
 
 .display-name-wrapper {

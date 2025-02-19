@@ -311,6 +311,10 @@ export class ExperimentManager extends Service {
     this.unsubscribeAll();
     this.isLoading = true;
 
+    if (!this.sp.authService.isExperimenter) {
+      return;
+    }
+
     // Subscribe to cohorts
     this.unsubscribe.push(
       onSnapshot(
