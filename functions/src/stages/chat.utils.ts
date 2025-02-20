@@ -73,7 +73,9 @@ export async function updateCurrentDiscussionIndex(
       .get()
   ).docs
     .map((doc) => doc.data() as ParticipantProfile)
-    .filter((participant) => !(participant.currentStatus in activeStatuses));
+    .filter((participant) =>
+      activeStatuses.find((status) => status === participant.currentStatus),
+    );
 
   // Check if active participants are ready to end current discussion
   const currentDiscussionId = publicStageData.currentDiscussionId;

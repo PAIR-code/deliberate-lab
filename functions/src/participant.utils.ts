@@ -81,7 +81,9 @@ export async function updateCohortStageUnlocked(
         .get()
     ).docs
       .map((doc) => doc.data() as ParticipantProfile)
-      .filter((participant) => !(participant.currentStatus in activeStatuses));
+      .filter((participant) =>
+        activeStatuses.find((status) => status === participant.currentStatus),
+      );
 
     // Get participant pending transfer into current cohort
     const transferParticipants = (
@@ -96,7 +98,7 @@ export async function updateCohortStageUnlocked(
       .map((doc) => doc.data() as ParticipantProfile)
       .filter(
         (participant) =>
-          participant.currentStatus !== ParticipantStatus.TRANSFER_PENDING,
+          participant.currentStatus === ParticipantStatus.TRANSFER_PENDING,
       );
 
     // Consider both participants actively in cohort and pending transfer
