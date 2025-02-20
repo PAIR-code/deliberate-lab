@@ -40,7 +40,9 @@ export async function getAgentParticipantRankingStageResponse(
       .get()
   ).docs
     .map((doc) => doc.data() as ParticipantProfile)
-    .filter((participant) => !(participant.currentStatus in activeStatuses));
+    .filter((participant) =>
+      activeStatuses.find((status) => status === participant.currentStatus),
+    );
 
   // Build prompt
   const prompt = createAgentParticipantRankingStagePrompt(
