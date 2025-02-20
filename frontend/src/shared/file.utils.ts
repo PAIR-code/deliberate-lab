@@ -1127,7 +1127,7 @@ export function getRankingStageCSVColumns(
     !participant
       ? `Participant rankings - ${rankingStage.id}`
       : stageAnswer?.kind === StageKind.RANKING
-        ? stageAnswer.rankingList.join(',')
+        ? `"${stageAnswer.rankingList.join(',')}"`
         : '',
   );
 
