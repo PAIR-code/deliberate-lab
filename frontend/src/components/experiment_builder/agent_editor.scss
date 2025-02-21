@@ -101,7 +101,11 @@ pr-textarea {
 
 .error-message {
   font-style: italic;
-  color: red;
+  color: var(--md-sys-color-error);
+}
+
+.required {
+  color: var(--md-sys-color-error);
 }
 
 .action-buttons {

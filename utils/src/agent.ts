@@ -100,6 +100,7 @@ export interface AgentChatPromptConfig extends BaseAgentPromptConfig {
 /** Top-level agent mediator config. */
 export interface AgentMediatorConfig {
   id: string;
+  privateName: string; // viewable only to experimenters
   name: string; // display name
   avatar: string;
   isActive: boolean; // if false, API calls are not made
@@ -184,7 +185,8 @@ export function createAgentMediatorConfig(
 ): AgentMediatorConfig {
   return {
     id: config.id ?? generateId(),
-    name: config.name ?? 'Agent',
+    privateName: config.name ?? '',
+    name: config.name ?? 'Mediator',
     avatar: config.avatar ?? '🤖',
     isActive: config.isActive ?? true,
     defaultModelSettings:
