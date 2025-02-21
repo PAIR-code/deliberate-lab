@@ -105,7 +105,7 @@ function formatFreeText(id: string, llmAnswerStr: string): TextSurveyAnswer | nu
 
 function formatMultipleAnswer(id: string, question: MultipleChoiceSurveyQuestion, llmAnswerStr: string): MultipleChoiceSurveyAnswer | null {
     const index = parseCatchInt(llmAnswerStr);
-    if (!index) {
+    if (index === null) {
         return null;
     }
 
@@ -114,6 +114,7 @@ function formatMultipleAnswer(id: string, question: MultipleChoiceSurveyQuestion
         console.error("Invalid survey multiple choice index:", index);
         return null;
     } else {
+        console.debug("Item selected ", item);
         return { id: id, kind: SurveyQuestionKind.MULTIPLE_CHOICE, choiceId: item.id };
     }
 }
@@ -131,7 +132,7 @@ function formatCheckAnswer(id: string, llmAnswerStr: string): CheckSurveyAnswer 
 
 function formatScale(id: string, question: ScaleSurveyQuestion, llmAnswerStr: string): ScaleSurveyAnswer | null {
     const value = parseCatchInt(llmAnswerStr);
-    if (!value) {
+    if (value === null) {
         return null;
     }
 
