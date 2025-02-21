@@ -56,7 +56,6 @@ export class ExperimentBuilder extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   @state() panelView: PanelView = PanelView.DEFAULT;
-  @state() testAgentConfigResponse = '';
 
   override render() {
     return html`
@@ -143,6 +142,7 @@ export class ExperimentBuilder extends MobxLitElement {
       `;
     }
     if (this.panelView === PanelView.AGENTS) {
+      // TODO: Refactor agent nav to separate component
       return html`
         <div class="panel-view">
           <div class="banner warning">
@@ -154,14 +154,31 @@ export class ExperimentBuilder extends MobxLitElement {
           <div class="top">
             <div class="panel-view-header">Agents</div>
             <pr-button
-              @click=${async () => {
-                this.testAgentConfigResponse =
-                  await this.experimentManager.testAgentConfig();
+              @click=${() => {
+                this.agentEditor.addAgentMediator();
               }}
             >
-              Test agent mediator
+              Add agent mediator
             </pr-button>
-            <div>${this.testAgentConfigResponse}</div>
+            ${this.agentEditor.agentMediators.map(
+              (mediator) => html`
+                <div
+                  class="agent-item ${this.agentEditor
+                    .currentAgentMediatorId === mediator.id
+                    ? 'current'
+                    : ''}"
+                  @click=${() => {
+                    this.agentEditor.setCurrentAgentMediator(mediator.id);
+                  }}
+                >
+                  <div>${mediator.name}</div>
+                  <div class="subtitle">
+                    ${mediator.defaultModelSettings.modelName}
+                  </div>
+                  <div class="subtitle">${mediator.id}</div>
+                </div>
+              `,
+            )}
           </div>
         </div>
       `;
@@ -226,7 +243,7 @@ export class ExperimentBuilder extends MobxLitElement {
       return nothing;
     }
 
-    const agent = this.agentEditor.getAgentMediator('test');
+    const agent = this.agentEditor.currentAgentMediator;
 
     return html`
       <div class="experiment-builder">

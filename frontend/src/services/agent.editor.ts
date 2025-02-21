@@ -1,13 +1,8 @@
-import {
-  ChatStageConfig,
-  Experiment,
-  StageConfig,
-  StageKind,
-} from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase/firestore';
 import {computed, makeObservable, observable} from 'mobx';
 
 import {FirebaseService} from './firebase.service';
+import {ExperimentManager} from './experiment.manager';
 import {Service} from './service';
 
 import {
@@ -16,12 +11,18 @@ import {
   AgentConfig,
   AgentMediatorConfig,
   AgentModelSettings,
+  ChatStageConfig,
+  Experiment,
+  StageConfig,
+  StageKind,
   ModelGenerationConfig,
   createAgentMediatorConfig,
+  createAgentChatPromptConfig,
 } from '@deliberation-lab/utils';
 import {updateChatAgentsCallable} from '../shared/callables';
 
 interface ServiceProvider {
+  experimentManager: ExperimentManager;
   firebaseService: FirebaseService;
 }
 
@@ -85,24 +86,45 @@ export class AgentEditor extends Service {
   // *********************************************************************** //
   // TODO: VARIABLES/FUNCTIONS FOR NEW AGENT MEDIATOR/PARTICIPANT CONFIGS    //
   // *********************************************************************** //
-  // TODO: Instead of creating a single test agent mediator,
-  // enable users to create multiple mediators for specific stages
-  @observable agentMediators: AgentMediatorConfig[] = [
-    createAgentMediatorConfig({id: 'test'}),
-  ];
-
+  @observable agentMediators: AgentMediatorConfig[] = [];
+  // Mediator selected in panel
+  @observable currentAgentMediatorId = '';
   // Maps from agent ID to (stage ID to stage chat prompt)
   @observable agentChatPromptMap: Record<
     string,
     Record<string, AgentChatPromptConfig>
   > = {};
+  // Maps from agent ID to test API response
+  @observable agentTestResponseMap: Record<string, string> = {};
 
-  addAgentMediator() {
-    this.agentMediators.push(createAgentMediatorConfig());
+  @computed get currentAgentMediator() {
+    return this.getAgentMediator(this.currentAgentMediatorId);
+  }
+
+  setCurrentAgentMediator(id: string) {
+    this.currentAgentMediatorId = id;
+  }
+
+  addAgentMediator(setAsCurrent = true) {
+    const agent = createAgentMediatorConfig();
+    this.agentMediators.push(agent);
+    if (setAsCurrent) {
+      this.currentAgentMediatorId = agent.id;
+    }
   }
 
   getAgentMediator(id: string) {
     return this.agentMediators.find((agent) => agent.id === id);
+  }
+
+  async testAgentConfig(agentConfig: AgentMediatorConfig) {
+    const response =
+      await this.sp.experimentManager.testAgentConfig(agentConfig);
+    this.agentTestResponseMap[agentConfig.id] = response;
+  }
+
+  getTestResponse(agentId = this.currentAgentMediatorId) {
+    return this.agentTestResponseMap[agentId] ?? '';
   }
 
   updateAgentMediatorName(id: string, name: string) {
@@ -130,6 +152,18 @@ export class AgentEditor extends Service {
         ...defaultModelSettings,
       };
     }
+  }
+
+  addAgentMediatorPrompt(agentId: string, stageConfig: StageConfig) {
+    const agent = this.getAgentMediator(agentId);
+    if (agent) {
+      this.agentChatPromptMap[agentId][stageConfig.id] =
+        createAgentChatPromptConfig(stageConfig.id, stageConfig.kind);
+    }
+  }
+
+  getAgentMediatorPrompt(agentId: string, stageId: string) {
+    return this.agentChatPromptMap[agentId][stageId];
   }
 
   updateAgentMediatorChatSettings(
