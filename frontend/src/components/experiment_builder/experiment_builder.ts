@@ -1,3 +1,8 @@
+import '../../pair-components/button';
+import '../../pair-components/icon';
+import '../../pair-components/icon_button';
+import '../../pair-components/tooltip';
+import '../experimenter/experimenter_data_editor';
 import '../stages/base_stage_editor';
 import '../stages/chat_editor';
 import '../stages/ranking_editor';
@@ -7,10 +12,6 @@ import '../stages/profile_stage_editor';
 import '../stages/reveal_editor';
 import '../stages/survey_editor';
 import '../stages/survey_per_participant_editor';
-import '../../pair-components/button';
-import '../../pair-components/icon';
-import '../../pair-components/icon_button';
-import '../../pair-components/tooltip';
 import '../stages/tos_editor';
 import '../stages/transfer_editor';
 import './agent_editor';
@@ -40,6 +41,7 @@ import {styles} from './experiment_builder.scss';
 
 enum PanelView {
   AGENTS = 'agents',
+  API_KEY = 'api_key',
   DEFAULT = 'default',
   STAGES = 'stages',
 }
@@ -60,8 +62,8 @@ export class ExperimentBuilder extends MobxLitElement {
   override render() {
     return html`
       ${this.renderNavPanel()} ${this.renderExperimentConfigBuilder()}
-      ${this.renderAgentBuilder()} ${this.renderStageBuilder()}
-      ${this.renderStageBuilderDialog()}
+      ${this.renderAgentBuilder()} ${this.renderExperimenterSettings()}
+      ${this.renderStageBuilder()} ${this.renderStageBuilderDialog()}
     `;
   }
 
@@ -109,6 +111,18 @@ export class ExperimentBuilder extends MobxLitElement {
             >
             </pr-icon-button>
           </pr-tooltip>
+          <pr-tooltip text="Experimenter settings" position="RIGHT_END">
+            <pr-icon-button
+              color="secondary"
+              icon="key"
+              size="medium"
+              variant=${isSelected(PanelView.API_KEY) ? 'tonal' : 'default'}
+              @click=${() => {
+                this.panelView = PanelView.API_KEY;
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
         </div>
         ${this.renderPanelView()}
       </div>
@@ -138,6 +152,19 @@ export class ExperimentBuilder extends MobxLitElement {
             ${this.renderStageButtons()}
           </div>
           <div class="bottom"></div>
+        </div>
+      `;
+    }
+    if (this.panelView === PanelView.API_KEY) {
+      return html`
+        <div class="panel-view">
+          <div class="top">
+            <div class="panel-view-header">Experimenter settings</div>
+            <div>
+              ⚠️ Note that experimenter API settings are shared across all
+              experiments!
+            </div>
+          </div>
         </div>
       `;
     }
@@ -235,6 +262,19 @@ export class ExperimentBuilder extends MobxLitElement {
         <pr-icon color="error" icon="delete"></pr-icon>
         Delete experiment
       </pr-button>
+    `;
+  }
+
+  private renderExperimenterSettings() {
+    if (this.panelView !== PanelView.API_KEY) {
+      return nothing;
+    }
+    return html`
+      <div class="experiment-builder">
+        <div class="content">
+          <experimenter-data-editor></experimenter-data-editor>
+        </div>
+      </div>
     `;
   }
 
