@@ -6,14 +6,13 @@ import {
     BaseSurveyAnswer,
     SurveyQuestionKind,
     INVALID_ANSWER,
-    createSurveyStageParticipantAnswer,
-    SurveyStageParticipantAnswer,
     TextSurveyAnswer,
     CheckSurveyAnswer,
     ScaleSurveyAnswer,
     MultipleChoiceSurveyAnswer,
     SurveyQuestion,
     MultipleChoiceSurveyQuestion,
+    ScaleSurveyQuestion,
 } from "@deliberation-lab/utils";
 import { getAgentResponse } from '../agent.utils';
 
@@ -45,7 +44,7 @@ export async function getAgentParticipantSurveyResponse(
         const llmResponse = await getLLMResponse(experimenterData, question);
 
         const formattedResponse = formatAnswer(question, llmResponse);
-        if(!formattedResponse){
+        if (!formattedResponse) {
             answers.push(INVALID_ANSWER);
         } else {
             answers.push(formattedResponse);
@@ -83,7 +82,7 @@ function formatAnswer(question: SurveyQuestion, llmAnswer: ModelResponse | null)
     if (!llmAnswer) {
         return INVALID_ANSWER;
     }
-    
+
     const llmAnswerStr = llmAnswer.text;
     const id = "placeholder"; //TODO: Figure out ID
 
@@ -95,45 +94,60 @@ function formatAnswer(question: SurveyQuestion, llmAnswer: ModelResponse | null)
         case SurveyQuestionKind.CHECK:
             return formatCheckAnswer(id, llmAnswerStr);
         case SurveyQuestionKind.SCALE:
-            return formatScale(id, llmAnswerStr);
+            return formatScale(id, question, llmAnswerStr);
     }
 
 }
 
-function formatFreeText(id: string, llmAnswerStr: string): TextSurveyAnswer  | null  {
-    return {id: id, kind: SurveyQuestionKind.TEXT, answer: llmAnswerStr}
+function formatFreeText(id: string, llmAnswerStr: string): TextSurveyAnswer | null {
+    return { id: id, kind: SurveyQuestionKind.TEXT, answer: llmAnswerStr }
 }
 
-function formatMultipleAnswer(id: string, question: MultipleChoiceSurveyQuestion, llmAnswerStr: string): MultipleChoiceSurveyAnswer | null  {
-    let index;
-    try {
-        index = parseInt(llmAnswerStr.trim());
-    } catch (e) {
-        console.error("Invalid survey multiple choice index:", e);
+function formatMultipleAnswer(id: string, question: MultipleChoiceSurveyQuestion, llmAnswerStr: string): MultipleChoiceSurveyAnswer | null {
+    const index = parseCatchInt(llmAnswerStr);
+    if (!index) {
         return null;
     }
-        
+
     const item = question.options[index];
-    if(!item){
+    if (!item) {
         console.error("Invalid survey multiple choice index:", index);
         return null;
     } else {
-        return {id: id, kind: SurveyQuestionKind.MULTIPLE_CHOICE, choiceId: item.id};
+        return { id: id, kind: SurveyQuestionKind.MULTIPLE_CHOICE, choiceId: item.id };
     }
 }
 
-function formatCheckAnswer(id: string, llmAnswerStr: string): CheckSurveyAnswer | null  {
-    if(llmAnswerStr !== "yes" && llmAnswerStr !== "no"){
+function formatCheckAnswer(id: string, llmAnswerStr: string): CheckSurveyAnswer | null {
+    if (llmAnswerStr !== "yes" && llmAnswerStr !== "no") {
         console.error("Invalid survey check answer:", llmAnswerStr);
         return null;
     }
     else {
         const answer = llmAnswerStr.trim() === "yes";
-        return {id: id, kind: SurveyQuestionKind.CHECK, isChecked: answer};
+        return { id: id, kind: SurveyQuestionKind.CHECK, isChecked: answer };
     }
 }
 
-function formatScale(id: string, llmAnswerStr: string): ScaleSurveyAnswer | null  {
-    const value = parseInt(llmAnswerStr.trim());
-    return {id: id, kind: SurveyQuestionKind.SCALE, value};
+function formatScale(id: string, question: ScaleSurveyQuestion, llmAnswerStr: string): ScaleSurveyAnswer | null {
+    const value = parseCatchInt(llmAnswerStr);
+    if (!value) {
+        return null;
+    }
+
+    if (value < question.lowerValue || value > question.upperValue) {
+        console.error(`Survey scale answer out of range: ${value}, expected between ${question.lowerValue} and ${question.upperValue}`);
+        return null;
+    }
+    return { id: id, kind: SurveyQuestionKind.SCALE, value };
+}
+
+function parseCatchInt(savedValue: any): number | null {
+    if (typeof savedValue === "number") {
+        return savedValue;
+    } else if (savedValue !== null && typeof savedValue === "string" && !isNaN(parseInt(savedValue))) {
+        return parseInt(savedValue.trim());
+    }
+    console.error("Invalid index (not a number):", savedValue);
+    return null;
 }
