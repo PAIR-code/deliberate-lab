@@ -48,6 +48,8 @@ export class AgentEditorComponent extends MobxLitElement {
         ${this.renderAgentModel(agentConfig)}
         <div class="divider"></div>
         ${this.renderTestButton(agentConfig)}
+        <div class="divider"></div>
+        ${this.renderDeleteButton(agentConfig)}
       </div>
     `;
   }
@@ -59,11 +61,29 @@ export class AgentEditorComponent extends MobxLitElement {
       this.isTestButtonLoading = false;
     };
 
+    const response = this.agentEditor.getTestResponse(agentConfig.id);
     return html`
-      <pr-button ?loading=${this.isTestButtonLoading} @click=${onClick}
-        >Test agent mediator</pr-button
+      <pr-button
+        ?loading=${this.isTestButtonLoading}
+        color="secondary"
+        variant="tonal"
+        @click=${onClick}
       >
-      <div>${this.agentEditor.getTestResponse(agentConfig.id)}</div>
+        Test agent mediator
+      </pr-button>
+      ${response.length > 0 ? html`<div>${response}</div>` : nothing}
+    `;
+  }
+
+  private renderDeleteButton(agent: AgentMediatorConfig) {
+    const onClick = () => {
+      this.agentEditor.deleteAgentMediator(agent.id);
+    };
+
+    return html`
+      <pr-button color="error" variant="outlined" @click=${onClick}>
+        Delete agent mediator
+      </pr-button>
     `;
   }
 
