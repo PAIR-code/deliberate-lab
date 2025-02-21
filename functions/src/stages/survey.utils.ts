@@ -13,9 +13,9 @@ import {
     ScaleSurveyAnswer,
     MultipleChoiceSurveyAnswer,
     SurveyQuestion,
+    MultipleChoiceSurveyQuestion,
 } from "@deliberation-lab/utils";
 import { getAgentResponse } from '../agent.utils';
-import { Model } from "openai/resources";
 
 
 /**
@@ -30,7 +30,7 @@ export async function getAgentParticipantSurveyResponse(
     experimentId: string,
     experimenterData: ExperimenterData, // for making LLM call
     participant: ParticipantProfileExtended,
-    stage: SurveyStageConfig): Promise<SurveyStageParticipantAnswer> {
+    stage: SurveyStageConfig): Promise<BaseSurveyAnswer[]> {
 
     console.debug(
         'TESTING AGENT PARTICIPANT PROMPT FOR RANKING STAGE\n',
@@ -44,7 +44,7 @@ export async function getAgentParticipantSurveyResponse(
     for (let question of stage.questions) {
         const llmResponse = await getLLMResponse(experimenterData, question);
 
-        const formattedResponse = formatAnswer(question.kind, llmResponse);
+        const formattedResponse = formatAnswer(question, llmResponse);
         if(!formattedResponse){
             answers.push(INVALID_ANSWER);
         } else {
@@ -79,7 +79,7 @@ async function getLLMResponse(experimenterData: ExperimenterData, question: Surv
  * @param answer the LLM response
  * @returns the answer in the appropriate type
  */
-function formatAnswer(questionKind: SurveyQuestionKind, llmAnswer: ModelResponse | null): BaseSurveyAnswer | null {
+function formatAnswer(question: SurveyQuestion, llmAnswer: ModelResponse | null): BaseSurveyAnswer | null {
     if (!llmAnswer) {
         return INVALID_ANSWER;
     }
@@ -87,18 +87,15 @@ function formatAnswer(questionKind: SurveyQuestionKind, llmAnswer: ModelResponse
     const llmAnswerStr = llmAnswer.text;
     const id = "placeholder"; //TODO: Figure out ID
 
-    switch (questionKind) {
+    switch (question.kind) {
         case SurveyQuestionKind.TEXT:
             return formatFreeText(id, llmAnswerStr);
         case SurveyQuestionKind.MULTIPLE_CHOICE:
-            return formatMultipleAnswer(id, llmAnswerStr);
+            return formatMultipleAnswer(id, question, llmAnswerStr);
         case SurveyQuestionKind.CHECK:
             return formatCheckAnswer(id, llmAnswerStr);
         case SurveyQuestionKind.SCALE:
             return formatScale(id, llmAnswerStr);
-        default:
-            console.error("Unknown survey question type:", questionKind);
-            return INVALID_ANSWER;
     }
 
 }
@@ -107,9 +104,22 @@ function formatFreeText(id: string, llmAnswerStr: string): TextSurveyAnswer  | n
     return {id: id, kind: SurveyQuestionKind.TEXT, answer: llmAnswerStr}
 }
 
-function formatMultipleAnswer(id: string, llmAnswerStr: string): MultipleChoiceSurveyAnswer | null  {
-    const value = parseInt(llmAnswerStr.trim());
-    return {id: id, kind: SurveyQuestionKind.MULTIPLE_CHOICE, choiceId: value};
+function formatMultipleAnswer(id: string, question: MultipleChoiceSurveyQuestion, llmAnswerStr: string): MultipleChoiceSurveyAnswer | null  {
+    let index;
+    try {
+        index = parseInt(llmAnswerStr.trim());
+    } catch (e) {
+        console.error("Invalid survey multiple choice index:", e);
+        return null;
+    }
+        
+    const item = question.options[index];
+    if(!item){
+        console.error("Invalid survey multiple choice index:", index);
+        return null;
+    } else {
+        return {id: id, kind: SurveyQuestionKind.MULTIPLE_CHOICE, choiceId: item.id};
+    }
 }
 
 function formatCheckAnswer(id: string, llmAnswerStr: string): CheckSurveyAnswer | null  {
