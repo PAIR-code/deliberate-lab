@@ -33,22 +33,39 @@ export enum ApiKeyType {
 // to experiment logic (e.g., chat mediation)
 // ----------------------------------------------------------------------------
 
-// TODO: Rename?
-export interface AgentModelSettings {
-  apiType: ApiKeyType;
-  modelName: string;
-  numRetries: number; // Number of times to retry API call if it fails
+/** Generation config for a specific stage's model call. */
+export interface ModelGenerationConfig {
   maxTokens: number; // Max tokens per model call response
+  stopSequences: string[];
   temperature: number;
   topP: number;
   frequencyPenalty: number;
   presencePenalty: number;
+  // TODO: Add response MIME type and schema
   customRequestBodyFields: CustomRequestBodyField[];
 }
 
-// Settings specifically for agent chat mediators
-// TODO: Adjust fields as appropriate
-export interface AgentMediatorModelSettings extends AgentModelSettings {
+/** Model settings for a specific agent. */
+export interface AgentModelSettings {
+  apiType: ApiKeyType;
+  modelName: string;
+}
+
+export interface AgentPromptSettings {
+  // Number of times to retry prompt call if it fails
+  numRetries: number;
+  // Whether or not to include context from all previously completed
+  // stages
+  includeStageHistory: boolean;
+  // Whether or not to include information (e.g., stage description)
+  // shown to users
+  includeStageInfo: boolean;
+  // TODO: Add few-shot examples
+  // (that align with generation config's response schema)
+}
+
+/** Model settings for agent in a chat discussion. */
+export interface AgentChatSettings {
   // Agent's "typing speed" during the chat conversation
   wordsPerMinute: number;
   // Number of chat messages that must exist before the agent can respond
@@ -60,40 +77,33 @@ export interface AgentMediatorModelSettings extends AgentModelSettings {
   maxTotalResponses: number | null;
 }
 
-// Specifies how prompt should be built
-// TODO: Adjust fields as appropriate
-export interface AgentBasePromptConfig {
-  type: StageKind;
-  prompt: string;
-  // Whether or not to include context from all previously completed
-  // stages
-  includeStageHistory: boolean;
-  // Whether or not to include information (e.g., stage description)
-  // shown to users
-  includeStageInfo: boolean;
-  // TODO: Add stop sequence?
-  // TODO: Add structured output config/fields
-  // TODO: Add structure for few-shot examples?
+/** Specifies how prompt should be sent to API. */
+export interface BaseAgentPromptConfig {
+  id: string; // stage ID
+  type: StageKind; // stage type
+  promptContext: string; // custom prompt content
+  modelSettings: AgentModelSettings;
+  generationConfig: ModelGenerationConfig;
+  promptSettings: AgentPromptSettings;
 }
 
-export interface AgentChatPromptConfig extends AgentBasePromptConfig {
-  type: StageKind.CHAT;
+/** Prompt config for completing stage (e.g., survey questions). */
+export type AgentParticipantPromptConfig = BaseAgentPromptConfig;
+
+/** Prompt config for sending chat messages
+ * (sent to specified API on stage's chat trigger)
+ */
+export interface AgentChatPromptConfig extends BaseAgentPromptConfig {
+  chatSettings: AgentChatSettings;
 }
 
-export type AgentPromptConfig = AgentChatPromptConfig;
-
-// TODO: Config for agent participant
-// For each stage agent is participating in,
-// include model + prompt settings?
-
-// Config for agent mediator
+/** Top-level agent mediator config. */
 export interface AgentMediatorConfig {
   id: string;
-  stageId: string; // chat stage that mediator is part of
   name: string; // display name
   avatar: string;
-  modelSettings: AgentMediatorModelSettings;
-  promptConfig: AgentChatPromptConfig;
+  isActive: boolean; // if false, API calls are not made
+  defaultModelSettings: AgentModelSettings;
 }
 
 // ************************************************************************* //
@@ -115,8 +125,15 @@ export function createAgentModelSettings(
     apiType: config.apiType ?? DEFAULT_AGENT_API_TYPE,
     // TODO: pick model name that matches API?
     modelName: config.modelName ?? DEFAULT_AGENT_API_MODEL,
-    numRetries: config.numRetries ?? 0,
+  };
+}
+
+export function createModelGenerationConfig(
+  config: Partial<ModelGenerationConfig> = {},
+): ModelGenerationConfig {
+  return {
     maxTokens: config.maxTokens ?? 8192,
+    stopSequences: config.stopSequences ?? [],
     temperature: config.temperature ?? 0.7,
     topP: config.topP ?? 1.0,
     frequencyPenalty: config.frequencyPenalty ?? 0.0,
@@ -125,11 +142,10 @@ export function createAgentModelSettings(
   };
 }
 
-export function createAgentMediatorModelSettings(
-  config: Partial<AgentMediatorModelSettings> = {},
-): AgentMediatorModelSettings {
+export function createAgentChatSettings(
+  config: Partial<AgentChatSettings> = {},
+): AgentChatSettings {
   return {
-    ...createAgentModelSettings(config),
     wordsPerMinute: config.wordsPerMinute ?? 80,
     minMessagesBeforeResponding: config.minMessagesBeforeResponding ?? 0,
     canSelfTriggerCalls: config.canSelfTriggerCalls ?? true,
@@ -137,27 +153,41 @@ export function createAgentMediatorModelSettings(
   };
 }
 
-export function createAgentChatPromptConfig(
-  config: Partial<AgentChatPromptConfig> = {},
-): AgentChatPromptConfig {
+export function createAgentPromptSettings(
+  config: Partial<AgentPromptSettings> = {},
+): AgentPromptSettings {
   return {
-    type: StageKind.CHAT,
-    prompt: config.prompt ?? DEFAULT_AGENT_MEDIATOR_PROMPT,
+    numRetries: config.numRetries ?? 0,
     includeStageHistory: config.includeStageHistory ?? false,
     includeStageInfo: config.includeStageInfo ?? false,
   };
 }
 
+export function createAgentChatPromptConfig(
+  id: string, // stage ID
+  type: StageKind, // stage kind
+  config: Partial<AgentChatPromptConfig> = {},
+): AgentChatPromptConfig {
+  return {
+    id,
+    type,
+    promptContext: config.promptContext ?? '',
+    modelSettings: config.modelSettings ?? createAgentModelSettings(),
+    promptSettings: config.promptSettings ?? createAgentPromptSettings(),
+    chatSettings: config.chatSettings ?? createAgentChatSettings(),
+    generationConfig: config.generationConfig ?? createModelGenerationConfig(),
+  };
+}
+
 export function createAgentMediatorConfig(
-  stageId: string, // ID of chat stage that agent should mediate
   config: Partial<AgentMediatorConfig> = {},
 ): AgentMediatorConfig {
   return {
     id: config.id ?? generateId(),
-    stageId,
     name: config.name ?? 'Agent',
     avatar: config.avatar ?? '🤖',
-    modelSettings: config.modelSettings ?? createAgentMediatorModelSettings(),
-    promptConfig: config.promptConfig ?? createAgentChatPromptConfig(),
+    isActive: config.isActive ?? true,
+    defaultModelSettings:
+      config.defaultModelSettings ?? createAgentModelSettings(),
   };
 }
