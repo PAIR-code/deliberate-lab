@@ -102,8 +102,10 @@ function encodeMessages(
     model: modelName,
     messages: messageObjs,
     stream: false,
-    temperature: generationConfig.temperature,
-    top_p: generationConfig.topP,
+    options: {
+      temperature: generationConfig.temperature,
+      top_p: generationConfig.topP,
+    },
     ...customFields
   };
 }
