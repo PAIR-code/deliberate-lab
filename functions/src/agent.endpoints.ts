@@ -6,6 +6,7 @@ import {
   StageConfig,
   StageKind,
   ParticipantProfileExtended,
+  createAgentGenerationConfig,
 } from '@deliberation-lab/utils';
 import {
   getAgentResponse,
@@ -134,9 +135,9 @@ export const testAgentConfig = onCall(async (request) => {
     if (apiType === ApiKeyType.GEMINI_API_KEY) {
       return await getGeminiResponse(experimenterData, model, prompt);
     }
-    if (apiType === ApiKeyType.OPEN_AI_API_KEY) {
-      const generationConfig =
-        agentConfig.modelSettings as AgentGenerationConfig;
+    if (apiType === ApiKeyType.OPENAI_API_KEY) {
+      // TODO: Add generation config based on new agent refactor
+      const generationConfig = createAgentGenerationConfig();
       return await getOpenAIAPIResponse(
         experimenterData,
         model,
