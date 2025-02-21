@@ -9,7 +9,7 @@ import { ollamaChat } from "./ollama.api";
  */
 
 const MODEL_TYPE = "llama3.2";
-const LLM_SERVER_ENDPOINT = "http://localhost:11434/api/chat";
+const LLM_SERVER_ENDPOINT = "http://localhost:11435/api/chat";
 const TEST_MESSAGE = "Say hello!";
 
 
