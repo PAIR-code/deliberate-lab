@@ -119,13 +119,13 @@ function formatMultipleAnswer(id: string, question: MultipleChoiceSurveyQuestion
 }
 
 function formatCheckAnswer(id: string, llmAnswerStr: string): CheckSurveyAnswer | null {
-    if (llmAnswerStr !== "yes" && llmAnswerStr !== "no") {
+    const answer = llmAnswerStr.toLocaleLowerCase();
+    if (!answer.includes("yes") && !answer.includes("no")) {
         console.error("Invalid survey check answer:", llmAnswerStr);
         return null;
     }
     else {
-        const answer = llmAnswerStr.trim() === "yes";
-        return { id: id, kind: SurveyQuestionKind.CHECK, isChecked: answer };
+        return { id: id, kind: SurveyQuestionKind.CHECK, isChecked: answer.includes("yes") };
     }
 }
 
