@@ -10,7 +10,11 @@ import {core} from '../../core/core';
 import {AgentEditor} from '../../services/agent.editor';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
-import {AgentMediatorConfig, checkApiKeyExists} from '@deliberation-lab/utils';
+import {
+  AgentChatPromptConfig,
+  AgentMediatorConfig,
+  checkApiKeyExists,
+} from '@deliberation-lab/utils';
 import {LLM_AGENT_AVATARS} from '../../shared/constants';
 import {getHashBasedColor} from '../../shared/utils';
 
@@ -37,12 +41,6 @@ export class AgentEditorComponent extends MobxLitElement {
       <div class="agent-wrapper">
         ${this.renderAgentName(agentConfig)} ${this.renderAvatars(agentConfig)}
         ${this.renderAgentModel(agentConfig)}
-        ${this.renderAgentPrompt(agentConfig)}
-        ${this.renderAgentWordsPerMinute(agentConfig)}
-        <div class="divider"></div>
-        ${this.renderAgentSamplingParameters(agentConfig)}
-        <div class="divider"></div>
-        ${this.renderAgentCustomRequestBodyFields(agentConfig)}
       </div>
     `;
   }
@@ -77,7 +75,7 @@ export class AgentEditorComponent extends MobxLitElement {
         label="Model"
         placeholder="Model ID"
         variant="outlined"
-        .value=${agent.modelSettings.modelName}
+        .value=${agent.defaultModelSettings.modelName}
         ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updateModel}
       >
@@ -85,10 +83,17 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderAgentPrompt(agent: AgentMediatorConfig) {
+  private renderAgentPrompt(
+    agent: AgentMediatorConfig,
+    agentPromptConfig: AgentChatPromptConfig,
+  ) {
     const updatePrompt = (e: InputEvent) => {
-      const prompt = (e.target as HTMLTextAreaElement).value;
-      this.agentEditor.updateAgentMediatorPromptConfig(agent.id, {prompt});
+      const promptContext = (e.target as HTMLTextAreaElement).value;
+      this.agentEditor.updateAgentMediatorPromptConfig(
+        agent.id,
+        agentPromptConfig.id,
+        {promptContext},
+      );
     };
 
     return html`
@@ -102,7 +107,7 @@ export class AgentEditorComponent extends MobxLitElement {
         <pr-textarea
           placeholder="Custom prompt for agent"
           variant="outlined"
-          .value=${agent.promptConfig.prompt}
+          .value=${agentPromptConfig.promptContext}
           ?disabled=${!this.experimentEditor.canEditStages}
           @input=${updatePrompt}
         >
@@ -153,17 +158,22 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderAgentWordsPerMinute(agent: AgentMediatorConfig) {
+  private renderAgentWordsPerMinute(
+    agent: AgentMediatorConfig,
+    agentPromptConfig: AgentChatPromptConfig,
+  ) {
     const updateWordsPerMinute = (e: InputEvent) => {
       const wordsPerMinute = Number((e.target as HTMLInputElement).value);
       if (!isNaN(wordsPerMinute)) {
-        this.agentEditor.updateAgentMediatorModelSettings(agent.id, {
-          wordsPerMinute,
-        });
+        this.agentEditor.updateAgentMediatorChatSettings(
+          agent.id,
+          agentPromptConfig.id,
+          {wordsPerMinute},
+        );
       }
     };
 
-    const currentWPM = agent.modelSettings.wordsPerMinute;
+    const currentWPM = agentPromptConfig.chatSettings.wordsPerMinute;
     return html`
       <div class="field">
         <div class="field-title">Words per minute</div>
@@ -190,38 +200,53 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderAgentSamplingParameters(agent: AgentMediatorConfig) {
+  private renderAgentSamplingParameters(
+    agent: AgentMediatorConfig,
+    agentPromptConfig: AgentChatPromptConfig,
+  ) {
+    const generationConfig = agentPromptConfig.generationConfig;
+
     const updateTemperature = (e: InputEvent) => {
       const temperature = Number((e.target as HTMLInputElement).value);
       if (!isNaN(temperature)) {
-        this.agentEditor.updateAgentMediatorModelSettings(agent.id, {
-          temperature,
-        });
+        this.agentEditor.updateAgentMediatorGenerationConfig(
+          agent.id,
+          agentPromptConfig.id,
+          {temperature},
+        );
       }
     };
 
     const updateTopP = (e: InputEvent) => {
       const topP = Number((e.target as HTMLInputElement).value);
       if (!isNaN(topP)) {
-        this.agentEditor.updateAgentMediatorModelSettings(agent.id, {topP});
+        this.agentEditor.updateAgentMediatorGenerationConfig(
+          agent.id,
+          agentPromptConfig.id,
+          {topP},
+        );
       }
     };
 
     const updateFrequencyPenalty = (e: InputEvent) => {
       const frequencyPenalty = Number((e.target as HTMLInputElement).value);
       if (!isNaN(frequencyPenalty)) {
-        this.agentEditor.updateAgentMediatorModelSettings(agent.id, {
-          frequencyPenalty,
-        });
+        this.agentEditor.updateAgentMediatorGenerationConfig(
+          agent.id,
+          agentPromptConfig.id,
+          {frequencyPenalty},
+        );
       }
     };
 
     const updatePresencePenalty = (e: InputEvent) => {
       const presencePenalty = Number((e.target as HTMLInputElement).value);
       if (!isNaN(presencePenalty)) {
-        this.agentEditor.updateAgentMediatorModelSettings(agent.id, {
-          presencePenalty,
-        });
+        this.agentEditor.updateAgentMediatorGenerationConfig(
+          agent.id,
+          agentPromptConfig.id,
+          {presencePenalty},
+        );
       }
     };
 
@@ -246,7 +271,7 @@ export class AgentEditorComponent extends MobxLitElement {
               min="0.0"
               max="1.0"
               step="0.1"
-              .value=${agent.modelSettings.temperature}
+              .value=${generationConfig.temperature}
               @input=${updateTemperature}
             />
           </div>
@@ -265,7 +290,7 @@ export class AgentEditorComponent extends MobxLitElement {
               min="0.0"
               max="1.0"
               step="0.1"
-              .value=${agent.modelSettings.topP}
+              .value=${generationConfig.topP}
               @input=${updateTopP}
             />
           </div>
@@ -283,7 +308,7 @@ export class AgentEditorComponent extends MobxLitElement {
               min="0.0"
               max="2.0"
               step="0.1"
-              .value=${agent.modelSettings.frequencyPenalty}
+              .value=${generationConfig.frequencyPenalty}
               @input=${updateFrequencyPenalty}
             />
           </div>
@@ -301,7 +326,7 @@ export class AgentEditorComponent extends MobxLitElement {
               min="0.0"
               max="2.0"
               step="0.1"
-              .value=${agent.modelSettings.presencePenalty}
+              .value=${generationConfig.presencePenalty}
               @input=${updatePresencePenalty}
             />
           </div>
@@ -310,10 +335,18 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderAgentCustomRequestBodyFields(agent: AgentMediatorConfig) {
+  private renderAgentCustomRequestBodyFields(
+    agent: AgentMediatorConfig,
+    agentPromptConfig: AgentChatPromptConfig,
+  ) {
     const addField = () => {
-      this.agentEditor.addAgentMediatorCustomRequestBodyField(agent.id);
+      this.agentEditor.addAgentMediatorCustomRequestBodyField(
+        agent.id,
+        agentPromptConfig.id,
+      );
     };
+
+    const generationConfig = agentPromptConfig.generationConfig;
 
     return html`
       <div class="section">
@@ -321,8 +354,13 @@ export class AgentEditorComponent extends MobxLitElement {
           <div class="section-title">Custom request body fields</div>
           <div class="description">Add custom fields to the request body.</div>
         </div>
-        ${agent.modelSettings.customRequestBodyFields.map((field, fieldIndex) =>
-          this.renderAgentCustomRequestBodyField(agent, field, fieldIndex),
+        ${generationConfig.customRequestBodyFields.map((field, fieldIndex) =>
+          this.renderAgentCustomRequestBodyField(
+            agent,
+            agentPromptConfig,
+            field,
+            fieldIndex,
+          ),
         )}
         <pr-button @click=${addField}>Add field</pr-button>
       </div>
@@ -331,6 +369,7 @@ export class AgentEditorComponent extends MobxLitElement {
 
   private renderAgentCustomRequestBodyField(
     agent: AgentMediatorConfig,
+    agentPromptConfig: AgentChatPromptConfig,
     field: {name: string; value: string},
     fieldIndex: number,
   ) {
@@ -338,6 +377,7 @@ export class AgentEditorComponent extends MobxLitElement {
       const name = (e.target as HTMLTextAreaElement).value;
       this.agentEditor.updateAgentMediatorCustomRequestBodyField(
         agent.id,
+        agentPromptConfig.id,
         fieldIndex,
         {name},
       );
@@ -347,6 +387,7 @@ export class AgentEditorComponent extends MobxLitElement {
       const value = (e.target as HTMLTextAreaElement).value;
       this.agentEditor.updateAgentMediatorCustomRequestBodyField(
         agent.id,
+        agentPromptConfig.id,
         fieldIndex,
         {value},
       );
@@ -355,35 +396,36 @@ export class AgentEditorComponent extends MobxLitElement {
     const deleteField = () => {
       this.agentEditor.deleteAgentMediatorCustomRequestBodyField(
         agent.id,
+        agentPromptConfig.id,
         fieldIndex,
       );
     };
     return html`
-                 <div class="name-value-input">
-           <pr-textarea
-             label="Field name"
-             variant="outlined"
-             .value=${field.name}
-             @input=${updateName}
-           >
-           </pr-textarea>
-           <pr-textarea
-             label="Field value"
-             variant="outlined"
-             .value=${field.value}
-             @input=${updateValue}
-           >
-           </pr-textarea>
-           <pr-icon-button
-              icon="close"
-              color="neutral"
-              padding="small"
-              variant="default"
-              ?disabled=${!this.experimentEditor.canEditStages}
-              @click=${deleteField}
-           >
-         </div>
-      `;
+      <div class="name-value-input">
+         <pr-textarea
+           label="Field name"
+           variant="outlined"
+           .value=${field.name}
+           @input=${updateName}
+         >
+         </pr-textarea>
+         <pr-textarea
+           label="Field value"
+           variant="outlined"
+           .value=${field.value}
+           @input=${updateValue}
+         >
+         </pr-textarea>
+         <pr-icon-button
+            icon="close"
+            color="neutral"
+            padding="small"
+            variant="default"
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @click=${deleteField}
+         >
+       </div>
+    `;
   }
 }
 

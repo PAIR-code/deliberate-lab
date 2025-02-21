@@ -125,9 +125,9 @@ export const testAgentConfig = onCall(async (request) => {
   const experimenterData = creatorDoc.data() as ExperimenterData;
 
   // TODO: Use utils functions to construct prompt based on stage type
-  const prompt = agentConfig.promptConfig.prompt;
-  const apiType = agentConfig.modelSettings.apiType;
-  const model = agentConfig.modelSettings.model;
+  const prompt = 'Tell a funny joke';
+  const apiType = agentConfig.defaultModelSettings.apiType;
+  const model = agentConfig.defaultModelSettings.model;
 
   // Call LLM API
   const callModel = async () => {
