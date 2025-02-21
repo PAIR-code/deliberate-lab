@@ -13,6 +13,7 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 import {
   AgentChatPromptConfig,
   AgentMediatorConfig,
+  ApiKeyType,
   checkApiKeyExists,
 } from '@deliberation-lab/utils';
 import {LLM_AGENT_AVATARS} from '../../shared/constants';
@@ -45,6 +46,7 @@ export class AgentEditorComponent extends MobxLitElement {
     return html`
       <div class="agent-wrapper">
         ${this.renderAgentName(agentConfig)} ${this.renderAvatars(agentConfig)}
+        ${this.renderAgentApiType(agentConfig)}
         ${this.renderAgentModel(agentConfig)}
         <div class="divider"></div>
         ${this.renderTestButton(agentConfig)}
@@ -103,6 +105,54 @@ export class AgentEditorComponent extends MobxLitElement {
         @input=${updateName}
       >
       </pr-textarea>
+    `;
+  }
+
+  private renderAgentApiType(agentConfig: AgentMediatorConfig) {
+    return html`
+      <div class="section">
+        <div class="field-title">LLM API</div>
+        <div class="action-buttons">
+          ${this.renderApiTypeButton(
+            agentConfig,
+            'Gemini',
+            ApiKeyType.GEMINI_API_KEY,
+          )}
+          ${this.renderApiTypeButton(
+            agentConfig,
+            'OpenAI or compatible API',
+            ApiKeyType.OPENAI_API_KEY,
+          )}
+          ${this.renderApiTypeButton(
+            agentConfig,
+            'Ollama Server',
+            ApiKeyType.OLLAMA_CUSTOM_URL,
+          )}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderApiTypeButton(
+    agentConfig: AgentMediatorConfig,
+    apiName: string,
+    apiType: ApiKeyType,
+  ) {
+    const updateAgentAPI = () => {
+      this.agentEditor.updateAgentMediatorModelSettings(agentConfig.id, {
+        apiType,
+      });
+    };
+
+    const isActive = apiType === agentConfig.defaultModelSettings.apiType;
+    return html`
+      <pr-button
+        color="${isActive ? 'primary' : 'neutral'}"
+        variant=${isActive ? 'tonal' : 'default'}
+        @click=${updateAgentAPI}
+      >
+        ${apiName}
+      </pr-button>
     `;
   }
 
