@@ -1,4 +1,5 @@
 import { 
+    BaseSurveyAnswer,
     BaseSurveyQuestion, 
     CheckSurveyQuestion, 
     MultipleChoiceSurveyQuestion, 
