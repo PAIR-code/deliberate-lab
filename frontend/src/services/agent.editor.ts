@@ -11,10 +11,12 @@ import {FirebaseService} from './firebase.service';
 import {Service} from './service';
 
 import {
+  AgentChatPromptConfig,
+  AgentChatSettings,
   AgentConfig,
-  AgentPromptConfig,
   AgentMediatorConfig,
-  AgentMediatorModelSettings,
+  AgentModelSettings,
+  ModelGenerationConfig,
   createAgentMediatorConfig,
 } from '@deliberation-lab/utils';
 import {updateChatAgentsCallable} from '../shared/callables';
@@ -86,11 +88,17 @@ export class AgentEditor extends Service {
   // TODO: Instead of creating a single test agent mediator,
   // enable users to create multiple mediators for specific stages
   @observable agentMediators: AgentMediatorConfig[] = [
-    createAgentMediatorConfig('testChatId', {id: 'test'}),
+    createAgentMediatorConfig({id: 'test'}),
   ];
 
-  addAgentMediator(chatStageId: string = '') {
-    this.agentMediators.push(createAgentMediatorConfig(chatStageId));
+  // Maps from agent ID to (stage ID to stage chat prompt)
+  @observable agentChatPromptMap: Record<
+    string,
+    Record<string, AgentChatPromptConfig>
+  > = {};
+
+  addAgentMediator() {
+    this.agentMediators.push(createAgentMediatorConfig());
   }
 
   getAgentMediator(id: string) {
@@ -113,68 +121,118 @@ export class AgentEditor extends Service {
 
   updateAgentMediatorModelSettings(
     id: string,
-    modelSettings: Partial<AgentMediatorModelSettings>,
+    defaultModelSettings: Partial<AgentModelSettings>,
   ) {
     const agent = this.getAgentMediator(id);
     if (agent) {
-      agent.modelSettings = {...agent.modelSettings, ...modelSettings};
+      agent.defaultModelSettings = {
+        ...agent.defaultModelSettings,
+        ...defaultModelSettings,
+      };
+    }
+  }
+
+  updateAgentMediatorChatSettings(
+    agentId: string,
+    stageId: string,
+    chatSettings: Partial<AgentChatSettings>,
+  ) {
+    const agent = this.getAgentMediator(agentId);
+    const promptConfig = this.agentChatPromptMap[agentId][stageId];
+    if (agent && promptConfig) {
+      promptConfig.chatSettings = {
+        ...promptConfig.chatSettings,
+        ...chatSettings,
+      };
+    }
+  }
+
+  updateAgentMediatorGenerationConfig(
+    agentId: string,
+    stageId: string,
+    generationConfig: Partial<ModelGenerationConfig>,
+  ) {
+    const agent = this.getAgentMediator(agentId);
+    const promptConfig = this.agentChatPromptMap[agentId][stageId];
+    if (agent && promptConfig) {
+      promptConfig.generationConfig = {
+        ...promptConfig.generationConfig,
+        ...generationConfig,
+      };
     }
   }
 
   updateAgentMediatorPromptConfig(
     id: string,
-    promptConfig: Partial<AgentPromptConfig>,
+    stageId: string,
+    promptConfig: Partial<AgentChatPromptConfig>,
   ) {
     const agent = this.getAgentMediator(id);
-    if (agent) {
-      agent.promptConfig = {...agent.promptConfig, ...promptConfig};
+    const config = this.agentChatPromptMap[id][stageId];
+    if (agent && config) {
+      this.agentChatPromptMap[id][stageId] = {...config, ...promptConfig};
     }
   }
 
-  addAgentMediatorCustomRequestBodyField(agentId: string) {
+  addAgentMediatorCustomRequestBodyField(agentId: string, stageId: string) {
     const agent = this.getAgentMediator(agentId);
-    if (agent) {
-      const fields = agent.modelSettings.customRequestBodyFields;
+    const promptConfig = this.agentChatPromptMap[agentId][stageId];
+    if (agent && promptConfig) {
+      const fields = promptConfig.generationConfig.customRequestBodyFields;
       const newField = {name: '', value: ''};
       const customRequestBodyFields = [...fields, newField];
-      agent.modelSettings = {...agent.modelSettings, customRequestBodyFields};
+      promptConfig.generationConfig = {
+        ...promptConfig.generationConfig,
+        customRequestBodyFields,
+      };
     }
   }
 
   updateAgentMediatorCustomRequestBodyField(
     agentId: string,
+    stageId: string,
     fieldIndex: number,
     field: Partial<{name: string; value: string}>,
   ) {
     const agent = this.getAgentMediator(agentId);
-    if (agent) {
+    const promptConfig = this.agentChatPromptMap[agentId][stageId];
+    if (agent && promptConfig) {
       const customRequestBodyFields =
-        agent.modelSettings.customRequestBodyFields;
+        promptConfig.generationConfig.customRequestBodyFields;
       customRequestBodyFields[fieldIndex] = {
         ...customRequestBodyFields[fieldIndex],
         ...field,
       };
-      agent.modelSettings = {...agent.modelSettings, customRequestBodyFields};
+      promptConfig.generationConfig = {
+        ...promptConfig.generationConfig,
+        customRequestBodyFields,
+      };
     }
   }
 
   deleteAgentMediatorCustomRequestBodyField(
     agentId: string,
+    stageId: string,
     fieldIndex: number,
   ) {
     const agent = this.getAgentMediator(agentId);
-    if (agent) {
-      const fields = agent.modelSettings.customRequestBodyFields;
+    const promptConfig = this.agentChatPromptMap[agentId][stageId];
+    if (agent && promptConfig) {
+      const fields = promptConfig.generationConfig.customRequestBodyFields;
       const customRequestBodyFields = [
         ...fields.slice(0, fieldIndex),
         ...fields.slice(fieldIndex + 1),
       ];
-      agent.modelSettings = {...agent.modelSettings, customRequestBodyFields};
+      promptConfig.generationConfig = {
+        ...promptConfig.generationConfig,
+        customRequestBodyFields,
+      };
     }
   }
 
   resetAgents() {
     this.agentMediators = [];
+    this.agentChatPromptMap = {};
   }
 
   // *********************************************************************** //
