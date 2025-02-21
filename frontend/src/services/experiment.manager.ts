@@ -21,6 +21,7 @@ import {Service} from './service';
 import JSZip from 'jszip';
 
 import {
+  AgentMediatorConfig,
   CohortConfig,
   CohortParticipantConfig,
   CreateChatMessageData,
@@ -691,11 +692,10 @@ export class ExperimentManager extends Service {
   }
 
   /** TEMPORARY: Test new agent config. */
-  async testAgentConfig() {
+  async testAgentConfig(agentConfig: AgentMediatorConfig) {
     let response = '';
     const creatorId = this.sp.authService.experimenterData?.email;
-    const agentConfig = this.sp.agentEditor.getAgentMediator('test');
-    if (creatorId && agentConfig) {
+    if (creatorId) {
       response =
         (
           await testAgentConfigCallable(this.sp.firebaseService.functions, {
