@@ -139,6 +139,7 @@ export class ExperimentBuilder extends MobxLitElement {
               Edit experiment metadata to the right, then use the tabs on the
               left to add experiment stages and agents.
             </div>
+            ${this.renderLoadGameButton()}
           </div>
           <div class="bottom">${this.renderDeleteButton()}</div>
         </div>
@@ -149,7 +150,7 @@ export class ExperimentBuilder extends MobxLitElement {
         <div class="panel-view">
           <div class="top">
             <div class="panel-view-header">Experiment stages</div>
-            ${this.renderStageButtons()}
+            ${this.renderAddStageButton()} ${this.renderLoadGameButton()}
           </div>
           <div class="bottom"></div>
         </div>
@@ -217,7 +218,7 @@ export class ExperimentBuilder extends MobxLitElement {
     return nothing;
   }
 
-  private renderStageButtons() {
+  private renderAddStageButton() {
     return html`
       <pr-button
         color="tertiary"
@@ -229,7 +230,11 @@ export class ExperimentBuilder extends MobxLitElement {
       >
         Add stage
       </pr-button>
+    `;
+  }
 
+  private renderLoadGameButton() {
+    return html`
       <pr-button
         color="tertiary"
         variant="tonal"
