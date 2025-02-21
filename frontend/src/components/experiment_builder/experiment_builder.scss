@@ -117,3 +117,29 @@ pr-button pr-icon {
     margin: 0;
   }
 }
+
+// Agent nav styles
+.agent-item {
+  @include common.flex-column;
+  border-radius: common.$spacing-medium;
+  cursor: pointer;
+  gap: common.$spacing-small;
+  padding: common.$spacing-medium;
+
+  &:focus,
+  &:hover {
+    background: var(--md-sys-color-surface-variant);
+  }
+
+  &.current,
+  &.current:focus,
+  &.current:hover {
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    cursor: initial;
+  }
+}
+
+.subtitle {
+  @include typescale.label-small;
+}
