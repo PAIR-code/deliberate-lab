@@ -45,6 +45,9 @@ export class HomeService extends Service {
   @observable experimenterMap: Record<string, ExperimenterProfile> = {};
   @observable experimentTemplates: Experiment[] = [];
 
+  // Home tabs
+  @observable showMyExperiments = true;
+
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
   @observable areExperimentsLoading = true;
@@ -126,5 +129,9 @@ export class HomeService extends Service {
 
   getExperimenterName(experimenterId: string) {
     return this.experimenterMap[experimenterId]?.name ?? experimenterId;
+  }
+
+  setShowMyExperiments(showMyExperiments: boolean) {
+    this.showMyExperiments = showMyExperiments;
   }
 }

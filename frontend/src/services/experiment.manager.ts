@@ -9,6 +9,7 @@ import {
   Unsubscribe,
   where,
 } from 'firebase/firestore';
+import {AgentEditor} from './agent.editor';
 import {AuthService} from './auth.service';
 import {CohortService} from './cohort.service';
 import {ExperimentEditor} from './experiment.editor';
@@ -44,6 +45,7 @@ import {
   initiateParticipantTransferCallable,
   sendParticipantCheckCallable,
   setExperimentCohortLockCallable,
+  testAgentConfigCallable,
   testAgentParticipantPromptCallable,
   updateCohortMetadataCallable,
   writeExperimentCallable,
@@ -68,6 +70,7 @@ import {
 } from '../shared/participant.utils';
 
 interface ServiceProvider {
+  agentEditor: AgentEditor;
   authService: AuthService;
   cohortService: CohortService;
   experimentEditor: ExperimentEditor;
@@ -112,6 +115,7 @@ export class ExperimentManager extends Service {
   @observable showParticipantStats = true;
   @observable showParticipantPreview = true;
   @observable hideLockedCohorts = false;
+  @observable expandAllCohorts = true;
 
   // Copy of cohort being edited in settings dialog
   @observable cohortEditing: CohortConfig | undefined = undefined;
@@ -211,6 +215,10 @@ export class ExperimentManager extends Service {
     this.hideLockedCohorts = hideLockedCohorts;
   }
 
+  setExpandAllCohorts(expandAllCohorts: boolean) {
+    this.expandAllCohorts = expandAllCohorts;
+  }
+
   setCurrentParticipantId(id: string | undefined) {
     this.currentParticipantId = id;
 
@@ -302,6 +310,10 @@ export class ExperimentManager extends Service {
   loadExperimentData(id: string) {
     this.unsubscribeAll();
     this.isLoading = true;
+
+    if (!this.sp.authService.isExperimenter) {
+      return;
+    }
 
     // Subscribe to cohorts
     this.unsubscribe.push(
@@ -676,6 +688,23 @@ export class ExperimentManager extends Service {
         },
       );
     }
+  }
+
+  /** TEMPORARY: Test new agent config. */
+  async testAgentConfig() {
+    let response = '';
+    const creatorId = this.sp.authService.experimenterData?.email;
+    const agentConfig = this.sp.agentEditor.getAgentMediator('test');
+    if (creatorId && agentConfig) {
+      response =
+        (
+          await testAgentConfigCallable(this.sp.firebaseService.functions, {
+            creatorId,
+            agentConfig,
+          })
+        ).data ?? '';
+    }
+    return response;
   }
 
   /** Create a manual (human) agent chat message. */

@@ -30,7 +30,6 @@ export class ExperimentBuilderNav extends MobxLitElement {
 
   override render() {
     return html`
-      ${this.renderMetadataItem()}
       ${this.experimentEditor.stages.map((stage, index) =>
         this.renderStageItem(stage, index),
       )}

@@ -28,7 +28,7 @@ import {
   createTOSStage,
   createTransferStage,
 } from '@deliberation-lab/utils';
-import {LAS_METADATA, getLASStageConfigs} from '../../shared/games/lost_at_sea';
+import {LAS_METADATA, ANON_LAS_METADATA, getLASStageConfigs, getAnonLASStageConfigs} from '../../shared/games/lost_at_sea';
 import {
   CHIP_GAME_METADATA,
   getChipNegotiationStageConfigs,
@@ -117,8 +117,9 @@ export class StageBuilderDialog extends MobxLitElement {
         ⚠️ Loading a game will override any current stages in your configuration
       </div>
       <div class="card-gallery-wrapper">
-        ${this.renderLASCard()} ${this.renderRealityTVCard()}
-        ${this.renderChipNegotiationCard()} ${this.renderBbotCard()}
+        ${this.renderLASCard()} ${this.renderLASCard(true)} ${this.renderRealityTVCard()}
+        ${this.renderChipNegotiationCard()}
+        ${this.renderBbotCard()}
       </div>
     `;
   }
@@ -149,16 +150,19 @@ export class StageBuilderDialog extends MobxLitElement {
     this.experimentEditor.toggleStageBuilderDialog();
   }
 
-  private renderLASCard() {
+  private renderLASCard(isAnon: boolean = false) {
+    const metadata = isAnon ? ANON_LAS_METADATA : LAS_METADATA;
+    const configs = isAnon ? getAnonLASStageConfigs() : getLASStageConfigs();
+
     const addGame = () => {
-      this.addGame(LAS_METADATA, getLASStageConfigs());
+      this.addGame(metadata, configs);
     };
 
     return html`
       <div class="card" @click=${addGame}>
-        <div class="title">🌊 ${LAS_METADATA.name}</div>
+        <div class="title">${metadata.name}</div>
         <div>
-          ${LAS_METADATA.description}
+          ${metadata.description}
           <div></div>
         </div>
       </div>

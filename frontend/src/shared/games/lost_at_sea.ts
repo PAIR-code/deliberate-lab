@@ -12,13 +12,16 @@ import {
   choice,
   createChatStage,
   createCompareChatDiscussion,
+  createComprehensionStage,
   createRankingStage,
   createExperimentConfig,
   createInfoStage,
+  createMultipleChoiceItem,
   createPayoutStage,
   createProfileStage,
   createMetadataConfig,
   createMultipleChoiceSurveyQuestion,
+  createMultipleChoiceComprehensionQuestion,
   createRankingRevealItem,
   createRevealStage,
   createScaleSurveyQuestion,
@@ -39,14 +42,21 @@ import {
 // ****************************************************************************
 // Experiment config
 // ****************************************************************************
-export const LAS_METADATA = createMetadataConfig({
-  name: 'Lost at Sea (v2)',
+export const ANON_LAS_METADATA = createMetadataConfig({
+  name: '🐱 Anonymous Lost at Sea (v3)',
   publicName: 'Adrift in the Atlantic',
   description:
     'A complex election scenario (Born 2022) that showcases pseudonoymous participants and many different experiment stages.',
 });
 
-export function getLASStageConfigs(): StageConfig[] {
+export const LAS_METADATA = createMetadataConfig({
+  name: '🌊 Lost at Sea (v3)',
+  publicName: 'Adrift in the Atlantic',
+  description:
+    'A complex election scenario (Born 2022) that showcases participants and many different experiment stages.',
+});
+
+export function getAnonLASStageConfigs(): StageConfig[] {
   const stages: StageConfig[] = [];
   // Terms of service
   stages.push(LAS_TOS_STAGE);
@@ -54,7 +64,7 @@ export function getLASStageConfigs(): StageConfig[] {
   stages.push(LAS_INTRO_STAGE);
   stages.push(LAS_PERSONAL_INFO_STAGE);
   // Profile
-  stages.push(LAS_PROFILE_STAGE);
+  stages.push(ANON_LAS_PROFILE_STAGE);
   // Part 1
   stages.push(LAS_PART_1_INSTRUCTIONS_STAGE);
   stages.push(LAS_PART_1_SURVIVAL_SURVEY_STAGE);
@@ -67,6 +77,7 @@ export function getLASStageConfigs(): StageConfig[] {
   stages.push(LAS_PART_2_INSTRUCTIONS_STAGE);
   stages.push(LAS_PART_2_PERFORMANCE_ESTIMATION_SURVEY_STAGE);
   stages.push(LAS_PART_2_GROUP_INSTRUCTIONS_STAGE);
+  stages.push(COMPREHENSION_CHECK);
   stages.push(LAS_PART_2_CHAT_STAGE);
 
   stages.push(LAS_PART_2_UPDATED_TASK_INFO_STAGE);
@@ -83,6 +94,55 @@ export function getLASStageConfigs(): StageConfig[] {
   stages.push(LAS_PART_2_ELECTION_RANK);
 
   stages.push(LAS_PART_2_GENDER_GUESS);
+
+  // Part 3
+  stages.push(LAS_PART_3_INSTRUCTIONS_STAGE);
+  stages.push(LAS_PART_3_LEADER_TASK_SURVEY_STAGE);
+  stages.push(LAS_PART_3_REVEAL_STAGE);
+  // Payout
+  stages.push(LAS_PAYOUT_INFO_STAGE);
+  stages.push(LAS_PAYOUT_STAGE);
+  // Final
+  stages.push(LAS_FINAL_SURVEY_STAGE);
+
+  return stages;
+}
+
+export function getLASStageConfigs(): StageConfig[] {
+  const stages: StageConfig[] = [];
+  // Terms of service
+  stages.push(LAS_TOS_STAGE);
+  // Intro
+  stages.push(LAS_INTRO_STAGE);
+  // Profile
+  stages.push(LAS_PROFILE_STAGE);
+  // Part 1
+  stages.push(LAS_PART_1_INSTRUCTIONS_STAGE);
+  stages.push(LAS_PART_1_SURVIVAL_SURVEY_STAGE);
+  stages.push(LAS_PART_1_WTL_SURVEY_STAGE);
+
+  // Transfer
+  stages.push(LAS_TRANSFER_STAGE);
+
+  // Part 2
+  stages.push(LAS_PART_2_INSTRUCTIONS_STAGE);
+  stages.push(LAS_PART_2_PERFORMANCE_ESTIMATION_SURVEY_STAGE);
+  stages.push(LAS_PART_2_GROUP_INSTRUCTIONS_STAGE);
+  stages.push(COMPREHENSION_CHECK);
+  stages.push(LAS_PART_2_CHAT_STAGE);
+
+  stages.push(LAS_PART_2_UPDATED_TASK_INFO_STAGE);
+  stages.push(LAS_PART_2_UPDATED_TASK_SURVEY_STAGE);
+
+  stages.push(LAS_PART_2_WTL_SURVEY_STAGE);
+  stages.push(LAS_PART_2_ELECTION_INFO_STAGE);
+  stages.push(LAS_PART_2_ELECTION_STAGE);
+
+  // Rankings
+  stages.push(LAS_PART_2_ACCURACY_RANK);
+  stages.push(LAS_PART_2_CONFIDENCE_RANK);
+  stages.push(LAS_PART_2_WTL_RANK);
+  stages.push(LAS_PART_2_ELECTION_RANK);
 
   // Part 3
   stages.push(LAS_PART_3_INSTRUCTIONS_STAGE);
@@ -264,7 +324,7 @@ const LAS_PERSONAL_INFO_STAGE = createSurveyStage({
   name: 'Personal information',
   descriptions: createStageTextConfig({
     primaryText:
-      'Please fill out the folloiwng. Your gender will remain anonymous throughout this experiment.',
+      'Please fill out the following for demographic data collection. Your gender will remain anonymous throughout this experiment.',
   }),
   questions: [
     createMultipleChoiceSurveyQuestion({
@@ -298,11 +358,24 @@ const LAS_PERSONAL_INFO_STAGE = createSurveyStage({
 // ****************************************************************************
 // Profile stage
 // ****************************************************************************
-const LAS_PROFILE_STAGE = createProfileStage({
+const ANON_LAS_PROFILE_STAGE = createProfileStage({
   id: 'profile',
   game: StageGame.LAS,
   name: 'View randomly assigned profile',
+  descriptions: createStageTextConfig({
+    primaryText: 'This information may be visible to other participants.',
+  }),
   profileType: ProfileType.ANONYMOUS_ANIMAL,
+});
+
+const LAS_PROFILE_STAGE = createProfileStage({
+  id: 'profile',
+  game: StageGame.LAS,
+  name: 'Set your profile',
+  descriptions: createStageTextConfig({
+    primaryText: 'This information may be visible to other participants.',
+  }),
+  profileType: ProfileType.DEFAULT,
 });
 
 // ****************************************************************************
@@ -376,6 +449,59 @@ export const LAS_TRANSFER_STAGE = createTransferStage({
   }),
   enableTimeout: true,
   timeoutSeconds: 600, // 10 minutes
+});
+
+// ****************************************************************************
+// Comprehension checks
+// ****************************************************************************
+export const COMPREHENSION_CHECK = createComprehensionStage({
+  id: 'comprehension_check1',
+  game: StageGame.CHP,
+  name: 'Comprehension check',
+  descriptions: createStageTextConfig({
+    primaryText:
+      'Please answer the following questions to verify your understanding of the instructions.',
+  }),
+
+  questions: [
+    createMultipleChoiceComprehensionQuestion(
+      {
+        questionTitle:
+          'In the next stage, you will discuss your responses to the survival task with other participants. What is your objective in this discussion?',
+        options: [
+          createMultipleChoiceItem({
+            id: 'a',
+            text: 'Come to a consensus, as a team, on which items to prioritize.',
+          }),
+          createMultipleChoiceItem({
+            id: 'b',
+            text: 'Evaluate the other participants for their decision-making abilities, as you will vote on who to represent your group in a following stage.',
+          }),
+        ],
+      },
+      'b', // correct answer ID
+    ),
+    createMultipleChoiceComprehensionQuestion(
+      {
+        questionTitle: 'What will your bonus payout depend on?',
+        options: [
+          createMultipleChoiceItem({
+            id: 'a',
+            text: 'Your score on the survival task.',
+          }),
+          createMultipleChoiceItem({
+            id: 'b',
+            text: "The elected leader's score on the survival task.",
+          }),
+          createMultipleChoiceItem({
+            id: 'c',
+            text: "Either your score or the elected leader's score on the survival task, randomly selected.",
+          }),
+        ],
+      },
+      'c', // correct answer ID
+    ),
+  ],
 });
 
 // ****************************************************************************
@@ -793,7 +919,7 @@ export function createLASPayoutItems() {
     stageId: LAS_PART_2_UPDATED_TASK_SURVEY_STAGE_ID,
     baseCurrencyAmount: 6,
   });
-  const part2Question = choice(LAS_LEADER_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
+  const part2Question = choice(LAS_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS);
   part2.questionMap[part2Question.id] = 2;
 
   const part3 = createSurveyPayoutItem({

@@ -9,7 +9,6 @@ import './components/login/login';
 import './components/participant_view/cohort_landing';
 import './components/participant_view/participant_view';
 import './components/settings/settings';
-import './components/sidenav/experimenter_sidenav';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
@@ -52,6 +51,7 @@ export class App extends MobxLitElement {
         }
         return html`
           <page-header></page-header>
+          <home-gallery-tabs></home-gallery-tabs>
           <div class="content">
             <home-gallery></home-gallery>
           </div>
@@ -66,7 +66,7 @@ export class App extends MobxLitElement {
       case Pages.SETTINGS:
         return html`
           <page-header></page-header>
-          <div class="content">
+          <div class="content info">
             <settings-page .showAccount=${true}></settings-page>
           </div>
         `;
@@ -74,6 +74,9 @@ export class App extends MobxLitElement {
         if (!this.authService.isExperimenter) {
           return this.render403();
         }
+        // Update viewed experiments for current experimenter
+        this.authService.updateViewedExperiments(params['experiment']);
+
         return html` <experiment-dashboard></experiment-dashboard> `;
       case Pages.EXPERIMENT_CREATE:
         if (!this.authService.isExperimenter) {
@@ -164,7 +167,6 @@ export class App extends MobxLitElement {
     return html`
       <div class="app-wrapper mode--${this.settingsService.colorMode}">
         <main>
-          <experimenter-sidenav></experimenter-sidenav>
           <div class="content-wrapper">${this.renderPageContent()}</div>
         </main>
       </div>

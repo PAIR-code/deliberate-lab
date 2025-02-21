@@ -1,10 +1,19 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
+  flex-grow: 1;
+  overflow: auto;
+}
+
+.inner-wrapper {
+  @include common.flex-column;
   gap: common.$spacing-xxl;
+  max-width: common.$info-content-max-width;
+  padding: common.$main-content-padding;
+  padding-bottom: calc(common.$main-content-padding * 2);
 }
 
 .section {

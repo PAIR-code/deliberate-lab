@@ -12,13 +12,7 @@ export async function getAgentResponse(
   const keyType = data.apiKeys.activeApiKeyType;
   let response;
 
-  if (process.env.OPENAI_BASE_URL) {
-    response = getOpenAIAPITextCompletionResponse(
-      process.env.OPENAI_API_KEY,
-      process.env.OPENAI_MODEL_NAME,
-      prompt,
-    );
-  } else if (keyType === ApiKeyType.GEMINI_API_KEY) {
+  if (keyType === ApiKeyType.GEMINI_API_KEY) {
     response =  getGeminiResponse(data, agent.model, prompt);
   } else if (keyType === ApiKeyType.OPENAI_API_KEY) {
     response = getOpenAIAPIResponse(
@@ -37,22 +31,27 @@ export async function getAgentResponse(
   return response;
 }
 
+// TODO: Refactor model call functions to take in direct API configs,
+// not full ExperimenterData
+
 export async function getGeminiResponse(
   data: ExperimenterData,
-   modelName: string,
-   prompt: string
-  ): Promise<ModelResponse> {
+  modelName: string,
+  prompt: string,
+  // TODO: Add new agent model settings
+): Promise<ModelResponse> {
   return await getGeminiAPIResponse(
     data.apiKeys.geminiApiKey,
     modelName,
-    prompt
+    prompt,
   );
 }
 
-async function getOpenAIAPIResponse(
+export async function getOpenAIAPIResponse(
   data: ExperimenterData,
   model: string,
   prompt: string,
+  // TODO: Replace with new agent model settings
   generationConfig: GenerationConfig,
 ): Promise<ModelResponse> {
   return await getOpenAIAPITextCompletionResponse(
@@ -67,7 +66,8 @@ async function getOpenAIAPIResponse(
 export async function getOllamaResponse(
   data: ExperimenterData,
   modelName: string,
-  prompt: string
+  prompt: string,
+  // TODO: Add new agent model settings
 ): Promise<ModelResponse> {
   return await ollamaChat([prompt], data.apiKeys.ollamaApiKey);
 }

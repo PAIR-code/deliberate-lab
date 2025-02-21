@@ -2,6 +2,7 @@
 
 import {Timestamp} from 'firebase/firestore';
 import {UnifiedTimestamp} from './shared';
+import {ApiKeyType} from './agent';
 
 // ************************************************************************* //
 // TYPES                                                                     //
@@ -22,26 +23,20 @@ export interface ExperimenterProfileExtended extends ExperimenterProfile {
 
 /** Experimenter data (written to Firestore under experimenterData/{id}). */
 export interface ExperimenterData {
-  /* 
-  Currently supports either all ollama or all gemini
-  TODO: refactor this as a list of types and values for each mediator(see design document)
-  */
   id: string;
   email: string;
   apiKeys: APIKeyConfig;
+  // List of experiment IDs that the user has clicked on
+  viewedExperiments: string[];
 }
 
 export interface APIKeyConfig {
   geminiApiKey: string; // distinct types since we don't want to lose information when switching between them
   openAIApiKey?: OpenAIServerConfig;
   ollamaApiKey: OllamaServerConfig;
-  activeApiKeyType: ApiKeyType; // keeps track of model type selection
-}
-
-export enum ApiKeyType {
-  GEMINI_API_KEY = 'GEMINI',
-  OPENAI_API_KEY = 'OPENAI',
-  OLLAMA_CUSTOM_URL = 'OLLAMA',
+  // Keeps track of model type selection
+  // TODO: Remove field and specify model API in agent config
+  activeApiKeyType: ApiKeyType;
 }
 
 export interface OpenAIServerConfig {
@@ -94,10 +89,11 @@ export function createExperimenterData(
     apiKeys: {
       geminiApiKey: INVALID_API_KEY,
       openAIApiKey: createOpenAIServerConfig(),
-      ollamaApiKey: { url: INVALID_API_KEY },
-      activeApiKeyType: ApiKeyType.GEMINI_API_KEY
+      ollamaApiKey: {url: INVALID_API_KEY},
+      activeApiKeyType: ApiKeyType.GEMINI_API_KEY,
     },
     email: experimenterEmail,
+    viewedExperiments: [],
   };
 }
 
@@ -130,9 +126,7 @@ export function checkApiKeyExists(
     experimenterData.apiKeys.activeApiKeyType === ApiKeyType.OLLAMA_CUSTOM_URL
   ) {
     // implicitly checks if llamaApiKey exists
-    return (
-      (experimenterData.apiKeys.ollamaApiKey.url !== INVALID_API_KEY)
-    );
+    return experimenterData.apiKeys.ollamaApiKey.url !== INVALID_API_KEY;
   }
 
   return false; // false if no valid condition is met

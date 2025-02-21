@@ -42,45 +42,84 @@ export class HomeGallery extends MobxLitElement {
       .slice()
       .sort(
         (a, b) =>
-          a.metadata.dateCreated.seconds - b.metadata.dateCreated.seconds,
+          b.metadata.dateCreated.seconds - a.metadata.dateCreated.seconds,
       );
 
     const yourExperiments = experiments.filter(
       (e) => e.metadata.creator === this.authService.userEmail,
     );
     const otherExperiments = experiments.filter(
-      (e) => e.metadata.creator !== this.authService.userEmail,
+      (e) =>
+        e.metadata.creator !== this.authService.userEmail &&
+        this.authService.isViewedExperiment(e.id),
     );
 
+    if (this.homeService.showMyExperiments) {
+      return html`
+        <div class="gallery-wrapper">
+          ${this.renderEmptyMessage(yourExperiments)}
+          ${yourExperiments.map((e) => renderExperiment(e))}
+        </div>
+      `;
+    }
+
     return html`
-      ${this.renderEmptyMessage()}
-      ${yourExperiments.length
-        ? html`
-            <h1>Your experiments</h1>
-            <div class="gallery-wrapper">
-              ${yourExperiments.map((e) => renderExperiment(e))}
-            </div>
-          `
-        : ''}
-      ${otherExperiments.length
-        ? html`
-            <h1>Other public experiments</h1>
-            <div class="gallery-wrapper">
-              ${otherExperiments.map((e) => renderExperiment(e))}
-            </div>
-          `
-        : ''}
+      <div class="gallery-wrapper">
+        <div class="banner">
+          Experiments by others will only be shown in this tab if they are
+          shared publicly and have been viewed by you before. To view an
+          experiment, ask the creator to make the experiment public and share
+          the link with you.
+        </div>
+        ${this.renderEmptyMessage(otherExperiments)}
+        ${otherExperiments.map((e) => renderExperiment(e))}
+      </div>
     `;
   }
 
-  private renderEmptyMessage() {
-    if (this.homeService.experiments.length > 0) return nothing;
+  private renderEmptyMessage(experiments: Experiment[]) {
+    if (experiments.length > 0) return nothing;
     return html`<div class="empty-message">No experiments yet</div>`;
+  }
+}
+
+/** Tabs for home/landing page */
+@customElement('home-gallery-tabs')
+export class HomeGalleryTabs extends MobxLitElement {
+  static override styles: CSSResultGroup = [styles];
+  private readonly homeService = core.getService(HomeService);
+
+  override render() {
+    return html`
+      <div class="gallery-tabs">
+        <div
+          class="gallery-tab ${this.homeService.showMyExperiments
+            ? 'active'
+            : ''}"
+          @click=${() => {
+            this.homeService.setShowMyExperiments(true);
+          }}
+        >
+          My experiments
+        </div>
+        <div
+          class="gallery-tab ${!this.homeService.showMyExperiments
+            ? 'active'
+            : ''}"
+          @click=${() => {
+            this.homeService.setShowMyExperiments(false);
+          }}
+        >
+          Shared with me
+        </div>
+      </div>
+    `;
   }
 }
 
 declare global {
   interface HTMLElementTagNameMap {
     'home-gallery': HomeGallery;
+    'home-gallery-tabs': HomeGalleryTabs;
   }
 }

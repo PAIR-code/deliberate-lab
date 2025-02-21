@@ -19,6 +19,7 @@ import {Service} from './service';
 import {AdminService} from './admin.service';
 import {FirebaseService} from './firebase.service';
 import {HomeService} from './home.service';
+import {ExperimentManager} from './experiment.manager';
 
 import {
   ExperimenterProfile,
@@ -28,6 +29,7 @@ import {
 
 interface ServiceProvider {
   adminService: AdminService;
+  experimentManager: ExperimentManager;
   firebaseService: FirebaseService;
   homeService: HomeService;
 }
@@ -58,6 +60,10 @@ export class AuthService extends Service {
             this.subscribe();
             this.writeExperimenterProfile(user);
             this.sp.homeService.subscribe();
+            const experimentId = this.sp.experimentManager.experimentId;
+            if (experimentId) {
+              this.sp.experimentManager.loadExperimentData(experimentId);
+            }
 
             // Check if admin
             if (allowlistDoc.data().isAdmin) {
@@ -135,7 +141,11 @@ export class AuthService extends Service {
               createExperimenterData(this.userId!, this.userEmail!),
             );
           } else {
-            this.experimenterData = doc.data() as ExperimenterData;
+            const viewedExperiments: string[] = [];
+            this.experimenterData = {
+              viewedExperiments, // backwards compatibility
+              ...doc.data(),
+            } as ExperimenterData;
           }
           this.isExperimentDataLoading = false;
         },
@@ -163,6 +173,30 @@ export class AuthService extends Service {
   signOut() {
     signOut(this.sp.firebaseService.auth);
     this.sp.homeService.unsubscribeAll();
+  }
+
+  /** Experimenter has viewed this experiment before. */
+  isViewedExperiment(experimentId: string) {
+    return this.experimenterData?.viewedExperiments.find(
+      (experiment) => experiment === experimentId,
+    );
+  }
+
+  /** Update viewed experiments list in ExperimenterData. */
+  updateViewedExperiments(experimentId: string) {
+    if (!this.experimenterData) {
+      return;
+    }
+
+    const viewedExperiments = this.experimenterData.viewedExperiments;
+    if (viewedExperiments.find((experiment) => experiment === experimentId)) {
+      return;
+    }
+
+    this.writeExperimenterData({
+      ...this.experimenterData,
+      viewedExperiments: [...viewedExperiments, experimentId],
+    });
   }
 
   // *********************************************************************** //

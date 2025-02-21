@@ -228,7 +228,7 @@ export class Component extends MobxLitElement {
         <div class="left">
           <pr-tooltip text="Hide panel" position="RIGHT">
             <pr-icon-button
-              icon="hide"
+              icon="visibility_off"
               size="small"
               color="neutral"
               variant="default"

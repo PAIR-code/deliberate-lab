@@ -1,6 +1,6 @@
+import {ApiKeyType} from './agent';
 import {
   ExperimenterData,
-  ApiKeyType,
   checkApiKeyExists,
   createExperimenterData,
 } from './experimenter';
