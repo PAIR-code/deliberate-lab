@@ -198,7 +198,11 @@ export class ExperimentBuilder extends MobxLitElement {
                     this.agentEditor.setCurrentAgentMediator(mediator.id);
                   }}
                 >
-                  <div>${mediator.name}</div>
+                  <div>
+                    ${mediator.privateName.length > 0
+                      ? mediator.privateName
+                      : mediator.name}
+                  </div>
                   <div class="subtitle">
                     ${mediator.defaultModelSettings.modelName}
                   </div>

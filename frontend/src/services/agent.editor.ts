@@ -145,6 +145,13 @@ export class AgentEditor extends Service {
     }
   }
 
+  updateAgentMediatorPrivateName(id: string, name: string) {
+    const agent = this.getAgentMediator(id);
+    if (agent) {
+      agent.privateName = name;
+    }
+  }
+
   updateAgentMediatorAvatar(id: string, avatar: string) {
     const agent = this.getAgentMediator(id);
     if (agent) {
