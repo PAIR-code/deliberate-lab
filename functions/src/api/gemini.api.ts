@@ -70,6 +70,12 @@ export async function getGeminiAPIResponse(
   generationConfig: AgentGenerationConfig,
   stopSequences: string[] = [],
 ): Promise<ModelResponse> {
+  const customFields = Object.fromEntries(
+    generationConfig.customRequestBodyFields.map((field) => [
+      field.name,
+      field.value,
+    ]),
+  );
   const geminiConfig: GenerationConfig = {
     stopSequences,
     maxOutputTokens: 300,
@@ -78,6 +84,7 @@ export async function getGeminiAPIResponse(
     topK: 16,
     presencePenalty: generationConfig.presencePenalty,
     frequencyPenalty: generationConfig.frequencyPenalty,
+    ...customFields
   };
 
   let response = {text: ''};

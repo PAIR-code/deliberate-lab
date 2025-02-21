@@ -34,6 +34,7 @@ describe('Gemini API', () => {
       topP: 0.9,
       frequencyPenalty: 0,
       presencePenalty: 0,
+      customRequestBodyFields: [{name: 'seed', value: 123}],
     };
 
     const response: ModelResponse = await getGeminiAPIResponse(
