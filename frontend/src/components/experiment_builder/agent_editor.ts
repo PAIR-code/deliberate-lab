@@ -45,6 +45,7 @@ export class AgentEditorComponent extends MobxLitElement {
     // TODO: Add API key check
     return html`
       <div class="agent-wrapper">
+        ${this.renderAgentPrivateName(agentConfig)}
         ${this.renderAgentName(agentConfig)} ${this.renderAvatars(agentConfig)}
         ${this.renderAgentApiType(agentConfig)}
         ${this.renderAgentModel(agentConfig)}
@@ -86,6 +87,26 @@ export class AgentEditorComponent extends MobxLitElement {
       <pr-button color="error" variant="outlined" @click=${onClick}>
         Delete agent mediator
       </pr-button>
+    `;
+  }
+
+  private renderAgentPrivateName(agent: AgentMediatorConfig) {
+    const updateName = (e: InputEvent) => {
+      const name = (e.target as HTMLTextAreaElement).value;
+      this.agentEditor.updateAgentMediatorPrivateName(agent.id, name);
+    };
+
+    return html`
+      <pr-textarea
+        label="Private agent name (viewable to experimenters only)*"
+        placeholder="E.g., Gemini Pro Agent"
+        variant="outlined"
+        .value=${agent.privateName}
+        class=${agent.privateName.length === 0 ? 'required' : ''}
+        ?disabled=${!this.experimentEditor.canEditStages}
+        @input=${updateName}
+      >
+      </pr-textarea>
     `;
   }
 
