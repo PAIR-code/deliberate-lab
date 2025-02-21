@@ -113,6 +113,17 @@ export class AgentEditor extends Service {
     }
   }
 
+  deleteAgentMediator(id: string) {
+    const agentIndex = this.agentMediators.findIndex(
+      (agent) => agent.id === id,
+    );
+    if (agentIndex === -1) return;
+    this.agentMediators = [
+      ...this.agentMediators.slice(0, agentIndex),
+      ...this.agentMediators.slice(agentIndex + 1),
+    ];
+  }
+
   getAgentMediator(id: string) {
     return this.agentMediators.find((agent) => agent.id === id);
   }
