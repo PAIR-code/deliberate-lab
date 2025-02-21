@@ -4,7 +4,7 @@ import '../../pair-components/textarea';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {AgentEditor} from '../../services/agent.editor';
@@ -29,10 +29,15 @@ export class AgentEditorComponent extends MobxLitElement {
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
   @property() agent: AgentMediatorConfig | undefined = undefined;
+  @state() isTestButtonLoading = false;
 
   override render() {
     if (this.agent === undefined) {
-      return nothing;
+      return html`
+        <div class="agent-wrapper">
+          <div>Select an agent to edit.</div>
+        </div>
+      `;
     }
 
     const agentConfig = this.agent;
@@ -41,7 +46,24 @@ export class AgentEditorComponent extends MobxLitElement {
       <div class="agent-wrapper">
         ${this.renderAgentName(agentConfig)} ${this.renderAvatars(agentConfig)}
         ${this.renderAgentModel(agentConfig)}
+        <div class="divider"></div>
+        ${this.renderTestButton(agentConfig)}
       </div>
+    `;
+  }
+
+  private renderTestButton(agentConfig: AgentMediatorConfig) {
+    const onClick = async () => {
+      this.isTestButtonLoading = true;
+      await this.agentEditor.testAgentConfig(agentConfig);
+      this.isTestButtonLoading = false;
+    };
+
+    return html`
+      <pr-button ?loading=${this.isTestButtonLoading} @click=${onClick}
+        >Test agent mediator</pr-button
+      >
+      <div>${this.agentEditor.getTestResponse(agentConfig.id)}</div>
     `;
   }
 
