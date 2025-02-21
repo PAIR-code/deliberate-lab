@@ -15,6 +15,7 @@ import {
 // TYPES                                                                     //
 // ************************************************************************* //
 
+
 /**
  * SurveyStageConfig.
  *
@@ -125,6 +126,8 @@ export interface ScaleSurveyAnswer extends BaseSurveyAnswer {
   kind: SurveyQuestionKind.SCALE;
   value: number; // number value selected
 }
+
+export const INVALID_ANSWER: BaseSurveyAnswer = { id: "invalid", kind: SurveyQuestionKind.TEXT};
 
 export type SurveyAnswer =
   | TextSurveyAnswer
