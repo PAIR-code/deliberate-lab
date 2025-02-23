@@ -153,6 +153,10 @@ pr-textarea {
   width: 100%;
 }
 
+.title {
+  @include typescale.title-large;
+}
+
 .chip {
   @include common.chip;
   @include typescale.label-small;
