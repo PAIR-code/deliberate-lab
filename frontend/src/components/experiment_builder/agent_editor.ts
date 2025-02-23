@@ -1,6 +1,7 @@
 import '../../pair-components/button';
 import '../../pair-components/icon_button';
 import '../../pair-components/textarea';
+import '@material/web/checkbox/checkbox.js';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -13,10 +14,13 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 import {
   AgentChatPromptConfig,
   AgentPersonaConfig,
+  AgentResponseConfig,
   ApiKeyType,
   StageConfig,
   StageKind,
   checkApiKeyExists,
+  DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
+  DEFAULT_STRING_FORMATTING_INSTRUCTIONS,
 } from '@deliberation-lab/utils';
 import {LLM_AGENT_AVATARS} from '../../shared/constants';
 import {getHashBasedColor} from '../../shared/utils';
@@ -140,6 +144,7 @@ export class AgentEditorComponent extends MobxLitElement {
         <div>${this.renderTestPromptButton(agentConfig, promptConfig)}</div>
         <div class="divider"></div>
         ${this.renderAgentPrompt(agentConfig, promptConfig)}
+        ${this.renderAgentResponseConfig(agentConfig, promptConfig)}
         ${this.renderAgentWordsPerMinute(agentConfig, promptConfig)}
         ${this.renderAgentSamplingParameters(agentConfig, promptConfig)}
         ${this.renderAgentCustomRequestBodyFields(agentConfig, promptConfig)}
@@ -678,6 +683,102 @@ export class AgentEditorComponent extends MobxLitElement {
             @click=${deleteField}
          >
        </div>
+    `;
+  }
+
+  // TODO(mkbehr): Update to match new structured output setup
+  private renderAgentResponseConfig(
+    agent: AgentPersonaConfig,
+    agentPromptConfig: AgentChatPromptConfig,
+  ) {
+    const config = agentPromptConfig.responseConfig;
+    const updateConfig = (responseConfig: Partial<AgentResponseConfig>) => {
+      this.agentEditor.updateAgentMediatorResponseConfig(
+        agent.id,
+        agentPromptConfig.id,
+        responseConfig,
+      );
+    };
+    const updateFormattingInstructions = (e: InputEvent) => {
+      const formattingInstructions = (e.target as HTMLTextAreaElement).value;
+      updateConfig({formattingInstructions});
+    };
+    const updateJSON = () => {
+      updateConfig({
+        isJSON: !config.isJSON,
+        formattingInstructions: config.isJSON
+          ? DEFAULT_STRING_FORMATTING_INSTRUCTIONS
+          : DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
+      });
+    };
+    const updateMessageField = (e: InputEvent) => {
+      const messageField = (e.target as HTMLTextAreaElement).value;
+      updateConfig({messageField});
+    };
+    const updateExplanationField = (e: InputEvent) => {
+      const explanationField = (e.target as HTMLTextAreaElement).value;
+      updateConfig({explanationField});
+    };
+
+    return html`
+      <div class="checkbox-wrapper">
+        <md-checkbox
+          touch-target="wrapper"
+          ?checked=${config.isJSON}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @click=${updateJSON}
+        >
+        </md-checkbox>
+        <div>Parse agent response as JSON</div>
+      </div>
+      <div class="description">
+        If JSON parsing enabled: Make sure to include appropriate
+        instructions/examples in your prompt to avoid parsing errors (if the
+        specified message field is non-empty, its contents will be turned into a
+        chat message). If disabled: non-empty responses will be turned into
+        messages.
+      </div>
+      <div class="field">
+        <pr-textarea
+          label="Formatting instructions and examples"
+          placeholder="Instructions and examples for formatting the agent response"
+          variant="outlined"
+          .value=${config.formattingInstructions}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @input=${updateFormattingInstructions}
+        >
+        </pr-textarea>
+      </div>
+      ${!config.isJSON
+        ? nothing
+        : html`
+            <div class="field">
+              <pr-textarea
+                label="JSON field to extract chat message from"
+                placeholder="JSON field to extract chat message from"
+                variant="outlined"
+                .value=${config.messageField}
+                ?disabled=${!this.experimentEditor.canEditStages}
+                @input=${updateMessageField}
+              >
+              </pr-textarea>
+            </div>
+          `}
+      ${!config.isJSON
+        ? nothing
+        : html`
+            <div class="field">
+              <pr-textarea
+                label="JSON field to extract debugging explanation from"
+                placeholder="JSON field to extract debugging explanation from"
+                variant="outlined"
+                .value=${config.explanationField}
+                ?disabled=${!this.experimentEditor.canEditStages}
+                @input=${updateExplanationField}
+              >
+              </pr-textarea>
+            </div>
+          `}
     `;
   }
 }
