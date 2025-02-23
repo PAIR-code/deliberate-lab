@@ -13,7 +13,7 @@ export async function getAgentResponse(
   let response;
 
   if (keyType === ApiKeyType.GEMINI_API_KEY) {
-    response =  getGeminiResponse(data, agent.model, prompt);
+    response = getGeminiResponse(data, agent.model, prompt, agent.generationConfig);
   } else if (keyType === ApiKeyType.OPENAI_API_KEY) {
     response = getOpenAIAPIResponse(
       data,
@@ -38,12 +38,14 @@ export async function getGeminiResponse(
   data: ExperimenterData,
   modelName: string,
   prompt: string,
-  // TODO: Add new agent model settings
-): Promise<ModelResponse> {
+  // TODO: Replace with new agent model settings
+  generationConfig: AgentGenerationConfig,
+  ): Promise<ModelResponse> {
   return await getGeminiAPIResponse(
     data.apiKeys.geminiApiKey,
     modelName,
     prompt,
+    generationConfig
   );
 }
 
@@ -52,7 +54,7 @@ export async function getOpenAIAPIResponse(
   model: string,
   prompt: string,
   // TODO: Replace with new agent model settings
-  generationConfig: GenerationConfig,
+  generationConfig: AgentGenerationConfig,
 ): Promise<ModelResponse> {
   return await getOpenAIAPITextCompletionResponse(
     data.apiKeys.openAIApiKey?.apiKey || '',
@@ -67,7 +69,8 @@ export async function getOllamaResponse(
   data: ExperimenterData,
   modelName: string,
   prompt: string,
-  // TODO: Add new agent model settings
+  // TODO: Replace with new agent model settings
+  generationConfig: AgentGenerationConfig,
 ): Promise<ModelResponse> {
-  return await ollamaChat([prompt], data.apiKeys.ollamaApiKey);
+  return await ollamaChat([prompt], modelName, data.apiKeys.ollamaApiKey, generationConfig);
 }
