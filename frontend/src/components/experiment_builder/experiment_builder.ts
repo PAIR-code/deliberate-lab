@@ -182,6 +182,8 @@ export class ExperimentBuilder extends MobxLitElement {
           <div class="top">
             <div class="panel-view-header">Agents</div>
             <pr-button
+              color="tertiary"
+              variant="tonal"
               @click=${() => {
                 this.agentEditor.addAgentMediator();
               }}

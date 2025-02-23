@@ -14,6 +14,8 @@ import {
   AgentChatPromptConfig,
   AgentMediatorConfig,
   ApiKeyType,
+  StageConfig,
+  StageKind,
   checkApiKeyExists,
 } from '@deliberation-lab/utils';
 import {LLM_AGENT_AVATARS} from '../../shared/constants';
@@ -44,41 +46,171 @@ export class AgentEditorComponent extends MobxLitElement {
     const agentConfig = this.agent;
     // TODO: Add API key check
     return html`
+      ${this.renderAgentNav(agentConfig)}
+      ${this.renderAgentContent(agentConfig)}
+    `;
+  }
+
+  private renderAgentNav(agentConfig: AgentMediatorConfig) {
+    const stages = this.experimentEditor.stages;
+    const isActive = (stageId: string) => {
+      return stageId === this.agentEditor.activeStageId;
+    };
+    return html`
+      <div class="agent-nav">
+        <div
+          class="nav-item ${isActive('') ? 'active' : ''}"
+          @click=${() => {
+            this.agentEditor.setActiveStageId('');
+          }}
+        >
+          Agent settings
+        </div>
+        ${stages.map((stage, index) => {
+          if (stage.kind === StageKind.CHAT) {
+            return html`
+              <div
+                class="nav-item ${isActive(stage.id) ? 'active' : ''}"
+                @click=${() => {
+                  this.agentEditor.setActiveStageId(stage.id);
+                }}
+              >
+                ${index + 1}. ${stage.name}
+              </div>
+            `;
+          } else {
+            return nothing;
+          }
+        })}
+        <div class="description">
+          Note: Add stages with chat discussions (e.g., chat stage) to your
+          experiment in order to specify agent mediator prompts here.
+        </div>
+      </div>
+    `;
+  }
+
+  private renderAgentContent(agentConfig: AgentMediatorConfig) {
+    const activeStageId = this.agentEditor.activeStageId;
+    if (activeStageId === '') {
+      return this.renderAgentGeneralSettings(agentConfig);
+    }
+
+    const stage = this.experimentEditor.stages.find(
+      (stage) => stage.id === activeStageId,
+    );
+
+    if (!stage) {
+      return html`
+        <div class="agent-wrapper">
+          <div>Stage not found</div>
+        </div>
+      `;
+    }
+
+    return this.renderStageEditor(stage, agentConfig);
+  }
+
+  private renderStageEditor(
+    stageConfig: StageConfig,
+    agentConfig: AgentMediatorConfig,
+  ) {
+    const renderAddButton = () => {
+      return html`
+        <pr-button
+          @click=${() => {
+            this.agentEditor.addAgentMediatorPrompt(
+              agentConfig.id,
+              stageConfig,
+            );
+          }}
+        >
+          Add prompt
+        </pr-button>
+      `;
+    };
+
+    const renderPromptSettings = (promptConfig: AgentChatPromptConfig) => {
+      return html`
+        <div>${this.renderTestPromptButton(agentConfig, promptConfig)}</div>
+        <div class="divider"></div>
+        ${this.renderAgentPrompt(agentConfig, promptConfig)}
+        ${this.renderAgentWordsPerMinute(agentConfig, promptConfig)}
+        ${this.renderAgentSamplingParameters(agentConfig, promptConfig)}
+        ${this.renderAgentCustomRequestBodyFields(agentConfig, promptConfig)}
+        <div class="divider"></div>
+        <pr-button
+          color="error"
+          variant="outlined"
+          @click=${() => {
+            this.agentEditor.deleteAgentMediatorPrompt(
+              agentConfig.id,
+              stageConfig.id,
+            );
+          }}
+        >
+          Delete prompt
+        </pr-button>
+      `;
+    };
+
+    const promptConfig = this.agentEditor.getAgentMediatorPrompt(
+      agentConfig.id,
+      stageConfig.id,
+    );
+
+    return html`
+      <div class="agent-wrapper">
+        <div class="header">
+          <div class="title">${stageConfig.name}</div>
+          <div class="chip tertiary">${stageConfig.kind}</div>
+        </div>
+        ${promptConfig ? renderPromptSettings(promptConfig) : renderAddButton()}
+      </div>
+    `;
+  }
+
+  private renderAgentGeneralSettings(agentConfig: AgentMediatorConfig) {
+    return html`
       <div class="agent-wrapper">
         ${this.renderAgentPrivateName(agentConfig)}
         ${this.renderAgentName(agentConfig)} ${this.renderAvatars(agentConfig)}
         ${this.renderAgentApiType(agentConfig)}
         ${this.renderAgentModel(agentConfig)}
         <div class="divider"></div>
-        ${this.renderTestButton(agentConfig)}
-        <div class="divider"></div>
-        ${this.renderDeleteButton(agentConfig)}
+        ${this.renderDeleteAgentButton(agentConfig)}
       </div>
     `;
   }
 
-  private renderTestButton(agentConfig: AgentMediatorConfig) {
+  private renderTestPromptButton(
+    agentConfig: AgentMediatorConfig,
+    promptConfig: AgentChatPromptConfig,
+  ) {
     const onClick = async () => {
       this.isTestButtonLoading = true;
       await this.agentEditor.testAgentConfig(agentConfig);
       this.isTestButtonLoading = false;
     };
 
+    // TODO: Test prompt with fake chat data?
+    // TODO: Update endpoint to feed in custom prompt
     const response = this.agentEditor.getTestResponse(agentConfig.id);
     return html`
       <pr-button
         ?loading=${this.isTestButtonLoading}
         color="secondary"
         variant="tonal"
+        disabled
         @click=${onClick}
       >
-        Test agent mediator
+        Coming soon: Test prompt
       </pr-button>
       ${response.length > 0 ? html`<div>${response}</div>` : nothing}
     `;
   }
 
-  private renderDeleteButton(agent: AgentMediatorConfig) {
+  private renderDeleteAgentButton(agent: AgentMediatorConfig) {
     const onClick = () => {
       this.agentEditor.deleteAgentMediator(agent.id);
     };
