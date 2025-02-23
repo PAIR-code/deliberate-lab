@@ -97,6 +97,14 @@ export class AgentEditor extends Service {
   // Maps from agent ID to test API response
   @observable agentTestResponseMap: Record<string, string> = {};
 
+  // Display variables for agent editor
+  // If active stage ID is empty, show agent settings
+  @observable activeStageId = '';
+
+  setActiveStageId(stageId: string) {
+    this.activeStageId = stageId;
+  }
+
   @computed get currentAgentMediator() {
     return this.getAgentMediator(this.currentAgentMediatorId);
   }
@@ -108,6 +116,7 @@ export class AgentEditor extends Service {
   addAgentMediator(setAsCurrent = true) {
     const agent = createAgentMediatorConfig();
     this.agentMediators.push(agent);
+    this.agentChatPromptMap[agent.id] = {};
     if (setAsCurrent) {
       this.currentAgentMediatorId = agent.id;
     }
@@ -169,12 +178,19 @@ export class AgentEditor extends Service {
         ...agent.defaultModelSettings,
         ...defaultModelSettings,
       };
+      // Update model settings for all prompt configs too
+      Object.values(this.agentChatPromptMap).forEach((prompt) => {
+        prompt.modelSettings = {
+          ...prompt.modelSettings,
+          ...defaultModelSettings,
+        };
+      });
     }
   }
 
   addAgentMediatorPrompt(agentId: string, stageConfig: StageConfig) {
     const agent = this.getAgentMediator(agentId);
-    if (agent) {
+    if (agent && !this.agentChatPromptMap[agentId][stageConfig.id]) {
       this.agentChatPromptMap[agentId][stageConfig.id] =
         createAgentChatPromptConfig(stageConfig.id, stageConfig.kind);
     }
@@ -182,6 +198,10 @@ export class AgentEditor extends Service {
 
   getAgentMediatorPrompt(agentId: string, stageId: string) {
     return this.agentChatPromptMap[agentId][stageId];
+  }
+
+  deleteAgentMediatorPrompt(agentId: string, stageId: string) {
+    delete this.agentChatPromptMap[agentId][stageId];
   }
 
   updateAgentMediatorChatSettings(
