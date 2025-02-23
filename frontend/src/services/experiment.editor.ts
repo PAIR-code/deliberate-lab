@@ -20,12 +20,14 @@ import {
 } from '../shared/callables';
 
 import {AuthService} from './auth.service';
+import {AgentEditor} from './agent.editor';
 import {ExperimentManager} from './experiment.manager';
 import {FirebaseService} from './firebase.service';
 import {Service} from './service';
 import {setMustWaitForAllParticipants} from '../shared/experiment.utils';
 
 interface ServiceProvider {
+  agentEditor: AgentEditor;
   authService: AuthService;
   experimentManager: ExperimentManager;
   firebaseService: FirebaseService;
@@ -200,6 +202,7 @@ export class ExperimentEditor extends Service {
   resetExperiment() {
     this.experiment = createExperimentConfig();
     this.stages = [];
+    this.sp.agentEditor.resetAgents();
   }
 
   // *********************************************************************** //
@@ -221,6 +224,7 @@ export class ExperimentEditor extends Service {
         collectionName: 'experiments',
         experimentConfig: this.experiment,
         stageConfigs: this.stages,
+        agentConfigs: this.sp.agentEditor.getAgentData(),
       },
     );
 
@@ -243,6 +247,7 @@ export class ExperimentEditor extends Service {
         collectionName: 'experiments',
         experimentConfig: this.experiment,
         stageConfigs: this.stages,
+        agentConfigs: this.sp.agentEditor.getAgentData(),
       },
     );
 

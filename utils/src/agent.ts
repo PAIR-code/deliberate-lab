@@ -105,8 +105,6 @@ export interface BaseAgentPromptConfig {
   id: string; // stage ID
   type: StageKind; // stage type
   promptContext: string; // custom prompt content
-  // TODO: remove since defaultModelSettings is used right now?
-  modelSettings: AgentModelSettings;
   generationConfig: ModelGenerationConfig;
   promptSettings: AgentPromptSettings;
 }
@@ -139,6 +137,13 @@ export interface AgentPersonaConfig {
   isDefaultAddToCohort: boolean;
   defaultProfile: ParticipantProfileBase;
   defaultModelSettings: AgentModelSettings;
+}
+
+/** Format used to send agent data from frontend to backend. */
+export interface AgentDataObject {
+  persona: AgentPersonaConfig;
+  participantPrompts: AgentParticipantPromptConfig[];
+  chatPrompts: AgentChatPromptConfig[];
 }
 
 // ************************************************************************* //
@@ -224,7 +229,6 @@ export function createAgentChatPromptConfig(
     id,
     type,
     promptContext: config.promptContext ?? DEFAULT_AGENT_MEDIATOR_PROMPT,
-    modelSettings: config.modelSettings ?? createAgentModelSettings(),
     promptSettings: config.promptSettings ?? createAgentPromptSettings(),
     generationConfig: config.generationConfig ?? createModelGenerationConfig(),
     chatSettings: config.chatSettings ?? createAgentChatSettings(),
