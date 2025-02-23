@@ -31,6 +31,7 @@ export * from './agent.validation';
 export * from './stages/stage';
 export * from './stages/stage.validation';
 export * from './stages/chat_stage';
+export * from './stages/chat_stage.prompts';
 export * from './stages/chat_stage.validation';
 export * from './stages/chip_stage';
 export * from './stages/chip_stage.validation';

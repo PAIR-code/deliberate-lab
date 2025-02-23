@@ -4,7 +4,13 @@ import {
 } from './participant';
 import {generateId} from './shared';
 import {StageKind} from './stages/stage';
-import {DEFAULT_AGENT_MEDIATOR_PROMPT} from './stages/chat_stage';
+import {
+  DEFAULT_AGENT_MEDIATOR_PROMPT,
+  DEFAULT_RESPONSE_FIELD,
+  DEFAULT_EXPLANATION_FIELD,
+  DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
+  DEFAULT_STRING_FORMATTING_INSTRUCTIONS,
+} from './stages/chat_stage.prompts';
 
 /** Agent types and functions. */
 
@@ -45,7 +51,7 @@ export interface ModelGenerationConfig {
   topP: number;
   frequencyPenalty: number;
   presencePenalty: number;
-  // TODO: Add response MIME type and schema
+  // TODO(mkbehr): Add response MIME type and schema
   customRequestBodyFields: CustomRequestBodyField[];
 }
 
@@ -64,7 +70,7 @@ export interface AgentPromptSettings {
   // Whether or not to include information (e.g., stage description)
   // shown to users
   includeStageInfo: boolean;
-  // TODO: Add few-shot examples
+  // TODO(mkbehr): Add few-shot examples
   // (that align with generation config's response schema)
 }
 
@@ -81,11 +87,25 @@ export interface AgentChatSettings {
   maxTotalResponses: number | null;
 }
 
+/** Settings for formatting agent response
+ *  (e.g., expect JSON, use specific JSON field for response, use end token)
+ */
+// TODO(mkbehr): Deprecate in favor of new structured output setup?
+export interface AgentResponseConfig {
+  isJSON: boolean;
+  // JSON field to extract chat message from
+  messageField: string;
+  // JSON field to extract explanation from
+  explanationField: string;
+  formattingInstructions: string;
+}
+
 /** Specifies how prompt should be sent to API. */
 export interface BaseAgentPromptConfig {
   id: string; // stage ID
   type: StageKind; // stage type
   promptContext: string; // custom prompt content
+  // TODO: remove since defaultModelSettings is used right now?
   modelSettings: AgentModelSettings;
   generationConfig: ModelGenerationConfig;
   promptSettings: AgentPromptSettings;
@@ -99,10 +119,12 @@ export type AgentParticipantPromptConfig = BaseAgentPromptConfig;
  */
 export interface AgentChatPromptConfig extends BaseAgentPromptConfig {
   chatSettings: AgentChatSettings;
+  // TODO(mkbehr): Replace with structured output setup?
+  responseConfig: AgentResponseConfig;
 }
 
 export enum AgentPersonaType {
-  PARTICIAPNT = 'participant',
+  PARTICIPANT = 'participant',
   MEDIATOR = 'mediator',
 }
 
@@ -176,6 +198,23 @@ export function createAgentPromptSettings(
   };
 }
 
+/** Create agent response config. */
+// TODO(mkbehr): Deprecated in favor of new structured output setup?
+export function createAgentResponseConfig(
+  config: Partial<AgentResponseConfig> = {},
+): AgentResponseConfig {
+  const isJSON = config.isJSON ?? false;
+  return {
+    isJSON,
+    messageField: config.messageField ?? DEFAULT_RESPONSE_FIELD,
+    explanationField: config.explanationField ?? DEFAULT_EXPLANATION_FIELD,
+    formattingInstructions:
+      (config.formattingInstructions ?? isJSON)
+        ? DEFAULT_JSON_FORMATTING_INSTRUCTIONS
+        : DEFAULT_STRING_FORMATTING_INSTRUCTIONS,
+  };
+}
+
 export function createAgentChatPromptConfig(
   id: string, // stage ID
   type: StageKind, // stage kind
@@ -184,11 +223,12 @@ export function createAgentChatPromptConfig(
   return {
     id,
     type,
-    promptContext: config.promptContext ?? '',
+    promptContext: config.promptContext ?? DEFAULT_AGENT_MEDIATOR_PROMPT,
     modelSettings: config.modelSettings ?? createAgentModelSettings(),
     promptSettings: config.promptSettings ?? createAgentPromptSettings(),
-    chatSettings: config.chatSettings ?? createAgentChatSettings(),
     generationConfig: config.generationConfig ?? createModelGenerationConfig(),
+    chatSettings: config.chatSettings ?? createAgentChatSettings(),
+    responseConfig: config.responseConfig ?? createAgentResponseConfig(),
   };
 }
 

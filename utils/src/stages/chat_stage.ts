@@ -13,7 +13,15 @@ import {
   ParticipantProfileBase,
   createParticipantProfileBase,
 } from '../participant';
-import {AgentGenerationConfig} from '../agent';
+import {
+  AgentGenerationConfig,
+  AgentResponseConfig,
+  createAgentResponseConfig,
+} from '../agent';
+import {
+  DEFAULT_MODEL,
+  DEFAULT_AGENT_MEDIATOR_PROMPT,
+} from './chat_stage.prompts';
 
 /** Group chat stage types and functions. */
 
@@ -115,18 +123,6 @@ export interface AgentConfig {
   // TODO: Add more settings, e.g. context window
 }
 
-/** Settings for formatting agent response
- *  (e.g., expect JSON, use specific JSON field for response, use end token)
- */
-export interface AgentResponseConfig {
-  isJSON: boolean;
-  // JSON field to extract chat message from
-  messageField: string;
-  // JSON field to extract explanation from
-  explanationField: string;
-  formattingInstructions: string;
-}
-
 export type ChatMessage =
   | ParticipantChatMessage
   | HumanMediatorChatMessage
@@ -166,43 +162,6 @@ export interface ChatStagePublicData extends BaseStagePublicData {
   // If the end timestamp is not null, the conversation has ended.
   discussionEndTimestamp: UnifiedTimestamp | null;
 }
-
-// ************************************************************************* //
-// CONSTANTS                                                                 //
-// ************************************************************************* //
-export const DEFAULT_MODEL = 'gemini-1.5-pro-latest';
-
-// TODO: Refactor chat prompts into chat_stage.prompts.ts file
-export const DEFAULT_AGENT_MEDIATOR_PROMPT = `You are a agent for a chat conversation. Your task is to ensure that the conversation is polite.
-If you notice that participants are being rude, step in to make sure that everyone is respectful. 
-Otherwise, do not respond.`;
-
-export const DEFAULT_RESPONSE_FIELD = 'response';
-export const DEFAULT_EXPLANATION_FIELD = 'explanation';
-export const DEFAULT_JSON_FORMATTING_INSTRUCTIONS = `INSTRUCTIONS:
-  Now, you have the opportunity to respond to the conversation. This response will be appended to the end of the transcript.
-  Fill out the following JSON response:
-    1. Do you want to add a message to the chat? ("true" or "false")
-    2. If yes, what would you like to say?
-    3. Why do you want to say that?
-  
-  IMPORTANT: Your output should be in a JSON dictionary exactly like the example output below. Just the JSON! Make sure the JSON is valid. No need to add any delimiters, just begin with a { bracket as in the example below.
-  
-  EXAMPLE OUTPUT:
-  {
-    "shouldRespond": true,
-    "${DEFAULT_RESPONSE_FIELD}": "This is my response.",
-    "${DEFAULT_EXPLANATION_FIELD}": "This is why I chose this response."
-  }
-  
-  EXAMPLE OUTPUT:
-  {
-    "shouldRespond": false,
-    "${DEFAULT_RESPONSE_FIELD}": "",
-    "${DEFAULT_EXPLANATION_FIELD}": "I have spoken recently and want to give others a chance to speak."
-  }`;
-
-export const DEFAULT_STRING_FORMATTING_INSTRUCTIONS = `If you would like to respond, respond with the message you would like to send only (no timestamps or metadata), for example, "Hey everyone, please be respectful." This will be appended to the end of the chat transcript. If you don't wish to respond, respond with an empty string.`;
 
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
@@ -374,22 +333,6 @@ export function createAgentGenerationConfig(
     frequencyPenalty: config.frequencyPenalty ?? 0.0,
     presencePenalty: config.presencePenalty ?? 0.0,
     customRequestBodyFields: config.customRequestBodyFields ?? [],
-  };
-}
-
-/** Create agent response config. */
-export function createAgentResponseConfig(
-  config: Partial<AgentResponseConfig> = {},
-): AgentResponseConfig {
-  const isJSON = config.isJSON ?? false;
-  return {
-    isJSON,
-    messageField: config.messageField ?? DEFAULT_RESPONSE_FIELD,
-    explanationField: config.explanationField ?? DEFAULT_EXPLANATION_FIELD,
-    formattingInstructions:
-      (config.formattingInstructions ?? isJSON)
-        ? DEFAULT_JSON_FORMATTING_INSTRUCTIONS
-        : DEFAULT_STRING_FORMATTING_INSTRUCTIONS,
   };
 }
 
