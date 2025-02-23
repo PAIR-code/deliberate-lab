@@ -32,10 +32,17 @@ export const AgentConfigData = Type.Object({
   // TODO: Add other agent config fields
 });
 
+export const PromptConfigData = Type.Object({
+  id: Type.String({minLength: 1}),
+  promptContext: Type.String(),
+  // TODO: Add other prompt config fields
+});
+
 /** AgentConfigTest input validation. */
 export const AgentConfigTestData = Type.Object({
   creatorId: Type.String({minLength: 1}),
   agentConfig: AgentConfigData,
+  promptConfig: PromptConfigData,
 });
 
 export type AgentConfigTestData = Static<typeof AgentConfigTestData>;

@@ -11,6 +11,7 @@ import {
   AgentConfig,
   AgentMediatorConfig,
   AgentModelSettings,
+  BaseAgentPromptConfig,
   ChatStageConfig,
   Experiment,
   StageConfig,
@@ -94,8 +95,8 @@ export class AgentEditor extends Service {
     string,
     Record<string, AgentChatPromptConfig>
   > = {};
-  // Maps from agent ID to test API response
-  @observable agentTestResponseMap: Record<string, string> = {};
+  // Maps from agent ID to (stage ID to test API response)
+  @observable agentTestResponseMap: Record<string, Record<string, string>> = {};
 
   // Display variables for agent editor
   // If active stage ID is empty, show agent settings
@@ -137,14 +138,23 @@ export class AgentEditor extends Service {
     return this.agentMediators.find((agent) => agent.id === id);
   }
 
-  async testAgentConfig(agentConfig: AgentMediatorConfig) {
-    const response =
-      await this.sp.experimentManager.testAgentConfig(agentConfig);
-    this.agentTestResponseMap[agentConfig.id] = response;
+  async testAgentConfig(
+    agentConfig: AgentMediatorConfig,
+    promptConfig: BaseAgentPromptConfig,
+  ) {
+    const response = await this.sp.experimentManager.testAgentConfig(
+      agentConfig,
+      promptConfig,
+    );
+    if (!this.agentTestResponseMap[agentConfig.id]) {
+      this.agentTestResponseMap[agentConfig.id] = {};
+    }
+    this.agentTestResponseMap[agentConfig.id][promptConfig.id] = response;
   }
 
-  getTestResponse(agentId = this.currentAgentMediatorId) {
-    return this.agentTestResponseMap[agentId] ?? '';
+  getTestResponse(agentId: string, stageId: string) {
+    if (!this.agentTestResponseMap[agentId]) return '';
+    return this.agentTestResponseMap[agentId][stageId] ?? '';
   }
 
   updateAgentMediatorName(id: string, name: string) {

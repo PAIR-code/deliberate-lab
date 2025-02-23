@@ -117,16 +117,21 @@ export class AgentEditorComponent extends MobxLitElement {
   ) {
     const renderAddButton = () => {
       return html`
-        <pr-button
-          @click=${() => {
-            this.agentEditor.addAgentMediatorPrompt(
-              agentConfig.id,
-              stageConfig,
-            );
-          }}
-        >
-          Add prompt
-        </pr-button>
+        <div class="field">
+          <pr-button
+            @click=${() => {
+              this.agentEditor.addAgentMediatorPrompt(
+                agentConfig.id,
+                stageConfig,
+              );
+            }}
+          >
+            Add prompt
+          </pr-button>
+          <div class="description">
+            If no prompt, the agent will not be called during this stage.
+          </div>
+        </div>
       `;
     };
 
@@ -189,24 +194,27 @@ export class AgentEditorComponent extends MobxLitElement {
   ) {
     const onClick = async () => {
       this.isTestButtonLoading = true;
-      await this.agentEditor.testAgentConfig(agentConfig);
+      await this.agentEditor.testAgentConfig(agentConfig, promptConfig);
       this.isTestButtonLoading = false;
     };
 
     // TODO: Test prompt with fake chat data?
-    // TODO: Update endpoint to feed in custom prompt
-    const response = this.agentEditor.getTestResponse(agentConfig.id);
+    const response = this.agentEditor.getTestResponse(
+      agentConfig.id,
+      promptConfig.id,
+    );
     return html`
-      <pr-button
-        ?loading=${this.isTestButtonLoading}
-        color="secondary"
-        variant="tonal"
-        disabled
-        @click=${onClick}
-      >
-        Coming soon: Test prompt
-      </pr-button>
-      ${response.length > 0 ? html`<div>${response}</div>` : nothing}
+      <div class="field">
+        <pr-button
+          ?loading=${this.isTestButtonLoading}
+          color="secondary"
+          variant="tonal"
+          @click=${onClick}
+        >
+          Test prompt
+        </pr-button>
+        ${response.length > 0 ? html`<div>${response}</div>` : nothing}
+      </div>
     `;
   }
 
