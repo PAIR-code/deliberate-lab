@@ -58,6 +58,9 @@ export const createCohort = onCall(async (request) => {
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
+    // TODO: For agents where isDefaultAddToCohort is true,
+    // add those agents (as participants or mediators) to cohort
+
     // For relevant stages, initialize public stage data documents
     const stageDocs = await app
       .firestore()
@@ -97,6 +100,7 @@ export const createCohort = onCall(async (request) => {
   return {id: document.id};
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleCohortCreationValidationErrors(data: any) {
   for (const error of Value.Errors(CohortCreationData, data)) {
     if (isUnionError(error)) {

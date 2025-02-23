@@ -24,6 +24,7 @@ import {
   AlertMessage,
   AlertStatus,
   AgentMediatorConfig,
+  AgentPersonaConfig,
   BaseAgentPromptConfig,
   CohortConfig,
   CohortParticipantConfig,
@@ -738,7 +739,7 @@ export class ExperimentManager extends Service {
 
   /** TEMPORARY: Test new agent config. */
   async testAgentConfig(
-    agentConfig: AgentMediatorConfig,
+    agentConfig: AgentPersonaConfig,
     promptConfig: BaseAgentPromptConfig,
   ) {
     let response = '';

@@ -28,14 +28,13 @@ export type AgentParticipantPromptTestData = Static<
 export const AgentConfigData = Type.Object({
   id: Type.String({minLength: 1}),
   name: Type.String(),
-  avatar: Type.String(),
-  // TODO: Add other agent config fields
+  // TODO: Add other AgentPersonaConfig fields
 });
 
 export const PromptConfigData = Type.Object({
   id: Type.String({minLength: 1}),
   promptContext: Type.String(),
-  // TODO: Add other prompt config fields
+  // TODO: Add other BaseAgentPromptConfig fields
 });
 
 /** AgentConfigTest input validation. */
