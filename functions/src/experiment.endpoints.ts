@@ -61,7 +61,23 @@ export const writeExperiment = onCall(async (request) => {
       transaction.set(document.collection('stages').doc(stage.id), stage);
     }
 
-    // TODO: Add agents
+    // Add agent configs and prompts
+    for (const agent of data.agentConfigs) {
+      const agentDoc = document.collection('agents').doc(agent.persona.id);
+      transaction.set(agentDoc, agent.persona);
+      for (const prompt of agent.participantPrompts) {
+        transaction.set(
+          agentDoc.collection('participantPrompts').doc(prompt.id),
+          prompt,
+        );
+      }
+      for (const prompt of agent.chatPrompts) {
+        transaction.set(
+          agentDoc.collection('chatPrompts').doc(prompt.id),
+          prompt,
+        );
+      }
+    }
   });
 
   return {id: document.id};
@@ -115,7 +131,24 @@ export const updateExperiment = onCall(async (request) => {
     for (const stage of data.stageConfigs) {
       transaction.set(document.collection('stages').doc(stage.id), stage);
     }
-    // TODO: Add updated collection of agents
+
+    // Add agent configs and prompts
+    for (const agent of data.agentConfigs) {
+      const agentDoc = document.collection('agents').doc(agent.persona.id);
+      transaction.set(agentDoc, agent.persona);
+      for (const prompt of agent.participantPrompts) {
+        transaction.set(
+          agentDoc.collection('participantPrompts').doc(prompt.id),
+          prompt,
+        );
+      }
+      for (const prompt of agent.chatPrompts) {
+        transaction.set(
+          agentDoc.collection('chatPrompts').doc(prompt.id),
+          prompt,
+        );
+      }
+    }
   });
 
   return {success: true};

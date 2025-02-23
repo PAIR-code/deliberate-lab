@@ -425,6 +425,7 @@ export class ExperimentManager extends Service {
         collectionName: 'experiments',
         experimentConfig: experiment,
         stageConfigs: stages,
+        agentConfigs: this.sp.agentEditor.getAgentData(),
       },
     );
 
