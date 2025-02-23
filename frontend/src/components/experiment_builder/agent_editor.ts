@@ -12,7 +12,7 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
   AgentChatPromptConfig,
-  AgentMediatorConfig,
+  AgentPersonaConfig,
   ApiKeyType,
   StageConfig,
   StageKind,
@@ -31,7 +31,7 @@ export class AgentEditorComponent extends MobxLitElement {
   private readonly agentEditor = core.getService(AgentEditor);
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
-  @property() agent: AgentMediatorConfig | undefined = undefined;
+  @property() agent: AgentPersonaConfig | undefined = undefined;
   @state() isTestButtonLoading = false;
 
   override render() {
@@ -51,7 +51,7 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderAgentNav(agentConfig: AgentMediatorConfig) {
+  private renderAgentNav(agentConfig: AgentPersonaConfig) {
     const stages = this.experimentEditor.stages;
     const isActive = (stageId: string) => {
       return stageId === this.agentEditor.activeStageId;
@@ -90,7 +90,7 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderAgentContent(agentConfig: AgentMediatorConfig) {
+  private renderAgentContent(agentConfig: AgentPersonaConfig) {
     const activeStageId = this.agentEditor.activeStageId;
     if (activeStageId === '') {
       return this.renderAgentGeneralSettings(agentConfig);
@@ -113,7 +113,7 @@ export class AgentEditorComponent extends MobxLitElement {
 
   private renderStageEditor(
     stageConfig: StageConfig,
-    agentConfig: AgentMediatorConfig,
+    agentConfig: AgentPersonaConfig,
   ) {
     const renderAddButton = () => {
       return html`
@@ -175,7 +175,7 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderAgentGeneralSettings(agentConfig: AgentMediatorConfig) {
+  private renderAgentGeneralSettings(agentConfig: AgentPersonaConfig) {
     return html`
       <div class="agent-wrapper">
         ${this.renderAgentPrivateName(agentConfig)}
@@ -189,7 +189,7 @@ export class AgentEditorComponent extends MobxLitElement {
   }
 
   private renderTestPromptButton(
-    agentConfig: AgentMediatorConfig,
+    agentConfig: AgentPersonaConfig,
     promptConfig: AgentChatPromptConfig,
   ) {
     const onClick = async () => {
@@ -218,7 +218,7 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderDeleteAgentButton(agent: AgentMediatorConfig) {
+  private renderDeleteAgentButton(agent: AgentPersonaConfig) {
     const onClick = () => {
       this.agentEditor.deleteAgentMediator(agent.id);
     };
@@ -230,7 +230,7 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderAgentPrivateName(agent: AgentMediatorConfig) {
+  private renderAgentPrivateName(agent: AgentPersonaConfig) {
     const updateName = (e: InputEvent) => {
       const name = (e.target as HTMLTextAreaElement).value;
       this.agentEditor.updateAgentMediatorPrivateName(agent.id, name);
@@ -241,8 +241,8 @@ export class AgentEditorComponent extends MobxLitElement {
         label="Private agent name (viewable to experimenters only)*"
         placeholder="E.g., Gemini Pro Agent"
         variant="outlined"
-        .value=${agent.privateName}
-        class=${agent.privateName.length === 0 ? 'required' : ''}
+        .value=${agent.name}
+        class=${agent.name.length === 0 ? 'required' : ''}
         ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updateName}
       >
@@ -250,10 +250,10 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderAgentName(agent: AgentMediatorConfig) {
+  private renderAgentName(agent: AgentPersonaConfig) {
     const updateName = (e: InputEvent) => {
       const name = (e.target as HTMLTextAreaElement).value;
-      this.agentEditor.updateAgentMediatorName(agent.id, name);
+      this.agentEditor.updateAgentMediatorProfile(agent.id, {name});
     };
 
     return html`
@@ -261,7 +261,7 @@ export class AgentEditorComponent extends MobxLitElement {
         label="Name"
         placeholder="Display name for agent"
         variant="outlined"
-        .value=${agent.name}
+        .value=${agent.defaultProfile.name}
         ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updateName}
       >
@@ -269,7 +269,7 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderAgentApiType(agentConfig: AgentMediatorConfig) {
+  private renderAgentApiType(agentConfig: AgentPersonaConfig) {
     return html`
       <div class="section">
         <div class="field-title">LLM API</div>
@@ -295,7 +295,7 @@ export class AgentEditorComponent extends MobxLitElement {
   }
 
   private renderApiTypeButton(
-    agentConfig: AgentMediatorConfig,
+    agentConfig: AgentPersonaConfig,
     apiName: string,
     apiType: ApiKeyType,
   ) {
@@ -317,7 +317,7 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderAgentModel(agent: AgentMediatorConfig) {
+  private renderAgentModel(agent: AgentPersonaConfig) {
     const updateModel = (e: InputEvent) => {
       const modelName = (e.target as HTMLTextAreaElement).value;
       this.agentEditor.updateAgentMediatorModelSettings(agent.id, {modelName});
@@ -337,7 +337,7 @@ export class AgentEditorComponent extends MobxLitElement {
   }
 
   private renderAgentPrompt(
-    agent: AgentMediatorConfig,
+    agent: AgentPersonaConfig,
     agentPromptConfig: AgentChatPromptConfig,
   ) {
     const updatePrompt = (e: InputEvent) => {
@@ -369,11 +369,11 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderAvatars(agent: AgentMediatorConfig) {
+  private renderAvatars(agent: AgentPersonaConfig) {
     const handleAvatarClick = (e: Event) => {
       const value = Number((e.target as HTMLInputElement).value);
       const avatar = LLM_AGENT_AVATARS[value];
-      this.agentEditor.updateAgentMediatorAvatar(agent.id, avatar);
+      this.agentEditor.updateAgentMediatorProfile(agent.id, {avatar});
     };
 
     const renderAvatarRadio = (emoji: string, index: number) => {
@@ -384,7 +384,7 @@ export class AgentEditorComponent extends MobxLitElement {
             name="${agent.id}-avatar"
             value=${index}
             aria-label=${emoji}
-            ?checked=${agent.avatar === emoji}
+            ?checked=${agent.defaultProfile.avatar === emoji}
             ?disabled=${!this.experimentEditor.canEditStages}
             @change=${handleAvatarClick}
           >
@@ -412,7 +412,7 @@ export class AgentEditorComponent extends MobxLitElement {
   }
 
   private renderAgentWordsPerMinute(
-    agent: AgentMediatorConfig,
+    agent: AgentPersonaConfig,
     agentPromptConfig: AgentChatPromptConfig,
   ) {
     const updateWordsPerMinute = (e: InputEvent) => {
@@ -454,7 +454,7 @@ export class AgentEditorComponent extends MobxLitElement {
   }
 
   private renderAgentSamplingParameters(
-    agent: AgentMediatorConfig,
+    agent: AgentPersonaConfig,
     agentPromptConfig: AgentChatPromptConfig,
   ) {
     const generationConfig = agentPromptConfig.generationConfig;
@@ -589,7 +589,7 @@ export class AgentEditorComponent extends MobxLitElement {
   }
 
   private renderAgentCustomRequestBodyFields(
-    agent: AgentMediatorConfig,
+    agent: AgentPersonaConfig,
     agentPromptConfig: AgentChatPromptConfig,
   ) {
     const addField = () => {
@@ -621,7 +621,7 @@ export class AgentEditorComponent extends MobxLitElement {
   }
 
   private renderAgentCustomRequestBodyField(
-    agent: AgentMediatorConfig,
+    agent: AgentPersonaConfig,
     agentPromptConfig: AgentChatPromptConfig,
     field: {name: string; value: string},
     fieldIndex: number,

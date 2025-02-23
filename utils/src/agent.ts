@@ -1,3 +1,7 @@
+import {
+  ParticipantProfileBase,
+  createParticipantProfileBase,
+} from './participant';
 import {generateId} from './shared';
 import {StageKind} from './stages/stage';
 import {DEFAULT_AGENT_MEDIATOR_PROMPT} from './stages/chat_stage';
@@ -97,13 +101,21 @@ export interface AgentChatPromptConfig extends BaseAgentPromptConfig {
   chatSettings: AgentChatSettings;
 }
 
-/** Top-level agent mediator config. */
-export interface AgentMediatorConfig {
+export enum AgentPersonaType {
+  PARTICIAPNT = 'participant',
+  MEDIATOR = 'mediator',
+}
+
+/** Top-level agent persona config (basically, template for agents). */
+export interface AgentPersonaConfig {
   id: string;
-  privateName: string; // viewable only to experimenters
-  name: string; // display name
-  avatar: string;
-  isActive: boolean; // if false, API calls are not made
+  // Viewable only to experimenters
+  name: string;
+  // Agent persona type
+  type: AgentPersonaType;
+  // If true, add to cohort on cohort creation
+  isDefaultAddToCohort: boolean;
+  defaultProfile: ParticipantProfileBase;
   defaultModelSettings: AgentModelSettings;
 }
 
@@ -180,15 +192,20 @@ export function createAgentChatPromptConfig(
   };
 }
 
-export function createAgentMediatorConfig(
-  config: Partial<AgentMediatorConfig> = {},
-): AgentMediatorConfig {
+export function createAgentPersonaConfig(
+  config: Partial<AgentPersonaConfig> = {},
+): AgentPersonaConfig {
+  const type = config.type ?? AgentPersonaType.MEDIATOR;
   return {
     id: config.id ?? generateId(),
-    privateName: config.name ?? '',
-    name: config.name ?? 'Mediator',
-    avatar: config.avatar ?? '🤖',
-    isActive: config.isActive ?? true,
+    name: config.name ?? '',
+    type,
+    isDefaultAddToCohort: config.isDefaultAddToCohort ?? false,
+    defaultProfile:
+      config.defaultProfile ??
+      createParticipantProfileBase({
+        name: type === AgentPersonaType.MEDIATOR ? 'Mediator' : '',
+      }),
     defaultModelSettings:
       config.defaultModelSettings ?? createAgentModelSettings(),
   };
