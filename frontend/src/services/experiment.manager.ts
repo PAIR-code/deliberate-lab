@@ -21,7 +21,7 @@ import {Service} from './service';
 import JSZip from 'jszip';
 
 import {
-  AgentMediatorConfig,
+  AgentPersonaConfig,
   BaseAgentPromptConfig,
   CohortConfig,
   CohortParticipantConfig,
@@ -694,7 +694,7 @@ export class ExperimentManager extends Service {
 
   /** TEMPORARY: Test new agent config. */
   async testAgentConfig(
-    agentConfig: AgentMediatorConfig,
+    agentConfig: AgentPersonaConfig,
     promptConfig: BaseAgentPromptConfig,
   ) {
     let response = '';

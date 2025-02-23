@@ -30,12 +30,7 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {Pages, RouterService} from '../../services/router.service';
 
-import {
-  StageConfig,
-  StageKind,
-  generateId,
-  createAgentMediatorConfig,
-} from '@deliberation-lab/utils';
+import {StageConfig, StageKind, generateId} from '@deliberation-lab/utils';
 
 import {styles} from './experiment_builder.scss';
 
@@ -202,9 +197,9 @@ export class ExperimentBuilder extends MobxLitElement {
                   }}
                 >
                   <div>
-                    ${mediator.privateName.length > 0
-                      ? mediator.privateName
-                      : mediator.name}
+                    ${mediator.name.length > 0
+                      ? mediator.name
+                      : mediator.defaultProfile.name}
                   </div>
                   <div class="subtitle">
                     ${mediator.defaultModelSettings.modelName}

@@ -9,16 +9,17 @@ import {
   AgentChatPromptConfig,
   AgentChatSettings,
   AgentConfig,
-  AgentMediatorConfig,
   AgentModelSettings,
+  AgentPersonaConfig,
   BaseAgentPromptConfig,
   ChatStageConfig,
   Experiment,
+  ParticipantProfileBase,
   StageConfig,
   StageKind,
   ModelGenerationConfig,
-  createAgentMediatorConfig,
   createAgentChatPromptConfig,
+  createAgentPersonaConfig,
 } from '@deliberation-lab/utils';
 import {updateChatAgentsCallable} from '../shared/callables';
 
@@ -87,7 +88,7 @@ export class AgentEditor extends Service {
   // *********************************************************************** //
   // TODO: VARIABLES/FUNCTIONS FOR NEW AGENT MEDIATOR/PARTICIPANT CONFIGS    //
   // *********************************************************************** //
-  @observable agentMediators: AgentMediatorConfig[] = [];
+  @observable agentMediators: AgentPersonaConfig[] = [];
   // Mediator selected in panel
   @observable currentAgentMediatorId = '';
   // Maps from agent ID to (stage ID to stage chat prompt)
@@ -115,7 +116,7 @@ export class AgentEditor extends Service {
   }
 
   addAgentMediator(setAsCurrent = true) {
-    const agent = createAgentMediatorConfig();
+    const agent = createAgentPersonaConfig();
     this.agentMediators.push(agent);
     this.agentChatPromptMap[agent.id] = {};
     if (setAsCurrent) {
@@ -139,7 +140,7 @@ export class AgentEditor extends Service {
   }
 
   async testAgentConfig(
-    agentConfig: AgentMediatorConfig,
+    agentConfig: AgentPersonaConfig,
     promptConfig: BaseAgentPromptConfig,
   ) {
     const response = await this.sp.experimentManager.testAgentConfig(
@@ -157,24 +158,20 @@ export class AgentEditor extends Service {
     return this.agentTestResponseMap[agentId][stageId] ?? '';
   }
 
-  updateAgentMediatorName(id: string, name: string) {
+  updateAgentMediatorProfile(
+    id: string,
+    profile: Partial<ParticipantProfileBase>,
+  ) {
     const agent = this.getAgentMediator(id);
     if (agent) {
-      agent.name = name;
+      agent.defaultProfile = {...agent.defaultProfile, ...profile};
     }
   }
 
   updateAgentMediatorPrivateName(id: string, name: string) {
     const agent = this.getAgentMediator(id);
     if (agent) {
-      agent.privateName = name;
-    }
-  }
-
-  updateAgentMediatorAvatar(id: string, avatar: string) {
-    const agent = this.getAgentMediator(id);
-    if (agent) {
-      agent.avatar = avatar;
+      agent.name = name;
     }
   }
 
