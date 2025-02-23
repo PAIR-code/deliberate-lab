@@ -11,6 +11,7 @@ import {
   AgentConfig,
   AgentModelSettings,
   AgentPersonaConfig,
+  AgentResponseConfig,
   BaseAgentPromptConfig,
   ChatStageConfig,
   Experiment,
@@ -250,6 +251,21 @@ export class AgentEditor extends Service {
     const config = this.agentChatPromptMap[id][stageId];
     if (agent && config) {
       this.agentChatPromptMap[id][stageId] = {...config, ...promptConfig};
+    }
+  }
+
+  updateAgentMediatorResponseConfig(
+    id: string,
+    stageId: string,
+    newResponseConfig: Partial<AgentResponseConfig>,
+  ) {
+    const agent = this.getAgentMediator(id);
+    const config = this.agentChatPromptMap[id][stageId];
+    if (agent && config) {
+      this.agentChatPromptMap[id][stageId] = {
+        ...config,
+        responseConfig: {...config.responseConfig, ...newResponseConfig},
+      };
     }
   }
 

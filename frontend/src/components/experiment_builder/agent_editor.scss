@@ -63,6 +63,7 @@
 .field {
   @include common.flex-column;
   gap: common.$spacing-small;
+  width: 100%;
 }
 
 .field-title,
