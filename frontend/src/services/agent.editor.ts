@@ -9,6 +9,7 @@ import {
   AgentChatPromptConfig,
   AgentChatSettings,
   AgentConfig,
+  AgentDataObject,
   AgentModelSettings,
   AgentPersonaConfig,
   AgentResponseConfig,
@@ -186,13 +187,6 @@ export class AgentEditor extends Service {
         ...agent.defaultModelSettings,
         ...defaultModelSettings,
       };
-      // Update model settings for all prompt configs too
-      Object.values(this.agentChatPromptMap).forEach((prompt) => {
-        prompt.modelSettings = {
-          ...prompt.modelSettings,
-          ...defaultModelSettings,
-        };
-      });
     }
   }
 
@@ -323,6 +317,22 @@ export class AgentEditor extends Service {
         customRequestBodyFields,
       };
     }
+  }
+
+  /** Return all agents in AgentDataObject format. */
+  getAgentData(): AgentDataObject[] {
+    const agentData: AgentDataObject[] = [];
+    Object.values(this.agentMediators).forEach((persona) => {
+      const chatPromptMap = this.agentChatPromptMap[persona.id];
+      const chatPrompts = chatPromptMap ? Object.values(chatPromptMap) : [];
+      const agent: AgentDataObject = {
+        persona,
+        participantPrompts: [],
+        chatPrompts,
+      };
+      agentData.push(agent);
+    });
+    return agentData;
   }
 
   resetAgents() {
