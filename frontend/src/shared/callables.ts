@@ -48,6 +48,18 @@ export const writeExperimentCallable = async (
   return data;
 };
 
+/** Generic endpoint to update experiments or experiment templates */
+export const updateExperimentCallable = async (
+  functions: Functions,
+  experiment: ExperimentCreationData,
+) => {
+  const {data} = await httpsCallable<ExperimentCreationData, SuccessResponse>(
+    functions,
+    'updateExperiment',
+  )(experiment);
+  return data;
+};
+
 /** Generic endpoint to delete experiments or experiment templates */
 export const deleteExperimentCallable = async (
   functions: Functions,

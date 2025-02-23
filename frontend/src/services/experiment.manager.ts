@@ -125,9 +125,9 @@ export class ExperimentManager extends Service {
   async setIsEditing(isEditing: boolean, saveChanges = false) {
     if (!isEditing) {
       this.isEditing = false;
-      // If save changes, call writeExperiment
+      // If save changes, call updateExperiment
       if (saveChanges) {
-        await this.sp.experimentEditor.writeExperiment();
+        await this.sp.experimentEditor.updateExperiment();
       }
       // Reset experiment editor
       this.sp.experimentEditor.resetExperiment();

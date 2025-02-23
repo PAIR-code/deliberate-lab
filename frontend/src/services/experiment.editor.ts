@@ -14,7 +14,10 @@ import {
 } from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase/firestore';
 import {computed, makeObservable, observable} from 'mobx';
-import {writeExperimentCallable} from '../shared/callables';
+import {
+  writeExperimentCallable,
+  updateExperimentCallable,
+} from '../shared/callables';
 
 import {AuthService} from './auth.service';
 import {ExperimentManager} from './experiment.manager';
@@ -203,7 +206,7 @@ export class ExperimentEditor extends Service {
   // FIRESTORE                                                               //
   // *********************************************************************** //
 
-  /** Create or update an experiment.
+  /** Create an experiment.
    * @rights Experimenter
    */
   async writeExperiment() {
@@ -213,6 +216,28 @@ export class ExperimentEditor extends Service {
     this.experiment.metadata.dateModified = Timestamp.now();
 
     const response = await writeExperimentCallable(
+      this.sp.firebaseService.functions,
+      {
+        collectionName: 'experiments',
+        experimentConfig: this.experiment,
+        stageConfigs: this.stages,
+      },
+    );
+
+    this.isWritingExperiment = false;
+    return response;
+  }
+
+  /** Update an experiment.
+   * @rights Experimenter who created the experiment
+   */
+  async updateExperiment() {
+    this.isWritingExperiment = true;
+
+    // Update date modified
+    this.experiment.metadata.dateModified = Timestamp.now();
+
+    const response = await updateExperimentCallable(
       this.sp.firebaseService.functions,
       {
         collectionName: 'experiments',
