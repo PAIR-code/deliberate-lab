@@ -104,12 +104,13 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
 
 // ****************************************************************************
 // Test new agent configs
-// Input structure: { creatorId, agentConfig }
+// Input structure: { creatorId, agentConfig, promptConfig }
 // Validation: utils/src/agent.validation.ts
 // ****************************************************************************
 export const testAgentConfig = onCall(async (request) => {
   const {data} = request;
   const agentConfig = data.agentConfig;
+  const promptConfig = data.promptConfig;
   const creatorId = data.creatorId;
 
   // Only allow experimenters to use this test endpoint
@@ -125,15 +126,22 @@ export const testAgentConfig = onCall(async (request) => {
 
   const experimenterData = creatorDoc.data() as ExperimenterData;
 
-  // TODO: Use utils functions to construct prompt based on stage type
-  const prompt = 'Tell a funny joke';
+  // TODO: Use fake (e.g., chat) data when running prompt?
+  const prompt = promptConfig.promptContext;
   const apiType = agentConfig.defaultModelSettings.apiType;
   const model = agentConfig.defaultModelSettings.model;
 
   // Call LLM API
   const callModel = async () => {
     if (apiType === ApiKeyType.GEMINI_API_KEY) {
-      return await getGeminiResponse(experimenterData, model, prompt);
+      // TODO: Add generation config based on new agent refactor
+      const generationConfig = createAgentGenerationConfig();
+      return await getGeminiResponse(
+        experimenterData,
+        model,
+        prompt,
+        generationConfig,
+      );
     }
     if (apiType === ApiKeyType.OPENAI_API_KEY) {
       // TODO: Add generation config based on new agent refactor
@@ -146,7 +154,14 @@ export const testAgentConfig = onCall(async (request) => {
       );
     }
     if (apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
-      return await getOllamaResponse(experimenterData, model, prompt);
+      // TODO: Add generation config based on new agent refactor
+      const generationConfig = createAgentGenerationConfig();
+      return await getOllamaResponse(
+        experimenterData,
+        model,
+        prompt,
+        generationConfig,
+      );
     }
     console.error('Error: Invalid API type');
     return {text: ''};
@@ -155,7 +170,12 @@ export const testAgentConfig = onCall(async (request) => {
   const response = await callModel();
 
   // Check console log for response
-  console.log('TESTING AGENT CONFIG\n', JSON.stringify(agentConfig), response);
+  console.log(
+    'TESTING AGENT CONFIG\n',
+    JSON.stringify(agentConfig),
+    JSON.stringify(promptConfig),
+    response,
+  );
 
   return {data: response.text};
 });

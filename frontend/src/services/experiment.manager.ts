@@ -24,6 +24,7 @@ import {
   AlertMessage,
   AlertStatus,
   AgentMediatorConfig,
+  BaseAgentPromptConfig,
   CohortConfig,
   CohortParticipantConfig,
   CreateChatMessageData,
@@ -736,7 +737,10 @@ export class ExperimentManager extends Service {
   }
 
   /** TEMPORARY: Test new agent config. */
-  async testAgentConfig(agentConfig: AgentMediatorConfig) {
+  async testAgentConfig(
+    agentConfig: AgentMediatorConfig,
+    promptConfig: BaseAgentPromptConfig,
+  ) {
     let response = '';
     const creatorId = this.sp.authService.experimenterData?.email;
     if (creatorId) {
@@ -745,6 +749,7 @@ export class ExperimentManager extends Service {
           await testAgentConfigCallable(this.sp.firebaseService.functions, {
             creatorId,
             agentConfig,
+            promptConfig,
           })
         ).data ?? '';
     }
