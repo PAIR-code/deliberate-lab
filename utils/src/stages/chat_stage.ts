@@ -14,10 +14,11 @@ import {
   createParticipantProfileBase,
 } from '../participant';
 import {
-  AgentGenerationConfig,
+  AgentChatPromptConfig,
   AgentResponseConfig,
   createAgentResponseConfig,
 } from '../agent';
+import {MediatorProfile} from '../mediator';
 import {
   DEFAULT_MODEL,
   DEFAULT_AGENT_MEDIATOR_PROMPT,
@@ -37,7 +38,6 @@ import {
 export interface ChatStageConfig extends BaseStageConfig {
   kind: StageKind.CHAT;
   discussions: ChatDiscussion[]; // ordered list of discussions
-  agents: AgentConfig[];
   timeLimitInMinutes: number | null; // How long remaining in the chat.
 }
 
@@ -100,23 +100,10 @@ export enum ChatMessageType {
   AGENT_AGENT = 'AGENT_AGENT', // obsolete type
 }
 
-/** LLM agent config. */
-// TODO: Remove after switching to refactored agent workflow
-export interface AgentConfig {
-  id: string;
-  name: string;
-  avatar: string; // emoji avatar for agent
-  model: string;
-  prompt: string;
-  wordsPerMinute: number; // Typing speed
-  generationConfig: AgentGenerationConfig;
-  responseConfig: AgentResponseConfig;
-  // TODO: Add more settings, e.g. context window
-}
-
 /** Format for LLM API chat message output. */
 export interface AgentChatResponse {
-  agent: AgentConfig;
+  mediator: MediatorProfile;
+  promptConfig: AgentChatPromptConfig;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   parsed: any;
   message: string;
@@ -175,7 +162,7 @@ export function createChatStage(
       config.progress ??
       createStageProgressConfig({waitForAllParticipants: true}),
     discussions: config.discussions ?? [],
-    agents: config.agents ?? [],
+    timeLimitInMinutes: config.timeLimitInMinutes ?? null,
   };
 }
 
@@ -250,36 +237,6 @@ export function createExperimenterChatMessage(
     senderId: config.senderId ?? '',
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
-  };
-}
-
-/** Create agent agent. */
-// TODO: Remove after switching to refactored agent workflow
-export function createAgentConfig(
-  config: Partial<AgentConfig> = {},
-): AgentConfig {
-  return {
-    id: config.id ?? generateId(),
-    name: config.name ?? 'Agent',
-    avatar: config.avatar ?? '🤖',
-    model: config.model ?? DEFAULT_MODEL,
-    prompt: config.prompt ?? DEFAULT_AGENT_MEDIATOR_PROMPT.trim(),
-    wordsPerMinute: config.wordsPerMinute ?? 80, // Default 80 WPM.
-    generationConfig: config.generationConfig ?? createAgentGenerationConfig(),
-    responseConfig: config.responseConfig ?? createAgentResponseConfig(),
-  };
-}
-
-// TODO: Remove after switching to refactored agent workflow
-export function createAgentGenerationConfig(
-  config: Partial<AgentGenerationConfig> = {},
-): AgentGenerationConfig {
-  return {
-    temperature: config.temperature ?? 0.7,
-    topP: config.topP ?? 1.0,
-    frequencyPenalty: config.frequencyPenalty ?? 0.0,
-    presencePenalty: config.presencePenalty ?? 0.0,
-    customRequestBodyFields: config.customRequestBodyFields ?? [],
   };
 }
 

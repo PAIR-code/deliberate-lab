@@ -61,35 +61,6 @@ export const createChatMessage = onCall(async (request) => {
 });
 
 // ************************************************************************* //
-// updateChatAgents endpoint                                              //
-//                                                                           //
-// Input structure: { experimentId, stageId, agentList }                  //
-// Validation: utils/src/stages/chat_stage.validation.ts                     //
-// ************************************************************************* //
-
-export const updateChatAgents = onCall(async (request) => {
-  const {data} = request;
-
-  const document = app
-    .firestore()
-    .collection('experiments')
-    .doc(data.experimentId)
-    .collection('stages')
-    .doc(data.stageId);
-
-  // Run document write as transaction to ensure consistency
-  await app.firestore().runTransaction(async (transaction) => {
-    const stageConfig = (await document.get()).data() as StageConfig;
-    if (!stageConfig || stageConfig.kind !== StageKind.CHAT) return {};
-
-    stageConfig.agents = data.agentList;
-    transaction.set(document, stageConfig);
-  });
-
-  return {success: true};
-});
-
-// ************************************************************************* //
 // updateChatStageParticipantAnswer endpoint                                 //
 //                                                                           //
 // Input structure: { experimentId, cohortId, participantPrivateId,          //
@@ -160,6 +131,7 @@ export const updateChatStageParticipantAnswer = onCall(async (request) => {
   return {id: document.id};
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleUpdateChatStageParticipantAnswerValidationErrors(data: any) {
   for (const error of Value.Errors(
     UpdateChatStageParticipantAnswerData,

@@ -17,7 +17,6 @@ import {ParticipantService} from '../../services/participant.service';
 import {
   ChatStageConfig,
   ChatStagePublicData,
-  AgentConfig,
   ParticipantProfile,
   checkApiKeyExists,
   getTimeElapsed,
@@ -173,40 +172,16 @@ export class ChatPanel extends MobxLitElement {
       return nothing;
     }
 
-    const agents = this.stage.agents;
+    // TODO: Include mediators
     return html`
       <div class="panel-item">
         <div class="panel-item-title">
-          Participants (${activeParticipants.length + agents.length})
+          Participants (${activeParticipants.length})
         </div>
-        ${agents && agents.length > 0 ? this.renderApiCheck() : ''}
         ${activeParticipants.map((participant) =>
           this.renderProfile(participant),
         )}
-        ${agents.map((agent) => this.renderAgent(agent))}
       </div>
-    `;
-  }
-
-  private renderAgent(agent: AgentConfig) {
-    // TODO: Consider adding a toggle so that agent details and identity
-    // can be exposed to all participants (not just in debug mode).
-    return html`
-      <pr-tooltip
-        text=${this.authService.isDebugMode ? agent.prompt : ''}
-        position="BOTTOM_END"
-      >
-        <div class="profile">
-          <avatar-icon
-            .emoji=${agent.avatar}
-            .color=${getHashBasedColor(agent?.avatar ?? '')}
-          >
-          </avatar-icon>
-          <div class="name">
-            ${agent.name}${this.authService.isDebugMode ? ` 🤖` : ''}
-          </div>
-        </div>
-      </pr-tooltip>
     `;
   }
 

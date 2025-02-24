@@ -41,3 +41,41 @@ export async function createMediatorsForCohort(
   }
   return mediators;
 }
+
+/** Return all mediators for given cohort and stage. */
+export async function getMediatorsInCohortStage(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+): MediatorProfile[] {
+  return (
+    await app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('mediators')
+      .where('currentCohortId', '==', cohortId)
+      .get()
+  ).docs
+    .map((doc) => doc.data() as MediatorProfile)
+    .filter((mediator) => mediator.activeStageMap[stageId]);
+}
+
+/** Return chat prompt that corresponds to mediator. */
+export async function getMediatorChatPrompt(
+  experimentId: string,
+  stageId: string,
+  mediator: MediatorProfile,
+): AgentChatPromptConfig {
+  return (
+    await app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('agents')
+      .doc(mediator.agentConfig.agentId)
+      .collection('chatPrompts')
+      .doc(stageId)
+      .get()
+  ).data() as AgentChatPromptConfig;
+}
