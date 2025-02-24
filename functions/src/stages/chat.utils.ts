@@ -5,6 +5,7 @@ import {
   ChatStageConfig,
   ChatStagePublicData,
   ExperimenterData,
+  MediatorStatus,
   ParticipantProfile,
   ParticipantStatus,
   getDefaultChatPrompt,
@@ -207,6 +208,11 @@ export async function getAgentChatResponse(
   stageConfig: ChatStageConfig,
   experimenterData: ExperimenterData,
 ): AgentChatResponse | null {
+  // Return null if mediator status is not active
+  if (mediator.currentStatus !== MediatorStatus.ACTIVE) {
+    return null;
+  }
+
   // Get chat prompt
   const promptConfig = await getMediatorChatPrompt(
     experimentId,
