@@ -1,8 +1,14 @@
-import {ApiKeyType, ExperimenterData} from '@deliberation-lab/utils';
+import {
+  AgentPersonaConfig,
+  ApiKeyType,
+  ExperimenterData,
+} from '@deliberation-lab/utils';
 
 import {getGeminiAPIResponse} from './api/gemini.api';
 import {getOpenAIAPITextCompletionResponse} from './api/openai.api';
 import {ollamaChat} from './api/ollama.api';
+
+import {app} from './app';
 
 export async function getAgentResponse(
   data: ExperimenterData,
@@ -13,7 +19,12 @@ export async function getAgentResponse(
   let response;
 
   if (keyType === ApiKeyType.GEMINI_API_KEY) {
-    response = getGeminiResponse(data, agent.model, prompt, agent.generationConfig);
+    response = getGeminiResponse(
+      data,
+      agent.model,
+      prompt,
+      agent.generationConfig,
+    );
   } else if (keyType === ApiKeyType.OPENAI_API_KEY) {
     response = getOpenAIAPIResponse(
       data,
@@ -40,12 +51,12 @@ export async function getGeminiResponse(
   prompt: string,
   // TODO: Replace with new agent model settings
   generationConfig: AgentGenerationConfig,
-  ): Promise<ModelResponse> {
+): Promise<ModelResponse> {
   return await getGeminiAPIResponse(
     data.apiKeys.geminiApiKey,
     modelName,
     prompt,
-    generationConfig
+    generationConfig,
   );
 }
 
@@ -72,5 +83,22 @@ export async function getOllamaResponse(
   // TODO: Replace with new agent model settings
   generationConfig: AgentGenerationConfig,
 ): Promise<ModelResponse> {
-  return await ollamaChat([prompt], modelName, data.apiKeys.ollamaApiKey, generationConfig);
+  return await ollamaChat(
+    [prompt],
+    modelName,
+    data.apiKeys.ollamaApiKey,
+    generationConfig,
+  );
+}
+
+/** Return all agent personas for a given experiment. */
+export async function getAgentPersonas(experimentId: string) {
+  const agentCollection = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('agents');
+  return (await agentCollection.get()).docs.map(
+    (agent) => agent.data() as AgentPersonaConfig,
+  );
 }
