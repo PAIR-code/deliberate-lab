@@ -23,6 +23,7 @@ import {
   ChatStageConfig,
   ChipLogEntry,
   CohortConfig,
+  MediatorProfile,
   ParticipantProfile,
   ParticipantStatus,
   StageConfig,
@@ -64,6 +65,8 @@ export class CohortService extends Service {
   @observable participantMap: Record<string, ParticipantProfile> = {};
   // Participants pending transfer to this cohort
   @observable transferParticipantMap: Record<string, ParticipantProfile> = {};
+  // Mediators currently in the cohort
+  @observable mediatorMap: Record<string, MediatorProfile> = {};
 
   @observable stagePublicDataMap: Record<string, StagePublicData> = {};
 
@@ -77,6 +80,7 @@ export class CohortService extends Service {
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
+  @observable isMediatorsLoading = false;
   @observable isParticipantsLoading = false;
   @observable isStageDataLoading = false;
   @observable isCohortConfigLoading = false;
@@ -84,7 +88,11 @@ export class CohortService extends Service {
   @observable isChipLoading = false;
 
   @computed get isLoading() {
-    return this.isParticipantsLoading || this.isStageDataLoading;
+    return (
+      this.isParticipantsLoading ||
+      this.isStageDataLoading ||
+      this.isMediatorsLoading
+    );
   }
 
   set isLoading(value: boolean) {
@@ -92,6 +100,14 @@ export class CohortService extends Service {
     this.isStageDataLoading = value;
     this.isChatLoading = value;
     this.isChipLoading = value;
+    this.isMediatorsLoading = value;
+  }
+
+  // Returns mediators that are active in the given stage
+  getMediatorsForStage(stageId: string) {
+    return Object.values(this.mediatorMap).filter(
+      (mediator) => mediator.activeStageMap[stageId],
+    );
   }
 
   getAllParticipants(
@@ -249,6 +265,7 @@ export class CohortService extends Service {
     this.loadChatMessages();
     this.loadChipLogEntries();
     this.loadParticipantProfiles();
+    this.loadMediatorProfiles();
   }
 
   /** Subscribe to current cohort config. */
@@ -476,6 +493,43 @@ export class CohortService extends Service {
     );
   }
 
+  loadMediatorProfiles() {
+    if (!this.experimentId || !this.cohortId) return;
+
+    this.isMediatorsLoading = true;
+
+    // Clear mediator map before repopulating
+    this.mediatorMap = {};
+
+    // TODO: Use mediatorPublicData collection once available
+    // so that agent configs are not surfaced
+    this.unsubscribe.push(
+      onSnapshot(
+        query(
+          collection(
+            this.sp.firebaseService.firestore,
+            'experiments',
+            this.experimentId,
+            'mediators',
+          ),
+          or(where('currentCohortId', '==', this.cohortId)),
+        ),
+        (snapshot) => {
+          let changedDocs = snapshot.docChanges().map((change) => change.doc);
+          if (changedDocs.length === 0) {
+            changedDocs = snapshot.docs;
+          }
+
+          changedDocs.forEach((doc) => {
+            const profile = doc.data() as MediatorProfile;
+            this.mediatorMap[profile.id] = profile;
+          });
+          this.isMediatorsLoading = false;
+        },
+      ),
+    );
+  }
+
   unsubscribeAll() {
     this.unsubscribe.forEach((unsubscribe) => unsubscribe());
     this.unsubscribe = [];
@@ -488,6 +542,7 @@ export class CohortService extends Service {
     this.chipLogMap = {};
     this.transferParticipantMap = {};
     this.stagePublicDataMap = {};
+    this.mediatorMap = {};
   }
 
   reset() {
