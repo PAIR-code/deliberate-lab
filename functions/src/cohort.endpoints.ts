@@ -13,6 +13,7 @@ import * as functions from 'firebase-functions';
 import {onCall} from 'firebase-functions/v2/https';
 
 import {app} from './app';
+import {createMediatorsForCohort} from './mediator.utils';
 import {AuthGuard} from './utils/auth-guard';
 import {
   checkConfigDataUnionOnPath,
@@ -95,6 +96,21 @@ export const createCohort = onCall(async (request) => {
 
     // Write cohort config
     transaction.set(document, cohortConfig);
+
+    // Add relevant mediators to cohort
+    const mediators = await createMediatorsForCohort(
+      data.experimentId,
+      cohortConfig.id,
+    );
+    for (const mediator of mediators) {
+      const mediatorDoc = app
+        .firestore()
+        .collection('experiments')
+        .doc(data.experimentId)
+        .collection('mediators')
+        .doc(mediator.id);
+      transaction.set(mediatorDoc, mediator);
+    }
   });
 
   return {id: document.id};
@@ -214,6 +230,8 @@ export const deleteCohort = onCall(async (request) => {
       });
     }
   }
+
+  // TODO: Set all mediators in cohort to deleted
 
   return {success: true};
 });

@@ -43,6 +43,13 @@ export enum ApiKeyType {
 // to experiment logic (e.g., chat mediation)
 // ----------------------------------------------------------------------------
 
+/** Agent config applied to ParticipantProfile or MediatorProfile. */
+export interface ProfileAgentConfig {
+  agentId: string; // ID of agent persona used
+  promptContext: string; // Additional text to concatenate to agent prompts
+  modelSettings: AgentModelSettings;
+}
+
 /** Generation config for a specific stage's model call. */
 export interface ModelGenerationConfig {
   maxTokens: number; // Max tokens per model call response
