@@ -288,8 +288,20 @@ export class AgentEditor extends Service {
     return agentData;
   }
 
+  /** Load given AgentDataObject items as agent configs and prompts. */
+  setAgentData(agentData: AgentDataObject[]) {
+    this.resetAgents();
+    agentData.forEach((data) => {
+      this.agentMediators.push(data.persona);
+      this.agentChatPromptMap[data.persona.id] = data.chatPromptMap;
+      this.agentParticipantPromptMap[data.persona.id] =
+        data.participantPromptMap;
+    });
+  }
+
   resetAgents() {
     this.agentMediators = [];
     this.agentChatPromptMap = {};
+    this.agentParticipantPromptMap = {};
   }
 }

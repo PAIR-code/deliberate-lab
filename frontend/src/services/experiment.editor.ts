@@ -196,7 +196,7 @@ export class ExperimentEditor extends Service {
 
   loadExperiment(experiment: Experiment, stages: StageConfig[]) {
     this.experiment = experiment;
-    this.stages = stages;
+    this.setStages(stages);
   }
 
   resetExperiment() {

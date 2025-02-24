@@ -6,14 +6,12 @@ import {customElement, property, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
+import {AgentEditor} from '../../services/agent.editor';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
-import {AuthService} from '../../services/auth.service';
-import {HomeService} from '../../services/home.service';
-import {Pages, RouterService} from '../../services/router.service';
-
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
+  AgentDataObject,
   MetadataConfig,
   StageConfig,
   StageKind,
@@ -28,6 +26,12 @@ import {
   createTOSStage,
   createTransferStage,
 } from '@deliberation-lab/utils';
+import {
+  LAS_METADATA,
+  ANON_LAS_METADATA,
+  getLASStageConfigs,
+  getAnonLASStageConfigs,
+} from '../../shared/games/lost_at_sea';
 import {
   LAS_METADATA,
   ANON_LAS_METADATA,
@@ -54,6 +58,7 @@ import {styles} from './stage_builder_dialog.scss';
 export class StageBuilderDialog extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly agentEditor = core.getService(AgentEditor);
   private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
@@ -148,10 +153,15 @@ export class StageBuilderDialog extends MobxLitElement {
     this.experimentEditor.jumpToLastStage();
   }
 
-  private addGame(metadata: Partial<MetadataConfig>, stages: StageConfig[]) {
+  private addGame(
+    metadata: Partial<MetadataConfig>,
+    stages: StageConfig[],
+    agents: AgentDataObject[] = [],
+  ) {
     this.analyticsService.trackButtonClick(ButtonClick.GAME_ADD);
     this.experimentEditor.updateMetadata(metadata);
     this.experimentEditor.setStages(stages);
+    this.agentEditor.setAgentData(agents);
     this.experimentEditor.toggleStageBuilderDialog();
   }
 
