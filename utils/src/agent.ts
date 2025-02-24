@@ -22,26 +22,13 @@ export interface CustomRequestBodyField {
   value: string;
 }
 
-export interface AgentGenerationConfig {
-  temperature: number;
-  topP: number;
-  frequencyPenalty: number;
-  presencePenalty: number;
-  customRequestBodyFields: CustomRequestBodyField[];
-}
-
-// Specifies which API to use for model calls
+/** Specifies which API to use for model calls. */
 // TODO: Rename enum (ApiType? LLMApiType?)
 export enum ApiKeyType {
   GEMINI_API_KEY = 'GEMINI',
   OPENAI_API_KEY = 'OPENAI',
   OLLAMA_CUSTOM_URL = 'OLLAMA',
 }
-
-// ----------------------------------------------------------------------------
-// NOTE: Everything below this is in progress and not yet connected
-// to experiment logic (e.g., chat mediation)
-// ----------------------------------------------------------------------------
 
 /** Agent config applied to ParticipantProfile or MediatorProfile. */
 export interface ProfileAgentConfig {

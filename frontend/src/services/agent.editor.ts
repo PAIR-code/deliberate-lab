@@ -8,7 +8,6 @@ import {Service} from './service';
 import {
   AgentChatPromptConfig,
   AgentChatSettings,
-  AgentConfig,
   AgentDataObject,
   AgentModelSettings,
   AgentParticipantPromptConfig,
@@ -24,7 +23,6 @@ import {
   createAgentChatPromptConfig,
   createAgentPersonaConfig,
 } from '@deliberation-lab/utils';
-import {updateChatAgentsCallable} from '../shared/callables';
 
 interface ServiceProvider {
   experimentManager: ExperimentManager;
@@ -40,57 +38,6 @@ export class AgentEditor extends Service {
     makeObservable(this);
   }
 
-  // *********************************************************************** //
-  // WARNING: Variables/functions for old chat agent config are soon to be   //
-  //          deprecated.                                                    //
-  // *********************************************************************** //
-
-  // Experiment ID
-  @observable experimentId: string | null = null;
-  // Stage ID to chat config
-  // TODO: Map from stage ID to AgentConfig list?
-  @observable configMap: Record<string, ChatStageConfig> = {};
-
-  setExperimentId(id: string) {
-    this.experimentId = id;
-  }
-
-  getAgents(stageId: string): AgentConfig[] {
-    return this.configMap[stageId]?.agents ?? [];
-  }
-
-  addConfig(config: ChatStageConfig) {
-    this.configMap[config.id] = config;
-  }
-
-  updateConfig(config: ChatStageConfig) {
-    this.configMap[config.id] = config;
-  }
-
-  updateAgent(stageId: string, agent: AgentConfig, index: number) {
-    const config = this.configMap[stageId];
-    if (!config) return;
-
-    const agents = [
-      ...config.agents.slice(0, index),
-      agent,
-      ...config.agents.slice(index + 1),
-    ];
-
-    this.updateConfig({
-      ...config,
-      agents,
-    });
-  }
-
-  reset() {
-    this.experimentId = null;
-    this.configMap = {};
-  }
-
-  // *********************************************************************** //
-  // TODO: VARIABLES/FUNCTIONS FOR NEW AGENT MEDIATOR/PARTICIPANT CONFIGS    //
-  // *********************************************************************** //
   @observable agentMediators: AgentPersonaConfig[] = [];
   // Mediator selected in panel
   @observable currentAgentMediatorId = '';
@@ -344,20 +291,5 @@ export class AgentEditor extends Service {
   resetAgents() {
     this.agentMediators = [];
     this.agentChatPromptMap = {};
-  }
-
-  // *********************************************************************** //
-  // FIRESTORE                                                               //
-  // *********************************************************************** //
-
-  // Write chat agents to backend
-  async saveChatAgents(stageId: string) {
-    if (!this.experimentId || !this.configMap[stageId]) return;
-
-    await updateChatAgentsCallable(this.sp.firebaseService.functions, {
-      experimentId: this.experimentId,
-      stageId,
-      agentList: this.configMap[stageId].agents,
-    });
   }
 }

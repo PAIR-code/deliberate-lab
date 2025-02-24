@@ -25,7 +25,6 @@ import {
   SetSalespersonResponseData,
   SimpleResponse,
   SuccessResponse,
-  UpdateChatAgentsData,
   UpdateChatStageParticipantAnswerData,
   UpdateCohortMetadataData,
   UpdateParticipantAcceptedTOSData,
@@ -301,18 +300,6 @@ export const updateChatStageParticipantAnswerCallable = async (
   >(
     functions,
     'updateChatStageParticipantAnswer',
-  )(config);
-  return data;
-};
-
-/** Generic endpoint to update chat stage agents */
-export const updateChatAgentsCallable = async (
-  functions: Functions,
-  config: UpdateChatAgentsData,
-) => {
-  const {data} = await httpsCallable<UpdateChatAgentsData, SuccessResponse>(
-    functions,
-    'updateChatAgents',
   )(config);
   return data;
 };
