@@ -24,6 +24,7 @@ import {
   ChipLogEntry,
   CohortConfig,
   MediatorProfile,
+  MediatorStatus,
   ParticipantProfile,
   ParticipantStatus,
   StageConfig,
@@ -106,7 +107,9 @@ export class CohortService extends Service {
   // Returns mediators that are active in the given stage
   getMediatorsForStage(stageId: string) {
     return Object.values(this.mediatorMap).filter(
-      (mediator) => mediator.activeStageMap[stageId],
+      (mediator) =>
+        mediator.activeStageMap[stageId] &&
+        mediator.currentStatus !== MediatorStatus.DELETED,
     );
   }
 
