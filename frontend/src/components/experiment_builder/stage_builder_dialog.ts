@@ -43,6 +43,7 @@ import {
   getChipNegotiationStageConfigs,
 } from '../../shared/games/chip_negotiation';
 import {
+  RTV_AGENTS,
   RTV_METADATA,
   getRTVStageConfigs,
 } from '../../shared/games/reality_tv_chat';
@@ -186,7 +187,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
   private renderRealityTVCard() {
     const addGame = () => {
-      this.addGame(RTV_METADATA, getRTVStageConfigs());
+      this.addGame(RTV_METADATA, getRTVStageConfigs(), RTV_AGENTS);
     };
     return html`
       <div class="card" @click=${addGame}>
