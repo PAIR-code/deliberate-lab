@@ -1,8 +1,12 @@
 import {
+  AgentChatResponse,
+  ChatMessage,
   ChatStageConfig,
   ChatStagePublicData,
+  ExperimenterData,
   ParticipantProfile,
   ParticipantStatus,
+  getDefaultChatPrompt,
   getTimeElapsed,
 } from '@deliberation-lab/utils';
 
@@ -12,6 +16,7 @@ import {Timestamp} from 'firebase-admin/firestore';
 import {onCall} from 'firebase-functions/v2/https';
 
 import {app} from '../app';
+import {getAgentResponse} from '../agent.utils';
 
 /** Get the chat stage configuration based on the event. */
 export async function getChatStage(
@@ -44,6 +49,50 @@ export async function getChatStagePublicData(
   if (!publicStageDoc.exists) return null; // Return null if the public stage data doesn't exist.
 
   return publicStageDoc.data() as ChatStagePublicData; // Return the public stage data.
+}
+
+/** Get chat messages for given cohort and stage ID. */
+export async function getChatMessages(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+): Promise<ChatMessage[]> {
+  try {
+    return (
+      await app
+        .firestore()
+        .collection(
+          `experiments/${experimentId}/cohorts/${cohortId}/publicStageData/${stageId}/chats`,
+        )
+        .orderBy('timestamp', 'asc')
+        .get()
+    ).docs.map((doc) => doc.data() as ChatMessage);
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+}
+
+/** Get number of chat messages for given cohort and stage ID. */
+export async function getChatMessageCount(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+): Promise<number> {
+  try {
+    return (
+      await app
+        .firestore()
+        .collection(
+          `experiments/${experimentId}/cohorts/${cohortId}/publicStageData/${stageId}/chats`,
+        )
+        .count()
+        .get()
+    ).data().count;
+  } catch (error) {
+    console.log(error);
+    return 0;
+  }
 }
 
 /**
@@ -146,4 +195,112 @@ export async function hasEndedChat(
     return true; // Indicate that the chat has ended.
   }
   return false;
+}
+
+/** Queries LLM API and parses chat response for given agent. */
+export async function getAgentChatResponse(
+  agent: AgentConfig,
+  stage: ChatStageConfig,
+  chatMessages: ChatMessage[],
+  experimenterData: ExperimenterData,
+): AgentChatResponse | null {
+  // TODO: Return null if agent's number of chat messages exceeds maxResponses
+  // TODO: Return null if minMessageBeforeResponding not met
+  // TODO: Return null if canSelfTriggerCalls is false and latest message
+  //       is from the same agent
+
+  try {
+    const prompt = getDefaultChatPrompt(agent, stage, chatMessages);
+
+    // Call LLM API with given modelCall info
+    // TODO: Incorporate number of retries
+    const response = await getAgentResponse(experimenterData, prompt, agent);
+
+    // Add agent message if non-empty
+    let message = response.text;
+    let parsed = '';
+
+    if (agent.responseConfig.isJSON) {
+      // Reset message to empty before trying to fill with JSON response
+      message = '';
+
+      try {
+        const cleanedText = response.text
+          .replace(/```json\s*|\s*```/g, '')
+          .trim();
+        parsed = JSON.parse(cleanedText);
+      } catch {
+        // Response is already logged in console during Gemini API call
+        console.log('Could not parse JSON!');
+        return null;
+      }
+      message = parsed[agent.responseConfig.messageField] ?? '';
+      if (message.trim().length === 0) {
+        return null;
+      }
+    }
+
+    return {agent, parsed, message};
+  } catch (error) {
+    console.log(error); // TODO: Write log to backend
+    return null;
+  }
+}
+
+/** Selects agent response from set of relevant agents' responses
+ *  (or null if none)
+ */
+export async function selectSingleAgentChatResponse(
+  stage: ChatStageConfig,
+  chatMessages: ChatMessage[],
+  experimenterData: ExperimenterData,
+): AgentChatResponse | null {
+  // Generate responses for all agents
+  const agentResponses: AgentChatResponse[] = [];
+  for (const agent of stage.agents) {
+    const response = await getAgentChatResponse(
+      agent,
+      stage,
+      chatMessages,
+      experimenterData,
+    );
+    if (response) {
+      agentResponses.push(response);
+    }
+  }
+
+  // If no responses, return
+  if (agentResponses.length === 0) {
+    console.log('No agents wish to speak');
+    return null;
+  }
+
+  // TODO: Write logs to Firestore
+  console.log('The following participants wish to speak:');
+  agentResponses.forEach((response) => {
+    console.log(
+      `\t${response.agent.name}: ${response.message} (WPM: ${response.agent.wordsPerMinute})`,
+    );
+  });
+
+  // Weighted sampling based on wordsPerMinute (WPM)
+  // TODO (#426): Refactor WPM logic into separate utils function
+  const totalWPM = agentResponses.reduce(
+    (sum, response) => sum + (response.agent.wordsPerMinute || 0),
+    0,
+  );
+  const cumulativeWeights: number[] = [];
+  let cumulativeSum = 0;
+  for (const response of agentResponses) {
+    cumulativeSum += response.agent.wordsPerMinute || 0;
+    cumulativeWeights.push(cumulativeSum / totalWPM);
+  }
+  const random = Math.random();
+  const chosenIndex = cumulativeWeights.findIndex((weight) => random <= weight);
+
+  // TODO: Write log to Firestore
+  console.log(
+    `${agentResponses[chosenIndex].agent.name} has been chosen out of ${agentResponses.length} agents with responses.`,
+  );
+  return agentResponses[chosenIndex] ?? null;
 }
