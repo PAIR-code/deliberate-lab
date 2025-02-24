@@ -6,6 +6,7 @@ import {
   StageConfig,
   StageKind,
   ParticipantProfileExtended,
+  createAgentConfig,
   createAgentGenerationConfig,
 } from '@deliberation-lab/utils';
 import {
@@ -89,7 +90,9 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
   }
 
   // Call LLM API
-  const response = await getAgentResponse(experimenterData, prompt);
+  // TODO: Use participant agent
+  const agent = createAgentConfig();
+  const response = await getAgentResponse(experimenterData, prompt, agent);
   // Check console log for response
   console.log(
     'TESTING AGENT PARTICIPANT PROMPT\n',
