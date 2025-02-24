@@ -17,6 +17,7 @@ import {ParticipantService} from '../../services/participant.service';
 import {
   ChatStageConfig,
   ChatStagePublicData,
+  MediatorProfile,
   ParticipantProfile,
   checkApiKeyExists,
   getTimeElapsed,
@@ -181,7 +182,24 @@ export class ChatPanel extends MobxLitElement {
         ${activeParticipants.map((participant) =>
           this.renderProfile(participant),
         )}
+        ${this.cohortService
+          .getMediatorsForStage(this.stage.id)
+          .map((mediator) => this.renderMediator(mediator))}
       </div>
+    `;
+  }
+
+  private renderMediator(profile: MediatorProfile) {
+    // TODO: Render experimenter-visible only controls
+    return html`
+      <profile-display
+        .profile=${profile}
+        .color=${getHashBasedColor(
+          profile.agentConfig?.agentId ?? profile.id ?? '',
+        )}
+        displayType="chat"
+      >
+      </profile-display>
     `;
   }
 
