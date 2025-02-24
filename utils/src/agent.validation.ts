@@ -51,6 +51,6 @@ export type AgentConfigTestData = Static<typeof AgentConfigTestData>;
 // ****************************************************************************
 export const AgentDataObjectData = Type.Object({
   persona: AgentConfigData,
-  participantPrompts: Type.Array(PromptConfigData),
-  chatPrompts: Type.Array(PromptConfigData),
+  participantPromptMap: Type.Record(Type.String(), PromptConfigData),
+  chatPromptMap: Type.Record(Type.String(), PromptConfigData),
 });

@@ -11,6 +11,7 @@ import {
   AgentConfig,
   AgentDataObject,
   AgentModelSettings,
+  AgentParticipantPromptConfig,
   AgentPersonaConfig,
   AgentResponseConfig,
   BaseAgentPromptConfig,
@@ -97,6 +98,11 @@ export class AgentEditor extends Service {
   @observable agentChatPromptMap: Record<
     string,
     Record<string, AgentChatPromptConfig>
+  > = {};
+  // Maps from agent ID to (stage ID to stage participant prompt)
+  @observable agentParticipantPromptMap: Record<
+    string,
+    Record<string, AgentParticipantPromptConfig>
   > = {};
   // Maps from agent ID to (stage ID to test API response)
   @observable agentTestResponseMap: Record<string, Record<string, string>> = {};
@@ -324,11 +330,11 @@ export class AgentEditor extends Service {
     const agentData: AgentDataObject[] = [];
     Object.values(this.agentMediators).forEach((persona) => {
       const chatPromptMap = this.agentChatPromptMap[persona.id];
-      const chatPrompts = chatPromptMap ? Object.values(chatPromptMap) : [];
+      const participantPromptMap = this.agentParticipantPromptMap[persona.id];
       const agent: AgentDataObject = {
         persona,
-        participantPrompts: [],
-        chatPrompts,
+        participantPromptMap: participantPromptMap ?? {},
+        chatPromptMap: chatPromptMap ?? {},
       };
       agentData.push(agent);
     });
