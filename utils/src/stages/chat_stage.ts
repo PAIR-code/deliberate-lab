@@ -80,34 +80,24 @@ export type ChatDiscussion = DefaultChatDiscussion | CompareChatDiscussion;
  * Saved as docs under
  * experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats
  */
-export interface BaseChatMessage {
+export interface ChatMessage {
   id: string;
   discussionId: string | null; // discussion during which message was sent
   type: ChatMessageType;
   message: string;
   timestamp: UnifiedTimestamp;
   profile: ParticipantProfileBase;
+  senderId: string; // participant public ID or mediator ID
+  agentId: string; // agent persona used (or blank if none)
+  explanation: string; // agent reasoning (or blank if none)
 }
 
 export enum ChatMessageType {
   PARTICIPANT = 'PARTICIPANT',
-  HUMAN_AGENT = 'HUMAN_AGENT',
-  AGENT_AGENT = 'AGENT_AGENT',
-}
-
-export interface ParticipantChatMessage extends BaseChatMessage {
-  type: ChatMessageType.PARTICIPANT;
-  participantPublicId: string;
-}
-
-export interface HumanMediatorChatMessage extends BaseChatMessage {
-  type: ChatMessageType.HUMAN_AGENT;
-}
-
-export interface AgentMediatorChatMessage extends BaseChatMessage {
-  type: ChatMessageType.AGENT_AGENT;
-  agentId: string;
-  explanation: string;
+  MEDIATOR = 'MEDIATOR',
+  EXPERIMENTER = 'EXPERIMENTER', // if experimenter needs to send a message
+  HUMAN_AGENT = 'HUMAN_AGENT', // obsolete type
+  AGENT_AGENT = 'AGENT_AGENT', // obsolete type
 }
 
 /** LLM agent config. */
@@ -123,11 +113,6 @@ export interface AgentConfig {
   responseConfig: AgentResponseConfig;
   // TODO: Add more settings, e.g. context window
 }
-
-export type ChatMessage =
-  | ParticipantChatMessage
-  | HumanMediatorChatMessage
-  | AgentMediatorChatMessage;
 
 /** Format for LLM API chat message output. */
 export interface AgentChatResponse {
@@ -220,8 +205,8 @@ export function createCompareChatDiscussion(
 
 /** Create participant chat message. */
 export function createParticipantChatMessage(
-  config: Partial<ParticipantChatMessage> = {},
-): ParticipantChatMessage {
+  config: Partial<ChatMessage> = {},
+): ChatMessage {
   return {
     id: config.id ?? generateId(),
     discussionId: config.discussionId ?? null,
@@ -229,35 +214,41 @@ export function createParticipantChatMessage(
     message: config.message ?? '',
     timestamp: config.timestamp ?? Timestamp.now(),
     profile: config.profile ?? createParticipantProfileBase(),
-    participantPublicId: config.participantPublicId ?? '',
+    senderId: config.senderId ?? '',
+    agentId: config.agentId ?? '',
+    explanation: config.explanation ?? '',
   };
 }
 
-/** Create human agent chat message. */
-export function createHumanMediatorChatMessage(
-  config: Partial<HumanMediatorChatMessage> = {},
-): HumanMediatorChatMessage {
+/** Create mediator chat message. */
+export function createMediatorChatMessage(
+  config: Partial<ChatMessage> = {},
+): ChatMessage {
   return {
     id: config.id ?? generateId(),
     discussionId: config.discussionId ?? null,
-    type: ChatMessageType.HUMAN_AGENT,
-    message: config.message ?? '',
-    timestamp: config.timestamp ?? Timestamp.now(),
-    profile: config.profile ?? {name: 'Agent', avatar: '⭐', pronouns: null},
-  };
-}
-
-/** Create agent agent chat message. */
-export function createAgentMediatorChatMessage(
-  config: Partial<AgentMediatorChatMessage> = {},
-): AgentMediatorChatMessage {
-  return {
-    id: config.id ?? generateId(),
-    discussionId: config.discussionId ?? null,
-    type: ChatMessageType.AGENT_AGENT,
+    type: ChatMessageType.MEDIATOR,
     message: config.message ?? '',
     timestamp: config.timestamp ?? Timestamp.now(),
     profile: config.profile ?? {name: 'Agent', avatar: '🤖', pronouns: null},
+    senderId: config.senderId ?? '',
+    agentId: config.agentId ?? '',
+    explanation: config.explanation ?? '',
+  };
+}
+
+/** Create experimenter chat message. */
+export function createExperimenterChatMessage(
+  config: Partial<ChatMessage> = {},
+): ChatMessage {
+  return {
+    id: config.id ?? generateId(),
+    discussionId: config.discussionId ?? null,
+    type: ChatMessageType.EXPERIMENTER,
+    message: config.message ?? '',
+    timestamp: config.timestamp ?? Timestamp.now(),
+    profile: config.profile ?? {name: 'Mediator', avatar: '⭐', pronouns: null},
+    senderId: config.senderId ?? '',
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
   };

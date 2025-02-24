@@ -1,9 +1,9 @@
 import {
+  ChatMessage,
   ChatStageParticipantAnswer,
   ChipOffer,
   CreateChatMessageData,
   RankingItem,
-  ParticipantChatMessage,
   ParticipantProfileBase,
   ParticipantProfileExtended,
   ParticipantStatus,
@@ -480,7 +480,7 @@ export class ParticipantService extends Service {
   }
 
   /** Send chat message. */
-  async createChatMessage(config: Partial<ParticipantChatMessage> = {}) {
+  async createChatMessage(config: Partial<ChatMessage> = {}) {
     let response = {};
     this.isSendingChat = true;
     if (this.experimentId && this.profile) {
@@ -489,7 +489,7 @@ export class ParticipantService extends Service {
         discussionId: this.sp.cohortService.getChatDiscussionId(
           this.profile.currentStageId,
         ),
-        participantPublicId: this.profile.publicId,
+        senderId: this.profile.publicId,
         profile: {
           name: this.profile.name,
           avatar: this.profile.avatar,
