@@ -405,7 +405,12 @@ export class CohortService extends Service {
               if (!this.chatDiscussionMap[stageId]) {
                 this.chatDiscussionMap[stageId] = {};
               }
-              const message = doc.data() as ChatMessage;
+              const message = {
+                senderId: doc.data().participantPublicId ?? '', // backwards compatibility pre version 16
+                agentId: '', // backwards compatibility pre version 16
+                explanation: '', // backwards compatibility pre version 16
+                ...doc.data(),
+              } as ChatMessage;
               if (!message.discussionId) {
                 this.chatMap[stageId].push(message);
               } else {

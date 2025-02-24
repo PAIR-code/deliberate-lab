@@ -33,6 +33,8 @@ export const ChatStageConfigData = Type.Object({
 /** ChatMessageType input validation. */
 export const ChatMessageTypeData = Type.Union([
   Type.Literal(ChatMessageType.PARTICIPANT),
+  Type.Literal(ChatMessageType.MEDIATOR),
+  Type.Literal(ChatMessageType.EXPERIMENTER),
   Type.Literal(ChatMessageType.HUMAN_AGENT),
   Type.Literal(ChatMessageType.AGENT_AGENT),
 ]);

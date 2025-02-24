@@ -1417,12 +1417,8 @@ export function getChatMessageCSVColumns(
   // Type
   columns.push(!message ? 'Message type' : message.type);
 
-  // Participant public ID (if participant chat message)
-  const publicId =
-    message?.type === ChatMessageType.PARTICIPANT
-      ? message.participantPublicId
-      : '';
-  columns.push(!message ? 'Participant public ID' : publicId);
+  // Participant public ID or mediator ID
+  columns.push(!message ? 'Sender ID' : toCSV(message.senderId));
 
   // Profile name
   columns.push(!message ? 'Sender name' : toCSV(message.profile.name));
