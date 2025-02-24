@@ -359,8 +359,8 @@ export class AgentEditorComponent extends MobxLitElement {
         <div class="field-title">Prompt</div>
         <div class="description">
           <b>Note:</b> Your custom prompt will be concatenated with the chat
-          history (last 10 messages) and sent to the model (i.e., chat history +
-          custom prompt => response)
+          history and sent to the model (i.e., chat history + custom prompt =>
+          response)
         </div>
         <pr-textarea
           placeholder="Custom prompt for agent"

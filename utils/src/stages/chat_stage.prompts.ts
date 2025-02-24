@@ -1,3 +1,6 @@
+import {UnifiedTimestamp} from '../shared';
+import {AgentConfig, ChatMessage, ChatStageConfig} from './chat_stage';
+
 // ************************************************************************* //
 // CONSTANTS                                                                 //
 // ************************************************************************* //
@@ -32,3 +35,65 @@ export const DEFAULT_JSON_FORMATTING_INSTRUCTIONS = `INSTRUCTIONS:
   }`;
 
 export const DEFAULT_STRING_FORMATTING_INSTRUCTIONS = `If you would like to respond, respond with the message you would like to send only (no timestamps or metadata), for example, "Hey everyone, please be respectful." This will be appended to the end of the chat transcript. If you don't wish to respond, respond with an empty string.`;
+
+// ************************************************************************* //
+// PROMPTS                                                                   //
+// ************************************************************************* //
+export function getDefaultChatPrompt(
+  agent: AgentConfig,
+  stage: ChatStageConfig,
+  chatMessages: ChatMessage[],
+) {
+  return `${getChatPromptPreface(agent, stage)}\n${getChatPromptHistory(chatMessages, agent)}\n${agent.responseConfig.formattingInstructions}`;
+}
+
+/** Return context for default chat prompt. */
+function getChatPromptPreface(agent: AgentConfig, stage: ChatStageConfig) {
+  const descriptions = [];
+
+  // TODO: Include history from prior stages if includeStageHistory is true
+  // TODO: Only include stage info if includeStageInfo is true
+  if (stage.descriptions.primaryText) {
+    descriptions.push(
+      `- Conversation description: ${stage.descriptions.primaryText}`,
+    );
+  }
+  if (stage.descriptions.infoText) {
+    descriptions.push(
+      `- Additional information: ${stage.descriptions.infoText}`,
+    );
+  }
+  if (stage.descriptions.helpText) {
+    descriptions.push(
+      `- If you need assistance: ${stage.descriptions.helpText}`,
+    );
+  }
+
+  const descriptionHtml = descriptions.length
+    ? `\nThis conversation has the following details:\n${descriptions.join('\n')}`
+    : '';
+
+  return `You are role-playing as ${agent.avatar} ${agent.name}, participating in a conversation with other participants.${descriptionHtml}.`;
+}
+
+/** Return prompt for processing chat history. */
+function getChatPromptHistory(messages: ChatMessage[], agent: AgentConfig) {
+  const latestMessage = messages[messages.length - 1];
+  const description = `The following is a conversation transcript between you and other participants. In the transcript, each entry follows the format (HH:MM) ParticipantName:  ParticipantMessage, where (HH:MM) is the timestamp of the message. The transcript is shown in sequential order from oldest message to latest message. The last entry is the most recent message. In this transcript, the latest message was written by ${latestMessage.profile.avatar} ${latestMessage.profile.name}. It said, ${latestMessage.message}.`;
+  return `${description}\n\nCONVERSATION TRANSCRIPT:\n\n${buildChatHistoryForPrompt(messages)}\n`;
+}
+
+/** Convert chat messages into chat history string for prompt. */
+function buildChatHistoryForPrompt(messages: ChatMessage[]) {
+  const getTime = (timestamp: UnifiedTimestamp) => {
+    const date = new Date(timestamp.seconds * 1000);
+    return `(${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')})`;
+  };
+
+  return messages
+    .map(
+      (message) =>
+        `${getTime(message.timestamp)} ${message.profile.name}: ${message.message}`,
+    )
+    .join('\n');
+}

@@ -4,37 +4,30 @@ import {
   onDocumentUpdated,
 } from 'firebase-functions/v2/firestore';
 import {
-  awaitTypingDelay,
-  getTypingDelayInMs,
-  ChatMessage,
-  ChatMessageType,
-  ChatStagePublicData,
-  StageKind,
-  addChatHistoryToPrompt,
-  getPreface,
-  getChatHistory,
-  getTimeElapsed,
-  createAgentMediatorChatMessage,
+  AgentChatResponse,
   AgentConfig,
   AgentGenerationConfig,
+  ChatMessage,
+  ChatMessageType,
   ChatStageConfig,
+  ChatStagePublicData,
   ExperimenterData,
+  StageKind,
+  awaitTypingDelay,
+  createAgentMediatorChatMessage,
+  getTimeElapsed,
+  getTypingDelayInMilliseconds,
 } from '@deliberation-lab/utils';
-import {getChatStage, getChatStagePublicData, hasEndedChat} from './chat.utils';
+import {
+  getChatMessages,
+  getChatMessageCount,
+  getChatStage,
+  getChatStagePublicData,
+  hasEndedChat,
+  selectSingleAgentChatResponse,
+} from './chat.utils';
 
 import {app} from '../app';
-import {
-  getAgentResponse,
-  getGeminiResponse,
-  getOllamaResponse,
-} from '../agent.utils';
-
-export interface AgentMessage {
-  agent: AgentConfig;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  parsed: any;
-  message: string;
-}
 
 // ************************************************************************* //
 // TRIGGER FUNCTIONS                                                         //
@@ -149,179 +142,99 @@ export const createAgentMessage = onDocumentCreated(
   async (event) => {
     const data = event.data?.data() as ChatMessage | undefined;
 
-    // Use experiment config to get ChatStageConfig with agents.
-    let stage = await getChatStage(
-      event.params.experimentId,
-      event.params.stageId,
-    );
-    if (!stage) {
-      return;
-    }
-
-    let publicStageData = await getChatStagePublicData(
-      event.params.experimentId,
-      event.params.cohortId,
-      event.params.stageId,
-    );
-    // Make sure the conversation hasn't ended.
-    if (!publicStageData || Boolean(publicStageData.discussionEndTimestamp))
-      return;
-
-    // Fetch experiment creator's API key.
-    const creatorId = (
-      await app
-        .firestore()
-        .collection('experiments')
-        .doc(event.params.experimentId)
-        .get()
-    ).data().metadata.creator;
-    const creatorDoc = await app
-      .firestore()
-      .collection('experimenterData')
-      .doc(creatorId)
-      .get();
-    if (!creatorDoc.exists) return;
-
-    const experimenterData = creatorDoc.data() as ExperimenterData;
-
-    // Use chats in collection to build chat history for prompt, get num chats
-    const chatMessages = (
-      await app
-        .firestore()
-        .collection(
-          `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}/chats`,
-        )
-        .orderBy('timestamp', 'asc')
-        .get()
-    ).docs.map((doc) => doc.data() as ChatMessage);
-
-    // Fetch messages from all agents
-    const agentMessages: AgentMessage[] = [];
-    for (const agent of stage.agents) {
-      const prompt = `${getPreface(agent, stage)}\n${getChatHistory(chatMessages, agent)}\n${agent.responseConfig.formattingInstructions}`;
-
-      // Call LLM API with given modelCall info
-      const response = await getAgentResponse(experimenterData, prompt, agent);
-
-      // Add agent message if non-empty
-      let message = response.text;
-      let parsed = '';
-
-      if (agent.responseConfig.isJSON) {
-        // Reset message to empty before trying to fill with JSON response
-        message = '';
-
-        try {
-          const cleanedText = response.text
-            .replace(/```json\s*|\s*```/g, '')
-            .trim();
-          parsed = JSON.parse(cleanedText);
-        } catch {
-          // Response is already logged in console during Gemini API call
-          console.log('Could not parse JSON!');
-        }
-        message = parsed[agent.responseConfig.messageField] ?? '';
+    await app.firestore().runTransaction(async (transaction) => {
+      // Use experiment config to get ChatStageConfig with agents.
+      const stage = await getChatStage(
+        event.params.experimentId,
+        event.params.stageId,
+      );
+      if (!stage) {
+        return;
       }
 
-      const trimmed = message.trim();
-      if (trimmed === '' || trimmed === '""' || trimmed === "''") continue;
-      agentMessages.push({agent, parsed, message});
-    }
-
-    if (agentMessages.length === 0) return;
-
-    // Show all of the potential messages.
-    console.log('The following participants wish to speak:');
-    agentMessages.forEach((message) => {
-      console.log(
-        `\t${message.agent.name}: ${message.message} (${message.agent.wordsPerMinute} WPM, ${getTypingDelayInMs(message.message, message.agent.wordsPerMinute) / 1000})`,
-      );
-    });
-
-    // Weighted sampling based on wordsPerMinute (WPM)
-    // TODO (#426): Refactor WPM logic into separate utils function
-    const totalWPM = agentMessages.reduce(
-      (sum, message) => sum + (message.agent.wordsPerMinute || 0),
-      0,
-    );
-    const cumulativeWeights: number[] = [];
-    let cumulativeSum = 0;
-    for (const message of agentMessages) {
-      cumulativeSum += message.agent.wordsPerMinute || 0;
-      cumulativeWeights.push(cumulativeSum / totalWPM);
-    }
-    const random = Math.random();
-    const chosenIndex = cumulativeWeights.findIndex(
-      (weight) => random <= weight,
-    );
-    const agentMessage = agentMessages[chosenIndex];
-    // Randomly sample a message.
-    const agent = agentMessage.agent;
-    const message = agentMessage.message;
-    const parsed = agentMessage.parsed;
-    console.log(`${agent.name} has been chosen to speak.`);
-    await awaitTypingDelay(message, agent.wordsPerMinute);
-
-    // Refresh the stage to check if the conversation has ended.
-    // TODO: Instead of doing this, run inside transaction?
-    stage = await getChatStage(event.params.experimentId, event.params.stageId);
-    publicStageData = await getChatStagePublicData(
-      event.params.experimentId,
-      event.params.cohortId,
-      event.params.stageId,
-    );
-
-    if (
-      !stage ||
-      !publicStageData ||
-      Boolean(publicStageData.discussionEndTimestamp) ||
-      (await hasEndedChat(
+      const publicStageData = await getChatStagePublicData(
         event.params.experimentId,
         event.params.cohortId,
         event.params.stageId,
-        stage,
-        publicStageData,
-      ))
-    )
-      return;
+      );
+      // Make sure the conversation hasn't ended.
+      if (!publicStageData || Boolean(publicStageData.discussionEndTimestamp))
+        return;
 
-    // Don't send a message if the conversation has moved on.
-    const numChatsBeforeAgent = chatMessages.length;
-    const numChatsAfterAgent = (
-      await app
+      // Fetch experiment creator's API key.
+      const creatorId = (
+        await app
+          .firestore()
+          .collection('experiments')
+          .doc(event.params.experimentId)
+          .get()
+      ).data().metadata.creator;
+      const creatorDoc = await app
         .firestore()
-        .collection(
-          `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}/chats`,
-        )
-        .count()
-        .get()
-    ).data().count;
-    if (numChatsAfterAgent > numChatsBeforeAgent) {
-      return;
-    }
+        .collection('experimenterData')
+        .doc(creatorId)
+        .get();
+      if (!creatorDoc.exists) return;
 
-    const chatMessage = createAgentMediatorChatMessage({
-      profile: {name: agent.name, avatar: agent.avatar, pronouns: null},
-      discussionId: data.discussionId,
-      message,
-      timestamp: Timestamp.now(),
-      agentId: agent.id,
-      explanation: agent.responseConfig.isJSON
-        ? (parsed[agent.responseConfig.explanationField] ?? '')
-        : '',
-    });
-    const agentDocument = app
-      .firestore()
-      .collection('experiments')
-      .doc(event.params.experimentId)
-      .collection('cohorts')
-      .doc(event.params.cohortId)
-      .collection('publicStageData')
-      .doc(event.params.stageId)
-      .collection('chats')
-      .doc(chatMessage.id);
+      const experimenterData = creatorDoc.data() as ExperimenterData;
 
-    await app.firestore().runTransaction(async (transaction) => {
+      // Use chats in collection to build chat history for prompt, get num chats
+      const chatMessages = await getChatMessages(
+        event.params.experimentId,
+        event.params.cohortId,
+        event.params.stageId,
+      );
+
+      // Select one agent's response
+      const agentResponse = await selectSingleAgentChatResponse(
+        stage,
+        chatMessages,
+        experimenterData,
+      );
+      if (!agentResponse) return;
+
+      // Don't send a message if the conversation has moved on
+      const numChatsBeforeAgent = chatMessages.length;
+      const numChatsAfterAgent = getChatMessageCount(
+        event.params.experimentId,
+        event.params.cohortId,
+        event.params.stageId,
+      );
+      if (numChatsAfterAgent > numChatsBeforeAgent) {
+        // TODO: Write log to Firestore
+        return;
+      }
+
+      // Wait for typing delay
+      // TODO: Decrease typing delay to account for LLM API call latencies?
+      await awaitTypingDelay(
+        agentResponse.message,
+        agentResponse.agent.wordsPerMinute,
+      );
+
+      // Write agent mediator message to conversation
+      const agent = agentResponse.agent;
+      const chatMessage = createAgentMediatorChatMessage({
+        profile: {name: agent.name, avatar: agent.avatar, pronouns: null},
+        discussionId: data.discussionId,
+        message: agentResponse.message,
+        timestamp: Timestamp.now(),
+        agentId: agent.id,
+        explanation: agent.responseConfig.isJSON
+          ? (agentResponse.parsed[agent.responseConfig.explanationField] ?? '')
+          : '',
+      });
+      const agentDocument = app
+        .firestore()
+        .collection('experiments')
+        .doc(event.params.experimentId)
+        .collection('cohorts')
+        .doc(event.params.cohortId)
+        .collection('publicStageData')
+        .doc(event.params.stageId)
+        .collection('chats')
+        .doc(chatMessage.id);
+
       transaction.set(agentDocument, chatMessage);
     });
   },
