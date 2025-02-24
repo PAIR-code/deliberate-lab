@@ -1,3 +1,4 @@
+import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
 import '../participant_profile/avatar_icon';
 import '../participant_profile/profile_display';
@@ -18,6 +19,7 @@ import {
   ChatStageConfig,
   ChatStagePublicData,
   MediatorProfile,
+  MediatorStatus,
   ParticipantProfile,
   checkApiKeyExists,
   getTimeElapsed,
@@ -173,7 +175,6 @@ export class ChatPanel extends MobxLitElement {
       return nothing;
     }
 
-    // TODO: Include mediators
     return html`
       <div class="panel-item">
         <div class="panel-item-title">
@@ -190,16 +191,45 @@ export class ChatPanel extends MobxLitElement {
   }
 
   private renderMediator(profile: MediatorProfile) {
-    // TODO: Render experimenter-visible only controls
+    const renderStatus = () => {
+      if (!this.authService.isDebugMode || !profile.agentConfig) {
+        return nothing;
+      }
+      return html`
+        <div class="chip secondary">🤖 ${profile.currentStatus}</div>
+      `;
+    };
+
+    const renderPause = () => {
+      if (!this.authService.isDebugMode || !profile.agentConfig) {
+        return nothing;
+      }
+      // TODO: Set mediator to paused/active on click
+      return html`
+        <pr-icon-button
+          disabled
+          variant="default"
+          icon=${profile.currentStatus === MediatorStatus.PAUSED
+            ? 'play_circle'
+            : 'pause'}
+        >
+        </pr-icon-button>
+      `;
+    };
+
+    // TODO: Calculate if mediator is out of messages (maxResponses)
     return html`
-      <profile-display
-        .profile=${profile}
-        .color=${getHashBasedColor(
-          profile.agentConfig?.agentId ?? profile.id ?? '',
-        )}
-        displayType="chat"
-      >
-      </profile-display>
+      <div class="profile">
+        <profile-display
+          .profile=${profile}
+          .color=${getHashBasedColor(
+            profile.agentConfig?.agentId ?? profile.id ?? '',
+          )}
+          displayType="chat"
+        >
+        </profile-display>
+        ${renderStatus()} ${renderPause()}
+      </div>
     `;
   }
 
