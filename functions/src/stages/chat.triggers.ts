@@ -14,7 +14,7 @@ import {
   ExperimenterData,
   StageKind,
   awaitTypingDelay,
-  createAgentMediatorChatMessage,
+  createMediatorChatMessage,
   getTimeElapsed,
   getTypingDelayInMilliseconds,
 } from '@deliberation-lab/utils';
@@ -214,11 +214,12 @@ export const createAgentMessage = onDocumentCreated(
 
       // Write agent mediator message to conversation
       const agent = agentResponse.agent;
-      const chatMessage = createAgentMediatorChatMessage({
+      const chatMessage = createMediatorChatMessage({
         profile: {name: agent.name, avatar: agent.avatar, pronouns: null},
         discussionId: data.discussionId,
         message: agentResponse.message,
         timestamp: Timestamp.now(),
+        senderId: '', // TODO: Update
         agentId: agent.id,
         explanation: agent.responseConfig.isJSON
           ? (agentResponse.parsed[agent.responseConfig.explanationField] ?? '')
