@@ -3,6 +3,7 @@ import {
   ParticipantStatus,
   RankingStageConfig,
   RankingStageParticipantAnswer,
+  createAgentConfig,
   createAgentParticipantRankingStagePrompt,
   createRankingStageParticipantAnswer,
 } from '@deliberation-lab/utils';
@@ -52,7 +53,9 @@ export async function getAgentParticipantRankingStageResponse(
   );
 
   // Call LLM API
-  const response = await getAgentResponse(experimenterData, prompt);
+  // TODO: Use participant agent
+  const agent = createAgentConfig();
+  const response = await getAgentResponse(experimenterData, prompt, agent);
   // Check console log for response
   console.log(
     'TESTING AGENT PARTICIPANT PROMPT FOR RANKING STAGE\n',
