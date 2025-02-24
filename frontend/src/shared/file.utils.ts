@@ -184,7 +184,17 @@ export async function getExperimentDownload(
         ),
       )
     ).docs.map((doc) => doc.data() as AgentChatPromptConfig);
-    const agentObject = {persona, participantPrompts, chatPrompts};
+    const agentObject: AgentDataObject = {
+      persona,
+      participantPromptMap: {},
+      chatPromptMap: {},
+    };
+    participantPrompts.forEach((prompt) => {
+      agentObject.participantPromptMap[prompt.id] = prompt;
+    });
+    chatPrompts.forEach((prompt) => {
+      agentObject.chatPromptMap[prompt.id] = prompt;
+    });
     // Add to ExperimentDownload
     experimentDownload.agentMap[persona.id] = agentObject;
   }

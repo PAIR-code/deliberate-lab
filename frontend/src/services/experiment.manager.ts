@@ -150,6 +150,7 @@ export class ExperimentManager extends Service {
         const stage = this.sp.experimentService.stageConfigMap[id];
         if (stage) stages.push(stage);
       });
+      // TODO: Load agent configs from snapshot listener in agent service
       this.sp.experimentEditor.loadExperiment(experiment, stages);
       this.isEditing = true;
     }
@@ -470,6 +471,7 @@ export class ExperimentManager extends Service {
         collectionName: 'experiments',
         experimentConfig: experiment,
         stageConfigs: stages,
+        // TODO: Use agent configs from snapshot listener in agent service
         agentConfigs: this.sp.agentEditor.getAgentData(),
       },
     );

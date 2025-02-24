@@ -142,8 +142,10 @@ export interface AgentPersonaConfig {
 /** Format used to send agent data from frontend to backend. */
 export interface AgentDataObject {
   persona: AgentPersonaConfig;
-  participantPrompts: AgentParticipantPromptConfig[];
-  chatPrompts: AgentChatPromptConfig[];
+  // Maps from stage ID to prompt for completing stage
+  participantPromptMap: Record<string, AgentParticipantPromptConfig>;
+  // Maps from stage ID to prompt for sending chat messages
+  chatPromptMap: Record<string, AgentChatPromptConfig>;
 }
 
 // ************************************************************************* //
