@@ -70,33 +70,6 @@ export const CreateChatMessageData = Type.Object(
 export type CreateChatMessageData = Static<typeof CreateChatMessageData>;
 
 // ************************************************************************* //
-// updateChatAgents endpoint                                               //
-// ************************************************************************* //
-
-export const UpdateChatAgentsData = Type.Object({
-  experimentId: Type.String({minLength: 1}),
-  stageId: Type.String({minLength: 1}),
-  // TODO: Refactor agent config validation
-  agentList: Type.Array(
-    Type.Object({
-      id: Type.String({minLength: 1}),
-      name: Type.String(),
-      avatar: Type.String(),
-      prompt: Type.String(),
-      wordsPerMinute: Type.Number({minimum: 1, maximum: 1000}),
-      responseConfig: Type.Object({
-        isJSON: Type.Boolean(),
-        messageField: Type.String(),
-        explanationField: Type.String(),
-        formattingInstructions: Type.String(),
-      }),
-    }),
-  ),
-});
-
-export type UpdateChatAgentsData = Static<typeof UpdateChatAgentsData>;
-
-// ************************************************************************* //
 // updateChatStageParticipantAnswer endpoint                                 //
 // ************************************************************************* //
 

@@ -18,6 +18,7 @@ import {
   getTimeElapsed,
   getTypingDelayInMilliseconds,
 } from '@deliberation-lab/utils';
+import {getMediatorsInCohortStage} from '../mediator.utils';
 import {
   getChatMessages,
   getChatMessageCount,
@@ -185,10 +186,19 @@ export const createAgentMessage = onDocumentCreated(
         event.params.stageId,
       );
 
+      // Get mediators for current cohort and stage
+      const mediators = await getMediatorsInCohortStage(
+        event.params.experimentId,
+        event.params.cohortId,
+        event.params.stageId,
+      );
+
       // Select one agent's response
       const agentResponse = await selectSingleAgentChatResponse(
-        stage,
+        event.params.experimentId,
+        mediators,
         chatMessages,
+        stage,
         experimenterData,
       );
       if (!agentResponse) return;
@@ -209,20 +219,22 @@ export const createAgentMessage = onDocumentCreated(
       // TODO: Decrease typing delay to account for LLM API call latencies?
       await awaitTypingDelay(
         agentResponse.message,
-        agentResponse.agent.wordsPerMinute,
+        agentResponse.promptConfig.chatSettings.wordsPerMinute,
       );
 
       // Write agent mediator message to conversation
-      const agent = agentResponse.agent;
+      const mediator = agentResponse.mediator;
       const chatMessage = createMediatorChatMessage({
-        profile: {name: agent.name, avatar: agent.avatar, pronouns: null},
+        profile: {name: mediator.name, avatar: mediator.avatar, pronouns: null},
         discussionId: data.discussionId,
         message: agentResponse.message,
         timestamp: Timestamp.now(),
-        senderId: '', // TODO: Update
-        agentId: agent.id,
-        explanation: agent.responseConfig.isJSON
-          ? (agentResponse.parsed[agent.responseConfig.explanationField] ?? '')
+        senderId: mediator.id,
+        agentId: mediator.agentConfig.agentId,
+        explanation: agentResponse.promptConfig.responseConfig.isJSON
+          ? (agentResponse.parsed[
+              agentResponse.promptConfig.responseConfig.explanationField
+            ] ?? '')
           : '',
       });
       const agentDocument = app
