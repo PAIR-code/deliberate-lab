@@ -83,8 +83,9 @@ export interface AgentChatSettings {
   // Whether the agent can respond multiple times in a row
   // (i.e., whether an agent's own message can trigger a new model call)
   canSelfTriggerCalls: boolean;
-  // Maximum total responses during the chat conversation (or null if no max)
-  maxTotalResponses: number | null;
+  // Maximum total responses agent can make during the chat conversation
+  // (or null if no max)
+  maxResponses: number | null;
 }
 
 /** Settings for formatting agent response
@@ -191,7 +192,7 @@ export function createAgentChatSettings(
     wordsPerMinute: config.wordsPerMinute ?? 80,
     minMessagesBeforeResponding: config.minMessagesBeforeResponding ?? 0,
     canSelfTriggerCalls: config.canSelfTriggerCalls ?? true,
-    maxTotalResponses: config.maxTotalResponses ?? null,
+    maxResponses: config.maxResponses ?? null,
   };
 }
 
@@ -200,8 +201,8 @@ export function createAgentPromptSettings(
 ): AgentPromptSettings {
   return {
     numRetries: config.numRetries ?? 0,
-    includeStageHistory: config.includeStageHistory ?? false,
-    includeStageInfo: config.includeStageInfo ?? false,
+    includeStageHistory: config.includeStageHistory ?? true,
+    includeStageInfo: config.includeStageInfo ?? true,
   };
 }
 
@@ -246,7 +247,7 @@ export function createAgentPersonaConfig(
     id: config.id ?? generateId(),
     name: config.name ?? '',
     type,
-    isDefaultAddToCohort: config.isDefaultAddToCohort ?? false,
+    isDefaultAddToCohort: config.isDefaultAddToCohort ?? true,
     defaultProfile:
       config.defaultProfile ??
       createParticipantProfileBase({

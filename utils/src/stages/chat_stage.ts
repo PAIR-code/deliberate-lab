@@ -111,6 +111,7 @@ export interface AgentMediatorChatMessage extends BaseChatMessage {
 }
 
 /** LLM agent config. */
+// TODO: Remove after switching to refactored agent workflow
 export interface AgentConfig {
   id: string;
   name: string;
@@ -127,6 +128,14 @@ export type ChatMessage =
   | ParticipantChatMessage
   | HumanMediatorChatMessage
   | AgentMediatorChatMessage;
+
+/** Format for LLM API chat message output. */
+export interface AgentChatResponse {
+  agent: AgentConfig;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  parsed: any;
+  message: string;
+}
 
 /**
  * ChatStageParticipantAnswer.
@@ -254,62 +263,8 @@ export function createAgentMediatorChatMessage(
   };
 }
 
-/** Convert chat messages into chat history string for prompt. */
-export function buildChatHistoryForPrompt(messages: ChatMessage[]) {
-  const getTime = (timestamp: UnifiedTimestamp) => {
-    const date = new Date(timestamp.seconds * 1000);
-    return `(${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')})`;
-  };
-
-  return messages
-    .map(
-      (message) =>
-        `${getTime(message.timestamp)} ${message.profile.name}: ${message.message}`,
-    )
-    .join('\n');
-}
-
-/** Add chat messages (as history) to given prompt. */
-export function addChatHistoryToPrompt(
-  messages: ChatMessage[],
-  prompt: string,
-) {
-  return `${buildChatHistoryForPrompt(messages)}\n\n${prompt}`;
-}
-
-export function getPreface(agent: AgentConfig, stage: ChatStageConfig) {
-  const descriptions = [];
-
-  if (stage.descriptions.primaryText) {
-    descriptions.push(
-      `- Conversation description: ${stage.descriptions.primaryText}`,
-    );
-  }
-  if (stage.descriptions.infoText) {
-    descriptions.push(
-      `- Additional information: ${stage.descriptions.infoText}`,
-    );
-  }
-  if (stage.descriptions.helpText) {
-    descriptions.push(
-      `- If you need assistance: ${stage.descriptions.helpText}`,
-    );
-  }
-
-  const descriptionHtml = descriptions.length
-    ? `\nThis conversation has the following details:\n${descriptions.join('\n')}`
-    : '';
-
-  return `You are role-playing as ${agent.avatar} ${agent.name}, participating in a conversation with other participants.${descriptionHtml}.`;
-}
-
-export function getChatHistory(messages: ChatMessage[], agent: AgentConfig) {
-  const latestMessage = messages[messages.length - 1];
-  const description = `The following is a conversation transcript between you and other participants. In the transcript, each entry follows the format (HH:MM) ParticipantName:  ParticipantMessage, where (HH:MM) is the timestamp of the message. The transcript is shown in sequential order from oldest message to latest message. The last entry is the most recent message. In this transcript, the latest message was written by ${latestMessage.profile.avatar} ${latestMessage.profile.name}. It said, ${latestMessage.message}.`;
-  return `${description}\n\nCONVERSATION TRANSCRIPT:\n\n${buildChatHistoryForPrompt(messages)}\n`;
-}
-
 /** Create agent agent. */
+// TODO: Remove after switching to refactored agent workflow
 export function createAgentConfig(
   config: Partial<AgentConfig> = {},
 ): AgentConfig {
@@ -325,6 +280,7 @@ export function createAgentConfig(
   };
 }
 
+// TODO: Remove after switching to refactored agent workflow
 export function createAgentGenerationConfig(
   config: Partial<AgentGenerationConfig> = {},
 ): AgentGenerationConfig {
