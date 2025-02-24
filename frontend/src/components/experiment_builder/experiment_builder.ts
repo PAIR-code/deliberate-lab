@@ -67,6 +67,11 @@ export class ExperimentBuilder extends MobxLitElement {
       return this.panelView === panelView;
     };
 
+    // Temporarily hide agent editor when editing existing experiment
+    // (as we are not yet listening to agent configs/prompts).
+    const showAgentPanel =
+      this.routerService.activePage === Pages.EXPERIMENT_CREATE;
+
     return html`
       <div class="panel-wrapper">
         <div class="sidebar">
@@ -94,18 +99,24 @@ export class ExperimentBuilder extends MobxLitElement {
             >
             </pr-icon-button>
           </pr-tooltip>
-          <pr-tooltip text="Agents" position="RIGHT_END">
-            <pr-icon-button
-              color="secondary"
-              icon="robot_2"
-              size="medium"
-              variant=${isSelected(PanelView.AGENTS) ? 'tonal' : 'default'}
-              @click=${() => {
-                this.panelView = PanelView.AGENTS;
-              }}
-            >
-            </pr-icon-button>
-          </pr-tooltip>
+          ${showAgentPanel
+            ? html`
+                <pr-tooltip text="Agents" position="RIGHT_END">
+                  <pr-icon-button
+                    color="secondary"
+                    icon="robot_2"
+                    size="medium"
+                    variant=${isSelected(PanelView.AGENTS)
+                      ? 'tonal'
+                      : 'default'}
+                    @click=${() => {
+                      this.panelView = PanelView.AGENTS;
+                    }}
+                  >
+                  </pr-icon-button>
+                </pr-tooltip>
+              `
+            : nothing}
           <pr-tooltip text="Experimenter settings" position="RIGHT_END">
             <pr-icon-button
               color="secondary"
