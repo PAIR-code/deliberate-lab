@@ -102,10 +102,11 @@ function encodeMessages(
     model: modelName,
     messages: messageObjs,
     stream: false,
-    options: {
-      temperature: generationConfig.temperature,
-      top_p: generationConfig.topP,
-    },
+    //TODO: options is not specified in the OutgoingMessage type
+    //options: {
+    //  temperature: generationConfig.temperature,
+    // top_p: generationConfig.topP,
+    //},
     ...customFields
   };
 }
