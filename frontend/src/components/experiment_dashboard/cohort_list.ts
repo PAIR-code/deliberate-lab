@@ -47,11 +47,13 @@ export class Component extends MobxLitElement {
         <div class="left">
           <pr-tooltip text="Hide panel" position="RIGHT">
             <pr-icon-button
-              icon="hide"
+              icon="visibility_off"
               size="small"
               color="neutral"
               variant="default"
-              @click=${() => { this.experimentManager.setShowCohortList(false) }}
+              @click=${() => {
+                this.experimentManager.setShowCohortList(false);
+              }}
             >
             </pr-icon-button>
           </pr-tooltip>
@@ -70,7 +72,7 @@ export class Component extends MobxLitElement {
               @click=${() => {
                 this.analyticsService.trackButtonClick(ButtonClick.COHORT_ADD);
                 const name = getCohortName(
-                  this.experimentManager.cohortList.length
+                  this.experimentManager.cohortList.length,
                 );
                 this.experimentManager.createCohort({}, name);
               }}
@@ -87,7 +89,7 @@ export class Component extends MobxLitElement {
                 const numCohorts = this.experimentManager.cohortList.length;
                 [...Array(5).keys()].forEach((key) => {
                   this.analyticsService.trackButtonClick(
-                    ButtonClick.COHORT_ADD
+                    ButtonClick.COHORT_ADD,
                   );
                   const name = getCohortName(numCohorts + key);
                   this.experimentManager.createCohort({}, name);
@@ -106,7 +108,7 @@ export class Component extends MobxLitElement {
                 const numCohorts = this.experimentManager.cohortList.length;
                 [...Array(10).keys()].forEach((key) => {
                   this.analyticsService.trackButtonClick(
-                    ButtonClick.COHORT_ADD
+                    ButtonClick.COHORT_ADD,
                   );
                   const name = getCohortName(numCohorts + key);
                   this.experimentManager.createCohort({}, name);
@@ -143,7 +145,7 @@ export class Component extends MobxLitElement {
           .slice()
           .sort((a, b) => {
             const nameComparison = a.metadata.name.localeCompare(
-              b.metadata.name
+              b.metadata.name,
             );
             if (
               a.metadata.name.startsWith('Cohort') &&
@@ -155,7 +157,11 @@ export class Component extends MobxLitElement {
           })
           .map(
             (cohort) =>
-              html`<cohort-summary .cohort=${cohort}></cohort-summary>`
+              html`<cohort-summary
+                .cohort=${cohort}
+                .isExpanded=${this.experimentManager.expandAllCohorts}
+              >
+              </cohort-summary>`,
           )}
       </div>
     `;

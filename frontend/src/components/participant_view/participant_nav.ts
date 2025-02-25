@@ -12,9 +12,7 @@ import {AuthService} from '../../services/auth.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {HomeService} from '../../services/home.service';
 import {ParticipantService} from '../../services/participant.service';
-import {
-  StageConfig
-} from '@deliberation-lab/utils';
+import {StageConfig} from '@deliberation-lab/utils';
 
 import {styles} from './participant_nav.scss';
 
@@ -37,9 +35,7 @@ export class ParticipantNav extends MobxLitElement {
         <div class="title" @click=${navigateToLanding}>
           <div>${this.experimentService.experimentPublicName}</div>
         </div>
-        <div class="stages">
-          ${this.renderStages()}
-        </div>
+        <div class="stages">${this.renderStages()}</div>
       </div>
     `;
   }
@@ -49,14 +45,12 @@ export class ParticipantNav extends MobxLitElement {
 
     // If not experimenter, filter out stages that aren't available yet
     if (!this.authService.isExperimenter) {
-      stages = stages.filter(
-        stage => this.participantService.canAccessStage(stage.id)
+      stages = stages.filter((stage) =>
+        this.participantService.canAccessStage(stage.id),
       );
     }
 
-    return stages.map(
-      (stage, index) => this.renderStageItem(stage, index)
-    );
+    return stages.map((stage, index) => this.renderStageItem(stage, index));
   }
 
   private renderStageItem(stage: StageConfig, index: number) {
@@ -72,18 +66,13 @@ export class ParticipantNav extends MobxLitElement {
 
     return html`
       <div class="nav-item-wrapper">
-        <div
-          class=${navItemClasses}
-          role="button"
-          @click=${navigate}
-        >
+        <div class=${navItemClasses} role="button" @click=${navigate}>
           <div>${index + 1}. ${stage.name}</div>
-          ${this.participantService.isCurrentStage(stage.id) ?
-            html`<div class="chip tertiary">current</div>`
-            : nothing
-          }
-          ${this.participantService.completedStage(stage.id) ?
-            html`<pr-icon icon="check_circle" size="small"></pr-icon>`
+          ${this.participantService.isCurrentStage(stage.id)
+            ? html`<div class="chip tertiary">current</div>`
+            : nothing}
+          ${this.participantService.completedStage(stage.id)
+            ? html`<pr-icon icon="check_circle" size="small"></pr-icon>`
             : nothing}
         </div>
       </div>

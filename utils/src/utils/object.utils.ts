@@ -79,7 +79,10 @@ export const mergeByKey = <T extends object, K extends Indexable<T>>(
  * const mergeableAnsers = mergeableRecord(answers, "answers")
  * firestoreDoc.set(mergeableAnsers, { merge: true });
  */
-export const mergeableRecord = <K extends Index, V>(record: Record<K, V>, fieldName: string) => {
+export const mergeableRecord = <K extends Index, V>(
+  record: Record<K, V>,
+  fieldName: string,
+) => {
   const result: Record<string, V> = {};
 
   Object.entries(record).forEach(([key, value]) => {

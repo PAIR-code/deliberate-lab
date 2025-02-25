@@ -10,9 +10,7 @@ import {CohortService} from '../../services/cohort.service';
 import {ParticipantService} from '../../services/participant.service';
 import {RouterService} from '../../services/router.service';
 
-import {
-  ParticipantProfile,
-} from '@deliberation-lab/utils';
+import {ParticipantProfile} from '@deliberation-lab/utils';
 
 import {styles} from './progress_stage_completed.scss';
 
@@ -33,8 +31,8 @@ export class Progress extends MobxLitElement {
       ${this.renderParticipants(completed)}
       <div class="status">
         ${completed.length} of
-        ${this.cohortService.nonObsoleteParticipants.length}
-        participants completed this stage
+        ${this.cohortService.nonObsoleteParticipants.length} participants
+        completed this stage
       </div>
     `;
   }
@@ -47,7 +45,8 @@ export class Progress extends MobxLitElement {
         class="participant"
         .profile=${participant}
         .stageId=${stageId}
-        displayType="progress">
+        displayType="progress"
+      >
       </participant-profile-display>
     `;
   }

@@ -26,6 +26,7 @@ import {
   AgentConfig,
   ParticipantProfileExtended,
   StageKind,
+  EXPERIMENT_VERSION_ID,
 } from '@deliberation-lab/utils';
 
 import {styles} from './experimenter_panel.scss';
@@ -140,6 +141,27 @@ export class Panel extends MobxLitElement {
     `;
   }
 
+  private renderOutdatedWarning() {
+    if (!this.experimentService.experiment) return nothing;
+
+    if (this.experimentService.experiment.versionId < EXPERIMENT_VERSION_ID) {
+      return html`
+        <div class="banner warning">
+          <p>
+            ⚠️ Warning: This experiment was created with a previous version of
+            Deliberate Lab and may not be compatible with the current version
+            (e.g., some stages or features may not load or function properly).
+          </p>
+          <p>
+            Contact the deployment owners if you would like to upgrade this
+            experiment to the latest version.
+          </p>
+        </div>
+      `;
+    }
+    return nothing;
+  }
+
   private renderPanelView() {
     switch (this.panelView) {
       case PanelView.PARTICIPANT_SEARCH:
@@ -158,9 +180,11 @@ export class Panel extends MobxLitElement {
   private renderDefaultPanel() {
     const showCohortList = this.experimentManager.showCohortList;
     const hideLockedCohorts = this.experimentManager.hideLockedCohorts;
+    const expandAllCohorts = this.experimentManager.expandAllCohorts;
 
     return html`
       <div class="main">
+        ${this.renderOutdatedWarning()}
         <div class="top">
           <div class="header">Cohort Panel</div>
           <div
@@ -195,11 +219,30 @@ export class Panel extends MobxLitElement {
               ${hideLockedCohorts ? 'Show all cohorts' : 'Hide locked cohorts'}
             </div>
           </div>
+          <div
+            class="checkbox-wrapper"
+            @click=${() => {
+              this.experimentManager.setExpandAllCohorts(!expandAllCohorts);
+            }}
+          >
+            <pr-icon-button
+              color="tertiary"
+              size="medium"
+              variant="default"
+              icon=${expandAllCohorts ? 'collapse_all' : 'expand_all'}
+            >
+            </pr-icon-button>
+            <div>${expandAllCohorts ? 'Collapse' : 'Expand'} all cohorts</div>
+          </div>
           ${this.renderParticipantSettingsPanel()}
         </div>
         <div class="bottom">
           <div class="header">Actions</div>
           ${this.renderExperimentActions()}
+          <div class="subtitle">
+            Experiment Version: ${this.experimentService.experiment?.versionId}
+            (latest version: ${EXPERIMENT_VERSION_ID})
+          </div>
         </div>
       </div>
     `;
@@ -253,7 +296,7 @@ export class Panel extends MobxLitElement {
       this.participantSearchQuery === ''
         ? []
         : this.experimentManager.getParticipantSearchResults(
-            this.participantSearchQuery
+            this.participantSearchQuery,
           );
 
     const renderResult = (participant: ParticipantProfileExtended) => {
@@ -350,7 +393,7 @@ export class Panel extends MobxLitElement {
             ? html`<div>No agents configured in the current stage</div>`
             : nothing}
           ${agents.map((agent, index) =>
-            this.renderAgentEditor(stageId, agent, index)
+            this.renderAgentEditor(stageId, agent, index),
           )}
         </div>
       </div>
@@ -361,7 +404,7 @@ export class Panel extends MobxLitElement {
   private renderAgentEditor(
     stageId: string,
     agent: AgentConfig,
-    index: number
+    index: number,
   ) {
     const updatePrompt = (e: InputEvent) => {
       const prompt = (e.target as HTMLTextAreaElement).value;
@@ -393,7 +436,7 @@ export class Panel extends MobxLitElement {
         this.agentEditor.updateAgent(
           stageId,
           {...agent, wordsPerMinute: wpm},
-          index
+          index,
         );
       }
     };
@@ -490,7 +533,7 @@ export class Panel extends MobxLitElement {
     const onClick = () => {
       // Display confirmation dialog
       const isConfirmed = window.confirm(
-        'This will create a copy of this experiment. Are you sure you want to proceed?'
+        'This will create a copy of this experiment. Are you sure you want to proceed?',
       );
       if (!isConfirmed) return;
       this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_FORK);
@@ -515,7 +558,7 @@ export class Panel extends MobxLitElement {
       this.analyticsService.trackButtonClick(
         this.experimentManager.isCreator
           ? ButtonClick.EXPERIMENT_EDIT
-          : ButtonClick.EXPERIMENT_PREVIEW_CONFIG
+          : ButtonClick.EXPERIMENT_PREVIEW_CONFIG,
       );
       this.experimentManager.setIsEditing(true);
     };
@@ -535,10 +578,33 @@ export class Panel extends MobxLitElement {
     `;
   }
 
+  private renderExperimentDeleteButton() {
+    return html`
+      <pr-button
+        color="error"
+        variant="outlined"
+        ?disabled=${!this.experimentManager.isCreator}
+        @click=${() => {
+          const isConfirmed = window.confirm(
+            `Are you sure you want to delete this experiment?`,
+          );
+          if (!isConfirmed) return;
+
+          this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_DELETE);
+          this.experimentManager.deleteExperiment();
+        }}
+      >
+        <pr-icon icon="delete" color="error" variant="default"> </pr-icon>
+        <div>Delete experiment</div>
+      </pr-button>
+    `;
+  }
+
   private renderExperimentActions() {
     return html`
       ${this.renderExperimentDownloadButton()}
       ${this.renderExperimentForkButton()} ${this.renderExperimentEditButton()}
+      ${this.renderExperimentDeleteButton()}
     `;
   }
 }

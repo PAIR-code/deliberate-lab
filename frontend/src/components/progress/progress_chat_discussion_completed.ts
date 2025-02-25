@@ -9,15 +9,13 @@ import {core} from '../../core/core';
 import {CohortService} from '../../services/cohort.service';
 import {ParticipantService} from '../../services/participant.service';
 
-import {
-  ParticipantProfile,
-} from '@deliberation-lab/utils';
+import {ParticipantProfile} from '@deliberation-lab/utils';
 
 import {styles} from './progress_stage_completed.scss';
 
 /** Progress component: Shows how many participants are ready to end
-  * the chat discussion.
-  */
+ * the chat discussion.
+ */
 @customElement('progress-chat-discussion-completed')
 export class Progress extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
@@ -25,22 +23,22 @@ export class Progress extends MobxLitElement {
   private readonly cohortService = core.getService(CohortService);
   private readonly participantService = core.getService(ParticipantService);
 
-  @property() discussionId: string|null = null;
+  @property() discussionId: string | null = null;
 
   override render() {
     if (!this.discussionId) return nothing;
 
     const stageId = this.participantService.currentStageViewId ?? '';
-    const { completed, notCompleted } =
+    const {completed, notCompleted} =
       this.cohortService.getParticipantsByChatDiscussionCompletion(
-        stageId, this.discussionId
+        stageId,
+        this.discussionId,
       );
 
     return html`
       ${this.renderParticipants(completed)}
       <div class="status">
-        ${completed.length} of
-        ${completed.length + notCompleted.length}
+        ${completed.length} of ${completed.length + notCompleted.length}
         participants are ready to move on
       </div>
     `;

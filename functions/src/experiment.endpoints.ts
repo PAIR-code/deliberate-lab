@@ -1,4 +1,4 @@
-import { Value } from '@sinclair/typebox/value';
+import {Value} from '@sinclair/typebox/value';
 import {
   Experiment,
   ExperimentCreationData,
@@ -8,10 +8,10 @@ import {
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
-import { onCall } from 'firebase-functions/v2/https';
+import {onCall} from 'firebase-functions/v2/https';
 
-import { app } from './app';
-import { AuthGuard } from './utils/auth-guard';
+import {app} from './app';
+import {AuthGuard} from './utils/auth-guard';
 import {
   checkConfigDataUnionOnPath,
   isUnionError,
@@ -31,7 +31,7 @@ import {
 
 export const writeExperiment = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
-  const { data } = request;
+  const {data} = request;
 
   // TODO: If experiment exists, verify that the experimenter is the creator
   // before updating.
@@ -52,9 +52,10 @@ export const writeExperiment = onCall(async (request) => {
   experimentConfig.metadata.creator = request.auth.token.email;
 
   // Define document reference
-  const document = app.firestore().collection(data.collectionName).doc(
-    experimentConfig.id
-  );
+  const document = app
+    .firestore()
+    .collection(data.collectionName)
+    .doc(experimentConfig.id);
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
@@ -69,7 +70,7 @@ export const writeExperiment = onCall(async (request) => {
     // stages, roles collections.
   });
 
-  return { id: document.id };
+  return {id: document.id};
 });
 
 function handleExperimentCreationValidationErrors(data: any) {
@@ -94,24 +95,31 @@ function handleExperimentCreationValidationErrors(data: any) {
 // ************************************************************************* //
 export const deleteExperiment = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
-  const { data } = request;
+  const {data} = request;
 
   // Validate input
   const validInput = Value.Check(ExperimentDeletionData, data);
   if (!validInput) {
     throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
-    return { success: false };
+    return {success: false};
   }
 
   // Verify that experimenter is the creator before enabling delete
-  const experiment = (await app.firestore().collection(data.collectionName).doc(data.experimentId).get())
-    .data();
+  const experiment = (
+    await app
+      .firestore()
+      .collection(data.collectionName)
+      .doc(data.experimentId)
+      .get()
+  ).data();
   if (request.auth?.token.email !== experiment.metadata.creator) return;
 
   // Delete document
-  const doc = app.firestore().doc(`${data.collectionName}/${data.experimentId}`);
+  const doc = app
+    .firestore()
+    .doc(`${data.collectionName}/${data.experimentId}`);
   app.firestore().recursiveDelete(doc);
-  return { success: true };
+  return {success: true};
 });
 
 // ************************************************************************* //
@@ -124,10 +132,11 @@ export const deleteExperiment = onCall(async (request) => {
 export const setExperimentCohortLock = onCall(async (request) => {
   // TODO: Only allow creator, admins, and readers to set lock
   await AuthGuard.isExperimenter(request);
-  const { data } = request;
+  const {data} = request;
 
   // Define document reference
-  const document = app.firestore()
+  const document = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId);
 
@@ -138,5 +147,5 @@ export const setExperimentCohortLock = onCall(async (request) => {
     transaction.set(document, experiment);
   });
 
-  return { success: true };
+  return {success: true};
 });

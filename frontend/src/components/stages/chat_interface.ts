@@ -39,7 +39,9 @@ export class ChatInterface extends MobxLitElement {
   private readonly cohortService = core.getService(CohortService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
-  private readonly participantAnswerService = core.getService(ParticipantAnswerService);
+  private readonly participantAnswerService = core.getService(
+    ParticipantAnswerService,
+  );
   private readonly routerService = core.getService(RouterService);
 
   @property() stage: ChatStageConfig | undefined = undefined;
@@ -50,7 +52,7 @@ export class ChatInterface extends MobxLitElement {
   private sendUserInput() {
     if (!this.stage) return;
 
-    const value = this.participantAnswerService.getChatInput(this.stage.id)
+    const value = this.participantAnswerService.getChatInput(this.stage.id);
     if (value.trim() === '') return;
     this.participantService.createChatMessage({message: value.trim()});
     this.participantAnswerService.updateChatInput(this.stage.id, '');
@@ -90,7 +92,7 @@ export class ChatInterface extends MobxLitElement {
       // Only show discussion threads that have been unlocked
       if (currentDiscussionId !== null) {
         const index = discussions.findIndex(
-          (discussion) => discussion.id === currentDiscussionId
+          (discussion) => discussion.id === currentDiscussionId,
         );
         discussions = discussions.slice(0, index + 1);
       }
@@ -99,7 +101,7 @@ export class ChatInterface extends MobxLitElement {
         <div class="chat-scroll">
           <div class="chat-history">
             ${discussions.map((discussion, index) =>
-              this.renderChatDiscussionThread(stage, index)
+              this.renderChatDiscussionThread(stage, index),
             )}
             ${messages.map(this.renderChatMessage.bind(this))}
           </div>
@@ -121,7 +123,7 @@ export class ChatInterface extends MobxLitElement {
 
   private renderChatDiscussionThread(
     stage: ChatStageConfig,
-    discussionIndex: number
+    discussionIndex: number,
   ) {
     const discussion = stage.discussions[discussionIndex];
 
@@ -198,7 +200,9 @@ export class ChatInterface extends MobxLitElement {
         <pr-textarea
           size="small"
           placeholder="Send message"
-          .value=${this.participantAnswerService.getChatInput(this.stage?.id ?? '')}
+          .value=${this.participantAnswerService.getChatInput(
+            this.stage?.id ?? '',
+          )}
           ?focused=${autoFocus()}
           ?disabled=${this.disableInput ||
           this.participantService.disableStage ||
@@ -216,7 +220,9 @@ export class ChatInterface extends MobxLitElement {
           <pr-icon-button
             icon="send"
             variant="tonal"
-            .disabled=${this.participantAnswerService.getChatInput(this.stage?.id ?? '').trim() === '' ||
+            .disabled=${this.participantAnswerService
+              .getChatInput(this.stage?.id ?? '')
+              .trim() === '' ||
             this.disableInput ||
             this.participantService.disableStage ||
             this.isConversationOver()}
@@ -241,7 +247,7 @@ export class ChatInterface extends MobxLitElement {
       try {
         await this.participantService.updateReadyToEndChatDiscussion(
           this.stage.id,
-          currentDiscussionId
+          currentDiscussionId,
         );
       } catch (error) {
         console.log(error);
@@ -253,7 +259,7 @@ export class ChatInterface extends MobxLitElement {
       this.participantService.disableStage ||
       this.participantService.isReadyToEndChatDiscussion(
         this.stage.id,
-        currentDiscussionId
+        currentDiscussionId,
       );
 
     return html`
@@ -279,7 +285,7 @@ export class ChatInterface extends MobxLitElement {
   override render() {
     if (!this.stage) return nothing;
     const currentDiscussionId = this.cohortService.getChatDiscussionId(
-      this.stage.id
+      this.stage.id,
     );
 
     const renderProgress = () => {

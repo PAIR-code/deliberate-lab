@@ -22,9 +22,7 @@ import {
   RankingItem,
   RankingType,
 } from '@deliberation-lab/utils';
-import {
-  getCohortRankingItems
-} from '../../shared/cohort.utils';
+import {getCohortRankingItems} from '../../shared/cohort.utils';
 
 import {styles} from './ranking_view.scss';
 
@@ -35,18 +33,20 @@ export class RankingView extends MobxLitElement {
 
   private readonly cohortService = core.getService(CohortService);
   private readonly participantAnswerService = core.getService(
-    ParticipantAnswerService
+    ParticipantAnswerService,
   );
   private readonly participantService = core.getService(ParticipantService);
 
   @property() stage: RankingStageConfig | undefined = undefined;
 
   private getItems() {
-    return this.stage ? getCohortRankingItems(
-      this.cohortService.activeParticipants,
-      this.participantService.profile?.publicId ?? '',
-      this.stage
-    ) : [];
+    return this.stage
+      ? getCohortRankingItems(
+          this.cohortService.activeParticipants,
+          this.participantService.profile?.publicId ?? '',
+          this.stage,
+        )
+      : [];
   }
 
   private getItemId(item: ParticipantProfile | RankingItem) {
@@ -72,7 +72,7 @@ export class RankingView extends MobxLitElement {
       // Write rankings to Firestore
       this.participantService.updateRankingStageParticipantAnswer(
         this.stage.id,
-        this.participantAnswerService.getRankingList(this.stage.id)
+        this.participantAnswerService.getRankingList(this.stage.id),
       );
       await this.participantService.progressToNextStage();
     };
@@ -93,7 +93,7 @@ export class RankingView extends MobxLitElement {
   private renderStartZone() {
     if (!this.stage) return;
     const rankingList = this.participantAnswerService.getRankingList(
-      this.stage.id
+      this.stage.id,
     );
 
     return html`
@@ -101,7 +101,7 @@ export class RankingView extends MobxLitElement {
         ${this.getItems()
           .slice()
           .sort((p1, p2) =>
-            this.getItemId(p1).localeCompare(this.getItemId(p2))
+            this.getItemId(p1).localeCompare(this.getItemId(p2)),
           )
           .filter((i) => !rankingList.find((id) => id === this.getItemId(i)))
           .map((i) => this.renderDraggableParticipant(i))}
@@ -151,7 +151,7 @@ export class RankingView extends MobxLitElement {
     const items = (this.stage as ItemRankingStage).rankingItems ?? [];
 
     const onDragStart = (event: DragEvent) => {
-      let target = event.target as HTMLElement;
+      const target = event.target as HTMLElement;
       target.style.opacity = '.25';
 
       if (event.dataTransfer) {
@@ -161,7 +161,7 @@ export class RankingView extends MobxLitElement {
     };
 
     const onDragEnd = (event: DragEvent) => {
-      let target = event.target as HTMLElement;
+      const target = event.target as HTMLElement;
       target.style.opacity = '';
     };
 
@@ -174,7 +174,7 @@ export class RankingView extends MobxLitElement {
       // Update ranking list
       this.participantAnswerService.updateRankingAnswer(
         this.stage.id,
-        rankings
+        rankings,
       );
     };
 
@@ -224,7 +224,7 @@ export class RankingView extends MobxLitElement {
         target.classList.remove('drag-over');
 
         const currentRankings = this.participantAnswerService.getRankingList(
-          this.stage.id
+          this.stage.id,
         );
         const itemId = event.dataTransfer.getData('text/plain');
 
@@ -252,7 +252,7 @@ export class RankingView extends MobxLitElement {
         // Update ranking list
         this.participantAnswerService.updateRankingAnswer(
           this.stage.id,
-          rankings
+          rankings,
         );
       }
     };
@@ -274,11 +274,11 @@ export class RankingView extends MobxLitElement {
 
   private renderRankedItem(
     item: ParticipantProfile | RankingItem,
-    index: number
+    index: number,
   ) {
     if (!this.stage) return;
     const rankings = this.participantAnswerService.getRankingList(
-      this.stage.id
+      this.stage.id,
     );
     const onCancel = () => {
       if (index === -1 || !this.stage) {
@@ -302,7 +302,7 @@ export class RankingView extends MobxLitElement {
       ];
       this.participantAnswerService.updateRankingAnswer(
         this.stage.id,
-        rankingList
+        rankingList,
       );
     };
 
@@ -316,12 +316,12 @@ export class RankingView extends MobxLitElement {
       ];
       this.participantAnswerService.updateRankingAnswer(
         this.stage.id,
-        rankingList
+        rankingList,
       );
     };
 
     const onDragStart = (event: DragEvent) => {
-      let target = event.target as HTMLElement;
+      const target = event.target as HTMLElement;
       target.style.opacity = '.25';
 
       if (event.dataTransfer) {
@@ -331,7 +331,7 @@ export class RankingView extends MobxLitElement {
     };
 
     const onDragEnd = (event: DragEvent) => {
-      let target = event.target as HTMLElement;
+      const target = event.target as HTMLElement;
       target.style.opacity = '';
     };
 
@@ -378,7 +378,7 @@ export class RankingView extends MobxLitElement {
   private renderEndZone() {
     if (!this.stage) return;
     const rankingList = this.participantAnswerService.getRankingList(
-      this.stage.id
+      this.stage.id,
     );
 
     return html`
@@ -391,7 +391,7 @@ export class RankingView extends MobxLitElement {
         </div>
         ${rankingList.map((id: string, index: number) => {
           const item = this.getItems().find(
-            (item) => this.getItemId(item) === id
+            (item) => this.getItemId(item) === id,
           );
 
           return item ? this.renderRankedItem(item, index) : nothing;

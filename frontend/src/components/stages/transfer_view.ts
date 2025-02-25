@@ -56,8 +56,7 @@ export class TransferView extends MobxLitElement {
 
     return html`
       <stage-description .stage=${this.stage}></stage-description>
-      ${this.renderCompletedStage()}
-      ${this.renderCountdown()}
+      ${this.renderCompletedStage()} ${this.renderCountdown()}
     `;
   }
 
@@ -92,15 +91,17 @@ export class TransferView extends MobxLitElement {
       '#A8DAB5', // Green
       '#FBA9D6', // Red
       this.timeRemainingSeconds,
-      this.stage?.timeoutSeconds
+      this.stage?.timeoutSeconds,
     );
 
     return html`
       <div class="transfer-wrapper">
-        <div>If the transfer cannot be completed, the experiment will end in:
-        <span style="font-weight: bold; color: ${timeColor};">
-          ${minutes}:${seconds.toString().padStart(2, '0')} (mm:ss) </span
-        >.</div>
+        <div>
+          If the transfer cannot be completed, the experiment will end in:
+          <span style="font-weight: bold; color: ${timeColor};">
+            ${minutes}:${seconds.toString().padStart(2, '0')} (mm:ss) </span
+          >.
+        </div>
       </div>
     `;
   }
@@ -120,7 +121,7 @@ export class TransferView extends MobxLitElement {
     alert('Thanks for waiting. The experiment has ended.');
     this.participantService.updateExperimentFailure(
       ParticipantStatus.TRANSFER_TIMEOUT,
-      true
+      true,
     );
   }
 
@@ -131,7 +132,7 @@ export class TransferView extends MobxLitElement {
     }
     const startTime = getCurrentStageStartTime(
       this.participantService.profile!,
-      this.experimentService.stageIds
+      this.experimentService.stageIds,
     )!;
     const secondsElapsed = getTimeElapsed(startTime, 's');
     this.timeRemainingSeconds = this.stage.timeoutSeconds - secondsElapsed;

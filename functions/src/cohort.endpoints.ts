@@ -1,5 +1,5 @@
-import { Timestamp } from 'firebase-admin/firestore';
-import { Value } from '@sinclair/typebox/value';
+import {Timestamp} from 'firebase-admin/firestore';
+import {Value} from '@sinclair/typebox/value';
 import {
   CohortConfig,
   CohortCreationData,
@@ -10,10 +10,10 @@ import {
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
-import { onCall } from 'firebase-functions/v2/https';
+import {onCall} from 'firebase-functions/v2/https';
 
-import { app } from './app';
-import { AuthGuard } from './utils/auth-guard';
+import {app} from './app';
+import {AuthGuard} from './utils/auth-guard';
 import {
   checkConfigDataUnionOnPath,
   isUnionError,
@@ -36,7 +36,7 @@ export const createCohort = onCall(async (request) => {
   // TODO: Verify that the experimenter is an admin OR creator/reader
   // of the cohort's experiment
   await AuthGuard.isExperimenter(request);
-  const { data } = request;
+  const {data} = request;
   const cohortConfig = data.cohortConfig;
 
   // Validate input
@@ -49,7 +49,8 @@ export const createCohort = onCall(async (request) => {
   cohortConfig.metadata.creator = request.auth?.token.email;
 
   // Define document reference
-  const document = app.firestore()
+  const document = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('cohorts')
@@ -57,19 +58,18 @@ export const createCohort = onCall(async (request) => {
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
-    transaction.set(document, cohortConfig);
-
     // For relevant stages, initialize public stage data documents
-    const stageConfigs =
-      await app.firestore().collection(`experiments/${data.experimentId}/stages`)
+    const stageDocs = await app
+      .firestore()
+      .collection(`experiments/${data.experimentId}/stages`)
       .get();
+    const stages = stageDocs.docs.map((stageDoc) => stageDoc.data());
 
-    const publicData = createPublicDataFromStageConfigs(
-      stageConfigs.docs.map(stageDoc => stageDoc.data())
-    );
+    const publicData = createPublicDataFromStageConfigs(stages);
 
     for (const dataItem of publicData) {
-      const dataDoc = app.firestore()
+      const dataDoc = app
+        .firestore()
         .collection('experiments')
         .doc(data.experimentId)
         .collection('cohorts')
@@ -78,9 +78,23 @@ export const createCohort = onCall(async (request) => {
         .doc(dataItem.id);
       transaction.set(dataDoc, dataItem);
     }
+
+    // Set relevant stages (e.g., with no min participants and no wait for all
+    // participants) as unlocked
+    for (const stage of stages) {
+      if (
+        stage.progress.minParticipants === 0 &&
+        !stage.progress.waitForAllParticipants
+      ) {
+        cohortConfig.stageUnlockMap[stage.id] = true;
+      }
+    }
+
+    // Write cohort config
+    transaction.set(document, cohortConfig);
   });
 
-  return { id: document.id };
+  return {id: document.id};
 });
 
 function handleCohortCreationValidationErrors(data: any) {
@@ -105,10 +119,11 @@ function handleCohortCreationValidationErrors(data: any) {
 
 export const updateCohortMetadata = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
-  const { data } = request;
+  const {data} = request;
 
   // Define document reference
-  const document = app.firestore()
+  const document = app
+    .firestore()
     .collection('experiments')
     .doc(data.experimentId)
     .collection('cohorts')
@@ -133,7 +148,7 @@ export const updateCohortMetadata = onCall(async (request) => {
     transaction.set(document, {...cohortConfig, metadata, participantConfig});
   });
 
-  return { success };
+  return {success};
 });
 
 // ************************************************************************* //
@@ -146,35 +161,55 @@ export const updateCohortMetadata = onCall(async (request) => {
 export const deleteCohort = onCall(async (request) => {
   // TODO: Only allow creator, admins, and readers to delete cohorts
   await AuthGuard.isExperimenter(request);
-  const { data } = request;
+  const {data} = request;
 
   // Validate input
   const validInput = Value.Check(CohortDeletionData, data);
   if (!validInput) {
     throw new functions.https.HttpsError('invalid-argument', 'Invalid data');
-    return { success: false };
+    return {success: false};
   }
 
   // Verify that experimenter is the creator before enabling delete
-  const experiment = (await app.firestore().collection('experiments').doc(data.experimentId).get())
-    .data();
+  const experiment = (
+    await app.firestore().collection('experiments').doc(data.experimentId).get()
+  ).data();
   if (request.auth?.token.email !== experiment.metadata.creator) return;
 
   // Delete document
-  const doc = app.firestore().doc(`experiments/${data.experimentId}/cohorts/${data.cohortId}`);
+  const doc = app
+    .firestore()
+    .doc(`experiments/${data.experimentId}/cohorts/${data.cohortId}`);
   app.firestore().recursiveDelete(doc);
 
   // Set all participants in cohort to deleted
-  const participants = (await app.firestore().collection('experiments').doc(data.experimentId).collection('participants').get())
-    .docs.map(doc => doc.data());
+  const participants = (
+    await app
+      .firestore()
+      .collection('experiments')
+      .doc(data.experimentId)
+      .collection('participants')
+      .get()
+  ).docs.map((doc) => doc.data());
   for (const participant of participants) {
-    if (participant.currentCohortId === data.cohortId || participant.transferCohortId === data.cohortId) {
+    if (
+      participant.currentCohortId === data.cohortId ||
+      participant.transferCohortId === data.cohortId
+    ) {
       await app.firestore().runTransaction(async (transaction) => {
-        const participantDoc = app.firestore().collection('experiments').doc(data.experimentId).collection('participants').doc(participant.privateId);
-        transaction.set(participantDoc, {...participant, currentStatus: ParticipantStatus.DELETED });
+        const participantDoc = app
+          .firestore()
+          .collection('experiments')
+          .doc(data.experimentId)
+          .collection('participants')
+          .doc(participant.privateId);
+        transaction.set(participantDoc, {
+          ...participant,
+          currentStatus: ParticipantStatus.DELETED,
+        });
       });
     }
   }
 
-  return { success: true };
+  return {success: true};
 });

@@ -24,7 +24,7 @@ import {
 import {
   ChatStageConfig,
   ParticipantProfile,
-  ParticipantStatus
+  ParticipantStatus,
 } from '@deliberation-lab/utils';
 
 import {styles} from './header.scss';
@@ -52,13 +52,14 @@ export class Header extends MobxLitElement {
     const headerClasses = classMap({
       header: true,
       banner: this.isBanner(),
+      'no-border': this.routerService.activePage === Pages.HOME,
     });
 
     return html`
       <div class=${headerClasses}>
         <div class="left">
           ${this.renderBackButton()}
-          <h1 class=${isDashboard ? 'short': ''}>${this.renderTitle()}</h1>
+          <h1 class=${isDashboard ? 'short' : ''}>${this.renderTitle()}</h1>
         </div>
         <div class="right">${this.renderActions()}</div>
       </div>
@@ -128,14 +129,16 @@ export class Header extends MobxLitElement {
     if (this.experimentManager.isCreator) {
       // Display confirmation dialog
       const isConfirmed = window.confirm(
-        'You may have unsaved changes. Are you sure you want to exit?'
+        'You may have unsaved changes. Are you sure you want to exit?',
       );
       if (!isConfirmed) return;
     }
     this.experimentManager.setIsEditing(false);
   }
 
-  private renderParticipantProfileBanner(profile: ParticipantProfile|undefined) {
+  private renderParticipantProfileBanner(
+    profile: ParticipantProfile | undefined,
+  ) {
     if (!profile) return;
 
     const getStageWaitingText = () => {
@@ -145,7 +148,7 @@ export class Header extends MobxLitElement {
 
       const isWaiting = this.cohortService.isStageInWaitingPhase(stage.id);
       if (isWaiting) {
-        return '⏸️ This participant currently sees a wait stage; they are waiting for others in the cohort to catch up.'
+        return '⏸️ This participant currently sees a wait stage; they are waiting for others in the cohort to catch up.';
       }
       return undefined;
     };
@@ -164,7 +167,7 @@ export class Header extends MobxLitElement {
 
     switch (activePage) {
       case Pages.HOME:
-        return 'Home';
+        return 'Deliberate Lab';
       case Pages.ADMIN:
         return 'Admin dashboard';
       case Pages.SETTINGS:
@@ -182,7 +185,7 @@ export class Header extends MobxLitElement {
         return getParticipantStatusDetailText(
           profile,
           this.cohortService.isStageInWaitingPhase(stage.id),
-          `Previewing as: ${getParticipantInlineDisplay(profile)}.`
+          `Previewing as: ${getParticipantInlineDisplay(profile)}.`,
         );
       default:
         return '';
@@ -205,35 +208,38 @@ export class Header extends MobxLitElement {
 
     // TODO: Refactor pr-buttons into separate render stages
     switch (activePage) {
-      case Pages.EXPERIMENT_CREATE:
+      case Pages.HOME:
         return html`
           <pr-button
             color="primary"
-            variant="outlined"
-            ?disabled=${!this.experimentEditor.canEditStages}
+            variant="tonal"
             @click=${() => {
-              this.experimentEditor.toggleStageBuilderDialog(false);
+              this.routerService.navigate(Pages.EXPERIMENT_CREATE);
             }}
           >
-            Add stage
+            <pr-icon icon="add" color="primary" variant="tonal"></pr-icon>
+            New experiment
           </pr-button>
-
-          <pr-button
-            color="primary"
-            variant="outlined"
-            ?disabled=${!this.experimentEditor.canEditStages}
-            @click=${() => {
-              this.experimentEditor.toggleStageBuilderDialog(true);
-            }}
-          >
-            Load game
-          </pr-button>
+          <pr-tooltip text="View experimenter settings" position="BOTTOM_END">
+            <pr-icon-button
+              icon="settings"
+              color="secondary"
+              variant="default"
+              @click=${() => {
+                this.routerService.navigate(Pages.SETTINGS);
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
+        `;
+      case Pages.EXPERIMENT_CREATE:
+        return html`
           <pr-button
             ?loading=${this.experimentEditor.isWritingExperiment}
             ?disabled=${!this.experimentEditor.isValidExperimentConfig}
             @click=${async () => {
               this.analyticsService.trackButtonClick(
-                ButtonClick.EXPERIMENT_SAVE_NEW
+                ButtonClick.EXPERIMENT_SAVE_NEW,
               );
               const response = await this.experimentEditor.writeExperiment();
               this.experimentEditor.resetExperiment();
@@ -252,27 +258,6 @@ export class Header extends MobxLitElement {
           return html`
             <pr-button
               color="tertiary"
-              variant="outlined"
-              ?disabled=${!this.experimentEditor.canEditStages}
-              @click=${() => {
-                this.experimentEditor.toggleStageBuilderDialog(false);
-              }}
-            >
-              Add stage
-            </pr-button>
-
-            <pr-button
-              color="tertiary"
-              variant="outlined"
-              ?disabled=${!this.experimentEditor.canEditStages}
-              @click=${() => {
-                this.experimentEditor.toggleStageBuilderDialog(true);
-              }}
-            >
-              Load game
-            </pr-button>
-            <pr-button
-              color="tertiary"
               variant="default"
               @click=${this.closeEditorWithoutSaving}
             >
@@ -284,7 +269,7 @@ export class Header extends MobxLitElement {
               ?disabled=${!this.experimentManager.isCreator}
               @click=${() => {
                 this.analyticsService.trackButtonClick(
-                  ButtonClick.EXPERIMENT_SAVE_EXISTING
+                  ButtonClick.EXPERIMENT_SAVE_EXISTING,
                 );
                 this.experimentManager.setIsEditing(false, true);
               }}

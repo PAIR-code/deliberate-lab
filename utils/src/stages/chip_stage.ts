@@ -1,5 +1,5 @@
-import { Timestamp } from 'firebase/firestore';
-import { generateId, UnifiedTimestamp } from '../shared';
+import {Timestamp} from 'firebase/firestore';
+import {generateId, UnifiedTimestamp} from '../shared';
 import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
@@ -123,7 +123,7 @@ export type ChipLogEntry =
   | ChipTransactionLogEntry;
 
 export interface BaseChipLogEntry {
-  type: ChipLogType
+  type: ChipLogType;
   timestamp: UnifiedTimestamp;
 }
 
@@ -179,14 +179,18 @@ export interface ChipTransactionLogEntry extends BaseChipLogEntry {
 // ************************************************************************* //
 
 /** Create chip stage. */
-export function createChipStage(config: Partial<ChipStageConfig> = {}): ChipStageConfig {
+export function createChipStage(
+  config: Partial<ChipStageConfig> = {},
+): ChipStageConfig {
   return {
     id: config.id ?? generateId(),
     kind: StageKind.CHIP,
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Chip negotiation',
     descriptions: config.descriptions ?? createStageTextConfig(),
-    progress: config.progress ?? createStageProgressConfig({ waitForAllParticipants: true }),
+    progress:
+      config.progress ??
+      createStageProgressConfig({waitForAllParticipants: true}),
     enableChat: config.enableChat ?? false,
     numRounds: config.numRounds ?? 3,
     chips: config.chips ?? [],
@@ -241,91 +245,99 @@ export function createChipTransaction(offer: ChipOffer): ChipTransaction {
     offer,
     responseMap: {},
     status: ChipTransactionStatus.PENDING,
-    recipientId: null
+    recipientId: null,
   };
 }
 
 /** Create chip info log entry. */
 export function createChipInfoLogEntry(
-  infoMessage: string, timestamp = Timestamp.now()
+  infoMessage: string,
+  timestamp = Timestamp.now(),
 ): ChipInfoLogEntry {
   return {
     type: ChipLogType.INFO,
     infoMessage,
-    timestamp
+    timestamp,
   };
 }
 
 /** Create chip error log entry. */
 export function createChipErrorLogEntry(
-  errorMessage: string, timestamp = Timestamp.now()
+  errorMessage: string,
+  timestamp = Timestamp.now(),
 ): ChipErrorLogEntry {
   return {
     type: ChipLogType.ERROR,
     errorMessage,
-    timestamp
+    timestamp,
   };
 }
 
 /** Create chip round log entry. */
 export function createChipRoundLogEntry(
-  roundNumber: number, timestamp = Timestamp.now()
+  roundNumber: number,
+  timestamp = Timestamp.now(),
 ): ChipRoundLogEntry {
   return {
     type: ChipLogType.NEW_ROUND,
     roundNumber,
-    timestamp
+    timestamp,
   };
 }
 
 /** Create chip turn log entry. */
 export function createChipTurnLogEntry(
-  roundNumber: number, participantId: string, timestamp = Timestamp.now()
+  roundNumber: number,
+  participantId: string,
+  timestamp = Timestamp.now(),
 ): ChipTurnLogEntry {
   return {
     type: ChipLogType.NEW_TURN,
     roundNumber,
     participantId,
-    timestamp
+    timestamp,
   };
 }
 
 /** Create chip offer log entry. */
 export function createChipOfferLogEntry(
-  offer: ChipOffer, timestamp = Timestamp.now()
+  offer: ChipOffer,
+  timestamp = Timestamp.now(),
 ): ChipOfferLogEntry {
   return {
     type: ChipLogType.OFFER,
     offer,
-    timestamp
+    timestamp,
   };
 }
 
 /** Create chip offer declined log entry. */
 export function createChipOfferDeclinedLogEntry(
-  offer: ChipOffer, timestamp = Timestamp.now()
+  offer: ChipOffer,
+  timestamp = Timestamp.now(),
 ): ChipOfferDeclinedLogEntry {
   return {
     type: ChipLogType.OFFER_DECLINED,
     offer,
-    timestamp
+    timestamp,
   };
 }
 
 /** Create chip transaction log entry. */
 export function createChipTransactionLogEntry(
-  transaction: ChipTransaction, timestamp = Timestamp.now()
+  transaction: ChipTransaction,
+  timestamp = Timestamp.now(),
 ): ChipTransactionLogEntry {
   return {
     type: ChipLogType.TRANSACTION,
     transaction,
-    timestamp
+    timestamp,
   };
 }
 
 export function displayChipOfferText(
   offerChipMap: Record<string, number>,
-  chipItems: ChipItem[]
+  chipItems: ChipItem[],
 ): string {
   const chipDescriptions: string[] = [];
 
@@ -333,8 +345,8 @@ export function displayChipOfferText(
     const quantity = offerChipMap[chip.id];
     if (quantity) {
       chipDescriptions.push(
-        `${chip.avatar} ${quantity} ${chip.name} chip${quantity !== 1 ? 's' : ''}`
-      )
+        `${chip.avatar} ${quantity} ${chip.name} chip${quantity !== 1 ? 's' : ''}`,
+      );
     }
   });
 

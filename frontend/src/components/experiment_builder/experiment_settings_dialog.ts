@@ -30,7 +30,7 @@ export class ExperimentSettingsDialog extends MobxLitElement {
             icon="close"
             variant="default"
             @click=${() => {
-              this.experimentManager.setIsEditingSettingsDialog(false)
+              this.experimentManager.setIsEditingSettingsDialog(false);
             }}
           >
           </pr-icon-button>
@@ -42,7 +42,9 @@ export class ExperimentSettingsDialog extends MobxLitElement {
           <pr-button
             ?disabled=${!this.experimentManager.isCreator}
             @click=${() => {
-              this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_SAVE_EXISTING);
+              this.analyticsService.trackButtonClick(
+                ButtonClick.EXPERIMENT_SAVE_EXISTING,
+              );
               this.experimentManager.setIsEditingSettingsDialog(false, true);
             }}
           >

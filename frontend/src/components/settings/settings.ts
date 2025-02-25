@@ -152,7 +152,7 @@ export class Settings extends MobxLitElement {
             @click=${() =>
               window.open(
                 `https://github.com/PAIR-code/deliberate-lab/wiki/Getting-started-(for-researchers)`,
-                '_blank'
+                '_blank',
               )}
           >
             📚 View the documentation
@@ -163,7 +163,7 @@ export class Settings extends MobxLitElement {
             @click=${() =>
               window.open(
                 `https://github.com/PAIR-code/deliberate-lab/issues/new`,
-                '_blank'
+                '_blank',
               )}
           >
             🐞 Report a bug

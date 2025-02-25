@@ -1,4 +1,4 @@
-import { generateId } from '../shared';
+import {generateId} from '../shared';
 import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
@@ -63,7 +63,7 @@ export enum RevealAudience {
 
 /** Create reveal stage. */
 export function createRevealStage(
-  config: Partial<RevealStageConfig> = {}
+  config: Partial<RevealStageConfig> = {},
 ): RevealStageConfig {
   return {
     id: config.id ?? generateId(),
@@ -79,8 +79,8 @@ export function createRevealStage(
 /** Create new reveal item. */
 export function createNewRevealItem(
   id: string,
-  kind: StageKind
-): RevealItem|null {
+  kind: StageKind,
+): RevealItem | null {
   switch (kind) {
     case StageKind.CHIP:
       return createChipRevealItem({id});
@@ -112,7 +112,7 @@ export function createRankingRevealItem(
     id: config.id ?? generateId(),
     kind: StageKind.RANKING,
     revealAudience: config.revealAudience ?? RevealAudience.CURRENT_PARTICIPANT,
-  }
+  };
 }
 
 /** Create survey reveal item. */
@@ -124,5 +124,5 @@ export function createSurveyRevealItem(
     kind: StageKind.SURVEY,
     revealAudience: config.revealAudience ?? RevealAudience.CURRENT_PARTICIPANT,
     revealScorableOnly: config.revealScorableOnly ?? false,
-  }
+  };
 }

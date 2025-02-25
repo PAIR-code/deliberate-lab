@@ -38,7 +38,7 @@ export class Preview extends MobxLitElement {
 
   public readonly participantService = core.getService(ParticipantService);
   public readonly participantAnswerService = core.getService(
-    ParticipantAnswerService
+    ParticipantAnswerService,
   );
 
   @property() profile: ParticipantProfileExtended | undefined = undefined;
@@ -53,9 +53,7 @@ export class Preview extends MobxLitElement {
     }
 
     return html`
-      ${this.renderChips()}
-      ${this.renderTable()}
-      ${this.renderStats()}
+      ${this.renderChips()} ${this.renderTable()} ${this.renderStats()}
       <div class="divider"></div>
       ${this.renderStageDatas()}
     `;
@@ -74,8 +72,13 @@ export class Preview extends MobxLitElement {
 
     return html`
       <div class="stats-wrapper">
-        ${transfer ? html`<div>Pending transfer: ${getCohort(transfer)}</div>` : nothing}
-        ${this.renderTimestamp('Started experiment', timestamps.startExperiment)}
+        ${transfer
+          ? html`<div>Pending transfer: ${getCohort(transfer)}</div>`
+          : nothing}
+        ${this.renderTimestamp(
+          'Started experiment',
+          timestamps.startExperiment,
+        )}
         ${this.renderTimestamp('Ended experiment', timestamps.endExperiment)}
       </div>
     `;
@@ -95,7 +98,9 @@ export class Preview extends MobxLitElement {
       return nothing;
     }
 
-    const isProlific = this.experimentService.experiment?.prolificConfig?.enableProlificIntegration;
+    const isProlific =
+      this.experimentService.experiment?.prolificConfig
+        ?.enableProlificIntegration;
 
     return html`
       <div class="table-wrapper">
@@ -118,7 +123,9 @@ export class Preview extends MobxLitElement {
           ${this.renderAnonymousProfileTableCells()}
           <div class="table-row">
             <div class="table-cell small">Prolific ID</div>
-            <div class="table-cell">${isProlific ? `${this.profile?.prolificId}` : 'N/A'}</div>
+            <div class="table-cell">
+              ${isProlific ? `${this.profile?.prolificId}` : 'N/A'}
+            </div>
           </div>
         </div>
       </div>
@@ -167,11 +174,7 @@ export class Preview extends MobxLitElement {
         </div>
       `;
     }
-    return html`
-      <div class="chip progress">
-        <b>⚠️ Accepted TOS:</b> N/A
-      </div>
-    `;
+    return html` <div class="chip progress"><b>⚠️ Accepted TOS:</b> N/A</div> `;
   }
 
   private renderStatusChip() {
@@ -196,9 +199,7 @@ export class Preview extends MobxLitElement {
 
     return html`
       <div class="chip neutral">
-        <b>Current stage:</b> ${this.getStageName(
-          this.profile.currentStageId
-        )}
+        <b>Current stage:</b> ${this.getStageName(this.profile.currentStageId)}
       </div>
     `;
   }
@@ -221,8 +222,8 @@ export class Preview extends MobxLitElement {
     };
 
     return html`
-      ${Object.keys(this.profile.anonymousProfiles).map(
-        profile => renderProfile(profile)
+      ${Object.keys(this.profile.anonymousProfiles).map((profile) =>
+        renderProfile(profile),
       )}
     `;
   }

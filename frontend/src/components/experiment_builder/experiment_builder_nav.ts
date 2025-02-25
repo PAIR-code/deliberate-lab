@@ -13,14 +13,10 @@ import {AuthService} from '../../services/auth.service';
 import {HomeService} from '../../services/home.service';
 import {Pages, RouterService} from '../../services/router.service';
 
-import {
-  StageConfig
-} from '@deliberation-lab/utils';
+import {StageConfig} from '@deliberation-lab/utils';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
-import {
-  getPrivateExperimentName
-} from '../../shared/experiment.utils';
+import {getPrivateExperimentName} from '../../shared/experiment.utils';
 
 import {styles} from './experiment_builder_nav.scss';
 
@@ -33,11 +29,9 @@ export class ExperimentBuilderNav extends MobxLitElement {
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
   override render() {
-
     return html`
-      ${this.renderMetadataItem()}
-      ${this.experimentEditor.stages.map(
-        (stage, index) => this.renderStageItem(stage, index)
+      ${this.experimentEditor.stages.map((stage, index) =>
+        this.renderStageItem(stage, index),
       )}
     `;
   }
@@ -52,11 +46,16 @@ export class ExperimentBuilderNav extends MobxLitElement {
       <div
         class=${navItemClasses}
         role="button"
-        @click=${() => { this.experimentEditor.setCurrentStageId(undefined) }}
+        @click=${() => {
+          this.experimentEditor.setCurrentStageId(undefined);
+        }}
       >
         <pr-icon icon="edit_note"></pr-icon>
         <div class="primary">
-          ${getPrivateExperimentName(this.experimentEditor.experiment, 'Experiment config')}
+          ${getPrivateExperimentName(
+            this.experimentEditor.experiment,
+            'Experiment config',
+          )}
         </div>
       </div>
     `;
@@ -90,7 +89,9 @@ export class ExperimentBuilderNav extends MobxLitElement {
         <div
           class=${navItemClasses}
           role="button"
-          @click=${() => { this.experimentEditor.setCurrentStageId(stage.id) }}
+          @click=${() => {
+            this.experimentEditor.setCurrentStageId(stage.id);
+          }}
         >
           ${index + 1}. ${stage.name}
         </div>
@@ -111,7 +112,8 @@ export class ExperimentBuilderNav extends MobxLitElement {
             padding="small"
             size="small"
             variant="default"
-            ?disabled=${index === this.experimentEditor.stages.length - 1 || !this.experimentEditor.canEditStages}
+            ?disabled=${index === this.experimentEditor.stages.length - 1 ||
+            !this.experimentEditor.canEditStages}
             @click=${handleMoveDown}
           >
           </pr-icon-button>

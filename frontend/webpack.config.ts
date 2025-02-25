@@ -69,7 +69,7 @@ const config: webpack.Configuration = {
       GIT_COMMIT_HASH: JSON.stringify(gitRevisionPlugin.commithash()),
       GIT_BRANCH: JSON.stringify(gitRevisionPlugin.branch()),
       GIT_LAST_COMMIT_DATETIME: JSON.stringify(
-        gitRevisionPlugin.lastcommitdatetime()
+        gitRevisionPlugin.lastcommitdatetime(),
       ),
     }),
     new webpack.ProvidePlugin({
@@ -79,14 +79,14 @@ const config: webpack.Configuration = {
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
     fallback: {
-      "crypto": require.resolve("crypto-browserify"),
-      "buffer": require.resolve("buffer/"),
-      "stream": require.resolve("stream-browserify"),
-      "events": require.resolve("events/"),
-      "vm": require.resolve("vm-browserify"),
+      crypto: require.resolve('crypto-browserify'),
+      buffer: require.resolve('buffer/'),
+      stream: require.resolve('stream-browserify'),
+      events: require.resolve('events/'),
+      vm: require.resolve('vm-browserify'),
     },
     alias: {
-       process: "process/browser"
+      process: 'process/browser',
     },
   },
   output: {

@@ -80,5 +80,5 @@ export const lockPromise = () => {
     reject = rej;
   });
 
-  return { promise, resolve, reject } as const;
+  return {promise, resolve, reject} as const;
 };

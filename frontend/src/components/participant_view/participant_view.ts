@@ -57,23 +57,23 @@ export class ParticipantView extends MobxLitElement {
 
   override render() {
     const stageId = this.participantService.currentStageViewId;
+    const stage = this.experimentService.getStage(stageId ?? '');
 
-    if (!stageId) {
+    const renderContent = () => {
+      // Render landing if stage ID is undefined
+      if (!stageId) {
+        return html` <div class="content">${this.renderLanding()}</div> `;
+      }
+
       return html`
-        <participant-nav></participant-nav>
-        <div
-          class="participant-previewer ${!this.authService.isExperimenter
-            ? 'full-view'
-            : ''}"
+        <participant-header
+          .stage=${stage}
+          .profile=${this.participantService.profile}
         >
-          <div class="content">${this.renderLanding()}</div>
-        </div>
-
-        ${this.renderPopups()}
+        </participant-header>
+        ${this.renderStageContent(stage)}
       `;
-    }
-
-    const stage = this.experimentService.getStage(stageId);
+    };
 
     return html`
       <participant-nav></participant-nav>
@@ -82,12 +82,7 @@ export class ParticipantView extends MobxLitElement {
           ? 'full-view'
           : ''}"
       >
-        <participant-header
-          .stage=${stage}
-          .profile=${this.participantService.profile}
-        >
-        </participant-header>
-        ${this.renderStageContent(stage)}
+        ${renderContent()}
       </div>
       ${this.renderPopups()}
     `;
@@ -143,10 +138,7 @@ export class ParticipantView extends MobxLitElement {
     ) {
       return nothing;
     }
-    return html`
-      <attention-check-popup>
-      </attention-check-popup>
-    `;
+    return html` <attention-check-popup> </attention-check-popup> `;
   }
 
   private renderBootedPopup() {
@@ -178,10 +170,25 @@ export class ParticipantView extends MobxLitElement {
 
     // If stage not yet unlocked, do not show to participants
     if (
-      !this.participantService.canAccessStage(stage.id) &&
+      (!this.participantService.profile?.timestamps.startExperiment ||
+        !this.participantService.canAccessStage(stage.id)) &&
       !this.authService.isExperimenter
     ) {
-      return html`<div class="content">Stage not available yet</div>`;
+      // When clicked, this button routes to the participant "landing,"
+      // which either shows the "start experiment" button (if relevant)
+      // or routes to the current stage.
+      return html`
+        <div class="content">
+          <div>Stage not available yet</div>
+          <pr-button
+            @click=${() => {
+              this.participantService.setCurrentStageView(undefined);
+            }}
+          >
+            Go to current stage
+          </pr-button>
+        </div>
+      `;
     }
 
     const isWaiting = this.cohortService.isStageInWaitingPhase(stage.id);

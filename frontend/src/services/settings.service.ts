@@ -1,17 +1,13 @@
-import { action, computed, makeObservable, observable } from "mobx";
-import { Service } from "./service";
+import {action, computed, makeObservable, observable} from 'mobx';
+import {Service} from './service';
 
-import {
-  ColorMode
-} from "../shared/types";
-
-interface ServiceProvider {}
+import {ColorMode} from '../shared/types';
 
 /**
  * Settings service.
  */
 export class SettingsService extends Service {
-  constructor(private readonly sp: ServiceProvider) {
+  constructor() {
     super();
     makeObservable(this);
   }

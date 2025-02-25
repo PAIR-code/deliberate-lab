@@ -13,9 +13,7 @@ import {ParticipantService} from '../../services/participant.service';
 import {RouterService} from '../../services/router.service';
 
 import {ParticipantProfile} from '@deliberation-lab/utils';
-import {
-  isActiveParticipant,
-} from '../../shared/participant.utils';
+import {isActiveParticipant} from '../../shared/participant.utils';
 
 import {styles} from './progress_stage_waiting.scss';
 
@@ -32,7 +30,7 @@ export class Progress extends MobxLitElement {
   @property() showReadyAvatars = true;
   @property() showWaitingAvatars = false;
 
-  @state() completeWaitingLoading = false;
+  @state() refreshReadyToStartLoading = false;
 
   override render() {
     const stageId = this.participantService.currentStageViewId ?? '';
@@ -43,14 +41,34 @@ export class Progress extends MobxLitElement {
     const unlocked = this.cohortService.getUnlockedStageParticipants(stageId);
 
     const numWaiting =
-      this.cohortService.getWaitingPhaseMinParticipants(stageId) - unlocked.length;
+      this.cohortService.getWaitingPhaseMinParticipants(stageId) -
+      unlocked.length;
 
-    const completeWaiting = async () => {
-      this.completeWaitingLoading = true;
-
+    const onUpdateStatus = async () => {
+      this.refreshReadyToStartLoading = true;
+      // Update "ready to start" for current participant
       await this.participantService.updateWaitingPhaseCompletion(stageId);
+      window.location.reload();
+      this.refreshReadyToStartLoading = false;
+    };
 
-      this.completeWaitingLoading = false;
+    const renderUpdateStatusButton = () => {
+      // Describe this button (used for fallbacks) as a "refresh" button;
+      // when clicked, it updates the participant's current state AND
+      // updates cohort unlock conditions.
+      //
+      // Participants should not have to click this, but we include it
+      // just in case there is an issue with Firestore updating.
+
+      return html`
+        <pr-button
+          color="primary"
+          ?loading=${this.refreshReadyToStartLoading}
+          @click=${onUpdateStatus}
+        >
+          Refresh this stage
+        </pr-button>
+      `;
     };
 
     const renderWaitingStatus = () => {
@@ -60,10 +78,7 @@ export class Progress extends MobxLitElement {
         <div class="status">
           <h2 class="secondary">
             <div class="chip secondary">Waiting on</div>
-            <div>
-              ${numWaiting}
-              participant${numWaiting > 1 ? 's' : ''}
-            </div>
+            <div>${numWaiting} participant${numWaiting > 1 ? 's' : ''}</div>
           </h2>
           ${this.showWaitingAvatars ? this.renderParticipants(locked) : nothing}
         </div>
@@ -71,6 +86,7 @@ export class Progress extends MobxLitElement {
       `;
     };
 
+    // TODO: Add "refresh cohort" button to check if cohort should be unlocked
     return html`
       ${renderWaitingStatus()}
       <div class="status">
@@ -81,17 +97,10 @@ export class Progress extends MobxLitElement {
         ${this.showReadyAvatars ? this.renderParticipants(unlocked) : nothing}
       </div>
       <div class="note">
-        NOTE: If you have been waiting for a long time, please refresh to
+        NOTE: If you have been waiting for a long time, please refresh below to
         ensure your page is up to date!
       </div>
-      <pr-button
-        color=${numWaiting > 0 ? 'neutral' : 'primary'}
-        ?disabled=${numWaiting > 0}
-        ?loading=${this.completeWaitingLoading}
-        @click=${completeWaiting}
-      >
-        ${numWaiting > 0 ? 'Waiting on participants...' : 'Continue to stage'}
-      </pr-button>
+      ${renderUpdateStatusButton()}
     `;
   }
 
@@ -110,9 +119,10 @@ export class Progress extends MobxLitElement {
         <participant-profile-display
           .profile=${participant}
           .stageId=${stageId}
-          displayType="waiting">
+          displayType="waiting"
+        >
         </participant-profile-display>
-       </pr-tooltip>
+      </pr-tooltip>
     `;
   }
 

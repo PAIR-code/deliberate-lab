@@ -61,7 +61,7 @@ import {
   isPendingParticipant,
   isParticipantEndedExperiment,
 } from '../shared/participant.utils';
-import { ElectionStrategy } from '@deliberation-lab/utils';
+import {ElectionStrategy} from '@deliberation-lab/utils';
 
 interface ServiceProvider {
   cohortService: CohortService;
@@ -83,7 +83,8 @@ export class ParticipantService extends Service {
   @observable currentStageViewId: string | undefined = undefined;
 
   @observable profile: ParticipantProfileExtended | undefined = undefined;
-  @observable answerMap: Record<string, StageParticipantAnswer | undefined> = {};
+  @observable answerMap: Record<string, StageParticipantAnswer | undefined> =
+    {};
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -136,17 +137,17 @@ export class ParticipantService extends Service {
     return this.profile?.transferCohortId !== null;
   }
 
-  isCurrentStage(stageId: string = (this.currentStageViewId ?? '')) {
+  isCurrentStage(stageId: string = this.currentStageViewId ?? '') {
     return this.profile?.currentStageId === stageId;
   }
 
-  isLastStage(stageId: string = (this.currentStageViewId ?? '')) {
+  isLastStage(stageId: string = this.currentStageViewId ?? '') {
     const ids = this.sp.experimentService.stageIds;
     return ids.length > 0 && ids[ids.length - 1] === stageId;
   }
 
   @computed get disableStage() {
-    return this.completedExperiment || !this.isCurrentStage()
+    return this.completedExperiment || !this.isCurrentStage();
   }
 
   // True if already completed stage or is current stage
@@ -175,21 +176,24 @@ export class ParticipantService extends Service {
     return stageAnswer.discussionTimestampMap[discussionId];
   }
 
-  @action setCurrentStageView(stageId: string|undefined) {
+  @action setCurrentStageView(stageId: string | undefined) {
     this.currentStageViewId = stageId;
   }
 
   updateForRoute(
     experimentId: string, // experiment ID
     participantId: string, // participant ID
-    stageId: string|undefined = undefined // stage ID
+    stageId: string | undefined = undefined, // stage ID
   ) {
     // If stage params exist, set current stage view to stage ID
     if (stageId) {
       this.currentStageViewId = stageId;
     }
 
-    if (experimentId !== this.experimentId || participantId !== this.participantId) {
+    if (
+      experimentId !== this.experimentId ||
+      participantId !== this.participantId
+    ) {
       this.setParticipant(experimentId, participantId);
     }
   }
@@ -205,7 +209,8 @@ export class ParticipantService extends Service {
 
     // Set IDs for participant answer service
     this.sp.participantAnswerService.updateForRoute(
-      this.experimentId, this.participantId
+      this.experimentId,
+      this.participantId,
     );
 
     // Subscribe to profile
@@ -216,7 +221,7 @@ export class ParticipantService extends Service {
           'experiments',
           this.experimentId,
           'participants',
-          this.participantId
+          this.participantId,
         ),
         async (doc) => {
           this.profile = doc.data() as ParticipantProfileExtended;
@@ -224,18 +229,22 @@ export class ParticipantService extends Service {
           if (this.experimentId) {
             await this.sp.cohortService.loadCohortData(
               this.experimentId,
-              this.profile.currentCohortId
+              this.profile.currentCohortId,
             );
           }
 
           // Load profile to participant answer service
           this.sp.participantAnswerService.setProfile(this.profile);
-          // Set current stage
-          this.currentStageViewId = this.profile.currentStageId;
+          // Set current stage (use undefined if experiment not started)
+          if (this.profile.timestamps.startExperiment) {
+            this.currentStageViewId = this.profile.currentStageId;
+          } else {
+            this.currentStageViewId = undefined;
+          }
 
           this.isProfileLoading = false;
-        }
-      )
+        },
+      ),
     );
 
     // Subscribe to the stage answers
@@ -247,7 +256,7 @@ export class ParticipantService extends Service {
           this.experimentId,
           'participants',
           this.participantId,
-          'stageData'
+          'stageData',
         ),
         (snapshot) => {
           let changedDocs = snapshot.docChanges().map((change) => change.doc);
@@ -261,8 +270,8 @@ export class ParticipantService extends Service {
             this.sp.participantAnswerService.addAnswer(doc.id, answer);
           });
           this.areAnswersLoading = false;
-        }
-      )
+        },
+      ),
     );
   }
 
@@ -288,21 +297,20 @@ export class ParticipantService extends Service {
 
   /** End experiment due to failure. */
   async updateExperimentFailure(
-    status: ParticipantStatus.TRANSFER_DECLINED|ParticipantStatus.TRANSFER_TIMEOUT,
-    navigateToFailurePage = false
+    status:
+      | ParticipantStatus.TRANSFER_DECLINED
+      | ParticipantStatus.TRANSFER_TIMEOUT,
+    navigateToFailurePage = false,
   ) {
     if (!this.experimentId || !this.profile) {
       return;
     }
 
-    await updateParticipantFailureCallable(
-      this.sp.firebaseService.functions,
-      {
-        experimentId: this.experimentId,
-        participantId: this.profile.privateId,
-        status,
-      }
-    );
+    await updateParticipantFailureCallable(this.sp.firebaseService.functions, {
+      experimentId: this.experimentId,
+      participantId: this.profile.privateId,
+      status,
+    });
 
     // Route to experiment landing (or redirect to Prolific)
     if (!navigateToFailurePage) return;
@@ -315,13 +323,19 @@ export class ParticipantService extends Service {
     // Redirect to Prolific if prolific integration is set up
     if (config && config.enableProlificIntegration) {
       let redirectCode = config.defaultRedirectCode;
-      if (currentStatus === ParticipantStatus.ATTENTION_TIMEOUT && config.attentionFailRedirectCode.length > 0) {
+      if (
+        currentStatus === ParticipantStatus.ATTENTION_TIMEOUT &&
+        config.attentionFailRedirectCode.length > 0
+      ) {
         redirectCode = config.attentionFailRedirectCode;
-      } else if (currentStatus === ParticipantStatus.BOOTED_OUT && config.bootedRedirectCode.length > 0) {
+      } else if (
+        currentStatus === ParticipantStatus.BOOTED_OUT &&
+        config.bootedRedirectCode.length > 0
+      ) {
         redirectCode = config.bootedRedirectCode;
       }
 
-     // Navigate to Prolific with completion code
+      // Navigate to Prolific with completion code
       window.location.href = PROLIFIC_COMPLETION_URL_PREFIX + redirectCode;
       return;
     }
@@ -334,14 +348,11 @@ export class ParticipantService extends Service {
   /** Complete waiting phase for stage. */
   async updateWaitingPhaseCompletion(stageId: string) {
     if (!this.experimentId || !this.profile) return false;
-    await updateParticipantWaitingCallable(
-      this.sp.firebaseService.functions,
-      {
-        experimentId: this.experimentId,
-        participantId: this.profile.privateId,
-        stageId
-      }
-    );
+    await updateParticipantWaitingCallable(this.sp.firebaseService.functions, {
+      experimentId: this.experimentId,
+      participantId: this.profile.privateId,
+      stageId,
+    });
   }
 
   /** Move to next stage. */
@@ -355,7 +366,7 @@ export class ParticipantService extends Service {
       {
         experimentId: this.experimentId,
         participantId: this.profile.privateId,
-      }
+      },
     );
 
     if (result.endExperiment) {
@@ -369,7 +380,7 @@ export class ParticipantService extends Service {
   }
 
   /** Update participant TOS response. */
-  async updateParticipantTOS(acceptedTOS: UnifiedTimestamp|null) {
+  async updateParticipantTOS(acceptedTOS: UnifiedTimestamp | null) {
     if (!this.profile) {
       return;
     }
@@ -378,11 +389,12 @@ export class ParticipantService extends Service {
 
     if (this.experimentId) {
       response = await updateParticipantAcceptedTOSCallable(
-        this.sp.firebaseService.functions, {
+        this.sp.firebaseService.functions,
+        {
           experimentId: this.experimentId,
           participantId: this.profile.privateId,
-          acceptedTOS
-        }
+          acceptedTOS,
+        },
       );
     }
     return response;
@@ -395,10 +407,11 @@ export class ParticipantService extends Service {
     }
 
     const result = await acceptParticipantTransferCallable(
-      this.sp.firebaseService.functions, {
+      this.sp.firebaseService.functions,
+      {
         experimentId: this.experimentId,
-        participantId: this.profile.privateId
-      }
+        participantId: this.profile.privateId,
+      },
     );
 
     if (result.endExperiment) {
@@ -414,7 +427,7 @@ export class ParticipantService extends Service {
   /** Update participant base profile. */
   async updateParticipantProfile(
     baseProfile: ParticipantProfileBase,
-    progressToNextStage = true
+    progressToNextStage = true,
   ) {
     if (!this.profile) {
       return;
@@ -425,11 +438,12 @@ export class ParticipantService extends Service {
 
     if (this.experimentId) {
       response = await updateParticipantProfileCallable(
-        this.sp.firebaseService.functions, {
+        this.sp.firebaseService.functions,
+        {
           experimentId: this.experimentId,
           participantId,
-          participantProfileBase
-        }
+          participantProfileBase,
+        },
       );
     }
 
@@ -438,7 +452,7 @@ export class ParticipantService extends Service {
     }
 
     return response;
-  };
+  }
 
   /** Start experiment. */
   async startExperiment() {
@@ -447,21 +461,18 @@ export class ParticipantService extends Service {
       this.sp.firebaseService.functions,
       {
         experimentId: this.experimentId,
-        participantId: this.profile.privateId
-      }
+        participantId: this.profile.privateId,
+      },
     );
   }
 
   /** Accept attention check. */
   async resolveAttentionCheck() {
     if (!this.experimentId || !this.profile) return;
-    await acceptParticipantCheckCallable(
-      this.sp.firebaseService.functions,
-      {
-        experimentId: this.experimentId,
-        participantId: this.profile.privateId
-      }
-    );
+    await acceptParticipantCheckCallable(this.sp.firebaseService.functions, {
+      experimentId: this.experimentId,
+      participantId: this.profile.privateId,
+    });
   }
 
   /** Send chat message. */
@@ -471,24 +482,27 @@ export class ParticipantService extends Service {
     if (this.experimentId && this.profile) {
       const chatMessage = createParticipantChatMessage({
         ...config,
-        discussionId: this.sp.cohortService.getChatDiscussionId(this.profile.currentStageId),
+        discussionId: this.sp.cohortService.getChatDiscussionId(
+          this.profile.currentStageId,
+        ),
         participantPublicId: this.profile.publicId,
         profile: {
           name: this.profile.name,
           avatar: this.profile.avatar,
           pronouns: this.profile.pronouns,
-        }
+        },
       });
 
       const createData: CreateChatMessageData = {
         experimentId: this.experimentId,
         cohortId: this.profile.currentCohortId,
         stageId: this.profile.currentStageId,
-        chatMessage
+        chatMessage,
       };
 
       response = await createChatMessageCallable(
-        this.sp.firebaseService.functions, createData
+        this.sp.firebaseService.functions,
+        createData,
       );
     }
     this.isSendingChat = false;
@@ -496,30 +510,29 @@ export class ParticipantService extends Service {
   }
 
   /** Update participant's ready to end chat answer. */
-  async updateReadyToEndChatDiscussion(
-    stageId: string,
-    discussionId: string,
-  ) {
+  async updateReadyToEndChatDiscussion(stageId: string, discussionId: string) {
     let response = {};
 
     if (this.experimentId && this.profile) {
       const answer = this.answerMap[stageId];
-      const chatStageParticipantAnswer = answer ? (answer as ChatStageParticipantAnswer)
-        : createChatStageParticipantAnswer({ id: stageId });
+      const chatStageParticipantAnswer = answer
+        ? (answer as ChatStageParticipantAnswer)
+        : createChatStageParticipantAnswer({id: stageId});
 
-      chatStageParticipantAnswer.discussionTimestampMap[discussionId] = Timestamp.now();
+      chatStageParticipantAnswer.discussionTimestampMap[discussionId] =
+        Timestamp.now();
 
       const createData: UpdateChatStageParticipantAnswerData = {
         experimentId: this.experimentId,
         cohortId: this.profile.currentCohortId,
         participantPrivateId: this.profile.privateId,
         participantPublicId: this.profile.publicId,
-        chatStageParticipantAnswer
+        chatStageParticipantAnswer,
       };
 
       response = await updateChatStageParticipantAnswerCallable(
         this.sp.firebaseService.functions,
-        createData
+        createData,
       );
     }
     return response;
@@ -540,13 +553,14 @@ export class ParticipantService extends Service {
 
     if (this.experimentId && this.profile) {
       response = await updateSurveyStageParticipantAnswerCallable(
-        this.sp.firebaseService.functions, {
+        this.sp.firebaseService.functions,
+        {
           experimentId: this.experimentId,
           cohortId: this.profile.currentCohortId,
           participantPrivateId: this.profile.privateId,
           participantPublicId: this.profile.publicId,
           surveyStageParticipantAnswer: participantAnswer,
-        }
+        },
       );
     }
     return response;
@@ -567,13 +581,14 @@ export class ParticipantService extends Service {
 
     if (this.experimentId && this.profile) {
       response = await updateSurveyStageParticipantAnswerCallable(
-        this.sp.firebaseService.functions, {
+        this.sp.firebaseService.functions,
+        {
           experimentId: this.experimentId,
           cohortId: this.profile.currentCohortId,
           participantPrivateId: this.profile.privateId,
           participantPublicId: this.profile.publicId,
           surveyStageParticipantAnswer: participantAnswer,
-        }
+        },
       );
     }
     return response;
@@ -587,19 +602,24 @@ export class ParticipantService extends Service {
   ) {
     let response = {};
 
-    let participantAnswer = this.answerMap[id] as SurveyPerParticipantStageParticipantAnswer;
+    let participantAnswer = this.answerMap[
+      id
+    ] as SurveyPerParticipantStageParticipantAnswer;
     if (!participantAnswer) {
-      participantAnswer = createSurveyPerParticipantStageParticipantAnswer({id});
+      participantAnswer = createSurveyPerParticipantStageParticipantAnswer({
+        id,
+      });
     }
     participantAnswer.answerMap = answerMap;
 
     if (this.experimentId && this.profile) {
       response = await updateSurveyPerParticipantStageParticipantAnswerCallable(
-        this.sp.firebaseService.functions, {
+        this.sp.firebaseService.functions,
+        {
           experimentId: this.experimentId,
           participantPrivateId: this.profile.privateId,
           surveyPerParticipantStageParticipantAnswer: participantAnswer,
-        }
+        },
       );
     }
     return response;
@@ -613,24 +633,22 @@ export class ParticipantService extends Service {
     let response = {};
     if (this.experimentId && this.profile) {
       response = await updateRankingStageParticipantAnswerCallable(
-        this.sp.firebaseService.functions, {
+        this.sp.firebaseService.functions,
+        {
           experimentId: this.experimentId,
           cohortId: this.profile.currentCohortId,
           participantPublicId: this.profile.publicId,
           participantPrivateId: this.profile.privateId,
           stageId,
           rankingList,
-        }
+        },
       );
     }
     return response;
   }
 
   /** Send participant chip offer. */
-  async sendParticipantChipOffer(
-    stageId: string,
-    chipOffer: ChipOffer
-  ) {
+  async sendParticipantChipOffer(stageId: string, chipOffer: ChipOffer) {
     let response = {};
     if (this.experimentId && this.profile) {
       response = await sendChipOfferCallable(
@@ -641,19 +659,15 @@ export class ParticipantService extends Service {
           participantPublicId: this.profile.publicId,
           participantPrivateId: this.profile.privateId,
           stageId,
-          chipOffer
-        }
+          chipOffer,
+        },
       );
     }
     return response;
   }
 
-
   /** Send participant chip response. */
-  async sendParticipantChipResponse(
-    stageId: string,
-    chipResponse: boolean
-  ) {
+  async sendParticipantChipResponse(stageId: string, chipResponse: boolean) {
     let response = {};
     if (this.experimentId && this.profile) {
       response = await sendChipResponseCallable(
@@ -664,27 +678,22 @@ export class ParticipantService extends Service {
           participantPublicId: this.profile.publicId,
           participantPrivateId: this.profile.privateId,
           stageId,
-          chipResponse
-        }
+          chipResponse,
+        },
       );
     }
     return response;
   }
 
   /** Set chip turn for current stage and cohort. */
-  async setChipTurn(
-    stageId: string
-  ) {
+  async setChipTurn(stageId: string) {
     let response = {};
     if (this.experimentId && this.profile) {
-      response = await setChipTurnCallable(
-        this.sp.firebaseService.functions,
-        {
-          experimentId: this.experimentId,
-          cohortId: this.profile.currentCohortId,
-          stageId,
-        }
-      );
+      response = await setChipTurnCallable(this.sp.firebaseService.functions, {
+        experimentId: this.experimentId,
+        cohortId: this.profile.currentCohortId,
+        stageId,
+      });
     }
     return response;
   }
