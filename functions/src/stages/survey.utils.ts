@@ -61,6 +61,7 @@ export async function getAgentParticipantSurveyResponse(
             stageAnswer.answerMap[answer.id] = answer;
         }
     }
+    console.debug("Final answer: ", stageAnswer);
     return stageAnswer;
 }
 
