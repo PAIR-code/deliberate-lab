@@ -105,7 +105,6 @@ export function getAnonLASStageConfigs(): StageConfig[] {
   stages.push(LAS_PAYOUT_STAGE);
   // Final
   stages.push(LAS_FINAL_SURVEY_STAGE);
-  stages.push(LAS_EXIT_STAGE);
 
   return stages;
 }
@@ -155,7 +154,6 @@ export function getLASStageConfigs(): StageConfig[] {
   stages.push(LAS_PAYOUT_STAGE);
   // Final
   stages.push(LAS_FINAL_SURVEY_STAGE);
-  stages.push(LAS_EXIT_STAGE);
 
   return stages;
 }
@@ -961,7 +959,7 @@ const LAS_PAYOUT_STAGE = createPayoutStage({
 // ****************************************************************************
 // Final survey stage
 // ****************************************************************************
-const LAS_FINAL_DESCRIPTION_PRIMARY = `Thanks for participating. Please complete this final survey.`;
+const LAS_FINAL_DESCRIPTION_PRIMARY = `Thank you for participating in this experiment. After completing the final survey, clicking 'End experiment' will redirect you to Prolific.`;
 
 export const LAS_FINAL_SURVEY_QUESTIONS: SurveyQuestion[] = [
    {
@@ -1043,12 +1041,4 @@ const LAS_FINAL_SURVEY_STAGE = createSurveyStage({
     primaryText: LAS_FINAL_DESCRIPTION_PRIMARY,
   }),
   questions: LAS_FINAL_SURVEY_QUESTIONS,
-});
-
-const LAS_EXIT_STAGE = createInfoStage({
-  game: StageGame.LAS,
-  name: 'Final stage',
-  descriptions: createStageTextConfig({
-    primaryText: 'Thank you for participating in our experiment! Clicking the "End experiment" button will redirect you to Prolific.',
-  }),
 });
