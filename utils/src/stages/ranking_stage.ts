@@ -93,7 +93,9 @@ export function createRankingStage(
     kind: StageKind.RANKING,
     game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Ranking',
-    descriptions: config.descriptions ?? createStageTextConfig(),
+    descriptions: config.descriptions ?? createStageTextConfig({
+      helpText: `Either drag and drop or use the arrows to rank all of the items.`
+    }),
     progress:
       config.progress ??
       createStageProgressConfig({waitForAllParticipants: true}),

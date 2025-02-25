@@ -145,7 +145,7 @@ export class SurveyView extends MobxLitElement {
           >
           </md-checkbox>
           <div class=${titleClasses}>
-            ${unsafeHTML(convertMarkdownToHTML(question.questionTitle))}*
+            ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + "*"))}
           </div>
         </label>
       </div>
@@ -183,7 +183,7 @@ export class SurveyView extends MobxLitElement {
     return html`
       <div class="question">
         <div class=${titleClasses}>
-          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle))}*
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + "*"))}
         </div>
         <pr-textarea
           variant="outlined"
@@ -312,7 +312,7 @@ export class SurveyView extends MobxLitElement {
     return html`
       <div class="question">
         <div class=${titleClasses}>
-          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle))}*
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + "*"))}
         </div>
         <div class="scale labels">
           <div>${question.lowerText}</div>

@@ -102,7 +102,7 @@ export class SurveyView extends MobxLitElement {
           >
           </md-checkbox>
           <div class=${titleClasses}>
-            ${unsafeHTML(convertMarkdownToHTML(question.questionTitle))}*
+            ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + "*"))}
           </div>
         </label>
       </div>
@@ -126,7 +126,7 @@ export class SurveyView extends MobxLitElement {
     return html`
       <div class="question">
         <div class=${titleClasses}>
-          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle))}*
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + "*"))}
         </div>
         ${textAnswer.trim().length > 0
           ? html`<div>${textAnswer}</div>`
@@ -153,7 +153,7 @@ export class SurveyView extends MobxLitElement {
     return html`
       <div class="radio-question">
         <div class=${titleClasses}>
-          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle))}*
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + "*"))}
         </div>
         <div class=${questionWrapperClasses}>
           ${question.options.map((option) =>
@@ -212,7 +212,7 @@ export class SurveyView extends MobxLitElement {
     return html`
       <div class="question">
         <div class=${titleClasses}>
-          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle))}*
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + "*"))}
         </div>
         <div class="scale labels">
           <div>${question.lowerText}</div>
