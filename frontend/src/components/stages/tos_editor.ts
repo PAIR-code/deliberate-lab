@@ -7,10 +7,7 @@ import {customElement, property} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
-import {
-  TOSStageConfig,
-  StageKind,
-} from '@deliberation-lab/utils';
+import {TOSStageConfig, StageKind} from '@deliberation-lab/utils';
 
 import {styles} from './info_editor.scss';
 
@@ -21,23 +18,21 @@ export class TOSEditorComponent extends MobxLitElement {
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
-  @property() stage: TOSStageConfig|undefined = undefined;
+  @property() stage: TOSStageConfig | undefined = undefined;
 
   override render() {
     if (this.stage === undefined) {
       return nothing;
     }
 
-    return html`
-      ${this.renderTOSLines()}
-    `;
+    return html` ${this.renderTOSLines()} `;
   }
 
   private renderTOSLines() {
     const updateTOSLines = (e: InputEvent) => {
       const value = (e.target as HTMLTextAreaElement).value;
       if (this.stage) {
-        this.experimentEditor.updateStage({ ...this.stage, tosLines: [value] });
+        this.experimentEditor.updateStage({...this.stage, tosLines: [value]});
       }
     };
 

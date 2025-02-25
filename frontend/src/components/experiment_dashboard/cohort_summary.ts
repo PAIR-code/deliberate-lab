@@ -57,7 +57,7 @@ export class CohortSummary extends MobxLitElement {
 
     const basePath = window.location.href.substring(
       0,
-      window.location.href.indexOf('/#')
+      window.location.href.indexOf('/#'),
     );
     const link = `${basePath}/#/e/${this.experimentManager.experimentId}/c/${this.cohort.id}`;
 
@@ -90,7 +90,7 @@ export class CohortSummary extends MobxLitElement {
               <span class="subtitle">
                 (${this.experimentManager.getCohortParticipants(
                   this.cohort.id,
-                  false
+                  false,
                 ).length}
                 participants)
               </span>
@@ -98,7 +98,7 @@ export class CohortSummary extends MobxLitElement {
             <cohort-progress-bar
               .cohortId=${this.cohort.id}
               .participantList=${this.experimentManager.getCohortParticipants(
-                this.cohort.id
+                this.cohort.id,
               )}
             >
             </cohort-progress-bar>
@@ -106,8 +106,7 @@ export class CohortSummary extends MobxLitElement {
         </div>
         <div class="right">
           ${this.renderAddParticipantButton()} ${this.renderLockButton()}
-          ${this.renderCopyButton()} 
-          ${this.renderSettingsButton()}
+          ${this.renderCopyButton()} ${this.renderSettingsButton()}
         </div>
       </div>
       ${this.renderDescription()}
@@ -224,7 +223,7 @@ export class CohortSummary extends MobxLitElement {
     }
 
     const participants = this.experimentManager.getCohortParticipants(
-      this.cohort.id
+      this.cohort.id,
     );
 
     if (participants.length === 0) {
@@ -249,12 +248,11 @@ export class CohortSummary extends MobxLitElement {
             );
           })
           .map(
-            (participant) =>
-              html`
-                <participant-summary
-                  .participant=${participant}
-                ></participant-summary>
-              `
+            (participant) => html`
+              <participant-summary
+                .participant=${participant}
+              ></participant-summary>
+            `,
           )}
       </div>
     `;

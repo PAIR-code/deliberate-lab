@@ -86,7 +86,7 @@ export function downloadJSON(data: object, filename: string) {
 }
 
 /** Make text CSV-compatibile. */
-export function toCSV(text: string|null) {
+export function toCSV(text: string | null) {
   if (!text) return '';
 
   return text.replaceAll(',', ''); // remove commas
@@ -97,7 +97,7 @@ export function toCSV(text: string|null) {
 // ****************************************************************************
 export async function getExperimentDownload(
   firestore: Firestore,
-  experimentId: string
+  experimentId: string,
 ) {
   // Get experiment config from experimentId
   const experimentConfig = (
@@ -118,7 +118,7 @@ export async function getExperimentDownload(
   // For each participant, add ParticipantDownload
   const profiles = (
     await getDocs(
-      collection(firestore, 'experiments', experimentId, 'participants')
+      collection(firestore, 'experiments', experimentId, 'participants'),
     )
   ).docs.map((doc) => doc.data() as ParticipantProfileExtended);
   for (const profile of profiles) {
@@ -134,8 +134,8 @@ export async function getExperimentDownload(
           experimentId,
           'participants',
           profile.privateId,
-          'stageData'
-        )
+          'stageData',
+        ),
       )
     ).docs.map((doc) => doc.data() as StageParticipantAnswer);
     for (const stage of stageAnswers) {
@@ -162,8 +162,8 @@ export async function getExperimentDownload(
           experimentId,
           'cohorts',
           cohort.id,
-          'publicStageData'
-        )
+          'publicStageData',
+        ),
       )
     ).docs.map((doc) => doc.data() as StagePublicData);
     for (const data of publicStageData) {
@@ -181,10 +181,10 @@ export async function getExperimentDownload(
                 cohort.id,
                 'publicStageData',
                 data.id,
-                'chats'
+                'chats',
               ),
-              orderBy('timestamp', 'asc')
-            )
+              orderBy('timestamp', 'asc'),
+            ),
           )
         ).docs.map((doc) => doc.data() as ChatMessage);
         cohortDownload.chatMap[data.id] = chatList;
@@ -260,9 +260,9 @@ export interface ChipNegotiationResponderData {
 // ****************************************************************************
 export function getChipNegotiationCSV(
   data: ExperimentDownload,
-  games: ChipNegotiationData[]
+  games: ChipNegotiationData[],
 ): string[][] {
-  let columns: string[][] = [];
+  const columns: string[][] = [];
 
   // Calculate max players across all games (needed for header columns)
   let maxPlayers = 0;
@@ -280,7 +280,7 @@ export function getChipNegotiationCSV(
     game.data.history.forEach((round) => {
       round.turns.forEach((turn) => {
         columns.push(
-          getChipNegotiationTurnColumns(maxPlayers, data, game, turn)
+          getChipNegotiationTurnColumns(maxPlayers, data, game, turn),
         );
       });
     });
@@ -293,12 +293,12 @@ export function getChipNegotiationTurnColumns(
   maxPlayers: number, // needed for player column headers
   data: ExperimentDownload,
   game: ChipNegotiationData,
-  turn: ChipNegotiationTurnData | null
+  turn: ChipNegotiationTurnData | null,
 ): string[] {
   // Start with player list that is maxPlayers long and populate in order.
   // Players have turns in order of their ID
   // NOTE: Keep in sync with player turn logic on backend
-  let players: string[] = [];
+  const players: string[] = [];
   const playerList: string[] = game.data.metadata.players.sort();
   let index = 0;
   while (index < maxPlayers) {
@@ -329,31 +329,31 @@ export function getChipNegotiationTurnColumns(
   columns.push(
     !turn
       ? 'Turn (sender name)'
-      : toCSV(data.participantMap[senderId]?.profile.name) ?? ''
+      : (toCSV(data.participantMap[senderId]?.profile.name) ?? ''),
   );
   columns.push(
     !turn
       ? 'Turn (avatar)'
-      : data.participantMap[senderId]?.profile.avatar ?? ''
+      : (data.participantMap[senderId]?.profile.avatar ?? ''),
   );
 
   columns.push(
     !turn
       ? 'Offer (timestamp)'
-      : convertUnifiedTimestampToISO(turn.transaction.offer.timestamp)
+      : convertUnifiedTimestampToISO(turn.transaction.offer.timestamp),
   );
   chips.forEach((chip) => {
     columns.push(
       !turn
         ? `Buy offer (${chip.id})`
-        : turn.transaction.offer.buy[chip.id]?.toString() ?? '0'
+        : (turn.transaction.offer.buy[chip.id]?.toString() ?? '0'),
     );
   });
   chips.forEach((chip) => {
     columns.push(
       !turn
         ? `Sell offer (${chip.id})`
-        : turn.transaction.offer.sell[chip.id]?.toString() ?? '0'
+        : (turn.transaction.offer.sell[chip.id]?.toString() ?? '0'),
     );
   });
   columns.push(!turn ? 'Offer status' : turn.transaction.status);
@@ -361,22 +361,22 @@ export function getChipNegotiationTurnColumns(
   columns.push(
     !turn
       ? `Sender payout before turn`
-      : turn.senderData.payoutBeforeTurn.toString()
+      : turn.senderData.payoutBeforeTurn.toString(),
   );
   columns.push(
     !turn
       ? `Sender payout after turn`
-      : turn.senderData.payoutAfterTurn.toString()
+      : turn.senderData.payoutAfterTurn.toString(),
   );
   columns.push(
     !turn
       ? `Recipient payout before turn`
-      : turn.responseData[recipientId]?.payoutBeforeTurn?.toString() ?? ''
+      : (turn.responseData[recipientId]?.payoutBeforeTurn?.toString() ?? ''),
   );
   columns.push(
     !turn
       ? `Recipient payout after turn`
-      : turn.responseData[recipientId]?.payoutAfterTurn?.toString() ?? ''
+      : (turn.responseData[recipientId]?.payoutAfterTurn?.toString() ?? ''),
   );
 
   // Map player number to player ID
@@ -388,46 +388,48 @@ export function getChipNegotiationTurnColumns(
     columns.push(
       !turn
         ? `player ${index + 1} (is sender)`
-        : (player === senderId).toString()
+        : (player === senderId).toString(),
     );
     columns.push(
       !turn
         ? `player ${index + 1} (is selected recipient)`
-        : (player === recipientId).toString()
+        : (player === recipientId).toString(),
     );
     columns.push(
       !turn
         ? `player ${index + 1} offer timestamp`
         : player === senderId
-        ? 'n/a'
-        : turn.responseData[player]
-        ? convertUnifiedTimestampToISO(
-            turn.responseData[player]?.offerResponseTimestamp
-          )
-        : ''
+          ? 'n/a'
+          : turn.responseData[player]
+            ? convertUnifiedTimestampToISO(
+                turn.responseData[player]?.offerResponseTimestamp,
+              )
+            : '',
     );
     columns.push(
       !turn
         ? `player ${index + 1} offer response`
         : player === senderId
-        ? 'n/a'
-        : turn.responseData[player]?.offerResponse.toString() ?? ''
+          ? 'n/a'
+          : (turn.responseData[player]?.offerResponse.toString() ?? ''),
     );
     chips.forEach((chip) => {
       columns.push(
         !turn
           ? `player ${index + 1} ${chip.id} before turn`
           : player == senderId
-          ? turn.senderData.chipsBeforeTurn[chip.id]?.toString() ?? ''
-          : turn.responseData[player]?.chipsBeforeTurn[chip.id]?.toString() ??
-            ''
+            ? (turn.senderData.chipsBeforeTurn[chip.id]?.toString() ?? '')
+            : (turn.responseData[player]?.chipsBeforeTurn[
+                chip.id
+              ]?.toString() ?? ''),
       );
       columns.push(
         !turn
           ? `player ${index + 1} ${chip.id} after turn`
           : player == senderId
-          ? turn.senderData.chipsAfterTurn[chip.id]?.toString() ?? ''
-          : turn.responseData[player]?.chipsAfterTurn[chip.id]?.toString() ?? ''
+            ? (turn.senderData.chipsAfterTurn[chip.id]?.toString() ?? '')
+            : (turn.responseData[player]?.chipsAfterTurn[chip.id]?.toString() ??
+              ''),
       );
     });
     chips.forEach((chip) => {
@@ -435,23 +437,24 @@ export function getChipNegotiationTurnColumns(
         !turn
           ? `player ${index + 1} ${chip.id} value`
           : player == senderId
-          ? turn.senderData.chipValues[chip.id]?.toString() ?? ''
-          : turn.responseData[player]?.chipValues[chip.id]?.toString() ?? ''
+            ? (turn.senderData.chipValues[chip.id]?.toString() ?? '')
+            : (turn.responseData[player]?.chipValues[chip.id]?.toString() ??
+              ''),
       );
     });
     columns.push(
       !turn
         ? `player ${index + 1} payout before turn`
         : player == senderId
-        ? turn.senderData.payoutBeforeTurn.toString()
-        : turn.responseData[player]?.payoutBeforeTurn?.toString() ?? ''
+          ? turn.senderData.payoutBeforeTurn.toString()
+          : (turn.responseData[player]?.payoutBeforeTurn?.toString() ?? ''),
     );
     columns.push(
       !turn
         ? `player ${index + 1} payout after turn`
         : player == senderId
-        ? turn.senderData.payoutAfterTurn.toString()
-        : turn.responseData[player]?.payoutAfterTurn?.toString() ?? ''
+          ? turn.senderData.payoutAfterTurn.toString()
+          : (turn.responseData[player]?.payoutAfterTurn?.toString() ?? ''),
     );
   });
 
@@ -460,7 +463,7 @@ export function getChipNegotiationTurnColumns(
 
 export function getChipNegotiationPlayerMapCSV(
   data: ExperimentDownload,
-  games: ChipNegotiationData[]
+  games: ChipNegotiationData[],
 ): string[][] {
   const columns: string[][] = [];
 
@@ -478,7 +481,7 @@ export function getChipNegotiationPlayerMapCSV(
       const timeA = timestampA.seconds * 1000 + timestampA.nanoseconds / 1e6;
       const timeB = timestampB.seconds * 1000 + timestampB.nanoseconds / 1e6;
       return timeA - timeB;
-    }
+    },
   );
 
   // Maps from participant ID to games played
@@ -498,27 +501,29 @@ export function getChipNegotiationPlayerMapCSV(
 
   const getPlayerColumns = (player: string | null): string[] => {
     const columns: string[] = [];
-    const playerGames = !player ? [] : playerMap[player] ?? [];
+    const playerGames = !player ? [] : (playerMap[player] ?? []);
 
     // Add player IDs, name, avatar, pronouns
     columns.push(
       !player
         ? 'Private ID'
-        : data.participantMap[player]?.profile.privateId ?? ''
+        : (data.participantMap[player]?.profile.privateId ?? ''),
     );
     columns.push(
       !player
         ? 'Public ID'
-        : data.participantMap[player]?.profile.publicId ?? ''
+        : (data.participantMap[player]?.profile.publicId ?? ''),
     );
     columns.push(
-      !player ? 'Name' : toCSV(data.participantMap[player]?.profile.name)
+      !player ? 'Name' : toCSV(data.participantMap[player]?.profile.name),
     );
     columns.push(
-      !player ? 'Avatar' : toCSV(data.participantMap[player]?.profile.avatar)
+      !player ? 'Avatar' : toCSV(data.participantMap[player]?.profile.avatar),
     );
     columns.push(
-      !player ? 'Pronouns' : toCSV(data.participantMap[player]?.profile.pronouns)
+      !player
+        ? 'Pronouns'
+        : toCSV(data.participantMap[player]?.profile.pronouns),
     );
 
     // Add column for each game
@@ -528,8 +533,8 @@ export function getChipNegotiationPlayerMapCSV(
         !player
           ? `Game ${gameNumber + 1}`
           : gameNumber < playerGames.length
-          ? playerGames[gameNumber]
-          : ''
+            ? playerGames[gameNumber]
+            : '',
       );
       gameNumber += 1;
     }
@@ -550,7 +555,7 @@ export function getChipNegotiationPlayerMapCSV(
 }
 
 export function getChipNegotiationData(
-  data: ExperimentDownload
+  data: ExperimentDownload,
 ): ChipNegotiationData[] {
   const participantMap = data.participantMap;
   const cohortMap = data.cohortMap;
@@ -581,7 +586,7 @@ export function getChipNegotiationData(
         // track each player's chip quantities from start to end of game
         let currentChipMap = getChipNegotiationStartingQuantityMap(
           stage,
-          metadata.players
+          metadata.players,
         );
 
         // for each round, add list of transactions
@@ -593,7 +598,7 @@ export function getChipNegotiationData(
               roundNumber,
               publicStage.participantOfferMap[roundNumber],
               metadata,
-              currentChipMap
+              currentChipMap,
             );
             roundData.push(data);
             currentChipMap = updatedChipMap;
@@ -620,7 +625,7 @@ export function getChipNegotiationData(
 
 function getChipNegotiationGameMetadata(
   stage: ChipStageConfig,
-  publicStage: ChipStagePublicData
+  publicStage: ChipStagePublicData,
 ): ChipNegotiationGameMetadata {
   // iterate through offer map to determine players
   const playerSet = new Set<string>();
@@ -644,7 +649,7 @@ function getChipNegotiationGameMetadata(
 
 function getChipNegotiationStartingQuantityMap(
   stage: ChipStageConfig,
-  players: string[]
+  players: string[],
 ) {
   const currentChipMap: Record<string, Record<string, number>> = {};
   const startingQuantityMap: Record<string, number> = {};
@@ -662,7 +667,7 @@ function getChipNegotiationRoundData(
   roundNumber: number,
   roundMap: Record<string, ChipTransaction>, // participant ID to transaction
   playerMetadata: ChipNegotiationGameMetadata,
-  currentChipMap: Record<string, Record<string, number>>
+  currentChipMap: Record<string, Record<string, number>>,
 ): {
   data: ChipNegotiationRoundData;
   updatedChipMap: Record<string, Record<string, number>>;
@@ -674,7 +679,7 @@ function getChipNegotiationRoundData(
       const timeB =
         b.offer.timestamp.seconds * 1000 + b.offer.timestamp.nanoseconds / 1e6;
       return timeA - timeB;
-    }
+    },
   );
 
   const turns: ChipNegotiationTurnData[] = [];
@@ -682,7 +687,7 @@ function getChipNegotiationRoundData(
     const response = getChipNegotiationTurnData(
       transaction,
       playerMetadata,
-      currentChipMap
+      currentChipMap,
     );
     currentChipMap = response.currentChipMap;
     turns.push(response.turn);
@@ -695,7 +700,7 @@ function getChipNegotiationRoundData(
 function runChipTransaction(
   currentChipMap: Record<string, number>,
   addChipMap: Record<string, number>,
-  removeChipMap: Record<string, number>
+  removeChipMap: Record<string, number>,
 ) {
   const newChipMap: Record<string, number> = {};
   if (!currentChipMap) return {};
@@ -718,7 +723,7 @@ function runChipTransaction(
 // TODO: Create utils function for chip payout calculation
 function getChipPayout(
   currentChipMap: Record<string, number>,
-  chipValueMap: Record<string, number>
+  chipValueMap: Record<string, number>,
 ): number {
   let payout = 0;
   if (!currentChipMap) return 0;
@@ -734,7 +739,7 @@ function getChipPayout(
 function getChipNegotiationTurnData(
   transaction: ChipTransaction,
   playerMetadata: ChipNegotiationGameMetadata,
-  currentChipMap: Record<string, Record<string, number>>
+  currentChipMap: Record<string, Record<string, number>>,
 ): {
   turn: ChipNegotiationTurnData;
   currentChipMap: Record<string, Record<string, number>>;
@@ -752,12 +757,12 @@ function getChipNegotiationTurnData(
     after[senderId] = runChipTransaction(
       before[senderId],
       offer.buy,
-      offer.sell
+      offer.sell,
     );
     after[transaction.recipientId] = runChipTransaction(
       before[transaction.recipientId],
       offer.sell,
-      offer.buy
+      offer.buy,
     );
   } else {
     after[senderId] = before[senderId];
@@ -792,7 +797,7 @@ function getChipNegotiationTurnData(
       chipsAfterTurn: after[responderId] ?? {},
       payoutBeforeTurn: getChipPayout(
         before[responderId],
-        responderChipValueMap
+        responderChipValueMap,
       ),
       payoutAfterTurn: getChipPayout(after[responderId], responderChipValueMap),
     };
@@ -826,13 +831,13 @@ export function getParticipantData(data: ExperimentDownload) {
 
   // Add headings
   participantData.push(
-    getAllParticipantCSVColumns(data, null, data.participantMap)
+    getAllParticipantCSVColumns(data, null, data.participantMap),
   );
 
   // Add participants
   for (const participant of Object.values(data.participantMap)) {
     participantData.push(
-      getAllParticipantCSVColumns(data, participant, data.participantMap)
+      getAllParticipantCSVColumns(data, participant, data.participantMap),
     );
   }
   return participantData;
@@ -840,7 +845,7 @@ export function getParticipantData(data: ExperimentDownload) {
 
 /** Returns CSV data for all chat histories in experiment download. */
 export function getChatHistoryData(
-  data: ExperimentDownload
+  data: ExperimentDownload,
 ): ChatHistoryData[] {
   const chatData: ChatHistoryData[] = [];
   for (const cohortId of Object.keys(data.cohortMap)) {
@@ -869,10 +874,10 @@ export function getChatHistoryData(
 export function getAllParticipantCSVColumns(
   data: ExperimentDownload,
   participant: ParticipantDownload | null = null,
-  participantMap: Record<string, ParticipantDownload> = {}
+  participantMap: Record<string, ParticipantDownload> = {},
 ) {
   let participantColumns = getParticipantProfileCSVColumns(
-    participant?.profile ?? null
+    participant?.profile ?? null,
   );
 
   // For each answer stage, add columns
@@ -884,7 +889,7 @@ export function getAllParticipantCSVColumns(
       case StageKind.SURVEY:
         const surveyColumns = getSurveyStageCSVColumns(
           stageConfig,
-          participant
+          participant,
         );
         participantColumns = [...participantColumns, ...surveyColumns];
         break;
@@ -892,7 +897,7 @@ export function getAllParticipantCSVColumns(
         const sppColumns = getSurveyPerParticipantStageCSVColumns(
           stageConfig,
           participant,
-          participantMap
+          participantMap,
         );
         participantColumns = [...participantColumns, ...sppColumns];
         break;
@@ -900,7 +905,7 @@ export function getAllParticipantCSVColumns(
         const rankingColumns = getRankingStageCSVColumns(
           stageConfig,
           data,
-          participant
+          participant,
         );
         participantColumns = [...participantColumns, ...rankingColumns];
         break;
@@ -908,7 +913,7 @@ export function getAllParticipantCSVColumns(
         const payoutColumns = getPayoutStageCSVColumns(
           stageConfig,
           data,
-          participant
+          participant,
         );
         participantColumns = [...participantColumns, ...payoutColumns];
         break;
@@ -921,7 +926,7 @@ export function getAllParticipantCSVColumns(
 
 /** Create CSV columns for participant profile. */
 export function getParticipantProfileCSVColumns(
-  profile: ParticipantProfileExtended | null = null // if null, return headers
+  profile: ParticipantProfileExtended | null = null, // if null, return headers
 ): string[] {
   const columns: string[] = [];
 
@@ -932,7 +937,7 @@ export function getParticipantProfileCSVColumns(
   columns.push(!profile ? 'Public ID' : profile.publicId);
 
   // Prolific ID
-  columns.push(!profile ? 'Prolific ID' : profile.prolificId ?? '');
+  columns.push(!profile ? 'Prolific ID' : (profile.prolificId ?? ''));
 
   // Profile name
   columns.push(!profile ? 'Name' : toCSV(profile.name));
@@ -954,7 +959,7 @@ export function getParticipantProfileCSVColumns(
 
   // Transfer cohort ID
   columns.push(
-    !profile ? 'Transfer cohort ID' : profile.transferCohortId ?? ''
+    !profile ? 'Transfer cohort ID' : (profile.transferCohortId ?? ''),
   );
 
   // Start experiment timestamp
@@ -985,7 +990,7 @@ export function getParticipantProfileCSVColumns(
 export function getPayoutStageCSVColumns(
   payoutStage: PayoutStageConfig,
   data: ExperimentDownload, // used to extract cohort public data
-  participant: ParticipantDownload | null = null // if null, return headers
+  participant: ParticipantDownload | null = null, // if null, return headers
 ): string[] {
   const columns: string[] = [];
 
@@ -995,19 +1000,21 @@ export function getPayoutStageCSVColumns(
 
   // Get participant answer (which specifies which random selection
   // payout items to use)
-  const answer = !participant ? null :
-    participant.answerMap[payoutStage.id] as PayoutStageParticipantAnswer;
+  const answer = !participant
+    ? null
+    : (participant.answerMap[payoutStage.id] as PayoutStageParticipantAnswer);
 
   // Get payout results
-  const resultConfig = participant && answer
-    ? calculatePayoutResult(
-        payoutStage,
-        answer,
-        data.stageMap,
-        publicDataMap,
-        participant.profile
-      )
-    : null;
+  const resultConfig =
+    participant && answer
+      ? calculatePayoutResult(
+          payoutStage,
+          answer,
+          data.stageMap,
+          publicDataMap,
+          participant.profile,
+        )
+      : null;
 
   payoutStage.payoutItems.forEach((item) => {
     // Skip if payout item is not active
@@ -1024,7 +1031,7 @@ export function getPayoutStageCSVColumns(
       !participant
         ? `Payout earned if stage completed - ${name} - Stage ${payoutStage.id}`
         : // Get amount earned from result config
-          resultItem?.baseAmountEarned.toString() ?? ''
+          (resultItem?.baseAmountEarned.toString() ?? ''),
     );
 
     if (item.type === PayoutItemType.SURVEY) {
@@ -1033,7 +1040,7 @@ export function getPayoutStageCSVColumns(
       columns.push(
         !participant
           ? `Ranking stage used for payout - ${name} - Stage ${payoutStage.id}`
-          : item.rankingStageId ?? ''
+          : (item.rankingStageId ?? ''),
       );
 
       // For each question in payout stage config that is also
@@ -1045,13 +1052,13 @@ export function getPayoutStageCSVColumns(
           const questionResult =
             resultItem?.type === PayoutItemType.SURVEY
               ? resultItem.questionResults.find(
-                  (result) => result.question.id === question.id
+                  (result) => result.question.id === question.id,
                 )
               : null;
           columns.push(
             !participant
               ? `Correct answer payout - "${toCSV(question.questionTitle)}" - ${name} - Stage ${payoutStage.id}`
-              : questionResult?.amountEarned.toString() ?? ''
+              : (questionResult?.amountEarned.toString() ?? ''),
           );
         }
       });
@@ -1063,8 +1070,8 @@ export function getPayoutStageCSVColumns(
     !participant
       ? `Total payout - Stage ${payoutStage.id}`
       : resultConfig
-      ? calculatePayoutTotal(resultConfig).toString()
-      : ''
+        ? calculatePayoutTotal(resultConfig).toString()
+        : '',
   );
 
   return columns;
@@ -1074,7 +1081,7 @@ export function getPayoutStageCSVColumns(
 export function getRankingStageCSVColumns(
   rankingStage: RankingStageConfig,
   data: ExperimentDownload, // used to extract ranking public data for cohort
-  participant: ParticipantDownload | null = null // if null, return headers
+  participant: ParticipantDownload | null = null, // if null, return headers
 ): string[] {
   const columns: string[] = [];
 
@@ -1095,24 +1102,24 @@ export function getRankingStageCSVColumns(
   columns.push(
     !participant
       ? `Ranking type - ${rankingStage.id}`
-      : rankingStage.rankingType
+      : rankingStage.rankingType,
   );
 
   // Add columns for ranking stage strategy
   columns.push(
     !participant
       ? `Ranking strategy - ${rankingStage.id}`
-      : rankingStage.strategy
+      : rankingStage.strategy,
   );
 
   // Add column for participant's cohort (since winners are per cohort)
-  columns.push(!participant ? `Participant's cohort ID` : cohortId ?? '');
+  columns.push(!participant ? `Participant's cohort ID` : (cohortId ?? ''));
 
   // Add column for ranking winner
   columns.push(
     !participant
       ? `Ranking winner (for participant's cohort) - ${rankingStage.id}`
-      : winnerId
+      : winnerId,
   );
 
   // Add column for participant's rankings
@@ -1120,8 +1127,8 @@ export function getRankingStageCSVColumns(
     !participant
       ? `Participant rankings - ${rankingStage.id}`
       : stageAnswer?.kind === StageKind.RANKING
-      ? stageAnswer.rankingList.join(',')
-      : ''
+        ? `"${stageAnswer.rankingList.join(',')}"`
+        : '',
   );
 
   return columns;
@@ -1130,7 +1137,7 @@ export function getRankingStageCSVColumns(
 /** Create CSV columns for survey stage answers. */
 export function getSurveyStageCSVColumns(
   surveyStage: SurveyStageConfig,
-  participant: ParticipantDownload | null = null // if null, return headers
+  participant: ParticipantDownload | null = null, // if null, return headers
 ): string[] {
   const columns: string[] = [];
 
@@ -1150,7 +1157,7 @@ export function getSurveyStageCSVColumns(
         columns.push(
           !participant
             ? `"${toCSV(question.questionTitle)}" - Survey ${surveyStage.id}`
-            : toCSV(textAnswer)
+            : toCSV(textAnswer),
         );
         break;
       case SurveyQuestionKind.CHECK:
@@ -1161,7 +1168,7 @@ export function getSurveyStageCSVColumns(
         columns.push(
           !participant
             ? `"${toCSV(question.questionTitle)}" - Survey ${surveyStage.id}`
-            : checkAnswer
+            : checkAnswer,
         );
         break;
       case SurveyQuestionKind.MULTIPLE_CHOICE:
@@ -1173,10 +1180,10 @@ export function getSurveyStageCSVColumns(
         question.options.forEach((item, index) => {
           columns.push(
             !participant
-              ? `Option ${index + 1} (${item.id}) - "${
-                  toCSV(question.questionTitle)
-                }" - Survey ${surveyStage.id}`
-              : item.text
+              ? `Option ${index + 1} (${item.id}) - "${toCSV(
+                  question.questionTitle,
+                )}" - Survey ${surveyStage.id}`
+              : item.text,
           );
         });
         // If correct answer, add column for correct answer
@@ -1184,29 +1191,30 @@ export function getSurveyStageCSVColumns(
           columns.push(
             !participant
               ? `Correct answer - "${toCSV(question.questionTitle)}" - Survey ${surveyStage.id}`
-              : question.options.find(
-                  (item) => item.id === question.correctAnswerId
-                )?.text ?? ''
+              : (question.options.find(
+                  (item) => item.id === question.correctAnswerId,
+                )?.text ?? ''),
           );
         }
         // Add column for participant answer ID
         columns.push(
           !participant
             ? `Participant answer (ID) - "${toCSV(question.questionTitle)}" - Survey ${surveyStage.id}`
-            : mcAnswer
+            : mcAnswer,
         );
         // Add column for participant text answer
         columns.push(
           !participant
             ? `Participant answer (text) - "${toCSV(question.questionTitle)}" - Survey ${surveyStage.id}`
-            : question.options.find((item) => item.id === mcAnswer)?.text ?? ''
+            : (question.options.find((item) => item.id === mcAnswer)?.text ??
+                ''),
         );
         // If correct answer, add column for if answer was correct
         if (question.correctAnswerId) {
           columns.push(
             !participant
               ? `Is participant correct? - "${toCSV(question.questionTitle)}" - Survey ${surveyStage.id}`
-              : (mcAnswer === question.correctAnswerId).toString()
+              : (mcAnswer === question.correctAnswerId).toString(),
           );
         }
         break;
@@ -1218,7 +1226,7 @@ export function getSurveyStageCSVColumns(
         columns.push(
           !participant
             ? `"${toCSV(question.questionTitle)}" - Survey ${surveyStage.id}`
-            : scaleAnswer
+            : scaleAnswer,
         );
         break;
       default:
@@ -1233,7 +1241,7 @@ export function getSurveyStageCSVColumns(
 export function getSurveyPerParticipantStageCSVColumns(
   stage: SurveyPerParticipantStageConfig,
   participant: ParticipantDownload | null = null, // if null, return headers
-  participantMap: Record<string, ParticipantDownload> = {}
+  participantMap: Record<string, ParticipantDownload> = {},
 ): string[] {
   const columns: string[] = [];
   const stageAnswer = participant ? participant.answerMap[stage.id] : null;
@@ -1242,7 +1250,7 @@ export function getSurveyPerParticipantStageCSVColumns(
   participantList.forEach((participantId) => {
     const answerMap =
       stageAnswer?.kind === StageKind.SURVEY_PER_PARTICIPANT
-        ? stageAnswer?.answerMap[participantId] ?? {}
+        ? (stageAnswer?.answerMap[participantId] ?? {})
         : {};
 
     stage.questions.forEach((question) => {
@@ -1254,7 +1262,7 @@ export function getSurveyPerParticipantStageCSVColumns(
           columns.push(
             !participant
               ? `"${toCSV(question.questionTitle)}" - ${participantId} - Per-Participant Survey ${stage.id}`
-              : toCSV(textAnswer)
+              : toCSV(textAnswer),
           );
           break;
         case SurveyQuestionKind.CHECK:
@@ -1265,7 +1273,7 @@ export function getSurveyPerParticipantStageCSVColumns(
           columns.push(
             !participant
               ? `"${toCSV(question.questionTitle)}" - ${participantId} - Per-Participant Survey ${stage.id}`
-              : checkAnswer
+              : checkAnswer,
           );
           break;
         case SurveyQuestionKind.MULTIPLE_CHOICE:
@@ -1277,10 +1285,10 @@ export function getSurveyPerParticipantStageCSVColumns(
           question.options.forEach((item, index) => {
             columns.push(
               !participant
-                ? `Option ${index + 1} (${item.id}) - "${
-                    toCSV(question.questionTitle)
-                  }" - ${participantId} - Per-Participant Survey ${stage.id}`
-                : item.text
+                ? `Option ${index + 1} (${item.id}) - "${toCSV(
+                    question.questionTitle,
+                  )}" - ${participantId} - Per-Participant Survey ${stage.id}`
+                : item.text,
             );
           });
           // If correct answer, add column for correct answer
@@ -1288,30 +1296,30 @@ export function getSurveyPerParticipantStageCSVColumns(
             columns.push(
               !participant
                 ? `Correct answer - "${toCSV(question.questionTitle)}" - ${participantId} - Per-Participant Survey ${stage.id}`
-                : question.options.find(
-                    (item) => item.id === question.correctAnswerId
-                  )?.text ?? ''
+                : (question.options.find(
+                    (item) => item.id === question.correctAnswerId,
+                  )?.text ?? ''),
             );
           }
           // Add column for participant answer ID
           columns.push(
             !participant
               ? `Participant answer (ID) - "${toCSV(question.questionTitle)}" - ${participantId} - Per-Participant Survey ${stage.id}`
-              : mcAnswer
+              : mcAnswer,
           );
           // Add column for participant text answer
           columns.push(
             !participant
               ? `Participant answer (text) - "${toCSV(question.questionTitle)}" - ${participantId} - Per-Participant Survey ${stage.id}`
-              : question.options.find((item) => item.id === mcAnswer)?.text ??
-                  ''
+              : (question.options.find((item) => item.id === mcAnswer)?.text ??
+                  ''),
           );
           // If correct answer, add column for if answer was correct
           if (question.correctAnswerId) {
             columns.push(
               !participant
                 ? `Is participant correct? - "${toCSV(question.questionTitle)}" - ${participantId} - Per-Participant Survey ${stage.id}`
-                : (mcAnswer === question.correctAnswerId).toString()
+                : (mcAnswer === question.correctAnswerId).toString(),
             );
           }
           break;
@@ -1323,7 +1331,7 @@ export function getSurveyPerParticipantStageCSVColumns(
           columns.push(
             !participant
               ? `"${toCSV(question.questionTitle)}" - ${participantId} - Per-Participant Survey ${stage.id}`
-              : scaleAnswer
+              : scaleAnswer,
           );
           break;
         default:
@@ -1337,20 +1345,20 @@ export function getSurveyPerParticipantStageCSVColumns(
 
 /** Create CSV columns for ChatMessage. */
 export function getChatMessageCSVColumns(
-  message: ChatMessage | null = null // if null, return headers
+  message: ChatMessage | null = null, // if null, return headers
 ): string[] {
   const columns: string[] = [];
 
   // Timestamp
   columns.push(
-    !message ? 'Timestamp' : convertUnifiedTimestampToISO(message.timestamp)
+    !message ? 'Timestamp' : convertUnifiedTimestampToISO(message.timestamp),
   );
 
   // ID
   columns.push(!message ? 'Message ID' : message.id);
 
   // Discussion ID
-  columns.push(!message ? 'Discussion ID' : message.discussionId ?? '');
+  columns.push(!message ? 'Discussion ID' : (message.discussionId ?? ''));
 
   // Type
   columns.push(!message ? 'Message type' : message.type);

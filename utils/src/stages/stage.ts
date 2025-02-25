@@ -12,7 +12,7 @@ import {
 } from './chip_stage';
 import {
   ComprehensionStageConfig,
-  ComprehensionStageParticipantAnswer
+  ComprehensionStageParticipantAnswer,
 } from './comprehension_stage';
 import {
   RankingStageConfig,
@@ -20,13 +20,10 @@ import {
   RankingStagePublicData,
   createRankingStagePublicData,
 } from './ranking_stage';
-import { InfoStageConfig } from './info_stage';
-import {
-  PayoutStageConfig,
-  PayoutStageParticipantAnswer
-} from './payout_stage';
-import { ProfileStageConfig } from './profile_stage';
-import { RevealStageConfig } from './reveal_stage';
+import {InfoStageConfig} from './info_stage';
+import {PayoutStageConfig, PayoutStageParticipantAnswer} from './payout_stage';
+import {ProfileStageConfig} from './profile_stage';
+import {RevealStageConfig} from './reveal_stage';
 import {
   SurveyPerParticipantStageConfig,
   SurveyPerParticipantStageParticipantAnswer,
@@ -35,8 +32,8 @@ import {
   SurveyStagePublicData,
   createSurveyStagePublicData,
 } from './survey_stage';
-import { TOSStageConfig } from './tos_stage';
-import { TransferStageConfig } from './transfer_stage';
+import {TOSStageConfig} from './tos_stage';
+import {TransferStageConfig} from './transfer_stage';
 
 /** Base stage types and functions. */
 
@@ -58,7 +55,7 @@ export enum StageKind {
   REVEAL = 'reveal',
   SURVEY = 'survey',
   SURVEY_PER_PARTICIPANT = 'surveyPerParticipant',
-  TRANSFER = 'transfer'
+  TRANSFER = 'transfer',
 }
 
 /** Specific game associated with stage. */
@@ -123,13 +120,13 @@ export interface BaseStageParticipantAnswer {
 }
 
 export type StageParticipantAnswer =
- | ChatStageParticipantAnswer
- | ChipStageParticipantAnswer
- | ComprehensionStageParticipantAnswer
- | PayoutStageParticipantAnswer
- | RankingStageParticipantAnswer
- | SurveyStageParticipantAnswer
- | SurveyPerParticipantStageParticipantAnswer;
+  | ChatStageParticipantAnswer
+  | ChipStageParticipantAnswer
+  | ComprehensionStageParticipantAnswer
+  | PayoutStageParticipantAnswer
+  | RankingStageParticipantAnswer
+  | SurveyStageParticipantAnswer
+  | SurveyPerParticipantStageParticipantAnswer;
 
 /**
  * Base stage public data created from cloud triggers
@@ -156,7 +153,7 @@ export type StagePublicData =
 
 /** Create stage text config. */
 export function createStageTextConfig(
-  config: Partial<StageTextConfig> = {}
+  config: Partial<StageTextConfig> = {},
 ): StageTextConfig {
   return {
     primaryText: config.primaryText ?? '',
@@ -167,7 +164,7 @@ export function createStageTextConfig(
 
 /** Create stage progress config. */
 export function createStageProgressConfig(
-  config: Partial<StageProgressConfig> = {}
+  config: Partial<StageProgressConfig> = {},
 ): StageProgressConfig {
   return {
     minParticipants: config.minParticipants ?? 0,

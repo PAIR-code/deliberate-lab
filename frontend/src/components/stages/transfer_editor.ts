@@ -9,10 +9,7 @@ import '@material/web/checkbox/checkbox.js';
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
-import {
-  TransferStageConfig,
-  StageKind,
-} from '@deliberation-lab/utils';
+import {TransferStageConfig, StageKind} from '@deliberation-lab/utils';
 
 import {styles} from './transfer_editor.scss';
 
@@ -23,16 +20,14 @@ export class TransferEditorComponent extends MobxLitElement {
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
-  @property() stage: TransferStageConfig|undefined = undefined;
+  @property() stage: TransferStageConfig | undefined = undefined;
 
   override render() {
     if (this.stage === undefined) {
       return nothing;
     }
 
-    return html`
-      ${this.renderTimeout()}
-    `;
+    return html` ${this.renderTimeout()} `;
   }
 
   private renderTimeout() {
@@ -42,16 +37,16 @@ export class TransferEditorComponent extends MobxLitElement {
     const updateTimeout = () => {
       if (!this.stage) return;
       const enableTimeout = !isTimeout;
-      this.experimentEditor.updateStage({ ...this.stage, enableTimeout });
+      this.experimentEditor.updateStage({...this.stage, enableTimeout});
     };
 
     return html`
       <div class="section">
         <div class="title">Timeout</div>
         <div class="description">
-          Note: If timeout is enabled and the experimenter does not transfer
-          the participant within the timeout window, the participant is removed
-          from the experiment with TIMEOUT_FAILED status
+          Note: If timeout is enabled and the experimenter does not transfer the
+          participant within the timeout window, the participant is removed from
+          the experiment with TIMEOUT_FAILED status
         </div>
         <div class="checkbox-wrapper">
           <md-checkbox
@@ -61,9 +56,7 @@ export class TransferEditorComponent extends MobxLitElement {
             @click=${updateTimeout}
           >
           </md-checkbox>
-          <div>
-            Enable timeout window
-          </div>
+          <div>Enable timeout window</div>
         </div>
         ${isTimeout ? this.renderTimeoutSeconds() : nothing}
       </div>
@@ -76,7 +69,7 @@ export class TransferEditorComponent extends MobxLitElement {
     const updateNum = (e: InputEvent) => {
       if (!this.stage) return;
       const timeoutSeconds = Number((e.target as HTMLTextAreaElement).value);
-      this.experimentEditor.updateStage({ ...this.stage, timeoutSeconds });
+      this.experimentEditor.updateStage({...this.stage, timeoutSeconds});
     };
 
     return html`
@@ -96,7 +89,6 @@ export class TransferEditorComponent extends MobxLitElement {
       </div>
     `;
   }
-
 }
 
 declare global {

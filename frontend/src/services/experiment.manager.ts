@@ -9,6 +9,7 @@ import {
   Unsubscribe,
   where,
 } from 'firebase/firestore';
+import {AgentEditor} from './agent.editor';
 import {AuthService} from './auth.service';
 import {CohortService} from './cohort.service';
 import {ExperimentEditor} from './experiment.editor';
@@ -44,6 +45,7 @@ import {
   initiateParticipantTransferCallable,
   sendParticipantCheckCallable,
   setExperimentCohortLockCallable,
+  testAgentConfigCallable,
   testAgentParticipantPromptCallable,
   updateCohortMetadataCallable,
   writeExperimentCallable,
@@ -68,6 +70,7 @@ import {
 } from '../shared/participant.utils';
 
 interface ServiceProvider {
+  agentEditor: AgentEditor;
   authService: AuthService;
   cohortService: CohortService;
   experimentEditor: ExperimentEditor;
@@ -112,6 +115,7 @@ export class ExperimentManager extends Service {
   @observable showParticipantStats = true;
   @observable showParticipantPreview = true;
   @observable hideLockedCohorts = false;
+  @observable expandAllCohorts = true;
 
   // Copy of cohort being edited in settings dialog
   @observable cohortEditing: CohortConfig | undefined = undefined;
@@ -211,6 +215,10 @@ export class ExperimentManager extends Service {
     this.hideLockedCohorts = hideLockedCohorts;
   }
 
+  setExpandAllCohorts(expandAllCohorts: boolean) {
+    this.expandAllCohorts = expandAllCohorts;
+  }
+
   setCurrentParticipantId(id: string | undefined) {
     this.currentParticipantId = id;
 
@@ -228,7 +236,7 @@ export class ExperimentManager extends Service {
 
   getCurrentParticipantCohort(participant: ParticipantProfileExtended) {
     return this.getCohort(
-      participant.transferCohortId ?? participant.currentCohortId
+      participant.transferCohortId ?? participant.currentCohortId,
     );
   }
 
@@ -239,7 +247,7 @@ export class ExperimentManager extends Service {
     }
 
     return participants.filter(
-      (participant) => !isObsoleteParticipant(participant)
+      (participant) => !isObsoleteParticipant(participant),
     ).length;
   }
 
@@ -248,7 +256,7 @@ export class ExperimentManager extends Service {
     return getCohortParticipants(
       Object.values(this.participantMap),
       cohortId,
-      countObsoleteParticipants
+      countObsoleteParticipants,
     );
   }
 
@@ -259,13 +267,13 @@ export class ExperimentManager extends Service {
   isFullCohort(cohort: CohortConfig) {
     return hasMaxParticipantsInCohort(
       cohort,
-      Object.values(this.participantMap)
+      Object.values(this.participantMap),
     );
   }
 
   @computed get availableCohorts() {
     return Object.values(this.cohortMap).filter(
-      (cohort) => !this.isFullCohort(cohort)
+      (cohort) => !this.isFullCohort(cohort),
     );
   }
 
@@ -277,7 +285,7 @@ export class ExperimentManager extends Service {
     if (this.hideLockedCohorts) {
       return Object.values(this.cohortMap).filter(
         (cohort) =>
-          !this.sp.experimentService.experiment?.cohortLockMap[cohort.id]
+          !this.sp.experimentService.experiment?.cohortLockMap[cohort.id],
       );
     }
     return Object.values(this.cohortMap);
@@ -303,6 +311,10 @@ export class ExperimentManager extends Service {
     this.unsubscribeAll();
     this.isLoading = true;
 
+    if (!this.sp.authService.isExperimenter) {
+      return;
+    }
+
     // Subscribe to cohorts
     this.unsubscribe.push(
       onSnapshot(
@@ -310,7 +322,7 @@ export class ExperimentManager extends Service {
           this.sp.firebaseService.firestore,
           'experiments',
           id,
-          'cohorts'
+          'cohorts',
         ),
         (snapshot) => {
           let changedDocs = snapshot.docChanges().map((change) => change.doc);
@@ -324,8 +336,8 @@ export class ExperimentManager extends Service {
           });
 
           this.isCohortsLoading = false;
-        }
-      )
+        },
+      ),
     );
 
     // Subscribe to participants' private profiles
@@ -336,9 +348,9 @@ export class ExperimentManager extends Service {
             this.sp.firebaseService.firestore,
             'experiments',
             id,
-            'participants'
+            'participants',
           ),
-          where('currentStatus', '!=', ParticipantStatus.DELETED)
+          where('currentStatus', '!=', ParticipantStatus.DELETED),
         ),
         (snapshot) => {
           let changedDocs = snapshot.docChanges().map((change) => change.doc);
@@ -352,8 +364,8 @@ export class ExperimentManager extends Service {
           });
 
           this.isParticipantsLoading = false;
-        }
-      )
+        },
+      ),
     );
   }
 
@@ -411,7 +423,7 @@ export class ExperimentManager extends Service {
         collectionName: 'experiments',
         experimentConfig: experiment,
         stageConfigs: stages,
-      }
+      },
     );
 
     // Route to new experiment and reload to update changes
@@ -432,7 +444,7 @@ export class ExperimentManager extends Service {
       {
         collectionName: 'experiments',
         experimentId: this.experimentId,
-      }
+      },
     );
     this.isEditingSettingsDialog = false;
     this.sp.routerService.navigate(Pages.HOME);
@@ -449,7 +461,7 @@ export class ExperimentManager extends Service {
       {
         experimentId: this.experimentId,
         cohortId,
-      }
+      },
     );
     this.loadExperimentData(this.experimentId);
     this.cohortEditing = undefined;
@@ -488,7 +500,7 @@ export class ExperimentManager extends Service {
   async updateCohortMetadata(
     cohortId: string,
     metadata: MetadataConfig,
-    participantConfig: CohortParticipantConfig
+    participantConfig: CohortParticipantConfig,
   ) {
     if (!this.sp.experimentService.experiment) return;
 
@@ -503,7 +515,7 @@ export class ExperimentManager extends Service {
           cohortId,
           metadata,
           participantConfig,
-        }
+        },
       );
     }
     this.isWritingCohort = false;
@@ -518,7 +530,7 @@ export class ExperimentManager extends Service {
 
     if (this.experimentId) {
       const isAnonymous = requiresAnonymousProfiles(
-        this.sp.experimentService.stages
+        this.sp.experimentService.stages,
       );
 
       response = await createParticipantCallable(
@@ -527,7 +539,7 @@ export class ExperimentManager extends Service {
           experimentId: this.experimentId,
           cohortId,
           isAnonymous,
-        }
+        },
       );
     }
     this.isWritingParticipant = false;
@@ -538,7 +550,7 @@ export class ExperimentManager extends Service {
   async sendCheckToParticipant(
     participantId: string,
     status: ParticipantStatus.ATTENTION_CHECK, // TODO: Add other checks
-    customMessage = ''
+    customMessage = '',
   ) {
     if (!this.experimentId) {
       return;
@@ -570,7 +582,7 @@ export class ExperimentManager extends Service {
           experimentId: this.experimentId,
           cohortId,
           participantId,
-        }
+        },
       );
     }
   }
@@ -582,7 +594,7 @@ export class ExperimentManager extends Service {
     if (experimentId) {
       const result = await getExperimentDownload(
         this.sp.firebaseService.firestore,
-        experimentId
+        experimentId,
       );
 
       if (result) {
@@ -596,26 +608,61 @@ export class ExperimentManager extends Service {
         const chipData = getChipNegotiationData(result);
         if (chipData.length > 0) {
           const chipDataTitle = `${experimentName}_ChipNegotiation_all`;
-          zip.file(`${chipDataTitle}.json`, JSON.stringify({ games: chipData }, null, 2));
-          zip.file(`${chipDataTitle}.csv`, new Blob([getChipNegotiationCSV(result, chipData).map(row => row.join(",")).join("\n")], { type: 'text/csv' }));
+          zip.file(
+            `${chipDataTitle}.json`,
+            JSON.stringify({games: chipData}, null, 2),
+          );
+          zip.file(
+            `${chipDataTitle}.csv`,
+            new Blob(
+              [
+                getChipNegotiationCSV(result, chipData)
+                  .map((row) => row.join(','))
+                  .join('\n'),
+              ],
+              {type: 'text/csv'},
+            ),
+          );
           zip.file(
             `${experimentName}_ChipNegotiation_PlayerMap.csv`,
-            new Blob([getChipNegotiationPlayerMapCSV(result, chipData).map(row => row.join(",")).join("\n")], { type: 'text/csv' })
+            new Blob(
+              [
+                getChipNegotiationPlayerMapCSV(result, chipData)
+                  .map((row) => row.join(','))
+                  .join('\n'),
+              ],
+              {type: 'text/csv'},
+            ),
           );
         }
 
         // Add chat data to zip
         const chatData = getChatHistoryData(result);
-        chatData.forEach(data => {
+        chatData.forEach((data) => {
           const chatFileName = `${data.experimentName}_ChatHistory_Cohort-${data.cohortId}_Stage-${data.stageId}.csv`;
-          zip.file(chatFileName, new Blob([data.data.map(row => row.join(",")).join("\n")], { type: 'text/csv' }));
+          zip.file(
+            chatFileName,
+            new Blob([data.data.map((row) => row.join(',')).join('\n')], {
+              type: 'text/csv',
+            }),
+          );
         });
 
         // Add participant data to zip
-        zip.file(`${experimentName}_ParticipantData.csv`, new Blob([getParticipantData(result).map(row => row.join(",")).join("\n")], { type: 'text/csv' }));
+        zip.file(
+          `${experimentName}_ParticipantData.csv`,
+          new Blob(
+            [
+              getParticipantData(result)
+                .map((row) => row.join(','))
+                .join('\n'),
+            ],
+            {type: 'text/csv'},
+          ),
+        );
 
         // Generate zip and trigger download
-        zip.generateAsync({ type: 'blob' }).then(blob => {
+        zip.generateAsync({type: 'blob'}).then((blob) => {
           const link = document.createElement('a');
           link.href = URL.createObjectURL(blob);
           link.download = `${experimentName}_data.zip`;
@@ -637,16 +684,33 @@ export class ExperimentManager extends Service {
         {
           experimentId: this.experimentId,
           participantId,
-          stageId
-        }
+          stageId,
+        },
       );
     }
+  }
+
+  /** TEMPORARY: Test new agent config. */
+  async testAgentConfig() {
+    let response = '';
+    const creatorId = this.sp.authService.experimenterData?.email;
+    const agentConfig = this.sp.agentEditor.getAgentMediator('test');
+    if (creatorId && agentConfig) {
+      response =
+        (
+          await testAgentConfigCallable(this.sp.firebaseService.functions, {
+            creatorId,
+            agentConfig,
+          })
+        ).data ?? '';
+    }
+    return response;
   }
 
   /** Create a manual (human) agent chat message. */
   async createManualChatMessage(
     stageId: string,
-    config: Partial<HumanMediatorChatMessage> = {}
+    config: Partial<HumanMediatorChatMessage> = {},
   ) {
     let response = {};
     const experimentId = this.sp.routerService.activeRoute.params['experiment'];
@@ -667,7 +731,7 @@ export class ExperimentManager extends Service {
 
       response = await createChatMessageCallable(
         this.sp.firebaseService.functions,
-        createData
+        createData,
       );
     }
 

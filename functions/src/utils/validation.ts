@@ -1,9 +1,12 @@
 /** Pretty printing and analysis utils for typebox validation */
 
-import { CONFIG_DATA, Index } from '@deliberation-lab/utils';
-import { TObject } from '@sinclair/typebox';
-import { ValueError, ValueErrorIterator } from '@sinclair/typebox/build/cjs/errors';
-import { Value } from '@sinclair/typebox/value';
+import {CONFIG_DATA, Index} from '@deliberation-lab/utils';
+import {TObject} from '@sinclair/typebox';
+import {
+  ValueError,
+  ValueErrorIterator,
+} from '@sinclair/typebox/build/cjs/errors';
+import {Value} from '@sinclair/typebox/value';
 
 // ************************************************************************* //
 // PRETTY PRINTING                                                           //
@@ -17,7 +20,9 @@ export const prettyPrintError = (error: ValueError) => {
 };
 
 /** Pretty print typebox validation errors */
-export const prettyPrintErrors = (errors: ValueErrorIterator | ValueError[]) => {
+export const prettyPrintErrors = (
+  errors: ValueErrorIterator | ValueError[],
+) => {
   for (const error of errors) {
     prettyPrintError(error);
   }
@@ -55,7 +60,9 @@ export const checkUnionErrorOnPath = (
 
   // Get the union validator related to the data kind
   if (!('kind' in value)) {
-    throw new Error('Union error path must point to a value with a "kind" property');
+    throw new Error(
+      'Union error path must point to a value with a "kind" property',
+    );
   }
 
   const validator = unionValidators[value.kind];

@@ -48,7 +48,7 @@ export class SurveyView extends MobxLitElement {
 
   private readonly participantService = core.getService(ParticipantService);
   private readonly participantAnswerService = core.getService(
-    ParticipantAnswerService
+    ParticipantAnswerService,
   );
 
   @property() stage: SurveyStageConfig | undefined = undefined;
@@ -62,7 +62,7 @@ export class SurveyView extends MobxLitElement {
       if (!this.stage) return false;
       return isSurveyComplete(
         this.stage.questions,
-        this.participantAnswerService.getSurveyAnswerMap(this.stage.id)
+        this.participantAnswerService.getSurveyAnswerMap(this.stage.id),
       );
     };
 
@@ -110,7 +110,7 @@ export class SurveyView extends MobxLitElement {
       if (!this.stage) return;
       const answer = this.participantAnswerService.getSurveyAnswer(
         this.stage.id,
-        question.id
+        question.id,
       );
       if (answer && answer.kind === SurveyQuestionKind.CHECK) {
         return answer.isChecked;
@@ -165,13 +165,13 @@ export class SurveyView extends MobxLitElement {
       };
       this.participantAnswerService.updateSurveyAnswer(
         this.stage.id,
-        textAnswer
+        textAnswer,
       );
     };
 
     const answer = this.participantAnswerService.getSurveyAnswer(
       this.stage.id,
-      question.id
+      question.id,
     );
     const textAnswer =
       answer && answer.kind === SurveyQuestionKind.TEXT ? answer.answer : '';
@@ -207,8 +207,8 @@ export class SurveyView extends MobxLitElement {
       required: !isSurveyAnswerComplete(
         this.participantAnswerService.getSurveyAnswer(
           this.stage?.id ?? '',
-          question.id
-        )
+          question.id,
+        ),
       ),
     });
 
@@ -217,7 +217,7 @@ export class SurveyView extends MobxLitElement {
         <div class=${titleClasses}>${question.questionTitle}*</div>
         <div class=${questionWrapperClasses}>
           ${question.options.map((option) =>
-            this.renderRadioButton(option, question.id)
+            this.renderRadioButton(option, question.id),
           )}
         </div>
       </div>
@@ -228,7 +228,7 @@ export class SurveyView extends MobxLitElement {
     if (!this.stage) return;
     const answer = this.participantAnswerService.getSurveyAnswer(
       this.stage.id,
-      questionId
+      questionId,
     );
     if (answer && answer.kind === SurveyQuestionKind.MULTIPLE_CHOICE) {
       return answer?.choiceId === choiceId;
@@ -297,15 +297,15 @@ export class SurveyView extends MobxLitElement {
 
   private renderScaleQuestion(question: ScaleSurveyQuestion) {
     const scale = [...Array(question.upperValue + 1).keys()].slice(
-      question.lowerValue
+      question.lowerValue,
     );
 
     const titleClasses = classMap({
       required: !isSurveyAnswerComplete(
         this.participantAnswerService.getSurveyAnswer(
           this.stage?.id ?? '',
-          question.id
-        )
+          question.id,
+        ),
       ),
     });
 
@@ -333,7 +333,7 @@ export class SurveyView extends MobxLitElement {
       if (!this.stage) return;
       const answer = this.participantAnswerService.getSurveyAnswer(
         this.stage.id,
-        question.id
+        question.id,
       );
       if (answer && answer.kind === SurveyQuestionKind.SCALE) {
         return answer.value === value;

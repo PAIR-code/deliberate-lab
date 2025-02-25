@@ -3,13 +3,13 @@ import {
   GenerationConfig,
   HarmCategory,
   HarmBlockThreshold,
-} from "@google/generative-ai";
+} from '@google/generative-ai';
+import {AgentGenerationConfig} from '@deliberation-lab/utils';
 
-const GEMINI_DEFAULT_MODEL = "gemini-1.5-pro-latest";
+const GEMINI_DEFAULT_MODEL = 'gemini-1.5-pro-latest';
 const DEFAULT_FETCH_TIMEOUT = 300 * 1000; // This is the Chrome default
-const MAX_TOKENS_FINISH_REASON = "MAX_TOKENS";
+const MAX_TOKENS_FINISH_REASON = 'MAX_TOKENS';
 const QUOTA_ERROR_CODE = 429;
-
 
 const SAFETY_SETTINGS = [
   {
@@ -49,50 +49,57 @@ export async function callGemini(
 
   if (!response || !response.candidates) {
     console.error('Error: No response');
-    return { text: '' };
+    return {text: ''};
   }
 
   const finishReason = response.candidates[0].finishReason;
   if (finishReason === MAX_TOKENS_FINISH_REASON) {
     console.error(
-      `Error: Token limit (${generationConfig.maxOutputTokens}) exceeded`
+      `Error: Token limit (${generationConfig.maxOutputTokens}) exceeded`,
     );
   }
 
-  return { text: response.text() };
+  return {text: response.text()};
 }
 
 /** Constructs Gemini API query and returns response. */
 export async function getGeminiAPIResponse(
   apiKey: string,
+  modelName: string,
   promptText: string,
+  generationConfig: AgentGenerationConfig,
   stopSequences: string[] = [],
-  maxOutputTokens = 300,
-  temperature = 0.5,
-  topP = 0.1,
-  topK = 16
 ): Promise<ModelResponse> {
-  const generationConfig = {
+  const customFields = Object.fromEntries(
+    generationConfig.customRequestBodyFields.map((field) => [
+      field.name,
+      field.value,
+    ]),
+  );
+  const geminiConfig: GenerationConfig = {
     stopSequences,
-    maxOutputTokens,
-    temperature,
-    topP,
-    topK,
+    maxOutputTokens: 300,
+    temperature: generationConfig.temperature,
+    topP: generationConfig.topP,
+    topK: 16,
+    presencePenalty: generationConfig.presencePenalty,
+    frequencyPenalty: generationConfig.frequencyPenalty,
+    ...customFields
   };
 
-  let response = { text: "" };
+  let response = {text: ''};
   try {
     response = await callGemini(
       apiKey,
       promptText,
-      generationConfig,
-      GEMINI_DEFAULT_MODEL
+      geminiConfig,
+      modelName
     );
   } catch (error: any) {
     if (error.message.includes(QUOTA_ERROR_CODE.toString())) {
-      console.error("API quota exceeded");
+      console.error('API quota exceeded');
     } else {
-      console.error("API error");
+      console.error('API error');
     }
     console.error(error);
   }

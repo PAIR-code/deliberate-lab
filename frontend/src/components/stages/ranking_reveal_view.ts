@@ -91,6 +91,7 @@ export class RankingReveal extends MobxLitElement {
   private renderResultsTable() {
     if (!this.publicData || !this.item) return;
 
+    // TODO: Fix broken logic
     const showAllParticipants =
       this.item.revealAudience === RevealAudience.ALL_PARTICIPANTS;
 
@@ -128,7 +129,7 @@ export class RankingReveal extends MobxLitElement {
     }
 
     const maxOptions = Math.max(
-      ...Object.values(participantMap).map((lst) => lst.length)
+      ...Object.values(participantMap).map((lst) => lst.length),
     );
 
     return html`
@@ -155,13 +156,13 @@ export class RankingReveal extends MobxLitElement {
                 <div class="table-cell rank-row">${rowIndex + 1}</div>
                 ${Object.keys(participantMap).map((participant) => {
                   const votedItems = participantMap[participant].map(
-                    (itemId: string) => getEntryText(itemId)
+                    (itemId: string) => getEntryText(itemId),
                   );
                   const itemText = votedItems[rowIndex] || '';
                   return html` <div class="table-cell">${itemText}</div> `;
                 })}
               </div>
-            `
+            `,
           )}
         </div>
       </div>
@@ -174,13 +175,13 @@ export class RankingReveal extends MobxLitElement {
     }
 
     const electionName = this.experimentService.getStageName(
-      this.publicData.id
+      this.publicData.id,
     );
     return html`
       <h2>
         Results for <b><i>${electionName}</i></b> stage
       </h2>
-      ${this.renderWinner()} ${this.renderResultsTable()}
+      ${this.renderWinner()}
       <div class="divider"></div>
     `;
   }

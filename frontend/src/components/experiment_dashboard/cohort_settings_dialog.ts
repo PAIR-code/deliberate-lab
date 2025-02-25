@@ -54,7 +54,7 @@ export class CohortSettingsDialog extends MobxLitElement {
             @click=${() => {
               this.analyticsService.trackButtonClick(ButtonClick.COHORT_DELETE);
               this.experimentManager.deleteCohort(
-                this.experimentManager.cohortEditing!.id
+                this.experimentManager.cohortEditing!.id,
               );
             }}
           >
@@ -63,14 +63,14 @@ export class CohortSettingsDialog extends MobxLitElement {
           <pr-button
             @click=${() => {
               this.analyticsService.trackButtonClick(
-                ButtonClick.COHORT_SAVE_EXISTING
+                ButtonClick.COHORT_SAVE_EXISTING,
               );
               const cohort = this.experimentManager.cohortEditing;
               if (!cohort) return;
               this.experimentManager.updateCohortMetadata(
                 cohort.id,
                 cohort.metadata,
-                cohort.participantConfig
+                cohort.participantConfig,
               );
               this.experimentManager.setCohortEditing(undefined);
             }}

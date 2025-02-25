@@ -1,4 +1,4 @@
-import { generateId } from '../shared';
+import {generateId} from '../shared';
 import {
   BaseStageConfig,
   StageGame,
@@ -24,7 +24,7 @@ export interface InfoStageConfig extends BaseStageConfig {
 
 /** Create info stage. */
 export function createInfoStage(
-  config: Partial<InfoStageConfig> = {}
+  config: Partial<InfoStageConfig> = {},
 ): InfoStageConfig {
   return {
     id: config.id ?? generateId(),

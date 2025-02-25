@@ -1,4 +1,4 @@
-import { Value } from '@sinclair/typebox/value';
+import {Value} from '@sinclair/typebox/value';
 import {
   ChipLogEntry,
   ChipOfferStatus,
@@ -16,11 +16,11 @@ import {
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
-import { Timestamp } from 'firebase-admin/firestore';
+import {Timestamp} from 'firebase-admin/firestore';
 import * as functions from 'firebase-functions';
-import { onCall } from 'firebase-functions/v2/https';
+import {onCall} from 'firebase-functions/v2/https';
 
-import { app } from '../app';
+import {app} from '../app';
 import {
   checkConfigDataUnionOnPath,
   isUnionError,
@@ -28,7 +28,7 @@ import {
   prettyPrintErrors,
 } from '../utils/validation';
 
-import { getChipParticipants, updateChipCurrentTurn } from './chip.utils';
+import {getChipParticipants, updateChipCurrentTurn} from './chip.utils';
 
 /** Manage chip negotiation offers. */
 
@@ -44,7 +44,7 @@ import { getChipParticipants, updateChipCurrentTurn } from './chip.utils';
 // Validation: utils/src/chip.validation.ts                                  //
 // ************************************************************************* //
 export const setChipTurn = onCall(async (request) => {
-  const { data } = request;
+  const {data} = request;
 
   // Validate input
   const validInput = Value.Check(SetChipTurnData, data);
@@ -82,24 +82,33 @@ export const setChipTurn = onCall(async (request) => {
     .collection('logs');
 
   await app.firestore().runTransaction(async (transaction) => {
-    const publicStageData = (await publicDoc.get()).data() as ChipStagePublicData;
+    const publicStageData = (
+      await publicDoc.get()
+    ).data() as ChipStagePublicData;
 
     // If turn is already set, then no action needed
     if (publicStageData.currentTurn !== null) {
-      return { success: false };
+      return {success: false};
     }
 
     // Get relevant (active, in cohort) participant IDs
-    const participants = await getChipParticipants(data.experimentId, data.cohortId);
+    const participants = await getChipParticipants(
+      data.experimentId,
+      data.cohortId,
+    );
 
     // If no participants, then no action needed
     if (participants.length === 0) {
-      return { success: false };
+      return {success: false};
     }
 
     const stageConfig = (await stageDoc.get()).data() as ChipStageConfig;
 
-    const newData = updateChipCurrentTurn(publicStageData, participants, stageConfig.numRounds);
+    const newData = updateChipCurrentTurn(
+      publicStageData,
+      participants,
+      stageConfig.numRounds,
+    );
 
     transaction.set(publicDoc, newData);
     transaction.set(
@@ -111,12 +120,12 @@ export const setChipTurn = onCall(async (request) => {
       createChipTurnLogEntry(
         newData.currentRound + 1,
         newData.currentTurn,
-        Timestamp.now()
+        Timestamp.now(),
       ),
     );
   }); // end transaction
 
-  return { success: true };
+  return {success: true};
 });
 
 // ************************************************************************* //
@@ -130,7 +139,7 @@ export const setChipTurn = onCall(async (request) => {
 // ************************************************************************* //
 
 export const sendChipOffer = onCall(async (request) => {
-  const { data } = request;
+  const {data} = request;
 
   // Validate input
   const validInput = Value.Check(SendChipOfferData, data);
@@ -161,7 +170,9 @@ export const sendChipOffer = onCall(async (request) => {
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
-    const publicStageData = (await publicDoc.get()).data() as ChipStagePublicData;
+    const publicStageData = (
+      await publicDoc.get()
+    ).data() as ChipStagePublicData;
     const chipOffer = data.chipOffer;
     const currentRound = publicStageData.currentRound;
 
@@ -173,9 +184,9 @@ export const sendChipOffer = onCall(async (request) => {
     if (
       chipOffer.senderId !== publicStageData.currentTurn ||
       (publicStageData.participantOfferMap[currentRound] &&
-      publicStageData.participantOfferMap[currentRound][chipOffer.senderId])
+        publicStageData.participantOfferMap[currentRound][chipOffer.senderId])
     ) {
-      return { success: false };
+      return {success: false};
     }
 
     // Update participant offer map in public stage data
@@ -192,11 +203,11 @@ export const sendChipOffer = onCall(async (request) => {
     // Add log entry for chip offer
     transaction.set(
       logCollection.doc(),
-      createChipOfferLogEntry(chipOffer, Timestamp.now())
+      createChipOfferLogEntry(chipOffer, Timestamp.now()),
     );
   });
 
-  return { success: true };
+  return {success: true};
 });
 
 // ************************************************************************* //
@@ -210,7 +221,7 @@ export const sendChipOffer = onCall(async (request) => {
 // Validation: utils/src/chip.validation.ts                                  //
 // ************************************************************************* //
 export const sendChipResponse = onCall(async (request) => {
-  const { data } = request;
+  const {data} = request;
 
   // Validate input
   const validInput = Value.Check(SendChipResponseData, data);
@@ -231,29 +242,33 @@ export const sendChipResponse = onCall(async (request) => {
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     // Confirm that offer is valid (ID matches the current offer ID)
-    const publicStageData = (await publicDoc.get()).data() as ChipStagePublicData;
+    const publicStageData = (
+      await publicDoc.get()
+    ).data() as ChipStagePublicData;
     // TODO: Check offer ID
     if (!publicStageData.currentTurn) {
-      return { success: false };
+      return {success: false};
     }
 
     // Update participant offer map in public stage data
     // (mark current participant as having responded to current offer)
     const currentRound = publicStageData.currentRound;
     const currentTurn = publicStageData.currentTurn;
-    if (!publicStageData.participantOfferMap[currentRound] ||
+    if (
+      !publicStageData.participantOfferMap[currentRound] ||
       !publicStageData.participantOfferMap[currentRound][currentTurn]
     ) {
-      return { success: false };
+      return {success: false};
     }
-    publicStageData.participantOfferMap[currentRound][currentTurn].responseMap[data.participantPublicId] =
-      { response: data.chipResponse, timestamp: Timestamp.now() };
+    publicStageData.participantOfferMap[currentRound][currentTurn].responseMap[
+      data.participantPublicId
+    ] = {response: data.chipResponse, timestamp: Timestamp.now()};
 
     // Set new public data
     transaction.set(publicDoc, publicStageData);
   });
 
-  return { success: true };
+  return {success: true};
 });
 
 // ************************************************************************* //

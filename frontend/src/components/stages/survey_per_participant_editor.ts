@@ -8,9 +8,7 @@ import '@material/web/checkbox/checkbox.js';
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
-import {
-  SurveyPerParticipantStageConfig,
-} from '@deliberation-lab/utils';
+import {SurveyPerParticipantStageConfig} from '@deliberation-lab/utils';
 
 import {styles} from './survey_editor.scss';
 
@@ -44,7 +42,8 @@ export class SurveyEditor extends MobxLitElement {
         >
         </md-checkbox>
         <span class="checkbox-label">
-          Enable self-survey for participants (participants answer survey questions about themself)
+          Enable self-survey for participants (participants answer survey
+          questions about themself)
         </span>
       </label>
       <survey-editor .stage=${this.stage}></survey-editor>

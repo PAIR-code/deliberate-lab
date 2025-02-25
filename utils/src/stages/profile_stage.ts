@@ -1,10 +1,10 @@
-import { generateId } from '../shared';
+import {generateId} from '../shared';
 import {
   BaseStageConfig,
   StageGame,
   StageKind,
   createStageProgressConfig,
-  createStageTextConfig
+  createStageTextConfig,
 } from './stage';
 
 /** Profile stage types and functions. */
@@ -12,7 +12,6 @@ import {
 // ************************************************************************* //
 // TYPES                                                                     //
 // ************************************************************************* //
-
 
 export enum ProfileType {
   DEFAULT = 'DEFAULT', // Profiles are set by the participant.
@@ -30,7 +29,7 @@ export interface ProfileStageConfig extends BaseStageConfig {
 
 /** Create profile stage. */
 export function createProfileStage(
-  config: Partial<ProfileStageConfig> = {}
+  config: Partial<ProfileStageConfig> = {},
 ): ProfileStageConfig {
   return {
     id: config.id ?? generateId(),

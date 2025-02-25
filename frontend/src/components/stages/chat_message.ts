@@ -21,7 +21,11 @@ import {
   HumanMediatorChatMessage,
   ParticipantChatMessage,
 } from '@deliberation-lab/utils';
-import {convertUnifiedTimestampToDate, getColor} from '../../shared/utils';
+import {
+  convertUnifiedTimestampToDate,
+  getHashBasedColor,
+  getProfileBasedColor,
+} from '../../shared/utils';
 
 import {styles} from './chat_message.scss';
 
@@ -68,19 +72,16 @@ export class ChatMessageComponent extends MobxLitElement {
       if (!chatMessage.profile?.name) {
         return '';
       }
-      // If publicId is in format animal-color-number, extract color
-      const splitId = (chatMessage.participantPublicId ?? '').split('-');
-      if (splitId.length >= 3) {
-        return splitId[1];
-      }
-      // Otherwise, use publicId as hash
-      return getColor(chatMessage.participantPublicId);
+      // Otherwise, use profile ID/avatar to determine color
+      return getProfileBasedColor(
+        chatMessage.participantPublicId ?? '',
+        profile.avatar ?? '',
+      );
     };
 
     return html`
       <div class=${classes}>
-        <avatar-icon .emoji=${profile.avatar} .color=${color()}>
-        </avatar-icon>
+        <avatar-icon .emoji=${profile.avatar} .color=${color()}> </avatar-icon>
         <div class="content">
           <div class="label">
             ${profile.name ?? chatMessage.participantPublicId}
@@ -89,7 +90,7 @@ export class ChatMessageComponent extends MobxLitElement {
             <span class="date"
               >${convertUnifiedTimestampToDate(
                 chatMessage.timestamp,
-                false
+                false,
               )}</span
             >
           </div>
@@ -104,7 +105,10 @@ export class ChatMessageComponent extends MobxLitElement {
 
     return html`
       <div class="chat-message">
-        <avatar-icon .emoji=${profile.avatar} .color=${getColor(profile?.avatar ?? '')}>
+        <avatar-icon
+          .emoji=${profile.avatar}
+          .color=${getHashBasedColor(profile?.avatar ?? '')}
+        >
         </avatar-icon>
         <div class="content">
           <div class="label">
@@ -112,7 +116,7 @@ export class ChatMessageComponent extends MobxLitElement {
             <span class="date"
               >${convertUnifiedTimestampToDate(
                 chatMessage.timestamp,
-                false
+                false,
               )}</span
             >
           </div>
@@ -127,7 +131,10 @@ export class ChatMessageComponent extends MobxLitElement {
 
     return html`
       <div class="chat-message">
-        <avatar-icon .emoji=${profile.avatar} .color=${getColor(profile?.avatar ?? '')}>
+        <avatar-icon
+          .emoji=${profile.avatar}
+          .color=${getHashBasedColor(profile?.avatar ?? '')}
+        >
         </avatar-icon>
         <div class="content">
           <div class="label">
@@ -135,7 +142,7 @@ export class ChatMessageComponent extends MobxLitElement {
             <span class="date"
               >${convertUnifiedTimestampToDate(
                 chatMessage.timestamp,
-                false
+                false,
               )}</span
             >
           </div>

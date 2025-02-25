@@ -1,6 +1,6 @@
-import { Timestamp } from 'firebase/firestore';
-import { ExperimentDownload } from './data';
-import { v4 as uuidv4 } from 'uuid';
+import {Timestamp} from 'firebase/firestore';
+import {ExperimentDownload} from './data';
+import {v4 as uuidv4} from 'uuid';
 
 /** Shared types and functions. */
 
@@ -22,7 +22,7 @@ export interface CreationResponse {
 }
 
 export interface ParticipantNextStageResponse {
-  currentStageId: string|null;
+  currentStageId: string | null;
   endExperiment: boolean;
 }
 
@@ -94,7 +94,10 @@ export function generateId(isSequential: boolean = false): string {
 }
 
 /** Await typing delay (e.g., for chat messages). */
-export async function awaitTypingDelay(message: string, wordsPerMinute: number): Promise<void> {
+export async function awaitTypingDelay(
+  message: string,
+  wordsPerMinute: number,
+): Promise<void> {
   const delay = getTypingDelayInMs(message, wordsPerMinute);
   console.log(
     `Waiting ${(delay / 1000).toFixed(2)} seconds to simulate delay.`,
@@ -103,14 +106,18 @@ export async function awaitTypingDelay(message: string, wordsPerMinute: number):
 }
 
 /** Calculate typing delay (e.g., for chat messages). */
-export function getTypingDelayInMs(message: string, wordsPerMinute: number): number {
+export function getTypingDelayInMs(
+  message: string,
+  wordsPerMinute: number,
+): number {
   const wordCount = message.split(' ').length;
   const timeInMinutes = wordCount / wordsPerMinute;
   let timeInSeconds = timeInMinutes * 60;
 
   // Add randomness to simulate variability in typing speed (0.75 - 1.25)
   const randomnessFactor = 0.5;
-  const randomMultiplier = 1 + (Math.random() * randomnessFactor - randomnessFactor / 2);
+  const randomMultiplier =
+    1 + (Math.random() * randomnessFactor - randomnessFactor / 2);
   timeInSeconds *= randomMultiplier;
 
   const delay = Math.min(timeInSeconds, 10) * 1000; // Cap delay at 10 seconds.
@@ -118,7 +125,9 @@ export function getTypingDelayInMs(message: string, wordsPerMinute: number): num
 }
 
 /** Create MetadataConfig. */
-export function createMetadataConfig(config: Partial<MetadataConfig> = {}): MetadataConfig {
+export function createMetadataConfig(
+  config: Partial<MetadataConfig> = {},
+): MetadataConfig {
   const timestamp = Timestamp.now();
 
   return {

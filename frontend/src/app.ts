@@ -9,7 +9,6 @@ import './components/login/login';
 import './components/participant_view/cohort_landing';
 import './components/participant_view/participant_view';
 import './components/settings/settings';
-import './components/sidenav/experimenter_sidenav';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
@@ -43,6 +42,8 @@ export class App extends MobxLitElement {
   }
 
   private renderPageContent() {
+    const params = this.routerService.activeRoute.params;
+
     switch (this.routerService.activePage) {
       case Pages.HOME:
         if (!this.authService.isExperimenter) {
@@ -50,6 +51,7 @@ export class App extends MobxLitElement {
         }
         return html`
           <page-header></page-header>
+          <home-gallery-tabs></home-gallery-tabs>
           <div class="content">
             <home-gallery></home-gallery>
           </div>
@@ -64,7 +66,7 @@ export class App extends MobxLitElement {
       case Pages.SETTINGS:
         return html`
           <page-header></page-header>
-          <div class="content">
+          <div class="content info">
             <settings-page .showAccount=${true}></settings-page>
           </div>
         `;
@@ -72,9 +74,10 @@ export class App extends MobxLitElement {
         if (!this.authService.isExperimenter) {
           return this.render403();
         }
-        return html`
-          <experiment-dashboard></experiment-dashboard>
-        `;
+        // Update viewed experiments for current experimenter
+        this.authService.updateViewedExperiments(params['experiment']);
+
+        return html` <experiment-dashboard></experiment-dashboard> `;
       case Pages.EXPERIMENT_CREATE:
         if (!this.authService.isExperimenter) {
           return this.render403();
@@ -91,11 +94,10 @@ export class App extends MobxLitElement {
       case Pages.PARTICIPANT_STAGE:
         // This ensures backwards compatibility
         // from when PARTICIPANT_STAGE was a different route than PARTICIPANT
-        const params = this.routerService.activeRoute.params;
         this.routerService.navigate(Pages.PARTICIPANT, {
           experiment: params['experiment'],
           participant: params['participant'],
-          stage: params['stage']
+          stage: params['stage'],
         });
         return nothing;
       case Pages.PARTICIPANT_JOIN_COHORT:
@@ -120,7 +122,9 @@ export class App extends MobxLitElement {
           <pr-button
             color="error"
             variant="outlined"
-            @click=${() => { this.authService.signOut() }}
+            @click=${() => {
+              this.authService.signOut();
+            }}
           >
             Log out
           </pr-button>
@@ -133,8 +137,8 @@ export class App extends MobxLitElement {
         <div class="error">
           <div>Participants do not have access to this page.</div>
           <div>
-            If you are a researcher, contact the owner(s) of this deployment
-            and have them add your email address to the allowlist.
+            If you are a researcher, contact the owner(s) of this deployment and
+            have them add your email address to the allowlist.
           </div>
           ${renderLogoutButton()}
         </div>
@@ -163,10 +167,7 @@ export class App extends MobxLitElement {
     return html`
       <div class="app-wrapper mode--${this.settingsService.colorMode}">
         <main>
-          <experimenter-sidenav></experimenter-sidenav>
-          <div class="content-wrapper">
-            ${this.renderPageContent()}
-          </div>
+          <div class="content-wrapper">${this.renderPageContent()}</div>
         </main>
       </div>
     `;

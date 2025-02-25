@@ -20,7 +20,7 @@ import {
   checkApiKeyExists,
 } from '@deliberation-lab/utils';
 import {LLM_AGENT_AVATARS} from '../../shared/constants';
-import {getColor} from '../../shared/utils';
+import {getHashBasedColor} from '../../shared/utils';
 
 import {styles} from './chat_editor.scss';
 
@@ -44,7 +44,8 @@ export class ChatEditor extends MobxLitElement {
     if (!checkApiKeyExists(this.authService.experimenterData)) {
       apiCheck = html`
         <div class="warning">
-          <b>Note:</b> In order for LLM calls to work, you must add an API key or server configuration under Experimenter Settings.
+          <b>Note:</b> In order for LLM calls to work, you must add an API key
+          or server configuration under Experimenter Settings.
         </div>
       `;
     } else {
@@ -184,7 +185,7 @@ export class ChatEditor extends MobxLitElement {
           ...agent,
           name,
         },
-        index
+        index,
       );
     };
 
@@ -201,6 +202,31 @@ export class ChatEditor extends MobxLitElement {
     `;
   }
 
+  private renderAgentModel(agent: AgentConfig, index: number) {
+    const updateModel = (e: InputEvent) => {
+      const model = (e.target as HTMLTextAreaElement).value;
+      this.updateAgent(
+        {
+          ...agent,
+          model,
+        },
+        index,
+      );
+    };
+
+    return html`
+      <pr-textarea
+        label="Model"
+        placeholder="Model ID"
+        variant="outlined"
+        .value=${agent.model}
+        ?disabled=${!this.experimentEditor.canEditStages}
+        @input=${updateModel}
+      >
+      </pr-textarea>
+    `;
+  }
+
   private renderAgentPrompt(agent: AgentConfig, index: number) {
     const updatePrompt = (e: InputEvent) => {
       const prompt = (e.target as HTMLTextAreaElement).value;
@@ -209,7 +235,7 @@ export class ChatEditor extends MobxLitElement {
           ...agent,
           prompt,
         },
-        index
+        index,
       );
     };
 
@@ -247,7 +273,7 @@ export class ChatEditor extends MobxLitElement {
           ...agent,
           avatar,
         },
-        index
+        index,
       );
     };
 
@@ -264,7 +290,11 @@ export class ChatEditor extends MobxLitElement {
             @change=${handleAvatarClick}
           >
           </md-radio>
-          <avatar-icon .emoji=${emoji} .square=${true} .color=${getColor(emoji)}>
+          <avatar-icon
+            .emoji=${emoji}
+            .square=${true}
+            .color=${getHashBasedColor(emoji)}
+          >
           </avatar-icon>
         </div>
       `;
@@ -275,7 +305,7 @@ export class ChatEditor extends MobxLitElement {
         <div class="question-label">Avatar</div>
         <div class="radio-wrapper">
           ${LLM_AGENT_AVATARS.map((avatar, index) =>
-            renderAvatarRadio(avatar, index)
+            renderAvatarRadio(avatar, index),
           )}
         </div>
       </div>
@@ -303,9 +333,12 @@ export class ChatEditor extends MobxLitElement {
             </pr-icon-button>
           </div>
           ${this.renderAvatars(agent, index)}
+          ${this.renderAgentModel(agent, index)}
           ${this.renderAgentPrompt(agent, index)}
           ${this.renderAgentResponseConfig(agent, index)}
           ${this.renderAgentWordsPerMinute(agent, index)}
+          ${this.renderAgentSamplingParameters(agent, index)}
+          ${this.renderAgentCustomRequestBodyFields(agent, index)}
         </div>
       </div>
     `;
@@ -320,7 +353,7 @@ export class ChatEditor extends MobxLitElement {
             ...agent,
             wordsPerMinute,
           },
-          index
+          index,
         );
       }
     };
@@ -346,6 +379,217 @@ export class ChatEditor extends MobxLitElement {
             </div>`
           : nothing}
       </div>
+    `;
+  }
+
+  private renderAgentSamplingParameters(agent: AgentConfig, index: number) {
+    const updateTemperature = (e: InputEvent) => {
+      const temperature = Number((e.target as HTMLInputElement).value);
+      if (!isNaN(temperature)) {
+        this.updateAgent(
+          {
+            ...agent,
+            generationConfig: {
+              ...agent.generationConfig,
+              temperature,
+            },
+          },
+          index,
+        );
+      }
+    };
+
+    const updateTopP = (e: InputEvent) => {
+      const topP = Number((e.target as HTMLInputElement).value);
+      if (!isNaN(topP)) {
+        this.updateAgent(
+          {
+            ...agent,
+            generationConfig: {
+              ...agent.generationConfig,
+              topP,
+            },
+          },
+          index,
+        );
+      }
+    };
+
+    const updateFrequencyPenalty = (e: InputEvent) => {
+      const frequencyPenalty = Number((e.target as HTMLInputElement).value);
+      if (!isNaN(frequencyPenalty)) {
+        this.updateAgent(
+          {
+            ...agent,
+            generationConfig: {
+              ...agent.generationConfig,
+              frequencyPenalty,
+            },
+          },
+          index,
+        );
+      }
+    };
+
+    const updatePresencePenalty = (e: InputEvent) => {
+      const presencePenalty = Number((e.target as HTMLInputElement).value);
+      if (!isNaN(presencePenalty)) {
+        this.updateAgent(
+          {
+            ...agent,
+            generationConfig: {
+              ...agent.generationConfig,
+              presencePenalty,
+            },
+          },
+          index,
+        );
+      }
+    };
+
+    return html`
+      <div class="question-label">Sampling parameters</div>
+      <div class="description">
+        Currently only used for OpenAI and OAI-compatible APIs.
+      </div>
+      <label for="temperature">Temperature</label>
+      <div class="description">
+        The lower this value, the more deterministic the model's outcome will
+        be.
+      </div>
+      <div class="number-input">
+        <input
+          .disabled=${!this.experimentEditor.canEditStages}
+          type="number"
+          min="0.0"
+          max="1.0"
+          step="0.1"
+          .value=${agent.generationConfig.temperature}
+          @input=${updateTemperature}
+        />
+      </div>
+      <label for="topP">Top P</label>
+      <div class="description">
+        If this value is less than 1.0, the model will discard unlikely tokens
+        and sample from only tokens comprising that much probability mass.
+      </div>
+      <div class="number-input">
+        <input
+          .disabled=${!this.experimentEditor.canEditStages}
+          type="number"
+          min="0.0"
+          max="1.0"
+          step="0.1"
+          .value=${agent.generationConfig.topP}
+          @input=${updateTopP}
+        />
+      </div>
+      <label for="frequencyPenalty">Frequency penalty</label>
+      <div class="description">
+        Positive values will penalize tokens based on how frequently they have
+        appeared in the text.
+      </div>
+      <div class="number-input">
+        <input
+          .disabled=${!this.experimentEditor.canEditStages}
+          type="number"
+          min="0.0"
+          max="2.0"
+          step="0.1"
+          .value=${agent.generationConfig.frequencyPenalty}
+          @input=${updateFrequencyPenalty}
+        />
+      </div>
+      <label for="presencePenalty">Presence penalty</label>
+      <div class="description">
+        Positive values will penalize tokens that have already appeared in the
+        text (regardless of frequency).
+      </div>
+      <div class="number-input">
+        <input
+          .disabled=${!this.experimentEditor.canEditStages}
+          type="number"
+          min="0.0"
+          max="2.0"
+          step="0.1"
+          .value=${agent.generationConfig.presencePenalty}
+          @input=${updatePresencePenalty}
+        />
+      </div>
+    `;
+  }
+
+  private renderAgentCustomRequestBodyFields(
+    agent: AgentConfig,
+    index: number,
+  ) {
+    const addField = () => {
+      this.updateAgent(
+        {
+          ...agent,
+          generationConfig: {
+            ...agent.generationConfig,
+            customRequestBodyFields: [
+              ...agent.generationConfig.customRequestBodyFields,
+              {name: '', value: ''},
+            ],
+          },
+        },
+        index,
+      );
+    };
+
+    const updateField = (
+      fieldIndex: number,
+      field: Partial<{name: string; value: string}>,
+    ) => {
+      agent.generationConfig.customRequestBodyFields[fieldIndex] = {
+        ...agent.generationConfig.customRequestBodyFields[fieldIndex],
+        ...field,
+      };
+      this.updateAgent(agent, index);
+    };
+
+    const deleteField = (fieldIndex: number) => {
+      agent.generationConfig.customRequestBodyFields = [
+        ...agent.generationConfig.customRequestBodyFields.slice(0, index),
+        ...agent.generationConfig.customRequestBodyFields.slice(index + 1),
+      ];
+      this.updateAgent(agent, index);
+    };
+
+    return html`
+      <div class="question-label">Custom request body fields</div>
+      <div class="description">Add custom fields to the request body.</div>
+      ${agent.generationConfig.customRequestBodyFields.map(
+        (field, fieldIndex) => html`
+         <div class="name-value-input">
+           <pr-textarea
+             label="Field name"
+             variant="outlined"
+             .value=${field.name}
+             @input=${(e: InputEvent) => updateField(fieldIndex, {name: (e.target as HTMLInputElement).value})}
+           >
+           </pr-textarea>
+           <pr-textarea
+             label="Field value"
+             variant="outlined"
+             .value=${field.value}
+             @input=${(e: InputEvent) => updateField(fieldIndex, {value: (e.target as HTMLInputElement).value})}
+           >
+           </pr-textarea>
+           <pr-icon-button
+              icon="close"
+              color="neutral"
+              padding="small"
+              variant="default"
+              ?disabled=${!this.experimentEditor.canEditStages}
+              @click=${(e: InputEvent) => deleteField(fieldIndex)}
+           >
+         </div>
+       `,
+      )}
+      <pr-button @click=${addField}>Add field</pr-button>
     `;
   }
 

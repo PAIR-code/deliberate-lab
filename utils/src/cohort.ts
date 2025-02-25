@@ -2,7 +2,7 @@ import {
   MetadataConfig,
   UnifiedTimestamp,
   createMetadataConfig,
-  generateId
+  generateId,
 } from './shared';
 import {
   CohortParticipantConfig,
@@ -20,6 +20,8 @@ export interface CohortConfig {
   id: string;
   metadata: MetadataConfig;
   participantConfig: CohortParticipantConfig;
+  // Maps stage ID to whether stage is unlocked (i.e., participants are ready)
+  stageUnlockMap: Record<string, boolean>;
 }
 
 // ************************************************************************* //
@@ -28,11 +30,13 @@ export interface CohortConfig {
 
 /** Create CohortConfig. */
 export function createCohortConfig(
-  config: Partial<CohortConfig>
+  config: Partial<CohortConfig>,
 ): CohortConfig {
   return {
     id: config.id ?? generateId(true), // Alphanumeric sorting.
     metadata: config.metadata ?? createMetadataConfig(),
-    participantConfig: config.participantConfig ?? createCohortParticipantConfig(),
+    participantConfig:
+      config.participantConfig ?? createCohortParticipantConfig(),
+    stageUnlockMap: config.stageUnlockMap ?? {},
   };
 }

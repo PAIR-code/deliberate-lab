@@ -1,6 +1,6 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   background: var(--md-sys-color-surface);
@@ -36,6 +36,10 @@
 
   &.banner {
     background: var(--md-sys-color-tertiary-container);
+  }
+
+  &.no-border {
+    border-color: transparent;
   }
 
   .left,
@@ -90,4 +94,10 @@ h1 {
 .subtitle {
   @include typescale.label-small;
   color: var(--md-sys-color-outline);
+}
+
+pr-button {
+  pr-icon {
+    margin-right: common.$spacing-small;
+  }
 }

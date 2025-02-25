@@ -1,5 +1,5 @@
-import { Service } from "../services/service";
-import { Constructor } from "../shared/types";
+import {Service} from '../services/service';
+import {Constructor} from '../shared/types';
 
 interface ServiceProvider {
   [key: string]: Service;

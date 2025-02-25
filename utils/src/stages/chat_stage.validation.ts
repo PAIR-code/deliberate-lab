@@ -1,15 +1,15 @@
-import { Type, type Static } from '@sinclair/typebox';
-import { UnifiedTimestampSchema } from '../shared.validation';
-import { StageKind } from './stage';
+import {Type, type Static} from '@sinclair/typebox';
+import {UnifiedTimestampSchema} from '../shared.validation';
+import {StageKind} from './stage';
 import {
   StageGameSchema,
   StageTextConfigSchema,
   StageProgressConfigSchema,
 } from './stage.validation';
-import { ChatMessageType } from './chat_stage';
+import {ChatMessageType} from './chat_stage';
 
 /** Shorthand for strict TypeBox object validation */
-const strict = { additionalProperties: false } as const;
+const strict = {additionalProperties: false} as const;
 
 // ************************************************************************* //
 // updateChatStageConfig endpoint                                            //
@@ -39,7 +39,7 @@ export const ChatMessageTypeData = Type.Union([
 
 /** ChatMessage input validation. */
 export const ChatMessageData = Type.Object({
-  id: Type.String({ minLength: 1 }),
+  id: Type.String({minLength: 1}),
   discussionId: Type.Union([Type.Null(), Type.String()]),
   type: ChatMessageTypeData,
   message: Type.String(),
@@ -57,9 +57,9 @@ export const ChatMessageData = Type.Object({
 /** CreateChatMessageData. */
 export const CreateChatMessageData = Type.Object(
   {
-    experimentId: Type.String({ minLength: 1 }),
-    cohortId: Type.String({ minLength: 1 }),
-    stageId: Type.String({ minLength: 1 }),
+    experimentId: Type.String({minLength: 1}),
+    cohortId: Type.String({minLength: 1}),
+    stageId: Type.String({minLength: 1}),
     chatMessage: ChatMessageData,
   },
   strict,
@@ -72,16 +72,16 @@ export type CreateChatMessageData = Static<typeof CreateChatMessageData>;
 // ************************************************************************* //
 
 export const UpdateChatAgentsData = Type.Object({
-  experimentId: Type.String({ minLength: 1 }),
-  stageId: Type.String({ minLength: 1 }),
+  experimentId: Type.String({minLength: 1}),
+  stageId: Type.String({minLength: 1}),
   // TODO: Refactor agent config validation
   agentList: Type.Array(
     Type.Object({
-      id: Type.String({ minLength: 1 }),
+      id: Type.String({minLength: 1}),
       name: Type.String(),
       avatar: Type.String(),
       prompt: Type.String(),
-      wordsPerMinute: Type.Number({ minimum: 1, maximum: 1000 }),
+      wordsPerMinute: Type.Number({minimum: 1, maximum: 1000}),
       responseConfig: Type.Object({
         isJSON: Type.Boolean(),
         messageField: Type.String(),
@@ -101,10 +101,10 @@ export type UpdateChatAgentsData = Static<typeof UpdateChatAgentsData>;
 /** ChatStageParticipantAnswerData. */
 export const ChatStageParticipantAnswerData = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.CHAT),
     discussionTimestampMap: Type.Record(
-      Type.String({ minLength: 1 }),
+      Type.String({minLength: 1}),
       Type.Union([Type.Null(), UnifiedTimestampSchema]),
     ),
   },
@@ -114,10 +114,10 @@ export const ChatStageParticipantAnswerData = Type.Object(
 /** UpdateChatStageParticipantAnswer endpoint validation. */
 export const UpdateChatStageParticipantAnswerData = Type.Object(
   {
-    experimentId: Type.String({ minLength: 1 }),
-    cohortId: Type.String({ minLength: 1 }),
-    participantPrivateId: Type.String({ minLength: 1 }),
-    participantPublicId: Type.String({ minLength: 1 }),
+    experimentId: Type.String({minLength: 1}),
+    cohortId: Type.String({minLength: 1}),
+    participantPrivateId: Type.String({minLength: 1}),
+    participantPublicId: Type.String({minLength: 1}),
     chatStageParticipantAnswer: ChatStageParticipantAnswerData,
   },
   strict,

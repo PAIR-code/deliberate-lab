@@ -18,7 +18,7 @@ import {styles} from './home_gallery.scss';
 @customElement('home-gallery')
 export class HomeGallery extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
-  
+
   private readonly authService = core.getService(AuthService);
   private readonly homeService = core.getService(HomeService);
   private readonly routerService = core.getService(RouterService);
@@ -29,7 +29,7 @@ export class HomeGallery extends MobxLitElement {
 
       const navigate = () => {
         this.routerService.navigate(Pages.EXPERIMENT, {
-          'experiment': experiment.id,
+          experiment: experiment.id,
         });
       };
 
@@ -39,42 +39,87 @@ export class HomeGallery extends MobxLitElement {
     };
 
     const experiments = this.homeService.experiments
-    .slice() 
-    .sort((a, b) => a.metadata.dateCreated.seconds - b.metadata.dateCreated.seconds);
+      .slice()
+      .sort(
+        (a, b) =>
+          b.metadata.dateCreated.seconds - a.metadata.dateCreated.seconds,
+      );
 
-    const yourExperiments = experiments.filter(e => e.metadata.creator === this.authService.userEmail);
-    const otherExperiments = experiments.filter(e => e.metadata.creator !== this.authService.userEmail);
- 
+    const yourExperiments = experiments.filter(
+      (e) => e.metadata.creator === this.authService.userEmail,
+    );
+    const otherExperiments = experiments.filter(
+      (e) =>
+        e.metadata.creator !== this.authService.userEmail &&
+        this.authService.isViewedExperiment(e.id),
+    );
+
+    if (this.homeService.showMyExperiments) {
+      return html`
+        <div class="gallery-wrapper">
+          ${this.renderEmptyMessage(yourExperiments)}
+          ${yourExperiments.map((e) => renderExperiment(e))}
+        </div>
+      `;
+    }
+
     return html`
-      ${this.renderEmptyMessage()}
-      ${yourExperiments.length ? 
-        html`
-       <h1>Your experiments</h1>
-        <div class="gallery-wrapper">
-        ${yourExperiments.map(e => renderExperiment(e))}
+      <div class="gallery-wrapper">
+        <div class="banner">
+          Experiments by others will only be shown in this tab if they are
+          shared publicly and have been viewed by you before. To view an
+          experiment, ask the creator to make the experiment public and share
+          the link with you.
         </div>
-        ` : ''
-      }
-      ${otherExperiments.length ? 
-        html`
-       <h1>Other public experiments</h1>
-        <div class="gallery-wrapper">
-        ${otherExperiments.map(e => renderExperiment(e))}
-        </div>
-        ` : ''
-      }
-
+        ${this.renderEmptyMessage(otherExperiments)}
+        ${otherExperiments.map((e) => renderExperiment(e))}
+      </div>
     `;
   }
 
-  private renderEmptyMessage() {
-    if (this.homeService.experiments.length > 0) return nothing;
+  private renderEmptyMessage(experiments: Experiment[]) {
+    if (experiments.length > 0) return nothing;
     return html`<div class="empty-message">No experiments yet</div>`;
+  }
+}
+
+/** Tabs for home/landing page */
+@customElement('home-gallery-tabs')
+export class HomeGalleryTabs extends MobxLitElement {
+  static override styles: CSSResultGroup = [styles];
+  private readonly homeService = core.getService(HomeService);
+
+  override render() {
+    return html`
+      <div class="gallery-tabs">
+        <div
+          class="gallery-tab ${this.homeService.showMyExperiments
+            ? 'active'
+            : ''}"
+          @click=${() => {
+            this.homeService.setShowMyExperiments(true);
+          }}
+        >
+          My experiments
+        </div>
+        <div
+          class="gallery-tab ${!this.homeService.showMyExperiments
+            ? 'active'
+            : ''}"
+          @click=${() => {
+            this.homeService.setShowMyExperiments(false);
+          }}
+        >
+          Shared with me
+        </div>
+      </div>
+    `;
   }
 }
 
 declare global {
   interface HTMLElementTagNameMap {
     'home-gallery': HomeGallery;
+    'home-gallery-tabs': HomeGalleryTabs;
   }
 }

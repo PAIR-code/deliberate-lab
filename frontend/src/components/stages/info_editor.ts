@@ -7,10 +7,7 @@ import {customElement, property} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
-import {
-  InfoStageConfig,
-  StageKind,
-} from '@deliberation-lab/utils';
+import {InfoStageConfig, StageKind} from '@deliberation-lab/utils';
 
 import {styles} from './info_editor.scss';
 
@@ -21,23 +18,21 @@ export class InfoEditorComponent extends MobxLitElement {
 
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
-  @property() stage: InfoStageConfig|undefined = undefined;
+  @property() stage: InfoStageConfig | undefined = undefined;
 
   override render() {
     if (this.stage === undefined) {
       return nothing;
     }
 
-    return html`
-      ${this.renderInfoLines()}
-    `;
+    return html` ${this.renderInfoLines()} `;
   }
 
   private renderInfoLines() {
     const updateInfoLines = (e: InputEvent) => {
       const value = (e.target as HTMLTextAreaElement).value;
       if (this.stage) {
-        this.experimentEditor.updateStage({ ...this.stage, infoLines: [value] });
+        this.experimentEditor.updateStage({...this.stage, infoLines: [value]});
       }
     };
 

@@ -6,22 +6,22 @@ import {
   RankingStageConfig,
   RankingStageParticipantAnswer,
   createAgentParticipantRankingStagePrompt,
-  createRankingStageParticipantAnswer
+  createRankingStageParticipantAnswer,
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from '../agent.utils';
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
-import { onCall } from 'firebase-functions/v2/https';
+import {onCall} from 'firebase-functions/v2/https';
 
-import { app } from '../app';
+import {app} from '../app';
 
 /** Use LLM call to generate agent participant response to ranking stage. */
 export async function getAgentParticipantRankingStageResponse(
   experimentId: string,
   experimenterData: ExperimenterData, // for making LLM call
   participant: ParticipantProfileExtended,
-  stage: RankingStageConfig
+  stage: RankingStageConfig,
 ) {
   // Get list of public IDs for other participants who are active in the cohort
   // (in case the agent participant is ranking participants)
@@ -29,21 +29,28 @@ export async function getAgentParticipantRankingStageResponse(
   const activeStatuses = [
     ParticipantStatus.IN_PROGRESS,
     ParticipantStatus.COMPLETED,
-    ParticipantStatus.ATTENTION_CHECK
+    ParticipantStatus.ATTENTION_CHECK,
   ];
 
-  const otherParticipants = (await app.firestore()
-    .collection('experiments')
-    .doc(experimentId)
-    .collection('participants')
-    .where('currentCohortId', '==', participant.currentCohortId)
-    .get()
-  ).docs.map(doc => doc.data() as ParticipantProfile)
-  .filter(participant => !(participant.currentStatus in activeStatuses));
+  const otherParticipants = (
+    await app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('participants')
+      .where('currentCohortId', '==', participant.currentCohortId)
+      .get()
+  ).docs
+    .map((doc) => doc.data() as ParticipantProfile)
+    .filter((participant) =>
+      activeStatuses.find((status) => status === participant.currentStatus),
+    );
 
   // Build prompt
   const prompt = createAgentParticipantRankingStagePrompt(
-    participant, stage, otherParticipants
+    participant,
+    stage,
+    otherParticipants,
   );
 
   // Call LLM API
@@ -54,7 +61,7 @@ export async function getAgentParticipantRankingStageResponse(
     `Experiment: ${experimentId}\n`,
     `Participant: ${participant.publicId}\n`,
     `Stage: ${stage.name} (${stage.kind})\n`,
-    response
+    response,
   );
 
   // Confirm that response is in expected format, e.g., list of strings
@@ -62,11 +69,11 @@ export async function getAgentParticipantRankingStageResponse(
     const rankingList = JSON.stringify(response) as string[];
     const participantAnswer = createRankingStageParticipantAnswer({
       id: stage.id,
-      rankingList
+      rankingList,
     });
     console.log(
       '✅ RankingStageParticipantAnswer\n',
-      JSON.stringify(participantAnswer)
+      JSON.stringify(participantAnswer),
     );
   } catch (error) {
     console.log(error);

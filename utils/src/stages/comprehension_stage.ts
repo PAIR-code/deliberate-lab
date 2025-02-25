@@ -1,4 +1,4 @@
-import { generateId } from '../shared';
+import {generateId} from '../shared';
 import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
@@ -7,9 +7,7 @@ import {
   createStageTextConfig,
   createStageProgressConfig,
 } from './stage';
-import {
-  MultipleChoiceItem
-} from './survey_stage';
+import {MultipleChoiceItem} from './survey_stage';
 
 /** Comprehension stage types and functions. */
 
@@ -42,13 +40,15 @@ export interface TextComprehensionQuestion extends BaseComprehensionQuestion {
   correctAnswer: string;
 }
 
-export interface MultipleChoiceComprehensionQuestion extends BaseComprehensionQuestion {
+export interface MultipleChoiceComprehensionQuestion
+  extends BaseComprehensionQuestion {
   kind: ComprehensionQuestionKind.MULTIPLE_CHOICE;
   options: MultipleChoiceItem[];
   correctAnswerId: string;
 }
 
-export interface ComprehensionStageParticipantAnswer extends BaseStageParticipantAnswer {
+export interface ComprehensionStageParticipantAnswer
+  extends BaseStageParticipantAnswer {
   kind: StageKind.COMPREHENSION;
   answerMap: Record<string, string>; // question ID to answer
 }
@@ -59,7 +59,7 @@ export interface ComprehensionStageParticipantAnswer extends BaseStageParticipan
 
 /** Create info stage. */
 export function createComprehensionStage(
-  config: Partial<ComprehensionStageConfig> = {}
+  config: Partial<ComprehensionStageConfig> = {},
 ): ComprehensionStageConfig {
   return {
     id: config.id ?? generateId(),
@@ -83,16 +83,16 @@ export function createMultipleChoiceComprehensionQuestion(
     questionTitle: config.questionTitle ?? '',
     options: config.options ?? [],
     correctAnswerId,
-  }
+  };
 }
 
 /** Create comprehension stage participant answer. */
 export function createComprehensionStageParticipantAnswer(
-  config: Partial<ComprehensionStageParticipantAnswer> = {}
+  config: Partial<ComprehensionStageParticipantAnswer> = {},
 ): ComprehensionStageParticipantAnswer {
   return {
     id: config.id ?? generateId(),
     kind: StageKind.COMPREHENSION,
     answerMap: config.answerMap ?? {},
-  }
+  };
 }

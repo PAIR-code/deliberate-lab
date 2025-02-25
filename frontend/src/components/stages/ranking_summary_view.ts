@@ -17,9 +17,7 @@ import {
   RankingItem,
   RankingType,
 } from '@deliberation-lab/utils';
-import {
-  getCohortRankingItems
-} from '../../shared/cohort.utils';
+import {getCohortRankingItems} from '../../shared/cohort.utils';
 
 import {styles} from './ranking_view.scss';
 
@@ -30,18 +28,20 @@ export class RankingView extends MobxLitElement {
 
   private readonly cohortService = core.getService(CohortService);
   private readonly participantAnswerService = core.getService(
-    ParticipantAnswerService
+    ParticipantAnswerService,
   );
   private readonly participantService = core.getService(ParticipantService);
 
   @property() stage: RankingStageConfig | undefined = undefined;
 
   private getItems() {
-    return this.stage ? getCohortRankingItems(
-      this.cohortService.activeParticipants,
-      this.participantService.profile?.publicId ?? '',
-      this.stage
-    ) : [];
+    return this.stage
+      ? getCohortRankingItems(
+          this.cohortService.activeParticipants,
+          this.participantService.profile?.publicId ?? '',
+          this.stage,
+        )
+      : [];
   }
 
   override render() {
@@ -50,7 +50,7 @@ export class RankingView extends MobxLitElement {
     }
 
     const rankingList = this.participantAnswerService.getRankingList(
-      this.stage.id
+      this.stage.id,
     );
 
     const items = this.getItems();
