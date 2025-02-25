@@ -127,8 +127,6 @@ export interface ScaleSurveyAnswer extends BaseSurveyAnswer {
   value: number; // number value selected
 }
 
-export const INVALID_ANSWER: BaseSurveyAnswer = { id: "invalid", kind: SurveyQuestionKind.TEXT};
-
 export type SurveyAnswer =
   | TextSurveyAnswer
   | CheckSurveyAnswer

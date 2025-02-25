@@ -3,9 +3,7 @@ import {
     ExperimenterData,
     ParticipantProfileExtended,
     createSurveyQuestionPrompt,
-    BaseSurveyAnswer,
     SurveyQuestionKind,
-    INVALID_ANSWER,
     TextSurveyAnswer,
     CheckSurveyAnswer,
     ScaleSurveyAnswer,
@@ -13,6 +11,9 @@ import {
     SurveyQuestion,
     MultipleChoiceSurveyQuestion,
     ScaleSurveyQuestion,
+    createSurveyStageParticipantAnswer,
+    SurveyAnswer,
+    SurveyStageParticipantAnswer,
 } from "@deliberation-lab/utils";
 import { getAgentResponse } from '../agent.utils';
 
@@ -29,7 +30,7 @@ export async function getAgentParticipantSurveyResponse(
     experimentId: string,
     experimenterData: ExperimenterData, // for making LLM call
     participant: ParticipantProfileExtended,
-    stage: SurveyStageConfig): Promise<BaseSurveyAnswer[]> {
+    stage: SurveyStageConfig): Promise<SurveyStageParticipantAnswer> {
 
     console.debug(
         'TESTING AGENT PARTICIPANT PROMPT FOR RANKING STAGE\n',
@@ -37,7 +38,7 @@ export async function getAgentParticipantSurveyResponse(
         `Participant: ${participant.publicId}\n`,
         `Stage: ${stage.name} (${stage.kind})\n`);
 
-    const answers: BaseSurveyAnswer[] = [];
+    const answers: (SurveyAnswer | null)[] = [];
 
     // Build prompt
     for (let question of stage.questions) {
@@ -45,7 +46,7 @@ export async function getAgentParticipantSurveyResponse(
 
         const formattedResponse = formatAnswer(question, llmResponse);
         if (!formattedResponse) {
-            answers.push(INVALID_ANSWER);
+            answers.push(null);
         } else {
             answers.push(formattedResponse);
         }
@@ -53,7 +54,14 @@ export async function getAgentParticipantSurveyResponse(
 
     }
 
-    return answers;
+    const stageAnswer = createSurveyStageParticipantAnswer({id: stage.id});
+    for (let answer of answers) {
+        //TODO: Fix this to be more robust and not just check for "null"
+        if (answer !== null) {
+            stageAnswer.answerMap[answer.id] = answer;
+        }
+    }
+    return stageAnswer;
 }
 
 async function getLLMResponse(experimenterData: ExperimenterData, question: SurveyQuestion): Promise<ModelResponse | null> {
@@ -78,9 +86,9 @@ async function getLLMResponse(experimenterData: ExperimenterData, question: Surv
  * @param answer the LLM response
  * @returns the answer in the appropriate type
  */
-function formatAnswer(question: SurveyQuestion, llmAnswer: ModelResponse | null): BaseSurveyAnswer | null {
+function formatAnswer(question: SurveyQuestion, llmAnswer: ModelResponse | null): SurveyAnswer | null {
     if (!llmAnswer) {
-        return INVALID_ANSWER;
+        return null;
     }
 
     const llmAnswerStr = llmAnswer.text;
