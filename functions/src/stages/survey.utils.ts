@@ -84,17 +84,16 @@ function formatAnswer(question: SurveyQuestion, llmAnswer: ModelResponse | null)
     }
 
     const llmAnswerStr = llmAnswer.text;
-    const id = "placeholder"; //TODO: Figure out ID
 
     switch (question.kind) {
         case SurveyQuestionKind.TEXT:
-            return formatFreeText(id, llmAnswerStr);
+            return formatFreeText(question.id, llmAnswerStr);
         case SurveyQuestionKind.MULTIPLE_CHOICE:
-            return formatMultipleAnswer(id, question, llmAnswerStr);
+            return formatMultipleAnswer(question, llmAnswerStr);
         case SurveyQuestionKind.CHECK:
-            return formatCheckAnswer(id, llmAnswerStr);
+            return formatCheckAnswer(question.id, llmAnswerStr);
         case SurveyQuestionKind.SCALE:
-            return formatScale(id, question, llmAnswerStr);
+            return formatScale(question, llmAnswerStr);
     }
 
 }
@@ -103,7 +102,7 @@ function formatFreeText(id: string, llmAnswerStr: string): TextSurveyAnswer | nu
     return { id: id, kind: SurveyQuestionKind.TEXT, answer: llmAnswerStr }
 }
 
-function formatMultipleAnswer(id: string, question: MultipleChoiceSurveyQuestion, llmAnswerStr: string): MultipleChoiceSurveyAnswer | null {
+function formatMultipleAnswer(question: MultipleChoiceSurveyQuestion, llmAnswerStr: string): MultipleChoiceSurveyAnswer | null {
     const index = parseCatchInt(llmAnswerStr);
     if (index === null) {
         return null;
@@ -115,7 +114,7 @@ function formatMultipleAnswer(id: string, question: MultipleChoiceSurveyQuestion
         return null;
     } else {
         console.debug("Item selected ", item);
-        return { id: id, kind: SurveyQuestionKind.MULTIPLE_CHOICE, choiceId: item.id };
+        return { id: question.id, kind: SurveyQuestionKind.MULTIPLE_CHOICE, choiceId: item.id };
     }
 }
 
@@ -130,7 +129,7 @@ function formatCheckAnswer(id: string, llmAnswerStr: string): CheckSurveyAnswer 
     }
 }
 
-function formatScale(id: string, question: ScaleSurveyQuestion, llmAnswerStr: string): ScaleSurveyAnswer | null {
+function formatScale(question: ScaleSurveyQuestion, llmAnswerStr: string): ScaleSurveyAnswer | null {
     const value = parseCatchInt(llmAnswerStr);
     if (value === null) {
         return null;
@@ -140,7 +139,7 @@ function formatScale(id: string, question: ScaleSurveyQuestion, llmAnswerStr: st
         console.error(`Survey scale answer out of range: ${value}, expected between ${question.lowerValue} and ${question.upperValue}`);
         return null;
     }
-    return { id: id, kind: SurveyQuestionKind.SCALE, value };
+    return { id: question.id, kind: SurveyQuestionKind.SCALE, value };
 }
 
 function parseCatchInt(savedValue: any): number | null {
