@@ -32,6 +32,7 @@ import {AuthGuard} from './utils/auth-guard';
 // ****************************************************************************
 export const testAgentParticipantPrompt = onCall(async (request) => {
   const {data} = request;
+  console.debug("Test agent participant prompt", data);
 
   // Only allow experimenters to use this test endpoint for now
   await AuthGuard.isExperimenter(request);
@@ -42,8 +43,8 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
 
   // Fetch experiment creator's API key and other experiment data.
   const creatorId = (
-    await app.firestore().collection('experiments').doc(experimentId).get()
-  ).data().metadata.creator;
+    await app?.firestore()?.collection('experiments')?.doc(experimentId)?.get()
+  ).data()?.metadata.creator;
   const creatorDoc = await app
     .firestore()
     .collection('experimenterData')
