@@ -45,14 +45,14 @@ import {
 // ****************************************************************************
 export const ANON_LAS_METADATA = createMetadataConfig({
   name: '🐱 Anonymous Lost at Sea (v4)',
-  publicName: '🌊 Adrift in the Atlantic v4',
+  publicName: '🌊 Adrift in the Atlantic (v4a)',
   description:
     'A complex election scenario (Born 2022) that showcases pseudonoymous participants and many different experiment stages.',
 });
 
 export const LAS_METADATA = createMetadataConfig({
   name: '🌊 Lost at Sea (v4)',
-  publicName: '🌊 Adrift in the Atlantic (v4a)',
+  publicName: '🌊 Adrift in the Atlantic (v4)',
   description:
     'A complex election scenario (Born 2022) that showcases participants and many different experiment stages.',
 });
@@ -294,6 +294,9 @@ const LAS_TOS_LINES = [
 const LAS_TOS_STAGE = createTOSStage({
   game: StageGame.LAS,
   tosLines: LAS_TOS_LINES,
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
 });
 
 // ****************************************************************************
@@ -318,6 +321,9 @@ const LAS_INTRO_STAGE = createInfoStage({
     primaryText: LAS_INTRO_INFO_DESCRIPTION_PRIMARY,
   }),
   infoLines: LAS_INTRO_INFO_LINES,
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
 });
 
 const LAS_PERSONAL_INFO_STAGE = createSurveyStage({
@@ -354,6 +360,10 @@ const LAS_PERSONAL_INFO_STAGE = createSurveyStage({
       ],
     }),
   ],
+
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
 });
 
 // ****************************************************************************
@@ -367,6 +377,10 @@ const ANON_LAS_PROFILE_STAGE = createProfileStage({
     primaryText: 'This information may be visible to other participants.',
   }),
   profileType: ProfileType.ANONYMOUS_ANIMAL,
+
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
 });
 
 const LAS_PROFILE_STAGE = createProfileStage({
@@ -377,6 +391,10 @@ const LAS_PROFILE_STAGE = createProfileStage({
     primaryText: 'This information may be visible to other participants.',
   }),
   profileType: ProfileType.DEFAULT,
+
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
 });
 
 // ****************************************************************************
@@ -397,6 +415,10 @@ const LAS_PART_1_INSTRUCTIONS_STAGE = createInfoStage({
   game: StageGame.LAS,
   name: 'Part 1 instructions',
   infoLines: LAS_PART_1_INSTRUCTIONS_INFO_LINES,
+
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
 });
 
 // ****************************************************************************
@@ -412,6 +434,10 @@ const LAS_PART_1_SURVIVAL_SURVEY_STAGE = createSurveyStage({
   questions: createLASSurvivalSurvey(
     LAS_INDIVIDUAL_ITEMS_MULTIPLE_CHOICE_QUESTIONS,
   ),
+
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
 });
 
 // ****************************************************************************
@@ -434,6 +460,10 @@ const LAS_PART_1_WTL_SURVEY_STAGE = createSurveyStage({
       lowerText: 'Not at all',
     }),
   ],
+
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
 });
 
 // ****************************************************************************
@@ -450,6 +480,10 @@ export const LAS_TRANSFER_STAGE = createTransferStage({
   }),
   enableTimeout: true,
   timeoutSeconds: 600, // 10 minutes
+
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
 });
 
 // ****************************************************************************
@@ -529,6 +563,7 @@ const LAS_PART_2_INSTRUCTIONS_STAGE = createInfoStage({
   game: StageGame.LAS,
   name: 'Overview of part 2 and 3',
   infoLines: LAS_PART_2_INSTRUCTIONS_INFO_LINES,
+
 });
 
 // ****************************************************************************

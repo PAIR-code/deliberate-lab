@@ -29,8 +29,8 @@ export class Chat extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
 
   @state() value = '';
-  @state() name = 'Agent';
-  @state() avatar = '⭐';
+  @state() name = 'Moderator';
+  @state() avatar = '🙋';
   @state() isLoading = false;
 
   private async sendUserInput() {

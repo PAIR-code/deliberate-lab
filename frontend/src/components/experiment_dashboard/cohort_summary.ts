@@ -20,6 +20,7 @@ import {Pages, RouterService} from '../../services/router.service';
 import {
   CohortConfig,
   ParticipantProfile,
+  ParticipantStatus,
   StageKind,
 } from '@deliberation-lab/utils';
 import {getCohortDescription, getCohortName} from '../../shared/cohort.utils';
@@ -230,6 +231,11 @@ export class CohortSummary extends MobxLitElement {
       return html` <div class="empty-message">No participants yet.</div> `;
     }
 
+    const isTransferTimeout = (participant: ParticipantProfile) => {
+      return participant.currentStatus == ParticipantStatus.TRANSFER_TIMEOUT;
+    };
+
+
     const isOnTransferStage = (participant: ParticipantProfile) => {
       const stage = this.experimentService.getStage(participant.currentStageId);
       if (!stage) return false; // Return false instead of 'nothing' to ensure it's a boolean
@@ -241,6 +247,14 @@ export class CohortSummary extends MobxLitElement {
         ${participants
           .slice()
           .sort((a, b) => {
+            if (isTransferTimeout(a)) {
+              return 1;
+            } 
+
+            if (isTransferTimeout(b)) {
+              return -1;
+            }
+            
             const aIsTransfer = isOnTransferStage(a) ? 0 : 1; // 0 if true, 1 if false
             const bIsTransfer = isOnTransferStage(b) ? 0 : 1;
             return (
