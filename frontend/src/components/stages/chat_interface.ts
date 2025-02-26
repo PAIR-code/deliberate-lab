@@ -12,6 +12,7 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
+import {AuthService} from '../../services/auth.service';
 import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
@@ -36,6 +37,7 @@ import {styles} from './chat_interface.scss';
 export class ChatInterface extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly authService = core.getService(AuthService);
   private readonly cohortService = core.getService(CohortService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
@@ -272,7 +274,7 @@ export class ChatInterface extends MobxLitElement {
         <pr-button
           color="tertiary"
           variant="tonal"
-          ?disabled=${isDisabled}
+          ?disabled=${this.authService.isExperimenter ? false : isDisabled}
           ?loading=${this.readyToEndDiscussionLoading}
           @click=${onClick}
         >
