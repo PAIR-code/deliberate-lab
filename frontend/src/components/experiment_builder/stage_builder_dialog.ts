@@ -41,6 +41,11 @@ import {
   RTV_METADATA,
   getRTVStageConfigs,
 } from '../../shared/games/reality_tv_chat';
+import {
+  MLT_METADATA,
+  MLT_AGENTS,
+  getMLTStageConfigs,
+} from '../../shared/games/multiturn_chat';
 
 import {styles} from './stage_builder_dialog.scss';
 
@@ -120,6 +125,7 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()} ${this.renderLASCard(true)}
         ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
+        ${this.renderMultiturnChatCard()}
       </div>
     `;
   }
@@ -195,6 +201,18 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addGame}>
         <div class="title">🪙 ${CHIP_GAME_METADATA.name}</div>
         <div>${CHIP_GAME_METADATA.description}</div>
+      </div>
+    `;
+  }
+
+  private renderMultiturnChatCard() {
+    const addGame = () => {
+      this.addGame(MLT_METADATA, getMLTStageConfigs(), MLT_AGENTS);
+    };
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">${MLT_METADATA.name}</div>
+        <div>${MLT_METADATA.description}</div>
       </div>
     `;
   }
