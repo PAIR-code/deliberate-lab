@@ -15,7 +15,7 @@ Copy your redirect code(s) from the Prolific platform and paste into the
 Deliberate Lab field(s).
 
 <img
-  src="../assets/images/prolific_copy_redirect_code.png"
+  src="../assets/images/prolific-copy-redirect-code.png"
   alt="Screenshot of Prolific platform showing places to copy redirect codes"
 />
 
@@ -29,7 +29,7 @@ After creating your experiment, create a cohort and copy the link.
 Paste this link into your Prolific experiment:
 
 <img
-  src="../assets/images/prolific_add_cohort_link.png"
+  src="../assets/images/prolific-add-cohort-link.png"
   alt="Screenshot of Prolific platform showing place to paste experiment URL"
 />
 
