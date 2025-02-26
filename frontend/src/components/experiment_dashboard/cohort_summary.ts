@@ -248,11 +248,11 @@ export class CohortSummary extends MobxLitElement {
           .slice()
           .sort((a, b) => {
             if (isTransferTimeout(a)) {
-              return -1;
+              return 1;
             } 
 
             if (isTransferTimeout(b)) {
-              return 1;
+              return -1;
             }
             
             const aIsTransfer = isOnTransferStage(a) ? 0 : 1; // 0 if true, 1 if false
