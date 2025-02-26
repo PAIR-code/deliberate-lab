@@ -18,6 +18,9 @@ import {
   SendChipResponseData,
   SendParticipantCheckData,
   SetChipTurnData,
+  SetSalespersonControllerData,
+  SetSalespersonMoveData,
+  SetSalespersonResponseData,
   SimpleResponse,
   SuccessResponse,
   UpdateChatStageParticipantAnswerData,
@@ -388,6 +391,48 @@ export const setChipTurnCallable = async (
   const {data} = await httpsCallable<SetChipTurnData, SuccessResponse>(
     functions,
     'setChipTurn',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for setting salesperson controller. */
+export const setSalespersonControllerCallable = async (
+  functions: Functions,
+  config: SetSalespersonControllerData,
+) => {
+  const {data} = await httpsCallable<
+    SetSalespersonControllerData,
+    SuccessResponse
+  >(
+    functions,
+    'setSalespersonController',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for setting salesperson move. */
+export const setSalespersonMoveCallable = async (
+  functions: Functions,
+  config: SetSalespersonMoveData,
+) => {
+  const {data} = await httpsCallable<SetSalespersonMoveData, SuccessResponse>(
+    functions,
+    'setSalespersonMove',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for setting salesperson response. */
+export const setSalespersonResponseCallable = async (
+  functions: Functions,
+  config: SetSalespersonResponseData,
+) => {
+  const {data} = await httpsCallable<
+    SetSalespersonResponseData,
+    SuccessResponse
+  >(
+    functions,
+    'setSalespersonResponse',
   )(config);
   return data;
 };

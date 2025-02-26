@@ -41,6 +41,10 @@ import {
   RTV_METADATA,
   getRTVStageConfigs,
 } from '../../shared/games/reality_tv_chat';
+import {
+  SALESPERSON_GAME_METADATA,
+  getSalespersonStageConfigs,
+} from '../../shared/games/salesperson';
 
 import {styles} from './stage_builder_dialog.scss';
 
@@ -118,8 +122,8 @@ export class StageBuilderDialog extends MobxLitElement {
         ⚠️ Loading a game will override any current stages in your configuration
       </div>
       <div class="card-gallery-wrapper">
-        ${this.renderLASCard()} ${this.renderLASCard(true)}
-        ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
+        ${this.renderLASCard()} ${this.renderLASCard(true)} ${this.renderRealityTVCard()}
+        ${this.renderChipNegotiationCard()} ${this.renderSalespersonGameCard()}
       </div>
     `;
   }
@@ -195,6 +199,19 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addGame}>
         <div class="title">🪙 ${CHIP_GAME_METADATA.name}</div>
         <div>${CHIP_GAME_METADATA.description}</div>
+      </div>
+    `;
+  }
+
+  private renderSalespersonGameCard() {
+    const addGame = () => {
+      this.addGame(SALESPERSON_GAME_METADATA, getSalespersonStageConfigs());
+    };
+
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">${SALESPERSON_GAME_METADATA.name}</div>
+        <div>${SALESPERSON_GAME_METADATA.description}</div>
       </div>
     `;
   }

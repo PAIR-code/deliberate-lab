@@ -43,6 +43,9 @@ import {
   sendChipOfferCallable,
   sendChipResponseCallable,
   setChipTurnCallable,
+  setSalespersonControllerCallable,
+  setSalespersonMoveCallable,
+  setSalespersonResponseCallable,
   updateParticipantAcceptedTOSCallable,
   updateParticipantFailureCallable,
   updateParticipantProfileCallable,
@@ -696,5 +699,59 @@ export class ParticipantService extends Service {
       });
     }
     return response;
+  }
+
+  async setSalespersonController(stageId: string) {
+    let response = {success: false};
+    if (this.experimentId && this.profile) {
+      response = await setSalespersonControllerCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          stageId,
+        },
+      );
+    }
+    return response.success;
+  }
+
+  async setSalespersonMove(
+    stageId: string,
+    proposedRow: number,
+    proposedColumn: number,
+  ) {
+    let response = {success: false};
+    if (this.experimentId && this.profile) {
+      response = await setSalespersonMoveCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          stageId,
+          participantId: this.profile.publicId,
+          proposedRow,
+          proposedColumn,
+        },
+      );
+    }
+    return response.success;
+  }
+
+  async setSalespersonResponse(stageId: string, response: boolean) {
+    let output = {success: false};
+    if (this.experimentId && this.profile) {
+      output = await setSalespersonResponseCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          stageId,
+          participantId: this.profile.publicId,
+          response,
+        },
+      );
+    }
+    return output.success;
   }
 }
