@@ -7,30 +7,21 @@ import {
   awaitTypingDelay,
   getTypingDelayInMs,
   ChatMessage,
-  ChatMessageType,
-  ChatStagePublicData,
-  StageKind,
-  addChatHistoryToPrompt,
   getPreface,
   getChatHistory,
   getTimeElapsed,
   createAgentMediatorChatMessage,
   AgentConfig,
-  AgentGenerationConfig,
-  ChatStageConfig,
   ExperimenterData,
 } from '@deliberation-lab/utils';
 import {getChatStage, getChatStagePublicData, hasEndedChat} from './chat.utils';
 
 import {app} from '../app';
-import {
-  getAgentResponse,
-  getGeminiResponse,
-  getOllamaResponse,
-} from '../agent.utils';
+import {getAgentResponse} from '../agent.utils';
 
 export interface AgentMessage {
   agent: AgentConfig;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   parsed: any;
   message: string;
 }
@@ -188,8 +179,6 @@ export const createAgentMessage = onDocumentCreated(
     // Fetch messages from all agents
     const agentMessages: AgentMessage[] = [];
     for (const agent of stage.agents) {
-      if(!shouldAgentRespond(chatMessages, agent)) continue;
-
       const prompt = `${getPreface(agent, stage)}\n${getChatHistory(chatMessages, agent)}\n${agent.responseConfig.formattingInstructions}`;
 
       // Call LLM API with given modelCall info
@@ -312,18 +301,3 @@ export const createAgentMessage = onDocumentCreated(
     });
   },
 );
-
-const shouldAgentRespond = function (chatMessages: ChatMessage[], agent: AgentConfig): boolean {
-  // If this agent just responded, don't let them respond again.
-  if (chatMessages.length > 0) {
-    const lastChatMessage = chatMessages[chatMessages.length - 1];
-    if (
-      lastChatMessage.type == ChatMessageType.AGENT_AGENT &&
-      lastChatMessage.agentId == agent.id
-    ) {
-      return false;
-    }
-  }
-
-  return true;
-};
