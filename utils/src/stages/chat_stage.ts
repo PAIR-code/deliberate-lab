@@ -223,6 +223,7 @@ export function createChatStage(
       createStageProgressConfig({waitForAllParticipants: true}),
     discussions: config.discussions ?? [],
     agents: config.agents ?? [],
+    timeLimitInMinutes: config.timeLimitInMinutes ?? null,
   };
 }
 
