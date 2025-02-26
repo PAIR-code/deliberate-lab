@@ -11,3 +11,10 @@
   - title: Add Prolific integration
     url: /researchers/prolific
 - title: Developers
+  pages:
+  - title: Running locally
+    url: /developers/run_locally
+  - title: Platform design
+    url: /developers/platform_design
+  - title: Deploying
+    url: /developers/deploy

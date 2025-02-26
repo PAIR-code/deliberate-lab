@@ -175,6 +175,17 @@ b {
   font-weight: 500;
 }
 
+p {
+  word-wrap: break-word;
+}
+
+ol,
+ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
 li {
   list-style: disc;
   margin-left: 1.25em;
@@ -194,4 +205,18 @@ blockquote a {
 
 img {
   max-width: 100%;
+}
+
+pre {
+  background: #eee;
+  border-radius: 4px;
+  overflow: auto;
+  padding: 1em;
+}
+
+code {
+  background: #eee;
+  color: var(--md-sys-color-gray);
+  font-family: 'Roboto Mono';
+  font-size: 0.9em;
 }
