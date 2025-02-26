@@ -25,6 +25,8 @@ export * from './stages/chip.utils';
 export * from './stages/ranking.endpoints';
 export * from './stages/ranking.utils';
 
+export * from './stages/salesperson.endpoints';
+
 export * from './stages/survey.endpoints';
 
 // API functions
