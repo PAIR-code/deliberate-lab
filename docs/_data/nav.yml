@@ -8,4 +8,6 @@
     url: /researchers/edit_experiment
   - title: Run experiment cohorts
     url: /researchers/run_experiment
+  - title: Add Prolific integration
+    url: /researchers/prolific
 - title: Developers
