@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  {% include head.html %}
+  <div class="page-container">
+    <body>
+      <nav class="top-nav">
+        {%- if page.url == "/" -%}
+        <div class="nav-title">{{ site.title }}</div>
+        {%- else -%}
+        <div class="nav-title">
+          <a class="nav-link" href="{{ '/' | relative_url }}">
+            {{ site.title }}
+          </a>
+          / {{ page.title }}
+        </div>
+        {%- endif -%}
+      </nav>
+      <main class="main-wrapper">
+        {% include sidenav.html %}
+        <article>
+          <div class="content-wrapper">
+            <div class="banner">
+              ⚠️ This site is in progress!
+              <a href="https://github.com/PAIR-code/deliberate-lab/wiki"
+                >Read our GitHub wiki</a
+              >
+              for full (but slightly outdated) documentation.
+            </div>
+            <h1>{{ page.title }}</h1>
+            {{ content }}
+          </div>
+        </article>
+      </main>
+    </body>
+  </div>
+</html>

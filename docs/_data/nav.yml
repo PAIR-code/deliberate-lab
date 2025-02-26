@@ -1,0 +1,20 @@
+- title: Researchers
+  pages:
+  - title: Getting started
+    url: /researchers/getting-started
+  - title: Create an experiment
+    url: /researchers/create-experiment
+  - title: Edit experiments and cohorts
+    url: /researchers/edit-experiment
+  - title: Run experiment cohorts
+    url: /researchers/run-experiment
+  - title: Add Prolific integration
+    url: /researchers/prolific
+- title: Developers
+  pages:
+  - title: Running locally
+    url: /developers/run-locally
+  - title: Platform design
+    url: /developers/platform-design
+  - title: Deploying
+    url: /developers/deploy
