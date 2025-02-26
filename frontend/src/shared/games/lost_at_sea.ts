@@ -31,6 +31,7 @@ import {
   createSurveyStage,
   createTOSStage,
   createTransferStage,
+  createStageProgressConfig,
   randint,
   LAS_WTL_STAGE_ID,
   RevealAudience,
@@ -43,15 +44,15 @@ import {
 // Experiment config
 // ****************************************************************************
 export const ANON_LAS_METADATA = createMetadataConfig({
-  name: '🐱 Anonymous Lost at Sea (v3)',
-  publicName: 'Adrift in the Atlantic',
+  name: '🐱 Anonymous Lost at Sea (v4)',
+  publicName: '🌊 Adrift in the Atlantic v4',
   description:
     'A complex election scenario (Born 2022) that showcases pseudonoymous participants and many different experiment stages.',
 });
 
 export const LAS_METADATA = createMetadataConfig({
-  name: '🌊 Lost at Sea (v3)',
-  publicName: 'Adrift in the Atlantic',
+  name: '🌊 Lost at Sea (v4)',
+  publicName: '🌊 Adrift in the Atlantic (v4a)',
   description:
     'A complex election scenario (Born 2022) that showcases participants and many different experiment stages.',
 });
@@ -83,8 +84,8 @@ export function getAnonLASStageConfigs(): StageConfig[] {
   stages.push(LAS_PART_2_UPDATED_TASK_INFO_STAGE);
   stages.push(LAS_PART_2_UPDATED_TASK_SURVEY_STAGE);
 
-  stages.push(LAS_PART_2_WTL_SURVEY_STAGE);
   stages.push(LAS_PART_2_ELECTION_INFO_STAGE);
+  stages.push(LAS_PART_2_WTL_SURVEY_STAGE);
   stages.push(LAS_PART_2_ELECTION_STAGE);
 
   // Rankings
@@ -134,8 +135,8 @@ export function getLASStageConfigs(): StageConfig[] {
   stages.push(LAS_PART_2_UPDATED_TASK_INFO_STAGE);
   stages.push(LAS_PART_2_UPDATED_TASK_SURVEY_STAGE);
 
-  stages.push(LAS_PART_2_WTL_SURVEY_STAGE);
   stages.push(LAS_PART_2_ELECTION_INFO_STAGE);
+  stages.push(LAS_PART_2_WTL_SURVEY_STAGE);
   stages.push(LAS_PART_2_ELECTION_STAGE);
 
   // Rankings
@@ -190,7 +191,7 @@ export function getLASItemImageId(itemId: string) {
 }
 
 export const LAS_ITEM_MULTIPLE_CHOICE_QUESTION_TITLE =
-  'Choose the item that would be more helpful to your survival';
+  'Choose the item that would be more helpful to your survival.';
 
 export const LAS_ITEM_SCALE_QUESTION_TITLE =
   'How confident are you that your answer is correct?';
@@ -283,10 +284,10 @@ export function createLASMultipleChoiceQuestion(
 // ****************************************************************************
 const LAS_TOS_LINES = [
   'Thank you for participating in this study.',
-  'This research is conducted by the Paris School of Economics and has been approved by their institutional review board for ethical standards.',
-  'The study will take approximately 15 minutes, with an additional 30 minutes if you are selected for the second found. Detailed instructions about the compensation will be provided in the relevant sections.',
+  'This research is conducted by the Paris School of Economics and has been approved by their institutional review board for [ethical standards](https://www.parisschoolofeconomics.eu/a-propos-de-pse/engagements-ethiques/integrite-scientifique/).',
+  'The study will take approximately 15 minutes, with an additional 30 minutes if you are selected for the second round. Detailed instructions about the compensation will be provided in the relevant sections.',
   'By participating, you agree that your responses, including basic demographic information, will be saved. No identifiable personal data will be collected. All data will be anonymized and used solely for scientific research. Your data will not be shared with third parties.',
-  "By clicking 'Next,' you accept these terms and proceed with the study.",
+  "By ticking the box below and clicking 'Next,' you accept these terms and proceed with the study.",
   '\n\nIf you have any questions, you can write to us at pse.experimenter@gmail.com.',
 ];
 
@@ -301,11 +302,11 @@ const LAS_TOS_STAGE = createTOSStage({
 const LAS_INTRO_INFO_DESCRIPTION_PRIMARY = `This experiment is part of a research project that explores human decisions in various online environments. You will play an engaging game that presents a survival scenario, and answer questions. You may also interact with others during the experiment.`;
 
 const LAS_INTRO_INFO_LINES = [
-  'You will receive a fixed fee of £3 for your participation, with an opportunity to earn a bonus. We will explain precisely how your bonus is determined later.',
+  'You will receive a **fixed fee of £3** for your participation, with an opportunity to earn a **£2 bonus**. We will explain precisely how your bonus is determined later.',
   'At the end of the experiment, you will be redirected to a waiting page. This waiting time is part of the experiment and has been factored into your payment. **You will not be approved for the payout if you do not remain on this waiting page for the full requested duration**.',
-  'During this waiting time, you may be invited to continue the experiment by completing two additional parts, Part 2 and Part 3. These parts will be played in *groups of four*, and should take an estimated additional 30 minutes. In these parts, you will have the opportunity to earn a £2 bonus, based on your decisions and the decisions of other participants. One of these parts will be randomly selected to determine your bonus. Additionally, you will receive a fixed fee of £6 for completing Parts 2 and 3.',
+  'During this waiting time, you may be invited to continue the experiment by completing two additional parts, Part 2 and Part 3. These parts will be played in *groups of four*, and should take an estimated additional 30 minutes.  You will receive a **fixed fee of £6 for completing Parts 2 and 3. Additionally, you will have the opportunity to earn a **£2 bonus**, based on your decisions and the decisions of other participants  in these parts. One of the 2 parts will be randomly selected to determine this bonus.',
   'To sum up:\n\n* You’ll complete a first part *individually*, and then wait to see if you are selected to take part in the next part of the experiment.\n* You need to wait the full amount of time to get your payoff for Part 1, even though you are not selected or choose to leave the experiment.\n* If you receive an invitation, you can then start the rest of the experiment, that is played in *groups of 4 participants*.',
-  '💸 These payments will be translated into the currency of your specification when they are paid out to you on the Prolific platform. **Please allow us 24-48 hours to process the payments.**',
+  '💸 Your payments will be translated into the currency of your specification when they are paid out to you on the Prolific platform. **Please allow us 24-48 hours to process the payments.**',
   '‼️ If you experience technical difficulties during the study, **please message the experiment administrators on Prolific as soon as possible.**',
   'Please click “Next stage” to proceed.',
 ];
@@ -388,7 +389,7 @@ const LAS_PART_1_INSTRUCTIONS_INFO_LINES = [
   '## Your task:',
   'You are asked to **evaluate these 10 items in terms of their importance for your survival, as you wait to be rescued**. The computer will randomly generate pairs of items, and you will select which of the two is the most useful in your situation.',
   '## Payment:',
-  "Your answers will be compared to a panel of experts' solutions. If a question from Part 1 is randomly selected to determine your payment at the end of the study, you will later receive a £2 bonus if your answer is correct, and £0 otherwise.",
+  "Your answers will be compared to a panel of experts' solutions. At the end of the experiment, a question from Part 1 will be randomly selected to determine your payment for this part. You will receive a £2 bonus if your answer to this question is correct, and £0 otherwise.",
   'Please click “Next stage” to proceed.',
 ];
 
@@ -417,7 +418,7 @@ const LAS_PART_1_SURVIVAL_SURVEY_STAGE = createSurveyStage({
 // Part 1 initial willingness to lead - survey stage
 // ****************************************************************************
 export const LAS_PART_1_WTL_DESCRIPTION_PRIMARY =
-  'Thank you for completing the task.\n\nNow, imagine that you are no longer alone but part of a group of four people. Your group must elect a leader whose role is to answer on behalf of the group the same types of questions you have just seen. In this scenario, the leader is the only one who chooses the most useful items for survival from pairs, and their answers determine the payment for each member of the group.';
+  'Thank you for completing the task.\n\nNow, imagine that you are no longer doing the task alone, but as part of a group of four people. Your group must elect a leader whose role is to answer on behalf of the group the same types of questions you have just seen. In this scenario, the leader is the only one who chooses the most useful items for survival from pairs, and their answers determine the payment for each member of the group.';
 
 const LAS_PART_1_WTL_SURVEY_STAGE = createSurveyStage({
   game: StageGame.LAS,
@@ -439,7 +440,7 @@ const LAS_PART_1_WTL_SURVEY_STAGE = createSurveyStage({
 // "Lobby" - transfer stage
 // ****************************************************************************
 export const LAS_TRANSFER_DESCRIPTION_PRIMARY =
-  'Please wait on this page for up to 10 minutes. There may be attention checks to make sure that you are waiting. If you leave this page before the time is up, you will not be approved for the payout. A link may appear offering you the option to continue to parts 2 and 3 of the experiment. These additional parts will take an estimated *45 minutes*. If you complete these additional parts, you wil earn an additional **£6 fixed fee, as well as up to a £2 bonus**. Thank you for your patience.';
+  'Please wait on this page for up to 10 minutes. There may be attention checks to make sure that you are waiting. If you leave this page before the time is up, you will not be approved for the payout. A link may appear offering you the option to continue to parts 2 and 3 of the experiment. These additional parts will take an estimated *30 minutes*. If you complete these additional parts, you will earn an additional **£6 fixed fee, as well as up to a £2 bonus**. Thank you for your patience.';
 
 export const LAS_TRANSFER_STAGE = createTransferStage({
   game: StageGame.LAS,
@@ -495,7 +496,7 @@ export const COMPREHENSION_CHECK = createComprehensionStage({
           }),
           createMultipleChoiceItem({
             id: 'c',
-            text: "Either your score or the elected leader's score on the survival task, randomly selected.",
+            text: "One randomly drawn question from either Part 2 (where your own answers determine your payoff) or Part 3 (where the leaders’ answers determine your payoff).",
           }),
         ],
       },
@@ -526,7 +527,7 @@ const LAS_PART_2_INSTRUCTIONS_INFO_LINES = [
 
 const LAS_PART_2_INSTRUCTIONS_STAGE = createInfoStage({
   game: StageGame.LAS,
-  name: 'Part 2 instructions',
+  name: 'Overview of part 2 and 3',
   infoLines: LAS_PART_2_INSTRUCTIONS_INFO_LINES,
 });
 
@@ -576,16 +577,17 @@ const LAS_PART_2_PERFORMANCE_ESTIMATION_SURVEY_STAGE = createSurveyStage({
 // Part 2 Group Discussion Instructions info stage
 // ****************************************************************************
 const LAS_PART_2_GROUP_INSTRUCTIONS_INFO_LINES = [
-  'Your group will now engage in a free-form chat discussion to evaluate the relative importance of each item in the different pairs you’ve already seen, based on their importance for group survival.',
-  '\n\nIn the chat, you will revisit each pair of items from Part 1. You need to discuss which item is most useful for survival by writing your arguments in the chat.',
-  '\n\nDuring the chat discussion, please follow these guidelines to ensure a productive and collaborative experience:',
-  '\n\n* **Participation Requirement:** Everyone must have spoken at least once before you can move to the next pair of items.',
-  '* **Progression to the Next Set of Items:** You will move to the next set of items once everyone has clicked on the button “Ready to end discussion.” You can continue interacting even after clicking “Ready to end discussion” if not everyone has clicked yet.',
-  '\n\n## Purpose of the Discussion:',
-  '* **Debate Object Utility:** The goal is to debate the usefulness of the items using the most relevant and well-developed arguments possible. The more arguments you gather, the more useful it will be for Part 3, where different pairs of the same items will be evaluated. Whoever the leader is, knowing the best arguments will help them make the best decisions in Part 3.',
-  '* **Gauge Abilities:** You can see this discussion as an opportunity to assess the abilities of your team members, as you will later vote for a representative whose performance will determine your payout.',
-  '\n\n*Remember, you do not need to agree on which item is most useful; the goal is to present and discuss the strongest arguments for each item.*',
-  '\n\nPlease keep these guidelines in mind as you engage in the discussion. Your active participation and thoughtful contributions are crucial for the success of the experiment.',
+  '## Group discussion about Part 1 answers',
+  'Your group will engage in a free-form chat discussion to evaluate the relative importance of the different items you’ve already seen in Part 1, based on their importance for group survival. More details about the chat will be given later.',
+  '## Opportunity to update your individual answer',
+  'After the chat ends, you will have the chance to revise the individual answers you provided in Part 1 of the experiment. You can choose to update your previous answers or to keep them the same.',
+  'Please note that Part 1 and Part 2 of the experiment are independent. Changing answers here will not impact the answers you provided in Part 1.',
+  '## Election of a group leader for Part 3',
+  'After the chat, and after you’ve had the chance to update your individual answers, you will be asked to elect a group leader who will play a crucial role in Part 3 of the experiment. In Part 3, your group will repeat the same task as in Part 1, but with different pairs of items. The leader’s answers regarding the most important items for survival will determine the team\'s final payoff.',
+  '## Payment for Parts 2 and 3',
+  'Your payment for Parts 2 and 3 includes a fixed fee of £6 and a bonus. The bonus is determined by randomly selecting either Part 2 or Part 3.',
+  '* If Part 2 is selected: One question is randomly chosen from Part 2. You earn £2 if your answer is correct, and £0 otherwise.',
+  '* If Part 3 is selected: One question is randomly chosen from Part 3, with only the leader’s answer counting. You earn £2 if the leader’s answer is correct, and £0 otherwise.',
 ];
 
 const LAS_PART_2_GROUP_INSTRUCTIONS_STAGE = createInfoStage({
@@ -725,9 +727,10 @@ export const LAS_PART_2_ACCURACY_RANK = createRankingStage({
   name: 'Accuracy ranking',
   descriptions: createStageTextConfig({
     primaryText:
-      'Now, we will ask a few questions about your evaluation of the group. Please rank the members of your group in order of who you think performed the best on the task, from top performing (top) to lowest performing (bottom).',
+      'Now, we will ask a few questions about your evaluation of the other group members. Please rank the members of your group (including you) in order of who you think performed the best on the task, from top performing (top) to lowest performing (bottom).',
   }),
   enableSelfVoting: true,
+  progress: createStageProgressConfig({waitForAllParticipants: false}),
 });
 
 export const LAS_PART_2_CONFIDENCE_RANK = createRankingStage({
@@ -736,9 +739,10 @@ export const LAS_PART_2_CONFIDENCE_RANK = createRankingStage({
   name: 'Confidence ranking',
   descriptions: createStageTextConfig({
     primaryText:
-      'Please rank the members of your group in order of how confident you think they were in their answers to the task, from most confident (top) to least confident (bottom).',
+      'Please rank the members of your group (including you) in order of how confident you think they were in their answers to the task, from most confident (top) to least confident (bottom).',
   }),
   enableSelfVoting: true,
+  progress: createStageProgressConfig({waitForAllParticipants: false}),
 });
 
 export const LAS_PART_2_WTL_RANK = createRankingStage({
@@ -747,9 +751,10 @@ export const LAS_PART_2_WTL_RANK = createRankingStage({
   name: 'Willingness to lead ranking',
   descriptions: createStageTextConfig({
     primaryText:
-      'Earlier, you were asked your willingness to become the group leader, on a scale from 1 to 10. Please rank the members of your group in order of how much you think they are willing to lead, from most willing (top) to least willing (bottom).',
+      'Earlier, you were asked your willingness to become the group leader, on a scale from 1 to 10. Please rank the members of your group (including you) in order of how much you think they are willing to lead, from most willing (top) to least willing (bottom).',
   }),
   enableSelfVoting: true,
+  progress: createStageProgressConfig({waitForAllParticipants: false}),
 });
 
 export const LAS_PART_2_ELECTION_RANK = createRankingStage({
@@ -758,9 +763,10 @@ export const LAS_PART_2_ELECTION_RANK = createRankingStage({
   name: 'Hypothesized election ranking',
   descriptions: createStageTextConfig({
     primaryText:
-      "Earlier, you cast a vote for who you think should become the group leader. Now, we would d like for you to think about how others might vote. Please rank the members of your group in the order of how likely you believe each individual is to be elected as the group's leader, from most likely (top) to least likely (bottom).",
+      "Earlier, you cast a vote for who you think should become the group leader. Now, we would like for you to think about how others might vote. Please rank the members of your group (including you) in the order of how likely you believe each individual is to be elected as the group's leader, from most likely (top) to least likely (bottom).",
   }),
   enableSelfVoting: true,
+  progress: createStageProgressConfig({waitForAllParticipants: false}),
 });
 
 export const LAS_PART_2_GENDER_GUESS = createSurveyPerParticipantStage({
@@ -953,29 +959,40 @@ const LAS_PAYOUT_STAGE = createPayoutStage({
 // ****************************************************************************
 // Final survey stage
 // ****************************************************************************
-const LAS_FINAL_DESCRIPTION_PRIMARY = `Thanks for participating. Please complete this final survey.`;
+const LAS_FINAL_DESCRIPTION_PRIMARY = `Thank you for participating in this experiment. After completing the final survey, clicking 'End experiment' will redirect you to Prolific.`;
 
 export const LAS_FINAL_SURVEY_QUESTIONS: SurveyQuestion[] = [
-  {
+   {
     id: '0',
-    kind: SurveyQuestionKind.TEXT,
-    questionTitle:
-      'Consider the survival task performed in this study. Did you have any prior knowledge or experience in the domain of survival that could have helped you solve the task? If yes, please share specific memories or experiences that explain your answer.',
-  },
-  {
-    id: '1',
     kind: SurveyQuestionKind.TEXT,
     questionTitle:
       'During the experiment, you were asked to rank the members of your group based on who you believed should become the group leader. Can you explain the reasons behind your ranking? Please provide specific and concrete arguments for your choices.',
   },
   {
+    id: '1',
+    kind: SurveyQuestionKind.SCALE,
+    questionTitle:
+      'On the scale from 1 to 10, how satisfied are you by the leader’s performance in this task? (if you’re the leader, rate your own performance)',
+    lowerText: 'Not at all satisfied',
+    lowerValue: 0,
+    upperText: 'Very satisfied',
+    upperValue: 10,
+  },
+ {
     id: '2',
+    kind: SurveyQuestionKind.TEXT,
+    questionTitle:
+      'Consider the survival task performed in this study. Did you have any prior knowledge or experience in the domain of survival that could have helped you solve the task? If yes, please share specific memories or experiences that explain your answer.',
+  },
+
+  {
+    id: '3',
     kind: SurveyQuestionKind.TEXT,
     questionTitle:
       'Do you have previous experience of leadership activities? If yes, please share specific memories or experiences that explain your answer.',
   },
   {
-    id: '3',
+    id: '4',
     kind: SurveyQuestionKind.SCALE,
     questionTitle:
       'In general, how willing or unwilling are you to take risks on a scale from 0 to 10?',
@@ -985,7 +1002,7 @@ export const LAS_FINAL_SURVEY_QUESTIONS: SurveyQuestion[] = [
     upperValue: 10,
   },
   {
-    id: '4',
+    id: '5',
     kind: SurveyQuestionKind.SCALE,
     questionTitle:
       'Consider the survival task performed in this study. On average, do you think that men are better at such tasks, that men and women are equally good, or that women are better?',
@@ -995,7 +1012,7 @@ export const LAS_FINAL_SURVEY_QUESTIONS: SurveyQuestion[] = [
     upperValue: 10,
   },
   {
-    id: '5',
+    id: '6',
     kind: SurveyQuestionKind.SCALE,
     questionTitle:
       'On average, do you think that men are better leaders, that men and women are equally good leaders, or that women are better leaders.',
@@ -1005,13 +1022,13 @@ export const LAS_FINAL_SURVEY_QUESTIONS: SurveyQuestion[] = [
     upperValue: 10,
   },
   {
-    id: '6',
+    id: '7',
     kind: SurveyQuestionKind.TEXT,
     questionTitle:
       'Would you like to share any more context about your reasoning in this task?',
   },
   {
-    id: '7',
+    id: '8',
     kind: SurveyQuestionKind.TEXT,
     questionTitle: 'Would you like to share any feedback about the task?',
   },
