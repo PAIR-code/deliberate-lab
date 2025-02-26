@@ -4,6 +4,7 @@ import {
   HarmCategory,
   HarmBlockThreshold,
 } from '@google/generative-ai';
+import {AgentGenerationConfig} from '@deliberation-lab/utils';
 
 const GEMINI_DEFAULT_MODEL = 'gemini-1.5-pro-latest';
 const DEFAULT_FETCH_TIMEOUT = 300 * 1000; // This is the Chrome default
@@ -66,18 +67,24 @@ export async function getGeminiAPIResponse(
   apiKey: string,
   modelName: string,
   promptText: string,
+  generationConfig: AgentGenerationConfig,
   stopSequences: string[] = [],
-  maxOutputTokens = 300,
-  temperature = 0.5,
-  topP = 0.1,
-  topK = 16,
 ): Promise<ModelResponse> {
-  const generationConfig = {
+  const customFields = Object.fromEntries(
+    generationConfig.customRequestBodyFields.map((field) => [
+      field.name,
+      field.value,
+    ]),
+  );
+  const geminiConfig: GenerationConfig = {
     stopSequences,
-    maxOutputTokens,
-    temperature,
-    topP,
-    topK,
+    maxOutputTokens: 300,
+    temperature: generationConfig.temperature,
+    topP: generationConfig.topP,
+    topK: 16,
+    presencePenalty: generationConfig.presencePenalty,
+    frequencyPenalty: generationConfig.frequencyPenalty,
+    ...customFields
   };
 
   let response = {text: ''};
@@ -85,7 +92,7 @@ export async function getGeminiAPIResponse(
     response = await callGemini(
       apiKey,
       promptText,
-      generationConfig,
+      geminiConfig,
       modelName
     );
   } catch (error: any) {

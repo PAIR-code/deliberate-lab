@@ -8,7 +8,7 @@
  * Note: there already exists a client library for JavaScript, but not for Typescript.
  */
 
-import {OllamaServerConfig} from '@deliberation-lab/utils';
+import {OllamaServerConfig, AgentGenerationConfig} from '@deliberation-lab/utils';
 import {ModelResponse} from './model.response';
 
 /**
@@ -39,8 +39,9 @@ export async function ollamaChat(
   messages: string[],
   modelName: string,
   serverConfig: OllamaServerConfig,
+  generationConfig: AgentGenerationConfig,
 ): Promise<ModelResponse> {
-  const messageObjects = encodeMessages(messages, modelName);
+  const messageObjects = encodeMessages(messages, modelName, generationConfig);
   const response = await fetch(serverConfig.url, {
     method: 'POST',
     body: JSON.stringify(messageObjects),
@@ -82,16 +83,30 @@ async function decodeResponse(response: Response): Promise<string> {
  */
 function encodeMessages(
   messages: string[],
-  modelName: string
+  modelName: string,
+  generationConfig: AgentGenerationConfig,
 ): OutgoingMessage {
   const messageObjs: OllamaMessage[] = messages.map((message) => ({
     role: 'user',
     content: message
   }));
+
+  const customFields = Object.fromEntries(
+    generationConfig.customRequestBodyFields.map((field) => [
+      field.name,
+      field.value,
+    ]),
+  );
+
   return {
     model: modelName,
     messages: messageObjs,
-    stream: false
+    stream: false,
+    options: {
+      temperature: generationConfig.temperature,
+      top_p: generationConfig.topP,
+    },
+    ...customFields
   };
 }
 

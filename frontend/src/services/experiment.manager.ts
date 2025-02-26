@@ -21,18 +21,20 @@ import {Service} from './service';
 import JSZip from 'jszip';
 
 import {
+  AgentPersonaConfig,
+  BaseAgentPromptConfig,
+  ChatMessage,
   CohortConfig,
   CohortParticipantConfig,
   CreateChatMessageData,
   Experiment,
   ExperimentDownload,
-  HumanMediatorChatMessage,
   MetadataConfig,
   ParticipantProfileExtended,
   ParticipantStatus,
   StageConfig,
   createCohortConfig,
-  createHumanMediatorChatMessage,
+  createExperimenterChatMessage,
   generateId,
 } from '@deliberation-lab/utils';
 import {
@@ -123,9 +125,9 @@ export class ExperimentManager extends Service {
   async setIsEditing(isEditing: boolean, saveChanges = false) {
     if (!isEditing) {
       this.isEditing = false;
-      // If save changes, call writeExperiment
+      // If save changes, call updateExperiment
       if (saveChanges) {
-        await this.sp.experimentEditor.writeExperiment();
+        await this.sp.experimentEditor.updateExperiment();
       }
       // Reset experiment editor
       this.sp.experimentEditor.resetExperiment();
@@ -143,6 +145,7 @@ export class ExperimentManager extends Service {
         const stage = this.sp.experimentService.stageConfigMap[id];
         if (stage) stages.push(stage);
       });
+      // TODO: Load agent configs from snapshot listener in agent service
       this.sp.experimentEditor.loadExperiment(experiment, stages);
       this.isEditing = true;
     }
@@ -423,6 +426,8 @@ export class ExperimentManager extends Service {
         collectionName: 'experiments',
         experimentConfig: experiment,
         stageConfigs: stages,
+        // TODO: Use agent configs from snapshot listener in agent service
+        agentConfigs: this.sp.agentEditor.getAgentData(),
       },
     );
 
@@ -691,16 +696,19 @@ export class ExperimentManager extends Service {
   }
 
   /** TEMPORARY: Test new agent config. */
-  async testAgentConfig() {
+  async testAgentConfig(
+    agentConfig: AgentPersonaConfig,
+    promptConfig: BaseAgentPromptConfig,
+  ) {
     let response = '';
     const creatorId = this.sp.authService.experimenterData?.email;
-    const agentConfig = this.sp.agentEditor.getAgentMediator('test');
-    if (creatorId && agentConfig) {
+    if (creatorId) {
       response =
         (
           await testAgentConfigCallable(this.sp.firebaseService.functions, {
             creatorId,
             agentConfig,
+            promptConfig,
           })
         ).data ?? '';
     }
@@ -710,14 +718,14 @@ export class ExperimentManager extends Service {
   /** Create a manual (human) agent chat message. */
   async createManualChatMessage(
     stageId: string,
-    config: Partial<HumanMediatorChatMessage> = {},
+    config: Partial<ChatMessage> = {},
   ) {
     let response = {};
     const experimentId = this.sp.routerService.activeRoute.params['experiment'];
     const cohortId = this.sp.cohortService.cohortId;
 
     if (experimentId && cohortId) {
-      const chatMessage = createHumanMediatorChatMessage({
+      const chatMessage = createExperimenterChatMessage({
         ...config,
         discussionId: this.sp.cohortService.getChatDiscussionId(stageId),
       });

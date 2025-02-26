@@ -1,28 +1,41 @@
-import {ApiKeyType, ExperimenterData} from '@deliberation-lab/utils';
+import {
+  AgentModelSettings,
+  AgentPersonaConfig,
+  ApiKeyType,
+  ExperimenterData,
+  ModelGenerationConfig,
+} from '@deliberation-lab/utils';
 
 import {getGeminiAPIResponse} from './api/gemini.api';
 import {getOpenAIAPITextCompletionResponse} from './api/openai.api';
 import {ollamaChat} from './api/ollama.api';
 
+import {app} from './app';
+
 export async function getAgentResponse(
-  data: ExperimenterData,
+  data: ExperimenterData, // TODO: Only pass in API keys
   prompt: string,
-  agent: AgentConfig,
+  modelSettings: AgentModelSettings,
+  generationConfig: ModelGenerationConfig,
 ): Promise<ModelResponse> {
-  const keyType = data.apiKeys.activeApiKeyType;
   let response;
 
-  if (keyType === ApiKeyType.GEMINI_API_KEY) {
-    response =  getGeminiResponse(data, agent.model, prompt);
-  } else if (keyType === ApiKeyType.OPENAI_API_KEY) {
+  if (modelSettings.apiType === ApiKeyType.GEMINI_API_KEY) {
+    response = getGeminiResponse(
+      data,
+      modelSettings.model,
+      prompt,
+      generationConfig,
+    );
+  } else if (modelSettings.apiType === ApiKeyType.OPENAI_API_KEY) {
     response = getOpenAIAPIResponse(
       data,
-      agent.model,
+      modelSettings.model,
       prompt,
-      agent.generationConfig,
+      generationConfig,
     );
-  } else if (keyType === ApiKeyType.OLLAMA_CUSTOM_URL) {
-    response = await getOllamaResponse(data, agent.model, prompt);
+  } else if (modelSettings.model === ApiKeyType.OLLAMA_CUSTOM_URL) {
+    response = await getOllamaResponse(data, modelSettings.model, prompt);
   } else {
     console.error('Error: invalid apiKey type: ', keyType);
     response = {text: ''};
@@ -38,12 +51,13 @@ export async function getGeminiResponse(
   data: ExperimenterData,
   modelName: string,
   prompt: string,
-  // TODO: Add new agent model settings
+  generationConfig: ModelGenerationConfig,
 ): Promise<ModelResponse> {
   return await getGeminiAPIResponse(
     data.apiKeys.geminiApiKey,
     modelName,
     prompt,
+    generationConfig,
   );
 }
 
@@ -51,8 +65,7 @@ export async function getOpenAIAPIResponse(
   data: ExperimenterData,
   model: string,
   prompt: string,
-  // TODO: Replace with new agent model settings
-  generationConfig: GenerationConfig,
+  generationConfig: ModelGenerationConfig,
 ): Promise<ModelResponse> {
   return await getOpenAIAPITextCompletionResponse(
     data.apiKeys.openAIApiKey?.apiKey || '',
@@ -67,7 +80,24 @@ export async function getOllamaResponse(
   data: ExperimenterData,
   modelName: string,
   prompt: string,
-  // TODO: Add new agent model settings
+  generationConfig: ModelGenerationConfig,
 ): Promise<ModelResponse> {
-  return await ollamaChat([prompt], data.apiKeys.ollamaApiKey);
+  return await ollamaChat(
+    [prompt],
+    modelName,
+    data.apiKeys.ollamaApiKey,
+    generationConfig,
+  );
+}
+
+/** Return all agent personas for a given experiment. */
+export async function getAgentPersonas(experimentId: string) {
+  const agentCollection = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('agents');
+  return (await agentCollection.get()).docs.map(
+    (agent) => agent.data() as AgentPersonaConfig,
+  );
 }
