@@ -77,7 +77,7 @@ export class ChatEditor extends MobxLitElement {
   }
 
   private renderTimeLimit() {
-    const timeLimit = this.stage?.timeLimitInMinutes;
+    const timeLimit = this.stage?.timeLimitInMinutes ?? null;
 
     const updateCheck = () => {
       if (!this.stage) return;
