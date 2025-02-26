@@ -43,6 +43,7 @@ import {
 } from '../../shared/games/reality_tv_chat';
 import {
   BBOT_METADATA,
+  BBOT_AGENTS,
   getBbotStageConfigs,
 } from '../../shared/games/bridging_bot';
 
@@ -206,7 +207,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
   private renderBbotCard() {
     const addGame = () => {
-      this.addGame(BBOT_METADATA, getBbotStageConfigs());
+      this.addGame(BBOT_METADATA, getBbotStageConfigs(), BBOT_AGENTS);
     };
 
     return html`

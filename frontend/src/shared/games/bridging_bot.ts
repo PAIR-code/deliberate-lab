@@ -1,26 +1,31 @@
 import {
-  ProfileType,
-  StageConfig,
-  StageGame,
+  AgentChatPromptConfig,
+  createAgentChatPromptConfig,
+  createAgentChatSettings,
+  createAgentPersonaConfig,
+  createAgentResponseConfig,
+  createChatStage,
   createCheckSurveyQuestion,
   createMetadataConfig,
   createMultipleChoiceItem,
-  createProfileStage,
-  createStageProgressConfig,
-  createSurveyStage,
-  createTransferStage,
-  createTOSStage,
-  createStageTextConfig,
-  createScaleSurveyQuestion,
-  createTextSurveyQuestion,
-  createAgentConfig,
-  createChatStage,
-  createAgentResponseConfig,
   createMultipleChoiceSurveyQuestion,
-  ScaleSurveyQuestion,
+  createParticipantProfileBase,
+  createProfileStage,
+  createScaleSurveyQuestion,
+  createStageProgressConfig,
+  createStageTextConfig,
+  createSurveyStage,
+  createTextSurveyQuestion,
+  createTOSStage,
+  createTransferStage,
   MultipleChoiceItem,
-  SurveyStageConfig,
+  ProfileType,
+  ScaleSurveyQuestion,
+  StageConfig,
+  StageGame,
+  StageKind,
   SurveyQuestion,
+  SurveyStageConfig,
 } from '@deliberation-lab/utils';
 
 export const BBOT_METADATA = createMetadataConfig({
@@ -28,6 +33,8 @@ export const BBOT_METADATA = createMetadataConfig({
   publicName: 'Reproductive Rights Chat',
   description: 'A discussion about reprodictive rights',
 });
+
+export const BBOT_CHAT_STAGE_ID = 'bbot_chat';
 
 export function getBbotStageConfigs(): StageConfig[] {
   const stages: StageConfig[] = [];
@@ -485,6 +492,7 @@ const BBOT_TRANSFER_STAGE = createTransferStage({
 
 const BBOT_CHAT_STAGE = createChatStage({
   game: StageGame.BBOT,
+  id: BBOT_CHAT_STAGE_ID,
   name: 'Group discussion',
   timeLimitInMinutes: 10,
   descriptions: {
@@ -498,17 +506,39 @@ const BBOT_CHAT_STAGE = createChatStage({
     waitForAllParticipants: true,
     showParticipantProgress: false,
   }),
-  agents: [
-    createAgentConfig({
+});
+
+const createBbotAgent = () => {
+  const persona = createAgentPersonaConfig({
+    name: 'BridgingBot',
+    isDefaultAddToCohort: true,
+    defaultProfile: createParticipantProfileBase({
       name: 'BridgingBot',
-      avatar: '🤦🏻‍♂️',
-      prompt: BBOT_AGENT_PROMPT,
-      wordsPerMinute: 300,
+      avatar: '💁',
+    }),
+  });
+
+  const chatPromptMap: Record<string, AgentChatPromptConfig> = {};
+  chatPromptMap[BBOT_CHAT_STAGE_ID] = createAgentChatPromptConfig(
+    BBOT_CHAT_STAGE_ID, // stage ID
+    StageKind.CHAT, // stage kind,
+    {
+      promptContext: BBOT_AGENT_PROMPT,
+      chatSettings: createAgentChatSettings({
+        wordsPerMinute: 300,
+        minMessagesBeforeResponding: 5,
+        canSelfTriggerCalls: false,
+        maxResponses: 1,
+      }),
       responseConfig: createAgentResponseConfig({
         isJSON: true,
         messageField: 'response',
         explanationField: 'explanation',
       }),
-    }),
-  ],
-});
+    },
+  );
+
+  return {persona, participantPromptMap: {}, chatPromptMap};
+};
+
+export const BBOT_AGENTS = [createBbotAgent()];
