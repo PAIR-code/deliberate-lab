@@ -7,27 +7,17 @@ import {
   awaitTypingDelay,
   getTypingDelayInMs,
   ChatMessage,
-  ChatMessageType,
-  ChatStagePublicData,
-  StageKind,
-  addChatHistoryToPrompt,
   getPreface,
   getChatHistory,
   getTimeElapsed,
   createAgentMediatorChatMessage,
   AgentConfig,
-  AgentGenerationConfig,
-  ChatStageConfig,
   ExperimenterData,
 } from '@deliberation-lab/utils';
 import {getChatStage, getChatStagePublicData, hasEndedChat} from './chat.utils';
 
 import {app} from '../app';
-import {
-  getAgentResponse,
-  getGeminiResponse,
-  getOllamaResponse,
-} from '../agent.utils';
+import {getAgentResponse} from '../agent.utils';
 
 export interface AgentMessage {
   agent: AgentConfig;
