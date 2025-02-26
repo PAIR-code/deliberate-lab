@@ -45,14 +45,14 @@ import {
 // ****************************************************************************
 export const ANON_LAS_METADATA = createMetadataConfig({
   name: '🐱 Anonymous Lost at Sea (v4)',
-  publicName: '🌊 Adrift in the Atlantic v4',
+  publicName: '🌊 Adrift in the Atlantic (v4a)',
   description:
     'A complex election scenario (Born 2022) that showcases pseudonoymous participants and many different experiment stages.',
 });
 
 export const LAS_METADATA = createMetadataConfig({
   name: '🌊 Lost at Sea (v4)',
-  publicName: '🌊 Adrift in the Atlantic (v4a)',
+  publicName: '🌊 Adrift in the Atlantic (v4)',
   description:
     'A complex election scenario (Born 2022) that showcases participants and many different experiment stages.',
 });
