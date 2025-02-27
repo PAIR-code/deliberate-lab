@@ -98,7 +98,7 @@ export async function awaitTypingDelay(
   message: string,
   wordsPerMinute: number,
 ): Promise<void> {
-  const delay = getTypingDelayInMs(message, wordsPerMinute);
+  const delay = getTypingDelayInMilliseconds(message, wordsPerMinute);
   console.log(
     `Waiting ${(delay / 1000).toFixed(2)} seconds to simulate delay.`,
   );
@@ -106,7 +106,7 @@ export async function awaitTypingDelay(
 }
 
 /** Calculate typing delay (e.g., for chat messages). */
-export function getTypingDelayInMs(
+export function getTypingDelayInMilliseconds(
   message: string,
   wordsPerMinute: number,
 ): number {

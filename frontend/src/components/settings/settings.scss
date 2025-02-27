@@ -1,5 +1,5 @@
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -21,7 +21,7 @@ a {
 
 .section {
   @include common.flex-column;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  border-bottom: 2px solid var(--md-sys-color-outline-variant);
   gap: common.$spacing-large;
   padding: common.$main-content-padding;
 

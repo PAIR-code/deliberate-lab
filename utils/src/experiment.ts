@@ -30,8 +30,9 @@ import {StageConfig} from './stages/stage';
  * VERSION 13 - add randomSelectionId to payout stage (PR #430)
  * VERSION 14 - add currentDiscussionId to chat public data (PR #431)
  * VERSION 15 - add stageUnlockMap, readyStages timestamps (PR #442)
+ * VERSION 16 - switch to new mediator workflow including updated ChatMessage
  */
-export const EXPERIMENT_VERSION_ID = 15;
+export const EXPERIMENT_VERSION_ID = 16;
 
 /** Experiment. */
 export interface Experiment {

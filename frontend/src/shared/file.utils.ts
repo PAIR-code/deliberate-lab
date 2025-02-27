@@ -12,6 +12,10 @@ import {
   query,
 } from 'firebase/firestore';
 import {
+  AgentDataObject,
+  AgentChatPromptConfig,
+  AgentParticipantPromptConfig,
+  AgentPersonaConfig,
   ChatMessage,
   ChatMessageType,
   ChipItem,
@@ -143,6 +147,56 @@ export async function getExperimentDownload(
     }
     // Add ParticipantDownload to ExperimentDownload
     experimentDownload.participantMap[profile.publicId] = participantDownload;
+  }
+
+  // For each agent, add AgentDataObject
+  const agentCollection = collection(
+    firestore,
+    'experiments',
+    experimentId,
+    'agents',
+  );
+  const agents = (await getDocs(agentCollection)).docs.map(
+    (agent) => agent.data() as AgentPersonaConfig,
+  );
+  for (const persona of agents) {
+    const participantPrompts = (
+      await getDocs(
+        collection(
+          firestore,
+          'experiments',
+          experimentId,
+          'agents',
+          persona.id,
+          'participantPrompts',
+        ),
+      )
+    ).docs.map((doc) => doc.data() as AgentParticipantPromptConfig);
+    const chatPrompts = (
+      await getDocs(
+        collection(
+          firestore,
+          'experiments',
+          experimentId,
+          'agents',
+          persona.id,
+          'chatPrompts',
+        ),
+      )
+    ).docs.map((doc) => doc.data() as AgentChatPromptConfig);
+    const agentObject: AgentDataObject = {
+      persona,
+      participantPromptMap: {},
+      chatPromptMap: {},
+    };
+    participantPrompts.forEach((prompt) => {
+      agentObject.participantPromptMap[prompt.id] = prompt;
+    });
+    chatPrompts.forEach((prompt) => {
+      agentObject.chatPromptMap[prompt.id] = prompt;
+    });
+    // Add to ExperimentDownload
+    experimentDownload.agentMap[persona.id] = agentObject;
   }
 
   // For each cohort, add CohortDownload
@@ -1363,12 +1417,8 @@ export function getChatMessageCSVColumns(
   // Type
   columns.push(!message ? 'Message type' : message.type);
 
-  // Participant public ID (if participant chat message)
-  const publicId =
-    message?.type === ChatMessageType.PARTICIPANT
-      ? message.participantPublicId
-      : '';
-  columns.push(!message ? 'Participant public ID' : publicId);
+  // Participant public ID or mediator ID
+  columns.push(!message ? 'Sender ID' : toCSV(message.senderId));
 
   // Profile name
   columns.push(!message ? 'Sender name' : toCSV(message.profile.name));

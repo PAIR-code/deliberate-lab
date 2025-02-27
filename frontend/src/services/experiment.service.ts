@@ -69,7 +69,6 @@ export class ExperimentService extends Service {
             cohortLockMap: {}, // for experiments version <= 11
             ...doc.data(),
           } as Experiment;
-          this.sp.agentEditor.setExperimentId(doc.id);
           this.isExperimentLoading = false;
         },
       ),
@@ -93,10 +92,6 @@ export class ExperimentService extends Service {
           changedDocs.forEach((doc) => {
             const data = doc.data() as StageConfig;
             this.stageConfigMap[doc.id] = data;
-            if (data.kind === StageKind.CHAT) {
-              // Load chat configs to agent editor service
-              this.sp.agentEditor.addConfig(data);
-            }
           });
 
           this.isStageConfigsLoading = false;
@@ -112,7 +107,7 @@ export class ExperimentService extends Service {
     // Reset stage configs
     this.stageConfigMap = {};
     this.experiment = undefined;
-    this.sp.agentEditor.reset();
+    this.sp.agentEditor.resetAgents();
   }
 
   reset() {

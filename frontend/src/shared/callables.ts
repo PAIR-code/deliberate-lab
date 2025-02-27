@@ -23,7 +23,6 @@ import {
   SetSalespersonResponseData,
   SimpleResponse,
   SuccessResponse,
-  UpdateChatAgentsData,
   UpdateChatStageParticipantAnswerData,
   UpdateCohortMetadataData,
   UpdateParticipantAcceptedTOSData,
@@ -47,6 +46,18 @@ export const writeExperimentCallable = async (
   const {data} = await httpsCallable<ExperimentCreationData, CreationResponse>(
     functions,
     'writeExperiment',
+  )(experiment);
+  return data;
+};
+
+/** Generic endpoint to update experiments or experiment templates */
+export const updateExperimentCallable = async (
+  functions: Functions,
+  experiment: ExperimentCreationData,
+) => {
+  const {data} = await httpsCallable<ExperimentCreationData, SuccessResponse>(
+    functions,
+    'updateExperiment',
   )(experiment);
   return data;
 };
@@ -287,18 +298,6 @@ export const updateChatStageParticipantAnswerCallable = async (
   >(
     functions,
     'updateChatStageParticipantAnswer',
-  )(config);
-  return data;
-};
-
-/** Generic endpoint to update chat stage agents */
-export const updateChatAgentsCallable = async (
-  functions: Functions,
-  config: UpdateChatAgentsData,
-) => {
-  const {data} = await httpsCallable<UpdateChatAgentsData, SuccessResponse>(
-    functions,
-    'updateChatAgents',
   )(config);
   return data;
 };

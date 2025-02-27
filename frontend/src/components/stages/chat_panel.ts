@@ -1,3 +1,4 @@
+import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
 import '../participant_profile/avatar_icon';
 import '../participant_profile/profile_display';
@@ -17,7 +18,8 @@ import {ParticipantService} from '../../services/participant.service';
 import {
   ChatStageConfig,
   ChatStagePublicData,
-  AgentConfig,
+  MediatorProfile,
+  MediatorStatus,
   ParticipantProfile,
   checkApiKeyExists,
   getTimeElapsed,
@@ -173,40 +175,61 @@ export class ChatPanel extends MobxLitElement {
       return nothing;
     }
 
-    const agents = this.stage.agents;
     return html`
       <div class="panel-item">
         <div class="panel-item-title">
-          Participants (${activeParticipants.length + agents.length})
+          Participants (${activeParticipants.length})
         </div>
-        ${agents && agents.length > 0 ? this.renderApiCheck() : ''}
         ${activeParticipants.map((participant) =>
           this.renderProfile(participant),
         )}
-        ${agents.map((agent) => this.renderAgent(agent))}
+        ${this.cohortService
+          .getMediatorsForStage(this.stage.id)
+          .map((mediator) => this.renderMediator(mediator))}
       </div>
     `;
   }
 
-  private renderAgent(agent: AgentConfig) {
-    // TODO: Consider adding a toggle so that agent details and identity
-    // can be exposed to all participants (not just in debug mode).
+  private renderMediator(profile: MediatorProfile) {
+    const renderStatus = () => {
+      if (!this.authService.isDebugMode || !profile.agentConfig) {
+        return nothing;
+      }
+      return html`
+        <div class="chip secondary">🤖 ${profile.currentStatus}</div>
+      `;
+    };
+
+    const renderPause = () => {
+      if (!this.authService.isDebugMode || !profile.agentConfig) {
+        return nothing;
+      }
+      // TODO: Set mediator to paused/active on click
+      return html`
+        <pr-icon-button
+          disabled
+          variant="default"
+          icon=${profile.currentStatus === MediatorStatus.PAUSED
+            ? 'play_circle'
+            : 'pause'}
+        >
+        </pr-icon-button>
+      `;
+    };
+
+    // TODO: Calculate if mediator is out of messages (maxResponses)
     return html`
-      <pr-tooltip
-        text=${this.authService.isDebugMode ? agent.prompt : ''}
-        position="BOTTOM_END"
-      >
-        <div class="profile">
-          <avatar-icon
-            .emoji=${agent.avatar}
-            .color=${getHashBasedColor(agent?.avatar ?? '')}
-          >
-          </avatar-icon>
-          <div class="name">
-            ${agent.name}${this.authService.isDebugMode ? ` 🤖` : ''}
-          </div>
-        </div>
-      </pr-tooltip>
+      <div class="profile">
+        <profile-display
+          .profile=${profile}
+          .color=${getHashBasedColor(
+            profile.agentConfig?.agentId ?? profile.id ?? '',
+          )}
+          displayType="chat"
+        >
+        </profile-display>
+        ${renderStatus()} ${renderPause()}
+      </div>
     `;
   }
 

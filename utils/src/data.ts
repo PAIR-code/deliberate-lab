@@ -1,3 +1,4 @@
+import {AgentDataObject} from './agent';
 import {CohortConfig} from './cohort';
 import {Experiment} from './experiment';
 import {ParticipantProfileExtended} from './participant';
@@ -23,6 +24,8 @@ export interface ExperimentDownload {
   participantMap: Record<string, ParticipantDownload>;
   // Maps from cohort ID to cohort download
   cohortMap: Record<string, CohortDownload>;
+  // Maps from agent persona ID to agent data
+  agentMap: Record<string, AgentDataObject>;
   // TODO: add roleMap once roles are added
 }
 
@@ -49,6 +52,7 @@ export function createExperimentDownload(
     stageMap: {},
     participantMap: {},
     cohortMap: {},
+    agentMap: {},
   };
 }
 
