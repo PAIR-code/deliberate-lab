@@ -273,7 +273,7 @@ export class Component extends MobxLitElement {
     return html`
       <pr-menu name="Transfer">
         <div class="menu-wrapper">
-          ${this.experimentManager.availableCohorts.map((cohort) =>
+          ${this.experimentManager.availableCohorts.sort((a, b) => {return a.metadata.name.localeCompare(b.metadata.name);}).map((cohort) =>
             this.renderTransferOption(cohort),
           )}
         </div>
