@@ -28,7 +28,12 @@ import {
   createTOSStage,
   createTransferStage,
 } from '@deliberation-lab/utils';
-import {LAS_METADATA, ANON_LAS_METADATA, getLASStageConfigs, getAnonLASStageConfigs} from '../../shared/games/lost_at_sea';
+import {
+  LAS_METADATA,
+  ANON_LAS_METADATA,
+  getLASStageConfigs,
+  getAnonLASStageConfigs,
+} from '../../shared/games/lost_at_sea';
 import {
   CHIP_GAME_METADATA,
   getChipNegotiationStageConfigs,
@@ -117,8 +122,9 @@ export class StageBuilderDialog extends MobxLitElement {
         ⚠️ Loading a game will override any current stages in your configuration
       </div>
       <div class="card-gallery-wrapper">
-        ${this.renderLASCard()} ${this.renderLASCard(true)} ${this.renderRealityTVCard()}
-        ${this.renderChipNegotiationCard()} ${this.renderSalespersonGameCard()}
+        ${this.renderLASCard()} ${this.renderLASCard(true)}
+        ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
+        ${this.renderSalespersonGameCard()}
       </div>
     `;
   }
@@ -181,13 +187,24 @@ export class StageBuilderDialog extends MobxLitElement {
   }
 
   private renderChipNegotiationCard() {
-    const addGame = () => {
-      this.addGame(CHIP_GAME_METADATA, getChipNegotiationStageConfigs());
+    const addGame = (numChips: number) => {
+      this.addGame(
+        CHIP_GAME_METADATA,
+        getChipNegotiationStageConfigs(numChips),
+      );
     };
 
     return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">🪙 ${CHIP_GAME_METADATA.name}</div>
+      <div class="card" @click=${() => addGame(2)}>
+        <div class="title">🔴 ${CHIP_GAME_METADATA.name} (2 chips)</div>
+        <div>${CHIP_GAME_METADATA.description}</div>
+      </div>
+      <div class="card" @click=${() => addGame(3)}>
+        <div class="title">🔵 ${CHIP_GAME_METADATA.name} (3 chips)</div>
+        <div>${CHIP_GAME_METADATA.description}</div>
+      </div>
+      <div class="card" @click=${() => addGame(4)}>
+        <div class="title">🟣 ${CHIP_GAME_METADATA.name} (4 chips)</div>
         <div>${CHIP_GAME_METADATA.description}</div>
       </div>
     `;
