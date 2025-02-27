@@ -1,5 +1,6 @@
 import {
   ALTERNATE_PROFILE_SET_ID,
+  ChipItem,
   ProfileType,
   StageConfig,
   StageGame,
@@ -29,6 +30,7 @@ import {
 export const N_INITIAL_GREEN_CHIPS = 10;
 export const N_INITIAL_BLUE_CHIPS = 10;
 export const N_INITIAL_RED_CHIPS = 10;
+export const N_INITIAL_PURPLE_CHIPS = 10;
 
 // ****************************************************************************
 // Experiment config
@@ -39,7 +41,7 @@ export const CHIP_GAME_METADATA = createMetadataConfig({
   description: 'A trading scenario that showcases a custom negotiation module.',
 });
 
-export function getChipNegotiationStageConfigs(): StageConfig[] {
+export function getChipNegotiationStageConfigs(numChips = 3): StageConfig[] {
   const stages: StageConfig[] = [];
 
   // Informed consent
@@ -72,12 +74,12 @@ export function getChipNegotiationStageConfigs(): StageConfig[] {
   stages.push(TRANSFER_STAGE);
 
   // Round 1
-  stages.push(CHIP_NEGOTIATION_STAGE1);
+  stages.push(getChipNegotiationStage1(numChips));
 
   // Round 2
   stages.push(CHIP_INFO_PART2);
   stages.push(CHIP_ALTERNATE_PROFILE_STAGE);
-  stages.push(CHIP_NEGOTIATION_STAGE2);
+  stages.push(getChipNegotiationStage2(numChips));
   stages.push(CHIP_PAYOUT_STAGE);
 
   // Post-negotiation survey stage
@@ -459,8 +461,8 @@ export const TRANSFER_STAGE = createTransferStage({
 // ****************************************************************************
 // Chip negotiation stage
 // ****************************************************************************
-const CHIPS = [
-  {
+function getChips(numChips: number) {
+  const redChip = {
     id: 'RED',
     name: 'red',
     avatar: '🔴',
@@ -469,8 +471,9 @@ const CHIPS = [
     startingQuantity: N_INITIAL_RED_CHIPS,
     lowerValue: 0.1,
     upperValue: 1,
-  },
-  {
+  };
+
+  const blueChip = {
     id: 'BLUE',
     name: 'blue',
     avatar: '🔵',
@@ -479,8 +482,20 @@ const CHIPS = [
     startingQuantity: N_INITIAL_BLUE_CHIPS,
     lowerValue: 0.1,
     upperValue: 1,
-  },
-  {
+  };
+
+  const purpleChip = {
+    id: 'PURPLE',
+    name: 'purple',
+    avatar: '🟣',
+    canBuy: true,
+    canSell: true,
+    startingQuantity: N_INITIAL_PURPLE_CHIPS,
+    lowerValue: 0.1,
+    upperValue: 1,
+  };
+
+  const greenChip = {
     id: 'GREEN',
     name: 'green',
     avatar: '🟢',
@@ -489,31 +504,48 @@ const CHIPS = [
     startingQuantity: N_INITIAL_GREEN_CHIPS,
     lowerValue: 0.5,
     upperValue: 0.5,
-  },
-];
+  };
+
+  const chips: ChipItem[] = [redChip];
+  if (numChips > 2) {
+    chips.push(blueChip);
+  }
+  if (numChips > 3) {
+    chips.push(purpleChip);
+  }
+
+  // All games have the same-valuation green chip
+  chips.push(greenChip);
+
+  return chips;
+}
 
 const CHIP_NEGOTIATION_STAGE1_ID = 'negotiation1';
 const CHIP_NEGOTIATION_STAGE2_ID = `negotiation2_${ALTERNATE_PROFILE_SET_ID}`;
 
-const CHIP_NEGOTIATION_STAGE1 = createChipStage({
-  id: CHIP_NEGOTIATION_STAGE1_ID,
-  game: StageGame.CHP,
-  name: 'First negotiation game',
-  descriptions: createStageTextConfig({
-    infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
-  }),
-  chips: CHIPS,
-});
+function getChipNegotiationStage1(numChips: number) {
+  return createChipStage({
+    id: CHIP_NEGOTIATION_STAGE1_ID,
+    game: StageGame.CHP,
+    name: 'First negotiation game',
+    descriptions: createStageTextConfig({
+      infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
+    }),
+    chips: getChips(numChips),
+  });
+}
 
-const CHIP_NEGOTIATION_STAGE2 = createChipStage({
-  id: CHIP_NEGOTIATION_STAGE2_ID,
-  game: StageGame.CHP,
-  name: 'Second negotiation game',
-  descriptions: createStageTextConfig({
-    infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
-  }),
-  chips: CHIPS,
-});
+function getChipNegotiationStage2(numChips: number) {
+  return createChipStage({
+    id: CHIP_NEGOTIATION_STAGE2_ID,
+    game: StageGame.CHP,
+    name: 'Second negotiation game',
+    descriptions: createStageTextConfig({
+      infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
+    }),
+    chips: getChips(numChips),
+  });
+}
 
 // ****************************************************************************
 // Payout stage

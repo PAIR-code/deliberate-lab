@@ -89,7 +89,7 @@ export function downloadJSON(data: object, filename: string) {
 export function toCSV(text: string | null) {
   if (!text) return '';
 
-  return text.replaceAll(',', ''); // remove commas
+  return text.replaceAll(',', '').replaceAll('\n', '');
 }
 
 // ****************************************************************************
