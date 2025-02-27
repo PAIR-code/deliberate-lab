@@ -2,6 +2,7 @@
 import nock = require('nock');
 
 import {ollamaChat} from './ollama.api';
+import { AgentGenerationConfig } from '@deliberation-lab/utils';
 
 const MODEL_NAME = 'llama3.2';
 const LLM_SERVER_ENDPOINT = 'http://localhost:11434/api/chat';
