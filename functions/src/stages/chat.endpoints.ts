@@ -126,6 +126,11 @@ export const updateChatStageParticipantAnswer = onCall(async (request) => {
     .collection('publicStageData')
     .doc(data.chatStageParticipantAnswer.id);
 
+  // Set random timeout to avoid data contention with transaction
+  await new Promise((resolve) => {
+    setTimeout(resolve, Math.random() * 2000);
+  });
+
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     transaction.set(document, data.chatStageParticipantAnswer);
@@ -160,6 +165,7 @@ export const updateChatStageParticipantAnswer = onCall(async (request) => {
   return {id: document.id};
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleUpdateChatStageParticipantAnswerValidationErrors(data: any) {
   for (const error of Value.Errors(
     UpdateChatStageParticipantAnswerData,
