@@ -1,5 +1,9 @@
 // Re export everything to simplify imports
 
+// Alert
+export * from './alert';
+export * from './alert.validation';
+
 // Experimenter
 export * from './experimenter';
 
