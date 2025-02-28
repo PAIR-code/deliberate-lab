@@ -98,7 +98,7 @@ export class ExperimentManager extends Service {
   @observable experimentId: string | undefined = undefined;
   @observable cohortMap: Record<string, CohortConfig> = {};
   @observable participantMap: Record<string, ParticipantProfileExtended> = {};
-  @observable alerts: AlertMessage[] = [];
+  @observable alertMap: Record<string, AlertMessage> = {};
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -300,11 +300,15 @@ export class ExperimentManager extends Service {
   }
 
   @computed get newAlerts() {
-    return this.alerts.filter((alert) => alert.status === AlertStatus.NEW);
+    return Object.values(this.alertMap).filter(
+      (alert) => alert.status === AlertStatus.NEW,
+    );
   }
 
   @computed get oldAlerts() {
-    return this.alerts.filter((alert) => alert.status !== AlertStatus.NEW);
+    return Object.values(this.alertMap).filter(
+      (alert) => alert.status !== AlertStatus.NEW,
+    );
   }
 
   @computed get isLoading() {
@@ -348,7 +352,7 @@ export class ExperimentManager extends Service {
 
           changedDocs.forEach((doc) => {
             const data = doc.data() as AlertMessage;
-            this.alerts.push(data);
+            this.alertMap[data.id] = data;
           });
         },
       ),
@@ -415,7 +419,7 @@ export class ExperimentManager extends Service {
     // Reset experiment data
     this.cohortMap = {};
     this.participantMap = {};
-    this.alerts = [];
+    this.alertMap = {};
   }
 
   reset() {
