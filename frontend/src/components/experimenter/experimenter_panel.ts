@@ -24,6 +24,7 @@ import {RouterService} from '../../services/router.service';
 
 import {
   AgentConfig,
+  AlertMessage,
   ParticipantProfileExtended,
   StageKind,
   EXPERIMENT_VERSION_ID,
@@ -33,12 +34,15 @@ import {styles} from './experimenter_panel.scss';
 import {DEFAULT_STRING_FORMATTING_INSTRUCTIONS} from '@deliberation-lab/utils';
 import {DEFAULT_JSON_FORMATTING_INSTRUCTIONS} from '@deliberation-lab/utils';
 
+import {convertUnifiedTimestampToDate} from '../../shared/utils';
+
 enum PanelView {
   DEFAULT = 'default',
   PARTICIPANT_SEARCH = 'participant_search',
   MANUAL_CHAT = 'manual_chat',
   LLM_SETTINGS = 'llm_settings',
   API_KEY = 'api_key',
+  ALERTS = 'alerts',
 }
 
 /** Experimenter panel component */
@@ -135,6 +139,18 @@ export class Panel extends MobxLitElement {
             >
             </pr-icon-button>
           </pr-tooltip>
+          <pr-tooltip text="Alerts" position="RIGHT_END">
+            <pr-icon-button
+              color="secondary"
+              icon="notifications"
+              size="medium"
+              variant=${isSelected(PanelView.ALERTS) ? 'tonal' : 'default'}
+              @click=${() => {
+                this.panelView = PanelView.ALERTS;
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
         </div>
         ${this.renderPanelView()}
       </div>
@@ -172,6 +188,8 @@ export class Panel extends MobxLitElement {
         return this.renderApiKeyPanel();
       case PanelView.LLM_SETTINGS:
         return this.renderAgentEditorPanel();
+      case PanelView.ALERTS:
+        return this.renderAlertPanel();
       default:
         return this.renderDefaultPanel();
     }
@@ -366,6 +384,38 @@ export class Panel extends MobxLitElement {
         <div class="top">
           <div class="header">Manual chat</div>
           <experimenter-manual-chat></experimenter-manual-chat>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderAlertPanel() {
+    const alerts = this.experimentManager.alerts;
+
+    const renderAlert = (alert: AlertMessage) => {
+      const cohort = this.experimentManager.getCohort(alert.cohortId);
+      const participant =
+        this.experimentManager.participantMap[alert.participantId];
+
+      return html`
+        <div class="alert">
+          <div class="subtitle">
+            ${convertUnifiedTimestampToDate(alert.timestamp)}
+          </div>
+          <div>
+            ${cohort?.metadata.name ?? 'Unknown cohort'}
+            (${participant?.name ?? 'Unknown participant'})
+          </div>
+          <div>${alert.message}</div>
+        </div>
+      `;
+    };
+
+    return html`
+      <div class="main">
+        <div class="top">
+          <div class="header">Alerts</div>
+          ${alerts.map((alert) => renderAlert(alert))}
         </div>
       </div>
     `;

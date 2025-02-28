@@ -21,6 +21,7 @@ import {Service} from './service';
 import JSZip from 'jszip';
 
 import {
+  AlertMessage,
   CohortConfig,
   CohortParticipantConfig,
   CreateChatMessageData,
@@ -95,6 +96,7 @@ export class ExperimentManager extends Service {
   @observable experimentId: string | undefined = undefined;
   @observable cohortMap: Record<string, CohortConfig> = {};
   @observable participantMap: Record<string, ParticipantProfileExtended> = {};
+  @observable alerts: AlertMessage[] = [];
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -315,6 +317,29 @@ export class ExperimentManager extends Service {
       return;
     }
 
+    // Subscribe to alerts
+    this.unsubscribe.push(
+      onSnapshot(
+        collection(
+          this.sp.firebaseService.firestore,
+          'experiments',
+          id,
+          'alerts',
+        ),
+        (snapshot) => {
+          let changedDocs = snapshot.docChanges().map((change) => change.doc);
+          if (changedDocs.length === 0) {
+            changedDocs = snapshot.docs;
+          }
+
+          changedDocs.forEach((doc) => {
+            const data = doc.data() as AlertMessage;
+            this.alerts.push(data);
+          });
+        },
+      ),
+    );
+
     // Subscribe to cohorts
     this.unsubscribe.push(
       onSnapshot(
@@ -376,6 +401,7 @@ export class ExperimentManager extends Service {
     // Reset experiment data
     this.cohortMap = {};
     this.participantMap = {};
+    this.alerts = [];
   }
 
   reset() {
