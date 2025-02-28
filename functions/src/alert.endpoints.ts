@@ -56,3 +56,33 @@ export const sendAlertMessage = onCall(async (request) => {
 
   return {success: true};
 });
+
+// Mark alert message as read and optionally write response
+export const ackAlertMessage = onCall(async (request) => {
+  const {data} = request;
+  const experimentId = data.experimentId;
+  const alertId = data.alertId;
+  const response = data.response;
+
+  // Only allow experimenters to ack alerts
+  await AuthGuard.isExperimenter(request);
+
+  const doc = await app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('alerts')
+    .doc(alertId);
+
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    const alert = (await doc.get()).data() as AlertMessage;
+    alert.status = AlertStatus.READ;
+    if (response.length > 0) {
+      alert.responses.push(response);
+    }
+    transaction.set(doc, alert);
+  });
+
+  return {success: true};
+});

@@ -37,6 +37,7 @@ import {
   generateId,
 } from '@deliberation-lab/utils';
 import {
+  ackAlertMessageCallable,
   bootParticipantCallable,
   createChatMessageCallable,
   createCohortCallable,
@@ -731,6 +732,22 @@ export class ExperimentManager extends Service {
         ).data ?? '';
     }
     return response;
+  }
+
+  /** Acknowledge alert message. */
+  async ackAlertMessage(alertId: string, response = '') {
+    let output = {};
+    if (this.experimentId) {
+      output = await ackAlertMessageCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          alertId,
+          response,
+        },
+      );
+    }
+    return output;
   }
 
   /** Create a manual (human) agent chat message. */

@@ -1,4 +1,5 @@
 import {
+  AckAlertMessageData,
   AgentConfigTestData,
   AgentParticipantPromptTestData,
   BaseParticipantData,
@@ -480,6 +481,21 @@ export const sendAlertMessageCallable = async (
   >(
     functions,
     'sendAlertMessage',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for acknowledging alert message. */
+export const ackAlertMessageCallable = async (
+  functions: Functions,
+  config: AckAlertMessageData,
+) => {
+  const {data} = await httpsCallable<
+    AckAlertMessageData,
+    SimpleResponse<string>
+  >(
+    functions,
+    'ackAlertMessage',
   )(config);
   return data;
 };

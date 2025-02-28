@@ -11,7 +11,7 @@ export interface AlertMessage {
   participantId: string; // private ID of participant
   message: string; // message from participant
   timestamp: UnifiedTimestamp; // time that message was sent
-  response: string[]; // responses from experimenter
+  responses: string[]; // responses from experimenter
   status: AlertStatus;
 }
 
@@ -31,7 +31,7 @@ export function createAlertMessage(
     stageId: config.stageId ?? '',
     participantId: config.participantId ?? '',
     message: config.message ?? '',
-    response: config.response ?? [],
+    responses: config.responses ?? [],
     timestamp: config.timestamp ?? Timestamp.now(),
     status: config.status ?? AlertStatus.NEW,
   };

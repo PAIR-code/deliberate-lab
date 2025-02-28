@@ -25,6 +25,7 @@ import {RouterService} from '../../services/router.service';
 import {
   AgentConfig,
   AlertMessage,
+  AlertStatus,
   ParticipantProfileExtended,
   StageKind,
   EXPERIMENT_VERSION_ID,
@@ -61,6 +62,7 @@ export class Panel extends MobxLitElement {
   @state() panelView: PanelView = PanelView.DEFAULT;
   @state() isLoading = false;
   @state() isDownloading = false;
+  @state() isAckAlertLoading = false;
   @state() participantSearchQuery = '';
 
   override render() {
@@ -397,6 +399,15 @@ export class Panel extends MobxLitElement {
       const participant =
         this.experimentManager.participantMap[alert.participantId];
 
+      const onAck = () => {
+        // TODO: Add UI so the experimenter can send a custom response
+        // (and add UI for the participant to view alert status/response)
+        this.isAckAlertLoading = true;
+        const response = 'Acknowledged';
+        this.experimentManager.ackAlertMessage(alert.id, response);
+        this.isAckAlertLoading = false;
+      };
+
       return html`
         <div class="alert">
           <div class="subtitle">
@@ -407,6 +418,17 @@ export class Panel extends MobxLitElement {
             (${participant?.name ?? 'Unknown participant'})
           </div>
           <div>${alert.message}</div>
+          ${alert.status === AlertStatus.NEW
+            ? html`
+                <pr-icon-button
+                  icon="check_circle"
+                  variant="default"
+                  ?loading=${this.isAckAlertLoading}
+                  @click=${onAck}
+                >
+                </pr-icon-button>
+              `
+            : nothing}
         </div>
       `;
     };

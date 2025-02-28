@@ -20,3 +20,19 @@ export const SendAlertMessageData = Type.Object(
 );
 
 export type SendAlertMessageData = Static<typeof SendAlertMessageData>;
+
+// ****************************************************************************
+// ackAlertMessage
+// ****************************************************************************
+
+/** AckAlertMessage input validation. */
+export const AckAlertMessageData = Type.Object(
+  {
+    experimentId: Type.String({minLength: 1}),
+    alertId: Type.String({minLength: 1}),
+    response: Type.String(),
+  },
+  strict,
+);
+
+export type AckAlertMessageData = Static<typeof AckAlertMessageData>;
