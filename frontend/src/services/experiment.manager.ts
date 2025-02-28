@@ -22,6 +22,7 @@ import JSZip from 'jszip';
 
 import {
   AlertMessage,
+  AlertStatus,
   CohortConfig,
   CohortParticipantConfig,
   CreateChatMessageData,
@@ -292,6 +293,18 @@ export class ExperimentManager extends Service {
       );
     }
     return Object.values(this.cohortMap);
+  }
+
+  @computed get hasNewAlerts() {
+    return this.newAlerts.length > 0;
+  }
+
+  @computed get newAlerts() {
+    return this.alerts.filter((alert) => alert.status === AlertStatus.NEW);
+  }
+
+  @computed get oldAlerts() {
+    return this.alerts.filter((alert) => alert.status !== AlertStatus.NEW);
   }
 
   @computed get isLoading() {

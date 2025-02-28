@@ -143,8 +143,14 @@ export class Panel extends MobxLitElement {
           </pr-tooltip>
           <pr-tooltip text="Alerts" position="RIGHT_END">
             <pr-icon-button
-              color="secondary"
-              icon="notifications"
+              color=${this.experimentManager.hasNewAlerts &&
+              !isSelected(PanelView.ALERTS)
+                ? 'error'
+                : 'secondary'}
+              icon=${this.experimentManager.hasNewAlerts &&
+              !isSelected(PanelView.ALERTS)
+                ? 'notifications_active'
+                : 'notifications'}
               size="medium"
               variant=${isSelected(PanelView.ALERTS) ? 'tonal' : 'default'}
               @click=${() => {
@@ -392,7 +398,8 @@ export class Panel extends MobxLitElement {
   }
 
   private renderAlertPanel() {
-    const alerts = this.experimentManager.alerts;
+    const newAlerts = this.experimentManager.newAlerts;
+    const oldAlerts = this.experimentManager.oldAlerts;
 
     const renderAlert = (alert: AlertMessage) => {
       const cohort = this.experimentManager.getCohort(alert.cohortId);
@@ -409,7 +416,7 @@ export class Panel extends MobxLitElement {
       };
 
       return html`
-        <div class="alert">
+        <div class="alert ${alert.status === AlertStatus.NEW ? 'new' : ''}">
           <div class="subtitle">
             ${convertUnifiedTimestampToDate(alert.timestamp)}
           </div>
@@ -436,8 +443,10 @@ export class Panel extends MobxLitElement {
     return html`
       <div class="main">
         <div class="top">
-          <div class="header">Alerts</div>
-          ${alerts.map((alert) => renderAlert(alert))}
+          <div class="header">New Alerts</div>
+          ${newAlerts.map((alert) => renderAlert(alert))}
+          <div class="header">Past Alerts</div>
+          ${oldAlerts.map((alert) => renderAlert(alert))}
         </div>
       </div>
     `;

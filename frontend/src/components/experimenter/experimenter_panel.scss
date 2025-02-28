@@ -176,7 +176,12 @@ pr-button pr-icon {
 .alert {
   @include common.flex-column;
   background: var(--md-sys-color-surface-variant);
+  border: 2px solid transparent;
   border-radius: common.$spacing-small;
   gap: common.$spacing-small;
   padding: common.$spacing-medium;
+
+  &.new {
+    border-color: var(--md-sys-color-error);
+  }
 }
