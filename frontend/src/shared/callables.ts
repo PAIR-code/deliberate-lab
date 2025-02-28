@@ -1,4 +1,5 @@
 import {
+  AckAlertMessageData,
   AgentConfigTestData,
   AgentParticipantPromptTestData,
   BaseParticipantData,
@@ -14,6 +15,7 @@ import {
   InitiateParticipantTransferData,
   ParticipantNextStageResponse,
   ParticipantProfile,
+  SendAlertMessageData,
   SendChipOfferData,
   SendChipResponseData,
   SendParticipantCheckData,
@@ -464,6 +466,36 @@ export const testAgentConfigCallable = async (
   >(
     functions,
     'testAgentConfig',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for sending alert message. */
+export const sendAlertMessageCallable = async (
+  functions: Functions,
+  config: SendAlertMessageData,
+) => {
+  const {data} = await httpsCallable<
+    SendAlertMessageData,
+    SimpleResponse<string>
+  >(
+    functions,
+    'sendAlertMessage',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for acknowledging alert message. */
+export const ackAlertMessageCallable = async (
+  functions: Functions,
+  config: AckAlertMessageData,
+) => {
+  const {data} = await httpsCallable<
+    AckAlertMessageData,
+    SimpleResponse<string>
+  >(
+    functions,
+    'ackAlertMessage',
   )(config);
   return data;
 };

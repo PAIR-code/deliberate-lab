@@ -40,6 +40,7 @@ import {
   acceptParticipantExperimentStartCallable,
   acceptParticipantTransferCallable,
   createChatMessageCallable,
+  sendAlertMessageCallable,
   sendChipOfferCallable,
   sendChipResponseCallable,
   setChipTurnCallable,
@@ -753,5 +754,22 @@ export class ParticipantService extends Service {
       );
     }
     return output.success;
+  }
+
+  async sendAlertMessage(message: string) {
+    let response = {};
+    if (this.experimentId && this.profile) {
+      response = await sendAlertMessageCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          stageId: this.profile.currentStageId,
+          participantId: this.profile.privateId,
+          message,
+        },
+      );
+    }
+    return response;
   }
 }

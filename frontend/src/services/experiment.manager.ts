@@ -21,6 +21,8 @@ import {Service} from './service';
 import JSZip from 'jszip';
 
 import {
+  AlertMessage,
+  AlertStatus,
   CohortConfig,
   CohortParticipantConfig,
   CreateChatMessageData,
@@ -36,6 +38,7 @@ import {
   generateId,
 } from '@deliberation-lab/utils';
 import {
+  ackAlertMessageCallable,
   bootParticipantCallable,
   createChatMessageCallable,
   createCohortCallable,
@@ -95,6 +98,7 @@ export class ExperimentManager extends Service {
   @observable experimentId: string | undefined = undefined;
   @observable cohortMap: Record<string, CohortConfig> = {};
   @observable participantMap: Record<string, ParticipantProfileExtended> = {};
+  @observable alertMap: Record<string, AlertMessage> = {};
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -291,6 +295,22 @@ export class ExperimentManager extends Service {
     return Object.values(this.cohortMap);
   }
 
+  @computed get hasNewAlerts() {
+    return this.newAlerts.length > 0;
+  }
+
+  @computed get newAlerts() {
+    return Object.values(this.alertMap).filter(
+      (alert) => alert.status === AlertStatus.NEW,
+    );
+  }
+
+  @computed get oldAlerts() {
+    return Object.values(this.alertMap).filter(
+      (alert) => alert.status !== AlertStatus.NEW,
+    );
+  }
+
   @computed get isLoading() {
     return this.isCohortsLoading || this.isParticipantsLoading;
   }
@@ -314,6 +334,29 @@ export class ExperimentManager extends Service {
     if (!this.sp.authService.isExperimenter) {
       return;
     }
+
+    // Subscribe to alerts
+    this.unsubscribe.push(
+      onSnapshot(
+        collection(
+          this.sp.firebaseService.firestore,
+          'experiments',
+          id,
+          'alerts',
+        ),
+        (snapshot) => {
+          let changedDocs = snapshot.docChanges().map((change) => change.doc);
+          if (changedDocs.length === 0) {
+            changedDocs = snapshot.docs;
+          }
+
+          changedDocs.forEach((doc) => {
+            const data = doc.data() as AlertMessage;
+            this.alertMap[data.id] = data;
+          });
+        },
+      ),
+    );
 
     // Subscribe to cohorts
     this.unsubscribe.push(
@@ -376,6 +419,7 @@ export class ExperimentManager extends Service {
     // Reset experiment data
     this.cohortMap = {};
     this.participantMap = {};
+    this.alertMap = {};
   }
 
   reset() {
@@ -705,6 +749,22 @@ export class ExperimentManager extends Service {
         ).data ?? '';
     }
     return response;
+  }
+
+  /** Acknowledge alert message. */
+  async ackAlertMessage(alertId: string, response = '') {
+    let output = {};
+    if (this.experimentId) {
+      output = await ackAlertMessageCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          alertId,
+          response,
+        },
+      );
+    }
+    return output;
   }
 
   /** Create a manual (human) agent chat message. */

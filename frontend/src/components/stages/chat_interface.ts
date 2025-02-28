@@ -50,6 +50,7 @@ export class ChatInterface extends MobxLitElement {
   @property() disableInput = false;
   @property() showInfo = false;
   @state() readyToEndDiscussionLoading = false;
+  @state() isAlertLoading = false;
 
   private sendUserInput() {
     if (!this.stage) return;
@@ -264,6 +265,12 @@ export class ChatInterface extends MobxLitElement {
         currentDiscussionId,
       );
 
+    const sendAlert = async () => {
+      this.isAlertLoading = true;
+      await this.participantService.sendAlertMessage('Stuck in chat stage!');
+      this.isAlertLoading = false;
+    };
+
     return html`
       <pr-tooltip
         text=${isDisabled
@@ -280,6 +287,19 @@ export class ChatInterface extends MobxLitElement {
         >
           Ready to end discussion
         </pr-button>
+      </pr-tooltip>
+      <pr-tooltip
+        position="TOP_END"
+        text="Click this to alert the experimenter if you have trouble ending discussion"
+      >
+        <pr-icon-button
+          icon="contact_support"
+          variant="default"
+          color="error"
+          ?loading=${this.isAlertLoading}
+          @click=${sendAlert}
+        >
+        </pr-icon-button>
       </pr-tooltip>
     `;
   }

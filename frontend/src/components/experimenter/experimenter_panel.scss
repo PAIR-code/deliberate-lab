@@ -1,6 +1,6 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-row;
@@ -170,5 +170,18 @@ pr-button pr-icon {
 
   p {
     margin: 0;
+  }
+}
+
+.alert {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface-variant);
+  border: 2px solid transparent;
+  border-radius: common.$spacing-small;
+  gap: common.$spacing-small;
+  padding: common.$spacing-medium;
+
+  &.new {
+    border-color: var(--md-sys-color-error);
   }
 }

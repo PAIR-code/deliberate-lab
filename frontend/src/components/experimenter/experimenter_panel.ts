@@ -24,6 +24,8 @@ import {RouterService} from '../../services/router.service';
 
 import {
   AgentConfig,
+  AlertMessage,
+  AlertStatus,
   ParticipantProfileExtended,
   StageKind,
   EXPERIMENT_VERSION_ID,
@@ -33,12 +35,15 @@ import {styles} from './experimenter_panel.scss';
 import {DEFAULT_STRING_FORMATTING_INSTRUCTIONS} from '@deliberation-lab/utils';
 import {DEFAULT_JSON_FORMATTING_INSTRUCTIONS} from '@deliberation-lab/utils';
 
+import {convertUnifiedTimestampToDate} from '../../shared/utils';
+
 enum PanelView {
   DEFAULT = 'default',
   PARTICIPANT_SEARCH = 'participant_search',
   MANUAL_CHAT = 'manual_chat',
   LLM_SETTINGS = 'llm_settings',
   API_KEY = 'api_key',
+  ALERTS = 'alerts',
 }
 
 /** Experimenter panel component */
@@ -57,6 +62,7 @@ export class Panel extends MobxLitElement {
   @state() panelView: PanelView = PanelView.DEFAULT;
   @state() isLoading = false;
   @state() isDownloading = false;
+  @state() isAckAlertLoading = false;
   @state() participantSearchQuery = '';
 
   override render() {
@@ -135,6 +141,24 @@ export class Panel extends MobxLitElement {
             >
             </pr-icon-button>
           </pr-tooltip>
+          <pr-tooltip text="Alerts" position="RIGHT_END">
+            <pr-icon-button
+              color=${this.experimentManager.hasNewAlerts &&
+              !isSelected(PanelView.ALERTS)
+                ? 'error'
+                : 'secondary'}
+              icon=${this.experimentManager.hasNewAlerts &&
+              !isSelected(PanelView.ALERTS)
+                ? 'notifications_active'
+                : 'notifications'}
+              size="medium"
+              variant=${isSelected(PanelView.ALERTS) ? 'tonal' : 'default'}
+              @click=${() => {
+                this.panelView = PanelView.ALERTS;
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
         </div>
         ${this.renderPanelView()}
       </div>
@@ -172,6 +196,8 @@ export class Panel extends MobxLitElement {
         return this.renderApiKeyPanel();
       case PanelView.LLM_SETTINGS:
         return this.renderAgentEditorPanel();
+      case PanelView.ALERTS:
+        return this.renderAlertPanel();
       default:
         return this.renderDefaultPanel();
     }
@@ -366,6 +392,61 @@ export class Panel extends MobxLitElement {
         <div class="top">
           <div class="header">Manual chat</div>
           <experimenter-manual-chat></experimenter-manual-chat>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderAlertPanel() {
+    const newAlerts = this.experimentManager.newAlerts;
+    const oldAlerts = this.experimentManager.oldAlerts;
+
+    const renderAlert = (alert: AlertMessage) => {
+      const cohort = this.experimentManager.getCohort(alert.cohortId);
+      const participant =
+        this.experimentManager.participantMap[alert.participantId];
+
+      const onAck = () => {
+        // TODO: Add UI so the experimenter can send a custom response
+        // (and add UI for the participant to view alert status/response)
+        this.isAckAlertLoading = true;
+        const response = 'Acknowledged';
+        this.experimentManager.ackAlertMessage(alert.id, response);
+        this.isAckAlertLoading = false;
+      };
+
+      return html`
+        <div class="alert ${alert.status === AlertStatus.NEW ? 'new' : ''}">
+          <div class="subtitle">
+            ${convertUnifiedTimestampToDate(alert.timestamp)}
+          </div>
+          <div>
+            ${cohort?.metadata.name ?? 'Unknown cohort'}
+            (${participant?.name ?? 'Unknown participant'})
+          </div>
+          <div>${alert.message}</div>
+          ${alert.status === AlertStatus.NEW
+            ? html`
+                <pr-icon-button
+                  icon="check_circle"
+                  variant="default"
+                  ?loading=${this.isAckAlertLoading}
+                  @click=${onAck}
+                >
+                </pr-icon-button>
+              `
+            : nothing}
+        </div>
+      `;
+    };
+
+    return html`
+      <div class="main">
+        <div class="top">
+          <div class="header">New Alerts</div>
+          ${newAlerts.map((alert) => renderAlert(alert))}
+          <div class="header">Past Alerts</div>
+          ${oldAlerts.map((alert) => renderAlert(alert))}
         </div>
       </div>
     `;
