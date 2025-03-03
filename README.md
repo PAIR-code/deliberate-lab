@@ -8,8 +8,15 @@ on human + LLM group dynamics.
 
 ## Citation
 
-📝 If you use Deliberate Lab in your work, please include the citation
-generated in the repository sidebar ("Cite this repository").
+📝 If you use Deliberate Lab in your work, please include the citation:
+
+@software{Deliberate Lab,
+author = {Vivian Tsai, Crystal Qian, and the Deliberate Lab Community},
+title = {Deliberate Lab: Open-Source Platform for LLM-Powered Social Science},
+year = {2025},
+url = {https://github.com/PAIR-code/deliberate-lab},
+version = {latest}
+}
 
 ## License and Disclaimer
 
