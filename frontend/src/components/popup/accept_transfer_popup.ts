@@ -28,14 +28,14 @@ class TransferPopup extends MobxLitElement {
       <div class="overlay">
         <div class="popup">
           <div class="title">
-            You have been transferred to a new experiment!
+            You have been transferred to a new group!
           </div>
           <div class="button-row">
             <div class="button-container">
               <pr-button color="error" variant="tonal" @click=${this.handleNo}>
                 Decline the invitation
               </pr-button>
-              <p class="subtitle">This will end the experiment</p>
+              <p class="subtitle">This will end the experiment.</p>
             </div>
             <div class="button-container">
               <pr-button
