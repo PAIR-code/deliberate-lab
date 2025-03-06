@@ -460,11 +460,14 @@ const CHIP_INFO_STAGE_GAMEPLAY2 = createInfoStage({
     `To propose a trade, a player must:`,
     `1. Request a certain quantity of chips of a single color from any other player to **get**`,
     `2. Specify a certain quantity of chips of a different color to **give** in return`,
+`\n## 🌟 One tip`,
+    'As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs. 🙂',
+
     `\n## Trade rules`,
     `* Players cannot offer more chips than they currently hold. For example, if you only have 5 🔴 red chips, you cannot offer 6 🔴 red chips.`,
     `* Players cannot trade chips of the same color. For example, you cannot trade 🔴 red chips for 🔴 red chips.`,
     '![Example of offering a trade](https://i.imgur.com/Jzah8Ot.png)',
-  ],
+      ],
 });
 
 const CHIP_INFO_STAGE_GAMEPLAY4 = createInfoStage({
@@ -656,6 +659,8 @@ function getChipNegotiationStage1(numChips: number) {
     name: 'First negotiation game',
     descriptions: createStageTextConfig({
       infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
+      helpText: `If you see the "It\'s your turn\" panel, that means others are waiting on you to make an offer! As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs.
+      `,
     }),
     chips: getChips(numChips),
   });
@@ -668,6 +673,8 @@ function getChipNegotiationStage2(numChips: number) {
     name: 'Second negotiation game',
     descriptions: createStageTextConfig({
       infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
+      helpText: `If you see the "It\'s your turn\" panel, that means others are waiting on you to make an offer! As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs.
+      `,
     }),
     chips: getChips(numChips),
   });
