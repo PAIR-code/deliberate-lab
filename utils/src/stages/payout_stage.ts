@@ -397,6 +397,7 @@ export function calculateChipPayoutItemResult(
   // Get chip stage config
   const stage = stageConfigMap[item.stageId];
   if (!stage || stage.kind !== StageKind.CHIP) return null;
+  if (!publicDataMap) return null;
 
   const stageTimestamp = profile.timestamps.completedStages[item.stageId];
   const completedStage =
