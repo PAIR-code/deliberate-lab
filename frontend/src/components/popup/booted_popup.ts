@@ -21,6 +21,9 @@ class BootedPopup extends MobxLitElement {
       <div class="overlay">
         <div class="popup">
           <div class="title">You have been removed from the experiment.</div>
+          <p>
+          The experiment ended due to either a failed attention check or a technical issue (e.g., system error, other participants leaving).<br/>If it was a technical issue, you will be fully compensated for your time.
+         </p>
           <p class="subtitle">
             Please contact the administrator if you have any questions.
           </p>
