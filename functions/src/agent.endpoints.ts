@@ -98,14 +98,7 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
   }
 
   // Call LLM API
-  const modelSettings = createAgentModelSettings();
-  const generationConfig = createModelGenerationConfig();
-  const response = await getAgentResponse(
-    experimenterData,
-    prompt,
-    modelSettings,
-    generationConfig,
-  );
+  const response = await getAgentResponse(experimenterData, prompt, agent);
   // Check console log for response
   console.log(
     'TESTING AGENT PARTICIPANT PROMPT\n',
