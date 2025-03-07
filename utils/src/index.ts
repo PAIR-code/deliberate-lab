@@ -34,6 +34,7 @@ export * from './profile_sets';
 // Agent
 export * from './agent';
 export * from './agent.validation';
+export * from './structured_output.ts';
 
 // Stages
 export * from './stages/stage';
