@@ -731,9 +731,15 @@ export class AgentEditorComponent extends MobxLitElement {
           @change=${updateType}
           ?disabled=${!this.experimentEditor.canEditStages}
         >
-          ${Object.values(StructuredOutputType).map((type) => {
-            return html`<option value="${type}">${type}</option>`;
-          })}
+          <option value="${StructuredOutputType.NONE}">
+            No structured output
+          </option>
+          <option value="${StructuredOutputType.JSON_FORMAT}">
+            Force JSON output
+          </option>
+          <option value="${StructuredOutputType.JSON_SCHEMA}">
+            Force JSON output with schema
+          </option>
         </select>
       </div>
       ${!config.isJSON
