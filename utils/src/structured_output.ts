@@ -24,3 +24,12 @@ export interface StructuredOutputConfig {
   type: StructuredOutputType;
   schema?: StructuredOutputSchema;
 }
+
+export function createStructuredOutputConfig(
+  config: Partial<StructuredOutputConfig> = {},
+): StructuredOutputConfig {
+  return {
+    type: config.type ?? StructuredOutputType.NONE,
+    schema: config.schema,
+  }
+}

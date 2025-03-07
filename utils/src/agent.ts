@@ -11,6 +11,7 @@ import {
   DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
   DEFAULT_STRING_FORMATTING_INSTRUCTIONS,
 } from './stages/chat_stage.prompts';
+import {StructuredOutputConfig} from './structured_output';
 
 /** Agent types and functions. */
 
@@ -112,8 +113,7 @@ export type AgentParticipantPromptConfig = BaseAgentPromptConfig;
  */
 export interface AgentChatPromptConfig extends BaseAgentPromptConfig {
   chatSettings: AgentChatSettings;
-  // TODO(mkbehr): Replace with structured output setup?
-  responseConfig: AgentResponseConfig;
+  structuredOutputConfig: StructuredOutputConfig;
 }
 
 export enum AgentPersonaType {
@@ -229,7 +229,7 @@ export function createAgentChatPromptConfig(
     promptSettings: config.promptSettings ?? createAgentPromptSettings(),
     generationConfig: config.generationConfig ?? createModelGenerationConfig(),
     chatSettings: config.chatSettings ?? createAgentChatSettings(),
-    responseConfig: config.responseConfig ?? createAgentResponseConfig(),
+    structuredOutputConfig: config.structuredOutputConfig ?? createStructuredOutputConfig(),
   };
 }
 
