@@ -19,6 +19,7 @@ import {
   ParticipantProfileBase,
   StageConfig,
   StageKind,
+  StructuredOutputConfig,
   ModelGenerationConfig,
   createAgentChatPromptConfig,
   createAgentPersonaConfig,
@@ -208,10 +209,26 @@ export class AgentEditor extends Service {
   ) {
     const agent = this.getAgentMediator(id);
     const config = this.agentChatPromptMap[id][stageId];
+    // TODO(mkbehr): fix or remove
+    // if (agent && config) {
+    //   this.agentChatPromptMap[id][stageId] = {
+    //     ...config,
+    //     responseConfig: {...config.responseConfig, ...newResponseConfig},
+    //   };
+    // }
+  }
+
+  updateAgentMediatorStructuredOutputConfig(
+    id: string,
+    stageId: string,
+    newStructuredOutputConfig: Partial<StructuredOutputConfig>,
+  ) {
+    const agent = this.getAgentMediator(id);
+    const config = this.agentChatPromptMap[id][stageId];
     if (agent && config) {
       this.agentChatPromptMap[id][stageId] = {
         ...config,
-        responseConfig: {...config.responseConfig, ...newResponseConfig},
+        structuredOutputConfig: {...config.structuredOutputConfig, ...newStructuredOutputConfig},
       };
     }
   }

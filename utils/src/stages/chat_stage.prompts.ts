@@ -50,7 +50,8 @@ export function getDefaultChatPrompt(
   return [
     getChatPromptPreface(mediator, promptConfig, stageConfig),
     getChatPromptHistory(chatMessages),
-    promptConfig.responseConfig.formattingInstructions,
+    // TODO(mkbehr): add new formatting instructions
+    // promptConfig.responseConfig.formattingInstructions,
     promptConfig.promptContext,
     mediator.agentConfig?.promptContext ?? '',
   ].join('\n');
