@@ -15,13 +15,10 @@ import {ExperimentService} from '../../services/experiment.service';
 import {
   AgentChatPromptConfig,
   AgentPersonaConfig,
-  AgentResponseConfig,
   ApiKeyType,
   StageConfig,
   StageKind,
-  checkApiKeyExists,
-  DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
-  DEFAULT_STRING_FORMATTING_INSTRUCTIONS,
+  StructuredOutputType,
 } from '@deliberation-lab/utils';
 import {LLM_AGENT_AVATARS} from '../../shared/constants';
 import {getHashBasedColor} from '../../shared/utils';
@@ -163,7 +160,7 @@ export class AgentEditorComponent extends MobxLitElement {
         <div>${this.renderTestPromptButton(agentConfig, promptConfig)}</div>
         <div class="divider"></div>
         ${this.renderAgentPrompt(agentConfig, promptConfig)}
-        ${this.renderAgentResponseConfig(agentConfig, promptConfig)}
+        ${this.renderAgentStructuredOutputConfig(agentConfig, promptConfig)}
         ${this.renderAgentWordsPerMinute(agentConfig, promptConfig)}
         ${this.renderAgentSamplingParameters(agentConfig, promptConfig)}
         ${this.renderAgentCustomRequestBodyFields(agentConfig, promptConfig)}
@@ -710,68 +707,34 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  // TODO(mkbehr): Update to match new structured output setup
-  private renderAgentResponseConfig(
+  private renderAgentStructuredOutputConfig(
     agent: AgentPersonaConfig,
     agentPromptConfig: AgentChatPromptConfig,
   ) {
-    const config = agentPromptConfig.responseConfig;
-    const updateConfig = (responseConfig: Partial<AgentResponseConfig>) => {
-      this.agentEditor.updateAgentMediatorResponseConfig(
+    const config = agentPromptConfig.structuredOutputConfig;
+
+    const updateType = (e: Event) => {
+      const type = (e.target as HTMLSelectElement).value as StructuredOutputType;
+      this.agentEditor.updateAgentMediatorStructuredOutputConfig(
         agent.id,
         agentPromptConfig.id,
-        responseConfig,
+        {type},
       );
-    };
-    const updateFormattingInstructions = (e: InputEvent) => {
-      const formattingInstructions = (e.target as HTMLTextAreaElement).value;
-      updateConfig({formattingInstructions});
-    };
-    const updateJSON = () => {
-      updateConfig({
-        isJSON: !config.isJSON,
-        formattingInstructions: config.isJSON
-          ? DEFAULT_STRING_FORMATTING_INSTRUCTIONS
-          : DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
-      });
-    };
-    const updateMessageField = (e: InputEvent) => {
-      const messageField = (e.target as HTMLTextAreaElement).value;
-      updateConfig({messageField});
-    };
-    const updateExplanationField = (e: InputEvent) => {
-      const explanationField = (e.target as HTMLTextAreaElement).value;
-      updateConfig({explanationField});
     };
 
     return html`
-      <div class="checkbox-wrapper">
-        <md-checkbox
-          touch-target="wrapper"
-          ?checked=${config.isJSON}
-          ?disabled=${!this.experimentEditor.isCreator}
-          @click=${updateJSON}
-        >
-        </md-checkbox>
-        <div>Parse agent response as JSON</div>
-      </div>
-      <div class="description">
-        If JSON parsing enabled: Make sure to include appropriate
-        instructions/examples in your prompt to avoid parsing errors (if the
-        specified message field is non-empty, its contents will be turned into a
-        chat message). If disabled: non-empty responses will be turned into
-        messages.
-      </div>
       <div class="field">
-        <pr-textarea
-          label="Formatting instructions and examples"
-          placeholder="Instructions and examples for formatting the agent response"
-          variant="outlined"
-          .value=${config.formattingInstructions}
-          ?disabled=${!this.experimentEditor.isCreator}
-          @input=${updateFormattingInstructions}
+        <label for="structuredOutputType">Structured Output Type</label>
+        <select
+          id="structuredOutputType"
+          .value=${config.type}
+          @change=${updateType}
+          ?disabled=${!this.experimentEditor.canEditStages}
         >
-        </pr-textarea>
+          ${Object.values(StructuredOutputType).map((type) => {
+            return html`<option value="${type}">${type}</option>`;
+          })}
+        </select>
       </div>
       ${!config.isJSON
         ? nothing
