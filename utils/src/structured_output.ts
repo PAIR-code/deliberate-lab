@@ -16,7 +16,7 @@ export enum StructuredOutputDataType {
 export interface StructuredOutputSchema {
   type: StructuredOutputDataType;
   description?: string;
-  properties?: Map<string, StructuredOutputSchema>;
+  properties?: {name: string, schema: StructuredOutputSchema}[];
   arrayItems?: StructuredOutputSchema;
 }
 

@@ -20,6 +20,7 @@ import {
   StageKind,
   StructuredOutputType,
   StructuredOutputDataType,
+  StructuredOutputSchema,
 } from '@deliberation-lab/utils';
 import {LLM_AGENT_AVATARS} from '../../shared/constants';
 import {getHashBasedColor} from '../../shared/utils';
@@ -758,12 +759,23 @@ export class AgentEditorComponent extends MobxLitElement {
       );
     };
 
+    const structuredOutputConfig = agentPromptConfig.structuredOutputConfig;
+
+    // TODO fix the rendering
     return html`
       <div class="section">
         <div class="section-header">
           <div class="section-title">Structured output schema fields</div>
           <div class="description">Add fields to the structured output schema.</div>
         </div>
+        ${structuredOutputConfig.schema?.properties?.map((field, fieldIndex) =>
+          this.renderAgentStructuredOutputSchemaField(
+            agent,
+            agentPromptConfig,
+            field,
+            fieldIndex,
+          ),
+        )}
         <pr-button @click=${addField}>Add field</pr-button>
       </div>
     `;
@@ -772,7 +784,7 @@ export class AgentEditorComponent extends MobxLitElement {
   private renderAgentStructuredOutputSchemaField(
     agent: AgentPersonaConfig,
     agentPromptConfig: AgentChatPromptConfig,
-    field: {name: string; type: StructuredOutputDataType; description: string},
+    field: {name: string; schema: StructuredOutputSchema},
     fieldIndex: number,
   ) {
     const updateName = (e: InputEvent) => {
@@ -781,7 +793,7 @@ export class AgentEditorComponent extends MobxLitElement {
         agent.id,
         agentPromptConfig.id,
         fieldIndex,
-        {name},
+        {name: name},
       );
     };
 
@@ -791,7 +803,7 @@ export class AgentEditorComponent extends MobxLitElement {
         agent.id,
         agentPromptConfig.id,
         fieldIndex,
-        {type},
+        {schema: {type: type}},
       );
     };
 
@@ -801,7 +813,7 @@ export class AgentEditorComponent extends MobxLitElement {
         agent.id,
         agentPromptConfig.id,
         fieldIndex,
-        {description},
+        {schema: {description: description}},
       );
     };
 
@@ -822,7 +834,7 @@ export class AgentEditorComponent extends MobxLitElement {
           @input=${updateName}
         >
         </pr-textarea>
-        <select .value=${field.type} @change=${updateType}>
+        <select .value=${field.schema.type} @change=${updateType}>
           <option value="${StructuredOutputDataType.STRING}">STRING</option>
           <option value="${StructuredOutputDataType.NUMBER}">NUMBER</option>
           <option value="${StructuredOutputDataType.INTEGER}">INTEGER</option>
@@ -831,7 +843,7 @@ export class AgentEditorComponent extends MobxLitElement {
         <pr-textarea
           label="Field description"
           variant="outlined"
-          .value=${field.description}
+          .value=${field.schema.description}
           @input=${updateDescription}
         >
         </pr-textarea>
