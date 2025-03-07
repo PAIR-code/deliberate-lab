@@ -20,6 +20,7 @@ import {
   StageConfig,
   StageKind,
   StructuredOutputConfig,
+  StructuredOutputDataType,
   ModelGenerationConfig,
   createAgentChatPromptConfig,
   createAgentPersonaConfig,
@@ -286,6 +287,72 @@ export class AgentEditor extends Service {
         ...promptConfig.generationConfig,
         customRequestBodyFields,
       };
+    }
+  }
+
+  addAgentMediatorStructuredOutputSchemaField(agentId: string, stageId: string) {
+    const agent = this.getAgentMediator(agentId);
+    const promptConfig = this.agentChatPromptMap[agentId][stageId];
+    if (agent && promptConfig) {
+      const schema = promptConfig.structuredOutputConfig.schema;
+      const newField = {name: '', type: StructuredOutputDataType.STRING, description: ''};
+      if (schema) {
+        schema.properties = schema.properties ?? new Map();
+        schema.properties.set(newField.name, newField);
+      } else {
+        promptConfig.structuredOutputConfig.schema = {
+          type: StructuredOutputDataType.OBJECT,
+          properties: new Map([[newField.name, newField]]),
+        };
+      }
+      this.updateAgentMediatorStructuredOutputConfig(agentId, stageId, {
+        schema: promptConfig.structuredOutputConfig.schema,
+      });
+    }
+  }
+
+  updateAgentMediatorStructuredOutputSchemaField(
+    agentId: string,
+    stageId: string,
+    fieldIndex: number,
+    field: Partial<{name: string; type: string; description: string}>,
+  ) {
+    const agent = this.getAgentMediator(agentId);
+    const promptConfig = this.agentChatPromptMap[agentId][stageId];
+    if (agent && promptConfig) {
+      const schema = promptConfig.structuredOutputConfig.schema;
+      if (schema && schema.properties) {
+        // TODO: Figure out how to update the map
+        // schema.properties[fieldIndex] = {
+        //   ...schema.properties[fieldIndex],
+        //   ...field,
+        // };
+        this.updateAgentMediatorStructuredOutputConfig(agentId, stageId, {
+          schema,
+        });
+      }
+    }
+  }
+
+  deleteAgentMediatorStructuredOutputSchemaField(
+    agentId: string,
+    stageId: string,
+    fieldIndex: number,
+  ) {
+    const agent = this.getAgentMediator(agentId);
+    const promptConfig = this.agentChatPromptMap[agentId][stageId];
+    if (agent && promptConfig) {
+      const schema = promptConfig.structuredOutputConfig.schema;
+      if (schema && schema.properties) {
+        // TODO: Figure out how to update the map
+        // schema.properties = [
+        //   ...schema.properties.slice(0, fieldIndex),
+        //   ...schema.properties.slice(fieldIndex + 1),
+        // ];
+        this.updateAgentMediatorStructuredOutputConfig(agentId, stageId, {
+          schema,
+        });
+      }
     }
   }
 
