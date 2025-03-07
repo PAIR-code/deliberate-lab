@@ -350,11 +350,10 @@ export class AgentEditor extends Service {
     if (agent && promptConfig) {
       const schema = promptConfig.structuredOutputConfig.schema;
       if (schema && schema.properties) {
-        // TODO: Figure out how to update the map
-        // schema.properties = [
-        //   ...schema.properties.slice(0, fieldIndex),
-        //   ...schema.properties.slice(fieldIndex + 1),
-        // ];
+        schema.properties = [
+          ...schema.properties.slice(0, fieldIndex),
+          ...schema.properties.slice(fieldIndex + 1),
+        ];
         this.updateAgentMediatorStructuredOutputConfig(agentId, stageId, {
           schema,
         });
