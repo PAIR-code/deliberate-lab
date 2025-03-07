@@ -1,3 +1,4 @@
+.vscode
 *.log
 *.DS_Store
 .firebaserc
@@ -5,3 +6,5 @@ node_modules/
 
 # Packed shared utils package
 *deliberation-lab-utils-*.tgz
+
+.vscode

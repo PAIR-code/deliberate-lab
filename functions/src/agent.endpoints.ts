@@ -16,6 +16,7 @@ import {
   getOllamaResponse,
 } from './agent.utils';
 import {getAgentParticipantRankingStageResponse} from './stages/ranking.utils';
+import {getAgentParticipantSurveyResponse} from './stages/survey.utils';
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
@@ -31,6 +32,7 @@ import {AuthGuard} from './utils/auth-guard';
 // ****************************************************************************
 export const testAgentParticipantPrompt = onCall(async (request) => {
   const {data} = request;
+  console.debug("Test agent participant prompt", data);
 
   // Only allow experimenters to use this test endpoint for now
   await AuthGuard.isExperimenter(request);
@@ -41,8 +43,8 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
 
   // Fetch experiment creator's API key and other experiment data.
   const creatorId = (
-    await app.firestore().collection('experiments').doc(experimentId).get()
-  ).data().metadata.creator;
+    await app?.firestore()?.collection('experiments')?.doc(experimentId)?.get()
+  ).data()?.metadata.creator;
   const creatorDoc = await app
     .firestore()
     .collection('experimenterData')
@@ -85,19 +87,18 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
         participant,
         stage,
       );
+    case StageKind.SURVEY:
+      return await getAgentParticipantSurveyResponse(
+        experimentId, 
+        experimenterData, 
+        participant,
+        stage);
     default:
       prompt = `This is a test prompt. Please output a funny joke.`;
   }
 
   // Call LLM API
-  const modelSettings = createAgentModelSettings();
-  const generationConfig = createModelGenerationConfig();
-  const response = await getAgentResponse(
-    experimenterData,
-    prompt,
-    modelSettings,
-    generationConfig,
-  );
+  const response = await getAgentResponse(experimenterData, prompt, agent);
   // Check console log for response
   console.log(
     'TESTING AGENT PARTICIPANT PROMPT\n',
