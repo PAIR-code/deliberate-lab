@@ -19,6 +19,7 @@ import {
   StageConfig,
   StageKind,
   StructuredOutputType,
+  StructuredOutputDataType,
 } from '@deliberation-lab/utils';
 import {LLM_AGENT_AVATARS} from '../../shared/constants';
 import {getHashBasedColor} from '../../shared/utils';
@@ -742,36 +743,108 @@ export class AgentEditorComponent extends MobxLitElement {
           </option>
         </select>
       </div>
-      ${!config.isJSON
-        ? nothing
-        : html`
-            <div class="field">
-              <pr-textarea
-                label="JSON field to extract chat message from"
-                placeholder="JSON field to extract chat message from"
-                variant="outlined"
-                .value=${config.messageField}
-                ?disabled=${!this.experimentEditor.isCreator}
-                @input=${updateMessageField}
-              >
-              </pr-textarea>
-            </div>
-          `}
-      ${!config.isJSON
-        ? nothing
-        : html`
-            <div class="field">
-              <pr-textarea
-                label="JSON field to extract debugging explanation from"
-                placeholder="JSON field to extract debugging explanation from"
-                variant="outlined"
-                .value=${config.explanationField}
-                ?disabled=${!this.experimentEditor.isCreator}
-                @input=${updateExplanationField}
-              >
-              </pr-textarea>
-            </div>
-          `}
+      ${this.renderAgentStructuredOutputSchemaFields(agent, agentPromptConfig)}
+    `;
+  }
+
+  private renderAgentStructuredOutputSchemaFields(
+    agent: AgentPersonaConfig,
+    agentPromptConfig: AgentChatPromptConfig,
+  ) {
+    const addField = () => {
+      this.agentEditor.addAgentMediatorStructuredOutputSchemaField(
+        agent.id,
+        agentPromptConfig.id,
+      );
+    };
+
+    return html`
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Structured output schema fields</div>
+          <div class="description">Add fields to the structured output schema.</div>
+        </div>
+        <pr-button @click=${addField}>Add field</pr-button>
+      </div>
+    `;
+  }
+
+  private renderAgentStructuredOutputSchemaField(
+    agent: AgentPersonaConfig,
+    agentPromptConfig: AgentChatPromptConfig,
+    field: {name: string; type: StructuredOutputDataType; description: string},
+    fieldIndex: number,
+  ) {
+    const updateName = (e: InputEvent) => {
+      const name = (e.target as HTMLTextAreaElement).value;
+      this.agentEditor.updateAgentMediatorStructuredOutputSchemaField(
+        agent.id,
+        agentPromptConfig.id,
+        fieldIndex,
+        {name},
+      );
+    };
+
+    const updateType = (e: Event) => {
+      const type = (e.target as HTMLSelectElement).value as StructuredOutputDataType;
+      this.agentEditor.updateAgentMediatorStructuredOutputSchemaField(
+        agent.id,
+        agentPromptConfig.id,
+        fieldIndex,
+        {type},
+      );
+    };
+
+    const updateDescription = (e: InputEvent) => {
+      const description = (e.target as HTMLTextAreaElement).value;
+      this.agentEditor.updateAgentMediatorStructuredOutputSchemaField(
+        agent.id,
+        agentPromptConfig.id,
+        fieldIndex,
+        {description},
+      );
+    };
+
+    const deleteField = () => {
+      this.agentEditor.deleteAgentMediatorStructuredOutputSchemaField(
+        agent.id,
+        agentPromptConfig.id,
+        fieldIndex,
+      );
+    };
+
+    return html`
+      <div class="name-value-input">
+        <pr-textarea
+          label="Field name"
+          variant="outlined"
+          .value=${field.name}
+          @input=${updateName}
+        >
+        </pr-textarea>
+        <select .value=${field.type} @change=${updateType}>
+          <option value="${StructuredOutputDataType.STRING}">STRING</option>
+          <option value="${StructuredOutputDataType.NUMBER}">NUMBER</option>
+          <option value="${StructuredOutputDataType.INTEGER}">INTEGER</option>
+          <option value="${StructuredOutputDataType.BOOLEAN}">BOOLEAN</option>
+        </select>
+        <pr-textarea
+          label="Field description"
+          variant="outlined"
+          .value=${field.description}
+          @input=${updateDescription}
+        >
+        </pr-textarea>
+        <pr-icon-button
+          icon="close"
+          color="neutral"
+          padding="small"
+          variant="default"
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @click=${deleteField}
+        >
+        </pr-icon-button>
+      </div>
     `;
   }
 }
