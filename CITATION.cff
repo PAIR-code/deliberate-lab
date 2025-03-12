@@ -5,11 +5,8 @@ authors:
   given-names: "Vivian"
 - family-names: "Qian"
   given-names: "Crystal"
-- family-names: "de Saivre"
-  given-names: "Thibaut"
-- family-names: "Dixon"
-  given-names: "Lucas"
-title: "Deliberate Lab"
+- family-names: "Deliberate Lab community contributors"
+title: "Deliberate Lab: Open-Source Platform for LLM-Powered Social Science"
 version: 1.0.0
 date-released: 2024-09-27
 url: "https://github.com/PAIR-code/deliberate-lab"
