@@ -35,11 +35,36 @@ export const N_INITIAL_PURPLE_CHIPS = 10;
 // ****************************************************************************
 // Experiment config
 // ****************************************************************************
-export const CHIP_GAME_METADATA = createMetadataConfig({
-  name: 'Chip Negotiation',
-  publicName: 'Chip Negotiation',
-  description: 'A trading scenario that showcases a custom negotiation module.',
-});
+export function getChipMetadata(numChips: number) {
+  let emoji = '🔴'; // Default to red
+  let name = 'Chip Negotiation';
+  let publicName = 'Chip Negotiation';
+  let description =
+    'A trading scenario that showcases a custom negotiation module';
+
+  if (numChips === 2) {
+    emoji = '🟢'; // Green for 2 chips
+    name = `${emoji} Chip Negotiation (2 Chips)`;
+    publicName = `${emoji} Chip Negotiation (v2)`;
+    description += ' with red and green chips.';
+  } else if (numChips === 3) {
+    emoji = '🔵'; // Blue for 3 chips
+    name = `${emoji} Chip Negotiation (3 Chips)`;
+    publicName = `${emoji} Chip Negotiation (v3)`;
+    description += ' with red, green, and blue chips.';
+  } else if (numChips === 4) {
+    emoji = '🟣'; // Purple for 4 chips
+    name = `${emoji} Chip Negotiation (4 Chips)`;
+    publicName = `${emoji} Chip Negotiation (v4)`;
+    description += ' with red, green, blue, and purple chips.';
+  }
+
+  return createMetadataConfig({
+    name,
+    publicName,
+    description,
+  });
+}
 
 export function getChipNegotiationStageConfigs(numChips = 3): StageConfig[] {
   const stages: StageConfig[] = [];
@@ -51,8 +76,8 @@ export function getChipNegotiationStageConfigs(numChips = 3): StageConfig[] {
   stages.push(CHIP_PROFILE_STAGE);
 
   // Overview stages
-  stages.push(CHIP_INFO_STAGE_OVERVIEW1);
-  stages.push(CHIP_INFO_STAGE_OVERVIEW2);
+  stages.push(createChipInfoStage1(numChips));
+  stages.push(createChipInfoStage2(numChips));
   stages.push(CHIP_INFO_STAGE_OVERVIEW3);
 
   // Comprehension check
@@ -68,7 +93,7 @@ export function getChipNegotiationStageConfigs(numChips = 3): StageConfig[] {
   stages.push(CHIP_COMPREHENSION_CHECK2);
 
   stages.push(CHIP_INFO_STAGE_PAYOUT);
-  stages.push(CHIP_INFO_STAGE_PAYOUT2);
+  stages.push(createChipInfoPayout(numChips));
 
   // Transfer
   stages.push(TRANSFER_STAGE);
@@ -138,33 +163,119 @@ const CHIP_ALTERNATE_PROFILE_STAGE = createProfileStage({
 // Info stage for chip negotiation
 // ****************************************************************************
 
-const CHIP_INFO_STAGE_OVERVIEW1 = createInfoStage({
-  id: 'info_overview1',
-  game: StageGame.CHP,
-  name: 'Instructions: overview',
-  infoLines: [
-    'In this experiment, you will be playing a trading game with other participants. All of you will be given the same initial amount of 🔴 red chips, 🟢 green chips, and 🔵 blue chips, but you may value the different colors of chips differently.',
-    'By making and accepting offers, you will try to exchange chips with the other players to increase the total value of chips that you end up holding at the end of the game.',
-    'You may receive a bonus payment depending on the final value of your chips.',
-  ],
-});
+function createChipInfoStage1(numChips: number) {
+  const infoLines = [
+    'In this experiment, you will be playing a trading game with other participants.',
+    'All of you will be given the same initial number of',
+  ];
 
-const CHIP_INFO_STAGE_OVERVIEW2 = createInfoStage({
-  id: 'info_overview2',
-  game: StageGame.CHP,
-  name: 'Instructions: chip valuations 1',
-  infoLines: [
-    'You will play this trading game two times, against different groups of participants. In each game, you and the other participants will start with:',
-    `* 🔴 ${N_INITIAL_RED_CHIPS} **red** chips`,
-    `* 🟢 ${N_INITIAL_GREEN_CHIPS} **green** chips`,
-    `* 🔵 ${N_INITIAL_BLUE_CHIPS} **blue** chips`,
-    '**Valuations:**',
-    'Each 🟢 green chip is worth $0.50 to each participant. However, you will all have different valuations for the red and blue chips, randomly chosen between $0.10 and $1.00. For example, Cat might value 🔴 red chips at $0.30 each and 🔵 blue chips at $0.70 each, while Mouse might value 🔴 red chips at $0.80 each and 🔵 blue chips at $0.30 each.',
+  // Adjust the chips included based on numChips
+  if (numChips === 2) {
+    infoLines[1] += ' 🔴 red chips and 🟢 green chips';
+  } else if (numChips === 3) {
+    infoLines[1] += ' 🔴 red chips, 🟢 green chips, and 🔵 blue chips';
+  } else if (numChips === 4) {
+    infoLines[1] +=
+      ' 🔴 red chips, 🟢 green chips, 🔵 blue chips, and 🟣 purple chips';
+  }
+
+  infoLines[1] +=
+    ', but you may value the different colors of chips differently.';
+
+  infoLines.push(
+    'By making and accepting offers, you can exchange chips with the other players to increase the total value of your chips.',
+    'You may receive a bonus payment depending on the value of your chips at the end of the game.',
+  );
+
+  return createInfoStage({
+    id: 'info_overview1',
+    game: StageGame.CHP,
+    name: 'Instructions: overview',
+    infoLines,
+  });
+}
+
+function createChipInfoStage2(numChips: number) {
+  const infoLines = [
+    'You will play this trading game two times against two different groups of participants. In each game, you and the other participants will start with:',
+  ];
+
+  // Adjust the chips included based on numChips
+  if (numChips >= 2) {
+    infoLines.push(`* 🔴 ${N_INITIAL_RED_CHIPS} **red** chips`);
+    infoLines.push(`* 🟢 ${N_INITIAL_GREEN_CHIPS} **green** chips`);
+  }
+  if (numChips >= 3) {
+    infoLines.push(`* 🔵 ${N_INITIAL_BLUE_CHIPS} **blue** chips`);
+  }
+  if (numChips === 4) {
+    infoLines.push(`* 🟣 ${N_INITIAL_PURPLE_CHIPS} **purple** chips`);
+  }
+
+  infoLines.push('**Valuations:**');
+
+  if (numChips === 2) {
+    infoLines.push(
+      'Each 🟢 green chip is worth $0.50 to each participant. However, you will all have different valuations for the red chips, randomly chosen between $0.10 and $1.00.',
+    );
+    infoLines.push(
+      'For example, Cat might value 🔴 red chips at $0.30 each, while Mouse might value 🔴 red chips at $0.80 each.',
+    );
+  } else if (numChips === 3) {
+    infoLines.push(
+      'Each 🟢 green chip is worth $0.50 to each participant. However, you will all have different valuations for the red and blue chips, randomly chosen between $0.10 and $1.00.',
+    );
+    infoLines.push(
+      'For example, Cat might value 🔴 red chips at $0.30 each and 🔵 blue chips at $0.70 each, while Mouse might value 🔴 red chips at $0.80 each and 🔵 blue chips at $0.30 each.',
+    );
+  } else if (numChips === 4) {
+    infoLines.push(
+      'Each 🟢 green chip is worth $0.50 to each participant. However, you will all have different valuations for the red, blue, and purple chips, randomly chosen between $0.10 and $1.00.',
+    );
+    infoLines.push(
+      'For example, Cat might value 🔴 red chips at $0.30 each, 🔵 blue chips at $0.70 each, and 🟣 purple chips at $0.50 each, while Mouse might value 🔴 red chips at $0.80 each, 🔵 blue chips at $0.30 each, and 🟣 purple chips at $0.60 each.',
+    );
+  }
+
+  infoLines.push(
     '\n**What this means:**',
-    'Because each participant values the chips differently, there may be good reasons to trade. For instance, if you don’t care much about 🔴 red chips but someone else does, you might offer your red chips to them in exchange for 🔵 blue chips, which you like more. In this way, both you and the other participant can end up with chips that you find more valuable.',
-    "You know your own chip valuation and that everyone values 🟢 green chips the same, at $0.50 per chip. However, you do not know the other players' valuations for red and blue chips.",
-  ],
-});
+    'Because each participant values the chips differently, there may be good reason to trade.',
+  );
+
+  if (numChips >= 2) {
+    infoLines.push(
+      'For instance, if you don’t care much about 🔴 red chips but someone else does, you might offer your red chips to them in exchange for 🟢 green chips, which you like more.',
+    );
+  }
+  if (numChips === 3) {
+    infoLines.push(
+      'Similarly, you might trade 🔵 blue chips with another participant if they value them more than you do.',
+    );
+  }
+  if (numChips === 4) {
+    infoLines.push(
+      'Similarly, you might trade 🔵 blue chips with another participant if they value them more than you do. The same goes for 🟣 purple chips, depending on your valuation of them compared to the other participants.',
+    );
+  }
+
+  infoLines.push(
+    "You know your own chip valuation and that everyone values 🟢 green chips the same, at $0.50 per chip. However, you do not know the other players' valuations for the other chips.",
+  );
+
+  infoLines.push("**Parcipant Knowledge of Others' Valuations:**");
+
+  infoLines.push(
+    'You know your own chip valuation and that everyone values 🟢 green chips the same, at $0.50 per chip.',
+    "However, you do not know the other players' valuations for the other chips, and they do not know your valuations (besides 🟢 green chips).",
+  );
+
+  return createInfoStage({
+    id: 'info_overview2',
+    game: StageGame.CHP,
+    name: 'Instructions: chip valuations 1',
+    infoLines,
+  });
+}
 
 const CHIP_INFO_STAGE_OVERVIEW3 = createInfoStage({
   id: 'info_overview3',
@@ -229,7 +340,7 @@ export const CHIP_COMPREHENSION_CHECK = createComprehensionStage({
     createMultipleChoiceComprehensionQuestion(
       {
         questionTitle:
-          'True or false: you and the other players will always value 🔵 blue chips at the same amount, $0.50 per chip.',
+          'True or false: you and the other players will always value NON-green chips at the same amount, $0.50 per chip.',
         options: [
           createMultipleChoiceItem({id: 'a', text: 'True'}),
           createMultipleChoiceItem({id: 'b', text: 'False'}),
@@ -356,8 +467,11 @@ const CHIP_INFO_STAGE_GAMEPLAY2 = createInfoStage({
   infoLines: [
     `## Trade proposals`,
     `To propose a trade, a player must:`,
-    `1. Request a certain quantity of chips of a single color from any other player to **get**`,
-    `2. Specify a certain quantity of chips of a different color to **give** in return`,
+    `1. Request a certain quantity of chips of a single color from any other player to **get**.`,
+    `2. Specify a certain quantity of chips of a different color to **give** in return.`,
+    `\n## 🌟 One tip`,
+    'As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs. 🙂',
+
     `\n## Trade rules`,
     `* Players cannot offer more chips than they currently hold. For example, if you only have 5 🔴 red chips, you cannot offer 6 🔴 red chips.`,
     `* Players cannot trade chips of the same color. For example, you cannot trade 🔴 red chips for 🔴 red chips.`,
@@ -375,7 +489,7 @@ const CHIP_INFO_STAGE_GAMEPLAY4 = createInfoStage({
     '![Example of receiving an offer](https://i.imgur.com/NJL4AvQ.png)',
     `Participants make their decisions simultaneously and privately. The participant who receives the offer is not dependent on who accepts the trade first. Some possible outcomes:`,
     `* If no one accepts, the trade does not happen, and the turn ends.`,
-    `* If multiple participants accept, one accepting participant is *chosen at random* to complete the trade with the offering participant. This means that participants cannot choose who they trade with.`,
+    `* If multiple participants accept, one accepting participant is *chosen at random* to complete the trade with the offering participant. This means that the participant proposing the trade cannot choose who they trade with.`,
     `* If only one participant accepts, the trade will happen.`,
   ],
 });
@@ -386,9 +500,9 @@ const CHIP_INFO_STAGE_GAMEPLAY5 = createInfoStage({
   name: 'Gameplay: summary',
   infoLines: [
     `## Key points to remember`,
-    `* In each round, each player gets to propose one trade and respond to other player's trades`,
-    `* You can only propose trades between different colored chips, and cannot offer to give a chip amount that you do not have`,
-    `* When multiple players accept a trade, the trading partner is randomly selected`,
+    `* In each round, each player gets to propose one trade and respond to other player's trades.`,
+    `* You can only propose trades between different colored chips, and cannot offer to give a chip amount that you do not have.`,
+    `* When multiple players accept a trade, the trading partner is randomly selected.`,
     `\nFeel free to click back to previous sections to review the instructions.`,
   ],
 });
@@ -411,24 +525,45 @@ const CHIP_INFO_STAGE_PAYOUT = createInfoStage({
   ],
 });
 
-const CHIP_INFO_STAGE_PAYOUT2 = createInfoStage({
-  id: 'info_payment2',
-  game: StageGame.CHP,
-  name: 'Payment information examples',
-  infoLines: [
-    '## Bonus payment example calculation',
-    ' Suppose that for the first game, you started with 10 chips of each color, worth (10 * 0.30 + 10 * 0.50 + 10 * 0.70) = **$15.00**.',
+function createChipInfoPayout(numChips: number) {
+  const infoLines = ['## Bonus payment example calculation'];
+
+  let startingValue = '';
+  let endingValue = '';
+  let bonus = '';
+
+  if (numChips === 2) {
+    startingValue = `(10 * 0.30 + 10 * 0.50) = **$8.00**`;
+    endingValue = `* 🔴 12 red chips valued at $0.30 each\n* 🟢 10 green chips valued at $0.50 each`;
+    bonus = `($8.60 - $8.00) = **$0.60**`;
+  } else if (numChips === 3) {
+    startingValue = `(10 * 0.30 + 10 * 0.50 + 10 * 0.70) = **$15.00**`;
+    endingValue = `* 🔴 8 red chips valued at $0.30 each\n* 🟢 7 green chips valued at $0.50 each\n* 🔵 21 blue chips valued at $0.70 each`;
+    bonus = `($20.60 - $15.00) = **$5.60**`;
+  } else if (numChips === 4) {
+    startingValue = `(10 * 0.30 + 10 * 0.50 + 10 * 0.70 + 10 * 0.40) = **$19.00**`;
+    endingValue = `* 🔴 8 red chips valued at $0.30 each\n* 🟢 7 green chips valued at $0.50 each\n* 🔵 21 blue chips valued at $0.70 each\n* 🟣 5 purple chips valued at $0.40 each`;
+    bonus = `($22.60 - $19.00) = **$3.60**`;
+  }
+
+  infoLines.push(
+    ` Suppose that for the first game, you started with 10 chips of each color, worth ${startingValue}.`,
     'At the end of that game, you have:',
-    '  * 🔴 8 red chips valued at $0.30 each',
-    '  * 🟢 7 green chips valued at $0.50 each',
-    '  * 🔵 21 blue chips valued at $0.70 each',
-    'This adds up to **$20.60**. You would receive $20.60 - $15.00 = **$5.60** as a bonus for the first game.',
+    endingValue,
+    `You would receive ${bonus} as a bonus for the first game.`,
     'If you did not increase the value of your chips, you would not receive a bonus.',
     '\n**Your total bonus will be randomly selected from either the first or the second game.**',
     '\nThe exact values will depend on your random chip valuations and your final holdings, so your payment may differ from this example.',
     '\nThis payment is in addition to the $8 base payment for participating.',
-  ],
-});
+  );
+
+  return createInfoStage({
+    id: 'info_payment2',
+    game: StageGame.CHP,
+    name: 'Payment information examples',
+    infoLines,
+  });
+}
 
 const CHIP_INFO_PART2 = createInfoStage({
   id: 'info_part2',
@@ -530,6 +665,8 @@ function getChipNegotiationStage1(numChips: number) {
     name: 'First negotiation game',
     descriptions: createStageTextConfig({
       infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
+      helpText: `If you see the "It's your turn" panel, that means others are waiting on you to make an offer! As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs.
+      `,
     }),
     chips: getChips(numChips),
   });
@@ -542,6 +679,8 @@ function getChipNegotiationStage2(numChips: number) {
     name: 'Second negotiation game',
     descriptions: createStageTextConfig({
       infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
+      helpText: `If you see the "It's your turn" panel, that means others are waiting on you to make an offer! As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs.
+      `,
     }),
     chips: getChips(numChips),
   });

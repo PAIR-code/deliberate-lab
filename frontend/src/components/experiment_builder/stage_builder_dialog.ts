@@ -35,7 +35,7 @@ import {
   getAnonLASStageConfigs,
 } from '../../shared/games/lost_at_sea';
 import {
-  CHIP_GAME_METADATA,
+  getChipMetadata,
   getChipNegotiationStageConfigs,
 } from '../../shared/games/chip_negotiation';
 import {
@@ -189,23 +189,23 @@ export class StageBuilderDialog extends MobxLitElement {
   private renderChipNegotiationCard() {
     const addGame = (numChips: number) => {
       this.addGame(
-        CHIP_GAME_METADATA,
+        getChipMetadata(numChips),
         getChipNegotiationStageConfigs(numChips),
       );
     };
 
     return html`
       <div class="card" @click=${() => addGame(2)}>
-        <div class="title">🔴 ${CHIP_GAME_METADATA.name} (2 chips)</div>
-        <div>${CHIP_GAME_METADATA.description}</div>
+        <div class="title">${getChipMetadata(2).name}</div>
+        <div>${getChipMetadata(2).description}</div>
       </div>
       <div class="card" @click=${() => addGame(3)}>
-        <div class="title">🔵 ${CHIP_GAME_METADATA.name} (3 chips)</div>
-        <div>${CHIP_GAME_METADATA.description}</div>
+        <div class="title">${getChipMetadata(3).name}</div>
+        <div>${getChipMetadata(3).description}</div>
       </div>
       <div class="card" @click=${() => addGame(4)}>
-        <div class="title">🟣 ${CHIP_GAME_METADATA.name} (4 chips)</div>
-        <div>${CHIP_GAME_METADATA.description}</div>
+        <div class="title">${getChipMetadata(4).name}</div>
+        <div>${getChipMetadata(4).description}</div>
       </div>
     `;
   }

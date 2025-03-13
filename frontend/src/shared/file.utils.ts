@@ -318,7 +318,7 @@ export function getChipNegotiationTurnColumns(
   const getPlayerNumber = () => {
     const index = playerList.findIndex((p) => p === senderId);
     if (index === -1) return '';
-    return `${index + 1}`;
+    return `${index}`;
   };
 
   columns.push(!turn ? 'Cohort' : toCSV(game.cohortName));

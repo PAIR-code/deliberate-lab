@@ -38,7 +38,8 @@ export class InfoPopupComponent extends LitElement {
     return html`
       <pr-icon-button
         variant="default"
-        color="secondary"
+        color="${this.showHelpIcon ? 'tertiary' : 'secondary'}"
+        size="large"
         icon="${icon}"
         @click=${this.handleButtonClick}
         >${icon}</pr-icon-button
@@ -49,7 +50,7 @@ export class InfoPopupComponent extends LitElement {
         @click=${this.handleOutsideClick}
       >
         <div class="modal-content">
-          <p>${this.popupText}</p>
+          <p>${unsafeHTML(convertMarkdownToHTML(this.popupText))}</p>
         </div>
       </div>
     `;
