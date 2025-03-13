@@ -383,6 +383,11 @@ export class ChatEditor extends MobxLitElement {
   }
 
   private renderAgentSamplingParameters(agent: AgentConfig, index: number) {
+    // Check for generation config (backwards compatibility)
+    if (!agent.generationConfig) {
+      return nothing;
+    }
+
     const updateTemperature = (e: InputEvent) => {
       const temperature = Number((e.target as HTMLInputElement).value);
       if (!isNaN(temperature)) {
@@ -523,6 +528,11 @@ export class ChatEditor extends MobxLitElement {
     agent: AgentConfig,
     index: number,
   ) {
+    // Check for generation config (backwards compatibility)
+    if (!agent.generationConfig) {
+      return nothing;
+    }
+
     const addField = () => {
       this.updateAgent(
         {
