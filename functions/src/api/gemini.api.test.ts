@@ -8,8 +8,10 @@ import {ModelResponse} from './model.response';
 const MODEL_NAME = 'gemini-1.5-flash';
 
 describe('Gemini API', () => {
-  it('handles text completion request', async () => {
-    nock('https://generativelanguage.googleapis.com')
+  let scope: nock.Scope;
+
+  beforeEach(() => {
+    scope = nock('https://generativelanguage.googleapis.com')
       .post(`/v1beta/models/${MODEL_NAME}:generateContent`)
       .reply(200, (uri, requestBody) => {
         return { candidates: [
@@ -27,8 +29,15 @@ describe('Gemini API', () => {
           },
         ],
         modelVersion: MODEL_NAME
-               };});
+        };
+      });
+  });
 
+  afterEach(() => {
+    nock.cleanAll();
+  });
+
+  it('handles text completion request', async () => {
     const generationConfig: AgentGenerationConfig = {
       temperature: 0.4,
       topP: 0.9,
@@ -47,7 +56,5 @@ describe('Gemini API', () => {
     expect(response.text).toContain('test output');
     expect(response.text).toContain('"temperature":0.4');
     expect(response.text).toContain('"topP":0.9');
-
-    nock.cleanAll();
   });
 });
