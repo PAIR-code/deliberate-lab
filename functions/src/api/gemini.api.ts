@@ -55,13 +55,14 @@ function makeStructuredOutputSchema(schema: StructuredOutputSchema)
   let properties = null;
   let orderedPropertyNames = null;
 
-  if (schema.properties.length > 0) {
+  if (schema.properties?.length > 0) {
+    console.log(schema.properties)
     properties = {};
-    propertyOrdering = [];
-    for (const [name, property] of schema.properties) {
-      properties.name = makeStructuredOutputSchema(property);
-      orderedPropertyNames.push(name);
-    }
+    orderedPropertyNames = [];
+    schema.properties.forEach((property) => {
+      properties[property.name] = makeStructuredOutputSchema(property.schema);
+      orderedPropertyNames.push(property.name);
+    });
   }
 
   const itemsSchema = schema.arrayItems ? makeStructuredOutputSchema(schema.arrayItems) : null;
@@ -149,7 +150,6 @@ export async function getGeminiAPIResponse(
     ]),
   );
   const structuredOutputGenerationConfig = makeStructuredOutputGenerationConfig(structuredOutputConfig);
-  const structuredOutputType = structuredOutput;
   const geminiConfig: GenerationConfig = {
     stopSequences,
     maxOutputTokens: 300,

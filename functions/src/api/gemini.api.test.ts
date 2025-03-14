@@ -75,12 +75,24 @@ describe('Gemini API', () => {
     };
 
     const structuredOutputConfig = {
-      type: StructuredOutputType.JSON_FORMAT,
+      type: StructuredOutputType.JSON_SCHEMA,
       schema: {
         type: StructuredOutputDataType.OBJECT,
         properties: [
-          { name: 'stringProperty', schema: { type: StructuredOutputDataType.STRING } },
-          { name: 'integerProperty', schema: { type: StructuredOutputDataType.INTEGER } },
+          {
+            name: 'stringProperty',
+            schema: {
+              type: StructuredOutputDataType.STRING,
+              description: "A string-valued property",
+            }
+          },
+          {
+            name: 'integerProperty',
+            schema: {
+              type: StructuredOutputDataType.INTEGER,
+              description: "An integer-valued property",
+            }
+          },
         ],
       },
     };
@@ -100,13 +112,21 @@ describe('Gemini API', () => {
         responseMimeType: 'application/json',
         responseSchema: {
           type: 'OBJECT',
-          properties: [
-            { name: 'stringProperty', schema: { type: 'STRING' } },
-            { name: 'integerProperty', schema: { type: 'INTEGER' } },
-          ],
+          properties: {
+            stringProperty:  {
+              type: 'STRING',
+              description: 'A string-valued property',
+            },
+            integerProperty: {
+              type: 'INTEGER',
+              description: 'An integer-valued property',
+            },
+          },
+          propertyOrdering: ['stringProperty', 'integerProperty'],
+          required: ['stringProperty', 'integerProperty'],
         },
       },
     };
-    expect(parsedResponse).toEqual(expect.objectContaining(expectedResponse));
+    expect(parsedResponse).toMatchObject(expectedResponse);
   });
 });
