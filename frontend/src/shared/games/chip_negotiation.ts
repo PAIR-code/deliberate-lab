@@ -121,9 +121,9 @@ const CHIP_TOS_STAGE = createTOSStage({
   game: StageGame.CHP,
   name: 'Terms of service',
   tosLines: [
-    'Thank you for your interest in this research. If you choose to participate, you will be asked to play negotiation games with other participants. In total, this will take no more about 45 minutes.',
+    'Thank you for your interest in this research. If you choose to participate, you will be asked to play negotiation games with other participants. In total, this will take around 25 minutes.',
     '\n**Compensation**',
-    'You will be paid $8 for playing the games and completing the survey. You may receive an additional bonus on your performance in the games.',
+    'You will be paid a base amount for playing the games and completing the survey. You may receive an additional bonus on your performance in the games.',
     '\n**IRB**',
     'The results of this study will be used solely for research purposes. Our team will keep all your information from this study strictly confidential, as required by law. The IRB at the Massachusetts Institute of Technology is responsible for protecting the rights and welfare of research volunteers like you.',
     '\n**Voluntary participation**',
@@ -132,6 +132,9 @@ const CHIP_TOS_STAGE = createTOSStage({
     'Please feel free to contact us through Prolific or your game administrator if you have any questions, concerns, or complaints about this study.',
     '\nBy checking the box below and proceeding, you are acknowledging that you are over the age of 18 and that you consent to participate. Clicking the arrow will bring you to the beginning of the task.',
   ],
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
 });
 
 // ****************************************************************************
@@ -146,6 +149,9 @@ const CHIP_PROFILE_STAGE = createProfileStage({
   }),
   game: StageGame.CHP,
   profileType: ProfileType.ANONYMOUS_ANIMAL,
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
 });
 
 const CHIP_ALTERNATE_PROFILE_STAGE = createProfileStage({
@@ -157,6 +163,9 @@ const CHIP_ALTERNATE_PROFILE_STAGE = createProfileStage({
   }),
   game: StageGame.CHP,
   profileType: ProfileType.ANONYMOUS_ANIMAL,
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
 });
 
 // ****************************************************************************
@@ -192,6 +201,9 @@ function createChipInfoStage1(numChips: number) {
     game: StageGame.CHP,
     name: 'Instructions: overview',
     infoLines,
+    progress: createStageProgressConfig({
+      showParticipantProgress: false,
+    }),
   });
 }
 
@@ -274,6 +286,9 @@ function createChipInfoStage2(numChips: number) {
     game: StageGame.CHP,
     name: 'Instructions: chip valuations 1',
     infoLines,
+    progress: createStageProgressConfig({
+      showParticipantProgress: false,
+    }),
   });
 }
 
@@ -285,6 +300,9 @@ const CHIP_INFO_STAGE_OVERVIEW3 = createInfoStage({
     'The following table is shown to you during the game. It provides the number of chips everyone has as well as a reminder of your own valuations.',
     '![Example of chip count table](https://i.imgur.com/ImUM14D.png)',
   ],
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
 });
 
 // ****************************************************************************
@@ -298,7 +316,9 @@ export const CHIP_COMPREHENSION_CHECK = createComprehensionStage({
     primaryText:
       'Please answer the following questions to verify your understanding of the instructions. You may proceed once you have answered the questions correctly.',
   }),
-
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
   questions: [
     createMultipleChoiceComprehensionQuestion(
       {
@@ -355,6 +375,9 @@ export const CHIP_COMPREHENSION_CHECK2 = createComprehensionStage({
   id: 'comprehension_check2',
   game: StageGame.CHP,
   name: 'Comprehension check 2',
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
   descriptions: createStageTextConfig({
     primaryText:
       'Please answer the following questions to verify your understanding of the instructions. You may proceed once you have answered the questions correctly.',
@@ -458,6 +481,9 @@ const CHIP_INFO_STAGE_GAMEPLAY = createInfoStage({
     `## How the game works`,
     `The game consists of **3 rounds** of trading. During each round, each player will have a turn to propose **1 trade**. These turns are pre-determined in a random order.`,
   ],
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
 });
 
 const CHIP_INFO_STAGE_GAMEPLAY2 = createInfoStage({
@@ -477,6 +503,9 @@ const CHIP_INFO_STAGE_GAMEPLAY2 = createInfoStage({
     `* Players cannot trade chips of the same color. For example, you cannot trade 🔴 red chips for 🔴 red chips.`,
     '![Example of offering a trade](https://i.imgur.com/Jzah8Ot.png)',
   ],
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
 });
 
 const CHIP_INFO_STAGE_GAMEPLAY4 = createInfoStage({
@@ -492,6 +521,9 @@ const CHIP_INFO_STAGE_GAMEPLAY4 = createInfoStage({
     `* If multiple participants accept, one accepting participant is *chosen at random* to complete the trade with the offering participant. This means that the participant proposing the trade cannot choose who they trade with.`,
     `* If only one participant accepts, the trade will happen.`,
   ],
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
 });
 
 const CHIP_INFO_STAGE_GAMEPLAY5 = createInfoStage({
@@ -505,6 +537,9 @@ const CHIP_INFO_STAGE_GAMEPLAY5 = createInfoStage({
     `* When multiple players accept a trade, the trading partner is randomly selected.`,
     `\nFeel free to click back to previous sections to review the instructions.`,
   ],
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
 });
 
 // ****************************************************************************
@@ -523,6 +558,9 @@ const CHIP_INFO_STAGE_PAYOUT = createInfoStage({
     '  * If you do not complete both games, you will not receive a bonus payment.',
     'In short, you want to make as much money as you can through trading!',
   ],
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
 });
 
 function createChipInfoPayout(numChips: number) {
@@ -554,7 +592,7 @@ function createChipInfoPayout(numChips: number) {
     'If you did not increase the value of your chips, you would not receive a bonus.',
     '\n**Your total bonus will be randomly selected from either the first or the second game.**',
     '\nThe exact values will depend on your random chip valuations and your final holdings, so your payment may differ from this example.',
-    '\nThis payment is in addition to the $8 base payment for participating.',
+    '\nThis payment is in addition to the base payment for participating.',
   );
 
   return createInfoStage({
@@ -562,6 +600,9 @@ function createChipInfoPayout(numChips: number) {
     game: StageGame.CHP,
     name: 'Payment information examples',
     infoLines,
+    progress: createStageProgressConfig({
+      showParticipantProgress: false,
+    }),
   });
 }
 
@@ -576,6 +617,9 @@ const CHIP_INFO_PART2 = createInfoStage({
     '* **New chip values:** You will receive a different valuation for your red and blue chips. The value of the 🟢 green chip will remain the same for everyone ($0.50).',
     'All players participating in this round are also playing for their second time. **Enjoy the game!**',
   ],
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
 });
 
 // ****************************************************************************
@@ -591,6 +635,9 @@ export const TRANSFER_STAGE = createTransferStage({
   }),
   enableTimeout: true,
   timeoutSeconds: 600, // 10 minutes
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
 });
 
 // ****************************************************************************
@@ -669,6 +716,11 @@ function getChipNegotiationStage1(numChips: number) {
       `,
     }),
     chips: getChips(numChips),
+    progress: {
+      minParticipants: 3,
+      waitForAllParticipants: true,
+      showParticipantProgress: true,
+    },
   });
 }
 
