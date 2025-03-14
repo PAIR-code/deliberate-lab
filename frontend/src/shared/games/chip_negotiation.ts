@@ -121,9 +121,9 @@ const CHIP_TOS_STAGE = createTOSStage({
   game: StageGame.CHP,
   name: 'Terms of service',
   tosLines: [
-    'Thank you for your interest in this research. If you choose to participate, you will be asked to play negotiation games with other participants. In total, this will take no more about 45 minutes.',
+    'Thank you for your interest in this research. If you choose to participate, you will be asked to play negotiation games with other participants. In total, this will take around 25 minutes.',
     '\n**Compensation**',
-    'You will be paid $8 for playing the games and completing the survey. You may receive an additional bonus on your performance in the games.',
+    'You will be paid a base amount for playing the games and completing the survey. You may receive an additional bonus on your performance in the games.',
     '\n**IRB**',
     'The results of this study will be used solely for research purposes. Our team will keep all your information from this study strictly confidential, as required by law. The IRB at the Massachusetts Institute of Technology is responsible for protecting the rights and welfare of research volunteers like you.',
     '\n**Voluntary participation**',
@@ -554,7 +554,7 @@ function createChipInfoPayout(numChips: number) {
     'If you did not increase the value of your chips, you would not receive a bonus.',
     '\n**Your total bonus will be randomly selected from either the first or the second game.**',
     '\nThe exact values will depend on your random chip valuations and your final holdings, so your payment may differ from this example.',
-    '\nThis payment is in addition to the $8 base payment for participating.',
+    '\nThis payment is in addition to the base payment for participating.',
   );
 
   return createInfoStage({
