@@ -1,7 +1,11 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import nock = require('nock');
 
-import {AgentGenerationConfig} from '@deliberation-lab/utils';
+import {
+  AgentGenerationConfig,
+  StructuredOutputType,
+  StructuredOutputDataType
+} from '@deliberation-lab/utils';
 import {getGeminiAPIResponse} from './gemini.api';
 import {ModelResponse} from './model.response';
 
@@ -92,10 +96,10 @@ describe('Gemini API', () => {
     const parsedResponse = JSON.parse(response.text);
     expect(parsedResponse.output).toBe('test output');
     expect(parsedResponse.generationConfig.responseMimeType).toBe('application/json');
-    expect(parsedResponse.generationConfig.responseSchema.type).toBe('OBJECT');
-    expect(parsedResponse.generationConfig.responseSchema.properties[0].name).toBe('stringProperty');
-    expect(parsedResponse.generationConfig.responseSchema.properties[0].schema.type).toBe('STRING');
-    expect(parsedResponse.generationConfig.responseSchema.properties[1].name).toBe('integerProperty');
-    expect(parsedResponse.generationConfig.responseSchema.properties[1].schema.type).toBe('INTEGER');
+    expect(parsedResponse.generationConfig.responseSchema?.type).toBe('OBJECT');
+    expect(parsedResponse.generationConfig.responseSchema?.properties[0]?.name).toBe('stringProperty');
+    expect(parsedResponse.generationConfig.responseSchema?.properties[0]?.schema.type).toBe('STRING');
+    expect(parsedResponse.generationConfig.responseSchema?.properties[1]?.name).toBe('integerProperty');
+    expect(parsedResponse.generationConfig.responseSchema?.properties[1]?.schema.type).toBe('INTEGER');
   });
 });
