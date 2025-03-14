@@ -669,6 +669,11 @@ function getChipNegotiationStage1(numChips: number) {
       `,
     }),
     chips: getChips(numChips),
+    progress: {
+      minParticipants: 3,
+      waitForAllParticipants: true,
+      showParticipantProgress: true,
+    },
   });
 }
 
