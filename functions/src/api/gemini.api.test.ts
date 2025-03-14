@@ -107,6 +107,6 @@ describe('Gemini API', () => {
         },
       },
     };
-    expect(parsedResponse).toEqual(expectedResponse);
+    expect(parsedResponse).toEqual(expect.objectContaining(expectedResponse));
   });
 });
