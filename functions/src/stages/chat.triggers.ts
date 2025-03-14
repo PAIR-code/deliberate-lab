@@ -231,7 +231,8 @@ export const createAgentMessage = onDocumentCreated(
         timestamp: Timestamp.now(),
         senderId: mediator.id,
         agentId: mediator.agentConfig.agentId,
-        explanation: agentResponse.promptConfig.responseConfig.isJSON
+        // TODO(mkbehr): move to new config
+        explanation: agentResponse.promptConfig.responseConfig?.isJSON
           ? (agentResponse.parsed[
               agentResponse.promptConfig.responseConfig.explanationField
             ] ?? '')

@@ -261,13 +261,14 @@ export async function getAgentChatResponse(
       prompt,
       mediator.agentConfig.modelSettings,
       promptConfig.generationConfig,
+      promptConfig.structuredOutputConfig,
     );
 
     // Add agent message if non-empty
     let message = response.text;
     let parsed = '';
 
-    if (promptConfig.responseConfig.isJSON) {
+    if (promptConfig.responseConfig?.isJSON) { // TODO change config
       // Reset message to empty before trying to fill with JSON response
       message = '';
 

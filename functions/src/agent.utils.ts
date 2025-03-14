@@ -58,12 +58,14 @@ export async function getGeminiResponse(
   modelName: string,
   prompt: string,
   generationConfig: ModelGenerationConfig,
+  structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
   return await getGeminiAPIResponse(
     data.apiKeys.geminiApiKey,
     modelName,
     prompt,
     generationConfig,
+    structuredOutputConfig,
   );
 }
 
