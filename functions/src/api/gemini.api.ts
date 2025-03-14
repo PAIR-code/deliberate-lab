@@ -68,6 +68,7 @@ export async function getGeminiAPIResponse(
   modelName: string,
   promptText: string,
   generationConfig: AgentGenerationConfig,
+  structuredOutputConfig?: StructuredOutputConfig = null,
   stopSequences: string[] = [],
 ): Promise<ModelResponse> {
   const customFields = Object.fromEntries(
@@ -76,6 +77,9 @@ export async function getGeminiAPIResponse(
       field.value,
     ]),
   );
+  const schema = structuredOutputSchema(structuredOutputConfig);
+  // Define mime_type as 'application/json' if structuredOutputConfig exists and has type JSON_FORMAT or JSON_SCHEMA; 'text/plain' otherwise. AI!
+  const mime_type = TODO;
   const geminiConfig: GenerationConfig = {
     stopSequences,
     maxOutputTokens: 300,
