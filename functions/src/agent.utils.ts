@@ -4,6 +4,7 @@ import {
   ApiKeyType,
   ExperimenterData,
   ModelGenerationConfig,
+  StructuredOutputConfig,
 } from '@deliberation-lab/utils';
 
 import {getGeminiAPIResponse} from './api/gemini.api';
@@ -17,6 +18,7 @@ export async function getAgentResponse(
   prompt: string,
   modelSettings: AgentModelSettings,
   generationConfig: ModelGenerationConfig,
+  structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
   let response;
 
@@ -26,6 +28,7 @@ export async function getAgentResponse(
       modelSettings.model,
       prompt,
       generationConfig,
+      structuredOutputConfig,
     );
   } else if (modelSettings.apiType === ApiKeyType.OPENAI_API_KEY) {
     response = getOpenAIAPIResponse(
