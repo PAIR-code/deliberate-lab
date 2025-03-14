@@ -19,7 +19,10 @@ describe('Gemini API', () => {
             content: {
               parts: [
                 {
-                  text: `test output, generation config: ${JSON.stringify(requestBody.generationConfig)}`,
+                  text: JSON.stringify({
+                    output: 'test output',
+                    generationConfig: requestBody.generationConfig,
+                  }),
                 }
               ],
             },
