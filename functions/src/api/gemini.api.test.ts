@@ -89,7 +89,13 @@ describe('Gemini API', () => {
       structuredOutputConfig,
     );
 
-    expect(response.text).toContain('test output');
-    expect(response.text).toContain('"generationConfig":{"temperature":0.4');
+    const parsedResponse = JSON.parse(response.text);
+    expect(parsedResponse.output).toBe('test output');
+    expect(parsedResponse.generationConfig.responseMimeType).toBe('application/json');
+    expect(parsedResponse.generationConfig.responseSchema.type).toBe('OBJECT');
+    expect(parsedResponse.generationConfig.responseSchema.properties[0].name).toBe('stringProperty');
+    expect(parsedResponse.generationConfig.responseSchema.properties[0].schema.type).toBe('STRING');
+    expect(parsedResponse.generationConfig.responseSchema.properties[1].name).toBe('integerProperty');
+    expect(parsedResponse.generationConfig.responseSchema.properties[1].schema.type).toBe('INTEGER');
   });
 });
