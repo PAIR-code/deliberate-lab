@@ -60,4 +60,36 @@ describe('Gemini API', () => {
     expect(response.text).toContain('"temperature":0.4');
     expect(response.text).toContain('"topP":0.9');
   });
+
+  it('handles structured output config', async () => {
+    const generationConfig: AgentGenerationConfig = {
+      temperature: 0.4,
+      topP: 0.9,
+      frequencyPenalty: 0,
+      presencePenalty: 0,
+      customRequestBodyFields: [{name: 'seed', value: 123}],
+    };
+
+    const structuredOutputConfig = {
+      type: StructuredOutputType.JSON_FORMAT,
+      schema: {
+        type: StructuredOutputDataType.OBJECT,
+        properties: [
+          { name: 'stringProperty', schema: { type: StructuredOutputDataType.STRING } },
+          { name: 'integerProperty', schema: { type: StructuredOutputDataType.INTEGER } },
+        ],
+      },
+    };
+
+    const response: ModelResponse = await getGeminiAPIResponse(
+      'testapikey',
+      MODEL_NAME,
+      'This is a test prompt.',
+      generationConfig,
+      structuredOutputConfig,
+    );
+
+    expect(response.text).toContain('test output');
+    expect(response.text).toContain('"generationConfig":{"temperature":0.4');
+  });
 });
