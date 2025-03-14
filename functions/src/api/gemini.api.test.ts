@@ -94,12 +94,19 @@ describe('Gemini API', () => {
     );
 
     const parsedResponse = JSON.parse(response.text);
-    expect(parsedResponse.output).toBe('test output');
-    expect(parsedResponse.generationConfig.responseMimeType).toBe('application/json');
-    expect(parsedResponse.generationConfig.responseSchema?.type).toBe('OBJECT');
-    expect(parsedResponse.generationConfig.responseSchema?.properties[0]?.name).toBe('stringProperty');
-    expect(parsedResponse.generationConfig.responseSchema?.properties[0]?.schema.type).toBe('STRING');
-    expect(parsedResponse.generationConfig.responseSchema?.properties[1]?.name).toBe('integerProperty');
-    expect(parsedResponse.generationConfig.responseSchema?.properties[1]?.schema.type).toBe('INTEGER');
+    const expectedResponse = {
+      output: 'test output',
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: 'OBJECT',
+          properties: [
+            { name: 'stringProperty', schema: { type: 'STRING' } },
+            { name: 'integerProperty', schema: { type: 'INTEGER' } },
+          ],
+        },
+      },
+    };
+    expect(parsedResponse).toEqual(expectedResponse);
   });
 });
