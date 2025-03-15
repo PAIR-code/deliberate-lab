@@ -614,7 +614,7 @@ const CHIP_INFO_PART2 = createInfoStage({
     '# Congratulations!',
     'You’ve successfully completed your first game! Now, it’s time to play again with all the **same rules**. However, for this second round, please note the following changes:',
     '* **New profile:** You will be playing as a new profile, and you will be playing against different animal profiles.',
-    '* **New chip values:** You will receive a different valuation for your red and blue chips. The value of the 🟢 green chip will remain the same for everyone ($0.50).',
+    '* **New chip values:** The value of the 🟢 green chip will remain the same for everyone ($0.50). You will receive a different valuation for your other chips.',
     'All players participating in this round are also playing for their second time. **Enjoy the game!**',
   ],
   progress: createStageProgressConfig({
