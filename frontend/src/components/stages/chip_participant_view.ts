@@ -564,8 +564,15 @@ export class ChipView extends MobxLitElement {
         ><b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b></span
       >`;
 
+      if (canAcceptOffer()) {
+        return html`<p>
+          If you accept this offer, your updated chip value will be
+          <b>$${newTotalPayout.toFixed(2)}</b> ${diffDisplay}.
+        </p>`;
+      }
+
       return html`<p>
-        If you accept this offer, your updated chip value will be
+        ⚠️ You do not have enough chips to accept this offer. If you could accept, your updated chip value would be
         <b>$${newTotalPayout.toFixed(2)}</b> ${diffDisplay}.
       </p>`;
     };
