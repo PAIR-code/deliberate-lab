@@ -14,6 +14,7 @@ import {
   ParticipantStatus,
   StageKind,
   UnifiedTimestamp,
+  calculatePayoutTotal,
 } from '@deliberation-lab/utils';
 import {getCohortName} from '../../shared/cohort.utils';
 import {getParticipantInlineDisplay} from '../../shared/participant.utils';
@@ -241,11 +242,11 @@ export class Preview extends MobxLitElement {
       }
 
       let stageHtml;
-
+      const answer = this.participantService.getStageAnswer(stage.id);
       switch (stage.kind) {
         case StageKind.PAYOUT:
           stageHtml = html`
-            <payout-summary-view .stage=${stage}></payout-summary-view>
+            <payout-summary-view .stage=${stage} .answer=${answer}></payout-summary-view>
           `;
           break;
         case StageKind.REVEAL:
