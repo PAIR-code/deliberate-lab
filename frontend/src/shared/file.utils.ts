@@ -720,7 +720,6 @@ function runChipTransaction(
   return newChipMap;
 }
 
-// TODO: Create utils function for chip payout calculation
 function getChipPayout(
   currentChipMap: Record<string, number>,
   chipValueMap: Record<string, number>,
@@ -733,7 +732,7 @@ function getChipPayout(
     payout += value * currentChipMap[chipId];
   });
 
-  return Math.floor(payout * 100) / 100; // round final payout
+  return Math.ceil(payout * 100) / 100; // round final payout
 }
 
 function getChipNegotiationTurnData(

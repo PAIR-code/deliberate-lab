@@ -56,7 +56,7 @@ export class ChipReveal extends MobxLitElement {
         ? currentParticipant
           ? [currentParticipant]
           : []
-        : this.cohortService.getAllParticipants();
+        : this.cohortService.getAllParticipants(false); // Hide transfer pending.
 
     return html` ${renderTitle()} ${this.renderGlobalTable(participants)} `;
   }

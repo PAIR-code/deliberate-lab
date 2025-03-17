@@ -47,6 +47,7 @@ export class TOSView extends MobxLitElement {
       <div class="html-wrapper">
         ${unsafeHTML(convertMarkdownToHTML(tosLinesJoined))}
       </div>
+      <div class="divider"></div>
       <div class="ack-wrapper">
         <label class="checkbox-wrapper">
           <md-checkbox
@@ -58,7 +59,7 @@ export class TOSView extends MobxLitElement {
           >
           </md-checkbox>
           <div class="timestamp-wrapper">
-            <div>I accept the Terms of Service</div>
+            <strong>I accept the Terms of Service</strong>
             ${timestamp
               ? html`<div class="ack">
                   Accepted at ${convertUnifiedTimestampToDate(timestamp)}
