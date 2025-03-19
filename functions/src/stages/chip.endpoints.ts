@@ -118,7 +118,7 @@ export const setChipTurn = onCall(async (request) => {
     transaction.set(
       logCollection.doc(),
       createChipTurnLogEntry(
-        newData.currentRound + 1,
+        newData.currentRound,
         newData.currentTurn,
         Timestamp.now(),
       ),
