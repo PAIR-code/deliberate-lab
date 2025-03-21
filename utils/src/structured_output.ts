@@ -23,6 +23,7 @@ export interface StructuredOutputSchema {
 export interface StructuredOutputConfig {
   type: StructuredOutputType;
   schema?: StructuredOutputSchema;
+  appendToPrompt: boolean;
 }
 
 export function createStructuredOutputConfig(
@@ -31,5 +32,33 @@ export function createStructuredOutputConfig(
   return {
     type: config.type ?? StructuredOutputType.NONE,
     schema: config.schema,
+    appendToPrompt: true,
   }
+}
+
+function schemaToObject(schema: StructuredOutputSchema): object {
+  let properties: Record<string, object> | undefined = undefined;
+  let required = undefined;
+  if (schema.properties) {
+    properties = {};
+    for (const property of schema.properties) {
+      properties[property.name] = schemaToObject(property.schema);
+    }
+    required = schema.properties.map((property) => property.name);
+  }
+  const arrayItems = (schema.arrayItems
+                      ? schemaToObject(schema.arrayItems)
+                      : undefined);
+  return {
+    description: schema.description ?? undefined,
+    type: schema.type.toLowerCase(),
+    properties: properties ?? undefined,
+    items: arrayItems ?? undefined,
+  }
+}
+
+export function printSchema(
+  schema: StructuredOutputSchema,
+  indent: number = 2): string {
+    return JSON.stringify(schemaToObject(schema), null, indent);
 }
