@@ -62,3 +62,18 @@ export function printSchema(
   indent: number = 2): string {
     return JSON.stringify(schemaToObject(schema), null, indent);
 }
+
+export function makeStructuredOutputPrompt(config?: StructuredOutputConfig): string {
+  if (!config?.appendToPrompt) {
+    return '';
+  }
+  if (!config.schema) {
+    return '';
+  }
+  if (config.schema.properties?.length == 0) {
+    return '';
+  }
+  return `Return only valid JSON, according to the following schema:
+${printSchema(config.schema)}
+`;
+}

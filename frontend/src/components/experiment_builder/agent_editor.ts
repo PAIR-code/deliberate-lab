@@ -21,6 +21,7 @@ import {
   StructuredOutputType,
   StructuredOutputDataType,
   StructuredOutputSchema,
+  makeStructuredOutputPrompt,
 } from '@deliberation-lab/utils';
 import {LLM_AGENT_AVATARS} from '../../shared/constants';
 import {getHashBasedColor} from '../../shared/utils';
@@ -393,6 +394,17 @@ export class AgentEditorComponent extends MobxLitElement {
           @input=${updatePrompt}
         >
         </pr-textarea>
+        <div class="description">
+          Structured output formatting instructions: configure under "Structured Output Type"
+        </div>
+        <pr-textarea
+          placeholder="Structured output formatting instructions"
+          variant="outlined"
+          .value=${makeStructuredOutputPrompt(agentPromptConfig.structuredOutputConfig)}
+          disabled=true
+          maxViewportHeight=20
+        >
+        </pr-textarea>
       </div>
     `;
   }
@@ -709,6 +721,9 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
+  // TODO: allow for reordering config fields
+  // TODO: add checkbox for whether to append schema prompt
+  // TODO: StructuredOutputType dropdown renders blank initially
   private renderAgentStructuredOutputConfig(
     agent: AgentPersonaConfig,
     agentPromptConfig: AgentChatPromptConfig,
@@ -734,7 +749,7 @@ export class AgentEditorComponent extends MobxLitElement {
           ?disabled=${!this.experimentEditor.canEditStages}
         >
           <option value="${StructuredOutputType.NONE}">
-            No structured output
+            No output forcing
           </option>
           <option value="${StructuredOutputType.JSON_FORMAT}">
             Force JSON output
@@ -761,7 +776,6 @@ export class AgentEditorComponent extends MobxLitElement {
 
     const structuredOutputConfig = agentPromptConfig.structuredOutputConfig;
 
-    // TODO fix the rendering
     return html`
       <div class="section">
         <div class="section-header">
@@ -825,6 +839,7 @@ export class AgentEditorComponent extends MobxLitElement {
       );
     };
 
+    // TODO: prettify type dropdown
     return html`
       <div class="name-value-input">
         <pr-textarea

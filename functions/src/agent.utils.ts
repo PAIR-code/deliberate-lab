@@ -5,6 +5,7 @@ import {
   ExperimenterData,
   ModelGenerationConfig,
   StructuredOutputConfig,
+  makeStructuredOutputPrompt,
 } from '@deliberation-lab/utils';
 
 import {getGeminiAPIResponse} from './api/gemini.api';
@@ -21,6 +22,13 @@ export async function getAgentResponse(
   structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
   let response;
+
+  const structuredOutputPrompt = (structuredOutputConfig
+                                  ? makeStructuredOutputPrompt(structuredOutputConfig)
+                                  : '');
+  if (structuredOutputPrompt) {
+    prompt = `${prompt}\n${structuredOutputPrompt}`;
+  }
 
   if (modelSettings.apiType === ApiKeyType.GEMINI_API_KEY) {
     response = getGeminiResponse(
