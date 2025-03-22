@@ -17,6 +17,7 @@ import {ExperimentManager} from '../../services/experiment.manager';
 import {ParticipantService} from '../../services/participant.service';
 import {Pages, RouterService} from '../../services/router.service';
 
+import {DOCUMENTATION_URL} from '../../shared/constants';
 import {
   getParticipantInlineDisplay,
   getParticipantStatusDetailText,
@@ -220,6 +221,18 @@ export class Header extends MobxLitElement {
             <pr-icon icon="add" color="primary" variant="tonal"></pr-icon>
             New experiment
           </pr-button>
+          <pr-tooltip text="Read the documentation" position="BOTTOM_END">
+            <pr-icon-button
+              icon="article"
+              color="secondary"
+              variant="default"
+              @click=${() => {
+                // TODO: Add Analytics tracking for documentation click
+                window.open(DOCUMENTATION_URL, '_blank');
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
           <pr-tooltip text="View experimenter settings" position="BOTTOM_END">
             <pr-icon-button
               icon="settings"
