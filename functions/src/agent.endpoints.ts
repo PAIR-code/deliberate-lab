@@ -6,6 +6,8 @@ import {
   StageConfig,
   StageKind,
   ParticipantProfileExtended,
+  createAgentModelSettings,
+  createModelGenerationConfig,
 } from '@deliberation-lab/utils';
 import {
   getAgentResponse,
@@ -88,7 +90,14 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
   }
 
   // Call LLM API
-  const response = await getAgentResponse(experimenterData, prompt);
+  const modelSettings = createAgentModelSettings();
+  const generationConfig = createModelGenerationConfig();
+  const response = await getAgentResponse(
+    experimenterData,
+    prompt,
+    modelSettings,
+    generationConfig,
+  );
   // Check console log for response
   console.log(
     'TESTING AGENT PARTICIPANT PROMPT\n',
@@ -103,12 +112,13 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
 
 // ****************************************************************************
 // Test new agent configs
-// Input structure: { creatorId, agentConfig }
+// Input structure: { creatorId, agentConfig, promptConfig }
 // Validation: utils/src/agent.validation.ts
 // ****************************************************************************
 export const testAgentConfig = onCall(async (request) => {
   const {data} = request;
   const agentConfig = data.agentConfig;
+  const promptConfig = data.promptConfig;
   const creatorId = data.creatorId;
 
   // Only allow experimenters to use this test endpoint
@@ -124,37 +134,24 @@ export const testAgentConfig = onCall(async (request) => {
 
   const experimenterData = creatorDoc.data() as ExperimenterData;
 
-  // TODO: Use utils functions to construct prompt based on stage type
-  const prompt = agentConfig.promptConfig.prompt;
-  const apiType = agentConfig.modelSettings.apiType;
-  const model = agentConfig.modelSettings.model;
+  // TODO: Use fake (e.g., chat) data when running prompt?
+  const prompt = promptConfig.promptContext;
+  const generationConfig = createModelGenerationConfig();
 
-  // Call LLM API
-  const callModel = async () => {
-    if (apiType === ApiKeyType.GEMINI_API_KEY) {
-      return await getGeminiResponse(experimenterData, model, prompt);
-    }
-    if (apiType === ApiKeyType.OPEN_AI_API_KEY) {
-      const generationConfig =
-        agentConfig.modelSettings as AgentGenerationConfig;
-      return await getOpenAIAPIResponse(
-        experimenterData,
-        model,
-        prompt,
-        generationConfig,
-      );
-    }
-    if (apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
-      return await getOllamaResponse(experimenterData, model, prompt);
-    }
-    console.error('Error: Invalid API type');
-    return {text: ''};
-  };
-
-  const response = await callModel();
+  const response = await getAgentReponse(
+    experimenterData,
+    prompt,
+    agentConfig.defaultModelSettings,
+    generationConfig,
+  );
 
   // Check console log for response
-  console.log('TESTING AGENT CONFIG\n', JSON.stringify(agentConfig), response);
+  console.log(
+    'TESTING AGENT CONFIG\n',
+    JSON.stringify(agentConfig),
+    JSON.stringify(promptConfig),
+    response,
+  );
 
   return {data: response.text};
 });

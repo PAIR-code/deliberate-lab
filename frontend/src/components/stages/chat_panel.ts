@@ -1,3 +1,4 @@
+import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
 import '../participant_profile/avatar_icon';
 import '../participant_profile/profile_display';
@@ -6,9 +7,10 @@ import './stage_footer';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
+import {AgentManager} from '../../services/agent.manager';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {CohortService} from '../../services/cohort.service';
@@ -17,7 +19,8 @@ import {ParticipantService} from '../../services/participant.service';
 import {
   ChatStageConfig,
   ChatStagePublicData,
-  AgentConfig,
+  MediatorProfile,
+  MediatorStatus,
   ParticipantProfile,
   checkApiKeyExists,
   getTimeElapsed,
@@ -34,6 +37,7 @@ import {styles} from './chat_panel.scss';
 export class ChatPanel extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly agentManager = core.getService(AgentManager);
   private readonly authService = core.getService(AuthService);
   private readonly cohortService = core.getService(CohortService);
   private readonly experimentManager = core.getService(ExperimentManager);
@@ -42,7 +46,10 @@ export class ChatPanel extends MobxLitElement {
   @property() stage: ChatStageConfig | null = null;
 
   @property({type: Number}) timeRemainingInSeconds: number | null = null;
-  private intervalId: number | null = null;
+
+  @state() intervalId: number | null = null;
+  @state() isStatusLoading = false;
+
   connectedCallback() {
     super.connectedCallback();
     this.startTimer();
@@ -173,40 +180,72 @@ export class ChatPanel extends MobxLitElement {
       return nothing;
     }
 
-    const agents = this.stage.agents;
     return html`
       <div class="panel-item">
         <div class="panel-item-title">
-          Participants (${activeParticipants.length + agents.length})
+          Participants (${activeParticipants.length})
         </div>
-        ${agents && agents.length > 0 ? this.renderApiCheck() : ''}
         ${activeParticipants.map((participant) =>
           this.renderProfile(participant),
         )}
-        ${agents.map((agent) => this.renderAgent(agent))}
+        ${this.cohortService
+          .getMediatorsForStage(this.stage.id)
+          .map((mediator) => this.renderMediator(mediator))}
       </div>
     `;
   }
 
-  private renderAgent(agent: AgentConfig) {
-    // TODO: Consider adding a toggle so that agent details and identity
-    // can be exposed to all participants (not just in debug mode).
+  private renderMediator(profile: MediatorProfile) {
+    const renderStatus = () => {
+      if (!this.authService.isDebugMode || !profile.agentConfig) {
+        return nothing;
+      }
+      return html`
+        <div class="chip secondary">🤖 ${profile.currentStatus}</div>
+      `;
+    };
+
+    const toggleStatus = async () => {
+      this.isStatusLoading = true;
+      await this.agentManager.updateMediatorStatus(
+        profile.id,
+        profile.currentStatus === MediatorStatus.ACTIVE
+          ? MediatorStatus.PAUSED
+          : MediatorStatus.ACTIVE,
+      );
+      this.isStatusLoading = false;
+    };
+
+    const renderPause = () => {
+      if (!this.authService.isDebugMode || !profile.agentConfig) {
+        return nothing;
+      }
+      return html`
+        <pr-icon-button
+          ?loading=${this.isStatusLoading}
+          variant="default"
+          icon=${profile.currentStatus === MediatorStatus.PAUSED
+            ? 'play_circle'
+            : 'pause'}
+          @click=${toggleStatus}
+        >
+        </pr-icon-button>
+      `;
+    };
+
+    // TODO: Calculate if mediator is out of messages (maxResponses)
     return html`
-      <pr-tooltip
-        text=${this.authService.isDebugMode ? agent.prompt : ''}
-        position="BOTTOM_END"
-      >
-        <div class="profile">
-          <avatar-icon
-            .emoji=${agent.avatar}
-            .color=${getHashBasedColor(agent?.avatar ?? '')}
-          >
-          </avatar-icon>
-          <div class="name">
-            ${agent.name}${this.authService.isDebugMode ? ` 🤖` : ''}
-          </div>
-        </div>
-      </pr-tooltip>
+      <div class="profile">
+        <profile-display
+          .profile=${profile}
+          .color=${getHashBasedColor(
+            profile.agentConfig?.agentId ?? profile.id ?? '',
+          )}
+          displayType="chat"
+        >
+        </profile-display>
+        ${renderStatus()} ${renderPause()}
+      </div>
     `;
   }
 

@@ -14,13 +14,7 @@ import {AuthService} from '../../services/auth.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
-import {
-  AgentMediatorChatMessage,
-  ChatMessage,
-  ChatMessageType,
-  HumanMediatorChatMessage,
-  ParticipantChatMessage,
-} from '@deliberation-lab/utils';
+import {ChatMessage, ChatMessageType} from '@deliberation-lab/utils';
 import {
   convertUnifiedTimestampToDate,
   getHashBasedColor,
@@ -48,21 +42,16 @@ export class ChatMessageComponent extends MobxLitElement {
     switch (this.chat.type) {
       case ChatMessageType.PARTICIPANT:
         return this.renderParticipantMessage(this.chat);
-      case ChatMessageType.HUMAN_AGENT:
-        return this.renderHumanMediatorMessage(this.chat);
-      case ChatMessageType.AGENT_AGENT:
-        return this.renderAgentMediatorMessage(this.chat);
       default:
-        return nothing;
+        return this.renderMediatorMessage(this.chat);
     }
   }
 
-  renderParticipantMessage(chatMessage: ParticipantChatMessage) {
+  renderParticipantMessage(chatMessage: ChatMessage) {
     const classes = classMap({
       'chat-message': true,
       'current-user':
-        chatMessage.participantPublicId ===
-        this.participantService.profile?.publicId,
+        chatMessage.senderId === this.participantService.profile?.publicId,
     });
 
     const profile = chatMessage.profile;
@@ -74,7 +63,7 @@ export class ChatMessageComponent extends MobxLitElement {
       }
       // Otherwise, use profile ID/avatar to determine color
       return getProfileBasedColor(
-        chatMessage.participantPublicId ?? '',
+        chatMessage.senderId ?? '',
         profile.avatar ?? '',
       );
     };
@@ -84,7 +73,7 @@ export class ChatMessageComponent extends MobxLitElement {
         <avatar-icon .emoji=${profile.avatar} .color=${color()}> </avatar-icon>
         <div class="content">
           <div class="label">
-            ${profile.name ?? chatMessage.participantPublicId}
+            ${profile.name ?? chatMessage.senderId}
             ${profile.pronouns ? `(${profile.pronouns})` : ''}
 
             <span class="date"
@@ -100,33 +89,7 @@ export class ChatMessageComponent extends MobxLitElement {
     `;
   }
 
-  renderHumanMediatorMessage(chatMessage: HumanMediatorChatMessage) {
-    const profile = chatMessage.profile;
-
-    return html`
-      <div class="chat-message">
-        <avatar-icon
-          .emoji=${profile.avatar}
-          .color=${getHashBasedColor(profile?.avatar ?? '')}
-        >
-        </avatar-icon>
-        <div class="content">
-          <div class="label">
-            ${profile.name}
-            <span class="date"
-              >${convertUnifiedTimestampToDate(
-                chatMessage.timestamp,
-                false,
-              )}</span
-            >
-          </div>
-          <div class="chat-bubble">${chatMessage.message}</div>
-        </div>
-      </div>
-    `;
-  }
-
-  renderAgentMediatorMessage(chatMessage: AgentMediatorChatMessage) {
+  renderMediatorMessage(chatMessage: ChatMessage) {
     const profile = chatMessage.profile;
 
     return html`
@@ -153,7 +116,7 @@ export class ChatMessageComponent extends MobxLitElement {
     `;
   }
 
-  renderDebuggingExplanation(chatMessage: AgentMediatorChatMessage) {
+  renderDebuggingExplanation(chatMessage: ChatMessage) {
     if (!this.authService.isDebugMode) return nothing;
 
     return html` <div class="debug">${chatMessage.explanation}</div> `;

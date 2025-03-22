@@ -27,14 +27,14 @@ export class Settings extends MobxLitElement {
   override render() {
     return html`
       <div class="settings">
-        ${this.renderColorModeSection()} ${this.renderAccountSection()}
+        ${this.renderColorModeSection()}
         ${this.authService.isExperimenter
           ? this.renderExperimenterData()
           : nothing}
         ${this.authService.isExperimenter
           ? this.renderAppVersionSection()
           : nothing}
-        ${this.renderReferenceSection()}
+        ${this.renderReferenceSection()} ${this.renderAccountSection()}
       </div>
     `;
   }

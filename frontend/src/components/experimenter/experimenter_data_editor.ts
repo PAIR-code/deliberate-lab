@@ -22,73 +22,13 @@ export class ExperimenterDataEditor extends MobxLitElement {
   private readonly authService = core.getService(AuthService);
 
   override render() {
-    return html` ${this.renderServerTypeButtons()} ${this.renderApiKeys()} `;
-  }
-
-  // ============ Server Type selection ============
-  private renderServerTypeButtons() {
-    return html` <div class="section">
-      <div class="title">LLM Host Selection</div>
-      <div class="action-buttons">
-        ${this.renderServerTypeButton('Gemini', ApiKeyType.GEMINI_API_KEY)}
-        ${this.renderServerTypeButton(
-          'OpenAI or compatible API',
-          ApiKeyType.OPENAI_API_KEY,
-        )}
-        ${this.renderServerTypeButton(
-          'Ollama Server',
-          ApiKeyType.OLLAMA_CUSTOM_URL,
-        )}
-      </div>
-    </div>`;
-  }
-
-  private renderServerTypeButton(
-    serverTypeName: string,
-    apiKeyType: ApiKeyType,
-  ) {
-    const isActive =
-      this.authService.experimenterData?.apiKeys.activeApiKeyType ===
-      apiKeyType;
-
     return html`
-      <pr-button
-        color="${isActive ? 'primary' : 'neutral'}"
-        variant=${isActive ? 'tonal' : 'default'}
-        @click=${() => this.selectServerType(apiKeyType)}
-      >
-        ${serverTypeName}
-      </pr-button>
+      ${this.renderGeminiKey()}
+      <div class="divider"></div>
+      ${this.renderOpenAISettings()}
+      <div class="divider"></div>
+      ${this.renderOllamaSettings()}
     `;
-  }
-
-  private selectServerType(serverType: ApiKeyType) {
-    const oldData = this.authService.experimenterData;
-    if (!oldData) return;
-
-    const newData = updateExperimenterData(oldData, {
-      apiKeys: {...oldData.apiKeys, activeApiKeyType: serverType},
-    });
-
-    this.authService.writeExperimenterData(newData);
-    this.requestUpdate(); // Change visibility of relevant API key sections
-  }
-
-  private renderApiKeys() {
-    const activeType =
-      this.authService.experimenterData?.apiKeys.activeApiKeyType;
-
-    switch (activeType) {
-      case ApiKeyType.GEMINI_API_KEY:
-        return this.renderGeminiKey();
-      case ApiKeyType.OPENAI_API_KEY:
-        return this.renderOpenAISettings();
-      case ApiKeyType.OLLAMA_CUSTOM_URL:
-        return this.renderServerSettings();
-      default:
-        console.error('Error: invalid server setting selected :', activeType);
-        return this.renderGeminiKey();
-    }
   }
 
   // ============ Gemini ============
@@ -107,6 +47,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
 
     return html`
       <div class="section">
+        <h3>Gemini API settings</h3>
         <pr-textarea
           label="Gemini API key"
           placeholder="Add Gemini API key"
@@ -168,28 +109,28 @@ export class ExperimenterDataEditor extends MobxLitElement {
     const data = this.authService.experimenterData;
     return html`
       <div class="section">
+        <h3>Open AI API settings</h3>
         <pr-textarea
           label="API Key"
-          placeholder=""
+          placeholder="Add Open AI API key"
           variant="outlined"
           .value=${data?.apiKeys.openAIApiKey?.apiKey ?? ''}
           @input=${(e: InputEvent) => updateOpenAISettings(e, 'apiKey')}
         ></pr-textarea>
 
         <pr-textarea
-          label="Base URL"
+          label="Base URL (if blank, uses OpenAI's servers)"
           placeholder="http://example:14434/v1"
           variant="outlined"
           .value=${data?.apiKeys.openAIApiKey?.baseUrl ?? ''}
           @input=${(e: InputEvent) => updateOpenAISettings(e, 'baseUrl')}
         ></pr-textarea>
-        <p>If blank, uses OpenAI's servers.</p>
       </div>
     `;
   }
 
   // ============ Local Ollama server ============
-  private renderServerSettings() {
+  private renderOllamaSettings() {
     const updateServerSettings = (e: InputEvent, field: 'url') => {
       const oldData = this.authService.experimenterData;
       if (!oldData) return;
@@ -220,14 +161,14 @@ export class ExperimenterDataEditor extends MobxLitElement {
     const data = this.authService.experimenterData;
     return html`
       <div class="section">
+        <h3>Ollama API settings</h3>
         <pr-textarea
-          label="Server URL"
+          label="Server URL (please ensure URL is valid!)"
           placeholder="http://example:80/api/chat"
           variant="outlined"
           .value=${data?.apiKeys.ollamaApiKey?.url ?? ''}
           @input=${(e: InputEvent) => updateServerSettings(e, 'url')}
         ></pr-textarea>
-        <p>Please ensure that the URL is valid before proceeding.</p>
       </div>
     `;
   }

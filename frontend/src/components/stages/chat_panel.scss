@@ -56,3 +56,8 @@
 .divider {
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
+
+.chip {
+  @include typescale.label-small;
+  @include common.chip;
+}

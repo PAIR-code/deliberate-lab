@@ -14,15 +14,20 @@ import {
 } from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase/firestore';
 import {computed, makeObservable, observable} from 'mobx';
-import {writeExperimentCallable} from '../shared/callables';
+import {
+  writeExperimentCallable,
+  updateExperimentCallable,
+} from '../shared/callables';
 
 import {AuthService} from './auth.service';
+import {AgentEditor} from './agent.editor';
 import {ExperimentManager} from './experiment.manager';
 import {FirebaseService} from './firebase.service';
 import {Service} from './service';
 import {setMustWaitForAllParticipants} from '../shared/experiment.utils';
 
 interface ServiceProvider {
+  agentEditor: AgentEditor;
   authService: AuthService;
   experimentManager: ExperimentManager;
   firebaseService: FirebaseService;
@@ -191,19 +196,20 @@ export class ExperimentEditor extends Service {
 
   loadExperiment(experiment: Experiment, stages: StageConfig[]) {
     this.experiment = experiment;
-    this.stages = stages;
+    this.setStages(stages);
   }
 
   resetExperiment() {
     this.experiment = createExperimentConfig();
     this.stages = [];
+    this.sp.agentEditor.resetAgents();
   }
 
   // *********************************************************************** //
   // FIRESTORE                                                               //
   // *********************************************************************** //
 
-  /** Create or update an experiment.
+  /** Create an experiment.
    * @rights Experimenter
    */
   async writeExperiment() {
@@ -218,6 +224,30 @@ export class ExperimentEditor extends Service {
         collectionName: 'experiments',
         experimentConfig: this.experiment,
         stageConfigs: this.stages,
+        agentConfigs: this.sp.agentEditor.getAgentData(),
+      },
+    );
+
+    this.isWritingExperiment = false;
+    return response;
+  }
+
+  /** Update an experiment.
+   * @rights Experimenter who created the experiment
+   */
+  async updateExperiment() {
+    this.isWritingExperiment = true;
+
+    // Update date modified
+    this.experiment.metadata.dateModified = Timestamp.now();
+
+    const response = await updateExperimentCallable(
+      this.sp.firebaseService.functions,
+      {
+        collectionName: 'experiments',
+        experimentConfig: this.experiment,
+        stageConfigs: this.stages,
+        agentConfigs: this.sp.agentEditor.getAgentData(),
       },
     );
 
