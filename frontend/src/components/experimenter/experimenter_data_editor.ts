@@ -23,69 +23,12 @@ export class ExperimenterDataEditor extends MobxLitElement {
 
   override render() {
     return html`
-      ${this.renderServerTypeButtons()}
-      <div class="divider"></div>
       ${this.renderGeminiKey()}
       <div class="divider"></div>
       ${this.renderOpenAISettings()}
       <div class="divider"></div>
       ${this.renderOllamaSettings()}
     `;
-  }
-
-  // ============ Server Type selection ============
-  private renderServerTypeButtons() {
-    return html`
-      <div class="section">
-        <h3>LLM Host Selection</h3>
-        <div class="title">
-          The selected API will be used for all LLM calls (note: ability to
-          specify API per agent coming soon!)
-        </div>
-        <div class="action-buttons">
-          ${this.renderServerTypeButton('Gemini', ApiKeyType.GEMINI_API_KEY)}
-          ${this.renderServerTypeButton(
-            'OpenAI or compatible API',
-            ApiKeyType.OPENAI_API_KEY,
-          )}
-          ${this.renderServerTypeButton(
-            'Ollama Server',
-            ApiKeyType.OLLAMA_CUSTOM_URL,
-          )}
-        </div>
-      </div>
-    `;
-  }
-
-  private renderServerTypeButton(
-    serverTypeName: string,
-    apiKeyType: ApiKeyType,
-  ) {
-    const isActive =
-      this.authService.experimenterData?.apiKeys.activeApiKeyType ===
-      apiKeyType;
-
-    return html`
-      <pr-button
-        color="${isActive ? 'primary' : 'neutral'}"
-        variant=${isActive ? 'tonal' : 'default'}
-        @click=${() => this.selectServerType(apiKeyType)}
-      >
-        ${serverTypeName}
-      </pr-button>
-    `;
-  }
-
-  private selectServerType(serverType: ApiKeyType) {
-    const oldData = this.authService.experimenterData;
-    if (!oldData) return;
-
-    const newData = updateExperimenterData(oldData, {
-      apiKeys: {...oldData.apiKeys, activeApiKeyType: serverType},
-    });
-
-    this.authService.writeExperimenterData(newData);
-    this.requestUpdate(); // Change visibility of relevant API key sections
   }
 
   // ============ Gemini ============
@@ -169,7 +112,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
         <h3>Open AI API settings</h3>
         <pr-textarea
           label="API Key"
-          placeholder=""
+          placeholder="Add Open AI API key"
           variant="outlined"
           .value=${data?.apiKeys.openAIApiKey?.apiKey ?? ''}
           @input=${(e: InputEvent) => updateOpenAISettings(e, 'apiKey')}

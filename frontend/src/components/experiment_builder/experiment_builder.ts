@@ -179,12 +179,6 @@ export class ExperimentBuilder extends MobxLitElement {
       // TODO: Refactor agent nav to separate component
       return html`
         <div class="panel-view">
-          <div class="banner warning">
-            <p>
-              For testing only! Settings on this page do not yet connect to the
-              saved experiment.
-            </p>
-          </div>
           <div class="top">
             <div class="panel-view-header">Agents</div>
             <pr-button
