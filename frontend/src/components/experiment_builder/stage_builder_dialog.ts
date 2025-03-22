@@ -33,12 +33,6 @@ import {
   getAnonLASStageConfigs,
 } from '../../shared/games/lost_at_sea';
 import {
-  LAS_METADATA,
-  ANON_LAS_METADATA,
-  getLASStageConfigs,
-  getAnonLASStageConfigs,
-} from '../../shared/games/lost_at_sea';
-import {
   getChipMetadata,
   getChipNegotiationStageConfigs,
 } from '../../shared/games/chip_negotiation';

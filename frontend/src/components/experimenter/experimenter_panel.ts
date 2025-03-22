@@ -23,7 +23,6 @@ import {ParticipantService} from '../../services/participant.service';
 import {RouterService} from '../../services/router.service';
 
 import {
-  AgentConfig,
   AlertMessage,
   AlertStatus,
   ParticipantProfileExtended,
@@ -126,20 +125,6 @@ export class Panel extends MobxLitElement {
             >
             </pr-icon-button>
           </pr-tooltip>
-          <pr-tooltip text="Edit agent configs" position="RIGHT_END">
-            <pr-icon-button
-              color="secondary"
-              icon="robot_2"
-              size="medium"
-              variant=${isSelected(PanelView.LLM_SETTINGS)
-                ? 'tonal'
-                : 'default'}
-              @click=${() => {
-                this.panelView = PanelView.LLM_SETTINGS;
-              }}
-            >
-            </pr-icon-button>
-          </pr-tooltip>
           <pr-tooltip text="Alerts" position="RIGHT_END">
             <pr-icon-button
               color=${this.experimentManager.hasNewAlerts &&
@@ -193,8 +178,6 @@ export class Panel extends MobxLitElement {
         return this.renderManualChatPanel();
       case PanelView.API_KEY:
         return this.renderApiKeyPanel();
-      case PanelView.LLM_SETTINGS:
-        return this.renderAgentEditorPanel();
       case PanelView.ALERTS:
         return this.renderAlertPanel();
       default:

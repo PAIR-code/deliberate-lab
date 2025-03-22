@@ -23,7 +23,6 @@ import JSZip from 'jszip';
 import {
   AlertMessage,
   AlertStatus,
-  AgentMediatorConfig,
   AgentPersonaConfig,
   BaseAgentPromptConfig,
   ChatMessage,
