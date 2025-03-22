@@ -7,9 +7,10 @@ import './stage_footer';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
+import {AgentManager} from '../../services/agent.manager';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {CohortService} from '../../services/cohort.service';
@@ -36,6 +37,7 @@ import {styles} from './chat_panel.scss';
 export class ChatPanel extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly agentManager = core.getService(AgentManager);
   private readonly authService = core.getService(AuthService);
   private readonly cohortService = core.getService(CohortService);
   private readonly experimentManager = core.getService(ExperimentManager);
@@ -44,7 +46,10 @@ export class ChatPanel extends MobxLitElement {
   @property() stage: ChatStageConfig | null = null;
 
   @property({type: Number}) timeRemainingInSeconds: number | null = null;
-  private intervalId: number | null = null;
+
+  @state() intervalId: number | null = null;
+  @state() isStatusLoading = false;
+
   connectedCallback() {
     super.connectedCallback();
     this.startTimer();
@@ -200,18 +205,29 @@ export class ChatPanel extends MobxLitElement {
       `;
     };
 
+    const toggleStatus = async () => {
+      this.isStatusLoading = true;
+      await this.agentManager.updateMediatorStatus(
+        profile.id,
+        profile.currentStatus === MediatorStatus.ACTIVE
+          ? MediatorStatus.PAUSED
+          : MediatorStatus.ACTIVE,
+      );
+      this.isStatusLoading = false;
+    };
+
     const renderPause = () => {
       if (!this.authService.isDebugMode || !profile.agentConfig) {
         return nothing;
       }
-      // TODO: Set mediator to paused/active on click
       return html`
         <pr-icon-button
-          disabled
+          ?loading=${this.isStatusLoading}
           variant="default"
           icon=${profile.currentStatus === MediatorStatus.PAUSED
             ? 'play_circle'
             : 'pause'}
+          @click=${toggleStatus}
         >
         </pr-icon-button>
       `;

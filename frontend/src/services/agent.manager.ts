@@ -9,6 +9,7 @@ import {
   Unsubscribe,
   where,
 } from 'firebase/firestore';
+import {ExperimentManager} from './experiment.manager';
 import {FirebaseService} from './firebase.service';
 import {Service} from './service';
 
@@ -17,9 +18,12 @@ import {
   AgentDataObject,
   AgentParticipantPromptConfig,
   AgentPersonaConfig,
+  MediatorStatus,
 } from '@deliberation-lab/utils';
+import {updateMediatorStatusCallable} from '../shared/callables';
 
 interface ServiceProvider {
+  experimentManager: ExperimentManager;
   firebaseService: FirebaseService;
 }
 
@@ -84,5 +88,22 @@ export class AgentManager extends Service {
       dataObjects.push(agentObject);
     }
     return dataObjects;
+  }
+
+  /** Change mediator status. */
+  async updateMediatorStatus(mediatorId: string, status: MediatorStatus) {
+    let response = {};
+    const experimentId = this.sp.experimentManager.experimentId;
+    if (experimentId) {
+      response = await updateMediatorStatusCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId,
+          mediatorId,
+          status,
+        },
+      );
+    }
+    return response;
   }
 }

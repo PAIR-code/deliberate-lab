@@ -27,6 +27,7 @@ import {
   SuccessResponse,
   UpdateChatStageParticipantAnswerData,
   UpdateCohortMetadataData,
+  UpdateMediatorStatusData,
   UpdateParticipantAcceptedTOSData,
   UpdateParticipantFailureData,
   UpdateParticipantProfileData,
@@ -435,6 +436,18 @@ export const setSalespersonResponseCallable = async (
   >(
     functions,
     'setSalespersonResponse',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for updating MediatorProfile status. */
+export const updateMediatorStatusCallable = async (
+  functions: Functions,
+  config: UpdateMediatorStatusData,
+) => {
+  const {data} = await httpsCallable<UpdateMediatorStatusData, SuccessResponse>(
+    functions,
+    'updateMediatorStatus',
   )(config);
   return data;
 };
