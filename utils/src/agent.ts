@@ -183,10 +183,10 @@ export function createAgentChatSettings(
   config: Partial<AgentChatSettings> = {},
 ): AgentChatSettings {
   return {
-    wordsPerMinute: config.wordsPerMinute ?? 80,
+    wordsPerMinute: config.wordsPerMinute ?? 100,
     minMessagesBeforeResponding: config.minMessagesBeforeResponding ?? 0,
-    canSelfTriggerCalls: config.canSelfTriggerCalls ?? true,
-    maxResponses: config.maxResponses ?? null,
+    canSelfTriggerCalls: config.canSelfTriggerCalls ?? false,
+    maxResponses: config.maxResponses ?? 20,
   };
 }
 
