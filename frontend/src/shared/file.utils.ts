@@ -627,17 +627,24 @@ function getChipNegotiationGameMetadata(
   stage: ChipStageConfig,
   publicStage: ChipStagePublicData,
 ): ChipNegotiationGameMetadata {
-  // iterate through offer map to determine players
-  const playerSet = new Set<string>();
-  Object.values(publicStage.participantOfferMap).forEach((round) => {
-    Object.keys(round).forEach((senderId) => {
-      playerSet.add(senderId);
-      Object.keys(round[senderId].responseMap).forEach((responderId) => {
-        playerSet.add(responderId);
-      });
+  // iterate through game turns to create list of players
+  // **in order of turn order**
+  const orderedTransactions = Object.values(publicStage.participantOfferMap)
+    .flatMap((transactions) => Object.values(transactions))
+    .sort((a: ChipTransaction, b: ChipTransaction) => {
+      const timeA =
+        a.offer.timestamp.seconds * 1000 + a.offer.timestamp.nanoseconds / 1e6;
+      const timeB =
+        b.offer.timestamp.seconds * 1000 + b.offer.timestamp.nanoseconds / 1e6;
+      return timeA - timeB;
     });
-  });
-  const players: string[] = Array.from(playerSet);
+
+  const players: string[] = [];
+  for (const transaction of orderedTransactions) {
+    if (!players.find((p) => p === transaction.offer.senderId)) {
+      players.push(transaction.offer.senderId);
+    }
+  }
 
   // build metadata
   return {
