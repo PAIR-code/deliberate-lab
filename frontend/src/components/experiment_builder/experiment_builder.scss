@@ -54,7 +54,6 @@
   border-right: 1px solid var(--md-sys-color-outline-variant);
   flex-shrink: 0;
   gap: common.$spacing-medium;
-  overflow: auto;
   padding: common.$sidenav-padding;
   width: common.$sidenav-closed-width;
 }
