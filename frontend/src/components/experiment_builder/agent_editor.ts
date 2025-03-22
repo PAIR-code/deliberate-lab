@@ -229,7 +229,12 @@ export class AgentEditorComponent extends MobxLitElement {
     };
 
     return html`
-      <pr-button color="error" variant="outlined" @click=${onClick}>
+      <pr-button
+        color="error"
+        variant="outlined"
+        @click=${onClick}
+        ?disabled=${!this.experimentEditor.canEditStages}
+      >
         Delete agent mediator
       </pr-button>
     `;
@@ -366,7 +371,7 @@ export class AgentEditorComponent extends MobxLitElement {
           placeholder="Custom prompt for agent"
           variant="outlined"
           .value=${agentPromptConfig.promptContext}
-          ?disabled=${!this.experimentEditor.canEditStages}
+          ?disabled=${!this.experimentEditor.isCreator}
           @input=${updatePrompt}
         >
         </pr-textarea>
@@ -441,7 +446,7 @@ export class AgentEditorComponent extends MobxLitElement {
         </div>
         <div class="number-input">
           <input
-            .disabled=${!this.experimentEditor.canEditStages}
+            .disabled=${!this.experimentEditor.isCreator}
             type="number"
             min="1"
             max="1000"
@@ -524,7 +529,7 @@ export class AgentEditorComponent extends MobxLitElement {
           </div>
           <div class="number-input">
             <input
-              .disabled=${!this.experimentEditor.canEditStages}
+              .disabled=${!this.experimentEditor.isCreator}
               type="number"
               min="0.0"
               max="1.0"
@@ -543,7 +548,7 @@ export class AgentEditorComponent extends MobxLitElement {
           </div>
           <div class="number-input">
             <input
-              .disabled=${!this.experimentEditor.canEditStages}
+              .disabled=${!this.experimentEditor.isCreator}
               type="number"
               min="0.0"
               max="1.0"
@@ -561,7 +566,7 @@ export class AgentEditorComponent extends MobxLitElement {
           </div>
           <div class="number-input">
             <input
-              .disabled=${!this.experimentEditor.canEditStages}
+              .disabled=${!this.experimentEditor.isCreator}
               type="number"
               min="0.0"
               max="2.0"
@@ -579,7 +584,7 @@ export class AgentEditorComponent extends MobxLitElement {
           </div>
           <div class="number-input">
             <input
-              .disabled=${!this.experimentEditor.canEditStages}
+              .disabled=${!this.experimentEditor.isCreator}
               type="number"
               min="0.0"
               max="2.0"
@@ -679,7 +684,7 @@ export class AgentEditorComponent extends MobxLitElement {
             color="neutral"
             padding="small"
             variant="default"
-            ?disabled=${!this.experimentEditor.canEditStages}
+            ?disabled=${!this.experimentEditor.isCreator}
             @click=${deleteField}
          >
        </div>
@@ -725,7 +730,7 @@ export class AgentEditorComponent extends MobxLitElement {
         <md-checkbox
           touch-target="wrapper"
           ?checked=${config.isJSON}
-          ?disabled=${!this.experimentEditor.canEditStages}
+          ?disabled=${!this.experimentEditor.isCreator}
           @click=${updateJSON}
         >
         </md-checkbox>
@@ -744,7 +749,7 @@ export class AgentEditorComponent extends MobxLitElement {
           placeholder="Instructions and examples for formatting the agent response"
           variant="outlined"
           .value=${config.formattingInstructions}
-          ?disabled=${!this.experimentEditor.canEditStages}
+          ?disabled=${!this.experimentEditor.isCreator}
           @input=${updateFormattingInstructions}
         >
         </pr-textarea>
@@ -758,7 +763,7 @@ export class AgentEditorComponent extends MobxLitElement {
                 placeholder="JSON field to extract chat message from"
                 variant="outlined"
                 .value=${config.messageField}
-                ?disabled=${!this.experimentEditor.canEditStages}
+                ?disabled=${!this.experimentEditor.isCreator}
                 @input=${updateMessageField}
               >
               </pr-textarea>
@@ -773,7 +778,7 @@ export class AgentEditorComponent extends MobxLitElement {
                 placeholder="JSON field to extract debugging explanation from"
                 variant="outlined"
                 .value=${config.explanationField}
-                ?disabled=${!this.experimentEditor.canEditStages}
+                ?disabled=${!this.experimentEditor.isCreator}
                 @input=${updateExplanationField}
               >
               </pr-textarea>

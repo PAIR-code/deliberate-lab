@@ -10,6 +10,7 @@ import {
   where,
 } from 'firebase/firestore';
 import {AgentEditor} from './agent.editor';
+import {AgentManager} from './agent.manager';
 import {AuthService} from './auth.service';
 import {CohortService} from './cohort.service';
 import {ExperimentEditor} from './experiment.editor';
@@ -76,6 +77,7 @@ import {
 
 interface ServiceProvider {
   agentEditor: AgentEditor;
+  agentManager: AgentManager;
   authService: AuthService;
   cohortService: CohortService;
   experimentEditor: ExperimentEditor;
@@ -149,7 +151,14 @@ export class ExperimentManager extends Service {
         const stage = this.sp.experimentService.stageConfigMap[id];
         if (stage) stages.push(stage);
       });
-      // TODO: Load agent configs from snapshot listener in agent service
+
+      // Load agent configs from snapshot listener in agent service
+      if (this.experimentId) {
+        this.sp.agentEditor.setAgentData(
+          await this.sp.agentManager.getAgentDataObjects(this.experimentId),
+        );
+      }
+
       this.sp.experimentEditor.loadExperiment(experiment, stages);
       this.isEditing = true;
     }
@@ -470,7 +479,6 @@ export class ExperimentManager extends Service {
         collectionName: 'experiments',
         experimentConfig: experiment,
         stageConfigs: stages,
-        // TODO: Use agent configs from snapshot listener in agent service
         agentConfigs: this.sp.agentEditor.getAgentData(),
       },
     );
