@@ -93,7 +93,8 @@ export class ChatInterface extends MobxLitElement {
     if (stage.discussions.length > 0) {
       let discussions = stage.discussions;
       // Only show discussion threads that have been unlocked
-      if (currentDiscussionId !== null) {
+      // (if earlier experiment version without currentDiscussionId, show all)
+      if (currentDiscussionId !== null && currentDiscussionId !== undefined) {
         const index = discussions.findIndex(
           (discussion) => discussion.id === currentDiscussionId,
         );
