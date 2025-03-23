@@ -138,7 +138,7 @@ export const testAgentConfig = onCall(async (request) => {
   const prompt = promptConfig.promptContext;
   const generationConfig = createModelGenerationConfig();
 
-  const response = await getAgentReponse(
+  const response = await getAgentResponse(
     experimenterData,
     prompt,
     agentConfig.defaultModelSettings,
