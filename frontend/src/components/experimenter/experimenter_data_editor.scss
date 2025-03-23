@@ -48,3 +48,14 @@ a {
   flex-wrap: wrap;
   gap: common.$spacing-medium;
 }
+
+.api-check {
+  @include common.flex-row;
+  align-items: center;
+  gap: common.$spacing-small;
+}
+
+.banner {
+  @include common.chip;
+  @include typescale.label-small;
+}

@@ -163,3 +163,16 @@ pr-textarea {
   @include typescale.label-small;
   width: max-content;
 }
+
+.banner {
+  @include typescale.label-small;
+  background: var(--md-sys-color-surface-container);
+  border-radius: common.$spacing-medium;
+  color: var(--md-sys-color-on-surface-container);
+  padding: common.$spacing-small common.$spacing-medium;
+
+  &.error {
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+  }
+}

@@ -32,30 +32,12 @@ export class ChatEditor extends MobxLitElement {
       return nothing;
     }
 
-    // Check if experimenter's API key exists
-    let apiCheck;
-    if (!checkApiKeyExists(this.authService.experimenterData)) {
-      apiCheck = html`
-        <div class="warning">
-          <b>Note:</b> In order for LLM calls to work, you must add an API key
-          or server configuration under Experimenter Settings.
-        </div>
-      `;
-    } else {
-      apiCheck = html`
-        <div class="notification">
-          <b>✅ A valid API key has been added. If it is valid, LLM calls will work.
-        </div>
-      `;
-    }
-
     return html`
       <div class="title">Conversation settings</div>
       ${this.renderTimeLimit()}
       <div class="divider"></div>
       <div class="title">Agent settings</div>
       <div>See agent tab to configure mediator agents!</div>
-      ${apiCheck}
     `;
   }
 

@@ -1,16 +1,26 @@
+import '../../pair-components/icon_button';
 import '../../pair-components/textarea';
+import '../../pair-components/tooltip';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
+import {ExperimentManager} from '../../services/experiment.manager';
 
 import {styles} from './experimenter_data_editor.scss';
 import {
   ApiKeyType,
+  BaseAgentPromptConfig,
   ExperimenterData,
+  StageKind,
+  createAgentModelSettings,
+  createAgentPersonaConfig,
+  createAgentPromptSettings,
+  createModelGenerationConfig,
+  checkApiKeyExists,
   createOpenAIServerConfig,
 } from '@deliberation-lab/utils';
 
@@ -20,6 +30,11 @@ export class ExperimenterDataEditor extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly authService = core.getService(AuthService);
+  private readonly experimentManager = core.getService(ExperimentManager);
+
+  @state() geminiKeyResponse: null | boolean = null;
+  @state() openAIKeyResponse: null | boolean = null;
+  @state() ollamaKeyResponse: null | boolean = null;
 
   override render() {
     return html`
@@ -31,6 +46,66 @@ export class ExperimenterDataEditor extends MobxLitElement {
     `;
   }
 
+  private renderCheckApiKey(apiType: ApiKeyType) {
+    const agentConfig = createAgentPersonaConfig({
+      defaultModelSettings: createAgentModelSettings({apiType}),
+    });
+    const promptConfig: BaseAgentPromptConfig = {
+      id: '',
+      type: StageKind.INFO,
+      promptContext: 'Say "hello world" and tell a unique joke',
+      generationConfig: createModelGenerationConfig(),
+      promptSettings: createAgentPromptSettings(),
+    };
+
+    const testEndpoint = async () => {
+      const result =
+        (
+          await this.experimentManager.testAgentConfig(
+            agentConfig,
+            promptConfig,
+          )
+        )?.length > 0;
+      if (apiType === ApiKeyType.GEMINI_API_KEY) {
+        this.geminiKeyResponse = result;
+      } else if (apiType === ApiKeyType.OPENAI_API_KEY) {
+        this.openAIKeyResponse = result;
+      } else if (apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
+        this.ollamaKeyResponse = result;
+      }
+    };
+
+    const getResult = () => {
+      if (apiType === ApiKeyType.GEMINI_API_KEY) {
+        return this.geminiKeyResponse;
+      } else if (apiType === ApiKeyType.OPENAI_API_KEY) {
+        return this.openAIKeyResponse;
+      } else if (apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
+        return this.ollamaKeyResponse;
+      }
+    };
+
+    const result = getResult();
+    return html`
+      <div class="api-check">
+        <pr-tooltip text="Test API key">
+          <pr-icon-button
+            icon="key"
+            color="neutral"
+            variant="default"
+            @click=${testEndpoint}
+          >
+          </pr-icon-button>
+        </pr-tooltip>
+        ${result === null
+          ? ''
+          : result
+            ? html`<div class="banner success">Valid API key</div>`
+            : html`<div class="banner error">Invalid API key</div>`}
+      </div>
+    `;
+  }
+
   // ============ Gemini ============
   private renderGeminiKey() {
     const updateKey = (e: InputEvent) => {
@@ -38,6 +113,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
       if (!oldData) return;
 
       const geminiKey = (e.target as HTMLTextAreaElement).value;
+      this.geminiKeyResponse = null;
       const newData = updateExperimenterData(oldData, {
         apiKeys: {...oldData.apiKeys, geminiApiKey: geminiKey},
       });
@@ -56,6 +132,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
           ''}
           @input=${updateKey}
         ></pr-textarea>
+        ${this.renderCheckApiKey(ApiKeyType.GEMINI_API_KEY)}
       </div>
     `;
   }
@@ -70,6 +147,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
       if (!oldData) return;
 
       const value = (e.target as HTMLInputElement).value;
+      this.openAIKeyResponse = null;
       let newData;
 
       switch (field) {
@@ -125,6 +203,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
           .value=${data?.apiKeys.openAIApiKey?.baseUrl ?? ''}
           @input=${(e: InputEvent) => updateOpenAISettings(e, 'baseUrl')}
         ></pr-textarea>
+        ${this.renderCheckApiKey(ApiKeyType.OPENAI_API_KEY)}
       </div>
     `;
   }
@@ -136,6 +215,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
       if (!oldData) return;
 
       const value = (e.target as HTMLInputElement).value;
+      this.ollamaKeyResponse = null;
       let newData;
 
       switch (field) {
@@ -169,6 +249,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
           .value=${data?.apiKeys.ollamaApiKey?.url ?? ''}
           @input=${(e: InputEvent) => updateServerSettings(e, 'url')}
         ></pr-textarea>
+        ${this.renderCheckApiKey(ApiKeyType.OLLAMA_CUSTOM_URL)}
       </div>
     `;
   }

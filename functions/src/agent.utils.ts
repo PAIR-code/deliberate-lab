@@ -37,7 +37,10 @@ export async function getAgentResponse(
   } else if (modelSettings.model === ApiKeyType.OLLAMA_CUSTOM_URL) {
     response = await getOllamaResponse(data, modelSettings.model, prompt);
   } else {
-    console.error('Error: invalid apiKey type: ', keyType);
+    console.error(
+      'Error: invalid apiKey type: ',
+      data.apiKeys.ollamaApiKey.apiKey,
+    );
     response = {text: ''};
   }
 

@@ -747,7 +747,7 @@ export class ExperimentManager extends Service {
     }
   }
 
-  /** TEMPORARY: Test new agent config. */
+  /** Test given agent config. */
   async testAgentConfig(
     agentConfig: AgentPersonaConfig,
     promptConfig: BaseAgentPromptConfig,
