@@ -118,7 +118,7 @@ export const setChipTurn = onCall(async (request) => {
     transaction.set(
       logCollection.doc(),
       createChipTurnLogEntry(
-        newData.currentRound + 1,
+        newData.currentRound,
         newData.currentTurn,
         Timestamp.now(),
       ),
@@ -173,7 +173,7 @@ export const sendChipOffer = onCall(async (request) => {
     const publicStageData = (
       await publicDoc.get()
     ).data() as ChipStagePublicData;
-    const chipOffer = data.chipOffer;
+    const chipOffer = {...data.chipOffer, timestamp: Timestamp.now()};
     const currentRound = publicStageData.currentRound;
 
     // Set current round for chip offer
@@ -275,6 +275,7 @@ export const sendChipResponse = onCall(async (request) => {
 // VALIDATION FUNCTIONS                                                      //
 // ************************************************************************* //
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleSetChipTurnValidationErrors(data: any) {
   for (const error of Value.Errors(SetChipTurnData, data)) {
     if (isUnionError(error)) {
@@ -286,6 +287,7 @@ function handleSetChipTurnValidationErrors(data: any) {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleSendChipOfferValidationErrors(data: any) {
   for (const error of Value.Errors(SendChipOfferData, data)) {
     if (isUnionError(error)) {
@@ -297,6 +299,7 @@ function handleSendChipOfferValidationErrors(data: any) {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleSendChipResponseValidationErrors(data: any) {
   for (const error of Value.Errors(SendChipResponseData, data)) {
     if (isUnionError(error)) {
