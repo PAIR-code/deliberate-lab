@@ -162,7 +162,8 @@ a {
   color: var(--md-sys-color-on-surface);
 }
 
-b {
+b,
+strong {
   font-weight: 500;
 }
 

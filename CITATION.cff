@@ -7,6 +7,6 @@ authors:
   given-names: "Crystal"
 - family-names: "Deliberate Lab community contributors"
 title: "Deliberate Lab: Open-Source Platform for LLM-Powered Social Science"
-version: 1.0.0
-date-released: 2024-09-27
+version: 2025-03-24
+date-released: 2025-03-24
 url: "https://github.com/PAIR-code/deliberate-lab"
