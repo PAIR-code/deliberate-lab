@@ -1,16 +1,28 @@
 import '../../pair-components/button';
 import '../../pair-components/icon_button';
 import '../../pair-components/textarea';
+import '@material/web/checkbox/checkbox.js';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {AgentEditor} from '../../services/agent.editor';
 import {ExperimentEditor} from '../../services/experiment.editor';
+import {ExperimentService} from '../../services/experiment.service';
 
-import {AgentMediatorConfig, checkApiKeyExists} from '@deliberation-lab/utils';
+import {
+  AgentChatPromptConfig,
+  AgentPersonaConfig,
+  AgentResponseConfig,
+  ApiKeyType,
+  StageConfig,
+  StageKind,
+  checkApiKeyExists,
+  DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
+  DEFAULT_STRING_FORMATTING_INSTRUCTIONS,
+} from '@deliberation-lab/utils';
 import {LLM_AGENT_AVATARS} from '../../shared/constants';
 import {getHashBasedColor} from '../../shared/utils';
 
@@ -23,42 +35,243 @@ export class AgentEditorComponent extends MobxLitElement {
 
   private readonly agentEditor = core.getService(AgentEditor);
   private readonly experimentEditor = core.getService(ExperimentEditor);
+  private readonly experimentService = core.getService(ExperimentService);
 
-  @property() agent: AgentMediatorConfig | undefined = undefined;
+  @property() agent: AgentPersonaConfig | undefined = undefined;
+  @state() isTestButtonLoading = false;
 
   override render() {
     if (this.agent === undefined) {
-      return nothing;
+      return html`
+        <div class="agent-wrapper">
+          <div>Select an agent to edit.</div>
+          ${this.renderOutdatedWarning()}
+        </div>
+      `;
     }
 
     const agentConfig = this.agent;
     // TODO: Add API key check
     return html`
-      <div class="agent-wrapper">
-        ${this.renderAgentName(agentConfig)} ${this.renderAvatars(agentConfig)}
-        ${this.renderAgentModel(agentConfig)}
-        ${this.renderAgentPrompt(agentConfig)}
-        ${this.renderAgentWordsPerMinute(agentConfig)}
-        <div class="divider"></div>
-        ${this.renderAgentSamplingParameters(agentConfig)}
-        <div class="divider"></div>
-        ${this.renderAgentCustomRequestBodyFields(agentConfig)}
+      ${this.renderAgentNav(agentConfig)}
+      ${this.renderAgentContent(agentConfig)}
+    `;
+  }
+
+  private renderOutdatedWarning() {
+    if (!this.experimentService.experiment) return nothing;
+
+    if (this.experimentService.experiment.versionId < 16) {
+      return html`
+        <p>
+          ⚠️ Agents saved in a previous version of Deliberate Lab may not
+          automatically load in the current version. Contact the deployment
+          owners if you would like to migrate your previously saved agents to
+          this new agents tab.
+        </p>
+      `;
+    }
+    return nothing;
+  }
+
+  private renderAgentNav(agentConfig: AgentPersonaConfig) {
+    const stages = this.experimentEditor.stages;
+    const isActive = (stageId: string) => {
+      return stageId === this.agentEditor.activeStageId;
+    };
+    return html`
+      <div class="agent-nav">
+        <div
+          class="nav-item ${isActive('') ? 'active' : ''}"
+          @click=${() => {
+            this.agentEditor.setActiveStageId('');
+          }}
+        >
+          Agent settings
+        </div>
+        ${stages.map((stage, index) => {
+          if (stage.kind === StageKind.CHAT) {
+            return html`
+              <div
+                class="nav-item ${isActive(stage.id) ? 'active' : ''}"
+                @click=${() => {
+                  this.agentEditor.setActiveStageId(stage.id);
+                }}
+              >
+                ${index + 1}. ${stage.name}
+              </div>
+            `;
+          } else {
+            return nothing;
+          }
+        })}
+        <div class="description">
+          Note: Add stages with chat discussions (e.g., chat stage) to your
+          experiment in order to specify agent mediator prompts here.
+        </div>
       </div>
     `;
   }
 
-  private renderAgentName(agent: AgentMediatorConfig) {
+  private renderAgentContent(agentConfig: AgentPersonaConfig) {
+    const activeStageId = this.agentEditor.activeStageId;
+    if (activeStageId === '') {
+      return this.renderAgentGeneralSettings(agentConfig);
+    }
+
+    const stage = this.experimentEditor.stages.find(
+      (stage) => stage.id === activeStageId,
+    );
+
+    if (!stage) {
+      return html`
+        <div class="agent-wrapper">
+          <div>Stage not found</div>
+        </div>
+      `;
+    }
+
+    return this.renderStageEditor(stage, agentConfig);
+  }
+
+  private renderStageEditor(
+    stageConfig: StageConfig,
+    agentConfig: AgentPersonaConfig,
+  ) {
+    const renderAddButton = () => {
+      return html`
+        <div class="field">
+          <pr-button
+            @click=${() => {
+              this.agentEditor.addAgentMediatorPrompt(
+                agentConfig.id,
+                stageConfig,
+              );
+            }}
+          >
+            Add prompt
+          </pr-button>
+          <div class="description">
+            If no prompt, the agent will not be called during this stage.
+          </div>
+        </div>
+      `;
+    };
+
+    const renderPromptSettings = (promptConfig: AgentChatPromptConfig) => {
+      return html`
+        <div>${this.renderTestPromptButton(agentConfig, promptConfig)}</div>
+        <div class="divider"></div>
+        ${this.renderAgentPrompt(agentConfig, promptConfig)}
+        ${this.renderAgentResponseConfig(agentConfig, promptConfig)}
+        ${this.renderAgentWordsPerMinute(agentConfig, promptConfig)}
+        ${this.renderAgentSamplingParameters(agentConfig, promptConfig)}
+        ${this.renderAgentCustomRequestBodyFields(agentConfig, promptConfig)}
+        <div class="divider"></div>
+        <pr-button
+          color="error"
+          variant="outlined"
+          @click=${() => {
+            this.agentEditor.deleteAgentMediatorPrompt(
+              agentConfig.id,
+              stageConfig.id,
+            );
+          }}
+        >
+          Delete prompt
+        </pr-button>
+      `;
+    };
+
+    const promptConfig = this.agentEditor.getAgentMediatorPrompt(
+      agentConfig.id,
+      stageConfig.id,
+    );
+
+    return html`
+      <div class="agent-wrapper">
+        <div class="header">
+          <div class="title">${stageConfig.name}</div>
+          <div class="chip tertiary">${stageConfig.kind}</div>
+        </div>
+        ${promptConfig ? renderPromptSettings(promptConfig) : renderAddButton()}
+      </div>
+    `;
+  }
+
+  private renderAgentGeneralSettings(agentConfig: AgentPersonaConfig) {
+    return html`
+      <div class="agent-wrapper">
+        ${this.renderAgentPrivateName(agentConfig)}
+        ${this.renderAgentName(agentConfig)} ${this.renderAvatars(agentConfig)}
+        ${this.renderAgentApiType(agentConfig)}
+        ${this.renderAgentModel(agentConfig)}
+        <div class="divider"></div>
+        ${this.renderDeleteAgentButton(agentConfig)}
+      </div>
+    `;
+  }
+
+  private renderTestPromptButton(
+    agentConfig: AgentPersonaConfig,
+    promptConfig: AgentChatPromptConfig,
+  ) {
+    const onClick = async () => {
+      this.isTestButtonLoading = true;
+      await this.agentEditor.testAgentConfig(agentConfig, promptConfig);
+      this.isTestButtonLoading = false;
+    };
+
+    // TODO: Test prompt with fake chat data?
+    const response = this.agentEditor.getTestResponse(
+      agentConfig.id,
+      promptConfig.id,
+    );
+    return html`
+      <div class="field">
+        <pr-button
+          ?loading=${this.isTestButtonLoading}
+          color="secondary"
+          variant="tonal"
+          @click=${onClick}
+        >
+          Test prompt
+        </pr-button>
+        ${response.length > 0 ? html`<div>${response}</div>` : nothing}
+      </div>
+    `;
+  }
+
+  private renderDeleteAgentButton(agent: AgentPersonaConfig) {
+    const onClick = () => {
+      this.agentEditor.deleteAgentMediator(agent.id);
+    };
+
+    return html`
+      <pr-button
+        color="error"
+        variant="outlined"
+        @click=${onClick}
+        ?disabled=${!this.experimentEditor.canEditStages}
+      >
+        Delete agent mediator
+      </pr-button>
+    `;
+  }
+
+  private renderAgentPrivateName(agent: AgentPersonaConfig) {
     const updateName = (e: InputEvent) => {
       const name = (e.target as HTMLTextAreaElement).value;
-      this.agentEditor.updateAgentMediatorName(agent.id, name);
+      this.agentEditor.updateAgentMediatorPrivateName(agent.id, name);
     };
 
     return html`
       <pr-textarea
-        label="Name"
-        placeholder="Display name for agent"
+        label="Private agent name (viewable to experimenters only)*"
+        placeholder="E.g., Gemini Pro Agent"
         variant="outlined"
         .value=${agent.name}
+        class=${agent.name.length === 0 ? 'required' : ''}
         ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updateName}
       >
@@ -66,7 +279,74 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderAgentModel(agent: AgentMediatorConfig) {
+  private renderAgentName(agent: AgentPersonaConfig) {
+    const updateName = (e: InputEvent) => {
+      const name = (e.target as HTMLTextAreaElement).value;
+      this.agentEditor.updateAgentMediatorProfile(agent.id, {name});
+    };
+
+    return html`
+      <pr-textarea
+        label="Name"
+        placeholder="Display name for agent"
+        variant="outlined"
+        .value=${agent.defaultProfile.name}
+        ?disabled=${!this.experimentEditor.canEditStages}
+        @input=${updateName}
+      >
+      </pr-textarea>
+    `;
+  }
+
+  private renderAgentApiType(agentConfig: AgentPersonaConfig) {
+    return html`
+      <div class="section">
+        <div class="field-title">LLM API</div>
+        <div class="action-buttons">
+          ${this.renderApiTypeButton(
+            agentConfig,
+            'Gemini',
+            ApiKeyType.GEMINI_API_KEY,
+          )}
+          ${this.renderApiTypeButton(
+            agentConfig,
+            'OpenAI or compatible API',
+            ApiKeyType.OPENAI_API_KEY,
+          )}
+          ${this.renderApiTypeButton(
+            agentConfig,
+            'Ollama Server',
+            ApiKeyType.OLLAMA_CUSTOM_URL,
+          )}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderApiTypeButton(
+    agentConfig: AgentPersonaConfig,
+    apiName: string,
+    apiType: ApiKeyType,
+  ) {
+    const updateAgentAPI = () => {
+      this.agentEditor.updateAgentMediatorModelSettings(agentConfig.id, {
+        apiType,
+      });
+    };
+
+    const isActive = apiType === agentConfig.defaultModelSettings.apiType;
+    return html`
+      <pr-button
+        color="${isActive ? 'primary' : 'neutral'}"
+        variant=${isActive ? 'tonal' : 'default'}
+        @click=${updateAgentAPI}
+      >
+        ${apiName}
+      </pr-button>
+    `;
+  }
+
+  private renderAgentModel(agent: AgentPersonaConfig) {
     const updateModel = (e: InputEvent) => {
       const modelName = (e.target as HTMLTextAreaElement).value;
       this.agentEditor.updateAgentMediatorModelSettings(agent.id, {modelName});
@@ -77,7 +357,7 @@ export class AgentEditorComponent extends MobxLitElement {
         label="Model"
         placeholder="Model ID"
         variant="outlined"
-        .value=${agent.modelSettings.modelName}
+        .value=${agent.defaultModelSettings.modelName}
         ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updateModel}
       >
@@ -85,10 +365,17 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderAgentPrompt(agent: AgentMediatorConfig) {
+  private renderAgentPrompt(
+    agent: AgentPersonaConfig,
+    agentPromptConfig: AgentChatPromptConfig,
+  ) {
     const updatePrompt = (e: InputEvent) => {
-      const prompt = (e.target as HTMLTextAreaElement).value;
-      this.agentEditor.updateAgentMediatorPromptConfig(agent.id, {prompt});
+      const promptContext = (e.target as HTMLTextAreaElement).value;
+      this.agentEditor.updateAgentMediatorPromptConfig(
+        agent.id,
+        agentPromptConfig.id,
+        {promptContext},
+      );
     };
 
     return html`
@@ -96,14 +383,14 @@ export class AgentEditorComponent extends MobxLitElement {
         <div class="field-title">Prompt</div>
         <div class="description">
           <b>Note:</b> Your custom prompt will be concatenated with the chat
-          history (last 10 messages) and sent to the model (i.e., chat history +
-          custom prompt => response)
+          history and sent to the model (i.e., chat history + custom prompt =>
+          response)
         </div>
         <pr-textarea
           placeholder="Custom prompt for agent"
           variant="outlined"
-          .value=${agent.promptConfig.prompt}
-          ?disabled=${!this.experimentEditor.canEditStages}
+          .value=${agentPromptConfig.promptContext}
+          ?disabled=${!this.experimentEditor.isCreator}
           @input=${updatePrompt}
         >
         </pr-textarea>
@@ -111,11 +398,11 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderAvatars(agent: AgentMediatorConfig) {
+  private renderAvatars(agent: AgentPersonaConfig) {
     const handleAvatarClick = (e: Event) => {
       const value = Number((e.target as HTMLInputElement).value);
       const avatar = LLM_AGENT_AVATARS[value];
-      this.agentEditor.updateAgentMediatorAvatar(agent.id, avatar);
+      this.agentEditor.updateAgentMediatorProfile(agent.id, {avatar});
     };
 
     const renderAvatarRadio = (emoji: string, index: number) => {
@@ -126,7 +413,7 @@ export class AgentEditorComponent extends MobxLitElement {
             name="${agent.id}-avatar"
             value=${index}
             aria-label=${emoji}
-            ?checked=${agent.avatar === emoji}
+            ?checked=${agent.defaultProfile.avatar === emoji}
             ?disabled=${!this.experimentEditor.canEditStages}
             @change=${handleAvatarClick}
           >
@@ -153,17 +440,22 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderAgentWordsPerMinute(agent: AgentMediatorConfig) {
+  private renderAgentWordsPerMinute(
+    agent: AgentPersonaConfig,
+    agentPromptConfig: AgentChatPromptConfig,
+  ) {
     const updateWordsPerMinute = (e: InputEvent) => {
       const wordsPerMinute = Number((e.target as HTMLInputElement).value);
       if (!isNaN(wordsPerMinute)) {
-        this.agentEditor.updateAgentMediatorModelSettings(agent.id, {
-          wordsPerMinute,
-        });
+        this.agentEditor.updateAgentMediatorChatSettings(
+          agent.id,
+          agentPromptConfig.id,
+          {wordsPerMinute},
+        );
       }
     };
 
-    const currentWPM = agent.modelSettings.wordsPerMinute;
+    const currentWPM = agentPromptConfig.chatSettings.wordsPerMinute;
     return html`
       <div class="field">
         <div class="field-title">Words per minute</div>
@@ -173,7 +465,7 @@ export class AgentEditorComponent extends MobxLitElement {
         </div>
         <div class="number-input">
           <input
-            .disabled=${!this.experimentEditor.canEditStages}
+            .disabled=${!this.experimentEditor.isCreator}
             type="number"
             min="1"
             max="1000"
@@ -190,38 +482,53 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderAgentSamplingParameters(agent: AgentMediatorConfig) {
+  private renderAgentSamplingParameters(
+    agent: AgentPersonaConfig,
+    agentPromptConfig: AgentChatPromptConfig,
+  ) {
+    const generationConfig = agentPromptConfig.generationConfig;
+
     const updateTemperature = (e: InputEvent) => {
       const temperature = Number((e.target as HTMLInputElement).value);
       if (!isNaN(temperature)) {
-        this.agentEditor.updateAgentMediatorModelSettings(agent.id, {
-          temperature,
-        });
+        this.agentEditor.updateAgentMediatorGenerationConfig(
+          agent.id,
+          agentPromptConfig.id,
+          {temperature},
+        );
       }
     };
 
     const updateTopP = (e: InputEvent) => {
       const topP = Number((e.target as HTMLInputElement).value);
       if (!isNaN(topP)) {
-        this.agentEditor.updateAgentMediatorModelSettings(agent.id, {topP});
+        this.agentEditor.updateAgentMediatorGenerationConfig(
+          agent.id,
+          agentPromptConfig.id,
+          {topP},
+        );
       }
     };
 
     const updateFrequencyPenalty = (e: InputEvent) => {
       const frequencyPenalty = Number((e.target as HTMLInputElement).value);
       if (!isNaN(frequencyPenalty)) {
-        this.agentEditor.updateAgentMediatorModelSettings(agent.id, {
-          frequencyPenalty,
-        });
+        this.agentEditor.updateAgentMediatorGenerationConfig(
+          agent.id,
+          agentPromptConfig.id,
+          {frequencyPenalty},
+        );
       }
     };
 
     const updatePresencePenalty = (e: InputEvent) => {
       const presencePenalty = Number((e.target as HTMLInputElement).value);
       if (!isNaN(presencePenalty)) {
-        this.agentEditor.updateAgentMediatorModelSettings(agent.id, {
-          presencePenalty,
-        });
+        this.agentEditor.updateAgentMediatorGenerationConfig(
+          agent.id,
+          agentPromptConfig.id,
+          {presencePenalty},
+        );
       }
     };
 
@@ -241,12 +548,12 @@ export class AgentEditorComponent extends MobxLitElement {
           </div>
           <div class="number-input">
             <input
-              .disabled=${!this.experimentEditor.canEditStages}
+              .disabled=${!this.experimentEditor.isCreator}
               type="number"
               min="0.0"
               max="1.0"
               step="0.1"
-              .value=${agent.modelSettings.temperature}
+              .value=${generationConfig.temperature}
               @input=${updateTemperature}
             />
           </div>
@@ -260,12 +567,12 @@ export class AgentEditorComponent extends MobxLitElement {
           </div>
           <div class="number-input">
             <input
-              .disabled=${!this.experimentEditor.canEditStages}
+              .disabled=${!this.experimentEditor.isCreator}
               type="number"
               min="0.0"
               max="1.0"
               step="0.1"
-              .value=${agent.modelSettings.topP}
+              .value=${generationConfig.topP}
               @input=${updateTopP}
             />
           </div>
@@ -278,12 +585,12 @@ export class AgentEditorComponent extends MobxLitElement {
           </div>
           <div class="number-input">
             <input
-              .disabled=${!this.experimentEditor.canEditStages}
+              .disabled=${!this.experimentEditor.isCreator}
               type="number"
               min="0.0"
               max="2.0"
               step="0.1"
-              .value=${agent.modelSettings.frequencyPenalty}
+              .value=${generationConfig.frequencyPenalty}
               @input=${updateFrequencyPenalty}
             />
           </div>
@@ -296,12 +603,12 @@ export class AgentEditorComponent extends MobxLitElement {
           </div>
           <div class="number-input">
             <input
-              .disabled=${!this.experimentEditor.canEditStages}
+              .disabled=${!this.experimentEditor.isCreator}
               type="number"
               min="0.0"
               max="2.0"
               step="0.1"
-              .value=${agent.modelSettings.presencePenalty}
+              .value=${generationConfig.presencePenalty}
               @input=${updatePresencePenalty}
             />
           </div>
@@ -310,10 +617,18 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderAgentCustomRequestBodyFields(agent: AgentMediatorConfig) {
+  private renderAgentCustomRequestBodyFields(
+    agent: AgentPersonaConfig,
+    agentPromptConfig: AgentChatPromptConfig,
+  ) {
     const addField = () => {
-      this.agentEditor.addAgentMediatorCustomRequestBodyField(agent.id);
+      this.agentEditor.addAgentMediatorCustomRequestBodyField(
+        agent.id,
+        agentPromptConfig.id,
+      );
     };
+
+    const generationConfig = agentPromptConfig.generationConfig;
 
     return html`
       <div class="section">
@@ -321,8 +636,13 @@ export class AgentEditorComponent extends MobxLitElement {
           <div class="section-title">Custom request body fields</div>
           <div class="description">Add custom fields to the request body.</div>
         </div>
-        ${agent.modelSettings.customRequestBodyFields.map((field, fieldIndex) =>
-          this.renderAgentCustomRequestBodyField(agent, field, fieldIndex),
+        ${generationConfig.customRequestBodyFields.map((field, fieldIndex) =>
+          this.renderAgentCustomRequestBodyField(
+            agent,
+            agentPromptConfig,
+            field,
+            fieldIndex,
+          ),
         )}
         <pr-button @click=${addField}>Add field</pr-button>
       </div>
@@ -330,7 +650,8 @@ export class AgentEditorComponent extends MobxLitElement {
   }
 
   private renderAgentCustomRequestBodyField(
-    agent: AgentMediatorConfig,
+    agent: AgentPersonaConfig,
+    agentPromptConfig: AgentChatPromptConfig,
     field: {name: string; value: string},
     fieldIndex: number,
   ) {
@@ -338,6 +659,7 @@ export class AgentEditorComponent extends MobxLitElement {
       const name = (e.target as HTMLTextAreaElement).value;
       this.agentEditor.updateAgentMediatorCustomRequestBodyField(
         agent.id,
+        agentPromptConfig.id,
         fieldIndex,
         {name},
       );
@@ -347,6 +669,7 @@ export class AgentEditorComponent extends MobxLitElement {
       const value = (e.target as HTMLTextAreaElement).value;
       this.agentEditor.updateAgentMediatorCustomRequestBodyField(
         agent.id,
+        agentPromptConfig.id,
         fieldIndex,
         {value},
       );
@@ -355,35 +678,132 @@ export class AgentEditorComponent extends MobxLitElement {
     const deleteField = () => {
       this.agentEditor.deleteAgentMediatorCustomRequestBodyField(
         agent.id,
+        agentPromptConfig.id,
         fieldIndex,
       );
     };
     return html`
-                 <div class="name-value-input">
-           <pr-textarea
-             label="Field name"
-             variant="outlined"
-             .value=${field.name}
-             @input=${updateName}
-           >
-           </pr-textarea>
-           <pr-textarea
-             label="Field value"
-             variant="outlined"
-             .value=${field.value}
-             @input=${updateValue}
-           >
-           </pr-textarea>
-           <pr-icon-button
-              icon="close"
-              color="neutral"
-              padding="small"
-              variant="default"
-              ?disabled=${!this.experimentEditor.canEditStages}
-              @click=${deleteField}
-           >
-         </div>
-      `;
+      <div class="name-value-input">
+         <pr-textarea
+           label="Field name"
+           variant="outlined"
+           .value=${field.name}
+           @input=${updateName}
+         >
+         </pr-textarea>
+         <pr-textarea
+           label="Field value"
+           variant="outlined"
+           .value=${field.value}
+           @input=${updateValue}
+         >
+         </pr-textarea>
+         <pr-icon-button
+            icon="close"
+            color="neutral"
+            padding="small"
+            variant="default"
+            ?disabled=${!this.experimentEditor.isCreator}
+            @click=${deleteField}
+         >
+       </div>
+    `;
+  }
+
+  // TODO(mkbehr): Update to match new structured output setup
+  private renderAgentResponseConfig(
+    agent: AgentPersonaConfig,
+    agentPromptConfig: AgentChatPromptConfig,
+  ) {
+    const config = agentPromptConfig.responseConfig;
+    const updateConfig = (responseConfig: Partial<AgentResponseConfig>) => {
+      this.agentEditor.updateAgentMediatorResponseConfig(
+        agent.id,
+        agentPromptConfig.id,
+        responseConfig,
+      );
+    };
+    const updateFormattingInstructions = (e: InputEvent) => {
+      const formattingInstructions = (e.target as HTMLTextAreaElement).value;
+      updateConfig({formattingInstructions});
+    };
+    const updateJSON = () => {
+      updateConfig({
+        isJSON: !config.isJSON,
+        formattingInstructions: config.isJSON
+          ? DEFAULT_STRING_FORMATTING_INSTRUCTIONS
+          : DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
+      });
+    };
+    const updateMessageField = (e: InputEvent) => {
+      const messageField = (e.target as HTMLTextAreaElement).value;
+      updateConfig({messageField});
+    };
+    const updateExplanationField = (e: InputEvent) => {
+      const explanationField = (e.target as HTMLTextAreaElement).value;
+      updateConfig({explanationField});
+    };
+
+    return html`
+      <div class="checkbox-wrapper">
+        <md-checkbox
+          touch-target="wrapper"
+          ?checked=${config.isJSON}
+          ?disabled=${!this.experimentEditor.isCreator}
+          @click=${updateJSON}
+        >
+        </md-checkbox>
+        <div>Parse agent response as JSON</div>
+      </div>
+      <div class="description">
+        If JSON parsing enabled: Make sure to include appropriate
+        instructions/examples in your prompt to avoid parsing errors (if the
+        specified message field is non-empty, its contents will be turned into a
+        chat message). If disabled: non-empty responses will be turned into
+        messages.
+      </div>
+      <div class="field">
+        <pr-textarea
+          label="Formatting instructions and examples"
+          placeholder="Instructions and examples for formatting the agent response"
+          variant="outlined"
+          .value=${config.formattingInstructions}
+          ?disabled=${!this.experimentEditor.isCreator}
+          @input=${updateFormattingInstructions}
+        >
+        </pr-textarea>
+      </div>
+      ${!config.isJSON
+        ? nothing
+        : html`
+            <div class="field">
+              <pr-textarea
+                label="JSON field to extract chat message from"
+                placeholder="JSON field to extract chat message from"
+                variant="outlined"
+                .value=${config.messageField}
+                ?disabled=${!this.experimentEditor.isCreator}
+                @input=${updateMessageField}
+              >
+              </pr-textarea>
+            </div>
+          `}
+      ${!config.isJSON
+        ? nothing
+        : html`
+            <div class="field">
+              <pr-textarea
+                label="JSON field to extract debugging explanation from"
+                placeholder="JSON field to extract debugging explanation from"
+                variant="outlined"
+                .value=${config.explanationField}
+                ?disabled=${!this.experimentEditor.isCreator}
+                @input=${updateExplanationField}
+              >
+              </pr-textarea>
+            </div>
+          `}
+    `;
   }
 }
 

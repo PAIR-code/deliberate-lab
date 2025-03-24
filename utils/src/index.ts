@@ -22,6 +22,10 @@ export * from './data';
 export * from './cohort';
 export * from './cohort.validation';
 
+// Mediator
+export * from './mediator';
+export * from './mediator.validation';
+
 // Participant
 export * from './participant';
 export * from './participant.validation';
@@ -35,6 +39,7 @@ export * from './agent.validation';
 export * from './stages/stage';
 export * from './stages/stage.validation';
 export * from './stages/chat_stage';
+export * from './stages/chat_stage.prompts';
 export * from './stages/chat_stage.validation';
 export * from './stages/chip_stage';
 export * from './stages/chip_stage.validation';

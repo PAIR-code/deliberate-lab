@@ -16,6 +16,8 @@ export * from './alert.endpoints';
 export * from './agent.endpoints';
 export * from './agent.utils';
 
+export * from './mediator.endpoints';
+
 export * from './stages/chat.endpoints';
 export * from './stages/chat.triggers';
 export * from './stages/chat.utils';

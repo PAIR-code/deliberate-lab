@@ -1,3 +1,8 @@
+import '../../pair-components/button';
+import '../../pair-components/icon';
+import '../../pair-components/icon_button';
+import '../../pair-components/tooltip';
+import '../experimenter/experimenter_data_editor';
 import '../stages/base_stage_editor';
 import '../stages/chat_editor';
 import '../stages/ranking_editor';
@@ -7,10 +12,6 @@ import '../stages/profile_stage_editor';
 import '../stages/reveal_editor';
 import '../stages/survey_editor';
 import '../stages/survey_per_participant_editor';
-import '../../pair-components/button';
-import '../../pair-components/icon';
-import '../../pair-components/icon_button';
-import '../../pair-components/tooltip';
 import '../stages/tos_editor';
 import '../stages/transfer_editor';
 import './agent_editor';
@@ -29,17 +30,13 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {Pages, RouterService} from '../../services/router.service';
 
-import {
-  StageConfig,
-  StageKind,
-  generateId,
-  createAgentMediatorConfig,
-} from '@deliberation-lab/utils';
+import {StageConfig, StageKind, generateId} from '@deliberation-lab/utils';
 
 import {styles} from './experiment_builder.scss';
 
 enum PanelView {
   AGENTS = 'agents',
+  API_KEY = 'api_key',
   DEFAULT = 'default',
   STAGES = 'stages',
 }
@@ -56,13 +53,12 @@ export class ExperimentBuilder extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   @state() panelView: PanelView = PanelView.DEFAULT;
-  @state() testAgentConfigResponse = '';
 
   override render() {
     return html`
       ${this.renderNavPanel()} ${this.renderExperimentConfigBuilder()}
-      ${this.renderAgentBuilder()} ${this.renderStageBuilder()}
-      ${this.renderStageBuilderDialog()}
+      ${this.renderAgentBuilder()} ${this.renderExperimenterSettings()}
+      ${this.renderStageBuilder()} ${this.renderStageBuilderDialog()}
     `;
   }
 
@@ -110,6 +106,18 @@ export class ExperimentBuilder extends MobxLitElement {
             >
             </pr-icon-button>
           </pr-tooltip>
+          <pr-tooltip text="Experimenter settings" position="RIGHT_END">
+            <pr-icon-button
+              color="secondary"
+              icon="key"
+              size="medium"
+              variant=${isSelected(PanelView.API_KEY) ? 'tonal' : 'default'}
+              @click=${() => {
+                this.panelView = PanelView.API_KEY;
+              }}
+            >
+            </pr-icon-button>
+          </pr-tooltip>
         </div>
         ${this.renderPanelView()}
       </div>
@@ -143,26 +151,57 @@ export class ExperimentBuilder extends MobxLitElement {
         </div>
       `;
     }
-    if (this.panelView === PanelView.AGENTS) {
+    if (this.panelView === PanelView.API_KEY) {
       return html`
         <div class="panel-view">
-          <div class="banner warning">
-            <p>
-              For testing only! Settings on this page do not yet connect to the
-              saved experiment.
-            </p>
+          <div class="top">
+            <div class="panel-view-header">Experimenter settings</div>
+            <div>
+              ⚠️ Note that experimenter API settings are shared across all
+              experiments!
+            </div>
           </div>
+        </div>
+      `;
+    }
+    if (this.panelView === PanelView.AGENTS) {
+      // TODO: Refactor agent nav to separate component
+      return html`
+        <div class="panel-view">
           <div class="top">
             <div class="panel-view-header">Agents</div>
             <pr-button
-              @click=${async () => {
-                this.testAgentConfigResponse =
-                  await this.experimentManager.testAgentConfig();
+              color="tertiary"
+              variant="tonal"
+              @click=${() => {
+                this.agentEditor.addAgentMediator();
               }}
             >
-              Test agent mediator
+              Add agent mediator
             </pr-button>
-            <div>${this.testAgentConfigResponse}</div>
+            ${this.agentEditor.agentMediators.map(
+              (mediator) => html`
+                <div
+                  class="agent-item ${this.agentEditor
+                    .currentAgentMediatorId === mediator.id
+                    ? 'current'
+                    : ''}"
+                  @click=${() => {
+                    this.agentEditor.setCurrentAgentMediator(mediator.id);
+                  }}
+                >
+                  <div>
+                    ${mediator.name.length > 0
+                      ? mediator.name
+                      : mediator.defaultProfile.name}
+                  </div>
+                  <div class="subtitle">
+                    ${mediator.defaultModelSettings.modelName}
+                  </div>
+                  <div class="subtitle">${mediator.id}</div>
+                </div>
+              `,
+            )}
           </div>
         </div>
       `;
@@ -226,12 +265,25 @@ export class ExperimentBuilder extends MobxLitElement {
     `;
   }
 
+  private renderExperimenterSettings() {
+    if (this.panelView !== PanelView.API_KEY) {
+      return nothing;
+    }
+    return html`
+      <div class="experiment-builder">
+        <div class="content">
+          <experimenter-data-editor></experimenter-data-editor>
+        </div>
+      </div>
+    `;
+  }
+
   private renderAgentBuilder() {
     if (this.panelView !== PanelView.AGENTS) {
       return nothing;
     }
 
-    const agent = this.agentEditor.getAgentMediator('test');
+    const agent = this.agentEditor.currentAgentMediator;
 
     return html`
       <div class="experiment-builder">

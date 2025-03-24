@@ -1,6 +1,6 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -28,22 +28,6 @@
   @include typescale.label-small;
   color: var(--md-sys-color-outline);
   font-style: italic;
-}
-
-.notification {
-  @include typescale.label-small;
-  background: var(--md-sys-color-surface-container);
-  border-radius: common.$spacing-medium;
-  color: var(--md-sys-color-on-surface-container);
-  padding: common.$spacing-small common.$spacing-medium;
-}
-
-.warning {
-  @include typescale.label-small;
-  background: var(--md-sys-color-error-container);
-  border-radius: common.$spacing-medium;
-  color: var(--md-sys-color-on-error-container);
-  padding: common.$spacing-small common.$spacing-medium;
 }
 
 .header {

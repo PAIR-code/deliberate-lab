@@ -25,9 +25,9 @@ import {
   SetSalespersonResponseData,
   SimpleResponse,
   SuccessResponse,
-  UpdateChatAgentsData,
   UpdateChatStageParticipantAnswerData,
   UpdateCohortMetadataData,
+  UpdateMediatorStatusData,
   UpdateParticipantAcceptedTOSData,
   UpdateParticipantFailureData,
   UpdateParticipantProfileData,
@@ -49,6 +49,18 @@ export const writeExperimentCallable = async (
   const {data} = await httpsCallable<ExperimentCreationData, CreationResponse>(
     functions,
     'writeExperiment',
+  )(experiment);
+  return data;
+};
+
+/** Generic endpoint to update experiments or experiment templates */
+export const updateExperimentCallable = async (
+  functions: Functions,
+  experiment: ExperimentCreationData,
+) => {
+  const {data} = await httpsCallable<ExperimentCreationData, SuccessResponse>(
+    functions,
+    'updateExperiment',
   )(experiment);
   return data;
 };
@@ -293,18 +305,6 @@ export const updateChatStageParticipantAnswerCallable = async (
   return data;
 };
 
-/** Generic endpoint to update chat stage agents */
-export const updateChatAgentsCallable = async (
-  functions: Functions,
-  config: UpdateChatAgentsData,
-) => {
-  const {data} = await httpsCallable<UpdateChatAgentsData, SuccessResponse>(
-    functions,
-    'updateChatAgents',
-  )(config);
-  return data;
-};
-
 /** Generic endpoint to update survey stage participant answers */
 export const updateSurveyStageParticipantAnswerCallable = async (
   functions: Functions,
@@ -436,6 +436,18 @@ export const setSalespersonResponseCallable = async (
   >(
     functions,
     'setSalespersonResponse',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for updating MediatorProfile status. */
+export const updateMediatorStatusCallable = async (
+  functions: Functions,
+  config: UpdateMediatorStatusData,
+) => {
+  const {data} = await httpsCallable<UpdateMediatorStatusData, SuccessResponse>(
+    functions,
+    'updateMediatorStatus',
   )(config);
   return data;
 };

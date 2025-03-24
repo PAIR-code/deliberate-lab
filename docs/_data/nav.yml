@@ -4,10 +4,10 @@
     url: /researchers/getting-started
   - title: Create an experiment
     url: /researchers/create-experiment
-  - title: Edit experiments and cohorts
-    url: /researchers/edit-experiment
-  - title: Run experiment cohorts
+  - title: Run an experiment
     url: /researchers/run-experiment
+  - title: Add LLM mediators to chat
+    url: /researchers/add-mediator
   - title: Add Prolific integration
     url: /researchers/prolific
 - title: Developers
@@ -18,3 +18,8 @@
     url: /developers/platform-design
   - title: Deploying
     url: /developers/deploy
+- title: Other
+  pages:
+    - title: Changelog
+      url: /changelog
+  

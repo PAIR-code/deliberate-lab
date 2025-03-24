@@ -23,7 +23,6 @@ import {ParticipantService} from '../../services/participant.service';
 import {RouterService} from '../../services/router.service';
 
 import {
-  AgentConfig,
   AlertMessage,
   AlertStatus,
   ParticipantProfileExtended,
@@ -41,7 +40,6 @@ enum PanelView {
   DEFAULT = 'default',
   PARTICIPANT_SEARCH = 'participant_search',
   MANUAL_CHAT = 'manual_chat',
-  LLM_SETTINGS = 'llm_settings',
   API_KEY = 'api_key',
   ALERTS = 'alerts',
 }
@@ -127,20 +125,6 @@ export class Panel extends MobxLitElement {
             >
             </pr-icon-button>
           </pr-tooltip>
-          <pr-tooltip text="Edit agent configs" position="RIGHT_END">
-            <pr-icon-button
-              color="secondary"
-              icon="robot_2"
-              size="medium"
-              variant=${isSelected(PanelView.LLM_SETTINGS)
-                ? 'tonal'
-                : 'default'}
-              @click=${() => {
-                this.panelView = PanelView.LLM_SETTINGS;
-              }}
-            >
-            </pr-icon-button>
-          </pr-tooltip>
           <pr-tooltip text="Alerts" position="RIGHT_END">
             <pr-icon-button
               color=${this.experimentManager.hasNewAlerts &&
@@ -194,8 +178,6 @@ export class Panel extends MobxLitElement {
         return this.renderManualChatPanel();
       case PanelView.API_KEY:
         return this.renderApiKeyPanel();
-      case PanelView.LLM_SETTINGS:
-        return this.renderAgentEditorPanel();
       case PanelView.ALERTS:
         return this.renderAlertPanel();
       default:
@@ -458,133 +440,6 @@ export class Panel extends MobxLitElement {
         <div class="top">
           <div class="header">Experimenter settings</div>
           <experimenter-data-editor></experimenter-data-editor>
-        </div>
-      </div>
-    `;
-  }
-
-  private renderAgentEditorPanel() {
-    const stageId = this.participantService.currentStageViewId ?? '';
-    const agents = this.agentEditor.getAgents(stageId);
-    return html`
-      <div class="main">
-        <div class="top">
-          <div class="header">Agent config</div>
-          ${agents.length === 0
-            ? html`<div>No agents configured in the current stage</div>`
-            : nothing}
-          ${agents.map((agent, index) =>
-            this.renderAgentEditor(stageId, agent, index),
-          )}
-        </div>
-      </div>
-    `;
-  }
-
-  // TODO: Refactor into separate component
-  private renderAgentEditor(
-    stageId: string,
-    agent: AgentConfig,
-    index: number,
-  ) {
-    const updatePrompt = (e: InputEvent) => {
-      const prompt = (e.target as HTMLTextAreaElement).value;
-      this.agentEditor.updateAgent(stageId, {...agent, prompt}, index);
-    };
-    const updateFormattingInstructions = (e: InputEvent) => {
-      const instructions = (e.target as HTMLTextAreaElement).value;
-      const responseConfig = {
-        ...agent.responseConfig,
-        formattingInstructions: instructions,
-      };
-      this.agentEditor.updateAgent(stageId, {...agent, responseConfig}, index);
-    };
-
-    const updateJSON = () => {
-      const responseConfig = {
-        ...agent.responseConfig,
-        isJSON: !agent.responseConfig.isJSON,
-        formattingInstructions: agent.responseConfig.isJSON
-          ? DEFAULT_STRING_FORMATTING_INSTRUCTIONS
-          : DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
-      };
-      this.agentEditor.updateAgent(stageId, {...agent, responseConfig}, index);
-    };
-
-    const updateWPM = (e: InputEvent) => {
-      const wpm = parseInt((e.target as HTMLInputElement).value, 10);
-      if (!isNaN(wpm)) {
-        this.agentEditor.updateAgent(
-          stageId,
-          {...agent, wordsPerMinute: wpm},
-          index,
-        );
-      }
-    };
-
-    return html`
-      <div class="agent">
-        <div class="agent-title">#${index + 1} - ${agent.name}</div>
-        <div class="debug">${JSON.stringify(agent.responseConfig)}</div>
-        Prompt:
-        <div class="prompt-box">
-          <pr-textarea
-            placeholder="Custom prompt for agent"
-            .value=${agent.prompt}
-            @input=${updatePrompt}
-          >
-          </pr-textarea>
-        </div>
-        Formatting instructions and examples:
-        <div class="prompt-box">
-          <pr-textarea
-            placeholder="Custom formatting instructions for agent"
-            .value=${agent.responseConfig.formattingInstructions}
-            @input=${updateFormattingInstructions}
-          >
-          </pr-textarea>
-        </div>
-        <div>
-          Words per minute (WPM):
-          <div class="wpm-box">
-            <input
-              type="number"
-              .value=${agent.wordsPerMinute ?? ''}
-              placeholder="Enter WPM"
-              @input=${updateWPM}
-            />
-          </div>
-        </div>
-        <div>
-          <div class="action-bar">
-            <div class="checkbox-wrapper">
-              <md-checkbox
-                touch-target="wrapper"
-                ?checked=${agent.responseConfig.isJSON}
-                @click=${updateJSON}
-              >
-              </md-checkbox>
-              <div>Parse as JSON</div>
-            </div>
-            <pr-button
-              color="secondary"
-              padding="small"
-              size="small"
-              variant="tonal"
-              ?loading=${this.isLoading}
-              @click=${async () => {
-                this.isLoading = true;
-                await this.agentEditor.saveChatAgents(stageId);
-                this.isLoading = false;
-              }}
-            >
-              Update prompt
-            </pr-button>
-          </div>
-        </div>
-        <div class="debug error">
-          Warning: Saving edits will update the agent across all experiment
-          cohorts
         </div>
       </div>
     `;

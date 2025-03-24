@@ -5,7 +5,7 @@ layout: default
 
 Welcome to Deliberate Lab! To get started, you should have a website
 link to the platform. If you're using the Google-hosted platform,
-[go here](https://deliberate-lab.appspot.com/). 
+[go here](https://deliberate-lab.appspot.com/).
 
 > 🎥 [View video tutorials for getting started](https://www.youtube.com/playlist?list=PLpC76pxkGLrBb5R7NViRloBzUkn8UQbr0)
 
@@ -44,6 +44,9 @@ are covered later in this tutorial.)
 Navigate to your provided website link and use the "Experimenter login"
 button to log in via Google account.
 
+> If you're using the Google-hosted platform,
+[go here](https://deliberate-lab.appspot.com/).
+
 Anyone with a Google account can "log in" to the platform, but researchers
 must be on an "allowlist" (managed in Firebase datastore) to view, create, and
 manage experiments.
@@ -53,15 +56,14 @@ error, you have not been added to the allowlist and should contact
 the person hosting the platform (at the website link you were provided).
 
 Once you're logged in, you should be able to see a home page with
-both publicly available experiments and your private experiments.
+both your experiments and any shared public experiments.
 
-> Tip: If you plan to set up LLM mediators, add your own
-[Gemini API key](https://ai.google.dev/gemini-api/docs/api-key)
+> Tip: If you plan to set up LLM mediators, add relevant API keys
+(e.g., [Gemini API key](https://ai.google.dev/gemini-api/docs/api-key))
 on the Settings page now. Your key must be present in order to effectively
-run LLM mediators during experiments. We store it in a Firebase document
-that only you (and the backend function making the LLM mediator calls
-for your experiment) can access. **Note:** LLM calls always use the API key
-of the person who created the experiment.
+run LLM agents during experiments. We store it in a Firebase document
+that only you (and the backend function making the LLM calls
+for your experiment) can access.
 
 ## Next steps
 Once you have access to the platform, you can start creating and running

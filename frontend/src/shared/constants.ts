@@ -1,3 +1,6 @@
+/** Documentation URL. */
+export const DOCUMENTATION_URL = 'https://pair-code.github.io/deliberate-lab/';
+
 /** Prolific URL prefix. */
 export const PROLIFIC_COMPLETION_URL_PREFIX =
   'https://app.prolific.com/submissions/complete?cc=';

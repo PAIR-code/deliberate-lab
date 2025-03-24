@@ -119,26 +119,17 @@ article {
 }
 
 a.nav-link {
-  cursor: pointer;
   text-decoration: none;
+  cursor: pointer;
 }
 
 a.nav-link:focus,
 a.nav-link:hover {
-  color: var(--md-sys-color-blue);
-}
-
-.nav-item {
+  color: var(--md-sys-color-blue-light);
   cursor: pointer;
 }
 
-.nav-item:focus,
-.nav-item:hover {
-  color: var(--md-sys-color-blue-light);
-}
-
 .nav-item.active {
-  cursor: auto;
   color: var(--md-sys-color-blue);
 }
 
@@ -171,7 +162,8 @@ a {
   color: var(--md-sys-color-on-surface);
 }
 
-b {
+b,
+strong {
   font-weight: 500;
 }
 
@@ -219,4 +211,8 @@ code {
   color: var(--md-sys-color-gray);
   font-family: 'Roboto Mono';
   font-size: 0.9em;
+}
+
+.yt-wrapper {
+  aspect-ratio: 16 / 9;
 }

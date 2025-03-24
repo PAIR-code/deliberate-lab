@@ -1,15 +1,15 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
-  gap: common.$spacing-xxl;
+  gap: common.$spacing-xl;
 }
 
 .section {
   @include common.flex-column;
-  gap: common.$spacing-large;
+  gap: common.$spacing-medium;
 }
 
 .title {
@@ -33,14 +33,9 @@ pr-textarea {
   width: 100%;
 }
 
-.action-buttons {
-  @include common.flex-row;
-  flex-wrap: wrap;
-  gap: common.$spacing-xl;
-}
-
-h2 {
-  @include typescale.title-medium;
+h3 {
+  @include typescale.title-small;
+  color: var(--md-sys-color-secondary);
   margin: 0;
 }
 
@@ -51,5 +46,16 @@ a {
 .action-buttons {
   @include common.flex-row;
   flex-wrap: wrap;
-  gap: common.$spacing-xl;
+  gap: common.$spacing-medium;
+}
+
+.api-check {
+  @include common.flex-row;
+  align-items: center;
+  gap: common.$spacing-small;
+}
+
+.banner {
+  @include common.chip;
+  @include typescale.label-small;
 }
