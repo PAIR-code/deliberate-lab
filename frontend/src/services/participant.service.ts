@@ -174,10 +174,16 @@ export class ParticipantService extends Service {
   }
 
   isReadyToEndChatDiscussion(stageId: string, discussionId: string) {
-    const stageAnswer = this.answerMap[stageId];
-    if (!stageAnswer || stageAnswer.kind !== StageKind.CHAT) return false;
-
-    return stageAnswer.discussionTimestampMap[discussionId];
+    // Use public stage data as source of truth
+    // (since public stage data is used to determine current discussion ID)
+    const {completed, notCompleted} =
+      this.sp.cohortService.getParticipantsByChatDiscussionCompletion(
+        stageId,
+        discussionId,
+      );
+    return completed.find(
+      (participant) => participant.publicId === this.profile?.publicId,
+    );
   }
 
   @action setCurrentStageView(stageId: string | undefined) {
