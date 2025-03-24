@@ -10,6 +10,7 @@ import {customElement, property, state} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {AgentEditor} from '../../services/agent.editor';
 import {ExperimentEditor} from '../../services/experiment.editor';
+import {ExperimentService} from '../../services/experiment.service';
 
 import {
   AgentChatPromptConfig,
@@ -34,6 +35,7 @@ export class AgentEditorComponent extends MobxLitElement {
 
   private readonly agentEditor = core.getService(AgentEditor);
   private readonly experimentEditor = core.getService(ExperimentEditor);
+  private readonly experimentService = core.getService(ExperimentService);
 
   @property() agent: AgentPersonaConfig | undefined = undefined;
   @state() isTestButtonLoading = false;
@@ -43,6 +45,7 @@ export class AgentEditorComponent extends MobxLitElement {
       return html`
         <div class="agent-wrapper">
           <div>Select an agent to edit.</div>
+          ${this.renderOutdatedWarning()}
         </div>
       `;
     }
@@ -53,6 +56,22 @@ export class AgentEditorComponent extends MobxLitElement {
       ${this.renderAgentNav(agentConfig)}
       ${this.renderAgentContent(agentConfig)}
     `;
+  }
+
+  private renderOutdatedWarning() {
+    if (!this.experimentService.experiment) return nothing;
+
+    if (this.experimentService.experiment.versionId < 16) {
+      return html`
+        <p>
+          ⚠️ Agents saved in a previous version of Deliberate Lab may not
+          automatically load in the current version. Contact the deployment
+          owners if you would like to migrate your previously saved agents to
+          this new agents tab.
+        </p>
+      `;
+    }
+    return nothing;
   }
 
   private renderAgentNav(agentConfig: AgentPersonaConfig) {
