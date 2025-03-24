@@ -169,10 +169,12 @@ export class ExperimentManager extends Service {
     this.isEditingSettingsDialog = isEditing;
   }
 
+  // Returns true if is creator OR admin
   @computed get isCreator() {
     return (
       this.sp.authService.userEmail ===
         this.sp.experimentService.experiment?.metadata.creator ||
+      this.sp.authService.isAdmin ||
       !this.sp.experimentService.experiment
     );
   }

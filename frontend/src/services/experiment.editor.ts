@@ -79,9 +79,11 @@ export class ExperimentEditor extends Service {
     return this.sp.experimentManager.canEditExperimentStages;
   }
 
+  // Return true if creator or admin
   @computed get isCreator() {
     return (
       this.sp.authService.userEmail === this.experiment.metadata.creator ||
+      this.sp.authService.isAdmin ||
       this.experiment.metadata.creator === ''
     );
   }
