@@ -308,6 +308,7 @@ export async function selectSingleAgentChatResponse(
   experimenterData: ExperimenterData,
 ): AgentChatResponse | null {
   // Generate responses for all agents
+  // TODO: Consider agent participants too
   const agentResponses: AgentChatResponse[] = [];
   for (const mediator of mediators) {
     const response = await getAgentChatResponse(

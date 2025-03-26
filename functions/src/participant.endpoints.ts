@@ -385,6 +385,7 @@ export const acceptParticipantCheck = onCall(async (request) => {
       participant.currentStatus = ParticipantStatus.IN_PROGRESS;
     }
 
+    // TODO: Handle case where participant has completed experiment
     // TODO: Reset custom message once field exists
 
     transaction.set(document, participant);
