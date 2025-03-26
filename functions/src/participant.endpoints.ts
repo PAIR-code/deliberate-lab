@@ -36,7 +36,8 @@ import {
 // ************************************************************************* //
 // createParticipant endpoint                                                //
 //                                                                           //
-// Input structure: { experimentId, cohortId, isAnonymous }                  //
+// Input structure: { experimentId, cohortId, isAnonymous, agentConfig }     //
+// Optional: { prolificId }                                                  //
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
 export const createParticipant = onCall(async (request) => {
@@ -53,6 +54,11 @@ export const createParticipant = onCall(async (request) => {
     currentCohortId: data.cohortId,
     prolificId: data.prolificId,
   });
+
+  // If agent config is specified, add to participant config
+  if (data.agentConfig) {
+    participantConfig.agentConfig = data.agentConfig;
+  }
 
   // Define document reference
   const document = app
@@ -101,6 +107,7 @@ export const createParticipant = onCall(async (request) => {
   return {id: document.id};
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleCreateParticipantValidationErrors(data: any) {
   for (const error of Value.Errors(CreateParticipantData, data)) {
     if (isUnionError(error)) {
@@ -151,7 +158,7 @@ export const updateParticipantAcceptedTOS = onCall(async (request) => {
 // Input structure: { experimentId, participantId, stageId }                 //
 // Validation: utils/src/participant.validation.ts                           //
 // ************************************************************************* //
-// The "completedWaiting" map now tracks when the participant has
+// The "readyStages" map tracks when the participant has
 // reached each stage --> this endpoint updates whether the participant
 // is ready to begin the stage. (Waiting is now determined by whether
 // or not the stage is unlocked in CohortConfig)
@@ -283,15 +290,6 @@ export const updateParticipantToNextStage = onCall(async (request) => {
     .doc(data.experimentId)
     .collection('participants')
     .doc(privateId);
-
-  // Function to find next stage ID given experiment list of stage IDs
-  const getNextStageId = (stageId: string, stageIds: string[]) => {
-    const currentIndex = stageIds.indexOf(stageId);
-    if (currentIndex >= 0 && currentIndex < stageIds.length - 1) {
-      return stageIds[currentIndex + 1];
-    }
-    return null;
-  };
 
   let response = {currentStageId: null, endExperiment: false};
 

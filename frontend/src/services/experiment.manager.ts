@@ -22,6 +22,7 @@ import {Service} from './service';
 import JSZip from 'jszip';
 
 import {
+  DEFAULT_AGENT_MODEL_SETTINGS,
   AlertMessage,
   AlertStatus,
   AgentPersonaConfig,
@@ -35,6 +36,7 @@ import {
   MetadataConfig,
   ParticipantProfileExtended,
   ParticipantStatus,
+  ProfileAgentConfig,
   StageConfig,
   createCohortConfig,
   createExperimenterChatMessage,
@@ -584,8 +586,7 @@ export class ExperimentManager extends Service {
     return response;
   }
 
-  /** Create a participant
-   */
+  /** Create human participant. */
   async createParticipant(cohortId: string) {
     this.isWritingParticipant = true;
     let response = {};
@@ -601,6 +602,36 @@ export class ExperimentManager extends Service {
           experimentId: this.experimentId,
           cohortId,
           isAnonymous,
+        },
+      );
+    }
+    this.isWritingParticipant = false;
+    return response;
+  }
+
+  /** Create agent participant. */
+  async createAgentParticipant(cohortId: string) {
+    this.isWritingParticipant = true;
+    let response = {};
+
+    const agentConfig: ProfileAgentConfig = {
+      agentId: 'test',
+      promptContext: '',
+      modelSettings: DEFAULT_AGENT_MODEL_SETTINGS,
+    };
+
+    if (this.experimentId) {
+      const isAnonymous = requiresAnonymousProfiles(
+        this.sp.experimentService.stages,
+      );
+
+      response = await createParticipantCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId,
+          isAnonymous,
+          agentConfig,
         },
       );
     }

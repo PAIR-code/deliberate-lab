@@ -150,6 +150,11 @@ export const DEFAULT_AGENT_API_TYPE = ApiKeyType.GEMINI_API_KEY;
 
 export const DEFAULT_AGENT_API_MODEL = 'gemini-1.5-pro-latest';
 
+export const DEFAULT_AGENT_MODEL_SETTINGS: AgentModelSettings = {
+  apiType: DEFAULT_AGENT_API_TYPE,
+  modelName: DEFAULT_AGENT_API_MODEL,
+};
+
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //

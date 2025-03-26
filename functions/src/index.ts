@@ -14,6 +14,7 @@ export * from './participant.utils';
 export * from './alert.endpoints';
 
 export * from './agent.endpoints';
+export * from './agent.triggers';
 export * from './agent.utils';
 
 export * from './mediator.endpoints';
