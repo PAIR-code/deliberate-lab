@@ -12,20 +12,23 @@ import {
   ChatStageConfig,
   ChatStagePublicData,
   ExperimenterData,
+  ParticipantStatus,
   StageKind,
   awaitTypingDelay,
   createMediatorChatMessage,
+  createParticipantChatMessage,
   getTimeElapsed,
   getTypingDelayInMilliseconds,
 } from '@deliberation-lab/utils';
 import {getMediatorsInCohortStage} from '../mediator.utils';
 import {
+  selectSingleAgentParticipantChatResponse,
   getChatMessages,
   getChatMessageCount,
   getChatStage,
   getChatStagePublicData,
   hasEndedChat,
-  selectSingleAgentChatResponse,
+  selectSingleAgentMediatorChatResponse,
 } from './chat.utils';
 
 import {app} from '../app';
@@ -194,7 +197,7 @@ export const createAgentMessage = onDocumentCreated(
       );
 
       // Select one agent's response
-      const agentResponse = await selectSingleAgentChatResponse(
+      const agentResponse = await selectSingleAgentMediatorChatResponse(
         event.params.experimentId,
         mediators,
         chatMessages,
@@ -223,14 +226,151 @@ export const createAgentMessage = onDocumentCreated(
       );
 
       // Write agent mediator message to conversation
-      const mediator = agentResponse.mediator;
+      // TODO: Or write agent participant message to conversation
       const chatMessage = createMediatorChatMessage({
-        profile: {name: mediator.name, avatar: mediator.avatar, pronouns: null},
+        profile: agentResponse.profile,
         discussionId: data.discussionId,
         message: agentResponse.message,
         timestamp: Timestamp.now(),
-        senderId: mediator.id,
-        agentId: mediator.agentConfig.agentId,
+        senderId: agentResponse.profileId,
+        agentId: agentResponse.agentId,
+        explanation: agentResponse.promptConfig.responseConfig.isJSON
+          ? (agentResponse.parsed[
+              agentResponse.promptConfig.responseConfig.explanationField
+            ] ?? '')
+          : '',
+      });
+      const agentDocument = app
+        .firestore()
+        .collection('experiments')
+        .doc(event.params.experimentId)
+        .collection('cohorts')
+        .doc(event.params.cohortId)
+        .collection('publicStageData')
+        .doc(event.params.stageId)
+        .collection('chats')
+        .doc(chatMessage.id);
+
+      transaction.set(agentDocument, chatMessage);
+    });
+  },
+);
+
+/** When chat message is created, generate agent participant response. */
+export const createAgentParticipantMessage = onDocumentCreated(
+  {
+    document:
+      'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}',
+    timeoutSeconds: 60, // Maximum timeout of 1 minute for typing delay.
+  },
+  async (event) => {
+    const data = event.data?.data() as ChatMessage | undefined;
+
+    await app.firestore().runTransaction(async (transaction) => {
+      // Use experiment config to get ChatStageConfig with agents.
+      const stage = await getChatStage(
+        event.params.experimentId,
+        event.params.stageId,
+      );
+      if (!stage) {
+        return;
+      }
+
+      const publicStageData = await getChatStagePublicData(
+        event.params.experimentId,
+        event.params.cohortId,
+        event.params.stageId,
+      );
+      // Make sure the conversation hasn't ended.
+      if (!publicStageData || Boolean(publicStageData.discussionEndTimestamp))
+        return;
+
+      // Fetch experiment creator's API key.
+      const creatorId = (
+        await app
+          .firestore()
+          .collection('experiments')
+          .doc(event.params.experimentId)
+          .get()
+      ).data().metadata.creator;
+      const creatorDoc = await app
+        .firestore()
+        .collection('experimenterData')
+        .doc(creatorId)
+        .get();
+      if (!creatorDoc.exists) return;
+
+      const experimenterData = creatorDoc.data() as ExperimenterData;
+
+      // Use chats in collection to build chat history for prompt, get num chats
+      const chatMessages = await getChatMessages(
+        event.params.experimentId,
+        event.params.cohortId,
+        event.params.stageId,
+      );
+
+      // Get agent participants for current cohort and stage
+      // TODO: Create shared utils under /utils for isActiveParticipant
+      const activeStatuses = [
+        ParticipantStatus.IN_PROGRESS,
+        ParticipantStatus.SUCCESS,
+        ParticipantStatus.ATTENTION_CHECK,
+      ];
+      const activeParticipants = (
+        await app
+          .firestore()
+          .collection('experiments')
+          .doc(event.params.experimentId)
+          .collection('participants')
+          .where('currentCohortId', '==', event.params.cohortId)
+          .get()
+      ).docs
+        .map((doc) => doc.data() as ParticipantProfileExtended)
+        .filter(
+          (participant) =>
+            participant.agentConfig &&
+            activeStatuses.find(
+              (status) => status === participant.currentStatus,
+            ),
+        );
+
+      // Select one agent's response
+      const agentResponse = await selectSingleAgentParticipantChatResponse(
+        event.params.experimentId,
+        activeParticipants,
+        chatMessages,
+        stage,
+        experimenterData,
+      );
+      if (!agentResponse) return;
+
+      // Don't send a message if the conversation has moved on
+      const numChatsBeforeAgent = chatMessages.length;
+      const numChatsAfterAgent = getChatMessageCount(
+        event.params.experimentId,
+        event.params.cohortId,
+        event.params.stageId,
+      );
+      if (numChatsAfterAgent > numChatsBeforeAgent) {
+        // TODO: Write log to Firestore
+        return;
+      }
+
+      // Wait for typing delay
+      // TODO: Decrease typing delay to account for LLM API call latencies?
+      await awaitTypingDelay(
+        agentResponse.message,
+        agentResponse.promptConfig.chatSettings.wordsPerMinute,
+      );
+
+      // Write agent participant message to conversation
+      const chatMessage = createParticipantChatMessage({
+        profile: agentResponse.profile,
+        discussionId: data.discussionId,
+        message: agentResponse.message,
+        timestamp: Timestamp.now(),
+        senderId: agentResponse.profileId,
+        agentId: agentResponse.agentId,
         explanation: agentResponse.promptConfig.responseConfig.isJSON
           ? (agentResponse.parsed[
               agentResponse.promptConfig.responseConfig.explanationField
