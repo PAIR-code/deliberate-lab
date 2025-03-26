@@ -416,7 +416,10 @@ export class ExperimentManager extends Service {
           }
 
           changedDocs.forEach((doc) => {
-            const data = doc.data() as ParticipantProfileExtended;
+            const data = {
+              agentConfig: null,
+              ...doc.data(),
+            } as ParticipantProfileExtended;
             this.participantMap[doc.id] = data;
           });
 
