@@ -1,10 +1,13 @@
 import {
+  AgentModelSettings,
+  ModelGenerationConfig,
   ParticipantProfileExtended,
   ParticipantStatus,
   RankingStageConfig,
   RankingStageParticipantAnswer,
   createAgentConfig,
   createAgentParticipantRankingStagePrompt,
+  createModelGenerationConfig,
   createRankingStageParticipantAnswer,
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from '../agent.utils';
@@ -22,6 +25,11 @@ export async function getAgentParticipantRankingStageResponse(
   participant: ParticipantProfileExtended,
   stage: RankingStageConfig,
 ) {
+  // If participant is not an agent, return
+  if (!participant.agentConfig) {
+    return;
+  }
+
   // Get list of public IDs for other participants who are active in the cohort
   // (in case the agent participant is ranking participants)
   // TODO: Use shared utils to determine isActiveParticipant
@@ -51,11 +59,17 @@ export async function getAgentParticipantRankingStageResponse(
     stage,
     otherParticipants,
   );
+  // Build generation config
+  const generationConfig = createModelGenerationConfig();
 
   // Call LLM API
-  // TODO: Use participant agent
-  const agent = createAgentConfig();
-  const response = await getAgentResponse(experimenterData, prompt, agent);
+  const response = await getAgentResponse(
+    experimenterData,
+    prompt,
+    participant.agentConfig.modelSettings,
+    generationConfig,
+  );
+
   // Check console log for response
   console.log(
     'TESTING AGENT PARTICIPANT PROMPT FOR RANKING STAGE\n',
