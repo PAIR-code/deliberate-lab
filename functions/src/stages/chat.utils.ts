@@ -112,7 +112,7 @@ export async function updateCurrentDiscussionIndex(
   // TODO: Create shared utils under /utils for isActiveParticipant
   const activeStatuses = [
     ParticipantStatus.IN_PROGRESS,
-    ParticipantStatus.COMPLETED,
+    ParticipantStatus.SUCCESS,
     ParticipantStatus.ATTENTION_CHECK,
   ];
   const activeParticipants = (

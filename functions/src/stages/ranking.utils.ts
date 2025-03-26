@@ -27,7 +27,7 @@ export async function getAgentParticipantRankingStageResponse(
   // TODO: Use shared utils to determine isActiveParticipant
   const activeStatuses = [
     ParticipantStatus.IN_PROGRESS,
-    ParticipantStatus.COMPLETED,
+    ParticipantStatus.SUCCESS,
     ParticipantStatus.ATTENTION_CHECK,
   ];
 
