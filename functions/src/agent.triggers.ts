@@ -126,6 +126,7 @@ export const updateAgentParticipant = onDocumentUpdated(
             // to end chat
             break;
           default:
+            console.log(`Move to next stage (${participant.publicId})`);
             await completeStage();
             transaction.set(participantDoc, participant);
         }
