@@ -229,7 +229,7 @@ export const createAgentMessage = onDocumentCreated(
       // TODO: Or write agent participant message to conversation
       const chatMessage = createMediatorChatMessage({
         profile: agentResponse.profile,
-        discussionId: data.discussionId,
+        discussionId: publicStageData.currentDiscussionId,
         message: agentResponse.message,
         timestamp: Timestamp.now(),
         senderId: agentResponse.profileId,
@@ -366,7 +366,7 @@ export const createAgentParticipantMessage = onDocumentCreated(
       // Write agent participant message to conversation
       const chatMessage = createParticipantChatMessage({
         profile: agentResponse.profile,
-        discussionId: data.discussionId,
+        discussionId: publicStageData.currentDiscussionId,
         message: agentResponse.message,
         timestamp: Timestamp.now(),
         senderId: agentResponse.profileId,
