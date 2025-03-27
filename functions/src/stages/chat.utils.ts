@@ -1,13 +1,18 @@
 import {
   AgentChatPromptConfig,
   AgentChatResponse,
+  AgentChatSettings,
   ChatMessage,
   ChatStageConfig,
   ChatStagePublicData,
   ExperimenterData,
   MediatorStatus,
   ParticipantProfile,
+  ParticipantProfileExtended,
   ParticipantStatus,
+  StageKind,
+  createAgentChatPromptConfig,
+  createParticipantChatMessage,
   getDefaultChatPrompt,
   getTimeElapsed,
 } from '@deliberation-lab/utils';
@@ -19,7 +24,6 @@ import {onCall} from 'firebase-functions/v2/https';
 
 import {app} from '../app';
 import {getAgentResponse} from '../agent.utils';
-import {getMediatorChatPrompt} from '../mediator.utils';
 
 /** Get the chat stage configuration based on the event. */
 export async function getChatStage(
@@ -112,7 +116,7 @@ export async function updateCurrentDiscussionIndex(
   // TODO: Create shared utils under /utils for isActiveParticipant
   const activeStatuses = [
     ParticipantStatus.IN_PROGRESS,
-    ParticipantStatus.COMPLETED,
+    ParticipantStatus.SUCCESS,
     ParticipantStatus.ATTENTION_CHECK,
   ];
   const activeParticipants = (
@@ -200,55 +204,241 @@ export async function hasEndedChat(
   return false;
 }
 
-/** Queries LLM API and parses chat response for given agent. */
-export async function getAgentChatResponse(
+/** Return chat prompt that corresponds to agent. */
+export async function getAgentChatPrompt(
+  experimentId: string,
+  stageId: string,
+  agentId: string,
+): AgentChatPromptConfig | null {
+  const prompt = await app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('agents')
+    .doc(agentId)
+    .collection('chatPrompts')
+    .doc(stageId)
+    .get();
+
+  if (!prompt.exists) {
+    return null;
+  }
+  return prompt.data() as AgentChatPromptConfig;
+}
+
+/** Uses weighted sampling based on WPM to choose agent response. */
+export function selectAgentResponseByWPM(agentResponses: AgentChatResponse[]) {
+  const totalWPM = agentResponses.reduce(
+    (sum, response) =>
+      sum + (response.promptConfig.chatSettings.wordsPerMinute || 0),
+    0,
+  );
+  const cumulativeWeights: number[] = [];
+  let cumulativeSum = 0;
+  for (const response of agentResponses) {
+    const wpm = response.promptConfig.chatSettings.wordsPerMinute;
+    cumulativeSum += wpm || 0;
+    cumulativeWeights.push(cumulativeSum / totalWPM);
+  }
+  const random = Math.random();
+  const chosenIndex = cumulativeWeights.findIndex((weight) => random <= weight);
+  return agentResponses[chosenIndex];
+}
+
+/** Checks if current participant/mediator can send a chat message
+ * (based on their agent config chat settings)
+ */
+export function canSendAgentChatMessage(
+  id: string, // mediator ID or participant public ID
+  chatSettings: AgentChatSettings,
+  chatMessages: ChatMessage[], // history of chat messges
+): boolean {
+  // Return null if agent's number of chat messages exceeds maxResponses
+  const chatsByAgent = chatMessages.filter((chat) => chat.senderId === id);
+
+  if (
+    chatSettings.maxResponses !== null &&
+    chatsByAgent.length >= chatSettings.maxResponses
+  ) {
+    return false;
+  }
+  // Return null if minMessageBeforeResponding not met
+  if (chatMessages.length < chatSettings.minMessagesBeforeResponding) {
+    return false;
+  }
+  // Return null if not canSelfTriggerCalls and latest message is agent's
+  const latestMessage =
+    chatMessages.length > 0 ? chatMessages[chatMessages.length - 1] : null;
+  if (!chatSettings.canSelfTriggerCalls && latestMessage?.senderId === id) {
+    return false;
+  }
+
+  return true;
+}
+
+/** Builds prompt, checks settings, and returns parsed LLM response
+ * for agent participant.
+ */
+export async function getAgentParticipantChatResponse(
+  participant: ParticipantProfileExtended,
+  chatMessages: ChatMessage[],
+  experimentId: string,
+  stageConfig: ChatStageConfig,
+  experimenterData: ExperimenterData,
+): AgentChatResponse | null {
+  // Return null if status is not active or agent config doesn't exist
+  if (
+    participant.currentStatus !== ParticipantStatus.IN_PROGRESS ||
+    !participant.agentConfig
+  ) {
+    return null;
+  }
+
+  // Get chat prompt
+  const promptConfig =
+    (await getAgentChatPrompt(
+      experimentId,
+      stageConfig.id,
+      participant.agentConfig.agentId,
+    )) ??
+    createAgentChatPromptConfig(stageConfig.id, StageKind.CHAT, {
+      promptContext:
+        'You are a participant. Respond in a quick sentence if you would like to say something. Otherwise, do not respond.',
+    });
+
+  const chatSettings = promptConfig.chatSettings;
+  if (
+    !canSendAgentChatMessage(participant.publicId, chatSettings, chatMessages)
+  ) {
+    return null;
+  }
+
+  // Else, query API and return parsed response
+  const response = await callChatAPI(
+    participant.publicId,
+    participant,
+    participant.agentConfig,
+    chatMessages,
+    promptConfig,
+    stageConfig,
+    experimenterData,
+  );
+  if (response) {
+    console.log(
+      `\t${response.profile.name}: ${response.message} (WPM: ${chatSettings.wordsPerMinute})`,
+    );
+  }
+  return response;
+}
+
+/** Selects agent response from set of relevant agents' responses
+ *  (or null if none)
+ */
+export async function selectSingleAgentParticipantChatResponse(
+  experimentId: string,
+  participants: ParticipantProfileExtended[],
+  chatMessages: ChatMessage[],
+  stageConfig: ChatStageConfig,
+  experimenterData: ExperimenterData,
+): AgentChatResponse | null {
+  const agentResponses: AgentChatResponse[] = [];
+  // Generate responses for agent participants
+  for (const participant of participants) {
+    const response = await getAgentParticipantChatResponse(
+      participant,
+      chatMessages,
+      experimentId,
+      stageConfig,
+      experimenterData,
+    );
+    if (response) {
+      agentResponses.push(response);
+    }
+  }
+
+  // If no responses, return
+  if (agentResponses.length === 0) {
+    console.log('No agent participants wish to speak');
+    return null;
+  }
+
+  // TODO: Write logs to Firestore
+  console.log('The following participants wish to speak:');
+  agentResponses.forEach((response) => {
+    const wpm = response.promptConfig.chatSettings.wordsPerMinute;
+    console.log(
+      `\t${response.profile.name}: ${response.message} (WPM: ${wpm})`,
+    );
+  });
+
+  // Weighted sampling based on wordsPerMinute (WPM)
+  const selectedResponse = selectAgentResponseByWPM(agentResponses);
+
+  // TODO: Write log to Firestore
+  console.log(
+    `${selectedResponse?.profile.name} has been chosen out of ${agentResponses.length} agent participants with responses.`,
+  );
+  return selectedResponse ?? null;
+}
+
+/** Builds prompt, checks settings, and returns parsed LLM response
+ * for agent mediator.
+ */
+export async function getAgentMediatorChatResponse(
   mediator: MediatorProfile,
   chatMessages: ChatMessage[],
   experimentId: string,
   stageConfig: ChatStageConfig,
   experimenterData: ExperimenterData,
 ): AgentChatResponse | null {
-  // Return null if mediator status is not active
-  if (mediator.currentStatus !== MediatorStatus.ACTIVE) {
+  // Return null if mediator status is not active or agent config doesn't exist
+  if (
+    mediator.currentStatus !== MediatorStatus.ACTIVE ||
+    !mediator.agentConfig
+  ) {
     return null;
   }
 
   // Get chat prompt
-  const promptConfig = await getMediatorChatPrompt(
+  const promptConfig = await getAgentChatPrompt(
     experimentId,
     stageConfig.id,
-    mediator,
+    mediator.agentConfig.agentId,
   );
+  if (!promptConfig) {
+    return null;
+  }
 
   const chatSettings = promptConfig.chatSettings;
-  // Return null if agent's number of chat messages exceeds maxResponses
-  const chatsByMediator = chatMessages.filter(
-    (chat) => chat.senderId === mediator.id,
+  if (!canSendAgentChatMessage(mediator.id, chatSettings, chatMessages)) {
+    return null;
+  }
+
+  // Else, query API and return parsed response
+  return await callChatAPI(
+    mediator.id,
+    mediator,
+    mediator.agentConfig,
+    chatMessages,
+    promptConfig,
+    stageConfig,
+    experimenterData,
   );
+}
 
-  if (
-    chatSettings.maxResponses !== null &&
-    chatsByMediator.length >= chatSettings.maxResponses
-  ) {
-    return null;
-  }
-  // Return null if minMessageBeforeResponding not met
-  if (chatMessages.length < chatSettings.minMessagesBeforeResponding) {
-    return null;
-  }
-  // Return null if not canSelfTriggerCalls and latest message is mediator's
-  const latestMessage =
-    chatMessages.length > 0 ? chatMessages[chatMessages.length - 1] : null;
-  if (
-    !chatSettings.canSelfTriggerCalls &&
-    latestMessage?.senderId === mediator.id
-  ) {
-    return null;
-  }
-
+export async function callChatAPI(
+  profileId: string, // ID of participant or mediator
+  profile: ParticipantProfileBase,
+  agentConfig: ProfileAgentConfig,
+  chatMessages: ChatMessage[],
+  promptConfig: AgentChatPromptConfig,
+  stageConfig: StageConfig,
+  experimenterData: ExperimenterData,
+) {
   try {
     const prompt = getDefaultChatPrompt(
-      mediator,
+      profile,
+      agentConfig,
       chatMessages,
       promptConfig,
       stageConfig,
@@ -259,7 +449,7 @@ export async function getAgentChatResponse(
     const response = await getAgentResponse(
       experimenterData,
       prompt,
-      mediator.agentConfig.modelSettings,
+      profile.agentConfig.modelSettings,
       promptConfig.generationConfig,
     );
 
@@ -290,7 +480,8 @@ export async function getAgentChatResponse(
       return null;
     }
 
-    return {mediator, promptConfig, parsed, message};
+    const agentId = agentConfig.agentId;
+    return {profile, profileId, agentId, promptConfig, parsed, message};
   } catch (error) {
     console.log(error); // TODO: Write log to backend
     return null;
@@ -300,17 +491,17 @@ export async function getAgentChatResponse(
 /** Selects agent response from set of relevant agents' responses
  *  (or null if none)
  */
-export async function selectSingleAgentChatResponse(
+export async function selectSingleAgentMediatorChatResponse(
   experimentId: string,
   mediators: MediatorProfile[],
   chatMessages: ChatMessage[],
   stageConfig: ChatStageConfig,
   experimenterData: ExperimenterData,
 ): AgentChatResponse | null {
-  // Generate responses for all agents
   const agentResponses: AgentChatResponse[] = [];
+  // Generate responses for agent mediators
   for (const mediator of mediators) {
-    const response = await getAgentChatResponse(
+    const response = await getAgentMediatorChatResponse(
       mediator,
       chatMessages,
       experimentId,
@@ -324,7 +515,7 @@ export async function selectSingleAgentChatResponse(
 
   // If no responses, return
   if (agentResponses.length === 0) {
-    console.log('No agents wish to speak');
+    console.log('No agent mediators wish to speak');
     return null;
   }
 
@@ -333,30 +524,103 @@ export async function selectSingleAgentChatResponse(
   agentResponses.forEach((response) => {
     const wpm = response.promptConfig.chatSettings.wordsPerMinute;
     console.log(
-      `\t${response.mediator.name}: ${response.message} (WPM: ${wpm})`,
+      `\t${response.profile.name}: ${response.message} (WPM: ${wpm})`,
     );
   });
 
   // Weighted sampling based on wordsPerMinute (WPM)
-  // TODO (#426): Refactor WPM logic into separate utils function
-  const totalWPM = agentResponses.reduce(
-    (sum, response) =>
-      sum + (response.promptConfig.chatSettings.wordsPerMinute || 0),
-    0,
-  );
-  const cumulativeWeights: number[] = [];
-  let cumulativeSum = 0;
-  for (const response of agentResponses) {
-    const wpm = response.promptConfig.chatSettings.wordsPerMinute;
-    cumulativeSum += wpm || 0;
-    cumulativeWeights.push(cumulativeSum / totalWPM);
-  }
-  const random = Math.random();
-  const chosenIndex = cumulativeWeights.findIndex((weight) => random <= weight);
+  const selectedResponse = selectAgentResponseByWPM(agentResponses);
 
   // TODO: Write log to Firestore
   console.log(
-    `${agentResponses[chosenIndex].mediator.name} has been chosen out of ${agentResponses.length} mediators with responses.`,
+    `${selectedResponse?.profile.name} has been chosen out of ${agentResponses.length} agent mediators with responses.`,
   );
-  return agentResponses[chosenIndex] ?? null;
+  return selectedResponse ?? null;
+}
+
+/** Check if chat conversation has not yet been started
+ * and if given agent participant should initiate the conversation.
+ */
+export async function initiateChatDiscussion(
+  experimentId: string,
+  cohortId: string,
+  stageConfig: StageConfig,
+  profileId: string,
+  profile: ParticipantProfileBase,
+  agentConfig: ProfileAgentConfig,
+) {
+  await app.firestore().runTransaction(async (transaction) => {
+    const stageId = stageConfig.id;
+
+    const numMessages = getChatMessageCount(experimentId, cohortId, stageId);
+    if (numMessages > 0) return;
+
+    const promptConfig =
+      (await getAgentChatPrompt(experimentId, stageId, agentConfig.agentId)) ??
+      createAgentChatPromptConfig(stageId, StageKind.CHAT, {
+        promptContext:
+          'You are a participant. Respond in a quick sentence if you would like to say something. Otherwise, do not respond.',
+      });
+
+    const chatMessages: ChatMessage[] = [];
+
+    // Fetch experiment creator's API key.
+    const creatorId = (
+      await app.firestore().collection('experiments').doc(experimentId).get()
+    ).data().metadata.creator;
+    const creatorDoc = await app
+      .firestore()
+      .collection('experimenterData')
+      .doc(creatorId)
+      .get();
+    if (!creatorDoc.exists) return;
+
+    const experimenterData = creatorDoc.data() as ExperimenterData;
+
+    // Get chat response
+    const response = await callChatAPI(
+      profileId,
+      profile,
+      agentConfig,
+      chatMessages,
+      promptConfig,
+      stageConfig,
+      experimenterData,
+    );
+
+    const publicStageData = await getChatStagePublicData(
+      experimentId,
+      cohortId,
+      stageId,
+    );
+
+    if (response) {
+      // Write agent participant message to conversation
+      const chatMessage = createParticipantChatMessage({
+        profile,
+        discussionId: publicStageData.currentDiscussionId,
+        message: response.message,
+        timestamp: Timestamp.now(),
+        senderId: profileId,
+        agentId: agentConfig.agentId,
+        explanation: response.promptConfig.responseConfig.isJSON
+          ? (response.parsed[
+              response.promptConfig.responseConfig.explanationField
+            ] ?? '')
+          : '',
+      });
+      const agentDocument = app
+        .firestore()
+        .collection('experiments')
+        .doc(experimentId)
+        .collection('cohorts')
+        .doc(cohortId)
+        .collection('publicStageData')
+        .doc(stageId)
+        .collection('chats')
+        .doc(chatMessage.id);
+
+      transaction.set(agentDocument, chatMessage);
+    }
+  });
 }

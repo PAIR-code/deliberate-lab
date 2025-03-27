@@ -144,6 +144,16 @@ export const CreateParticipantData = Type.Object(
     experimentId: Type.String(),
     cohortId: Type.String(),
     isAnonymous: Type.Boolean(), // true if requires anonymous profiles
+    agentConfig: Type.Optional(
+      Type.Object({
+        agentId: Type.String(),
+        promptContext: Type.String(),
+        modelSettings: Type.Object({
+          apiType: Type.String(),
+          modelName: Type.String(),
+        }),
+      }),
+    ),
     prolificId: Type.Optional(Type.Union([Type.Null(), Type.String()])),
   },
   strict,
