@@ -100,6 +100,10 @@ function getChatPromptPreface(
 
 /** Return prompt for processing chat history. */
 function getChatPromptHistory(messages: ChatMessage[]) {
+  if (messages.length === 0) {
+    return '';
+  }
+
   const latestMessage = messages[messages.length - 1];
   const description = `The following is a conversation transcript between you and other participants. In the transcript, each entry follows the format (HH:MM) ParticipantName:  ParticipantMessage, where (HH:MM) is the timestamp of the message. The transcript is shown in sequential order from oldest message to latest message. The last entry is the most recent message. In this transcript, the latest message was written by ${latestMessage.profile.avatar} ${latestMessage.profile.name}. It said, ${latestMessage.message}.`;
   return `${description}\n\nCONVERSATION TRANSCRIPT:\n\n${buildChatHistoryForPrompt(messages)}\n`;
