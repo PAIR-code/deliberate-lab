@@ -9,6 +9,7 @@ import {
   ParticipantStatus,
   StageKind,
 } from '@deliberation-lab/utils';
+import {initiateChatDiscussion} from './stages/chat.utils';
 import {updateParticipantNextStage} from './participant.utils';
 
 import {app} from './app';
@@ -112,6 +113,15 @@ export const updateAgentParticipant = onDocumentUpdated(
         switch (stage.kind) {
           case StageKind.CHAT:
             // Do not complete stage as agent participant must chat first
+            // Instead, check if participant should initiate conversation
+            initiateChatDiscussion(
+              event.params.experimentId,
+              participant.currentCohortId,
+              stage,
+              participant.publicId,
+              participant, // profile
+              participant.agentConfig, // agent config
+            );
             // TODO: Add chat trigger to check if participant is ready
             // to end chat
             break;

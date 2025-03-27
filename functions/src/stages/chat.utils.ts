@@ -12,6 +12,7 @@ import {
   ParticipantStatus,
   StageKind,
   createAgentChatPromptConfig,
+  createParticipantChatMessage,
   getDefaultChatPrompt,
   getTimeElapsed,
 } from '@deliberation-lab/utils';
@@ -535,4 +536,91 @@ export async function selectSingleAgentMediatorChatResponse(
     `${selectedResponse?.profile.name} has been chosen out of ${agentResponses.length} agent mediators with responses.`,
   );
   return selectedResponse ?? null;
+}
+
+/** Check if chat conversation has not yet been started
+ * and if given agent participant should initiate the conversation.
+ */
+export async function initiateChatDiscussion(
+  experimentId: string,
+  cohortId: string,
+  stageConfig: StageConfig,
+  profileId: string,
+  profile: ParticipantProfileBase,
+  agentConfig: ProfileAgentConfig,
+) {
+  await app.firestore().runTransaction(async (transaction) => {
+    const stageId = stageConfig.id;
+
+    const numMessages = getChatMessageCount(experimentId, cohortId, stageId);
+    if (numMessages > 0) return;
+
+    const promptConfig =
+      (await getAgentChatPrompt(experimentId, stageId, agentConfig.agentId)) ??
+      createAgentChatPromptConfig(stageId, StageKind.CHAT, {
+        promptContext:
+          'You are a participant. Respond in a quick sentence if you would like to say something. Otherwise, do not respond.',
+      });
+
+    const chatMessages: ChatMessage[] = [];
+
+    // Fetch experiment creator's API key.
+    const creatorId = (
+      await app.firestore().collection('experiments').doc(experimentId).get()
+    ).data().metadata.creator;
+    const creatorDoc = await app
+      .firestore()
+      .collection('experimenterData')
+      .doc(creatorId)
+      .get();
+    if (!creatorDoc.exists) return;
+
+    const experimenterData = creatorDoc.data() as ExperimenterData;
+
+    // Get chat response
+    const response = await callChatAPI(
+      profileId,
+      profile,
+      agentConfig,
+      chatMessages,
+      promptConfig,
+      stageConfig,
+      experimenterData,
+    );
+
+    const publicStageData = await getChatStagePublicData(
+      experimentId,
+      cohortId,
+      stageId,
+    );
+
+    if (response) {
+      // Write agent participant message to conversation
+      const chatMessage = createParticipantChatMessage({
+        profile,
+        discussionId: publicStageData.currentDiscussionId,
+        message: response.message,
+        timestamp: Timestamp.now(),
+        senderId: profileId,
+        agentId: agentConfig.agentId,
+        explanation: response.promptConfig.responseConfig.isJSON
+          ? (response.parsed[
+              response.promptConfig.responseConfig.explanationField
+            ] ?? '')
+          : '',
+      });
+      const agentDocument = app
+        .firestore()
+        .collection('experiments')
+        .doc(experimentId)
+        .collection('cohorts')
+        .doc(cohortId)
+        .collection('publicStageData')
+        .doc(stageId)
+        .collection('chats')
+        .doc(chatMessage.id);
+
+      transaction.set(agentDocument, chatMessage);
+    }
+  });
 }
