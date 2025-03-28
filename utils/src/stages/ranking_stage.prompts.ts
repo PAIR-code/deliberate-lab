@@ -8,8 +8,8 @@ import {RankingStageConfig, RankingType} from './ranking_stage';
 
 // TODO: Update example item-ranking prompt to use actual ranking logic, etc.
 export const DEFAULT_AGENT_PARTICIPANT_RANKING_ITEMS_PROMPT = `
-  Your job is to alphabetize the following items based on their name.
-  Return the alphabetized items' IDs in an ordered list.
+  Your job is to rank the following items based on their name.
+  Return the ranked items' IDs in an ordered list.
   For example: ['item3', 'item1', 'item2']. Do not include
   any explanations or other information. Only return the list.
 `;
@@ -17,7 +17,7 @@ export const DEFAULT_AGENT_PARTICIPANT_RANKING_ITEMS_PROMPT = `
 // TODO: Update example participant-ranking prompt to use actual ranking logic,
 // etc.
 export const DEFAULT_AGENT_PARTICIPANT_RANKING_PARTICIPANTS_PROMPT = `
-  Your job is to alphabetize a series of participants. Return the alphabetized
+  Your job is to rank a series of participants. Return the ranked
   participants' IDs in an ordered list. Do not include any explanations or
   other information. Only return the list.
 `;

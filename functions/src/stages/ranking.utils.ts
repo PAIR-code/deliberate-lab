@@ -30,6 +30,8 @@ export async function getAgentParticipantRankingStageResponse(
     return;
   }
 
+  // TODO: If ranking is items (not participants), rank items instead.
+
   // Get list of public IDs for other participants who are active in the cohort
   // (in case the agent participant is ranking participants)
   // TODO: Use shared utils to determine isActiveParticipant
@@ -60,15 +62,17 @@ export async function getAgentParticipantRankingStageResponse(
     otherParticipants,
   );
   // Build generation config
+  // TODO: Use generation config from agent persona prompt
   const generationConfig = createModelGenerationConfig();
 
   // Call LLM API
-  const response = await getAgentResponse(
+  const rawResponse = await getAgentResponse(
     experimenterData,
     prompt,
     participant.agentConfig.modelSettings,
     generationConfig,
   );
+  const response = rawResponse.text;
 
   // Check console log for response
   console.log(
@@ -81,7 +85,7 @@ export async function getAgentParticipantRankingStageResponse(
 
   // Confirm that response is in expected format, e.g., list of strings
   try {
-    const rankingList = JSON.stringify(response) as string[];
+    const rankingList: string[] = JSON.parse(response);
     const participantAnswer = createRankingStageParticipantAnswer({
       id: stage.id,
       rankingList,
@@ -90,9 +94,9 @@ export async function getAgentParticipantRankingStageResponse(
       '✅ RankingStageParticipantAnswer\n',
       JSON.stringify(participantAnswer),
     );
+    return participantAnswer;
   } catch (error) {
     console.log(error);
+    return undefined;
   }
-
-  return response;
 }
