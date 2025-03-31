@@ -2,6 +2,7 @@ import {Timestamp} from 'firebase-admin/firestore';
 import {
   onDocumentCreated,
   onDocumentUpdated,
+  onDocumentWritten,
 } from 'firebase-functions/v2/firestore';
 import {
   AgentChatResponse,
@@ -13,6 +14,7 @@ import {
   ChatStagePublicData,
   ExperimenterData,
   ParticipantStatus,
+  StageParticipantAnswer,
   StageKind,
   awaitTypingDelay,
   createAgentChatPromptConfig,
@@ -23,6 +25,7 @@ import {
   getTypingDelayInMilliseconds,
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from '../agent.utils';
+import {updateCurrentDiscussionIndex} from './chat.utils';
 import {getMediatorsInCohortStage} from '../mediator.utils';
 import {updateParticipantNextStage} from '../participant.utils';
 import {
@@ -137,6 +140,77 @@ export const updateTimeElapsed = onDocumentUpdated(
         `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
       )
       .update({discussionCheckpointTimestamp: Timestamp.now()});
+  },
+);
+
+/** When chat participant answer is updated, check if all participants
+ * are ready to move to next discussion. */
+export const updateCurrentChatDiscussionId = onDocumentWritten(
+  {
+    document:
+      'experiments/{experimentId}/participants/{participantId}/stageData/{stageId}',
+    timeoutSeconds: 60,
+  },
+  async (event) => {
+    const data = event.data.after.data() as StageParticipantAnswer | undefined;
+
+    const stageDocument = app
+      .firestore()
+      .collection('experiments')
+      .doc(event.params.experimentId)
+      .collection('stages')
+      .doc(event.params.stageId);
+    const stage = (await stageDocument.get()).data() as StageConfig;
+    if (stage.kind !== StageKind.CHAT) return;
+
+    // Define participant document
+    const participantDocument = app
+      .firestore()
+      .collection('experiments')
+      .doc(event.params.experimentId)
+      .collection('participants')
+      .doc(event.params.participantId);
+
+    const participant = (
+      await participantDocument.get()
+    ).data() as ParticipantProfileExtended;
+
+    // Define public stage document reference
+    const publicDocument = app
+      .firestore()
+      .collection('experiments')
+      .doc(event.params.experimentId)
+      .collection('cohorts')
+      .doc(participant.currentCohortId)
+      .collection('publicStageData')
+      .doc(event.params.stageId);
+
+    await app.firestore().runTransaction(async (transaction) => {
+      // Update public stage data
+      const publicStageData = (
+        await publicDocument.get()
+      ).data() as StagePublicData;
+      const discussionStatusMap = data.discussionTimestampMap;
+
+      for (const discussionId of Object.keys(discussionStatusMap)) {
+        if (!publicStageData.discussionTimestampMap[discussionId]) {
+          publicStageData.discussionTimestampMap[discussionId] = {};
+        }
+        publicStageData.discussionTimestampMap[discussionId][
+          participant.publicId
+        ] = discussionStatusMap[discussionId];
+      }
+
+      // Update current discussion ID if applicable
+      await updateCurrentDiscussionIndex(
+        event.params.experimentId,
+        participant.currentCohortId,
+        event.params.stageId,
+        publicStageData,
+      );
+
+      transaction.set(publicDocument, publicStageData);
+    });
   },
 );
 
