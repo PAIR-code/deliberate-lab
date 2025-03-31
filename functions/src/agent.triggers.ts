@@ -43,6 +43,10 @@ export const startAgentParticipant = onDocumentCreated(
       if (!participant.timestamps.acceptedTOS) {
         participant.timestamps.acceptedTOS = Timestamp.now();
       }
+      if (!participant.timestamps.readyStages[participant.currentStageId]) {
+        participant.timestamps.readyStages[participant.currentStageId] =
+          Timestamp.now();
+      }
       transaction.set(participantDoc, participant);
     }); // end transaction
   },
