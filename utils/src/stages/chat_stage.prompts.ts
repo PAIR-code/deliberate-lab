@@ -1,7 +1,12 @@
 import {UnifiedTimestamp} from '../shared';
 import {AgentChatPromptConfig, ProfileAgentConfig} from '../agent';
 import {ParticipantProfileBase} from '../participant';
-import {ChatMessage, ChatStageConfig} from './chat_stage';
+import {
+  ChatDiscussion,
+  ChatDiscussionType,
+  ChatMessage,
+  ChatStageConfig,
+} from './chat_stage';
 
 // ************************************************************************* //
 // CONSTANTS                                                                 //
@@ -49,15 +54,27 @@ export function getDefaultChatPrompt(
   stageConfig: ChatStageConfig,
 ) {
   return [
-    getChatPromptPreface(profile, promptConfig, stageConfig),
-    getChatPromptHistory(chatMessages),
+    getChatStagePromptContext(profile, promptConfig, stageConfig, chatMessages),
     promptConfig.responseConfig.formattingInstructions,
     promptConfig.promptContext,
     agentConfig?.promptContext ?? '',
   ].join('\n');
 }
 
-/** Return context for default chat prompt. */
+/** Return context for chat stage. */
+function getChatStagePromptContext(
+  profile: ParticipantProfileBase,
+  promptConfig: AgentChatPromptConfig,
+  stage: ChatStageConfig,
+  chatMessages: ChatMessage[],
+) {
+  return [
+    getChatPromptPreface(profile, promptConfig, stage),
+    getChatPromptMessageHistory(chatMessages, stage),
+  ].join('\n');
+}
+
+/** Return preface (stage context not including chat messages). */
 function getChatPromptPreface(
   profile: ParticipantProfileBase,
   promptConfig: AgentChatPromptConfig,
@@ -99,27 +116,65 @@ function getChatPromptPreface(
 }
 
 /** Return prompt for processing chat history. */
-function getChatPromptHistory(messages: ChatMessage[]) {
+function getChatPromptMessageHistory(
+  messages: ChatMessage[],
+  stage: ChatStageConfig,
+) {
   if (messages.length === 0) {
     return '';
   }
 
   const latestMessage = messages[messages.length - 1];
   const description = `The following is a conversation transcript between you and other participants. In the transcript, each entry follows the format (HH:MM) ParticipantName:  ParticipantMessage, where (HH:MM) is the timestamp of the message. The transcript is shown in sequential order from oldest message to latest message. The last entry is the most recent message. In this transcript, the latest message was written by ${latestMessage.profile.avatar} ${latestMessage.profile.name}. It said, ${latestMessage.message}.`;
-  return `${description}\n\nCONVERSATION TRANSCRIPT:\n\n${buildChatHistoryForPrompt(messages)}\n`;
+  return `${description}\n\nCONVERSATION TRANSCRIPT:\n\n${buildChatHistoryForPrompt(messages, stage)}\n`;
 }
 
 /** Convert chat messages into chat history string for prompt. */
-function buildChatHistoryForPrompt(messages: ChatMessage[]) {
+function buildChatHistoryForPrompt(
+  messages: ChatMessage[],
+  stage: ChatStageConfig,
+) {
   const getTime = (timestamp: UnifiedTimestamp) => {
     const date = new Date(timestamp.seconds * 1000);
     return `(${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')})`;
   };
 
-  return messages
-    .map(
-      (message) =>
-        `${getTime(message.timestamp)} ${message.profile.name}: ${message.message}`,
-    )
-    .join('\n');
+  const concatMessages = (messages: ChatMessage[]) => {
+    return messages
+      .map(
+        (message) =>
+          `${getTime(message.timestamp)} ${message.profile.name}: ${message.message}`,
+      )
+      .join('\n');
+  };
+
+  // If no discussion threads, just return messages
+  if (stage.discussions.length === 0) {
+    return concatMessages(messages);
+  }
+
+  // Otherwise, organize messages by thread
+  const history: string[] = [];
+  stage.discussions.forEach((discussion) => {
+    const discussionMessages = messages.filter(
+      (message) => message.discussionId === discussion.id,
+    );
+    if (discussionMessages.length === 0) return;
+
+    history.push(
+      `${getChatDiscussionDetailsForPrompt(discussion)}\n${concatMessages(discussionMessages)}`,
+    );
+  });
+  return history.join('\n');
+}
+
+/** Convert ChatDiscussion details into string for prompt. */
+function getChatDiscussionDetailsForPrompt(discussion: ChatDiscussion) {
+  if (discussion.type === ChatDiscussionType.DEFAULT) {
+    return `DISCUSSION THREAD: ${discussion.description}`;
+  }
+
+  // Otherwise, if comparing items
+  const discussionItems = discussion.items.map((item) => item.name).join(', ');
+  return `DISCUSSION THREAD COMPARING THE FOLLOWING ITEMS: ${discussionItems}. ${discussion.description}`;
 }

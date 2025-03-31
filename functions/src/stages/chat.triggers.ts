@@ -11,6 +11,7 @@ import {
   ChatMessage,
   ChatMessageType,
   ChatStageConfig,
+  ChatStageParticipantAnswer,
   ChatStagePublicData,
   ExperimenterData,
   ParticipantStatus,
@@ -18,6 +19,7 @@ import {
   StageKind,
   awaitTypingDelay,
   createAgentChatPromptConfig,
+  createChatStageParticipantAnswer,
   createMediatorChatMessage,
   createParticipantChatMessage,
   getDefaultChatPrompt,
@@ -567,7 +569,7 @@ export const checkReadyToEndChat = onDocumentCreated(
         StageKind.CHAT,
         {
           promptContext:
-            'Are you ready to end the conversation and stop talking? Please consider whether you have met your goals and explicitly communicated this to other participants. If you have more to say or have yet to explicitly agree in the chat, you should not end the discussion yet. If so, respond YES and explain why. Otherwise, do not return anything.',
+            'Are you ready to end the conversation and stop talking? Please consider whether you have met your goals and explicitly communicated this to other participants. If you have more to say or have yet to explicitly agree in the chat, you should not end the discussion yet. If so, respond the exact word YES. Otherwise, do not return anything.',
         },
       );
 
@@ -603,13 +605,37 @@ export const checkReadyToEndChat = onDocumentCreated(
         console.log(participant.publicId, 'ready to end discussion?', response);
         // TODO: Use structured output instead of checking for YES string
         if (response?.text.includes('YES')) {
-          await updateParticipantNextStage(
-            event.params.experimentId,
-            participant,
-            experiment.stageIds,
-          );
-          await transaction.set(participantDoc, participant);
-        }
+          // If threaded discussion (and not last thread), move to next thread
+          if (
+            stage.discussions.length > 0 &&
+            publicStageData.currentDiscussionId &&
+            publicStageData.currentDiscussionId !==
+              stage.discussions[stage.discussions.length - 1]
+          ) {
+            const participantAnswerDoc = app
+              .firestore()
+              .doc(
+                `experiments/${event.params.experimentId}/participants/${participant.privateId}/stageData/${event.params.stageId}`,
+              );
+            const chatAnswerDoc = await participantAnswerDoc.get();
+            const participantAnswer = chatAnswerDoc.exists
+              ? (chatAnswerDoc.data() as ChatStageParticipantAnswer)
+              : createChatStageParticipantAnswer({id: stage.id});
+            // if (!participantAnswer.discussionTimestampMap[publicStageData.currentDiscussionId]) {
+            participantAnswer.discussionTimestampMap[
+              publicStageData.currentDiscussionId
+            ] = Timestamp.now();
+            await transaction.set(participantAnswerDoc, participantAnswer);
+          } else {
+            // Otherwise, move to next stage
+            await updateParticipantNextStage(
+              event.params.experimentId,
+              participant,
+              experiment.stageIds,
+            );
+            await transaction.set(participantDoc, participant);
+          }
+        } // end ready to end discussion logic
       } // end participant loop
     });
   },

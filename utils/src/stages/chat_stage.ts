@@ -244,7 +244,7 @@ export function createExperimenterChatMessage(
 
 /** Create participant chat stage answer. */
 export function createChatStageParticipantAnswer(
-  config: Partial<ChatStageParticipantAnswer>,
+  config: Partial<ChatStageParticipantAnswer> = {},
 ): ChatStageParticipantAnswer {
   return {
     id: config.id ?? generateId(),
