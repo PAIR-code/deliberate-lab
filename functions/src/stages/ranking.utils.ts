@@ -1,5 +1,6 @@
 import {
   AgentModelSettings,
+  ExperimenterData,
   ModelGenerationConfig,
   ParticipantProfileExtended,
   ParticipantStatus,
