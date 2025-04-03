@@ -28,6 +28,7 @@ export * from './mediator.validation';
 
 // Participant
 export * from './participant';
+export * from './participant.prompts';
 export * from './participant.validation';
 export * from './profile_sets';
 
@@ -37,6 +38,7 @@ export * from './agent.validation';
 
 // Stages
 export * from './stages/stage';
+export * from './stages/stage.prompts';
 export * from './stages/stage.validation';
 export * from './stages/chat_stage';
 export * from './stages/chat_stage.prompts';

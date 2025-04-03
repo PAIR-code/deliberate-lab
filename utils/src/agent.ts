@@ -61,7 +61,7 @@ export interface AgentPromptSettings {
   // Whether or not to include context from all previously completed
   // stages
   includeStageHistory: boolean;
-  // Whether or not to include information (e.g., stage description)
+  // Whether or not to include information (stage description/info/help)
   // shown to users
   includeStageInfo: boolean;
   // TODO(mkbehr): Add few-shot examples
