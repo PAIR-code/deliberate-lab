@@ -4,7 +4,15 @@ import {
   ApiKeyType,
   ExperimenterData,
   ModelGenerationConfig,
+  ParticipantProfileExtended,
+  StageConfig,
+  StageKind,
 } from '@deliberation-lab/utils';
+import {Transaction} from 'firebase-admin/firestore';
+
+import {updateParticipantNextStage} from './participant.utils';
+import {initiateChatDiscussion} from './stages/chat.utils';
+import {getAgentParticipantRankingStageResponse} from './stages/ranking.utils';
 
 import {getGeminiAPIResponse} from './api/gemini.api';
 import {getOpenAIAPITextCompletionResponse} from './api/openai.api';
@@ -103,4 +111,92 @@ export async function getAgentPersonas(experimentId: string) {
   return (await agentCollection.get()).docs.map(
     (agent) => agent.data() as AgentPersonaConfig,
   );
+}
+
+/** Complete agent participant's current stage. */
+export async function completeStageAsAgentParticipant(
+  experiment: Experiment,
+  participant: ParticipantProfileExtended,
+  transaction: Transaction,
+) {
+  const experimentId = experiment.id;
+  const participantDoc = app
+    .firestore()
+    .doc(`experiments/${experimentId}/participants/${participant.privateId}`);
+
+  const completeStage = async () => {
+    await updateParticipantNextStage(
+      experimentId,
+      participant,
+      experiment.stageIds,
+    );
+  };
+
+  // TODO: Set up trigger for cohort updates => if a stage is locked,
+  // don't update the agent participant profile yet. Instead, wait for
+  // cohort update that unlocks stage to continue
+  const stageDoc = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('stages')
+    .doc(participant.currentStageId);
+  const stage = (await stageDoc.get()).data() as StageConfig;
+
+  // Fetch experiment creator's API key.
+  const creatorId = experiment.metadata.creator;
+  const creatorDoc = await app
+    .firestore()
+    .collection('experimenterData')
+    .doc(creatorId)
+    .get();
+  const experimenterData = creatorDoc.exists
+    ? (creatorDoc.data() as ExperimenterData)
+    : null;
+
+  // ParticipantAnswer doc
+  const answerDoc = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('participants')
+    .doc(participant.privateId)
+    .collection('stageData')
+    .doc(stage.id);
+
+  switch (stage.kind) {
+    case StageKind.CHAT:
+      // Do not complete stage as agent participant must chat first
+      // Instead, check if participant should initiate conversation
+      initiateChatDiscussion(
+        experimentId,
+        participant.currentCohortId,
+        stage,
+        participant.publicId,
+        participant, // profile
+        participant.agentConfig, // agent config
+      );
+      // TODO: Add chat trigger to check if participant is ready
+      // to end chat
+      break;
+    case StageKind.RANKING:
+      if (!experimenterData) {
+        console.log('Could not find experimenter data and API key');
+        break;
+      }
+      const rankingAnswer = await getAgentParticipantRankingStageResponse(
+        experimentId,
+        experimenterData,
+        participant,
+        stage,
+      );
+      transaction.set(answerDoc, rankingAnswer);
+      await completeStage();
+      transaction.set(participantDoc, participant);
+      break;
+    default:
+      console.log(`Move to next stage (${participant.publicId})`);
+      await completeStage();
+      transaction.set(participantDoc, participant);
+  }
 }
