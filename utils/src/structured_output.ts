@@ -27,6 +27,7 @@ export interface StructuredOutputSchema {
 }
 
 export interface StructuredOutputConfig {
+  enabled: boolean;
   type: StructuredOutputType;
   schema?: StructuredOutputSchema;
   appendToPrompt: boolean;
@@ -38,7 +39,6 @@ export interface StructuredOutputConfig {
 export function createStructuredOutputConfig(
   config: Partial<StructuredOutputConfig> = {},
 ): StructuredOutputConfig {
-  console.log('createStructuredOutputConfig'); // DEBUG
   const schema = config.schema ?? {
     type: StructuredOutputDataType.OBJECT,
     properties: [
@@ -66,6 +66,7 @@ export function createStructuredOutputConfig(
     ],
   }
   return {
+    enabled: config.enabled ?? true,
     type: config.type ?? StructuredOutputType.NONE,
     schema: schema,
     appendToPrompt: true,
@@ -97,7 +98,7 @@ function schemaToObject(schema: StructuredOutputSchema): object {
 }
 
 export function structuredOutputEnabled(config?: StructuredOutputConfig) : boolean {
-  if (!config?.appendToPrompt) {
+  if (config.type == StructuredOutputType.NONE && !config?.appendToPrompt) {
     return false;
   }
   if (!config.schema) {
@@ -106,7 +107,7 @@ export function structuredOutputEnabled(config?: StructuredOutputConfig) : boole
   if (config.schema.properties?.length == 0) {
     return false;
   }
-  return true;
+  return config.enabled;
 }
 
 export function printSchema(
@@ -116,7 +117,7 @@ export function printSchema(
 }
 
 export function makeStructuredOutputPrompt(config?: StructuredOutputConfig): string {
-  if (!structuredOutputEnabled(config) || !config?.schema) {
+  if (!structuredOutputEnabled(config) || !config?.appendToPrompt || !config?.schema) {
     return '';
   }
   return `Return only valid JSON, according to the following schema:
