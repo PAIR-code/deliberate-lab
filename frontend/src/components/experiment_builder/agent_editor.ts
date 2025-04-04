@@ -724,7 +724,6 @@ export class AgentEditorComponent extends MobxLitElement {
 
   // TODO: allow for reordering config fields
   // TODO: add checkbox for whether to append schema prompt
-  // TODO: StructuredOutputType dropdown renders blank initially
   private renderAgentStructuredOutputConfig(
     agent: AgentPersonaConfig,
     agentPromptConfig: AgentChatPromptConfig,
@@ -745,7 +744,7 @@ export class AgentEditorComponent extends MobxLitElement {
         <label for="structuredOutputType">Structured Output Type</label>
         <select
           id="structuredOutputType"
-          .value=${config.type}
+          .selected=${config.type}
           @change=${updateType}
           ?disabled=${!this.experimentEditor.canEditStages}
         >
