@@ -17,6 +17,7 @@ import {
   createMediatorChatMessage,
   getTimeElapsed,
   getTypingDelayInMilliseconds,
+  structuredOutputEnabled,
 } from '@deliberation-lab/utils';
 import {getMediatorsInCohortStage} from '../mediator.utils';
 import {
@@ -224,6 +225,22 @@ export const createAgentMessage = onDocumentCreated(
 
       // Write agent mediator message to conversation
       const mediator = agentResponse.mediator;
+      let explanation = '';
+      if (agentResponse.promptConfig.responseConfig?.isJSON) {
+        explanation =
+          agentResponse.parsed[
+            agentResponse.promptConfig.responseConfig.explanationField
+          ] ?? '';
+      } else if (
+        structuredOutputEnabled(
+          agentResponse.promptConfig.structuredOutputConfig,
+        )
+      ) {
+        explanation =
+          agentResponse.parsed[
+            agentResponse.promptConfig.structuredOutputConfig.explanationField
+          ] ?? '';
+      }
       const chatMessage = createMediatorChatMessage({
         profile: {name: mediator.name, avatar: mediator.avatar, pronouns: null},
         discussionId: data.discussionId,
@@ -231,11 +248,7 @@ export const createAgentMessage = onDocumentCreated(
         timestamp: Timestamp.now(),
         senderId: mediator.id,
         agentId: mediator.agentConfig.agentId,
-        explanation: agentResponse.promptConfig.responseConfig.isJSON
-          ? (agentResponse.parsed[
-              agentResponse.promptConfig.responseConfig.explanationField
-            ] ?? '')
-          : '',
+        explanation: explanation,
       });
       const agentDocument = app
         .firestore()
