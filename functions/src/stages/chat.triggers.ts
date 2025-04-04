@@ -232,7 +232,7 @@ export const createAgentMessage = onDocumentCreated(
         ] ?? '';
       } else if (structuredOutputEnabled(agentResponse.promptConfig.structuredOutputConfig)) {
         explanation = agentResponse.parsed[
-              agentResponse.promptConfig.structuredOutputConfig.thoughtField
+              agentResponse.promptConfig.structuredOutputConfig.explanationField
         ] ?? '';
       }
       const chatMessage = createMediatorChatMessage({

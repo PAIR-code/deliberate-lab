@@ -31,8 +31,8 @@ export interface StructuredOutputConfig {
   schema?: StructuredOutputSchema;
   appendToPrompt: boolean;
   shouldRespondField: string;
-  thoughtField: string;
-  responseField: string;
+  explanationField: string;
+  messageField: string;
 }
 
 export function createStructuredOutputConfig(
@@ -70,8 +70,8 @@ export function createStructuredOutputConfig(
     schema: schema,
     appendToPrompt: true,
     shouldRespondField: config.shouldRespondField ?? DEFAULT_SHOULD_RESPOND_FIELD,
-    responseField: config.responseField ?? DEFAULT_RESPONSE_FIELD,
-    thoughtField: config.thoughtField ?? DEFAULT_EXPLANATION_FIELD,
+    messageField: config.messageField ?? DEFAULT_RESPONSE_FIELD,
+    explanationField: config.explanationField ?? DEFAULT_EXPLANATION_FIELD,
   }
 }
 

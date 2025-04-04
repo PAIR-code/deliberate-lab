@@ -299,7 +299,7 @@ export async function getAgentChatResponse(
         return null;
       }
       if (parsed[promptConfig.structuredOutputConfig.shouldRespondField] ?? true) {
-        message = parsed[promptConfig.structuredOutputConfig.responseField] ?? '';
+        message = parsed[promptConfig.structuredOutputConfig.messageField] ?? '';
       }
       console.log(parsed);
     }

@@ -18,6 +18,7 @@ import {
   ApiKeyType,
   StageConfig,
   StageKind,
+  StructuredOutputConfig,
   StructuredOutputType,
   StructuredOutputDataType,
   StructuredOutputSchema,
@@ -767,14 +768,32 @@ export class AgentEditorComponent extends MobxLitElement {
     agent: AgentPersonaConfig,
     agentPromptConfig: AgentChatPromptConfig,
   ) {
+    const config = agentPromptConfig.structuredOutputConfig;
     const addField = () => {
       this.agentEditor.addAgentMediatorStructuredOutputSchemaField(
         agent.id,
         agentPromptConfig.id,
       );
     };
-
-    const structuredOutputConfig = agentPromptConfig.structuredOutputConfig;
+    const updateConfig = (structuredOutputConfig: Partial<StructuredOutputConfig>) => {
+      this.agentEditor.updateAgentMediatorStructuredOutputConfig(
+        agent.id,
+        agentPromptConfig.id,
+        structuredOutputConfig,
+      );
+    };
+    const updateMessageField = (e: InputEvent) => {
+      const messageField = (e.target as HTMLTextAreaElement).value;
+      updateConfig({messageField});
+    };
+    const updateExplanationField = (e: InputEvent) => {
+      const explanationField = (e.target as HTMLTextAreaElement).value;
+      updateConfig({explanationField});
+    };
+    const updateShouldRespondField = (e: InputEvent) => {
+      const shouldRespondField = (e.target as HTMLTextAreaElement).value;
+      updateConfig({shouldRespondField});
+    };
 
     return html`
       <div class="section">
@@ -782,7 +801,7 @@ export class AgentEditorComponent extends MobxLitElement {
           <div class="section-title">Structured output schema fields</div>
           <div class="description">Add fields to the structured output schema.</div>
         </div>
-        ${structuredOutputConfig.schema?.properties?.map((field, fieldIndex) =>
+        ${config.schema?.properties?.map((field, fieldIndex) =>
           this.renderAgentStructuredOutputSchemaField(
             agent,
             agentPromptConfig,
@@ -791,6 +810,39 @@ export class AgentEditorComponent extends MobxLitElement {
           ),
         )}
         <pr-button @click=${addField}>Add field</pr-button>
+      </div>
+      <div class="field">
+        <pr-textarea
+          label="JSON field to extract debugging explanation or chain of thought from"
+          placeholder="JSON field to extract debugging explanation from"
+          variant="outlined"
+          .value=${config.explanationField}
+          ?disabled=${!this.experimentEditor.isCreator}
+          @input=${updateExplanationField}
+        >
+        </pr-textarea>
+      </div>
+      <div class="field">
+        <pr-textarea
+          label="JSON field to extract boolean decision to respond from"
+          placeholder="JSON field to extract boolean decision to respond from"
+          variant="outlined"
+          .value=${config.shouldRespondField}
+          ?disabled=${!this.experimentEditor.isCreator}
+          @input=${updateShouldRespondField}
+        >
+        </pr-textarea>
+      </div>
+      <div class="field">
+        <pr-textarea
+          label="JSON field to extract chat message from"
+          placeholder="JSON field to extract chat message from"
+          variant="outlined"
+          .value=${config.messageField}
+          ?disabled=${!this.experimentEditor.isCreator}
+          @input=${updateMessageField}
+        >
+        </pr-textarea>
       </div>
     `;
   }
@@ -839,7 +891,7 @@ export class AgentEditorComponent extends MobxLitElement {
       );
     };
 
-    // TODO: prettify type dropdown
+    // TODO(mkbehr): type dropdown is too tall
     return html`
       <div class="name-value-input">
         <pr-textarea
