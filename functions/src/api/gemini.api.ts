@@ -37,7 +37,7 @@ const SAFETY_SETTINGS = [
 ];
 
 function makeStructuredOutputSchema(schema: StructuredOutputSchema)
-: Object | null {               // TODO: reference Schema type from google api if possible
+: Object | null {
   const typeMap: { [key in StructuredOutputDataType]?: string } = {
     [StructuredOutputDataType.STRING]: 'STRING',
     [StructuredOutputDataType.NUMBER]: 'NUMBER',
