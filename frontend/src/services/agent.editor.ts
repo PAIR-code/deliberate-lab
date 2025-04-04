@@ -290,9 +290,6 @@ export class AgentEditor extends Service {
           properties: [newField]
         };
       }
-      console.log(promptConfig.structuredOutputConfig.type);
-      console.log(promptConfig.structuredOutputConfig.schema);
-      console.log(promptConfig.structuredOutputConfig.schema?.properties ?? 'no properties');
       this.updateAgentMediatorStructuredOutputConfig(agentId, stageId, {
         schema: promptConfig.structuredOutputConfig.schema,
       });

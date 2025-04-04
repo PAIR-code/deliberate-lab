@@ -301,7 +301,6 @@ export async function getAgentChatResponse(
       if (parsed[promptConfig.structuredOutputConfig.shouldRespondField] ?? true) {
         message = parsed[promptConfig.structuredOutputConfig.messageField] ?? '';
       }
-      console.log(parsed);
     }
 
     // Check if message is empty

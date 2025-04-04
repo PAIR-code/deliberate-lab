@@ -56,7 +56,6 @@ function makeStructuredOutputSchema(schema: StructuredOutputSchema)
   let orderedPropertyNames = null;
 
   if (schema.properties?.length > 0) {
-    console.log(schema.properties)
     properties = {};
     orderedPropertyNames = [];
     schema.properties.forEach((property) => {
