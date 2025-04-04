@@ -227,13 +227,19 @@ export const createAgentMessage = onDocumentCreated(
       const mediator = agentResponse.mediator;
       let explanation = '';
       if (agentResponse.promptConfig.responseConfig?.isJSON) {
-        explanation = agentResponse.parsed[
-              agentResponse.promptConfig.responseConfig.explanationField
-        ] ?? '';
-      } else if (structuredOutputEnabled(agentResponse.promptConfig.structuredOutputConfig)) {
-        explanation = agentResponse.parsed[
-              agentResponse.promptConfig.structuredOutputConfig.explanationField
-        ] ?? '';
+        explanation =
+          agentResponse.parsed[
+            agentResponse.promptConfig.responseConfig.explanationField
+          ] ?? '';
+      } else if (
+        structuredOutputEnabled(
+          agentResponse.promptConfig.structuredOutputConfig,
+        )
+      ) {
+        explanation =
+          agentResponse.parsed[
+            agentResponse.promptConfig.structuredOutputConfig.explanationField
+          ] ?? '';
       }
       const chatMessage = createMediatorChatMessage({
         profile: {name: mediator.name, avatar: mediator.avatar, pronouns: null},

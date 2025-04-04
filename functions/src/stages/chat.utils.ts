@@ -298,8 +298,12 @@ export async function getAgentChatResponse(
         console.log('Could not parse JSON!');
         return null;
       }
-      if (parsed[promptConfig.structuredOutputConfig.shouldRespondField] ?? true) {
-        message = parsed[promptConfig.structuredOutputConfig.messageField] ?? '';
+      if (
+        parsed[promptConfig.structuredOutputConfig.shouldRespondField] ??
+        true
+      ) {
+        message =
+          parsed[promptConfig.structuredOutputConfig.messageField] ?? '';
       }
     }
 

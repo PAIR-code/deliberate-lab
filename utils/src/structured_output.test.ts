@@ -1,7 +1,5 @@
 import {
-  StructuredOutputType,
   StructuredOutputDataType,
-  StructuredOutputSchema,
   printSchema,
 } from './structured_output';
 
@@ -14,17 +12,17 @@ describe('Structured outputs', () => {
           name: 'stringProperty',
           schema: {
             type: StructuredOutputDataType.STRING,
-            description: "A string-valued property",
-          }
+            description: 'A string-valued property',
+          },
         },
         {
           name: 'intArrayProperty',
           schema: {
             type: StructuredOutputDataType.ARRAY,
-            description: "An array-valued property",
+            description: 'An array-valued property',
             arrayItems: {
               type: StructuredOutputDataType.INTEGER,
-              description: "An integer-valued property",
+              description: 'An integer-valued property',
             },
           },
         },
@@ -34,21 +32,21 @@ describe('Structured outputs', () => {
     const result = printSchema(structuredOutputSchema);
     const parsedResult = JSON.parse(result);
     const expectedResult = {
-      type: "object",
+      type: 'object',
       properties: {
         stringProperty: {
-          description: "A string-valued property",
-          type: "string"
+          description: 'A string-valued property',
+          type: 'string',
         },
         intArrayProperty: {
-          description: "An array-valued property",
-          type: "array",
+          description: 'An array-valued property',
+          type: 'array',
           items: {
-            description: "An integer-valued property",
-            type: "integer"
-          }
-        }
-      }
+            description: 'An integer-valued property',
+            type: 'integer',
+          },
+        },
+      },
     };
     expect(parsedResult).toEqual(expectedResult);
   });

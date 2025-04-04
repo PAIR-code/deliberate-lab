@@ -36,9 +36,10 @@ const SAFETY_SETTINGS = [
   },
 ];
 
-function makeStructuredOutputSchema(schema: StructuredOutputSchema)
-: Object | null {
-  const typeMap: { [key in StructuredOutputDataType]?: string } = {
+function makeStructuredOutputSchema(
+  schema: StructuredOutputSchema,
+): object | null {
+  const typeMap: {[key in StructuredOutputDataType]?: string} = {
     [StructuredOutputDataType.STRING]: 'STRING',
     [StructuredOutputDataType.NUMBER]: 'NUMBER',
     [StructuredOutputDataType.INTEGER]: 'INTEGER',
@@ -48,7 +49,9 @@ function makeStructuredOutputSchema(schema: StructuredOutputSchema)
   };
   const type = typeMap[schema.type];
   if (!type) {
-    console.error(`Error parsing structured output config: unrecognized data type ${dataType}`);
+    console.error(
+      `Error parsing structured output config: unrecognized data type ${dataType}`,
+    );
     return null;
   }
 
@@ -64,8 +67,10 @@ function makeStructuredOutputSchema(schema: StructuredOutputSchema)
     });
   }
 
-  const itemsSchema = schema.arrayItems ? makeStructuredOutputSchema(schema.arrayItems) : null;
-  
+  const itemsSchema = schema.arrayItems
+    ? makeStructuredOutputSchema(schema.arrayItems)
+    : null;
+
   return {
     type: type,
     description: schema.description,
@@ -78,17 +83,21 @@ function makeStructuredOutputSchema(schema: StructuredOutputSchema)
 }
 
 function makeStructuredOutputGenerationConfig(
-  structuredOutputConfig?: StructuredOutputConfig
+  structuredOutputConfig?: StructuredOutputConfig,
 ): Partial<GenerationConfig> | null {
-  if (!structuredOutputConfig
-      || structuredOutputConfig.type === StructuredOutputType.NONE) {
-    return { responseMimeType: 'text/plain' };
+  if (
+    !structuredOutputConfig ||
+    structuredOutputConfig.type === StructuredOutputType.NONE
+  ) {
+    return {responseMimeType: 'text/plain'};
   }
   if (structuredOutputConfig.type === StructuredOutputType.JSON_FORMAT) {
-    return { responseMimeType: 'application/json' };
+    return {responseMimeType: 'application/json'};
   }
   if (!structuredOutputConfig.schema) {
-    console.error(`Expected schema for structured output type ${structuredOutputConfig.type}`);
+    console.error(
+      `Expected schema for structured output type ${structuredOutputConfig.type}`,
+    );
     return null;
   }
   const schema = makeStructuredOutputSchema(structuredOutputConfig.schema);
@@ -98,7 +107,7 @@ function makeStructuredOutputGenerationConfig(
   return {
     responseMimeType: 'application/json',
     responseSchema: schema,
-  }
+  };
 }
 
 /** Makes Gemini API call. */
@@ -148,7 +157,9 @@ export async function getGeminiAPIResponse(
       field.value,
     ]),
   );
-  const structuredOutputGenerationConfig = makeStructuredOutputGenerationConfig(structuredOutputConfig);
+  const structuredOutputGenerationConfig = makeStructuredOutputGenerationConfig(
+    structuredOutputConfig,
+  );
   const geminiConfig: GenerationConfig = {
     stopSequences,
     maxOutputTokens: 300,
@@ -158,17 +169,12 @@ export async function getGeminiAPIResponse(
     presencePenalty: generationConfig.presencePenalty,
     frequencyPenalty: generationConfig.frequencyPenalty,
     ...structuredOutputGenerationConfig,
-    ...customFields
+    ...customFields,
   };
 
   let response = {text: ''};
   try {
-    response = await callGemini(
-      apiKey,
-      promptText,
-      geminiConfig,
-      modelName
-    );
+    response = await callGemini(apiKey, promptText, geminiConfig, modelName);
   } catch (error: any) {
     if (error.message.includes(QUOTA_ERROR_CODE.toString())) {
       console.error('API quota exceeded');

@@ -4,7 +4,7 @@ import nock = require('nock');
 import {
   AgentGenerationConfig,
   StructuredOutputType,
-  StructuredOutputDataType
+  StructuredOutputDataType,
 } from '@deliberation-lab/utils';
 import {getGeminiAPIResponse} from './gemini.api';
 import {ModelResponse} from './model.response';
@@ -18,24 +18,25 @@ describe('Gemini API', () => {
     scope = nock('https://generativelanguage.googleapis.com')
       .post(`/v1beta/models/${MODEL_NAME}:generateContent`)
       .reply(200, (uri, requestBody) => {
-        return { candidates: [
-          {
-            content: {
-              parts: [
-                {
-                  text: JSON.stringify({
-                    output: 'test output',
-                    generationConfig: requestBody.generationConfig,
-                  }),
-                }
-              ],
+        return {
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    text: JSON.stringify({
+                      output: 'test output',
+                      generationConfig: requestBody.generationConfig,
+                    }),
+                  },
+                ],
+              },
+              index: 0,
+              finish_reason: 'STOP',
+              avgLogprobs: -0.1,
             },
-            index: 0,
-            finish_reason: 'STOP',
-            avgLogprobs: -0.1
-          },
-        ],
-        modelVersion: MODEL_NAME
+          ],
+          modelVersion: MODEL_NAME,
         };
       });
   });
@@ -83,15 +84,15 @@ describe('Gemini API', () => {
             name: 'stringProperty',
             schema: {
               type: StructuredOutputDataType.STRING,
-              description: "A string-valued property",
-            }
+              description: 'A string-valued property',
+            },
           },
           {
             name: 'integerProperty',
             schema: {
               type: StructuredOutputDataType.INTEGER,
-              description: "An integer-valued property",
-            }
+              description: 'An integer-valued property',
+            },
           },
         ],
       },
@@ -113,7 +114,7 @@ describe('Gemini API', () => {
         responseSchema: {
           type: 'OBJECT',
           properties: {
-            stringProperty:  {
+            stringProperty: {
               type: 'STRING',
               description: 'A string-valued property',
             },

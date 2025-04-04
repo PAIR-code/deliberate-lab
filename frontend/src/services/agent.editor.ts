@@ -214,7 +214,10 @@ export class AgentEditor extends Service {
     if (agent && config) {
       this.agentChatPromptMap[id][stageId] = {
         ...config,
-        structuredOutputConfig: {...config.structuredOutputConfig, ...newStructuredOutputConfig},
+        structuredOutputConfig: {
+          ...config.structuredOutputConfig,
+          ...newStructuredOutputConfig,
+        },
       };
     }
   }
@@ -275,19 +278,25 @@ export class AgentEditor extends Service {
     }
   }
 
-  addAgentMediatorStructuredOutputSchemaField(agentId: string, stageId: string) {
+  addAgentMediatorStructuredOutputSchemaField(
+    agentId: string,
+    stageId: string,
+  ) {
     const agent = this.getAgentMediator(agentId);
     const promptConfig = this.agentChatPromptMap[agentId][stageId];
     if (agent && promptConfig) {
       const schema = promptConfig.structuredOutputConfig.schema;
-      const newField = {name: '', schema: {type: StructuredOutputDataType.STRING, description: ''}};
+      const newField = {
+        name: '',
+        schema: {type: StructuredOutputDataType.STRING, description: ''},
+      };
       if (schema) {
         schema.properties = schema.properties ?? [];
         schema.properties = [...schema.properties, newField];
       } else {
         promptConfig.structuredOutputConfig.schema = {
           type: StructuredOutputDataType.OBJECT,
-          properties: [newField]
+          properties: [newField],
         };
       }
       this.updateAgentMediatorStructuredOutputConfig(agentId, stageId, {
@@ -310,9 +319,9 @@ export class AgentEditor extends Service {
         schema.properties[fieldIndex] = {
           name: field.name ?? schema.properties[fieldIndex].name,
           schema: {
-              ...schema.properties[fieldIndex].schema,
-              ...field.schema,
-          }
+            ...schema.properties[fieldIndex].schema,
+            ...field.schema,
+          },
         };
         this.updateAgentMediatorStructuredOutputConfig(agentId, stageId, {
           schema,

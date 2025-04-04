@@ -23,9 +23,9 @@ export async function getAgentResponse(
 ): Promise<ModelResponse> {
   let response;
 
-  const structuredOutputPrompt = (structuredOutputConfig
-                                  ? makeStructuredOutputPrompt(structuredOutputConfig)
-                                  : '');
+  const structuredOutputPrompt = structuredOutputConfig
+    ? makeStructuredOutputPrompt(structuredOutputConfig)
+    : '';
   if (structuredOutputPrompt) {
     prompt = `${prompt}\n${structuredOutputPrompt}`;
   }

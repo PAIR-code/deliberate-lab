@@ -11,7 +11,10 @@ import {
   DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
   DEFAULT_STRING_FORMATTING_INSTRUCTIONS,
 } from './stages/chat_stage.prompts';
-import {StructuredOutputConfig, createStructuredOutputConfig} from './structured_output';
+import {
+  StructuredOutputConfig,
+  createStructuredOutputConfig,
+} from './structured_output';
 
 /** Agent types and functions. */
 
@@ -230,7 +233,8 @@ export function createAgentChatPromptConfig(
     promptSettings: config.promptSettings ?? createAgentPromptSettings(),
     generationConfig: config.generationConfig ?? createModelGenerationConfig(),
     chatSettings: config.chatSettings ?? createAgentChatSettings(),
-    structuredOutputConfig: config.structuredOutputConfig ?? createStructuredOutputConfig(),
+    structuredOutputConfig:
+      config.structuredOutputConfig ?? createStructuredOutputConfig(),
   };
 }
 

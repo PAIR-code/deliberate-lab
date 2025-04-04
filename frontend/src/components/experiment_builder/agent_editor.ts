@@ -392,18 +392,21 @@ export class AgentEditorComponent extends MobxLitElement {
       }
       return html`
         <div class="description">
-          Structured output formatting instructions: configure under structured output settings
+          Structured output formatting instructions: configure under structured
+          output settings
         </div>
         <pr-textarea
           placeholder="Structured output formatting instructions"
           variant="outlined"
-          .value=${makeStructuredOutputPrompt(agentPromptConfig.structuredOutputConfig)}
-          disabled=true
-          maxViewportHeight=20
+          .value=${makeStructuredOutputPrompt(
+            agentPromptConfig.structuredOutputConfig,
+          )}
+          disabled="true"
+          maxViewportHeight="20"
         >
         </pr-textarea>
       `;
-    }
+    };
 
     return html`
       <div class="field">
@@ -745,7 +748,9 @@ export class AgentEditorComponent extends MobxLitElement {
     agentPromptConfig: AgentChatPromptConfig,
   ) {
     const config = agentPromptConfig.structuredOutputConfig;
-    const updateConfig = (structuredOutputConfig: Partial<StructuredOutputConfig>) => {
+    const updateConfig = (
+      structuredOutputConfig: Partial<StructuredOutputConfig>,
+    ) => {
       this.agentEditor.updateAgentMediatorStructuredOutputConfig(
         agent.id,
         agentPromptConfig.id,
@@ -761,7 +766,8 @@ export class AgentEditorComponent extends MobxLitElement {
       updateConfig({appendToPrompt});
     };
     const updateType = (e: InputEvent) => {
-      const type = (e.target as HTMLSelectElement).value as StructuredOutputType;
+      const type = (e.target as HTMLSelectElement)
+        .value as StructuredOutputType;
       updateConfig({type});
     };
 
@@ -770,39 +776,45 @@ export class AgentEditorComponent extends MobxLitElement {
         return nothing;
       }
       return html`
-      <div class="field">
-        <label for="structuredOutputType">Structured Output Type</label>
-        <div class="description">Constrain the sampler to produce valid JSON. Only supported for Gemini.</div>
-        <select
-          id="structuredOutputType"
-          .selected=${config.type}
-          @change=${updateType}
-          ?disabled=${!this.experimentEditor.canEditStages}
-        >
-          <option value="${StructuredOutputType.NONE}">
-            No output forcing
-          </option>
-          <option value="${StructuredOutputType.JSON_FORMAT}">
-            Force JSON output
-          </option>
-          <option value="${StructuredOutputType.JSON_SCHEMA}">
-            Force JSON output with schema
-          </option>
-        </select>
-      </div>
-      <div class="checkbox-wrapper">
-        <md-checkbox
-          touch-target="wrapper"
-          ?checked=${config.appendToPrompt}
-          ?disabled=${!this.experimentEditor.canEditStages}
-          @click=${updateAppendToPrompt}
-        >
-        </md-checkbox>
-        <div>Add formatting instructions to prompt</div>
-      </div>
-      ${this.renderAgentStructuredOutputSchemaFields(agent, agentPromptConfig)}
-    `;
-    }
+        <div class="field">
+          <label for="structuredOutputType">Structured Output Type</label>
+          <div class="description">
+            Constrain the sampler to produce valid JSON. Only supported for
+            Gemini.
+          </div>
+          <select
+            id="structuredOutputType"
+            .selected=${config.type}
+            @change=${updateType}
+            ?disabled=${!this.experimentEditor.canEditStages}
+          >
+            <option value="${StructuredOutputType.NONE}">
+              No output forcing
+            </option>
+            <option value="${StructuredOutputType.JSON_FORMAT}">
+              Force JSON output
+            </option>
+            <option value="${StructuredOutputType.JSON_SCHEMA}">
+              Force JSON output with schema
+            </option>
+          </select>
+        </div>
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${config.appendToPrompt}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @click=${updateAppendToPrompt}
+          >
+          </md-checkbox>
+          <div>Add formatting instructions to prompt</div>
+        </div>
+        ${this.renderAgentStructuredOutputSchemaFields(
+          agent,
+          agentPromptConfig,
+        )}
+      `;
+    };
 
     return html`
       <div class="section>
@@ -833,7 +845,9 @@ export class AgentEditorComponent extends MobxLitElement {
         agentPromptConfig.id,
       );
     };
-    const updateConfig = (structuredOutputConfig: Partial<StructuredOutputConfig>) => {
+    const updateConfig = (
+      structuredOutputConfig: Partial<StructuredOutputConfig>,
+    ) => {
       this.agentEditor.updateAgentMediatorStructuredOutputConfig(
         agent.id,
         agentPromptConfig.id,
@@ -857,7 +871,9 @@ export class AgentEditorComponent extends MobxLitElement {
       <div class="section">
         <div class="section-header">
           <div class="section-title">Structured output schema fields</div>
-          <div class="description">Add fields to the structured output schema.</div>
+          <div class="description">
+            Add fields to the structured output schema.
+          </div>
         </div>
         ${config.schema?.properties?.map((field, fieldIndex) =>
           this.renderAgentStructuredOutputSchemaField(
@@ -922,7 +938,8 @@ export class AgentEditorComponent extends MobxLitElement {
     };
 
     const updateType = (e: Event) => {
-      const type = (e.target as HTMLSelectElement).value as StructuredOutputDataType;
+      const type = (e.target as HTMLSelectElement)
+        .value as StructuredOutputDataType;
       this.agentEditor.updateAgentMediatorStructuredOutputSchemaField(
         agent.id,
         agentPromptConfig.id,
