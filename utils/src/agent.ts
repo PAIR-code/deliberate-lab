@@ -83,10 +83,10 @@ export interface AgentChatSettings {
   maxResponses: number | null;
 }
 
-/** Settings for formatting agent response
+/** DEPRECATED: Settings for formatting agent response
  *  (e.g., expect JSON, use specific JSON field for response, use end token)
+ *  New config is StructuredOutputConfig.
  */
-// TODO(mkbehr): Deprecate in favor of new structured output setup?
 export interface AgentResponseConfig {
   isJSON: boolean;
   // JSON field to extract chat message from
@@ -114,7 +114,7 @@ export type AgentParticipantPromptConfig = BaseAgentPromptConfig;
 export interface AgentChatPromptConfig extends BaseAgentPromptConfig {
   chatSettings: AgentChatSettings;
   structuredOutputConfig: StructuredOutputConfig;
-  responseConfig?: AgentResponseConfig;
+  responseConfig?: AgentResponseConfig; // deprecated
 }
 
 export enum AgentPersonaType {

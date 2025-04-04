@@ -204,22 +204,6 @@ export class AgentEditor extends Service {
     }
   }
 
-  updateAgentMediatorResponseConfig(
-    id: string,
-    stageId: string,
-    newResponseConfig: Partial<AgentResponseConfig>,
-  ) {
-    const agent = this.getAgentMediator(id);
-    const config = this.agentChatPromptMap[id][stageId];
-    // TODO(mkbehr): fix or remove
-    // if (agent && config) {
-    //   this.agentChatPromptMap[id][stageId] = {
-    //     ...config,
-    //     responseConfig: {...config.responseConfig, ...newResponseConfig},
-    //   };
-    // }
-  }
-
   updateAgentMediatorStructuredOutputConfig(
     id: string,
     stageId: string,
