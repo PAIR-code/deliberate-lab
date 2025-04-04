@@ -1,13 +1,5 @@
 import {Value} from '@sinclair/typebox/value';
 import {MediatorProfile} from '@deliberation-lab/utils';
-import {
-  getAgentResponse,
-  getGeminiResponse,
-  getOpenAIAPIResponse,
-  getOllamaResponse,
-} from './agent.utils';
-import {getAgentParticipantRankingStageResponse} from './stages/ranking.utils';
-
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import {onCall} from 'firebase-functions/v2/https';

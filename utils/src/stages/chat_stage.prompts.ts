@@ -1,6 +1,6 @@
 import {UnifiedTimestamp} from '../shared';
-import {AgentChatPromptConfig} from '../agent';
-import {MediatorProfile} from '../mediator';
+import {AgentChatPromptConfig, ProfileAgentConfig} from '../agent';
+import {ParticipantProfileBase} from '../participant';
 import {ChatMessage, ChatStageConfig} from './chat_stage';
 
 // ************************************************************************* //
@@ -42,23 +42,24 @@ export const DEFAULT_STRING_FORMATTING_INSTRUCTIONS = `If you would like to resp
 // PROMPTS                                                                   //
 // ************************************************************************* //
 export function getDefaultChatPrompt(
-  mediator: MediatorProfile,
+  profile: ParticipantProfileBase,
+  agentConfig: ProfileAgentConfig, // TODO: Add to params
   chatMessages: ChatMessage[],
   promptConfig: AgentChatPromptConfig,
   stageConfig: ChatStageConfig,
 ) {
   return [
-    getChatPromptPreface(mediator, promptConfig, stageConfig),
+    getChatPromptPreface(profile, promptConfig, stageConfig),
     getChatPromptHistory(chatMessages),
     promptConfig.responseConfig.formattingInstructions,
     promptConfig.promptContext,
-    mediator.agentConfig?.promptContext ?? '',
+    agentConfig?.promptContext ?? '',
   ].join('\n');
 }
 
 /** Return context for default chat prompt. */
 function getChatPromptPreface(
-  mediator: MediatorProfile,
+  profile: ParticipantProfileBase,
   promptConfig: AgentChatPromptConfig,
   stage: ChatStageConfig,
 ) {
@@ -94,11 +95,15 @@ function getChatPromptPreface(
     ? `\nThis conversation has the following details:\n${descriptions.join('\n')}`
     : '';
 
-  return `You are role-playing as ${mediator.avatar} ${mediator.name}, participating in a conversation with other participants.${descriptionHtml}.`;
+  return `You are role-playing as ${profile.avatar} ${profile.name}, participating in a conversation with other participants.${descriptionHtml}.`;
 }
 
 /** Return prompt for processing chat history. */
 function getChatPromptHistory(messages: ChatMessage[]) {
+  if (messages.length === 0) {
+    return '';
+  }
+
   const latestMessage = messages[messages.length - 1];
   const description = `The following is a conversation transcript between you and other participants. In the transcript, each entry follows the format (HH:MM) ParticipantName:  ParticipantMessage, where (HH:MM) is the timestamp of the message. The transcript is shown in sequential order from oldest message to latest message. The last entry is the most recent message. In this transcript, the latest message was written by ${latestMessage.profile.avatar} ${latestMessage.profile.name}. It said, ${latestMessage.message}.`;
   return `${description}\n\nCONVERSATION TRANSCRIPT:\n\n${buildChatHistoryForPrompt(messages)}\n`;

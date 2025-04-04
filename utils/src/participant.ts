@@ -1,3 +1,4 @@
+import {ProfileAgentConfig} from './agent';
 import {UnifiedTimestamp, generateId} from './shared';
 import {
   ALTERNATE_PROFILE_SET_ID,
@@ -47,6 +48,8 @@ export interface AnonymousProfileMetadata {
 /** Participant profile available in private participants collection. */
 export interface ParticipantProfileExtended extends ParticipantProfile {
   privateId: string;
+  // If null, operated by human (otherwise, specifies agent persona, model)
+  agentConfig: ProfileAgentConfig | null;
 }
 
 export interface ProgressTimestamps {
@@ -148,6 +151,7 @@ export function createParticipantProfileExtended(
     currentStatus: config.currentStatus ?? ParticipantStatus.IN_PROGRESS,
     timestamps: config.timestamps ?? createProgressTimestamps(),
     anonymousProfiles: {},
+    agentConfig: config.agentConfig ?? null,
   };
 }
 
