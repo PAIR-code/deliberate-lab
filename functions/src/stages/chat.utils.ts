@@ -10,6 +10,7 @@ import {
   ParticipantStatus,
   getDefaultChatPrompt,
   getTimeElapsed,
+  structuredOutputEnabled,
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
@@ -268,7 +269,7 @@ export async function getAgentChatResponse(
     let message = response.text;
     let parsed = '';
 
-    if (promptConfig.responseConfig?.isJSON) { // TODO change config
+    if (promptConfig.responseConfig?.isJSON) {
       // Reset message to empty before trying to fill with JSON response
       message = '';
 
@@ -283,6 +284,24 @@ export async function getAgentChatResponse(
         return null;
       }
       message = parsed[promptConfig.responseConfig.messageField] ?? '';
+    } else if (structuredOutputEnabled(promptConfig.structuredOutputConfig)) {
+      // Reset message to empty before trying to fill with JSON response
+      message = '';
+
+      try {
+        const cleanedText = response.text
+          .replace(/```json\s*|\s*```/g, '')
+          .trim();
+        parsed = JSON.parse(cleanedText);
+      } catch {
+        // Response is already logged in console during Gemini API call
+        console.log('Could not parse JSON!');
+        return null;
+      }
+      if (parsed[promptConfig.structuredOutputConfig.shouldRespondField] ?? true) {
+        message = parsed[promptConfig.structuredOutputConfig.responseField] ?? '';
+      }
+      console.log(parsed);
     }
 
     // Check if message is empty
