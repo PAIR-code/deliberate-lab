@@ -1,7 +1,4 @@
-import {
-  StructuredOutputDataType,
-  printSchema,
-} from './structured_output';
+import {StructuredOutputDataType, printSchema} from './structured_output';
 
 describe('Structured outputs', () => {
   it('print schemas in expected format', () => {
@@ -47,6 +44,7 @@ describe('Structured outputs', () => {
           },
         },
       },
+      required: ['stringProperty', 'intArrayProperty'],
     };
     expect(parsedResult).toEqual(expectedResult);
   });
