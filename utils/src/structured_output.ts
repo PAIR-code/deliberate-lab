@@ -102,6 +102,9 @@ function schemaToObject(schema: StructuredOutputSchema): object {
 export function structuredOutputEnabled(
   config?: StructuredOutputConfig,
 ): boolean {
+  if (!config) {
+    return false;
+  }
   if (config.type == StructuredOutputType.NONE && !config?.appendToPrompt) {
     return false;
   }
