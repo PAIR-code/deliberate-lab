@@ -11,6 +11,7 @@ export const DEFAULT_AGENT_MEDIATOR_PROMPT = `You are a agent for a chat convers
 If you notice that participants are being rude, step in to make sure that everyone is respectful. 
 Otherwise, do not respond.`;
 
+export const DEFAULT_SHOULD_RESPOND_FIELD = 'shouldRespond';
 export const DEFAULT_RESPONSE_FIELD = 'response';
 export const DEFAULT_EXPLANATION_FIELD = 'explanation';
 export const DEFAULT_JSON_FORMATTING_INSTRUCTIONS = `INSTRUCTIONS:

@@ -1,3 +1,9 @@
+import {
+  DEFAULT_SHOULD_RESPOND_FIELD,
+  DEFAULT_RESPONSE_FIELD,
+  DEFAULT_EXPLANATION_FIELD,
+} from './stages/chat_stage.prompts';
+
 export enum StructuredOutputType {
   NONE = 'NONE',                // No special constraints on the sampler.
   JSON_FORMAT = 'JSON_FORMAT',  // Constrain the sampler to output JSON.
@@ -24,15 +30,48 @@ export interface StructuredOutputConfig {
   type: StructuredOutputType;
   schema?: StructuredOutputSchema;
   appendToPrompt: boolean;
+  shouldRespondField: string;
+  thoughtField: string;
+  responseField: string;
 }
 
 export function createStructuredOutputConfig(
   config: Partial<StructuredOutputConfig> = {},
 ): StructuredOutputConfig {
+  console.log('createStructuredOutputConfig'); // DEBUG
+  const schema = config.schema ?? {
+    type: StructuredOutputDataType.OBJECT,
+    properties: [
+      {
+        name: DEFAULT_EXPLANATION_FIELD,
+        schema: {
+          type: StructuredOutputDataType.STRING,
+          description: 'Your reasoning for your response.'
+        }
+      },
+      {
+        name: DEFAULT_SHOULD_RESPOND_FIELD,
+        schema: {
+          type: StructuredOutputDataType.BOOLEAN,
+          description: 'Whether or not to respond.'
+        }
+      },
+      {
+        name: DEFAULT_RESPONSE_FIELD,
+        schema: {
+          type: StructuredOutputDataType.STRING,
+          description: 'Your response.'
+        }
+      },
+    ],
+  }
   return {
     type: config.type ?? StructuredOutputType.NONE,
-    schema: config.schema,
+    schema: schema,
     appendToPrompt: true,
+    shouldRespondField: config.shouldRespondField ?? DEFAULT_SHOULD_RESPOND_FIELD,
+    responseField: config.responseField ?? DEFAULT_RESPONSE_FIELD,
+    thoughtField: config.thoughtField ?? DEFAULT_EXPLANATION_FIELD,
   }
 }
 
@@ -57,6 +96,19 @@ function schemaToObject(schema: StructuredOutputSchema): object {
   }
 }
 
+export function structuredOutputEnabled(config?: StructuredOutputConfig) : boolean {
+  if (!config?.appendToPrompt) {
+    return false;
+  }
+  if (!config.schema) {
+    return false;
+  }
+  if (config.schema.properties?.length == 0) {
+    return false;
+  }
+  return true;
+}
+
 export function printSchema(
   schema: StructuredOutputSchema,
   indent: number = 2): string {
@@ -64,13 +116,7 @@ export function printSchema(
 }
 
 export function makeStructuredOutputPrompt(config?: StructuredOutputConfig): string {
-  if (!config?.appendToPrompt) {
-    return '';
-  }
-  if (!config.schema) {
-    return '';
-  }
-  if (config.schema.properties?.length == 0) {
+  if (!structuredOutputEnabled(config) || !config?.schema) {
     return '';
   }
   return `Return only valid JSON, according to the following schema:
