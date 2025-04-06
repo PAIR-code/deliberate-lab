@@ -974,12 +974,15 @@ export class AgentEditorComponent extends MobxLitElement {
           @input=${updateName}
         >
         </pr-textarea>
-        <select .value=${field.schema.type} @change=${updateType}>
-          <option value="${StructuredOutputDataType.STRING}">STRING</option>
-          <option value="${StructuredOutputDataType.NUMBER}">NUMBER</option>
-          <option value="${StructuredOutputDataType.INTEGER}">INTEGER</option>
-          <option value="${StructuredOutputDataType.BOOLEAN}">BOOLEAN</option>
-        </select>
+        <div class="select-field">
+          <div class="field-title">Field type</div>
+          <select .value=${field.schema.type} @change=${updateType}>
+            <option value="${StructuredOutputDataType.STRING}">STRING</option>
+            <option value="${StructuredOutputDataType.NUMBER}">NUMBER</option>
+            <option value="${StructuredOutputDataType.INTEGER}">INTEGER</option>
+            <option value="${StructuredOutputDataType.BOOLEAN}">BOOLEAN</option>
+          </select>
+        </div>
         <pr-textarea
           label="Field description"
           variant="outlined"

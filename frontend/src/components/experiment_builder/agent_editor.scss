@@ -180,8 +180,14 @@ pr-textarea {
   }
 }
 
+.select-field {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
 select {
   @include common.select;
   background: var(--md-sys-color-surface-variant);
+  border-radius: common.$spacing-medium;
   color: var(--md-sys-color-on-surface-variant);
 }
