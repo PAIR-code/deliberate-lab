@@ -205,22 +205,6 @@ export function createAgentPromptSettings(
   };
 }
 
-/** DEPRECATED: Create agent response config. */
-export function createAgentResponseConfig(
-  config: Partial<AgentResponseConfig> = {},
-): AgentResponseConfig {
-  const isJSON = config.isJSON ?? false;
-  return {
-    isJSON,
-    messageField: config.messageField ?? DEFAULT_RESPONSE_FIELD,
-    explanationField: config.explanationField ?? DEFAULT_EXPLANATION_FIELD,
-    formattingInstructions:
-      (config.formattingInstructions ?? isJSON)
-        ? DEFAULT_JSON_FORMATTING_INSTRUCTIONS
-        : DEFAULT_STRING_FORMATTING_INSTRUCTIONS,
-  };
-}
-
 export function createAgentChatPromptConfig(
   id: string, // stage ID
   type: StageKind, // stage kind
