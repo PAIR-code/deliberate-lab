@@ -1,8 +1,7 @@
-import {
-  DEFAULT_SHOULD_RESPOND_FIELD,
-  DEFAULT_RESPONSE_FIELD,
-  DEFAULT_EXPLANATION_FIELD,
-} from './stages/chat_stage.prompts';
+/** Structured output types, constants, and functions. */
+// ****************************************************************************
+// TYPES
+// ****************************************************************************
 
 export enum StructuredOutputType {
   NONE = 'NONE', // No special constraints on the sampler.
@@ -35,6 +34,17 @@ export interface StructuredOutputConfig {
   explanationField: string;
   messageField: string;
 }
+
+// ****************************************************************************
+// CONSTANTS
+// ****************************************************************************
+export const DEFAULT_SHOULD_RESPOND_FIELD = 'shouldRespond';
+export const DEFAULT_RESPONSE_FIELD = 'response';
+export const DEFAULT_EXPLANATION_FIELD = 'explanation';
+
+// ****************************************************************************
+// FUNCTIONS
+// ****************************************************************************
 
 export function createStructuredOutputConfig(
   config: Partial<StructuredOutputConfig> = {},

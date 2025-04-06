@@ -4,13 +4,7 @@ import {
 } from './participant';
 import {generateId} from './shared';
 import {StageKind} from './stages/stage';
-import {
-  DEFAULT_AGENT_MEDIATOR_PROMPT,
-  DEFAULT_RESPONSE_FIELD,
-  DEFAULT_EXPLANATION_FIELD,
-  DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
-  DEFAULT_STRING_FORMATTING_INSTRUCTIONS,
-} from './stages/chat_stage.prompts';
+import {DEFAULT_AGENT_MEDIATOR_PROMPT} from './stages/chat_stage.prompts';
 import {
   StructuredOutputConfig,
   createStructuredOutputConfig,
