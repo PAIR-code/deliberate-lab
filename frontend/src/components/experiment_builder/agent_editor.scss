@@ -176,3 +176,9 @@ pr-textarea {
     color: var(--md-sys-color-on-error-container);
   }
 }
+
+select {
+  @include common.select;
+  background: var(--md-sys-color-surface-variant);
+  color: var(--md-sys-color-on-surface-variant);
+}
