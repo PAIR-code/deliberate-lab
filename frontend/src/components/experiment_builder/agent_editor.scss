@@ -47,7 +47,8 @@
   padding: common.$main-content-padding;
 }
 
-.section-header {
+.section-header,
+.subsection-header {
   @include common.flex-column;
 }
 
@@ -55,7 +56,8 @@
   @include typescale.title-medium;
 }
 
-.section {
+.section,
+.subsection {
   @include common.flex-column;
   gap: common.$spacing-large;
 }

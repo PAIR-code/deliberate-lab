@@ -170,7 +170,10 @@ export class AgentEditorComponent extends MobxLitElement {
           ${this.renderAgentStructuredOutputConfig(agentConfig, promptConfig)}
         </div>
         <div class="divider"></div>
-        ${this.renderAgentWordsPerMinute(agentConfig, promptConfig)}
+        <div class="section">
+          <div class="section-title">Chat settings</div>
+          ${this.renderAgentWordsPerMinute(agentConfig, promptConfig)}
+        </div>
         <div class="divider"></div>
         ${this.renderAgentSamplingParameters(agentConfig, promptConfig)}
         <div class="divider"></div>
@@ -481,7 +484,6 @@ export class AgentEditorComponent extends MobxLitElement {
 
     const currentWPM = agentPromptConfig.chatSettings.wordsPerMinute;
     return html`
-      <div class="section-title">Chat settings</div>
       <div class="field">
         <div class="field-title">Words per minute</div>
         <div class="description">
@@ -864,9 +866,9 @@ export class AgentEditorComponent extends MobxLitElement {
     };
 
     return html`
-      <div class="section">
-        <div class="section-header">
-          <div class="section-title">Structured output schema fields</div>
+      <div class="subsection">
+        <div class="subsection-header">
+          <div>Structured output schema fields</div>
           <div class="description">
             Add fields to the structured output schema.
           </div>
