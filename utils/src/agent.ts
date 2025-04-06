@@ -117,7 +117,8 @@ export type AgentParticipantPromptConfig = BaseAgentPromptConfig;
 export interface AgentChatPromptConfig extends BaseAgentPromptConfig {
   chatSettings: AgentChatSettings;
   structuredOutputConfig: StructuredOutputConfig;
-  responseConfig?: AgentResponseConfig; // deprecated
+  // DEPRECATED: Use structuredOutputConfig, not responseConfig
+  responseConfig?: AgentResponseConfig;
 }
 
 export enum AgentPersonaType {
@@ -204,8 +205,7 @@ export function createAgentPromptSettings(
   };
 }
 
-/** Create agent response config. */
-// TODO(mkbehr): Deprecated in favor of new structured output setup?
+/** DEPRECATED: Create agent response config. */
 export function createAgentResponseConfig(
   config: Partial<AgentResponseConfig> = {},
 ): AgentResponseConfig {
