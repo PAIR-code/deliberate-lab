@@ -22,7 +22,7 @@ import {
   StructuredOutputType,
   StructuredOutputDataType,
   StructuredOutputSchema,
-  makeStructuredOutputPrompt,
+  printSchema,
   structuredOutputEnabled,
 } from '@deliberation-lab/utils';
 import {LLM_AGENT_AVATARS} from '../../shared/constants';
@@ -164,12 +164,16 @@ export class AgentEditorComponent extends MobxLitElement {
       return html`
         <div>${this.renderTestPromptButton(agentConfig, promptConfig)}</div>
         <div class="divider"></div>
-        ${this.renderAgentPrompt(agentConfig, promptConfig)}
-        <div class="divider"></div>
-        ${this.renderAgentStructuredOutputConfig(agentConfig, promptConfig)}
+        <div class="section">
+          <div class="section-title">Prompt settings</div>
+          ${this.renderAgentPrompt(agentConfig, promptConfig)}
+          ${this.renderAgentStructuredOutputConfig(agentConfig, promptConfig)}
+        </div>
         <div class="divider"></div>
         ${this.renderAgentWordsPerMinute(agentConfig, promptConfig)}
+        <div class="divider"></div>
         ${this.renderAgentSamplingParameters(agentConfig, promptConfig)}
+        <div class="divider"></div>
         ${this.renderAgentCustomRequestBodyFields(agentConfig, promptConfig)}
         <div class="divider"></div>
         <pr-button
@@ -382,32 +386,6 @@ export class AgentEditorComponent extends MobxLitElement {
       );
     };
 
-    const renderStructuredOutputPrompt = () => {
-      const config = agentPromptConfig.structuredOutputConfig;
-      if (!structuredOutputEnabled(config)) {
-        return nothing;
-      }
-      if (!config.appendToPrompt) {
-        return nothing;
-      }
-      return html`
-        <div class="description">
-          Structured output formatting instructions: configure under structured
-          output settings
-        </div>
-        <pr-textarea
-          placeholder="Structured output formatting instructions"
-          variant="outlined"
-          .value=${makeStructuredOutputPrompt(
-            agentPromptConfig.structuredOutputConfig,
-          )}
-          disabled="true"
-          maxViewportHeight="20"
-        >
-        </pr-textarea>
-      `;
-    };
-
     return html`
       <div class="field">
         <div class="field-title">Prompt</div>
@@ -424,7 +402,22 @@ export class AgentEditorComponent extends MobxLitElement {
           @input=${updatePrompt}
         >
         </pr-textarea>
-        ${renderStructuredOutputPrompt()}
+      </div>
+    `;
+  }
+
+  private renderAgentStructuredOutputSchema(
+    agentPromptConfig: AgentChatPromptConfig,
+  ) {
+    const config = agentPromptConfig.structuredOutputConfig;
+    if (!structuredOutputEnabled(config) || !config.schema) {
+      return nothing;
+    }
+    return html`
+      <div>
+        <div>Structured output schema (defined by fields above):</div>
+        <div class="description">${printSchema(config.schema)}</div>
+        <div></div>
       </div>
     `;
   }
@@ -488,6 +481,7 @@ export class AgentEditorComponent extends MobxLitElement {
 
     const currentWPM = agentPromptConfig.chatSettings.wordsPerMinute;
     return html`
+      <div class="section-title">Chat settings</div>
       <div class="field">
         <div class="field-title">Words per minute</div>
         <div class="description">
@@ -742,7 +736,6 @@ export class AgentEditorComponent extends MobxLitElement {
   }
 
   // TODO(mkbehr): allow for reordering config fields
-  // TODO(mkbehr): the UI jumps around when you check/uncheck these boxes
   private renderAgentStructuredOutputConfig(
     agent: AgentPersonaConfig,
     agentPromptConfig: AgentChatPromptConfig,
@@ -807,7 +800,13 @@ export class AgentEditorComponent extends MobxLitElement {
             @click=${updateAppendToPrompt}
           >
           </md-checkbox>
-          <div>Add formatting instructions to prompt</div>
+          <div>
+            Include explanation of structured output format in prompt
+            <span class="small">
+              (e.g., "Return only valid JSON according to the following
+              schema...")
+            </span>
+          </div>
         </div>
         ${this.renderAgentStructuredOutputSchemaFields(
           agent,
@@ -817,21 +816,18 @@ export class AgentEditorComponent extends MobxLitElement {
     };
 
     return html`
-      <div class="section>
-        <div class="title">Structured output settings</div>
-        <div class="checkbox-wrapper">
-          <md-checkbox
-            touch-target="wrapper"
-            ?checked=${config.enabled}
-            ?disabled=${!this.experimentEditor.canEditStages}
-            @click=${updateEnabled}
-          >
-          </md-checkbox>
-      <div>Enable structured outputs</div>
+      <div class="checkbox-wrapper">
+        <md-checkbox
+          touch-target="wrapper"
+          ?checked=${config.enabled}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @click=${updateEnabled}
+        >
+        </md-checkbox>
+        <div>Enable structured outputs</div>
       </div>
       ${mainSettings()}
-      </div>
-      `;
+    `;
   }
 
   private renderAgentStructuredOutputSchemaFields(

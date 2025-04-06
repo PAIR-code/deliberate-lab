@@ -67,7 +67,8 @@
 }
 
 .field-title,
-.radio-question-label {
+.radio-question-label,
+.small {
   @include typescale.label-small;
 }
 
