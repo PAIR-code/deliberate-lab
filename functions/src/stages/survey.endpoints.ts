@@ -58,19 +58,12 @@ export const updateSurveyStageParticipantAnswer = onCall(async (request) => {
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     transaction.set(document, data.surveyStageParticipantAnswer);
-
-    // Update public stage data
-    const publicStageData = (
-      await publicDocument.get()
-    ).data() as StagePublicData;
-    publicStageData.participantAnswerMap[data.participantPublicId] =
-      data.surveyStageParticipantAnswer.answerMap;
-    transaction.set(publicDocument, publicStageData);
   });
 
   return {id: document.id};
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleUpdateSurveyStageParticipantAnswerValidationErrors(data: any) {
   for (const error of Value.Errors(
     UpdateSurveyStageParticipantAnswerData,
@@ -134,7 +127,7 @@ export const updateSurveyPerParticipantStageParticipantAnswer = onCall(
 );
 
 function handleUpdateSurveyPerParticipantStageParticipantAnswerValidationErrors(
-  data: any,
+  data: any, // eslint-disable-line @typescript-eslint/no-explicit-any
 ) {
   for (const error of Value.Errors(
     UpdateSurveyPerParticipantStageParticipantAnswerData,

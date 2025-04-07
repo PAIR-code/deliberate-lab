@@ -7,8 +7,6 @@ import {
   StageKind,
   UpdateChatStageParticipantAnswerData,
 } from '@deliberation-lab/utils';
-import {updateCurrentDiscussionIndex} from './chat.utils';
-
 import * as admin from 'firebase-admin';
 import {Timestamp} from 'firebase-admin/firestore';
 import * as functions from 'firebase-functions';
@@ -87,16 +85,6 @@ export const updateChatStageParticipantAnswer = onCall(async (request) => {
     .collection('stageData')
     .doc(data.chatStageParticipantAnswer.id);
 
-  // Define public stage document reference
-  const publicDocument = app
-    .firestore()
-    .collection('experiments')
-    .doc(data.experimentId)
-    .collection('cohorts')
-    .doc(data.cohortId)
-    .collection('publicStageData')
-    .doc(data.chatStageParticipantAnswer.id);
-
   // Set random timeout to avoid data contention with transaction
   await new Promise((resolve) => {
     setTimeout(resolve, Math.random() * 2000);
@@ -105,32 +93,6 @@ export const updateChatStageParticipantAnswer = onCall(async (request) => {
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     transaction.set(document, data.chatStageParticipantAnswer);
-
-    // Update public stage data
-    const publicStageData = (
-      await publicDocument.get()
-    ).data() as StagePublicData;
-    const discussionStatusMap =
-      data.chatStageParticipantAnswer.discussionTimestampMap;
-
-    for (const discussionId of Object.keys(discussionStatusMap)) {
-      if (!publicStageData.discussionTimestampMap[discussionId]) {
-        publicStageData.discussionTimestampMap[discussionId] = {};
-      }
-      publicStageData.discussionTimestampMap[discussionId][
-        data.participantPublicId
-      ] = discussionStatusMap[discussionId];
-    }
-
-    // Update current discussion ID if applicable
-    await updateCurrentDiscussionIndex(
-      data.experimentId,
-      data.cohortId,
-      data.chatStageParticipantAnswer.id,
-      publicStageData,
-    );
-
-    transaction.set(publicDocument, publicStageData);
   });
 
   return {id: document.id};
