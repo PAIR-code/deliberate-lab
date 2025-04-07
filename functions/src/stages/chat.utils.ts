@@ -344,6 +344,7 @@ export async function selectSingleAgentParticipantChatResponse(
   const agentResponses: AgentChatResponse[] = [];
   // Generate responses for agent participants
   for (const participant of participants) {
+    // TODO(vivcodes): Call agent mediators asynchronously
     const response = await getAgentParticipantChatResponse(
       participant,
       chatMessages,
@@ -501,6 +502,7 @@ export async function selectSingleAgentMediatorChatResponse(
   const agentResponses: AgentChatResponse[] = [];
   // Generate responses for agent mediators
   for (const mediator of mediators) {
+    // TODO(vivcodes): Call agent mediators asynchronously
     const response = await getAgentMediatorChatResponse(
       mediator,
       chatMessages,
