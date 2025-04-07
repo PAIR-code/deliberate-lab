@@ -5,6 +5,7 @@ import {
   ExperimenterData,
   ModelGenerationConfig,
   ParticipantProfileExtended,
+  ParticipantStatus,
   StageConfig,
   StageKind,
 } from '@deliberation-lab/utils';
@@ -123,6 +124,12 @@ export async function completeStageAsAgentParticipant(
   const participantDoc = app
     .firestore()
     .doc(`experiments/${experimentId}/participants/${participant.privateId}`);
+
+  // Only update if participant is active, etc.
+  const status = participant.currentStatus;
+  if (status !== ParticipantStatus.IN_PROGRESS) {
+    return;
+  }
 
   const completeStage = async () => {
     await updateParticipantNextStage(
