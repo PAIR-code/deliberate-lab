@@ -964,7 +964,6 @@ export class AgentEditorComponent extends MobxLitElement {
       );
     };
 
-    // TODO(mkbehr): type dropdown is too tall
     return html`
       <div class="name-value-input">
         <pr-textarea
