@@ -22,7 +22,7 @@ import {
   StructuredOutputType,
   StructuredOutputDataType,
   StructuredOutputSchema,
-  printSchema,
+  makeStructuredOutputPrompt,
   structuredOutputEnabled,
 } from '@deliberation-lab/utils';
 import {LLM_AGENT_AVATARS} from '../../shared/constants';
@@ -168,6 +168,7 @@ export class AgentEditorComponent extends MobxLitElement {
           <div class="section-title">Prompt settings</div>
           ${this.renderAgentPrompt(agentConfig, promptConfig)}
           ${this.renderAgentStructuredOutputConfig(agentConfig, promptConfig)}
+          ${this.renderPromptPreview(promptConfig)}
         </div>
         <div class="divider"></div>
         <div class="section">
@@ -409,18 +410,16 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderAgentStructuredOutputSchema(
-    agentPromptConfig: AgentChatPromptConfig,
-  ) {
+  private renderPromptPreview(agentPromptConfig: AgentChatPromptConfig) {
     const config = agentPromptConfig.structuredOutputConfig;
-    if (!structuredOutputEnabled(config) || !config.schema) {
-      return nothing;
+    let prompt = agentPromptConfig.promptContext;
+    if (structuredOutputEnabled(config) && config.schema) {
+      prompt += `\n${makeStructuredOutputPrompt(config)}`;
     }
     return html`
-      <div>
-        <div>Structured output schema (defined by fields above):</div>
-        <div class="description">${printSchema(config.schema)}</div>
-        <div></div>
+      <div class="code-wrapper">
+        <div class="field-title">Prompt preview</div>
+        <pre><code>${prompt}</code></pre>
       </div>
     `;
   }

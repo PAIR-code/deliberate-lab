@@ -191,3 +191,17 @@ select {
   border-radius: common.$spacing-medium;
   color: var(--md-sys-color-on-surface-variant);
 }
+
+.code-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+  max-width: calc(common.$info-content-max-width - common.$spacing-xxl);
+  width: 100%;
+}
+
+pre {
+  background: var(--md-sys-color-surface-variant);
+  margin: 0;
+  overflow: auto;
+  padding: common.$spacing-medium;
+}
