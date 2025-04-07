@@ -4,12 +4,14 @@ import {
 } from 'firebase-functions/v2/firestore';
 import {Timestamp} from 'firebase-admin/firestore';
 import {
+  CohortConfig,
   Experiment,
   ParticipantProfileExtended,
   ParticipantStatus,
   StageKind,
 } from '@deliberation-lab/utils';
 import {completeStageAsAgentParticipant} from './agent.utils';
+import {updateCohortStageUnlocked} from './participant.utils';
 import {app} from './app';
 
 /** If created participant is agent, start experiment. */
@@ -44,6 +46,12 @@ export const startAgentParticipant = onDocumentCreated(
         participant.timestamps.readyStages[participant.currentStageId] =
           Timestamp.now();
       }
+      await updateCohortStageUnlocked(
+        event.params.experimentId,
+        participant.currentCohortId,
+        participant.currentStageId,
+        participant.privateId,
+      );
       transaction.set(participantDoc, participant);
     }); // end transaction
   },
@@ -77,6 +85,17 @@ export const updateAgentParticipant = onDocumentUpdated(
         return;
       }
 
+      // Get cohort config
+      const cohort = (
+        await app
+          .firestore()
+          .collection('experiments')
+          .doc(event.params.experimentId)
+          .collection('cohorts')
+          .doc(participant.currentCohortId)
+          .get()
+      ).data() as CohortConfig;
+
       // Make ONE update for the agent participant (e.g., alter status
       // OR complete a stage)
       if (participant.status === ParticipantStatus.TRANSFER_PENDING) {
@@ -90,6 +109,9 @@ export const updateAgentParticipant = onDocumentUpdated(
           participant.currentStatus = ParticipantStatus.IN_PROGRESS;
         }
         transaction.set(participantDoc, participant);
+      } else if (!cohort.stageUnlockMap[participant.currentStageId]) {
+        // If stage is locked, do nothing
+        // TODO: Write log about stage being locked
       } else {
         // Otherwise, try completing the current stage
         const experiment = (await experimentDoc.get()).data() as Experiment;

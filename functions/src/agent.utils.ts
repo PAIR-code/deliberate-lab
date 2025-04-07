@@ -139,9 +139,6 @@ export async function completeStageAsAgentParticipant(
     );
   };
 
-  // TODO: Set up trigger for cohort updates => if a stage is locked,
-  // don't update the agent participant profile yet. Instead, wait for
-  // cohort update that unlocks stage to continue
   const stageDoc = app
     .firestore()
     .collection('experiments')
@@ -183,8 +180,6 @@ export async function completeStageAsAgentParticipant(
         participant, // profile
         participant.agentConfig, // agent config
       );
-      // TODO: Add chat trigger to check if participant is ready
-      // to end chat
       break;
     case StageKind.RANKING:
       if (!experimenterData) {

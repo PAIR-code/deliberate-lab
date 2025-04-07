@@ -1,8 +1,10 @@
 import {Timestamp} from 'firebase-admin/firestore';
 import {
+  Experiment,
   ParticipantProfileExtended,
   ParticipantStatus,
 } from '@deliberation-lab/utils';
+import {completeStageAsAgentParticipant} from './agent.utils';
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
@@ -172,5 +174,17 @@ export async function updateCohortStageUnlocked(
     // TODO: Now that the given stage is unlocked, active any agent
     // participants that are ready to start (and have not yet completed)
     // the current stage
+    const experiment = (
+      await app.firestore().collection('experiments').doc(experimentId).get()
+    ).data() as Experiment;
+    for (const participant of participants) {
+      if (participant.agentConfig && participant.currentStageId === stageId) {
+        await completeStageAsAgentParticipant(
+          experiment,
+          participant,
+          transaction,
+        );
+      } // end agent participant if
+    } // end participant loop
   });
 }
