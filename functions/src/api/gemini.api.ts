@@ -4,7 +4,13 @@ import {
   HarmCategory,
   HarmBlockThreshold,
 } from '@google/generative-ai';
-import {AgentGenerationConfig} from '@deliberation-lab/utils';
+import {
+  AgentGenerationConfig,
+  StructuredOutputType,
+  StructuredOutputDataType,
+  StructuredOutputConfig,
+  StructuredOutputSchema,
+} from '@deliberation-lab/utils';
 
 const GEMINI_DEFAULT_MODEL = 'gemini-1.5-pro-latest';
 const DEFAULT_FETCH_TIMEOUT = 300 * 1000; // This is the Chrome default
@@ -29,6 +35,80 @@ const SAFETY_SETTINGS = [
     threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
   },
 ];
+
+function makeStructuredOutputSchema(
+  schema: StructuredOutputSchema,
+): object | null {
+  const typeMap: {[key in StructuredOutputDataType]?: string} = {
+    [StructuredOutputDataType.STRING]: 'STRING',
+    [StructuredOutputDataType.NUMBER]: 'NUMBER',
+    [StructuredOutputDataType.INTEGER]: 'INTEGER',
+    [StructuredOutputDataType.BOOLEAN]: 'BOOLEAN',
+    [StructuredOutputDataType.ARRAY]: 'ARRAY',
+    [StructuredOutputDataType.OBJECT]: 'OBJECT',
+  };
+  const type = typeMap[schema.type];
+  if (!type) {
+    console.error(
+      `Error parsing structured output config: unrecognized data type ${dataType}`,
+    );
+    return null;
+  }
+
+  let properties = null;
+  let orderedPropertyNames = null;
+
+  if (schema.properties?.length > 0) {
+    properties = {};
+    orderedPropertyNames = [];
+    schema.properties.forEach((property) => {
+      properties[property.name] = makeStructuredOutputSchema(property.schema);
+      orderedPropertyNames.push(property.name);
+    });
+  }
+
+  const itemsSchema = schema.arrayItems
+    ? makeStructuredOutputSchema(schema.arrayItems)
+    : null;
+
+  return {
+    type: type,
+    description: schema.description,
+    nullable: false,
+    properties: properties,
+    propertyOrdering: orderedPropertyNames,
+    required: orderedPropertyNames,
+    items: itemsSchema,
+  };
+}
+
+function makeStructuredOutputGenerationConfig(
+  structuredOutputConfig?: StructuredOutputConfig,
+): Partial<GenerationConfig> | null {
+  if (
+    !structuredOutputConfig ||
+    structuredOutputConfig.type === StructuredOutputType.NONE
+  ) {
+    return {responseMimeType: 'text/plain'};
+  }
+  if (structuredOutputConfig.type === StructuredOutputType.JSON_FORMAT) {
+    return {responseMimeType: 'application/json'};
+  }
+  if (!structuredOutputConfig.schema) {
+    console.error(
+      `Expected schema for structured output type ${structuredOutputConfig.type}`,
+    );
+    return null;
+  }
+  const schema = makeStructuredOutputSchema(structuredOutputConfig.schema);
+  if (!schema) {
+    return null;
+  }
+  return {
+    responseMimeType: 'application/json',
+    responseSchema: schema,
+  };
+}
 
 /** Makes Gemini API call. */
 export async function callGemini(
@@ -68,6 +148,7 @@ export async function getGeminiAPIResponse(
   modelName: string,
   promptText: string,
   generationConfig: AgentGenerationConfig,
+  structuredOutputConfig?: StructuredOutputConfig = null,
   stopSequences: string[] = [],
 ): Promise<ModelResponse> {
   const customFields = Object.fromEntries(
@@ -75,6 +156,9 @@ export async function getGeminiAPIResponse(
       field.name,
       field.value,
     ]),
+  );
+  const structuredOutputGenerationConfig = makeStructuredOutputGenerationConfig(
+    structuredOutputConfig,
   );
   const geminiConfig: GenerationConfig = {
     stopSequences,
@@ -84,17 +168,13 @@ export async function getGeminiAPIResponse(
     topK: 16,
     presencePenalty: generationConfig.presencePenalty,
     frequencyPenalty: generationConfig.frequencyPenalty,
-    ...customFields
+    ...structuredOutputGenerationConfig,
+    ...customFields,
   };
 
   let response = {text: ''};
   try {
-    response = await callGemini(
-      apiKey,
-      promptText,
-      geminiConfig,
-      modelName
-    );
+    response = await callGemini(apiKey, promptText, geminiConfig, modelName);
   } catch (error: any) {
     if (error.message.includes(QUOTA_ERROR_CODE.toString())) {
       console.error('API quota exceeded');

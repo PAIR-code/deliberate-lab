@@ -1,5 +1,3 @@
-import {createProfileStage} from '@deliberation-lab/utils';
-import {createAgentResponseConfig} from '@deliberation-lab/utils';
 import {
   createAgentChatPromptConfig,
   createAgentChatSettings,
@@ -7,6 +5,7 @@ import {
   createChatStage,
   createMetadataConfig,
   createParticipantProfileBase,
+  createProfileStage,
   AgentChatPromptConfig,
   AgentDataObject,
   ProfileType,
@@ -78,11 +77,6 @@ function createLennyAgent(): AgentDataObject {
         canSelfTriggerCalls: false,
         maxResponses: 10,
       }),
-      responseConfig: createAgentResponseConfig({
-        isJSON: true,
-        messageField: 'response',
-        explanationField: 'explanation',
-      }),
     },
   );
 
@@ -111,11 +105,6 @@ function createBobAgent(): AgentDataObject {
         canSelfTriggerCalls: false,
         maxResponses: 10,
       }),
-      responseConfig: createAgentResponseConfig({
-        isJSON: true,
-        messageField: 'response',
-        explanationField: 'explanation',
-      }),
     },
   );
 
@@ -142,11 +131,6 @@ function createRhondaAgent(): AgentDataObject {
         wordsPerMinute: 100,
         canSelfTriggerCalls: false,
         maxResponses: 10,
-      }),
-      responseConfig: createAgentResponseConfig({
-        isJSON: true,
-        messageField: 'response',
-        explanationField: 'explanation',
       }),
     },
   );
@@ -175,11 +159,6 @@ function createModeratorAgent(): AgentDataObject {
         wordsPerMinute: 300,
         canSelfTriggerCalls: false,
         maxResponses: 10,
-      }),
-      responseConfig: createAgentResponseConfig({
-        isJSON: true,
-        messageField: 'response',
-        explanationField: 'explanation',
       }),
     },
   );

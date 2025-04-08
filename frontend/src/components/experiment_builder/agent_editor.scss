@@ -47,7 +47,8 @@
   padding: common.$main-content-padding;
 }
 
-.section-header {
+.section-header,
+.subsection-header {
   @include common.flex-column;
 }
 
@@ -55,7 +56,8 @@
   @include typescale.title-medium;
 }
 
-.section {
+.section,
+.subsection {
   @include common.flex-column;
   gap: common.$spacing-large;
 }
@@ -67,7 +69,8 @@
 }
 
 .field-title,
-.radio-question-label {
+.radio-question-label,
+.small {
   @include typescale.label-small;
 }
 
@@ -175,4 +178,30 @@ pr-textarea {
     background: var(--md-sys-color-error-container);
     color: var(--md-sys-color-on-error-container);
   }
+}
+
+.select-field {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
+select {
+  @include common.select;
+  background: var(--md-sys-color-surface-variant);
+  border-radius: common.$spacing-medium;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.code-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+  max-width: calc(common.$info-content-max-width - common.$spacing-xxl);
+  width: 100%;
+}
+
+pre {
+  background: var(--md-sys-color-surface-variant);
+  margin: 0;
+  overflow: auto;
+  padding: common.$spacing-medium;
 }

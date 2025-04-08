@@ -15,13 +15,15 @@ import {ExperimentService} from '../../services/experiment.service';
 import {
   AgentChatPromptConfig,
   AgentPersonaConfig,
-  AgentResponseConfig,
   ApiKeyType,
   StageConfig,
   StageKind,
-  checkApiKeyExists,
-  DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
-  DEFAULT_STRING_FORMATTING_INSTRUCTIONS,
+  StructuredOutputConfig,
+  StructuredOutputType,
+  StructuredOutputDataType,
+  StructuredOutputSchema,
+  makeStructuredOutputPrompt,
+  structuredOutputEnabled,
 } from '@deliberation-lab/utils';
 import {LLM_AGENT_AVATARS} from '../../shared/constants';
 import {getHashBasedColor} from '../../shared/utils';
@@ -162,10 +164,20 @@ export class AgentEditorComponent extends MobxLitElement {
       return html`
         <div>${this.renderTestPromptButton(agentConfig, promptConfig)}</div>
         <div class="divider"></div>
-        ${this.renderAgentPrompt(agentConfig, promptConfig)}
-        ${this.renderAgentResponseConfig(agentConfig, promptConfig)}
-        ${this.renderAgentWordsPerMinute(agentConfig, promptConfig)}
+        <div class="section">
+          <div class="section-title">Prompt settings</div>
+          ${this.renderAgentPrompt(agentConfig, promptConfig)}
+          ${this.renderAgentStructuredOutputConfig(agentConfig, promptConfig)}
+          ${this.renderPromptPreview(promptConfig)}
+        </div>
+        <div class="divider"></div>
+        <div class="section">
+          <div class="section-title">Chat settings</div>
+          ${this.renderAgentWordsPerMinute(agentConfig, promptConfig)}
+        </div>
+        <div class="divider"></div>
         ${this.renderAgentSamplingParameters(agentConfig, promptConfig)}
+        <div class="divider"></div>
         ${this.renderAgentCustomRequestBodyFields(agentConfig, promptConfig)}
         <div class="divider"></div>
         <pr-button
@@ -394,6 +406,20 @@ export class AgentEditorComponent extends MobxLitElement {
           @input=${updatePrompt}
         >
         </pr-textarea>
+      </div>
+    `;
+  }
+
+  private renderPromptPreview(agentPromptConfig: AgentChatPromptConfig) {
+    const config = agentPromptConfig.structuredOutputConfig;
+    let prompt = agentPromptConfig.promptContext;
+    if (structuredOutputEnabled(config) && config.schema) {
+      prompt += `\n${makeStructuredOutputPrompt(config)}`;
+    }
+    return html`
+      <div class="code-wrapper">
+        <div class="field-title">Prompt preview</div>
+        <pre><code>${prompt}</code></pre>
       </div>
     `;
   }
@@ -710,30 +736,120 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  // TODO(mkbehr): Update to match new structured output setup
-  private renderAgentResponseConfig(
+  // TODO(mkbehr): allow for reordering config fields
+  private renderAgentStructuredOutputConfig(
     agent: AgentPersonaConfig,
     agentPromptConfig: AgentChatPromptConfig,
   ) {
-    const config = agentPromptConfig.responseConfig;
-    const updateConfig = (responseConfig: Partial<AgentResponseConfig>) => {
-      this.agentEditor.updateAgentMediatorResponseConfig(
+    const config = agentPromptConfig.structuredOutputConfig;
+    const updateConfig = (
+      structuredOutputConfig: Partial<StructuredOutputConfig>,
+    ) => {
+      this.agentEditor.updateAgentMediatorStructuredOutputConfig(
         agent.id,
         agentPromptConfig.id,
-        responseConfig,
+        structuredOutputConfig,
       );
     };
-    const updateFormattingInstructions = (e: InputEvent) => {
-      const formattingInstructions = (e.target as HTMLTextAreaElement).value;
-      updateConfig({formattingInstructions});
+    const updateEnabled = () => {
+      const enabled = !config.enabled;
+      updateConfig({enabled});
     };
-    const updateJSON = () => {
-      updateConfig({
-        isJSON: !config.isJSON,
-        formattingInstructions: config.isJSON
-          ? DEFAULT_STRING_FORMATTING_INSTRUCTIONS
-          : DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
-      });
+    const updateAppendToPrompt = () => {
+      const appendToPrompt = !config.appendToPrompt;
+      updateConfig({appendToPrompt});
+    };
+    const updateType = (e: InputEvent) => {
+      const type = (e.target as HTMLSelectElement)
+        .value as StructuredOutputType;
+      updateConfig({type});
+    };
+
+    const mainSettings = () => {
+      if (!config.enabled) {
+        return nothing;
+      }
+      return html`
+        <div class="field">
+          <label for="structuredOutputType">Structured Output Type</label>
+          <div class="description">
+            Constrain the sampler to produce valid JSON. Only supported for
+            Gemini.
+          </div>
+          <select
+            id="structuredOutputType"
+            .selected=${config.type}
+            @change=${updateType}
+            ?disabled=${!this.experimentEditor.canEditStages}
+          >
+            <option value="${StructuredOutputType.NONE}">
+              No output forcing
+            </option>
+            <option value="${StructuredOutputType.JSON_FORMAT}">
+              Force JSON output
+            </option>
+            <option value="${StructuredOutputType.JSON_SCHEMA}">
+              Force JSON output with schema
+            </option>
+          </select>
+        </div>
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${config.appendToPrompt}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @click=${updateAppendToPrompt}
+          >
+          </md-checkbox>
+          <div>
+            Include explanation of structured output format in prompt
+            <span class="small">
+              (e.g., "Return only valid JSON according to the following
+              schema...")
+            </span>
+          </div>
+        </div>
+        ${this.renderAgentStructuredOutputSchemaFields(
+          agent,
+          agentPromptConfig,
+        )}
+      `;
+    };
+
+    return html`
+      <div class="checkbox-wrapper">
+        <md-checkbox
+          touch-target="wrapper"
+          ?checked=${config.enabled}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @click=${updateEnabled}
+        >
+        </md-checkbox>
+        <div>Enable structured outputs</div>
+      </div>
+      ${mainSettings()}
+    `;
+  }
+
+  private renderAgentStructuredOutputSchemaFields(
+    agent: AgentPersonaConfig,
+    agentPromptConfig: AgentChatPromptConfig,
+  ) {
+    const config = agentPromptConfig.structuredOutputConfig;
+    const addField = () => {
+      this.agentEditor.addAgentMediatorStructuredOutputSchemaField(
+        agent.id,
+        agentPromptConfig.id,
+      );
+    };
+    const updateConfig = (
+      structuredOutputConfig: Partial<StructuredOutputConfig>,
+    ) => {
+      this.agentEditor.updateAgentMediatorStructuredOutputConfig(
+        agent.id,
+        agentPromptConfig.id,
+        structuredOutputConfig,
+      );
     };
     const updateMessageField = (e: InputEvent) => {
       const messageField = (e.target as HTMLTextAreaElement).value;
@@ -743,66 +859,145 @@ export class AgentEditorComponent extends MobxLitElement {
       const explanationField = (e.target as HTMLTextAreaElement).value;
       updateConfig({explanationField});
     };
+    const updateShouldRespondField = (e: InputEvent) => {
+      const shouldRespondField = (e.target as HTMLTextAreaElement).value;
+      updateConfig({shouldRespondField});
+    };
 
     return html`
-      <div class="checkbox-wrapper">
-        <md-checkbox
-          touch-target="wrapper"
-          ?checked=${config.isJSON}
-          ?disabled=${!this.experimentEditor.isCreator}
-          @click=${updateJSON}
-        >
-        </md-checkbox>
-        <div>Parse agent response as JSON</div>
-      </div>
-      <div class="description">
-        If JSON parsing enabled: Make sure to include appropriate
-        instructions/examples in your prompt to avoid parsing errors (if the
-        specified message field is non-empty, its contents will be turned into a
-        chat message). If disabled: non-empty responses will be turned into
-        messages.
+      <div class="subsection">
+        <div class="subsection-header">
+          <div>Structured output schema fields</div>
+          <div class="description">
+            Add fields to the structured output schema.
+          </div>
+        </div>
+        ${config.schema?.properties?.map((field, fieldIndex) =>
+          this.renderAgentStructuredOutputSchemaField(
+            agent,
+            agentPromptConfig,
+            field,
+            fieldIndex,
+          ),
+        )}
+        <pr-button @click=${addField}>Add field</pr-button>
       </div>
       <div class="field">
         <pr-textarea
-          label="Formatting instructions and examples"
-          placeholder="Instructions and examples for formatting the agent response"
+          label="JSON field to extract debugging explanation or chain of thought from"
+          placeholder="JSON field to extract debugging explanation from"
           variant="outlined"
-          .value=${config.formattingInstructions}
+          .value=${config.explanationField}
           ?disabled=${!this.experimentEditor.isCreator}
-          @input=${updateFormattingInstructions}
+          @input=${updateExplanationField}
         >
         </pr-textarea>
       </div>
-      ${!config.isJSON
-        ? nothing
-        : html`
-            <div class="field">
-              <pr-textarea
-                label="JSON field to extract chat message from"
-                placeholder="JSON field to extract chat message from"
-                variant="outlined"
-                .value=${config.messageField}
-                ?disabled=${!this.experimentEditor.isCreator}
-                @input=${updateMessageField}
-              >
-              </pr-textarea>
-            </div>
-          `}
-      ${!config.isJSON
-        ? nothing
-        : html`
-            <div class="field">
-              <pr-textarea
-                label="JSON field to extract debugging explanation from"
-                placeholder="JSON field to extract debugging explanation from"
-                variant="outlined"
-                .value=${config.explanationField}
-                ?disabled=${!this.experimentEditor.isCreator}
-                @input=${updateExplanationField}
-              >
-              </pr-textarea>
-            </div>
-          `}
+      <div class="field">
+        <pr-textarea
+          label="JSON field to extract boolean decision to respond from"
+          placeholder="JSON field to extract boolean decision to respond from"
+          variant="outlined"
+          .value=${config.shouldRespondField}
+          ?disabled=${!this.experimentEditor.isCreator}
+          @input=${updateShouldRespondField}
+        >
+        </pr-textarea>
+      </div>
+      <div class="field">
+        <pr-textarea
+          label="JSON field to extract chat message from"
+          placeholder="JSON field to extract chat message from"
+          variant="outlined"
+          .value=${config.messageField}
+          ?disabled=${!this.experimentEditor.isCreator}
+          @input=${updateMessageField}
+        >
+        </pr-textarea>
+      </div>
+    `;
+  }
+
+  private renderAgentStructuredOutputSchemaField(
+    agent: AgentPersonaConfig,
+    agentPromptConfig: AgentChatPromptConfig,
+    field: {name: string; schema: StructuredOutputSchema},
+    fieldIndex: number,
+  ) {
+    const updateName = (e: InputEvent) => {
+      const name = (e.target as HTMLTextAreaElement).value;
+      this.agentEditor.updateAgentMediatorStructuredOutputSchemaField(
+        agent.id,
+        agentPromptConfig.id,
+        fieldIndex,
+        {name: name},
+      );
+    };
+
+    const updateType = (e: Event) => {
+      const type = (e.target as HTMLSelectElement)
+        .value as StructuredOutputDataType;
+      this.agentEditor.updateAgentMediatorStructuredOutputSchemaField(
+        agent.id,
+        agentPromptConfig.id,
+        fieldIndex,
+        {schema: {type: type}},
+      );
+    };
+
+    const updateDescription = (e: InputEvent) => {
+      const description = (e.target as HTMLTextAreaElement).value;
+      this.agentEditor.updateAgentMediatorStructuredOutputSchemaField(
+        agent.id,
+        agentPromptConfig.id,
+        fieldIndex,
+        {schema: {description: description}},
+      );
+    };
+
+    const deleteField = () => {
+      this.agentEditor.deleteAgentMediatorStructuredOutputSchemaField(
+        agent.id,
+        agentPromptConfig.id,
+        fieldIndex,
+      );
+    };
+
+    return html`
+      <div class="name-value-input">
+        <pr-textarea
+          label="Field name"
+          variant="outlined"
+          .value=${field.name}
+          @input=${updateName}
+        >
+        </pr-textarea>
+        <div class="select-field">
+          <div class="field-title">Field type</div>
+          <select .value=${field.schema.type} @change=${updateType}>
+            <option value="${StructuredOutputDataType.STRING}">STRING</option>
+            <option value="${StructuredOutputDataType.NUMBER}">NUMBER</option>
+            <option value="${StructuredOutputDataType.INTEGER}">INTEGER</option>
+            <option value="${StructuredOutputDataType.BOOLEAN}">BOOLEAN</option>
+          </select>
+        </div>
+        <pr-textarea
+          label="Field description"
+          variant="outlined"
+          .value=${field.schema.description}
+          @input=${updateDescription}
+        >
+        </pr-textarea>
+        <pr-icon-button
+          icon="close"
+          color="neutral"
+          padding="small"
+          variant="default"
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @click=${deleteField}
+        >
+        </pr-icon-button>
+      </div>
     `;
   }
 }

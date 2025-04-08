@@ -9,6 +9,7 @@
     "url": "git+https://github.com/PAIR-code/deliberate-lab.git"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.29.0",
     "eslint": "^9.20.1",
     "husky": "^9.1.7",
     "lint-staged": "^15.4.3",
@@ -22,8 +23,5 @@
   },
   "scripts": {
     "prepare": "husky"
-  },
-  "dependencies": {
-    "@typescript-eslint/eslint-plugin": "^8.24.0"
   }
 }
