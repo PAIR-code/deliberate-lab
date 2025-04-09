@@ -1,3 +1,4 @@
+import {Timestamp} from 'firebase-admin/firestore';
 import {
   AgentModelSettings,
   AgentPersonaConfig,
@@ -9,7 +10,6 @@ import {
   StageConfig,
   StageKind,
 } from '@deliberation-lab/utils';
-import {Transaction} from 'firebase-admin/firestore';
 
 import {updateParticipantNextStage} from './participant.utils';
 import {initiateChatDiscussion} from './stages/chat.utils';
@@ -118,7 +118,6 @@ export async function getAgentPersonas(experimentId: string) {
 export async function completeStageAsAgentParticipant(
   experiment: Experiment,
   participant: ParticipantProfileExtended,
-  transaction: Transaction,
 ) {
   const experimentId = experiment.id;
   const participantDoc = app
@@ -129,6 +128,19 @@ export async function completeStageAsAgentParticipant(
   const status = participant.currentStatus;
   if (status !== ParticipantStatus.IN_PROGRESS) {
     return;
+  }
+
+  // Ensure participants have start experiment, TOS, and current stage
+  // ready marked appropriately
+  if (!participant.timestamps.startExperiment) {
+    participant.timestamps.startExperiment = Timestamp.now();
+  }
+  if (!participant.timestamps.acceptedTOS) {
+    participant.timestamps.acceptedTOS = Timestamp.now();
+  }
+  if (!participant.timestamps.readyStages[participant.currentStageId]) {
+    participant.timestamps.readyStages[participant.currentStageId] =
+      Timestamp.now();
   }
 
   const completeStage = async () => {
@@ -192,13 +204,13 @@ export async function completeStageAsAgentParticipant(
         participant,
         stage,
       );
-      transaction.set(answerDoc, rankingAnswer);
+      answerDoc.set(rankingAnswer);
       await completeStage();
-      transaction.set(participantDoc, participant);
+      participantDoc.set(participant);
       break;
     default:
       console.log(`Move to next stage (${participant.publicId})`);
       await completeStage();
-      transaction.set(participantDoc, participant);
+      participantDoc.set(participant);
   }
 }

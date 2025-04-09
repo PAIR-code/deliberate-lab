@@ -171,7 +171,7 @@ export async function updateCohortStageUnlocked(
     cohortConfig.stageUnlockMap[stageId] = true;
     transaction.set(cohortDoc, cohortConfig);
 
-    // TODO: Now that the given stage is unlocked, active any agent
+    // Now that the given stage is unlocked, active any agent
     // participants that are ready to start (and have not yet completed)
     // the current stage
     const experiment = (
@@ -179,11 +179,7 @@ export async function updateCohortStageUnlocked(
     ).data() as Experiment;
     for (const participant of participants) {
       if (participant.agentConfig && participant.currentStageId === stageId) {
-        await completeStageAsAgentParticipant(
-          experiment,
-          participant,
-          transaction,
-        );
+        completeStageAsAgentParticipant(experiment, participant);
       } // end agent participant if
     } // end participant loop
   });

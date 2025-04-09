@@ -115,11 +115,7 @@ export const updateAgentParticipant = onDocumentUpdated(
       } else {
         // Otherwise, try completing the current stage
         const experiment = (await experimentDoc.get()).data() as Experiment;
-        await completeStageAsAgentParticipant(
-          experiment,
-          participant,
-          transaction,
-        );
+        await completeStageAsAgentParticipant(experiment, participant);
       }
     }); // end transaction
   },
