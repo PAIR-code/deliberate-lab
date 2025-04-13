@@ -9,7 +9,7 @@ import {
 } from '@deliberation-lab/utils';
 
 import {getGeminiAPIResponse} from './api/gemini.api';
-import {getOpenAIAPITextCompletionResponse} from './api/openai.api';
+import {getOpenAIAPIChatCompletionResponse} from './api/openai.api';
 import {ollamaChat} from './api/ollama.api';
 
 import {app} from './app';
@@ -83,7 +83,7 @@ export async function getOpenAIAPIResponse(
   prompt: string,
   generationConfig: ModelGenerationConfig,
 ): Promise<ModelResponse> {
-  return await getOpenAIAPITextCompletionResponse(
+  return await getOpenAIAPIChatCompletionResponse(
     data.apiKeys.openAIApiKey?.apiKey || '',
     data.apiKeys.openAIApiKey?.baseUrl || null,
     model,

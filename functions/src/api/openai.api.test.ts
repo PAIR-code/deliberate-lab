@@ -2,13 +2,13 @@
 import nock = require('nock');
 
 import {AgentGenerationConfig} from '@deliberation-lab/utils';
-import {getOpenAIAPITextCompletionResponse} from './openai.api';
+import {getOpenAIAPIChatCompletionResponse} from './openai.api';
 import {ModelResponse} from './model.response';
 
 describe('OpenAI-compatible API', () => {
-  it('handles text completion request', async () => {
+  it('handles chat completion request', async () => {
     nock('https://test.uri')
-      .post('/v1/completions', body => body.model == 'test-model')
+      .post('/v1/chat/completions', body => body.model == 'test-model')
       .reply(200, {
         id: 'test-id',
         object: 'text_completion',
@@ -32,7 +32,7 @@ describe('OpenAI-compatible API', () => {
       customRequestBodyFields: [{name: 'foo', value: 'bar'}],
     };
 
-    const response: ModelResponse = await getOpenAIAPITextCompletionResponse(
+    const response: ModelResponse = await getOpenAIAPIChatCompletionResponse(
       'testapikey',
       'https://test.uri/v1/',
       'test-model',
