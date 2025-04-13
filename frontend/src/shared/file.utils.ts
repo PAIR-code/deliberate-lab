@@ -350,10 +350,8 @@ export function getChipNegotiationTurnColumns(
   turn: ChipNegotiationTurnData | null,
 ): string[] {
   // Start with player list that is maxPlayers long and populate in order.
-  // Players have turns in order of their ID
-  // NOTE: Keep in sync with player turn logic on backend
   const players: string[] = [];
-  const playerList: string[] = game.data.metadata.players.sort();
+  const playerList: string[] = game.data.metadata.players;
   let index = 0;
   while (index < maxPlayers) {
     if (index < playerList.length) {

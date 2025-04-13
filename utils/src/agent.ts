@@ -4,13 +4,11 @@ import {
 } from './participant';
 import {generateId} from './shared';
 import {StageKind} from './stages/stage';
+import {DEFAULT_AGENT_MEDIATOR_PROMPT} from './stages/chat_stage.prompts';
 import {
-  DEFAULT_AGENT_MEDIATOR_PROMPT,
-  DEFAULT_RESPONSE_FIELD,
-  DEFAULT_EXPLANATION_FIELD,
-  DEFAULT_JSON_FORMATTING_INSTRUCTIONS,
-  DEFAULT_STRING_FORMATTING_INSTRUCTIONS,
-} from './stages/chat_stage.prompts';
+  StructuredOutputConfig,
+  createStructuredOutputConfig,
+} from './structured_output';
 
 /** Agent types and functions. */
 
@@ -82,10 +80,10 @@ export interface AgentChatSettings {
   maxResponses: number | null;
 }
 
-/** Settings for formatting agent response
+/** DEPRECATED: Settings for formatting agent response
  *  (e.g., expect JSON, use specific JSON field for response, use end token)
+ *  New config is StructuredOutputConfig.
  */
-// TODO(mkbehr): Deprecate in favor of new structured output setup?
 export interface AgentResponseConfig {
   isJSON: boolean;
   // JSON field to extract chat message from
@@ -112,8 +110,9 @@ export type AgentParticipantPromptConfig = BaseAgentPromptConfig;
  */
 export interface AgentChatPromptConfig extends BaseAgentPromptConfig {
   chatSettings: AgentChatSettings;
-  // TODO(mkbehr): Replace with structured output setup?
-  responseConfig: AgentResponseConfig;
+  structuredOutputConfig: StructuredOutputConfig;
+  // DEPRECATED: Use structuredOutputConfig, not responseConfig
+  responseConfig?: AgentResponseConfig;
 }
 
 export enum AgentPersonaType {
@@ -205,23 +204,6 @@ export function createAgentPromptSettings(
   };
 }
 
-/** Create agent response config. */
-// TODO(mkbehr): Deprecated in favor of new structured output setup?
-export function createAgentResponseConfig(
-  config: Partial<AgentResponseConfig> = {},
-): AgentResponseConfig {
-  const isJSON = config.isJSON ?? false;
-  return {
-    isJSON,
-    messageField: config.messageField ?? DEFAULT_RESPONSE_FIELD,
-    explanationField: config.explanationField ?? DEFAULT_EXPLANATION_FIELD,
-    formattingInstructions:
-      (config.formattingInstructions ?? isJSON)
-        ? DEFAULT_JSON_FORMATTING_INSTRUCTIONS
-        : DEFAULT_STRING_FORMATTING_INSTRUCTIONS,
-  };
-}
-
 export function createAgentChatPromptConfig(
   id: string, // stage ID
   type: StageKind, // stage kind
@@ -234,7 +216,8 @@ export function createAgentChatPromptConfig(
     promptSettings: config.promptSettings ?? createAgentPromptSettings(),
     generationConfig: config.generationConfig ?? createModelGenerationConfig(),
     chatSettings: config.chatSettings ?? createAgentChatSettings(),
-    responseConfig: config.responseConfig ?? createAgentResponseConfig(),
+    structuredOutputConfig:
+      config.structuredOutputConfig ?? createStructuredOutputConfig(),
   };
 }
 

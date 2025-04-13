@@ -19,6 +19,8 @@ import {
   AgentParticipantPromptConfig,
   AgentPersonaConfig,
   MediatorStatus,
+  StructuredOutputConfig,
+  createStructuredOutputConfig,
 } from '@deliberation-lab/utils';
 import {updateMediatorStatusCallable} from '../shared/callables';
 
@@ -73,7 +75,17 @@ export class AgentManager extends Service {
             'chatPrompts',
           ),
         )
-      ).docs.map((doc) => doc.data() as AgentChatPromptConfig);
+      ).docs.map(
+        (doc) =>
+          ({
+            // Include false, empty structured output config for experiments
+            // created before version 17
+            structuredOutputConfig: createStructuredOutputConfig({
+              enabled: false,
+            }),
+            ...doc.data(),
+          }) as AgentChatPromptConfig,
+      );
       const agentObject: AgentDataObject = {
         persona,
         participantPromptMap: {},
@@ -83,6 +95,13 @@ export class AgentManager extends Service {
         agentObject.participantPromptMap[prompt.id] = prompt;
       });
       chatPrompts.forEach((prompt) => {
+        // For experiments created before version 17 with structured output
+        // enabled, set StructuredOutputConfig enabled to true and remove
+        // deprecated AgentResponseConfig
+        if (prompt.responseConfig?.isJSON) {
+          prompt.structuredOutputConfig.enabled = true;
+          delete prompt.responseConfig;
+        }
         agentObject.chatPromptMap[prompt.id] = prompt;
       });
       dataObjects.push(agentObject);

@@ -13,11 +13,7 @@ import {
   ParticipantProfileBase,
   createParticipantProfileBase,
 } from '../participant';
-import {
-  AgentChatPromptConfig,
-  AgentResponseConfig,
-  createAgentResponseConfig,
-} from '../agent';
+import {AgentChatPromptConfig, AgentResponseConfig} from '../agent';
 import {MediatorProfile} from '../mediator';
 import {
   DEFAULT_MODEL,

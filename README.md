@@ -3,8 +3,8 @@
 🕊️ **Deliberate Lab** is a platform for running online research experiments
 on human + LLM group dynamics.
 
-- 🔎 [Wiki for researchers + developers](https://github.com/PAIR-code/deliberate-lab/wiki)
-- 👉 [Quick start for developers](https://github.com/PAIR-code/deliberate-lab/wiki/Getting-started-(for-developers))
+- 🔎 [Documentation for researchers + developers](https://pair-code.github.io/deliberate-lab/)
+- 👉 [Quick start for developers](https://pair-code.github.io/deliberate-lab/developers/run-locally)
 
 ## Citation
 

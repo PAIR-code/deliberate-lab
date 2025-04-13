@@ -31,9 +31,6 @@ import {
 } from '@deliberation-lab/utils';
 
 import {styles} from './experimenter_panel.scss';
-import {DEFAULT_STRING_FORMATTING_INSTRUCTIONS} from '@deliberation-lab/utils';
-import {DEFAULT_JSON_FORMATTING_INSTRUCTIONS} from '@deliberation-lab/utils';
-
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
 enum PanelView {
