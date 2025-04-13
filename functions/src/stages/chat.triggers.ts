@@ -217,7 +217,7 @@ export const updateCurrentChatDiscussionId = onDocumentWritten(
   },
 );
 
-/** When chat message is created, generate agent response if relevant. */
+/** When chat message is created, generate mediator agent response if relevant. */
 export const createAgentMessage = onDocumentCreated(
   {
     document:
@@ -307,7 +307,6 @@ export const createAgentMessage = onDocumentCreated(
       );
 
       // Write agent mediator message to conversation
-      // TODO: Or write agent participant message to conversation
       let explanation = '';
       if (agentResponse.promptConfig.responseConfig?.isJSON) {
         explanation =
@@ -459,6 +458,22 @@ export const createAgentParticipantMessage = onDocumentCreated(
       );
 
       // Write agent participant message to conversation
+      let explanation = '';
+      if (agentResponse.promptConfig.responseConfig?.isJSON) {
+        explanation =
+          agentResponse.parsed[
+            agentResponse.promptConfig.responseConfig.explanationField
+          ] ?? '';
+      } else if (
+        structuredOutputEnabled(
+          agentResponse.promptConfig.structuredOutputConfig,
+        )
+      ) {
+        explanation =
+          agentResponse.parsed[
+            agentResponse.promptConfig.structuredOutputConfig.explanationField
+          ] ?? '';
+      }
       const chatMessage = createParticipantChatMessage({
         profile: agentResponse.profile,
         discussionId: publicStageData.currentDiscussionId,
@@ -466,11 +481,7 @@ export const createAgentParticipantMessage = onDocumentCreated(
         timestamp: Timestamp.now(),
         senderId: agentResponse.profileId,
         agentId: agentResponse.agentId,
-        explanation: agentResponse.promptConfig.responseConfig.isJSON
-          ? (agentResponse.parsed[
-              agentResponse.promptConfig.responseConfig.explanationField
-            ] ?? '')
-          : '',
+        explanation,
       });
       const agentDocument = app
         .firestore()
