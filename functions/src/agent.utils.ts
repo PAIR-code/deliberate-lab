@@ -33,7 +33,7 @@ export async function getAgentResponse(
   if (modelSettings.apiType === ApiKeyType.GEMINI_API_KEY) {
     response = getGeminiResponse(
       data,
-      modelSettings.model,
+      modelSettings.modelName,
       prompt,
       generationConfig,
       structuredOutputConfig,
@@ -41,12 +41,12 @@ export async function getAgentResponse(
   } else if (modelSettings.apiType === ApiKeyType.OPENAI_API_KEY) {
     response = getOpenAIAPIResponse(
       data,
-      modelSettings.model,
+      modelSettings.modelName,
       prompt,
       generationConfig,
     );
-  } else if (modelSettings.model === ApiKeyType.OLLAMA_CUSTOM_URL) {
-    response = await getOllamaResponse(data, modelSettings.model, prompt);
+  } else if (modelSettings.apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
+    response = await getOllamaResponse(data, modelSettings.modelName, prompt);
   } else {
     console.error(
       'Error: invalid apiKey type: ',
