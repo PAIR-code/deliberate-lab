@@ -25,6 +25,7 @@ import {onCall} from 'firebase-functions/v2/https';
 
 import {app} from '../app';
 import {getAgentResponse} from '../agent.utils';
+import {getPastStagesPromptContext} from './stage.utils';
 
 /** Get the chat stage configuration based on the event. */
 export async function getChatStage(
@@ -316,6 +317,8 @@ export async function getAgentParticipantChatResponse(
 
   // Else, query API and return parsed response
   const response = await callChatAPI(
+    experimentId,
+    participant.privateId,
     participant.publicId,
     participant,
     participant.agentConfig,
@@ -345,7 +348,7 @@ export async function selectSingleAgentParticipantChatResponse(
   const agentResponses: AgentChatResponse[] = [];
   // Generate responses for agent participants
   for (const participant of participants) {
-    // TODO(vivcodes): Call agent mediators asynchronously
+    // TODO(vivcodes): Call agent participants asynchronously
     const response = await getAgentParticipantChatResponse(
       participant,
       chatMessages,
@@ -418,6 +421,8 @@ export async function getAgentMediatorChatResponse(
 
   // Else, query API and return parsed response
   return await callChatAPI(
+    experimentId,
+    null,
     mediator.id,
     mediator,
     mediator.agentConfig,
@@ -429,6 +434,8 @@ export async function getAgentMediatorChatResponse(
 }
 
 export async function callChatAPI(
+  experimentId: string,
+  privateId: string | null, // private participant ID or null if mediator
   profileId: string, // ID of participant or mediator
   profile: ParticipantProfileBase,
   agentConfig: ProfileAgentConfig,
@@ -438,9 +445,20 @@ export async function callChatAPI(
   experimenterData: ExperimenterData,
 ) {
   try {
+    const pastStageContext =
+      promptConfig.promptSettings.includeStageHistory && privateId
+        ? await getPastStagesPromptContext(
+            experimentId,
+            stageConfig.id,
+            privateId,
+            promptConfig.promptSettings.includeStageInfo,
+          )
+        : '';
+
     const prompt = getDefaultChatPrompt(
       profile,
       agentConfig,
+      pastStageContext,
       chatMessages,
       promptConfig,
       stageConfig,
@@ -474,7 +492,7 @@ export async function callChatAPI(
         console.log('Could not parse JSON!');
         return null;
       }
-      message = parsed[promptConfig.responseConfig.messageField] ?? '';
+      message = parsed[promptConfig.responseConfig?.messageField] ?? '';
     } else if (structuredOutputEnabled(promptConfig.structuredOutputConfig)) {
       // Reset message to empty before trying to fill with JSON response
       message = '';
@@ -570,6 +588,7 @@ export async function initiateChatDiscussion(
   experimentId: string,
   cohortId: string,
   stageConfig: StageConfig,
+  privateId: string,
   profileId: string,
   profile: ParticipantProfileBase,
   agentConfig: ProfileAgentConfig,
@@ -604,6 +623,8 @@ export async function initiateChatDiscussion(
 
     // Get chat response
     const response = await callChatAPI(
+      experimentId,
+      privateId,
       profileId,
       profile,
       agentConfig,
@@ -628,9 +649,9 @@ export async function initiateChatDiscussion(
         timestamp: Timestamp.now(),
         senderId: profileId,
         agentId: agentConfig.agentId,
-        explanation: response.promptConfig.responseConfig.isJSON
+        explanation: response.promptConfig.responseConfig?.isJSON
           ? (response.parsed[
-              response.promptConfig.responseConfig.explanationField
+              response.promptConfig.responseConfig?.explanationField
             ] ?? '')
           : '',
       });

@@ -1,7 +1,8 @@
 import {TOSStageConfig} from './tos_stage';
 import {getBaseStagePrompt} from './stage.prompts';
 
-export function getTOSStagePrompt(
+/** Get TOS stage context (e.g., to use in prompt for future stage). */
+export function getTOSStagePromptContext(
   stage: TOSStageConfig,
   includeStageInfo: boolean,
 ) {

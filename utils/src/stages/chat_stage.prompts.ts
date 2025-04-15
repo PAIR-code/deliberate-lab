@@ -25,6 +25,7 @@ Otherwise, do not respond.`;
 export function getDefaultChatPrompt(
   profile: ParticipantProfileBase,
   agentConfig: ProfileAgentConfig, // TODO: Add to params
+  pastStageContext: string,
   chatMessages: ChatMessage[],
   promptConfig: AgentChatPromptConfig,
   stageConfig: ChatStageConfig,
@@ -35,13 +36,28 @@ export function getDefaultChatPrompt(
       profile,
       agentConfig?.promptContext ?? '',
     ),
-    getBaseStagePrompt(
+    pastStageContext,
+    getChatStagePromptContext(
+      chatMessages,
       stageConfig,
       promptConfig.promptSettings.includeStageInfo,
     ),
-    getChatPromptMessageHistory(chatMessages, stageConfig),
     promptConfig.promptContext,
     makeStructuredOutputPrompt(promptConfig.structuredOutputConfig),
+  ].join('\n');
+}
+
+/** Get chat stage context
+ *  (e.g., to include in prompt for a current/future stage)
+ */
+export function getChatStagePromptContext(
+  chatMessages: ChatMessage[],
+  stageConfig: ChatStageConfig,
+  includeStageInfo: boolean,
+) {
+  return [
+    getBaseStagePrompt(stageConfig, includeStageInfo),
+    getChatPromptMessageHistory(chatMessages, stageConfig),
   ].join('\n');
 }
 

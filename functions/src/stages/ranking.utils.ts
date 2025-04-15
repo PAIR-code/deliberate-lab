@@ -67,6 +67,7 @@ export async function getAgentParticipantRankingStageResponse(
   const generationConfig = createModelGenerationConfig();
 
   // Call LLM API
+  // TODO: Use structured output
   const rawResponse = await getAgentResponse(
     experimenterData,
     prompt,
@@ -77,7 +78,7 @@ export async function getAgentParticipantRankingStageResponse(
 
   // Check console log for response
   console.log(
-    'TESTING AGENT PARTICIPANT PROMPT FOR RANKING STAGE\n',
+    'SENDING AGENT PARTICIPANT PROMPT FOR RANKING STAGE\n',
     `Experiment: ${experimentId}\n`,
     `Participant: ${participant.publicId}\n`,
     `Stage: ${stage.name} (${stage.kind})\n`,
@@ -86,7 +87,10 @@ export async function getAgentParticipantRankingStageResponse(
 
   // Confirm that response is in expected format, e.g., list of strings
   try {
-    const rankingList: string[] = JSON.parse(response);
+    // TODO: Use structured output
+    const rankingList: string[] = response
+      .split(',')
+      .map((item) => item.trim());
     const participantAnswer = createRankingStageParticipantAnswer({
       id: stage.id,
       rankingList,

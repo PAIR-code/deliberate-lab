@@ -40,6 +40,7 @@ import {
   hasEndedChat,
   selectSingleAgentMediatorChatResponse,
 } from './chat.utils';
+import {getPastStagesPromptContext} from './stage.utils';
 
 import {app} from '../app';
 
@@ -614,9 +615,18 @@ export const checkReadyToEndChat = onDocumentCreated(
         }
 
         // TODO: Use regular participant decision-making prompt, not chat prompt
+        const pastStageContext = promptConfig.promptSettings.includeStageHistory
+          ? await getPastStagesPromptContext(
+              event.params.experimentId,
+              event.params.stageId,
+              participant.privateId,
+              promptConfig.promptSettings.includeStageInfo,
+            )
+          : '';
         const prompt = getDefaultChatPrompt(
           participant,
           participant.agentConfig,
+          pastStageContext,
           chatMessages,
           promptConfig,
           stage,

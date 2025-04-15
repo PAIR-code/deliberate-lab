@@ -201,6 +201,7 @@ export async function completeStageAsAgentParticipant(
         experimentId,
         participant.currentCohortId,
         stage,
+        participant.privateId,
         participant.publicId,
         participant, // profile
         participant.agentConfig, // agent config

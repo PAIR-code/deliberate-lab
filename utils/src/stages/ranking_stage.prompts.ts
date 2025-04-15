@@ -1,6 +1,8 @@
 /** Prompt constants and utils for interacting with ranking stage. */
+import {AgentParticipantPromptConfig} from '../agent';
 import {ParticipantProfile, ParticipantProfileExtended} from '../participant';
 import {RankingStageConfig, RankingType} from './ranking_stage';
+import {getBaseStagePrompt} from './stage.prompts';
 
 // ************************************************************************* //
 // CONSTANTS                                                                 //
@@ -9,8 +11,8 @@ import {RankingStageConfig, RankingType} from './ranking_stage';
 // TODO: Update example item-ranking prompt to use actual ranking logic, etc.
 export const DEFAULT_AGENT_PARTICIPANT_RANKING_ITEMS_PROMPT = `
   Your job is to rank the following items based on their name.
-  Return the ranked items' IDs in an ordered list.
-  For example: ['item3', 'item1', 'item2']. Do not include
+  Return the ranked items' IDs in order separated by commas.
+  For example: item3,item1,item2. Do not include
   any explanations or other information. Only return the list.
 `;
 
@@ -18,8 +20,8 @@ export const DEFAULT_AGENT_PARTICIPANT_RANKING_ITEMS_PROMPT = `
 // etc.
 export const DEFAULT_AGENT_PARTICIPANT_RANKING_PARTICIPANTS_PROMPT = `
   Your job is to rank a series of participants. Return the ranked
-  participants' IDs in an ordered list. Do not include any explanations or
-  other information. Only return the list.
+  participants' IDs in order separated by commas.
+  Do not include any explanations or other information. Only return the list.
 `;
 
 // TODO: Remove temporary list of example participants
@@ -57,6 +59,18 @@ export const EXAMPLE_RANKING_PARTICIPANTS: {name: string; publicId: string}[] =
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
+
+/** Get ranking stage context (e.g., to use in prompt for future stage). */
+export function getRankingStagePromptContext(
+  stageConfig: RankingStageConfig,
+  includeStageInfo: boolean,
+  rankingList: string[], // ordered answers from RankingStageParticipantAnswer
+) {
+  return [
+    getBaseStagePrompt(stageConfig, includeStageInfo),
+    `You submitted the following ranking: ${rankingList.join(',')}`,
+  ].join('\n');
+}
 
 /**
  *  Create prompt for current agent participant to

@@ -1,7 +1,8 @@
 import {InfoStageConfig} from './info_stage';
 import {getBaseStagePrompt} from './stage.prompts';
 
-export function getInfoStagePrompt(
+/** Get info stage context (e.g., to use in prompt for future stage). */
+export function getInfoStagePromptContext(
   stage: InfoStageConfig,
   includeStageInfo: boolean,
 ) {
