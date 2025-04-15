@@ -63,6 +63,7 @@ export * from './stages/reveal_stage.validation';
 export * from './stages/salesperson_stage';
 export * from './stages/salesperson_stage.validation';
 export * from './stages/survey_stage';
+export * from './stages/survey_stage.prompts';
 export * from './stages/survey_stage.validation';
 export * from './stages/tos_stage';
 export * from './stages/tos_stage.prompts';

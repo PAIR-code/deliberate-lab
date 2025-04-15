@@ -7,6 +7,7 @@ import {
   getChatStagePromptContext,
   getInfoStagePromptContext,
   getRankingStagePromptContext,
+  getSurveyStagePromptContext,
   getTOSStagePromptContext,
 } from '@deliberation-lab/utils';
 import {getChatMessages} from './chat.utils';
@@ -70,6 +71,15 @@ export async function getStagePromptContext(
       .doc(participantPrivateId)
       .get()
   ).data() as ParticipantProfileExtended;
+  const answerData = await app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('participants')
+    .doc(participantPrivateId)
+    .collection('stageData')
+    .doc(stageId)
+    .get();
 
   switch (stageConfig.kind) {
     case StageKind.INFO:
@@ -77,23 +87,23 @@ export async function getStagePromptContext(
     case StageKind.TOS:
       return getTOSStagePromptContext(stageConfig, includeStageInfo);
     case StageKind.RANKING:
-      const rankingAnswerData = await app
-        .firestore()
-        .collection('experiments')
-        .doc(experimentId)
-        .collection('participants')
-        .doc(participantPrivateId)
-        .collection('stageData')
-        .doc(stageId)
-        .get();
-      const rankingList = rankingAnswerData.exists
-        ? (rankingAnswerData.data() as RankingStageParticipantAnswer)
-            .rankingList
+      const rankingList = answerData.exists
+        ? (answerData.data() as RankingStageParticipantAnswer).rankingList
         : [];
       return getRankingStagePromptContext(
         stageConfig,
         includeStageInfo,
         rankingList,
+      );
+    case StageKind.SURVEY:
+      const surveyAnswerMap = answerData.exists
+        ? (answerData.data() as SurveyStageParticipantAnswer).answerMap
+        : {};
+      return getSurveyStagePromptContext(
+        stageConfig,
+        includeStageInfo,
+        stageConfig.questions,
+        surveyAnswerMap,
       );
     case StageKind.CHAT:
       // TODO: Use cohort at time participant was in stage,

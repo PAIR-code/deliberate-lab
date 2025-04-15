@@ -16,6 +16,7 @@ import {
 import {updateParticipantNextStage} from './participant.utils';
 import {initiateChatDiscussion} from './stages/chat.utils';
 import {getAgentParticipantRankingStageResponse} from './stages/ranking.utils';
+import {getAgentParticipantSurveyStageResponse} from './stages/survey.utils';
 
 import {getGeminiAPIResponse} from './api/gemini.api';
 import {getOpenAIAPITextCompletionResponse} from './api/openai.api';
@@ -219,6 +220,21 @@ export async function completeStageAsAgentParticipant(
         stage,
       );
       answerDoc.set(rankingAnswer);
+      await completeStage();
+      participantDoc.set(participant);
+      break;
+    case StageKind.SURVEY:
+      if (!experimenterData) {
+        console.log('Could not find experimenter data and API key');
+        break;
+      }
+      const surveyAnswer = await getAgentParticipantSurveyStageResponse(
+        experimentId,
+        experimenterData,
+        participant,
+        stage,
+      );
+      answerDoc.set(surveyAnswer);
       await completeStage();
       participantDoc.set(participant);
       break;
