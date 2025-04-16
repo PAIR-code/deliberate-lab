@@ -1,14 +1,14 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import nock = require('nock');
 
-import {AgentGenerationConfig} from '@deliberation-lab/utils';
+import {ModelGenerationConfig} from '@deliberation-lab/utils';
 import {getOpenAIAPITextCompletionResponse} from './openai.api';
 import {ModelResponse} from './model.response';
 
 describe('OpenAI-compatible API', () => {
   it('handles text completion request', async () => {
     nock('https://test.uri')
-      .post('/v1/completions', body => body.model == 'test-model')
+      .post('/v1/completions', (body) => body.model == 'test-model')
       .reply(200, {
         id: 'test-id',
         object: 'text_completion',
@@ -24,7 +24,9 @@ describe('OpenAI-compatible API', () => {
         ],
       });
 
-    const generationConfig: AgentGenerationConfig = {
+    const generationConfig: ModelGenerationConfig = {
+      maxTokens: 300,
+      stopSequences: [],
       temperature: 0.7,
       topP: 1,
       frequencyPenalty: 0,

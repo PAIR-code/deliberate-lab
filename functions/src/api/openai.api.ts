@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import {AgentGenerationConfig} from '@deliberation-lab/utils';
+import {ModelGenerationConfig} from '@deliberation-lab/utils';
 import {ModelResponse} from './model.response';
 
 const MAX_TOKENS_FINISH_REASON = 'length';
@@ -9,7 +9,7 @@ export async function callOpenAITextCompletion(
   baseUrl: string | null,
   modelName: string,
   prompt: string,
-  generationConfig: AgentGenerationConfig,
+  generationConfig: ModelGenerationConfig,
 ) {
   const client = new OpenAI({
     apiKey: apiKey,
@@ -51,7 +51,7 @@ export async function getOpenAIAPITextCompletionResponse(
   baseUrl: string | null,
   modelName: string,
   promptText: string,
-  generationConfig: AgentGenerationConfig,
+  generationConfig: ModelGenerationConfig,
 ): Promise<ModelResponse> {
   if (!modelName) {
     console.warn('OpenAI API model name not set.');
@@ -79,6 +79,7 @@ export async function getOpenAIAPITextCompletionResponse(
       promptText,
       generationConfig,
     );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('API error:', error);
   }
