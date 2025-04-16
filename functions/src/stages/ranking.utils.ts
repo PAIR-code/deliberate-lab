@@ -12,6 +12,7 @@ import {
   createRankingStageParticipantAnswer,
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from '../agent.utils';
+import {getPastStagesPromptContext} from './stage.utils';
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
@@ -57,11 +58,20 @@ export async function getAgentParticipantRankingStageResponse(
     );
 
   // Build prompt
-  const prompt = createAgentParticipantRankingStagePrompt(
+  // TODO: Include participant profile context in prompt
+  const contextPrompt = await getPastStagesPromptContext(
+    experimentId,
+    stage.id,
+    participant.privateId,
+    true, // TODO: Use prompt settings for includeStageInfo
+  );
+  const currentStagePrompt = createAgentParticipantRankingStagePrompt(
     participant,
     stage,
     otherParticipants,
   );
+  const prompt = `${contextPrompt}\n${currentStagePrompt}`;
+
   // Build generation config
   // TODO: Use generation config from agent persona prompt
   const generationConfig = createModelGenerationConfig();

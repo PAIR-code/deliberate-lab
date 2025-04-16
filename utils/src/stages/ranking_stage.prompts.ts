@@ -10,7 +10,7 @@ import {getBaseStagePrompt} from './stage.prompts';
 
 // TODO: Update example item-ranking prompt to use actual ranking logic, etc.
 export const DEFAULT_AGENT_PARTICIPANT_RANKING_ITEMS_PROMPT = `
-  Your job is to rank the following items based on their name.
+  Your job is to rank the following items.
   Return the ranked items' IDs in order separated by commas.
   For example: item3,item1,item2. Do not include
   any explanations or other information. Only return the list.
