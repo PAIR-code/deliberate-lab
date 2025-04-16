@@ -4,7 +4,7 @@ import {ModelResponse} from './model.response';
 
 const MAX_TOKENS_FINISH_REASON = 'length';
 
-export async function callOpenAITextCompletion(
+export async function callOpenAIChatCompletion(
   apiKey: string,
   baseUrl: string | null,
   modelName: string,
@@ -22,9 +22,9 @@ export async function callOpenAITextCompletion(
       field.value,
     ]),
   );
-  const response = await client.completions.create({
+  const response = await client.chat.completions.create({
     model: modelName,
-    prompt: prompt,
+    messages: [{ role: 'user', content: prompt }],
     temperature: generationConfig.temperature,
     top_p: generationConfig.topP,
     frequency_penalty: generationConfig.frequencyPenalty,
@@ -46,7 +46,7 @@ export async function callOpenAITextCompletion(
   return {text: response.choices[0].text};
 }
 
-export async function getOpenAIAPITextCompletionResponse(
+export async function getOpenAIAPIChatCompletionResponse(
   apiKey: string,
   baseUrl: string | null,
   modelName: string,
@@ -72,7 +72,7 @@ export async function getOpenAIAPITextCompletionResponse(
 
   let response = {text: ''};
   try {
-    response = await callOpenAITextCompletion(
+    response = await callOpenAIChatCompletion(
       apiKey,
       baseUrl,
       modelName,

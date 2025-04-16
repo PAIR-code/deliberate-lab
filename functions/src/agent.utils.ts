@@ -19,7 +19,7 @@ import {getAgentParticipantRankingStageResponse} from './stages/ranking.utils';
 import {getAgentParticipantSurveyStageResponse} from './stages/survey.utils';
 
 import {getGeminiAPIResponse} from './api/gemini.api';
-import {getOpenAIAPITextCompletionResponse} from './api/openai.api';
+import {getOpenAIAPIChatCompletionResponse} from './api/openai.api';
 import {ollamaChat} from './api/ollama.api';
 
 import {app} from './app';
@@ -43,7 +43,7 @@ export async function getAgentResponse(
   if (modelSettings.apiType === ApiKeyType.GEMINI_API_KEY) {
     response = getGeminiResponse(
       data,
-      modelSettings.model,
+      modelSettings.modelName,
       prompt,
       generationConfig,
       structuredOutputConfig,
@@ -51,12 +51,12 @@ export async function getAgentResponse(
   } else if (modelSettings.apiType === ApiKeyType.OPENAI_API_KEY) {
     response = getOpenAIAPIResponse(
       data,
-      modelSettings.model,
+      modelSettings.modelName,
       prompt,
       generationConfig,
     );
-  } else if (modelSettings.model === ApiKeyType.OLLAMA_CUSTOM_URL) {
-    response = await getOllamaResponse(data, modelSettings.model, prompt);
+  } else if (modelSettings.apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
+    response = await getOllamaResponse(data, modelSettings.modelName, prompt);
   } else {
     console.error(
       'Error: invalid apiKey type: ',
@@ -93,7 +93,7 @@ export async function getOpenAIAPIResponse(
   prompt: string,
   generationConfig: ModelGenerationConfig,
 ): Promise<ModelResponse> {
-  return await getOpenAIAPITextCompletionResponse(
+  return await getOpenAIAPIChatCompletionResponse(
     data.apiKeys.openAIApiKey?.apiKey || '',
     data.apiKeys.openAIApiKey?.baseUrl || null,
     model,
