@@ -2,7 +2,7 @@
 import nock = require('nock');
 
 import {
-  AgentGenerationConfig,
+  ModelGenerationConfig,
   StructuredOutputType,
   StructuredOutputDataType,
 } from '@deliberation-lab/utils';
@@ -46,7 +46,9 @@ describe('Gemini API', () => {
   });
 
   it('handles text completion request', async () => {
-    const generationConfig: AgentGenerationConfig = {
+    const generationConfig: ModelGenerationConfig = {
+      maxTokens: 300,
+      stopSequences: [],
       temperature: 0.4,
       topP: 0.9,
       frequencyPenalty: 0,
@@ -67,7 +69,9 @@ describe('Gemini API', () => {
   });
 
   it('handles structured output config', async () => {
-    const generationConfig: AgentGenerationConfig = {
+    const generationConfig: ModelGenerationConfig = {
+      maxTokens: 300,
+      stopSequences: [],
       temperature: 0.4,
       topP: 0.9,
       frequencyPenalty: 0,

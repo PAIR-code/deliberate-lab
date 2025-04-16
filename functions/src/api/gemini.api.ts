@@ -5,7 +5,7 @@ import {
   HarmBlockThreshold,
 } from '@google/generative-ai';
 import {
-  AgentGenerationConfig,
+  ModelGenerationConfig,
   StructuredOutputType,
   StructuredOutputDataType,
   StructuredOutputConfig,
@@ -147,9 +147,8 @@ export async function getGeminiAPIResponse(
   apiKey: string,
   modelName: string,
   promptText: string,
-  generationConfig: AgentGenerationConfig,
+  generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig = null,
-  stopSequences: string[] = [],
 ): Promise<ModelResponse> {
   const customFields = Object.fromEntries(
     generationConfig.customRequestBodyFields.map((field) => [
@@ -161,8 +160,8 @@ export async function getGeminiAPIResponse(
     structuredOutputConfig,
   );
   const geminiConfig: GenerationConfig = {
-    stopSequences,
-    maxOutputTokens: 300,
+    stopSequences: generationConfig.stopSequences,
+    maxOutputTokens: generationConfig.maxTokens,
     temperature: generationConfig.temperature,
     topP: generationConfig.topP,
     topK: 16,
