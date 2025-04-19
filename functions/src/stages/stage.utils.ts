@@ -108,7 +108,7 @@ export async function getStagePromptContext(
     case StageKind.CHAT:
       // TODO: Use cohort at time participant was in stage,
       // NOT participant's current cohort
-      const chatMessages = getChatMessages(
+      const chatMessages = await getChatMessages(
         experimentId,
         participant.currentCohortId,
         stageId,
