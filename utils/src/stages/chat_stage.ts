@@ -98,7 +98,9 @@ export enum ChatMessageType {
 
 /** Format for LLM API chat message output. */
 export interface AgentChatResponse {
-  mediator: MediatorProfile;
+  profile: ParticipantProfileBase;
+  profileId: string; // ID of participant or mediator
+  agentId: string; // ID of agent persona
   promptConfig: AgentChatPromptConfig;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   parsed: any;
@@ -238,7 +240,7 @@ export function createExperimenterChatMessage(
 
 /** Create participant chat stage answer. */
 export function createChatStageParticipantAnswer(
-  config: Partial<ChatStageParticipantAnswer>,
+  config: Partial<ChatStageParticipantAnswer> = {},
 ): ChatStageParticipantAnswer {
   return {
     id: config.id ?? generateId(),

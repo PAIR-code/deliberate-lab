@@ -17,8 +17,8 @@ import {
 // Experiment config
 // ****************************************************************************
 export const RTV_METADATA = createMetadataConfig({
-  name: 'Reality TV Chat',
-  publicName: 'Reality TV Chat',
+  name: 'TV Debate',
+  publicName: 'TV Debate',
   description:
     'A debate scenario that showcases multi-agent conversation and facilitation.',
 });
@@ -48,12 +48,7 @@ export function getRTVStageConfigs(): StageConfig[] {
   return stages;
 }
 
-export const RTV_AGENTS: AgentDataObject[] = [
-  createLennyAgent(),
-  createBobAgent(),
-  createRhondaAgent(),
-  createModeratorAgent(),
-];
+export const RTV_AGENTS: AgentDataObject[] = [createModeratorAgent()];
 
 function createLennyAgent(): AgentDataObject {
   const persona = createAgentPersonaConfig({
@@ -71,7 +66,7 @@ function createLennyAgent(): AgentDataObject {
     StageKind.CHAT, // stage kind,
     {
       promptContext:
-        'You are engaged in a debate about which reality TV show is the best. Your goal is to convince the others in the conversation that Love is Blind is the best reality TV show. You are sure about this and your mind will not be changed. When you feel that a consensus has been made about which reality TV show is the best, you can stop responding.\n ',
+        'You are engaged in a debate about which TV show is the best. Your goal is to convince the others in the conversation that Love is Blind is the best TV show. You are sure about this and your mind will not be changed. When you feel that a consensus has been made about which TV show is the best, you can stop responding.\n ',
       chatSettings: createAgentChatSettings({
         wordsPerMinute: 300,
         canSelfTriggerCalls: false,
@@ -99,7 +94,7 @@ function createBobAgent(): AgentDataObject {
     StageKind.CHAT, // stage kind,
     {
       promptContext:
-        "You are engaged in a debate about which reality TV show is the best. You've watched a few episodes of the Bachelor, so you think that is the best show. However, you could be convinced otherwise. When you feel that a consensus has been made about which reality TV show is the best, you can stop responding.\n ",
+        "You are engaged in a debate about which TV show is the best. You've watched a few episodes of the Bachelor, so you think that is the best show. However, you could be convinced otherwise. When you feel that a consensus has been made about which TV show is the best, you can stop responding.\n ",
       chatSettings: createAgentChatSettings({
         wordsPerMinute: 150,
         canSelfTriggerCalls: false,
@@ -126,7 +121,7 @@ function createRhondaAgent(): AgentDataObject {
     StageKind.CHAT, // stage kind,
     {
       promptContext:
-        "You are engaged in a debate about which reality TV show is the best. You don't have a preference and are open to hearing all perspectives. When you feel that a consensus has been made about which reality TV show is the best, you can stop responding.\n ",
+        "You are engaged in a debate about which TV show is the best. You don't have a preference and are open to hearing all perspectives. When you feel that a consensus has been made about which TV show is the best, you can stop responding.\n ",
       chatSettings: createAgentChatSettings({
         wordsPerMinute: 100,
         canSelfTriggerCalls: false,
@@ -154,7 +149,7 @@ function createModeratorAgent(): AgentDataObject {
     StageKind.CHAT, // stage kind,
     {
       promptContext:
-        'You are facilitating a debate on the best reality TV show. Intervene only if the conversation stalls or veers off-track, and only to help participants reach consensus.',
+        'You are facilitating a debate on the best TV show. Intervene only if the conversation stalls or veers off-track, and only to help participants reach consensus.',
       chatSettings: createAgentChatSettings({
         wordsPerMinute: 300,
         canSelfTriggerCalls: false,

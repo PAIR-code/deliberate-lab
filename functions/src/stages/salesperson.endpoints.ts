@@ -42,10 +42,10 @@ export const setSalespersonController = onCall(async (request) => {
       return {success: false};
     }
 
-    const participants = await getChipParticipants(
-      data.experimentId,
-      data.cohortId,
-    );
+    // Controller must be human participant
+    const participants = (
+      await getChipParticipants(data.experimentId, data.cohortId)
+    ).filter((participant) => !participant.agentConfig);
     if (participants.length === 0) {
       return {success: false};
     }

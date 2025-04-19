@@ -59,7 +59,7 @@ export interface AgentPromptSettings {
   // Whether or not to include context from all previously completed
   // stages
   includeStageHistory: boolean;
-  // Whether or not to include information (e.g., stage description)
+  // Whether or not to include information (stage description/info/help)
   // shown to users
   includeStageInfo: boolean;
   // TODO(mkbehr): Add few-shot examples
@@ -148,6 +148,11 @@ export interface AgentDataObject {
 export const DEFAULT_AGENT_API_TYPE = ApiKeyType.GEMINI_API_KEY;
 
 export const DEFAULT_AGENT_API_MODEL = 'gemini-1.5-pro-latest';
+
+export const DEFAULT_AGENT_MODEL_SETTINGS: AgentModelSettings = {
+  apiType: DEFAULT_AGENT_API_TYPE,
+  modelName: DEFAULT_AGENT_API_MODEL,
+};
 
 // ************************************************************************* //
 // FUNCTIONS                                                                 //

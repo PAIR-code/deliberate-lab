@@ -1,13 +1,18 @@
 import {
+  AgentModelSettings,
+  ExperimenterData,
+  ModelGenerationConfig,
   ParticipantProfileExtended,
   ParticipantStatus,
   RankingStageConfig,
   RankingStageParticipantAnswer,
   createAgentConfig,
   createAgentParticipantRankingStagePrompt,
+  createModelGenerationConfig,
   createRankingStageParticipantAnswer,
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from '../agent.utils';
+import {getPastStagesPromptContext} from './stage.utils';
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
@@ -22,12 +27,19 @@ export async function getAgentParticipantRankingStageResponse(
   participant: ParticipantProfileExtended,
   stage: RankingStageConfig,
 ) {
+  // If participant is not an agent, return
+  if (!participant.agentConfig) {
+    return;
+  }
+
+  // TODO: If ranking is items (not participants), rank items instead.
+
   // Get list of public IDs for other participants who are active in the cohort
   // (in case the agent participant is ranking participants)
   // TODO: Use shared utils to determine isActiveParticipant
   const activeStatuses = [
     ParticipantStatus.IN_PROGRESS,
-    ParticipantStatus.COMPLETED,
+    ParticipantStatus.SUCCESS,
     ParticipantStatus.ATTENTION_CHECK,
   ];
 
@@ -46,19 +58,37 @@ export async function getAgentParticipantRankingStageResponse(
     );
 
   // Build prompt
-  const prompt = createAgentParticipantRankingStagePrompt(
+  // TODO: Include participant profile context in prompt
+  const contextPrompt = await getPastStagesPromptContext(
+    experimentId,
+    stage.id,
+    participant.privateId,
+    true, // TODO: Use prompt settings for includeStageInfo
+  );
+  const currentStagePrompt = createAgentParticipantRankingStagePrompt(
     participant,
     stage,
     otherParticipants,
   );
+  const prompt = `${contextPrompt}\n${currentStagePrompt}`;
+
+  // Build generation config
+  // TODO: Use generation config from agent persona prompt
+  const generationConfig = createModelGenerationConfig();
 
   // Call LLM API
-  // TODO: Use participant agent
-  const agent = createAgentConfig();
-  const response = await getAgentResponse(experimenterData, prompt, agent);
+  // TODO: Use structured output
+  const rawResponse = await getAgentResponse(
+    experimenterData,
+    prompt,
+    participant.agentConfig.modelSettings,
+    generationConfig,
+  );
+  const response = rawResponse.text;
+
   // Check console log for response
   console.log(
-    'TESTING AGENT PARTICIPANT PROMPT FOR RANKING STAGE\n',
+    'SENDING AGENT PARTICIPANT PROMPT FOR RANKING STAGE\n',
     `Experiment: ${experimentId}\n`,
     `Participant: ${participant.publicId}\n`,
     `Stage: ${stage.name} (${stage.kind})\n`,
@@ -67,7 +97,10 @@ export async function getAgentParticipantRankingStageResponse(
 
   // Confirm that response is in expected format, e.g., list of strings
   try {
-    const rankingList = JSON.stringify(response) as string[];
+    // TODO: Use structured output
+    const rankingList: string[] = response
+      .split(',')
+      .map((item) => item.trim());
     const participantAnswer = createRankingStageParticipantAnswer({
       id: stage.id,
       rankingList,
@@ -76,9 +109,9 @@ export async function getAgentParticipantRankingStageResponse(
       '✅ RankingStageParticipantAnswer\n',
       JSON.stringify(participantAnswer),
     );
+    return participantAnswer;
   } catch (error) {
     console.log(error);
+    return undefined;
   }
-
-  return response;
 }
