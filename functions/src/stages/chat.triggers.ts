@@ -366,7 +366,7 @@ export const createAgentParticipantMessage = onDocumentCreated(
         event.params.experimentId,
         event.params.stageId,
       );
-      if (!stage) {
+      if (!stage || stage.kind !== StageKind.CHAT) {
         return;
       }
 
@@ -514,11 +514,12 @@ export const checkReadyToEndChat = onDocumentCreated(
 
     await app.firestore().runTransaction(async (transaction) => {
       // Use experiment config to get ChatStageConfig with agents.
+      // TODO: Add separate readyToEndChat trigger for other stages with chat
       const stage = await getChatStage(
         event.params.experimentId,
         event.params.stageId,
       );
-      if (!stage) {
+      if (!stage || stage?.kind !== StageKind.CHAT) {
         return;
       }
 

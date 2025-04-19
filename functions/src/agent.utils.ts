@@ -208,6 +208,17 @@ export async function completeStageAsAgentParticipant(
         participant.agentConfig, // agent config
       );
       break;
+    case StageKind.SALESPERSON:
+      initiateChatDiscussion(
+        experimentId,
+        participant.currentCohortId,
+        stage,
+        participant.privateId,
+        participant.publicId,
+        participant, // profile
+        participant.agentConfig, // agent config
+      );
+      break;
     case StageKind.RANKING:
       if (!experimenterData) {
         console.log('Could not find experimenter data and API key');

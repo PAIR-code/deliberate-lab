@@ -9,6 +9,7 @@ import {
   ChatMessage,
   ChatStageConfig,
 } from './chat_stage';
+import {StageKind} from './stage';
 import {getBaseStagePrompt} from './stage.prompts';
 
 // ************************************************************************* //
@@ -81,7 +82,7 @@ Each message is displayed in chronological order, with the most recent message a
 }
 
 /** Convert chat message to prompt format. */
-function convertChatMessageToPromptFormat(message: ChatMessage) {
+export function convertChatMessageToPromptFormat(message: ChatMessage) {
   // TODO: Move to shared utils functions
   const getTime = (timestamp: UnifiedTimestamp) => {
     const date = new Date(timestamp.seconds * 1000);
@@ -105,7 +106,7 @@ function buildChatHistoryForPrompt(
   };
 
   // If no discussion threads, just return messages
-  if (stage.discussions.length === 0) {
+  if (stage.kind !== StageKind.CHAT || stage.discussions.length === 0) {
     return concatMessages(messages);
   }
 
