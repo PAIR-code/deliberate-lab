@@ -142,7 +142,10 @@ export async function updateCurrentDiscussionIndex(
     const timestampMap = publicStageData.discussionTimestampMap;
 
     for (const participant of activeParticipants) {
-      if (!timestampMap[currentDiscussionId][participant.publicId]) {
+      if (
+        !timestampMap[currentDiscussionId] ||
+        !timestampMap[currentDiscussionId][participant.publicId]
+      ) {
         return false;
       }
     }
