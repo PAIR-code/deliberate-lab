@@ -307,6 +307,17 @@ export const createAgentMessage = onDocumentCreated(
         agentResponse.promptConfig.chatSettings.wordsPerMinute,
       );
 
+      // Don't send a message if the conversation has moved on
+      const newNumChatsAfterAgent = getChatMessageCount(
+        event.params.experimentId,
+        event.params.cohortId,
+        event.params.stageId,
+      );
+      if (newNumChatsAfterAgent > numChatsBeforeAgent) {
+        // TODO: Write log to Firestore
+        return;
+      }
+
       // Write agent mediator message to conversation
       let explanation = '';
       if (agentResponse.promptConfig.responseConfig?.isJSON) {
@@ -457,6 +468,17 @@ export const createAgentParticipantMessage = onDocumentCreated(
         agentResponse.message,
         agentResponse.promptConfig.chatSettings.wordsPerMinute,
       );
+
+      // Don't send a message if the conversation has moved on
+      const newNumChatsAfterAgent = getChatMessageCount(
+        event.params.experimentId,
+        event.params.cohortId,
+        event.params.stageId,
+      );
+      if (newNumChatsAfterAgent > numChatsBeforeAgent) {
+        // TODO: Write log to Firestore
+        return;
+      }
 
       // Write agent participant message to conversation
       let explanation = '';
