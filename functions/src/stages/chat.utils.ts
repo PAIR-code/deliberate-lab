@@ -11,6 +11,7 @@ import {
   ParticipantProfileExtended,
   ParticipantStatus,
   StageKind,
+  awaitTypingDelay,
   createAgentChatPromptConfig,
   createParticipantChatMessage,
   getDefaultChatPrompt,
@@ -639,6 +640,23 @@ export async function initiateChatDiscussion(
       cohortId,
       stageId,
     );
+
+    // Typing delay
+    await awaitTypingDelay(
+      response?.message ?? '',
+      promptConfig.chatSettings.wordsPerMinute,
+    );
+
+    // If initial message has already been written, do not write initial
+    // message
+    const numChatsAfterAgent = getChatMessageCount(
+      experimentId,
+      cohortId,
+      stageConfig.id,
+    );
+    if (numChatsAfterAgent > 0) {
+      return;
+    }
 
     if (response) {
       // Write agent participant message to conversation
