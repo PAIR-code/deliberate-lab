@@ -96,7 +96,6 @@ export class SalespersonView extends MobxLitElement {
     return html`
       <div class="panel">
         <pr-button @click=${onClick}>Start game</pr-button>
-        ${this.renderBoard(publicData)}
       </div>
     `;
   }
