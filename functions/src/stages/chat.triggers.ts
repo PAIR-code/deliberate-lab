@@ -290,7 +290,7 @@ export const createAgentMessage = onDocumentCreated(
 
       // Don't send a message if the conversation has moved on
       const numChatsBeforeAgent = chatMessages.length;
-      const numChatsAfterAgent = getChatMessageCount(
+      const numChatsAfterAgent = await getChatMessageCount(
         event.params.experimentId,
         event.params.cohortId,
         event.params.stageId,
@@ -308,7 +308,7 @@ export const createAgentMessage = onDocumentCreated(
       );
 
       // Don't send a message if the conversation has moved on
-      const newNumChatsAfterAgent = getChatMessageCount(
+      const newNumChatsAfterAgent = await getChatMessageCount(
         event.params.experimentId,
         event.params.cohortId,
         event.params.stageId,
@@ -452,7 +452,7 @@ export const createAgentParticipantMessage = onDocumentCreated(
 
       // Don't send a message if the conversation has moved on
       const numChatsBeforeAgent = chatMessages.length;
-      const numChatsAfterAgent = getChatMessageCount(
+      const numChatsAfterAgent = await getChatMessageCount(
         event.params.experimentId,
         event.params.cohortId,
         event.params.stageId,
@@ -470,7 +470,7 @@ export const createAgentParticipantMessage = onDocumentCreated(
       );
 
       // Don't send a message if the conversation has moved on
-      const newNumChatsAfterAgent = getChatMessageCount(
+      const newNumChatsAfterAgent = await getChatMessageCount(
         event.params.experimentId,
         event.params.cohortId,
         event.params.stageId,

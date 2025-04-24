@@ -600,7 +600,11 @@ export async function initiateChatDiscussion(
   await app.firestore().runTransaction(async (transaction) => {
     const stageId = stageConfig.id;
 
-    const numMessages = getChatMessageCount(experimentId, cohortId, stageId);
+    const numMessages = await getChatMessageCount(
+      experimentId,
+      cohortId,
+      stageId,
+    );
     if (numMessages > 0) return;
 
     const promptConfig =
@@ -652,7 +656,7 @@ export async function initiateChatDiscussion(
 
     // If initial message has already been written, do not write initial
     // message
-    const numChatsAfterAgent = getChatMessageCount(
+    const numChatsAfterAgent = await getChatMessageCount(
       experimentId,
       cohortId,
       stageConfig.id,
