@@ -318,8 +318,26 @@ export const createAgentMessage = onDocumentCreated(
         return;
       }
 
+      // Don't send a message if the conversation already has a response
+      // to the trigger message
+      const triggerResponseDoc = app
+        .firestore()
+        .collection('experiments')
+        .doc(event.params.experimentId)
+        .collection('cohorts')
+        .doc(event.params.cohortId)
+        .collection('publicStageData')
+        .doc(event.params.stageId)
+        .collection('triggerLogs')
+        .doc(`${event.params.chatId}-mediator`);
+      const hasTriggerResponse = (await triggerResponseDoc.get()).exists;
+      if (hasTriggerResponse) {
+        return;
+      }
+
       // Write agent mediator message to conversation
       let explanation = '';
+      triggerResponseDoc.set({});
       if (agentResponse.promptConfig.responseConfig?.isJSON) {
         explanation =
           agentResponse.parsed[
@@ -480,8 +498,26 @@ export const createAgentParticipantMessage = onDocumentCreated(
         return;
       }
 
+      // Don't send a message if the conversation already has a response
+      // to the trigger message
+      const triggerResponseDoc = app
+        .firestore()
+        .collection('experiments')
+        .doc(event.params.experimentId)
+        .collection('cohorts')
+        .doc(event.params.cohortId)
+        .collection('publicStageData')
+        .doc(event.params.stageId)
+        .collection('triggerLogs')
+        .doc(`${event.params.chatId}-participant`);
+      const hasTriggerResponse = (await triggerResponseDoc.get()).exists;
+      if (hasTriggerResponse) {
+        return;
+      }
+
       // Write agent participant message to conversation
       let explanation = '';
+      triggerResponseDoc.set({});
       if (agentResponse.promptConfig.responseConfig?.isJSON) {
         explanation =
           agentResponse.parsed[
