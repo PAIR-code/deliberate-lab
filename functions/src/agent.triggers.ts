@@ -12,26 +12,26 @@ import {
 } from '@deliberation-lab/utils';
 import {completeStageAsAgentParticipant} from './agent.utils';
 import {updateCohortStageUnlocked} from './participant.utils';
+import {
+  getFirestoreCohort,
+  getFirestoreParticipant,
+  getFirestoreParticipantRef,
+} from './utils/firestore';
 import {app} from './app';
 
 /** If created participant is agent, start experiment. */
 export const startAgentParticipant = onDocumentCreated(
   {document: 'experiments/{experimentId}/participants/{participantId}'},
   async (event) => {
-    const participantDoc = app
-      .firestore()
-      .doc(
-        `experiments/${event.params.experimentId}/participants/${event.params.participantId}`,
-      );
-
     await app.firestore().runTransaction(async (transaction) => {
       // Get participant config
-      const participant = (
-        await participantDoc.get()
-      ).data() as ParticipantProfileExtended;
+      const participant = await getFirestoreParticipant(
+        event.params.experimentId,
+        event.params.participantId,
+      );
 
       // If participant is NOT agent, do nothing
-      if (!participant.agentConfig) {
+      if (!participant?.agentConfig) {
         return;
       }
 
@@ -52,6 +52,10 @@ export const startAgentParticipant = onDocumentCreated(
         participant.currentStageId,
         participant.privateId,
       );
+      const participantDoc = getFirestoreParticipantRef(
+        event.params.experimentId,
+        participant.privateId,
+      );
       transaction.set(participantDoc, participant);
     }); // end transaction
   },
@@ -63,12 +67,6 @@ export const startAgentParticipant = onDocumentCreated(
 export const updateAgentParticipant = onDocumentUpdated(
   {document: 'experiments/{experimentId}/participants/{participantId}'},
   async (event) => {
-    const participantDoc = app
-      .firestore()
-      .doc(
-        `experiments/${event.params.experimentId}/participants/${event.params.participantId}`,
-      );
-
     const experimentDoc = app
       .firestore()
       .collection('experiments')
@@ -76,25 +74,21 @@ export const updateAgentParticipant = onDocumentUpdated(
 
     await app.firestore().runTransaction(async (transaction) => {
       // Get participant config
-      const participant = (
-        await participantDoc.get()
-      ).data() as ParticipantProfileExtended;
+      const participant = await getFirestoreParticipant(
+        event.params.experimentId,
+        event.params.participantId,
+      );
 
       // If participant is NOT agent or if experiment over, do nothing
-      if (!participant.agentConfig || participant.timestamps.endExperiment) {
+      if (!participant?.agentConfig || participant?.timestamps.endExperiment) {
         return;
       }
 
       // Get cohort config
-      const cohort = (
-        await app
-          .firestore()
-          .collection('experiments')
-          .doc(event.params.experimentId)
-          .collection('cohorts')
-          .doc(participant.currentCohortId)
-          .get()
-      ).data() as CohortConfig;
+      const cohort = await getFirestoreCohort(
+        event.params.experimentId,
+        participant.currentCohortId,
+      );
 
       // Make ONE update for the agent participant (e.g., alter status
       // OR complete a stage)
@@ -108,6 +102,10 @@ export const updateAgentParticipant = onDocumentUpdated(
         } else {
           participant.currentStatus = ParticipantStatus.IN_PROGRESS;
         }
+        const participantDoc = getFirestoreParticipantRef(
+          event.params.experimentId,
+          participant.privateId,
+        );
         transaction.set(participantDoc, participant);
       } else if (!cohort.stageUnlockMap[participant.currentStageId]) {
         // If stage is locked, do nothing

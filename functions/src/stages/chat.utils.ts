@@ -26,6 +26,7 @@ import {onCall} from 'firebase-functions/v2/https';
 
 import {app} from '../app';
 import {getAgentResponse} from '../agent.utils';
+import {getFirestoreStagePublicData} from '../utils/firestore';
 import {getPastStagesPromptContext} from './stage.utils';
 
 /** Get the chat stage configuration based on the event. */
@@ -49,16 +50,14 @@ export async function getChatStagePublicData(
   cohortId: string,
   stageId: string,
 ): Promise<ChatStagePublicData | null> {
-  const publicStageRef = app
-    .firestore()
-    .doc(
-      `experiments/${experimentId}/cohorts/${cohortId}/publicStageData/${stageId}`,
-    );
+  const data = await getFirestoreStagePublicData(
+    experimentId,
+    cohortId,
+    stageId,
+  );
+  if (data?.kind !== StageKind.CHAT) return null; // Return null if the public stage data doesn't exist.
 
-  const publicStageDoc = await publicStageRef.get();
-  if (!publicStageDoc.exists) return null; // Return null if the public stage data doesn't exist.
-
-  return publicStageDoc.data() as ChatStagePublicData; // Return the public stage data.
+  return data as ChatStagePublicData; // Return the public stage data.
 }
 
 /** Get chat messages for given cohort and stage ID. */
@@ -669,7 +668,7 @@ export async function initiateChatDiscussion(
       // Write agent participant message to conversation
       const chatMessage = createParticipantChatMessage({
         profile,
-        discussionId: publicStageData.currentDiscussionId,
+        discussionId: publicStageData?.currentDiscussionId,
         message: response.message,
         timestamp: Timestamp.now(),
         senderId: profileId,

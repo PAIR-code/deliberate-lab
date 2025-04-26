@@ -22,6 +22,12 @@ import {getGeminiAPIResponse} from './api/gemini.api';
 import {getOpenAIAPIChatCompletionResponse} from './api/openai.api';
 import {ollamaChat} from './api/ollama.api';
 
+import {
+  getExperimenterData,
+  getFirestoreParticipantRef,
+  getFirestoreStage,
+} from './utils/firestore';
+
 import {app} from './app';
 
 export async function getAgentResponse(
@@ -134,9 +140,10 @@ export async function completeStageAsAgentParticipant(
   participant: ParticipantProfileExtended,
 ) {
   const experimentId = experiment.id;
-  const participantDoc = app
-    .firestore()
-    .doc(`experiments/${experimentId}/participants/${participant.privateId}`);
+  const participantDoc = getFirestoreParticipantRef(
+    experimentId,
+    participant.privateId,
+  );
 
   // Only update if participant is active, etc.
   const status = participant.currentStatus;
@@ -165,24 +172,14 @@ export async function completeStageAsAgentParticipant(
     );
   };
 
-  const stageDoc = app
-    .firestore()
-    .collection('experiments')
-    .doc(experimentId)
-    .collection('stages')
-    .doc(participant.currentStageId);
-  const stage = (await stageDoc.get()).data() as StageConfig;
+  const stage = await getFirestoreStage(
+    experimentId,
+    participant.currentStageId,
+  );
 
   // Fetch experiment creator's API key.
   const creatorId = experiment.metadata.creator;
-  const creatorDoc = await app
-    .firestore()
-    .collection('experimenterData')
-    .doc(creatorId)
-    .get();
-  const experimenterData = creatorDoc.exists
-    ? (creatorDoc.data() as ExperimenterData)
-    : null;
+  const experimenterData = await getExperimenterData(creatorId);
 
   // ParticipantAnswer doc
   const answerDoc = app
