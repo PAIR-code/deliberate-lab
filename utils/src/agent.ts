@@ -190,7 +190,7 @@ export function createAgentChatSettings(
     wordsPerMinute: config.wordsPerMinute ?? 100,
     minMessagesBeforeResponding: config.minMessagesBeforeResponding ?? 0,
     canSelfTriggerCalls: config.canSelfTriggerCalls ?? false,
-    maxResponses: config.maxResponses ?? 20,
+    maxResponses: config.maxResponses ?? 100,
   };
 }
 
