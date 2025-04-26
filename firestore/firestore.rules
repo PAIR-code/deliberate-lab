@@ -94,6 +94,11 @@ service cloud.firestore {
         allow write: if false; // Use cloud functions
       }
 
+      match /logs/{logId} {
+        allow read: if isExperimenter();
+        allow write: if false; // Use cloud functions
+      }
+
       match /stages/{stageId} {
         allow read: if true; // Public read
         // Experimenters can use `writeExperiment`, `deleteExperiment`
@@ -145,7 +150,7 @@ service cloud.firestore {
             allow write: if false; // Write using cloud functions
           }
 
-          match /logs/{logId} {
+          match /logs/{logId} { // TODO: Refactor chip logs
             allow read: if true;
             allow write: if false; // Write using cloud functions
           }
