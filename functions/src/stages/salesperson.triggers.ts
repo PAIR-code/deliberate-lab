@@ -22,6 +22,7 @@ import {
 } from './chat.utils';
 import {getSalespersonChatPrompt} from './salesperson.utils';
 import {getPastStagesPromptContext} from './stage.utils';
+import {getFirestoreActiveParticipants} from '../utils/firestore';
 import {app} from '../app';
 
 /** When chat message is created in salesperson stage,
@@ -81,28 +82,12 @@ export const createAgentParticipantSalespersonMessage = onDocumentCreated(
     );
 
     // Get agent participants for current cohort and stage
-    // TODO: Create shared utils under /utils for isActiveParticipant
-    const activeStatuses = [
-      ParticipantStatus.IN_PROGRESS,
-      ParticipantStatus.SUCCESS,
-      ParticipantStatus.ATTENTION_CHECK,
-    ];
-    const activeParticipants = (
-      await app
-        .firestore()
-        .collection('experiments')
-        .doc(event.params.experimentId)
-        .collection('participants')
-        .where('currentCohortId', '==', event.params.cohortId)
-        .get()
-    ).docs
-      .map((doc) => doc.data() as ParticipantProfileExtended)
-      .filter(
-        (participant) =>
-          participant.agentConfig &&
-          participant.currentStageId === event.params.stageId &&
-          activeStatuses.find((status) => status === participant.currentStatus),
-      );
+    const activeParticipants = getFirestoreActiveParticipants(
+      event.params.experimentId,
+      event.params.cohortId,
+      event.params.stageId,
+      true, // must be agent
+    );
 
     // For each agent participant, potentially send chat message
     activeParticipants.forEach(async (participant) => {

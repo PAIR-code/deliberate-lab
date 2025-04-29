@@ -5,6 +5,7 @@ import {
   CohortConfig,
   ExperimenterData,
   ParticipantProfileExtended,
+  ParticipantStatus,
   StageConfig,
   StageParticipantAnswer,
   StagePublicData,
@@ -64,6 +65,38 @@ export async function getFirestoreParticipant(
   if (!doc.exists) return undefined;
 
   return doc.data() as ParticipantProfileExtended;
+}
+
+/** Fetch active participants for current cohort/stage. */
+export async function getFirestoreActiveParticipants(
+  experimentId: string,
+  cohortId: string,
+  stageId: string | null = null, // if null, can be in any stage
+  checkIsAgent = false, // whether to check if participant is agent
+) {
+  // TODO: Use isActiveParticipant utils function.
+  const activeStatuses = [
+    ParticipantStatus.IN_PROGRESS,
+    ParticipantStatus.SUCCESS,
+    ParticipantStatus.ATTENTION_CHECK,
+  ];
+  const activeParticipants = (
+    await app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('participants')
+      .where('currentCohortId', '==', cohortId)
+      .get()
+  ).docs
+    .map((doc) => doc.data() as ParticipantProfileExtended)
+    .filter(
+      (participant) =>
+        (stageId !== null ? participant.currentStageId === stageId : true) &&
+        (checkIsAgent ? participant.agentConfig : true) &&
+        activeStatuses.find((status) => status === participant.currentStatus),
+    );
+  return activeParticipants;
 }
 
 /** Return ref for cohort config. */

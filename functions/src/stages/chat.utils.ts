@@ -28,6 +28,7 @@ import {app} from '../app';
 import {getAgentResponse} from '../agent.utils';
 import {
   getExperimenterDataFromExperiment,
+  getFirestoreActiveParticipants,
   getFirestoreStagePublicData,
 } from '../utils/firestore';
 import {getPastStagesPromptContext} from './stage.utils';
@@ -118,25 +119,10 @@ export async function updateCurrentDiscussionIndex(
   publicStageData: ChatStagePublicData,
 ) {
   // Get active participants for given cohort
-  // TODO: Create shared utils under /utils for isActiveParticipant
-  const activeStatuses = [
-    ParticipantStatus.IN_PROGRESS,
-    ParticipantStatus.SUCCESS,
-    ParticipantStatus.ATTENTION_CHECK,
-  ];
-  const activeParticipants = (
-    await app
-      .firestore()
-      .collection('experiments')
-      .doc(experimentId)
-      .collection('participants')
-      .where('currentCohortId', '==', cohortId)
-      .get()
-  ).docs
-    .map((doc) => doc.data() as ParticipantProfile)
-    .filter((participant) =>
-      activeStatuses.find((status) => status === participant.currentStatus),
-    );
+  const activeParticipants = await getFirestoreActiveParticipants(
+    experimentId,
+    cohortId,
+  );
 
   // Check if active participants are ready to end current discussion
   const currentDiscussionId = publicStageData.currentDiscussionId;

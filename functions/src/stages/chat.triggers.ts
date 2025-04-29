@@ -33,6 +33,7 @@ import {updateCurrentDiscussionIndex} from './chat.utils';
 import {getMediatorsInCohortStage} from '../mediator.utils';
 import {updateParticipantNextStage} from '../participant.utils';
 import {
+  getFirestoreActiveParticipants,
   getFirestoreParticipant,
   getFirestoreParticipantRef,
   getFirestoreParticipantAnswer,
@@ -417,30 +418,12 @@ export const createAgentParticipantMessage = onDocumentCreated(
       );
 
       // Get agent participants for current cohort and stage
-      // TODO: Create shared utils under /utils for isActiveParticipant
-      const activeStatuses = [
-        ParticipantStatus.IN_PROGRESS,
-        ParticipantStatus.SUCCESS,
-        ParticipantStatus.ATTENTION_CHECK,
-      ];
-      const activeParticipants = (
-        await app
-          .firestore()
-          .collection('experiments')
-          .doc(event.params.experimentId)
-          .collection('participants')
-          .where('currentCohortId', '==', event.params.cohortId)
-          .get()
-      ).docs
-        .map((doc) => doc.data() as ParticipantProfileExtended)
-        .filter(
-          (participant) =>
-            participant.agentConfig &&
-            participant.currentStageId === event.params.stageId &&
-            activeStatuses.find(
-              (status) => status === participant.currentStatus,
-            ),
-        );
+      const activeParticipants = await getFirestoreActiveParticipants(
+        event.params.experimentId,
+        event.params.cohortId,
+        event.params.stageId,
+        true, // must be agent
+      );
 
       // Select one agent's response
       const agentResponse = await selectSingleAgentParticipantChatResponse(
@@ -592,30 +575,12 @@ export const checkReadyToEndChat = onDocumentCreated(
       );
 
       // Get agent participants for current cohort and stage
-      // TODO: Create shared utils under /utils for isActiveParticipant
-      const activeStatuses = [
-        ParticipantStatus.IN_PROGRESS,
-        ParticipantStatus.SUCCESS,
-        ParticipantStatus.ATTENTION_CHECK,
-      ];
-      const activeParticipants = (
-        await app
-          .firestore()
-          .collection('experiments')
-          .doc(event.params.experimentId)
-          .collection('participants')
-          .where('currentCohortId', '==', event.params.cohortId)
-          .get()
-      ).docs
-        .map((doc) => doc.data() as ParticipantProfileExtended)
-        .filter(
-          (participant) =>
-            participant.currentStageId === event.params.stageId &&
-            participant.agentConfig &&
-            activeStatuses.find(
-              (status) => status === participant.currentStatus,
-            ),
-        );
+      const activeParticipants = await getFirestoreActiveParticipants(
+        event.params.experimentId,
+        event.params.cohortId,
+        event.params.stageId,
+        true, // must be agent
+      );
 
       // For each participant, check if ready to end chat
       const promptConfig = createAgentChatPromptConfig(
