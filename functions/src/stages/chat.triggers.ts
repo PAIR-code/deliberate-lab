@@ -33,6 +33,11 @@ import {updateCurrentDiscussionIndex} from './chat.utils';
 import {getMediatorsInCohortStage} from '../mediator.utils';
 import {updateParticipantNextStage} from '../participant.utils';
 import {
+  getFirestoreParticipant,
+  getFirestoreParticipantRef,
+  getFirestoreParticipantAnswer,
+} from '../utils/firestore';
+import {
   selectSingleAgentParticipantChatResponse,
   getChatMessages,
   getChatMessageCount,
@@ -623,18 +628,14 @@ export const checkReadyToEndChat = onDocumentCreated(
       );
 
       for (const participant of activeParticipants) {
-        const participantDoc = app
-          .firestore()
-          .doc(
-            `experiments/${event.params.experimentId}/participants/${participant.privateId}`,
-          );
         // Make sure participant has not already moved on
         // to a different stage
-        const refreshedParticipant = (
-          await participantDoc.get()
-        ).data() as ParticipantProfileExtended;
-        if (refreshedParticipant.currentStageId !== event.params.stageId) {
-          break;
+        const refreshedParticipant = await getFirestoreParticipant(
+          event.params.experimentId,
+          participant.privateId,
+        );
+        if (refreshedParticipant?.currentStageId !== event.params.stageId) {
+          return;
         }
 
         // TODO: Use regular participant decision-making prompt, not chat prompt
@@ -661,40 +662,56 @@ export const checkReadyToEndChat = onDocumentCreated(
           promptConfig.generationConfig,
         );
         console.log(participant.publicId, 'ready to end discussion?', response);
+
         // TODO: Use structured output instead of checking for YES string
-        if (response?.text.includes('YES')) {
-          // If threaded discussion (and not last thread), move to next thread
-          if (
-            stage.discussions.length > 0 &&
-            publicStageData.currentDiscussionId &&
-            publicStageData.currentDiscussionId !==
-              stage.discussions[stage.discussions.length - 1]
-          ) {
-            const participantAnswerDoc = app
-              .firestore()
-              .doc(
-                `experiments/${event.params.experimentId}/participants/${participant.privateId}/stageData/${event.params.stageId}`,
-              );
-            const chatAnswerDoc = await participantAnswerDoc.get();
-            const participantAnswer = chatAnswerDoc.exists
-              ? (chatAnswerDoc.data() as ChatStageParticipantAnswer)
+        // If not ready to move on, do nothing
+        if (!response?.text.includes('YES')) {
+          break;
+        }
+
+        // If threaded discussion (and not last thread), move to next thread
+        if (
+          stage.discussions.length > 0 &&
+          publicStageData.currentDiscussionId &&
+          publicStageData.currentDiscussionId !==
+            stage.discussions[stage.discussions.length - 1]
+        ) {
+          const chatAnswer = await getFirestoreParticipantAnswer(
+            event.params.experimentId,
+            participant.privateId,
+            event.params.stageId,
+          );
+          const participantAnswer =
+            chatAnswer?.kind === StageKind.CHAT
+              ? (chatAnswer as ChatStageParticipantAnswer)
               : createChatStageParticipantAnswer({id: stage.id});
-            // if (!participantAnswer.discussionTimestampMap[publicStageData.currentDiscussionId]) {
+
+          // Set ready to end timestamp if not already set
+          if (
+            !participantAnswer.discussionTimestampMap[
+              publicStageData.currentDiscussionId
+            ]
+          ) {
             participantAnswer.discussionTimestampMap[
               publicStageData.currentDiscussionId
             ] = Timestamp.now();
             await transaction.set(participantAnswerDoc, participantAnswer);
-          } else {
-            // Otherwise, move to next stage
-            await updateParticipantNextStage(
-              event.params.experimentId,
-              participant,
-              experiment.stageIds,
-            );
-            await transaction.set(participantDoc, participant);
           }
-        } // end ready to end discussion logic
-      } // end participant loop
+        } else {
+          // Otherwise, move to next stage
+          await updateParticipantNextStage(
+            event.params.experimentId,
+            participant,
+            experiment.stageIds,
+          );
+
+          const participantDoc = getFirestoreParticipantRef(
+            event.params.experimentId,
+            participant.privateId,
+          );
+          await transaction.set(participantDoc, participant);
+        }
+      } // end of active participants for loop
     });
   },
 );

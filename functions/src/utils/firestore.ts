@@ -6,6 +6,7 @@ import {
   ExperimenterData,
   ParticipantProfileExtended,
   StageConfig,
+  StageParticipantAnswer,
   StagePublicData,
 } from '@deliberation-lab/utils';
 
@@ -104,6 +105,39 @@ export async function getFirestoreStage(experimentId: string, stageId: string) {
   if (!doc.exists) return undefined;
 
   return doc.data() as StageConfig;
+}
+
+/** Return ref for stage answer doc. */
+export function getFirestoreParticipantAnswerRef(
+  experimentId: string,
+  participantId: string, // private ID
+  stageId: string,
+) {
+  return app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('participants')
+    .doc(participantId)
+    .collection('stageData')
+    .doc(stageId);
+}
+
+/** Fetch participant answer from Firestore. */
+export async function getFirestoreParticipantAnswer(
+  experimentId: string,
+  participantId: string, // private ID
+  stageId: string,
+) {
+  const ref = getFirestoreParticipantAnswerRef(
+    experimentId,
+    participantId,
+    stageId,
+  );
+  const doc = await ref.get();
+  if (!doc.exists) return undefined;
+
+  return doc.data() as StageParticipantAnswer;
 }
 
 /** Return ref for stage public data doc. */
