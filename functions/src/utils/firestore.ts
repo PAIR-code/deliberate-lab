@@ -26,6 +26,20 @@ export async function getExperimenterData(creatorId: string) {
   return experimenterData;
 }
 
+/** Get experimenter data from experiment ID. */
+export async function getExperimenterDataFromExperiment(experimentId: string) {
+  const experimentDoc = await app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .get();
+  if (!experimentDoc) {
+    return undefined;
+  }
+  const creatorId = experimentDoc.data().metadata.creator;
+  return await getExperimenterData(creatorId);
+}
+
 /** Return ref for participant doc. */
 export function getFirestoreParticipantRef(
   experimentId: string,

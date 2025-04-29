@@ -28,6 +28,7 @@ import {
   structuredOutputEnabled,
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from '../agent.utils';
+import {getExperimenterDataFromExperiment} from '../utils/firestore';
 import {updateCurrentDiscussionIndex} from './chat.utils';
 import {getMediatorsInCohortStage} from '../mediator.utils';
 import {updateParticipantNextStage} from '../participant.utils';
@@ -248,21 +249,10 @@ export const createAgentMessage = onDocumentCreated(
         return;
 
       // Fetch experiment creator's API key.
-      const creatorId = (
-        await app
-          .firestore()
-          .collection('experiments')
-          .doc(event.params.experimentId)
-          .get()
-      ).data().metadata.creator;
-      const creatorDoc = await app
-        .firestore()
-        .collection('experimenterData')
-        .doc(creatorId)
-        .get();
-      if (!creatorDoc.exists) return;
-
-      const experimenterData = creatorDoc.data() as ExperimenterData;
+      const experimenterData = await getExperimenterDataFromExperiment(
+        event.params.experimentId,
+      );
+      if (!experimenterData) return;
 
       // Use chats in collection to build chat history for prompt, get num chats
       const chatMessages = await getChatMessages(
@@ -409,21 +399,10 @@ export const createAgentParticipantMessage = onDocumentCreated(
         return;
 
       // Fetch experiment creator's API key.
-      const creatorId = (
-        await app
-          .firestore()
-          .collection('experiments')
-          .doc(event.params.experimentId)
-          .get()
-      ).data().metadata.creator;
-      const creatorDoc = await app
-        .firestore()
-        .collection('experimenterData')
-        .doc(creatorId)
-        .get();
-      if (!creatorDoc.exists) return;
-
-      const experimenterData = creatorDoc.data() as ExperimenterData;
+      const experimenterData = await getExperimenterDataFromExperiment(
+        event.params.experimentId,
+      );
+      if (!experimenterData) return;
 
       // Use chats in collection to build chat history for prompt, get num chats
       const chatMessages = await getChatMessages(
@@ -586,27 +565,12 @@ export const checkReadyToEndChat = onDocumentCreated(
         event.params.cohortId,
         event.params.stageId,
       );
-      if (publicStageData.discussionId) {
-        // TODO: Check if ready to end discussion before ready to end chat
-      }
 
       // Fetch experiment creator's API key.
-      // TODO: Add utils function for getting experiment creator's API key
-      const creatorId = (
-        await app
-          .firestore()
-          .collection('experiments')
-          .doc(event.params.experimentId)
-          .get()
-      ).data().metadata.creator;
-      const creatorDoc = await app
-        .firestore()
-        .collection('experimenterData')
-        .doc(creatorId)
-        .get();
-      if (!creatorDoc.exists) return;
-
-      const experimenterData = creatorDoc.data() as ExperimenterData;
+      const experimenterData = await getExperimenterDataFromExperiment(
+        event.params.experimentId,
+      );
+      if (!experimenterData) return;
 
       // Get experiment
       const experimentDoc = app

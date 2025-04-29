@@ -26,7 +26,10 @@ import {onCall} from 'firebase-functions/v2/https';
 
 import {app} from '../app';
 import {getAgentResponse} from '../agent.utils';
-import {getFirestoreStagePublicData} from '../utils/firestore';
+import {
+  getExperimenterDataFromExperiment,
+  getFirestoreStagePublicData,
+} from '../utils/firestore';
 import {getPastStagesPromptContext} from './stage.utils';
 
 /** Get the chat stage configuration based on the event. */
@@ -616,17 +619,9 @@ export async function initiateChatDiscussion(
     const chatMessages: ChatMessage[] = [];
 
     // Fetch experiment creator's API key.
-    const creatorId = (
-      await app.firestore().collection('experiments').doc(experimentId).get()
-    ).data().metadata.creator;
-    const creatorDoc = await app
-      .firestore()
-      .collection('experimenterData')
-      .doc(creatorId)
-      .get();
-    if (!creatorDoc.exists) return;
-
-    const experimenterData = creatorDoc.data() as ExperimenterData;
+    const experimenterData =
+      await getExperimenterDataFromExperiment(experimentId);
+    if (!experimenterData) return;
 
     // Get chat response
     const response = await callChatAPI(
