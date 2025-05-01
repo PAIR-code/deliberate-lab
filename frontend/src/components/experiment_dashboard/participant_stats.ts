@@ -88,7 +88,7 @@ export class Preview extends MobxLitElement {
   private renderChips() {
     return html`
       <div class="chip-container">
-        ${this.renderStatusChip()} ${this.renderStageChip()}
+        ${this.renderStatusChip()} ${this.renderConnectedChip()} ${this.renderStageChip()}
         ${this.renderTOSChip()}
       </div>
     `;
@@ -163,6 +163,17 @@ export class Preview extends MobxLitElement {
     }
   }
 
+  private getConnectedChipStyle(connected: boolean): {
+    emoji: string;
+    className: string;
+  } {
+    if (connected) {
+      return {emoji: '🔗', className: 'success'};
+    } else {
+      return {emoji: '📵', className: 'error'};
+    }
+  }
+
   private renderTOSChip() {
     if (!this.profile) {
       return nothing;
@@ -188,6 +199,20 @@ export class Preview extends MobxLitElement {
     return html`
       <div class="chip ${className}">
         <b>${emoji} Status:</b> ${currentStatus}
+      </div>
+    `;
+  }
+
+  private renderConnectedChip() {
+    if (!this.profile) {
+      return nothing;
+    }
+    const {connected} = this.profile;
+    const {emoji, className} = this.getConnectedChipStyle(connected);
+
+    return html`
+      <div class="chip ${className}">
+        <b>${emoji} Connected:</b> ${connected}
       </div>
     `;
   }
