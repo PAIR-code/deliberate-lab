@@ -15,10 +15,10 @@ import {
   createParticipantChatMessage,
 } from '@deliberation-lab/utils';
 import {
-  callChatAPI,
-  canSendAgentChatMessage,
+  getAgentChatAPIResponse,
   getAgentChatPrompt,
   getChatMessages,
+  sendAgentChatMessage,
 } from './chat.utils';
 import {getSalespersonChatPrompt} from './salesperson.utils';
 import {getPastStagesPromptContext} from './stage.utils';
@@ -49,31 +49,6 @@ export const createAgentParticipantSalespersonMessage = onDocumentCreated(
       return;
     }
 
-    // Fetch experiment creator's API key.
-    // TODO: Add utils function for getting experiment creator's API key
-    const creatorId = (
-      await app
-        .firestore()
-        .collection('experiments')
-        .doc(event.params.experimentId)
-        .get()
-    ).data().metadata.creator;
-    const creatorDoc = await app
-      .firestore()
-      .collection('experimenterData')
-      .doc(creatorId)
-      .get();
-    if (!creatorDoc.exists) return;
-
-    const experimenterData = creatorDoc.data() as ExperimenterData;
-
-    // Get experiment
-    const experimentDoc = app
-      .firestore()
-      .collection('experiments')
-      .doc(event.params.experimentId);
-    const experiment = (await experimentDoc.get()).data() as Experiment;
-
     // Use chats in collection to build chat history for prompt, get num chats
     const chatMessages = await getChatMessages(
       event.params.experimentId,
@@ -82,7 +57,7 @@ export const createAgentParticipantSalespersonMessage = onDocumentCreated(
     );
 
     // Get agent participants for current cohort and stage
-    const activeParticipants = getFirestoreActiveParticipants(
+    const activeParticipants = await getFirestoreActiveParticipants(
       event.params.experimentId,
       event.params.cohortId,
       event.params.stageId,
@@ -100,6 +75,9 @@ export const createAgentParticipantSalespersonMessage = onDocumentCreated(
             'You are a participant. Respond in a quick sentence if you would like to say something. Otherwise, do not respond.',
         },
       );
+      // Temporary: Always allow a lot of responses for this game!
+      promptConfig.chatSettings.maxResponses = 10000;
+
       const pastStageContext = promptConfig.promptSettings.includeStageHistory
         ? await getPastStagesPromptContext(
             event.params.experimentId,
@@ -108,7 +86,7 @@ export const createAgentParticipantSalespersonMessage = onDocumentCreated(
             promptConfig.promptSettings.includeStageInfo,
           )
         : '';
-      const salespersonPrompt = await getSalespersonChatPrompt(
+      promptConfig.promptContext = await getSalespersonChatPrompt(
         event.params.experimentId,
         participant.privateId,
         participant,
@@ -119,53 +97,40 @@ export const createAgentParticipantSalespersonMessage = onDocumentCreated(
         stage,
       );
 
-      const chatSettings = promptConfig.chatSettings;
-      // Temporary: Always allow a lot of responses for this game!
-      chatSettings.maxResponses = 1000;
-      if (
-        !canSendAgentChatMessage(
-          participant.publicId,
-          chatSettings,
-          chatMessages,
-        )
-      ) {
-        return null;
-      }
-
-      const response = await callChatAPI(
+      const response = await getAgentChatAPIResponse(
+        participant, // profile
         event.params.experimentId,
-        participant.privateId,
         participant.publicId,
-        participant,
-        participant.agentConfig,
+        pastStageContext,
         chatMessages,
+        participant.agentConfig,
         promptConfig,
         stage,
-        experimenterData,
       );
 
-      if (response) {
-        const chatMessage = createParticipantChatMessage({
-          profile: response.profile,
-          discussionId: null,
-          message: response.message,
-          timestamp: Timestamp.now(),
-          senderId: participant.publicId,
-          agentId: participant.agentConfig.agentId,
-          explanation: response.parsed.explanation,
-        });
-        const agentDocument = app
-          .firestore()
-          .collection('experiments')
-          .doc(event.params.experimentId)
-          .collection('cohorts')
-          .doc(event.params.cohortId)
-          .collection('publicStageData')
-          .doc(event.params.stageId)
-          .collection('chats')
-          .doc(chatMessage.id);
-        agentDocument.set(chatMessage);
-      } // end conditional for writing chat message
+      if (!response) return null;
+      const chatMessage = createParticipantChatMessage({
+        profile: response.profile,
+        discussionId: null,
+        message: response.message,
+        timestamp: Timestamp.now(),
+        senderId: participant.publicId,
+        agentId: participant.agentConfig.agentId,
+        explanation:
+          response.parsed[
+            response.promptConfig.structuredOutputConfig?.explanationField
+          ] ?? '',
+      });
+
+      sendAgentChatMessage(
+        chatMessage,
+        response,
+        chatMessages.length,
+        event.params.experimentId,
+        event.params.cohortId,
+        event.params.stageId,
+        event.params.chatId,
+      );
     });
   },
 );
