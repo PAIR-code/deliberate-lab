@@ -2,7 +2,6 @@
 import nock = require('nock');
 
 import {ModelGenerationConfig} from '@deliberation-lab/utils';
-import {getOpenAIAPITextCompletionResponse} from './openai.api';
 import {getOpenAIAPIChatCompletionResponse} from './openai.api';
 import {ModelResponse} from './model.response';
 
