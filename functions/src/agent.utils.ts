@@ -44,6 +44,7 @@ export async function getAgentResponse(
       modelSettings.modelName,
       prompt,
       generationConfig,
+      structuredOutputConfig,
     );
   } else if (modelSettings.apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
     response = await getOllamaResponse(data, modelSettings.modelName, prompt);

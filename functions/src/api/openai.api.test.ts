@@ -1,49 +1,153 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import nock = require('nock');
 
-import {ModelGenerationConfig} from '@deliberation-lab/utils';
-import {getOpenAIAPITextCompletionResponse} from './openai.api';
+import {
+  ModelGenerationConfig,
+  StructuredOutputType,
+  StructuredOutputDataType,
+  createStructuredOutputConfig,
+} from '@deliberation-lab/utils';
+import {getOpenAIAPIChatCompletionResponse} from './openai.api';
 import {ModelResponse} from './model.response';
 
+const DEFAULT_GENERATION_CONFIG: ModelGenerationConfig = {
+  maxTokens: 300,
+  stopSequences: [],
+  temperature: 0.7,
+  topP: 1,
+  frequencyPenalty: 0,
+  presencePenalty: 0,
+  customRequestBodyFields: [{name: 'foo', value: 'bar'}],
+};
+
 describe('OpenAI-compatible API', () => {
-  it('handles chat completion request', async () => {
-    nock('https://test.uri')
-      .post('/v1/chat/completions', body => body.model == 'test-model')
-      .reply(200, {
-        id: 'test-id',
-        object: 'text_completion',
-        created: Date.now(),
-        model: 'test-model',
-        choices: [
-          {
-            text: 'test output',
-            index: 0,
-            logprobs: null,
-            finish_reason: 'stop',
-          },
-        ],
+  let scope: nock.Scope;
+
+  beforeEach(() => {
+    scope = nock('https://test.uri')
+      .post('/v1/chat/completions')
+      .reply(200, (uri, requestBody) => {
+        return {
+          id: 'test-id',
+          object: 'text_completion',
+          created: Date.now(),
+          model: requestBody.model,
+          choices: [
+            {
+              text: JSON.stringify(requestBody),
+              index: 0,
+              logprobs: null,
+              finish_reason: 'stop',
+            },
+          ],
+        };
       });
+  });
 
-    const generationConfig: ModelGenerationConfig = {
-      maxTokens: 300,
-      stopSequences: [],
-      temperature: 0.7,
-      topP: 1,
-      frequencyPenalty: 0,
-      presencePenalty: 0,
-      customRequestBodyFields: [{name: 'foo', value: 'bar'}],
-    };
+  afterEach(() => {
+    nock.cleanAll();
+  });
 
+  
+  it('handles chat completion request', async () => {
     const response: ModelResponse = await getOpenAIAPIChatCompletionResponse(
       'testapikey',
       'https://test.uri/v1/',
       'test-model',
       'This is a test prompt.',
-      generationConfig,
+      DEFAULT_GENERATION_CONFIG,
+    );
+    const parsedResponse = JSON.parse(response.text);
+
+    expect(parsedResponse.model).toEqual('test-model');
+    expect(parsedResponse.response_format).toEqual({type: 'text'});
+    expect(parsedResponse.messages).toEqual(
+      [{role: 'user', content: 'This is a test prompt.'}]
+    );
+  });
+
+  it('handles json format request', async () => {
+    const structuredOutputConfig : StructuredOutputConfig = createStructuredOutputConfig({
+      type: StructuredOutputType.JSON_FORMAT,
+    });
+    
+    const response: ModelResponse = await getOpenAIAPIChatCompletionResponse(
+      'testapikey',
+      'https://test.uri/v1/',
+      'test-model',
+      'This is a test prompt.',
+      DEFAULT_GENERATION_CONFIG,
+      structuredOutputConfig,
+    );
+    const parsedResponse = JSON.parse(response.text);
+
+    expect(parsedResponse.model).toEqual('test-model');
+    expect(parsedResponse.response_format).toEqual({type: 'json_object'});
+    expect(parsedResponse.messages).toEqual(
+      [{role: 'user', content: 'This is a test prompt.'}]
+    );
+  });
+
+  it('handles json schema request', async () => {
+    const structuredOutputConfig : StructuredOutputConfig = createStructuredOutputConfig({
+      type: StructuredOutputType.JSON_SCHEMA,
+      schema: {
+        type: StructuredOutputDataType.OBJECT,
+        properties: [
+          {
+            name: 'stringProperty',
+            schema: {
+              type: StructuredOutputDataType.STRING,
+              description: 'A string-valued property',
+            },
+          },
+          {
+            name: 'integerProperty',
+            schema: {
+              type: StructuredOutputDataType.INTEGER,
+              description: 'An integer-valued property',
+            },
+          },
+        ],
+      },
+    });
+    
+    const response: ModelResponse = await getOpenAIAPIChatCompletionResponse(
+      'testapikey',
+      'https://test.uri/v1/',
+      'test-model',
+      'This is a test prompt.',
+      DEFAULT_GENERATION_CONFIG,
+      structuredOutputConfig,
+    );
+    // Mock request still just returns the response body, not actually the
+    // specified schema.
+    const parsedResponse = JSON.parse(response.text);
+
+    expect(parsedResponse.model).toEqual('test-model');
+    expect(parsedResponse.messages).toEqual(
+      [{role: 'user', content: 'This is a test prompt.'}]
     );
 
-    expect(response.text).toEqual('test output');
-
-    nock.cleanAll();
+    const expectedSchema = {
+      type: 'OBJECT',
+      properties: {
+        stringProperty: {
+          type: 'STRING',
+          description: 'A string-valued property',
+        },
+        integerProperty: {
+          type: 'INTEGER',
+          description: 'An integer-valued property',
+        },
+      },
+      additionalProperties: false,
+      required: ['stringProperty', 'integerProperty'],
+    }
+    expect(parsedResponse.response_format).toEqual({
+      type: 'json_schema',
+      strict: true,
+      json_schema: expectedSchema
+    });
   });
 });
