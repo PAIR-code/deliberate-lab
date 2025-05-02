@@ -131,7 +131,7 @@ export async function callOpenAIChatCompletion(
     console.error(`Error: Token limit exceeded`);
   }
 
-  return {text: response.choices[0].text};
+  return {text: response.choices[0].message.content};
 }
 
 export async function getOpenAIAPIChatCompletionResponse(

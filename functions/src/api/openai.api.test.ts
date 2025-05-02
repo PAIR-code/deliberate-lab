@@ -34,8 +34,13 @@ describe('OpenAI-compatible API', () => {
           model: requestBody.model,
           choices: [
             {
-              text: JSON.stringify(requestBody),
               index: 0,
+              message: {
+                role: 'assistant',
+                content: JSON.stringify(requestBody),
+                refusal: null,
+                annotations: [],
+              },
               logprobs: null,
               finish_reason: 'stop',
             },
