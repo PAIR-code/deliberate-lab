@@ -16,6 +16,8 @@
     url: /developers/run-locally
   - title: Platform design
     url: /developers/platform-design
+  - title: Agent design
+    url: /developers/agent-design
   - title: Deploying
     url: /developers/deploy
 - title: Other

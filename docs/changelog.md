@@ -5,6 +5,21 @@ layout: default
 
 This page summarizes notable updates to the Deliberate Lab platform.
 
+## 2025-05-02: Add early agent participant support
+Experiment Version: 18 / [PR #490](https://github.com/PAIR-code/deliberate-lab/pull/490)
+
+- Experimenters can now add default (not configurable from frontend) agent participants to cohorts from the experiment dashboard
+- Agent participants use new (automatically triggered) stage prompts/functions to complete survey, ranking, and chat stages (and click through the rest)
+- Agents now asynchronously query LLM APIs to generate chat responses and rely on new "triggerLogs" collection to avoid duplicate posting
+
+Other changes:
+- (feature) Add utils function to create agent prompts with past stages' context included
+- (feature) Add Firestore diagram to documentation
+- (feature) Update salesperson game to work with one human participant vs. one agent participant
+- (patch) Fix API bug with using obsolete AgentGenerationConfig instead of ModelGenerationConfig
+- (patch) Use public stage data, not last chat message, to determine discussion ID for agent generated chat messages
+- (patch) Refactor some stages' public data updates into trigger functions
+
 ## 2025-04-07: Add structured output support to agent prompts
 Experiment Version: 17 / [PR #495](https://github.com/PAIR-code/deliberate-lab/pull/495)
 
