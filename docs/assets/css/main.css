@@ -187,7 +187,7 @@ blockquote {
   border-left: 3px solid var(--md-sys-color-outline-variant);
   color: var(--md-sys-color-gray);
   font-size: 0.95em;
-  line-height: 1.1em;
+  line-height: 1.2em;
   padding-left: 1em;
 }
 
@@ -211,6 +211,11 @@ code {
   color: var(--md-sys-color-gray);
   font-family: 'Roboto Mono';
   font-size: 0.9em;
+}
+
+small {
+  font-size: 0.9em;
+  line-height: 1em;
 }
 
 .yt-wrapper {

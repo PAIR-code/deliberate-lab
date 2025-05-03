@@ -3,7 +3,46 @@ title: Platform design
 layout: default
 ---
 
-## /utils
+## Overview
+
+Deliberate Lab uses Firebase's [Cloud Firestore database](https://firebase.google.com/docs/firestore/),
+which is comprised of collections of documents (where each document
+can contain collections, each of those collections contain documents, and
+so on).
+
+The following diagram shows all the collections/documents under an "Experiment"
+document:
+
+<img
+  src="../assets/images/firestore-diagram.png"
+  alt="Diagram showing how Deliberate Lab's Firestore database is organized"
+/>
+
+The frontend can fetch and/or listen to specific collections or documents.
+
+> Example: A listener for `$EXPERIMENT_ID/cohorts/$COHORT_ID/publicStageData/$STAGE_ID/chats/`
+could show all the chat messages available in a specific stage for a specific
+experiment cohort.
+
+On the backend, Cloud functions are used to update documents and sometimes
+trigger relevant updates to other documents.
+
+> Example: If updating a participant
+answer, the function would write the new version of the participant's `$STAGE_ID`
+answer to `$EXPERIMENT_ID/participants/$PARTICIPANT_ID/stageData/$STAGE_ID`.
+
+> Writing to this path will trigger a different Cloud function that, if the
+stage type is relevant, updates the participant's current cohort's public stage
+data for `$STAGE_ID`. That means that when a participant completes a ranking
+of other participants, their answer triggers an update to their cohort's
+public ranking data, i.e., the calculation of the "winner" (highest ranked participant).
+
+For details on how agents automatically interact with experiments and send
+chat messages, see [Agent design](agent-design).
+
+## Directories
+
+### /utils
 
 Utils are organized by stage (under `/utils/src/stages`). Each stage has:
 
@@ -13,12 +52,12 @@ Utils are organized by stage (under `/utils/src/stages`). Each stage has:
 - Validation file (e.g., `survey_stage.validation.ts`) defining type
 checks that are used by Firebase cloud functions (and their frontend endpoints)
 
-## /functions
+### /functions
 
-Functions are organized by the object (e.g., participant, survey stage)
-that they update.
+Firebase Cloud functions are organized by the object
+(e.g., participant, survey stage) that they update.
 
-## /frontend
+### /frontend
 
 The frontend web app includes:
 

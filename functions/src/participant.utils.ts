@@ -1,8 +1,11 @@
 import {Timestamp} from 'firebase-admin/firestore';
 import {
+  Experiment,
   ParticipantProfileExtended,
   ParticipantStatus,
 } from '@deliberation-lab/utils';
+import {completeStageAsAgentParticipant} from './agent.utils';
+import {getFirestoreActiveParticipants} from './utils/firestore';
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
@@ -65,25 +68,10 @@ export async function updateCohortStageUnlocked(
 ) {
   await app.firestore().runTransaction(async (transaction) => {
     // Get active participants for given cohort
-    // TODO: Create shared utils under /utils for isActiveParticipant
-    const activeStatuses = [
-      ParticipantStatus.IN_PROGRESS,
-      ParticipantStatus.COMPLETED,
-      ParticipantStatus.ATTENTION_CHECK,
-    ];
-    const activeParticipants = (
-      await app
-        .firestore()
-        .collection('experiments')
-        .doc(experimentId)
-        .collection('participants')
-        .where('currentCohortId', '==', cohortId)
-        .get()
-    ).docs
-      .map((doc) => doc.data() as ParticipantProfile)
-      .filter((participant) =>
-        activeStatuses.find((status) => status === participant.currentStatus),
-      );
+    const activeParticipants = await getFirestoreActiveParticipants(
+      experimentId,
+      cohortId,
+    );
 
     // Get participant pending transfer into current cohort
     const transferParticipants = (
@@ -169,8 +157,16 @@ export async function updateCohortStageUnlocked(
     cohortConfig.stageUnlockMap[stageId] = true;
     transaction.set(cohortDoc, cohortConfig);
 
-    // TODO: Now that the given stage is unlocked, active any agent
+    // Now that the given stage is unlocked, active any agent
     // participants that are ready to start (and have not yet completed)
     // the current stage
+    const experiment = (
+      await app.firestore().collection('experiments').doc(experimentId).get()
+    ).data() as Experiment;
+    for (const participant of participants) {
+      if (participant.agentConfig && participant.currentStageId === stageId) {
+        completeStageAsAgentParticipant(experiment, participant);
+      } // end agent participant if
+    } // end participant loop
   });
 }
