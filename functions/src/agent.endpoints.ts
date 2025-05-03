@@ -16,6 +16,10 @@ import {
   getOllamaResponse,
 } from './agent.utils';
 import {getAgentParticipantRankingStageResponse} from './stages/ranking.utils';
+import {
+  getExperimenterData,
+  getExperimenterDataFromExperiment,
+} from './utils/firestore';
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
@@ -40,17 +44,9 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
   const participantPrivateId = data.participantId;
 
   // Fetch experiment creator's API key and other experiment data.
-  const creatorId = (
-    await app.firestore().collection('experiments').doc(experimentId).get()
-  ).data().metadata.creator;
-  const creatorDoc = await app
-    .firestore()
-    .collection('experimenterData')
-    .doc(creatorId)
-    .get();
-  if (!creatorDoc.exists) return;
-
-  const experimenterData = creatorDoc.data() as ExperimenterData;
+  const experimenterData =
+    await getExperimenterDataFromExperiment(experimentId);
+  if (!experimenterData) return;
 
   // Fetch participant config (in case needed to help construct prompt)
   const participant = (
@@ -125,14 +121,8 @@ export const testAgentConfig = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
 
   // Fetch experiment creator's API key and other experiment data
-  const creatorDoc = await app
-    .firestore()
-    .collection('experimenterData')
-    .doc(creatorId)
-    .get();
-  if (!creatorDoc.exists) return;
-
-  const experimenterData = creatorDoc.data() as ExperimenterData;
+  const experimenterData = await getExperimenterData(creatorId);
+  if (!experimenterData) return;
 
   // TODO: Use fake (e.g., chat) data when running prompt?
   const prompt = promptConfig.promptContext;
