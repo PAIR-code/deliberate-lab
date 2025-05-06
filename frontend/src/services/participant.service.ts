@@ -234,7 +234,10 @@ export class ParticipantService extends Service {
           this.participantId,
         ),
         async (doc) => {
-          this.profile = doc.data() as ParticipantProfileExtended;
+          this.profile = {
+            agentConfig: null,
+            ...doc.data(),
+          } as ParticipantProfileExtended;
           // Load cohort data
           if (this.experimentId) {
             await this.sp.cohortService.loadCohortData(

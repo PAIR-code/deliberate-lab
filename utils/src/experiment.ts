@@ -32,8 +32,9 @@ import {StageConfig} from './stages/stage';
  * VERSION 15 - add stageUnlockMap, readyStages timestamps (PR #442)
  * VERSION 16 - switch to new mediator workflow including updated ChatMessage
  * VERSION 17 - add structured output config to agent prompt configs
+ * VERSION 18 - add agent participant config to ParticipantProfileExtended
  */
-export const EXPERIMENT_VERSION_ID = 17;
+export const EXPERIMENT_VERSION_ID = 18;
 
 /** Experiment. */
 export interface Experiment {

@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import nock = require('nock');
 
-import {AgentGenerationConfig} from '@deliberation-lab/utils';
+import {ModelGenerationConfig} from '@deliberation-lab/utils';
 import {getOpenAIAPIChatCompletionResponse} from './openai.api';
 import {ModelResponse} from './model.response';
 
@@ -24,7 +24,9 @@ describe('OpenAI-compatible API', () => {
         ],
       });
 
-    const generationConfig: AgentGenerationConfig = {
+    const generationConfig: ModelGenerationConfig = {
+      maxTokens: 300,
+      stopSequences: [],
       temperature: 0.7,
       topP: 1,
       frequencyPenalty: 0,

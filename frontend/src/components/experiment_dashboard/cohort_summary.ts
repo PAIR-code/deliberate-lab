@@ -106,7 +106,8 @@ export class CohortSummary extends MobxLitElement {
           </div>
         </div>
         <div class="right">
-          ${this.renderAddParticipantButton()} ${this.renderLockButton()}
+          ${this.renderAddParticipantButton(false)}
+          ${this.renderAddParticipantButton(true)} ${this.renderLockButton()}
           ${this.renderCopyButton()} ${this.renderSettingsButton()}
         </div>
       </div>
@@ -138,7 +139,7 @@ export class CohortSummary extends MobxLitElement {
     `;
   }
 
-  private renderAddParticipantButton() {
+  private renderAddParticipantButton(isAgent: boolean) {
     if (!this.cohort) {
       return nothing;
     }
@@ -154,9 +155,12 @@ export class CohortSummary extends MobxLitElement {
     };
 
     return html`
-      <pr-tooltip text="Add participant" position="BOTTOM_END">
+      <pr-tooltip
+        text=${isAgent ? 'Add agent participant' : 'Add human participant'}
+        position="BOTTOM_END"
+      >
         <pr-icon-button
-          icon="person_add"
+          icon=${isAgent ? 'robot_2' : 'person_add'}
           color="tertiary"
           variant="default"
           ?disabled=${isDisabled()}
@@ -164,7 +168,13 @@ export class CohortSummary extends MobxLitElement {
           @click=${async () => {
             if (!this.cohort) return;
             this.analyticsService.trackButtonClick(ButtonClick.PARTICIPANT_ADD);
-            await this.experimentManager.createParticipant(this.cohort.id);
+            if (isAgent) {
+              await this.experimentManager.createAgentParticipant(
+                this.cohort.id,
+              );
+            } else {
+              await this.experimentManager.createParticipant(this.cohort.id);
+            }
             this.isExpanded = true;
           }}
         >
@@ -235,7 +245,6 @@ export class CohortSummary extends MobxLitElement {
       return participant.currentStatus == ParticipantStatus.TRANSFER_TIMEOUT;
     };
 
-
     const isOnTransferStage = (participant: ParticipantProfile) => {
       const stage = this.experimentService.getStage(participant.currentStageId);
       if (!stage) return false; // Return false instead of 'nothing' to ensure it's a boolean
@@ -249,12 +258,12 @@ export class CohortSummary extends MobxLitElement {
           .sort((a, b) => {
             if (isTransferTimeout(a)) {
               return 1;
-            } 
+            }
 
             if (isTransferTimeout(b)) {
               return -1;
             }
-            
+
             const aIsTransfer = isOnTransferStage(a) ? 0 : 1; // 0 if true, 1 if false
             const bIsTransfer = isOnTransferStage(b) ? 0 : 1;
             return (
