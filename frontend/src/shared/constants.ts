@@ -10,6 +10,7 @@ export const FIREBASE_LOCAL_HOST_PORT_FIRESTORE = 8080;
 export const FIREBASE_LOCAL_HOST_PORT_STORAGE = 9199;
 export const FIREBASE_LOCAL_HOST_PORT_AUTH = 9099;
 export const FIREBASE_LOCAL_HOST_PORT_FUNCTIONS = 5001;
+export const FIREBASE_LOCAL_HOST_PORT_RTDB = 9000;
 
 /** App name. */
 export const APP_NAME = 'Deliberate Lab';

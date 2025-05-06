@@ -22,9 +22,15 @@
   "storage": {
     "rules": "firestore/storage.rules"
   },
+  "database": {
+    "rules": "firestore/database.rules.json"
+  },
   "emulators": {
     "auth": {
       "port": 9099
+    },
+    "database": {
+      "port": 9000
     },
     "functions": {
       "port": 5001

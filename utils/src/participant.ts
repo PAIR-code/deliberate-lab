@@ -36,6 +36,7 @@ export interface ParticipantProfile extends ParticipantProfileBase {
   currentStatus: ParticipantStatus;
   timestamps: ProgressTimestamps;
   anonymousProfiles: Record<string, AnonymousProfileMetadata>;
+  connected: boolean;
 }
 
 /** Anonymous profile data generated from profile set. */
@@ -151,6 +152,7 @@ export function createParticipantProfileExtended(
     currentStatus: config.currentStatus ?? ParticipantStatus.IN_PROGRESS,
     timestamps: config.timestamps ?? createProgressTimestamps(),
     anonymousProfiles: {},
+    connected: false,
     agentConfig: config.agentConfig ?? null,
   };
 }

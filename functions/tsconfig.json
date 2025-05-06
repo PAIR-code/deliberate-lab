@@ -9,7 +9,8 @@
     "target": "es2017",
     "paths": {
       "@deliberation-lab/utils": ["../utils/dist"] // Makes `tsc --watch` also watch changes in the utils package
-    }
+    },
+    "esModuleInterop": true
   },
   "compileOnSave": true,
   "include": ["src"],
