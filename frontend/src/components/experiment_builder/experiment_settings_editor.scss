@@ -58,13 +58,6 @@ pr-textarea {
   gap: common.$spacing-small;
 }
 
-.number-input {
-  @include common.number-input;
-  /* width of checkbox plus gap */
-  margin-left: calc(48px + common.$spacing-medium);
-  width: max-content;
-}
-
 .inner-setting {
   @include common.flex-column;
   gap: common.$spacing-large;
