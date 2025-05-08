@@ -30,9 +30,15 @@ export class ExperimentBuilderNav extends MobxLitElement {
 
   override render() {
     return html`
-      ${this.experimentEditor.stages.map((stage, index) =>
-        this.renderStageItem(stage, index),
-      )}
+      <div class="buttons header">
+        ${this.renderAddStageButton()} ${this.renderLoadGameButton()}
+      </div>
+      <div class="nav-items-wrapper">
+        ${this.experimentEditor.stages.map((stage, index) =>
+          this.renderStageItem(stage, index),
+        )}
+      </div>
+      ${this.renderStageBuilderDialog()}
     `;
   }
 
@@ -54,7 +60,7 @@ export class ExperimentBuilderNav extends MobxLitElement {
         <div class="primary">
           ${getPrivateExperimentName(
             this.experimentEditor.experiment,
-            'Experiment config',
+            'Experiment stage editor',
           )}
         </div>
       </div>
@@ -130,6 +136,45 @@ export class ExperimentBuilderNav extends MobxLitElement {
         </div>
       </div>
     `;
+  }
+
+  private renderAddStageButton() {
+    return html`
+      <pr-button
+        color="tertiary"
+        variant="tonal"
+        ?disabled=${!this.experimentEditor.canEditStages}
+        @click=${() => {
+          this.experimentEditor.toggleStageBuilderDialog(false);
+        }}
+      >
+        + Add stage
+      </pr-button>
+    `;
+  }
+
+  private renderLoadGameButton() {
+    return html`
+      <pr-button
+        color="neutral"
+        variant="default"
+        ?disabled=${!this.experimentEditor.canEditStages}
+        @click=${() => {
+          this.experimentEditor.toggleStageBuilderDialog(true);
+        }}
+      >
+        Load game
+      </pr-button>
+    `;
+  }
+
+  private renderStageBuilderDialog() {
+    if (this.experimentEditor.showStageBuilderDialog) {
+      return html`<stage-builder-dialog
+        .showGames=${this.experimentEditor.showGamesTab}
+      ></stage-builder-dialog>`;
+    }
+    return nothing;
   }
 }
 

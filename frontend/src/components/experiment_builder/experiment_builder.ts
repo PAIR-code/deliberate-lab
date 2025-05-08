@@ -57,8 +57,7 @@ export class ExperimentBuilder extends MobxLitElement {
   override render() {
     return html`
       ${this.renderNavPanel()} ${this.renderExperimentConfigBuilder()}
-      ${this.renderAgentBuilder()} ${this.renderExperimenterSettings()}
-      ${this.renderStageBuilder()} ${this.renderStageBuilderDialog()}
+      ${this.renderExperimenterSettings()}
     `;
   }
 
@@ -70,43 +69,19 @@ export class ExperimentBuilder extends MobxLitElement {
     return html`
       <div class="panel-wrapper">
         <div class="sidebar">
-          <pr-tooltip text="General experiment settings" position="RIGHT_END">
+          <pr-tooltip text="Experiment settings" position="RIGHT_END">
             <pr-icon-button
               color="secondary"
               icon="folder_managed"
               size="medium"
-              variant=${isSelected(PanelView.DEFAULT) ? 'tonal' : 'default'}
+              variant=${!isSelected(PanelView.API_KEY) ? 'tonal' : 'default'}
               @click=${() => {
                 this.panelView = PanelView.DEFAULT;
               }}
             >
             </pr-icon-button>
           </pr-tooltip>
-          <pr-tooltip text="Experiment stages" position="RIGHT_END">
-            <pr-icon-button
-              color="secondary"
-              icon="list"
-              size="medium"
-              variant=${isSelected(PanelView.STAGES) ? 'tonal' : 'default'}
-              @click=${() => {
-                this.panelView = PanelView.STAGES;
-              }}
-            >
-            </pr-icon-button>
-          </pr-tooltip>
-          <pr-tooltip text="Agents" position="RIGHT_END">
-            <pr-icon-button
-              color="secondary"
-              icon="robot_2"
-              size="medium"
-              variant=${isSelected(PanelView.AGENTS) ? 'tonal' : 'default'}
-              @click=${() => {
-                this.panelView = PanelView.AGENTS;
-              }}
-            >
-            </pr-icon-button>
-          </pr-tooltip>
-          <pr-tooltip text="Experimenter settings" position="RIGHT_END">
+          <pr-tooltip text="API key settings" position="RIGHT_END">
             <pr-icon-button
               color="secondary"
               icon="key"
@@ -125,32 +100,6 @@ export class ExperimentBuilder extends MobxLitElement {
   }
 
   private renderPanelView() {
-    if (this.panelView === PanelView.DEFAULT) {
-      return html`
-        <div class="panel-view">
-          <div class="top">
-            <div class="panel-view-header">General settings</div>
-            <div>
-              Edit experiment metadata to the right, then use the tabs on the
-              left to add experiment stages and agents.
-            </div>
-            ${this.renderLoadGameButton()}
-          </div>
-          <div class="bottom">${this.renderDeleteButton()}</div>
-        </div>
-      `;
-    }
-    if (this.panelView === PanelView.STAGES) {
-      return html`
-        <div class="panel-view">
-          <div class="top">
-            <div class="panel-view-header">Experiment stages</div>
-            ${this.renderAddStageButton()} ${this.renderLoadGameButton()}
-          </div>
-          <div class="bottom"></div>
-        </div>
-      `;
-    }
     if (this.panelView === PanelView.API_KEY) {
       return html`
         <div class="panel-view">
@@ -164,78 +113,73 @@ export class ExperimentBuilder extends MobxLitElement {
         </div>
       `;
     }
-    if (this.panelView === PanelView.AGENTS) {
-      // TODO: Refactor agent nav to separate component
-      return html`
-        <div class="panel-view">
-          <div class="top">
-            <div class="panel-view-header">Agents</div>
-            <pr-button
-              color="tertiary"
-              variant="tonal"
-              @click=${() => {
-                this.agentEditor.addAgentMediator();
-              }}
-            >
-              Add agent mediator
-            </pr-button>
-            ${this.agentEditor.agentMediators.map(
-              (mediator) => html`
-                <div
-                  class="agent-item ${this.agentEditor
-                    .currentAgentMediatorId === mediator.id
-                    ? 'current'
-                    : ''}"
-                  @click=${() => {
-                    this.agentEditor.setCurrentAgentMediator(mediator.id);
-                  }}
-                >
-                  <div>
-                    ${mediator.name.length > 0
-                      ? mediator.name
-                      : mediator.defaultProfile.name}
-                  </div>
-                  <div class="subtitle">
-                    ${mediator.defaultModelSettings.modelName}
-                  </div>
-                  <div class="subtitle">${mediator.id}</div>
-                </div>
-              `,
-            )}
+
+    return html`
+      <div class="panel-view">
+        <div class="top">
+          <div class="panel-view-header">General settings</div>
+          <div
+            class="general-item ${this.panelView === PanelView.DEFAULT
+              ? 'current'
+              : ''}"
+            @click=${() => {
+              this.panelView = PanelView.DEFAULT;
+            }}
+          >
+            <div>Metadata</div>
+            <div class="subtitle">
+              Experiment name, visibility, Prolific integration
+            </div>
           </div>
+          <div
+            class="general-item ${this.panelView === PanelView.STAGES
+              ? 'current'
+              : ''}"
+            @click=${() => {
+              this.panelView = PanelView.STAGES;
+            }}
+          >
+            <div>Stages</div>
+            <div class="subtitle">Add and configure experiment stages</div>
+          </div>
+          <div class="panel-view-header">Agent Mediators</div>
+          ${this.agentEditor.agentMediators.map(
+            (mediator) => html`
+              <div
+                class="agent-item ${this.agentEditor.currentAgentMediatorId ===
+                  mediator.id && this.panelView === PanelView.AGENTS
+                  ? 'current'
+                  : ''}"
+                @click=${() => {
+                  this.panelView = PanelView.AGENTS;
+                  this.agentEditor.setCurrentAgentMediator(mediator.id);
+                }}
+              >
+                <div>
+                  ${mediator.name.length > 0
+                    ? mediator.name
+                    : mediator.defaultProfile.name}
+                </div>
+                <div class="subtitle">
+                  ${mediator.defaultModelSettings.modelName}
+                </div>
+                <div class="subtitle">${mediator.id}</div>
+              </div>
+            `,
+          )}
+          <pr-button
+            color="neutral"
+            variant="default"
+            @click=${() => {
+              this.panelView = PanelView.AGENTS;
+              this.agentEditor.addAgentMediator();
+            }}
+          >
+            + New agent mediator
+          </pr-button>
         </div>
-      `;
-    }
-    return nothing;
-  }
-
-  private renderAddStageButton() {
-    return html`
-      <pr-button
-        color="tertiary"
-        variant="tonal"
-        ?disabled=${!this.experimentEditor.canEditStages}
-        @click=${() => {
-          this.experimentEditor.toggleStageBuilderDialog(false);
-        }}
-      >
-        Add stage
-      </pr-button>
-    `;
-  }
-
-  private renderLoadGameButton() {
-    return html`
-      <pr-button
-        color="tertiary"
-        variant="tonal"
-        ?disabled=${!this.experimentEditor.canEditStages}
-        @click=${() => {
-          this.experimentEditor.toggleStageBuilderDialog(true);
-        }}
-      >
-        Load game
-      </pr-button>
+        <div class="bottom">${this.renderDeleteButton()}</div>
+      </div>
     `;
   }
 
@@ -278,39 +222,29 @@ export class ExperimentBuilder extends MobxLitElement {
     `;
   }
 
-  private renderAgentBuilder() {
-    if (this.panelView !== PanelView.AGENTS) {
-      return nothing;
-    }
-
-    const agent = this.agentEditor.currentAgentMediator;
-
-    return html`
-      <div class="experiment-builder">
-        <agent-editor .agent=${agent}></agent-editor>
-      </div>
-    `;
-  }
-
   private renderExperimentConfigBuilder() {
-    if (this.panelView !== PanelView.DEFAULT) {
-      return nothing;
+    if (this.panelView === PanelView.DEFAULT) {
+      return html`
+        <div class="experiment-builder">
+          <experiment-settings-editor></experiment-settings-editor>
+        </div>
+      `;
+    } else if (this.panelView === PanelView.AGENTS) {
+      const agent = this.agentEditor.currentAgentMediator;
+      return html`
+        <div class="experiment-builder">
+          <agent-editor .agent=${agent}></agent-editor>
+        </div>
+      `;
+    } else if (this.panelView === PanelView.STAGES) {
+      return this.renderStageBuilder();
     }
-
-    return html`
-      <div class="experiment-builder">
-        <experiment-settings-editor></experiment-settings-editor>
-      </div>
-    `;
+    return nothing;
   }
 
   private renderStageBuilder() {
     if (this.panelView !== PanelView.STAGES) {
       return nothing;
-    }
-
-    if (this.experimentEditor.stages.length === 0) {
-      return html` <div class="content">Add a stage to get started.</div> `;
     }
 
     return html`
@@ -434,15 +368,6 @@ export class ExperimentBuilder extends MobxLitElement {
       default:
         return nothing;
     }
-  }
-
-  private renderStageBuilderDialog() {
-    if (this.experimentEditor.showStageBuilderDialog) {
-      return html`<stage-builder-dialog
-        .showGames=${this.experimentEditor.showGamesTab}
-      ></stage-builder-dialog>`;
-    }
-    return nothing;
   }
 }
 

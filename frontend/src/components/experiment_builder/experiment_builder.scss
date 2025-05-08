@@ -119,8 +119,10 @@ pr-button pr-icon {
 
 // Agent nav styles
 // TODO: Refactor agent nav into separate component
+.general-item,
 .agent-item {
   @include common.flex-column;
+  border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: common.$spacing-medium;
   cursor: pointer;
   gap: common.$spacing-small;
