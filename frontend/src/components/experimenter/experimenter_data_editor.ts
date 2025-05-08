@@ -1,10 +1,11 @@
 import '../../pair-components/icon_button';
-import '../../pair-components/textarea';
 import '../../pair-components/tooltip';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
+
+import '@material/web/textfield/filled-text-field.js';
 
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
@@ -124,14 +125,13 @@ export class ExperimenterDataEditor extends MobxLitElement {
     return html`
       <div class="section">
         <h3>Gemini API settings</h3>
-        <pr-textarea
+        <md-filled-text-field
           label="Gemini API key"
           placeholder="Add Gemini API key"
-          variant="outlined"
           .value=${this.authService.experimenterData?.apiKeys.geminiApiKey ??
           ''}
           @input=${updateKey}
-        ></pr-textarea>
+        ></md-filled-text-field>
         ${this.renderCheckApiKey(ApiKeyType.GEMINI_API_KEY)}
       </div>
     `;
@@ -188,21 +188,20 @@ export class ExperimenterDataEditor extends MobxLitElement {
     return html`
       <div class="section">
         <h3>Open AI API settings</h3>
-        <pr-textarea
+        <md-filled-text-field
           label="API Key"
           placeholder="Add Open AI API key"
-          variant="outlined"
           .value=${data?.apiKeys.openAIApiKey?.apiKey ?? ''}
           @input=${(e: InputEvent) => updateOpenAISettings(e, 'apiKey')}
-        ></pr-textarea>
+        ></md-filled-text-field>
 
-        <pr-textarea
+        <md-filled-text-field
           label="Base URL (if blank, uses OpenAI's servers)"
           placeholder="http://example:14434/v1"
           variant="outlined"
           .value=${data?.apiKeys.openAIApiKey?.baseUrl ?? ''}
           @input=${(e: InputEvent) => updateOpenAISettings(e, 'baseUrl')}
-        ></pr-textarea>
+        ></md-filled-text-field>
         ${this.renderCheckApiKey(ApiKeyType.OPENAI_API_KEY)}
       </div>
     `;
@@ -242,13 +241,12 @@ export class ExperimenterDataEditor extends MobxLitElement {
     return html`
       <div class="section">
         <h3>Ollama API settings</h3>
-        <pr-textarea
+        <md-filled-text-field
           label="Server URL (please ensure URL is valid!)"
           placeholder="http://example:80/api/chat"
-          variant="outlined"
           .value=${data?.apiKeys.ollamaApiKey?.url ?? ''}
           @input=${(e: InputEvent) => updateServerSettings(e, 'url')}
-        ></pr-textarea>
+        ></md-filled-text-field>
         ${this.renderCheckApiKey(ApiKeyType.OLLAMA_CUSTOM_URL)}
       </div>
     `;
