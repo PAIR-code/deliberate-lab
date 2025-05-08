@@ -1,5 +1,3 @@
-import '../../pair-components/textarea';
-
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
