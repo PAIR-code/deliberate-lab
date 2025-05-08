@@ -208,7 +208,8 @@
   --md-sys-color-on-surface: var(--md-ref-palette-neutral10);
   --md-sys-color-surface-variant: var(--md-ref-palette-neutral-variant96);
   --md-sys-color-on-surface-variant: var(--md-ref-palette-neutral-variant30);
-  --md-sys-color-surface-container-highest: var(--md-ref-palette-neutral99);
+  /* Used for md-filled-text-field container color */
+  --md-sys-color-surface-container-highest: var(--md-ref-palette-neutral96);
   --md-sys-color-surface-container-high: var(--md-ref-palette-neutral98);
   --md-sys-color-surface-container: var(--md-ref-palette-neutral96);
   --md-sys-color-surface-container-low: var(--md-ref-palette-neutral92);

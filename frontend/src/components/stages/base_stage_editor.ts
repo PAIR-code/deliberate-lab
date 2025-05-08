@@ -4,6 +4,7 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
+import '@material/web/textfield/filled-text-field.js';
 import '@material/web/checkbox/checkbox.js';
 
 import {core} from '../../core/core';
@@ -36,27 +37,16 @@ export class BaseStageEditorComponent extends MobxLitElement {
     }
 
     return html`
-      <div class="section">
-        <div class="title">Metadata</div>
-        ${this.renderName()}
-        ${this.stage.kind === StageKind.CHAT
-          ? html`<i
-              >If there are agents active in this stage, they will see the
-              fields below:</i
-            >`
-          : ``}
-        ${this.renderPrimaryText()} ${this.renderInfoText()}
-        ${this.renderHelpText()}
-      </div>
-      <div class="divider"></div>
-
-      <div class="section">
-        <div class="title">Progression</div>
-        ${this.renderWaitForAllParticipants()}
-        ${this.renderWaitForNumParticipants()}
-        ${this.renderShowParticipantProgress()}
-      </div>
-      <div class="divider"></div>
+      <details>
+        <summary>Metadata and progress settings</summary>
+        <div class="inner-section">
+          ${this.renderName()} ${this.renderPrimaryText()}
+          ${this.renderInfoText()} ${this.renderHelpText()}
+          ${this.renderWaitForAllParticipants()}
+          ${this.renderWaitForNumParticipants()}
+          ${this.renderShowParticipantProgress()}
+        </div>
+      </details>
     `;
   }
 
@@ -69,15 +59,15 @@ export class BaseStageEditorComponent extends MobxLitElement {
     };
 
     return html`
-      <pr-textarea
+      <md-filled-text-field
         label="Stage name"
-        placeholder="Add stage name"
-        variant="outlined"
-        .value=${this.stage?.name ?? ''}
+        required
         ?disabled=${!this.experimentEditor.canEditStages}
+        .error=${!this.stage?.name}
+        .value=${this.stage?.name ?? ''}
         @input=${updateName}
       >
-      </pr-textarea>
+      </md-filled-text-field>
     `;
   }
 
@@ -91,15 +81,15 @@ export class BaseStageEditorComponent extends MobxLitElement {
     };
 
     return html`
-      <pr-textarea
-        label="Stage description / instructions"
-        placeholder="Add description"
-        variant="outlined"
+      <md-filled-text-field
+        label="Stage description or instructions (optional)"
         .value=${this.stage?.descriptions.primaryText ?? ''}
         ?disabled=${!this.experimentEditor.canEditStages}
+        type="textarea"
+        rows="3"
         @input=${update}
       >
-      </pr-textarea>
+      </md-filled-text-field>
     `;
   }
 
@@ -113,15 +103,14 @@ export class BaseStageEditorComponent extends MobxLitElement {
     };
 
     return html`
-      <pr-textarea
-        label="Info popup text"
-        placeholder="Add info popup text"
-        variant="outlined"
+      <md-filled-text-field
+        label="Info popup text (optional)"
         .value=${this.stage?.descriptions.infoText ?? ''}
         ?disabled=${!this.experimentEditor.canEditStages}
+        type="textarea"
         @input=${update}
       >
-      </pr-textarea>
+      </md-filled-text-field>
     `;
   }
 
@@ -135,15 +124,14 @@ export class BaseStageEditorComponent extends MobxLitElement {
     };
 
     return html`
-      <pr-textarea
-        label="Help popup text"
-        placeholder="Add help popup text"
-        variant="outlined"
+      <md-filled-text-field
+        label="Help popup text (optional)"
         .value=${this.stage?.descriptions.helpText ?? ''}
         ?disabled=${!this.experimentEditor.canEditStages}
+        type="textarea"
         @input=${update}
       >
-      </pr-textarea>
+      </md-filled-text-field>
     `;
   }
 
