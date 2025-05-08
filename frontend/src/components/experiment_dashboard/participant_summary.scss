@@ -1,6 +1,6 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -12,6 +12,7 @@
   border-top: 1px solid var(--md-sys-color-outline-variant-high);
   cursor: pointer;
   justify-content: space-between;
+  overflow: hidden;
   padding: common.$spacing-xs common.$spacing-large;
 
   &:focus,
@@ -24,7 +25,7 @@
   }
 
   &.old {
-    opacity: .5;
+    opacity: 0.5;
   }
 
   .left,
