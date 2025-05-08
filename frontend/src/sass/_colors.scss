@@ -1,21 +1,21 @@
 /* Global colors (not specific to palette). */
 @mixin global {
   /* avatars */
-  --md-sys-color-avatar-red: #FFB3AE; // red80
-  --md-sys-color-avatar-orange: #FFB683; // orange80
-  --md-sys-color-avatar-yellow: #FDE293; // yellow200
-  --md-sys-color-avatar-green: #A8DAB5; // green200
-  --md-sys-color-avatar-blue: #AECBFA; // blue200
-  --md-sys-color-avatar-purple: #D7AEFB; // purple200
-  --md-sys-color-avatar-pink: #FBA9D6; // pink200
+  --md-sys-color-avatar-red: #ffb3ae; // red80
+  --md-sys-color-avatar-orange: #ffb683; // orange80
+  --md-sys-color-avatar-yellow: #fde293; // yellow200
+  --md-sys-color-avatar-green: #a8dab5; // green200
+  --md-sys-color-avatar-blue: #aecbfa; // blue200
+  --md-sys-color-avatar-purple: #d7aefb; // purple200
+  --md-sys-color-avatar-pink: #fba9d6; // pink200
   /* status */
-  --md-sys-color-progress: #FDE293; // yellow200
-  --md-sys-color-success: #A8DAB5; // green200
+  --md-sys-color-progress: #fde293; // yellow200
+  --md-sys-color-success: #a8dab5; // green200
 }
 
 /* Kamino reference definitions. */
 @mixin kamino-ref {
-  --md-source: #365ABC;
+  --md-source: #365abc;
   /* primary */
   --md-ref-palette-primary0: #000000;
   --md-ref-palette-primary4: #000b2f;
@@ -228,8 +228,8 @@
   --md-sys-color-secondary-container-low: var(--md-ref-palette-secondary94);
   --md-sys-color-secondary-container-high: var(--md-ref-palette-secondary80);
   --md-sys-color-outline-variant-high: var(--md-ref-palette-neutral-variant90);
-  --md-sys-color-box-shadow-3: 0px 1px 3px 0px rgba(0, 0, 0, 0.3),
-    0px 4px 8px 3px rgba(0, 0, 0, 0.15);
+  --md-sys-color-box-shadow-3:
+    0px 1px 3px 0px rgba(0, 0, 0, 0.3), 0px 4px 8px 3px rgba(0, 0, 0, 0.15);
 }
 
 /* Dark theme. */
@@ -274,6 +274,9 @@
   --md-sys-color-secondary-container-low: var(--md-ref-palette-secondary40);
   --md-sys-color-secondary-container-high: var(--md-ref-palette-secondary20);
   --md-sys-color-outline-variant-high: var(--md-ref-palette-neutral-variant25);
-  --md-sys-color-box-shadow-3: 0px 1px 3px 0px rgba(0, 0, 0, 0.3),
-    0px 4px 8px 3px rgba(0, 0, 0, 0.15);
+  --md-sys-color-box-shadow-3:
+    0px 1px 3px 0px rgba(0, 0, 0, 0.3), 0px 4px 8px 3px rgba(0, 0, 0, 0.15);
+
+  // scrollbar
+  scrollbar-color: #777 #333;
 }
