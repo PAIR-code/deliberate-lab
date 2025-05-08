@@ -57,7 +57,6 @@ main {
   @include common.full-percentage;
   flex-grow: 1;
   max-width: common.$main-content-max-width;
-  overflow: auto;
   padding: common.$main-content-padding;
 
   &.info {
