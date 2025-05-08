@@ -39,7 +39,6 @@
 
 .agent-wrapper {
   @include common.flex-column;
-  align-items: start;
   flex-grow: 1;
   gap: common.$spacing-xl;
   max-width: common.$info-content-max-width;

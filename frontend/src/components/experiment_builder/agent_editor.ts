@@ -1,6 +1,7 @@
 import '../../pair-components/button';
 import '../../pair-components/icon_button';
 import '../../pair-components/textarea';
+import '@material/web/textfield/filled-text-field.js';
 import '@material/web/checkbox/checkbox.js';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -278,16 +279,14 @@ export class AgentEditorComponent extends MobxLitElement {
     };
 
     return html`
-      <pr-textarea
-        label="Private agent name (viewable to experimenters only)*"
-        placeholder="E.g., Gemini Pro Agent"
-        variant="outlined"
+      <md-filled-text-field
+        label="Private agent name (viewable to experimenters only)"
         .value=${agent.name}
         class=${agent.name.length === 0 ? 'required' : ''}
         ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updateName}
       >
-      </pr-textarea>
+      </md-filled-text-field>
     `;
   }
 
@@ -298,15 +297,15 @@ export class AgentEditorComponent extends MobxLitElement {
     };
 
     return html`
-      <pr-textarea
-        label="Name"
-        placeholder="Display name for agent"
-        variant="outlined"
+      <md-filled-text-field
+        required
+        label="Display name for agent"
+        .error="$!agent.defaultProfile.name}"
         .value=${agent.defaultProfile.name}
         ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updateName}
       >
-      </pr-textarea>
+      </md-filled-text-field>
     `;
   }
 
@@ -365,15 +364,15 @@ export class AgentEditorComponent extends MobxLitElement {
     };
 
     return html`
-      <pr-textarea
-        label="Model"
-        placeholder="Model ID"
-        variant="outlined"
+      <md-filled-text-field
+        required
+        label="Model ID"
+        .error=${!agent.defaultModelSettings.modelName}
         .value=${agent.defaultModelSettings.modelName}
         ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updateModel}
       >
-      </pr-textarea>
+      </md-filled-text-field>
     `;
   }
 
@@ -391,22 +390,17 @@ export class AgentEditorComponent extends MobxLitElement {
     };
 
     return html`
-      <div class="field">
-        <div class="field-title">Prompt</div>
-        <div class="description">
-          <b>Note:</b> Your custom prompt will be concatenated with the chat
-          history and sent to the model (i.e., chat history + custom prompt =>
-          response)
-        </div>
-        <pr-textarea
-          placeholder="Custom prompt for agent"
-          variant="outlined"
-          .value=${agentPromptConfig.promptContext}
-          ?disabled=${!this.experimentEditor.isCreator}
-          @input=${updatePrompt}
-        >
-        </pr-textarea>
-      </div>
+      <md-filled-text-field
+        required
+        type="textarea"
+        rows="10"
+        label="Custom prompt for agent (will be concatenated with chat history and sent to model)"
+        .error=${!agentPromptConfig.promptContext}
+        .value=${agentPromptConfig.promptContext}
+        ?disabled=${!this.experimentEditor.isCreator}
+        @input=${updatePrompt}
+      >
+      </md-filled-text-field>
     `;
   }
 
@@ -710,29 +704,29 @@ export class AgentEditorComponent extends MobxLitElement {
     };
     return html`
       <div class="name-value-input">
-         <pr-textarea
-           label="Field name"
-           variant="outlined"
-           .value=${field.name}
-           @input=${updateName}
-         >
-         </pr-textarea>
-         <pr-textarea
-           label="Field value"
-           variant="outlined"
-           .value=${field.value}
-           @input=${updateValue}
-         >
-         </pr-textarea>
-         <pr-icon-button
-            icon="close"
-            color="neutral"
-            padding="small"
-            variant="default"
-            ?disabled=${!this.experimentEditor.isCreator}
-            @click=${deleteField}
-         >
-       </div>
+        <pr-textarea
+         label="Field name"
+         variant="outlined"
+         .value=${field.name}
+         @input=${updateName}
+        >
+        </pr-textarea>
+        <pr-textarea
+         label="Field value"
+         variant="outlined"
+         .value=${field.value}
+         @input=${updateValue}
+        >
+        </pr-textarea>
+        <pr-icon-button
+          icon="close"
+          color="neutral"
+          padding="small"
+          variant="default"
+          ?disabled=${!this.experimentEditor.isCreator}
+          @click=${deleteField}
+        >
+      </div>
     `;
   }
 
