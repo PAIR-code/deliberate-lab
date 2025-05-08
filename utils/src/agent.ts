@@ -100,6 +100,7 @@ export interface BaseAgentPromptConfig {
   promptContext: string; // custom prompt content
   generationConfig: ModelGenerationConfig;
   promptSettings: AgentPromptSettings;
+  structuredOutputConfig: StructuredOutputConfig;
 }
 
 /** Prompt config for completing stage (e.g., survey questions). */
@@ -110,7 +111,6 @@ export type AgentParticipantPromptConfig = BaseAgentPromptConfig;
  */
 export interface AgentChatPromptConfig extends BaseAgentPromptConfig {
   chatSettings: AgentChatSettings;
-  structuredOutputConfig: StructuredOutputConfig;
   // DEPRECATED: Use structuredOutputConfig, not responseConfig
   responseConfig?: AgentResponseConfig;
 }

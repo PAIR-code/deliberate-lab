@@ -23,6 +23,7 @@ import {
   createModelGenerationConfig,
   checkApiKeyExists,
   createOpenAIServerConfig,
+  createStructuredOutputConfig,
 } from '@deliberation-lab/utils';
 
 /** Editor for adjusting experimenter data */
@@ -57,6 +58,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
       promptContext: 'Say "hello world" and tell a unique joke',
       generationConfig: createModelGenerationConfig(),
       promptSettings: createAgentPromptSettings(),
+      structuredOutputConfig: createStructuredOutputConfig(),
     };
 
     const testEndpoint = async () => {
