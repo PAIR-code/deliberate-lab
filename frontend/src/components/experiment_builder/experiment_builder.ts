@@ -366,7 +366,7 @@ export class ExperimentBuilder extends MobxLitElement {
           <transfer-editor .stage=${stage}></transfer-editor>
         `;
       default:
-        return nothing;
+        return html` Stage editor not found. `;
     }
   }
 }
