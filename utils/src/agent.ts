@@ -234,6 +234,7 @@ export function createAgentPersonaConfig(
       config.defaultProfile ??
       createParticipantProfileBase({
         name: type === AgentPersonaType.MEDIATOR ? 'Mediator' : '',
+        avatar: '🙋',
       }),
     defaultModelSettings:
       config.defaultModelSettings ?? createAgentModelSettings(),
