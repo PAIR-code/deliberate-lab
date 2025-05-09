@@ -18,6 +18,10 @@ export enum ModelResponseStatus {
   // The response reached the configured output token limit and was terminated
   // early. The partial response will be present in the text field.
   LENGTH_ERROR = 'length_error',
+  // The agent's config is invalid.
+  CONFIG_ERROR = 'config_error',
+  // Deliberate Lab encountered an internal error.
+  INTERNAL_ERROR = 'internal_error',
   // Catchall category for errors not covered above.
   UNKNOWN_ERROR = 'unknown_error',
 }
