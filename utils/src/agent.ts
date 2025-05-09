@@ -59,7 +59,7 @@ export interface AgentPromptSettings {
   // Whether or not to include context from all previously completed
   // stages
   includeStageHistory: boolean;
-  // Whether or not to include information (e.g., stage description)
+  // Whether or not to include information (stage description/info/help)
   // shown to users
   includeStageInfo: boolean;
   // TODO(mkbehr): Add few-shot examples
@@ -149,6 +149,11 @@ export const DEFAULT_AGENT_API_TYPE = ApiKeyType.GEMINI_API_KEY;
 
 export const DEFAULT_AGENT_API_MODEL = 'gemini-1.5-pro-latest';
 
+export const DEFAULT_AGENT_MODEL_SETTINGS: AgentModelSettings = {
+  apiType: DEFAULT_AGENT_API_TYPE,
+  modelName: DEFAULT_AGENT_API_MODEL,
+};
+
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
@@ -185,7 +190,7 @@ export function createAgentChatSettings(
     wordsPerMinute: config.wordsPerMinute ?? 100,
     minMessagesBeforeResponding: config.minMessagesBeforeResponding ?? 0,
     canSelfTriggerCalls: config.canSelfTriggerCalls ?? false,
-    maxResponses: config.maxResponses ?? 20,
+    maxResponses: config.maxResponses ?? 100,
   };
 }
 

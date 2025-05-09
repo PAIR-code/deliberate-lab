@@ -42,10 +42,10 @@ export const setSalespersonController = onCall(async (request) => {
       return {success: false};
     }
 
-    const participants = await getChipParticipants(
-      data.experimentId,
-      data.cohortId,
-    );
+    // Controller must be human participant
+    const participants = (
+      await getChipParticipants(data.experimentId, data.cohortId)
+    ).filter((participant) => !participant.agentConfig);
     if (participants.length === 0) {
       return {success: false};
     }
@@ -92,6 +92,60 @@ export const setSalespersonMove = onCall(async (request) => {
       status: SalespersonMoveStatus.PENDING,
     };
     publicStageData.moveHistory.push(newMove);
+
+    // TODO: Refactor this section later
+    // If the other participant is an agent, automatically accept
+    const participants = (
+      await getChipParticipants(data.experimentId, data.cohortId)
+    ).filter((participant) => participant.agentConfig);
+    if (participants.length > 0) {
+      publicStageData.moveHistory[
+        publicStageData.moveHistory.length - 1
+      ].status = SalespersonMoveStatus.ACCEPTED;
+      publicStageData.moveHistory[
+        publicStageData.moveHistory.length - 1
+      ].responseMap[data.participantId] = {
+        response: {response: true, timestamp: Timestamp.now()},
+        timestamp: Timestamp.now(),
+      };
+      publicStageData.numMoves += 1;
+      const currentMove =
+        publicStageData.moveHistory[publicStageData.moveHistory.length - 1];
+      publicStageData.currentCoord = currentMove.proposedCoord;
+      const stageConfig = (
+        await app
+          .firestore()
+          .collection('experiments')
+          .doc(data.experimentId)
+          .collection('stages')
+          .doc(data.stageId)
+          .get()
+      ).data() as SalespersonStageConfig;
+      let coins: SalespersonBoardCoord[] = [];
+      Object.values(stageConfig.board.coinMap).forEach((coinList) => {
+        coins = [...coins, ...coinList];
+      });
+      const column = currentMove.proposedCoord.column;
+      const row = currentMove.proposedCoord.row;
+      if (
+        coins.find((coin) => coin.column === column && coin.row === row) &&
+        !publicStageData.coinsCollected.find(
+          (coin) => coin.column === column && coin.row === row,
+        )
+      ) {
+        publicStageData.coinsCollected.push(currentMove.proposedCoord);
+      }
+      if (
+        (stageConfig.board.maxNumberOfMoves !== null &&
+          publicStageData.numMoves >= stageConfig.board.maxNumberOfMoves) ||
+        (column === stageConfig.board.endCoord.column &&
+          row === stageConfig.board.endCoord.row)
+      ) {
+        publicStageData.isGameOver = true;
+      }
+    }
+
+    // Write public data
     transaction.set(publicDoc, publicStageData);
   });
 

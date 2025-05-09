@@ -174,6 +174,7 @@ export async function getGeminiAPIResponse(
   let response = {text: ''};
   try {
     response = await callGemini(apiKey, promptText, geminiConfig, modelName);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     if (error.message.includes(QUOTA_ERROR_CODE.toString())) {
       console.error('API quota exceeded');
