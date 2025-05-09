@@ -12,10 +12,7 @@ import {
   OllamaServerConfig,
   ModelGenerationConfig,
 } from '@deliberation-lab/utils';
-import {
-  ModelResponse,
-  ModelResponseStatus,
-} from './model.response';
+import {ModelResponse, ModelResponseStatus} from './model.response';
 
 /**
  * The JSON schema for LLM input understood by Ollama.

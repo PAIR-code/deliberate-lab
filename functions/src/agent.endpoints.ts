@@ -15,10 +15,7 @@ import {
   getOpenAIAPIResponse,
   getOllamaResponse,
 } from './agent.utils';
-import {
-  ModelResponseStatus,
-  ModelResponse,
-} from './api/model.response';
+import {ModelResponseStatus, ModelResponse} from './api/model.response';
 import {getAgentParticipantRankingStageResponse} from './stages/ranking.utils';
 import {
   getExperimenterData,

@@ -6,10 +6,7 @@ import {
   StructuredOutputConfig,
   StructuredOutputSchema,
 } from '@deliberation-lab/utils';
-import {
-  ModelResponse,
-  ModelResponseStatus,
-} from './model.response';
+import {ModelResponse, ModelResponseStatus} from './model.response';
 
 const MAX_TOKENS_FINISH_REASON = 'length';
 
@@ -48,8 +45,8 @@ function makeStructuredOutputSchema(
     ? makeStructuredOutputSchema(schema.arrayItems)
     : undefined;
 
-  const additionalProperties = (schema.type == StructuredOutputDataType.OBJECT)
-    ? false : undefined;
+  const additionalProperties =
+    schema.type == StructuredOutputDataType.OBJECT ? false : undefined;
 
   return {
     type: type,
@@ -64,7 +61,7 @@ function makeStructuredOutputSchema(
 function makeStructuredOutputParameters(
   structuredOutputConfig?: StructuredOutputConfig,
 ): object | null {
-    if (
+  if (
     !structuredOutputConfig ||
     structuredOutputConfig.type === StructuredOutputType.NONE
   ) {
@@ -103,9 +100,7 @@ export async function callOpenAIChatCompletion(
     baseURL: baseUrl,
   });
 
-  const responseFormat = makeStructuredOutputParameters(
-    structuredOutputConfig
-  );
+  const responseFormat = makeStructuredOutputParameters(structuredOutputConfig);
   const customFields = Object.fromEntries(
     generationConfig.customRequestBodyFields.map((field) => [
       field.name,
@@ -114,13 +109,13 @@ export async function callOpenAIChatCompletion(
   );
   const response = await client.chat.completions.create({
     model: modelName,
-    messages: [{ role: 'user', content: prompt }],
+    messages: [{role: 'user', content: prompt}],
     temperature: generationConfig.temperature,
     top_p: generationConfig.topP,
     frequency_penalty: generationConfig.frequencyPenalty,
     presence_penalty: generationConfig.presencePenalty,
     response_format: responseFormat,
-      ...customFields,
+    ...customFields,
   });
 
   if (!response || !response.choices) {
@@ -137,7 +132,7 @@ export async function callOpenAIChatCompletion(
   return {
     // TODO(mkbehr): handle errors from this API
     status: ModelResponseStatus.OK,
-    text: response.choices[0].message.content
+    text: response.choices[0].message.content,
   };
 }
 
@@ -171,7 +166,7 @@ export async function getOpenAIAPIChatCompletionResponse(
   let response = {
     // TODO(mkbehr): handle errors from this API
     status: ModelResponseStatus.UNKNOWN_ERROR,
-    errorMessage: ''
+    errorMessage: '',
   };
   try {
     response = await callOpenAIChatCompletion(

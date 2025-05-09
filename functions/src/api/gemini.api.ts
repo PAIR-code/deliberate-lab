@@ -11,10 +11,7 @@ import {
   StructuredOutputConfig,
   StructuredOutputSchema,
 } from '@deliberation-lab/utils';
-import {
-  ModelResponseStatus,
-  ModelResponse,
-} from './model.response';
+import {ModelResponseStatus, ModelResponse} from './model.response';
 
 const GEMINI_DEFAULT_MODEL = 'gemini-1.5-pro-latest';
 const DEFAULT_FETCH_TIMEOUT = 300 * 1000; // This is the Chrome default
@@ -41,9 +38,7 @@ const SAFETY_SETTINGS = [
   },
 ];
 
-function makeStructuredOutputSchema(
-  schema: StructuredOutputSchema,
-): object {
+function makeStructuredOutputSchema(schema: StructuredOutputSchema): object {
   const typeMap: {[key in StructuredOutputDataType]?: string} = {
     [StructuredOutputDataType.STRING]: 'STRING',
     [StructuredOutputDataType.NUMBER]: 'NUMBER',
@@ -130,7 +125,9 @@ export async function callGemini(
   if (response.promptFeedback) {
     return {
       status: ModelResponseStatus.REFUSAL_ERROR,
-      errorMessage: response.promptFeedback.blockReasonMessage ?? JSON.stringify(response.promptFeedback),
+      errorMessage:
+        response.promptFeedback.blockReasonMessage ??
+        JSON.stringify(response.promptFeedback),
     };
   }
 
@@ -178,7 +175,7 @@ export async function getGeminiAPIResponse(
     return {
       status: ModelResponseStatus.INTERNAL_ERROR,
       errorMessage: error.message,
-    }
+    };
   }
   const geminiConfig: GenerationConfig = {
     stopSequences: generationConfig.stopSequences,
@@ -200,7 +197,7 @@ export async function getGeminiAPIResponse(
     // so try to parse the output string looking for the HTTP status code.
     let returnStatus = ModelResponseStatus.UNKNOWN_ERROR;
     // Match a status code and message between brackets, e.g. "[403 Forbidden]".
-    const statusMatch = error.message.match(/\[(\d{3})[\s\w]*\]/)
+    const statusMatch = error.message.match(/\[(\d{3})[\s\w]*\]/);
     if (statusMatch) {
       const statusCode = parseInt(statusMatch[1]);
       if (statusCode == AUTHENTICATION_FAILURE_ERROR_CODE) {

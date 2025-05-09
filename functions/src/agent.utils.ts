@@ -73,7 +73,9 @@ export async function getAgentResponse(
   }
 
   if (response.status !== ModelResponseStatus.OK) {
-    console.error(`GetAgentResponse: response error status: ${response.status}; message: ${response.errorMessage}`);
+    console.error(
+      `GetAgentResponse: response error status: ${response.status}; message: ${response.errorMessage}`,
+    );
   }
 
   return response;

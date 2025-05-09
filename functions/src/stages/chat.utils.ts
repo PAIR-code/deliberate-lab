@@ -325,8 +325,8 @@ export async function getAgentChatAPIResponse(
     message = '';
 
     try {
-      const cleanedText = response.text!
-        .replace(/```json\s*|\s*```/g, '')
+      const cleanedText = response
+        .text!.replace(/```json\s*|\s*```/g, '')
         .trim();
       parsed = JSON.parse(cleanedText);
     } catch {
@@ -340,8 +340,8 @@ export async function getAgentChatAPIResponse(
     message = '';
 
     try {
-      const cleanedText = response.text!
-        .replace(/```json\s*|\s*```/g, '')
+      const cleanedText = response
+        .text!.replace(/```json\s*|\s*```/g, '')
         .trim();
       parsed = JSON.parse(cleanedText);
     } catch {
