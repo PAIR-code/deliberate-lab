@@ -201,7 +201,7 @@ export async function getGeminiAPIResponse(
     if (statusMatch) {
       const statusCode = parseInt(statusMatch[1]);
       if (statusCode == AUTHENTICATION_FAILURE_ERROR_CODE) {
-        returnStatus = ModelResponseStatus.QUOTA_ERROR;
+        returnStatus = ModelResponseStatus.AUTHENTICATION_ERROR;
       } else if (statusCode == QUOTA_ERROR_CODE) {
         returnStatus = ModelResponseStatus.QUOTA_ERROR;
       } else if (statusCode >= 500 && statusCode < 600) {
