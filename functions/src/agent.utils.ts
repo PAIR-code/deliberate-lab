@@ -18,10 +18,7 @@ import {initiateChatDiscussion} from './stages/chat.utils';
 import {getAgentParticipantRankingStageResponse} from './stages/ranking.utils';
 import {getAgentParticipantSurveyStageResponse} from './stages/survey.utils';
 
-import {
-  ModelResponse,
-  ModelResponseStatus,
-} from './api/model.response';
+import {ModelResponseStatus} from './api/model.response';
 import {getGeminiAPIResponse} from './api/gemini.api';
 import {getOpenAIAPIChatCompletionResponse} from './api/openai.api';
 import {ollamaChat} from './api/ollama.api';
@@ -51,7 +48,7 @@ export async function getAgentResponse(
   }
 
   if (modelSettings.apiType === ApiKeyType.GEMINI_API_KEY) {
-    response = getGeminiResponse(
+    response = await getGeminiResponse(
       data,
       modelSettings.modelName,
       prompt,
@@ -59,7 +56,7 @@ export async function getAgentResponse(
       structuredOutputConfig,
     );
   } else if (modelSettings.apiType === ApiKeyType.OPENAI_API_KEY) {
-    response = getOpenAIAPIResponse(
+    response = await getOpenAIAPIResponse(
       data,
       modelSettings.modelName,
       prompt,

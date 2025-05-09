@@ -24,6 +24,7 @@ import * as functions from 'firebase-functions';
 import {Timestamp} from 'firebase-admin/firestore';
 import {onCall} from 'firebase-functions/v2/https';
 
+import {ModelResponseStatus} from '../api/model.response';
 import {app} from '../app';
 import {getAgentResponse} from '../agent.utils';
 import {
@@ -310,7 +311,7 @@ export async function getAgentChatAPIResponse(
     promptConfig.structuredOutputConfig,
   );
 
-  if (message.status !== ModelResponseStatus.OK) {
+  if (response.status !== ModelResponseStatus.OK) {
     // TODO: Surface the error to the experimenter.
     return null;
   }
