@@ -170,7 +170,7 @@ export function createModelGenerationConfig(
   return {
     maxTokens: config.maxTokens ?? 8192,
     stopSequences: config.stopSequences ?? [],
-    temperature: config.temperature ?? 0.7,
+    temperature: config.temperature ?? 1.0,
     topP: config.topP ?? 1.0,
     frequencyPenalty: config.frequencyPenalty ?? 0.0,
     presencePenalty: config.presencePenalty ?? 0.0,
