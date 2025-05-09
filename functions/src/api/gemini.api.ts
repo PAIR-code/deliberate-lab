@@ -11,10 +11,15 @@ import {
   StructuredOutputConfig,
   StructuredOutputSchema,
 } from '@deliberation-lab/utils';
+import {
+  ModelResponseStatus,
+  ModelResponse,
+} from './model.response';
 
 const GEMINI_DEFAULT_MODEL = 'gemini-1.5-pro-latest';
 const DEFAULT_FETCH_TIMEOUT = 300 * 1000; // This is the Chrome default
 const MAX_TOKENS_FINISH_REASON = 'MAX_TOKENS';
+const AUTHENTICATION_FAILURE_ERROR_CODE = 403;
 const QUOTA_ERROR_CODE = 429;
 
 const SAFETY_SETTINGS = [
@@ -139,7 +144,10 @@ export async function callGemini(
     );
   }
 
-  return {text: response.text()};
+  return {
+    status: ModelResponseStatus.OK,
+    text: response.text(),
+  };
 }
 
 /** Constructs Gemini API query and returns response. */
@@ -176,12 +184,25 @@ export async function getGeminiAPIResponse(
     response = await callGemini(apiKey, promptText, geminiConfig, modelName);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    if (error.message.includes(QUOTA_ERROR_CODE.toString())) {
-      console.error('API quota exceeded');
-    } else {
-      console.error('API error');
+    // The GenerativeAI client doesn't return responses in a parseable format,
+    // so try to parse the output string looking for the HTTP status code.
+    let returnStatus = ModelResponseStatus.UNKNOWN_ERROR;
+    // Match a status code and message between brackets, e.g. "[403 Forbidden]".
+    const statusMatch = error.message.match(/\[(\d{3})[\s\w]*\]/)
+    if (statusMatch) {
+      const statusCode = parseInt(statusMatch[1]);
+      if (statusCode == AUTHENTICATION_FAILURE_ERROR_CODE) {
+        returnStatus = ModelResponseStatus.QUOTA_ERROR;
+      } else if (statusCode == QUOTA_ERROR_CODE) {
+        returnStatus = ModelResponseStatus.QUOTA_ERROR;
+      } else if (statusCode >= 500 && statusCode < 600) {
+        returnStatus = ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR;
+      }
     }
-    console.error(error);
+    return {
+      status: returnStatus,
+      errorMessage: error.message,
+    }
   }
 
   return response;
