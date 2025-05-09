@@ -310,8 +310,13 @@ export async function getAgentChatAPIResponse(
     promptConfig.structuredOutputConfig,
   );
 
+  if (message.status !== ModelResponseStatus.OK) {
+    // TODO: Surface the error to the experimenter.
+    return null;
+  }
+
   // Add agent message if non-empty
-  let message = response.text;
+  let message = response.text!;
   let parsed = '';
 
   if (promptConfig.responseConfig?.isJSON) {
@@ -319,7 +324,7 @@ export async function getAgentChatAPIResponse(
     message = '';
 
     try {
-      const cleanedText = response.text
+      const cleanedText = response.text!
         .replace(/```json\s*|\s*```/g, '')
         .trim();
       parsed = JSON.parse(cleanedText);
@@ -334,7 +339,7 @@ export async function getAgentChatAPIResponse(
     message = '';
 
     try {
-      const cleanedText = response.text
+      const cleanedText = response.text!
         .replace(/```json\s*|\s*```/g, '')
         .trim();
       parsed = JSON.parse(cleanedText);

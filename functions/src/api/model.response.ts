@@ -33,6 +33,7 @@ export interface ModelResponse {
   status: ModelResponseStatus;
   // The model's response, in plaintext. Null if the provider didn't return a response.
   text?: string;
+  // TODO(mkbehr): Parse the response during response creation.
   parsedResponse?: object;
   errorMessage?: string;
 }
