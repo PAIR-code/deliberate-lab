@@ -6,7 +6,10 @@ import {
   StructuredOutputConfig,
   StructuredOutputSchema,
 } from '@deliberation-lab/utils';
-import {ModelResponse} from './model.response';
+import {
+  ModelResponse,
+  ModelResponseStatus,
+} from './model.response';
 
 const MAX_TOKENS_FINISH_REASON = 'length';
 
@@ -131,7 +134,11 @@ export async function callOpenAIChatCompletion(
     console.error(`Error: Token limit exceeded`);
   }
 
-  return {text: response.choices[0].message.content};
+  return {
+    // TODO(mkbehr): handle errors from this API
+    status: ModelResponseStatus.OK,
+    text: response.choices[0].message.content
+  };
 }
 
 export async function getOpenAIAPIChatCompletionResponse(
@@ -161,7 +168,11 @@ export async function getOpenAIAPIChatCompletionResponse(
     structuredOutputConfig,
   );
 
-  let response = {text: ''};
+  let response = {
+    // TODO(mkbehr): handle errors from this API
+    status: ModelResponseStatus.UNKNOWN_ERROR,
+    errorMessage: ''
+  };
   try {
     response = await callOpenAIChatCompletion(
       apiKey,
@@ -173,10 +184,12 @@ export async function getOpenAIAPIChatCompletionResponse(
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    console.error('API error:', error);
+    response = {
+      // TODO(mkbehr): handle errors from this API
+      status: ModelResponseStatus.UNKNOWN_ERROR,
+      errorMessage: error.message,
+    };
   }
 
-  // Log the response
-  console.log(response);
   return response;
 }

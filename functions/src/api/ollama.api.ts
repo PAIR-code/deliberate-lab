@@ -12,7 +12,10 @@ import {
   OllamaServerConfig,
   ModelGenerationConfig,
 } from '@deliberation-lab/utils';
-import {ModelResponse} from './model.response';
+import {
+  ModelResponse,
+  ModelResponseStatus,
+} from './model.response';
 
 /**
  * The JSON schema for LLM input understood by Ollama.
@@ -50,7 +53,11 @@ export async function ollamaChat(
     body: JSON.stringify(messageObjects),
   });
   const responseMessage = await decodeResponse(response);
-  return {text: responseMessage};
+  return {
+    // TODO(mkbehr): handle errors from this API
+    status: ModelResponseStatus.OK,
+    text: responseMessage,
+  };
 }
 
 /**
