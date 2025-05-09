@@ -43,7 +43,7 @@ const SAFETY_SETTINGS = [
 
 function makeStructuredOutputSchema(
   schema: StructuredOutputSchema,
-): object | null {
+): object {
   const typeMap: {[key in StructuredOutputDataType]?: string} = {
     [StructuredOutputDataType.STRING]: 'STRING',
     [StructuredOutputDataType.NUMBER]: 'NUMBER',
@@ -54,10 +54,9 @@ function makeStructuredOutputSchema(
   };
   const type = typeMap[schema.type];
   if (!type) {
-    console.error(
+    throw new Error(
       `Error parsing structured output config: unrecognized data type ${dataType}`,
     );
-    return null;
   }
 
   let properties = null;
@@ -89,7 +88,7 @@ function makeStructuredOutputSchema(
 
 function makeStructuredOutputGenerationConfig(
   structuredOutputConfig?: StructuredOutputConfig,
-): Partial<GenerationConfig> | null {
+): Partial<GenerationConfig> {
   if (
     !structuredOutputConfig ||
     structuredOutputConfig.type === StructuredOutputType.NONE
@@ -100,15 +99,11 @@ function makeStructuredOutputGenerationConfig(
     return {responseMimeType: 'application/json'};
   }
   if (!structuredOutputConfig.schema) {
-    console.error(
+    throw new Error(
       `Expected schema for structured output type ${structuredOutputConfig.type}`,
     );
-    return null;
   }
   const schema = makeStructuredOutputSchema(structuredOutputConfig.schema);
-  if (!schema) {
-    return null;
-  }
   return {
     responseMimeType: 'application/json',
     responseSchema: schema,
@@ -132,16 +127,26 @@ export async function callGemini(
   const result = await model.generateContent(prompt);
   const response = await result.response;
 
-  if (!response || !response.candidates) {
-    console.error('Error: No response');
-    return {text: ''};
+  if (response.promptFeedback) {
+    return {
+      status: ModelResponseStatus.REFUSAL_ERROR,
+      errorMessage: response.promptFeedback.blockReasonMessage ?? JSON.stringify(response.promptFeedback),
+    };
+  }
+
+  if (!response.candidates) {
+    return {
+      status: ModelResponseStatus.UNKNOWN_ERROR,
+      errorMessage: `Response unexpectedly had no candidates: ${response}`,
+    };
   }
 
   const finishReason = response.candidates[0].finishReason;
   if (finishReason === MAX_TOKENS_FINISH_REASON) {
-    console.error(
-      `Error: Token limit (${generationConfig.maxOutputTokens}) exceeded`,
-    );
+    return {
+      status: ModelResponseStatus.LENGTH_ERROR,
+      errorMessage: `Error: Token limit (${generationConfig.maxOutputTokens}) exceeded`,
+    };
   }
 
   return {
@@ -164,9 +169,17 @@ export async function getGeminiAPIResponse(
       field.value,
     ]),
   );
-  const structuredOutputGenerationConfig = makeStructuredOutputGenerationConfig(
-    structuredOutputConfig,
-  );
+  let structuredOutputGenerationConfig;
+  try {
+    structuredOutputGenerationConfig = makeStructuredOutputGenerationConfig(
+      structuredOutputConfig,
+    );
+  } catch (error: Error) {
+    return {
+      status: ModelResponseStatus.INTERNAL_ERROR,
+      errorMessage: error.message,
+    }
+  }
   const geminiConfig: GenerationConfig = {
     stopSequences: generationConfig.stopSequences,
     maxOutputTokens: generationConfig.maxTokens,
@@ -179,9 +192,8 @@ export async function getGeminiAPIResponse(
     ...customFields,
   };
 
-  let response = {text: ''};
   try {
-    response = await callGemini(apiKey, promptText, geminiConfig, modelName);
+    return callGemini(apiKey, promptText, geminiConfig, modelName);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     // The GenerativeAI client doesn't return responses in a parseable format,
@@ -204,6 +216,4 @@ export async function getGeminiAPIResponse(
       errorMessage: error.message,
     }
   }
-
-  return response;
 }
