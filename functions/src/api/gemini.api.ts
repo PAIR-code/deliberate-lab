@@ -193,7 +193,7 @@ export async function getGeminiAPIResponse(
   };
 
   try {
-    return callGemini(apiKey, promptText, geminiConfig, modelName);
+    return await callGemini(apiKey, promptText, geminiConfig, modelName);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     // The GenerativeAI client doesn't return responses in a parseable format,
@@ -214,6 +214,6 @@ export async function getGeminiAPIResponse(
     return {
       status: returnStatus,
       errorMessage: error.message,
-    }
+    };
   }
 }
