@@ -3,13 +3,13 @@ import {
   Experiment,
   ParticipantProfileExtended,
   ParticipantStatus,
+  TransferStageConfig,
+  StageConfig,
+  CohortConfig,
 } from '@deliberation-lab/utils';
 import {completeStageAsAgentParticipant} from './agent.utils';
 import {getFirestoreActiveParticipants} from './utils/firestore';
-
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
-import {onCall} from 'firebase-functions/v2/https';
+import {generateId} from '@deliberation-lab/utils';
 
 import {app} from './app';
 
@@ -19,7 +19,7 @@ export async function updateParticipantNextStage(
   participant: ParticipantProfileExtended,
   stageIds: string[],
 ) {
-  const response = {currentStageId: null, endExperiment: false};
+  const response = {currentStageId: null as (string | null), endExperiment: false};
 
   const currentStageId = participant.currentStageId;
   const currentStageIndex = stageIds.indexOf(currentStageId);
@@ -83,7 +83,7 @@ export async function updateCohortStageUnlocked(
         .where('transferCohortId', '==', cohortId)
         .get()
     ).docs
-      .map((doc) => doc.data() as ParticipantProfile)
+      .map((doc) => doc.data() as ParticipantProfileExtended)
       .filter(
         (participant) =>
           participant.currentStatus === ParticipantStatus.TRANSFER_PENDING,
@@ -169,4 +169,126 @@ export async function updateCohortStageUnlocked(
       } // end agent participant if
     } // end participant loop
   });
+}
+
+/** Check and transfer participants based on survey answers. */
+export async function handleAutomaticTransfer(
+  transaction: FirebaseFirestore.Transaction,
+  experimentId: string,
+  stageConfig: TransferStageConfig,
+  participantId: string,
+) {
+  const firestore = app.firestore();
+
+  // Fetch participants waiting at this stage
+  const waitingParticipants = (
+    await transaction.get(
+      firestore
+        .collection('experiments')
+        .doc(experimentId)
+        .collection('participants')
+        .where('currentStageId', '==', stageConfig.id)
+        .where('currentStatus', '==', ParticipantStatus.TRANSFER_PENDING),
+    )
+  ).docs.map((doc) => doc.data() as ParticipantProfileExtended);
+
+  // Filter connected participants
+  const connectedParticipants = waitingParticipants.filter(
+    (participant) => participant.connected,
+  );
+
+  const participant = await getParticipantRecord(transaction, experimentId, participantId);
+
+  if (!participant) {
+    throw new Error('Participant not found');
+  }
+
+  // Fetch public data for the relevant survey stage
+  const surveyStageDoc = firestore
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('cohorts')
+    .doc(participant.currentCohortId)
+    .collection('publicStageData')
+    .doc(stageConfig.surveyStageId!);
+
+  const surveyStageData = (
+    await transaction.get(surveyStageDoc)
+  ).data() as { participantAnswerMap: Record<string, string[]> } | undefined;
+
+  if (!surveyStageData) {
+    throw new Error('Survey stage data not found');
+  }
+
+  // Group participants by survey answers
+  const answerGroups: Record<string, ParticipantProfileExtended[]> = {};
+  for (const participant of connectedParticipants) {
+    const surveyAnswer = surveyStageData.participantAnswerMap[participant.publicId];
+    if (!surveyAnswer) continue;
+
+    const key = JSON.stringify(surveyAnswer);
+    if (!answerGroups[key]) {
+      answerGroups[key] = [];
+    }
+    answerGroups[key].push(participant);
+  }
+
+  // Check if a cohort can be formed
+  const requiredCounts = stageConfig.participantCounts || {};
+  const cohortParticipants: ParticipantProfileExtended[] = [];
+
+  for (const [key, requiredCount] of Object.entries(requiredCounts)) {
+    const groupedAnswers = JSON.parse(key) as string[];
+    const matchingParticipants = groupedAnswers.flatMap(
+      (answer) => answerGroups[JSON.stringify(answer)] || [],
+    );
+
+    if (matchingParticipants.length < requiredCount) {
+      return; // Not enough participants to form a cohort
+    }
+
+    cohortParticipants.push(...matchingParticipants.slice(0, requiredCount));
+  }
+
+  // Create a new cohort and transfer participants
+  const cohortId = generateId();
+  const cohortDoc = firestore
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('cohorts')
+    .doc(cohortId);
+
+  transaction.set(cohortDoc, { stageId: stageConfig.id, participants: cohortParticipants.map((p) => p.privateId) });
+
+  for (const participant of cohortParticipants) {
+    const participantDoc = firestore
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('participants')
+      .doc(participant.privateId);
+
+    transaction.update(participantDoc, {
+      currentCohortId: cohortId,
+      currentStatus: ParticipantStatus.IN_PROGRESS,
+    });
+  }
+}
+
+/** Fetch a participant record by experimentId and participantId. */
+export async function getParticipantRecord(
+  transaction: FirebaseFirestore.Transaction,
+  experimentId: string,
+  participantId: string,
+): Promise<ParticipantProfileExtended | null> {
+  const participantDoc = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('participants')
+    .doc(participantId);
+
+  const participantSnapshot = await transaction.get(participantDoc);
+  return participantSnapshot.exists
+    ? (participantSnapshot.data() as ParticipantProfileExtended)
+    : null;
 }

@@ -5,10 +5,10 @@ import {
   CohortCreationData,
   CohortDeletionData,
   ParticipantStatus,
+  StageConfig,
   createPublicDataFromStageConfigs,
 } from '@deliberation-lab/utils';
 
-import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import {onCall} from 'firebase-functions/v2/https';
 
@@ -67,7 +67,7 @@ export const createCohort = onCall(async (request) => {
       .firestore()
       .collection(`experiments/${data.experimentId}/stages`)
       .get();
-    const stages = stageDocs.docs.map((stageDoc) => stageDoc.data());
+    const stages = stageDocs.docs.map((stageDoc) => stageDoc.data()) as StageConfig[];
 
     const publicData = createPublicDataFromStageConfigs(stages);
 
@@ -194,6 +194,13 @@ export const deleteCohort = onCall(async (request) => {
   const experiment = (
     await app.firestore().collection('experiments').doc(data.experimentId).get()
   ).data();
+  if (!experiment) {
+    throw new functions.https.HttpsError(
+      'not-found',
+      `Experiment ${data.experimentId} not found`,
+    );
+  }
+
   if (request.auth?.token.email !== experiment.metadata.creator) return;
 
   // Delete document
