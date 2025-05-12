@@ -773,8 +773,7 @@ export class AgentEditorComponent extends MobxLitElement {
         <div class="field">
           <label for="structuredOutputType">Structured Output Type</label>
           <div class="description">
-            Constrain the sampler to produce valid JSON. Only supported for
-            Gemini.
+            Constrain the sampler to produce valid JSON. Supported for Gemini and OpenAI-compatible APIs.
           </div>
           <select
             id="structuredOutputType"
