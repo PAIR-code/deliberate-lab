@@ -17,6 +17,9 @@ export interface TransferStageConfig extends BaseStageConfig {
   kind: StageKind.TRANSFER;
   enableTimeout: boolean;
   timeoutSeconds: number;
+  surveyStageId?: string; // ID of the survey stage to reference
+  surveyQuestionId?: string; // ID of the survey question to reference
+  participantCounts?: { [key: string]: number }; // Map of serialized survey answers to required participant counts
 }
 
 // ************************************************************************* //
@@ -39,5 +42,8 @@ export function createTransferStage(
     progress: config.progress ?? createStageProgressConfig(),
     enableTimeout: config.enableTimeout ?? false,
     timeoutSeconds: config.timeoutSeconds ?? 600, // 10 minutes
+    surveyStageId: config.surveyStageId,
+    surveyQuestionId: config.surveyQuestionId,
+    participantCounts: config.participantCounts,
   };
 }

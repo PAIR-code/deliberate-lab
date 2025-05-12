@@ -1,13 +1,15 @@
-import {onDocumentCreated} from 'firebase-functions/v2/firestore';
+import {onDocumentCreated, onDocumentUpdated} from 'firebase-functions/v2/firestore';
 
 import {
-  ChipPublicStageData,
+  ChipItem,
+  ChipStagePublicData,
   ParticipantProfileExtended,
   StageConfig,
   StageKind,
   createChipStageParticipantAnswer,
   createPayoutStageParticipantAnswer,
 } from '@deliberation-lab/utils';
+import {handleAutomaticTransfer} from './participant.utils';
 
 import {app} from './app';
 
@@ -35,7 +37,7 @@ export const setParticipantStageData = onDocumentCreated(
           .get()
       ).docs.map((doc) => doc.data() as StageConfig);
 
-      const getRandomChipValue = (chip) => {
+      const getRandomChipValue = (chip: ChipItem) => {
         const step = 0.1;
         const lower = Math.round(chip.lowerValue / step);
         const upper = Math.round(chip.upperValue / step);
@@ -60,8 +62,8 @@ export const setParticipantStageData = onDocumentCreated(
         switch (stage.kind) {
           case StageKind.CHIP:
             // If chip stage, set default chips for participant based on config
-            const chipMap = {};
-            const chipValueMap = {};
+            const chipMap: Record<string, number> = {};
+            const chipValueMap: Record<string, number> = {};
             stage.chips.forEach((chip) => {
               chipMap[chip.id] = chip.startingQuantity;
               chipValueMap[chip.id] = getRandomChipValue(chip);
@@ -87,7 +89,7 @@ export const setParticipantStageData = onDocumentCreated(
 
             const publicChipData = (
               await publicChipDoc.get()
-            ).data() as ChipPublicStageData;
+            ).data() as ChipStagePublicData;
             const publicId = participantConfig.publicId;
 
             publicChipData.participantChipMap[publicId] = chipAnswer.chipMap;
@@ -100,10 +102,59 @@ export const setParticipantStageData = onDocumentCreated(
             const payoutAnswer = createPayoutStageParticipantAnswer(stage);
             transaction.set(stageDoc, payoutAnswer);
             break;
+          case StageKind.TRANSFER:
+            // Handle transfer stage logic
+            await handleAutomaticTransfer(
+              transaction,
+              event.params.experimentId,
+              stage,
+              event.params.participantId,
+            );
+            break;
           default:
             break;
         }
       } // end stage config logic
     }); // end transaction
+  },
+);
+
+/** Trigger when a disconnected participant reconnects. */
+export const onParticipantReconnect = onDocumentUpdated(
+  {
+    document: 'experiments/{experimentId}/participants/{participantId}',
+  },
+  async (event) => {
+    if (!event.data) return;
+
+    const before = event.data.before.data() as ParticipantProfileExtended;
+    const after = event.data.after.data() as ParticipantProfileExtended;
+
+    // Check if participant reconnected
+    if (!before.connected && after.connected) {
+      const firestore = app.firestore();
+      await firestore.runTransaction(async (transaction) => {
+        // Fetch the participant's current stage config
+        const stageDoc = firestore
+          .collection('experiments')
+          .doc(event.params.experimentId)
+          .collection('stages')
+          .doc(after.currentStageId);
+
+        const stageConfig = (
+          await transaction.get(stageDoc)
+        ).data() as StageConfig;
+
+        // Only handle transfer if the stage is a transfer stage
+        if (stageConfig?.kind === StageKind.TRANSFER) {
+          await handleAutomaticTransfer(
+            transaction,
+            event.params.experimentId,
+            stageConfig,
+            event.params.participantId,
+          );
+        }
+      });
+    }
   },
 );
