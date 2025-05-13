@@ -204,7 +204,7 @@ export class Preview extends MobxLitElement {
   }
 
   private renderConnectedChip() {
-    if (!this.profile) {
+    if (!this.profile || this.profile.connected === null) {
       return nothing;
     }
     const {connected} = this.profile;
