@@ -33,26 +33,30 @@ describe('mirrorPresenceToFirestore', () => {
     jest.clearAllMocks();
   });
 
-  it('updates firestore with the connected status from rtdb', async () => {
-    const wrapped = testEnv.wrap(mirrorPresenceToFirestore);
+  let wrapped: any;
+  let beforeSnap: any;
+  let afterSnap: any;
+  let change: any;
 
-    const beforeSnap = testEnv.database.makeDataSnapshot(null, '/status/exp123/user456');
-    const afterSnap = testEnv.database.makeDataSnapshot(
+  beforeEach(() => {
+    wrapped = testEnv.wrap(mirrorPresenceToFirestore);
+
+    beforeSnap = testEnv.database.makeDataSnapshot(null, '/status/exp123/user456');
+    afterSnap = testEnv.database.makeDataSnapshot(
       { connected: true, last_changed: 1234567890 },
       '/status/exp123/user456'
     );
 
-    const mockFirestoreProfile = {
-      agentConfig: null,
-    };
+    change = { before: beforeSnap, after: afterSnap };
+  });
 
-    const { getMock } = __mocks__;
+  it('updates firestore with the connected status from rtdb', async () => {
+    const { getMock, docMock, setMock } = __mocks__;
+
     getMock.mockResolvedValueOnce({
       exists: true,
-      data: jest.fn(() => mockFirestoreProfile),
+      data: jest.fn(() => ({ connected: true })),
     });
-
-    const change = { before: beforeSnap, after: afterSnap };
 
     await wrapped(change, {
       params: {
@@ -60,33 +64,22 @@ describe('mirrorPresenceToFirestore', () => {
         participantPrivateId: 'user456',
       },
     });
-
-    const { docMock, setMock } = __mocks__;
 
     expect(docMock).toHaveBeenCalledWith('experiments/exp123/participants/user456');
     expect(setMock).toHaveBeenCalledWith({ connected: true }, { merge: true });
   });
 
   it('does not mirror presence data for agent participants', async () => {
-    const wrapped = testEnv.wrap(mirrorPresenceToFirestore);
-
-    const beforeSnap = testEnv.database.makeDataSnapshot(null, '/status/exp123/user456');
-    const afterSnap = testEnv.database.makeDataSnapshot(
-      { connected: true, last_changed: 1234567890 },
-      '/status/exp123/user456'
-    );
+    const { getMock, docMock, setMock } = __mocks__;
 
     const mockFirestoreProfile = {
       agentConfig: { role: 'observer' },
     };
 
-    const { getMock } = __mocks__;
     getMock.mockResolvedValueOnce({
       exists: true,
       data: jest.fn(() => mockFirestoreProfile),
     });
-
-    const change = { before: beforeSnap, after: afterSnap };
 
     await wrapped(change, {
       params: {
@@ -94,8 +87,6 @@ describe('mirrorPresenceToFirestore', () => {
         participantPrivateId: 'user456',
       },
     });
-
-    const { docMock, setMock } = __mocks__;
 
     expect(docMock).toHaveBeenCalledWith('experiments/exp123/participants/user456');
     expect(setMock).not.toHaveBeenCalled();
