@@ -1,0 +1,12 @@
+{
+  "rules": {
+    "status": {
+      "$experimentId": {
+        "$privateId": {
+          ".read": "true",
+          ".write": "true"
+        }
+      }
+    }
+  }
+}

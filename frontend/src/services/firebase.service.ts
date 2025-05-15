@@ -6,6 +6,11 @@ import {
   getAuth,
 } from 'firebase/auth';
 import {
+  Database,
+  getDatabase,
+  connectDatabaseEmulator,
+} from 'firebase/database';
+import {
   Firestore,
   Unsubscribe,
   connectFirestoreEmulator,
@@ -28,6 +33,7 @@ import {
   FIREBASE_LOCAL_HOST_PORT_FIRESTORE,
   FIREBASE_LOCAL_HOST_PORT_FUNCTIONS,
   FIREBASE_LOCAL_HOST_PORT_STORAGE,
+  FIREBASE_LOCAL_HOST_PORT_RTDB,
 } from '../shared/constants';
 import {FIREBASE_CONFIG} from '../../firebase_config';
 
@@ -44,6 +50,7 @@ export class FirebaseService extends Service {
     this.auth = getAuth(this.app);
     this.functions = getFunctions(this.app);
     this.storage = getStorage(this.app);
+    this.rtdb = getDatabase(this.app);
 
     // Only register emulators if in dev mode
     if (process.env.NODE_ENV === 'development') {
@@ -61,6 +68,7 @@ export class FirebaseService extends Service {
   provider: GoogleAuthProvider;
   storage: FirebaseStorage;
   unsubscribe: Unsubscribe[] = [];
+  rtdb: Database;
 
   registerEmulators() {
     connectFirestoreEmulator(
@@ -81,6 +89,11 @@ export class FirebaseService extends Service {
       this.functions,
       'localhost',
       FIREBASE_LOCAL_HOST_PORT_FUNCTIONS,
+    );
+    connectDatabaseEmulator(
+      this.rtdb,
+      'localhost',
+      FIREBASE_LOCAL_HOST_PORT_RTDB,
     );
   }
 }

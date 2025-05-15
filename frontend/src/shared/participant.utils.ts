@@ -58,37 +58,44 @@ export function getCurrentStageStartTime(
 
 /** Returns an explanation text about the participant status. */
 export function getParticipantStatusDetailText(
-  profile: ParticipantProfile,
+  participant: ParticipantProfile,
   isStageInWaitingPhase = false,
   defaultText = '',
 ) {
-  if (isStageInWaitingPhase) {
+  if (isStageInWaitingPhase && isConnected(participant)) {
     return '⏸️ This participant currently sees a wait stage; they are waiting for others in the cohort to catch up.';
   }
 
-  if (profile.currentStatus === ParticipantStatus.BOOTED_OUT) {
+  if (participant.currentStatus === ParticipantStatus.BOOTED_OUT) {
     return '‼️  This participant has been booted from the experiment and can no longer participate.';
-  } else if (profile.currentStatus === ParticipantStatus.ATTENTION_TIMEOUT) {
+  } else if (participant.currentStatus === ParticipantStatus.ATTENTION_TIMEOUT) {
     return '‼️  This participant has failed an attention check and can no longer participate.';
-  } else if (profile.currentStatus === ParticipantStatus.TRANSFER_DECLINED) {
+  } else if (participant.currentStatus === ParticipantStatus.TRANSFER_DECLINED) {
     return '🛑 This participant declined a transfer and can no longer participate.';
-  } else if (profile.currentStatus === ParticipantStatus.ATTENTION_CHECK) {
+  } else if(isDisconnectedUnfinishedParticipant(participant)) {
+    return '🔌 This participant is disconnected, and cannot continue until they reconnect.';
+  } else if (participant.currentStatus === ParticipantStatus.ATTENTION_CHECK) {
     return '⚠️ This participant has been sent an attention check.';
-  } else if (profile.currentStatus === ParticipantStatus.TRANSFER_PENDING) {
+  } else if (participant.currentStatus === ParticipantStatus.TRANSFER_PENDING) {
     return '⚠️ This participant has been sent a transfer invitation.';
   }
 
   return defaultText;
 }
 
-/** True if participating in experiment (not dropped out, not transfer pending)
+/** True if participating in experiment (online, not dropped out, not transfer pending)
  *  (note that participants who completed experiment are included here)
  */
 export function isActiveParticipant(participant: ParticipantProfile) {
   return (
-    participant.currentStatus === ParticipantStatus.IN_PROGRESS ||
-    participant.currentStatus === ParticipantStatus.ATTENTION_CHECK ||
-    participant.currentStatus === ParticipantStatus.SUCCESS
+    participant.currentStatus === ParticipantStatus.SUCCESS ||
+    (
+      isConnected(participant) === true &&
+      (
+        participant.currentStatus === ParticipantStatus.IN_PROGRESS ||
+        participant.currentStatus === ParticipantStatus.ATTENTION_CHECK
+      )
+     )
   );
 }
 
@@ -97,11 +104,19 @@ export function isActiveParticipant(participant: ParticipantProfile) {
  */
 export function isObsoleteParticipant(participant: ParticipantProfile) {
   return (
+    isDisconnectedUnfinishedParticipant(participant) ||
     participant.currentStatus === ParticipantStatus.TRANSFER_FAILED ||
     participant.currentStatus === ParticipantStatus.TRANSFER_DECLINED ||
     participant.currentStatus === ParticipantStatus.TRANSFER_TIMEOUT ||
     participant.currentStatus === ParticipantStatus.ATTENTION_TIMEOUT ||
     participant.currentStatus === ParticipantStatus.BOOTED_OUT
+  );
+}
+
+export function isDisconnectedUnfinishedParticipant(participant: ParticipantProfile) {
+  return (
+    ! isConnected(participant) &&
+    ! isParticipantEndedExperiment(participant)
   );
 }
 
@@ -115,7 +130,7 @@ export function isSuccessParticipant(participant: ParticipantProfile) {
  * has not left yet)
  */
 export function isPendingParticipant(participant: ParticipantProfile) {
-  return participant.currentStatus === ParticipantStatus.TRANSFER_PENDING;
+  return isConnected(participant) === true && participant.currentStatus === ParticipantStatus.TRANSFER_PENDING;
 }
 
 /** If pending transfer to given cohort ID. */
@@ -124,6 +139,7 @@ export function isParticipantPendingTransfer(
   cohortId: string,
 ) {
   return (
+    isConnected(participant) === true &&
     participant.currentStatus === ParticipantStatus.TRANSFER_PENDING &&
     participant.transferCohortId === cohortId
   );
@@ -184,4 +200,11 @@ export function requiresAnonymousProfiles(stages: StageConfig[]): boolean {
 
   if (!profileStage || profileStage.kind !== StageKind.PROFILE) return false;
   return profileStage.profileType === ProfileType.ANONYMOUS_ANIMAL;
+}
+
+function isConnected(participant: ParticipantProfile) {
+  if (participant.connected === null) {
+    return true; // assume connected if not specified, for backwards compatibility
+  }
+  return participant.connected;
 }
