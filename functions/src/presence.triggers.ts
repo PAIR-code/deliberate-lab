@@ -27,6 +27,11 @@ export const mirrorPresenceToFirestore = database
       console.warn(`No participant found with id=${participantPrivateId} in experiment=${experimentId}`);
       return null;
     }
+    const participant = participantSnapshot.data();
+
+    if(participant && participant.agentConfig) {
+      return null;  // Don't update presence for agent participants
+    }
 
     return participantRef.set(
       { connected: status.connected },
