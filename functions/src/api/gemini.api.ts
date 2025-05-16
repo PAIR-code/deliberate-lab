@@ -134,7 +134,7 @@ export async function callGemini(
   if (!response.candidates) {
     return {
       status: ModelResponseStatus.UNKNOWN_ERROR,
-      errorMessage: `Response unexpectedly had no candidates: ${response}`,
+      errorMessage: `Model provider returned an unexpected response (no response candidates): ${response}`,
     };
   }
 
