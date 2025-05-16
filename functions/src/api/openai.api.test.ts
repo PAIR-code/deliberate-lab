@@ -8,7 +8,10 @@ import {
   createStructuredOutputConfig,
 } from '@deliberation-lab/utils';
 import {getOpenAIAPIChatCompletionResponse} from './openai.api';
-import {ModelResponse} from './model.response';
+import {
+  ModelResponse,
+  ModelResponseStatus,
+} from './model.response';
 
 const DEFAULT_GENERATION_CONFIG: ModelGenerationConfig = {
   maxTokens: 300,
@@ -62,6 +65,7 @@ describe('OpenAI-compatible API', () => {
       'This is a test prompt.',
       DEFAULT_GENERATION_CONFIG,
     );
+    expect(response.status).toEqual(ModelResponseStatus.OK);
     const parsedResponse = JSON.parse(response.text);
 
     expect(parsedResponse.model).toEqual('test-model');
@@ -84,6 +88,7 @@ describe('OpenAI-compatible API', () => {
       DEFAULT_GENERATION_CONFIG,
       structuredOutputConfig,
     );
+    expect(response.status).toEqual(ModelResponseStatus.OK);
     const parsedResponse = JSON.parse(response.text);
 
     expect(parsedResponse.model).toEqual('test-model');
@@ -155,4 +160,30 @@ describe('OpenAI-compatible API', () => {
       json_schema: expectedSchema
     });
   });
+
+  it('handles error response', async () => {
+    scope = nock('https://test.error.uri')
+      .post('/v1/chat/completions')
+      .reply(401, {
+        error: {
+          message: "You didn't provide an API key.",
+          type: "invalid_request_error",
+          param: null,
+          code: null
+        }
+      });
+    
+    const response: ModelResponse = await getOpenAIAPIChatCompletionResponse(
+      'testapikey',
+      'https://test.error.uri/v1/',
+      'test-model',
+      'This is a test prompt.',
+      DEFAULT_GENERATION_CONFIG,
+    );
+
+    expect(response.status).toEqual(ModelResponseStatus.AUTHENTICATION_ERROR);
+    expect(response.text).toBeUndefined();
+    expect(response.errorMessage).toEqual("Error: 401 You didn't provide an API key.");
+  });
+
 });

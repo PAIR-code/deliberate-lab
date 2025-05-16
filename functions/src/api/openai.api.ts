@@ -12,7 +12,7 @@ const MAX_TOKENS_FINISH_REASON = 'length';
 
 function makeStructuredOutputSchema(
   schema: StructuredOutputSchema,
-): object | null {
+): object {
   const typeMap: {[key in StructuredOutputDataType]?: string} = {
     [StructuredOutputDataType.STRING]: 'STRING',
     [StructuredOutputDataType.NUMBER]: 'NUMBER',
@@ -23,10 +23,9 @@ function makeStructuredOutputSchema(
   };
   const type = typeMap[schema.type];
   if (!type) {
-    console.error(
+    throw new Error(
       `Error parsing structured output config: unrecognized data type ${dataType}`,
     );
-    return null;
   }
 
   let properties = undefined;
@@ -60,7 +59,7 @@ function makeStructuredOutputSchema(
 
 function makeStructuredOutputParameters(
   structuredOutputConfig?: StructuredOutputConfig,
-): object | null {
+): object {
   if (
     !structuredOutputConfig ||
     structuredOutputConfig.type === StructuredOutputType.NONE
@@ -71,15 +70,11 @@ function makeStructuredOutputParameters(
     return {type: 'json_object'};
   }
   if (!structuredOutputConfig.schema) {
-    console.error(
+    throw new Error(
       `Expected schema for structured output type ${structuredOutputConfig.type}`,
     );
-    return null;
   }
   const schema = makeStructuredOutputSchema(structuredOutputConfig.schema);
-  if (!schema) {
-    return null;
-  }
   return {
     type: 'json_schema',
     strict: true,
@@ -100,37 +95,85 @@ export async function callOpenAIChatCompletion(
     baseURL: baseUrl,
   });
 
-  const responseFormat = makeStructuredOutputParameters(structuredOutputConfig);
+  let responseFormat;
+  try {
+    responseFormat = makeStructuredOutputParameters(structuredOutputConfig);
+  } catch (error: Error) {
+    return {
+      status: ModelResponseStatus.INTERNAL_ERROR,
+      errorMessage: error.message,
+    };
+  }
   const customFields = Object.fromEntries(
     generationConfig.customRequestBodyFields.map((field) => [
       field.name,
       field.value,
     ]),
   );
-  const response = await client.chat.completions.create({
-    model: modelName,
-    messages: [{role: 'user', content: prompt}],
-    temperature: generationConfig.temperature,
-    top_p: generationConfig.topP,
-    frequency_penalty: generationConfig.frequencyPenalty,
-    presence_penalty: generationConfig.presencePenalty,
-    response_format: responseFormat,
-    ...customFields,
-  });
+
+  let response;
+  try {
+    response = await client.chat.completions.create({
+      model: modelName,
+      messages: [{role: 'user', content: prompt}],
+      temperature: generationConfig.temperature,
+      top_p: generationConfig.topP,
+      frequency_penalty: generationConfig.frequencyPenalty,
+      presence_penalty: generationConfig.presencePenalty,
+      response_format: responseFormat,
+        ...customFields,
+    });
+  } catch (error) {
+    if (error instanceof OpenAI.APIError) {
+      let status;
+      switch (error.status) {
+      case undefined:           // API connection error
+      case 408:                 // Request timeout
+      case 409:                 // Conflict
+        status = ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR;
+        break;
+      case 401:                 // Unauthorized
+        status = ModelResponseStatus.AUTHENTICATION_ERROR;
+        break;
+      case 403:                 // Permissions error
+        status = ModelResponseStatus.UNKNOWN_ERROR;
+        break;
+      case 429:                 // Rate limited or lack of funds
+        status = ModelResponseStatus.QUOTA_ERROR;
+        break;
+      default:
+        if (status >= 500) {
+          status = ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR;
+        } else {
+          status = ModelResponseStatus.UNKNOWN_ERROR;
+        }
+      }
+      return {
+        status: status,
+        errorMessage: `${error.name}: ${error.message}`,
+      }
+    } else {
+      throw error;
+    }
+  }
 
   if (!response || !response.choices) {
-    console.error('Error: No response');
-
-    return {text: ''};
+    return {
+      status: ModelResponseStatus.UNKNOWN_ERROR,
+      text: `Model provider returned an unexpected response: ${response}`,
+    };
   }
 
   const finishReason = response.choices[0].finish_reason;
   if (finishReason === MAX_TOKENS_FINISH_REASON) {
-    console.error(`Error: Token limit exceeded`);
+    return {
+      status: ModelResponseStatus.LENGTH_ERROR,
+      text: response.choices[0].message.content,
+      errorMessage: `Error: Token limit (${generationConfig.maxOutputTokens}) exceeded`,
+    };
   }
 
   return {
-    // TODO(mkbehr): handle errors from this API
     status: ModelResponseStatus.OK,
     text: response.choices[0].message.content,
   };
@@ -163,11 +206,7 @@ export async function getOpenAIAPIChatCompletionResponse(
     structuredOutputConfig,
   );
 
-  let response = {
-    // TODO(mkbehr): handle errors from this API
-    status: ModelResponseStatus.UNKNOWN_ERROR,
-    errorMessage: '',
-  };
+  let response;
   try {
     response = await callOpenAIChatCompletion(
       apiKey,
@@ -180,7 +219,6 @@ export async function getOpenAIAPIChatCompletionResponse(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     response = {
-      // TODO(mkbehr): handle errors from this API
       status: ModelResponseStatus.UNKNOWN_ERROR,
       errorMessage: error.message,
     };
