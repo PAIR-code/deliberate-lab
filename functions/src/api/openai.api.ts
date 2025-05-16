@@ -8,7 +8,9 @@ import {
 } from '@deliberation-lab/utils';
 import {ModelResponse, ModelResponseStatus} from './model.response';
 
+const SUCCESS_FINISH_REASON = 'stop';
 const MAX_TOKENS_FINISH_REASON = 'length';
+const REFUSAL_FINISH_REASON = 'content_filter';
 
 function makeStructuredOutputSchema(schema: StructuredOutputSchema): object {
   const typeMap: {[key in StructuredOutputDataType]?: string} = {
@@ -167,8 +169,19 @@ export async function callOpenAIChatCompletion(
     return {
       status: ModelResponseStatus.LENGTH_ERROR,
       text: response.choices[0].message.content,
-      errorMessage: `Error: Token limit (${generationConfig.maxOutputTokens}) exceeded`,
+      errorMessage: `Token limit (${generationConfig.maxOutputTokens}) exceeded`,
     };
+  } else if (finishReason === REFUSAL_FINISH_REASON || response.choices[0].message.refusal) {
+    return {
+      status: ModelResponseStatus.REFUSAL_ERROR,
+      errorMessage: `Refusal from provider: ${response.choices[0].message.refusal}`,
+    };
+  } else if (finishReason !== SUCCESS_FINISH_REASON) {
+    return {
+      status: ModelResponseStatus.UNKNOWN_ERROR,
+      text: response.choices[0].message.content,
+      errorMessage: `Provider sent unrecognized finish_reason: ${finishReason}`,
+    }
   }
 
   return {
