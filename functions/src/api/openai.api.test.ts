@@ -8,7 +8,7 @@ import {
   createStructuredOutputConfig,
 } from '@deliberation-lab/utils';
 import {getOpenAIAPIChatCompletionResponse} from './openai.api';
-import {ModelResponse} from './model.response';
+import {ModelResponse, ModelResponseStatus} from './model.response';
 
 const DEFAULT_GENERATION_CONFIG: ModelGenerationConfig = {
   maxTokens: 300,
@@ -21,10 +21,8 @@ const DEFAULT_GENERATION_CONFIG: ModelGenerationConfig = {
 };
 
 describe('OpenAI-compatible API', () => {
-  let scope: nock.Scope;
-
   beforeEach(() => {
-    scope = nock('https://test.uri')
+    nock('https://test.uri')
       .post('/v1/chat/completions')
       .reply(200, (uri, requestBody) => {
         return {
@@ -53,7 +51,6 @@ describe('OpenAI-compatible API', () => {
     nock.cleanAll();
   });
 
-  
   it('handles chat completion request', async () => {
     const response: ModelResponse = await getOpenAIAPIChatCompletionResponse(
       'testapikey',
@@ -62,20 +59,22 @@ describe('OpenAI-compatible API', () => {
       'This is a test prompt.',
       DEFAULT_GENERATION_CONFIG,
     );
+    expect(response.status).toEqual(ModelResponseStatus.OK);
     const parsedResponse = JSON.parse(response.text);
 
     expect(parsedResponse.model).toEqual('test-model');
     expect(parsedResponse.response_format).toEqual({type: 'text'});
-    expect(parsedResponse.messages).toEqual(
-      [{role: 'user', content: 'This is a test prompt.'}]
-    );
+    expect(parsedResponse.messages).toEqual([
+      {role: 'user', content: 'This is a test prompt.'},
+    ]);
   });
 
   it('handles json format request', async () => {
-    const structuredOutputConfig : StructuredOutputConfig = createStructuredOutputConfig({
-      type: StructuredOutputType.JSON_FORMAT,
-    });
-    
+    const structuredOutputConfig: StructuredOutputConfig =
+      createStructuredOutputConfig({
+        type: StructuredOutputType.JSON_FORMAT,
+      });
+
     const response: ModelResponse = await getOpenAIAPIChatCompletionResponse(
       'testapikey',
       'https://test.uri/v1/',
@@ -84,39 +83,41 @@ describe('OpenAI-compatible API', () => {
       DEFAULT_GENERATION_CONFIG,
       structuredOutputConfig,
     );
+    expect(response.status).toEqual(ModelResponseStatus.OK);
     const parsedResponse = JSON.parse(response.text);
 
     expect(parsedResponse.model).toEqual('test-model');
     expect(parsedResponse.response_format).toEqual({type: 'json_object'});
-    expect(parsedResponse.messages).toEqual(
-      [{role: 'user', content: 'This is a test prompt.'}]
-    );
+    expect(parsedResponse.messages).toEqual([
+      {role: 'user', content: 'This is a test prompt.'},
+    ]);
   });
 
   it('handles json schema request', async () => {
-    const structuredOutputConfig : StructuredOutputConfig = createStructuredOutputConfig({
-      type: StructuredOutputType.JSON_SCHEMA,
-      schema: {
-        type: StructuredOutputDataType.OBJECT,
-        properties: [
-          {
-            name: 'stringProperty',
-            schema: {
-              type: StructuredOutputDataType.STRING,
-              description: 'A string-valued property',
+    const structuredOutputConfig: StructuredOutputConfig =
+      createStructuredOutputConfig({
+        type: StructuredOutputType.JSON_SCHEMA,
+        schema: {
+          type: StructuredOutputDataType.OBJECT,
+          properties: [
+            {
+              name: 'stringProperty',
+              schema: {
+                type: StructuredOutputDataType.STRING,
+                description: 'A string-valued property',
+              },
             },
-          },
-          {
-            name: 'integerProperty',
-            schema: {
-              type: StructuredOutputDataType.INTEGER,
-              description: 'An integer-valued property',
+            {
+              name: 'integerProperty',
+              schema: {
+                type: StructuredOutputDataType.INTEGER,
+                description: 'An integer-valued property',
+              },
             },
-          },
-        ],
-      },
-    });
-    
+          ],
+        },
+      });
+
     const response: ModelResponse = await getOpenAIAPIChatCompletionResponse(
       'testapikey',
       'https://test.uri/v1/',
@@ -130,9 +131,9 @@ describe('OpenAI-compatible API', () => {
     const parsedResponse = JSON.parse(response.text);
 
     expect(parsedResponse.model).toEqual('test-model');
-    expect(parsedResponse.messages).toEqual(
-      [{role: 'user', content: 'This is a test prompt.'}]
-    );
+    expect(parsedResponse.messages).toEqual([
+      {role: 'user', content: 'This is a test prompt.'},
+    ]);
 
     const expectedSchema = {
       type: 'OBJECT',
@@ -148,11 +149,38 @@ describe('OpenAI-compatible API', () => {
       },
       additionalProperties: false,
       required: ['stringProperty', 'integerProperty'],
-    }
+    };
     expect(parsedResponse.response_format).toEqual({
       type: 'json_schema',
       strict: true,
-      json_schema: expectedSchema
+      json_schema: expectedSchema,
     });
+  });
+
+  it('handles error response', async () => {
+    nock('https://test.error.uri')
+      .post('/v1/chat/completions')
+      .reply(401, {
+        error: {
+          message: "You didn't provide an API key.",
+          type: 'invalid_request_error',
+          param: null,
+          code: null,
+        },
+      });
+
+    const response: ModelResponse = await getOpenAIAPIChatCompletionResponse(
+      'testapikey',
+      'https://test.error.uri/v1/',
+      'test-model',
+      'This is a test prompt.',
+      DEFAULT_GENERATION_CONFIG,
+    );
+
+    expect(response.status).toEqual(ModelResponseStatus.AUTHENTICATION_ERROR);
+    expect(response.text).toBeUndefined();
+    expect(response.errorMessage).toEqual(
+      "Error: 401 You didn't provide an API key.",
+    );
   });
 });
