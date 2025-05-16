@@ -10,9 +10,7 @@ import {ModelResponse, ModelResponseStatus} from './model.response';
 
 const MAX_TOKENS_FINISH_REASON = 'length';
 
-function makeStructuredOutputSchema(
-  schema: StructuredOutputSchema,
-): object {
+function makeStructuredOutputSchema(schema: StructuredOutputSchema): object {
   const typeMap: {[key in StructuredOutputDataType]?: string} = {
     [StructuredOutputDataType.STRING]: 'STRING',
     [StructuredOutputDataType.NUMBER]: 'NUMBER',
@@ -121,37 +119,37 @@ export async function callOpenAIChatCompletion(
       frequency_penalty: generationConfig.frequencyPenalty,
       presence_penalty: generationConfig.presencePenalty,
       response_format: responseFormat,
-        ...customFields,
+      ...customFields,
     });
   } catch (error) {
     if (error instanceof OpenAI.APIError) {
       let status;
       switch (error.status) {
-      case undefined:           // API connection error
-      case 408:                 // Request timeout
-      case 409:                 // Conflict
-        status = ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR;
-        break;
-      case 401:                 // Unauthorized
-        status = ModelResponseStatus.AUTHENTICATION_ERROR;
-        break;
-      case 403:                 // Permissions error
-        status = ModelResponseStatus.UNKNOWN_ERROR;
-        break;
-      case 429:                 // Rate limited or lack of funds
-        status = ModelResponseStatus.QUOTA_ERROR;
-        break;
-      default:
-        if (status >= 500) {
+        case undefined: // API connection error
+        case 408: // Request timeout
+        case 409: // Conflict
           status = ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR;
-        } else {
+          break;
+        case 401: // Unauthorized
+          status = ModelResponseStatus.AUTHENTICATION_ERROR;
+          break;
+        case 403: // Permissions error
           status = ModelResponseStatus.UNKNOWN_ERROR;
-        }
+          break;
+        case 429: // Rate limited or lack of funds
+          status = ModelResponseStatus.QUOTA_ERROR;
+          break;
+        default:
+          if (status >= 500) {
+            status = ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR;
+          } else {
+            status = ModelResponseStatus.UNKNOWN_ERROR;
+          }
       }
       return {
         status: status,
         errorMessage: `${error.name}: ${error.message}`,
-      }
+      };
     } else {
       throw error;
     }
