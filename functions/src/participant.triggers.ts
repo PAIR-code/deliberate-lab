@@ -9,7 +9,10 @@ import {
   createChipStageParticipantAnswer,
   createPayoutStageParticipantAnswer,
 } from '@deliberation-lab/utils';
-import {handleAutomaticTransfer} from './participant.utils';
+import {
+  handleAutomaticTransfer,
+  getParticipantRecord,
+} from './participant.utils';
 
 import {app} from './app';
 
@@ -104,11 +107,17 @@ export const setParticipantStageData = onDocumentCreated(
             break;
           case StageKind.TRANSFER:
             // Handle transfer stage logic
+            const participant = await getParticipantRecord(transaction, event.params.experimentId, event.params.participantId);
+
+            if (!participant) {
+              throw new Error('Participant not found');
+            }
+
             await handleAutomaticTransfer(
               transaction,
               event.params.experimentId,
               stage,
-              event.params.participantId,
+              participant,
             );
             break;
           default:
@@ -147,11 +156,17 @@ export const onParticipantReconnect = onDocumentUpdated(
 
         // Only handle transfer if the stage is a transfer stage
         if (stageConfig?.kind === StageKind.TRANSFER) {
+          const participant = await getParticipantRecord(transaction, event.params.experimentId, event.params.participantId);
+
+          if (!participant) {
+            throw new Error('Participant not found');
+          }
+
           await handleAutomaticTransfer(
             transaction,
             event.params.experimentId,
             stageConfig,
-            event.params.participantId,
+            participant,
           );
         }
       });
