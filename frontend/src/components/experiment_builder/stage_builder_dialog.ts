@@ -45,6 +45,11 @@ import {
   SALESPERSON_GAME_METADATA,
   getSalespersonStageConfigs,
 } from '../../shared/games/salesperson';
+import {
+  TG_METADATA,
+  getTgStageConfigs,
+  TG_AGENTS,
+} from '../../shared/games/test_game';
 
 import {styles} from './stage_builder_dialog.scss';
 
@@ -124,7 +129,7 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()} ${this.renderLASCard(true)}
         ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
-        ${this.renderSalespersonGameCard()}
+        ${this.renderSalespersonGameCard()} ${this.renderTestGameCard()}
       </div>
     `;
   }
@@ -224,6 +229,19 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addGame}>
         <div class="title">${SALESPERSON_GAME_METADATA.name}</div>
         <div>${SALESPERSON_GAME_METADATA.description}</div>
+      </div>
+    `;
+  }
+
+  private renderTestGameCard() {
+    const addGame = () => {
+      this.addGame(TG_METADATA, getTgStageConfigs(), TG_AGENTS);
+    };
+
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">${TG_METADATA.publicName}</div>
+        <div>${TG_METADATA.description}</div>
       </div>
     `;
   }
