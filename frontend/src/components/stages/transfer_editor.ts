@@ -174,7 +174,7 @@ export class TransferEditorComponent extends MobxLitElement {
         />
 
         <label for="participantCounts">
-          Provide a JSON object mapping survey answers to required participant counts.
+          Provide a JSON object mapping survey answer ids to required participant counts.
         </label>
         <input
           type="text"
