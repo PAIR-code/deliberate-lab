@@ -18,6 +18,7 @@ import {initiateChatDiscussion} from './stages/chat.utils';
 import {getAgentParticipantRankingStageResponse} from './stages/ranking.utils';
 import {getAgentParticipantSurveyStageResponse} from './stages/survey.utils';
 
+import {ModelResponseStatus} from './api/model.response';
 import {getGeminiAPIResponse} from './api/gemini.api';
 import {getOpenAIAPIChatCompletionResponse} from './api/openai.api';
 import {ollamaChat} from './api/ollama.api';
@@ -47,7 +48,7 @@ export async function getAgentResponse(
   }
 
   if (modelSettings.apiType === ApiKeyType.GEMINI_API_KEY) {
-    response = getGeminiResponse(
+    response = await getGeminiResponse(
       data,
       modelSettings.modelName,
       prompt,
@@ -55,7 +56,7 @@ export async function getAgentResponse(
       structuredOutputConfig,
     );
   } else if (modelSettings.apiType === ApiKeyType.OPENAI_API_KEY) {
-    response = getOpenAIAPIResponse(
+    response = await getOpenAIAPIResponse(
       data,
       modelSettings.modelName,
       prompt,
@@ -65,11 +66,16 @@ export async function getAgentResponse(
   } else if (modelSettings.apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
     response = await getOllamaResponse(data, modelSettings.modelName, prompt);
   } else {
+    response = {
+      status: ModelResponseStatus.CONFIG_ERROR,
+      errorMessage: `Error: invalid apiKey type: ${data.apiKeys.ollamaApiKey.apiKey}`,
+    };
+  }
+
+  if (response.status !== ModelResponseStatus.OK) {
     console.error(
-      'Error: invalid apiKey type: ',
-      data.apiKeys.ollamaApiKey.apiKey,
+      `GetAgentResponse: response error status: ${response.status}; message: ${response.errorMessage}`,
     );
-    response = {text: ''};
   }
 
   return response;
