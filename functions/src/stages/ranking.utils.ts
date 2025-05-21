@@ -94,7 +94,7 @@ export async function getAgentParticipantRankingStageResponse(
     participant.agentConfig.modelSettings,
     generationConfig,
   );
-  const response = rawResponse.text;
+  const response = rawResponse.text ?? '';
 
   // Add log entry
   writeLogEntry(

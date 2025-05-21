@@ -26,7 +26,6 @@ import {
   getTypingDelayInMilliseconds,
   structuredOutputEnabled,
 } from '@deliberation-lab/utils';
-import {getAgentResponse} from '../agent.utils';
 import {updateCurrentDiscussionIndex} from './chat.utils';
 import {getPastStagesPromptContext} from './stage.utils';
 import {getMediatorsInCohortStage} from '../mediator.utils';

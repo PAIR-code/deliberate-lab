@@ -5,20 +5,18 @@ import {
   CreateParticipantData,
   Experiment,
   ParticipantProfileExtended,
-  ParticipantProfileExtendedData,
   ParticipantStatus,
   StageKind,
   SurveyStagePublicData,
   createParticipantProfileExtended,
-  generateParticipantPublicId,
   setProfile,
+  StageConfig,
 } from '@deliberation-lab/utils';
 import {
   updateCohortStageUnlocked,
   updateParticipantNextStage,
 } from './participant.utils';
 
-import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import {onCall} from 'firebase-functions/v2/https';
 
@@ -58,6 +56,7 @@ export const createParticipant = onCall(async (request) => {
   // If agent config is specified, add to participant config
   if (data.agentConfig) {
     participantConfig.agentConfig = data.agentConfig;
+    participantConfig.connected = true; // agent is always connected
   }
 
   // Define document reference
@@ -425,8 +424,7 @@ export const acceptParticipantTransfer = onCall(async (request) => {
       await document.get()
     ).data() as ParticipantProfileExtended;
     if (!participant.transferCohortId) {
-      success = false;
-      return;
+      return {success: false};
     }
 
     // Update cohort ID
@@ -501,6 +499,7 @@ export const acceptParticipantTransfer = onCall(async (request) => {
           break;
       }
     }
+    return {success: true};
   });
 
   return response;

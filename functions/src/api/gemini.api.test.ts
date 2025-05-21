@@ -134,4 +134,6 @@ describe('Gemini API', () => {
     };
     expect(parsedResponse).toMatchObject(expectedResponse);
   });
+
+  // TODO(mkbehr): Add tests for error responses.
 });

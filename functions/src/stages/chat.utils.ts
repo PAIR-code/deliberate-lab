@@ -24,6 +24,7 @@ import * as functions from 'firebase-functions';
 import {Timestamp} from 'firebase-admin/firestore';
 import {onCall} from 'firebase-functions/v2/https';
 
+import {ModelResponseStatus} from '../api/model.response';
 import {app} from '../app';
 import {getAgentResponse} from '../agent.utils';
 import {
@@ -310,8 +311,13 @@ export async function getAgentChatAPIResponse(
     promptConfig.structuredOutputConfig,
   );
 
+  if (response.status !== ModelResponseStatus.OK) {
+    // TODO: Surface the error to the experimenter.
+    return null;
+  }
+
   // Add agent message if non-empty
-  let message = response.text;
+  let message = response.text!;
   let parsed = '';
 
   if (promptConfig.responseConfig?.isJSON) {
@@ -319,8 +325,8 @@ export async function getAgentChatAPIResponse(
     message = '';
 
     try {
-      const cleanedText = response.text
-        .replace(/```json\s*|\s*```/g, '')
+      const cleanedText = response
+        .text!.replace(/```json\s*|\s*```/g, '')
         .trim();
       parsed = JSON.parse(cleanedText);
     } catch {
@@ -334,8 +340,8 @@ export async function getAgentChatAPIResponse(
     message = '';
 
     try {
-      const cleanedText = response.text
-        .replace(/```json\s*|\s*```/g, '')
+      const cleanedText = response
+        .text!.replace(/```json\s*|\s*```/g, '')
         .trim();
       parsed = JSON.parse(cleanedText);
     } catch {

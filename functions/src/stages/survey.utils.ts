@@ -106,7 +106,7 @@ async function getAgentParticipantSurveyQuestionResponse(
     participant.agentConfig.modelSettings,
     generationConfig,
   );
-  const response = rawResponse.text;
+  const response = rawResponse.text ?? '';
 
   writeLogEntry(
     experimentId,

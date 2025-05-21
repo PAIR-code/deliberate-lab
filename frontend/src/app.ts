@@ -21,6 +21,7 @@ import {AuthService} from './services/auth.service';
 import {HomeService} from './services/home.service';
 import {Pages, RouterService} from './services/router.service';
 import {SettingsService} from './services/settings.service';
+import {PresenceService} from './services/presence.service';
 
 import {ColorMode} from './shared/types';
 
@@ -36,6 +37,7 @@ export class App extends MobxLitElement {
   private readonly homeService = core.getService(HomeService);
   private readonly routerService = core.getService(RouterService);
   private readonly settingsService = core.getService(SettingsService);
+  private readonly presenceService = core.getService(PresenceService);
 
   override connectedCallback() {
     super.connectedCallback();
@@ -87,6 +89,11 @@ export class App extends MobxLitElement {
           <experiment-builder></experiment-builder>
         `;
       case Pages.PARTICIPANT:
+        this.presenceService.setupPresence(
+          this.routerService.activeRoute.params['experiment'],
+          this.routerService.activeRoute.params['participant'],
+        );
+
         return html`
           <page-header></page-header>
           <participant-view></participant-view>

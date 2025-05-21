@@ -151,6 +151,12 @@ export class ParticipantSummary extends MobxLitElement {
   private renderStatus() {
     if (!this.participant) return nothing;
 
+    const {connected} = this.participant;
+
+    if(!connected && !isParticipantEndedExperiment(this.participant)) {
+      return html`<div class="chip error">disconnected</div>`;
+    }
+
     if (isPendingParticipant(this.participant)) {
       return html`<div class="chip secondary">transfer pending</div>`;
     } else if (isObsoleteParticipant(this.participant)) {
