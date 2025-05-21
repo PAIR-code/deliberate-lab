@@ -3,7 +3,7 @@
 @use '../../sass/typescale';
 
 :host {
-  @include common.flex-row;
+  @include common.flex-column;
   height: 100%;
   overflow: auto;
 }
@@ -18,31 +18,10 @@
   width: common.$sidenav-width;
 }
 
-.nav-item {
-  border-radius: common.$spacing-small;
-  padding: common.$spacing-medium;
-
-  &:hover,
-  &:focus {
-    background: var(--md-sys-color-surface-variant);
-    cursor: pointer;
-  }
-
-  &.active,
-  &.active:hover,
-  &.active:focus {
-    background: var(--md-sys-color-secondary-container);
-    color: var(--md-sys-color-on-secondary-container);
-    cursor: initial;
-  }
-}
-
 .agent-wrapper {
   @include common.flex-column;
-  flex-grow: 1;
   gap: common.$spacing-xl;
   max-width: common.$info-content-max-width;
-  overflow: auto;
   padding: common.$main-content-padding;
 }
 
@@ -74,7 +53,6 @@
 }
 
 .description {
-  @include typescale.label-small;
   color: var(--md-sys-color-outline);
   font-style: italic;
 }

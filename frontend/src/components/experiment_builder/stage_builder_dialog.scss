@@ -1,6 +1,6 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.overlay;
@@ -10,6 +10,11 @@
   @include common.dialog;
   height: 600px;
   width: 800px;
+
+  &.full {
+    height: 100%;
+    width: common.$info-content-max-width;
+  }
 }
 
 .header {
@@ -81,7 +86,7 @@
   &:hover {
     background: var(--md-sys-color-surface-variant);
   }
-  
+
   &.disabled {
     pointer-events: none;
     background-color: var(--md-sys-color-surface);
