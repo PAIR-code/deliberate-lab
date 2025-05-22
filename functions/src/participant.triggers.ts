@@ -129,43 +129,61 @@ export const onParticipantReconnect = onDocumentUpdated(
     // Check if participant reconnected
     if (!before.connected && after.connected) {
       const firestore = app.firestore();
-      await firestore.runTransaction(async (transaction) => {
-        // Fetch the participant's current stage config
-        const stageDoc = firestore
-          .collection('experiments')
-          .doc(experimentId)
-          .collection('stages')
-          .doc(after.currentStageId);
+      // Fetch the participant's current stage config (outside transaction)
+      const stageDocPrecheck = firestore
+        .collection('experiments')
+        .doc(experimentId)
+        .collection('stages')
+        .doc(after.currentStageId);
+      const stageConfigPrecheck = (await stageDocPrecheck.get()).data() as StageConfig;
 
-        const stageConfig = (
-          await transaction.get(stageDoc)
-        ).data() as StageConfig;
+      if (stageConfigPrecheck?.kind === StageKind.TRANSFER) {
+        // Wait 10 seconds before running the transaction, to make sure user's connection is
+        // relatviely stable
+        await new Promise((resolve) => setTimeout(resolve, 10000));
+        await firestore.runTransaction(async (transaction) => {
+          // Fetch the participant's current stage config again (inside transaction)
+          const stageDoc = firestore
+            .collection('experiments')
+            .doc(experimentId)
+            .collection('stages')
+            .doc(after.currentStageId);
+          const stageConfig = (
+            await transaction.get(stageDoc)
+          ).data() as StageConfig;
 
-        if (stageConfig?.kind === StageKind.TRANSFER) {
-          const participant = await getParticipantRecord(transaction, experimentId, participantId);
+          if (stageConfig?.kind === StageKind.TRANSFER) {
+            const participant = await getParticipantRecord(transaction, experimentId, participantId);
 
-          if (!participant) {
-            throw new Error('Participant not found');
+            if (!participant) {
+              throw new Error('Participant not found');
+            }
+
+            // Ensure participant is still connected after the delay
+            if (!participant.connected) {
+              console.log(`Participant ${participantId} is no longer connected after delay, skipping transfer.`);
+              return;
+            }
+
+            const transferResult = await handleAutomaticTransfer(
+              transaction,
+              experimentId,
+              stageConfig,
+              participant,
+            );
+            if (transferResult) {
+              // Store any updates to participant after transfer
+              const participantDoc = app
+                .firestore()
+                .collection('experiments')
+                .doc(experimentId)
+                .collection('participants')
+                .doc(participant.privateId);
+              transaction.set(participantDoc, participant);
+            }
           }
-
-          const transferResult = await handleAutomaticTransfer(
-            transaction,
-            experimentId,
-            stageConfig,
-            participant,
-          );
-          if (transferResult) {
-            // Store any updates to participant after transfer
-            const participantDoc = app
-              .firestore()
-              .collection('experiments')
-              .doc(experimentId)
-              .collection('participants')
-              .doc(participant.privateId);
-            transaction.set(participantDoc, participant);
-          }
-        }
-      });
+        });
+      }
     }
   },
 );
