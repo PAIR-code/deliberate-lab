@@ -105,21 +105,6 @@ export const setParticipantStageData = onDocumentCreated(
             const payoutAnswer = createPayoutStageParticipantAnswer(stage);
             transaction.set(stageDoc, payoutAnswer);
             break;
-          case StageKind.TRANSFER:
-            // Handle transfer stage logic
-            const participant = await getParticipantRecord(transaction, event.params.experimentId, event.params.participantId);
-
-            if (!participant) {
-              throw new Error('Participant not found');
-            }
-
-            await handleAutomaticTransfer(
-              transaction,
-              event.params.experimentId,
-              stage,
-              participant,
-            );
-            break;
           default:
             break;
         }
@@ -135,6 +120,8 @@ export const onParticipantReconnect = onDocumentUpdated(
   },
   async (event) => {
     if (!event.data) return;
+    const experimentId = event.params.experimentId;
+    const participantId = event.params.participantId;
 
     const before = event.data.before.data() as ParticipantProfileExtended;
     const after = event.data.after.data() as ParticipantProfileExtended;
@@ -146,7 +133,7 @@ export const onParticipantReconnect = onDocumentUpdated(
         // Fetch the participant's current stage config
         const stageDoc = firestore
           .collection('experiments')
-          .doc(event.params.experimentId)
+          .doc(experimentId)
           .collection('stages')
           .doc(after.currentStageId);
 
@@ -154,20 +141,29 @@ export const onParticipantReconnect = onDocumentUpdated(
           await transaction.get(stageDoc)
         ).data() as StageConfig;
 
-        // Only handle transfer if the stage is a transfer stage
         if (stageConfig?.kind === StageKind.TRANSFER) {
-          const participant = await getParticipantRecord(transaction, event.params.experimentId, event.params.participantId);
+          const participant = await getParticipantRecord(transaction, experimentId, participantId);
 
           if (!participant) {
             throw new Error('Participant not found');
           }
 
-          await handleAutomaticTransfer(
+          const transferResult = await handleAutomaticTransfer(
             transaction,
-            event.params.experimentId,
+            experimentId,
             stageConfig,
             participant,
           );
+          if (transferResult) {
+            // Store any updates to participant after transfer
+            const participantDoc = app
+              .firestore()
+              .collection('experiments')
+              .doc(experimentId)
+              .collection('participants')
+              .doc(participant.privateId);
+            transaction.set(participantDoc, participant);
+          }
         }
       });
     }
