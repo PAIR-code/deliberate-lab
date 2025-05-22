@@ -10,6 +10,7 @@ import {
   createMetadataConfig,
   SurveyStagePublicData,
   SurveyQuestionKind,
+  MultipleChoiceSurveyAnswer,
 } from '@deliberation-lab/utils';
 import {completeStageAsAgentParticipant} from './agent.utils';
 import {getFirestoreActiveParticipants} from './utils/firestore';
@@ -176,7 +177,7 @@ export async function updateCohortStageUnlocked(
   });
 }
 
-/** Check and transfer participants based on survey answers. */
+/** Automatically transfer participants based on survey answers. */
 export async function handleAutomaticTransfer(
   transaction: FirebaseFirestore.Transaction,
   experimentId: string,
@@ -185,7 +186,16 @@ export async function handleAutomaticTransfer(
 ): Promise<{ currentStageId: string; endExperiment: boolean } | null> {
   const firestore = app.firestore();
 
-  // Fetch participants waiting at this stage
+  // Do a read to lock the current participant's document for this transaction
+  // The data itself might be outdated, so we discard it
+  const participantDocRef = firestore
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('participants')
+    .doc(participant.privateId);
+  await transaction.get(participantDocRef);
+
+  // Fetch participants waiting at this stage and in the same cohort as the current participant
   const waitingParticipants = (
     await transaction.get(
       firestore
@@ -193,11 +203,14 @@ export async function handleAutomaticTransfer(
         .doc(experimentId)
         .collection('participants')
         .where('currentStageId', '==', stageConfig.id)
-        .where('currentStatus', '==', ParticipantStatus.IN_PROGRESS),
+        .where('currentStatus', '==', ParticipantStatus.IN_PROGRESS)
+        .where('currentCohortId', '==', participant.currentCohortId)
+        .where('transferCohortId', '==', null)
     )
   ).docs.map((doc) => doc.data() as ParticipantProfileExtended);
 
   // Add the current participant if they're not already present
+  // (they might not be, since their currentStageId hasn't been updated in the db yet)
   if (!waitingParticipants.some((p) => p.privateId === participant.privateId)) {
     waitingParticipants.push(participant);
   }
@@ -207,7 +220,6 @@ export async function handleAutomaticTransfer(
     (p) => p.connected,
   );
 
-  // Log all connected participants
   console.log(
     `Connected participants for transfer stage ${stageConfig.id}: ${connectedParticipants
       .map((p) => p.publicId)
@@ -265,9 +277,19 @@ export async function handleAutomaticTransfer(
   // Check if a cohort can be formed
   const cohortParticipants: ParticipantProfileExtended[] = [];
 
-  // TODO: make sure the current participant is included in the cohort in all cases
   for (const [key, requiredCount] of Object.entries(requiredCounts)) {
-    const matchingParticipants = answerGroups[key] || [];
+    let matchingParticipants = answerGroups[key] || [];
+
+    // Sort by waiting time (oldest first)
+    matchingParticipants = matchingParticipants.sort((a, b) => {
+      const aTime = a.timestamps.readyStages?.[stageConfig.id]?.toMillis?.() ?? 0;
+      const bTime = b.timestamps.readyStages?.[stageConfig.id]?.toMillis?.() ?? 0;
+      return aTime - bTime;
+    });
+
+    // Move the current participant to the front if present
+    matchingParticipants = matchingParticipants.filter(p => p.privateId === participant.privateId)
+      .concat(matchingParticipants.filter(p => p.privateId !== participant.privateId));
 
     // If not enough participants to form a cohort, return null
     if (matchingParticipants.length < requiredCount) {
@@ -300,11 +322,11 @@ export async function handleAutomaticTransfer(
       .doc(participant.privateId);
 
     transaction.update(participantDoc, {
-      currentCohortId: cohortConfig.id,
-      currentStatus: ParticipantStatus.IN_PROGRESS,
+      transferCohortId: cohortConfig.id,
+      currentStatus: ParticipantStatus.TRANSFER_PENDING,
     });
 
-    console.log(`Transferring participant ${participant.privateId} to cohort ${cohortConfig.id}`);
+    console.log(`Transferring participant ${participant.publicId} to cohort ${cohortConfig.id}`);
   }
 
   // Update the passed-in participant as a side-effect, since this is how we merge all the changes
