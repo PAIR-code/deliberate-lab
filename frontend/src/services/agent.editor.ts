@@ -58,7 +58,7 @@ export class AgentEditor extends Service {
   @observable agentTestResponseMap: Record<string, Record<string, string>> = {};
 
   // Display variables for agent editor
-  // If active stage ID is empty, show agent settings
+  // If active stage ID is assigned, show agent editor dialog
   @observable activeStageId = '';
 
   setActiveStageId(stageId: string) {

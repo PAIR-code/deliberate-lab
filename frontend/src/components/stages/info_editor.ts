@@ -1,8 +1,7 @@
-import '../../pair-components/textarea';
-
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
+import '@material/web/textfield/outlined-text-field.js';
 
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
@@ -37,15 +36,18 @@ export class InfoEditorComponent extends MobxLitElement {
     };
 
     return html`
-      <pr-textarea
-        label="Info"
+      <md-outlined-text-field
+        required
+        type="textarea"
+        rows="10"
+        label="Information to display to participant"
         placeholder="Add info to display to participant"
-        variant="outlined"
+        .error=${this.stage?.infoLines.length === 0}
         .value=${this.stage?.infoLines.join('\n\n') ?? ''}
         ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updateInfoLines}
       >
-      </pr-textarea>
+      </md-outlined-text-field>
     `;
   }
 }
