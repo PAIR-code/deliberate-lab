@@ -112,7 +112,9 @@ export class AgentEditorComponent extends MobxLitElement {
                 .agentConfig=${agentConfig}
                 .stageConfig=${stage}
               >
-                ${this.renderAgentWordsPerMinute(agentConfig, promptConfig)}
+                ${promptConfig
+                  ? this.renderAgentWordsPerMinute(agentConfig, promptConfig)
+                  : nothing}
               </agent-base-prompt-editor>
             `;
           } else {
@@ -348,7 +350,7 @@ export class AgentEditorComponent extends MobxLitElement {
       }
     };
 
-    const currentWPM = agentPromptConfig.chatSettings.wordsPerMinute;
+    const currentWPM = agentPromptConfig?.chatSettings?.wordsPerMinute ?? 0;
     return html`
       <div class="field">
         <div class="field-title">Words per minute</div>
