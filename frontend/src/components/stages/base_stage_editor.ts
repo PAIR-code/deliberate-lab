@@ -36,10 +36,15 @@ export class BaseStageEditorComponent extends MobxLitElement {
 
     return html`
       <details>
-        <summary>Metadata and progress settings</summary>
+        <summary>Metadata</summary>
         <div class="inner-section">
           ${this.renderName()} ${this.renderPrimaryText()}
           ${this.renderInfoText()} ${this.renderHelpText()}
+        </div>
+      </details>
+      <details>
+        <summary>Progress settings</summary>
+        <div class="inner-section">
           ${this.renderWaitForAllParticipants()}
           ${this.renderWaitForNumParticipants()}
           ${this.renderShowParticipantProgress()}
