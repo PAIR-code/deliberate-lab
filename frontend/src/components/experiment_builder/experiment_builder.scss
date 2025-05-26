@@ -84,6 +84,10 @@
     @include common.flex-row-align-center;
     gap: common.$spacing-medium;
   }
+
+  .left {
+    flex-grow: 1;
+  }
 }
 
 .content {
@@ -148,4 +152,8 @@ pr-button pr-icon {
 
 .subtitle {
   @include typescale.label-small;
+}
+
+.title-field {
+  flex-grow: 1;
 }

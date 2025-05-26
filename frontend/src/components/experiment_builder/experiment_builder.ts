@@ -259,13 +259,27 @@ export class ExperimentBuilder extends MobxLitElement {
   private renderTitle() {
     const stage = this.experimentEditor.currentStage;
 
+    const updateTitle = (e: InputEvent) => {
+      const name = (e.target as HTMLTextAreaElement).value;
+      if (stage) {
+        this.experimentEditor.updateStage({...stage, name});
+      }
+    };
+
     if (stage === undefined) {
       return html`<div>Experiment config</div>`;
     } else {
       return html`
         <div class="left">
           <div class="chip secondary">${stage.kind}</div>
-          <div>${stage.name}</div>
+          <pr-textarea
+            class="title-field"
+            placeholder="Stage name (click to edit)"
+            size="large"
+            .value=${stage.name}
+            @input=${updateTitle}
+          >
+          </pr-textarea>
         </div>
       `;
     }
