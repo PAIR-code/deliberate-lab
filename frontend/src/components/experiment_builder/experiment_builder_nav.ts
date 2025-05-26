@@ -38,7 +38,6 @@ export class ExperimentBuilderNav extends MobxLitElement {
           this.renderStageItem(stage, index),
         )}
       </div>
-      ${this.renderStageBuilderDialog()}
     `;
   }
 
@@ -166,15 +165,6 @@ export class ExperimentBuilderNav extends MobxLitElement {
         Load game
       </pr-button>
     `;
-  }
-
-  private renderStageBuilderDialog() {
-    if (this.experimentEditor.showStageBuilderDialog) {
-      return html`<stage-builder-dialog
-        .showGames=${this.experimentEditor.showGamesTab}
-      ></stage-builder-dialog>`;
-    }
-    return nothing;
   }
 }
 

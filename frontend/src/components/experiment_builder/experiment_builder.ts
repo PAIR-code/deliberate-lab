@@ -57,8 +57,17 @@ export class ExperimentBuilder extends MobxLitElement {
   override render() {
     return html`
       ${this.renderNavPanel()} ${this.renderExperimentConfigBuilder()}
-      ${this.renderExperimenterSettings()}
+      ${this.renderExperimenterSettings()} ${this.renderStageBuilderDialog()}
     `;
+  }
+
+  private renderStageBuilderDialog() {
+    if (this.experimentEditor.showStageBuilderDialog) {
+      return html`<stage-builder-dialog
+        .showGames=${this.experimentEditor.showGamesTab}
+      ></stage-builder-dialog>`;
+    }
+    return nothing;
   }
 
   private renderNavPanel() {

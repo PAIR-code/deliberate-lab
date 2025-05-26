@@ -123,10 +123,28 @@ export class AgentEditorComponent extends MobxLitElement {
         })}
         <div class="divider"></div>
         <div class="description agent-wrapper">
-          Note: Add stages with chat discussions (e.g., chat stage) to your
-          experiment in order to specify agent mediator prompts here.
+          <div>
+            Note: Add stages with chat discussions (e.g., chat stage) to your
+            experiment in order to specify agent mediator prompts here.
+          </div>
+          ${this.renderAddStageButton()}
         </div>
       </div>
+    `;
+  }
+
+  private renderAddStageButton() {
+    return html`
+      <pr-button
+        color="neutral"
+        variant="default"
+        ?disabled=${!this.experimentEditor.canEditStages}
+        @click=${() => {
+          this.experimentEditor.toggleStageBuilderDialog(false);
+        }}
+      >
+        + Add stage
+      </pr-button>
     `;
   }
 
