@@ -64,7 +64,7 @@ export class ExperimentBuilder extends MobxLitElement {
   private renderStageBuilderDialog() {
     if (this.experimentEditor.showStageBuilderDialog) {
       return html`<stage-builder-dialog
-        .showGames=${this.experimentEditor.showGamesTab}
+        .showTemplates=${this.experimentEditor.showTemplatesTab}
       ></stage-builder-dialog>`;
     }
     return nothing;

@@ -31,7 +31,7 @@ export class ExperimentBuilderNav extends MobxLitElement {
   override render() {
     return html`
       <div class="buttons header">
-        ${this.renderAddStageButton()} ${this.renderLoadGameButton()}
+        ${this.renderAddStageButton()} ${this.renderLoadTemplateButton()}
       </div>
       <div class="nav-items-wrapper">
         ${this.experimentEditor.stages.map((stage, index) =>
@@ -152,7 +152,7 @@ export class ExperimentBuilderNav extends MobxLitElement {
     `;
   }
 
-  private renderLoadGameButton() {
+  private renderLoadTemplateButton() {
     return html`
       <pr-button
         color="neutral"
@@ -162,7 +162,7 @@ export class ExperimentBuilderNav extends MobxLitElement {
           this.experimentEditor.toggleStageBuilderDialog(true);
         }}
       >
-        Load game
+        Load template
       </pr-button>
     `;
   }
