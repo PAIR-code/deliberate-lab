@@ -126,7 +126,10 @@ export class ExperimentBuilder extends MobxLitElement {
     return html`
       <div class="panel-view">
         <div class="top">
-          <div class="panel-view-header">General settings</div>
+          <div class="panel-view-header">
+            <div class="header-title">General settings</div>
+            ${this.renderAddStageButton()}
+          </div>
           <div
             class="general-item ${this.panelView === PanelView.DEFAULT
               ? 'current'
@@ -151,7 +154,10 @@ export class ExperimentBuilder extends MobxLitElement {
             <div>Stages</div>
             <div class="subtitle">Add and configure experiment stages</div>
           </div>
-          <div class="panel-view-header">Agent Mediators</div>
+          <div class="panel-view-header">
+            <div class="header-title">Agent Mediators</div>
+            ${this.renderAddMediatorButton()}
+          </div>
           ${this.agentEditor.agentMediators.map(
             (mediator) => html`
               <div
@@ -176,19 +182,43 @@ export class ExperimentBuilder extends MobxLitElement {
               </div>
             `,
           )}
-          <pr-button
-            color="neutral"
-            variant="default"
-            @click=${() => {
-              this.panelView = PanelView.AGENTS;
-              this.agentEditor.addAgentMediator();
-            }}
-          >
-            + New agent mediator
-          </pr-button>
         </div>
         <div class="bottom">${this.renderDeleteButton()}</div>
       </div>
+    `;
+  }
+
+  private renderAddMediatorButton() {
+    return html`
+      <pr-tooltip text="Add agent mediator persona" position="BOTTOM_END">
+        <pr-icon-button
+          icon="person_add"
+          color="neutral"
+          variant="default"
+          @click=${() => {
+            this.panelView = PanelView.AGENTS;
+            this.agentEditor.addAgentMediator();
+          }}
+        >
+        </pr-icon-button>
+      </pr-tootipt>
+    `;
+  }
+
+  private renderAddStageButton() {
+    return html`
+      <pr-tooltip text="Add stage or load template" position="BOTTOM_END">
+        <pr-icon-button
+          icon="playlist_add"
+          color="neutral"
+          variant="default"
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @click=${() => {
+            this.experimentEditor.toggleStageBuilderDialog(false);
+          }}
+        >
+        </pr-icon-button>
+      </pr-tootipt>
     `;
   }
 
