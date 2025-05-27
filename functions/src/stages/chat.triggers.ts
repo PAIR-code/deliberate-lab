@@ -25,6 +25,7 @@ import {
   getTimeElapsed,
   getTypingDelayInMilliseconds,
   structuredOutputEnabled,
+  DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
 } from '@deliberation-lab/utils';
 import {updateCurrentDiscussionIndex} from './chat.utils';
 import {getPastStagesPromptContext} from './stage.utils';
@@ -358,8 +359,7 @@ export const createAgentParticipantMessage = onDocumentCreated(
           participant.agentConfig.agentId,
         )) ??
         createAgentChatPromptConfig(stageId, StageKind.CHAT, {
-          promptContext:
-            'You are a human participant playing as the avatar mentioned above. Respond in a quick sentence if you would like to say something. Make sure your response sounds like a human with the phrasing and punctuation people use when casually chatting and no animal sounds. Otherwise, do not respond.',
+          promptContext: DEFAULT_AGENT_PARTICIPANT_PROMPT,
         });
 
       const pastStageContext = promptConfig.promptSettings.includeStageHistory
