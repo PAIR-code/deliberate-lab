@@ -139,7 +139,7 @@ export const onParticipantReconnect = onDocumentUpdated(
 
       if (stageConfigPrecheck?.kind === StageKind.TRANSFER) {
         // Wait 10 seconds before running the transaction, to make sure user's connection is
-        // relatviely stable
+        // relatively stable
         await new Promise((resolve) => setTimeout(resolve, 10000));
         await firestore.runTransaction(async (transaction) => {
           // Fetch the participant's current stage config again (inside transaction)
