@@ -308,6 +308,7 @@ export async function handleAutomaticTransfer(
   const cohortConfig = createCohortConfig({
     id: generateId(),
     metadata: createMetadataConfig({ creator: 'system', dateCreated: Timestamp.now(), dateModified: Timestamp.now() }),
+    participantConfig: stageConfig.newCohortParticipantConfig,
   });
 
   console.log(`Creating cohort ${cohortConfig.id} for participants: ${cohortParticipants.map((p) => p.publicId).join(', ')}`);

@@ -6,6 +6,7 @@ import {
   createStageProgressConfig,
   createStageTextConfig,
 } from './stage';
+import {CohortParticipantConfig} from '../experiment';
 
 /** Transfer stage types and functions. */
 
@@ -21,6 +22,7 @@ export interface TransferStageConfig extends BaseStageConfig {
   surveyStageId?: string; // ID of the survey stage to reference
   surveyQuestionId?: string; // ID of the survey question to reference
   participantCounts?: { [key: string]: number }; // Map of serialized survey answers to required participant counts
+  newCohortParticipantConfig?: CohortParticipantConfig; // Cohort participant config for new cohorts
 }
 
 // ************************************************************************* //
