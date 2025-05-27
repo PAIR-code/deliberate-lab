@@ -136,7 +136,7 @@ export class AgentEditorComponent extends MobxLitElement {
         ${renderEmpty()}
         ${stages.map((stage, index) => {
           if (stage.kind === StageKind.CHAT) {
-            const promptConfig = this.agentEditor.getAgentMediatorPrompt(
+            const promptConfig = this.agentEditor.getAgentChatPrompt(
               agentConfig.id,
               stage.id,
             );
@@ -177,7 +177,7 @@ export class AgentEditorComponent extends MobxLitElement {
 
   private renderDeleteAgentButton(agent: AgentPersonaConfig) {
     const onClick = () => {
-      this.agentEditor.deleteAgentMediator(agent.id);
+      this.agentEditor.deleteAgent(agent.id);
     };
 
     return html`
@@ -197,7 +197,7 @@ export class AgentEditorComponent extends MobxLitElement {
   private renderAgentPrivateName(agent: AgentPersonaConfig) {
     const updateName = (e: InputEvent) => {
       const name = (e.target as HTMLTextAreaElement).value;
-      this.agentEditor.updateAgentMediatorPrivateName(agent.id, name);
+      this.agentEditor.updateAgentPrivateName(agent.id, name);
     };
 
     return html`
@@ -215,7 +215,7 @@ export class AgentEditorComponent extends MobxLitElement {
   private renderAgentName(agent: AgentPersonaConfig) {
     const updateName = (e: InputEvent) => {
       const name = (e.target as HTMLTextAreaElement).value;
-      this.agentEditor.updateAgentMediatorProfile(agent.id, {name});
+      this.agentEditor.updateAgentProfile(agent.id, {name});
     };
 
     return html`
@@ -262,7 +262,7 @@ export class AgentEditorComponent extends MobxLitElement {
     apiType: ApiKeyType,
   ) {
     const updateAgentAPI = () => {
-      this.agentEditor.updateAgentMediatorModelSettings(agentConfig.id, {
+      this.agentEditor.updateAgentChatModelSettings(agentConfig.id, {
         apiType,
       });
     };
@@ -282,7 +282,7 @@ export class AgentEditorComponent extends MobxLitElement {
   private renderAgentModel(agent: AgentPersonaConfig) {
     const updateModel = (e: InputEvent) => {
       const modelName = (e.target as HTMLTextAreaElement).value;
-      this.agentEditor.updateAgentMediatorModelSettings(agent.id, {modelName});
+      this.agentEditor.updateAgentChatModelSettings(agent.id, {modelName});
     };
 
     return html`
@@ -304,7 +304,7 @@ export class AgentEditorComponent extends MobxLitElement {
   ) {
     const updatePrompt = (e: InputEvent) => {
       const promptContext = (e.target as HTMLTextAreaElement).value;
-      this.agentEditor.updateAgentMediatorPromptConfig(
+      this.agentEditor.updateAgentChatPromptConfig(
         agent.id,
         agentPromptConfig.id,
         {promptContext},
@@ -344,7 +344,7 @@ export class AgentEditorComponent extends MobxLitElement {
     const handleAvatarClick = (e: Event) => {
       const value = Number((e.target as HTMLInputElement).value);
       const avatar = LLM_AGENT_AVATARS[value];
-      this.agentEditor.updateAgentMediatorProfile(agent.id, {avatar});
+      this.agentEditor.updateAgentProfile(agent.id, {avatar});
     };
 
     const renderAvatarRadio = (emoji: string, index: number) => {
@@ -389,7 +389,7 @@ export class AgentEditorComponent extends MobxLitElement {
     const updateWordsPerMinute = (e: InputEvent) => {
       const wordsPerMinute = Number((e.target as HTMLInputElement).value);
       if (!isNaN(wordsPerMinute)) {
-        this.agentEditor.updateAgentMediatorChatSettings(
+        this.agentEditor.updateAgentChatSettings(
           agent.id,
           agentPromptConfig.id,
           {wordsPerMinute},
