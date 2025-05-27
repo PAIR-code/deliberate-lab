@@ -12,6 +12,7 @@ import {
   AgentModelSettings,
   AgentParticipantPromptConfig,
   AgentPersonaConfig,
+  AgentPersonaType,
   AgentResponseConfig,
   BaseAgentPromptConfig,
   ChatStageConfig,
@@ -41,9 +42,9 @@ export class AgentEditor extends Service {
     makeObservable(this);
   }
 
-  @observable agentMediators: AgentPersonaConfig[] = [];
-  // Mediator selected in panel
-  @observable currentAgentMediatorId = '';
+  @observable agents: AgentPersonaConfig[] = [];
+  // Agent selected in panel
+  @observable currentAgentId = '';
   // Maps from agent ID to (stage ID to stage chat prompt)
   @observable agentChatPromptMap: Record<
     string,
@@ -65,36 +66,46 @@ export class AgentEditor extends Service {
     this.activeStageId = stageId;
   }
 
-  @computed get currentAgentMediator() {
-    return this.getAgentMediator(this.currentAgentMediatorId);
+  @computed get agentMediators() {
+    return this.agents.filter(
+      (agent) => agent.type === AgentPersonaType.MEDIATOR,
+    );
   }
 
-  setCurrentAgentMediator(id: string) {
-    this.currentAgentMediatorId = id;
+  @computed get currentAgentMediator() {
+    return this.getAgentMediator(this.currentAgentId);
+  }
+
+  setCurrentAgent(id: string) {
+    this.currentAgentId = id;
   }
 
   addAgentMediator(setAsCurrent = true) {
     const agent = createAgentPersonaConfig();
-    this.agentMediators.push(agent);
+    this.agents.push(agent);
     this.agentChatPromptMap[agent.id] = {};
     if (setAsCurrent) {
-      this.currentAgentMediatorId = agent.id;
+      this.currentAgentId = agent.id;
     }
   }
 
-  deleteAgentMediator(id: string) {
-    const agentIndex = this.agentMediators.findIndex(
-      (agent) => agent.id === id,
-    );
+  deleteAgent(id: string) {
+    const agentIndex = this.agents.findIndex((agent) => agent.id === id);
     if (agentIndex === -1) return;
-    this.agentMediators = [
-      ...this.agentMediators.slice(0, agentIndex),
-      ...this.agentMediators.slice(agentIndex + 1),
+    this.agents = [
+      ...this.agents.slice(0, agentIndex),
+      ...this.agents.slice(agentIndex + 1),
     ];
   }
 
+  getAgent(id: string) {
+    return this.agents.find((agent) => agent.id === id);
+  }
+
   getAgentMediator(id: string) {
-    return this.agentMediators.find((agent) => agent.id === id);
+    return this.agents.find(
+      (agent) => agent.id === id && agent.type === AgentPersonaType.MEDIATOR,
+    );
   }
 
   async testAgentConfig(
@@ -116,28 +127,25 @@ export class AgentEditor extends Service {
     return this.agentTestResponseMap[agentId][stageId] ?? '';
   }
 
-  updateAgentMediatorProfile(
-    id: string,
-    profile: Partial<ParticipantProfileBase>,
-  ) {
-    const agent = this.getAgentMediator(id);
+  updateAgentProfile(id: string, profile: Partial<ParticipantProfileBase>) {
+    const agent = this.getAgent(id);
     if (agent) {
       agent.defaultProfile = {...agent.defaultProfile, ...profile};
     }
   }
 
-  updateAgentMediatorPrivateName(id: string, name: string) {
-    const agent = this.getAgentMediator(id);
+  updateAgentPrivateName(id: string, name: string) {
+    const agent = this.getAgent(id);
     if (agent) {
       agent.name = name;
     }
   }
 
-  updateAgentMediatorModelSettings(
+  updateAgentChatModelSettings(
     id: string,
     defaultModelSettings: Partial<AgentModelSettings>,
   ) {
-    const agent = this.getAgentMediator(id);
+    const agent = this.getAgent(id);
     if (agent) {
       agent.defaultModelSettings = {
         ...agent.defaultModelSettings,
@@ -146,28 +154,28 @@ export class AgentEditor extends Service {
     }
   }
 
-  addAgentMediatorPrompt(agentId: string, stageConfig: StageConfig) {
-    const agent = this.getAgentMediator(agentId);
+  addAgentChatPrompt(agentId: string, stageConfig: StageConfig) {
+    const agent = this.getAgent(agentId);
     if (agent && !this.agentChatPromptMap[agentId][stageConfig.id]) {
       this.agentChatPromptMap[agentId][stageConfig.id] =
         createAgentChatPromptConfig(stageConfig.id, stageConfig.kind);
     }
   }
 
-  getAgentMediatorPrompt(agentId: string, stageId: string) {
+  getAgentChatPrompt(agentId: string, stageId: string) {
     return this.agentChatPromptMap[agentId][stageId];
   }
 
-  deleteAgentMediatorPrompt(agentId: string, stageId: string) {
+  deleteAgentChatPrompt(agentId: string, stageId: string) {
     delete this.agentChatPromptMap[agentId][stageId];
   }
 
-  updateAgentMediatorChatSettings(
+  updateAgentChatSettings(
     agentId: string,
     stageId: string,
     chatSettings: Partial<AgentChatSettings>,
   ) {
-    const agent = this.getAgentMediator(agentId);
+    const agent = this.getAgent(agentId);
     const promptConfig = this.agentChatPromptMap[agentId][stageId];
     if (agent && promptConfig) {
       promptConfig.chatSettings = {
@@ -177,12 +185,12 @@ export class AgentEditor extends Service {
     }
   }
 
-  updateAgentMediatorGenerationConfig(
+  updateAgentChatGenerationConfig(
     agentId: string,
     stageId: string,
     generationConfig: Partial<ModelGenerationConfig>,
   ) {
-    const agent = this.getAgentMediator(agentId);
+    const agent = this.getAgent(agentId);
     const promptConfig = this.agentChatPromptMap[agentId][stageId];
     if (agent && promptConfig) {
       promptConfig.generationConfig = {
@@ -192,24 +200,24 @@ export class AgentEditor extends Service {
     }
   }
 
-  updateAgentMediatorPromptConfig(
+  updateAgentChatPromptConfig(
     id: string,
     stageId: string,
     promptConfig: Partial<AgentChatPromptConfig>,
   ) {
-    const agent = this.getAgentMediator(id);
+    const agent = this.getAgent(id);
     const config = this.agentChatPromptMap[id][stageId];
     if (agent && config) {
       this.agentChatPromptMap[id][stageId] = {...config, ...promptConfig};
     }
   }
 
-  updateAgentMediatorStructuredOutputConfig(
+  updateAgentChatStructuredOutputConfig(
     id: string,
     stageId: string,
     newStructuredOutputConfig: Partial<StructuredOutputConfig>,
   ) {
-    const agent = this.getAgentMediator(id);
+    const agent = this.getAgent(id);
     const config = this.agentChatPromptMap[id][stageId];
     if (agent && config) {
       this.agentChatPromptMap[id][stageId] = {
@@ -222,8 +230,8 @@ export class AgentEditor extends Service {
     }
   }
 
-  addAgentMediatorCustomRequestBodyField(agentId: string, stageId: string) {
-    const agent = this.getAgentMediator(agentId);
+  addAgentChatCustomRequestBodyField(agentId: string, stageId: string) {
+    const agent = this.getAgent(agentId);
     const promptConfig = this.agentChatPromptMap[agentId][stageId];
     if (agent && promptConfig) {
       const fields = promptConfig.generationConfig.customRequestBodyFields;
@@ -236,13 +244,13 @@ export class AgentEditor extends Service {
     }
   }
 
-  updateAgentMediatorCustomRequestBodyField(
+  updateAgentChatCustomRequestBodyField(
     agentId: string,
     stageId: string,
     fieldIndex: number,
     field: Partial<{name: string; value: string}>,
   ) {
-    const agent = this.getAgentMediator(agentId);
+    const agent = this.getAgent(agentId);
     const promptConfig = this.agentChatPromptMap[agentId][stageId];
     if (agent && promptConfig) {
       const customRequestBodyFields =
@@ -258,12 +266,12 @@ export class AgentEditor extends Service {
     }
   }
 
-  deleteAgentMediatorCustomRequestBodyField(
+  deleteAgentChatCustomRequestBodyField(
     agentId: string,
     stageId: string,
     fieldIndex: number,
   ) {
-    const agent = this.getAgentMediator(agentId);
+    const agent = this.getAgent(agentId);
     const promptConfig = this.agentChatPromptMap[agentId][stageId];
     if (agent && promptConfig) {
       const fields = promptConfig.generationConfig.customRequestBodyFields;
@@ -278,11 +286,8 @@ export class AgentEditor extends Service {
     }
   }
 
-  addAgentMediatorStructuredOutputSchemaField(
-    agentId: string,
-    stageId: string,
-  ) {
-    const agent = this.getAgentMediator(agentId);
+  addAgentChatStructuredOutputSchemaField(agentId: string, stageId: string) {
+    const agent = this.getAgent(agentId);
     const promptConfig = this.agentChatPromptMap[agentId][stageId];
     if (agent && promptConfig) {
       const schema = promptConfig.structuredOutputConfig.schema;
@@ -299,19 +304,19 @@ export class AgentEditor extends Service {
           properties: [newField],
         };
       }
-      this.updateAgentMediatorStructuredOutputConfig(agentId, stageId, {
+      this.updateAgentChatStructuredOutputConfig(agentId, stageId, {
         schema: promptConfig.structuredOutputConfig.schema,
       });
     }
   }
 
-  updateAgentMediatorStructuredOutputSchemaField(
+  updateAgentChatStructuredOutputSchemaField(
     agentId: string,
     stageId: string,
     fieldIndex: number,
     field: Partial<{name: string; schema: Partial<StructuredOutputSchema>}>,
   ) {
-    const agent = this.getAgentMediator(agentId);
+    const agent = this.getAgent(agentId);
     const promptConfig = this.agentChatPromptMap[agentId][stageId];
     if (agent && promptConfig) {
       const schema = promptConfig.structuredOutputConfig.schema;
@@ -323,19 +328,19 @@ export class AgentEditor extends Service {
             ...field.schema,
           },
         };
-        this.updateAgentMediatorStructuredOutputConfig(agentId, stageId, {
+        this.updateAgentChatStructuredOutputConfig(agentId, stageId, {
           schema,
         });
       }
     }
   }
 
-  deleteAgentMediatorStructuredOutputSchemaField(
+  deleteAgentChatStructuredOutputSchemaField(
     agentId: string,
     stageId: string,
     fieldIndex: number,
   ) {
-    const agent = this.getAgentMediator(agentId);
+    const agent = this.getAgent(agentId);
     const promptConfig = this.agentChatPromptMap[agentId][stageId];
     if (agent && promptConfig) {
       const schema = promptConfig.structuredOutputConfig.schema;
@@ -344,7 +349,7 @@ export class AgentEditor extends Service {
           ...schema.properties.slice(0, fieldIndex),
           ...schema.properties.slice(fieldIndex + 1),
         ];
-        this.updateAgentMediatorStructuredOutputConfig(agentId, stageId, {
+        this.updateAgentChatStructuredOutputConfig(agentId, stageId, {
           schema,
         });
       }
@@ -354,7 +359,7 @@ export class AgentEditor extends Service {
   /** Return all agents in AgentDataObject format. */
   getAgentData(): AgentDataObject[] {
     const agentData: AgentDataObject[] = [];
-    Object.values(this.agentMediators).forEach((persona) => {
+    Object.values(this.agents).forEach((persona) => {
       const chatPromptMap = this.agentChatPromptMap[persona.id];
       const participantPromptMap = this.agentParticipantPromptMap[persona.id];
       const agent: AgentDataObject = {
@@ -371,7 +376,7 @@ export class AgentEditor extends Service {
   setAgentData(agentData: AgentDataObject[]) {
     this.resetAgents();
     agentData.forEach((data) => {
-      this.agentMediators.push(data.persona);
+      this.agents.push(data.persona);
       this.agentChatPromptMap[data.persona.id] = data.chatPromptMap;
       this.agentParticipantPromptMap[data.persona.id] =
         data.participantPromptMap;
@@ -379,7 +384,7 @@ export class AgentEditor extends Service {
   }
 
   resetAgents() {
-    this.agentMediators = [];
+    this.agents = [];
     this.agentChatPromptMap = {};
     this.agentParticipantPromptMap = {};
   }

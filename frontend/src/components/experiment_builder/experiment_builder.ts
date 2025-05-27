@@ -161,13 +161,13 @@ export class ExperimentBuilder extends MobxLitElement {
           ${this.agentEditor.agentMediators.map(
             (mediator) => html`
               <div
-                class="agent-item ${this.agentEditor.currentAgentMediatorId ===
+                class="agent-item ${this.agentEditor.currentAgentId ===
                   mediator.id && this.panelView === PanelView.AGENTS
                   ? 'current'
                   : ''}"
                 @click=${() => {
                   this.panelView = PanelView.AGENTS;
-                  this.agentEditor.setCurrentAgentMediator(mediator.id);
+                  this.agentEditor.setCurrentAgent(mediator.id);
                 }}
               >
                 <div>

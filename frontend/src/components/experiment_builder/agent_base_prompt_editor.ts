@@ -51,7 +51,7 @@ export class AgentEditorComponent extends MobxLitElement {
       return nothing;
     }
 
-    const promptConfig = this.agentEditor.getAgentMediatorPrompt(
+    const promptConfig = this.agentEditor.getAgentChatPrompt(
       this.agentConfig.id,
       this.stageConfig.id,
     );
@@ -145,7 +145,7 @@ export class AgentEditorComponent extends MobxLitElement {
           color="error"
           variant="outlined"
           @click=${() => {
-            this.agentEditor.deleteAgentMediatorPrompt(
+            this.agentEditor.deleteAgentChatPrompt(
               agentConfig.id,
               stageConfig.id,
             );
@@ -161,10 +161,7 @@ export class AgentEditorComponent extends MobxLitElement {
         <div class="field">
           <pr-button
             @click=${() => {
-              this.agentEditor.addAgentMediatorPrompt(
-                agentConfig.id,
-                stageConfig,
-              );
+              this.agentEditor.addAgentChatPrompt(agentConfig.id, stageConfig);
             }}
           >
             Add prompt
@@ -197,10 +194,7 @@ export class AgentEditorComponent extends MobxLitElement {
         <div class="field">
           <pr-button
             @click=${() => {
-              this.agentEditor.addAgentMediatorPrompt(
-                agentConfig.id,
-                stageConfig,
-              );
+              this.agentEditor.addAgentChatPrompt(agentConfig.id, stageConfig);
             }}
           >
             Add prompt
@@ -255,7 +249,7 @@ export class AgentEditorComponent extends MobxLitElement {
   ) {
     const updatePrompt = (e: InputEvent) => {
       const promptContext = (e.target as HTMLTextAreaElement).value;
-      this.agentEditor.updateAgentMediatorPromptConfig(
+      this.agentEditor.updateAgentChatPromptConfig(
         agent.id,
         agentPromptConfig.id,
         {promptContext},
@@ -295,7 +289,7 @@ export class AgentEditorComponent extends MobxLitElement {
     const handleAvatarClick = (e: Event) => {
       const value = Number((e.target as HTMLInputElement).value);
       const avatar = LLM_AGENT_AVATARS[value];
-      this.agentEditor.updateAgentMediatorProfile(agent.id, {avatar});
+      this.agentEditor.updateAgentProfile(agent.id, {avatar});
     };
 
     const renderAvatarRadio = (emoji: string, index: number) => {
@@ -342,7 +336,7 @@ export class AgentEditorComponent extends MobxLitElement {
     const updateTemperature = (e: InputEvent) => {
       const temperature = Number((e.target as HTMLInputElement).value);
       if (!isNaN(temperature)) {
-        this.agentEditor.updateAgentMediatorGenerationConfig(
+        this.agentEditor.updateAgentChatGenerationConfig(
           agent.id,
           agentPromptConfig.id,
           {temperature},
@@ -353,7 +347,7 @@ export class AgentEditorComponent extends MobxLitElement {
     const updateTopP = (e: InputEvent) => {
       const topP = Number((e.target as HTMLInputElement).value);
       if (!isNaN(topP)) {
-        this.agentEditor.updateAgentMediatorGenerationConfig(
+        this.agentEditor.updateAgentChatGenerationConfig(
           agent.id,
           agentPromptConfig.id,
           {topP},
@@ -364,7 +358,7 @@ export class AgentEditorComponent extends MobxLitElement {
     const updateFrequencyPenalty = (e: InputEvent) => {
       const frequencyPenalty = Number((e.target as HTMLInputElement).value);
       if (!isNaN(frequencyPenalty)) {
-        this.agentEditor.updateAgentMediatorGenerationConfig(
+        this.agentEditor.updateAgentChatGenerationConfig(
           agent.id,
           agentPromptConfig.id,
           {frequencyPenalty},
@@ -375,7 +369,7 @@ export class AgentEditorComponent extends MobxLitElement {
     const updatePresencePenalty = (e: InputEvent) => {
       const presencePenalty = Number((e.target as HTMLInputElement).value);
       if (!isNaN(presencePenalty)) {
-        this.agentEditor.updateAgentMediatorGenerationConfig(
+        this.agentEditor.updateAgentChatGenerationConfig(
           agent.id,
           agentPromptConfig.id,
           {presencePenalty},
@@ -473,7 +467,7 @@ export class AgentEditorComponent extends MobxLitElement {
     agentPromptConfig: BaseAgentPromptConfig,
   ) {
     const addField = () => {
-      this.agentEditor.addAgentMediatorCustomRequestBodyField(
+      this.agentEditor.addAgentChatCustomRequestBodyField(
         agent.id,
         agentPromptConfig.id,
       );
@@ -508,7 +502,7 @@ export class AgentEditorComponent extends MobxLitElement {
   ) {
     const updateName = (e: InputEvent) => {
       const name = (e.target as HTMLTextAreaElement).value;
-      this.agentEditor.updateAgentMediatorCustomRequestBodyField(
+      this.agentEditor.updateAgentChatCustomRequestBodyField(
         agent.id,
         agentPromptConfig.id,
         fieldIndex,
@@ -518,7 +512,7 @@ export class AgentEditorComponent extends MobxLitElement {
 
     const updateValue = (e: InputEvent) => {
       const value = (e.target as HTMLTextAreaElement).value;
-      this.agentEditor.updateAgentMediatorCustomRequestBodyField(
+      this.agentEditor.updateAgentChatCustomRequestBodyField(
         agent.id,
         agentPromptConfig.id,
         fieldIndex,
@@ -527,7 +521,7 @@ export class AgentEditorComponent extends MobxLitElement {
     };
 
     const deleteField = () => {
-      this.agentEditor.deleteAgentMediatorCustomRequestBodyField(
+      this.agentEditor.deleteAgentChatCustomRequestBodyField(
         agent.id,
         agentPromptConfig.id,
         fieldIndex,
@@ -570,7 +564,7 @@ export class AgentEditorComponent extends MobxLitElement {
     const updateConfig = (
       structuredOutputConfig: Partial<StructuredOutputConfig>,
     ) => {
-      this.agentEditor.updateAgentMediatorStructuredOutputConfig(
+      this.agentEditor.updateAgentChatStructuredOutputConfig(
         agent.id,
         agentPromptConfig.id,
         structuredOutputConfig,
@@ -662,7 +656,7 @@ export class AgentEditorComponent extends MobxLitElement {
   ) {
     const config = agentPromptConfig.structuredOutputConfig;
     const addField = () => {
-      this.agentEditor.addAgentMediatorStructuredOutputSchemaField(
+      this.agentEditor.addAgentChatStructuredOutputSchemaField(
         agent.id,
         agentPromptConfig.id,
       );
@@ -670,7 +664,7 @@ export class AgentEditorComponent extends MobxLitElement {
     const updateConfig = (
       structuredOutputConfig: Partial<StructuredOutputConfig>,
     ) => {
-      this.agentEditor.updateAgentMediatorStructuredOutputConfig(
+      this.agentEditor.updateAgentChatStructuredOutputConfig(
         agent.id,
         agentPromptConfig.id,
         structuredOutputConfig,
@@ -751,7 +745,7 @@ export class AgentEditorComponent extends MobxLitElement {
   ) {
     const updateName = (e: InputEvent) => {
       const name = (e.target as HTMLTextAreaElement).value;
-      this.agentEditor.updateAgentMediatorStructuredOutputSchemaField(
+      this.agentEditor.updateAgentChatStructuredOutputSchemaField(
         agent.id,
         agentPromptConfig.id,
         fieldIndex,
@@ -762,7 +756,7 @@ export class AgentEditorComponent extends MobxLitElement {
     const updateType = (e: Event) => {
       const type = (e.target as HTMLSelectElement)
         .value as StructuredOutputDataType;
-      this.agentEditor.updateAgentMediatorStructuredOutputSchemaField(
+      this.agentEditor.updateAgentChatStructuredOutputSchemaField(
         agent.id,
         agentPromptConfig.id,
         fieldIndex,
@@ -772,7 +766,7 @@ export class AgentEditorComponent extends MobxLitElement {
 
     const updateDescription = (e: InputEvent) => {
       const description = (e.target as HTMLTextAreaElement).value;
-      this.agentEditor.updateAgentMediatorStructuredOutputSchemaField(
+      this.agentEditor.updateAgentChatStructuredOutputSchemaField(
         agent.id,
         agentPromptConfig.id,
         fieldIndex,
@@ -781,7 +775,7 @@ export class AgentEditorComponent extends MobxLitElement {
     };
 
     const deleteField = () => {
-      this.agentEditor.deleteAgentMediatorStructuredOutputSchemaField(
+      this.agentEditor.deleteAgentChatStructuredOutputSchemaField(
         agent.id,
         agentPromptConfig.id,
         fieldIndex,
