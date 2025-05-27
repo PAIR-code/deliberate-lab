@@ -25,6 +25,7 @@ import {
   StructuredOutputSchema,
   ModelGenerationConfig,
   createAgentChatPromptConfig,
+  createAgentParticipantPersonaConfig,
   createAgentPersonaConfig,
 } from '@deliberation-lab/utils';
 
@@ -72,12 +73,31 @@ export class AgentEditor extends Service {
     );
   }
 
+  @computed get agentParticipants() {
+    return this.agents.filter(
+      (agent) => agent.type === AgentPersonaType.PARTICIPANT,
+    );
+  }
+
   @computed get currentAgentMediator() {
     return this.getAgentMediator(this.currentAgentId);
   }
 
+  @computed get currentAgent() {
+    return this.agents.find((agent) => agent.id === this.currentAgentId);
+  }
+
   setCurrentAgent(id: string) {
     this.currentAgentId = id;
+  }
+
+  addAgentParticipant(setAsCurrent = true) {
+    const agent = createAgentParticipantPersonaConfig();
+    this.agents.push(agent);
+    this.agentChatPromptMap[agent.id] = {};
+    if (setAsCurrent) {
+      this.currentAgentId = agent.id;
+    }
   }
 
   addAgentMediator(setAsCurrent = true) {
@@ -158,7 +178,11 @@ export class AgentEditor extends Service {
     const agent = this.getAgent(agentId);
     if (agent && !this.agentChatPromptMap[agentId][stageConfig.id]) {
       this.agentChatPromptMap[agentId][stageConfig.id] =
-        createAgentChatPromptConfig(stageConfig.id, stageConfig.kind);
+        createAgentChatPromptConfig(
+          stageConfig.id,
+          stageConfig.kind,
+          agent.type,
+        );
     }
   }
 
