@@ -110,9 +110,8 @@ export class CohortSummary extends MobxLitElement {
           </div>
         </div>
         <div class="right">
-          ${this.renderAddParticipantButton(false)}
-          ${this.renderAddParticipantButton(true)} ${this.renderLockButton()}
-          ${this.renderCopyButton()} ${this.renderSettingsButton()}
+          ${this.renderLockButton()} ${this.renderCopyButton()}
+          ${this.renderEditButton()}
         </div>
       </div>
       ${this.renderDescription()}
@@ -127,59 +126,18 @@ export class CohortSummary extends MobxLitElement {
     return html`<div class="description">${description}</div>`;
   }
 
-  private renderSettingsButton() {
+  private renderEditButton() {
     return html`
-      <pr-tooltip text="Edit cohort settings" position="BOTTOM_END">
+      <pr-tooltip text="Edit cohort" position="BOTTOM_END">
         <pr-icon-button
-          icon="settings"
+          icon="edit_note"
           color="neutral"
           variant="default"
           @click=${() => {
-            this.experimentManager.setCohortEditing(this.cohort);
-          }}
-        >
-        </pr-icon-button>
-      </pr-tooltip>
-    `;
-  }
-
-  private renderAddParticipantButton(isAgent: boolean) {
-    if (!this.cohort) {
-      return nothing;
-    }
-
-    const isDisabled = () => {
-      if (!this.experimentService.experiment || !this.cohort) {
-        return true;
-      }
-      return (
-        this.experimentManager.isFullCohort(this.cohort) ||
-        this.experimentService.experiment.cohortLockMap[this.cohort.id]
-      );
-    };
-
-    return html`
-      <pr-tooltip
-        text=${isAgent ? 'Add agent participant' : 'Add human participant'}
-        position="BOTTOM_END"
-      >
-        <pr-icon-button
-          icon=${isAgent ? 'robot_2' : 'person_add'}
-          color="tertiary"
-          variant="default"
-          ?disabled=${isDisabled()}
-          ?loading=${this.experimentManager.isWritingParticipant}
-          @click=${async () => {
-            if (!this.cohort) return;
-            this.analyticsService.trackButtonClick(ButtonClick.PARTICIPANT_ADD);
-            if (isAgent) {
-              await this.experimentManager.createAgentParticipant(
-                this.cohort.id,
-              );
-            } else {
-              await this.experimentManager.createParticipant(this.cohort.id);
-            }
-            this.isExpanded = true;
+            this.experimentManager.setCurrentCohortId(
+              this.cohort?.id ?? undefined,
+            );
+            this.experimentManager.setShowCohortEditor(true);
           }}
         >
         </pr-icon-button>
@@ -237,6 +195,7 @@ export class CohortSummary extends MobxLitElement {
       return nothing;
     }
 
+    // TODO: Refactor into participant-list component
     const participants = this.experimentManager.getCohortParticipants(
       this.cohort.id,
     );
