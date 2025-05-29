@@ -22,7 +22,7 @@ export const ChatStageConfigData = Type.Object({
   descriptions: StageTextConfigSchema,
   progress: StageProgressConfigSchema,
   timeLimitInMinutes: Type.Union([Type.Number(), Type.Null()]),
-  requireFullTime: Type.Optional(Type.Boolean({default: false})),
+  requireFullTime: Type.Union([Type.Boolean(), Type.Null()]),
   // discussions
   // agents
 });
