@@ -97,7 +97,10 @@ export class Component extends MobxLitElement {
     return html`
       <div class="content">
         <div class="content-header">
-          <div>${this.cohort?.metadata.name}</div>
+          <div>
+            <div>${this.cohort?.metadata.name}</div>
+            <div class="subtitle">${this.cohort?.id}</div>
+          </div>
           <div class="toolbar">
             ${this.renderLockButton()} ${this.renderCopyButton()}
             ${this.renderSettingsButton()}
