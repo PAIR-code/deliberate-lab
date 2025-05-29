@@ -25,6 +25,7 @@
     "@types/sanitize-html": "^2.11.0",
     "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^7.11.0",
+    "clean-webpack-plugin": "^4.0.0",
     "copy-webpack-plugin": "^12.0.2",
     "eslint": "^8.56.0",
     "git-revision-webpack-plugin": "^5.0.0",
