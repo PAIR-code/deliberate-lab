@@ -70,6 +70,17 @@ small {
   overflow: hidden;
 }
 
+.table-row {
+  @include common.flex-row-align-center;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  min-height: 35px;
+  padding: common.$spacing-xs common.$spacing-large;
+
+  &:first-of-type {
+    border-top: none;
+  }
+}
+
 .select-field {
   @include common.flex-column;
   gap: common.$spacing-small;

@@ -3,6 +3,7 @@ import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
 
+import '../participant_profile/profile_display';
 import './cohort_summary';
 import './participant_summary';
 
@@ -19,6 +20,7 @@ import {Pages, RouterService} from '../../services/router.service';
 
 import {
   CohortConfig,
+  MediatorProfile,
   ParticipantProfile,
   ParticipantProfileExtended,
   ParticipantStatus,
@@ -116,6 +118,39 @@ export class Component extends MobxLitElement {
           this.experimentManager.getCohortAgentParticipants(this.cohort.id),
           html`${this.renderAddParticipantButton(true)}`,
         )}
+        ${this.renderMediatorTable(
+          'Agent mediators',
+          this.experimentManager.getCohortAgentMediators(this.cohort.id),
+        )}
+      </div>
+    `;
+  }
+
+  private renderMediatorTable(title: string, mediators: MediatorProfile[]) {
+    const renderEmptyMessage = () => {
+      if (mediators.length === 0) {
+        return html`<div class="table-row">No mediators yet</div>`;
+      }
+      return nothing;
+    };
+
+    const renderMediator = (mediator: MediatorProfile) => {
+      return html`
+        <div class="table-row">
+          <profile-display .profile=${mediator}></profile-display>
+        </div>
+      `;
+    };
+
+    return html`
+      <div class="table-wrapper">
+        <div class="table-header">
+          <div>${title}</div>
+        </div>
+        <div class="table-body">
+          ${renderEmptyMessage()}
+          ${mediators.map((mediator) => renderMediator(mediator))}
+        </div>
       </div>
     `;
   }
@@ -128,7 +163,7 @@ export class Component extends MobxLitElement {
   ) {
     const renderEmptyMessage = () => {
       if (participants.length === 0) {
-        return html` <div class="empty-message">${emptyMessage}</div> `;
+        return html` <div class="table-row">${emptyMessage}</div> `;
       }
       return nothing;
     };
