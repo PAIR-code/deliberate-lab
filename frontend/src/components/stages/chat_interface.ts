@@ -20,14 +20,11 @@ import {ParticipantAnswerService} from '../../services/participant.answer';
 import {RouterService} from '../../services/router.service';
 
 import {
-  ChatDiscussion,
   ChatDiscussionType,
   ChatStagePublicData,
   ChatMessage,
   ChatStageConfig,
   DiscussionItem,
-  ParticipantProfile,
-  StageConfig,
   StageKind,
 } from '@deliberation-lab/utils';
 import {styles} from './chat_interface.scss';
@@ -313,10 +310,8 @@ export class ChatInterface extends MobxLitElement {
 
     // Determine if Next Stage button should be disabled
     let disableNext = false;
-    // Treat null or undefined as false for backward compatibility
     const requireFullTime = this.stage.requireFullTime === true;
     if (requireFullTime && this.stage.timeLimitInMinutes !== null) {
-      // Find time remaining in seconds (reuse logic from chat_panel if needed)
       let timeRemainingInSeconds = this.stage.timeLimitInMinutes * 60;
       const messages = this.cohortService.chatMap[this.stage.id] ?? [];
       if (messages.length) {

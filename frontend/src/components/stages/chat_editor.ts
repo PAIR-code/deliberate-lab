@@ -9,11 +9,7 @@ import {AuthService} from '../../services/auth.service';
 
 import {ExperimentEditor} from '../../services/experiment.editor';
 
-import {
-  ChatStageConfig,
-  StageKind,
-  checkApiKeyExists,
-} from '@deliberation-lab/utils';
+import {ChatStageConfig} from '@deliberation-lab/utils';
 
 import {styles} from './chat_editor.scss';
 
