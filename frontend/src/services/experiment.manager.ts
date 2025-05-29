@@ -121,6 +121,8 @@ export class ExperimentManager extends Service {
 
   // Current participant, view in dashboard
   @observable currentParticipantId: string | undefined = undefined;
+  @observable currentCohortId: string | undefined = undefined;
+  @observable showCohortEditor = true;
   @observable showCohortList = true;
   @observable showParticipantStats = true;
   @observable showParticipantPreview = true;
@@ -219,6 +221,10 @@ export class ExperimentManager extends Service {
     this.cohortEditing = cohort;
   }
 
+  setShowCohortEditor(showCohortEditor: boolean) {
+    this.showCohortEditor = showCohortEditor;
+  }
+
   setShowCohortList(showCohortList: boolean) {
     this.showCohortList = showCohortList;
   }
@@ -239,8 +245,14 @@ export class ExperimentManager extends Service {
     this.expandAllCohorts = expandAllCohorts;
   }
 
+  setCurrentCohortId(id: string | undefined) {
+    console.log(id);
+    this.currentCohortId = id;
+  }
+
   setCurrentParticipantId(id: string | undefined) {
     this.currentParticipantId = id;
+    // TODO: Update current cohort to match current participant's cohort?
 
     // Update participant service in order to load correct participant answers
     // (Note: This also updates participant answer service accordingly)
@@ -257,6 +269,20 @@ export class ExperimentManager extends Service {
   getCurrentParticipantCohort(participant: ParticipantProfileExtended) {
     return this.getCohort(
       participant.transferCohortId ?? participant.currentCohortId,
+    );
+  }
+
+  getCohortAgentParticipants(cohortId: string) {
+    return Object.values(this.participantMap).filter(
+      (participant) =>
+        participant.agentConfig && cohortId === participant.currentCohortId,
+    );
+  }
+
+  getCohortHumanParticipants(cohortId: string) {
+    return Object.values(this.participantMap).filter(
+      (participant) =>
+        !participant.agentConfig && cohortId === participant.currentCohortId,
     );
   }
 

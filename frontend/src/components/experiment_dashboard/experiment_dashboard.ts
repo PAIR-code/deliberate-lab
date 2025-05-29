@@ -4,6 +4,7 @@ import '../experiment_builder/experiment_settings_dialog';
 import '../experimenter/experimenter_panel';
 import '../header/header';
 import '../participant_view/participant_view';
+import './cohort_editor';
 import './cohort_settings_dialog';
 import './cohort_list';
 import './participant_stats';
@@ -71,7 +72,8 @@ export class Component extends MobxLitElement {
       `;
     }
     return html`
-      ${this.renderCohortListPanel()} ${this.renderParticipantStatsPanel()}
+      ${this.renderCohortListPanel()} ${this.renderCohortEditorPanel()}
+      ${this.renderParticipantStatsPanel()}
       ${this.renderParticipantPreviewPanel()}
     `;
   }
@@ -83,6 +85,22 @@ export class Component extends MobxLitElement {
     return html`
       <div class="cohort-panel">
         <cohort-list></cohort-list>
+      </div>
+    `;
+  }
+
+  private renderCohortEditorPanel() {
+    if (!this.experimentManager.showCohortEditor) {
+      return nothing;
+    }
+    return html`
+      <div class="cohort-panel">
+        <cohort-editor
+          .cohort=${this.experimentManager.getCohort(
+            this.experimentManager.currentCohortId ?? '',
+          )}
+        >
+        </cohort-editor>
       </div>
     `;
   }
@@ -273,9 +291,11 @@ export class Component extends MobxLitElement {
     return html`
       <pr-menu name="Transfer">
         <div class="menu-wrapper">
-          ${this.experimentManager.availableCohorts.sort((a, b) => {return a.metadata.name.localeCompare(b.metadata.name);}).map((cohort) =>
-            this.renderTransferOption(cohort),
-          )}
+          ${this.experimentManager.availableCohorts
+            .sort((a, b) => {
+              return a.metadata.name.localeCompare(b.metadata.name);
+            })
+            .map((cohort) => this.renderTransferOption(cohort))}
         </div>
       </pr-menu>
     `;

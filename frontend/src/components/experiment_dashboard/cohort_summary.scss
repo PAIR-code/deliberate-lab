@@ -1,6 +1,6 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -15,9 +15,15 @@
   @include typescale.title-medium;
   @include common.flex-row;
   background: var(--md-sys-color-surface-container-high);
+  cursor: pointer;
   gap: common.$spacing-medium;
   justify-content: space-between;
   padding: common.$spacing-medium common.$spacing-large;
+
+  &:focus,
+  &:hover {
+    background: var(--md-sys-color-surface-container-highest);
+  }
 
   .left,
   .right {
