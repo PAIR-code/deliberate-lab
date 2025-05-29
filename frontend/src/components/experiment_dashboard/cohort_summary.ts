@@ -71,8 +71,12 @@ export class CohortSummary extends MobxLitElement {
       return nothing;
     }
 
+    const setCurrentCohort = () => {
+      this.experimentManager.setCurrentCohortId(this.cohort?.id);
+    };
+
     return html`
-      <div class="header">
+      <div class="header" @click=${setCurrentCohort}>
         <div class="left">
           <pr-icon-button
             icon=${this.isExpanded
