@@ -22,6 +22,7 @@ export const ChatStageConfigData = Type.Object({
   descriptions: StageTextConfigSchema,
   progress: StageProgressConfigSchema,
   timeLimitInMinutes: Type.Union([Type.Number(), Type.Null()]),
+  requireFullTime: Type.Optional(Type.Boolean({default: false})),
   // discussions
   // agents
 });

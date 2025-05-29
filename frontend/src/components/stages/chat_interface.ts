@@ -311,6 +311,24 @@ export class ChatInterface extends MobxLitElement {
       this.stage.id,
     );
 
+    // Determine if Next Stage button should be disabled
+    let disableNext = false;
+    // Treat null or undefined as false for backward compatibility
+    const requireFullTime = this.stage.requireFullTime === true;
+    if (requireFullTime && this.stage.timeLimitInMinutes !== null) {
+      // Find time remaining in seconds (reuse logic from chat_panel if needed)
+      let timeRemainingInSeconds = this.stage.timeLimitInMinutes * 60;
+      const messages = this.cohortService.chatMap[this.stage.id] ?? [];
+      if (messages.length) {
+        const timeElapsed =
+          Date.now() / 1000 - (messages[0].timestamp?.seconds ?? 0);
+        timeRemainingInSeconds -= timeElapsed;
+      }
+      if (timeRemainingInSeconds > 0) {
+        disableNext = true;
+      }
+    }
+
     const renderProgress = () => {
       if (currentDiscussionId) {
         return html`
@@ -332,7 +350,10 @@ export class ChatInterface extends MobxLitElement {
       <div class="input-row-wrapper">
         <div class="input-row">${this.renderInput()}</div>
       </div>
-      <stage-footer .showNextButton=${currentDiscussionId === null}>
+      <stage-footer
+        .showNextButton=${currentDiscussionId === null}
+        .disabled=${disableNext}
+      >
         ${renderProgress()}
         ${this.renderEndDiscussionButton(currentDiscussionId)}
       </stage-footer>

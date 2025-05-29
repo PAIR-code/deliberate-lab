@@ -35,6 +35,11 @@ export interface ChatStageConfig extends BaseStageConfig {
   kind: StageKind.CHAT;
   discussions: ChatDiscussion[]; // ordered list of discussions
   timeLimitInMinutes: number | null; // How long remaining in the chat.
+  /**
+   * If true, users must stay until timer elapses. If null or false, users can leave early.
+   * Null is treated as false for backward compatibility.
+   */
+  requireFullTime: boolean | null;
 }
 
 /** Chat discussion. */
@@ -161,6 +166,7 @@ export function createChatStage(
       createStageProgressConfig({waitForAllParticipants: true}),
     discussions: config.discussions ?? [],
     timeLimitInMinutes: config.timeLimitInMinutes ?? null,
+    requireFullTime: config.requireFullTime ?? false,
   };
 }
 
