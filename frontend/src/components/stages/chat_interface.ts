@@ -456,7 +456,7 @@ export class ChatInterface extends MobxLitElement {
     const requireFullTime = this.stage.requireFullTime === true;
     if (requireFullTime && this.stage.timeLimitInMinutes !== null) {
       if (
-        this.timeRemainingInSeconds !== null &&
+        this.timeRemainingInSeconds == null || // chat hasn't begun yet
         this.timeRemainingInSeconds > 0
       ) {
         disableNext = true;
