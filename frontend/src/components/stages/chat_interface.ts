@@ -436,22 +436,6 @@ export class ChatInterface extends MobxLitElement {
     `;
   }
 
-  private formatTime(seconds: number | null): string {
-    if (seconds === null) return '';
-    const hours = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    if (hours > 0) {
-      return `${hours.toString().padStart(2, '0')}:${mins
-        .toString()
-        .padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    } else {
-      return `${mins.toString().padStart(2, '0')}:${secs
-        .toString()
-        .padStart(2, '0')}`;
-    }
-  }
-
   private renderStageDescription() {
     if (!this.stage) return nothing;
     // Pass noBorder=true when rendering in chat-info-message
