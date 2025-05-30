@@ -14,14 +14,14 @@ export class StageDescription extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   @property() stage: StageConfig | null = null;
+  @property({type: Boolean}) noBorder = false;
 
   override render() {
     if (!this.stage || this.stage.descriptions.primaryText.length === 0) {
       return nothing;
     }
-
     return html`
-      <div class="description-wrapper">
+      <div class="description-wrapper${this.noBorder ? ' no-border' : ''}">
         <div class="description html-wrapper">
           ${unsafeHTML(
             convertMarkdownToHTML(this.stage.descriptions.primaryText),

@@ -18,18 +18,17 @@ import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 import {RouterService} from '../../services/router.service';
+import {getHashBasedColor} from '../../shared/utils';
 
 import {
-  ChatDiscussion,
   ChatDiscussionType,
   ChatStagePublicData,
   ChatMessage,
   ChatStageConfig,
   DiscussionItem,
-  ParticipantProfile,
-  StageConfig,
   StageKind,
 } from '@deliberation-lab/utils';
+
 import {styles} from './chat_interface.scss';
 
 /** Chat interface component */
@@ -51,6 +50,69 @@ export class ChatInterface extends MobxLitElement {
   @property() showInfo = false;
   @state() readyToEndDiscussionLoading = false;
   @state() isAlertLoading = false;
+  @state() mobileView = false;
+  @state() timeRemainingInSeconds: number | null = null;
+
+  private updateResponsiveState = () => {
+    this.mobileView = window.innerWidth <= 1024;
+  };
+
+  private timerIntervalId: number | null = null;
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.updateResponsiveState();
+    window.addEventListener('resize', this.updateResponsiveState);
+    this.startTimer();
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener('resize', this.updateResponsiveState);
+    this.clearTimer();
+  }
+
+  private startTimer() {
+    this.updateTimeRemaining();
+    this.timerIntervalId = window.setInterval(() => {
+      this.updateTimeRemaining();
+    }, 1000);
+  }
+
+  private clearTimer() {
+    if (this.timerIntervalId !== null) {
+      clearInterval(this.timerIntervalId);
+      this.timerIntervalId = null;
+    }
+  }
+
+  private updateTimeRemaining() {
+    const chatStartTimestamp = this.chatStartTimestamp();
+    if (
+      chatStartTimestamp === null ||
+      this.stage == null ||
+      this.stage.timeLimitInMinutes == null
+    ) {
+      this.timeRemainingInSeconds = null;
+      return;
+    }
+    const timeElapsed = Date.now() / 1000 - chatStartTimestamp;
+    const timeRemainingInSeconds =
+      this.stage.timeLimitInMinutes * 60 - timeElapsed;
+    this.timeRemainingInSeconds =
+      timeRemainingInSeconds > 0 ? Math.floor(timeRemainingInSeconds) : 0;
+  }
+
+  private chatStartTimestamp() {
+    if (!this.stage || this.stage.timeLimitInMinutes == null) {
+      return null;
+    }
+    const messages = this.cohortService.chatMap[this.stage.id] ?? [];
+    if (messages.length) {
+      return messages[0].timestamp?.seconds ?? null;
+    }
+    return null;
+  }
 
   private sendUserInput() {
     if (!this.stage) return;
@@ -89,6 +151,13 @@ export class ChatInterface extends MobxLitElement {
     // Non-discussion messages
     const messages = this.cohortService.chatMap[stageId] ?? [];
 
+    // Only show intro text in chat on small screens
+    const introNode = this.mobileView
+      ? html`<div class="chat-info-message">
+          ${this.renderStageDescription()}
+        </div>`
+      : nothing;
+
     // If discussion threads, render each thread
     if (stage.discussions.length > 0) {
       let discussions = stage.discussions;
@@ -100,10 +169,10 @@ export class ChatInterface extends MobxLitElement {
         );
         discussions = discussions.slice(0, index + 1);
       }
-
       return html`
         <div class="chat-scroll">
           <div class="chat-history">
+            ${introNode}
             ${discussions.map((discussion, index) =>
               this.renderChatDiscussionThread(stage, index),
             )}
@@ -119,7 +188,7 @@ export class ChatInterface extends MobxLitElement {
     return html`
       <div class="chat-scroll">
         <div class="chat-history">
-          ${messages.map(this.renderChatMessage.bind(this))}
+          ${introNode} ${messages.map(this.renderChatMessage.bind(this))}
         </div>
       </div>
     `;
@@ -305,11 +374,110 @@ export class ChatInterface extends MobxLitElement {
     `;
   }
 
+  private renderParticipantsTop() {
+    if (!this.mobileView || !this.stage) return nothing;
+    const activeParticipants = this.cohortService.activeParticipants;
+    const mediators = this.cohortService.getMediatorsForStage(this.stage.id);
+    // Timer display for mobile
+    let timerText: unknown = undefined;
+    if (this.timeRemainingInSeconds !== null) {
+      if (this.timeRemainingInSeconds > 0) {
+        const chatStart = this.chatStartTimestamp();
+        let formattedTime = '';
+        if (chatStart !== null) {
+          const date = new Date(chatStart * 1000);
+          const hours = date.getHours().toString().padStart(2, '0');
+          const minutes = date.getMinutes().toString().padStart(2, '0');
+          formattedTime = `${hours}:${minutes}`;
+        }
+        timerText = html`<span class="chat-timer-mobile countdown"
+          >${this.stage.timeLimitInMinutes} min chat, began
+          ${formattedTime}</span
+        >`;
+      } else {
+        timerText = html`<span class="chat-timer-mobile ended countdown"
+          >Discussion ended</span
+        >`;
+      }
+    }
+    return html`
+      <div class="chat-participants-top">
+        <div class="chat-participants-title-row">
+          <span
+            >Participants
+            (${activeParticipants.length + mediators.length})</span
+          >
+          ${timerText}
+        </div>
+        <div class="chat-participants-wrapper">
+          ${activeParticipants.map(
+            (participant) => html`
+              <participant-profile-display
+                .profile=${participant}
+                .showIsSelf=${participant.publicId ===
+                this.participantService.profile?.publicId}
+                displayType="chat"
+              ></participant-profile-display>
+            `,
+          )}
+          ${mediators.map(
+            (mediator) => html`
+              <profile-display
+                .profile=${mediator}
+                .color=${getHashBasedColor(
+                  mediator.agentConfig?.agentId ?? mediator.id ?? '',
+                )}
+                displayType="chat"
+              ></profile-display>
+            `,
+          )}
+        </div>
+      </div>
+    `;
+  }
+
+  private formatTime(seconds: number | null): string {
+    if (seconds === null) return '';
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    if (hours > 0) {
+      return `${hours.toString().padStart(2, '0')}:${mins
+        .toString()
+        .padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    } else {
+      return `${mins.toString().padStart(2, '0')}:${secs
+        .toString()
+        .padStart(2, '0')}`;
+    }
+  }
+
+  private renderStageDescription() {
+    if (!this.stage) return nothing;
+    // Pass noBorder=true when rendering in chat-info-message
+    return html`<stage-description
+      .stage=${this.stage}
+      noBorder
+    ></stage-description>`;
+  }
+
   override render() {
     if (!this.stage) return nothing;
     const currentDiscussionId = this.cohortService.getChatDiscussionId(
       this.stage.id,
     );
+
+    // Determine if Next Stage button should be disabled
+    let disableNext = false;
+    const requireFullTime = this.stage.requireFullTime === true;
+    if (requireFullTime && this.stage.timeLimitInMinutes !== null) {
+      if (
+        this.timeRemainingInSeconds !== null &&
+        this.timeRemainingInSeconds > 0
+      ) {
+        disableNext = true;
+      }
+    }
 
     const renderProgress = () => {
       if (currentDiscussionId) {
@@ -324,6 +492,7 @@ export class ChatInterface extends MobxLitElement {
     };
 
     return html`
+      ${this.renderParticipantsTop()}
       <div class="chat-content">
         ${this.cohortService.isChatLoading
           ? html`<div>Loading...</div>`
@@ -332,7 +501,10 @@ export class ChatInterface extends MobxLitElement {
       <div class="input-row-wrapper">
         <div class="input-row">${this.renderInput()}</div>
       </div>
-      <stage-footer .showNextButton=${currentDiscussionId === null}>
+      <stage-footer
+        .showNextButton=${currentDiscussionId === null}
+        .disabled=${disableNext}
+      >
         ${renderProgress()}
         ${this.renderEndDiscussionButton(currentDiscussionId)}
       </stage-footer>

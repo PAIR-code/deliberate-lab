@@ -7,6 +7,10 @@
   gap: common.$spacing-large;
   overflow: auto;
   width: 240px;
+
+  @include common.viewport-medium {
+    display: none;
+  }
 }
 
 .panel-item {
