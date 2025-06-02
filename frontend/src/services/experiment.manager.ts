@@ -104,6 +104,7 @@ export class ExperimentManager extends Service {
   // Experimenter-only data
   @observable experimentId: string | undefined = undefined;
   @observable cohortMap: Record<string, CohortConfig> = {};
+  @observable agentPersonaMap: Record<string, AgentPersonaConfig> = {};
   @observable participantMap: Record<string, ParticipantProfileExtended> = {};
   @observable mediatorMap: Record<string, MediatorProfile> = {};
   @observable alertMap: Record<string, AlertMessage> = {};
@@ -113,6 +114,7 @@ export class ExperimentManager extends Service {
   @observable isCohortsLoading = false;
   @observable isParticipantsLoading = false;
   @observable isMediatorsLoading = false;
+  @observable isAgentsLoading = false;
 
   // Firestore loading (not included in general isLoading)
   @observable isWritingCohort = false;
@@ -264,6 +266,10 @@ export class ExperimentManager extends Service {
     }
   }
 
+  @computed get agentPersonas() {
+    return Object.values(this.agentPersonaMap);
+  }
+
   @computed get currentParticipant() {
     if (!this.currentParticipantId) return null;
     return this.participantMap[this.currentParticipantId];
@@ -367,7 +373,8 @@ export class ExperimentManager extends Service {
     return (
       this.isCohortsLoading ||
       this.isParticipantsLoading ||
-      this.isMediatorsLoading
+      this.isMediatorsLoading ||
+      this.isAgentsLoading
     );
   }
 
@@ -375,6 +382,7 @@ export class ExperimentManager extends Service {
     this.isCohortsLoading = value;
     this.isParticipantsLoading = value;
     this.isMediatorsLoading = value;
+    this.isAgentsLoading = value;
   }
 
   updateForRoute(experimentId: string) {
@@ -501,6 +509,33 @@ export class ExperimentManager extends Service {
         },
       ),
     );
+
+    // Subscribe to agent personas
+    this.unsubscribe.push(
+      onSnapshot(
+        query(
+          collection(
+            this.sp.firebaseService.firestore,
+            'experiments',
+            id,
+            'agents',
+          ),
+        ),
+        (snapshot) => {
+          let changedDocs = snapshot.docChanges().map((change) => change.doc);
+          if (changedDocs.length === 0) {
+            changedDocs = snapshot.docs;
+          }
+
+          changedDocs.forEach((doc) => {
+            const data = doc.data() as AgentPersonaConfig;
+            this.agentPersonaMap[doc.id] = data;
+          });
+
+          this.isAgentsLoading = false;
+        },
+      ),
+    );
   }
 
   unsubscribeAll() {
@@ -511,6 +546,7 @@ export class ExperimentManager extends Service {
     this.cohortMap = {};
     this.participantMap = {};
     this.mediatorMap = {};
+    this.agentPersonaMap = {};
     this.alertMap = {};
   }
 
