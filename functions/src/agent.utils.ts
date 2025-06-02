@@ -15,6 +15,7 @@ import {
 
 import {updateParticipantNextStage} from './participant.utils';
 import {initiateChatDiscussion} from './stages/chat.utils';
+import {completeProfile} from './stages/profile.utils';
 import {getAgentParticipantRankingStageResponse} from './stages/ranking.utils';
 import {getAgentParticipantSurveyStageResponse} from './stages/survey.utils';
 
@@ -211,6 +212,11 @@ export async function completeStageAsAgentParticipant(
         participant, // profile
         participant.agentConfig, // agent config
       );
+      break;
+    case StageKind.PROFILE:
+      await completeProfile(experimentId, participant, stage);
+      await completeStage();
+      participantDoc.set(participant);
       break;
     case StageKind.SALESPERSON:
       initiateChatDiscussion(
