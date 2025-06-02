@@ -4,6 +4,7 @@ import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
 
 import '../participant_profile/profile_display';
+import './agent_participant_configuration_dialog';
 import './cohort_summary';
 import './participant_summary';
 
@@ -41,6 +42,7 @@ export class Component extends MobxLitElement {
   private readonly experimentService = core.getService(ExperimentService);
 
   @property() cohort: CohortConfig | undefined = undefined;
+  @property() showAgentParticipantDialog = false;
 
   override render() {
     return html`
@@ -111,12 +113,12 @@ export class Component extends MobxLitElement {
         ${this.renderParticipantTable(
           'Human participants',
           this.experimentManager.getCohortHumanParticipants(this.cohort.id),
-          html`${this.renderAddParticipantButton(false)}`,
+          html`${this.renderAddHumanParticipant()}`,
         )}
         ${this.renderParticipantTable(
           'Agent participants',
           this.experimentManager.getCohortAgentParticipants(this.cohort.id),
-          html`${this.renderAddParticipantButton(true)}`,
+          html`${this.renderAddAgentParticipant()}`,
         )}
         ${this.renderMediatorTable(
           'Agent mediators',
@@ -216,46 +218,72 @@ export class Component extends MobxLitElement {
     `;
   }
 
-  private renderAddParticipantButton(isAgent: boolean) {
+  private isAddParticipantDisabled() {
+    if (!this.experimentService.experiment || !this.cohort) {
+      return true;
+    }
+    return (
+      this.experimentManager.isFullCohort(this.cohort) ||
+      this.experimentService.experiment.cohortLockMap[this.cohort.id]
+    );
+  }
+
+  private renderAddHumanParticipant() {
     if (!this.cohort) {
       return nothing;
     }
 
-    const isDisabled = () => {
-      if (!this.experimentService.experiment || !this.cohort) {
-        return true;
-      }
-      return (
-        this.experimentManager.isFullCohort(this.cohort) ||
-        this.experimentService.experiment.cohortLockMap[this.cohort.id]
-      );
-    };
-
     return html`
-      <pr-tooltip
-        text=${isAgent ? 'Add agent participant' : 'Add human participant'}
-        position="BOTTOM_END"
-      >
+      <pr-tooltip text="Add human participant" position="BOTTOM_END">
         <pr-icon-button
           icon="person_add"
           color="tertiary"
           variant="default"
-          ?disabled=${isDisabled()}
+          ?disabled=${this.isAddParticipantDisabled()}
           ?loading=${this.experimentManager.isWritingParticipant}
           @click=${async () => {
             if (!this.cohort) return;
             this.analyticsService.trackButtonClick(ButtonClick.PARTICIPANT_ADD);
-            if (isAgent) {
-              await this.experimentManager.createAgentParticipant(
-                this.cohort.id,
-              );
-            } else {
-              await this.experimentManager.createParticipant(this.cohort.id);
-            }
+            await this.experimentManager.createParticipant(this.cohort.id);
           }}
         >
         </pr-icon-button>
       </pr-tooltip>
+    `;
+  }
+
+  private renderAddAgentParticipant() {
+    const renderDialog = () => {
+      if (!this.showAgentParticipantDialog) {
+        return nothing;
+      }
+      return html`
+        <agent-participant-configuration-dialog
+          .cohort=${this.cohort}
+          .onDialogClose=${() => {
+            this.showAgentParticipantDialog = false;
+          }}
+        >
+        </agent-participant-configuration-dialog>
+      `;
+    };
+
+    return html`
+      <pr-tooltip text="Add agent participant" position="BOTTOM_END">
+        <pr-icon-button
+          icon="person_add"
+          color="tertiary"
+          variant="default"
+          ?disabled=${this.isAddParticipantDisabled()}
+          ?loading=${this.experimentManager.isWritingParticipant}
+          @click=${async () => {
+            if (!this.cohort) return;
+            this.showAgentParticipantDialog = true;
+          }}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+      ${renderDialog()}
     `;
   }
 
