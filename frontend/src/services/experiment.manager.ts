@@ -26,6 +26,7 @@ import {
   AlertMessage,
   AlertStatus,
   AgentPersonaConfig,
+  AgentPersonaType,
   BaseAgentPromptConfig,
   ChatMessage,
   CohortConfig,
@@ -268,6 +269,12 @@ export class ExperimentManager extends Service {
 
   @computed get agentPersonas() {
     return Object.values(this.agentPersonaMap);
+  }
+
+  @computed get agentParticipantPersonas() {
+    return this.agentPersonas.filter(
+      (persona) => persona.type === AgentPersonaType.PARTICIPANT,
+    );
   }
 
   @computed get currentParticipant() {
@@ -719,15 +726,12 @@ export class ExperimentManager extends Service {
   }
 
   /** Create agent participant. */
-  async createAgentParticipant(cohortId: string) {
+  async createAgentParticipant(
+    cohortId: string,
+    agentConfig: ProfileAgentConfig,
+  ) {
     this.isWritingParticipant = true;
     let response = {};
-
-    const agentConfig: ProfileAgentConfig = {
-      agentId: 'test',
-      promptContext: '',
-      modelSettings: DEFAULT_AGENT_MODEL_SETTINGS,
-    };
 
     if (this.experimentId) {
       const isAnonymous = requiresAnonymousProfiles(
