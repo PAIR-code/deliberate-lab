@@ -61,3 +61,41 @@ npm run build:prod
 
 Then, deploy your build wherever you're hosting the platform
 (e.g., App Engine)!
+
+## Cache busting
+
+When you build for prod, you will get bundled assets with a hash included in their filenames. This ensures that old code isn't loaded from the browser cache when new code is available, guarantees that users always get the most current version, and moves deployments closer to atomicity (so users can't get files from different deployments). To make proper use of that, you need to configure the cache-control headers in your hosting environment as follows:
+
+- A long long max-age for javascript files (31536000 is good)
+- No caching for `index.html`. This ensures that users will always get the most current deployed version of the code.
+
+### Firebase hosting
+
+If you're using Firebase Hosting, the following configuration works well (in `firebase.json`):
+
+```json
+  "hosting": {
+    "public": "frontend/dist",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "headers": [
+      {
+        "source": "**/*.@(js|css)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public,max-age=31536000,immutable"
+          }
+        ]
+      },
+      {
+        "source": "/index.html",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      }
+    ]
+  }
+```
