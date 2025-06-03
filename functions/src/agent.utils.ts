@@ -1,6 +1,7 @@
 import {Timestamp} from 'firebase-admin/firestore';
 import {
   AgentModelSettings,
+  AgentParticipantPromptConfig,
   AgentPersonaConfig,
   ApiKeyType,
   ExperimenterData,
@@ -264,4 +265,26 @@ export async function completeStageAsAgentParticipant(
       await completeStage();
       participantDoc.set(participant);
   }
+}
+
+/** Return agent participant prompt that corresponds to agent. */
+export async function getAgentParticipantPrompt(
+  experimentId: string,
+  stageId: string,
+  agentId: string,
+): AgentParticipantPromptConfig | null {
+  const prompt = await app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('agents')
+    .doc(agentId)
+    .collection('participantPrompts')
+    .doc(stageId)
+    .get();
+
+  if (!prompt.exists) {
+    return null;
+  }
+  return prompt.data() as AgentParticipantPromptConfig;
 }
