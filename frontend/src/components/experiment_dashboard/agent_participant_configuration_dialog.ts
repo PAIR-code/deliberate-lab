@@ -122,10 +122,24 @@ export class AgentParticipantDialog extends MobxLitElement {
         </div>
       `;
     };
+
+    const renderEmptyMessage = () => {
+      if (this.experimentManager.agentParticipantPersonas.length > 0) {
+        return nothing;
+      }
+      return html`
+        <div class="error">
+          No agent personas have been configured. Use the edit button in the
+          left panel to add a persona.
+        </div>
+      `;
+    };
+
     return html`
       <div>
         <div>Persona to use for this specific agent participant</div>
         <div class="agent-persona-wrapper">
+          ${renderEmptyMessage()}
           ${this.experimentManager.agentParticipantPersonas.map((persona) =>
             renderAgentPersona(persona),
           )}

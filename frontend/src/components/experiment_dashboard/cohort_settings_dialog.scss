@@ -102,3 +102,8 @@
   @include typescale.label-small;
   color: var(--md-sys-color-outline);
 }
+
+.error {
+  @include typescale.body-small;
+  color: var(--md-sys-color-error);
+}
