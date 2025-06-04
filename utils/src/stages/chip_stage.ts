@@ -9,6 +9,7 @@ import {
   createStageTextConfig,
   createStageProgressConfig,
 } from './stage';
+import {ChatMessage} from './chat_stage';
 
 /** "Chip" negotiation stage types and functions. */
 
@@ -120,7 +121,8 @@ export type ChipLogEntry =
   | ChipOfferDeclinedLogEntry
   | ChipInfoLogEntry
   | ChipErrorLogEntry
-  | ChipTransactionLogEntry;
+  | ChipTransactionLogEntry
+  | ChipChatLogEntry;
 
 export interface BaseChipLogEntry {
   type: ChipLogType;
@@ -136,6 +138,12 @@ export enum ChipLogType {
   OFFER = 'offer', // new offer posted
   OFFER_DECLINED = 'offerDeclined', // no one accepted offer
   TRANSACTION = 'transaction', // transaction cleared
+  CHAT_MESSAGE = 'chatMessage', // chat message
+}
+
+export interface ChipChatLogEntry extends BaseChipLogEntry {
+  type: ChipLogType.CHAT_MESSAGE;
+  chatMessage: ChatMessage;
 }
 
 export interface ChipRoundLogEntry extends BaseChipLogEntry {

@@ -2,6 +2,7 @@ import '../../pair-components/button';
 
 import '../progress/progress_stage_completed';
 
+import './chat_message';
 import './chip_reveal_view';
 import './stage_description';
 import './stage_footer';
@@ -17,13 +18,16 @@ import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 import {getParticipantInlineDisplay} from '../../shared/participant.utils';
 import {
+  ChatMessage,
+  ChatMessageType,
   ChipItem,
+  ChipChatLogEntry,
   ChipLogEntry,
   ChipLogType,
   ChipOffer,
-  ChipStagePublicData,
   ChipStageConfig,
   ChipStageParticipantAnswer,
+  ChipStagePublicData,
   ChipTransaction,
   ChipTransactionStatus,
   StageKind,
@@ -572,7 +576,8 @@ export class ChipView extends MobxLitElement {
       }
 
       return html`<p>
-        ⚠️ You do not have enough chips to accept this offer. If you could accept, your updated chip value would be
+        ⚠️ You do not have enough chips to accept this offer. If you could
+        accept, your updated chip value would be
         <b>$${newTotalPayout.toFixed(2)}</b> ${diffDisplay}.
       </p>`;
     };
@@ -645,6 +650,7 @@ export class ChipView extends MobxLitElement {
       [ChipLogType.NEW_ROUND]: 3,
       [ChipLogType.INFO]: 4,
       [ChipLogType.ERROR]: 4,
+      [ChipLogType.CHAT_MESSAGE]: 4,
     };
 
     const sortLogsByPriority = (a: ChipLogEntry, b: ChipLogEntry) => {
@@ -661,6 +667,7 @@ export class ChipView extends MobxLitElement {
     };
 
     const logs = this.cohortService.getChipLogEntries(this.stage.id);
+    const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
 
     if (logs.length === 0) {
       return nothing;
@@ -668,6 +675,9 @@ export class ChipView extends MobxLitElement {
 
     return html`
       <div class="log-panel">
+        ${publicData.kind === StageKind.CHIP
+          ? this.renderChatInput(publicData)
+          : nothing}
         <div class="log-scroll-outer-wrapper">
           <div class="log-scroll-inner-wrapper">
             ${logs
@@ -675,7 +685,11 @@ export class ChipView extends MobxLitElement {
               .sort(sortLogsByPriority)
               .map((entry, index, array) => {
                 const isLastEntry = index === array.length - 1;
-                return this.renderLogEntry(entry, index === logs.length - 1);
+                if (entry.type === ChipLogType.CHAT_MESSAGE) {
+                  return this.renderChatMessage(entry);
+                } else {
+                  return this.renderLogEntry(entry, index === logs.length - 1);
+                }
               })}
           </div>
         </div>
@@ -696,6 +710,14 @@ export class ChipView extends MobxLitElement {
       false,
       this.stage?.id ?? '',
     );
+  }
+
+  private renderChatMessage(entry: ChipChatLogEntry) {
+    return html`
+      <div class="chat-message-wrapper">
+        <chat-message .chat=${entry.chatMessage}></chat-message>
+      </div>
+    `;
   }
 
   private renderLogEntry(entry: ChipLogEntry, isLatestEntry: boolean = false) {
@@ -825,6 +847,73 @@ export class ChipView extends MobxLitElement {
       default:
         return nothing;
     }
+  }
+
+  private renderChatInput(publicData: ChipStagePublicData) {
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        sendInput();
+        e.stopPropagation();
+      }
+    };
+
+    const sendInput = () => {
+      if (!this.stage) return;
+
+      const value = this.participantAnswerService.getChatInput(this.stage.id);
+      if (value.trim() === '') return;
+      this.participantService.createChatMessage({message: value.trim()});
+      this.participantAnswerService.updateChatInput(this.stage.id, '');
+    };
+
+    const handleInput = (e: Event) => {
+      if (!this.stage) return;
+
+      const value = (e.target as HTMLTextAreaElement).value;
+      this.participantAnswerService.updateChatInput(this.stage.id, value);
+    };
+
+    const autoFocus = () => {
+      // Only auto-focus chat input if on desktop
+      return navigator.maxTouchPoints === 0;
+    };
+
+    return html`<div class="input-wrapper">
+      <div class="input">
+        <pr-textarea
+          size="small"
+          placeholder="Send message"
+          .value=${this.participantAnswerService.getChatInput(
+            this.stage?.id ?? '',
+          )}
+          ?focused=${autoFocus()}
+          ?disabled=${this.participantService.disableStage ||
+          publicData.isGameOver}
+          @keyup=${handleKeyUp}
+          @input=${handleInput}
+        >
+        </pr-textarea>
+        <pr-tooltip
+          text="Send message"
+          color="tertiary"
+          variant="outlined"
+          position="TOP_END"
+        >
+          <pr-icon-button
+            icon="send"
+            variant="tonal"
+            .disabled=${this.participantAnswerService
+              .getChatInput(this.stage?.id ?? '')
+              .trim() === '' ||
+            this.participantService.disableStage ||
+            publicData.isGameOver}
+            ?loading=${this.participantService.isSendingChat}
+            @click=${sendInput}
+          >
+          </pr-icon-button>
+        </pr-tooltip>
+      </div>
+    </div>`;
   }
 }
 

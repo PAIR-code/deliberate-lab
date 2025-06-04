@@ -24,7 +24,7 @@
     flex-shrink: 0;
     gap: 0;
     padding: 0;
-    width: 65%;
+    width: 50%;
   }
 }
 
@@ -146,6 +146,30 @@ select {
 .positive {
   color: green;
 }
+
 .negative {
   color: red;
+}
+
+.input-wrapper {
+  @include common.flex-row-align-center;
+  padding: common.$spacing-medium;
+}
+
+.input {
+  @include common.flex-row-align-center;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: common.$spacing-medium;
+  flex-grow: 1;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+
+  pr-textarea {
+    flex-grow: 1;
+  }
+}
+
+.chat-message-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-xs;
 }

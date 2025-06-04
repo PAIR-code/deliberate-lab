@@ -4,6 +4,7 @@ import {
   onDocumentUpdated,
 } from 'firebase-functions/v2/firestore';
 import {
+  ChipLogType,
   ChipStageParticipantAnswer,
   ChipStagePublicData,
   ChipTransaction,
@@ -25,6 +26,7 @@ import {
   updateChipCurrentTurn,
   updateParticipantChipQuantities,
 } from './chip.utils';
+import {getFirestoreStage} from '../utils/firestore';
 
 /**
  * When chip negotiation public data is updated,
@@ -290,5 +292,46 @@ export const completeChipTransaction = onDocumentCreated(
     }); // end transaction
 
     return true;
+  },
+);
+
+/** When chat message is created in chip stage, write to chip logs.
+ */
+export const createChipChatLogEntry = onDocumentCreated(
+  {
+    document:
+      'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}',
+    timeoutSeconds: 60, // Maximum timeout of 1 minute for typing delay.
+  },
+  async (event) => {
+    const data = event.data?.data() as ChatMessage | undefined;
+    const stage = await getFirestoreStage(
+      event.params.experimentId,
+      event.params.stageId,
+    );
+    if (stage?.kind !== StageKind.CHIP) {
+      return;
+    }
+    // Define log entry collection reference
+    const logCollection = app
+      .firestore()
+      .collection('experiments')
+      .doc(event.params.experimentId)
+      .collection('cohorts')
+      .doc(event.params.cohortId)
+      .collection('publicStageData')
+      .doc(event.params.stageId)
+      .collection('logs');
+
+    // Write chip chat log entry
+    const chipChatLog = {
+      type: ChipLogType.CHAT_MESSAGE,
+      timestamp: data.timestamp,
+      chatMessage: data,
+    };
+
+    await app.firestore().runTransaction(async (transaction) => {
+      transaction.set(logCollection.doc(), chipChatLog);
+    });
   },
 );
