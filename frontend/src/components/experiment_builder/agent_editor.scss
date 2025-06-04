@@ -53,6 +53,7 @@
 }
 
 .description {
+  @include common.flex-row-align-center;
   color: var(--md-sys-color-outline);
   font-style: italic;
 }
@@ -106,6 +107,10 @@ pr-textarea {
 .divider {
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   width: 100%;
+
+  &.main {
+    border-color: var(--md-sys-color-outline);
+  }
 }
 
 .tab {

@@ -1,4 +1,5 @@
 import '../../pair-components/button';
+import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 import '../../pair-components/textarea';
 import './agent_base_prompt_editor';
@@ -17,6 +18,7 @@ import {ExperimentService} from '../../services/experiment.service';
 import {
   AgentChatPromptConfig,
   AgentPersonaConfig,
+  AgentPersonaType,
   ApiKeyType,
   StageConfig,
   StageKind,
@@ -59,7 +61,7 @@ export class AgentEditorComponent extends MobxLitElement {
     return html`
       ${this.renderAgentGeneralSettings(agentConfig)}
       ${this.renderAgentPrompts(agentConfig)}
-      <div class="divider"></div>
+      <div class="divider main"></div>
       <div class="agent-wrapper">
         ${this.renderDeleteAgentButton(agentConfig)}
       </div>
@@ -99,7 +101,39 @@ export class AgentEditorComponent extends MobxLitElement {
       return stageId === this.agentEditor.activeStageId;
     };
 
+    const renderMediatorNote = () => {
+      return html`
+        <div class="description">
+          Note: Mediators only have prompts for chat stages!
+        </div>
+      `;
+    };
+
+    const renderEmpty = () => {
+      if (
+        stages.filter((stage) => stage.kind === StageKind.CHAT).length === 0
+      ) {
+        return html`
+          <div class="divider"></div>
+          <div class="agent-wrapper">
+            ⚠️ No chat stages yet.
+            <div class="description">
+              Use the ${this.renderAddStageButton()} button in the left panel to
+              add more stages to your experiment.
+            </div>
+          </div>
+        `;
+      }
+      return nothing;
+    };
+
     return html`
+        <div class="divider main"></div>
+        <div class="agent-wrapper">
+          <div class="title">Stage prompts</div>
+          ${agentConfig.type === AgentPersonaType.MEDIATOR ? renderMediatorNote() : nothing}
+        </div>
+        ${renderEmpty()}
         ${stages.map((stage, index) => {
           if (stage.kind === StageKind.CHAT) {
             const promptConfig = this.agentEditor.getAgentMediatorPrompt(
@@ -121,21 +155,15 @@ export class AgentEditorComponent extends MobxLitElement {
             return nothing;
           }
         })}
-        <div class="divider"></div>
-        <div class="description agent-wrapper">
-          <div>
-            Note: Add stages with chat discussions (e.g., chat stage) to your
-            experiment in order to specify agent mediator prompts here.
-          </div>
-          ${this.renderAddStageButton()}
-        </div>
       </div>
     `;
   }
 
   private renderAddStageButton() {
     return html`
-      <pr-button
+      <pr-icon-button
+        size="small"
+        icon="playlist_add"
         color="neutral"
         variant="default"
         ?disabled=${!this.experimentEditor.canEditStages}
@@ -143,8 +171,7 @@ export class AgentEditorComponent extends MobxLitElement {
           this.experimentEditor.toggleStageBuilderDialog(false);
         }}
       >
-        + Add stage
-      </pr-button>
+      </pr-icon-button>
     `;
   }
 
@@ -160,7 +187,9 @@ export class AgentEditorComponent extends MobxLitElement {
         @click=${onClick}
         ?disabled=${!this.experimentEditor.canEditStages}
       >
-        Delete agent mediator
+        Delete agent
+        ${agent.type === AgentPersonaType.MEDIATOR ? 'mediator' : 'participant'}
+        persona
       </pr-button>
     `;
   }
