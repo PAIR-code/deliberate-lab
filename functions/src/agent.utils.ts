@@ -260,6 +260,9 @@ export async function completeStageAsAgentParticipant(
       await completeStage();
       participantDoc.set(participant);
       break;
+    case StageKind.CHIP:
+      // TODO: Add logic
+      break;
     default:
       console.log(`Move to next stage (${participant.publicId})`);
       await completeStage();

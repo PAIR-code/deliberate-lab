@@ -1,10 +1,19 @@
 import {
+  ChipLogEntry,
   ChipStagePublicData,
   ParticipantProfile,
   ParticipantStatus,
+  convertLogEntryToPromptFormat,
   createChipTurn,
+  getBaseStagePrompt,
+  getParticipantProfilePromptContext,
+  makeStructuredOutputPrompt,
   sortParticipantsByRandomProfile,
 } from '@deliberation-lab/utils';
+import {
+  getFirestoreParticipant,
+  getFirestoreStagePublicData,
+} from '../utils/firestore';
 
 import * as admin from 'firebase-admin';
 import {Timestamp} from 'firebase-admin/firestore';
@@ -150,4 +159,81 @@ export async function updateParticipantChipQuantities(
   publicStageData.participantChipMap[publicId] = answer.chipMap;
 
   return {answerDoc, answer, publicStageData};
+}
+
+/** Assemble chip chat prompt. */
+export async function getChipChatPrompt(
+  experimentId: string,
+  participantId: string, // private ID
+  profile: ParticipantProfileBase,
+  agentConfig: ProfileAgentConfig, // TODO: Add to params
+  pastStageContext: string,
+  chatMessages: ChatMessage[],
+  promptConfig: AgentChatPromptConfig,
+  stageConfig: ChatStageConfig,
+) {
+  return [
+    // TODO: Move profile context up one level
+    getParticipantProfilePromptContext(
+      profile,
+      agentConfig?.promptContext ?? '',
+    ),
+    pastStageContext,
+    await getChipStagePromptContext(
+      experimentId,
+      participantId,
+      chatMessages,
+      stageConfig,
+      promptConfig.promptSettings.includeStageInfo,
+    ),
+    promptConfig.promptContext,
+    makeStructuredOutputPrompt(promptConfig.structuredOutputConfig),
+  ];
+}
+
+export async function getChipStagePromptContext(
+  experimentId: string,
+  participantId: string, // private ID
+  logs: ChipLogEntry[],
+  stageConfig: ChatStageConfig,
+  includeStageInfo: boolean,
+) {
+  const participant = await getFirestoreParticipant(
+    experimentId,
+    participantId,
+  );
+  const publicData = await getFirestoreStagePublicData(
+    experimentId,
+    participant.currentCohortId,
+    stageConfig.id,
+  );
+
+  const prompt = [
+    getBaseStagePrompt(stageConfig, includeStageInfo),
+    ``, // TODO: current status of everyone's chips
+    logs.map((message) => convertLogEntryToPromptFormat(message)).join('\n'),
+  ].join('\n');
+  return prompt;
+}
+
+/** Get chip log messages for given cohort and stage ID. */
+export async function getChipLogs(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+): Promise<ChipLogEntry[]> {
+  try {
+    return (
+      await app
+        .firestore()
+        .collection(
+          `experiments/${experimentId}/cohorts/${cohortId}/publicStageData/${stageId}/logs`,
+        )
+        .orderBy('timestamp', 'asc')
+        .get()
+    ).docs.map((doc) => doc.data() as ChipLogEntry);
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
 }

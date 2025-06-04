@@ -13,20 +13,34 @@ import {
   StageConfig,
   StageKind,
   StagePublicData,
+  createAgentChatPromptConfig,
   createChipInfoLogEntry,
   createChipOfferDeclinedLogEntry,
   createChipRoundLogEntry,
   createChipTransactionLogEntry,
   createChipTurnLogEntry,
+  createParticipantChatMessage,
+  DEFAULT_CHIP_CHAT_AGENT_PARTICIPANT_PROMPT,
 } from '@deliberation-lab/utils';
 
 import {app} from '../app';
+
+import {ModelResponseStatus} from '../api/model.response';
+import {getAgentResponse} from '../agent.utils';
+import {getAgentChatPrompt, sendAgentChatMessage} from './chat.utils';
 import {
+  getChipChatPrompt,
+  getChipLogs,
   getChipParticipants,
   updateChipCurrentTurn,
   updateParticipantChipQuantities,
 } from './chip.utils';
-import {getFirestoreStage} from '../utils/firestore';
+import {getPastStagesPromptContext} from './stage.utils';
+import {
+  getExperimenterDataFromExperiment,
+  getFirestoreActiveParticipants,
+  getFirestoreStage,
+} from '../utils/firestore';
 
 /**
  * When chip negotiation public data is updated,
@@ -332,6 +346,149 @@ export const createChipChatLogEntry = onDocumentCreated(
 
     await app.firestore().runTransaction(async (transaction) => {
       transaction.set(logCollection.doc(), chipChatLog);
+    });
+  },
+);
+
+/** When chat message is created in chip stage,
+ * generate agent participant response.
+ */
+export const createAgentParticipantChipMessage = onDocumentCreated(
+  {
+    document:
+      'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/logs/{chatId}',
+    timeoutSeconds: 60, // Maximum timeout of 1 minute for typing delay.
+  },
+  async (event) => {
+    const data = event.data?.data() as ChipLogEntry | undefined;
+    const stage = await getFirestoreStage(
+      event.params.experimentId,
+      event.params.stageId,
+    );
+    if (stage?.kind !== StageKind.CHIP) {
+      return;
+    }
+
+    // Use logs in collection to build chat history for prompt, get num chats
+    const logs = await getChipLogs(
+      event.params.experimentId,
+      event.params.cohortId,
+      event.params.stageId,
+    );
+
+    // Get agent participants for current cohort and stage
+    const activeParticipants = await getFirestoreActiveParticipants(
+      event.params.experimentId,
+      event.params.cohortId,
+      event.params.stageId,
+      true, // must be agent
+    );
+
+    // For each agent participant, potentially send chat message
+    activeParticipants.forEach(async (participant) => {
+      // Get chat prompt
+      const agentConfig = participant.agentConfig;
+      const promptConfig =
+        (await getAgentChatPrompt(
+          event.params.experimentId,
+          event.params.stageId,
+          agentConfig.agentId,
+        )) ??
+        createAgentChatPromptConfig(event.params.stageId, StageKind.CHAT, {
+          promptContext: DEFAULT_CHIP_CHAT_AGENT_PARTICIPANT_PROMPT,
+        });
+      const pastStageContext = promptConfig.promptSettings.includeStageHistory
+        ? await getPastStagesPromptContext(
+            event.params.experimentId,
+            stage.id,
+            participant.privateId,
+            promptConfig.promptSettings.includeStageInfo,
+          )
+        : '';
+      promptConfig.promptContext = await getChipChatPrompt(
+        event.params.experimentId,
+        participant.privateId,
+        participant,
+        participant.agentConfig,
+        pastStageContext,
+        logs,
+        promptConfig,
+        stage,
+      );
+
+      // Fetch experiment creator's API key.
+      const experimenterData = await getExperimenterDataFromExperiment(
+        event.params.experimentId,
+      );
+      if (!experimenterData) return null;
+
+      const response = await getAgentResponse(
+        experimenterData,
+        promptConfig.promptContext,
+        agentConfig.modelSettings,
+        promptConfig.generationConfig,
+        promptConfig.structuredOutputConfig,
+      );
+
+      if (response.status !== ModelResponseStatus.OK) {
+        // TODO: Surface the error to the experimenter.
+        return null;
+      }
+
+      let message = '';
+      let parsed = '';
+      try {
+        const cleanedText = response
+          .text!.replace(/```json\s*|\s*```/g, '')
+          .trim();
+        parsed = JSON.parse(cleanedText);
+      } catch {
+        // Response is already logged in console during Gemini API call
+        console.log('Could not parse JSON!');
+        return null;
+      }
+      if (
+        parsed[promptConfig.structuredOutputConfig.shouldRespondField] ??
+        true
+      ) {
+        message =
+          parsed[promptConfig.structuredOutputConfig.messageField] ?? '';
+      }
+
+      // Check if message is empty
+      const trimmed = message.trim();
+      if (trimmed === '' || trimmed === '""' || trimmed === "''") {
+        return null;
+      }
+
+      if (!response) return null;
+      const chatMessage = createParticipantChatMessage({
+        profile: participant,
+        discussionId: null,
+        message,
+        timestamp: Timestamp.now(),
+        senderId: participant.publicId,
+        agentId: participant.agentConfig.agentId,
+        explanation:
+          parsed[promptConfig.structuredOutputConfig?.explanationField] ?? '',
+      });
+
+      sendAgentChatMessage(
+        chatMessage,
+        {
+          profile: participant,
+          profileId: participant.publicId,
+          agentId: agentConfig.agentId,
+          promptConfig,
+          parsed,
+          message,
+        },
+        1000000, // TODO: determine actual number of chat messages sent
+        event.params.experimentId,
+        event.params.cohortId,
+        event.params.stageId,
+        event.params.chatId,
+      );
     });
   },
 );
