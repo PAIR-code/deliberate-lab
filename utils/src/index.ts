@@ -22,6 +22,9 @@ export * from './data';
 export * from './cohort';
 export * from './cohort.validation';
 
+// Log
+export * from './log';
+
 // Mediator
 export * from './mediator';
 export * from './mediator.validation';

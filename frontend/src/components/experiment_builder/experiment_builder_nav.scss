@@ -1,16 +1,21 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
   border-right: 1px solid var(--md-sys-color-outline-variant);
   flex-shrink: 0;
-  gap: common.$spacing-medium;
   max-height: calc(100vh - common.$header-height);
   overflow: auto;
-  padding: common.$sidenav-padding;
   width: common.$sidenav-width;
+}
+
+.nav-items-wrapper {
+  @include common.flex-column;
+  flex-shrink: 0;
+  gap: common.$spacing-medium;
+  padding: common.$sidenav-padding;
 }
 
 .nav-item-wrapper {
@@ -26,6 +31,17 @@
 .buttons {
   @include common.flex-row-align-center;
   gap: common.$spacing-small;
+}
+
+.header {
+  background: var(--md-sys-color-surface);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  flex-shrink: 0;
+  height: common.$header-height;
+  padding: 0 common.$sidenav-padding;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .primary {

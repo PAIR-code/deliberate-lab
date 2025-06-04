@@ -54,7 +54,7 @@ export class ExperimentEditor extends Service {
   // Editor tooling
   @observable currentStageId: string | undefined = undefined;
   @observable showStageBuilderDialog = false;
-  @observable showGamesTab = false;
+  @observable showTemplatesTab = false;
 
   @computed get isValidExperimentConfig() {
     // TODO: Add other validation checks here
@@ -191,9 +191,9 @@ export class ExperimentEditor extends Service {
     ];
   }
 
-  toggleStageBuilderDialog(showGames: boolean = false) {
+  toggleStageBuilderDialog(showTemplates: boolean = false) {
     this.showStageBuilderDialog = !this.showStageBuilderDialog;
-    this.showGamesTab = showGames;
+    this.showTemplatesTab = showTemplates;
   }
 
   loadExperiment(experiment: Experiment, stages: StageConfig[]) {
