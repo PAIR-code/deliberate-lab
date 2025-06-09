@@ -4,7 +4,10 @@ import {
 } from './participant';
 import {generateId} from './shared';
 import {StageKind} from './stages/stage';
-import {DEFAULT_AGENT_MEDIATOR_PROMPT} from './stages/chat_stage.prompts';
+import {
+  DEFAULT_AGENT_MEDIATOR_PROMPT,
+  DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
+} from './stages/chat_stage.prompts';
 import {
   StructuredOutputConfig,
   createStructuredOutputConfig,
@@ -207,12 +210,17 @@ export function createAgentPromptSettings(
 export function createAgentChatPromptConfig(
   id: string, // stage ID
   type: StageKind, // stage kind
+  personaType: AgentPersonaType, // mediator or participant
   config: Partial<AgentChatPromptConfig> = {},
 ): AgentChatPromptConfig {
   return {
     id,
     type,
-    promptContext: config.promptContext ?? DEFAULT_AGENT_MEDIATOR_PROMPT,
+    promptContext:
+      config.promptContext ??
+      (personaType === AgentPersonaType.MEDIATOR
+        ? DEFAULT_AGENT_MEDIATOR_PROMPT
+        : DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT),
     promptSettings: config.promptSettings ?? createAgentPromptSettings(),
     generationConfig: config.generationConfig ?? createModelGenerationConfig(),
     chatSettings: config.chatSettings ?? createAgentChatSettings(),
@@ -235,6 +243,25 @@ export function createAgentPersonaConfig(
       createParticipantProfileBase({
         name: type === AgentPersonaType.MEDIATOR ? 'Mediator' : '',
         avatar: '🙋',
+      }),
+    defaultModelSettings:
+      config.defaultModelSettings ?? createAgentModelSettings(),
+  };
+}
+
+export function createAgentParticipantPersonaConfig(
+  config: Partial<AgentPersonaConfig> = {},
+): AgentPersonaConfig {
+  return {
+    id: config.id ?? generateId(),
+    name: config.name ?? 'Agent Participant',
+    type: AgentPersonaType.PARTICIPANT,
+    isDefaultAddToCohort: config.isDefaultAddToCohort ?? false,
+    defaultProfile:
+      config.defaultProfile ??
+      createParticipantProfileBase({
+        name: '',
+        avatar: '',
       }),
     defaultModelSettings:
       config.defaultModelSettings ?? createAgentModelSettings(),

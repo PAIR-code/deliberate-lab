@@ -19,6 +19,10 @@ export const DEFAULT_MODEL = 'gemini-1.5-pro-latest';
 export const DEFAULT_AGENT_MEDIATOR_PROMPT = `You are a agent for a chat conversation. Your task is to ensure that the conversation is polite.
 If you notice that participants are being rude, step in to make sure that everyone is respectful. 
 Otherwise, do not respond.`;
+export const DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT = `You are a human participant playing as the avatar mentioned above.
+Respond in a quick sentence if you would like to say something.
+Make sure your response sounds like a human with the phrasing and punctuation people use when casually chatting and no animal sounds.
+Otherwise, do not respond.`;
 
 // ************************************************************************* //
 // PROMPTS                                                                   //

@@ -161,13 +161,13 @@ export class ExperimentBuilder extends MobxLitElement {
           ${this.agentEditor.agentMediators.map(
             (mediator) => html`
               <div
-                class="agent-item ${this.agentEditor.currentAgentMediatorId ===
+                class="agent-item ${this.agentEditor.currentAgentId ===
                   mediator.id && this.panelView === PanelView.AGENTS
                   ? 'current'
                   : ''}"
                 @click=${() => {
                   this.panelView = PanelView.AGENTS;
-                  this.agentEditor.setCurrentAgentMediator(mediator.id);
+                  this.agentEditor.setCurrentAgent(mediator.id);
                 }}
               >
                 <div>
@@ -179,6 +179,34 @@ export class ExperimentBuilder extends MobxLitElement {
                   ${mediator.defaultModelSettings.modelName}
                 </div>
                 <div class="subtitle">${mediator.id}</div>
+              </div>
+            `,
+          )}
+          <div class="panel-view-header">
+            <div class="header-title">Agent Participants</div>
+            ${this.renderAddParticipantButton()}
+          </div>
+          ${this.agentEditor.agentParticipants.map(
+            (agent) => html`
+              <div
+                class="agent-item ${this.agentEditor.currentAgentId ===
+                  agent.id && this.panelView === PanelView.AGENTS
+                  ? 'current'
+                  : ''}"
+                @click=${() => {
+                  this.panelView = PanelView.AGENTS;
+                  this.agentEditor.setCurrentAgent(agent.id);
+                }}
+              >
+                <div>
+                  ${agent.name.length > 0
+                    ? agent.name
+                    : agent.defaultProfile.name}
+                </div>
+                <div class="subtitle">
+                  ${agent.defaultModelSettings.modelName}
+                </div>
+                <div class="subtitle">${agent.id}</div>
               </div>
             `,
           )}
@@ -198,6 +226,23 @@ export class ExperimentBuilder extends MobxLitElement {
           @click=${() => {
             this.panelView = PanelView.AGENTS;
             this.agentEditor.addAgentMediator();
+          }}
+        >
+        </pr-icon-button>
+      </pr-tootipt>
+    `;
+  }
+
+  private renderAddParticipantButton() {
+    return html`
+      <pr-tooltip text="Add agent participant persona" position="BOTTOM_END">
+        <pr-icon-button
+          icon="person_add"
+          color="neutral"
+          variant="default"
+          @click=${() => {
+            this.panelView = PanelView.AGENTS;
+            this.agentEditor.addAgentParticipant();
           }}
         >
         </pr-icon-button>
@@ -269,7 +314,7 @@ export class ExperimentBuilder extends MobxLitElement {
         </div>
       `;
     } else if (this.panelView === PanelView.AGENTS) {
-      const agent = this.agentEditor.currentAgentMediator;
+      const agent = this.agentEditor.currentAgent;
       return html`
         <div class="experiment-builder">
           <agent-editor .agent=${agent}></agent-editor>
