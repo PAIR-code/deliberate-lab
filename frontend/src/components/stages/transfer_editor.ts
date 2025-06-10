@@ -194,6 +194,7 @@ export class TransferEditorComponent extends MobxLitElement {
         <input
           type="text"
           id="surveyStageId"
+          placeholder="survey_stage_id"
           name="surveyStageId"
           .value=${this.stage.autoTransferConfig?.surveyStageId || ''}
           ?disabled=${!this.experimentEditor.canEditStages}
@@ -204,6 +205,7 @@ export class TransferEditorComponent extends MobxLitElement {
         <input
           type="text"
           id="surveyQuestionId"
+          placeholder="survey_question_1"
           name="surveyQuestionId"
           .value=${this.stage.autoTransferConfig?.surveyQuestionId || ''}
           ?disabled=${!this.experimentEditor.canEditStages}
@@ -217,6 +219,7 @@ export class TransferEditorComponent extends MobxLitElement {
         <input
           type="text"
           id="participantCounts"
+          placeholder="{ 'survey_answer_1': 1, 'survey_answer_2': 1 }"
           name="participantCounts"
           .value=${JSON.stringify(
             this.stage.autoTransferConfig?.participantCounts || {},
