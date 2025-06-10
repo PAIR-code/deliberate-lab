@@ -5,6 +5,23 @@ layout: default
 
 This page summarizes notable updates to the Deliberate Lab platform.
 
+## 2025-06-10: Add automatic cohort transfer by survey answer
+Experiment Version: 18 / [PR #535](https://github.com/PAIR-code/deliberate-lab/pull/535)
+
+Enable experimenters to set up automatic cohort transfers: the platform can
+now detect when human participants are connected/disconnected; if active
+participants in the transfer stage meet the "participant count" requirements
+specified in the automatic transfer config (e.g., 2 participants who answered
+"yes" to question A and 2 participants who answered "no" to question A),
+the relevant participants are moved into a newly created cohort.
+
+Other changes:
+- (feature) Add presence detection using Firebase realtime database websocket [PR #507](https://github.com/PAIR-code/deliberate-lab/pull/507)
+- (feature) Add option to keep participants in the chat stage for the entire timer countdown [PR #528](https://github.com/PAIR-code/deliberate-lab/pull/528)
+- (feature) Add webpack cache busting for prod deployments [PR #526](https://github.com/PAIR-code/deliberate-lab/pull/526)
+- (feature) Refactor experiment editor in frontend and add cohort editor panel to dashboard
+- (feature) Return error output from LLM API functions
+
 ## 2025-05-02: Add early agent participant support
 Experiment Version: 18 / [PR #490](https://github.com/PAIR-code/deliberate-lab/pull/490)
 
