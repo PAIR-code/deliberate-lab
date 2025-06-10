@@ -22,12 +22,48 @@ export class TransferEditorComponent extends MobxLitElement {
 
   @property() stage: TransferStageConfig | undefined = undefined;
 
+  private renderSurveyToggle() {
+    if (!this.stage) return nothing;
+    const isSurveyMatchingEnabled = this.stage.enableSurveyMatching || false;
+
+    const updateSurveyMatching = () => {
+      if (!this.stage) return;
+      const enableSurveyMatching = !isSurveyMatchingEnabled;
+      this.experimentEditor.updateStage({...this.stage, enableSurveyMatching});
+    };
+
+    return html`
+      <div class="section">
+        <div class="title">Automatic transfer</div>
+        <div class="description">
+          If you would like to transfer participants based on rules rather than manually,
+          specify the behavior here.
+        </div>
+
+        <div class="checkbox-wrapper">
+          <md-checkbox
+            touch-target="wrapper"
+            ?checked=${isSurveyMatchingEnabled}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @click=${updateSurveyMatching}
+          >
+          </md-checkbox>
+          <div>Automatically match participants based on survey answers</div>
+        </div>
+      </div>
+    `;
+  }
+
   override render() {
     if (this.stage === undefined) {
       return nothing;
     }
 
-    return html` ${this.renderTimeout()} `;
+    return html`
+      ${this.renderSurveyToggle()}
+      ${this.stage.enableSurveyMatching ? this.renderSurveyConfig() : nothing}
+      ${this.renderTimeout()}
+    `;
   }
 
   private renderTimeout() {
@@ -85,6 +121,68 @@ export class TransferEditorComponent extends MobxLitElement {
           .value=${waitSeconds}
           ?disabled=${!this.experimentEditor.canEditStages}
           @input=${updateNum}
+        />
+      </div>
+    `;
+  }
+
+  private renderSurveyConfig() {
+    if (!this.stage) return nothing;
+
+    const updateSurveyStageId = (e: InputEvent) => {
+      if (!this.stage) return;
+      const surveyStageId = (e.target as HTMLInputElement).value;
+      this.experimentEditor.updateStage({...this.stage, surveyStageId});
+    };
+
+    const updateSurveyQuestionId = (e: InputEvent) => {
+      if (!this.stage) return;
+      const surveyQuestionId = (e.target as HTMLInputElement).value;
+      this.experimentEditor.updateStage({...this.stage, surveyQuestionId});
+    };
+
+    const updateParticipantCounts = (e: InputEvent) => {
+      if (!this.stage) return;
+      try {
+        const participantCounts = JSON.parse((e.target as HTMLInputElement).value);
+        this.experimentEditor.updateStage({...this.stage, participantCounts});
+      } catch {
+        // Handle invalid JSON input gracefully
+      }
+    };
+
+    return html`
+      <div class="number-input">
+        <label for="surveyStageId">Survey Stage ID</label>
+        <input
+          type="text"
+          id="surveyStageId"
+          name="surveyStageId"
+          .value=${this.stage.surveyStageId || ''}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @input=${updateSurveyStageId}
+        />
+
+        <label for="surveyQuestionId">Survey Question ID</label>
+        <input
+          type="text"
+          id="surveyQuestionId"
+          name="surveyQuestionId"
+          .value=${this.stage.surveyQuestionId || ''}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @input=${updateSurveyQuestionId}
+        />
+
+        <label for="participantCounts">
+          Provide a JSON object mapping survey answer ids to required participant counts.
+        </label>
+        <input
+          type="text"
+          id="participantCounts"
+          name="participantCounts"
+          .value=${JSON.stringify(this.stage.participantCounts || {}, null, 2)}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @input=${updateParticipantCounts}
         />
       </div>
     `;

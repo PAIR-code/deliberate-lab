@@ -6,6 +6,7 @@ import {
   createStageProgressConfig,
   createStageTextConfig,
 } from './stage';
+import {CohortParticipantConfig} from '../experiment';
 
 /** Transfer stage types and functions. */
 
@@ -17,6 +18,11 @@ export interface TransferStageConfig extends BaseStageConfig {
   kind: StageKind.TRANSFER;
   enableTimeout: boolean;
   timeoutSeconds: number;
+  enableSurveyMatching?: boolean; // Whether to enable survey-based participant matching
+  surveyStageId?: string; // ID of the survey stage to reference
+  surveyQuestionId?: string; // ID of the survey question to reference
+  participantCounts?: { [key: string]: number }; // Map of serialized survey answers to required participant counts
+  newCohortParticipantConfig?: CohortParticipantConfig; // Cohort participant config for new cohorts
 }
 
 // ************************************************************************* //
@@ -39,5 +45,9 @@ export function createTransferStage(
     progress: config.progress ?? createStageProgressConfig(),
     enableTimeout: config.enableTimeout ?? false,
     timeoutSeconds: config.timeoutSeconds ?? 600, // 10 minutes
+    enableSurveyMatching: config.enableSurveyMatching ?? false,
+    surveyStageId: config.surveyStageId,
+    surveyQuestionId: config.surveyQuestionId,
+    participantCounts: config.participantCounts,
   };
 }
