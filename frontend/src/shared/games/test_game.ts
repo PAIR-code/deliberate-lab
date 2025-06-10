@@ -1,5 +1,6 @@
 import {
   AgentChatPromptConfig,
+  AgentPersonaType,
   ApiKeyType,
   createAgentChatPromptConfig,
   createAgentPromptSettings,
@@ -53,7 +54,7 @@ export function getTgStageConfigs(): StageConfig[] {
   return stages;
 }
 
-const TG_CONSENT = "You must agree to participate in this study.";
+const TG_CONSENT = 'You must agree to participate in this study.';
 const TG_AGENT_PROMPT = `You don't like apples or pears, but you do like bananas`;
 
 const TG_TOS_STAGE = createTOSStage({
@@ -62,7 +63,6 @@ const TG_TOS_STAGE = createTOSStage({
   name: 'Consent',
   tosLines: TG_CONSENT.split('\n'),
 });
-
 
 const TG_PROFILE_STAGE = createProfileStage({
   id: 'profile',
@@ -82,8 +82,7 @@ const TG_SURVEY_STAGE = createSurveyStage({
   questions: [
     createMultipleChoiceSurveyQuestion({
       id: 'fruit_preference',
-      questionTitle:
-        'Apple or pear?',
+      questionTitle: 'Apple or pear?',
       options: [
         createMultipleChoiceItem({id: 'apple', text: 'I like apples'}),
         createMultipleChoiceItem({id: 'pear', text: 'I like pears'}),
@@ -151,6 +150,7 @@ const createBbotAgent = () => {
   chatPromptMap[TG_CHAT_STAGE_ID] = createAgentChatPromptConfig(
     TG_CHAT_STAGE_ID, // stage ID
     StageKind.CHAT, // stage kind,
+    AgentPersonaType.MEDIATOR,
     {
       promptContext: TG_AGENT_PROMPT,
       promptSettings: createAgentPromptSettings({
