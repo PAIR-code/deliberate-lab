@@ -18,6 +18,7 @@ import {
   createScaleSurveyQuestion,
   createStageProgressConfig,
   createStageTextConfig,
+  createSurveyAutoTransferConfig,
   createSurveyStage,
   createTextSurveyQuestion,
   createTOSStage,
@@ -100,10 +101,11 @@ const TG_TRANSFER_STAGE = createTransferStage({
   game: StageGame.TG,
   enableTimeout: false,
   descriptions: createStageTextConfig({primaryText: TG_TRANSFER_TEXT}),
-  enableSurveyMatching: true,
-  surveyStageId: 'tg_survey',
-  surveyQuestionId: 'fruit_preference',
-  participantCounts: {apple: 1, pear: 1},
+  autoTransferConfig: createSurveyAutoTransferConfig({
+    surveyStageId: 'tg_survey',
+    surveyQuestionId: 'fruit_preference',
+    participantCounts: {apple: 1, pear: 1},
+  }),
 });
 
 const TG_CHAT_INTRO_TEXT = `On the next screen, you will have a conversation with another participant. To get started, explain your position on fruit.`;

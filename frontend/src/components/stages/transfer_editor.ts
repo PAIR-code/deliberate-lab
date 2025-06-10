@@ -9,7 +9,12 @@ import '@material/web/checkbox/checkbox.js';
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
-import {TransferStageConfig, StageKind} from '@deliberation-lab/utils';
+import {
+  AutoTransferType,
+  TransferStageConfig,
+  StageKind,
+  createSurveyAutoTransferConfig,
+} from '@deliberation-lab/utils';
 
 import {styles} from './transfer_editor.scss';
 
@@ -24,20 +29,22 @@ export class TransferEditorComponent extends MobxLitElement {
 
   private renderSurveyToggle() {
     if (!this.stage) return nothing;
-    const isSurveyMatchingEnabled = this.stage.enableSurveyMatching || false;
+    const isSurveyMatchingEnabled = this.stage.autoTransferConfig;
 
     const updateSurveyMatching = () => {
       if (!this.stage) return;
-      const enableSurveyMatching = !isSurveyMatchingEnabled;
-      this.experimentEditor.updateStage({...this.stage, enableSurveyMatching});
+      const autoTransferConfig = isSurveyMatchingEnabled
+        ? null
+        : createSurveyAutoTransferConfig();
+      this.experimentEditor.updateStage({...this.stage, autoTransferConfig});
     };
 
     return html`
       <div class="section">
         <div class="title">Automatic transfer</div>
         <div class="description">
-          If you would like to transfer participants based on rules rather than manually,
-          specify the behavior here.
+          If you would like to transfer participants based on rules rather than
+          manually, specify the behavior here.
         </div>
 
         <div class="checkbox-wrapper">
@@ -61,7 +68,7 @@ export class TransferEditorComponent extends MobxLitElement {
 
     return html`
       ${this.renderSurveyToggle()}
-      ${this.stage.enableSurveyMatching ? this.renderSurveyConfig() : nothing}
+      ${this.stage.autoTransferConfig ? this.renderSurveyConfig() : nothing}
       ${this.renderTimeout()}
     `;
   }
@@ -127,25 +134,55 @@ export class TransferEditorComponent extends MobxLitElement {
   }
 
   private renderSurveyConfig() {
-    if (!this.stage) return nothing;
+    if (
+      !this.stage ||
+      this.stage.autoTransferConfig?.type !== AutoTransferType.SURVEY
+    )
+      return nothing;
 
     const updateSurveyStageId = (e: InputEvent) => {
-      if (!this.stage) return;
+      if (
+        !this.stage ||
+        this.stage.autoTransferConfig?.type !== AutoTransferType.SURVEY
+      )
+        return;
       const surveyStageId = (e.target as HTMLInputElement).value;
-      this.experimentEditor.updateStage({...this.stage, surveyStageId});
+      const autoTransferConfig = {
+        ...this.stage.autoTransferConfig,
+        surveyStageId,
+      };
+      this.experimentEditor.updateStage({...this.stage, autoTransferConfig});
     };
 
     const updateSurveyQuestionId = (e: InputEvent) => {
-      if (!this.stage) return;
+      if (
+        !this.stage ||
+        this.stage.autoTransferConfig?.type !== AutoTransferType.SURVEY
+      )
+        return;
       const surveyQuestionId = (e.target as HTMLInputElement).value;
-      this.experimentEditor.updateStage({...this.stage, surveyQuestionId});
+      const autoTransferConfig = {
+        ...this.stage.autoTransferConfig,
+        surveyQuestionId,
+      };
+      this.experimentEditor.updateStage({...this.stage, autoTransferConfig});
     };
 
     const updateParticipantCounts = (e: InputEvent) => {
-      if (!this.stage) return;
+      if (
+        !this.stage ||
+        this.stage.autoTransferConfig?.type !== AutoTransferType.SURVEY
+      )
+        return;
       try {
-        const participantCounts = JSON.parse((e.target as HTMLInputElement).value);
-        this.experimentEditor.updateStage({...this.stage, participantCounts});
+        const participantCounts = JSON.parse(
+          (e.target as HTMLInputElement).value,
+        );
+        const autoTransferConfig = {
+          ...this.stage.autoTransferConfig,
+          participantCounts,
+        };
+        this.experimentEditor.updateStage({...this.stage, autoTransferConfig});
       } catch {
         // Handle invalid JSON input gracefully
       }
@@ -158,7 +195,7 @@ export class TransferEditorComponent extends MobxLitElement {
           type="text"
           id="surveyStageId"
           name="surveyStageId"
-          .value=${this.stage.surveyStageId || ''}
+          .value=${this.stage.autoTransferConfig?.surveyStageId || ''}
           ?disabled=${!this.experimentEditor.canEditStages}
           @input=${updateSurveyStageId}
         />
@@ -168,19 +205,24 @@ export class TransferEditorComponent extends MobxLitElement {
           type="text"
           id="surveyQuestionId"
           name="surveyQuestionId"
-          .value=${this.stage.surveyQuestionId || ''}
+          .value=${this.stage.autoTransferConfig?.surveyQuestionId || ''}
           ?disabled=${!this.experimentEditor.canEditStages}
           @input=${updateSurveyQuestionId}
         />
 
         <label for="participantCounts">
-          Provide a JSON object mapping survey answer ids to required participant counts.
+          Provide a JSON object mapping survey answer ids to required
+          participant counts.
         </label>
         <input
           type="text"
           id="participantCounts"
           name="participantCounts"
-          .value=${JSON.stringify(this.stage.participantCounts || {}, null, 2)}
+          .value=${JSON.stringify(
+            this.stage.autoTransferConfig?.participantCounts || {},
+            null,
+            2,
+          )}
           ?disabled=${!this.experimentEditor.canEditStages}
           @input=${updateParticipantCounts}
         />

@@ -6,7 +6,10 @@ import {
   createStageProgressConfig,
   createStageTextConfig,
 } from './stage';
-import {CohortParticipantConfig} from '../experiment';
+import {
+  CohortParticipantConfig,
+  createCohortParticipantConfig,
+} from '../experiment';
 
 /** Transfer stage types and functions. */
 
@@ -18,11 +21,37 @@ export interface TransferStageConfig extends BaseStageConfig {
   kind: StageKind.TRANSFER;
   enableTimeout: boolean;
   timeoutSeconds: number;
-  enableSurveyMatching?: boolean; // Whether to enable survey-based participant matching
-  surveyStageId?: string; // ID of the survey stage to reference
-  surveyQuestionId?: string; // ID of the survey question to reference
-  participantCounts?: { [key: string]: number }; // Map of serialized survey answers to required participant counts
-  newCohortParticipantConfig?: CohortParticipantConfig; // Cohort participant config for new cohorts
+  autoTransferConfig: AutoTransferConfig | null; // if null, no auto-transfer
+}
+
+export type AutoTransferConfig =
+  | DefaultAutoTransferConfig
+  | SurveyAutoTransferConfig;
+
+export enum AutoTransferType {
+  DEFAULT = 'default', // group only based on number of participants
+  SURVEY = 'survey', // match based on responses to specific survey question
+}
+
+export interface BaseAutoTransferConfig {
+  type: AutoTransferType;
+  // Cohort participant config for new cohorts
+  autoCohortParticipantConfig: CohortParticipantConfig;
+}
+
+export interface DefaultAutoTransferConfig extends BaseAutoTransferConfig {
+  type: AutoTransferType.DEFAULT;
+  minParticipants: number;
+  maxParticipants: number;
+}
+
+export interface SurveyAutoTransferConfig extends BaseAutoTransferConfig {
+  // ID of the survey stage to reference
+  surveyStageId: string;
+  // ID of the survey question to reference
+  surveyQuestionId: string;
+  // Map of serialized survey answers to required participant counts
+  participantCounts: {[key: string]: number};
 }
 
 // ************************************************************************* //
@@ -45,9 +74,20 @@ export function createTransferStage(
     progress: config.progress ?? createStageProgressConfig(),
     enableTimeout: config.enableTimeout ?? false,
     timeoutSeconds: config.timeoutSeconds ?? 600, // 10 minutes
-    enableSurveyMatching: config.enableSurveyMatching ?? false,
-    surveyStageId: config.surveyStageId,
-    surveyQuestionId: config.surveyQuestionId,
-    participantCounts: config.participantCounts,
+    autoTransferConfig: config.autoTransferConfig ?? null,
+  };
+}
+
+/** Create survey auto-transfer config. */
+export function createSurveyAutoTransferConfig(
+  config: Partial<SurveyAutoTransferConfig> = {},
+): SurveyAutoTransferConfig {
+  return {
+    type: AutoTransferType.SURVEY,
+    autoCohortParticipantConfig:
+      config.autoCohortParticipantConfig ?? createCohortParticipantConfig(),
+    surveyStageId: config.surveyStageId ?? '',
+    surveyQuestionId: config.surveyQuestionId ?? '',
+    participantCounts: config.participantCounts ?? {},
   };
 }

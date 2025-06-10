@@ -1,5 +1,6 @@
 import {Timestamp} from 'firebase-admin/firestore';
 import {
+  AutoTransferType,
   Experiment,
   ParticipantProfileExtended,
   ParticipantStatus,
@@ -15,7 +16,7 @@ import {
 import {completeStageAsAgentParticipant} from './agent.utils';
 import {getFirestoreActiveParticipants} from './utils/firestore';
 import {generateId} from '@deliberation-lab/utils';
-import { createCohortInternal } from './cohort.utils';
+import {createCohortInternal} from './cohort.utils';
 
 import {app} from './app';
 
@@ -25,7 +26,10 @@ export async function updateParticipantNextStage(
   participant: ParticipantProfileExtended,
   stageIds: string[],
 ) {
-  const response = {currentStageId: null as (string | null), endExperiment: false};
+  const response = {
+    currentStageId: null as string | null,
+    endExperiment: false,
+  };
 
   const currentStageId = participant.currentStageId;
   const currentStageIndex = stageIds.indexOf(currentStageId);
@@ -183,8 +187,21 @@ export async function handleAutomaticTransfer(
   experimentId: string,
   stageConfig: TransferStageConfig,
   participant: ParticipantProfileExtended,
-): Promise<{ currentStageId: string; endExperiment: boolean } | null> {
+): Promise<{currentStageId: string; endExperiment: boolean} | null> {
   const firestore = app.firestore();
+
+  // If stage config does not have an auto-transfer config, ignore
+  // TODO: Remove temporary ignore of "default" transfer type
+  if (
+    !stageConfig.autoTransferConfig ||
+    stageConfig.autoTransferConfig.type !== AutoTransferType.SURVEY
+  ) {
+    return null;
+  }
+
+  // Auto-transfer config
+  // TODO: Add switch statement depending on transfer type
+  const autoTransferConfig = stageConfig.autoTransferConfig;
 
   // Do a read to lock the current participant's document for this transaction
   // The data itself might be outdated, so we discard it
@@ -205,7 +222,7 @@ export async function handleAutomaticTransfer(
         .where('currentStageId', '==', stageConfig.id)
         .where('currentStatus', '==', ParticipantStatus.IN_PROGRESS)
         .where('currentCohortId', '==', participant.currentCohortId)
-        .where('transferCohortId', '==', null)
+        .where('transferCohortId', '==', null),
     )
   ).docs.map((doc) => doc.data() as ParticipantProfileExtended);
 
@@ -216,9 +233,7 @@ export async function handleAutomaticTransfer(
   }
 
   // Filter connected participants
-  const connectedParticipants = waitingParticipants.filter(
-    (p) => p.connected,
-  );
+  const connectedParticipants = waitingParticipants.filter((p) => p.connected);
 
   console.log(
     `Connected participants for transfer stage ${stageConfig.id}: ${connectedParticipants
@@ -233,37 +248,44 @@ export async function handleAutomaticTransfer(
     .collection('cohorts')
     .doc(participant.currentCohortId)
     .collection('publicStageData')
-    .doc(stageConfig.surveyStageId!);
+    .doc(autoTransferConfig.surveyStageId!);
 
-  const surveyStageData = (
-    await transaction.get(surveyStageDoc)
-  ).data() as SurveyStagePublicData | undefined;
+  const surveyStageData = (await transaction.get(surveyStageDoc)).data() as
+    | SurveyStagePublicData
+    | undefined;
 
   if (!surveyStageData) {
     throw new Error('Survey stage data not found');
   }
 
   // Update requiredCounts to be treated as a Firebase map type
-  const requiredCounts = stageConfig.participantCounts || {};
+  const requiredCounts = autoTransferConfig.participantCounts || {};
 
   // Group participants by survey answers
   const answerGroups: Record<string, ParticipantProfileExtended[]> = {};
   for (const connectedParticipant of connectedParticipants) {
-    const surveyAnswers = surveyStageData.participantAnswerMap[connectedParticipant.publicId];
+    const surveyAnswers =
+      surveyStageData.participantAnswerMap[connectedParticipant.publicId];
     if (!surveyAnswers) {
-      console.log(`Participant ${connectedParticipant.publicId} has no survey answers`);
+      console.log(
+        `Participant ${connectedParticipant.publicId} has no survey answers`,
+      );
       continue;
     }
 
-    const surveyAnswer = surveyAnswers[stageConfig.surveyQuestionId!];
+    const surveyAnswer = surveyAnswers[autoTransferConfig.surveyQuestionId!];
     if (!surveyAnswer) {
-      console.log(`Participant ${connectedParticipant.publicId} has no survey answer matching ${stageConfig.surveyQuestionId}`);
+      console.log(
+        `Participant ${connectedParticipant.publicId} has no survey answer matching ${stageConfig.surveyQuestionId}`,
+      );
       continue;
     }
 
     // Only support multiple-choice questions for now
     if (surveyAnswer.kind !== SurveyQuestionKind.MULTIPLE_CHOICE) {
-      throw new Error(`Selected survey answer is not of kind ${SurveyQuestionKind.MULTIPLE_CHOICE}`);
+      throw new Error(
+        `Selected survey answer is not of kind ${SurveyQuestionKind.MULTIPLE_CHOICE}`,
+      );
     }
 
     const key = surveyAnswer.choiceId;
@@ -271,7 +293,9 @@ export async function handleAutomaticTransfer(
       answerGroups[key] = [];
     }
     answerGroups[key].push(connectedParticipant);
-    console.log(`Participant ${connectedParticipant.publicId} has answer ${key}`);
+    console.log(
+      `Participant ${connectedParticipant.publicId} has answer ${key}`,
+    );
   }
 
   // Check if a cohort can be formed
@@ -282,14 +306,21 @@ export async function handleAutomaticTransfer(
 
     // Sort by waiting time (oldest first)
     matchingParticipants = matchingParticipants.sort((a, b) => {
-      const aTime = a.timestamps.readyStages?.[stageConfig.id]?.toMillis?.() ?? 0;
-      const bTime = b.timestamps.readyStages?.[stageConfig.id]?.toMillis?.() ?? 0;
+      const aTime =
+        a.timestamps.readyStages?.[stageConfig.id]?.toMillis?.() ?? 0;
+      const bTime =
+        b.timestamps.readyStages?.[stageConfig.id]?.toMillis?.() ?? 0;
       return aTime - bTime;
     });
 
     // Move the current participant to the front if present
-    matchingParticipants = matchingParticipants.filter(p => p.privateId === participant.privateId)
-      .concat(matchingParticipants.filter(p => p.privateId !== participant.privateId));
+    matchingParticipants = matchingParticipants
+      .filter((p) => p.privateId === participant.privateId)
+      .concat(
+        matchingParticipants.filter(
+          (p) => p.privateId !== participant.privateId,
+        ),
+      );
 
     // If not enough participants to form a cohort, return null
     if (matchingParticipants.length < requiredCount) {
@@ -307,11 +338,17 @@ export async function handleAutomaticTransfer(
   // Create a new cohort and transfer participants
   const cohortConfig = createCohortConfig({
     id: generateId(),
-    metadata: createMetadataConfig({ creator: 'system', dateCreated: Timestamp.now(), dateModified: Timestamp.now() }),
-    participantConfig: stageConfig.newCohortParticipantConfig,
+    metadata: createMetadataConfig({
+      creator: 'system',
+      dateCreated: Timestamp.now(),
+      dateModified: Timestamp.now(),
+    }),
+    participantConfig: autoTransferConfig.newCohortParticipantConfig,
   });
 
-  console.log(`Creating cohort ${cohortConfig.id} for participants: ${cohortParticipants.map((p) => p.publicId).join(', ')}`);
+  console.log(
+    `Creating cohort ${cohortConfig.id} for participants: ${cohortParticipants.map((p) => p.publicId).join(', ')}`,
+  );
 
   await createCohortInternal(transaction, experimentId, cohortConfig);
 
@@ -327,7 +364,9 @@ export async function handleAutomaticTransfer(
       currentStatus: ParticipantStatus.TRANSFER_PENDING,
     });
 
-    console.log(`Transferring participant ${participant.publicId} to cohort ${cohortConfig.id}`);
+    console.log(
+      `Transferring participant ${participant.publicId} to cohort ${cohortConfig.id}`,
+    );
   }
 
   // Update the passed-in participant as a side-effect, since this is how we merge all the changes
@@ -335,7 +374,7 @@ export async function handleAutomaticTransfer(
   participant.currentStatus = ParticipantStatus.TRANSFER_PENDING;
   participant.transferCohortId = cohortConfig.id;
 
-  return { currentStageId: stageConfig.id, endExperiment: false };
+  return {currentStageId: stageConfig.id, endExperiment: false};
 }
 
 /** Fetch a participant record by experimentId and participantId. */
