@@ -37,6 +37,7 @@ textarea {
     --pr-textarea-line-height,
     var(--pr-body-line-height)
   ); /* default set in shared styles */
+  overflow: hidden;
   padding: var(
     --pr-textarea-padding,
     var(--pr-padding)

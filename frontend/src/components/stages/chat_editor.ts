@@ -9,11 +9,7 @@ import {AuthService} from '../../services/auth.service';
 
 import {ExperimentEditor} from '../../services/experiment.editor';
 
-import {
-  ChatStageConfig,
-  StageKind,
-  checkApiKeyExists,
-} from '@deliberation-lab/utils';
+import {ChatStageConfig} from '@deliberation-lab/utils';
 
 import {styles} from './chat_editor.scss';
 
@@ -43,6 +39,7 @@ export class ChatEditor extends MobxLitElement {
 
   private renderTimeLimit() {
     const timeLimit = this.stage?.timeLimitInMinutes ?? null;
+    const requireFullTime = this.stage?.requireFullTime ?? false;
 
     const updateCheck = () => {
       if (!this.stage) return;
@@ -65,6 +62,14 @@ export class ChatEditor extends MobxLitElement {
       this.experimentEditor.updateStage({
         ...this.stage,
         timeLimitInMinutes: timeLimit,
+      });
+    };
+
+    const updateRequireFullTime = (e: Event) => {
+      if (!this.stage) return;
+      this.experimentEditor.updateStage({
+        ...this.stage,
+        requireFullTime: (e.target as HTMLInputElement).checked,
       });
     };
 
@@ -97,8 +102,18 @@ export class ChatEditor extends MobxLitElement {
                   @input=${updateNum}
                 />
               </div>
+              <div class="checkbox-wrapper tab">
+                <md-checkbox
+                  touch-target="wrapper"
+                  ?checked=${requireFullTime}
+                  ?disabled=${!this.experimentEditor.canEditStages}
+                  @change=${updateRequireFullTime}
+                >
+                </md-checkbox>
+                <div>Require participants to stay until time elapses</div>
+              </div>
             `
-          : ''}
+          : nothing}
       </div>
     `;
   }

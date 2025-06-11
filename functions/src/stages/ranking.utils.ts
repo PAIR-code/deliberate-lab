@@ -12,6 +12,7 @@ import {
   createRankingStageParticipantAnswer,
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from '../agent.utils';
+import {writeLogEntry} from '../log.utils';
 import {getPastStagesPromptContext} from './stage.utils';
 
 import * as admin from 'firebase-admin';
@@ -77,6 +78,15 @@ export async function getAgentParticipantRankingStageResponse(
   const generationConfig = createModelGenerationConfig();
 
   // Call LLM API
+  writeLogEntry(
+    experimentId,
+    participant.currentCohortId,
+    stage.id,
+    participant.publicId,
+    `Sending agent participant prompt for ranking stage (${stage.name})`,
+    prompt,
+  );
+
   // TODO: Use structured output
   const rawResponse = await getAgentResponse(
     experimenterData,
@@ -86,12 +96,13 @@ export async function getAgentParticipantRankingStageResponse(
   );
   const response = rawResponse.text ?? '';
 
-  // Check console log for response
-  console.log(
-    'SENDING AGENT PARTICIPANT PROMPT FOR RANKING STAGE\n',
-    `Experiment: ${experimentId}\n`,
-    `Participant: ${participant.publicId}\n`,
-    `Stage: ${stage.name} (${stage.kind})\n`,
+  // Add log entry
+  writeLogEntry(
+    experimentId,
+    participant.currentCohortId,
+    stage.id,
+    participant.publicId,
+    `Received agent participant response for ranking stage (${stage.name})`,
     response,
   );
 
@@ -105,10 +116,6 @@ export async function getAgentParticipantRankingStageResponse(
       id: stage.id,
       rankingList,
     });
-    console.log(
-      '✅ RankingStageParticipantAnswer\n',
-      JSON.stringify(participantAnswer),
-    );
     return participantAnswer;
   } catch (error) {
     console.log(error);

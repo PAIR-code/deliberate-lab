@@ -1,6 +1,6 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.overlay;
@@ -62,4 +62,48 @@
   md-checkbox {
     flex-shrink: 0;
   }
+}
+
+/* Used in agent-participant-configuration-dialog */
+.buttons-wrapper {
+  @include common.flex-row-align-center;
+  justify-content: end;
+}
+
+/* Used in agent-participant-configuration-dialog */
+.agent-persona-wrapper {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-large;
+  margin-top: common.$spacing-large;
+}
+
+.agent-persona {
+  @include common.flex-column;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-small;
+  flex-wrap: wrap;
+  gap: common.$spacing-small;
+  max-width: 400px;
+  padding: common.$spacing-medium;
+
+  &:focus,
+  &:hover {
+    cursor: pointer;
+  }
+
+  &.selected {
+    background: var(--md-sys-color-surface-variant);
+    border-color: var(--md-sys-color-primary);
+  }
+}
+
+.subtitle {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outline);
+}
+
+.error {
+  @include typescale.body-small;
+  color: var(--md-sys-color-error);
 }

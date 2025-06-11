@@ -26,6 +26,7 @@ import {
   AlertMessage,
   AlertStatus,
   AgentPersonaConfig,
+  AgentPersonaType,
   BaseAgentPromptConfig,
   ChatMessage,
   CohortConfig,
@@ -33,6 +34,7 @@ import {
   CreateChatMessageData,
   Experiment,
   ExperimentDownload,
+  MediatorProfile,
   MetadataConfig,
   ParticipantProfileExtended,
   ParticipantStatus,
@@ -103,13 +105,17 @@ export class ExperimentManager extends Service {
   // Experimenter-only data
   @observable experimentId: string | undefined = undefined;
   @observable cohortMap: Record<string, CohortConfig> = {};
+  @observable agentPersonaMap: Record<string, AgentPersonaConfig> = {};
   @observable participantMap: Record<string, ParticipantProfileExtended> = {};
+  @observable mediatorMap: Record<string, MediatorProfile> = {};
   @observable alertMap: Record<string, AlertMessage> = {};
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
   @observable isCohortsLoading = false;
   @observable isParticipantsLoading = false;
+  @observable isMediatorsLoading = false;
+  @observable isAgentsLoading = false;
 
   // Firestore loading (not included in general isLoading)
   @observable isWritingCohort = false;
@@ -121,6 +127,8 @@ export class ExperimentManager extends Service {
 
   // Current participant, view in dashboard
   @observable currentParticipantId: string | undefined = undefined;
+  @observable currentCohortId: string | undefined = undefined;
+  @observable showCohortEditor = true;
   @observable showCohortList = true;
   @observable showParticipantStats = true;
   @observable showParticipantPreview = true;
@@ -219,6 +227,10 @@ export class ExperimentManager extends Service {
     this.cohortEditing = cohort;
   }
 
+  setShowCohortEditor(showCohortEditor: boolean) {
+    this.showCohortEditor = showCohortEditor;
+  }
+
   setShowCohortList(showCohortList: boolean) {
     this.showCohortList = showCohortList;
   }
@@ -239,14 +251,30 @@ export class ExperimentManager extends Service {
     this.expandAllCohorts = expandAllCohorts;
   }
 
+  setCurrentCohortId(id: string | undefined) {
+    console.log(id);
+    this.currentCohortId = id;
+  }
+
   setCurrentParticipantId(id: string | undefined) {
     this.currentParticipantId = id;
+    // TODO: Update current cohort to match current participant's cohort?
 
     // Update participant service in order to load correct participant answers
     // (Note: This also updates participant answer service accordingly)
     if (this.experimentId && id) {
       this.sp.participantService.updateForRoute(this.experimentId, id);
     }
+  }
+
+  @computed get agentPersonas() {
+    return Object.values(this.agentPersonaMap);
+  }
+
+  @computed get agentParticipantPersonas() {
+    return this.agentPersonas.filter(
+      (persona) => persona.type === AgentPersonaType.PARTICIPANT,
+    );
   }
 
   @computed get currentParticipant() {
@@ -257,6 +285,27 @@ export class ExperimentManager extends Service {
   getCurrentParticipantCohort(participant: ParticipantProfileExtended) {
     return this.getCohort(
       participant.transferCohortId ?? participant.currentCohortId,
+    );
+  }
+
+  getCohortAgentParticipants(cohortId: string) {
+    return Object.values(this.participantMap).filter(
+      (participant) =>
+        participant.agentConfig && cohortId === participant.currentCohortId,
+    );
+  }
+
+  getCohortHumanParticipants(cohortId: string) {
+    return Object.values(this.participantMap).filter(
+      (participant) =>
+        !participant.agentConfig && cohortId === participant.currentCohortId,
+    );
+  }
+
+  getCohortAgentMediators(cohortId: string) {
+    return Object.values(this.mediatorMap).filter(
+      (mediator) =>
+        mediator.agentConfig && mediator.currentCohortId === cohortId,
     );
   }
 
@@ -328,12 +377,19 @@ export class ExperimentManager extends Service {
   }
 
   @computed get isLoading() {
-    return this.isCohortsLoading || this.isParticipantsLoading;
+    return (
+      this.isCohortsLoading ||
+      this.isParticipantsLoading ||
+      this.isMediatorsLoading ||
+      this.isAgentsLoading
+    );
   }
 
   set isLoading(value: boolean) {
     this.isCohortsLoading = value;
     this.isParticipantsLoading = value;
+    this.isMediatorsLoading = value;
+    this.isAgentsLoading = value;
   }
 
   updateForRoute(experimentId: string) {
@@ -429,6 +485,64 @@ export class ExperimentManager extends Service {
         },
       ),
     );
+
+    // Subscribe to mediators' private profiles
+    this.unsubscribe.push(
+      onSnapshot(
+        query(
+          collection(
+            this.sp.firebaseService.firestore,
+            'experiments',
+            id,
+            'mediators',
+          ),
+          where('currentStatus', '!=', ParticipantStatus.DELETED),
+        ),
+        (snapshot) => {
+          let changedDocs = snapshot.docChanges().map((change) => change.doc);
+          if (changedDocs.length === 0) {
+            changedDocs = snapshot.docs;
+          }
+
+          changedDocs.forEach((doc) => {
+            const data = {
+              agentConfig: null,
+              ...doc.data(),
+            } as MediatorProfile;
+            this.mediatorMap[doc.id] = data;
+          });
+
+          this.isMediatorsLoading = false;
+        },
+      ),
+    );
+
+    // Subscribe to agent personas
+    this.unsubscribe.push(
+      onSnapshot(
+        query(
+          collection(
+            this.sp.firebaseService.firestore,
+            'experiments',
+            id,
+            'agents',
+          ),
+        ),
+        (snapshot) => {
+          let changedDocs = snapshot.docChanges().map((change) => change.doc);
+          if (changedDocs.length === 0) {
+            changedDocs = snapshot.docs;
+          }
+
+          changedDocs.forEach((doc) => {
+            const data = doc.data() as AgentPersonaConfig;
+            this.agentPersonaMap[doc.id] = data;
+          });
+
+          this.isAgentsLoading = false;
+        },
+      ),
+    );
   }
 
   unsubscribeAll() {
@@ -438,6 +552,8 @@ export class ExperimentManager extends Service {
     // Reset experiment data
     this.cohortMap = {};
     this.participantMap = {};
+    this.mediatorMap = {};
+    this.agentPersonaMap = {};
     this.alertMap = {};
   }
 
@@ -610,15 +726,12 @@ export class ExperimentManager extends Service {
   }
 
   /** Create agent participant. */
-  async createAgentParticipant(cohortId: string) {
+  async createAgentParticipant(
+    cohortId: string,
+    agentConfig: ProfileAgentConfig,
+  ) {
     this.isWritingParticipant = true;
     let response = {};
-
-    const agentConfig: ProfileAgentConfig = {
-      agentId: 'test',
-      promptContext: '',
-      modelSettings: DEFAULT_AGENT_MODEL_SETTINGS,
-    };
 
     if (this.experimentId) {
       const isAnonymous = requiresAnonymousProfiles(

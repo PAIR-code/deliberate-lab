@@ -13,12 +13,7 @@ import {
   ParticipantProfileBase,
   createParticipantProfileBase,
 } from '../participant';
-import {AgentChatPromptConfig, AgentResponseConfig} from '../agent';
-import {MediatorProfile} from '../mediator';
-import {
-  DEFAULT_MODEL,
-  DEFAULT_AGENT_MEDIATOR_PROMPT,
-} from './chat_stage.prompts';
+import {AgentChatPromptConfig} from '../agent';
 
 /** Group chat stage types and functions. */
 
@@ -35,6 +30,7 @@ export interface ChatStageConfig extends BaseStageConfig {
   kind: StageKind.CHAT;
   discussions: ChatDiscussion[]; // ordered list of discussions
   timeLimitInMinutes: number | null; // How long remaining in the chat.
+  requireFullTime: boolean | null; // Require participants to stay in chat until time limit is up
 }
 
 /** Chat discussion. */
@@ -161,6 +157,7 @@ export function createChatStage(
       createStageProgressConfig({waitForAllParticipants: true}),
     discussions: config.discussions ?? [],
     timeLimitInMinutes: config.timeLimitInMinutes ?? null,
+    requireFullTime: config.requireFullTime ?? false,
   };
 }
 

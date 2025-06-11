@@ -10,6 +10,7 @@ import {
   getSurveyStageQuestion,
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from '../agent.utils';
+import {writeLogEntry} from '../log.utils';
 import {getPastStagesPromptContext} from './stage.utils';
 
 /** Use LLM call to generation agent participant response to survey stage. */
@@ -90,6 +91,14 @@ async function getAgentParticipantSurveyQuestionResponse(
   const generationConfig = createModelGenerationConfig();
 
   // Call LLM API
+  writeLogEntry(
+    experimentId,
+    participant.currentCohortId,
+    stage.id,
+    participant.publicId,
+    `Sending agent participant prompt for survey stage (${stage.name} - ${question.questionTitle})`,
+    prompt,
+  );
   // TODO: Use structured output
   const rawResponse = await getAgentResponse(
     experimenterData,
@@ -99,13 +108,12 @@ async function getAgentParticipantSurveyQuestionResponse(
   );
   const response = rawResponse.text ?? '';
 
-  // Check console log for response
-  console.log(
-    'SENDING AGENT PARTICIPANT PROMPT FOR SURVEY STAGE\n',
-    `Experiment: ${experimentId}\n`,
-    `Participant: ${participant.publicId}\n`,
-    `Stage: ${stage.name} (${stage.kind})\n`,
-    `Question: ${question.questionTitle}\n`,
+  writeLogEntry(
+    experimentId,
+    participant.currentCohortId,
+    stage.id,
+    participant.publicId,
+    `Received agent participant response for survey stage (${stage.name} - ${question.questionTitle})`,
     response,
   );
 
