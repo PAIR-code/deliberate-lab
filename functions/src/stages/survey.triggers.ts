@@ -6,6 +6,8 @@ import {
   StageKind,
   StageParticipantAnswer,
 } from '@deliberation-lab/utils';
+import {addParticipantAnswerToSurveyStagePublicData} from './survey.utils';
+import {getFirestoreParticipant, getFirestoreStage} from '../utils/firestore';
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
@@ -24,47 +26,22 @@ export const updateSurveyStagePublicData = onDocumentWritten(
   async (event) => {
     const data = event.data.after.data() as StageParticipantAnswer | undefined;
 
-    const stageDocument = app
-      .firestore()
-      .collection('experiments')
-      .doc(event.params.experimentId)
-      .collection('stages')
-      .doc(event.params.stageId);
-    const stage = (await stageDocument.get()).data() as StageConfig;
+    const stage = await getFirestoreStage(
+      event.params.experimentId,
+      event.params.stageId,
+    );
     if (stage.kind !== StageKind.SURVEY) return;
 
-    const participantDocument = app
-      .firestore()
-      .collection('experiments')
-      .doc(event.params.experimentId)
-      .collection('participants')
-      .doc(event.params.participantId);
+    const participant = await getFirestoreParticipant(
+      event.params.experimentId,
+      event.params.participantId,
+    );
 
-    // Run document write as transaction to ensure consistency
-    await app.firestore().runTransaction(async (transaction) => {
-      // Get participant
-      const participant = (
-        await participantDocument.get()
-      ).data() as ParticipantProfileExtended;
-
-      const publicDocument = app
-        .firestore()
-        .collection('experiments')
-        .doc(event.params.experimentId)
-        .collection('cohorts')
-        .doc(participant.currentCohortId)
-        .collection('publicStageData')
-        .doc(event.params.stageId);
-
-      // Update public stage data (current participant rankings, current winner)
-      const publicStageData = (
-        await publicDocument.get()
-      ).data() as SurveyStagePublicData;
-      publicStageData.participantAnswerMap[participant.publicId] =
-        data.answerMap;
-
-      // Write public data
-      transaction.set(publicDocument, publicStageData);
-    });
+    addParticipantAnswerToSurveyStagePublicData(
+      event.params.experimentId,
+      stage,
+      participant,
+      data,
+    );
   },
 );
