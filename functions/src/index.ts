@@ -37,7 +37,6 @@ export * from './stages/profile.utils';
 
 export * from './stages/ranking.endpoints';
 export * from './stages/ranking.triggers';
-export * from './stages/ranking.utils';
 
 export * from './stages/salesperson.endpoints';
 export * from './stages/salesperson.utils';

@@ -12,7 +12,7 @@ import {
 import {updateParticipantNextStage} from './participant.utils';
 import {initiateChatDiscussion} from './stages/chat.utils';
 import {completeProfile} from './stages/profile.utils';
-import {getAgentParticipantRankingStageResponse} from './stages/ranking.utils';
+import {getAgentParticipantRankingStageResponse} from './stages/ranking.agent';
 import {getAgentParticipantSurveyStageResponse} from './stages/survey.agent';
 import {
   getExperimenterData,
