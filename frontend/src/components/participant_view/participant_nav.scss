@@ -1,6 +1,6 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -47,7 +47,7 @@
   border-radius: common.$spacing-medium;
 
   &.experimenter-only {
-    opacity: .25;
+    opacity: 0.25;
   }
 }
 
@@ -60,4 +60,29 @@
   @include common.chip;
   @include typescale.label-small;
   border-radius: common.$spacing-small;
+}
+
+@include common.viewport-small {
+  :host {
+    width: 0;
+    min-width: 0;
+    flex-basis: 0;
+    overflow: hidden;
+  }
+  .nav {
+    width: 0;
+    min-width: 0;
+    flex-basis: 0;
+    overflow: hidden;
+    border-right: none;
+    padding: 0;
+  }
+  .title,
+  .stages,
+  .nav-item-wrapper,
+  .nav-item,
+  .primary,
+  .chip {
+    display: none;
+  }
 }
