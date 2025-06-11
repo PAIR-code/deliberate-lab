@@ -16,8 +16,10 @@ export * from './presence.triggers';
 export * from './alert.endpoints';
 
 export * from './agent.endpoints';
-export * from './agent.triggers';
 export * from './agent.utils';
+
+export * from './agent_participant.triggers';
+export * from './agent_participant.utils';
 
 export * from './log.utils';
 
