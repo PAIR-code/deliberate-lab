@@ -10,7 +10,7 @@ import {
   ParticipantStatus,
   StageKind,
 } from '@deliberation-lab/utils';
-import {completeStageAsAgentParticipant} from './agent.utils';
+import {completeStageAsAgentParticipant} from './agent_participant.utils';
 import {updateCohortStageUnlocked} from './participant.utils';
 import {
   getFirestoreCohort,
