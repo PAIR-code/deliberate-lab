@@ -1,15 +1,29 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
   gap: common.$spacing-xxl;
 }
 
-.section {
+.section,
+.inner-section {
   @include common.flex-column;
   gap: common.$spacing-large;
+}
+
+summary {
+  @include typescale.title-medium;
+  padding-bottom: common.$spacing-large;
+}
+
+details {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+
+  .inner-section {
+    padding-bottom: common.$spacing-large;
+  }
 }
 
 .title {
@@ -36,7 +50,7 @@ pr-textarea {
   width: max-content;
 }
 
-.warning{
+.warning {
   font-style: italic;
   color: var(--md-sys-color-secondary);
   max-width: common.$info-content-max-width;

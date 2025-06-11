@@ -19,6 +19,8 @@ export * from './agent.endpoints';
 export * from './agent.triggers';
 export * from './agent.utils';
 
+export * from './log.utils';
+
 export * from './mediator.endpoints';
 
 export * from './stages/chat.endpoints';
@@ -28,6 +30,8 @@ export * from './stages/chat.utils';
 export * from './stages/chip.endpoints';
 export * from './stages/chip.triggers';
 export * from './stages/chip.utils';
+
+export * from './stages/profile.utils';
 
 export * from './stages/ranking.endpoints';
 export * from './stages/ranking.triggers';

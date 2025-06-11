@@ -14,6 +14,7 @@ import {AgentManager} from '../../services/agent.manager';
 import {AuthService} from '../../services/auth.service';
 import {CohortService} from '../../services/cohort.service';
 import {ParticipantService} from '../../services/participant.service';
+import {getChatTimeRemainingInSeconds} from '../../shared/stage.utils';
 
 import {
   ChatStageConfig,
@@ -22,7 +23,6 @@ import {
   MediatorStatus,
   ParticipantProfile,
   checkApiKeyExists,
-  getTimeElapsed,
 } from '@deliberation-lab/utils';
 import {
   convertUnifiedTimestampToDate,
@@ -72,21 +72,10 @@ export class ChatPanel extends MobxLitElement {
   }
 
   private updateTimeRemaining() {
-    const chatStage = this.stage as ChatStageConfig;
-    if (!chatStage || !chatStage.timeLimitInMinutes) {
-      this.timeRemainingInSeconds = null;
-      return;
-    }
-
-    let timeRemainingInSeconds = chatStage.timeLimitInMinutes * 60;
-    const messages = this.cohortService.chatMap[chatStage.id] ?? [];
-    if (messages.length) {
-      const timeElapsed = getTimeElapsed(messages[0].timestamp, 's');
-      timeRemainingInSeconds -= timeElapsed;
-    }
-
-    this.timeRemainingInSeconds =
-      timeRemainingInSeconds > 0 ? timeRemainingInSeconds : 0;
+    this.timeRemainingInSeconds = getChatTimeRemainingInSeconds(
+      this.stage,
+      this.cohortService.chatMap,
+    );
   }
 
   override render() {
@@ -123,9 +112,6 @@ export class ChatPanel extends MobxLitElement {
       const startText = `Conversation started at: ${convertUnifiedTimestampToDate(
         publicStageData.discussionStartTimestamp,
         false,
-      )}`;
-      const timeText = `Time remaining: ${this.formatTime(
-        this.timeRemainingInSeconds!,
       )}`;
       // TODO: Remove timer in favor of "end conversation" button
       timerHtml = html`<div class="countdown">

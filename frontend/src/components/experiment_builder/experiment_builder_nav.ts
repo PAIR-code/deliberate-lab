@@ -30,9 +30,14 @@ export class ExperimentBuilderNav extends MobxLitElement {
 
   override render() {
     return html`
-      ${this.experimentEditor.stages.map((stage, index) =>
-        this.renderStageItem(stage, index),
-      )}
+      <div class="buttons header">
+        ${this.renderAddStageButton()} ${this.renderLoadTemplateButton()}
+      </div>
+      <div class="nav-items-wrapper">
+        ${this.experimentEditor.stages.map((stage, index) =>
+          this.renderStageItem(stage, index),
+        )}
+      </div>
     `;
   }
 
@@ -54,7 +59,7 @@ export class ExperimentBuilderNav extends MobxLitElement {
         <div class="primary">
           ${getPrivateExperimentName(
             this.experimentEditor.experiment,
-            'Experiment config',
+            'Experiment stage editor',
           )}
         </div>
       </div>
@@ -129,6 +134,36 @@ export class ExperimentBuilderNav extends MobxLitElement {
           </pr-icon-button>
         </div>
       </div>
+    `;
+  }
+
+  private renderAddStageButton() {
+    return html`
+      <pr-button
+        color="tertiary"
+        variant="tonal"
+        ?disabled=${!this.experimentEditor.canEditStages}
+        @click=${() => {
+          this.experimentEditor.toggleStageBuilderDialog(false);
+        }}
+      >
+        + Add stage
+      </pr-button>
+    `;
+  }
+
+  private renderLoadTemplateButton() {
+    return html`
+      <pr-button
+        color="neutral"
+        variant="default"
+        ?disabled=${!this.experimentEditor.canEditStages}
+        @click=${() => {
+          this.experimentEditor.toggleStageBuilderDialog(true);
+        }}
+      >
+        Load template
+      </pr-button>
     `;
   }
 }

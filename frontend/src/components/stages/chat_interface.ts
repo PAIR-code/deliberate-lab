@@ -19,6 +19,10 @@ import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 import {RouterService} from '../../services/router.service';
 import {getHashBasedColor} from '../../shared/utils';
+import {
+  getChatStartTimestamp,
+  getChatTimeRemainingInSeconds,
+} from '../../shared/stage.utils';
 
 import {
   ChatDiscussionType,
@@ -87,31 +91,15 @@ export class ChatInterface extends MobxLitElement {
   }
 
   private updateTimeRemaining() {
-    const chatStartTimestamp = this.chatStartTimestamp();
-    if (
-      chatStartTimestamp === null ||
-      this.stage == null ||
-      this.stage.timeLimitInMinutes == null
-    ) {
-      this.timeRemainingInSeconds = null;
-      return;
-    }
-    const timeElapsed = Date.now() / 1000 - chatStartTimestamp;
-    const timeRemainingInSeconds =
-      this.stage.timeLimitInMinutes * 60 - timeElapsed;
-    this.timeRemainingInSeconds =
-      timeRemainingInSeconds > 0 ? Math.floor(timeRemainingInSeconds) : 0;
+    this.timeRemainingInSeconds = getChatTimeRemainingInSeconds(
+      this.stage,
+      this.cohortService.chatMap,
+    );
   }
 
   private chatStartTimestamp() {
-    if (!this.stage || this.stage.timeLimitInMinutes == null) {
-      return null;
-    }
-    const messages = this.cohortService.chatMap[this.stage.id] ?? [];
-    if (messages.length) {
-      return messages[0].timestamp?.seconds ?? null;
-    }
-    return null;
+    if (!this.stage) return null;
+    return getChatStartTimestamp(this.stage.id, this.cohortService.chatMap);
   }
 
   private sendUserInput() {

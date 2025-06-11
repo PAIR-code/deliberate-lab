@@ -45,8 +45,14 @@
   @include typescale.label-small;
   color: var(--md-sys-color-outline);
   flex-shrink: 0;
-  font-weight: 500;
-  text-transform: uppercase;
+  flex-wrap: wrap;
+  gap: common.$spacing-small;
+  justify-content: space-between;
+
+  .header-title {
+    font-weight: 500;
+    text-transform: uppercase;
+  }
 }
 
 .sidebar {
@@ -68,17 +74,25 @@
 .header {
   @include common.flex-row-align-center;
   @include typescale.title-large;
+  background: var(--md-sys-color-surface);
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   flex-shrink: 0;
   gap: common.$spacing-medium;
   height: common.$header-height;
   justify-content: space-between;
   padding: 0 common.$main-content-padding;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 
   .left,
   .right {
     @include common.flex-row-align-center;
     gap: common.$spacing-medium;
+  }
+
+  .left {
+    flex-grow: 1;
   }
 }
 
@@ -119,8 +133,10 @@ pr-button pr-icon {
 
 // Agent nav styles
 // TODO: Refactor agent nav into separate component
+.general-item,
 .agent-item {
   @include common.flex-column;
+  border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: common.$spacing-medium;
   cursor: pointer;
   gap: common.$spacing-small;
@@ -142,4 +158,8 @@ pr-button pr-icon {
 
 .subtitle {
   @include typescale.label-small;
+}
+
+.title-field {
+  flex-grow: 1;
 }

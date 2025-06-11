@@ -1,9 +1,8 @@
-import '../../pair-components/textarea';
-
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
+import '@material/web/textfield/filled-text-field.js';
 import '@material/web/checkbox/checkbox.js';
 
 import {core} from '../../core/core';
@@ -30,13 +29,8 @@ export class ExperimentSettingsEditor extends MobxLitElement {
   override render() {
     return html`
       <div class="inner-wrapper">
-        ${this.renderMetadata()}
-        <div class="divider"></div>
-        ${this.renderPermissions()}
-        <div class="divider"></div>
-        ${this.renderCohortParticipantConfig()}
-        <div class="divider"></div>
-        ${this.renderProlificConfig()}
+        ${this.renderMetadata()} ${this.renderPermissions()}
+        ${this.renderCohortParticipantConfig()} ${this.renderProlificConfig()}
       </div>
     `;
   }
@@ -59,37 +53,31 @@ export class ExperimentSettingsEditor extends MobxLitElement {
 
     return html`
       <div class="section">
-        <div class="title">Metadata</div>
-        <pr-textarea
-          label="Private experiment name*"
-          placeholder="Internal experiment name (not visible to participants)"
-          class=${this.experimentEditor.experiment.metadata.name === ''
-            ? 'required'
-            : ''}
-          variant="outlined"
+        <md-filled-text-field
+          label="Private experiment name (not visible to participants)"
+          required
+          .error=${!this.experimentEditor.experiment.metadata.name}
           .value=${this.experimentEditor.experiment.metadata.name ?? ''}
           ?disabled=${!this.experimentManager.isCreator}
           @input=${updateName}
         >
-        </pr-textarea>
-        <pr-textarea
-          label="Private experiment description"
-          placeholder="Experiment description (not visible to participants)"
-          variant="outlined"
+        </md-filled-text-field>
+        <md-filled-text-field
+          type="textarea"
+          rows="2"
+          label="Private experiment description (not visible to participants)"
           .value=${this.experimentEditor.experiment.metadata.description ?? ''}
           ?disabled=${!this.experimentManager.isCreator}
           @input=${updateDescription}
         >
-        </pr-textarea>
-        <pr-textarea
-          label="Public experiment name"
-          placeholder="External experiment name (shown to participants)"
-          variant="outlined"
+        </md-filled-text-field>
+        <md-filled-text-field
+          label="Public experiment name (shown to participants)"
           .value=${this.experimentEditor.experiment.metadata.publicName ?? ''}
           ?disabled=${!this.experimentManager.isCreator}
           @input=${updatePublicName}
         >
-        </pr-textarea>
+        </md-filled-text-field>
       </div>
     `;
   }
@@ -106,7 +94,6 @@ export class ExperimentSettingsEditor extends MobxLitElement {
 
     return html`
       <div class="section">
-        <div class="title">Permissions</div>
         <div class="checkbox-wrapper">
           <md-checkbox
             touch-target="wrapper"
@@ -117,7 +104,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           </md-checkbox>
           <div>
             Make experiment public (all researchers on platform can view and
-            edit if you share the link with them)
+            manage the experiment dashboard if you share the link with them)
           </div>
         </div>
       </div>
@@ -175,18 +162,17 @@ export class ExperimentSettingsEditor extends MobxLitElement {
             Require minimum number of participants in cohort to start experiment
           </div>
         </div>
-        <div class="number-input">
-          <label for="minParticipants"> Minimum number of participants </label>
-          <input
-            type="number"
-            id="minParticipants"
-            name="minParticipants"
-            min="0"
-            .value=${minParticipants ?? 0}
-            ?disabled=${!this.experimentManager.isCreator}
-            @input=${updateNum}
-          />
-        </div>
+        <md-filled-text-field
+          label="Minimum number of participants"
+          type="number"
+          id="minParticipants"
+          name="minParticipants"
+          min="0"
+          .value=${minParticipants ?? 0}
+          ?disabled=${!this.experimentManager.isCreator || !minParticipants}
+          @input=${updateNum}
+        >
+        </md-filled-text-field>
       </div>
     `;
   }
@@ -225,22 +211,17 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           </md-checkbox>
           <div>Limit cohort to maximum number of participants</div>
         </div>
-        ${maxParticipants
-          ? html`<div class="number-input">
-              <label for="maxParticipants">
-                Maximum number of participants
-              </label>
-              <input
-                type="number"
-                id="maxParticipants"
-                name="maxParticipants"
-                min="0"
-                .value=${maxParticipants ?? 100}
-                ?disabled=${!this.experimentManager.isCreator}
-                @input=${updateNum}
-              />
-            </div>`
-          : ''}
+        <md-filled-text-field
+          label="Maximum number of participants"
+          type="number"
+          id="maxParticipants"
+          name="maxParticipants"
+          min="0"
+          .value=${maxParticipants ?? ''}
+          ?disabled=${!this.experimentManager.isCreator || !maxParticipants}
+          @input=${updateNum}
+        >
+        </md-filled-text-field>
       </div>
     `;
   }
@@ -290,36 +271,33 @@ export class ExperimentSettingsEditor extends MobxLitElement {
 
     return html`
       <div class="inner-setting">
-        <pr-textarea
+        <md-filled-text-field
+          required
           label="Default redirect code (e.g., when experiment ends)"
-          placeholder="Add Prolific redirect code"
-          variant="outlined"
           .value=${this.experimentEditor.experiment.prolificConfig
             .defaultRedirectCode ?? ''}
+          .error=${!this.experimentEditor.experiment.prolificConfig
+            .defaultRedirectCode}
           ?disabled=${!this.experimentManager.isCreator}
           @input=${updateDefault}
         >
-        </pr-textarea>
-        <pr-textarea
+        </md-filled-text-field>
+        <md-filled-text-field
           label="Attention redirect code (used when participants fail attention checks)"
-          placeholder="Add Prolific redirect code for attention check failures"
-          variant="outlined"
           .value=${this.experimentEditor.experiment.prolificConfig
             .attentionFailRedirectCode ?? ''}
           ?disabled=${!this.experimentManager.isCreator}
           @input=${updateAttention}
         >
-        </pr-textarea>
-        <pr-textarea
+        </md-filled-text-field>
+        <md-filled-text-field
           label="Booted redirect code (used when experimenters boot a participant from an experiment)"
-          placeholder="Add Prolific redirect code for booted participants"
-          variant="outlined"
           .value=${this.experimentEditor.experiment.prolificConfig
             .bootedRedirectCode ?? ''}
           ?disabled=${!this.experimentManager.isCreator}
           @input=${updateBooted}
         >
-        </pr-textarea>
+        </md-filled-text-field>
       </div>
     `;
   }
