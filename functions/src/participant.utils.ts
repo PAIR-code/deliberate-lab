@@ -13,7 +13,7 @@ import {
   SurveyQuestionKind,
   MultipleChoiceSurveyAnswer,
 } from '@deliberation-lab/utils';
-import {completeStageAsAgentParticipant} from './agent.utils';
+import {completeStageAsAgentParticipant} from './agent_participant.utils';
 import {getFirestoreActiveParticipants} from './utils/firestore';
 import {generateId} from '@deliberation-lab/utils';
 import {createCohortInternal} from './cohort.utils';

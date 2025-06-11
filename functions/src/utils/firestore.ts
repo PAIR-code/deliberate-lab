@@ -201,3 +201,37 @@ export async function getFirestoreStagePublicData(
 
   return doc.data() as StagePublicData;
 }
+
+/** Return all agent personas for a given experiment. */
+export async function getAgentPersonas(experimentId: string) {
+  const agentCollection = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('agents');
+  return (await agentCollection.get()).docs.map(
+    (agent) => agent.data() as AgentPersonaConfig,
+  );
+}
+
+/** Return agent participant prompt that corresponds to agent. */
+export async function getAgentParticipantPrompt(
+  experimentId: string,
+  stageId: string,
+  agentId: string,
+): AgentParticipantPromptConfig | null {
+  const prompt = await app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('agents')
+    .doc(agentId)
+    .collection('participantPrompts')
+    .doc(stageId)
+    .get();
+
+  if (!prompt.exists) {
+    return null;
+  }
+  return prompt.data() as AgentParticipantPromptConfig;
+}

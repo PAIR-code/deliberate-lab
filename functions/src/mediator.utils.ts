@@ -5,7 +5,7 @@ import {
   ProfileAgentConfig,
   createMediatorProfileFromAgentPersona,
 } from '@deliberation-lab/utils';
-import {getAgentPersonas} from './agent.utils';
+import {getAgentPersonas} from './utils/firestore';
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
