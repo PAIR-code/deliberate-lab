@@ -13,6 +13,7 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
+import {AuthService} from '../../services/auth.service';
 import {CohortService} from '../../services/cohort.service';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
@@ -33,6 +34,7 @@ import {
   StageKind,
   createChipOffer,
   ParticipantProfile,
+  convertLogEntryToPromptFormat,
   displayChipOfferText,
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
@@ -44,6 +46,7 @@ import {styles} from './chip_view.scss';
 export class ChipView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly authService = core.getService(AuthService);
   private readonly cohortService = core.getService(CohortService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly participantAnswerService = core.getService(
@@ -678,6 +681,7 @@ export class ChipView extends MobxLitElement {
         ${publicData.kind === StageKind.CHIP
           ? this.renderChatInput(publicData)
           : nothing}
+        ${this.renderDebug(logs)}
         <div class="log-scroll-outer-wrapper">
           <div class="log-scroll-inner-wrapper">
             ${logs
@@ -694,6 +698,19 @@ export class ChipView extends MobxLitElement {
           </div>
         </div>
       </div>
+    `;
+  }
+
+  private renderDebug(logs: ChipLogEntry[]) {
+    if (!this.authService.isDebugMode) {
+      return nothing;
+    }
+    return html`
+      <pre>
+        <code>
+          ${logs.map((log) => convertLogEntryToPromptFormat(log)).join('\n')}
+        </code>
+      </pre>
     `;
   }
 

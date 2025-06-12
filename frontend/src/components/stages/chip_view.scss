@@ -173,3 +173,16 @@ select {
   @include common.flex-column;
   gap: common.$spacing-xs;
 }
+
+pre {
+  @include common.flex-column;
+  border: 1px solid var(--md-sys-color-tertiary);
+  padding: common.$spacing-medium;
+}
+
+code {
+  @include typescale.label-small;
+  color: var(--md-sys-color-tertiary);
+  text-wrap: wrap;
+  word-break: break-all;
+}
