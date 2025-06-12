@@ -15,6 +15,7 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
+import {AuthService} from '../../services/auth.service';
 import {CohortService} from '../../services/cohort.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
@@ -35,6 +36,7 @@ export class Component extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly analyticsService = core.getService(AnalyticsService);
+  private readonly authService = core.getService(AuthService);
   private readonly cohortService = core.getService(CohortService);
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentService = core.getService(ExperimentService);
@@ -263,9 +265,35 @@ export class Component extends MobxLitElement {
           ${!isPreview ? getProfileString() : ''} ${renderStatusBanner()}
         </div>
         <div class="right">
-          ${renderAgentParticipantButton()} ${this.renderTransferMenu()}
+          ${this.renderDebugModeButton()} ${renderAgentParticipantButton()}
+          ${this.renderTransferMenu()}
         </div>
       </div>
+    `;
+  }
+
+  private renderDebugModeButton() {
+    if (!this.authService.isExperimenter) return nothing;
+
+    const debugMode = this.authService.isDebugMode;
+    const tooltipText = `
+      Turn debug mode ${debugMode ? 'off' : 'on'}.
+      (When on, experimenters can debugging statements in participant preview.
+      Note that only some stages have debugging statements.)
+    `;
+
+    return html`
+      <pr-tooltip text=${tooltipText} position="BOTTOM_END">
+        <pr-icon-button
+          icon=${debugMode ? 'code_off' : 'code'}
+          color="neutral"
+          variant="default"
+          @click=${() => {
+            this.authService.setDebugMode(!debugMode);
+          }}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
     `;
   }
 
