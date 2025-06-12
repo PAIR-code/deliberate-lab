@@ -1,4 +1,7 @@
-import {onDocumentCreated, onDocumentUpdated} from 'firebase-functions/v2/firestore';
+import {
+  onDocumentCreated,
+  onDocumentUpdated,
+} from 'firebase-functions/v2/firestore';
 
 import {
   ChipItem,
@@ -17,7 +20,7 @@ import {
 import {app} from './app';
 
 /** When participant is created, set participant stage answers. */
-export const setParticipantStageData = onDocumentCreated(
+export const onParticipantCreation = onDocumentCreated(
   {document: 'experiments/{experimentId}/participants/{participantId}'},
   async (event) => {
     const participantDoc = app
@@ -135,7 +138,9 @@ export const onParticipantReconnect = onDocumentUpdated(
         .doc(experimentId)
         .collection('stages')
         .doc(after.currentStageId);
-      const stageConfigPrecheck = (await stageDocPrecheck.get()).data() as StageConfig;
+      const stageConfigPrecheck = (
+        await stageDocPrecheck.get()
+      ).data() as StageConfig;
 
       if (stageConfigPrecheck?.kind === StageKind.TRANSFER) {
         // Wait 10 seconds before running the transaction, to make sure user's connection is
@@ -153,7 +158,11 @@ export const onParticipantReconnect = onDocumentUpdated(
           ).data() as StageConfig;
 
           if (stageConfig?.kind === StageKind.TRANSFER) {
-            const participant = await getParticipantRecord(transaction, experimentId, participantId);
+            const participant = await getParticipantRecord(
+              transaction,
+              experimentId,
+              participantId,
+            );
 
             if (!participant) {
               throw new Error('Participant not found');
@@ -161,7 +170,9 @@ export const onParticipantReconnect = onDocumentUpdated(
 
             // Ensure participant is still connected after the delay
             if (!participant.connected) {
-              console.log(`Participant ${participantId} is no longer connected after delay, skipping transfer.`);
+              console.log(
+                `Participant ${participantId} is no longer connected after delay, skipping transfer.`,
+              );
               return;
             }
 
