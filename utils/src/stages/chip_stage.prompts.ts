@@ -20,15 +20,15 @@ export function convertLogEntryToPromptFormat(entry: ChipLogEntry) {
     case ChipLogType.INFO:
       return `${getTime(entry.timestamp)}: ${entry.infoMessage}`;
     case ChipLogType.NEW_ROUND:
-      return `${getTime(entry.timestamp)}: Round ${entry.roundNumber + 1}`;
+      return `${getTime(entry.timestamp)}: Round ${entry.roundNumber + 1} has started`;
     case ChipLogType.NEW_TURN:
       return `${getTime(entry.timestamp)}: ${entry.participantId}'s turn to submit an offer`;
     case ChipLogType.OFFER:
-      return `${getTime(entry.timestamp)}: ${entry.offer.senderId} has made the offer ${JSON.stringify(entry.offer)}`;
+      return `${getTime(entry.timestamp)}: ${entry.offer.senderId} has made the offer ${entry.offer.id}: give ${JSON.stringify(entry.offer.sell)} and get ${JSON.stringify(entry.offer.buy)}`;
     case ChipLogType.OFFER_DECLINED:
-      return `${getTime(entry.timestamp)}: Offer ${JSON.stringify(entry.offer)} was declined`;
+      return `${getTime(entry.timestamp)}: Offer ${entry.offer.id} was declined`;
     case ChipLogType.TRANSACTION:
-      return `${getTime(entry.timestamp)}: Transaction update ${JSON.stringify(entry.transaction)}`;
+      return `${getTime(entry.timestamp)}: Deal made: ${entry.transaction.offer.senderId}'s offer ${entry.transaction.offer.id} was accepted by ${entry.transaction.recipientId}`;
     default:
       return '';
   }
