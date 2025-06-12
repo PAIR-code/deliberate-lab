@@ -170,35 +170,6 @@ export async function updateCurrentDiscussionIndex(
   return publicStageData;
 }
 
-/** Checks whether the chat has ended, returning true if ending chat. */
-export async function hasEndedChat(
-  experimentId: string,
-  cohortId: string,
-  stageId: string,
-  chatStage: ChatStageConfig | null,
-  publicStageData: ChatStagePublicData | null,
-): Promise<boolean> {
-  if (!chatStage || !publicStageData || !chatStage.timeLimitInMinutes)
-    return false;
-
-  const elapsedMinutes = getTimeElapsed(
-    publicStageData.discussionStartTimestamp!,
-    'm',
-  );
-
-  // Check if the elapsed time has reached or exceeded the time limit
-  if (elapsedMinutes >= chatStage.timeLimitInMinutes) {
-    await app
-      .firestore()
-      .doc(
-        `experiments/${experimentId}/cohorts/${cohortId}/publicStageData/${stageId}`,
-      )
-      .update({discussionEndTimestamp: Timestamp.now()});
-    return true; // Indicate that the chat has ended.
-  }
-  return false;
-}
-
 /** Return chat prompt that corresponds to agent. */
 export async function getAgentChatPrompt(
   experimentId: string,

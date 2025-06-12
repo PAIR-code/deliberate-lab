@@ -44,10 +44,10 @@ import {
   getChatMessageCount,
   getChatStage,
   getChatStagePublicData,
-  hasEndedChat,
   sendAgentChatMessage,
 } from './chat.utils';
 import {getPastStagesPromptContext} from './stage.utils';
+import {startTimeElapsed, updateTimeElapsed} from './chat.time';
 
 import {app} from '../app';
 
@@ -55,10 +55,12 @@ import {app} from '../app';
 // TRIGGER FUNCTIONS                                                         //
 // ************************************************************************* //
 
-/** When a chat message is created, start tracking elapsed time. */
-export const startTimeElapsed = onDocumentCreated(
+/** When a chat message is created */
+export const onChatMessageCreated = onDocumentCreated(
   'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}',
   async (event) => {
+    // TODO: Add agent chat response logic here
+
     const stage = await getChatStage(
       event.params.experimentId,
       event.params.stageId,
@@ -72,35 +74,30 @@ export const startTimeElapsed = onDocumentCreated(
     );
     if (!publicStageData) return;
 
-    // Exit if discussion has already ended.
-    if (publicStageData.discussionEndTimestamp) return;
-
-    // Update the start timestamp and checkpoint timestamp if not set.
-    if (publicStageData.discussionStartTimestamp === null) {
-      await app
-        .firestore()
-        .doc(
-          `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
-        )
-        .update({
-          discussionStartTimestamp: Timestamp.now(),
-          discussionCheckpointTimestamp: Timestamp.now(),
-        });
-    }
+    // Start tracking elapsed time
+    startTimeElapsed(
+      event.params.experimentId,
+      event.params.cohortId,
+      publicStageData,
+    );
   },
 );
 
-/**
- * When chat public stage data is updated, update elapsed time
- * and potentially end the discussion.
- */
-export const updateTimeElapsed = onDocumentUpdated(
+/** When public stage data is updated. */
+export const onPublicStageDataUpdated = onDocumentUpdated(
   {
     document:
       'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/',
     timeoutSeconds: 360, // Maximum timeout of 6 minutes.
   },
   async (event) => {
+    // TODO: Generalize logic to account for all stages, not just chat stage
+    const stage = await getChatStage(
+      event.params.experimentId,
+      event.params.stageId,
+    );
+    if (!stage) return;
+
     const publicStageData = await getChatStagePublicData(
       event.params.experimentId,
       event.params.cohortId,
@@ -108,49 +105,13 @@ export const updateTimeElapsed = onDocumentUpdated(
     );
     if (!publicStageData) return;
 
-    // Only update time if the conversation is in progress.
-    if (
-      !publicStageData.discussionStartTimestamp ||
-      publicStageData.discussionEndTimestamp
-    )
-      return;
-
-    const stage = await getChatStage(
+    // Update elapsed time and potentially end the discussion
+    updateTimeElapsed(
       event.params.experimentId,
-      event.params.stageId,
+      event.params.cohortId,
+      stage,
+      publicStageData,
     );
-    if (!stage || !stage.timeLimitInMinutes) return;
-    // Maybe end the chat.
-    if (
-      await hasEndedChat(
-        event.params.experimentId,
-        event.params.cohortId,
-        event.params.stageId,
-        stage,
-        publicStageData,
-      )
-    )
-      return;
-
-    // Calculate how long to wait.
-    const elapsedMinutes = getTimeElapsed(
-      publicStageData.discussionStartTimestamp,
-      'm',
-    );
-    const maxWaitTimeInMinutes = 5;
-    const remainingTime = stage.timeLimitInMinutes - elapsedMinutes;
-    const intervalTime = Math.min(maxWaitTimeInMinutes, remainingTime);
-
-    // Wait for the determined interval time, and then re-trigger the function.
-    await new Promise((resolve) =>
-      setTimeout(resolve, intervalTime * 60 * 1000),
-    );
-    await app
-      .firestore()
-      .doc(
-        `experiments/${event.params.experimentId}/cohorts/${event.params.cohortId}/publicStageData/${event.params.stageId}`,
-      )
-      .update({discussionCheckpointTimestamp: Timestamp.now()});
   },
 );
 
