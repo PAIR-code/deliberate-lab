@@ -100,6 +100,7 @@ export enum ChipTransactionStatus {
  * This is saved as a stage doc (with stage ID as doc ID) under
  * experiments/{experimentId}/cohorts/{cohortId}/publicStageData
  */
+// TODO: Record timestamps for when each turn begins/ends
 export interface ChipStagePublicData extends BaseStagePublicData {
   kind: StageKind.CHIP;
   // initialized false, set to true once completes number of rounds
