@@ -5,10 +5,10 @@ import {
   CohortCreationData,
   CohortDeletionData,
   ParticipantStatus,
+  StageConfig,
   createPublicDataFromStageConfigs,
 } from '@deliberation-lab/utils';
 
-import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import {onCall} from 'firebase-functions/v2/https';
 
@@ -21,6 +21,7 @@ import {
   prettyPrintError,
   prettyPrintErrors,
 } from './utils/validation';
+import { createCohortInternal } from './cohort.utils';
 
 /** Create/update and delete cohorts. */
 
@@ -49,71 +50,16 @@ export const createCohort = onCall(async (request) => {
   // Use current experimenter as creator
   cohortConfig.metadata.creator = request.auth?.token.email;
 
-  // Define document reference
-  const document = app
-    .firestore()
-    .collection('experiments')
-    .doc(data.experimentId)
-    .collection('cohorts')
-    .doc(cohortConfig.id);
-
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
-    // TODO: For agents where isDefaultAddToCohort is true,
-    // add those agents (as participants or mediators) to cohort
-
-    // For relevant stages, initialize public stage data documents
-    const stageDocs = await app
-      .firestore()
-      .collection(`experiments/${data.experimentId}/stages`)
-      .get();
-    const stages = stageDocs.docs.map((stageDoc) => stageDoc.data());
-
-    const publicData = createPublicDataFromStageConfigs(stages);
-
-    for (const dataItem of publicData) {
-      const dataDoc = app
-        .firestore()
-        .collection('experiments')
-        .doc(data.experimentId)
-        .collection('cohorts')
-        .doc(cohortConfig.id)
-        .collection('publicStageData')
-        .doc(dataItem.id);
-      transaction.set(dataDoc, dataItem);
-    }
-
-    // Set relevant stages (e.g., with no min participants and no wait for all
-    // participants) as unlocked
-    for (const stage of stages) {
-      if (
-        stage.progress.minParticipants === 0 &&
-        !stage.progress.waitForAllParticipants
-      ) {
-        cohortConfig.stageUnlockMap[stage.id] = true;
-      }
-    }
-
-    // Write cohort config
-    transaction.set(document, cohortConfig);
-
-    // Add relevant mediators to cohort
-    const mediators = await createMediatorsForCohort(
+    await createCohortInternal(
+      transaction,
       data.experimentId,
-      cohortConfig.id,
+      cohortConfig,
     );
-    for (const mediator of mediators) {
-      const mediatorDoc = app
-        .firestore()
-        .collection('experiments')
-        .doc(data.experimentId)
-        .collection('mediators')
-        .doc(mediator.id);
-      transaction.set(mediatorDoc, mediator);
-    }
   });
 
-  return {id: document.id};
+  return {id: cohortConfig.id};
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -194,6 +140,13 @@ export const deleteCohort = onCall(async (request) => {
   const experiment = (
     await app.firestore().collection('experiments').doc(data.experimentId).get()
   ).data();
+  if (!experiment) {
+    throw new functions.https.HttpsError(
+      'not-found',
+      `Experiment ${data.experimentId} not found`,
+    );
+  }
+
   if (request.auth?.token.email !== experiment.metadata.creator) return;
 
   // Delete document

@@ -71,6 +71,7 @@ export enum StageGame {
   RTV = 'rtv', // Reality TV Debate.
   CHP = 'chp', // Chip Negotiation
   CTS = 'cts', // Co-op Traveling Salesperson
+  TG = 'TG', // Test Game
 }
 
 /**

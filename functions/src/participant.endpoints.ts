@@ -11,10 +11,12 @@ import {
   createParticipantProfileExtended,
   setProfile,
   StageConfig,
+  TransferStageConfig,
 } from '@deliberation-lab/utils';
 import {
   updateCohortStageUnlocked,
   updateParticipantNextStage,
+  handleAutomaticTransfer,
 } from './participant.utils';
 
 import * as functions from 'firebase-functions';
@@ -293,7 +295,10 @@ export const updateParticipantToNextStage = onCall(async (request) => {
     .collection('participants')
     .doc(privateId);
 
-  let response = {currentStageId: null, endExperiment: false};
+  let response: { currentStageId: string | null; endExperiment: boolean } = {
+    currentStageId: null,
+    endExperiment: false,
+  };
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
@@ -307,6 +312,31 @@ export const updateParticipantToNextStage = onCall(async (request) => {
       participant,
       experiment.stageIds,
     );
+
+    // Check if the next stage is a transfer stage
+    const nextStageConfig = (
+      await app
+        .firestore()
+        .collection('experiments')
+        .doc(data.experimentId)
+        .collection('stages')
+        .doc(participant.currentStageId)
+        .get()
+    ).data() as StageConfig;
+
+    if (nextStageConfig?.kind === StageKind.TRANSFER) {
+      const automaticTransferResponse = await handleAutomaticTransfer(
+        transaction,
+        data.experimentId,
+        nextStageConfig as TransferStageConfig,
+        participant,
+      );
+
+      if (automaticTransferResponse) {
+        response = automaticTransferResponse;
+      }
+    }
+
     transaction.set(participantDoc, participant);
   });
 
@@ -419,7 +449,10 @@ export const acceptParticipantTransfer = onCall(async (request) => {
     .collection('experiments')
     .doc(data.experimentId);
 
-  let response = {currentStageId: null, endExperiment: false};
+    let response: { currentStageId: string | null; endExperiment: boolean } = {
+      currentStageId: null,
+      endExperiment: false,
+    };
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {

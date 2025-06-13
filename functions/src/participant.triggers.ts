@@ -1,13 +1,18 @@
-import {onDocumentCreated} from 'firebase-functions/v2/firestore';
+import {onDocumentCreated, onDocumentUpdated} from 'firebase-functions/v2/firestore';
 
 import {
-  ChipPublicStageData,
+  ChipItem,
+  ChipStagePublicData,
   ParticipantProfileExtended,
   StageConfig,
   StageKind,
   createChipStageParticipantAnswer,
   createPayoutStageParticipantAnswer,
 } from '@deliberation-lab/utils';
+import {
+  handleAutomaticTransfer,
+  getParticipantRecord,
+} from './participant.utils';
 
 import {app} from './app';
 
@@ -35,7 +40,7 @@ export const setParticipantStageData = onDocumentCreated(
           .get()
       ).docs.map((doc) => doc.data() as StageConfig);
 
-      const getRandomChipValue = (chip) => {
+      const getRandomChipValue = (chip: ChipItem) => {
         const step = 0.1;
         const lower = Math.round(chip.lowerValue / step);
         const upper = Math.round(chip.upperValue / step);
@@ -60,8 +65,8 @@ export const setParticipantStageData = onDocumentCreated(
         switch (stage.kind) {
           case StageKind.CHIP:
             // If chip stage, set default chips for participant based on config
-            const chipMap = {};
-            const chipValueMap = {};
+            const chipMap: Record<string, number> = {};
+            const chipValueMap: Record<string, number> = {};
             stage.chips.forEach((chip) => {
               chipMap[chip.id] = chip.startingQuantity;
               chipValueMap[chip.id] = getRandomChipValue(chip);
@@ -87,7 +92,7 @@ export const setParticipantStageData = onDocumentCreated(
 
             const publicChipData = (
               await publicChipDoc.get()
-            ).data() as ChipPublicStageData;
+            ).data() as ChipStagePublicData;
             const publicId = participantConfig.publicId;
 
             publicChipData.participantChipMap[publicId] = chipAnswer.chipMap;
@@ -105,5 +110,80 @@ export const setParticipantStageData = onDocumentCreated(
         }
       } // end stage config logic
     }); // end transaction
+  },
+);
+
+/** Trigger when a disconnected participant reconnects. */
+export const onParticipantReconnect = onDocumentUpdated(
+  {
+    document: 'experiments/{experimentId}/participants/{participantId}',
+  },
+  async (event) => {
+    if (!event.data) return;
+    const experimentId = event.params.experimentId;
+    const participantId = event.params.participantId;
+
+    const before = event.data.before.data() as ParticipantProfileExtended;
+    const after = event.data.after.data() as ParticipantProfileExtended;
+
+    // Check if participant reconnected
+    if (!before.connected && after.connected) {
+      const firestore = app.firestore();
+      // Fetch the participant's current stage config (outside transaction)
+      const stageDocPrecheck = firestore
+        .collection('experiments')
+        .doc(experimentId)
+        .collection('stages')
+        .doc(after.currentStageId);
+      const stageConfigPrecheck = (await stageDocPrecheck.get()).data() as StageConfig;
+
+      if (stageConfigPrecheck?.kind === StageKind.TRANSFER) {
+        // Wait 10 seconds before running the transaction, to make sure user's connection is
+        // relatively stable
+        await new Promise((resolve) => setTimeout(resolve, 10000));
+        await firestore.runTransaction(async (transaction) => {
+          // Fetch the participant's current stage config again (inside transaction)
+          const stageDoc = firestore
+            .collection('experiments')
+            .doc(experimentId)
+            .collection('stages')
+            .doc(after.currentStageId);
+          const stageConfig = (
+            await transaction.get(stageDoc)
+          ).data() as StageConfig;
+
+          if (stageConfig?.kind === StageKind.TRANSFER) {
+            const participant = await getParticipantRecord(transaction, experimentId, participantId);
+
+            if (!participant) {
+              throw new Error('Participant not found');
+            }
+
+            // Ensure participant is still connected after the delay
+            if (!participant.connected) {
+              console.log(`Participant ${participantId} is no longer connected after delay, skipping transfer.`);
+              return;
+            }
+
+            const transferResult = await handleAutomaticTransfer(
+              transaction,
+              experimentId,
+              stageConfig,
+              participant,
+            );
+            if (transferResult) {
+              // Store any updates to participant after transfer
+              const participantDoc = app
+                .firestore()
+                .collection('experiments')
+                .doc(experimentId)
+                .collection('participants')
+                .doc(participant.privateId);
+              transaction.set(participantDoc, participant);
+            }
+          }
+        });
+      }
+    }
   },
 );
