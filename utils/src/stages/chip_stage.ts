@@ -123,6 +123,9 @@ export interface SimpleChipLog {
   timestamp: Timestamp | null;
 }
 
+// TODO: Consider removing subcollections for chip logs and transactions,
+// as they are no longer used.
+
 /** Chip log entry. */
 export type ChipLogEntry =
   | ChipRoundLogEntry
