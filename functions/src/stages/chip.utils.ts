@@ -1,11 +1,14 @@
 import {
+  ChipOffer,
   ChipStagePublicData,
   ChipTransactionStatus,
   ParticipantProfile,
   ParticipantStatus,
   createChipInfoLogEntry,
+  createChipOfferLogEntry,
   createChipOfferDeclinedLogEntry,
   createChipRoundLogEntry,
+  createChipTransaction,
   createChipTurn,
   createChipTurnLogEntry,
   sortParticipantsByRandomProfile,
@@ -298,4 +301,72 @@ export async function updateChipTurn(
       newData,
     );
   }); // end transaction
+
+  return true;
+}
+
+export async function addChipOfferToPublicData(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+  offer: ChipOffer,
+) {
+  // Define chip stage public data document reference
+  const publicDoc = await getFirestoreStagePublicDataRef(
+    experimentId,
+    cohortId,
+    stageId,
+  );
+
+  // Define log entry collection reference
+  const logCollection = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('cohorts')
+    .doc(cohortId)
+    .collection('publicStageData')
+    .doc(stageId)
+    .collection('logs');
+
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    const publicStageData = (
+      await publicDoc.get()
+    ).data() as ChipStagePublicData;
+    const chipOffer = {...offer, timestamp: Timestamp.now()};
+    const currentRound = publicStageData.currentRound;
+
+    // Set current round for chip offer
+    chipOffer.round = currentRound;
+
+    // Confirm that offer is valid (it is the participant's turn to send offers
+    // and there is not already an offer)
+    if (
+      chipOffer.senderId !== publicStageData.currentTurn ||
+      (publicStageData.participantOfferMap[currentRound] &&
+        publicStageData.participantOfferMap[currentRound][chipOffer.senderId])
+    ) {
+      return {success: false};
+    }
+
+    // Update participant offer map in public stage data
+    if (!publicStageData.participantOfferMap[currentRound]) {
+      publicStageData.participantOfferMap[currentRound] = {};
+    }
+
+    publicStageData.participantOfferMap[currentRound][chipOffer.senderId] =
+      createChipTransaction(chipOffer);
+
+    // Set new public data
+    transaction.set(publicDoc, publicStageData);
+
+    // Add log entry for chip offer
+    transaction.set(
+      logCollection.doc(),
+      createChipOfferLogEntry(chipOffer, Timestamp.now()),
+    );
+  });
+
+  return true;
 }

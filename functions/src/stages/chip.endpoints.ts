@@ -28,7 +28,11 @@ import {
   prettyPrintErrors,
 } from '../utils/validation';
 
-import {getChipParticipants, updateChipCurrentTurn} from './chip.utils';
+import {
+  addChipOfferToPublicData,
+  getChipParticipants,
+  updateChipCurrentTurn,
+} from './chip.utils';
 
 /** Manage chip negotiation offers. */
 
@@ -147,67 +151,15 @@ export const sendChipOffer = onCall(async (request) => {
     handleSendChipOfferValidationErrors(data);
   }
 
-  // Define chip stage public data document reference
-  const publicDoc = app
-    .firestore()
-    .collection('experiments')
-    .doc(data.experimentId)
-    .collection('cohorts')
-    .doc(data.cohortId)
-    .collection('publicStageData')
-    .doc(data.stageId);
+  // Add chip offer to public data
+  const success = await addChipOfferToPublicData(
+    data.experimentId,
+    data.cohortId,
+    data.stageId,
+    data.chipOffer,
+  );
 
-  // Define log entry collection reference
-  const logCollection = app
-    .firestore()
-    .collection('experiments')
-    .doc(data.experimentId)
-    .collection('cohorts')
-    .doc(data.cohortId)
-    .collection('publicStageData')
-    .doc(data.stageId)
-    .collection('logs');
-
-  // Run document write as transaction to ensure consistency
-  await app.firestore().runTransaction(async (transaction) => {
-    const publicStageData = (
-      await publicDoc.get()
-    ).data() as ChipStagePublicData;
-    const chipOffer = {...data.chipOffer, timestamp: Timestamp.now()};
-    const currentRound = publicStageData.currentRound;
-
-    // Set current round for chip offer
-    chipOffer.round = currentRound;
-
-    // Confirm that offer is valid (it is the participant's turn to send offers
-    // and there is not already an offer)
-    if (
-      chipOffer.senderId !== publicStageData.currentTurn ||
-      (publicStageData.participantOfferMap[currentRound] &&
-        publicStageData.participantOfferMap[currentRound][chipOffer.senderId])
-    ) {
-      return {success: false};
-    }
-
-    // Update participant offer map in public stage data
-    if (!publicStageData.participantOfferMap[currentRound]) {
-      publicStageData.participantOfferMap[currentRound] = {};
-    }
-
-    publicStageData.participantOfferMap[currentRound][chipOffer.senderId] =
-      createChipTransaction(chipOffer);
-
-    // Set new public data
-    transaction.set(publicDoc, publicStageData);
-
-    // Add log entry for chip offer
-    transaction.set(
-      logCollection.doc(),
-      createChipOfferLogEntry(chipOffer, Timestamp.now()),
-    );
-  });
-
-  return {success: true};
+  return {success};
 });
 
 // ************************************************************************* //
