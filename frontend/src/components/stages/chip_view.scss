@@ -68,6 +68,10 @@
     border: none;
     padding: 0;
   }
+
+  &.highlight {
+    padding: common.$spacing-small;
+  }
 }
 
 .subtitle {
@@ -123,6 +127,7 @@ select {
 }
 
 .warning {
+  @include typescale.label-small;
   background: var(--md-sys-color-secondary-container);
   border-radius: common.$spacing-medium;
   padding: common.$spacing-small;
@@ -138,6 +143,7 @@ select {
 
 .highlight {
   background-color: var(--md-sys-color-tertiary-container);
+  border-radius: common.$spacing-small;
 }
 
 .number-input {
@@ -151,6 +157,7 @@ select {
 .positive {
   color: green;
 }
+
 .negative {
   color: red;
 }
