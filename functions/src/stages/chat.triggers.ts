@@ -47,7 +47,7 @@ import {
   sendAgentChatMessage,
 } from './chat.utils';
 import {getPastStagesPromptContext} from './stage.utils';
-import {startTimeElapsed, updateTimeElapsed} from './chat.time';
+import {startTimeElapsed} from './chat.time';
 
 import {app} from '../app';
 
@@ -78,38 +78,6 @@ export const onChatMessageCreated = onDocumentCreated(
     startTimeElapsed(
       event.params.experimentId,
       event.params.cohortId,
-      publicStageData,
-    );
-  },
-);
-
-/** When public stage data is updated. */
-export const onPublicStageDataUpdated = onDocumentUpdated(
-  {
-    document:
-      'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/',
-    timeoutSeconds: 360, // Maximum timeout of 6 minutes.
-  },
-  async (event) => {
-    // TODO: Generalize logic to account for all stages, not just chat stage
-    const stage = await getChatStage(
-      event.params.experimentId,
-      event.params.stageId,
-    );
-    if (!stage) return;
-
-    const publicStageData = await getChatStagePublicData(
-      event.params.experimentId,
-      event.params.cohortId,
-      event.params.stageId,
-    );
-    if (!publicStageData) return;
-
-    // Update elapsed time and potentially end the discussion
-    updateTimeElapsed(
-      event.params.experimentId,
-      event.params.cohortId,
-      stage,
       publicStageData,
     );
   },
