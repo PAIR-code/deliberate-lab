@@ -30,6 +30,7 @@ import {
 
 import {
   addChipOfferToPublicData,
+  addChipResponseToPublicData,
   getChipParticipants,
   updateChipCurrentTurn,
 } from './chip.utils';
@@ -181,46 +182,15 @@ export const sendChipResponse = onCall(async (request) => {
     handleSendChipResponseValidationErrors(data);
   }
 
-  // Define chip stage public data document reference
-  const publicDoc = app
-    .firestore()
-    .collection('experiments')
-    .doc(data.experimentId)
-    .collection('cohorts')
-    .doc(data.cohortId)
-    .collection('publicStageData')
-    .doc(data.stageId);
+  const success = addChipResponseToPublicData(
+    data.experimentId,
+    data.cohortId,
+    data.stageId,
+    data.participantPublicId,
+    data.chipResponse,
+  );
 
-  // Run document write as transaction to ensure consistency
-  await app.firestore().runTransaction(async (transaction) => {
-    // Confirm that offer is valid (ID matches the current offer ID)
-    const publicStageData = (
-      await publicDoc.get()
-    ).data() as ChipStagePublicData;
-    // TODO: Check offer ID
-    if (!publicStageData.currentTurn) {
-      return {success: false};
-    }
-
-    // Update participant offer map in public stage data
-    // (mark current participant as having responded to current offer)
-    const currentRound = publicStageData.currentRound;
-    const currentTurn = publicStageData.currentTurn;
-    if (
-      !publicStageData.participantOfferMap[currentRound] ||
-      !publicStageData.participantOfferMap[currentRound][currentTurn]
-    ) {
-      return {success: false};
-    }
-    publicStageData.participantOfferMap[currentRound][currentTurn].responseMap[
-      data.participantPublicId
-    ] = {response: data.chipResponse, timestamp: Timestamp.now()};
-
-    // Set new public data
-    transaction.set(publicDoc, publicStageData);
-  });
-
-  return {success: true};
+  return {success};
 });
 
 // ************************************************************************* //
