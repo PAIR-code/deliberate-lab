@@ -1,6 +1,11 @@
 import {Timestamp} from 'firebase/firestore';
 import {generateId, UnifiedTimestamp} from '../shared';
 import {
+  ParticipantProfile,
+  getNameFromPublicId,
+  sortParticipantsByRandomProfile,
+} from '../participant';
+import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
   BaseStagePublicData,
@@ -110,6 +115,12 @@ export interface ChipStagePublicData extends BaseStagePublicData {
   participantChipMap: Record<string, Record<string, number>>;
   // map of participant to current chip value map
   participantChipValueMap: Record<string, Record<string, number>>;
+}
+
+/** Simplified chip log. */
+export interface SimpleChipLog {
+  message: string;
+  timestamp: Timestamp | null;
 }
 
 /** Chip log entry. */
@@ -239,6 +250,17 @@ export function createChipStagePublicData(
   };
 }
 
+/** Create simple chip log. */
+export function createSimpleChipLog(
+  message: string,
+  timestamp: Timestamp | null = null,
+): SimpleChipLog {
+  return {
+    message,
+    timestamp,
+  };
+}
+
 /** Create chip transaction. */
 export function createChipTransaction(offer: ChipOffer): ChipTransaction {
   return {
@@ -356,4 +378,151 @@ export function displayChipOfferText(
   }
 
   return chipDescriptions.join(' and ');
+}
+
+/** Use chip public data to get time-ordered logs. */
+export function getChipLogs(
+  stage: ChipStageConfig,
+  publicData: ChipStagePublicData,
+  participants: ParticipantProfile[],
+  currentParticipantPublicId = '', // leave blank if not using for logging
+): SimpleChipLog[] {
+  let logs: SimpleChipLog[] = [];
+  const offerMap = publicData.participantOfferMap;
+
+  // Get order of participant turns
+  const orderedParticipants = sortParticipantsByRandomProfile(participants);
+
+  // For each round/turn, convert to set of logs
+  let round = 0;
+  let turn = 0;
+  while (offerMap[round]) {
+    turn = 0;
+    for (const participant of orderedParticipants) {
+      const transaction = offerMap[round][participant.publicId];
+      // Add new round log if applicable
+      if (turn === 0) {
+        logs.push(
+          createSimpleChipLog(`Round ${round + 1} of ${stage.numRounds}`),
+        );
+      }
+
+      if (transaction) {
+        logs = [
+          ...logs,
+          ...getChipLogsFromTransaction(
+            stage,
+            transaction,
+            participants,
+            currentParticipantPublicId,
+          ),
+        ];
+      }
+      turn += 1;
+    }
+    round += 1;
+  }
+
+  // If game is over, no more logs
+  if (publicData.isGameOver) {
+    return logs;
+  }
+
+  // Otherwise, if current round/turn has not made an offer yet, add a turn log
+  const currentRound = publicData.currentRound;
+  const currentTurn = publicData.currentTurn;
+  if (
+    currentTurn &&
+    (!offerMap[currentRound] || !offerMap[currentRound][currentTurn])
+  ) {
+    const sender = getNameFromPublicId(participants, currentTurn);
+    const name =
+      currentParticipantPublicId === currentTurn
+        ? `Your turn (${sender})`
+        : `${sender}'s`;
+    // TODO: Store timestamp for when turn begins
+    logs.push(createSimpleChipLog(`${name} turn to submit an offer!`));
+  }
+
+  return logs;
+}
+
+/** Convert single transaction into series of logs. */
+export function getChipLogsFromTransaction(
+  stage: ChipStageConfig,
+  transaction: ChipTransaction,
+  participants: ParticipantProfile[],
+  currentParticipantPublicId = '',
+): SimpleChipLog[] {
+  const logs: SimpleChipLog[] = [];
+
+  // Log participant for current turn
+  const offer = transaction.offer;
+  const sender = getNameFromPublicId(participants, offer.senderId);
+  const name =
+    currentParticipantPublicId === offer.senderId
+      ? `Your turn (${sender})`
+      : `${sender}'s`;
+  // TODO: Store timestamp for when turn begins
+  logs.push(createSimpleChipLog(`${name} turn to submit an offer!`));
+
+  // Log offer
+  logs.push(
+    createSimpleChipLog(
+      `${sender} is offering ${displayChipOfferText(offer.sell, stage.chips)} of their chips to get ${displayChipOfferText(offer.buy, stage.chips)} in return.`,
+      offer.timestamp,
+    ),
+  );
+
+  // If pending, write status log
+  if (transaction.status === ChipTransactionStatus.PENDING) {
+    if (offer.senderId === currentParticipantPublicId) {
+      logs.push(
+        createSimpleChipLog(
+          `Waiting for other participants to respond to your offer...`,
+        ),
+      );
+    } else if (transaction.responseMap[currentParticipantPublicId]) {
+      logs.push(
+        createSimpleChipLog(
+          `Waiting for other participants to respond to ${sender}'s offer...'`,
+        ),
+      );
+    } else {
+      logs.push(
+        createSimpleChipLog(
+          `‼️ Please evaluate and respond to ${sender}'s offer!`,
+        ),
+      );
+    }
+    return logs;
+  }
+
+  // Otherwise, add accept/reject log
+  const recipientId = transaction.recipientId;
+  if (transaction.status === ChipTransactionStatus.ACCEPTED && recipientId) {
+    const recipient = getNameFromPublicId(participants, recipientId);
+    logs.push(
+      createSimpleChipLog(
+        `🤝 Deal made: ${sender}'s offer was accepted by ${recipient}.`,
+        offer.timestamp, // TODO: Get timestamp for when transaction ended
+      ),
+    );
+  } else if (recipientId) {
+    logs.push(
+      createSimpleChipLog(
+        `❌ No deal: There was an error processing ${sender}'s' offer.`,
+        offer.timestamp, // TODO: Get timestamp for when transaction ended
+      ),
+    );
+  } else {
+    logs.push(
+      createSimpleChipLog(
+        `❌ No deal: No one accepted ${sender}'s offer.`,
+        offer.timestamp, // TODO: Get timetsamp for when transaction ended
+      ),
+    );
+  }
+
+  return logs;
 }
