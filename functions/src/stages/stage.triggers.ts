@@ -5,6 +5,7 @@ import {
   getFirestoreStagePublicData,
 } from '../utils/firestore';
 import {updateTimeElapsed} from './chat.time';
+import {updateChipTurn} from './chip.utils';
 
 /** When public stage data is updated. */
 export const onPublicStageDataUpdated = onDocumentUpdated(
@@ -31,6 +32,15 @@ export const onPublicStageDataUpdated = onDocumentUpdated(
       case StageKind.CHAT:
         // Update elapsed time and potentially end the discussion
         updateTimeElapsed(
+          event.params.experimentId,
+          event.params.cohortId,
+          stage,
+          publicStageData,
+        );
+        break;
+      case StageKind.CHIP:
+        // Update chip round/turn if applicable
+        updateChipTurn(
           event.params.experimentId,
           event.params.cohortId,
           stage,
