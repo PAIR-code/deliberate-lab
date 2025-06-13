@@ -651,7 +651,6 @@ export class ChipView extends MobxLitElement {
     const currentParticipantPublicId =
       this.participantService.profile?.publicId;
 
-    // TODO: HELP
     const logs = getChipLogs(
       this.stage,
       publicData,
