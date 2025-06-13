@@ -42,6 +42,8 @@ export * from './stages/salesperson.endpoints';
 export * from './stages/salesperson.utils';
 export * from './stages/salesperson.triggers';
 
+export * from './stages/stage.triggers';
+
 export * from './stages/survey.endpoints';
 export * from './stages/survey.triggers';
 

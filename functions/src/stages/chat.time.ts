@@ -73,9 +73,20 @@ export async function updateTimeElapsed(
   // Wait for the determined interval time, and then re-trigger the function.
   await new Promise((resolve) => setTimeout(resolve, intervalTime * 60 * 1000));
 
-  // Write timestamp as discussion checkpoint to public stage data.
+  // If time is now up, mark discussion as over
+  if (remainingTime - intervalTime <= 0) {
+    await getFirestoreStagePublicDataRef(
+      experimentId,
+      cohortId,
+      stageId,
+    ).update({
+      discussionEndTimestamp: Timestamp.now(),
+    });
+  }
+
+  // Otherwise, write timestamp as discussion checkpoint to public stage data.
   // This will trigger the onPublicStageDataUpdated function and thus
-  // call this function to re-evaluate if time remaining <= 0
+  // call this function to re-evaluate elapsed time
   await getFirestoreStagePublicDataRef(experimentId, cohortId, stageId).update({
     discussionCheckpointTimestamp: Timestamp.now(),
   });
