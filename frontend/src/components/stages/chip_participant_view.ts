@@ -175,20 +175,6 @@ export class ChipView extends MobxLitElement {
     `;
   }
 
-  private getTransaction(round: number, turn: string) {
-    if (!this.stage) return null;
-
-    const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
-
-    if (publicData?.kind !== StageKind.CHIP) return null;
-    const offerMap = publicData.participantOfferMap;
-
-    if (!offerMap[round] || !offerMap[round][turn]) {
-      return null;
-    }
-    return offerMap[round][turn];
-  }
-
   private getCurrentTransaction() {
     if (!this.stage) return null;
 
