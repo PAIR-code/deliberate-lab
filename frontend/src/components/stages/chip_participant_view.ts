@@ -238,13 +238,6 @@ export class ChipView extends MobxLitElement {
   }
 
   private renderSenderView() {
-    if (!this.stage) return nothing;
-
-    const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
-    if (!publicData || publicData.kind !== StageKind.CHIP) {
-      return nothing;
-    }
-
     const sendOffer = async () => {
       if (!this.stage) return;
       this.isOfferLoading = true;
@@ -265,39 +258,15 @@ export class ChipView extends MobxLitElement {
     };
 
     const renderOfferPayout = () => {
-      let payoutHtml = html``;
-      if (!this.isOfferIncomplete() && this.isOfferValid()) {
-        if (!this.stage || !this.participantService.profile) return nothing;
-        const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
-        if (publicData?.kind !== StageKind.CHIP) return 0;
-
-        const currentParticipant = this.participantService.profile;
-        const participantChipMap =
-          publicData.participantChipMap[currentParticipant.publicId] ?? {};
-        const participantChipValueMap =
-          publicData.participantChipValueMap[currentParticipant.publicId] ?? {};
-
-        const payouts = calculateChipOfferPayout(
-          participantChipMap,
-          participantChipValueMap,
-          {[this.selectedBuyChip]: this.buyChipAmount}, // gained chips
-          {[this.selectedSellChip]: this.sellChipAmount}, // lost chips
-        );
-
-        const currentTotalPayout = payouts.before;
-        const newTotalPayout = payouts.after;
-        const diff = newTotalPayout - currentTotalPayout;
-        const diffDisplay = html`
-          <span class=${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}>
-            <b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b>
-          </span>
-        `;
-        payoutHtml = html`
-          If this offer is accepted, your updated payout will be
-          <b>$${newTotalPayout.toFixed(2)}</b> ${diffDisplay}.
-        `;
+      if (this.isOfferIncomplete() || !this.isOfferValid()) {
+        return nothing;
       }
-      return html`<div class="payout-panel">${payoutHtml}</div>`;
+
+      return this.renderDiffDisplay(
+        'If this offer is accepted, your updated payout will be ',
+        {[this.selectedBuyChip]: this.buyChipAmount},
+        {[this.selectedSellChip]: this.sellChipAmount},
+      );
     };
 
     const renderValidationMessages = () => {
@@ -480,46 +449,22 @@ export class ChipView extends MobxLitElement {
     const displayHypotheticalTotal = () => {
       if (!this.stage || !this.participantService.profile) return 0;
 
-      const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
-      if (publicData?.kind !== StageKind.CHIP) return 0;
-
-      const currentParticipant = this.participantService.profile;
-      const currentId = currentParticipant.publicId;
-      const participantChipMap = publicData.participantChipMap[currentId] ?? {};
-      const participantChipValueMap =
-        publicData.participantChipValueMap[currentId] ?? {};
-
       const offer = this.getCurrentTransaction()?.offer ?? null;
       if (!offer) return nothing;
 
-      const payouts = calculateChipOfferPayout(
-        participantChipMap,
-        participantChipValueMap,
-        offer.sell, // the participant will gain what the sender is selling
-        offer.buy, // the participant will lose what the sender is buying
-      );
-
-      const currentTotalPayout = payouts.before;
-      const newTotalPayout = payouts.after;
-
-      const diff = newTotalPayout - currentTotalPayout;
-      const diffDisplay = html`<span
-        class=${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}
-        ><b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b></span
-      >`;
-
       if (canAcceptOffer()) {
-        return html`<p>
-          If you accept this offer, your updated chip value will be
-          <b>$${newTotalPayout.toFixed(2)}</b> ${diffDisplay}.
-        </p>`;
+        return this.renderDiffDisplay(
+          'If you accept this offer, your updated chip value will be ',
+          offer.sell, // gained chips
+          offer.buy, // lost chips
+        );
       }
 
-      return html`<p>
-        ⚠️ You do not have enough chips to accept this offer. If you could
-        accept, your updated chip value would be
-        <b>$${newTotalPayout.toFixed(2)}</b> ${diffDisplay}.
-      </p>`;
+      return this.renderDiffDisplay(
+        `⚠️ You do not have enough chips to accept this offer. If you could accept, your updated chip value would be `,
+        offer.sell, // gained chips
+        offer.buy, // lost chips
+      );
     };
 
     const rejectOffer = async () => {
@@ -576,6 +521,36 @@ export class ChipView extends MobxLitElement {
           </pr-button>
         </div>
       </div>
+    `;
+  }
+
+  private renderDiffDisplay(
+    text: string,
+    gainedChips: Record<string, number>,
+    lostChips: Record<string, number>,
+  ) {
+    if (!this.stage || !this.participantService.profile) return nothing;
+    const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
+    if (publicData?.kind !== StageKind.CHIP) return nothing;
+
+    const publicId = this.participantService.profile?.publicId ?? '';
+
+    const payouts = calculateChipOfferPayout(
+      publicData.participantChipMap[publicId] ?? {},
+      publicData.participantChipValueMap[publicId] ?? {},
+      gainedChips,
+      lostChips,
+    );
+
+    const diff = payouts.after - payouts.before;
+    return html`
+      <p>
+        ${text}
+        <b>$${payouts.before.toFixed(2)}</b>
+        <span class=${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}>
+          <b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b> </span
+        >.
+      </p>
     `;
   }
 
