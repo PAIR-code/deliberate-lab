@@ -63,6 +63,11 @@
   @include common.flex-column;
   border-left: 2px solid var(--md-sys-color-secondary);
   padding-left: common.$spacing-large;
+
+  &.plain {
+    border: none;
+    padding: 0;
+  }
 }
 
 .subtitle {
@@ -148,4 +153,40 @@ select {
 }
 .negative {
   color: red;
+}
+
+.input-wrapper {
+  @include common.flex-row-align-center;
+  padding: common.$spacing-medium;
+}
+
+.input {
+  @include common.flex-row-align-center;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: common.$spacing-medium;
+  flex-grow: 1;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+
+  pr-textarea {
+    flex-grow: 1;
+  }
+}
+
+.chat-message-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-xs;
+}
+
+pre {
+  @include common.flex-column;
+  border: 1px solid var(--md-sys-color-tertiary);
+  padding: common.$spacing-medium;
+}
+
+code {
+  @include typescale.label-small;
+  color: var(--md-sys-color-tertiary);
+  text-wrap: wrap;
+  word-break: break-all;
 }
