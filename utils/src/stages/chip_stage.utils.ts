@@ -195,3 +195,59 @@ export function getChipLogsFromTransaction(
 
   return logs;
 }
+
+/** Check if chip offer can be accepted by other participants. */
+export function isChipOfferAcceptable(
+  buyChipType: string, // type of chip to buy
+  buyChipQuantity: number, // number of chips to buy
+  publicData: ChipStagePublicData,
+  currentParticipantPublicId: string,
+) {
+  const chipMap = publicData.participantChipMap;
+  const participants = Object.keys(chipMap);
+  for (const participant of participants) {
+    if (participant !== currentParticipantPublicId) {
+      const participantChipMap = chipMap[participant];
+      if (participantChipMap[buyChipType] >= buyChipQuantity) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/** Calculate chip payout for a certain offer. */
+export function calculateChipOfferPayout(
+  chipMap: Record<string, number>,
+  chipValueMap: Record<string, number>,
+  addChipMap: Record<string, number> = {},
+  removeChipMap: Record<string, number> = {},
+) {
+  // Calculate the total payout before the offer
+  const currentTotalPayout = Object.keys(chipMap)
+    .map((chipId) => {
+      const quantity = chipMap[chipId] ?? 0;
+      const value = chipValueMap[chipId] ?? 0;
+      return quantity * value;
+    })
+    .reduce((total, value) => total + value, 0);
+
+  // Calculate the changes from the offer
+  const addAmount = Object.keys(addChipMap)
+    .map((chipId) => {
+      return (addChipMap[chipId] ?? 0) * (chipValueMap[chipId] ?? 0);
+    })
+    .reduce((total, value) => total + value, 0);
+
+  const removeAmount = Object.keys(removeChipMap)
+    .map((chipId) => {
+      return (removeChipMap[chipId] ?? 0) * (chipValueMap[chipId] ?? 0);
+    })
+    .reduce((total, value) => total + value, 0);
+
+  // Update the hypothetical payout
+  return {
+    before: currentTotalPayout,
+    after: currentTotalPayout + addAmount - removeAmount,
+  };
+}

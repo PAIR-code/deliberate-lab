@@ -31,10 +31,12 @@ import {
   SimpleChipLog,
   StageKind,
   ParticipantProfile,
+  calculateChipOfferPayout,
   convertChipLogToPromptFormat,
   createChipOffer,
   displayChipOfferText,
   getChipLogs,
+  isChipOfferAcceptable,
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
@@ -195,23 +197,6 @@ export class ChipView extends MobxLitElement {
     return this.getCurrentTransaction()?.offer ?? false;
   }
 
-  private isOfferAcceptable() {
-    const publicData =
-      this.cohortService.stagePublicDataMap[this.stage?.id ?? ''];
-    if (publicData?.kind !== StageKind.CHIP) return true;
-
-    const currentParticipant = this.participantService.profile;
-    for (const participant of this.cohortService.getAllParticipants()) {
-      if (participant.publicId === currentParticipant!.publicId) continue;
-      const participantChipMap =
-        publicData.participantChipMap[participant.publicId] ?? {};
-      if (participantChipMap[this.selectedBuyChip] >= this.buyChipAmount) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   private isOfferIncomplete() {
     return (
       this.selectedBuyChip === '' ||
@@ -237,6 +222,7 @@ export class ChipView extends MobxLitElement {
 
     return availableSell;
   }
+
   private isOfferValid() {
     return (
       // Ensure different chips are selected
@@ -291,7 +277,7 @@ export class ChipView extends MobxLitElement {
         const participantChipValueMap =
           publicData.participantChipValueMap[currentParticipant.publicId] ?? {};
 
-        const payouts = this.calculatePayout(
+        const payouts = calculateChipOfferPayout(
           participantChipMap,
           participantChipValueMap,
           {[this.selectedBuyChip]: this.buyChipAmount}, // gained chips
@@ -319,38 +305,40 @@ export class ChipView extends MobxLitElement {
         return nothing;
       }
 
-      const errors = [];
-
+      const errors: string[] = [];
       // Check if the offer is unacceptable
-      if (!this.isOfferAcceptable()) {
-        errors.push(html`
-          <div class="warning">
-            ⚠️ No other players have enough chips to accept your offer.
-          </div>
-        `);
+      const publicData =
+        this.cohortService.stagePublicDataMap[this.stage?.id ?? ''];
+      const isAcceptable =
+        publicData?.kind === StageKind.CHIP
+          ? isChipOfferAcceptable(
+              this.selectedBuyChip,
+              this.buyChipAmount,
+              publicData,
+              this.participantService.profile?.publicId ?? '',
+            )
+          : false;
+      if (!isAcceptable) {
+        errors.push(
+          `⚠️ No other players have enough chips to accept your offer.`,
+        );
       }
-
-      // Validate the offer
-      if (!this.isOfferValid()) {
-        if (this.getAvailableSell() < this.sellChipAmount) {
-          errors.push(html`
-            <div class="warning">
-              ‼️ You cannot give more chips than you have.
-            </div>
-          `);
-        }
-
-        if (this.selectedBuyChip === this.selectedSellChip) {
-          errors.push(html`
-            <div class="warning">
-              ‼️ You cannot offer to buy and sell the same chip type.
-            </div>
-          `);
-        }
+      if (
+        !this.isOfferValid() &&
+        this.getAvailableSell() < this.sellChipAmount
+      ) {
+        errors.push(`‼️ You cannot give more chips than you have.`);
+      }
+      if (this.selectedBuyChip === this.selectedSellChip) {
+        errors.push(`‼️ You cannot offer to buy and sell the same chip type.`);
       }
 
       // Return all collected errors
-      return html`<div class="warnings-panel">${errors}</div>`;
+      return html`
+        <div class="warnings-panel">
+          ${errors.map((error) => html`<div class="warning">${error}</div>`)}
+        </div>
+      `;
     };
 
     return html`
@@ -422,42 +410,6 @@ export class ChipView extends MobxLitElement {
         />
       </div>
     `;
-  }
-
-  // TODO: Move to utils? We do a similar calculation in cloud functions
-  private calculatePayout(
-    chipMap: Record<string, number>,
-    chipValueMap: Record<string, number>,
-    addChipMap: Record<string, number> = {},
-    removeChipMap: Record<string, number> = {},
-  ) {
-    // Calculate the total payout before the offer
-    const currentTotalPayout = Object.keys(chipMap)
-      .map((chipId) => {
-        const quantity = chipMap[chipId] ?? 0;
-        const value = chipValueMap[chipId] ?? 0;
-        return quantity * value;
-      })
-      .reduce((total, value) => total + value, 0);
-
-    // Calculate the changes from the offer
-    const addAmount = Object.keys(addChipMap)
-      .map((chipId) => {
-        return (addChipMap[chipId] ?? 0) * (chipValueMap[chipId] ?? 0);
-      })
-      .reduce((total, value) => total + value, 0);
-
-    const removeAmount = Object.keys(removeChipMap)
-      .map((chipId) => {
-        return (removeChipMap[chipId] ?? 0) * (chipValueMap[chipId] ?? 0);
-      })
-      .reduce((total, value) => total + value, 0);
-
-    // Update the hypothetical payout
-    return {
-      before: currentTotalPayout,
-      after: currentTotalPayout + addAmount - removeAmount,
-    };
   }
 
   private renderChipSelector(value: string, onInput: (value: string) => void) {
@@ -540,7 +492,7 @@ export class ChipView extends MobxLitElement {
       const offer = this.getCurrentTransaction()?.offer ?? null;
       if (!offer) return nothing;
 
-      const payouts = this.calculatePayout(
+      const payouts = calculateChipOfferPayout(
         participantChipMap,
         participantChipValueMap,
         offer.sell, // the participant will gain what the sender is selling
