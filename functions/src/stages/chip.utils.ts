@@ -370,3 +370,49 @@ export async function addChipOfferToPublicData(
 
   return true;
 }
+
+export async function addChipResponseToPublicData(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+  participantPublicId: string,
+  chipResponse: boolean,
+) {
+  // Define chip stage public data document reference
+  const publicDoc = await getFirestoreStagePublicDataRef(
+    experimentId,
+    cohortId,
+    stageId,
+  );
+
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    // Confirm that offer is valid (ID matches the current offer ID)
+    const publicStageData = (
+      await publicDoc.get()
+    ).data() as ChipStagePublicData;
+    // TODO: Check offer ID
+    if (!publicStageData.currentTurn) {
+      return {success: false};
+    }
+
+    // Update participant offer map in public stage data
+    // (mark current participant as having responded to current offer)
+    const currentRound = publicStageData.currentRound;
+    const currentTurn = publicStageData.currentTurn;
+    if (
+      !publicStageData.participantOfferMap[currentRound] ||
+      !publicStageData.participantOfferMap[currentRound][currentTurn]
+    ) {
+      return {success: false};
+    }
+    publicStageData.participantOfferMap[currentRound][currentTurn].responseMap[
+      participantPublicId
+    ] = {response: chipResponse, timestamp: Timestamp.now()};
+
+    // Set new public data
+    transaction.set(publicDoc, publicStageData);
+  });
+
+  return true;
+}
