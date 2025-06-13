@@ -63,6 +63,11 @@
   @include common.flex-column;
   border-left: 2px solid var(--md-sys-color-secondary);
   padding-left: common.$spacing-large;
+
+  &.plain {
+    border: none;
+    padding: 0;
+  }
 }
 
 .subtitle {
