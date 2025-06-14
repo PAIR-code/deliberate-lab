@@ -91,17 +91,21 @@ export class ChipReveal extends MobxLitElement {
     return html`
       <div class="table-head">
         <div class="table-row">
-          ${this.makeCell('participant')}
+          <div class="table-cell participant-cell">participant</div>
           ${chipValues.map(
             (chip) =>
               html`<div class="table-cell">
-                ${chip.chip.avatar} ${chip.chip.name}<br />($${chip.value.toFixed(
-                  2,
-                )}
-                for
-                ${chip.chip.upperValue === chip.chip.lowerValue
-                  ? 'all'
-                  : 'you'})
+                <div>
+                  ${chip.chip.avatar} ${chip.chip.name}
+                  <div>
+                    <div class="subtitle">
+                      $${chip.value.toFixed(2)} for
+                      ${chip.chip.upperValue === chip.chip.lowerValue
+                        ? 'all'
+                        : 'you'}
+                    </div>
+                  </div>
+                </div>
               </div>`,
           )}
         </div>
@@ -175,51 +179,53 @@ export class ChipReveal extends MobxLitElement {
       (total, {quantity, value}) => total + quantity * value,
       0,
     );
+
     const diff = totalPayout! - initialPayout!;
-    const payout = Math.max(0, diff);
-    const diffDisplay = html`<span
-      class=${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}
-      ><b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b></span
-    >`;
+    const renderPayout = () => {
+      if (diff < 0) {
+        return html`
+          $0.00
+          <b class="negative">(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b>
+        `;
+      } else if (diff === 0) {
+        return html`<b>$0.00</b>`;
+      } else {
+        return html`<b class="positive">$${diff.toFixed(2)}</b>`;
+      }
+    };
+
     return html`
-      <h3>Chip counts</h3>
-      <p class="description">
-        This table shows how many chips all participants currently have.<br />Participants
-        are ordered by the order in which they will make offers.
+      <div class="title">Chip counts</div>
+      <p class="description subtitle">
+        This table shows the current status of chips. Participants are ordered
+        by the order in which they will make offers.
       </p>
-      <div class="table">
-        ${this.renderGlobalTableHeader()}
-        <div class="table-body">
-          ${sortParticipantsByRandomProfile(
-            participants,
-            this.stage?.id ?? '',
-          ).map((p) => this.renderParticipantRow(p))}
+      <div class="tables-wrapper">
+        <div class="table">
+          ${this.renderGlobalTableHeader()}
+          <div class="table-body">
+            ${sortParticipantsByRandomProfile(
+              participants,
+              this.stage?.id ?? '',
+            ).map((p) => this.renderParticipantRow(p))}
+          </div>
         </div>
-        <div class="table-foot">
+        <div class="table">
+          <div class="table-head">
+            <div class="table-cell">Estimated payout</div>
+          </div>
           <div class="table-row">
-            ${this.makeCell('Initial chip value')}
-            ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
+            <div class="table-cell value-header">Initial chip value</div>
             ${this.makeCell(`$${initialPayout!.toFixed(2)}`)}
           </div>
-
           <div class="table-row">
-            ${this.makeCell('Current chip value')}
-            ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
+            <div class="table-cell value-header">Current chip value</div>
             <div class="table-cell">$${totalPayout!.toFixed(2)}</div>
           </div>
 
           <div class="table-row">
-            <div class="table-cell">Current payout<br />(0 if negative)</div>
-            ${Array(chipValues!.length - 1).fill(this.makeCell(''))}
-            <div
-              class="table-cell ${payout > 0
-                ? 'positive'
-                : payout < 0
-                  ? 'negative'
-                  : ''}"
-            >
-              <b>$${payout.toFixed(2)}</b>
-            </div>
+            <div class="table-cell value-header">Current payout</div>
+            <div class="table-cell">${renderPayout()}</div>
           </div>
         </div>
       </div>
