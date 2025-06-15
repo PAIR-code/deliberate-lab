@@ -108,9 +108,9 @@ export function getChipLogs(
     const name =
       currentParticipantPublicId === currentTurn
         ? `Your turn (${sender})`
-        : `${sender}'s`;
+        : `${sender}'s turn`;
     // TODO: Store timestamp for when turn begins
-    logs.push(createSimpleChipLog(`${name} turn to submit an offer!`));
+    logs.push(createSimpleChipLog(`${name} to submit an offer!`));
   }
 
   return logs;
@@ -130,15 +130,19 @@ export function getChipLogsFromTransaction(
   const sender = getNameFromPublicId(participants, offer.senderId);
   const name =
     currentParticipantPublicId === offer.senderId
-      ? `Your turn (${sender})`
+      ? `Your (${sender})`
       : `${sender}'s`;
   // TODO: Store timestamp for when turn begins
   logs.push(createSimpleChipLog(`${name} turn to submit an offer!`));
 
   // Log offer
+  const offerName =
+    currentParticipantPublicId === offer.senderId
+      ? `You (${sender}) are`
+      : `${sender} is`;
   logs.push(
     createSimpleChipLog(
-      `${sender} is offering ${displayChipOfferText(offer.sell, stage.chips)} of their chips to get ${displayChipOfferText(offer.buy, stage.chips)} in return.`,
+      `${offerName} offering ${displayChipOfferText(offer.sell, stage.chips)} chips to get ${displayChipOfferText(offer.buy, stage.chips)} in return.`,
       offer.timestamp,
     ),
   );
@@ -169,25 +173,26 @@ export function getChipLogsFromTransaction(
 
   // Otherwise, add accept/reject log
   const recipientId = transaction.recipientId;
+  const lowercaseName = name.charAt(0).toLowerCase() + name.slice(1);
   if (transaction.status === ChipTransactionStatus.ACCEPTED && recipientId) {
     const recipient = getNameFromPublicId(participants, recipientId);
     logs.push(
       createSimpleChipLog(
-        `🤝 Deal made: ${sender}'s offer was accepted by ${recipient}.`,
+        `🤝 Deal made: ${name} offer was accepted by ${recipient}.`,
         offer.timestamp, // TODO: Get timestamp for when transaction ended
       ),
     );
   } else if (recipientId) {
     logs.push(
       createSimpleChipLog(
-        `❌ No deal: There was an error processing ${sender}'s' offer.`,
+        `❌ No deal: There was an error processing ${lowercaseName} offer.`,
         offer.timestamp, // TODO: Get timestamp for when transaction ended
       ),
     );
   } else {
     logs.push(
       createSimpleChipLog(
-        `❌ No deal: No one accepted ${sender}'s offer.`,
+        `❌ No deal: No one accepted ${lowercaseName} offer.`,
         offer.timestamp, // TODO: Get timetsamp for when transaction ended
       ),
     );
