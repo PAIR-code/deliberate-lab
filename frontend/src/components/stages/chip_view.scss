@@ -40,6 +40,7 @@
   border-radius: common.$spacing-medium common.$spacing-medium 0 0;
   flex-shrink: 0;
   gap: 0;
+  max-height: 50%;
   max-width: calc(100% - common.$spacing-large * 2);
   overflow: auto;
   width: 660px;
@@ -64,7 +65,7 @@
 
 .log-scroll-inner-wrapper {
   @include common.flex-column;
-  gap: common.$spacing-xl;
+  gap: common.$spacing-medium;
   justify-content: flex-end;
   padding: common.$main-content-padding;
 }
@@ -77,22 +78,21 @@
 
 .log-entry {
   @include common.flex-column;
-  border-left: 2px solid var(--md-sys-color-secondary);
-  padding-left: common.$spacing-large;
+  background: var(--md-sys-color-surface-variant);
+  border-radius: common.$spacing-small;
+  padding: common.$spacing-medium;
 
   &.plain {
-    border: none;
+    background: none;
+    color: var(--md-sys-color-secondary);
+    font-style: italic;
     padding: 0;
-  }
-
-  &.highlight {
-    padding: common.$spacing-small;
   }
 }
 
 .subtitle {
   @include typescale.label-small;
-  color: var(--md-sys-color-secondary);
+  color: var(--md-sys-color-outline);
 }
 
 .buttons {
