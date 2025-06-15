@@ -121,7 +121,7 @@ export class ChipView extends MobxLitElement {
       // was in
       return html`
         <div class="status-panel">
-          <div class="status">
+          <div class="offer-panel">
             ‼️ This game has ended. Please continue to the next stage.
           </div>
         </div>
@@ -158,10 +158,8 @@ export class ChipView extends MobxLitElement {
     const renderTopLeftPanel = () => {
       if (publicData.isGameOver) {
         return html`
-          <div class="status-panel">
-            <div class="status">
-              ‼️ This game has ended. Please continue to the next stage.
-            </div>
+          <div class="offer-panel">
+            ‼️ This game has ended. Please continue to the next stage.
           </div>
         `;
       }
@@ -235,6 +233,10 @@ export class ChipView extends MobxLitElement {
   }
 
   private renderSenderView() {
+    if (this.isOfferPending()) {
+      return nothing;
+    }
+
     const sendOffer = async () => {
       if (!this.stage) return;
       this.isOfferLoading = true;
@@ -415,8 +417,8 @@ export class ChipView extends MobxLitElement {
     if (publicData?.kind !== StageKind.CHIP) return nothing;
 
     const offer = this.getCurrentTransaction()?.offer ?? null;
-    if (!offer) {
-      return html`<div class="offer-panel">Waiting for an offer...</div>`;
+    if (!offer || this.isResponsePending()) {
+      return nothing;
     }
 
     const acceptOffer = async () => {
