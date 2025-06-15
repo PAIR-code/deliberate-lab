@@ -146,9 +146,7 @@ export function getChipLogsFromTransaction(
   const hasResponse = transaction.responseMap[currentParticipantPublicId];
   if (!isSender && hasResponse) {
     const response = hasResponse.response ? 'accepted' : 'rejected';
-    logs.push(
-      createSimpleChipLog(`You ${response} the offer`, hasResponse.timestamp),
-    );
+    logs.push(createSimpleChipLog(`You ${response} the offer`));
   }
 
   // If pending, write status log
