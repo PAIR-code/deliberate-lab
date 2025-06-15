@@ -11,16 +11,33 @@ h2 {
   margin: 0;
 }
 
-h3 {
-  margin: 0;
+.title {
+  @include typescale.title-small;
 }
 
 p {
   margin: 0;
 }
 
+.tables-wrapper {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-large;
+}
+
 .table {
   @include common.table;
+  border-color: var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-small;
+
+  .table-cell {
+    word-break: break-word;
+  }
+
+  .table-head {
+    display: flex;
+    flex-grow: 1;
+  }
 }
 
 .description {
@@ -34,6 +51,7 @@ p {
 .positive {
   color: green;
 }
+
 .negative {
   color: red;
 }
@@ -43,8 +61,12 @@ p {
 }
 
 .participant-cell {
-  display: "flex";
-  margin-right: 4px 0;
+  @include common.flex-column;
+  min-width: 180px;
+}
+
+.value-header {
+  min-width: 150px;
 }
 
 .indicator {
@@ -53,4 +75,8 @@ p {
 
 .hidden {
   visibility: hidden;
+}
+
+.subtitle {
+  @include typescale.label-small;
 }
