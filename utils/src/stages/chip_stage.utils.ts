@@ -128,18 +128,13 @@ export function getChipLogsFromTransaction(
   // Log participant for current turn
   const offer = transaction.offer;
   const sender = getNameFromPublicId(participants, offer.senderId);
-  const name =
-    currentParticipantPublicId === offer.senderId
-      ? `Your (${sender})`
-      : `${sender}'s`;
+  const isSender = currentParticipantPublicId === offer.senderId;
+  const name = isSender ? `Your (${sender})` : `${sender}'s`;
   // TODO: Store timestamp for when turn begins
   logs.push(createSimpleChipLog(`${name} turn to submit an offer!`));
 
   // Log offer
-  const offerName =
-    currentParticipantPublicId === offer.senderId
-      ? `You (${sender}) are`
-      : `${sender} is`;
+  const offerName = isSender ? `You (${sender}) are` : `${sender} is`;
   logs.push(
     createSimpleChipLog(
       `${offerName} offering ${displayChipOfferText(offer.sell, stage.chips)} chips to get ${displayChipOfferText(offer.buy, stage.chips)} in return.`,
@@ -147,15 +142,24 @@ export function getChipLogsFromTransaction(
     ),
   );
 
+  // If applicable, write log of current participant's response
+  const hasResponse = transaction.responseMap[currentParticipantPublicId];
+  if (!isSender && hasResponse) {
+    const response = hasResponse.response ? 'accepted' : 'rejected';
+    logs.push(
+      createSimpleChipLog(`You ${response} the offer`, hasResponse.timestamp),
+    );
+  }
+
   // If pending, write status log
   if (transaction.status === ChipTransactionStatus.PENDING) {
-    if (offer.senderId === currentParticipantPublicId) {
+    if (isSender) {
       logs.push(
         createSimpleChipLog(
           `Waiting for other participants to respond to your offer...`,
         ),
       );
-    } else if (transaction.responseMap[currentParticipantPublicId]) {
+    } else if (hasResponse) {
       logs.push(
         createSimpleChipLog(
           `Waiting for other participants to respond to ${sender}'s offer...'`,
