@@ -3,29 +3,46 @@
 
 :host {
   @include common.flex-column;
-  height: 100%;
-  overflow: auto;
+  height: calc(100vh - 96px);
 }
 
 .panel-wrapper {
-  @include common.flex-row;
+  @include common.flex-column;
+  align-items: center;
   flex-grow: 1;
-  overflow: auto;
+  overflow: hidden;
 }
 
-.panel {
+.reveal-panel {
+  @include common.flex-column;
+  align-items: center;
+  background: var(--md-sys-color-surface-container);
+  border-bottom: 1px solid var(--md-sys-color-outline);
+  flex-shrink: 0;
+  max-height: 33%;
+  overflow: auto;
+  padding: common.$spacing-large;
+  width: 100%;
+}
+
+.game-panel {
   @include common.flex-column;
   flex-grow: 1;
-  gap: common.$spacing-xl;
   overflow: auto;
-  padding: common.$main-content-padding;
+  max-width: 100%;
+  width: 600px;
+}
 
-  &.left {
-    flex-shrink: 0;
-    gap: 0;
-    padding: 0;
-    width: 65%;
-  }
+.status-panel {
+  @include common.flex-column;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-bottom: none;
+  border-radius: common.$spacing-medium common.$spacing-medium 0 0;
+  flex-shrink: 0;
+  gap: 0;
+  max-width: calc(100% - common.$spacing-large * 2);
+  overflow: auto;
+  width: 660px;
 }
 
 .subpanel {
@@ -34,7 +51,6 @@
 }
 
 .log-panel {
-  border-left: 1px solid var(--md-sys-color-outline-variant);
   display: flex;
   flex-direction: column-reverse;
   flex-grow: 1;
@@ -91,7 +107,6 @@
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   flex-shrink: 0;
   gap: common.$spacing-medium;
-  height: 240px;
   overflow: auto;
   padding: common.$main-content-padding;
 }

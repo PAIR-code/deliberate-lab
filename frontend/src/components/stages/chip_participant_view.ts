@@ -88,7 +88,12 @@ export class ChipView extends MobxLitElement {
     return html`
       <stage-description .stage=${this.stage}></stage-description>
       <div class="panel-wrapper">
-        ${this.renderStatusPanel()} ${this.renderLogsPanel()}
+        <div class="reveal-panel">
+          <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
+          </chip-reveal-view>
+        </div>
+        <div class="game-panel">${this.renderLogsPanel()}</div>
+        ${this.renderStatusPanel()}
       </div>
       <stage-footer .disabled=${!publicData.isGameOver}>
         ${this.stage.progress.showParticipantProgress
@@ -115,7 +120,7 @@ export class ChipView extends MobxLitElement {
       // TODO: Show results from the cohort game that participant
       // was in
       return html`
-        <div class="panel">
+        <div class="status-panel">
           <div class="status">
             ‼️ This game has ended. Please continue to the next stage.
           </div>
@@ -130,7 +135,7 @@ export class ChipView extends MobxLitElement {
       };
 
       return html`
-        <div class="panel">
+        <div class="status-panel">
           <pr-button
             variant="tonal"
             ?loading=${this.isSetTurnLoading}
@@ -153,7 +158,7 @@ export class ChipView extends MobxLitElement {
     const renderTopLeftPanel = () => {
       if (publicData.isGameOver) {
         return html`
-          <div class="offer-panel">
+          <div class="status-panel">
             <div class="status">
               ‼️ This game has ended. Please continue to the next stage.
             </div>
@@ -166,15 +171,7 @@ export class ChipView extends MobxLitElement {
       return this.renderRecipientView();
     };
 
-    return html`
-      <div class="panel left">
-        ${renderTopLeftPanel()}
-        <div class="subpanel">
-          <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
-          </chip-reveal-view>
-        </div>
-      </div>
-    `;
+    return html` <div class="status-panel">${renderTopLeftPanel()}</div> `;
   }
 
   private getCurrentTransaction() {
@@ -350,8 +347,8 @@ export class ChipView extends MobxLitElement {
               ? 'Offer sent and pending...'
               : 'Submit offer'}
           </pr-button>
+          <div>${renderOfferPayout()} ${renderValidationMessages()}</div>
         </div>
-        ${renderOfferPayout()} ${renderValidationMessages()}
       </div>
     `;
   }
