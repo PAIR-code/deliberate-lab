@@ -620,7 +620,6 @@ export class ChipView extends MobxLitElement {
   private renderLogEntry(log: SimpleChipLog, isLatestEntry: boolean = false) {
     if (!this.stage) return nothing;
     const cssClasses = classMap({
-      highlight: isLatestEntry,
       plain: !log.timestamp,
     });
 
