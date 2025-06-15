@@ -91,7 +91,10 @@ export class ChipReveal extends MobxLitElement {
     return html`
       <div class="table-head">
         <div class="table-row">
-          <div class="table-cell participant-cell">participant</div>
+          <div class="table-cell participant-cell">
+            Participants
+            <div class="subtitle">(in turn order)</div>
+          </div>
           ${chipValues.map(
             (chip) =>
               html`<div class="table-cell">
@@ -195,11 +198,6 @@ export class ChipReveal extends MobxLitElement {
     };
 
     return html`
-      <div class="title">Chip counts</div>
-      <p class="description subtitle">
-        This table shows the current status of chips. Participants are ordered
-        by the order in which they will make offers.
-      </p>
       <div class="tables-wrapper">
         <div class="table">
           ${this.renderGlobalTableHeader()}
@@ -212,7 +210,7 @@ export class ChipReveal extends MobxLitElement {
         </div>
         <div class="table">
           <div class="table-head">
-            <div class="table-cell">Estimated payout</div>
+            <div class="table-cell">Your estimated payout</div>
           </div>
           <div class="table-row">
             <div class="table-cell value-header">Initial chip value</div>

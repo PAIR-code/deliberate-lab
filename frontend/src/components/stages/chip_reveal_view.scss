@@ -27,6 +27,7 @@ p {
 
 .table {
   @include common.table;
+  border-color: var(--md-sys-color-outline-variant);
   border-radius: common.$spacing-small;
 
   .table-cell {
