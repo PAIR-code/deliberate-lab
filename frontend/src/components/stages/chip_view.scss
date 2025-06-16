@@ -212,3 +212,28 @@ code {
   text-wrap: wrap;
   word-break: break-all;
 }
+
+.temporary-panel-wrapper {
+  @include common.flex-row;
+  align-items: end;
+  height: 100%;
+}
+
+.temporary-subpanel-wrapper {
+  @include common.flex-column-align-center;
+  flex-shrink: 0;
+}
+
+.debug-panel {
+  @include common.flex-column;
+  border: 2px solid var(--md-sys-color-secondary);
+  gap: common.$spacing-medium;
+  max-height: 500px;
+  min-width: 240px;
+  overflow: auto;
+  padding: common.$spacing-medium;
+}
+
+.button-wrapper {
+  width: max-content;
+}

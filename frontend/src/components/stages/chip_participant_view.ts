@@ -1,5 +1,4 @@
 import '../../pair-components/button';
-
 import '../progress/progress_stage_completed';
 
 import './chip_reveal_view';
@@ -37,9 +36,6 @@ import {
   displayChipOfferText,
   getChipLogs,
   isChipOfferAcceptable,
-  CHIP_OFFER_ASSISTANCE_DELEGATE_PROMPT,
-  CHIP_OFFER_ASSISTANCE_ADVISOR_PROMPT,
-  CHIP_OFFER_ASSISTANCE_COACH_PROMPT,
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
@@ -72,10 +68,12 @@ export class ChipView extends MobxLitElement {
   @state() sellChipAmount: number = 0;
 
   // TODO: Remove temporary variables to track chip assistance mode, response
-  @state() assistanceMode: 'default' | 'delegate' | 'advisor' | 'coach' =
-    'delegate';
-  @state() isAssistanceLoading = false;
-  @state() assistanceResponse = '';
+  @state() assistanceAdvisorResponse = '';
+  @state() assistanceCoachResponse = '';
+  @state() assistanceDelegateResponse = '';
+  @state() isAssistanceAdvisorLoading = false;
+  @state() isAssistanceCoachLoading = false;
+  @state() isAssistanceDelegateLoading = false;
 
   resetChipValues() {
     this.selectedBuyChip = '';
@@ -101,8 +99,8 @@ export class ChipView extends MobxLitElement {
           <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
           </chip-reveal-view>
         </div>
-        <div style="display: flex; height: 100%;">
-          <div style="flex-shrink: 0; display: flex; flex-direction: column">
+        <div class="temporary-panel-wrapper">
+          <div class="temporary-subpanel-wrapper">
             <div class="game-panel">${this.renderLogsPanel()}</div>
             ${this.renderStatusPanel()}
           </div>
@@ -603,117 +601,85 @@ export class ChipView extends MobxLitElement {
   }
 
   private renderDebug() {
-    if (!this.authService.isDebugMode || !this.stage) {
+    if (!this.authService.isDebugMode) {
+      return nothing;
+    }
+    // Only show debug panel for participant making the offer
+    const publicData = this.cohortService.stagePublicDataMap[this.stage!.id];
+    if (!publicData || publicData.kind !== StageKind.CHIP) return nothing;
+    if (this.participantService.profile?.publicId !== publicData.currentTurn) {
       return nothing;
     }
 
-    const publicData = this.cohortService.stagePublicDataMap[this.stage!.id];
-    if (!publicData || publicData.kind !== StageKind.CHIP) return nothing;
-
-    const participants = this.cohortService.getAllParticipants();
-    const currentParticipantPublicId =
-      this.participantService.profile?.publicId;
-    const logs = getChipLogs(
-      this.stage,
-      publicData,
-      participants,
-      currentParticipantPublicId,
-    );
-
-    const logContext = logs
-      .map((log) => convertChipLogToPromptFormat(log))
-      .join('\n');
-    const buildOffer = () => {
-      if (!this.isOfferValid()) {
-        return '';
-      }
-      // TODO: Reformat proposed offer for coach assistance mode?
-      return `Proposed offer: give ${this.sellChipAmount} ${this.selectedSellChip} chips to get ${this.buyChipAmount} ${this.selectedBuyChip} chips`;
-    };
-
-    const renderSubmit = () => {
-      if (this.assistanceMode === 'default') {
-        return html`<div>Click on a mode above to generate the prompt</div>`;
-      }
-      return html`
-        <div class="button-wrapper" style="width: max-content">
+    return html`
+      <div class="debug-panel">
+        <div>Chip assistance</div>
+        <div class="button-wrapper">
           <pr-button
-            color="tertiary"
+            ?loading=${this.isAssistanceDelegateLoading}
             @click=${async () => {
-              this.isAssistanceLoading = true;
+              this.isAssistanceDelegateLoading = true;
+              this.assistanceDelegateResponse = '';
               const response =
                 await this.participantService.requestChipOfferAssistance(
-                  this.assistanceMode,
+                  'delegate',
                   this.selectedBuyChip,
                   this.buyChipAmount,
                   this.selectedSellChip,
                   this.sellChipAmount,
                 );
-              this.isAssistanceLoading = false;
-              if (response) {
-                this.assistanceResponse = JSON.stringify(response);
-              }
-            }}
-            ?loading=${this.isAssistanceLoading}
-          >
-            Send this prompt
-          </pr-button>
-        </div>
-      `;
-    };
-
-    return html`
-      <div
-        style="border: 2px solid var(--md-sys-color-secondary); padding: 8px"
-      >
-        <div>Preview prompt for each assistance mode</div>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px ">
-          <pr-button
-            ?disabled=${this.isAssistanceLoading}
-            color=${this.assistanceMode === 'delegate' ? 'primary' : 'neutral'}
-            variant=${this.assistanceMode === 'delegate' ? 'filled' : 'default'}
-            @click=${() => {
-              this.assistanceMode = 'delegate';
-              this.assistanceResponse = '';
+              this.isAssistanceDelegateLoading = false;
+              this.assistanceDelegateResponse = JSON.stringify(response);
             }}
           >
             Delegate
           </pr-button>
+        </div>
+        ${this.assistanceDelegateResponse}
+        <div class="button-wrapper">
           <pr-button
-            ?disabled=${this.isAssistanceLoading}
-            color=${this.assistanceMode === 'advisor' ? 'primary' : 'neutral'}
-            variant=${this.assistanceMode === 'advisor' ? 'filled' : 'default'}
-            @click=${() => {
-              this.assistanceMode = 'advisor';
-              this.assistanceResponse = '';
+            ?loading=${this.isAssistanceAdvisorLoading}
+            @click=${async () => {
+              this.isAssistanceAdvisorLoading = true;
+              this.assistanceAdvisorResponse = '';
+              const response =
+                await this.participantService.requestChipOfferAssistance(
+                  'advisor',
+                  this.selectedBuyChip,
+                  this.buyChipAmount,
+                  this.selectedSellChip,
+                  this.sellChipAmount,
+                );
+              this.isAssistanceAdvisorLoading = false;
+              this.assistanceAdvisorResponse = JSON.stringify(response);
             }}
           >
             Advisor
           </pr-button>
+        </div>
+        ${this.assistanceAdvisorResponse}
+        <div class="button-wrapper">
           <pr-button
-            ?disabled=${this.isAssistanceLoading}
-            color=${this.assistanceMode === 'coach' ? 'primary' : 'neutral'}
-            variant=${this.assistanceMode === 'coach' ? 'filled' : 'default'}
-            @click=${() => {
-              this.assistanceMode = 'coach';
-              this.assistanceResponse = '';
+            ?loading=${this.isAssistanceCoachLoading}
+            @click=${async () => {
+              this.isAssistanceCoachLoading = true;
+              this.assistanceCoachResponse = '';
+              const response =
+                await this.participantService.requestChipOfferAssistance(
+                  'coach',
+                  this.selectedBuyChip,
+                  this.buyChipAmount,
+                  this.selectedSellChip,
+                  this.sellChipAmount,
+                );
+              this.isAssistanceCoachLoading = false;
+              this.assistanceCoachResponse = JSON.stringify(response);
             }}
           >
             Coach
           </pr-button>
-          <pr-button
-            ?disabled=${this.isAssistanceLoading}
-            color="neutral"
-            variant="default"
-            @click=${() => {
-              this.assistanceMode = 'default';
-              this.assistanceResponse = '';
-            }}
-          >
-            Reset mode
-          </pr-button>
         </div>
-        ${renderSubmit()} ${this.assistanceResponse}
+        ${this.assistanceCoachResponse}
       </div>
     `;
   }
