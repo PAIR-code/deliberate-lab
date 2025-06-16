@@ -18,6 +18,11 @@ import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 import {RouterService} from '../../services/router.service';
+import {getHashBasedColor} from '../../shared/utils';
+import {
+  getChatStartTimestamp,
+  getChatTimeRemainingInSeconds,
+} from '../../shared/stage.utils';
 
 import {
   ChatDiscussionType,
@@ -27,6 +32,7 @@ import {
   DiscussionItem,
   StageKind,
 } from '@deliberation-lab/utils';
+
 import {styles} from './chat_interface.scss';
 
 /** Chat interface component */
@@ -48,6 +54,53 @@ export class ChatInterface extends MobxLitElement {
   @property() showInfo = false;
   @state() readyToEndDiscussionLoading = false;
   @state() isAlertLoading = false;
+  @state() mobileView = false;
+  @state() timeRemainingInSeconds: number | null = null;
+
+  private updateResponsiveState = () => {
+    this.mobileView = window.innerWidth <= 1024;
+  };
+
+  private timerIntervalId: number | null = null;
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.updateResponsiveState();
+    window.addEventListener('resize', this.updateResponsiveState);
+    this.startTimer();
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener('resize', this.updateResponsiveState);
+    this.clearTimer();
+  }
+
+  private startTimer() {
+    this.updateTimeRemaining();
+    this.timerIntervalId = window.setInterval(() => {
+      this.updateTimeRemaining();
+    }, 1000);
+  }
+
+  private clearTimer() {
+    if (this.timerIntervalId !== null) {
+      clearInterval(this.timerIntervalId);
+      this.timerIntervalId = null;
+    }
+  }
+
+  private updateTimeRemaining() {
+    this.timeRemainingInSeconds = getChatTimeRemainingInSeconds(
+      this.stage,
+      this.cohortService.chatMap,
+    );
+  }
+
+  private chatStartTimestamp() {
+    if (!this.stage) return null;
+    return getChatStartTimestamp(this.stage.id, this.cohortService.chatMap);
+  }
 
   private sendUserInput() {
     if (!this.stage) return;
@@ -86,6 +139,13 @@ export class ChatInterface extends MobxLitElement {
     // Non-discussion messages
     const messages = this.cohortService.chatMap[stageId] ?? [];
 
+    // Only show intro text in chat on small screens
+    const introNode = this.mobileView
+      ? html`<div class="chat-info-message">
+          ${this.renderStageDescription()}
+        </div>`
+      : nothing;
+
     // If discussion threads, render each thread
     if (stage.discussions.length > 0) {
       let discussions = stage.discussions;
@@ -97,10 +157,10 @@ export class ChatInterface extends MobxLitElement {
         );
         discussions = discussions.slice(0, index + 1);
       }
-
       return html`
         <div class="chat-scroll">
           <div class="chat-history">
+            ${introNode}
             ${discussions.map((discussion, index) =>
               this.renderChatDiscussionThread(stage, index),
             )}
@@ -116,7 +176,7 @@ export class ChatInterface extends MobxLitElement {
     return html`
       <div class="chat-scroll">
         <div class="chat-history">
-          ${messages.map(this.renderChatMessage.bind(this))}
+          ${introNode} ${messages.map(this.renderChatMessage.bind(this))}
         </div>
       </div>
     `;
@@ -302,6 +362,77 @@ export class ChatInterface extends MobxLitElement {
     `;
   }
 
+  private renderParticipantsTop() {
+    if (!this.mobileView || !this.stage) return nothing;
+    const activeParticipants = this.cohortService.activeParticipants;
+    const mediators = this.cohortService.getMediatorsForStage(this.stage.id);
+    // Timer display for mobile
+    let timerText: unknown = undefined;
+    if (this.timeRemainingInSeconds !== null) {
+      if (this.timeRemainingInSeconds > 0) {
+        const chatStart = this.chatStartTimestamp();
+        let formattedTime = '';
+        if (chatStart !== null) {
+          const date = new Date(chatStart * 1000);
+          const hours = date.getHours().toString().padStart(2, '0');
+          const minutes = date.getMinutes().toString().padStart(2, '0');
+          formattedTime = `${hours}:${minutes}`;
+        }
+        timerText = html`<span class="chat-timer-mobile countdown"
+          >${this.stage.timeLimitInMinutes} min chat, began
+          ${formattedTime}</span
+        >`;
+      } else {
+        timerText = html`<span class="chat-timer-mobile ended countdown"
+          >Discussion ended</span
+        >`;
+      }
+    }
+    return html`
+      <div class="chat-participants-top">
+        <div class="chat-participants-title-row">
+          <span
+            >Participants
+            (${activeParticipants.length + mediators.length})</span
+          >
+          ${timerText}
+        </div>
+        <div class="chat-participants-wrapper">
+          ${activeParticipants.map(
+            (participant) => html`
+              <participant-profile-display
+                .profile=${participant}
+                .showIsSelf=${participant.publicId ===
+                this.participantService.profile?.publicId}
+                displayType="chat"
+              ></participant-profile-display>
+            `,
+          )}
+          ${mediators.map(
+            (mediator) => html`
+              <profile-display
+                .profile=${mediator}
+                .color=${getHashBasedColor(
+                  mediator.agentConfig?.agentId ?? mediator.id ?? '',
+                )}
+                displayType="chat"
+              ></profile-display>
+            `,
+          )}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderStageDescription() {
+    if (!this.stage) return nothing;
+    // Pass noBorder=true when rendering in chat-info-message
+    return html`<stage-description
+      .stage=${this.stage}
+      noBorder
+    ></stage-description>`;
+  }
+
   override render() {
     if (!this.stage) return nothing;
     const currentDiscussionId = this.cohortService.getChatDiscussionId(
@@ -312,14 +443,10 @@ export class ChatInterface extends MobxLitElement {
     let disableNext = false;
     const requireFullTime = this.stage.requireFullTime === true;
     if (requireFullTime && this.stage.timeLimitInMinutes !== null) {
-      let timeRemainingInSeconds = this.stage.timeLimitInMinutes * 60;
-      const messages = this.cohortService.chatMap[this.stage.id] ?? [];
-      if (messages.length) {
-        const timeElapsed =
-          Date.now() / 1000 - (messages[0].timestamp?.seconds ?? 0);
-        timeRemainingInSeconds -= timeElapsed;
-      }
-      if (timeRemainingInSeconds > 0) {
+      if (
+        this.timeRemainingInSeconds == null || // chat hasn't begun yet
+        this.timeRemainingInSeconds > 0
+      ) {
         disableNext = true;
       }
     }
@@ -337,6 +464,7 @@ export class ChatInterface extends MobxLitElement {
     };
 
     return html`
+      ${this.renderParticipantsTop()}
       <div class="chat-content">
         ${this.cohortService.isChatLoading
           ? html`<div>Loading...</div>`

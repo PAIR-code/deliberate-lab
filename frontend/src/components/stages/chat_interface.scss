@@ -1,5 +1,5 @@
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -135,4 +135,51 @@ stage-footer {
     height: auto;
     width: 100%;
   }
+}
+
+.chat-participants-top {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+  margin-bottom: common.$spacing-large;
+  background: var(--md-sys-color-surface-variant);
+  border-radius: common.$spacing-medium;
+  padding: common.$spacing-medium;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.chat-participants-title {
+  @include typescale.title-small;
+  margin-bottom: common.$spacing-small;
+}
+
+.chat-participants-title-row {
+  display: flex;
+  align-items: center;
+}
+
+.chat-timer-mobile {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.chat-info-message {
+  @include common.flex-row;
+  background: var(--md-sys-color-surface);
+  border-radius: common.$spacing-medium;
+  margin-bottom: common.$spacing-medium;
+  padding: common.$spacing-medium common.$spacing-large;
+  color: var(--md-sys-color-on-surface-variant);
+  :host .description-wrapper {
+    border-bottom: none;
+  }
+}
+
+.countdown {
+  @include typescale.label-medium;
+  font-style: italic;
+  color: var(--md-sys-color-secondary);
+}
+
+.ended {
+  color: var(--md-sys-color-tertiary);
 }
