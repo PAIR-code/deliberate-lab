@@ -1,9 +1,16 @@
 import {
+  AgentModelSettings,
+  ApiKeyType,
+  ChipAssistanceMode,
   ChipOffer,
+  ChipStageConfig,
+  ChipStageParticipantAnswer,
   ChipStagePublicData,
   ChipTransactionStatus,
+  ExperimenterData,
   ParticipantProfile,
   ParticipantStatus,
+  convertChipLogToPromptFormat,
   createChipInfoLogEntry,
   createChipOfferLogEntry,
   createChipOfferDeclinedLogEntry,
@@ -11,9 +18,15 @@ import {
   createChipTransaction,
   createChipTurn,
   createChipTurnLogEntry,
+  createModelGenerationConfig,
+  getChipLogs,
   sortParticipantsByRandomProfile,
+  CHIP_OFFER_ASSISTANCE_ADVISOR_PROMPT,
+  CHIP_OFFER_ASSISTANCE_COACH_PROMPT,
+  CHIP_OFFER_ASSISTANCE_DELEGATE_PROMPT,
 } from '@deliberation-lab/utils';
 
+import {getAgentResponse} from '../agent.utils';
 import {getFirestoreStagePublicDataRef} from '../utils/firestore';
 
 import * as admin from 'firebase-admin';
@@ -415,4 +428,103 @@ export async function addChipResponseToPublicData(
   });
 
   return true;
+}
+
+export async function getChipOfferAssistance(
+  stage: ChipStageConfig,
+  publicData: ChipStagePublicData,
+  participants: ParticipantProfile[], // participants in cohort
+  participant: ParticipantProfile, // current participant
+  participantAnswer: ChipStageParticipantAnswer,
+  experimenterData: ExperimenterData,
+  assistanceMode: ChipAssistanceMode,
+  buyMap: Record<string, number> = {}, // for COACH mode only
+  sellMap: Record<string, number> = {}, // for COACH mode only
+) {
+  // Player name
+  const playerName = participant.name;
+
+  // Player chip values
+  const playerChipValues = Object.keys(participantAnswer.chipValueMap)
+    .map(
+      (chip) =>
+        `${chip} chips = $${participantAnswer.chipValueMap[chip].toFixed(2)} each`,
+    )
+    .join(', ');
+
+  // Player chip quantities
+  const playerChipQuantities = Object.keys(participantAnswer.chipMap)
+    .map((chip) => `${participantAnswer.chipMap[chip]} ${chip} chips`)
+    .join(', ');
+
+  // Player's proposed offer
+  const sellChips = Object.keys(sellMap)
+    .map((chip) => `${sellMap[chip]} ${chip} chips`)
+    .join(', ');
+  const buyChips = Object.keys(buyMap)
+    .map((chip) => `${buyMap[chip]} ${chip} chips`)
+    .join(', ');
+  const offerIdea = `${sellChips} for ${buyChips}`;
+
+  // Negotiation history
+  const negotiationHistory = getChipLogs(
+    stage,
+    publicData,
+    participants,
+    participant.publicId,
+  )
+    .map((log) => convertChipLogToPromptFormat(log))
+    .join('\n');
+
+  // Number of rounds left
+  const numRoundsLeft = stage.numRounds - (publicData.currentRound + 1);
+
+  // Model settings
+  const modelSettings: AgentModelSettings = {
+    apiType: ApiKeyType.GEMINI_API_KEY,
+    modelName: 'gemini-2.5-pro-preview-06-05',
+  };
+  const modelGenerationConfig = createModelGenerationConfig();
+
+  // Call different LLM API prompt based on assistance mode
+  switch (assistanceMode) {
+    case ChipAssistanceMode.COACH:
+      // TODO: Construct prompt using helper function
+      const coachPrompt = `${negotiationHistory}\n\n${CHIP_OFFER_ASSISTANCE_COACH_PROMPT}\n\nProposed offer: ${offerIdea}`;
+      // Call API
+      const coachResponse = await getAgentResponse(
+        experimenterData,
+        coachPrompt,
+        modelSettings,
+        modelGenerationConfig,
+      );
+      // TODO: Call helper function to parse response before returning
+      return coachResponse;
+    case ChipAssistanceMode.ADVISOR:
+      // TODO: Construct prompt using helper function
+      const advisorPrompt = `${negotiationHistory}\n\n${CHIP_OFFER_ASSISTANCE_ADVISOR_PROMPT}`;
+      // Call API
+      const advisorResponse = await getAgentResponse(
+        experimenterData,
+        advisorPrompt,
+        modelSettings,
+        modelGenerationConfig,
+      );
+      // TODO: Call helper function to parse response before returning
+      return advisorResponse;
+    case ChipAssistanceMode.DELEGATE:
+      // TODO: Construct prompt using helper function
+      const delegatePrompt = `${negotiationHistory}\n\n${CHIP_OFFER_ASSISTANCE_DELEGATE_PROMPT}`;
+      // Call API
+      const delegateResponse = await getAgentResponse(
+        experimenterData,
+        delegatePrompt,
+        modelSettings,
+        modelGenerationConfig,
+      );
+      // TODO: Call helper function to parse response before returning
+      return delegateResponse;
+    default:
+      return '';
+  }
 }

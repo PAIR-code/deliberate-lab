@@ -124,6 +124,13 @@ export interface SimpleChipLog {
   timestamp: Timestamp | null;
 }
 
+/** Chip assistance modes. */
+export enum ChipAssistanceMode {
+  ADVISOR = 'advisor',
+  COACH = 'coach',
+  DELEGATE = 'delegate',
+}
+
 // TODO: Consider removing subcollections for chip logs and transactions,
 // as they are no longer used.
 

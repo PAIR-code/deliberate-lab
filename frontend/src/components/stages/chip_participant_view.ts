@@ -15,7 +15,6 @@ import {classMap} from 'lit/directives/class-map.js';
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
 import {CohortService} from '../../services/cohort.service';
-import {ExperimentManager} from '../../services/experiment.manager';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 import {getParticipantInlineDisplay} from '../../shared/participant.utils';
@@ -38,9 +37,9 @@ import {
   displayChipOfferText,
   getChipLogs,
   isChipOfferAcceptable,
-  CHIP_ASSISTANCE_DELEGATE_PROMPT,
-  CHIP_ASSISTANCE_ADVISOR_PROMPT,
-  CHIP_ASSISTANCE_COACH_PROMPT,
+  CHIP_OFFER_ASSISTANCE_DELEGATE_PROMPT,
+  CHIP_OFFER_ASSISTANCE_ADVISOR_PROMPT,
+  CHIP_OFFER_ASSISTANCE_COACH_PROMPT,
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
@@ -53,7 +52,6 @@ export class ChipView extends MobxLitElement {
 
   private readonly authService = core.getService(AuthService);
   private readonly cohortService = core.getService(CohortService);
-  private readonly experimentManager = core.getService(ExperimentManager);
   private readonly participantService = core.getService(ParticipantService);
   private readonly participantAnswerService = core.getService(
     ParticipantAnswerService,
@@ -633,19 +631,6 @@ export class ChipView extends MobxLitElement {
       return `Proposed offer: give ${this.sellChipAmount} ${this.selectedSellChip} chips to get ${this.buyChipAmount} ${this.selectedBuyChip} chips`;
     };
 
-    const getPrompt = () => {
-      switch (this.assistanceMode) {
-        case 'default':
-          return '';
-        case 'delegate':
-          return `${logContext}\n\n${CHIP_ASSISTANCE_DELEGATE_PROMPT}`;
-        case 'advisor':
-          return `${logContext}\n\n${CHIP_ASSISTANCE_ADVISOR_PROMPT}`;
-        case 'coach':
-          return `${logContext}\n\n${CHIP_ASSISTANCE_COACH_PROMPT}\n\n${buildOffer()}`;
-      }
-    };
-
     const renderSubmit = () => {
       if (this.assistanceMode === 'default') {
         return html`<div>Click on a mode above to generate the prompt</div>`;
@@ -657,13 +642,14 @@ export class ChipView extends MobxLitElement {
             @click=${async () => {
               this.isAssistanceLoading = true;
               const response =
-                await this.experimentManager.testAgentParticipantPrompt(
-                  this.experimentManager.experimentId ?? '',
-                  this.stage?.id ?? '',
-                  getPrompt(),
+                await this.participantService.requestChipOfferAssistance(
+                  this.assistanceMode,
+                  this.selectedBuyChip,
+                  this.buyChipAmount,
+                  this.selectedSellChip,
+                  this.sellChipAmount,
                 );
               this.isAssistanceLoading = false;
-              console.log(response);
               if (response) {
                 this.assistanceResponse = JSON.stringify(response);
               }
@@ -727,7 +713,6 @@ export class ChipView extends MobxLitElement {
             Reset mode
           </pr-button>
         </div>
-        <pre><code>${getPrompt()}</code></pre>
         ${renderSubmit()} ${this.assistanceResponse}
       </div>
     `;

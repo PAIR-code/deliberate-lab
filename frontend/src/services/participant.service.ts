@@ -40,6 +40,7 @@ import {
   acceptParticipantExperimentStartCallable,
   acceptParticipantTransferCallable,
   createChatMessageCallable,
+  requestChipOfferAssistanceCallable,
   sendAlertMessageCallable,
   sendChipOfferCallable,
   sendChipResponseCallable,
@@ -763,6 +764,37 @@ export class ParticipantService extends Service {
       );
     }
     return output.success;
+  }
+
+  async requestChipOfferAssistance(
+    assistanceMode: string, // TODO: make enum
+    buyChipType: string,
+    buyChipAmount: number,
+    sellChipType: string,
+    sellChipAmount: number,
+  ) {
+    const buyMap: Record<string, number> = {};
+    buyMap[buyChipType] = buyChipAmount;
+
+    const sellMap: Record<string, number> = {};
+    sellMap[sellChipType] = sellChipAmount;
+
+    let output = {data: ''};
+    if (this.experimentId && this.profile) {
+      output = await requestChipOfferAssistanceCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          stageId: this.profile.currentStageId,
+          participantId: this.profile.privateId,
+          assistanceMode,
+          buyMap,
+          sellMap,
+        },
+      );
+    }
+    return output;
   }
 
   async sendAlertMessage(message: string) {
