@@ -15,6 +15,7 @@ import {classMap} from 'lit/directives/class-map.js';
 import {core} from '../../core/core';
 import {AuthService} from '../../services/auth.service';
 import {CohortService} from '../../services/cohort.service';
+import {ExperimentManager} from '../../services/experiment.manager';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 import {getParticipantInlineDisplay} from '../../shared/participant.utils';
@@ -37,6 +38,9 @@ import {
   displayChipOfferText,
   getChipLogs,
   isChipOfferAcceptable,
+  CHIP_ASSISTANCE_DELEGATE_PROMPT,
+  CHIP_ASSISTANCE_ADVISOR_PROMPT,
+  CHIP_ASSISTANCE_COACH_PROMPT,
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
@@ -49,6 +53,7 @@ export class ChipView extends MobxLitElement {
 
   private readonly authService = core.getService(AuthService);
   private readonly cohortService = core.getService(CohortService);
+  private readonly experimentManager = core.getService(ExperimentManager);
   private readonly participantService = core.getService(ParticipantService);
   private readonly participantAnswerService = core.getService(
     ParticipantAnswerService,
@@ -67,6 +72,12 @@ export class ChipView extends MobxLitElement {
   @state() selectedSellChip: string = '';
   @state() buyChipAmount: number = 0;
   @state() sellChipAmount: number = 0;
+
+  // TODO: Remove temporary variables to track chip assistance mode, response
+  @state() assistanceMode: 'default' | 'delegate' | 'advisor' | 'coach' =
+    'delegate';
+  @state() isAssistanceLoading = false;
+  @state() assistanceResponse = '';
 
   resetChipValues() {
     this.selectedBuyChip = '';
@@ -92,8 +103,13 @@ export class ChipView extends MobxLitElement {
           <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
           </chip-reveal-view>
         </div>
-        <div class="game-panel">${this.renderLogsPanel()}</div>
-        ${this.renderStatusPanel()}
+        <div style="display: flex; height: 100%;">
+          <div style="flex-shrink: 0; display: flex; flex-direction: column">
+            <div class="game-panel">${this.renderLogsPanel()}</div>
+            ${this.renderStatusPanel()}
+          </div>
+          ${this.renderDebug()}
+        </div>
       </div>
       <stage-footer .disabled=${!publicData.isGameOver}>
         ${this.stage.progress.showParticipantProgress
@@ -576,7 +592,6 @@ export class ChipView extends MobxLitElement {
 
     return html`
       <div class="log-panel">
-        ${this.renderDebug(logs)}
         <div class="log-scroll-outer-wrapper">
           <div class="log-scroll-inner-wrapper">
             ${logs.map((entry, index, array) => {
@@ -589,16 +604,132 @@ export class ChipView extends MobxLitElement {
     `;
   }
 
-  private renderDebug(logs: SimpleChipLog[]) {
-    if (!this.authService.isDebugMode) {
+  private renderDebug() {
+    if (!this.authService.isDebugMode || !this.stage) {
       return nothing;
     }
+
+    const publicData = this.cohortService.stagePublicDataMap[this.stage!.id];
+    if (!publicData || publicData.kind !== StageKind.CHIP) return nothing;
+
+    const participants = this.cohortService.getAllParticipants();
+    const currentParticipantPublicId =
+      this.participantService.profile?.publicId;
+    const logs = getChipLogs(
+      this.stage,
+      publicData,
+      participants,
+      currentParticipantPublicId,
+    );
+
+    const logContext = logs
+      .map((log) => convertChipLogToPromptFormat(log))
+      .join('\n');
+    const buildOffer = () => {
+      if (!this.isOfferValid()) {
+        return '';
+      }
+      // TODO: Reformat proposed offer for coach assistance mode?
+      return `Proposed offer: give ${this.sellChipAmount} ${this.selectedSellChip} chips to get ${this.buyChipAmount} ${this.selectedBuyChip} chips`;
+    };
+
+    const getPrompt = () => {
+      switch (this.assistanceMode) {
+        case 'default':
+          return '';
+        case 'delegate':
+          return `${logContext}\n\n${CHIP_ASSISTANCE_DELEGATE_PROMPT}`;
+        case 'advisor':
+          return `${logContext}\n\n${CHIP_ASSISTANCE_ADVISOR_PROMPT}`;
+        case 'coach':
+          return `${logContext}\n\n${CHIP_ASSISTANCE_COACH_PROMPT}\n\n${buildOffer()}`;
+      }
+    };
+
+    const renderSubmit = () => {
+      if (this.assistanceMode === 'default') {
+        return html`<div>Click on a mode above to generate the prompt</div>`;
+      }
+      return html`
+        <div class="button-wrapper" style="width: max-content">
+          <pr-button
+            color="tertiary"
+            @click=${async () => {
+              this.isAssistanceLoading = true;
+              const response =
+                await this.experimentManager.testAgentParticipantPrompt(
+                  this.experimentManager.experimentId ?? '',
+                  this.stage?.id ?? '',
+                  getPrompt(),
+                );
+              this.isAssistanceLoading = false;
+              console.log(response);
+              if (response) {
+                this.assistanceResponse = JSON.stringify(response);
+              }
+            }}
+            ?loading=${this.isAssistanceLoading}
+          >
+            Send this prompt
+          </pr-button>
+        </div>
+      `;
+    };
+
     return html`
-      <pre>
-        <code>
-          ${logs.map((log) => convertChipLogToPromptFormat(log)).join('\n')}
-        </code>
-      </pre>
+      <div
+        style="border: 2px solid var(--md-sys-color-secondary); padding: 8px"
+      >
+        <div>Preview prompt for each assistance mode</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px ">
+          <pr-button
+            ?disabled=${this.isAssistanceLoading}
+            color=${this.assistanceMode === 'delegate' ? 'primary' : 'neutral'}
+            variant=${this.assistanceMode === 'delegate' ? 'filled' : 'default'}
+            @click=${() => {
+              this.assistanceMode = 'delegate';
+              this.assistanceResponse = '';
+            }}
+          >
+            Delegate
+          </pr-button>
+          <pr-button
+            ?disabled=${this.isAssistanceLoading}
+            color=${this.assistanceMode === 'advisor' ? 'primary' : 'neutral'}
+            variant=${this.assistanceMode === 'advisor' ? 'filled' : 'default'}
+            @click=${() => {
+              this.assistanceMode = 'advisor';
+              this.assistanceResponse = '';
+            }}
+          >
+            Advisor
+          </pr-button>
+          <pr-button
+            ?disabled=${this.isAssistanceLoading}
+            color=${this.assistanceMode === 'coach' ? 'primary' : 'neutral'}
+            variant=${this.assistanceMode === 'coach' ? 'filled' : 'default'}
+            @click=${() => {
+              this.assistanceMode = 'coach';
+              this.assistanceResponse = '';
+            }}
+          >
+            Coach
+          </pr-button>
+          <pr-button
+            ?disabled=${this.isAssistanceLoading}
+            color="neutral"
+            variant="default"
+            @click=${() => {
+              this.assistanceMode = 'default';
+              this.assistanceResponse = '';
+            }}
+          >
+            Reset mode
+          </pr-button>
+        </div>
+        <pre><code>${getPrompt()}</code></pre>
+        ${renderSubmit()} ${this.assistanceResponse}
+      </div>
     `;
   }
 
