@@ -95,3 +95,21 @@ export const SetChipTurnData = Type.Object(
 );
 
 export type SetChipTurnData = Static<typeof SetChipTurnData>;
+
+/** requestChipOfferAssistance endpoint data validation. */
+export const RequestChipOfferAssistanceData = Type.Object(
+  {
+    experimentId: Type.String({minLength: 1}),
+    cohortId: Type.String({minLength: 1}),
+    stageId: Type.String({minLength: 1}),
+    participantId: Type.String({minLength: 1}),
+    assistanceMode: Type.String({minLength: 1}),
+    buyMap: Type.Optional(Type.Record(Type.String(), Type.Number())),
+    sellMap: Type.Optional(Type.Record(Type.String(), Type.Number())),
+  },
+  strict,
+);
+
+export type RequestChipOfferAssistanceData = Static<
+  typeof RequestChipOfferAssistanceData
+>;

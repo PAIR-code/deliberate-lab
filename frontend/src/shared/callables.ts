@@ -15,6 +15,7 @@ import {
   InitiateParticipantTransferData,
   ParticipantNextStageResponse,
   ParticipantProfile,
+  RequestChipOfferAssistanceData,
   SendAlertMessageData,
   SendChipOfferData,
   SendChipResponseData,
@@ -394,6 +395,21 @@ export const setChipTurnCallable = async (
   const {data} = await httpsCallable<SetChipTurnData, SuccessResponse>(
     functions,
     'setChipTurn',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for chip offer assistance. */
+export const requestChipOfferAssistanceCallable = async (
+  functions: Functions,
+  config: RequestChipOfferAssistanceData,
+) => {
+  const {data} = await httpsCallable<
+    RequestChipOfferAssistanceData,
+    SimpleResponse<string>
+  >(
+    functions,
+    'requestChipOfferAssistance',
   )(config);
   return data;
 };

@@ -31,7 +31,7 @@ import {AuthGuard} from './utils/auth-guard';
 
 // ****************************************************************************
 // Test agent participant prompts
-// Input structure: { experimentId, participantId, stageId, prompt }
+// Input structure: { experimentId, participantId, stageId }
 // Validation: utils/src/agent.validation.ts
 // ****************************************************************************
 export const testAgentParticipantPrompt = onCall(async (request) => {
@@ -82,17 +82,6 @@ export const testAgentParticipantPrompt = onCall(async (request) => {
         participant,
         stage,
       );
-    case StageKind.CHIP:
-      // Temporary hack to call chip assistance prompts
-      // WARNING: Do NOT merge this code into main!
-      // TODO: Move chip assistance logic to new set of endpoints
-      const chipResponse = await getAgentResponse(
-        experimenterData,
-        data.prompt,
-        createAgentModelSettings({model: 'gemini-2.5-pro-preview-06-05'}),
-        createModelGenerationConfig(),
-      );
-      return {data: chipResponse};
     default:
       prompt = `This is a test prompt. Please output a funny joke.`;
   }
