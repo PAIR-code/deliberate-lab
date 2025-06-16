@@ -883,17 +883,23 @@ export class ExperimentManager extends Service {
   }
 
   /** TEMPORARY: Test agent participant prompt for given participant/stage. */
-  async testAgentParticipantPrompt(participantId: string, stageId: string) {
+  async testAgentParticipantPrompt(
+    participantId: string,
+    stageId: string,
+    prompt = '',
+  ) {
     if (this.experimentId) {
-      await testAgentParticipantPromptCallable(
+      return await testAgentParticipantPromptCallable(
         this.sp.firebaseService.functions,
         {
           experimentId: this.experimentId,
           participantId,
           stageId,
+          prompt,
         },
       );
     }
+    return null;
   }
 
   /** Test given agent config. */

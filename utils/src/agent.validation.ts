@@ -13,6 +13,7 @@ export const AgentParticipantPromptTestData = Type.Object(
     experimentId: Type.String({minLength: 1}),
     participantId: Type.String({minLength: 1}),
     stageId: Type.String({minLength: 1}),
+    prompt: Type.String(),
   },
   strict,
 );
