@@ -20,6 +20,7 @@ import {
   createChipTurnLogEntry,
   createModelGenerationConfig,
   getChipLogs,
+  getChipOfferAssistanceCoachPrompt,
   sortParticipantsByRandomProfile,
   CHIP_OFFER_ASSISTANCE_ADVISOR_PROMPT,
   CHIP_OFFER_ASSISTANCE_COACH_PROMPT,
@@ -489,8 +490,16 @@ export async function getChipOfferAssistance(
   // Call different LLM API prompt based on assistance mode
   switch (assistanceMode) {
     case ChipAssistanceMode.COACH:
-      // TODO: Construct prompt using helper function
-      const coachPrompt = `${negotiationHistory}\n\n${CHIP_OFFER_ASSISTANCE_COACH_PROMPT}\n\nProposed offer: ${offerIdea}`;
+      // Construct prompt using helper function
+      const coachPrompt = getChipOfferAssistanceCoachPrompt(
+        playerName,
+        playerChipValues,
+        playerChipQuantities,
+        negotiationHistory,
+        numRoundsLeft,
+        offerIdea,
+      );
+      console.log('Chip offer assistance coach prompt:', coachPrompt);
       // Call API
       const coachResponse = await getAgentResponse(
         experimenterData,
