@@ -1,5 +1,4 @@
 import '../../pair-components/button';
-
 import '../progress/progress_stage_completed';
 
 import './chip_reveal_view';
@@ -68,6 +67,14 @@ export class ChipView extends MobxLitElement {
   @state() buyChipAmount: number = 0;
   @state() sellChipAmount: number = 0;
 
+  // TODO: Remove temporary variables to track chip assistance mode, response
+  @state() assistanceAdvisorResponse = '';
+  @state() assistanceCoachResponse = '';
+  @state() assistanceDelegateResponse = '';
+  @state() isAssistanceAdvisorLoading = false;
+  @state() isAssistanceCoachLoading = false;
+  @state() isAssistanceDelegateLoading = false;
+
   resetChipValues() {
     this.selectedBuyChip = '';
     this.selectedSellChip = '';
@@ -92,8 +99,13 @@ export class ChipView extends MobxLitElement {
           <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
           </chip-reveal-view>
         </div>
-        <div class="game-panel">${this.renderLogsPanel()}</div>
-        ${this.renderStatusPanel()}
+        <div class="temporary-panel-wrapper">
+          <div class="temporary-subpanel-wrapper">
+            <div class="game-panel">${this.renderLogsPanel()}</div>
+            ${this.renderStatusPanel()}
+          </div>
+          ${this.renderDebug()}
+        </div>
       </div>
       <stage-footer .disabled=${!publicData.isGameOver}>
         ${this.stage.progress.showParticipantProgress
@@ -576,7 +588,6 @@ export class ChipView extends MobxLitElement {
 
     return html`
       <div class="log-panel">
-        ${this.renderDebug(logs)}
         <div class="log-scroll-outer-wrapper">
           <div class="log-scroll-inner-wrapper">
             ${logs.map((entry, index, array) => {
@@ -589,16 +600,81 @@ export class ChipView extends MobxLitElement {
     `;
   }
 
-  private renderDebug(logs: SimpleChipLog[]) {
+  private renderDebug() {
     if (!this.authService.isDebugMode) {
       return nothing;
     }
+
     return html`
-      <pre>
-        <code>
-          ${logs.map((log) => convertChipLogToPromptFormat(log)).join('\n')}
-        </code>
-      </pre>
+      <div class="debug-panel">
+        <div>Chip assistance</div>
+        <div class="button-wrapper">
+          <pr-button
+            ?loading=${this.isAssistanceDelegateLoading}
+            @click=${async () => {
+              this.isAssistanceDelegateLoading = true;
+              this.assistanceDelegateResponse = '';
+              const response =
+                await this.participantService.requestChipAssistance(
+                  'delegate',
+                  this.selectedBuyChip,
+                  this.buyChipAmount,
+                  this.selectedSellChip,
+                  this.sellChipAmount,
+                );
+              this.isAssistanceDelegateLoading = false;
+              this.assistanceDelegateResponse = JSON.stringify(response);
+            }}
+          >
+            Delegate
+          </pr-button>
+        </div>
+        ${this.assistanceDelegateResponse}
+        <div class="button-wrapper">
+          <pr-button
+            ?loading=${this.isAssistanceAdvisorLoading}
+            @click=${async () => {
+              this.isAssistanceAdvisorLoading = true;
+              this.assistanceAdvisorResponse = '';
+              const response =
+                await this.participantService.requestChipAssistance(
+                  'advisor',
+                  this.selectedBuyChip,
+                  this.buyChipAmount,
+                  this.selectedSellChip,
+                  this.sellChipAmount,
+                );
+              this.isAssistanceAdvisorLoading = false;
+              this.assistanceAdvisorResponse = JSON.stringify(response);
+            }}
+          >
+            Advisor
+          </pr-button>
+        </div>
+        ${this.assistanceAdvisorResponse}
+        <div class="button-wrapper">
+          <pr-button
+            ?loading=${this.isAssistanceCoachLoading}
+            @click=${async () => {
+              this.isAssistanceCoachLoading = true;
+              this.assistanceCoachResponse = '';
+              const response =
+                await this.participantService.requestChipAssistance(
+                  'coach',
+                  this.selectedBuyChip,
+                  this.buyChipAmount,
+                  this.selectedSellChip,
+                  this.sellChipAmount,
+                );
+              this.isAssistanceCoachLoading = false;
+              this.assistanceCoachResponse = JSON.stringify(response);
+            }}
+          >
+            Coach
+          </pr-button>
+        </div>
+        ${this.assistanceCoachResponse}
+      </div>
     `;
   }
 

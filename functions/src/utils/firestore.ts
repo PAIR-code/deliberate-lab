@@ -67,6 +67,22 @@ export async function getFirestoreParticipant(
   return doc.data() as ParticipantProfileExtended;
 }
 
+/** Fetch participants for current cohort. */
+export async function getFirestoreCohortParticipants(
+  experimentId: string,
+  cohortId: string,
+) {
+  return (
+    await app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('participants')
+      .where('currentCohortId', '==', cohortId)
+      .get()
+  ).docs.map((doc) => doc.data() as ParticipantProfileExtended);
+}
+
 /** Fetch active participants for current cohort/stage. */
 export async function getFirestoreActiveParticipants(
   experimentId: string,

@@ -8,6 +8,7 @@ import {
   displayChipOfferText,
   SendChipResponseData,
   SetChipTurnData,
+  StageKind,
   createChipOfferLogEntry,
   createChipRoundLogEntry,
   createChipTurnLogEntry,
@@ -22,6 +23,15 @@ import {onCall} from 'firebase-functions/v2/https';
 
 import {app} from '../app';
 import {
+  getExperimenterDataFromExperiment,
+  getFirestoreCohortParticipants,
+  getFirestoreParticipant,
+  getFirestoreParticipants,
+  getFirestoreParticipantAnswer,
+  getFirestoreStage,
+  getFirestoreStagePublicData,
+} from '../utils/firestore';
+import {
   checkConfigDataUnionOnPath,
   isUnionError,
   prettyPrintError,
@@ -31,7 +41,9 @@ import {
 import {
   addChipOfferToPublicData,
   addChipResponseToPublicData,
+  getChipOfferAssistance,
   getChipParticipants,
+  getChipResponseAssistance,
   updateChipCurrentTurn,
 } from './chip.utils';
 
@@ -191,6 +203,83 @@ export const sendChipResponse = onCall(async (request) => {
   );
 
   return {success};
+});
+
+// ************************************************************************* //
+// requestChipAssistance endpoint                                       //
+// Returns LLM API response to requested assistance with chip offer/response //
+//                                                                           //
+// Input structure: {                                                        //
+//   experimentId, cohortId, stageId,                                        //
+//   participantId, assistanceMode,                                          //
+//   (optionally filled for coach mode: buyMap, sellMap, offerResponse)      //
+// }                                                                         //
+// Validation: utils/src/chip.validation.ts                                  //
+// ************************************************************************* //
+export const requestChipAssistance = onCall(async (request) => {
+  const {data} = request;
+
+  const participant = await getFirestoreParticipant(
+    data.experimentId,
+    data.participantId,
+  );
+  if (!participant) return {data: ''};
+
+  const participantAnswer = await getFirestoreParticipantAnswer(
+    data.experimentId,
+    data.participantId,
+    data.stageId,
+  );
+  if (!participantAnswer) return {data: ''};
+
+  const stage = await getFirestoreStage(data.experimentId, data.stageId);
+  if (stage?.kind !== StageKind.CHIP) return {data: ''};
+
+  const publicData = await getFirestoreStagePublicData(
+    data.experimentId,
+    data.cohortId,
+    data.stageId,
+  );
+  if (publicData?.kind !== StageKind.CHIP) return {data: ''};
+
+  // If not current participant, give chip response assistance with offer
+  if (publicData.currentTurn !== participant.publicId) {
+    const roundMap =
+      publicData.participantOfferMap[publicData.currentRound] ?? {};
+    const currentOffer = roundMap[publicData.currentTurn].offer;
+    if (!currentOffer) {
+      return {data: null};
+    }
+
+    return {
+      data: await getChipResponseAssistance(
+        stage,
+        publicData,
+        await getFirestoreCohortParticipants(data.experimentId, data.cohortId),
+        participant,
+        participantAnswer,
+        await getExperimenterDataFromExperiment(data.experimentId),
+        data.assistanceMode,
+        currentOffer,
+        data.offerResponse,
+      ),
+    };
+  }
+
+  // Otherwise, assist with offer
+  return {
+    data: await getChipOfferAssistance(
+      stage,
+      publicData,
+      await getFirestoreCohortParticipants(data.experimentId, data.cohortId),
+      participant,
+      participantAnswer,
+      await getExperimenterDataFromExperiment(data.experimentId),
+      data.assistanceMode,
+      data.buyMap ?? {},
+      data.sellMap ?? {},
+    ),
+  };
 });
 
 // ************************************************************************* //
