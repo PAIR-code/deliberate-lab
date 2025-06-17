@@ -106,6 +106,7 @@ export const RequestChipAssistanceData = Type.Object(
     assistanceMode: Type.String({minLength: 1}),
     buyMap: Type.Optional(Type.Record(Type.String(), Type.Number())),
     sellMap: Type.Optional(Type.Record(Type.String(), Type.Number())),
+    offerResponse: Type.Optional(Type.Boolean()),
   },
   strict,
 );

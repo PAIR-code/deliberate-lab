@@ -23,11 +23,15 @@ import {
   getChipOfferAssistanceAdvisorPrompt,
   getChipOfferAssistanceCoachPrompt,
   getChipOfferAssistanceDelegatePrompt,
+  getChipResponseAssistanceAdvisorPrompt,
+  getChipResponseAssistanceCoachPrompt,
+  getChipResponseAssistanceDelegatePrompt,
   sortParticipantsByRandomProfile,
   CHIP_OFFER_ASSISTANCE_COACH_PROMPT,
   CHIP_OFFER_ASSISTANCE_DELEGATE_PROMPT,
   CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
   CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
+  CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
 } from '@deliberation-lab/utils';
 
 import {getAgentResponse} from '../agent.utils';
@@ -564,6 +568,147 @@ export async function getChipOfferAssistance(
         modelSettings,
         modelGenerationConfig,
         CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
+      );
+      // Parse response before returning
+      return parseResponse(delegateResponse);
+    default:
+      return '';
+  }
+}
+
+export async function getChipResponseAssistance(
+  stage: ChipStageConfig,
+  publicData: ChipStagePublicData,
+  participants: ParticipantProfile[], // participants in cohort
+  participant: ParticipantProfile, // current participant
+  participantAnswer: ChipStageParticipantAnswer,
+  experimenterData: ExperimenterData,
+  assistanceMode: ChipAssistanceMode,
+  currentOffer: ChipOffer,
+  responseIdea: boolean,
+) {
+  // Player name
+  const playerName = participant.name;
+
+  // Player chip values
+  const playerChipValues = Object.keys(participantAnswer.chipValueMap)
+    .map(
+      (chip) =>
+        `${chip} chips = $${participantAnswer.chipValueMap[chip].toFixed(2)} each`,
+    )
+    .join(', ');
+
+  // Player chip quantities
+  const playerChipQuantities = Object.keys(participantAnswer.chipMap)
+    .map((chip) => `${participantAnswer.chipMap[chip]} ${chip} chips`)
+    .join(', ');
+
+  // Player's proposed offer
+  const sellChips = Object.keys(currentOffer.sell)
+    .map((chip) => `${currentOffer.sell[chip]} ${chip} chips`)
+    .join(', ');
+  const buyChips = Object.keys(currentOffer.buy)
+    .map((chip) => `${currentOffer.buy[chip]} ${chip} chips`)
+    .join(', ');
+  const offer = `You will give ${buyChips} and get ${sellChips}`;
+
+  // Negotiation history
+  const negotiationHistory = getChipLogs(
+    stage,
+    publicData,
+    participants,
+    participant.publicId,
+  )
+    .map((log) => convertChipLogToPromptFormat(log))
+    .join('\n');
+
+  // Number of rounds left
+  const numRoundsLeft = stage.numRounds - (publicData.currentRound + 1);
+
+  // Model settings
+  const modelSettings: AgentModelSettings = {
+    apiType: ApiKeyType.GEMINI_API_KEY,
+    modelName: 'gemini-2.5-flash',
+  };
+  const modelGenerationConfig = createModelGenerationConfig();
+
+  // Helper function to parse structured output response
+  const parseResponse = (response: string) => {
+    try {
+      const cleanedText = response
+        .text!.replace(/```json\s*|\s*```/g, '')
+        .trim();
+      return JSON.parse(cleanedText);
+    } catch {
+      // Response is already logged in console during Gemini API call
+      console.log('Could not parse JSON!');
+      return {};
+    }
+  };
+
+  // Call different LLM API prompt based on assistance mode
+  switch (assistanceMode) {
+    case ChipAssistanceMode.COACH:
+      // Construct prompt using helper function
+      const coachPrompt = getChipResponseAssistanceCoachPrompt(
+        playerName,
+        playerChipValues,
+        playerChipQuantities,
+        negotiationHistory,
+        numRoundsLeft,
+        offer,
+        responseIdea,
+      );
+      console.log('Chip response assistance coach prompt:', coachPrompt);
+      // Call API
+      const coachResponse = await getAgentResponse(
+        experimenterData,
+        coachPrompt,
+        modelSettings,
+        modelGenerationConfig,
+        CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
+      );
+      // Parse response before returning
+      return parseResponse(coachResponse);
+    case ChipAssistanceMode.ADVISOR:
+      // Construct prompt using helper function
+      const advisorPrompt = getChipResponseAssistanceAdvisorPrompt(
+        playerName,
+        playerChipValues,
+        playerChipQuantities,
+        negotiationHistory,
+        numRoundsLeft,
+        offer,
+      );
+      console.log('Chip response assistance advisor prompt:', advisorPrompt);
+      // Call API
+      const advisorResponse = await getAgentResponse(
+        experimenterData,
+        advisorPrompt,
+        modelSettings,
+        modelGenerationConfig,
+        CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
+      );
+      // Parse response before returning
+      return parseResponse(advisorResponse);
+    case ChipAssistanceMode.DELEGATE:
+      // Construct prompt using helper function
+      const delegatePrompt = getChipResponseAssistanceDelegatePrompt(
+        playerName,
+        playerChipValues,
+        playerChipQuantities,
+        negotiationHistory,
+        numRoundsLeft,
+        offer,
+      );
+      console.log('Chip response assistance delegate prompt:', delegatePrompt);
+      // Call API
+      const delegateResponse = await getAgentResponse(
+        experimenterData,
+        delegatePrompt,
+        modelSettings,
+        modelGenerationConfig,
+        CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
       );
       // Parse response before returning
       return parseResponse(delegateResponse);

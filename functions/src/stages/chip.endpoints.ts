@@ -43,6 +43,7 @@ import {
   addChipResponseToPublicData,
   getChipOfferAssistance,
   getChipParticipants,
+  getChipResponseAssistance,
   updateChipCurrentTurn,
 } from './chip.utils';
 
@@ -210,7 +211,8 @@ export const sendChipResponse = onCall(async (request) => {
 //                                                                           //
 // Input structure: {                                                        //
 //   experimentId, cohortId, stageId,                                        //
-//   participantId, assistanceMode, buyMap, sellMap                          //
+//   participantId, assistanceMode,                                          //
+//   (optionally filled for coach mode: buyMap, sellMap, offerResponse)      //
 // }                                                                         //
 // Validation: utils/src/chip.validation.ts                                  //
 // ************************************************************************* //
@@ -244,14 +246,13 @@ export const requestChipAssistance = onCall(async (request) => {
   if (publicData.currentTurn !== participant.publicId) {
     const roundMap =
       publicData.participantOfferMap[publicData.currentRound] ?? {};
-    const currentOffer = roundMap[publicData.currentTurn];
+    const currentOffer = roundMap[publicData.currentTurn].offer;
     if (!currentOffer) {
       return {data: null};
     }
 
     return {
-      data: `Response assistance coming soon!`,
-      /* await getChipResponseAssistance(
+      data: await getChipResponseAssistance(
         stage,
         publicData,
         await getFirestoreCohortParticipants(data.experimentId, data.cohortId),
@@ -259,8 +260,9 @@ export const requestChipAssistance = onCall(async (request) => {
         participantAnswer,
         await getExperimenterDataFromExperiment(data.experimentId),
         data.assistanceMode,
-        currentOffer
-      ) */
+        currentOffer,
+        data.offerResponse,
+      ),
     };
   }
 
