@@ -20,11 +20,12 @@ import {
   createChipTurnLogEntry,
   createModelGenerationConfig,
   getChipLogs,
+  getChipOfferAssistanceAdvisorPrompt,
   getChipOfferAssistanceCoachPrompt,
   sortParticipantsByRandomProfile,
-  CHIP_OFFER_ASSISTANCE_ADVISOR_PROMPT,
   CHIP_OFFER_ASSISTANCE_COACH_PROMPT,
   CHIP_OFFER_ASSISTANCE_DELEGATE_PROMPT,
+  CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
   CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
 } from '@deliberation-lab/utils';
 
@@ -526,15 +527,22 @@ export async function getChipOfferAssistance(
       // Parse response before returning
       return parseResponse(coachResponse);
     case ChipAssistanceMode.ADVISOR:
-      // TODO: Construct prompt using helper function
-      const advisorPrompt = `${negotiationHistory}\n\n${CHIP_OFFER_ASSISTANCE_ADVISOR_PROMPT}`;
+      // Construct prompt using helper function
+      const advisorPrompt = getChipOfferAssistanceAdvisorPrompt(
+        playerName,
+        playerChipValues,
+        playerChipQuantities,
+        negotiationHistory,
+        numRoundsLeft,
+      );
+      console.log('Chip offer assistance advisor prompt:', advisorPrompt);
       // Call API
       const advisorResponse = await getAgentResponse(
         experimenterData,
         advisorPrompt,
         modelSettings,
         modelGenerationConfig,
-        CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
+        CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
       );
       // Parse response before returning
       return parseResponse(advisorResponse);
