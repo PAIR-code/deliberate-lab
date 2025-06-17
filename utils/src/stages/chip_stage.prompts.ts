@@ -101,9 +101,103 @@ ${printSchema(CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG.schema!)}
 `;
 }
 
-// TODO: Update temporary prompt
-export const CHIP_OFFER_ASSISTANCE_ADVISOR_PROMPT =
-  'Suggest a trade that should be made and explain why.';
+/** Chip offer assistance advisor structured output. */
+export const CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG =
+  createStructuredOutputConfig({
+    schema: {
+      type: StructuredOutputDataType.OBJECT,
+      properties: [
+        {
+          name: 'check',
+          schema: {
+            type: StructuredOutputDataType.STRING,
+            description: `Check if you have sufficient chips to trade. If you have n green chips, you can at most give n green chips. If you don't want to trade, you can ask for a large amount of chips that no one can afford`,
+          },
+        },
+        {
+          name: 'reasoning',
+          schema: {
+            type: StructuredOutputDataType.STRING,
+            description:
+              'Provide your concise reasoning in a few sentences, e.g. To gain more surplus, I want more xxx chips',
+          },
+        },
+        {
+          name: 'loss',
+          schema: {
+            type: StructuredOutputDataType.STRING,
+            description: `Given your thoughts on the proposal, check to make sure you aren't losing money (your valuation * chips you are offering) < your valuation * chips you are receiving. For example, if you value the red chip at 6 and blue chip at 8. By proposing to GET 5 red chips and GIVE 3 blue chips, your surplus change will be + 5*6 - 3*8 = +6. So you get 6 positive surplus gains. BBut if you propose to GET 5 red chips and GIVE 4 blue chips, your surplus change will be + 5*6 - 4*8 = -2. So you get negative surplus gain.`,
+          },
+        },
+        {
+          name: 'suggestedBuyType',
+          schema: {
+            type: StructuredOutputDataType.STRING,
+            description: 'Your suggested type of chip for the user to buy',
+          },
+        },
+        {
+          name: 'suggestedBuyQuantity',
+          schema: {
+            type: StructuredOutputDataType.NUMBER,
+            description:
+              'Your suggested quantity of chip for the user to buy, given the type of chip that the user is buying',
+          },
+        },
+        {
+          name: 'suggestedSellType',
+          schema: {
+            type: StructuredOutputDataType.STRING,
+            description: 'Your suggested type of chip for the user to sell',
+          },
+        },
+        {
+          name: 'suggestedSellQuantity',
+          schema: {
+            type: StructuredOutputDataType.NUMBER,
+            description:
+              'Your suggested quantity of chip for the user to sell, given the type of chip that the user is selling',
+          },
+        },
+        {
+          name: 'tradeExplanation',
+          schema: {
+            type: StructuredOutputDataType.STRING,
+            description:
+              'An explanation of why you chose the suggested buy chip type/quantity and sell chip type/quantity',
+          },
+        },
+      ],
+    },
+  });
+
+/** Chip offer assistance (advisor mode). */
+export function getChipOfferAssistanceAdvisorPrompt(
+  playerName: string,
+  playerChipValues: string,
+  playerChipQuantities: string,
+  negotiationHistory: string,
+  numRoundsLeft: string,
+) {
+  return `
+You are a strategic advisor to ${playerName}. our primary objective is to maximize their surplus by the end of the game. Proactively analyze the current game state to identify and recommend the most advantageous trades. For each recommendation, provide a clear rationale, including potential risks and rewards, to empower your player to make the final, informed decision.
+
+The player’s valuations of the different types of chips are: ${playerChipValues}.
+
+The player now has the following amounts of each chip: ${playerChipQuantities}.
+
+The trade history so far is:
+${negotiationHistory}
+
+There are only ${numRoundsLeft} rounds left.
+
+Now, you need to give the player a recommendation along with the reason.
+REMEMBER the player now has the following amounts of each chip: ${playerChipQuantities}.
+
+${printSchema(CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG.schema!)}
+      
+`;
+}
 
 export const DEFAULT_CHIP_CHAT_AGENT_PARTICIPANT_PROMPT = `You are playing a chip negotiation game. Talk to the other participants.`;
 
