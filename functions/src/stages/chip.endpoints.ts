@@ -205,8 +205,8 @@ export const sendChipResponse = onCall(async (request) => {
 });
 
 // ************************************************************************* //
-// requestChipOfferAssistance endpoint                                       //
-// Returns LLM API response to requested assistance with chip offer          //
+// requestChipAssistance endpoint                                       //
+// Returns LLM API response to requested assistance with chip offer/response //
 //                                                                           //
 // Input structure: {                                                        //
 //   experimentId, cohortId, stageId,                                        //
@@ -214,7 +214,7 @@ export const sendChipResponse = onCall(async (request) => {
 // }                                                                         //
 // Validation: utils/src/chip.validation.ts                                  //
 // ************************************************************************* //
-export const requestChipOfferAssistance = onCall(async (request) => {
+export const requestChipAssistance = onCall(async (request) => {
   const {data} = request;
 
   const participant = await getFirestoreParticipant(
@@ -240,11 +240,31 @@ export const requestChipOfferAssistance = onCall(async (request) => {
   );
   if (publicData?.kind !== StageKind.CHIP) return {data: ''};
 
-  // Verify that participant seeking assistance is making the offer
+  // If not current participant, give chip response assistance with offer
   if (publicData.currentTurn !== participant.publicId) {
-    return {data: null};
+    const roundMap =
+      publicData.participantOfferMap[publicData.currentRound] ?? {};
+    const currentOffer = roundMap[publicData.currentTurn];
+    if (!currentOffer) {
+      return {data: null};
+    }
+
+    return {
+      data: `Response assistance coming soon!`,
+      /* await getChipResponseAssistance(
+        stage,
+        publicData,
+        await getFirestoreCohortParticipants(data.experimentId, data.cohortId),
+        participant,
+        participantAnswer,
+        await getExperimenterDataFromExperiment(data.experimentId),
+        data.assistanceMode,
+        currentOffer
+      ) */
+    };
   }
 
+  // Otherwise, assist with offer
   return {
     data: await getChipOfferAssistance(
       stage,

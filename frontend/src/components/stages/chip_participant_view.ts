@@ -604,12 +604,6 @@ export class ChipView extends MobxLitElement {
     if (!this.authService.isDebugMode) {
       return nothing;
     }
-    // Only show debug panel for participant making the offer
-    const publicData = this.cohortService.stagePublicDataMap[this.stage!.id];
-    if (!publicData || publicData.kind !== StageKind.CHIP) return nothing;
-    if (this.participantService.profile?.publicId !== publicData.currentTurn) {
-      return nothing;
-    }
 
     return html`
       <div class="debug-panel">
@@ -621,7 +615,7 @@ export class ChipView extends MobxLitElement {
               this.isAssistanceDelegateLoading = true;
               this.assistanceDelegateResponse = '';
               const response =
-                await this.participantService.requestChipOfferAssistance(
+                await this.participantService.requestChipAssistance(
                   'delegate',
                   this.selectedBuyChip,
                   this.buyChipAmount,
@@ -643,7 +637,7 @@ export class ChipView extends MobxLitElement {
               this.isAssistanceAdvisorLoading = true;
               this.assistanceAdvisorResponse = '';
               const response =
-                await this.participantService.requestChipOfferAssistance(
+                await this.participantService.requestChipAssistance(
                   'advisor',
                   this.selectedBuyChip,
                   this.buyChipAmount,
@@ -665,7 +659,7 @@ export class ChipView extends MobxLitElement {
               this.isAssistanceCoachLoading = true;
               this.assistanceCoachResponse = '';
               const response =
-                await this.participantService.requestChipOfferAssistance(
+                await this.participantService.requestChipAssistance(
                   'coach',
                   this.selectedBuyChip,
                   this.buyChipAmount,
