@@ -229,9 +229,9 @@ code {
   border: 2px solid var(--md-sys-color-secondary);
   gap: common.$spacing-medium;
   max-height: 500px;
-  min-width: 240px;
   overflow: auto;
   padding: common.$spacing-medium;
+  width: 300px;
 }
 
 .button-wrapper {
