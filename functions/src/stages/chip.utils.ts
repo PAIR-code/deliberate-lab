@@ -25,6 +25,7 @@ import {
   CHIP_OFFER_ASSISTANCE_ADVISOR_PROMPT,
   CHIP_OFFER_ASSISTANCE_COACH_PROMPT,
   CHIP_OFFER_ASSISTANCE_DELEGATE_PROMPT,
+  CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
 } from '@deliberation-lab/utils';
 
 import {getAgentResponse} from '../agent.utils';
@@ -487,6 +488,20 @@ export async function getChipOfferAssistance(
   };
   const modelGenerationConfig = createModelGenerationConfig();
 
+  // Helper function to parse structured output response
+  const parseResponse = (response: string) => {
+    try {
+      const cleanedText = response
+        .text!.replace(/```json\s*|\s*```/g, '')
+        .trim();
+      return JSON.parse(cleanedText);
+    } catch {
+      // Response is already logged in console during Gemini API call
+      console.log('Could not parse JSON!');
+      return {};
+    }
+  };
+
   // Call different LLM API prompt based on assistance mode
   switch (assistanceMode) {
     case ChipAssistanceMode.COACH:
@@ -506,9 +521,10 @@ export async function getChipOfferAssistance(
         coachPrompt,
         modelSettings,
         modelGenerationConfig,
+        CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
       );
-      // TODO: Call helper function to parse response before returning
-      return coachResponse;
+      // Parse response before returning
+      return parseResponse(coachResponse);
     case ChipAssistanceMode.ADVISOR:
       // TODO: Construct prompt using helper function
       const advisorPrompt = `${negotiationHistory}\n\n${CHIP_OFFER_ASSISTANCE_ADVISOR_PROMPT}`;
@@ -518,9 +534,10 @@ export async function getChipOfferAssistance(
         advisorPrompt,
         modelSettings,
         modelGenerationConfig,
+        CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
       );
-      // TODO: Call helper function to parse response before returning
-      return advisorResponse;
+      // Parse response before returning
+      return parseResponse(advisorResponse);
     case ChipAssistanceMode.DELEGATE:
       // TODO: Construct prompt using helper function
       const delegatePrompt = `${negotiationHistory}\n\n${CHIP_OFFER_ASSISTANCE_DELEGATE_PROMPT}`;
@@ -530,9 +547,10 @@ export async function getChipOfferAssistance(
         delegatePrompt,
         modelSettings,
         modelGenerationConfig,
+        CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
       );
-      // TODO: Call helper function to parse response before returning
-      return delegateResponse;
+      // Parse response before returning
+      return parseResponse(delegateResponse);
     default:
       return '';
   }

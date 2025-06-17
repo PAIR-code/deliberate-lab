@@ -1,9 +1,77 @@
 import {UnifiedTimestamp} from '../shared';
+import {
+  StructuredOutputConfig,
+  StructuredOutputDataType,
+  createStructuredOutputConfig,
+  printSchema,
+} from '../structured_output';
 import {SimpleChipLog} from './chip_stage';
 
 // TODO: Update temporary prompt
 export const CHIP_OFFER_ASSISTANCE_DELEGATE_PROMPT =
   'Decide what trade you should make.';
+
+/** Chip offer assistance structured output. */
+export const CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG =
+  createStructuredOutputConfig({
+    schema: {
+      type: StructuredOutputDataType.OBJECT,
+      properties: [
+        {
+          name: 'feedback',
+          schema: {
+            type: StructuredOutputDataType.STRING,
+            description: 'Your feedback to show to the player',
+          },
+        },
+        {
+          name: 'reasoning',
+          schema: {
+            type: StructuredOutputDataType.STRING,
+            description: 'Your concise reasoning in a few sentences',
+          },
+        },
+        {
+          name: 'suggestedBuyType',
+          schema: {
+            type: StructuredOutputDataType.STRING,
+            description: 'Your suggested type of chip for the user to buy',
+          },
+        },
+        {
+          name: 'suggestedBuyQuantity',
+          schema: {
+            type: StructuredOutputDataType.NUMBER,
+            description:
+              'Your suggested quantity of chip for the user to buy, given the type of chip that the user is buying',
+          },
+        },
+        {
+          name: 'suggestedSellType',
+          schema: {
+            type: StructuredOutputDataType.STRING,
+            description: 'Your suggested type of chip for the user to sell',
+          },
+        },
+        {
+          name: 'suggestedSellQuantity',
+          schema: {
+            type: StructuredOutputDataType.NUMBER,
+            description:
+              'Your suggested quantity of chip for the user to sell, given the type of chip that the user is selling',
+          },
+        },
+        {
+          name: 'tradeExplanation',
+          schema: {
+            type: StructuredOutputDataType.STRING,
+            description:
+              'An explanation of why you chose the suggested buy chip type/quantity and sell chip type/quantity',
+          },
+        },
+      ],
+    },
+  });
 
 /** Chip offer assistance (coach mode). */
 export function getChipOfferAssistanceCoachPrompt(
@@ -28,15 +96,8 @@ Here is the player’s initial idea: ${offerIdea}.
 
 Now, you need to give the player your feedback on this initial idea.
 REMEMBER the player now has the following amounts of each chip: ${playerChipQuantities}.
-Your response must use these EXACT tags below. The response should include nothing else besides the tags, your trade offer, and your reasoning. The text between tags should be concise.
 
-\`\`\`
-<REASONING>
-[Provide your concise reasoning in a few sentences, e.g. To gain more surplus, I want more xxx chips]
-</REASONING>
-
-<FEEDBACK> your feedback to show to the player </FEEDBACK>
-\`\`\`
+${printSchema(CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG.schema!)}
 `;
 }
 
