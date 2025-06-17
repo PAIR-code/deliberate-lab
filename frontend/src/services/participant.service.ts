@@ -40,7 +40,7 @@ import {
   acceptParticipantExperimentStartCallable,
   acceptParticipantTransferCallable,
   createChatMessageCallable,
-  requestChipOfferAssistanceCallable,
+  requestChipAssistanceCallable,
   sendAlertMessageCallable,
   sendChipOfferCallable,
   sendChipResponseCallable,
@@ -766,7 +766,7 @@ export class ParticipantService extends Service {
     return output.success;
   }
 
-  async requestChipOfferAssistance(
+  async requestChipAssistance(
     assistanceMode: string, // TODO: make enum
     buyChipType: string,
     buyChipAmount: number,
@@ -781,7 +781,7 @@ export class ParticipantService extends Service {
 
     let output = {data: ''};
     if (this.experimentId && this.profile) {
-      output = await requestChipOfferAssistanceCallable(
+      output = await requestChipAssistanceCallable(
         this.sp.firebaseService.functions,
         {
           experimentId: this.experimentId,
