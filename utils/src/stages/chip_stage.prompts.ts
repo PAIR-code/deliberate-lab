@@ -223,6 +223,127 @@ ${printSchema(CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG.schema!)}
 `;
 }
 
+/** Chip response assistance structured output. */
+export const CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG =
+  createStructuredOutputConfig({
+    schema: {
+      type: StructuredOutputDataType.OBJECT,
+      properties: [
+        {
+          name: 'feedback',
+          schema: {
+            type: StructuredOutputDataType.STRING,
+            description: 'Your feedback to show to the player',
+          },
+        },
+        {
+          name: 'reasoning',
+          schema: {
+            type: StructuredOutputDataType.STRING,
+            description: 'Your concise reasoning in a few sentences',
+          },
+        },
+        {
+          name: 'response',
+          schema: {
+            type: StructuredOutputDataType.BOOLEAN,
+            description: 'Whether or not to accept the current offer',
+          },
+        },
+      ],
+    },
+  });
+
+/** Chip response assistance (advisor mode). */
+export function getChipResponseAssistanceAdvisorPrompt(
+  playerName: string,
+  playerChipValues: string,
+  playerChipQuantities: string,
+  negotiationHistory: string,
+  numRoundsLeft: string,
+  offer: string,
+) {
+  return `
+You are a strategic advisor to ${playerName}. Your primary objective is to maximize their surplus by the end of the game. Proactively analyze the current game state to identify and recommend the most advantageous trades. For each recommendation, provide a clear rationale, including potential risks and rewards, to empower your player to make the final, informed decision.
+
+The player’s valuations of the different types of chips are: ${playerChipValues}.
+
+The player now has the following amounts of each chip: ${playerChipQuantities}.
+
+The trade history so far is:
+${negotiationHistory}
+
+There are only ${numRoundsLeft} rounds left.
+
+You have an offer: ${offer}
+
+Now, you need to give the player a recommendation along with the reason.
+
+${printSchema(CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG.schema!)}
+`;
+}
+
+/** Chip response assistance (coach mode). */
+export function getChipResponseAssistanceCoachPrompt(
+  playerName: string,
+  playerChipValues: string,
+  playerChipQuantities: string,
+  negotiationHistory: string,
+  numRoundsLeft: string,
+  offer: string,
+  responseIdea: boolean,
+) {
+  return `
+You are a strategic coach for ${playerName}, dedicated to sharpening their decision-making skills. Your goal is to help them maximize their end-of-game surplus. When the player presents a trade offer, your role is to provide constructive feedback that helps them refine their own strategy and understand its long-term implications.
+
+The player’s valuations of the different types of chips are: ${playerChipValues}.
+
+The player now has the following amounts of each chip: ${playerChipQuantities}.
+
+The trade history so far is:
+${negotiationHistory}
+
+There are only ${numRoundsLeft} rounds left.
+
+You have an offer: ${offer}
+
+Here is the player's initial proposal: ${responseIdea ? 'Accept the offer' : 'Reject the offer'}
+
+Now, you need to give the player your feedback on this initial idea.
+
+${printSchema(CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG.schema!)}
+`;
+}
+
+/** Chip response assistance (delegate mode). */
+export function getChipResponseAssistanceDelegatePrompt(
+  playerName: string,
+  playerChipValues: string,
+  playerChipQuantities: string,
+  negotiationHistory: string,
+  numRoundsLeft: string,
+  offer: string,
+) {
+  return `
+You are a helpful agent to ${playerName}
+
+You valuations of the different types of chips are: ${playerChipValues}.
+
+You now have the following amounts of each chip: ${playerChipQuantities}.
+
+The trade history so far is:
+${negotiationHistory}
+
+There are only ${numRoundsLeft} rounds left.
+
+You have an offer: ${offer}
+
+Now, you need to decide whether to accept or decline.
+
+${printSchema(CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG.schema!)}
+`;
+}
+
 export const DEFAULT_CHIP_CHAT_AGENT_PARTICIPANT_PROMPT = `You are playing a chip negotiation game. Talk to the other participants.`;
 
 export function convertChipLogToPromptFormat(log: SimpleChipLog) {

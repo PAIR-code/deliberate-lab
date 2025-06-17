@@ -772,6 +772,7 @@ export class ParticipantService extends Service {
     buyChipAmount: number,
     sellChipType: string,
     sellChipAmount: number,
+    offerResponse: boolean | undefined = undefined,
   ) {
     const buyMap: Record<string, number> = {};
     buyMap[buyChipType] = buyChipAmount;
@@ -791,6 +792,7 @@ export class ParticipantService extends Service {
           assistanceMode,
           buyMap,
           sellMap,
+          offerResponse,
         },
       );
     }
