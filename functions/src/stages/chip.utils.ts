@@ -483,7 +483,7 @@ export async function getChipOfferAssistance(
   // Model settings
   const modelSettings: AgentModelSettings = {
     apiType: ApiKeyType.GEMINI_API_KEY,
-    modelName: 'gemini-2.5-pro-preview-06-05',
+    modelName: 'gemini-2.5-flash',
   };
   const modelGenerationConfig = createModelGenerationConfig();
 
