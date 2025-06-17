@@ -7,7 +7,32 @@ import {
 } from '../structured_output';
 import {SimpleChipLog} from './chip_stage';
 
-// TODO: Update temporary prompt
+/** Chip offer assistance delegate prompt. */
+export function getChipOfferAssistanceDelegatePrompt(
+  playerName: string,
+  playerChipValues: string,
+  playerChipQuantities: string,
+  negotiationHistory: string,
+  numRoundsLeft: string,
+) {
+  return `
+You are the trusted agent for ${playerName}. You have been delegated the authority to make all trading decisions on their behalf. Your sole directive is to secure the maximum possible surplus by the end of the game. Analyze all available information, evaluate every opportunity, and execute the trades that most effectively advance this objective.
+
+Your valuations of the different types of chips are: ${playerChipValues}.
+
+You now have the following amounts of each chip: ${playerChipQuantities}.
+
+The trade history so far is:
+${negotiationHistory}
+
+There are only ${numRoundsLeft} rounds left.
+
+Now, you need to decide what and how much to give and to receive.
+REMEMBER the player now has the following amounts of each chip: ${playerChipQuantities}.
+
+${printSchema(CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG.schema!)}
+`;
+}
 export const CHIP_OFFER_ASSISTANCE_DELEGATE_PROMPT =
   'Decide what trade you should make.';
 
@@ -180,7 +205,7 @@ export function getChipOfferAssistanceAdvisorPrompt(
   numRoundsLeft: string,
 ) {
   return `
-You are a strategic advisor to ${playerName}. our primary objective is to maximize their surplus by the end of the game. Proactively analyze the current game state to identify and recommend the most advantageous trades. For each recommendation, provide a clear rationale, including potential risks and rewards, to empower your player to make the final, informed decision.
+You are a strategic advisor to ${playerName}. Your primary objective is to maximize their surplus by the end of the game. Proactively analyze the current game state to identify and recommend the most advantageous trades. For each recommendation, provide a clear rationale, including potential risks and rewards, to empower your player to make the final, informed decision.
 
 The player’s valuations of the different types of chips are: ${playerChipValues}.
 
@@ -195,7 +220,6 @@ Now, you need to give the player a recommendation along with the reason.
 REMEMBER the player now has the following amounts of each chip: ${playerChipQuantities}.
 
 ${printSchema(CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG.schema!)}
-      
 `;
 }
 
