@@ -253,6 +253,7 @@ export const requestChipAssistance = onCall(async (request) => {
 
     return {
       data: await getChipResponseAssistance(
+        data.experimentId,
         stage,
         publicData,
         await getFirestoreCohortParticipants(data.experimentId, data.cohortId),
@@ -269,6 +270,7 @@ export const requestChipAssistance = onCall(async (request) => {
   // Otherwise, assist with offer
   return {
     data: await getChipOfferAssistance(
+      data.experimentId,
       stage,
       publicData,
       await getFirestoreCohortParticipants(data.experimentId, data.cohortId),
