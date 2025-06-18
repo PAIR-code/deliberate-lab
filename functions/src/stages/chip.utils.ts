@@ -500,11 +500,12 @@ export async function getChipOfferAssistance(
       const cleanedText = response
         .text!.replace(/```json\s*|\s*```/g, '')
         .trim();
-      return JSON.parse(cleanedText);
-    } catch {
+      const responseObj = JSON.parse(cleanedText);
+      return `Suggested: Give ${responseObj['suggestedSellQuantity']} ${responseObj['suggestedSellType']} to get ${responseObj['suggestedBuyQuantity']} ${responseObj['suggestedBuyType']} (${responseObj['reasoning']})`;
+    } catch (error) {
       // Response is already logged in console during Gemini API call
-      console.log('Could not parse JSON!');
-      return {};
+      console.log('Could not parse JSON:', error);
+      return '';
     }
   };
 
@@ -638,11 +639,12 @@ export async function getChipResponseAssistance(
       const cleanedText = response
         .text!.replace(/```json\s*|\s*```/g, '')
         .trim();
-      return JSON.parse(cleanedText);
-    } catch {
+      const responseObject = JSON.parse(cleanedText);
+      return `${responseObject['response']} (${responseObject['feedback']}) (${responseObject['reasoning']})`;
+    } catch (error) {
       // Response is already logged in console during Gemini API call
-      console.log('Could not parse JSON!');
-      return {};
+      console.log('Could not parse JSON:', error);
+      return '';
     }
   };
 
