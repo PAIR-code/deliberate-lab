@@ -23,27 +23,31 @@
   overflow: auto;
   padding: common.$spacing-large;
   width: 100%;
+  z-index: 1; /* show over scrolling logs in bottom panel */
 }
 
 .game-panel {
   @include common.flex-column;
-  flex-grow: 1;
+  height: 100%;
   overflow: auto;
-  max-width: 100%;
-  width: 600px;
+}
+
+.status-panel-wrapper {
+  @include common.flex-column;
+  flex-shrink: 0;
+  height: 100%;
+  justify-content: end;
+  padding: common.$spacing-large;
+  width: 50%;
 }
 
 .status-panel {
   @include common.flex-column;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-bottom: none;
-  border-radius: common.$spacing-medium common.$spacing-medium 0 0;
-  flex-shrink: 0;
+  border: 2px solid var(--md-sys-color-outline);
+  border-radius: common.$spacing-medium;
+  flex-grow: 1;
   gap: 0;
-  max-height: 50%;
-  max-width: calc(100% - common.$spacing-large * 2);
   overflow: auto;
-  width: 660px;
 }
 
 .subpanel {
@@ -105,7 +109,7 @@
   @include common.flex-column;
   background-color: var(--md-sys-color-surface-variant);
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  flex-shrink: 0;
+  flex-grow: 1;
   gap: common.$spacing-medium;
   overflow: auto;
   padding: common.$main-content-padding;
@@ -213,25 +217,17 @@ code {
   word-break: break-all;
 }
 
-.temporary-panel-wrapper {
+.bottom-panel-wrapper {
   @include common.flex-row;
   align-items: end;
-  height: 100%;
-}
-
-.temporary-subpanel-wrapper {
-  @include common.flex-column-align-center;
-  flex-shrink: 0;
+  overflow: hidden;
 }
 
 .debug-panel {
+  @include typescale.label-small;
   @include common.flex-column;
-  border: 2px solid var(--md-sys-color-secondary);
   gap: common.$spacing-medium;
-  max-height: 500px;
-  overflow: auto;
   padding: common.$spacing-medium;
-  width: 300px;
 }
 
 .button-wrapper {
