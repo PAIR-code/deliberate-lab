@@ -99,12 +99,9 @@ export class ChipView extends MobxLitElement {
           <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
           </chip-reveal-view>
         </div>
-        <div class="temporary-panel-wrapper">
-          <div class="temporary-subpanel-wrapper">
-            <div class="game-panel">${this.renderLogsPanel()}</div>
-            ${this.renderStatusPanel()}
-          </div>
-          ${this.renderDebug()}
+        <div class="bottom-panel-wrapper">
+          <div class="game-panel">${this.renderLogsPanel()}</div>
+          ${this.renderStatusPanel()}
         </div>
       </div>
       <stage-footer .disabled=${!publicData.isGameOver}>
@@ -181,7 +178,12 @@ export class ChipView extends MobxLitElement {
       return this.renderRecipientView();
     };
 
-    return html` <div class="status-panel">${renderTopLeftPanel()}</div> `;
+    return html`
+      <div class="status-panel-wrapper">
+        <div class="status-panel">${renderTopLeftPanel()}</div>
+        ${this.renderDebug()}
+      </div>
+    `;
   }
 
   private getCurrentTransaction() {
