@@ -1,3 +1,4 @@
+import {Timestamp} from 'firebase-admin/firestore';
 import {
   AgentModelSettings,
   ApiKeyType,
@@ -19,6 +20,7 @@ import {
   createChipTurn,
   createChipTurnLogEntry,
   createModelGenerationConfig,
+  generateId,
   getChipLogs,
   getChipOfferAssistanceAdvisorPrompt,
   getChipOfferAssistanceCoachPrompt,
@@ -439,6 +441,7 @@ export async function addChipResponseToPublicData(
 }
 
 export async function getChipOfferAssistance(
+  experimentId: string,
   stage: ChipStageConfig,
   publicData: ChipStagePublicData,
   participants: ParticipantProfile[], // participants in cohort
@@ -495,12 +498,34 @@ export async function getChipOfferAssistance(
   const modelGenerationConfig = createModelGenerationConfig();
 
   // Helper function to parse structured output response
-  const parseResponse = (response: string) => {
+  const parseResponse = (response: string, sendOffer = false) => {
     try {
       const cleanedText = response
         .text!.replace(/```json\s*|\s*```/g, '')
         .trim();
       const responseObj = JSON.parse(cleanedText);
+      if (sendOffer) {
+        const buy: Record<string, number> = {};
+        const sell: Record<string, number> = {};
+        buy[responseObj['suggestedBuyType']] =
+          responseObj['suggestedBuyQuantity'];
+        sell[responseObj['suggestedSellType']] =
+          responseObj['suggestedSellQuantity'];
+        console.log(buy, sell);
+        addChipOfferToPublicData(
+          experimentId,
+          participant.currentCohortId,
+          stage.id,
+          {
+            id: generateId(),
+            round: publicData.currentRound,
+            senderId: participant.publicId,
+            buy,
+            sell,
+            timestamp: Timestamp.now(),
+          },
+        );
+      }
       return `Suggested: Give ${responseObj['suggestedSellQuantity']} ${responseObj['suggestedSellType']} to get ${responseObj['suggestedBuyQuantity']} ${responseObj['suggestedBuyType']} (${responseObj['reasoning']})`;
     } catch (error) {
       // Response is already logged in console during Gemini API call
@@ -571,13 +596,14 @@ export async function getChipOfferAssistance(
         CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
       );
       // Parse response before returning
-      return parseResponse(delegateResponse);
+      return parseResponse(delegateResponse, true);
     default:
       return '';
   }
 }
 
 export async function getChipResponseAssistance(
+  experimentId: string,
   stage: ChipStageConfig,
   publicData: ChipStagePublicData,
   participants: ParticipantProfile[], // participants in cohort
@@ -634,12 +660,21 @@ export async function getChipResponseAssistance(
   const modelGenerationConfig = createModelGenerationConfig();
 
   // Helper function to parse structured output response
-  const parseResponse = (response: string) => {
+  const parseResponse = (response: string, sendResponse = false) => {
     try {
       const cleanedText = response
         .text!.replace(/```json\s*|\s*```/g, '')
         .trim();
       const responseObject = JSON.parse(cleanedText);
+      if (sendResponse) {
+        addChipResponseToPublicData(
+          experimentId,
+          participant.currentCohortId,
+          stage.id,
+          participant.publicId,
+          responseObject['response'],
+        );
+      }
       return `${responseObject['response']} (${responseObject['feedback']}) (${responseObject['reasoning']})`;
     } catch (error) {
       // Response is already logged in console during Gemini API call
@@ -713,7 +748,7 @@ export async function getChipResponseAssistance(
         CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
       );
       // Parse response before returning
-      return parseResponse(delegateResponse);
+      return parseResponse(delegateResponse, true);
     default:
       return '';
   }
