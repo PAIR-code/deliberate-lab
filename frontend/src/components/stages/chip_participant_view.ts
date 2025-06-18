@@ -322,7 +322,7 @@ export class ChipView extends MobxLitElement {
     if (this.isOfferPending()) {
       return html`
         <div class="offer-panel">
-          Waiting on other participants to response to your offer...
+          Waiting on other participants to respond to your offer...
         </div>
       `;
     }
