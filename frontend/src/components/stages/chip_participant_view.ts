@@ -632,7 +632,7 @@ export class ChipView extends MobxLitElement {
                   this.sellChipAmount,
                 );
               this.isAssistanceDelegateLoading = false;
-              this.assistanceDelegateResponse = JSON.stringify(response);
+              this.assistanceDelegateResponse = response.data;
             }}
           >
             Delegate
@@ -654,7 +654,7 @@ export class ChipView extends MobxLitElement {
                   this.sellChipAmount,
                 );
               this.isAssistanceAdvisorLoading = false;
-              this.assistanceAdvisorResponse = JSON.stringify(response);
+              this.assistanceAdvisorResponse = response.data;
             }}
           >
             Advisor
@@ -676,7 +676,7 @@ export class ChipView extends MobxLitElement {
                   this.sellChipAmount,
                 );
               this.isAssistanceCoachLoading = false;
-              this.assistanceCoachResponse = JSON.stringify(response);
+              this.assistanceCoachResponse = response.data;
             }}
           >
             Coach
