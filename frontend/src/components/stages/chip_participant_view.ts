@@ -245,10 +245,6 @@ export class ChipView extends MobxLitElement {
   }
 
   private renderSenderView() {
-    if (this.isOfferPending()) {
-      return nothing;
-    }
-
     const sendOffer = async () => {
       if (!this.stage) return;
       this.isOfferLoading = true;
@@ -321,12 +317,18 @@ export class ChipView extends MobxLitElement {
       `;
     };
 
+    if (this.isOfferPending()) {
+      return html`
+        <div class="offer-panel">
+          Waiting on other participants to response to your offer...
+        </div>
+      `;
+    }
+
     return html`
       <div class="offer-panel">
         <div class="offer-description">
-          ${this.isOfferPending()
-            ? `Waiting on other participants to evaluate your offer...`
-            : `✋ It's your turn! Make an offer to the other participants.`}
+          ✋ It's your turn! Make an offer to the other participants.
         </div>
 
         <div class="offer-form">
@@ -429,8 +431,13 @@ export class ChipView extends MobxLitElement {
     if (publicData?.kind !== StageKind.CHIP) return nothing;
 
     const offer = this.getCurrentTransaction()?.offer ?? null;
-    if (!offer || this.isResponsePending()) {
-      return nothing;
+    if (this.isResponsePending()) {
+      return html`<div class="offer-panel">
+        Waiting for others to respond...
+      </div>`;
+    }
+    if (!offer) {
+      return html`<div class="offer-panel">Waiting for an offer...</div>`;
     }
 
     const acceptOffer = async () => {
