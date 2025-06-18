@@ -99,12 +99,9 @@ export class ChipView extends MobxLitElement {
           <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
           </chip-reveal-view>
         </div>
-        <div class="temporary-panel-wrapper">
-          <div class="temporary-subpanel-wrapper">
-            <div class="game-panel">${this.renderLogsPanel()}</div>
-            ${this.renderStatusPanel()}
-          </div>
-          ${this.renderDebug()}
+        <div class="bottom-panel-wrapper">
+          <div class="game-panel">${this.renderLogsPanel()}</div>
+          ${this.renderStatusPanel()}
         </div>
       </div>
       <stage-footer .disabled=${!publicData.isGameOver}>
@@ -181,7 +178,12 @@ export class ChipView extends MobxLitElement {
       return this.renderRecipientView();
     };
 
-    return html` <div class="status-panel">${renderTopLeftPanel()}</div> `;
+    return html`
+      <div class="status-panel-wrapper">
+        <div class="status-panel">${renderTopLeftPanel()}</div>
+        ${this.renderDebug()}
+      </div>
+    `;
   }
 
   private getCurrentTransaction() {
@@ -245,10 +247,6 @@ export class ChipView extends MobxLitElement {
   }
 
   private renderSenderView() {
-    if (this.isOfferPending()) {
-      return nothing;
-    }
-
     const sendOffer = async () => {
       if (!this.stage) return;
       this.isOfferLoading = true;
@@ -321,12 +319,18 @@ export class ChipView extends MobxLitElement {
       `;
     };
 
+    if (this.isOfferPending()) {
+      return html`
+        <div class="offer-panel">
+          Waiting on other participants to respond to your offer...
+        </div>
+      `;
+    }
+
     return html`
       <div class="offer-panel">
         <div class="offer-description">
-          ${this.isOfferPending()
-            ? `Waiting on other participants to evaluate your offer...`
-            : `✋ It's your turn! Make an offer to the other participants.`}
+          ✋ It's your turn! Make an offer to the other participants.
         </div>
 
         <div class="offer-form">
@@ -363,6 +367,8 @@ export class ChipView extends MobxLitElement {
           </pr-button>
           <div>${renderOfferPayout()} ${renderValidationMessages()}</div>
         </div>
+        ${this.renderDelegateButton()} ${this.renderAdvisorButton()}
+        ${this.renderCoachButton()}
       </div>
     `;
   }
@@ -429,8 +435,13 @@ export class ChipView extends MobxLitElement {
     if (publicData?.kind !== StageKind.CHIP) return nothing;
 
     const offer = this.getCurrentTransaction()?.offer ?? null;
-    if (!offer || this.isResponsePending()) {
-      return nothing;
+    if (this.isResponsePending()) {
+      return html`<div class="offer-panel">
+        Waiting for others to respond...
+      </div>`;
+    }
+    if (!offer) {
+      return html`<div class="offer-panel">Waiting for an offer...</div>`;
     }
 
     const acceptOffer = async () => {
@@ -530,6 +541,7 @@ export class ChipView extends MobxLitElement {
           >
             Reject offer
           </pr-button>
+          ${this.renderDelegateButton()} ${this.renderAdvisorButton()}
         </div>
       </div>
     `;
@@ -600,6 +612,94 @@ export class ChipView extends MobxLitElement {
     `;
   }
 
+  private renderDelegateButton() {
+    return html`
+      <div class="button-wrapper">
+        <pr-button
+          color="secondary"
+          variant="tonal"
+          ?loading=${this.isAssistanceDelegateLoading}
+          @click=${async () => {
+            this.isAssistanceDelegateLoading = true;
+            this.assistanceDelegateResponse = '';
+            const response =
+              await this.participantService.requestChipAssistance(
+                'delegate',
+                this.selectedBuyChip,
+                this.buyChipAmount,
+                this.selectedSellChip,
+                this.sellChipAmount,
+              );
+            this.isAssistanceDelegateLoading = false;
+            this.assistanceDelegateResponse = response.data;
+          }}
+        >
+          Delegate decision to agent
+        </pr-button>
+      </div>
+      ${this.assistanceDelegateResponse}
+    `;
+  }
+
+  private renderAdvisorButton() {
+    return html`
+      <div class="button-wrapper">
+        <pr-button
+          color="secondary"
+          variant="tonal"
+          ?loading=${this.isAssistanceAdvisorLoading}
+          @click=${async () => {
+            this.isAssistanceAdvisorLoading = true;
+            this.assistanceAdvisorResponse = '';
+            const response =
+              await this.participantService.requestChipAssistance(
+                'advisor',
+                this.selectedBuyChip,
+                this.buyChipAmount,
+                this.selectedSellChip,
+                this.sellChipAmount,
+              );
+            this.isAssistanceAdvisorLoading = false;
+            this.assistanceAdvisorResponse = response.data;
+          }}
+        >
+          Get advice on what to do
+        </pr-button>
+      </div>
+      ${this.assistanceAdvisorResponse}
+    `;
+  }
+
+  private renderCoachButton() {
+    return html`
+      <div class="button-wrapper">
+        <pr-button
+          color="secondary"
+          variant="tonal"
+          ?disabled=${!this.isOfferValid()}
+          ?loading=${this.isAssistanceCoachLoading}
+          @click=${async () => {
+            this.isAssistanceCoachLoading = true;
+            this.assistanceCoachResponse = '';
+            const response =
+              await this.participantService.requestChipAssistance(
+                'coach',
+                this.selectedBuyChip,
+                this.buyChipAmount,
+                this.selectedSellChip,
+                this.sellChipAmount,
+              );
+            this.isAssistanceCoachLoading = false;
+            this.assistanceCoachResponse = response.data;
+          }}
+        >
+          Get feedback on your offer
+        </pr-button>
+      </div>
+      ${this.assistanceCoachResponse}
+    `;
+  }
+
   private renderDebug() {
     if (!this.authService.isDebugMode) {
       return nothing;
@@ -608,72 +708,8 @@ export class ChipView extends MobxLitElement {
     return html`
       <div class="debug-panel">
         <div>Chip assistance</div>
-        <div class="button-wrapper">
-          <pr-button
-            ?loading=${this.isAssistanceDelegateLoading}
-            @click=${async () => {
-              this.isAssistanceDelegateLoading = true;
-              this.assistanceDelegateResponse = '';
-              const response =
-                await this.participantService.requestChipAssistance(
-                  'delegate',
-                  this.selectedBuyChip,
-                  this.buyChipAmount,
-                  this.selectedSellChip,
-                  this.sellChipAmount,
-                );
-              this.isAssistanceDelegateLoading = false;
-              this.assistanceDelegateResponse = JSON.stringify(response);
-            }}
-          >
-            Delegate
-          </pr-button>
-        </div>
-        ${this.assistanceDelegateResponse}
-        <div class="button-wrapper">
-          <pr-button
-            ?loading=${this.isAssistanceAdvisorLoading}
-            @click=${async () => {
-              this.isAssistanceAdvisorLoading = true;
-              this.assistanceAdvisorResponse = '';
-              const response =
-                await this.participantService.requestChipAssistance(
-                  'advisor',
-                  this.selectedBuyChip,
-                  this.buyChipAmount,
-                  this.selectedSellChip,
-                  this.sellChipAmount,
-                );
-              this.isAssistanceAdvisorLoading = false;
-              this.assistanceAdvisorResponse = JSON.stringify(response);
-            }}
-          >
-            Advisor
-          </pr-button>
-        </div>
-        ${this.assistanceAdvisorResponse}
-        <div class="button-wrapper">
-          <pr-button
-            ?loading=${this.isAssistanceCoachLoading}
-            @click=${async () => {
-              this.isAssistanceCoachLoading = true;
-              this.assistanceCoachResponse = '';
-              const response =
-                await this.participantService.requestChipAssistance(
-                  'coach',
-                  this.selectedBuyChip,
-                  this.buyChipAmount,
-                  this.selectedSellChip,
-                  this.sellChipAmount,
-                );
-              this.isAssistanceCoachLoading = false;
-              this.assistanceCoachResponse = JSON.stringify(response);
-            }}
-          >
-            Coach
-          </pr-button>
-        </div>
-        ${this.assistanceCoachResponse}
+        ${this.renderDelegateButton()} ${this.renderAdvisorButton()}
+        ${this.renderCoachButton()}
       </div>
     `;
   }
