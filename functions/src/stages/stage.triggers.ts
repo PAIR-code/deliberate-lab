@@ -1,11 +1,68 @@
-import {onDocumentUpdated} from 'firebase-functions/v2/firestore';
+import {
+  onDocumentUpdated,
+  onDocumentWritten,
+} from 'firebase-functions/v2/firestore';
 import {StageKind} from '@deliberation-lab/utils';
 import {
+  getFirestoreParticipant,
   getFirestoreStage,
   getFirestoreStagePublicData,
 } from '../utils/firestore';
 import {updateTimeElapsed} from './chat.time';
+import {updateCurrentChatDiscussionId} from './chat.utils';
 import {updateChipTurn} from './chip.utils';
+import {addParticipantAnswerToRankingStagePublicData} from './ranking.utils';
+import {addParticipantAnswerToSurveyStagePublicData} from './survey.utils';
+
+/** When participant (private) stage data is updated. */
+export const onParticipantStageDataUpdated = onDocumentWritten(
+  {
+    document:
+      'experiments/{experimentId}/participants/{participantId}/stageData/{stageId}',
+    timeoutSeconds: 60,
+  },
+  async (event) => {
+    const data = event.data.after.data() as StageParticipantAnswer | undefined;
+    const stage = await getFirestoreStage(
+      event.params.experimentId,
+      event.params.stageId,
+    );
+    const participant = await getFirestoreParticipant(
+      event.params.experimentId,
+      event.params.participantId,
+    );
+    if (!stage || !participant) return;
+
+    switch (stage.kind) {
+      case StageKind.CHAT:
+        updateCurrentChatDiscussionId(
+          event.params.experimentId,
+          stage,
+          participant,
+          data,
+        );
+        break;
+      case StageKind.RANKING:
+        addParticipantAnswerToRankingStagePublicData(
+          event.params.experimentId,
+          stage,
+          participant,
+          data,
+        );
+        break;
+      case StageKind.SURVEY:
+        addParticipantAnswerToSurveyStagePublicData(
+          event.params.experimentId,
+          stage,
+          participant,
+          data,
+        );
+        break;
+      default:
+        break;
+    }
+  },
+);
 
 /** When public stage data is updated. */
 export const onPublicStageDataUpdated = onDocumentUpdated(

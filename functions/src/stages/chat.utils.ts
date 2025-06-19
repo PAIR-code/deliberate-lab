@@ -4,6 +4,7 @@ import {
   AgentChatSettings,
   ChatMessage,
   ChatStageConfig,
+  ChatStageParticipantAnswer,
   ChatStagePublicData,
   ExperimenterData,
   MediatorStatus,
@@ -485,5 +486,50 @@ export async function initiateChatDiscussion(
       stageId,
       '', // not responding to any chat ID because first message
     );
+  });
+}
+
+/** Move on to next chat discussion if all participants are ready. */
+export async function updateCurrentChatDiscussionId(
+  experimentId: string,
+  stage: ChatStageConfig,
+  participant: ParticipantProfileExtended,
+  answer: ChatStageParticipantAnswer,
+) {
+  // Define public stage document reference
+  const publicDocument = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('cohorts')
+    .doc(participant.currentCohortId)
+    .collection('publicStageData')
+    .doc(stage.id);
+
+  await app.firestore().runTransaction(async (transaction) => {
+    // Update public stage data
+    const publicStageData = (
+      await publicDocument.get()
+    ).data() as StagePublicData;
+    const discussionStatusMap = answer.discussionTimestampMap;
+
+    for (const discussionId of Object.keys(discussionStatusMap)) {
+      if (!publicStageData.discussionTimestampMap[discussionId]) {
+        publicStageData.discussionTimestampMap[discussionId] = {};
+      }
+      publicStageData.discussionTimestampMap[discussionId][
+        participant.publicId
+      ] = discussionStatusMap[discussionId];
+    }
+
+    // Update current discussion ID if applicable
+    await updateCurrentDiscussionIndex(
+      experimentId,
+      participant.currentCohortId,
+      stage.id,
+      publicStageData,
+    );
+
+    transaction.set(publicDocument, publicStageData);
   });
 }
