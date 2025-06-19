@@ -1,58 +1,16 @@
-import {Timestamp} from 'firebase-admin/firestore';
+import {onDocumentCreated} from 'firebase-functions/v2/firestore';
+import {StageKind} from '@deliberation-lab/utils';
 import {
-  onDocumentCreated,
-  onDocumentUpdated,
-  onDocumentWritten,
-} from 'firebase-functions/v2/firestore';
+  checkAgentsReadyToEndChat,
+  sendAgentMediatorMessage,
+  sendAgentParticipantMessage,
+} from './chat.agent';
+import {getChatStage, getChatStagePublicData} from './chat.utils';
 import {
-  AgentChatResponse,
-  AgentConfig,
-  AgentGenerationConfig,
-  ChatMessage,
-  ChatMessageType,
-  ChatStageConfig,
-  ChatStageParticipantAnswer,
-  ChatStagePublicData,
-  ParticipantStatus,
-  StageParticipantAnswer,
-  StageKind,
-  awaitTypingDelay,
-  createAgentChatPromptConfig,
-  createChatStageParticipantAnswer,
-  createMediatorChatMessage,
-  createParticipantChatMessage,
-  getDefaultChatPrompt,
-  getTimeElapsed,
-  getTypingDelayInMilliseconds,
-  structuredOutputEnabled,
-  DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
-} from '@deliberation-lab/utils';
-import {checkAgentsReadyToEndChat} from './chat.agent';
-import {updateCurrentDiscussionIndex} from './chat.utils';
-import {getPastStagesPromptContext} from './stage.utils';
-import {getMediatorsInCohortStage} from '../mediator.utils';
-import {updateParticipantNextStage} from '../participant.utils';
-import {
-  getFirestoreActiveParticipants,
-  getFirestoreParticipant,
-  getFirestoreParticipantRef,
-  getFirestoreParticipantAnswer,
   getFirestoreStage,
   getFirestoreStagePublicData,
 } from '../utils/firestore';
-import {
-  getAgentChatAPIResponse,
-  getAgentChatPrompt,
-  getChatMessages,
-  getChatMessageCount,
-  getChatStage,
-  getChatStagePublicData,
-  sendAgentChatMessage,
-} from './chat.utils';
-import {getPastStagesPromptContext} from './stage.utils';
 import {startTimeElapsed} from './chat.time';
-
-import {app} from '../app';
 
 // ************************************************************************* //
 // TRIGGER FUNCTIONS                                                         //
@@ -87,7 +45,6 @@ export const onChatMessageCreated = onDocumentCreated(
 );
 
 /** When chat message is created, generate mediator agent response if relevant. */
-// TODO: Rename to createAgentMediatorMessage
 export const createAgentMessage = onDocumentCreated(
   {
     document:
@@ -111,64 +68,14 @@ export const createAgentMessage = onDocumentCreated(
       cohortId,
       stageId,
     );
-    // Make sure the conversation hasn't ended.
-    if (!publicStageData || Boolean(publicStageData.discussionEndTimestamp))
-      return;
 
-    // Use chats in collection to build chat history for prompt, get num chats
-    const chatMessages = await getChatMessages(experimentId, cohortId, stageId);
-
-    // Get mediators for current cohort and stage
-    const mediators = await getMediatorsInCohortStage(
+    sendAgentMediatorMessage(
       experimentId,
       cohortId,
-      stageId,
+      stage,
+      publicStageData,
+      event.params.chatId,
     );
-
-    // For each active agent mediator, attempt to create/send chat response
-    mediators.forEach(async (mediator) => {
-      const promptConfig = await getAgentChatPrompt(
-        experimentId,
-        stageId,
-        mediator.agentConfig.agentId,
-      );
-      if (!promptConfig) return null;
-      const response = await getAgentChatAPIResponse(
-        mediator, // profile
-        experimentId,
-        mediator.id,
-        '', // no past stage context
-        chatMessages,
-        mediator.agentConfig,
-        promptConfig,
-        stage,
-      );
-      if (!response) return null;
-
-      // Build chat message to send
-      const explanation =
-        response.parsed[
-          response.promptConfig.structuredOutputConfig?.explanationField
-        ] ?? '';
-      const chatMessage = createMediatorChatMessage({
-        profile: response.profile,
-        discussionId: publicStageData.currentDiscussionId,
-        message: response.message,
-        timestamp: Timestamp.now(),
-        senderId: response.profileId,
-        agentId: response.agentId,
-        explanation,
-      });
-      sendAgentChatMessage(
-        chatMessage,
-        response,
-        chatMessages.length,
-        experimentId,
-        cohortId,
-        stageId,
-        event.params.chatId,
-      );
-    });
   },
 );
 
@@ -196,78 +103,14 @@ export const createAgentParticipantMessage = onDocumentCreated(
       cohortId,
       stageId,
     );
-    // Make sure the conversation hasn't ended.
-    if (!publicStageData || Boolean(publicStageData.discussionEndTimestamp))
-      return;
 
-    // Use chats in collection to build chat history for prompt, get num chats
-    const chatMessages = await getChatMessages(experimentId, cohortId, stageId);
-
-    // Get agent participants for current cohort and stage
-    const activeParticipants = await getFirestoreActiveParticipants(
+    sendAgentParticipantMessage(
       experimentId,
       cohortId,
-      stageId,
-      true, // must be agent
+      stage,
+      publicStageData,
+      event.params.chatId,
     );
-
-    // For each active agent participant, attempt to create/send chat response
-    activeParticipants.forEach(async (participant) => {
-      const promptConfig =
-        (await getAgentChatPrompt(
-          experimentId,
-          stageId,
-          participant.agentConfig.agentId,
-        )) ??
-        createAgentChatPromptConfig(stageId, StageKind.CHAT, {
-          promptContext: DEFAULT_AGENT_PARTICIPANT_PROMPT,
-        });
-
-      const pastStageContext = promptConfig.promptSettings.includeStageHistory
-        ? await getPastStagesPromptContext(
-            experimentId,
-            stageId,
-            participant.privateId,
-            promptConfig.promptSettings.includeStageInfo,
-          )
-        : '';
-
-      const response = await getAgentChatAPIResponse(
-        participant, // profile
-        experimentId,
-        participant.publicId,
-        pastStageContext,
-        chatMessages,
-        participant.agentConfig,
-        promptConfig,
-        stage,
-      );
-      if (!response) return null;
-
-      // Build chat message to send
-      const explanation =
-        response.parsed[
-          response.promptConfig.structuredOutputConfig?.explanationField
-        ] ?? '';
-      const chatMessage = createParticipantChatMessage({
-        profile: response.profile,
-        discussionId: publicStageData.currentDiscussionId,
-        message: response.message,
-        timestamp: Timestamp.now(),
-        senderId: response.profileId,
-        agentId: response.agentId,
-        explanation,
-      });
-      sendAgentChatMessage(
-        chatMessage,
-        response,
-        chatMessages.length,
-        experimentId,
-        cohortId,
-        stageId,
-        event.params.chatId,
-      );
-    });
   },
 );
 
@@ -291,6 +134,7 @@ export const checkReadyToEndChat = onDocumentCreated(
       event.params.experimentId,
       event.params.stageId,
     );
+
     checkAgentsReadyToEndChat(
       event.params.experimentId,
       event.params.cohortId,

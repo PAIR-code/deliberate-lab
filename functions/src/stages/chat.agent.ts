@@ -2,32 +2,32 @@ import {
   BaseAgentPromptConfig,
   ChatMessage,
   ChatStageConfig,
-  ChatStagePublicData,
-  ParticipantProfileExtended,
   StageKind,
+  createAgentChatPromptConfig,
   createAgentPromptSettings,
+  createMediatorChatMessage,
   createModelGenerationConfig,
+  createParticipantChatMessage,
   getDefaultChatPrompt,
   DEFAULT_AGENT_PARTICIPANT_READY_TO_END_CHAT_PROMPT,
   DEFAULT_AGENT_PARTICIPANT_READY_TO_END_CHAT_STRUCTURED_OUTPUT,
 } from '@deliberation-lab/utils';
-
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
 import {Timestamp} from 'firebase-admin/firestore';
-import {onCall} from 'firebase-functions/v2/https';
-
-import {app} from '../app';
 import {getAgentResponse} from '../agent.utils';
+import {getMediatorsInCohortStage} from '../mediator.utils';
 import {
   getExperimenterDataFromExperiment,
   getFirestoreActiveParticipants,
   getFirestoreParticipant,
   getFirestoreParticipantAnswer,
-  getFirestoreStage,
-  getFirestoreStagePublicData,
 } from '../utils/firestore';
-import {getChatMessages, updateParticipantReadyToEndChat} from './chat.utils';
+import {
+  getAgentChatAPIResponse,
+  getAgentChatPrompt,
+  getChatMessages,
+  sendAgentChatMessage,
+  updateParticipantReadyToEndChat,
+} from './chat.utils';
 import {getPastStagesPromptContext} from './stage.utils';
 
 /** For each agent participant, check if ready to end discussion. */
@@ -119,11 +119,6 @@ export async function checkAgentParticipantReadyToEndChat(
     const parsedResponse = JSON.parse(cleanedText);
     // If ready to end, call function to update participant answer
     if (parsedResponse['response']) {
-      const participantAnswer = await getFirestoreParticipantAnswer(
-        experimentId,
-        participant.privateId,
-        stage.id,
-      );
       updateParticipantReadyToEndChat(
         experimentId,
         stage,
@@ -136,4 +131,160 @@ export async function checkAgentParticipantReadyToEndChat(
     console.log('Could not parse JSON!');
     return {};
   }
+}
+
+/** If applicable, send agent mediator chat message. */
+export async function sendAgentMediatorMessage(
+  experimentId: string,
+  cohortId: string,
+  stage: ChatStageConfig,
+  publicStageData: ChatPublicStageData,
+  chatId: string,
+) {
+  // Make sure the conversation hasn't ended.
+  if (publicStageData.discussionEndTimestamp) {
+    return;
+  }
+
+  const stageId = stage.id;
+
+  // Use chats in collection to build chat history for prompt, get num chats
+  const chatMessages = await getChatMessages(experimentId, cohortId, stageId);
+
+  // Get mediators for current cohort and stage
+  const mediators = await getMediatorsInCohortStage(
+    experimentId,
+    cohortId,
+    stageId,
+  );
+
+  // For each active agent mediator, attempt to create/send chat response
+  mediators.forEach(async (mediator) => {
+    const promptConfig = await getAgentChatPrompt(
+      experimentId,
+      stageId,
+      mediator.agentConfig.agentId,
+    );
+    if (!promptConfig) return null;
+    const response = await getAgentChatAPIResponse(
+      mediator, // profile
+      experimentId,
+      mediator.id,
+      '', // no past stage context
+      chatMessages,
+      mediator.agentConfig,
+      promptConfig,
+      stage,
+    );
+    if (!response) return null;
+
+    // Build chat message to send
+    const explanation =
+      response.parsed[
+        response.promptConfig.structuredOutputConfig?.explanationField
+      ] ?? '';
+    const chatMessage = createMediatorChatMessage({
+      profile: response.profile,
+      discussionId: publicStageData.currentDiscussionId,
+      message: response.message,
+      timestamp: Timestamp.now(),
+      senderId: response.profileId,
+      agentId: response.agentId,
+      explanation,
+    });
+    sendAgentChatMessage(
+      chatMessage,
+      response,
+      chatMessages.length,
+      experimentId,
+      cohortId,
+      stageId,
+      chatId,
+    );
+  });
+}
+
+/** If applicable, send agent participant chat message. */
+export async function sendAgentParticipantMessage(
+  experimentId: string,
+  cohortId: string,
+  stage: ChatStageConfig,
+  publicStageData: ChatPublicStageData,
+  chatId: string,
+) {
+  // Make sure the conversation hasn't ended.
+  if (publicStageData.discussionEndTimestamp) {
+    return;
+  }
+
+  const stageId = stage.id;
+
+  // Use chats in collection to build chat history for prompt, get num chats
+  const chatMessages = await getChatMessages(experimentId, cohortId, stageId);
+
+  // Get agent participants for current cohort and stage
+  const activeParticipants = await getFirestoreActiveParticipants(
+    experimentId,
+    cohortId,
+    stageId,
+    true, // must be agent
+  );
+
+  // For each active agent participant, attempt to create/send chat response
+  activeParticipants.forEach(async (participant) => {
+    const promptConfig =
+      (await getAgentChatPrompt(
+        experimentId,
+        stageId,
+        participant.agentConfig.agentId,
+      )) ??
+      createAgentChatPromptConfig(stageId, StageKind.CHAT, {
+        promptContext: DEFAULT_AGENT_PARTICIPANT_PROMPT,
+      });
+
+    const pastStageContext = promptConfig.promptSettings.includeStageHistory
+      ? await getPastStagesPromptContext(
+          experimentId,
+          stageId,
+          participant.privateId,
+          promptConfig.promptSettings.includeStageInfo,
+        )
+      : '';
+
+    const response = await getAgentChatAPIResponse(
+      participant, // profile
+      experimentId,
+      participant.publicId,
+      pastStageContext,
+      chatMessages,
+      participant.agentConfig,
+      promptConfig,
+      stage,
+    );
+    if (!response) return null;
+
+    // Build chat message to send
+    const explanation =
+      response.parsed[
+        response.promptConfig.structuredOutputConfig?.explanationField
+      ] ?? '';
+    const chatMessage = createParticipantChatMessage({
+      profile: response.profile,
+      discussionId: publicStageData.currentDiscussionId,
+      message: response.message,
+      timestamp: Timestamp.now(),
+      senderId: response.profileId,
+      agentId: response.agentId,
+      explanation,
+    });
+    sendAgentChatMessage(
+      chatMessage,
+      response,
+      chatMessages.length,
+      experimentId,
+      cohortId,
+      stageId,
+      chatId,
+    );
+  });
 }
