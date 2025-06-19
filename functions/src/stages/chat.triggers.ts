@@ -27,6 +27,7 @@ import {
   structuredOutputEnabled,
   DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
 } from '@deliberation-lab/utils';
+import {checkAgentsReadyToEndChat} from './chat.agent';
 import {updateCurrentDiscussionIndex} from './chat.utils';
 import {getPastStagesPromptContext} from './stage.utils';
 import {getMediatorsInCohortStage} from '../mediator.utils';
@@ -36,6 +37,8 @@ import {
   getFirestoreParticipant,
   getFirestoreParticipantRef,
   getFirestoreParticipantAnswer,
+  getFirestoreStage,
+  getFirestoreStagePublicData,
 } from '../utils/firestore';
 import {
   getAgentChatAPIResponse,
@@ -279,146 +282,20 @@ export const checkReadyToEndChat = onDocumentCreated(
   },
   async (event) => {
     const data = event.data?.data() as ChatMessage | undefined;
-
-    await app.firestore().runTransaction(async (transaction) => {
-      // Use experiment config to get ChatStageConfig with agents.
-      // TODO: Add separate readyToEndChat trigger for other stages with chat
-      const stage = await getChatStage(
-        event.params.experimentId,
-        event.params.stageId,
-      );
-      if (!stage || stage?.kind !== StageKind.CHAT) {
-        return;
-      }
-
-      const publicStageData = await getChatStagePublicData(
-        event.params.experimentId,
-        event.params.cohortId,
-        event.params.stageId,
-      );
-
-      // Get experiment
-      const experimentDoc = app
-        .firestore()
-        .collection('experiments')
-        .doc(event.params.experimentId);
-      const experiment = (await experimentDoc.get()).data() as Experiment;
-
-      // Use chats in collection to build chat history for prompt, get num chats
-      const chatMessages = await getChatMessages(
-        event.params.experimentId,
-        event.params.cohortId,
-        event.params.stageId,
-      );
-
-      // Get agent participants for current cohort and stage
-      const activeParticipants = await getFirestoreActiveParticipants(
-        event.params.experimentId,
-        event.params.cohortId,
-        event.params.stageId,
-        true, // must be agent
-      );
-
-      // For each participant, check if ready to end chat
-      const promptConfig = createAgentChatPromptConfig(
-        event.params.stageId,
-        StageKind.CHAT,
-        {
-          promptContext:
-            'Are you ready to end the conversation and stop talking? Please consider whether you have met your goals and explicitly communicated this to other participants. If you have more to say or have yet to explicitly agree in the chat, you should not end the discussion yet. If so, respond the exact word YES. Otherwise, do not return anything.',
-        },
-      );
-
-      for (const participant of activeParticipants) {
-        // Make sure participant has not already moved on
-        // to a different stage
-        const refreshedParticipant = await getFirestoreParticipant(
-          event.params.experimentId,
-          participant.privateId,
-        );
-        if (refreshedParticipant?.currentStageId !== event.params.stageId) {
-          return;
-        }
-
-        // TODO: Use regular participant decision-making prompt, not chat prompt
-        const pastStageContext = promptConfig.promptSettings.includeStageHistory
-          ? await getPastStagesPromptContext(
-              event.params.experimentId,
-              event.params.stageId,
-              participant.privateId,
-              promptConfig.promptSettings.includeStageInfo,
-            )
-          : '';
-        const prompt = getDefaultChatPrompt(
-          participant,
-          participant.agentConfig,
-          pastStageContext,
-          chatMessages,
-          promptConfig,
-          stage,
-        );
-
-        const response = await getAgentChatAPIResponse(
-          participant, // profile
-          event.params.experimentId,
-          participant.publicId,
-          pastStageContext,
-          chatMessages,
-          participant.agentConfig,
-          promptConfig,
-          stage,
-        );
-        console.log(participant.publicId, 'ready to end discussion?', response);
-
-        // TODO: Use structured output instead of checking for YES string
-        // If not ready to move on, do nothing
-        if (!response?.message.includes('YES')) {
-          break;
-        }
-
-        // If threaded discussion (and not last thread), move to next thread
-        if (
-          stage.discussions.length > 0 &&
-          publicStageData.currentDiscussionId &&
-          publicStageData.currentDiscussionId !==
-            stage.discussions[stage.discussions.length - 1]
-        ) {
-          const chatAnswer = await getFirestoreParticipantAnswer(
-            event.params.experimentId,
-            participant.privateId,
-            event.params.stageId,
-          );
-          const participantAnswer =
-            chatAnswer?.kind === StageKind.CHAT
-              ? (chatAnswer as ChatStageParticipantAnswer)
-              : createChatStageParticipantAnswer({id: stage.id});
-
-          // Set ready to end timestamp if not already set
-          if (
-            !participantAnswer.discussionTimestampMap[
-              publicStageData.currentDiscussionId
-            ]
-          ) {
-            participantAnswer.discussionTimestampMap[
-              publicStageData.currentDiscussionId
-            ] = Timestamp.now();
-            await transaction.set(participantAnswerDoc, participantAnswer);
-          }
-        } else {
-          // Otherwise, move to next stage
-          await updateParticipantNextStage(
-            event.params.experimentId,
-            participant,
-            experiment.stageIds,
-          );
-
-          const participantDoc = getFirestoreParticipantRef(
-            event.params.experimentId,
-            participant.privateId,
-          );
-          await transaction.set(participantDoc, participant);
-        }
-      } // end of active participants for loop
-    });
+    const publicStageData = await getFirestoreStagePublicData(
+      event.params.experimentId,
+      event.params.cohortId,
+      event.params.stageId,
+    );
+    const stage = await getFirestoreStage(
+      event.params.experimentId,
+      event.params.stageId,
+    );
+    checkAgentsReadyToEndChat(
+      event.params.experimentId,
+      event.params.cohortId,
+      stage,
+      publicStageData,
+    );
   },
 );
