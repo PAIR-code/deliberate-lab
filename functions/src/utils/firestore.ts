@@ -3,6 +3,7 @@ import * as functions from 'firebase-functions';
 
 import {
   CohortConfig,
+  Experiment,
   ExperimenterData,
   ParticipantProfileExtended,
   ParticipantStatus,
@@ -40,6 +41,21 @@ export async function getExperimenterDataFromExperiment(experimentId: string) {
   }
   const creatorId = experimentDoc.data().metadata.creator;
   return await getExperimenterData(creatorId);
+}
+
+/** Return ref for experiment doc. */
+export function getFirestoreExperimentRef(experimentId: string) {
+  return app.firestore().collection('experiments').doc(experimentId);
+}
+
+/** Fetch experiment from Firestore */
+export async function getFirestoreExperiment(experimentId: string) {
+  const ref = getFirestoreExperimentRef(experimentId);
+
+  const doc = await ref.get();
+  if (!doc.exists) return undefined;
+
+  return doc.data() as Experiment;
 }
 
 /** Return ref for participant doc. */
