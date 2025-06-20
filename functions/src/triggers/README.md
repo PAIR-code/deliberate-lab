@@ -4,14 +4,14 @@ Trigger functions listen to when documents at specified Firestore paths are
 updated and call actions, e.g., querying LLM APIs for agent responses.
 
 
-**onParticipantCreated**
+## onParticipantCreated
 *When document is created at `experiments/{experimentId}/participants/{participantId}`*
 
 - Initialize participant stage answers
 - Start making agent participant calls if participant contains agent config
 
 
-**onParticipantUpdated**
+## onParticipantUpdated
 *When document is updated at `experiments/{experimentId}/participants/{participantId}`*
 
 Make agent participant calls to complete the current stage and advance to the
@@ -21,7 +21,7 @@ If the participant has just reconnected, handle transfer state if applicable
 (TODO: consolidate logic).
 
 
-**onParticipantStageDataUpdated**
+## onParticipantStageDataUpdated
 *When document is updated at `experiments/{experimentId}/participants/{participantId}/stageData/{stageId}`*
 
 When participant's private stage data is updated, call different actions
@@ -31,7 +31,7 @@ written to participant stage data are mirrored to the cohort's public stage
 data).
 
 
-**onPublicStageDataUpdated**
+## onPublicStageDataUpdated
 *When document is updated at `experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}`*
 
 When cohort's public stage data is updated, call different actions
@@ -39,7 +39,7 @@ depending on the stage, e.g., for chip stage, check if the transaction is
 ready to be cleared.
 
 
-**onChatMessageCreated**
+## onChatMessageCreated
 *When document is updated at `experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}`*
 
 When a new group chat message is created:
@@ -53,7 +53,7 @@ stage, call different function to build agent chat messages (that sends
 the salesperson game board as part of the prompt).
 
 
-**onChipTransactionCreated**
+## onChipTransactionCreated
 *When document is updated at `experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/transactions/{transactionId}`*
 
 When a new chip transaction is written, update participants' chip quantities.
@@ -61,7 +61,7 @@ When a new chip transaction is written, update participants' chip quantities.
 TODO: Refactor this into `onPublicStageDataUpdated`.
 
 
-**mirrorPresenceToFirestore**
+## mirrorPresenceToFirestore
 *When participant's presence status changes in the Realtime database*
 
 Set participant to connected/disconnected.
