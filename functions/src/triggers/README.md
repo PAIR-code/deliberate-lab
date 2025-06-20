@@ -7,10 +7,8 @@ updated and call actions, e.g., querying LLM APIs for agent responses.
 **onParticipantCreated**
 *When document is created at `experiments/{experimentId}/participants/{participantId}`*
 
-Initialize participant stage answers.
-
-Start making agent participant calls if participant contains agent config.
-Currently in `agent_participant.triggers.ts` (TODO: consolidate logic)
+- Initialize participant stage answers
+- Start making agent participant calls if participant contains agent config
 
 
 **onParticipantUpdated**

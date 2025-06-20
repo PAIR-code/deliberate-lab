@@ -19,48 +19,6 @@ import {
 } from '../utils/firestore';
 import {app} from '../app';
 
-/** If created participant is agent, start experiment. */
-export const startAgentParticipant = onDocumentCreated(
-  {document: 'experiments/{experimentId}/participants/{participantId}'},
-  async (event) => {
-    await app.firestore().runTransaction(async (transaction) => {
-      // Get participant config
-      const participant = await getFirestoreParticipant(
-        event.params.experimentId,
-        event.params.participantId,
-      );
-
-      // If participant is NOT agent, do nothing
-      if (!participant?.agentConfig) {
-        return;
-      }
-
-      // Otherwise, accept terms of service and start experiment
-      if (!participant.timestamps.startExperiment) {
-        participant.timestamps.startExperiment = Timestamp.now();
-      }
-      if (!participant.timestamps.acceptedTOS) {
-        participant.timestamps.acceptedTOS = Timestamp.now();
-      }
-      if (!participant.timestamps.readyStages[participant.currentStageId]) {
-        participant.timestamps.readyStages[participant.currentStageId] =
-          Timestamp.now();
-      }
-      await updateCohortStageUnlocked(
-        event.params.experimentId,
-        participant.currentCohortId,
-        participant.currentStageId,
-        participant.privateId,
-      );
-      const participantDoc = getFirestoreParticipantRef(
-        event.params.experimentId,
-        participant.privateId,
-      );
-      transaction.set(participantDoc, participant);
-    }); // end transaction
-  },
-);
-
 /** If agent participant is updated, try making a single move
  * (e.g., accepting transfer or moving to next stage).
  */
