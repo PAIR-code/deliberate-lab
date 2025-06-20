@@ -62,10 +62,6 @@ export const updateSurveyStageParticipantAnswer = onCall(async (request) => {
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     transaction.set(document, data.surveyStageParticipantAnswer);
-    // Store the answers in the public version as well, since they are needed in a timely
-    // fashion by handleAutomaticTransfer
-    transaction.set(publicDocument, {participantAnswerMap}, {merge: true});
-    console.log(`Updated public stage data for ${data.participantPublicId} with ${participantAnswerMap}`);
   });
 
   return {id: document.id};

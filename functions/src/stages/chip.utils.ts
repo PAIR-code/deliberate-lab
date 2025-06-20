@@ -1,10 +1,20 @@
 import {
+  ChipOffer,
   ChipStagePublicData,
+  ChipTransactionStatus,
   ParticipantProfile,
   ParticipantStatus,
+  createChipInfoLogEntry,
+  createChipOfferLogEntry,
+  createChipOfferDeclinedLogEntry,
+  createChipRoundLogEntry,
+  createChipTransaction,
   createChipTurn,
+  createChipTurnLogEntry,
   sortParticipantsByRandomProfile,
 } from '@deliberation-lab/utils';
+
+import {getFirestoreStagePublicDataRef} from '../utils/firestore';
 
 import * as admin from 'firebase-admin';
 import {Timestamp} from 'firebase-admin/firestore';
@@ -150,4 +160,259 @@ export async function updateParticipantChipQuantities(
   publicStageData.participantChipMap[publicId] = answer.chipMap;
 
   return {answerDoc, answer, publicStageData};
+}
+
+/** Update current turn/round if all participants have responded to
+ * current offer.
+ */
+export async function updateChipTurn(
+  experimentId: string,
+  cohortId: string,
+  stageConfig: ChipStageConfig,
+  publicStage: ChipStagePublicData,
+) {
+  const stageId = stageConfig.id;
+
+  // Define log entry collection reference
+  const logCollection = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('cohorts')
+    .doc(cohortId)
+    .collection('publicStageData')
+    .doc(stageId)
+    .collection('logs');
+
+  // Define chip transaction collection reference
+  const transactionCollection = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('cohorts')
+    .doc(cohortId)
+    .collection('publicStageData')
+    .doc(stageId)
+    .collection('transactions');
+
+  await app.firestore().runTransaction(async (transaction) => {
+    const numRounds = stageConfig.numRounds;
+
+    const currentRound = publicStage.currentRound;
+    const currentTurn = publicStage.currentTurn;
+
+    if (!publicStage.participantOfferMap[currentRound]) {
+      return false;
+    }
+
+    const currentTransaction =
+      publicStage.participantOfferMap[currentRound][currentTurn];
+
+    // If no offer, no need to update
+    if (!currentTransaction) {
+      return false;
+    }
+
+    // Check all cohort participants for response to offer
+    const participants = await getChipParticipants(experimentId, cohortId);
+    const participantIds = participants.map((p) => p.publicId);
+
+    const acceptedOffer: string[] = [];
+    for (const participantId of participantIds) {
+      if (
+        participantId !== currentTurn &&
+        !(participantId in currentTransaction.responseMap)
+      ) {
+        // If an active participant (not the current sender) has not
+        // responded. do not proceed
+        return false;
+      } else if (
+        participantId !== currentTurn &&
+        currentTransaction.responseMap[participantId]?.response
+      ) {
+        // Track participants who accepted the current offer
+        acceptedOffer.push(participantId);
+      }
+    }
+
+    const timestamp = Timestamp.now();
+
+    // If all (non-offer) participants have responded to the offer,
+    // execute chip transaction
+    const senderId = currentTurn;
+    const recipientId =
+      acceptedOffer.length > 0
+        ? acceptedOffer[Math.floor(Math.random() * acceptedOffer.length)]
+        : null;
+
+    publicStage.participantOfferMap[currentRound][currentTurn].recipientId =
+      recipientId;
+
+    // Run chip offer transaction and write relevant logs
+    if (recipientId !== null) {
+      currentTransaction.status = ChipTransactionStatus.ACCEPTED;
+      publicStage.participantOfferMap[currentRound][currentTurn] =
+        currentTransaction;
+      // Sender/recipient chips will be updated on chip transaction trigger
+      transaction.set(transactionCollection.doc(), currentTransaction);
+    } else {
+      currentTransaction.status = ChipTransactionStatus.DECLINED;
+      publicStage.participantOfferMap[currentRound][currentTurn] =
+        currentTransaction;
+      transaction.set(
+        logCollection.doc(),
+        createChipOfferDeclinedLogEntry(currentTransaction.offer, timestamp),
+      );
+    }
+
+    // Then, update current turn
+    publicStage.currentTurn = null;
+    const oldCurrentRound = currentRound;
+    const newData = updateChipCurrentTurn(publicStage, participants, numRounds);
+
+    // Write logs
+    if (newData.isGameOver) {
+      transaction.set(
+        logCollection.doc(),
+        createChipInfoLogEntry('The game has ended.', timestamp),
+      );
+    } else {
+      // Write new round log entry if applicable
+      if (oldCurrentRound !== newData.currentRound) {
+        transaction.set(
+          logCollection.doc(),
+          createChipRoundLogEntry(newData.currentRound, timestamp),
+        );
+      }
+      // Write new turn entry
+      transaction.set(
+        logCollection.doc(),
+        createChipTurnLogEntry(
+          newData.currentRound,
+          newData.currentTurn,
+          timestamp,
+        ),
+      );
+    }
+
+    // Update public stage data
+    transaction.set(
+      await getFirestoreStagePublicDataRef(experimentId, cohortId, stageId),
+      newData,
+    );
+  }); // end transaction
+
+  return true;
+}
+
+export async function addChipOfferToPublicData(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+  offer: ChipOffer,
+) {
+  // Define chip stage public data document reference
+  const publicDoc = await getFirestoreStagePublicDataRef(
+    experimentId,
+    cohortId,
+    stageId,
+  );
+
+  // Define log entry collection reference
+  const logCollection = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('cohorts')
+    .doc(cohortId)
+    .collection('publicStageData')
+    .doc(stageId)
+    .collection('logs');
+
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    const publicStageData = (
+      await publicDoc.get()
+    ).data() as ChipStagePublicData;
+    const chipOffer = {...offer, timestamp: Timestamp.now()};
+    const currentRound = publicStageData.currentRound;
+
+    // Set current round for chip offer
+    chipOffer.round = currentRound;
+
+    // Confirm that offer is valid (it is the participant's turn to send offers
+    // and there is not already an offer)
+    if (
+      chipOffer.senderId !== publicStageData.currentTurn ||
+      (publicStageData.participantOfferMap[currentRound] &&
+        publicStageData.participantOfferMap[currentRound][chipOffer.senderId])
+    ) {
+      return {success: false};
+    }
+
+    // Update participant offer map in public stage data
+    if (!publicStageData.participantOfferMap[currentRound]) {
+      publicStageData.participantOfferMap[currentRound] = {};
+    }
+
+    publicStageData.participantOfferMap[currentRound][chipOffer.senderId] =
+      createChipTransaction(chipOffer);
+
+    // Set new public data
+    transaction.set(publicDoc, publicStageData);
+
+    // Add log entry for chip offer
+    transaction.set(
+      logCollection.doc(),
+      createChipOfferLogEntry(chipOffer, Timestamp.now()),
+    );
+  });
+
+  return true;
+}
+
+export async function addChipResponseToPublicData(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+  participantPublicId: string,
+  chipResponse: boolean,
+) {
+  // Define chip stage public data document reference
+  const publicDoc = await getFirestoreStagePublicDataRef(
+    experimentId,
+    cohortId,
+    stageId,
+  );
+
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    // Confirm that offer is valid (ID matches the current offer ID)
+    const publicStageData = (
+      await publicDoc.get()
+    ).data() as ChipStagePublicData;
+    // TODO: Check offer ID
+    if (!publicStageData.currentTurn) {
+      return {success: false};
+    }
+
+    // Update participant offer map in public stage data
+    // (mark current participant as having responded to current offer)
+    const currentRound = publicStageData.currentRound;
+    const currentTurn = publicStageData.currentTurn;
+    if (
+      !publicStageData.participantOfferMap[currentRound] ||
+      !publicStageData.participantOfferMap[currentRound][currentTurn]
+    ) {
+      return {success: false};
+    }
+    publicStageData.participantOfferMap[currentRound][currentTurn].responseMap[
+      participantPublicId
+    ] = {response: chipResponse, timestamp: Timestamp.now()};
+
+    // Set new public data
+    transaction.set(publicDoc, publicStageData);
+  });
+
+  return true;
 }

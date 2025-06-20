@@ -16,7 +16,7 @@ import {
   getOllamaResponse,
 } from './agent.utils';
 import {ModelResponseStatus, ModelResponse} from './api/model.response';
-import {getAgentParticipantRankingStageResponse} from './stages/ranking.utils';
+import {getAgentParticipantRankingStageResponse} from './stages/ranking.agent';
 import {
   getExperimenterData,
   getExperimenterDataFromExperiment,

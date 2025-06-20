@@ -1,124 +1,79 @@
 import {
-  AgentModelSettings,
-  ExperimenterData,
-  ModelGenerationConfig,
   ParticipantProfileExtended,
-  ParticipantStatus,
-  RankingStageConfig,
   RankingStageParticipantAnswer,
-  createAgentConfig,
-  createAgentParticipantRankingStagePrompt,
-  createModelGenerationConfig,
-  createRankingStageParticipantAnswer,
+  RankingStagePublicData,
+  StageConfig,
+  StageKind,
+  StageParticipantAnswer,
+  filterRankingsByCandidates,
+  getCondorcetElectionWinner,
+  getRankingCandidatesFromWTL,
+  LAS_WTL_STAGE_ID,
+  ElectionStrategy,
 } from '@deliberation-lab/utils';
-import {getAgentResponse} from '../agent.utils';
-import {writeLogEntry} from '../log.utils';
-import {getPastStagesPromptContext} from './stage.utils';
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import {onCall} from 'firebase-functions/v2/https';
+import {onDocumentWritten} from 'firebase-functions/v2/firestore';
 
 import {app} from '../app';
 
-/** Use LLM call to generate agent participant response to ranking stage. */
-export async function getAgentParticipantRankingStageResponse(
+/** Update ranking stage public data to include participant private data. */
+export async function addParticipantAnswerToRankingStagePublicData(
   experimentId: string,
-  experimenterData: ExperimenterData, // for making LLM call
-  participant: ParticipantProfileExtended,
   stage: RankingStageConfig,
+  participant: ParticipantProfileExtended,
+  answer: RankingStageParticipantAnswer,
 ) {
-  // If participant is not an agent, return
-  if (!participant.agentConfig) {
-    return;
-  }
-
-  // TODO: If ranking is items (not participants), rank items instead.
-
-  // Get list of public IDs for other participants who are active in the cohort
-  // (in case the agent participant is ranking participants)
-  // TODO: Use shared utils to determine isActiveParticipant
-  const activeStatuses = [
-    ParticipantStatus.IN_PROGRESS,
-    ParticipantStatus.SUCCESS,
-    ParticipantStatus.ATTENTION_CHECK,
-  ];
-
-  const otherParticipants = (
-    await app
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    const publicDocument = app
       .firestore()
       .collection('experiments')
       .doc(experimentId)
-      .collection('participants')
-      .where('currentCohortId', '==', participant.currentCohortId)
-      .get()
-  ).docs
-    .map((doc) => doc.data() as ParticipantProfile)
-    .filter((participant) =>
-      activeStatuses.find((status) => status === participant.currentStatus),
-    );
+      .collection('cohorts')
+      .doc(participant.currentCohortId)
+      .collection('publicStageData')
+      .doc(stage.id);
 
-  // Build prompt
-  // TODO: Include participant profile context in prompt
-  const contextPrompt = await getPastStagesPromptContext(
-    experimentId,
-    stage.id,
-    participant.privateId,
-    true, // TODO: Use prompt settings for includeStageInfo
-  );
-  const currentStagePrompt = createAgentParticipantRankingStagePrompt(
-    participant,
-    stage,
-    otherParticipants,
-  );
-  const prompt = `${contextPrompt}\n${currentStagePrompt}`;
+    // For hardcoded WTL stage in LAS game only
+    const wtlDoc = app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('cohorts')
+      .doc(participant.currentCohortId)
+      .collection('publicStageData')
+      .doc(LAS_WTL_STAGE_ID);
+    // Update public stage data (current participant rankings, current winner)
+    const publicStageData = (
+      await publicDocument.get()
+    ).data() as RankingStagePublicData;
+    publicStageData.participantAnswerMap[participant.publicId] =
+      answer.rankingList;
 
-  // Build generation config
-  // TODO: Use generation config from agent persona prompt
-  const generationConfig = createModelGenerationConfig();
+    // Calculate rankings
+    let participantAnswerMap = publicStageData.participantAnswerMap;
 
-  // Call LLM API
-  writeLogEntry(
-    experimentId,
-    participant.currentCohortId,
-    stage.id,
-    participant.publicId,
-    `Sending agent participant prompt for ranking stage (${stage.name})`,
-    prompt,
-  );
+    // If experiment has hardcoded WTL stage (for LAS game), use the WTL
+    // stage/question IDs to only consider top ranking participants
+    const wtlResponse = await wtlDoc.get();
+    if (wtlResponse.exists) {
+      const wtlData = wtlResponse.data() as SurveyStagePublicData;
 
-  // TODO: Use structured output
-  const rawResponse = await getAgentResponse(
-    experimenterData,
-    prompt,
-    participant.agentConfig.modelSettings,
-    generationConfig,
-  );
-  const response = rawResponse.text ?? '';
+      if (wtlData?.kind === StageKind.SURVEY) {
+        const candidateList = getRankingCandidatesFromWTL(wtlData);
+        participantAnswerMap = filterRankingsByCandidates(
+          participantAnswerMap,
+          candidateList,
+        );
+      }
+    }
 
-  // Add log entry
-  writeLogEntry(
-    experimentId,
-    participant.currentCohortId,
-    stage.id,
-    participant.publicId,
-    `Received agent participant response for ranking stage (${stage.name})`,
-    response,
-  );
+    // Calculate winner (not used in frontend if strategy is none)
+    publicStageData.winnerId = getCondorcetElectionWinner(participantAnswerMap);
 
-  // Confirm that response is in expected format, e.g., list of strings
-  try {
-    // TODO: Use structured output
-    const rankingList: string[] = response
-      .split(',')
-      .map((item) => item.trim());
-    const participantAnswer = createRankingStageParticipantAnswer({
-      id: stage.id,
-      rankingList,
-    });
-    return participantAnswer;
-  } catch (error) {
-    console.log(error);
-    return undefined;
-  }
+    transaction.set(publicDocument, publicStageData);
+  });
 }
