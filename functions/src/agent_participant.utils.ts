@@ -9,7 +9,10 @@ import {
   StageConfig,
   StageKind,
 } from '@deliberation-lab/utils';
-import {updateParticipantNextStage} from './participant.utils';
+import {
+  updateCohortStageUnlocked,
+  updateParticipantNextStage,
+} from './participant.utils';
 import {initiateChatDiscussion} from './stages/chat.utils';
 import {completeProfile} from './stages/profile.utils';
 import {getAgentParticipantRankingStageResponse} from './stages/ranking.agent';
@@ -144,4 +147,40 @@ export async function completeStageAsAgentParticipant(
       await completeStage();
       participantDoc.set(participant);
   }
+}
+
+/** Start agent participant. */
+export async function startAgentParticipant(
+  experimentId: string,
+  participant: ParticipantProfileExtended,
+) {
+  await app.firestore().runTransaction(async (transaction) => {
+    // If participant is NOT agent, do nothing
+    if (!participant?.agentConfig) {
+      return;
+    }
+
+    // Otherwise, accept terms of service and start experiment
+    if (!participant.timestamps.startExperiment) {
+      participant.timestamps.startExperiment = Timestamp.now();
+    }
+    if (!participant.timestamps.acceptedTOS) {
+      participant.timestamps.acceptedTOS = Timestamp.now();
+    }
+    if (!participant.timestamps.readyStages[participant.currentStageId]) {
+      participant.timestamps.readyStages[participant.currentStageId] =
+        Timestamp.now();
+    }
+    await updateCohortStageUnlocked(
+      experimentId,
+      participant.currentCohortId,
+      participant.currentStageId,
+      participant.privateId,
+    );
+    const participantDoc = getFirestoreParticipantRef(
+      experimentId,
+      participant.privateId,
+    );
+    transaction.set(participantDoc, participant);
+  }); // end transaction
 }
