@@ -8,11 +8,11 @@ import {
   getFirestoreStage,
   getFirestoreStagePublicData,
 } from '../utils/firestore';
-import {updateTimeElapsed} from './chat.time';
-import {updateCurrentChatDiscussionId} from './chat.utils';
-import {updateChipTurn} from './chip.utils';
-import {addParticipantAnswerToRankingStagePublicData} from './ranking.utils';
-import {addParticipantAnswerToSurveyStagePublicData} from './survey.utils';
+import {updateTimeElapsed} from '../stages/chat.time';
+import {updateCurrentChatDiscussionId} from '../stages/chat.utils';
+import {updateChipTurn} from '../stages/chip.utils';
+import {addParticipantAnswerToRankingStagePublicData} from '../stages/ranking.utils';
+import {addParticipantAnswerToSurveyStagePublicData} from '../stages/survey.utils';
 
 /** When participant (private) stage data is updated. */
 export const onParticipantStageDataUpdated = onDocumentWritten(

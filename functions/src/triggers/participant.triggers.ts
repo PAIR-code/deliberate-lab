@@ -15,9 +15,9 @@ import {
 import {
   handleAutomaticTransfer,
   getParticipantRecord,
-} from './participant.utils';
+} from '../participant.utils';
 
-import {app} from './app';
+import {app} from '../app';
 
 /** When participant is created, set participant stage answers. */
 export const onParticipantCreation = onDocumentCreated(

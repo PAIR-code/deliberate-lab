@@ -8,9 +8,9 @@ import {
   checkAgentsReadyToEndChat,
   sendAgentMediatorMessage,
   sendAgentParticipantMessage,
-} from './chat.agent';
-import {startTimeElapsed} from './chat.time';
-import {sendAgentParticipantSalespersonMessage} from './salesperson.agent';
+} from '../stages/chat.agent';
+import {startTimeElapsed} from '../stages/chat.time';
+import {sendAgentParticipantSalespersonMessage} from '../stages/salesperson.agent';
 
 // ************************************************************************* //
 // TRIGGER FUNCTIONS                                                         //
