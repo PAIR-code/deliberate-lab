@@ -40,37 +40,6 @@ import {
 } from '../utils/firestore';
 import {getPastStagesPromptContext} from './stage.utils';
 
-/** Get the chat stage configuration based on the event. */
-export async function getChatStage(
-  experimentId: string,
-  stageId: string,
-): Promise<ChatStageConfig | null> {
-  const stageRef = app
-    .firestore()
-    .doc(`experiments/${experimentId}/stages/${stageId}`);
-
-  const stageDoc = await stageRef.get();
-  if (!stageDoc.exists) return null; // Return null if the stage doesn't exist.
-
-  return stageDoc.data() as ChatStageConfig; // Return the stage data.
-}
-
-/** Get public data for the given chat stage. */
-export async function getChatStagePublicData(
-  experimentId: string,
-  cohortId: string,
-  stageId: string,
-): Promise<ChatStagePublicData | null> {
-  const data = await getFirestoreStagePublicData(
-    experimentId,
-    cohortId,
-    stageId,
-  );
-  if (data?.kind !== StageKind.CHAT) return null; // Return null if the public stage data doesn't exist.
-
-  return data as ChatStagePublicData; // Return the public stage data.
-}
-
 /** Get chat messages for given cohort and stage ID. */
 export async function getChatMessages(
   experimentId: string,
@@ -441,11 +410,14 @@ export async function initiateChatDiscussion(
       });
 
     const chatMessages: ChatMessage[] = [];
-    const publicStageData = await getChatStagePublicData(
+    const publicStageData = await getFirestoreStagePublicData(
       experimentId,
       cohortId,
       stageId,
     );
+    if (publicStageData?.kind !== StageKind.CHAT) {
+      return;
+    }
 
     const pastStageContext = promptConfig.promptSettings.includeStageHistory
       ? await getPastStagesPromptContext(
