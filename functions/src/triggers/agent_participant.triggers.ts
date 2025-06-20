@@ -10,14 +10,14 @@ import {
   ParticipantStatus,
   StageKind,
 } from '@deliberation-lab/utils';
-import {completeStageAsAgentParticipant} from './agent_participant.utils';
-import {updateCohortStageUnlocked} from './participant.utils';
+import {completeStageAsAgentParticipant} from '../agent_participant.utils';
+import {updateCohortStageUnlocked} from '../participant.utils';
 import {
   getFirestoreCohort,
   getFirestoreParticipant,
   getFirestoreParticipantRef,
-} from './utils/firestore';
-import {app} from './app';
+} from '../utils/firestore';
+import {app} from '../app';
 
 /** If created participant is agent, start experiment. */
 export const startAgentParticipant = onDocumentCreated(

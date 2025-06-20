@@ -1,5 +1,5 @@
 import {database} from 'firebase-functions';
-import {app} from './app';
+import {app} from '../app';
 
 /**
  * Mirror the presence status from RTDB to Firestore.

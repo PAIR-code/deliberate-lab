@@ -19,10 +19,10 @@ export * from './stages/salesperson.endpoints';
 export * from './stages/survey.endpoints';
 
 // Trigger functions
-export * from './agent_participant.triggers';
-export * from './participant.triggers';
-export * from './presence.triggers';
+export * from './triggers/agent_participant.triggers';
+export * from './triggers/participant.triggers';
+export * from './triggers/presence.triggers';
 
-export * from './stages/chat.triggers';
-export * from './stages/chip.triggers';
-export * from './stages/stage.triggers';
+export * from './triggers/chat.triggers';
+export * from './triggers/chip.triggers';
+export * from './triggers/stage.triggers';

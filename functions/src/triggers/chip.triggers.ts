@@ -24,7 +24,7 @@ import {
   getChipParticipants,
   updateChipCurrentTurn,
   updateParticipantChipQuantities,
-} from './chip.utils';
+} from '../stages/chip.utils';
 
 /**
  * When chip transaction doc is written,
