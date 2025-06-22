@@ -13,7 +13,6 @@ import {
   AgentParticipantPromptConfig,
   AgentPersonaConfig,
   AgentPersonaType,
-  AgentResponseConfig,
   BaseAgentPromptConfig,
   ChatStageConfig,
   Experiment,

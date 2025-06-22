@@ -266,22 +266,7 @@ export async function getAgentChatAPIResponse(
   let message = response.text!;
   let parsed = '';
 
-  if (promptConfig.responseConfig?.isJSON) {
-    // Reset message to empty before trying to fill with JSON response
-    message = '';
-
-    try {
-      const cleanedText = response
-        .text!.replace(/```json\s*|\s*```/g, '')
-        .trim();
-      parsed = JSON.parse(cleanedText);
-    } catch {
-      // Response is already logged in console during Gemini API call
-      console.log('Could not parse JSON!');
-      return null;
-    }
-    message = parsed[promptConfig.responseConfig?.messageField] ?? '';
-  } else if (structuredOutputEnabled(promptConfig.structuredOutputConfig)) {
+  if (structuredOutputEnabled(promptConfig.structuredOutputConfig)) {
     // Reset message to empty before trying to fill with JSON response
     message = '';
 

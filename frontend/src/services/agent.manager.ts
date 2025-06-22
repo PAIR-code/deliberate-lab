@@ -95,13 +95,6 @@ export class AgentManager extends Service {
         agentObject.participantPromptMap[prompt.id] = prompt;
       });
       chatPrompts.forEach((prompt) => {
-        // For experiments created before version 17 with structured output
-        // enabled, set StructuredOutputConfig enabled to true and remove
-        // deprecated AgentResponseConfig
-        if (prompt.responseConfig?.isJSON) {
-          prompt.structuredOutputConfig.enabled = true;
-          delete prompt.responseConfig;
-        }
         agentObject.chatPromptMap[prompt.id] = prompt;
       });
       dataObjects.push(agentObject);
