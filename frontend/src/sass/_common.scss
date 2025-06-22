@@ -302,6 +302,12 @@
   }
 }
 
+@mixin viewport-medium {
+  @media screen and (max-width: 1024px) {
+    @content;
+  }
+}
+
 @mixin viewport-small {
   @media screen and (max-width: 720px) {
     @content;
