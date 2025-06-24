@@ -297,9 +297,11 @@ export class SurveyView extends MobxLitElement {
   }
 
   private renderScaleQuestion(question: ScaleSurveyQuestion) {
-    const scale = [...Array(question.upperValue + 1).keys()].slice(
-      question.lowerValue,
-    );
+    const stepSize = question.stepSize ?? 1;
+    const scale = [];
+    for (let i = question.lowerValue; i <= question.upperValue; i += stepSize) {
+      scale.push(i);
+    }
 
     const titleClasses = classMap({
       required: !isSurveyAnswerComplete(
@@ -377,7 +379,7 @@ export class SurveyView extends MobxLitElement {
           <md-slider
             min=${question.lowerValue}
             max=${question.upperValue}
-            step="1"
+            step=${question.stepSize ?? 1}
             value=${getCurrentValue()}
             ticks
             labeled

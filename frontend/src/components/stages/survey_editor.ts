@@ -402,6 +402,11 @@ export class SurveyEditor extends MobxLitElement {
       this.updateQuestion({...question, upperValue}, index);
     };
 
+    const updateStepSize = (e: InputEvent) => {
+      const stepSize = parseInt((e.target as HTMLInputElement).value, 10) || 1;
+      this.updateQuestion({...question, stepSize}, index);
+    };
+
     const toggleUseSlider = () => {
       const updatedQuestion = {...question, useSlider: !question.useSlider};
       this.updateQuestion(updatedQuestion, index);
@@ -424,6 +429,8 @@ export class SurveyEditor extends MobxLitElement {
             type="number"
             min="0"
             max="100"
+            step="1"
+            required
             .value=${question.lowerValue.toString()}
             ?disabled=${!this.experimentEditor.canEditStages}
             @input=${updateLowerValue}
@@ -433,11 +440,26 @@ export class SurveyEditor extends MobxLitElement {
           <label>Upper value</label>
           <input
             type="number"
-            min="0"
+            min=${(question.lowerValue + 1).toString()}
             max="100"
+            step="1"
+            required
             .value=${question.upperValue.toString()}
             ?disabled=${!this.experimentEditor.canEditStages}
             @input=${updateUpperValue}
+          />
+        </div>
+        <div class="scale-value-editor">
+          <label>Step size</label>
+          <input
+            type="number"
+            min="1"
+            max="10"
+            step="1"
+            required
+            .value=${(question.stepSize ?? 1).toString()}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @input=${updateStepSize}
           />
         </div>
       </div>
