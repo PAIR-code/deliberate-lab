@@ -112,6 +112,14 @@
   &.labels {
     @include typescale.label-small;
     justify-content: space-between;
+
+    &.include-middle-label {
+      justify-content: space-between;
+
+      .middle-label {
+        text-align: center;
+      }
+    }
   }
 
   &.slider {

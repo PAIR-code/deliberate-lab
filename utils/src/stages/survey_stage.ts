@@ -74,6 +74,7 @@ export interface ScaleSurveyQuestion extends BaseSurveyQuestion {
   upperText: string;
   lowerValue: number; // min 0
   lowerText: string;
+  middleText?: string; // Optional text to display in the center of the scale
   useSlider?: boolean; // Whether to display as slider instead of radio buttons
   stepSize?: number; // Step size for the scale (defaults to 1)
 }
@@ -243,6 +244,7 @@ export function createScaleSurveyQuestion(
     upperText: config.upperText ?? '',
     lowerValue: config.lowerValue ?? 0,
     lowerText: config.lowerText ?? '',
+    middleText: config.middleText ?? '',
     useSlider: config.useSlider ?? false,
     stepSize: config.stepSize ?? 1,
   };

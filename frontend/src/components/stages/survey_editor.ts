@@ -390,6 +390,11 @@ export class SurveyEditor extends MobxLitElement {
       this.updateQuestion({...question, upperText}, index);
     };
 
+    const updateMiddleText = (e: InputEvent) => {
+      const middleText = (e.target as HTMLTextAreaElement).value;
+      this.updateQuestion({...question, middleText}, index);
+    };
+
     const updateLowerValue = (e: InputEvent) => {
       const lowerValue =
         parseInt((e.target as HTMLInputElement).value, 10) || 0;
@@ -487,6 +492,17 @@ export class SurveyEditor extends MobxLitElement {
             .value=${question.upperText ?? ''}
             ?disabled=${!this.experimentEditor.canEditStages}
             @input=${updateUpperText}
+          >
+          </pr-textarea>
+        </div>
+        <div class="scale-text-editor">
+          <label>Middle text (optional)</label>
+          <pr-textarea
+            placeholder="e.g., Neutral"
+            size="small"
+            .value=${question.middleText ?? ''}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @input=${updateMiddleText}
           >
           </pr-textarea>
         </div>
