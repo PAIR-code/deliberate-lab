@@ -1,4 +1,5 @@
 import '@material/web/radio/radio.js';
+import '@material/web/slider/slider.js';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -102,7 +103,7 @@ export class SurveyView extends MobxLitElement {
           >
           </md-checkbox>
           <div class=${titleClasses}>
-            ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + "*"))}
+            ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
           </div>
         </label>
       </div>
@@ -126,7 +127,7 @@ export class SurveyView extends MobxLitElement {
     return html`
       <div class="question">
         <div class=${titleClasses}>
-          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + "*"))}
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
         </div>
         ${textAnswer.trim().length > 0
           ? html`<div>${textAnswer}</div>`
@@ -153,7 +154,7 @@ export class SurveyView extends MobxLitElement {
     return html`
       <div class="radio-question">
         <div class=${titleClasses}>
-          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + "*"))}
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
         </div>
         <div class=${questionWrapperClasses}>
           ${question.options.map((option) =>
@@ -196,9 +197,11 @@ export class SurveyView extends MobxLitElement {
   }
 
   private renderScaleQuestion(question: ScaleSurveyQuestion) {
-    const scale = [...Array(question.upperValue + 1).keys()].slice(
-      question.lowerValue,
-    );
+    const stepSize = question.stepSize ?? 1;
+    const scale = [];
+    for (let i = question.lowerValue; i <= question.upperValue; i += stepSize) {
+      scale.push(i);
+    }
 
     const titleClasses = classMap({
       required: !isSurveyAnswerComplete(
@@ -209,10 +212,14 @@ export class SurveyView extends MobxLitElement {
       ),
     });
 
+    if (question.useSlider) {
+      return this.renderScaleSlider(question);
+    }
+
     return html`
       <div class="question">
         <div class=${titleClasses}>
-          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + "*"))}
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
         </div>
         <div class="scale labels">
           <div>${question.lowerText}</div>
@@ -220,6 +227,56 @@ export class SurveyView extends MobxLitElement {
         </div>
         <div class="scale values">
           ${scale.map((num) => this.renderScaleRadioButton(question, num))}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderScaleSlider(question: ScaleSurveyQuestion) {
+    const titleClasses = classMap({
+      required: !isSurveyAnswerComplete(
+        this.participantAnswerService.getSurveyAnswer(
+          this.stage?.id ?? '',
+          question.id,
+        ),
+      ),
+    });
+
+    const getCurrentValue = () => {
+      if (!this.stage) return question.lowerValue;
+      const answer = this.participantAnswerService.getSurveyAnswer(
+        this.stage.id,
+        question.id,
+      );
+      if (answer && answer.kind === SurveyQuestionKind.SCALE) {
+        return answer.value;
+      }
+      return question.lowerValue;
+    };
+
+    return html`
+      <div class="question">
+        <div class=${titleClasses}>
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
+        </div>
+        <div class="scale labels">
+          <div>${question.lowerText}</div>
+          <div>${question.upperText}</div>
+        </div>
+        <div class="scale slider">
+          <md-slider
+            min=${question.lowerValue}
+            max=${question.upperValue}
+            step=${question.stepSize ?? 1}
+            value=${getCurrentValue()}
+            ticks
+            labeled
+            disabled
+          >
+          </md-slider>
+        </div>
+        <div class="slider-selected-value">
+          Selected value: ${getCurrentValue()}
         </div>
       </div>
     `;

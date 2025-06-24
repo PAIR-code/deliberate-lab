@@ -123,6 +123,15 @@
   }
 }
 
+.slider-selected-value {
+  @include common.flex-row-align-center;
+  @include typescale.label-medium;
+  color: var(--md-sys-color-primary);
+  font-weight: 500;
+  justify-content: center;
+  margin-top: common.$spacing-small;
+}
+
 .scale-button {
   @include common.flex-column-align-center;
   gap: common.$spacing-small;
