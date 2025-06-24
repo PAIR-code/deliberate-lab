@@ -3,6 +3,7 @@ import * as functions from 'firebase-functions';
 
 import {
   CohortConfig,
+  Experiment,
   ExperimenterData,
   ParticipantProfileExtended,
   ParticipantStatus,
@@ -40,6 +41,21 @@ export async function getExperimenterDataFromExperiment(experimentId: string) {
   }
   const creatorId = experimentDoc.data().metadata.creator;
   return await getExperimenterData(creatorId);
+}
+
+/** Return ref for experiment doc. */
+export function getFirestoreExperimentRef(experimentId: string) {
+  return app.firestore().collection('experiments').doc(experimentId);
+}
+
+/** Fetch experiment from Firestore */
+export async function getFirestoreExperiment(experimentId: string) {
+  const ref = getFirestoreExperimentRef(experimentId);
+
+  const doc = await ref.get();
+  if (!doc.exists) return undefined;
+
+  return doc.data() as Experiment;
 }
 
 /** Return ref for participant doc. */
@@ -200,4 +216,38 @@ export async function getFirestoreStagePublicData(
   if (!doc.exists) return undefined;
 
   return doc.data() as StagePublicData;
+}
+
+/** Return all agent personas for a given experiment. */
+export async function getAgentPersonas(experimentId: string) {
+  const agentCollection = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('agents');
+  return (await agentCollection.get()).docs.map(
+    (agent) => agent.data() as AgentPersonaConfig,
+  );
+}
+
+/** Return agent participant prompt that corresponds to agent. */
+export async function getAgentParticipantPrompt(
+  experimentId: string,
+  stageId: string,
+  agentId: string,
+): AgentParticipantPromptConfig | null {
+  const prompt = await app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('agents')
+    .doc(agentId)
+    .collection('participantPrompts')
+    .doc(stageId)
+    .get();
+
+  if (!prompt.exists) {
+    return null;
+  }
+  return prompt.data() as AgentParticipantPromptConfig;
 }

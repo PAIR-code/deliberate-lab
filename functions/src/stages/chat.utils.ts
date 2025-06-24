@@ -4,6 +4,7 @@ import {
   AgentChatSettings,
   ChatMessage,
   ChatStageConfig,
+  ChatStageParticipantAnswer,
   ChatStagePublicData,
   ExperimenterData,
   MediatorStatus,
@@ -13,6 +14,7 @@ import {
   StageKind,
   awaitTypingDelay,
   createAgentChatPromptConfig,
+  createChatStageParticipantAnswer,
   createParticipantChatMessage,
   getDefaultChatPrompt,
   getTimeElapsed,
@@ -27,43 +29,16 @@ import {onCall} from 'firebase-functions/v2/https';
 import {ModelResponseStatus} from '../api/model.response';
 import {app} from '../app';
 import {getAgentResponse} from '../agent.utils';
+import {updateParticipantNextStage} from '../participant.utils';
 import {
   getExperimenterDataFromExperiment,
   getFirestoreActiveParticipants,
+  getFirestoreExperiment,
+  getFirestoreParticipantAnswer,
+  getFirestoreParticipantAnswerRef,
   getFirestoreStagePublicData,
 } from '../utils/firestore';
 import {getPastStagesPromptContext} from './stage.utils';
-
-/** Get the chat stage configuration based on the event. */
-export async function getChatStage(
-  experimentId: string,
-  stageId: string,
-): Promise<ChatStageConfig | null> {
-  const stageRef = app
-    .firestore()
-    .doc(`experiments/${experimentId}/stages/${stageId}`);
-
-  const stageDoc = await stageRef.get();
-  if (!stageDoc.exists) return null; // Return null if the stage doesn't exist.
-
-  return stageDoc.data() as ChatStageConfig; // Return the stage data.
-}
-
-/** Get public data for the given chat stage. */
-export async function getChatStagePublicData(
-  experimentId: string,
-  cohortId: string,
-  stageId: string,
-): Promise<ChatStagePublicData | null> {
-  const data = await getFirestoreStagePublicData(
-    experimentId,
-    cohortId,
-    stageId,
-  );
-  if (data?.kind !== StageKind.CHAT) return null; // Return null if the public stage data doesn't exist.
-
-  return data as ChatStagePublicData; // Return the public stage data.
-}
 
 /** Get chat messages for given cohort and stage ID. */
 export async function getChatMessages(
@@ -168,35 +143,6 @@ export async function updateCurrentDiscussionIndex(
   }
 
   return publicStageData;
-}
-
-/** Checks whether the chat has ended, returning true if ending chat. */
-export async function hasEndedChat(
-  experimentId: string,
-  cohortId: string,
-  stageId: string,
-  chatStage: ChatStageConfig | null,
-  publicStageData: ChatStagePublicData | null,
-): Promise<boolean> {
-  if (!chatStage || !publicStageData || !chatStage.timeLimitInMinutes)
-    return false;
-
-  const elapsedMinutes = getTimeElapsed(
-    publicStageData.discussionStartTimestamp!,
-    'm',
-  );
-
-  // Check if the elapsed time has reached or exceeded the time limit
-  if (elapsedMinutes >= chatStage.timeLimitInMinutes) {
-    await app
-      .firestore()
-      .doc(
-        `experiments/${experimentId}/cohorts/${cohortId}/publicStageData/${stageId}`,
-      )
-      .update({discussionEndTimestamp: Timestamp.now()});
-    return true; // Indicate that the chat has ended.
-  }
-  return false;
 }
 
 /** Return chat prompt that corresponds to agent. */
@@ -464,11 +410,14 @@ export async function initiateChatDiscussion(
       });
 
     const chatMessages: ChatMessage[] = [];
-    const publicStageData = await getChatStagePublicData(
+    const publicStageData = await getFirestoreStagePublicData(
       experimentId,
       cohortId,
       stageId,
     );
+    if (publicStageData?.kind !== StageKind.CHAT) {
+      return;
+    }
 
     const pastStageContext = promptConfig.promptSettings.includeStageHistory
       ? await getPastStagesPromptContext(
@@ -515,4 +464,108 @@ export async function initiateChatDiscussion(
       '', // not responding to any chat ID because first message
     );
   });
+}
+
+/** Move on to next chat discussion if all participants are ready. */
+export async function updateCurrentChatDiscussionId(
+  experimentId: string,
+  stage: ChatStageConfig,
+  participant: ParticipantProfileExtended,
+  answer: ChatStageParticipantAnswer,
+) {
+  // Define public stage document reference
+  const publicDocument = app
+    .firestore()
+    .collection('experiments')
+    .doc(experimentId)
+    .collection('cohorts')
+    .doc(participant.currentCohortId)
+    .collection('publicStageData')
+    .doc(stage.id);
+
+  await app.firestore().runTransaction(async (transaction) => {
+    // Update public stage data
+    const publicStageData = (
+      await publicDocument.get()
+    ).data() as StagePublicData;
+    const discussionStatusMap = answer.discussionTimestampMap;
+
+    for (const discussionId of Object.keys(discussionStatusMap)) {
+      if (!publicStageData.discussionTimestampMap[discussionId]) {
+        publicStageData.discussionTimestampMap[discussionId] = {};
+      }
+      publicStageData.discussionTimestampMap[discussionId][
+        participant.publicId
+      ] = discussionStatusMap[discussionId];
+    }
+
+    // Update current discussion ID if applicable
+    await updateCurrentDiscussionIndex(
+      experimentId,
+      participant.currentCohortId,
+      stage.id,
+      publicStageData,
+    );
+
+    transaction.set(publicDocument, publicStageData);
+  });
+}
+
+/** Update participant answer ready to end chat discussion. */
+export async function updateParticipantReadyToEndChat(
+  experimentId: string,
+  stage: ChatStageConfig,
+  publicStageData: ChatStagePublicData,
+  participant: ParticipantProfileExtended,
+) {
+  const participantAnswerDoc = getFirestoreParticipantAnswerRef(
+    experimentId,
+    participant.privateId,
+    stage.id,
+  );
+  const participantAnswer =
+    (await getFirestoreParticipantAnswer(
+      experimentId,
+      participant.privateId,
+      stage.id,
+    )) ?? createChatStageParticipantAnswer({id: stage.id});
+
+  // If threaded discussion (and not last thread), move to next thread
+  if (
+    stage.discussions.length > 0 &&
+    publicStageData.currentDiscussionId &&
+    publicStageData.currentDiscussionId !==
+      stage.discussions[stage.discussions.length - 1]
+  ) {
+    // Set ready to end timestamp if not already set
+    if (
+      !participantAnswer.discussionTimestampMap[
+        publicStageData.currentDiscussionId
+      ]
+    ) {
+      participantAnswer.discussionTimestampMap[
+        publicStageData.currentDiscussionId
+      ] = Timestamp.now();
+
+      await app.firestore().runTransaction(async (transaction) => {
+        await transaction.set(participantAnswerDoc, participantAnswer);
+      });
+    }
+  } else {
+    // Otherwise, move to next stage
+    const experiment = await getFirestoreExperiment(experimentId);
+    await updateParticipantNextStage(
+      experimentId,
+      participant,
+      experiment.stageIds,
+    );
+
+    const participantDoc = getFirestoreParticipantRef(
+      experimentId,
+      participantId,
+    );
+    await app.firestore().runTransaction(async (transaction) => {
+      await transaction.set(participantDoc, participant);
+    });
+  }
 }
