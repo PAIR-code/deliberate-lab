@@ -380,6 +380,28 @@ export class SurveyEditor extends MobxLitElement {
   }
 
   private renderScaleQuestion(question: ScaleSurveyQuestion, index: number) {
+    const updateLowerText = (e: InputEvent) => {
+      const lowerText = (e.target as HTMLTextAreaElement).value;
+      this.updateQuestion({...question, lowerText}, index);
+    };
+
+    const updateUpperText = (e: InputEvent) => {
+      const upperText = (e.target as HTMLTextAreaElement).value;
+      this.updateQuestion({...question, upperText}, index);
+    };
+
+    const updateLowerValue = (e: InputEvent) => {
+      const lowerValue =
+        parseInt((e.target as HTMLInputElement).value, 10) || 0;
+      this.updateQuestion({...question, lowerValue}, index);
+    };
+
+    const updateUpperValue = (e: InputEvent) => {
+      const upperValue =
+        parseInt((e.target as HTMLInputElement).value, 10) || 10;
+      this.updateQuestion({...question, upperValue}, index);
+    };
+
     const toggleUseSlider = () => {
       const updatedQuestion = {...question, useSlider: !question.useSlider};
       this.updateQuestion(updatedQuestion, index);
@@ -391,6 +413,61 @@ export class SurveyEditor extends MobxLitElement {
           ${this.renderQuestionTitleEditor(question, index)}
         </div>
         ${this.renderQuestionNav(question, index)}
+      </div>
+      <div class="description">
+        <b>Scale range:</b> Set the numeric range for the scale.
+      </div>
+      <div class="scale-value-editors">
+        <div class="scale-value-editor">
+          <label>Lower value</label>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            .value=${question.lowerValue.toString()}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @input=${updateLowerValue}
+          />
+        </div>
+        <div class="scale-value-editor">
+          <label>Upper value</label>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            .value=${question.upperValue.toString()}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @input=${updateUpperValue}
+          />
+        </div>
+      </div>
+      <div class="description">
+        <b>Scale labels:</b> Add text labels for the lower and upper ends of the
+        scale.
+      </div>
+      <div class="scale-text-editors">
+        <div class="scale-text-editor">
+          <label>Lower text (${question.lowerValue})</label>
+          <pr-textarea
+            placeholder="e.g., Strongly disagree"
+            size="small"
+            .value=${question.lowerText ?? ''}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @input=${updateLowerText}
+          >
+          </pr-textarea>
+        </div>
+        <div class="scale-text-editor">
+          <label>Upper text (${question.upperValue})</label>
+          <pr-textarea
+            placeholder="e.g., Strongly agree"
+            size="small"
+            .value=${question.upperText ?? ''}
+            ?disabled=${!this.experimentEditor.canEditStages}
+            @input=${updateUpperText}
+          >
+          </pr-textarea>
+        </div>
       </div>
       <div class="description">
         <b>Optional:</b> Display the scale as a slider instead of radio buttons.
