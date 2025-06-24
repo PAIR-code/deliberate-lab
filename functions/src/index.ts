@@ -13,6 +13,7 @@ export * from './participant.endpoints';
 
 export * from './stages/chat.endpoints';
 export * from './stages/chip.endpoints';
+export * from './stages/flipcard.endpoints';
 
 export * from './stages/ranking.endpoints';
 export * from './stages/salesperson.endpoints';

@@ -5,6 +5,7 @@ import '../../pair-components/tooltip';
 import '../experimenter/experimenter_data_editor';
 import '../stages/base_stage_editor';
 import '../stages/chat_editor';
+import '../stages/flipcard_editor';
 import '../stages/ranking_editor';
 import '../stages/info_editor';
 import '../stages/payout_editor';
@@ -431,6 +432,11 @@ export class ExperimentBuilder extends MobxLitElement {
         return html`
           <base-stage-editor .stage=${stage}></base-stage-editor>
           <chat-editor .stage=${stage}></chat-editor>
+        `;
+      case StageKind.FLIPCARD:
+        return html`
+          <base-stage-editor .stage=${stage}></base-stage-editor>
+          <flipcard-editor .stage=${stage}></flipcard-editor>
         `;
       case StageKind.RANKING:
         return html`

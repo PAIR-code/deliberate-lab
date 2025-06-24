@@ -1,0 +1,87 @@
+import {Type, type Static} from '@sinclair/typebox';
+import {StageKind} from './stage';
+import {
+  StageGameSchema,
+  StageProgressConfigSchema,
+  StageTextConfigSchema,
+} from './stage.validation';
+
+/** Shorthand for strict TypeBox object validation */
+const strict = {additionalProperties: false} as const;
+
+// ************************************************************************* //
+// FlipCard stage validation                                                //
+// ************************************************************************* //
+
+/** FlipCard item validation. */
+export const FlipCardData = Type.Object(
+  {
+    id: Type.String({minLength: 1}),
+    title: Type.String({minLength: 1}),
+    frontContent: Type.String({minLength: 1}),
+    backContent: Type.String({minLength: 1}),
+  },
+  strict,
+);
+
+/** FlipCard stage config validation. */
+export const FlipCardStageConfigData = Type.Object(
+  {
+    id: Type.String({minLength: 1}),
+    kind: Type.Literal(StageKind.FLIPCARD),
+    game: StageGameSchema,
+    name: Type.String({minLength: 1}),
+    descriptions: StageTextConfigSchema,
+    progress: StageProgressConfigSchema,
+    cards: Type.Array(FlipCardData),
+    allowMultipleSelections: Type.Boolean(),
+    requireConfirmation: Type.Boolean(),
+  },
+  strict,
+);
+
+/** FlipCard stage participant answer validation. */
+export const FlipCardStageParticipantAnswerData = Type.Object(
+  {
+    id: Type.String({minLength: 1}),
+    kind: Type.Literal(StageKind.FLIPCARD),
+    selectedCardIds: Type.Array(Type.String()),
+    flippedCardIds: Type.Array(Type.String()),
+    flipHistory: Type.Array(
+      Type.Object(
+        {
+          cardId: Type.String({minLength: 1}),
+          action: Type.Union([
+            Type.Literal('flip_to_back'),
+            Type.Literal('flip_to_front'),
+          ]),
+          timestamp: Type.String({minLength: 1}),
+        },
+        strict,
+      ),
+    ),
+    confirmed: Type.Boolean(),
+    timestamp: Type.String({minLength: 1}),
+  },
+  strict,
+);
+
+// ************************************************************************* //
+// updateFlipCardStageParticipantAnswer endpoint                            //
+// ************************************************************************* //
+
+/** FlipCard stage participant answer update data validation. */
+export const UpdateFlipCardStageParticipantAnswerData = Type.Object(
+  {
+    experimentId: Type.String({minLength: 1}),
+    cohortId: Type.String({minLength: 1}),
+    participantPrivateId: Type.String({minLength: 1}),
+    participantPublicId: Type.String({minLength: 1}),
+    flipCardStageParticipantAnswer: FlipCardStageParticipantAnswerData,
+  },
+  strict,
+);
+
+export type UpdateFlipCardStageParticipantAnswerData = Static<
+  typeof UpdateFlipCardStageParticipantAnswerData
+>;

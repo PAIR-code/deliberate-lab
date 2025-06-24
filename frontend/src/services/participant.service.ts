@@ -3,6 +3,7 @@ import {
   ChatStageParticipantAnswer,
   ChipOffer,
   CreateChatMessageData,
+  FlipCardStageParticipantAnswer,
   RankingItem,
   ParticipantProfileBase,
   ParticipantProfileExtended,
@@ -53,6 +54,7 @@ import {
   updateParticipantToNextStageCallable,
   updateParticipantWaitingCallable,
   updateChatStageParticipantAnswerCallable,
+  updateFlipCardStageParticipantAnswerCallable,
   updateSurveyPerParticipantStageParticipantAnswerCallable,
   updateSurveyStageParticipantAnswerCallable,
   updateRankingStageParticipantAnswerCallable,
@@ -580,6 +582,31 @@ export class ParticipantService extends Service {
   }
 
   /** Update participant survey answerMap. */
+  async updateFlipCardStageParticipantAnswer(
+    id: string, // flipcard stage ID
+    answer: FlipCardStageParticipantAnswer, // flipcard answer
+  ) {
+    let response = {};
+
+    // Update local answer map
+    this.answerMap[id] = answer;
+
+    if (this.experimentId && this.profile) {
+      response = await updateFlipCardStageParticipantAnswerCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          participantPrivateId: this.profile.privateId,
+          participantPublicId: this.profile.publicId,
+          flipCardStageParticipantAnswer: answer,
+        },
+      );
+    }
+
+    return response;
+  }
+
   async updateSurveyStageParticipantAnswerMap(
     id: string, // survey stage ID,
     answerMap: Record<string, SurveyAnswer>, // map of question ID to answer

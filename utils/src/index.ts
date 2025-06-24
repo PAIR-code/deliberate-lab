@@ -51,6 +51,8 @@ export * from './stages/chip_stage';
 export * from './stages/chip_stage.validation';
 export * from './stages/comprehension_stage';
 export * from './stages/comprehension_stage.validation';
+export * from './stages/flipcard_stage';
+export * from './stages/flipcard_stage.validation';
 export * from './stages/ranking_stage';
 export * from './stages/ranking_stage.prompts';
 export * from './stages/ranking_stage.validation';

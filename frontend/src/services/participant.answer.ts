@@ -253,6 +253,15 @@ export class ParticipantAnswerService extends Service {
     );
   }
 
+  async saveFlipCardAnswers(stageId: string) {
+    const answer = this.answerMap[stageId];
+    if (!answer || answer.kind !== StageKind.FLIPCARD) return;
+    await this.sp.participantService.updateFlipCardStageParticipantAnswer(
+      stageId,
+      answer,
+    );
+  }
+
   async saveSurveyPerParticipantAnswers(stageId: string) {
     const answer = this.answerMap[stageId];
     if (!answer || answer.kind !== StageKind.SURVEY_PER_PARTICIPANT) return;
