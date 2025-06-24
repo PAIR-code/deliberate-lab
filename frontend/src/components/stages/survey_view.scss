@@ -1,5 +1,5 @@
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -36,7 +36,7 @@
 
 .question {
   @include common.flex-column;
-  gap: common.$spacing-medium; 
+  gap: common.$spacing-medium;
 }
 
 .slider-wrapper {
@@ -112,6 +112,14 @@
   &.labels {
     @include typescale.label-small;
     justify-content: space-between;
+  }
+
+  &.slider {
+    width: 100%;
+
+    md-slider {
+      width: 100%;
+    }
   }
 }
 

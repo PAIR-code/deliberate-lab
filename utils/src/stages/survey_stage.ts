@@ -74,6 +74,7 @@ export interface ScaleSurveyQuestion extends BaseSurveyQuestion {
   upperText: string;
   lowerValue: number; // min 0
   lowerText: string;
+  useSlider?: boolean; // Whether to display as slider instead of radio buttons
 }
 
 export type SurveyQuestion =
@@ -241,6 +242,7 @@ export function createScaleSurveyQuestion(
     upperText: config.upperText ?? '',
     lowerValue: config.lowerValue ?? 0,
     lowerText: config.lowerText ?? '',
+    useSlider: config.useSlider ?? false,
   };
 }
 

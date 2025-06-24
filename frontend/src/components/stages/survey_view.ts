@@ -5,6 +5,7 @@ import './stage_description';
 import './stage_footer';
 
 import '@material/web/radio/radio.js';
+import '@material/web/slider/slider.js';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -145,7 +146,7 @@ export class SurveyView extends MobxLitElement {
           >
           </md-checkbox>
           <div class=${titleClasses}>
-            ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + "*"))}
+            ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
           </div>
         </label>
       </div>
@@ -183,7 +184,7 @@ export class SurveyView extends MobxLitElement {
     return html`
       <div class="question">
         <div class=${titleClasses}>
-          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + "*"))}
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
         </div>
         <pr-textarea
           variant="outlined"
@@ -309,10 +310,14 @@ export class SurveyView extends MobxLitElement {
       ),
     });
 
+    if (question.useSlider) {
+      return this.renderScaleSlider(question);
+    }
+
     return html`
       <div class="question">
         <div class=${titleClasses}>
-          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + "*"))}
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
         </div>
         <div class="scale labels">
           <div>${question.lowerText}</div>
@@ -320,6 +325,66 @@ export class SurveyView extends MobxLitElement {
         </div>
         <div class="scale values">
           ${scale.map((num) => this.renderScaleRadioButton(question, num))}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderScaleSlider(question: ScaleSurveyQuestion) {
+    const titleClasses = classMap({
+      required: !isSurveyAnswerComplete(
+        this.participantAnswerService.getSurveyAnswer(
+          this.stage?.id ?? '',
+          question.id,
+        ),
+      ),
+    });
+    const getCurrentValue = () => {
+      if (!this.stage) return question.lowerValue;
+      const answer = this.participantAnswerService.getSurveyAnswer(
+        this.stage.id,
+        question.id,
+      );
+      if (answer && answer.kind === SurveyQuestionKind.SCALE) {
+        return answer.value;
+      }
+      return question.lowerValue;
+    };
+
+    const handleSliderChange = (e: Event) => {
+      const value = Number((e.target as HTMLInputElement).value);
+      const answer: ScaleSurveyAnswer = {
+        id: question.id,
+        kind: SurveyQuestionKind.SCALE,
+        value,
+      };
+
+      // Update stage answer
+      if (!this.stage) return;
+      this.participantAnswerService.updateSurveyAnswer(this.stage.id, answer);
+    };
+
+    return html`
+      <div class="question">
+        <div class=${titleClasses}>
+          ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
+        </div>
+        <div class="scale labels">
+          <div>${question.lowerText}</div>
+          <div>${question.upperText}</div>
+        </div>
+        <div class="scale slider">
+          <md-slider
+            min=${question.lowerValue}
+            max=${question.upperValue}
+            step="1"
+            value=${getCurrentValue()}
+            ticks
+            labeled
+            ?disabled=${this.participantService.disableStage}
+            @input=${handleSliderChange}
+          >
+          </md-slider>
         </div>
       </div>
     `;

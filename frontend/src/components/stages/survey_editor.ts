@@ -380,6 +380,11 @@ export class SurveyEditor extends MobxLitElement {
   }
 
   private renderScaleQuestion(question: ScaleSurveyQuestion, index: number) {
+    const toggleUseSlider = () => {
+      const updatedQuestion = {...question, useSlider: !question.useSlider};
+      this.updateQuestion(updatedQuestion, index);
+    };
+
     return html`
       <div class="header">
         <div class="left">
@@ -387,6 +392,19 @@ export class SurveyEditor extends MobxLitElement {
         </div>
         ${this.renderQuestionNav(question, index)}
       </div>
+      <div class="description">
+        <b>Optional:</b> Display the scale as a slider instead of radio buttons.
+      </div>
+      <label class="checkbox-wrapper">
+        <md-checkbox
+          touch-target="wrapper"
+          ?checked=${question.useSlider ?? false}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @click=${toggleUseSlider}
+        >
+        </md-checkbox>
+        <span class="checkbox-label">Use slider</span>
+      </label>
     `;
   }
 
