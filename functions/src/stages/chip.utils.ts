@@ -706,7 +706,7 @@ export async function getChipResponseAssistance(
           responseObject['response'],
         );
       }
-      return `${responseObject['response']} (${responseObject['feedback']}) (${responseObject['reasoning']})`;
+      return `${responseObject['response']} ${responseObject['feedback']}`;
     } catch (error) {
       // Response is already logged in console during Gemini API call
       console.log('Could not parse JSON:', error);
