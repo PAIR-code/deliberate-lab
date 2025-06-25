@@ -104,14 +104,17 @@ export function getChipNegotiationStageConfigs(numChips = 3): StageConfig[] {
   stages.push(TRANSFER_STAGE);
 
   stages.push(COACH_MODE_INSTRUCTION);
+  stages.push(getChipNegotiationCoach(numChips));
   // Coach mode survey stage
   stages.push(CHIP_COACH_FEEDBACK_STAGE);
 
   stages.push(ADVISOR_MODE_INSTRUCTION);
+  stages.push(getChipNegotiationAdvisor(numChips));
   // Advisor mode survey stage
   stages.push(CHIP_ADVISOR_FEEDBACK_STAGE);
 
   stages.push(DELEGATE_MODE_INSTRUCTION);
+  stages.push(getChipNegotiationDelegate(numChips));
   // Delegate mode survey stage
   stages.push(CHIP_DELEGATE_FEEDBACK_STAGE);
 
@@ -706,6 +709,62 @@ function getChips(numChips: number) {
 const CHIP_NEGOTIATION_STAGE1_ID = 'negotiation1';
 const CHIP_NEGOTIATION_STAGE2_ID = `negotiation2_${ALTERNATE_PROFILE_SET_ID}`;
 
+// Begin temporary chip stages for testing assistance
+function getChipNegotiationCoach(numChips: number) {
+  return createChipStage({
+    id: 'chip_coach',
+    game: StageGame.CHP,
+    name: 'Chip negotiation with coaching option',
+    descriptions: createStageTextConfig({
+      infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
+      helpText: `If you see the "It's your turn" panel, that means others are waiting on you to make an offer! As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs.
+      `,
+    }),
+    chips: getChips(numChips),
+    assistanceConfig: {
+      offerModes: [ChipAssistanceMode.NONE, ChipAssistanceMode.COACH],
+      responseModes: [ChipAssistanceMode.NONE, ChipAssistanceMode.COACH],
+    },
+  });
+}
+
+function getChipNegotiationAdvisor(numChips: number) {
+  return createChipStage({
+    id: 'chip_advisor',
+    game: StageGame.CHP,
+    name: 'Chip negotiation with advisor option',
+    descriptions: createStageTextConfig({
+      infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
+      helpText: `If you see the "It's your turn" panel, that means others are waiting on you to make an offer! As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs.
+      `,
+    }),
+    chips: getChips(numChips),
+    assistanceConfig: {
+      offerModes: [ChipAssistanceMode.NONE, ChipAssistanceMode.ADVISOR],
+      responseModes: [ChipAssistanceMode.NONE, ChipAssistanceMode.ADVISOR],
+    },
+  });
+}
+
+function getChipNegotiationDelegate(numChips: number) {
+  return createChipStage({
+    id: 'chip_delegate',
+    game: StageGame.CHP,
+    name: 'Chip negotiation with delegate option',
+    descriptions: createStageTextConfig({
+      infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
+      helpText: `If you see the "It's your turn" panel, that means others are waiting on you to make an offer! As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs.
+      `,
+    }),
+    chips: getChips(numChips),
+    assistanceConfig: {
+      offerModes: [ChipAssistanceMode.NONE, ChipAssistanceMode.DELEGATE],
+      responseModes: [ChipAssistanceMode.NONE, ChipAssistanceMode.DELEGATE],
+    },
+  });
+}
+// End temporary chip stages
+
 function getChipNegotiationStage1(numChips: number) {
   return createChipStage({
     id: CHIP_NEGOTIATION_STAGE1_ID,
@@ -721,20 +780,6 @@ function getChipNegotiationStage1(numChips: number) {
       waitForAllParticipants: true,
       showParticipantProgress: true,
     },
-    assistanceConfig: {
-      offerModes: [
-        ChipAssistanceMode.NONE,
-        ChipAssistanceMode.ADVISOR,
-        ChipAssistanceMode.COACH,
-        ChipAssistanceMode.DELEGATE,
-      ],
-      responseModes: [
-        ChipAssistanceMode.NONE,
-        ChipAssistanceMode.ADVISOR,
-        ChipAssistanceMode.COACH,
-        ChipAssistanceMode.DELEGATE,
-      ],
-    },
   });
 }
 
@@ -748,20 +793,6 @@ function getChipNegotiationStage2(numChips: number) {
       `,
     }),
     chips: getChips(numChips),
-    assistanceConfig: {
-      offerModes: [
-        ChipAssistanceMode.NONE,
-        ChipAssistanceMode.ADVISOR,
-        ChipAssistanceMode.COACH,
-        ChipAssistanceMode.DELEGATE,
-      ],
-      responseModes: [
-        ChipAssistanceMode.NONE,
-        ChipAssistanceMode.ADVISOR,
-        ChipAssistanceMode.COACH,
-        ChipAssistanceMode.DELEGATE,
-      ],
-    },
   });
 }
 
