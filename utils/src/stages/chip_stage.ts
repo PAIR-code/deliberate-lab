@@ -33,6 +33,8 @@ export interface ChipStageConfig extends BaseStageConfig {
   // has the opportunity to submit an offer that others accept/reject)
   numRounds: number;
   chips: ChipItem[];
+  // If set, use chip assistance workflow to send/respond to offers
+  assistanceConfig: ChipAssistanceConfig | null;
 }
 
 /** Chip item config. */
@@ -123,8 +125,17 @@ export interface SimpleChipLog {
   timestamp: Timestamp | null;
 }
 
+/** Chip assistance workflow config. */
+export interface ChipAssistanceConfig {
+  // List of chip assistance modes to include in offer
+  offerModes: ChipAssistanceMode[];
+  // List of chip assistance modes to include in response
+  responseModes: ChipAssistanceMode[];
+}
+
 /** Chip assistance modes. */
 export enum ChipAssistanceMode {
+  NONE = 'none', // manually submit without assistance
   ADVISOR = 'advisor',
   COACH = 'coach',
   DELEGATE = 'delegate',
@@ -215,6 +226,7 @@ export function createChipStage(
     enableChat: config.enableChat ?? false,
     numRounds: config.numRounds ?? 3,
     chips: config.chips ?? [],
+    assistanceConfig: config.assistanceConfig ?? null,
   };
 }
 

@@ -18,6 +18,8 @@ import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 import {getParticipantInlineDisplay} from '../../shared/participant.utils';
 import {
+  ChipAssistanceConfig,
+  ChipAssistanceMode,
   ChipItem,
   ChipLogEntry,
   ChipLogType,
@@ -266,14 +268,36 @@ export class ChipView extends MobxLitElement {
       this.resetChipValues();
     };
 
+    const assistanceConfig = this.stage?.assistanceConfig;
     return html`
       <div class="offer-panel">
         <div class="offer-description">
           ✋ It's your turn! Make an offer to the other participants.
         </div>
-        ${this.renderManualOffer(sendOffer)} ${this.renderDelegateButton()}
-        ${this.renderAdvisorButton()} ${this.renderCoachButton()}
+        ${assistanceConfig
+          ? this.renderAssistanceOffer(assistanceConfig.offerModes, sendOffer)
+          : this.renderManualOffer(sendOffer)}
       </div>
+    `;
+  }
+
+  private renderAssistanceOffer(
+    modes: ChipAssistanceMode[],
+    sendOffer: () => void,
+  ) {
+    return html`
+      ${modes.includes(ChipAssistanceMode.NONE)
+        ? this.renderManualOffer(sendOffer)
+        : nothing}
+      ${modes.includes(ChipAssistanceMode.DELEGATE)
+        ? this.renderDelegateButton()
+        : nothing}
+      ${modes.includes(ChipAssistanceMode.ADVISOR)
+        ? this.renderAdvisorButton()
+        : nothing}
+      ${modes.includes(ChipAssistanceMode.COACH)
+        ? this.renderCoachButton()
+        : nothing}
     `;
   }
 
@@ -500,6 +524,7 @@ export class ChipView extends MobxLitElement {
     if (!senderParticipant) return nothing;
     const senderName = `${getParticipantInlineDisplay(senderParticipant, false, this.stage?.id ?? '')}`;
 
+    const assistanceConfig = this.stage?.assistanceConfig;
     return html`
       <div class="offer-panel">
         <div class="offer-description">Incoming offer!</div>
@@ -512,11 +537,35 @@ export class ChipView extends MobxLitElement {
           </p>
           ${displayHypotheticalTotal()}
         </div>
-        ${this.renderManualResponse(acceptOffer, rejectOffer)}
-        <div class="buttons">
-          ${this.renderDelegateButton()} ${this.renderAdvisorButton()}
-        </div>
+        ${assistanceConfig
+          ? this.renderAssistanceResponse(
+              assistanceConfig.responseModes,
+              acceptOffer,
+              rejectOffer,
+            )
+          : this.renderManualResponse(acceptOffer, rejectOffer)}
       </div>
+    `;
+  }
+
+  private renderAssistanceResponse(
+    modes: ChipAssistanceMode[],
+    acceptOffer: () => void,
+    rejectOffer: () => void,
+  ) {
+    return html`
+      ${modes.includes(ChipAssistanceMode.NONE)
+        ? this.renderManualResponse(acceptOffer, rejectOffer)
+        : nothing}
+      ${modes.includes(ChipAssistanceMode.DELEGATE)
+        ? this.renderDelegateButton()
+        : nothing}
+      ${modes.includes(ChipAssistanceMode.ADVISOR)
+        ? this.renderAdvisorButton()
+        : nothing}
+      ${modes.includes(ChipAssistanceMode.COACH)
+        ? this.renderCoachButton()
+        : nothing}
     `;
   }
 

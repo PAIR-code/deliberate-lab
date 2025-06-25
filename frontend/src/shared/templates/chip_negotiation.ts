@@ -1,5 +1,6 @@
 import {
   ALTERNATE_PROFILE_SET_ID,
+  ChipAssistanceMode,
   ChipItem,
   ProfileType,
   StageConfig,
@@ -720,6 +721,20 @@ function getChipNegotiationStage1(numChips: number) {
       waitForAllParticipants: true,
       showParticipantProgress: true,
     },
+    assistanceConfig: {
+      offerModes: [
+        ChipAssistanceMode.NONE,
+        ChipAssistanceMode.ADVISOR,
+        ChipAssistanceMode.COACH,
+        ChipAssistanceMode.DELEGATE,
+      ],
+      responseModes: [
+        ChipAssistanceMode.NONE,
+        ChipAssistanceMode.ADVISOR,
+        ChipAssistanceMode.COACH,
+        ChipAssistanceMode.DELEGATE,
+      ],
+    },
   });
 }
 
@@ -733,6 +748,20 @@ function getChipNegotiationStage2(numChips: number) {
       `,
     }),
     chips: getChips(numChips),
+    assistanceConfig: {
+      offerModes: [
+        ChipAssistanceMode.NONE,
+        ChipAssistanceMode.ADVISOR,
+        ChipAssistanceMode.COACH,
+        ChipAssistanceMode.DELEGATE,
+      ],
+      responseModes: [
+        ChipAssistanceMode.NONE,
+        ChipAssistanceMode.ADVISOR,
+        ChipAssistanceMode.COACH,
+        ChipAssistanceMode.DELEGATE,
+      ],
+    },
   });
 }
 
