@@ -137,7 +137,7 @@ export function getChipLogsFromTransaction(
   const offerName = isSender ? `You (${sender}) are` : `${sender} is`;
   logs.push(
     createSimpleChipLog(
-      `${offerName} offering ${displayChipOfferText(offer.sell, stage.chips)} chips to get ${displayChipOfferText(offer.buy, stage.chips)} in return.`,
+      `${offerName} offering ${displayChipOfferText(offer.sell, stage.chips)} to get ${displayChipOfferText(offer.buy, stage.chips)} in return.`,
       offer.timestamp,
     ),
   );
