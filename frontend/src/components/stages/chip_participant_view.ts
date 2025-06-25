@@ -569,7 +569,7 @@ export class ChipView extends MobxLitElement {
     return html`
       <div class="subtitle">
         ${text}
-        <b>$${payouts.before.toFixed(2)}</b>
+        <b>$${payouts.after.toFixed(2)}</b>
         <span class=${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}>
           <b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b> </span
         >.
