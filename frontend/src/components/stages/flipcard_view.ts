@@ -10,6 +10,7 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
+import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 
 import {
   FlipCardStageConfig,
@@ -22,6 +23,7 @@ import {
 import {core} from '../../core/core';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
+import {convertMarkdownToHTML} from '../../shared/utils';
 
 import {styles} from './flipcard_view.scss';
 
@@ -92,7 +94,9 @@ export class FlipCardView extends MobxLitElement {
           <!-- Front of card -->
           <div class="card-front">
             <h3 class="card-title">${card.title}</h3>
-            <div class="card-content">${card.frontContent}</div>
+            <div class="card-content">
+              ${unsafeHTML(convertMarkdownToHTML(card.frontContent))}
+            </div>
             <div class="card-buttons">
               <md-text-button
                 @click=${() => this.flipCard(card.id, 'flip_to_back')}
@@ -117,7 +121,9 @@ export class FlipCardView extends MobxLitElement {
           <!-- Back of card -->
           <div class="card-back">
             <h3 class="card-title">${card.title}</h3>
-            <div class="card-content">${card.backContent}</div>
+            <div class="card-content">
+              ${unsafeHTML(convertMarkdownToHTML(card.backContent))}
+            </div>
             <div class="card-buttons">
               <md-outlined-button
                 @click=${() => this.flipCard(card.id, 'flip_to_front')}
