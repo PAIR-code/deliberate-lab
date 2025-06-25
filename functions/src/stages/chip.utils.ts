@@ -640,6 +640,25 @@ export async function getChipResponseAssistance(
     .join(', ');
   const offer = `You will give ${buyChips} and get ${sellChips}`;
 
+  let chipsetDescription = ``;
+  const participantChipMap = publicData.participantChipMap;
+  const participantIds = Object.keys(participantChipMap);
+  for (let i = 0; i < participantIds.length; i++) {
+    const participantId = participantIds[i];
+    const chipMap = participantChipMap[participantId];
+    const chipTypes = Object.keys(chipMap);
+
+    const chipQuantities = chipTypes
+      .map((chip) => `${chipMap[chip]} ${chip} chips`)
+      .join(', ');
+
+    chipsetDescription += `${participantId}: ${chipQuantities}`;
+
+    if (i < participantIds.length - 1) {
+      chipsetDescription += ' | ';
+    }
+  }
+
   // Negotiation history
   const negotiationHistory = getChipLogs(
     stage,
@@ -691,9 +710,9 @@ export async function getChipResponseAssistance(
       const coachPrompt = getChipResponseAssistanceCoachPrompt(
         playerName,
         playerChipValues,
-        publicData,
         playerChipQuantities,
-        negotiationHistorzy,
+        chipsetDescription,
+        negotiationHistory,
         numRoundsLeft,
         offer,
         responseIdea,
@@ -702,7 +721,6 @@ export async function getChipResponseAssistance(
       // Call API
       const coachResponse = await getAgentResponse(
         experimenterData,
-        publicData,
         coachPrompt,
         modelSettings,
         modelGenerationConfig,
@@ -715,7 +733,7 @@ export async function getChipResponseAssistance(
       const advisorPrompt = getChipResponseAssistanceAdvisorPrompt(
         playerName,
         playerChipValues,
-        publicData,
+        chipsetDescription,
         playerChipQuantities,
         negotiationHistory,
         numRoundsLeft,
@@ -725,7 +743,6 @@ export async function getChipResponseAssistance(
       // Call API
       const advisorResponse = await getAgentResponse(
         experimenterData,
-        publicData,
         advisorPrompt,
         modelSettings,
         modelGenerationConfig,
@@ -738,8 +755,8 @@ export async function getChipResponseAssistance(
       const delegatePrompt = getChipResponseAssistanceDelegatePrompt(
         playerName,
         playerChipValues,
-        publicData,
         playerChipQuantities,
+        chipsetDescription,
         negotiationHistory,
         numRoundsLeft,
         offer,
@@ -748,7 +765,6 @@ export async function getChipResponseAssistance(
       // Call API
       const delegateResponse = await getAgentResponse(
         experimenterData,
-        publicData,
         delegatePrompt,
         modelSettings,
         modelGenerationConfig,

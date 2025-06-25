@@ -12,9 +12,9 @@ export function getChipOfferAssistanceDelegatePrompt(
   playerName: string,
   playerChipValues: string,
   playerChipQuantities: string,
+  chipsetDescription: string,
   negotiationHistory: string,
   numRoundsLeft: string,
-  publicData: string,
 ) {
   return `You are role-playing as the game participant with alias ${playerName}. It is your turn to propose a trade.
 
@@ -23,7 +23,7 @@ export function getChipOfferAssistanceDelegatePrompt(
  * Remember that all players value green chips at $0.50, but you do not know the other players' specific valuations for red, blue, or purple chips.
 * **Your chip inventory:** ${playerChipQuantities}.
  * Remember that all players started with 10 chips of each color.
-* **All players' chip inventory:** ${publicData}
+* **All players' chip inventory:** ${chipsetDescription}
 * **Transaction history:** ${negotiationHistory}
  * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
 There are only ${numRoundsLeft} rounds left.
@@ -36,7 +36,7 @@ Remember, your trade proposal must adhere to the following:
 2.  **Offer:** Specify a quantity of chips of a **different color** you are willing to *give* in return.
 
 
-**Crucial strategy: rational trading**: Your trades must be **profitable for you**. This means the total value of chips you *receive* (quantity × your valuation) **must be greater than** the total value of chips you *offer* (quantity × your valuation).
+**Crucial strategy: rational trading**: Your trades must be **profitable for you**. This means the total value of chips you *receive* (quantity x your valuation) **must be greater than** the total value of chips you *offer* (quantity × your valuation).
 
 
 **Do NOT propose a trade if it results in a loss or zero gain for you.** You cannot offer more chips than you currently possess.
@@ -118,10 +118,10 @@ export function getChipOfferAssistanceCoachPrompt(
   playerName: string,
   playerChipValues: string,
   playerChipQuantities: string,
+  chipsetDescription: string,
   negotiationHistory: string,
   numRoundsLeft: number,
   offerIdea: string,
-  publicData: string,
 ) {
   return `
   You are a strategic coach for the participant in the trading game whose alias is ${playerName}. You are dedicated to sharpening their decision-making skills so that they can make make proposals leading to maximizing the value of their chips.
@@ -131,7 +131,7 @@ export function getChipOfferAssistanceCoachPrompt(
  * Remember that all players value green chips at $0.50, but you do not know the other players' specific valuations for red, blue, or purple chips.
 * **Your chip inventory:** ${playerChipQuantities}.
  * Remember that all players started with 10 chips of each color.
-* **All players' chip inventory:** ${publicData}
+* **All players' chip inventory:** ${chipsetDescription}
 * **Transaction history:** ${negotiationHistory}
  * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
 There are only ${numRoundsLeft} rounds left.
@@ -236,9 +236,9 @@ export function getChipOfferAssistanceAdvisorPrompt(
   playerName: string,
   playerChipValues: string,
   playerChipQuantities: string,
+  chipsetDescription: string,
   negotiationHistory: string,
   numRoundsLeft: string,
-  publicData: string,
 ) {
   return `
 You are role-playing as the game participant with alias ${playerName}. It is your turn to propose a trade.
@@ -248,7 +248,7 @@ You are role-playing as the game participant with alias ${playerName}. It is you
  * Remember that all players value green chips at $0.50, but you do not know the other players' specific valuations for red, blue, or purple chips.
 * **Your chip inventory:** ${playerChipQuantities}.
  * Remember that all players started with 10 chips of each color.
-* **All players' chip inventory:** ${publicData}
+* **All players' chip inventory:** ${chipsetDescription}
 * **Transaction history:** ${negotiationHistory}
  * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
 There are only ${numRoundsLeft} rounds left.
@@ -330,10 +330,10 @@ export function getChipResponseAssistanceAdvisorPrompt(
   playerName: string,
   playerChipValues: string,
   playerChipQuantities: string,
+  chipsetDescription: string,
   negotiationHistory: string,
   numRoundsLeft: string,
   offer: string,
-  publicData: string,
 ) {
   return `
 You are role-playing as the game participant with alias ${playerName}. It is your turn to propose a trade.
@@ -343,7 +343,7 @@ You are role-playing as the game participant with alias ${playerName}. It is you
  * Remember that all players value green chips at $0.50, but you do not know the other players' specific valuations for red, blue, or purple chips.
 * **Your chip inventory:** ${playerChipQuantities}.
  * Remember that all players started with 10 chips of each color.
-* **All players' chip inventory:** ${publicData}
+* **All players' chip inventory:** ${chipsetDescription}
 * **Transaction history:** ${negotiationHistory}
  * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
 There are only ${numRoundsLeft} rounds left.
@@ -366,11 +366,11 @@ export function getChipResponseAssistanceCoachPrompt(
   playerName: string,
   playerChipValues: string,
   playerChipQuantities: string,
+  chipsetDescription: string,
   negotiationHistory: string,
   numRoundsLeft: string,
   offer: string,
   responseIdea: boolean,
-  publicData: string,
 ) {
   return `
 You are a strategic coach for ${playerName}, dedicated to sharpening their decision-making skills. Your goal is to help them maximize their end-of-game surplus. When the player presents a trade offer, your role is to provide constructive feedback that helps them refine their own strategy and understand its long-term implications.
@@ -380,7 +380,7 @@ You are a strategic coach for ${playerName}, dedicated to sharpening their decis
  * Remember that all players value green chips at $0.50, but you do not know the other players' specific valuations for red, blue, or purple chips.
 * **Your chip inventory:** ${playerChipQuantities}.
  * Remember that all players started with 10 chips of each color.
-* **All players' chip inventory:** ${publicData}
+* **All players' chip inventory:** ${chipsetDescription}
 * **Transaction history:** ${negotiationHistory}
  * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
 There are only ${numRoundsLeft} rounds left.
@@ -405,10 +405,10 @@ export function getChipResponseAssistanceDelegatePrompt(
   playerName: string,
   playerChipValues: string,
   playerChipQuantities: string,
+  chipsetDescription: string,
   negotiationHistory: string,
   numRoundsLeft: string,
   offer: string,
-  publicData: string,
 ) {
   return `
 You are role-playing as the game participant with alias ${playerName}. It is your turn to propose a trade.
@@ -418,7 +418,7 @@ You are role-playing as the game participant with alias ${playerName}. It is you
  * Remember that all players value green chips at $0.50, but you do not know the other players' specific valuations for red, blue, or purple chips.
 * **Your chip inventory:** ${playerChipQuantities}.
  * Remember that all players started with 10 chips of each color.
-* **All players' chip inventory:** ${publicData}
+* **All players' chip inventory:** ${chipsetDescription}
 * **Transaction history:** ${negotiationHistory}
  * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
 There are only ${numRoundsLeft} rounds left.
