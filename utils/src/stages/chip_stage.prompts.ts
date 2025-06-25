@@ -5,7 +5,7 @@ import {
   createStructuredOutputConfig,
   printSchema,
 } from '../structured_output';
-import {createChipStagePublicData, SimpleChipLog} from './chip_stage';
+// import {createChipStagePublicData, SimpleChipLog} from './chip_stage';
 
 /** Chip offer assistance delegate prompt. */
 export function getChipOfferAssistanceDelegatePrompt(
