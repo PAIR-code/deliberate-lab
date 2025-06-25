@@ -268,6 +268,14 @@ export class ChipView extends MobxLitElement {
       this.resetChipValues();
     };
 
+    if (this.isOfferPending()) {
+      return html`
+        <div class="offer-panel">
+          Waiting for others to respond to your offer...
+        </div>
+      `;
+    }
+
     const assistanceConfig = this.stage?.assistanceConfig;
     return html`
       <div class="offer-panel">
