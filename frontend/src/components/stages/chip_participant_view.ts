@@ -342,6 +342,7 @@ export class ChipView extends MobxLitElement {
   private renderManualOffer(
     sendOffer: () => void,
     loading = this.isOfferLoading,
+    buttonText = 'Submit offer',
   ) {
     const renderOfferPayout = () => {
       if (this.isOfferIncomplete() || !this.isOfferValid()) {
@@ -425,9 +426,7 @@ export class ChipView extends MobxLitElement {
           this.isOfferPending()}
           @click=${sendOffer}
         >
-          ${this.isOfferPending()
-            ? 'Offer sent and pending...'
-            : 'Submit offer'}
+          ${this.isOfferPending() ? 'Offer sent and pending...' : buttonText}
         </pr-button>
         <div>${renderOfferPayout()} ${renderValidationMessages()}</div>
       </div>
@@ -886,6 +885,7 @@ export class ChipView extends MobxLitElement {
       ${this.renderManualOffer(
         sendCoachProposal,
         this.isAssistanceCoachLoading,
+        'Submit proposed offer',
       )}
     `;
   }
