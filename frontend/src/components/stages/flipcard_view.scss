@@ -94,6 +94,10 @@
   text-align: left;
 }
 
+.card-front .card-content {
+  text-align: center;
+}
+
 .card-buttons {
   @include common.flex-row;
   gap: common.$spacing-small;
