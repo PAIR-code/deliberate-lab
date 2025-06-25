@@ -31,7 +31,8 @@ import {
   CHIP_OFFER_ASSISTANCE_DELEGATE_PROMPT,
   CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
   CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
-  CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
+  CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG,
+  CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
 } from '@deliberation-lab/utils';
 
 import {getAgentResponse} from '../agent.utils';
@@ -653,8 +654,9 @@ export async function getChipResponseAssistance(
       const coachPrompt = getChipResponseAssistanceCoachPrompt(
         playerName,
         playerChipValues,
+        publicData,
         playerChipQuantities,
-        negotiationHistory,
+        negotiationHistorzy,
         numRoundsLeft,
         offer,
         responseIdea,
@@ -663,10 +665,11 @@ export async function getChipResponseAssistance(
       // Call API
       const coachResponse = await getAgentResponse(
         experimenterData,
+        publicData,
         coachPrompt,
         modelSettings,
         modelGenerationConfig,
-        CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
+        CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG,
       );
       // Parse response before returning
       return parseResponse(coachResponse);
@@ -675,6 +678,7 @@ export async function getChipResponseAssistance(
       const advisorPrompt = getChipResponseAssistanceAdvisorPrompt(
         playerName,
         playerChipValues,
+        publicData,
         playerChipQuantities,
         negotiationHistory,
         numRoundsLeft,
@@ -684,10 +688,11 @@ export async function getChipResponseAssistance(
       // Call API
       const advisorResponse = await getAgentResponse(
         experimenterData,
+        publicData,
         advisorPrompt,
         modelSettings,
         modelGenerationConfig,
-        CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
+        CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
       );
       // Parse response before returning
       return parseResponse(advisorResponse);
@@ -696,6 +701,7 @@ export async function getChipResponseAssistance(
       const delegatePrompt = getChipResponseAssistanceDelegatePrompt(
         playerName,
         playerChipValues,
+        publicData,
         playerChipQuantities,
         negotiationHistory,
         numRoundsLeft,
@@ -705,10 +711,11 @@ export async function getChipResponseAssistance(
       // Call API
       const delegateResponse = await getAgentResponse(
         experimenterData,
+        publicData,
         delegatePrompt,
         modelSettings,
         modelGenerationConfig,
-        CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
+        CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
       );
       // Parse response before returning
       return parseResponse(delegateResponse);

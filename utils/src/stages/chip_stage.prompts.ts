@@ -5,7 +5,7 @@ import {
   createStructuredOutputConfig,
   printSchema,
 } from '../structured_output';
-import {SimpleChipLog} from './chip_stage';
+import {createChipStagePublicData, SimpleChipLog} from './chip_stage';
 
 /** Chip offer assistance delegate prompt. */
 export function getChipOfferAssistanceDelegatePrompt(
@@ -14,21 +14,36 @@ export function getChipOfferAssistanceDelegatePrompt(
   playerChipQuantities: string,
   negotiationHistory: string,
   numRoundsLeft: string,
+  publicData: string,
 ) {
-  return `
-You are the trusted agent for ${playerName}. You have been delegated the authority to make all trading decisions on their behalf. Your sole directive is to secure the maximum possible surplus by the end of the game. Analyze all available information, evaluate every opportunity, and execute the trades that most effectively advance this objective.
+  return `You are role-playing as the game participant with alias ${playerName}. It is your turn to propose a trade.
 
-Your valuations of the different types of chips are: ${playerChipValues}.
-
-You now have the following amounts of each chip: ${playerChipQuantities}.
-
-The trade history so far is:
-${negotiationHistory}
-
+### Current game state
+* **Your chip valuations:** ${playerChipValues}
+ * Remember that all players value green chips at $0.50, but you do not know the other players' specific valuations for red, blue, or purple chips.
+* **Your chip inventory:** ${playerChipQuantities}.
+ * Remember that all players started with 10 chips of each color.
+* **All players' chip inventory:** ${publicData}
+* **Transaction history:** ${negotiationHistory}
+ * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
 There are only ${numRoundsLeft} rounds left.
 
-Now, you need to decide what and how much to give and to receive.
-REMEMBER the player now has the following amounts of each chip: ${playerChipQuantities}.
+### Proposing a trade
+
+
+Remember, your trade proposal must adhere to the following:
+1.  **Request:** Specify a quantity of chips of a **single color** you wish to *receive* from any other player.
+2.  **Offer:** Specify a quantity of chips of a **different color** you are willing to *give* in return.
+
+
+**Crucial strategy: rational trading**: Your trades must be **profitable for you**. This means the total value of chips you *receive* (quantity × your valuation) **must be greater than** the total value of chips you *offer* (quantity × your valuation).
+
+
+**Do NOT propose a trade if it results in a loss or zero gain for you.** You cannot offer more chips than you currently possess.
+---
+
+### Response format
+Output a proposal response. Your response **must adhere strictly to the following format**. Include **nothing else** in your output apart from these tags and their content.
 
 ${printSchema(CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG.schema!)}
 `;
@@ -106,21 +121,41 @@ export function getChipOfferAssistanceCoachPrompt(
   negotiationHistory: string,
   numRoundsLeft: number,
   offerIdea: string,
+  publicData: string,
 ) {
   return `
-You are a strategic coach for ${playerName}, dedicated to sharpening their decision-making skills. Your goal is to help them maximize their end-of-game surplus. When the player presents a trade offer, your role is to provide constructive feedback that helps them refine their own strategy and understand its long-term implications.
+  You are a strategic coach for the participant in the trading game whose alias is ${playerName}. You are dedicated to sharpening their decision-making skills so that they can make make proposals leading to maximizing the value of their chips.
 
-The player’s valuations of the different types of chips are: ${playerChipValues}.
-The player now has the following amounts of each chip: ${playerChipQuantities}.
-The trade history so far is:
-${negotiationHistory}
-
+### Current game state
+* **Your chip valuations:** ${playerChipValues}
+ * Remember that all players value green chips at $0.50, but you do not know the other players' specific valuations for red, blue, or purple chips.
+* **Your chip inventory:** ${playerChipQuantities}.
+ * Remember that all players started with 10 chips of each color.
+* **All players' chip inventory:** ${publicData}
+* **Transaction history:** ${negotiationHistory}
+ * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
 There are only ${numRoundsLeft} rounds left.
 
-Here is the player’s initial idea: ${offerIdea}.
 
-Now, you need to give the player your feedback on this initial idea.
-REMEMBER the player now has the following amounts of each chip: ${playerChipQuantities}.
+### Current user's proposal idea
+The participant's current idea is to offer the following trade proposal: ${offerIdea}.
+Your goal is to provide coaching to lead them to a better trade proposal that maximizes the value of their chips. Some coaching to consider: Can they make a better offer? Should they be trading different colors? Based on the transaction history, what is the likelihood of their proposal being accepted or rejected? What chip colors do other players appear to prioritize?
+
+### Proposing a trade
+
+Remember, a trade proposal must adhere to the following:
+1.  **Request:** Specify a quantity of chips of a **single color** you wish to *receive* from any other player.
+2.  **Offer:** Specify a quantity of chips of a **different color** you are willing to *give* in return.
+
+**Crucial strategy: rational trading**: The trades must be **profitable**. This means the total value of chips *received* (quantity x your valuation) **must be greater than** the total value of chips *offered* (quantity × your valuation).
+
+---
+
+### Response format
+
+Output a coaching response. Your response **must adhere strictly to the following format**. Include **nothing else** in your output apart from these tags and their content.
+In the <feedback> and <reasoning> tags, you will provide your coaching feedback and reasoning for providing that coaching feedback.
+
 
 ${printSchema(CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG.schema!)}
 `;
@@ -203,28 +238,40 @@ export function getChipOfferAssistanceAdvisorPrompt(
   playerChipQuantities: string,
   negotiationHistory: string,
   numRoundsLeft: string,
+  publicData: string,
 ) {
   return `
-You are a strategic advisor to ${playerName}. Your primary objective is to maximize their surplus by the end of the game. Proactively analyze the current game state to identify and recommend the most advantageous trades. For each recommendation, provide a clear rationale, including potential risks and rewards, to empower your player to make the final, informed decision.
+You are role-playing as the game participant with alias ${playerName}. It is your turn to propose a trade.
 
-The player’s valuations of the different types of chips are: ${playerChipValues}.
-
-The player now has the following amounts of each chip: ${playerChipQuantities}.
-
-The trade history so far is:
-${negotiationHistory}
-
+### Current game state
+* **Your chip valuations:** ${playerChipValues}
+ * Remember that all players value green chips at $0.50, but you do not know the other players' specific valuations for red, blue, or purple chips.
+* **Your chip inventory:** ${playerChipQuantities}.
+ * Remember that all players started with 10 chips of each color.
+* **All players' chip inventory:** ${publicData}
+* **Transaction history:** ${negotiationHistory}
+ * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
 There are only ${numRoundsLeft} rounds left.
 
-Now, you need to give the player a recommendation along with the reason.
-REMEMBER the player now has the following amounts of each chip: ${playerChipQuantities}.
+### Proposing a trade
+
+Remember, your trade proposal must adhere to the following:
+1.  **Request:** Specify a quantity of chips of a **single color** you wish to *receive* from any other player.
+2.  **Offer:** Specify a quantity of chips of a **different color** you are willing to *give* in return.
+
+**Crucial strategy: rational trading**: Your trades must be **profitable for you**. This means the total value of chips you *receive* (quantity × your valuation) **must be greater than** the total value of chips you *offer* (quantity × your valuation).
+
+**Do NOT propose a trade if it results in a loss or zero gain for you.** You cannot offer more chips than you currently possess.
+---
+
+### Response format
+Output a proposal response. Your response **must adhere strictly to the following format**. Include **nothing else** in your output apart from these tags and their content.
 
 ${printSchema(CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG.schema!)}
 `;
 }
 
-/** Chip response assistance structured output. */
-export const CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG =
+export const CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG =
   createStructuredOutputConfig({
     schema: {
       type: StructuredOutputDataType.OBJECT,
@@ -254,6 +301,30 @@ export const CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG =
     },
   });
 
+/** Chip response assistance structured output. */
+export const CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG =
+  createStructuredOutputConfig({
+    schema: {
+      type: StructuredOutputDataType.OBJECT,
+      properties: [
+        {
+          name: 'reasoning',
+          schema: {
+            type: StructuredOutputDataType.STRING,
+            description: 'Your concise reasoning in a few sentences',
+          },
+        },
+        {
+          name: 'response',
+          schema: {
+            type: StructuredOutputDataType.BOOLEAN,
+            description: 'Whether or not to accept the current offer',
+          },
+        },
+      ],
+    },
+  });
+
 /** Chip response assistance (advisor mode). */
 export function getChipResponseAssistanceAdvisorPrompt(
   playerName: string,
@@ -262,24 +333,31 @@ export function getChipResponseAssistanceAdvisorPrompt(
   negotiationHistory: string,
   numRoundsLeft: string,
   offer: string,
+  publicData: string,
 ) {
   return `
-You are a strategic advisor to ${playerName}. Your primary objective is to maximize their surplus by the end of the game. Proactively analyze the current game state to identify and recommend the most advantageous trades. For each recommendation, provide a clear rationale, including potential risks and rewards, to empower your player to make the final, informed decision.
+You are role-playing as the game participant with alias ${playerName}. It is your turn to propose a trade.
 
-The player’s valuations of the different types of chips are: ${playerChipValues}.
-
-The player now has the following amounts of each chip: ${playerChipQuantities}.
-
-The trade history so far is:
-${negotiationHistory}
-
+### Current game state
+* **Your chip valuations:** ${playerChipValues}
+ * Remember that all players value green chips at $0.50, but you do not know the other players' specific valuations for red, blue, or purple chips.
+* **Your chip inventory:** ${playerChipQuantities}.
+ * Remember that all players started with 10 chips of each color.
+* **All players' chip inventory:** ${publicData}
+* **Transaction history:** ${negotiationHistory}
+ * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
 There are only ${numRoundsLeft} rounds left.
 
+### Instructions
+Currently, you are deciding whether to accept or decline an offer.
+
+**Offer**:
 You have an offer: ${offer}
 
-Now, you need to give the player a recommendation along with the reason.
+Now, you need to decide whether to accept or decline.
+Your response must use these EXACT tags below. The response should include nothing else besides the tags, your choice to accept or decline, and your reasoning. The text between tags should be concise.
 
-${printSchema(CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG.schema!)}
+${printSchema(CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG.schema!)}
 `;
 }
 
@@ -292,26 +370,33 @@ export function getChipResponseAssistanceCoachPrompt(
   numRoundsLeft: string,
   offer: string,
   responseIdea: boolean,
+  publicData: string,
 ) {
   return `
 You are a strategic coach for ${playerName}, dedicated to sharpening their decision-making skills. Your goal is to help them maximize their end-of-game surplus. When the player presents a trade offer, your role is to provide constructive feedback that helps them refine their own strategy and understand its long-term implications.
 
-The player’s valuations of the different types of chips are: ${playerChipValues}.
-
-The player now has the following amounts of each chip: ${playerChipQuantities}.
-
-The trade history so far is:
-${negotiationHistory}
-
+### Current game state
+* **Your chip valuations:** ${playerChipValues}
+ * Remember that all players value green chips at $0.50, but you do not know the other players' specific valuations for red, blue, or purple chips.
+* **Your chip inventory:** ${playerChipQuantities}.
+ * Remember that all players started with 10 chips of each color.
+* **All players' chip inventory:** ${publicData}
+* **Transaction history:** ${negotiationHistory}
+ * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
 There are only ${numRoundsLeft} rounds left.
 
+### Instructions
+Currently, you are deciding whether to accept or decline an offer.
+Your goal is to provide coaching to lead them to a better decision that maximizes the value of their chips. Some coaching to consider: Will this trade make them better off? Is this trade profitable for them? Is this trade beneficial in the long term?
+
+**Offer**:
 You have an offer: ${offer}
 
 Here is the player's initial proposal: ${responseIdea ? 'Accept the offer' : 'Reject the offer'}
 
 Now, you need to give the player your feedback on this initial idea.
 
-${printSchema(CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG.schema!)}
+${printSchema(CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG.schema!)}
 `;
 }
 
@@ -323,24 +408,31 @@ export function getChipResponseAssistanceDelegatePrompt(
   negotiationHistory: string,
   numRoundsLeft: string,
   offer: string,
+  publicData: string,
 ) {
   return `
-You are a helpful agent to ${playerName}
+You are role-playing as the game participant with alias ${playerName}. It is your turn to propose a trade.
 
-You valuations of the different types of chips are: ${playerChipValues}.
-
-You now have the following amounts of each chip: ${playerChipQuantities}.
-
-The trade history so far is:
-${negotiationHistory}
-
+### Current game state
+* **Your chip valuations:** ${playerChipValues}
+ * Remember that all players value green chips at $0.50, but you do not know the other players' specific valuations for red, blue, or purple chips.
+* **Your chip inventory:** ${playerChipQuantities}.
+ * Remember that all players started with 10 chips of each color.
+* **All players' chip inventory:** ${publicData}
+* **Transaction history:** ${negotiationHistory}
+ * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
 There are only ${numRoundsLeft} rounds left.
 
+### Instructions
+Currently, you are deciding whether to accept or decline an offer.
+
+**Offer**:
 You have an offer: ${offer}
 
 Now, you need to decide whether to accept or decline.
+Your response must use these EXACT tags below. The response should include nothing else besides the tags, your choice to accept or decline, and your reasoning. The text between tags should be concise.
 
-${printSchema(CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG.schema!)}
+${printSchema(CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG.schema!)}
 `;
 }
 
