@@ -77,6 +77,16 @@ export class FlipCardEditor extends MobxLitElement {
           ></md-filled-text-field>
         </div>
 
+        <div class="setting-row">
+          <label class="checkbox-label">
+            <md-checkbox
+              ?checked=${this.stage.shuffleCards}
+              @change=${this.updateShuffleCards}
+            ></md-checkbox>
+            Shuffle card order for each participant
+          </label>
+        </div>
+
         ${this.stage.enableSelection
           ? html`
               <div class="setting-row">
@@ -209,6 +219,18 @@ export class FlipCardEditor extends MobxLitElement {
     const updatedStage: FlipCardStageConfig = {
       ...this.stage,
       minFlipsRequired: minMaxValue,
+    };
+
+    this.experimentEditor.updateStage(updatedStage);
+  }
+
+  private updateShuffleCards(e: Event) {
+    if (!this.stage) return;
+
+    const target = e.target as HTMLInputElement;
+    const updatedStage: FlipCardStageConfig = {
+      ...this.stage,
+      shuffleCards: target.checked,
     };
 
     this.experimentEditor.updateStage(updatedStage);

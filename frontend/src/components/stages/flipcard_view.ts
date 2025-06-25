@@ -18,6 +18,8 @@ import {
   FlipCardStageParticipantAnswer,
   createFlipCardStageParticipantAnswer,
   FlipAction,
+  seed,
+  choices,
 } from '@deliberation-lab/utils';
 
 import {core} from '../../core/core';
@@ -52,7 +54,9 @@ export class FlipCardView extends MobxLitElement {
         <stage-description .stage=${this.stage}></stage-description>
 
         <div class="cards-grid">
-          ${this.stage.cards.map((card) => this.renderCard(card, answer))}
+          ${this.getDisplayCards().map((card: FlipCard) =>
+            this.renderCard(card, answer),
+          )}
         </div>
 
         ${this.stage.enableSelection
@@ -278,6 +282,22 @@ export class FlipCardView extends MobxLitElement {
     } else {
       return this.canProceedWithMinFlips(answer);
     }
+  }
+
+  private getDisplayCards(): FlipCard[] {
+    if (!this.stage.shuffleCards) {
+      return this.stage.cards;
+    }
+
+    // Use participant ID as seed for consistent shuffling
+    const participantId = this.participantService.profile?.privateId || '';
+    let seedValue = 0;
+    for (let i = 0; i < participantId.length; i++) {
+      seedValue += participantId.charCodeAt(i);
+    }
+
+    seed(seedValue);
+    return choices(this.stage.cards, this.stage.cards.length);
   }
 
   private saveAndProgress = async () => {

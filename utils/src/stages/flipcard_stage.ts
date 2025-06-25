@@ -29,6 +29,7 @@ export interface FlipCardStageConfig extends BaseStageConfig {
   allowMultipleSelections: boolean;
   requireConfirmation: boolean;
   minFlipsRequired: number;
+  shuffleCards: boolean;
 }
 
 /** FlipCard participant answer. */
@@ -100,6 +101,7 @@ export function createFlipCardStage(
     allowMultipleSelections: config.allowMultipleSelections ?? false,
     requireConfirmation: config.requireConfirmation ?? true,
     minFlipsRequired: config.minFlipsRequired ?? 0,
+    shuffleCards: config.shuffleCards ?? false,
   };
 }
 
