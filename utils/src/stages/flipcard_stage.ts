@@ -25,6 +25,7 @@ export interface FlipCard {
 export interface FlipCardStageConfig extends BaseStageConfig {
   kind: StageKind.FLIPCARD;
   cards: FlipCard[];
+  enableSelection: boolean;
   allowMultipleSelections: boolean;
   requireConfirmation: boolean;
 }
@@ -94,6 +95,7 @@ export function createFlipCardStage(
         showParticipantProgress: true,
       }),
     cards: config.cards ?? [createFlipCard()],
+    enableSelection: config.enableSelection ?? true,
     allowMultipleSelections: config.allowMultipleSelections ?? false,
     requireConfirmation: config.requireConfirmation ?? true,
   };

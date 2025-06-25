@@ -53,11 +53,14 @@ export class FlipCardView extends MobxLitElement {
           ${this.stage.cards.map((card) => this.renderCard(card, answer))}
         </div>
 
-        <div class="actions">
-          ${this.renderSelectionInfo(answer)}
-          ${this.renderActionButtons(answer)}
-        </div>
-
+        ${this.stage.enableSelection
+          ? html`
+              <div class="actions">
+                ${this.renderSelectionInfo(answer)}
+                ${this.renderActionButtons(answer)}
+              </div>
+            `
+          : nothing}
         ${isComplete
           ? html`<progress-stage-completed></progress-stage-completed>`
           : nothing}
@@ -92,12 +95,16 @@ export class FlipCardView extends MobxLitElement {
               >
                 Learn More
               </md-text-button>
-              <md-filled-button
-                @click=${() => this.selectCard(card.id)}
-                ?disabled=${isConfirmed}
-              >
-                Select
-              </md-filled-button>
+              ${this.stage.enableSelection
+                ? html`
+                    <md-filled-button
+                      @click=${() => this.selectCard(card.id)}
+                      ?disabled=${isConfirmed}
+                    >
+                      Select
+                    </md-filled-button>
+                  `
+                : nothing}
             </div>
           </div>
 

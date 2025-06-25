@@ -55,22 +55,36 @@ export class FlipCardEditor extends MobxLitElement {
         <div class="setting-row">
           <label class="checkbox-label">
             <md-checkbox
-              ?checked=${this.stage.allowMultipleSelections}
-              @change=${this.updateAllowMultipleSelections}
+              ?checked=${this.stage.enableSelection}
+              @change=${this.updateEnableSelection}
             ></md-checkbox>
-            Allow multiple selections
+            Enable card selection
           </label>
         </div>
 
-        <div class="setting-row">
-          <label class="checkbox-label">
-            <md-checkbox
-              ?checked=${this.stage.requireConfirmation}
-              @change=${this.updateRequireConfirmation}
-            ></md-checkbox>
-            Require confirmation to complete stage
-          </label>
-        </div>
+        ${this.stage.enableSelection
+          ? html`
+              <div class="setting-row">
+                <label class="checkbox-label">
+                  <md-checkbox
+                    ?checked=${this.stage.allowMultipleSelections}
+                    @change=${this.updateAllowMultipleSelections}
+                  ></md-checkbox>
+                  Allow multiple selections
+                </label>
+              </div>
+
+              <div class="setting-row">
+                <label class="checkbox-label">
+                  <md-checkbox
+                    ?checked=${this.stage.requireConfirmation}
+                    @change=${this.updateRequireConfirmation}
+                  ></md-checkbox>
+                  Require confirmation to complete stage
+                </label>
+              </div>
+            `
+          : nothing}
       </div>
     `;
   }
@@ -155,6 +169,18 @@ export class FlipCardEditor extends MobxLitElement {
         </div>
       </div>
     `;
+  }
+
+  private updateEnableSelection(e: Event) {
+    if (!this.stage) return;
+
+    const target = e.target as HTMLInputElement;
+    const updatedStage: FlipCardStageConfig = {
+      ...this.stage,
+      enableSelection: target.checked,
+    };
+
+    this.experimentEditor.updateStage(updatedStage);
   }
 
   private updateAllowMultipleSelections(e: Event) {
