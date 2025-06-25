@@ -43,7 +43,7 @@ export class FlipCardView extends MobxLitElement {
     }
 
     const answer = this.getParticipantAnswer();
-    const isComplete = answer.confirmed;
+    const isComplete = this.isStageComplete(answer);
 
     return html`
       <div class="stage-container">
@@ -61,10 +61,15 @@ export class FlipCardView extends MobxLitElement {
               </div>
             `
           : nothing}
-        ${isComplete
-          ? html`<progress-stage-completed></progress-stage-completed>`
-          : nothing}
-        <stage-footer .stage=${this.stage}></stage-footer>
+        <stage-footer
+          .stage=${this.stage}
+          .disabled=${!isComplete}
+          .onNextClick=${this.saveAndProgress}
+        >
+          ${isComplete
+            ? html`<progress-stage-completed></progress-stage-completed>`
+            : nothing}
+        </stage-footer>
       </div>
     `;
   }
@@ -99,7 +104,8 @@ export class FlipCardView extends MobxLitElement {
                 ? html`
                     <md-filled-button
                       @click=${() => this.selectCard(card.id)}
-                      ?disabled=${isConfirmed}
+                      ?disabled=${isConfirmed ||
+                      !this.canProceedWithMinFlips(answer)}
                     >
                       Select
                     </md-filled-button>
@@ -156,9 +162,14 @@ export class FlipCardView extends MobxLitElement {
       return nothing;
     }
 
+    const canProceed = this.canProceedWithMinFlips(answer);
+
     return html`
       <div class="action-buttons">
-        <md-filled-button @click=${this.confirmSelection}>
+        <md-filled-button
+          @click=${this.confirmSelection}
+          ?disabled=${!canProceed}
+        >
           Confirm Selection
         </md-filled-button>
       </div>
@@ -201,7 +212,7 @@ export class FlipCardView extends MobxLitElement {
     let updatedSelectedIds: string[];
     if (this.stage.allowMultipleSelections) {
       updatedSelectedIds = answer.selectedCardIds.includes(cardId)
-        ? answer.selectedCardIds.filter((id) => id !== cardId)
+        ? answer.selectedCardIds.filter((id: string) => id !== cardId)
         : [...answer.selectedCardIds, cardId];
     } else {
       updatedSelectedIds = [cardId];
@@ -218,6 +229,7 @@ export class FlipCardView extends MobxLitElement {
   private async confirmSelection() {
     const answer = this.getParticipantAnswer();
     if (answer.selectedCardIds.length === 0) return;
+    if (!this.canProceedWithMinFlips(answer)) return;
 
     const updatedAnswer: FlipCardStageParticipantAnswer = {
       ...answer,
@@ -230,6 +242,42 @@ export class FlipCardView extends MobxLitElement {
     // Save to Firebase
     await this.participantAnswerService.saveFlipCardAnswers(this.stage.id);
   }
+
+  private getUniqueFlippedCardsCount(
+    answer: FlipCardStageParticipantAnswer,
+  ): number {
+    // Count unique cards that have been flipped to back at least once
+    const uniqueFlippedCards = new Set(
+      answer.flipHistory
+        .filter((action: FlipAction) => action.action === 'flip_to_back')
+        .map((action: FlipAction) => action.cardId),
+    );
+    return uniqueFlippedCards.size;
+  }
+
+  private canProceedWithMinFlips(
+    answer: FlipCardStageParticipantAnswer,
+  ): boolean {
+    if (this.stage.minFlipsRequired === 0) {
+      return true;
+    }
+    return (
+      this.getUniqueFlippedCardsCount(answer) >= this.stage.minFlipsRequired
+    );
+  }
+
+  private isStageComplete(answer: FlipCardStageParticipantAnswer): boolean {
+    if (this.stage.enableSelection) {
+      return answer.confirmed && this.canProceedWithMinFlips(answer);
+    } else {
+      return this.canProceedWithMinFlips(answer);
+    }
+  }
+
+  private saveAndProgress = async () => {
+    await this.participantAnswerService.saveFlipCardAnswers(this.stage.id);
+    await this.participantService.progressToNextStage();
+  };
 
   private getParticipantAnswer(): FlipCardStageParticipantAnswer {
     const existingAnswer =

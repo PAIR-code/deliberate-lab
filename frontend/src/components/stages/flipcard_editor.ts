@@ -10,6 +10,7 @@ import '@material/web/button/text-button.js';
 import '@material/web/checkbox/checkbox.js';
 import '@material/web/icon/icon.js';
 import '@material/web/iconbutton/icon-button.js';
+import '@material/web/textfield/filled-text-field.js';
 
 import {core} from '../../core/core';
 import {ExperimentEditor} from '../../services/experiment.editor';
@@ -60,6 +61,20 @@ export class FlipCardEditor extends MobxLitElement {
             ></md-checkbox>
             Enable card selection
           </label>
+        </div>
+
+        <div class="setting-row">
+          <label class="field-label"
+            >Minimum flips required (0 = disabled)</label
+          >
+          <md-filled-text-field
+            type="number"
+            .value=${this.stage.minFlipsRequired.toString()}
+            @input=${this.updateMinFlipsRequired}
+            min="0"
+            max="${this.stage.cards.length}"
+            ?disabled=${!this.experimentEditor.canEditStages}
+          ></md-filled-text-field>
         </div>
 
         ${this.stage.enableSelection
@@ -178,6 +193,22 @@ export class FlipCardEditor extends MobxLitElement {
     const updatedStage: FlipCardStageConfig = {
       ...this.stage,
       enableSelection: target.checked,
+    };
+
+    this.experimentEditor.updateStage(updatedStage);
+  }
+
+  private updateMinFlipsRequired(e: Event) {
+    if (!this.stage) return;
+
+    const target = e.target as HTMLInputElement;
+    const value = parseInt(target.value, 10) || 0;
+    const maxValue = this.stage.cards.length;
+    const minMaxValue = Math.max(0, Math.min(value, maxValue));
+
+    const updatedStage: FlipCardStageConfig = {
+      ...this.stage,
+      minFlipsRequired: minMaxValue,
     };
 
     this.experimentEditor.updateStage(updatedStage);
