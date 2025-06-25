@@ -266,6 +266,18 @@ export class ChipView extends MobxLitElement {
       this.resetChipValues();
     };
 
+    return html`
+      <div class="offer-panel">
+        <div class="offer-description">
+          ✋ It's your turn! Make an offer to the other participants.
+        </div>
+        ${this.renderManualOffer(sendOffer)} ${this.renderDelegateButton()}
+        ${this.renderAdvisorButton()} ${this.renderCoachButton()}
+      </div>
+    `;
+  }
+
+  private renderManualOffer(sendOffer: () => void) {
     const renderOfferPayout = () => {
       if (this.isOfferIncomplete() || !this.isOfferValid()) {
         return nothing;
@@ -319,56 +331,40 @@ export class ChipView extends MobxLitElement {
       `;
     };
 
-    if (this.isOfferPending()) {
-      return html`
-        <div class="offer-panel">
-          Waiting on other participants to respond to your offer...
-        </div>
-      `;
-    }
-
     return html`
-      <div class="offer-panel">
-        <div class="offer-description">
-          ✋ It's your turn! Make an offer to the other participants.
+      <div class="offer-form">
+        <div class="offer-config">
+          <label class="offer-config-label">You give:</label>
+          ${this.renderChipNumberInput(this.sellChipAmount, (value) => {
+            this.sellChipAmount = value;
+          })}
+          ${this.renderChipSelector(this.selectedSellChip, (value) => {
+            this.selectedSellChip = value;
+          })}
         </div>
-
-        <div class="offer-form">
-          <div class="offer-config">
-            <label class="offer-config-label">You give:</label>
-            ${this.renderChipNumberInput(this.sellChipAmount, (value) => {
-              this.sellChipAmount = value;
-            })}
-            ${this.renderChipSelector(this.selectedSellChip, (value) => {
-              this.selectedSellChip = value;
-            })}
-          </div>
-          <div class="offer-config">
-            <label class="offer-config-label">You get:</label>
-            ${this.renderChipNumberInput(this.buyChipAmount, (value) => {
-              this.buyChipAmount = value;
-            })}
-            ${this.renderChipSelector(this.selectedBuyChip, (value) => {
-              this.selectedBuyChip = value;
-            })}
-          </div>
+        <div class="offer-config">
+          <label class="offer-config-label">You get:</label>
+          ${this.renderChipNumberInput(this.buyChipAmount, (value) => {
+            this.buyChipAmount = value;
+          })}
+          ${this.renderChipSelector(this.selectedBuyChip, (value) => {
+            this.selectedBuyChip = value;
+          })}
         </div>
-        <div class="buttons">
-          <pr-button
-            ?loading=${this.isOfferLoading}
-            ?disabled=${this.isOfferEmpty() ||
-            !this.isOfferValid() ||
-            this.isOfferPending()}
-            @click=${sendOffer}
-          >
-            ${this.isOfferPending()
-              ? 'Offer sent and pending...'
-              : 'Submit offer'}
-          </pr-button>
-          <div>${renderOfferPayout()} ${renderValidationMessages()}</div>
-        </div>
-        ${this.renderDelegateButton()} ${this.renderAdvisorButton()}
-        ${this.renderCoachButton()}
+      </div>
+      <div class="buttons">
+        <pr-button
+          ?loading=${this.isOfferLoading}
+          ?disabled=${this.isOfferEmpty() ||
+          !this.isOfferValid() ||
+          this.isOfferPending()}
+          @click=${sendOffer}
+        >
+          ${this.isOfferPending()
+            ? 'Offer sent and pending...'
+            : 'Submit offer'}
+        </pr-button>
+        <div>${renderOfferPayout()} ${renderValidationMessages()}</div>
       </div>
     `;
   }
@@ -516,33 +512,68 @@ export class ChipView extends MobxLitElement {
           </p>
           ${displayHypotheticalTotal()}
         </div>
+        ${this.renderManualResponse(acceptOffer, rejectOffer)}
         <div class="buttons">
-          <pr-tooltip
-            text=${!canAcceptOffer()
-              ? 'You do not have enough chips to accept this offer.'
-              : ''}
-            position="BOTTOM_START"
-          >
-            <pr-button
-              variant="tonal"
-              ?loading=${this.isAcceptOfferLoading}
-              ?disabled=${this.isResponsePending() || !canAcceptOffer()}
-              @click=${acceptOffer}
-            >
-              Accept offer
-            </pr-button>
-          </pr-tooltip>
-          <pr-button
-            color="error"
-            variant="tonal"
-            ?loading=${this.isRejectOfferLoading}
-            ?disabled=${this.isResponsePending()}
-            @click=${rejectOffer}
-          >
-            Reject offer
-          </pr-button>
           ${this.renderDelegateButton()} ${this.renderAdvisorButton()}
         </div>
+      </div>
+    `;
+  }
+
+  private renderManualResponse(
+    acceptOffer: () => void,
+    rejectOffer: () => void,
+  ) {
+    const offer = this.getCurrentTransaction()?.offer ?? null;
+    if (this.isResponsePending()) {
+      return html`<div class="offer-panel">
+        Waiting for others to respond...
+      </div>`;
+    }
+    if (!offer) {
+      return html`<div class="offer-panel">Waiting for an offer...</div>`;
+    }
+
+    const canAcceptOffer = () => {
+      if (!this.stage) return;
+      const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
+      if (publicData?.kind !== StageKind.CHIP) return nothing;
+
+      const buyChip = Object.keys(offer.buy)[0];
+
+      const publicId = this.participantService.profile?.publicId ?? '';
+      const participantChipMap = publicData.participantChipMap[publicId] ?? {};
+      const availableSell = participantChipMap[buyChip] ?? 0;
+
+      return availableSell >= offer.buy[buyChip];
+    };
+
+    return html`
+      <div class="buttons">
+        <pr-tooltip
+          text=${!canAcceptOffer()
+            ? 'You do not have enough chips to accept this offer.'
+            : ''}
+          position="BOTTOM_START"
+        >
+          <pr-button
+            variant="tonal"
+            ?loading=${this.isAcceptOfferLoading}
+            ?disabled=${this.isResponsePending() || !canAcceptOffer()}
+            @click=${acceptOffer}
+          >
+            Accept offer
+          </pr-button>
+        </pr-tooltip>
+        <pr-button
+          color="error"
+          variant="tonal"
+          ?loading=${this.isRejectOfferLoading}
+          ?disabled=${this.isResponsePending()}
+          @click=${rejectOffer}
+        >
+          Reject offer
+        </pr-button>
       </div>
     `;
   }
