@@ -16,9 +16,9 @@
 
 .header {
   @include common.flex-row-align-center;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
   justify-content: space-between;
   padding-bottom: common.$spacing-small;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .title {
@@ -28,11 +28,11 @@
 
 .settings {
   @include common.flex-column;
+  background: var(--md-sys-color-surface-variant);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-small;
   gap: common.$spacing-medium;
   padding: common.$spacing-medium;
-  background: var(--md-sys-color-surface-variant);
-  border-radius: common.$spacing-small;
-  border: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .setting-row {
@@ -42,10 +42,10 @@
 
 .checkbox-label {
   @include common.flex-row-align-center;
-  gap: common.$spacing-small;
   @include typescale.body-medium;
   color: var(--md-sys-color-on-surface);
   cursor: pointer;
+  gap: common.$spacing-small;
 }
 
 .cards-section {
@@ -60,11 +60,11 @@
 
 .card-editor {
   @include common.flex-column;
-  gap: common.$spacing-medium;
+  background: var(--md-sys-color-surface);
   border: 2px solid var(--md-sys-color-outline-variant);
   border-radius: common.$spacing-medium;
+  gap: common.$spacing-medium;
   padding: common.$spacing-medium;
-  background: var(--md-sys-color-surface);
   transition: border-color 0.2s ease;
 
   &:hover {
@@ -74,9 +74,9 @@
 
 .card-header {
   @include common.flex-row-align-center;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
   justify-content: space-between;
   padding-bottom: common.$spacing-small;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .card-title-label {
@@ -108,8 +108,8 @@
 // Responsive design
 @include common.viewport-small {
   .header {
-    flex-direction: column;
     align-items: flex-start;
+    flex-direction: column;
     gap: common.$spacing-small;
   }
 
