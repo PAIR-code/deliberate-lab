@@ -18,7 +18,6 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: common.$spacing-large;
-  margin: common.$spacing-large 0;
 }
 
 .card-container {
@@ -56,6 +55,7 @@
   padding: common.$spacing-medium;
   background: var(--md-sys-color-surface);
   @include common.flex-column;
+  gap: common.$spacing-medium;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
 }
@@ -81,7 +81,7 @@
   @include typescale.label-large;
   color: var(--md-sys-color-on-surface);
   margin: 0 0 common.$spacing-medium 0;
-  padding-bottom: common.$spacing-small;
+  padding-bottom: common.$spacing-medium;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
@@ -89,7 +89,6 @@
   flex: 1;
   color: var(--md-sys-color-on-surface-variant);
   line-height: 1.5;
-  margin-bottom: common.$spacing-medium;
   overflow-y: auto;
   text-align: left;
 }
@@ -103,7 +102,6 @@
   gap: common.$spacing-small;
   justify-content: space-between;
   align-items: center;
-  margin-top: auto;
 }
 
 .actions {

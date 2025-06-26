@@ -62,6 +62,8 @@
 }
 
 .card-editor {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
   border: 2px solid var(--md-sys-color-outline-variant);
   border-radius: common.$spacing-medium;
   padding: common.$spacing-medium;
@@ -77,7 +79,6 @@
   @include common.flex-row;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: common.$spacing-medium;
   padding-bottom: common.$spacing-small;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
