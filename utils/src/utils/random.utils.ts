@@ -40,7 +40,7 @@ export const choice = <T>(array: readonly T[]): T => {
 
 /** Chooses n random distinct values from an array. The array is not modified. */
 export const choices = <T>(array: readonly T[], n: number): T[] => {
-  if (array.length <= n) {
+  if (array.length < n) {
     throw new Error(
       `Cannot choose ${n} distinct values from an array of length ${array.length}`,
     );
