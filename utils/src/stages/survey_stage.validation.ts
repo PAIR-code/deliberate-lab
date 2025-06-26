@@ -67,6 +67,9 @@ export const ScaleSurveyQuestionData = Type.Object(
     upperText: Type.String(),
     lowerValue: Type.Number(),
     lowerText: Type.String(),
+    middleText: Type.String(),
+    useSlider: Type.Boolean(),
+    stepSize: Type.Number({minimum: 1}),
   },
   strict,
 );
