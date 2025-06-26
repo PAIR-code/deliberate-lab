@@ -1,5 +1,3 @@
-import {FlipCardStagePublicData} from '@deliberation-lab/utils';
-
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import {onCall} from 'firebase-functions/v2/https';
@@ -11,7 +9,7 @@ import {app} from '../app';
 // ************************************************************************* //
 // updateFlipCardStageParticipantAnswer endpoint                            //
 //                                                                           //
-// Updates participant's FlipCard answer and public data                    //
+// Updates participant's FlipCard answer (public data updated by trigger)  //
 // ************************************************************************* //
 
 export const updateFlipCardStageParticipantAnswer = onCall(async (request) => {
@@ -19,19 +17,12 @@ export const updateFlipCardStageParticipantAnswer = onCall(async (request) => {
 
   try {
     // Extract required fields
-    const {
-      experimentId,
-      cohortId,
-      participantPrivateId,
-      participantPublicId,
-      flipCardStageParticipantAnswer,
-    } = data;
+    const {experimentId, participantPrivateId, flipCardStageParticipantAnswer} =
+      data;
 
     if (
       !experimentId ||
-      !cohortId ||
       !participantPrivateId ||
-      !participantPublicId ||
       !flipCardStageParticipantAnswer
     ) {
       throw new functions.https.HttpsError(
@@ -50,47 +41,13 @@ export const updateFlipCardStageParticipantAnswer = onCall(async (request) => {
       .collection('stageData')
       .doc(flipCardStageParticipantAnswer.id);
 
-    // Define public stage document reference
-    const publicDocument = app
-      .firestore()
-      .collection('experiments')
-      .doc(experimentId)
-      .collection('cohorts')
-      .doc(cohortId)
-      .collection('publicStageData')
-      .doc(flipCardStageParticipantAnswer.id);
-
-    // Update participant answer and public data in a transaction
+    // Update participant answer only (public data will be updated by trigger)
     await app.firestore().runTransaction(async (transaction) => {
-      // Read current public data first (all reads must come before writes)
-      const publicDoc = await transaction.get(publicDocument);
-      const publicData = publicDoc.data() as
-        | FlipCardStagePublicData
-        | undefined;
-
       // Update participant's answer
       transaction.set(participantDocument, {
         ...flipCardStageParticipantAnswer,
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
       });
-
-      if (publicData) {
-        // Update public data with participant's flip history and selections
-        const updatedPublicData: FlipCardStagePublicData = {
-          ...publicData,
-          participantFlipHistory: {
-            ...publicData.participantFlipHistory,
-            [participantPublicId]: flipCardStageParticipantAnswer.flipHistory,
-          },
-          participantSelections: {
-            ...publicData.participantSelections,
-            [participantPublicId]:
-              flipCardStageParticipantAnswer.selectedCardIds,
-          },
-        };
-
-        transaction.set(publicDocument, updatedPublicData);
-      }
     });
 
     return {success: true};
