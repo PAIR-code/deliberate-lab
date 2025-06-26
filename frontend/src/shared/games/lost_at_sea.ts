@@ -308,7 +308,7 @@ const LAS_INTRO_INFO_LINES = [
   'You will receive a **fixed fee of £3** for your participation, with an opportunity to earn a **£2 bonus**. We will explain precisely how your bonus is determined later.',
   'At the end of the experiment, you will be redirected to a waiting page. This waiting time is part of the experiment and has been factored into your payment. **You will not be approved for the payout if you do not remain on this waiting page for the full requested duration**.',
   'During this waiting time, you may be invited to continue the experiment by completing two additional parts, Part 2 and Part 3. These parts will be played in *groups of four*, and should take an estimated additional 30 minutes.  You will receive a **fixed fee of £6 for completing Parts 2 and 3. Additionally, you will have the opportunity to earn a **£2 bonus**, based on your decisions and the decisions of other participants  in these parts. One of the 2 parts will be randomly selected to determine this bonus.',
-  'To sum up:\n\n* You’ll complete a first part *individually*, and then wait to see if you are selected to take part in the next part of the experiment.\n* You need to wait the full amount of time to get your payoff for Part 1, even though you are not selected or choose to leave the experiment.\n* If you receive an invitation, you can then start the rest of the experiment, that is played in *groups of 4 participants*.',
+  "To sum up:\n\n* You'll complete a first part *individually*, and then wait to see if you are selected to take part in the next part of the experiment.\n* You need to wait the full amount of time to get your payoff for Part 1, even though you are not selected or choose to leave the experiment.\n* If you receive an invitation, you can then start the rest of the experiment, that is played in *groups of 4 participants*.",
   '💸 Your payments will be translated into the currency of your specification when they are paid out to you on the Prolific platform. **Please allow us 24-48 hours to process the payments.**',
   '‼️ If you experience technical difficulties during the study, **please message the experiment administrators on Prolific as soon as possible.**',
   'Please click “Next stage” to proceed.',
@@ -530,7 +530,7 @@ export const COMPREHENSION_CHECK = createComprehensionStage({
           }),
           createMultipleChoiceItem({
             id: 'c',
-            text: 'One randomly drawn question from either Part 2 (where your own answers determine your payoff) or Part 3 (where the leaders’ answers determine your payoff).',
+            text: "One randomly drawn question from either Part 2 (where your own answers determine your payoff) or Part 3 (where the leaders' answers determine your payoff).",
           }),
         ],
       },
@@ -550,13 +550,13 @@ const LAS_PART_2_INSTRUCTIONS_INFO_LINES = [
   '2. **Opportunity to update your individual answers from Part 1**',
   '3. **Election of a group leader**',
   '\n\n## Group discussion about Part 1 answers',
-  'Your group will engage in a free-form chat discussion to evaluate the relative importance of the different items you’ve already seen in Part 1, based on their importance for group survival. More details about the chat will be given later.',
+  "Your group will engage in a free-form chat discussion to evaluate the relative importance of the different items you've already seen in Part 1, based on their importance for group survival. More details about the chat will be given later.",
   '\n\n## Opportunity to update your individual answer',
   'After the chat ends, you will have the chance to revise the individual answers you provided in Part 1 of the experiment. You can choose to update your previous answers or to keep them the same.',
   "\n\nIf a question from Part 2 is selected to determine your final payoff, your answers will be evaluated in the same way as in Part 1. Your answers will be compared to a panel of experts' solutions, and you will earn £2 if your answer is correct, and £0 otherwise.",
   '\n\nPlease note that Part 1 and Part 2 of the experiment are independent. Changing answers here will not impact the answers you provided in Part 1.',
   '\n\n## Election of a group leader for Part 3',
-  "After the chat, and after you’ve had the chance to update your individual answers, you will be asked to elect a group leader who will play a crucial role in Part 3 of the experiment. In Part 3, your group will repeat the same task as in Part 1, but with different pairs of items. The leader’s answers regarding the most important items for survival will determine the team's final payoff.",
+  "After the chat, and after you've had the chance to update your individual answers, you will be asked to elect a group leader who will play a crucial role in Part 3 of the experiment. In Part 3, your group will repeat the same task as in Part 1, but with different pairs of items. The leader's answers regarding the most important items for survival will determine the team's final payoff.",
 ];
 
 const LAS_PART_2_INSTRUCTIONS_STAGE = createInfoStage({
@@ -612,16 +612,16 @@ const LAS_PART_2_PERFORMANCE_ESTIMATION_SURVEY_STAGE = createSurveyStage({
 // ****************************************************************************
 const LAS_PART_2_GROUP_INSTRUCTIONS_INFO_LINES = [
   '## Group discussion about Part 1 answers',
-  'Your group will engage in a free-form chat discussion to evaluate the relative importance of the different items you’ve already seen in Part 1, based on their importance for group survival. More details about the chat will be given later.',
+  "Your group will engage in a free-form chat discussion to evaluate the relative importance of the different items you've already seen in Part 1, based on their importance for group survival. More details about the chat will be given later.",
   '## Opportunity to update your individual answer',
   'After the chat ends, you will have the chance to revise the individual answers you provided in Part 1 of the experiment. You can choose to update your previous answers or to keep them the same.',
   'Please note that Part 1 and Part 2 of the experiment are independent. Changing answers here will not impact the answers you provided in Part 1.',
   '## Election of a group leader for Part 3',
-  "After the chat, and after you’ve had the chance to update your individual answers, you will be asked to elect a group leader who will play a crucial role in Part 3 of the experiment. In Part 3, your group will repeat the same task as in Part 1, but with different pairs of items. The leader’s answers regarding the most important items for survival will determine the team's final payoff.",
+  "After the chat, and after you've had the chance to update your individual answers, you will be asked to elect a group leader who will play a crucial role in Part 3 of the experiment. In Part 3, your group will repeat the same task as in Part 1, but with different pairs of items. The leader's answers regarding the most important items for survival will determine the team's final payoff.",
   '## Payment for Parts 2 and 3',
   'Your payment for Parts 2 and 3 includes a fixed fee of £6 and a bonus. The bonus is determined by randomly selecting either Part 2 or Part 3.',
   '* If Part 2 is selected: One question is randomly chosen from Part 2. You earn £2 if your answer is correct, and £0 otherwise.',
-  '* If Part 3 is selected: One question is randomly chosen from Part 3, with only the leader’s answer counting. You earn £2 if the leader’s answer is correct, and £0 otherwise.',
+  "* If Part 3 is selected: One question is randomly chosen from Part 3, with only the leader's answer counting. You earn £2 if the leader's answer is correct, and £0 otherwise.",
 ];
 
 const LAS_PART_2_GROUP_INSTRUCTIONS_STAGE = createInfoStage({
@@ -704,7 +704,7 @@ export const LAS_PART_2_ELECTION_INFO_LINES = [
   '- The two group members who express the most interest in becoming the leader will be selected as candidates for the election. If several group members choose the same number, the computer will randomly determine the order of these group members.',
   '- The highest-ranked candidate among the two will be elected as leader. If both candidates tie, the decision will be made randomly.',
   '\n\nWith this process, you are asked to rank your team members before knowing who the candidates are. Only the rankings of the two group members who are not candidates will be considered. This ensures that you cannot vote strategically to increase your own chances of being elected as the leader. Therefore, it is in the interest of all group members to provide their true, preferred ranking of the other group members.',
-  '\n\nWhile these calculations are being performed, you will be invited to complete Part 3. Keep in mind that your performance might determine everyone’s payoff for this part, as you could potentially be the leader without knowing it yet.',
+  "\n\nWhile these calculations are being performed, you will be invited to complete Part 3. Keep in mind that your performance might determine everyone's payoff for this part, as you could potentially be the leader without knowing it yet.",
   '\n\nYou will learn who the candidates were and who is elected as the leader at the end of Part 3. Your score indicating how much you wanted to become the leader will not be disclosed to the group.',
 ];
 
@@ -843,8 +843,8 @@ export const LAS_PART_2_GENDER_GUESS = createSurveyPerParticipantStage({
 // Part 3 Instructions info stage
 // ****************************************************************************
 const LAS_PART_3_INSTRUCTIONS_INFO_LINES = [
-  'You are invited to complete Part 3, while the computer gathers information to determine who the elected leader is. In this part, everyone will complete the same task as in Part 1, but with a new set of questions. However, only the leader’s answers will determine the payoff for this task.',
-  '\n\nSince you could potentially be the leader without knowing it yet, keep in mind that your performance might determine everyone’s payoff for this part.',
+  "You are invited to complete Part 3, while the computer gathers information to determine who the elected leader is. In this part, everyone will complete the same task as in Part 1, but with a new set of questions. However, only the leader's answers will determine the payoff for this task.",
+  "\n\nSince you could potentially be the leader without knowing it yet, keep in mind that your performance might determine everyone's payoff for this part.",
   "\n\nFor each question, the leader's answers will be evaluated in the same manner as in Part 1 and will determine the payoff for all group members. Thus, if a question from Part 3 is selected to determine your final payoff, it will be the leader's answer that counts.",
   '\n\nAfter the task ends, the entire group will be informed who the candidates were and who was elected as the leader. Your score indicating how much you wanted to become the leader will not be disclosed to the group.',
 ];
@@ -906,7 +906,7 @@ export const LAS_PAYMENT_PARTS_2_AND_3_DESCRIPTION = `Your payment for Parts 2 a
 
 export const LAS_PAYMENT_PART_2_DESCRIPTION = `One question is randomly chosen from Part 2. You earn £2 if your answer is correct, and £0 otherwise.`;
 
-export const LAS_PAYMENT_PART_3_DESCRIPTION = `One question is randomly chosen from Part 3, with only the leader’s answer counting. You earn £2 if the leader’s answer is correct, and £0 otherwise.`;
+export const LAS_PAYMENT_PART_3_DESCRIPTION = `One question is randomly chosen from Part 3, with only the leader's answer counting. You earn £2 if the leader's answer is correct, and £0 otherwise.`;
 
 export const LAS_PAYMENT_INSTRUCTIONS = [
   '## Part 1 Payment:',
@@ -996,88 +996,67 @@ const LAS_PAYOUT_STAGE = createPayoutStage({
 const LAS_FINAL_DESCRIPTION_PRIMARY = `Thank you for participating in this experiment. After completing the final survey, clicking 'End experiment' will redirect you to Prolific.`;
 
 export const LAS_FINAL_SURVEY_QUESTIONS: SurveyQuestion[] = [
-  {
+  createTextSurveyQuestion({
     id: '0',
-    kind: SurveyQuestionKind.TEXT,
     questionTitle:
       'During the experiment, you were asked to rank the members of your group based on who you believed should become the group leader. Can you explain the reasons behind your ranking? Please provide specific and concrete arguments for your choices.',
-  },
-  {
+  }),
+  createScaleSurveyQuestion({
     id: '1',
-    kind: SurveyQuestionKind.SCALE,
     questionTitle:
-      'On the scale from 1 to 10, how satisfied are you by the leader’s performance in this task? (if you’re the leader, rate your own performance)',
+      "On the scale from 1 to 10, how satisfied are you by the leader's performance in this task? (if you're the leader, rate your own performance)",
     lowerText: 'Not at all satisfied',
     lowerValue: 0,
     upperText: 'Very satisfied',
     upperValue: 10,
-    middleText: '',
-    useSlider: false,
-    stepSize: 1,
-  },
-  {
+  }),
+  createTextSurveyQuestion({
     id: '2',
-    kind: SurveyQuestionKind.TEXT,
     questionTitle:
       'Consider the survival task performed in this study. Did you have any prior knowledge or experience in the domain of survival that could have helped you solve the task? If yes, please share specific memories or experiences that explain your answer.',
-  },
+  }),
 
-  {
+  createTextSurveyQuestion({
     id: '3',
-    kind: SurveyQuestionKind.TEXT,
     questionTitle:
       'Do you have previous experience of leadership activities? If yes, please share specific memories or experiences that explain your answer.',
-  },
-  {
+  }),
+  createScaleSurveyQuestion({
     id: '4',
-    kind: SurveyQuestionKind.SCALE,
     questionTitle:
       'In general, how willing or unwilling are you to take risks on a scale from 0 to 10?',
     lowerText: 'Completely unwilling to take risks',
     lowerValue: 0,
     upperText: 'Very willing to take risks',
     upperValue: 10,
-    middleText: '',
-    useSlider: false,
-    stepSize: 1,
-  },
-  {
+  }),
+  createScaleSurveyQuestion({
     id: '5',
-    kind: SurveyQuestionKind.SCALE,
     questionTitle:
       'Consider the survival task performed in this study. On average, do you think that men are better at such tasks, that men and women are equally good, or that women are better?',
     lowerText: 'Men are better',
     lowerValue: 0,
     upperText: 'Women are better',
     upperValue: 10,
-    middleText: '',
-    useSlider: false,
-    stepSize: 1,
-  },
-  {
+  }),
+  createScaleSurveyQuestion({
     id: '6',
-    kind: SurveyQuestionKind.SCALE,
     questionTitle:
       'On average, do you think that men are better leaders, that men and women are equally good leaders, or that women are better leaders.',
     lowerText: 'Men are better',
     lowerValue: 0,
     upperText: 'Women are better',
     upperValue: 10,
-    middleText: '',
-    useSlider: false,
-    stepSize: 1,
-  },
-  {
+  }),
+  createTextSurveyQuestion({
     id: '7',
-    kind: SurveyQuestionKind.TEXT,
     questionTitle:
       'Would you like to share any more context about your reasoning in this task?',
-  },
-  {
+  }),
+  createTextSurveyQuestion({
     id: '8',
-    kind: SurveyQuestionKind.TEXT,
     questionTitle: 'Would you like to share any feedback about the task?',
-  },
+  }),
 ];
 
 const LAS_FINAL_SURVEY_STAGE = createSurveyStage({
