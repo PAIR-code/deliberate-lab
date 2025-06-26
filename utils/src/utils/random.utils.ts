@@ -57,6 +57,24 @@ export const choices = <T>(array: readonly T[], n: number): T[] => {
   return result;
 };
 
+/** Shuffles an array using a string seed for consistent results. */
+export const shuffleWithSeed = <T>(
+  array: readonly T[],
+  seedString: string,
+): T[] => {
+  // Convert string to numeric seed
+  let seedValue = 0;
+  for (let i = 0; i < seedString.length; i++) {
+    seedValue += seedString.charCodeAt(i);
+  }
+
+  // Set the seed
+  seed(seedValue);
+
+  // Return all items in shuffled order
+  return choices(array, array.length);
+};
+
 /** Generates a random alphanumeric string of length n. */
 export const randstr = (n: number): string => {
   const characters =

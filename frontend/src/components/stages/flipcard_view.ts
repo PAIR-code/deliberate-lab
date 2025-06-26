@@ -18,9 +18,13 @@ import {
   FlipCardStageParticipantAnswer,
   createFlipCardStageParticipantAnswer,
   FlipAction,
-  seed,
-  choices,
 } from '@deliberation-lab/utils';
+import {
+  getUniqueFlippedCardsCount,
+  canProceedWithMinFlips,
+  isStageComplete,
+} from '@deliberation-lab/utils/src/stages/flipcard_stage.utils';
+import {shuffleWithSeed} from '@deliberation-lab/utils/src/utils/random.utils';
 import {Timestamp} from 'firebase/firestore';
 
 import {core} from '../../core/core';
@@ -48,7 +52,7 @@ export class FlipCardView extends MobxLitElement {
     }
 
     const answer = this.getParticipantAnswer();
-    const isComplete = this.isStageComplete(answer);
+    const isComplete = isStageComplete(this.stage, answer);
 
     return html`
       <div class="stage-container">
@@ -114,7 +118,7 @@ export class FlipCardView extends MobxLitElement {
                     <md-filled-button
                       @click=${() => this.selectCard(card.id)}
                       ?disabled=${isConfirmed ||
-                      !this.canProceedWithMinFlips(answer)}
+                      !canProceedWithMinFlips(this.stage!, answer)}
                     >
                       Select
                     </md-filled-button>
@@ -167,7 +171,7 @@ export class FlipCardView extends MobxLitElement {
       return nothing;
     }
 
-    const canProceed = this.canProceedWithMinFlips(answer);
+    const canProceed = canProceedWithMinFlips(this.stage!, answer);
 
     return html`
       <div class="action-buttons">
@@ -240,7 +244,7 @@ export class FlipCardView extends MobxLitElement {
 
     const answer = this.getParticipantAnswer();
     if (answer.selectedCardIds.length === 0) return;
-    if (!this.canProceedWithMinFlips(answer)) return;
+    if (!canProceedWithMinFlips(this.stage, answer)) return;
 
     const updatedAnswer: FlipCardStageParticipantAnswer = {
       ...answer,
@@ -254,57 +258,15 @@ export class FlipCardView extends MobxLitElement {
     await this.participantAnswerService.saveFlipCardAnswers(this.stage.id);
   }
 
-  private getUniqueFlippedCardsCount(
-    answer: FlipCardStageParticipantAnswer,
-  ): number {
-    // Count unique cards that have been flipped to back at least once
-    const uniqueFlippedCards = new Set(
-      answer.flipHistory
-        .filter((action: FlipAction) => action.action === 'flip_to_back')
-        .map((action: FlipAction) => action.cardId),
-    );
-    return uniqueFlippedCards.size;
-  }
-
-  private canProceedWithMinFlips(
-    answer: FlipCardStageParticipantAnswer,
-  ): boolean {
-    if (!this.stage) return false;
-
-    if (this.stage.minFlipsRequired === 0) {
-      return true;
-    }
-    return (
-      this.getUniqueFlippedCardsCount(answer) >= this.stage.minFlipsRequired
-    );
-  }
-
-  private isStageComplete(answer: FlipCardStageParticipantAnswer): boolean {
-    if (!this.stage) return false;
-
-    if (this.stage.enableSelection) {
-      return answer.confirmed && this.canProceedWithMinFlips(answer);
-    } else {
-      return this.canProceedWithMinFlips(answer);
-    }
-  }
-
   private getDisplayCards(): FlipCard[] {
     if (!this.stage) return [];
 
-    if (!this.stage.shuffleCards) {
-      return this.stage.cards;
+    if (this.stage.shuffleCards) {
+      const participantId = this.participantService.profile?.privateId || '';
+      return shuffleWithSeed(this.stage.cards, participantId);
     }
 
-    // Use participant ID as seed for consistent shuffling
-    const participantId = this.participantService.profile?.privateId || '';
-    let seedValue = 0;
-    for (let i = 0; i < participantId.length; i++) {
-      seedValue += participantId.charCodeAt(i);
-    }
-
-    seed(seedValue);
-    return choices(this.stage.cards, this.stage.cards.length);
+    return this.stage.cards;
   }
 
   private saveAndProgress = async () => {
