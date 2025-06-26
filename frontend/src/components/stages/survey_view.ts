@@ -321,12 +321,7 @@ export class SurveyView extends MobxLitElement {
         <div class=${titleClasses}>
           ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
         </div>
-        <div
-          class="scale labels ${question.middleText &&
-          question.middleText.trim().length > 0
-            ? 'include-middle-label'
-            : ''}"
-        >
+        <div class="scale labels">
           <div>${question.lowerText}</div>
           ${question.middleText && question.middleText.trim().length > 0
             ? html`<div class="middle-label">${question.middleText}</div>`
@@ -379,12 +374,7 @@ export class SurveyView extends MobxLitElement {
         <div class=${titleClasses}>
           ${unsafeHTML(convertMarkdownToHTML(question.questionTitle + '*'))}
         </div>
-        <div
-          class="scale labels ${question.middleText &&
-          question.middleText.trim().length > 0
-            ? 'include-middle-label'
-            : ''}"
-        >
+        <div class="scale labels">
           <div>${question.lowerText}</div>
           ${question.middleText && question.middleText.trim().length > 0
             ? html`<div class="middle-label">${question.middleText}</div>`

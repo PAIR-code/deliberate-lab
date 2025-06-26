@@ -402,12 +402,7 @@ export class SurveyView extends MobxLitElement {
       <div class="question">
         <div class="question-title">${question.questionTitle}</div>
         ${this.renderParticipant(participant)}
-        <div
-          class="scale labels ${question.middleText &&
-          question.middleText.trim().length > 0
-            ? 'include-middle-label'
-            : ''}"
-        >
+        <div class="scale labels">
           <div>${question.lowerText}</div>
           ${question.middleText && question.middleText.trim().length > 0
             ? html`<div class="middle-label">${question.middleText}</div>`
@@ -462,12 +457,7 @@ export class SurveyView extends MobxLitElement {
       <div class="question">
         <div class="question-title">${question.questionTitle}</div>
         ${this.renderParticipant(participant)}
-        <div
-          class="scale labels ${question.middleText &&
-          question.middleText.trim().length > 0
-            ? 'include-middle-label'
-            : ''}"
-        >
+        <div class="scale labels">
           <div>${question.lowerText}</div>
           ${question.middleText && question.middleText.trim().length > 0
             ? html`<div class="middle-label">${question.middleText}</div>`
