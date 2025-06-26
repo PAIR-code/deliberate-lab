@@ -162,14 +162,6 @@ export class FlipCardView extends MobxLitElement {
   }
 
   private renderActionButtons(answer: FlipCardStageParticipantAnswer) {
-    if (answer.confirmed) {
-      return html`
-        <div class="action-buttons">
-          <md-filled-button disabled>Selection Confirmed</md-filled-button>
-        </div>
-      `;
-    }
-
     if (answer.selectedCardIds.length === 0) {
       return nothing;
     }
@@ -179,10 +171,10 @@ export class FlipCardView extends MobxLitElement {
     return html`
       <div class="action-buttons">
         <md-filled-button
+          ?disabled=${answer.confirmed || !canProceed}
           @click=${this.confirmSelection}
-          ?disabled=${!canProceed}
         >
-          Confirm Selection
+          ${answer.confirmed ? 'Selection Confirmed' : 'Confirm Selection'}
         </md-filled-button>
       </div>
     `;
