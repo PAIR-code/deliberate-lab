@@ -223,9 +223,7 @@ export class SurveyView extends MobxLitElement {
         </div>
         <div class="scale labels">
           <div>${question.lowerText}</div>
-          ${question.middleText && question.middleText.trim().length > 0
-            ? html`<div class="middle-label">${question.middleText}</div>`
-            : nothing}
+          <div>${question.middleText}</div>
           <div>${question.upperText}</div>
         </div>
         <div class="scale values">
@@ -264,9 +262,7 @@ export class SurveyView extends MobxLitElement {
         </div>
         <div class="scale labels">
           <div>${question.lowerText}</div>
-          ${question.middleText && question.middleText.trim().length > 0
-            ? html`<div class="middle-label">${question.middleText}</div>`
-            : nothing}
+          <div>${question.middleText}</div>
           <div>${question.upperText}</div>
         </div>
         <div class="scale slider">
