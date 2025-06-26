@@ -39,7 +39,7 @@ export class FlipCardView extends MobxLitElement {
     ParticipantAnswerService,
   );
 
-  @property({type: Object}) stage!: FlipCardStageConfig;
+  @property({type: Object}) stage: FlipCardStageConfig | undefined = undefined;
 
   override render() {
     if (!this.stage || !this.participantService.profile) {
