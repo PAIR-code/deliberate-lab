@@ -15,9 +15,8 @@
 }
 
 .header {
-  @include common.flex-row;
+  @include common.flex-row-align-center;
   justify-content: space-between;
-  align-items: center;
   padding-bottom: common.$spacing-small;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
@@ -37,14 +36,12 @@
 }
 
 .setting-row {
-  @include common.flex-row;
-  align-items: center;
+  @include common.flex-row-align-center;
   gap: common.$spacing-small;
 }
 
 .checkbox-label {
-  @include common.flex-row;
-  align-items: center;
+  @include common.flex-row-align-center;
   gap: common.$spacing-small;
   @include typescale.body-medium;
   color: var(--md-sys-color-on-surface);
@@ -76,9 +73,8 @@
 }
 
 .card-header {
-  @include common.flex-row;
+  @include common.flex-row-align-center;
   justify-content: space-between;
-  align-items: center;
   padding-bottom: common.$spacing-small;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }

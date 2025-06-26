@@ -98,15 +98,13 @@
 }
 
 .card-buttons {
-  @include common.flex-row;
+  @include common.flex-row-align-center;
   gap: common.$spacing-small;
   justify-content: space-between;
-  align-items: center;
 }
 
 .actions {
-  @include common.flex-column;
-  align-items: center;
+  @include common.flex-column-align-center;
   gap: common.$spacing-medium;
   padding: common.$spacing-large;
   border-top: 1px solid var(--md-sys-color-outline-variant);
