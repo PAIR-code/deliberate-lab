@@ -35,7 +35,7 @@ const FLIPCARD_TOS_STAGE = createTOSStage({
   id: 'flipcard_tos',
   game: StageGame.NONE,
   name: 'Consent',
-  tosLines: FLIPCARD_CONSENT.split('\n'),
+  tosLines: [FLIPCARD_CONSENT],
 });
 
 const FLIPCARD_PROFILE_STAGE = createProfileStage({
@@ -63,7 +63,7 @@ Take your time to explore the cards by flipping them over to read more details. 
 const FLIPCARD_INTRO_STAGE = createInfoStage({
   id: 'flipcard_intro',
   name: 'FlipCard Instructions',
-  infoLines: FLIPCARD_INTRO_TEXT.trim().split('\n'),
+  infoLines: [FLIPCARD_INTRO_TEXT],
 });
 
 const FLIPCARD_MAIN_STAGE = createFlipCardStage({
