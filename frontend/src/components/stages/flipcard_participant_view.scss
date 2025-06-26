@@ -99,6 +99,7 @@
 
 .card-buttons {
   @include common.flex-row-align-center;
+  flex-wrap: wrap;
   gap: common.$spacing-small;
   justify-content: space-between;
 }
@@ -129,10 +130,6 @@
   .cards-grid {
     gap: common.$spacing-medium;
     grid-template-columns: 1fr;
-  }
-
-  .card-container {
-    height: 240px;
   }
 
   .card-buttons {
