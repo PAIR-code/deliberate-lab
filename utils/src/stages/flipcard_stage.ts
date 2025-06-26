@@ -47,7 +47,9 @@ export interface FlipCardStageParticipantAnswer
 /** FlipCard public data. */
 export interface FlipCardStagePublicData extends BaseStagePublicData {
   kind: StageKind.FLIPCARD;
+  /** Map of participant public IDs to their flip action history */
   participantFlipHistory: Record<string, FlipAction[]>;
+  /** Map of participant public IDs to their selected card IDs */
   participantSelections: Record<string, string[]>;
 }
 
