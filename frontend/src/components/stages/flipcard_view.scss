@@ -129,7 +129,7 @@
 }
 
 // Responsive design for smaller screens
-@media (max-width: 768px) {
+@include common.viewport-small {
   .cards-grid {
     grid-template-columns: 1fr;
     gap: common.$spacing-medium;

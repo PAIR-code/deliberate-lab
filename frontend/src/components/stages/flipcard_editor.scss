@@ -108,7 +108,7 @@
 }
 
 // Responsive design
-@media (max-width: 768px) {
+@include common.viewport-small {
   .header {
     flex-direction: column;
     align-items: flex-start;
