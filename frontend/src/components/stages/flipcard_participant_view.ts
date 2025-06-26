@@ -107,12 +107,12 @@ export class FlipCardParticipantView extends MobxLitElement {
               ${unsafeHTML(convertMarkdownToHTML(card.frontContent))}
             </div>
             <div class="card-buttons">
-              <md-text-button
+              <md-outlined-button
                 @click=${() => this.flipCard(card.id, 'flip_to_back')}
                 ?disabled=${isConfirmed}
               >
                 Learn More
-              </md-text-button>
+              </md-outlined-button>
               ${this.stage!.enableSelection
                 ? html`
                     <md-filled-button
