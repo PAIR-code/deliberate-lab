@@ -21,6 +21,7 @@ import {
   seed,
   choices,
 } from '@deliberation-lab/utils';
+import {Timestamp} from 'firebase/firestore';
 
 import {core} from '../../core/core';
 import {ParticipantService} from '../../services/participant.service';
@@ -189,7 +190,7 @@ export class FlipCardView extends MobxLitElement {
     const flipAction: FlipAction = {
       cardId,
       action,
-      timestamp: new Date().toISOString(),
+      timestamp: Timestamp.now(),
     };
 
     const updatedFlippedIds = [...answer.flippedCardIds];
@@ -244,7 +245,7 @@ export class FlipCardView extends MobxLitElement {
     const updatedAnswer: FlipCardStageParticipantAnswer = {
       ...answer,
       confirmed: true,
-      timestamp: new Date().toISOString(),
+      timestamp: Timestamp.now(),
     };
 
     this.participantAnswerService.addAnswer(this.stage.id, updatedAnswer);

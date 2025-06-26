@@ -1,4 +1,5 @@
-import {generateId} from '../shared';
+import {Timestamp} from 'firebase/firestore';
+import {generateId, UnifiedTimestamp} from '../shared';
 import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
@@ -40,7 +41,7 @@ export interface FlipCardStageParticipantAnswer
   flippedCardIds: string[];
   flipHistory: FlipAction[];
   confirmed: boolean;
-  timestamp: string;
+  timestamp: UnifiedTimestamp;
 }
 
 /** FlipCard public data. */
@@ -54,7 +55,7 @@ export interface FlipCardStagePublicData extends BaseStagePublicData {
 export interface FlipAction {
   cardId: string;
   action: 'flip_to_back' | 'flip_to_front';
-  timestamp: string;
+  timestamp: UnifiedTimestamp;
 }
 
 // ************************************************************************* //
@@ -117,7 +118,7 @@ export function createFlipCardStageParticipantAnswer(
     flippedCardIds: config.flippedCardIds ?? [],
     flipHistory: config.flipHistory ?? [],
     confirmed: config.confirmed ?? false,
-    timestamp: config.timestamp ?? new Date().toISOString(),
+    timestamp: config.timestamp ?? Timestamp.now(),
   };
 }
 

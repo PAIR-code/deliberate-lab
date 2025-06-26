@@ -1,4 +1,5 @@
 import {Type, type Static} from '@sinclair/typebox';
+import {UnifiedTimestampSchema} from '../shared.validation';
 import {StageKind} from './stage';
 import {
   StageGameSchema,
@@ -34,8 +35,11 @@ export const FlipCardStageConfigData = Type.Object(
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,
     cards: Type.Array(FlipCardData),
+    enableSelection: Type.Boolean(),
     allowMultipleSelections: Type.Boolean(),
     requireConfirmation: Type.Boolean(),
+    minFlipsRequired: Type.Number(),
+    shuffleCards: Type.Boolean(),
   },
   strict,
 );
@@ -55,13 +59,13 @@ export const FlipCardStageParticipantAnswerData = Type.Object(
             Type.Literal('flip_to_back'),
             Type.Literal('flip_to_front'),
           ]),
-          timestamp: Type.String({minLength: 1}),
+          timestamp: UnifiedTimestampSchema,
         },
         strict,
       ),
     ),
     confirmed: Type.Boolean(),
-    timestamp: Type.String({minLength: 1}),
+    timestamp: UnifiedTimestampSchema,
   },
   strict,
 );
