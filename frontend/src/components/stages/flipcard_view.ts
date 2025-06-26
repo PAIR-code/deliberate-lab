@@ -108,7 +108,7 @@ export class FlipCardView extends MobxLitElement {
               >
                 Learn More
               </md-text-button>
-              ${this.stage.enableSelection
+              ${this.stage!.enableSelection
                 ? html`
                     <md-filled-button
                       @click=${() => this.selectCard(card.id)}
@@ -143,6 +143,8 @@ export class FlipCardView extends MobxLitElement {
   }
 
   private renderSelectionInfo(answer: FlipCardStageParticipantAnswer) {
+    if (!this.stage) return;
+
     if (answer.selectedCardIds.length === 0) {
       return nothing;
     }
@@ -187,6 +189,8 @@ export class FlipCardView extends MobxLitElement {
   }
 
   private flipCard(cardId: string, action: 'flip_to_back' | 'flip_to_front') {
+    if (!this.stage) return;
+
     const answer = this.getParticipantAnswer();
     if (answer.confirmed) return;
 
@@ -216,6 +220,8 @@ export class FlipCardView extends MobxLitElement {
   }
 
   private selectCard(cardId: string) {
+    if (!this.stage) return;
+
     const answer = this.getParticipantAnswer();
     if (answer.confirmed) return;
 
@@ -237,6 +243,8 @@ export class FlipCardView extends MobxLitElement {
   }
 
   private async confirmSelection() {
+    if (!this.stage) return;
+
     const answer = this.getParticipantAnswer();
     if (answer.selectedCardIds.length === 0) return;
     if (!this.canProceedWithMinFlips(answer)) return;
@@ -268,6 +276,8 @@ export class FlipCardView extends MobxLitElement {
   private canProceedWithMinFlips(
     answer: FlipCardStageParticipantAnswer,
   ): boolean {
+    if (!this.stage) return false;
+
     if (this.stage.minFlipsRequired === 0) {
       return true;
     }
@@ -277,6 +287,8 @@ export class FlipCardView extends MobxLitElement {
   }
 
   private isStageComplete(answer: FlipCardStageParticipantAnswer): boolean {
+    if (!this.stage) return false;
+
     if (this.stage.enableSelection) {
       return answer.confirmed && this.canProceedWithMinFlips(answer);
     } else {
@@ -285,6 +297,8 @@ export class FlipCardView extends MobxLitElement {
   }
 
   private getDisplayCards(): FlipCard[] {
+    if (!this.stage) return [];
+
     if (!this.stage.shuffleCards) {
       return this.stage.cards;
     }
@@ -301,11 +315,15 @@ export class FlipCardView extends MobxLitElement {
   }
 
   private saveAndProgress = async () => {
+    if (!this.stage) return;
+
     await this.participantAnswerService.saveFlipCardAnswers(this.stage.id);
     await this.participantService.progressToNextStage();
   };
 
   private getParticipantAnswer(): FlipCardStageParticipantAnswer {
+    if (!this.stage) return createFlipCardStageParticipantAnswer('');
+
     const existingAnswer =
       this.participantAnswerService.answerMap[this.stage.id];
 
