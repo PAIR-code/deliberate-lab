@@ -513,7 +513,7 @@ export class SurveyEditor extends MobxLitElement {
       <label class="checkbox-wrapper">
         <md-checkbox
           touch-target="wrapper"
-          ?checked=${question.useSlider ?? false}
+          ?checked=${question.useSlider}
           ?disabled=${!this.experimentEditor.canEditStages}
           @click=${toggleUseSlider}
         >
