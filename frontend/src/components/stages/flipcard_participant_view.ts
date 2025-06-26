@@ -32,11 +32,11 @@ import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 import {convertMarkdownToHTML} from '../../shared/utils';
 
-import {styles} from './flipcard_view.scss';
+import {styles} from './flipcard_participant_view.scss';
 
-/** FlipCard stage view for participants */
-@customElement('flipcard-view')
-export class FlipCardView extends MobxLitElement {
+/** FlipCard stage participant view */
+@customElement('flipcard-participant-view')
+export class FlipCardParticipantView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly participantService = core.getService(ParticipantService);
