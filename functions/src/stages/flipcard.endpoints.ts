@@ -1,8 +1,4 @@
-import {Value} from '@sinclair/typebox/value';
-import {
-  FlipCardStageParticipantAnswer,
-  FlipCardStagePublicData,
-} from '@deliberation-lab/utils';
+import {FlipCardStagePublicData} from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
@@ -103,54 +99,6 @@ export const updateFlipCardStageParticipantAnswer = onCall(async (request) => {
     throw new functions.https.HttpsError(
       'internal',
       'Failed to update FlipCard stage participant answer',
-    );
-  }
-});
-
-// ************************************************************************* //
-// getFlipCardStagePublicData endpoint                                      //
-//                                                                           //
-// Retrieves public FlipCard stage data for a cohort                       //
-// ************************************************************************* //
-
-export const getFlipCardStagePublicData = onCall(async (request) => {
-  const {data} = request;
-
-  try {
-    const {experimentId, cohortId, stageId} = data;
-
-    if (!experimentId || !cohortId || !stageId) {
-      throw new functions.https.HttpsError(
-        'invalid-argument',
-        'Missing required fields: experimentId, cohortId, stageId',
-      );
-    }
-
-    // Define public stage document reference
-    const publicDocument = app
-      .firestore()
-      .collection('experiments')
-      .doc(experimentId)
-      .collection('cohorts')
-      .doc(cohortId)
-      .collection('publicStageData')
-      .doc(stageId);
-
-    const doc = await publicDocument.get();
-
-    if (!doc.exists) {
-      throw new functions.https.HttpsError(
-        'not-found',
-        'FlipCard stage public data not found',
-      );
-    }
-
-    return doc.data() as FlipCardStagePublicData;
-  } catch (error) {
-    console.error('Error getting FlipCard stage public data:', error);
-    throw new functions.https.HttpsError(
-      'internal',
-      'Failed to get FlipCard stage public data',
     );
   }
 });
