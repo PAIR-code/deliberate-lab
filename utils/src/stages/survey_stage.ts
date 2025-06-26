@@ -74,9 +74,9 @@ export interface ScaleSurveyQuestion extends BaseSurveyQuestion {
   upperText: string;
   lowerValue: number; // min 0
   lowerText: string;
-  middleText?: string; // Optional text to display in the center of the scale
-  useSlider?: boolean; // Whether to display as slider instead of radio buttons
-  stepSize?: number; // Step size for the scale (defaults to 1)
+  middleText: string; // Optional text to display in the center of the scale
+  useSlider: boolean; // Whether to display as slider instead of radio buttons
+  stepSize: number; // Step size for the scale (defaults to 1)
 }
 
 export type SurveyQuestion =

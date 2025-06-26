@@ -530,7 +530,7 @@ export const COMPREHENSION_CHECK = createComprehensionStage({
           }),
           createMultipleChoiceItem({
             id: 'c',
-            text: "One randomly drawn question from either Part 2 (where your own answers determine your payoff) or Part 3 (where the leaders’ answers determine your payoff).",
+            text: 'One randomly drawn question from either Part 2 (where your own answers determine your payoff) or Part 3 (where the leaders’ answers determine your payoff).',
           }),
         ],
       },
@@ -563,7 +563,6 @@ const LAS_PART_2_INSTRUCTIONS_STAGE = createInfoStage({
   game: StageGame.LAS,
   name: 'Overview of part 2 and 3',
   infoLines: LAS_PART_2_INSTRUCTIONS_INFO_LINES,
-
 });
 
 // ****************************************************************************
@@ -618,7 +617,7 @@ const LAS_PART_2_GROUP_INSTRUCTIONS_INFO_LINES = [
   'After the chat ends, you will have the chance to revise the individual answers you provided in Part 1 of the experiment. You can choose to update your previous answers or to keep them the same.',
   'Please note that Part 1 and Part 2 of the experiment are independent. Changing answers here will not impact the answers you provided in Part 1.',
   '## Election of a group leader for Part 3',
-  'After the chat, and after you’ve had the chance to update your individual answers, you will be asked to elect a group leader who will play a crucial role in Part 3 of the experiment. In Part 3, your group will repeat the same task as in Part 1, but with different pairs of items. The leader’s answers regarding the most important items for survival will determine the team\'s final payoff.',
+  "After the chat, and after you’ve had the chance to update your individual answers, you will be asked to elect a group leader who will play a crucial role in Part 3 of the experiment. In Part 3, your group will repeat the same task as in Part 1, but with different pairs of items. The leader’s answers regarding the most important items for survival will determine the team's final payoff.",
   '## Payment for Parts 2 and 3',
   'Your payment for Parts 2 and 3 includes a fixed fee of £6 and a bonus. The bonus is determined by randomly selecting either Part 2 or Part 3.',
   '* If Part 2 is selected: One question is randomly chosen from Part 2. You earn £2 if your answer is correct, and £0 otherwise.',
@@ -997,7 +996,7 @@ const LAS_PAYOUT_STAGE = createPayoutStage({
 const LAS_FINAL_DESCRIPTION_PRIMARY = `Thank you for participating in this experiment. After completing the final survey, clicking 'End experiment' will redirect you to Prolific.`;
 
 export const LAS_FINAL_SURVEY_QUESTIONS: SurveyQuestion[] = [
-   {
+  {
     id: '0',
     kind: SurveyQuestionKind.TEXT,
     questionTitle:
@@ -1012,8 +1011,11 @@ export const LAS_FINAL_SURVEY_QUESTIONS: SurveyQuestion[] = [
     lowerValue: 0,
     upperText: 'Very satisfied',
     upperValue: 10,
+    middleText: '',
+    useSlider: false,
+    stepSize: 1,
   },
- {
+  {
     id: '2',
     kind: SurveyQuestionKind.TEXT,
     questionTitle:
@@ -1035,6 +1037,9 @@ export const LAS_FINAL_SURVEY_QUESTIONS: SurveyQuestion[] = [
     lowerValue: 0,
     upperText: 'Very willing to take risks',
     upperValue: 10,
+    middleText: '',
+    useSlider: false,
+    stepSize: 1,
   },
   {
     id: '5',
@@ -1045,6 +1050,9 @@ export const LAS_FINAL_SURVEY_QUESTIONS: SurveyQuestion[] = [
     lowerValue: 0,
     upperText: 'Women are better',
     upperValue: 10,
+    middleText: '',
+    useSlider: false,
+    stepSize: 1,
   },
   {
     id: '6',
@@ -1055,6 +1063,9 @@ export const LAS_FINAL_SURVEY_QUESTIONS: SurveyQuestion[] = [
     lowerValue: 0,
     upperText: 'Women are better',
     upperValue: 10,
+    middleText: '',
+    useSlider: false,
+    stepSize: 1,
   },
   {
     id: '7',
