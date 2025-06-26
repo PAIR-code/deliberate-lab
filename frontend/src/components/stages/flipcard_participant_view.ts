@@ -21,7 +21,7 @@ import {
 } from '@deliberation-lab/utils';
 import {
   getUniqueFlippedCardsCount,
-  canProceedWithMinFlips,
+  canProceedWithMinCardsFlipped,
   isStageComplete,
 } from '@deliberation-lab/utils/src/stages/flipcard_stage.utils';
 import {shuffleWithSeed} from '@deliberation-lab/utils/src/utils/random.utils';
@@ -118,7 +118,7 @@ export class FlipCardParticipantView extends MobxLitElement {
                     <md-filled-button
                       @click=${() => this.selectCard(card.id)}
                       ?disabled=${isConfirmed ||
-                      !canProceedWithMinFlips(this.stage!, answer)}
+                      !canProceedWithMinCardsFlipped(this.stage!, answer)}
                     >
                       Select
                     </md-filled-button>
@@ -171,7 +171,7 @@ export class FlipCardParticipantView extends MobxLitElement {
       return nothing;
     }
 
-    const canProceed = canProceedWithMinFlips(this.stage!, answer);
+    const canProceed = canProceedWithMinCardsFlipped(this.stage!, answer);
 
     return html`
       <div class="action-buttons">
@@ -244,7 +244,7 @@ export class FlipCardParticipantView extends MobxLitElement {
 
     const answer = this.getParticipantAnswer();
     if (answer.selectedCardIds.length === 0) return;
-    if (!canProceedWithMinFlips(this.stage, answer)) return;
+    if (!canProceedWithMinCardsFlipped(this.stage, answer)) return;
 
     const updatedAnswer: FlipCardStageParticipantAnswer = {
       ...answer,

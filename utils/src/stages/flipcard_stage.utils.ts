@@ -24,14 +24,16 @@ export function getUniqueFlippedCardsCount(
 /**
  * Check if participant can proceed based on minimum flips requirement.
  */
-export function canProceedWithMinFlips(
+export function canProceedWithMinCardsFlipped(
   stage: FlipCardStageConfig,
   answer: FlipCardStageParticipantAnswer,
 ): boolean {
-  if (stage.minFlipsRequired === 0) {
+  if (stage.minUniqueCardsFlippedRequirement === 0) {
     return true;
   }
-  return getUniqueFlippedCardsCount(answer) >= stage.minFlipsRequired;
+  return (
+    getUniqueFlippedCardsCount(answer) >= stage.minUniqueCardsFlippedRequirement
+  );
 }
 
 /**
@@ -42,9 +44,9 @@ export function isStageComplete(
   answer: FlipCardStageParticipantAnswer,
 ): boolean {
   if (stage.enableSelection) {
-    return answer.confirmed && canProceedWithMinFlips(stage, answer);
+    return answer.confirmed && canProceedWithMinCardsFlipped(stage, answer);
   } else {
-    return canProceedWithMinFlips(stage, answer);
+    return canProceedWithMinCardsFlipped(stage, answer);
   }
 }
 
@@ -91,11 +93,11 @@ export function canSelectCard(
 }
 
 /**
- * Check if participant meets minimum flips requirement to proceed.
+ * Check if participant meets minimum unique cards flipped requirement to proceed.
  */
 export function meetsMinFlipsRequirement(
   stage: FlipCardStageConfig,
   answer: FlipCardStageParticipantAnswer,
 ): boolean {
-  return canProceedWithMinFlips(stage, answer);
+  return canProceedWithMinCardsFlipped(stage, answer);
 }

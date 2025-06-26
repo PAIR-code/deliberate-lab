@@ -65,12 +65,12 @@ export class FlipCardEditor extends MobxLitElement {
 
         <div class="setting-row">
           <label class="field-label"
-            >Minimum flips required (0 = disabled)</label
+            >Minimum unique cards flipped requirement (0 = disabled)</label
           >
           <md-filled-text-field
             type="number"
-            .value=${this.stage.minFlipsRequired.toString()}
-            @input=${this.updateMinFlipsRequired}
+            .value=${this.stage.minUniqueCardsFlippedRequirement.toString()}
+            @input=${this.updateMinUniqueCardsFlippedRequirement}
             min="0"
             max="${this.stage.cards.length}"
             ?disabled=${!this.experimentEditor.canEditStages}
@@ -208,7 +208,7 @@ export class FlipCardEditor extends MobxLitElement {
     this.experimentEditor.updateStage(updatedStage);
   }
 
-  private updateMinFlipsRequired(e: Event) {
+  private updateMinUniqueCardsFlippedRequirement(e: Event) {
     if (!this.stage) return;
 
     const target = e.target as HTMLInputElement;
@@ -218,7 +218,7 @@ export class FlipCardEditor extends MobxLitElement {
 
     const updatedStage: FlipCardStageConfig = {
       ...this.stage,
-      minFlipsRequired: minMaxValue,
+      minUniqueCardsFlippedRequirement: minMaxValue,
     };
 
     this.experimentEditor.updateStage(updatedStage);

@@ -29,7 +29,7 @@ export interface FlipCardStageConfig extends BaseStageConfig {
   enableSelection: boolean;
   allowMultipleSelections: boolean;
   requireConfirmation: boolean;
-  minFlipsRequired: number;
+  minUniqueCardsFlippedRequirement: number;
   shuffleCards: boolean;
 }
 
@@ -103,7 +103,8 @@ export function createFlipCardStage(
     enableSelection: config.enableSelection ?? true,
     allowMultipleSelections: config.allowMultipleSelections ?? false,
     requireConfirmation: config.requireConfirmation ?? true,
-    minFlipsRequired: config.minFlipsRequired ?? 0,
+    minUniqueCardsFlippedRequirement:
+      config.minUniqueCardsFlippedRequirement ?? 0,
     shuffleCards: config.shuffleCards ?? false,
   };
 }

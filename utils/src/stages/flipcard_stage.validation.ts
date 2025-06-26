@@ -38,7 +38,7 @@ export const FlipCardStageConfigData = Type.Object(
     enableSelection: Type.Boolean(),
     allowMultipleSelections: Type.Boolean(),
     requireConfirmation: Type.Boolean(),
-    minFlipsRequired: Type.Number(),
+    minUniqueCardsFlippedRequirement: Type.Number(),
     shuffleCards: Type.Boolean(),
   },
   strict,
