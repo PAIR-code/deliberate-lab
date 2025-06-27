@@ -64,7 +64,7 @@ export class FlipCardParticipantView extends MobxLitElement {
           )}
         </div>
 
-        ${this.stage.enableSelection
+        ${this.stage?.enableSelection
           ? html`
               <div class="actions">
                 ${this.renderSelectionInfo(answer)}
@@ -113,12 +113,12 @@ export class FlipCardParticipantView extends MobxLitElement {
               >
                 Learn More
               </md-outlined-button>
-              ${this.stage!.enableSelection
+              ${this.stage?.enableSelection
                 ? html`
                     <md-filled-button
                       @click=${() => this.selectCard(card.id)}
                       ?disabled=${isConfirmed ||
-                      !canProceedWithMinCardsFlipped(this.stage!, answer)}
+                      !canProceedWithMinCardsFlipped(this.stage, answer)}
                     >
                       Select
                     </md-filled-button>
@@ -148,7 +148,7 @@ export class FlipCardParticipantView extends MobxLitElement {
   }
 
   private renderSelectionInfo(answer: FlipCardStageParticipantAnswer) {
-    if (!this.stage) return;
+    if (!this.stage) return nothing;
 
     if (answer.selectedCardIds.length === 0) {
       return nothing;
@@ -167,6 +167,7 @@ export class FlipCardParticipantView extends MobxLitElement {
   }
 
   private renderActionButtons(answer: FlipCardStageParticipantAnswer) {
+    if (!this.stage) return nothing;
     if (answer.selectedCardIds.length === 0) {
       return nothing;
     }
