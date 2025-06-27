@@ -36,6 +36,7 @@ import {
   getFirestoreExperiment,
   getFirestoreParticipantAnswer,
   getFirestoreParticipantAnswerRef,
+  getFirestoreParticipantRef,
   getFirestoreStagePublicData,
 } from '../utils/firestore';
 import {getPastStagesPromptContext} from './stage.utils';
@@ -547,7 +548,7 @@ export async function updateParticipantReadyToEndChat(
 
     const participantDoc = getFirestoreParticipantRef(
       experimentId,
-      participantId,
+      participant.privateId,
     );
     await app.firestore().runTransaction(async (transaction) => {
       await transaction.set(participantDoc, participant);
