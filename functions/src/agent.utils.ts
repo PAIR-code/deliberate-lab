@@ -3,8 +3,8 @@ import {
   AgentModelSettings,
   AgentParticipantPromptConfig,
   AgentPersonaConfig,
+  APIKeyConfig,
   ApiKeyType,
-  ExperimenterData,
   ModelGenerationConfig,
   ParticipantProfileExtended,
   ParticipantStatus,
@@ -22,7 +22,7 @@ import {ollamaChat} from './api/ollama.api';
 import {app} from './app';
 
 export async function getAgentResponse(
-  data: ExperimenterData, // TODO: Only pass in API keys
+  apiKeyConfig: APIKeyConfig,
   prompt: string,
   modelSettings: AgentModelSettings,
   generationConfig: ModelGenerationConfig,
@@ -39,7 +39,7 @@ export async function getAgentResponse(
 
   if (modelSettings.apiType === ApiKeyType.GEMINI_API_KEY) {
     response = await getGeminiResponse(
-      data,
+      apiKeyConfig,
       modelSettings.modelName,
       prompt,
       generationConfig,
@@ -47,18 +47,22 @@ export async function getAgentResponse(
     );
   } else if (modelSettings.apiType === ApiKeyType.OPENAI_API_KEY) {
     response = await getOpenAIAPIResponse(
-      data,
+      apiKeyConfig,
       modelSettings.modelName,
       prompt,
       generationConfig,
       structuredOutputConfig,
     );
   } else if (modelSettings.apiType === ApiKeyType.OLLAMA_CUSTOM_URL) {
-    response = await getOllamaResponse(data, modelSettings.modelName, prompt);
+    response = await getOllamaResponse(
+      apiKeyConfig,
+      modelSettings.modelName,
+      prompt,
+    );
   } else {
     response = {
       status: ModelResponseStatus.CONFIG_ERROR,
-      errorMessage: `Error: invalid apiKey type: ${data.apiKeys.ollamaApiKey.apiKey}`,
+      errorMessage: `Error: invalid apiKey type: ${apiKeyConfig.ollamaApiKey.apiKey}`,
     };
   }
 
@@ -71,18 +75,15 @@ export async function getAgentResponse(
   return response;
 }
 
-// TODO: Refactor model call functions to take in direct API configs,
-// not full ExperimenterData
-
 export async function getGeminiResponse(
-  data: ExperimenterData,
+  apiKeyConfig: APIKeyConfig,
   modelName: string,
   prompt: string,
   generationConfig: ModelGenerationConfig,
   structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
   return await getGeminiAPIResponse(
-    data.apiKeys.geminiApiKey,
+    apiKeyConfig.geminiApiKey,
     modelName,
     prompt,
     generationConfig,
@@ -91,14 +92,14 @@ export async function getGeminiResponse(
 }
 
 export async function getOpenAIAPIResponse(
-  data: ExperimenterData,
+  apiKeyConfig: APIKeyConfig,
   model: string,
   prompt: string,
   generationConfig: ModelGenerationConfig,
 ): Promise<ModelResponse> {
   return await getOpenAIAPIChatCompletionResponse(
-    data.apiKeys.openAIApiKey?.apiKey || '',
-    data.apiKeys.openAIApiKey?.baseUrl || null,
+    apiKeyConfig.openAIApiKey?.apiKey || '',
+    apiKeyConfig.openAIApiKey?.baseUrl || null,
     model,
     prompt,
     generationConfig,
@@ -106,7 +107,7 @@ export async function getOpenAIAPIResponse(
 }
 
 export async function getOllamaResponse(
-  data: ExperimenterData,
+  apiKeyConfig: APIKeyConfig,
   modelName: string,
   prompt: string,
   generationConfig: ModelGenerationConfig,
@@ -114,7 +115,7 @@ export async function getOllamaResponse(
   return await ollamaChat(
     [prompt],
     modelName,
-    data.apiKeys.ollamaApiKey,
+    apiKeyConfig.ollamaApiKey,
     generationConfig,
   );
 }

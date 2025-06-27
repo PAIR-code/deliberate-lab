@@ -251,7 +251,7 @@ export async function getAgentChatAPIResponse(
   );
 
   const response = await getAgentResponse(
-    experimenterData,
+    experimenterData.apiKeys,
     prompt,
     agentConfig.modelSettings,
     promptConfig.generationConfig,
