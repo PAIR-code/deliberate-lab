@@ -13,6 +13,7 @@ import {updateCurrentChatDiscussionId} from '../stages/chat.utils';
 import {updateChipTurn} from '../stages/chip.utils';
 import {addParticipantAnswerToRankingStagePublicData} from '../stages/ranking.utils';
 import {addParticipantAnswerToSurveyStagePublicData} from '../stages/survey.utils';
+import {addParticipantAnswerToFlipCardStagePublicData} from '../stages/flipcard.utils';
 
 /** When participant (private) stage data is updated. */
 export const onParticipantStageDataUpdated = onDocumentWritten(
@@ -36,6 +37,14 @@ export const onParticipantStageDataUpdated = onDocumentWritten(
     switch (stage.kind) {
       case StageKind.CHAT:
         updateCurrentChatDiscussionId(
+          event.params.experimentId,
+          stage,
+          participant,
+          data,
+        );
+        break;
+      case StageKind.FLIPCARD:
+        addParticipantAnswerToFlipCardStagePublicData(
           event.params.experimentId,
           stage,
           participant,

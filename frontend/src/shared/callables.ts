@@ -27,6 +27,7 @@ import {
   SuccessResponse,
   UpdateChatStageParticipantAnswerData,
   UpdateCohortMetadataData,
+  UpdateFlipCardStageParticipantAnswerData,
   UpdateMediatorStatusData,
   UpdateParticipantAcceptedTOSData,
   UpdateParticipantFailureData,
@@ -301,6 +302,21 @@ export const updateChatStageParticipantAnswerCallable = async (
   >(
     functions,
     'updateChatStageParticipantAnswer',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint to update flipcard stage participant answers */
+export const updateFlipCardStageParticipantAnswerCallable = async (
+  functions: Functions,
+  config: UpdateFlipCardStageParticipantAnswerData,
+) => {
+  const {data} = await httpsCallable<
+    UpdateFlipCardStageParticipantAnswerData,
+    SuccessResponse
+  >(
+    functions,
+    'updateFlipCardStageParticipantAnswer',
   )(config);
   return data;
 };

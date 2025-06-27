@@ -6,6 +6,7 @@ import '../stages/chat_interface';
 import '../stages/chat_panel';
 import '../stages/chip_participant_view';
 import '../stages/comprehension_participant_view';
+import '../stages/flipcard_participant_view';
 import '../stages/ranking_participant_view';
 import '../stages/info_view';
 import '../stages/payout_participant_view';
@@ -231,6 +232,10 @@ export class ParticipantView extends MobxLitElement {
           <comprehension-participant-view .stage=${stage}>
           </comprehension-participant-view>
         `;
+      case StageKind.FLIPCARD:
+        return html`<flipcard-participant-view
+          .stage=${stage}
+        ></flipcard-participant-view>`;
       case StageKind.RANKING:
         return html`
           <ranking-participant-view .stage=${stage} .answer=${answer}>

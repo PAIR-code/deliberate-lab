@@ -3,6 +3,7 @@ import {StageGame} from './stage';
 import {ChatStageConfigData} from './chat_stage.validation';
 import {ChipStageConfigData} from './chip_stage.validation';
 import {ComprehensionStageConfigData} from './comprehension_stage.validation';
+import {FlipCardStageConfigData} from './flipcard_stage.validation';
 import {RankingStageConfigData} from './ranking_stage.validation';
 import {InfoStageConfigData} from './info_stage.validation';
 import {PayoutStageConfigData} from './payout_stage.validation';
@@ -25,6 +26,7 @@ export const StageConfigData = Type.Union([
   ChatStageConfigData,
   ChipStageConfigData,
   ComprehensionStageConfigData,
+  FlipCardStageConfigData,
   InfoStageConfigData,
   PayoutStageConfigData,
   ProfileStageConfigData,

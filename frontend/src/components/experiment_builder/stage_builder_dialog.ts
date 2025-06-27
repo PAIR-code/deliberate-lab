@@ -18,6 +18,7 @@ import {
   createChatStage,
   createRankingStage,
   createInfoStage,
+  createFlipCardStage,
   createPayoutStage,
   createProfileStage,
   createRevealStage,
@@ -50,6 +51,10 @@ import {
   getTgStageConfigs,
   TG_AGENTS,
 } from '../../shared/games/test_game';
+import {
+  FLIPCARD_GAME_METADATA,
+  getFlipCardGameStageConfigs,
+} from '../../shared/games/flipcard_game';
 
 import {styles} from './stage_builder_dialog.scss';
 
@@ -132,7 +137,8 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()} ${this.renderLASCard(true)}
         ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
-        ${this.renderSalespersonGameCard()} ${this.renderTestGameCard()}
+        ${this.renderSalespersonGameCard()} ${this.renderFlipCardGameCard()}
+        ${this.renderTestGameCard()}
       </div>
     `;
   }
@@ -143,8 +149,9 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderTOSCard()} ${this.renderInfoCard()}
         ${this.renderTransferCard()} ${this.renderProfileCard()}
         ${this.renderSurveyCard()} ${this.renderSurveyPerParticipantCard()}
-        ${this.renderChatCard()} ${this.renderRankingCard()}
-        ${this.renderRevealCard()} ${this.renderPayoutCard()}
+        ${this.renderChatCard()} ${this.renderFlipCardCard()}
+        ${this.renderRankingCard()} ${this.renderRevealCard()}
+        ${this.renderPayoutCard()}
       </div>
     `;
   }
@@ -292,6 +299,22 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
+  private renderFlipCardCard() {
+    const addStage = () => {
+      this.addStage(createFlipCardStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">🔄 FlipCard</div>
+        <div>
+          Present cards that participants can flip to reveal additional
+          information and make selections.
+        </div>
+      </div>
+    `;
+  }
+
   private renderRankingCard() {
     const addStage = () => {
       this.addStage(createRankingStage());
@@ -395,6 +418,21 @@ export class StageBuilderDialog extends MobxLitElement {
         <div>
           Assign participants to different cohorts while they wait in this
           stage.
+        </div>
+      </div>
+    `;
+  }
+
+  private renderFlipCardGameCard() {
+    const addGame = () => {
+      this.addGame(FLIPCARD_GAME_METADATA, getFlipCardGameStageConfigs(), []);
+    };
+
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">🔄 FlipCard Game</div>
+        <div>
+          A demonstration of the FlipCard stage with adventure selection cards.
         </div>
       </div>
     `;
