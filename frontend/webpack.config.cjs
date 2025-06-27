@@ -1,3 +1,4 @@
+
 /**
  * Copyright 2024 Google LLC
  *
@@ -13,24 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import CopyWebpackPlugin from 'copy-webpack-plugin';
-import {Configuration} from 'webpack';
-import {GitRevisionPlugin} from 'git-revision-webpack-plugin';
-import HtmlWebpackPlugin from 'html-webpack-plugin';
-import {CleanWebpackPlugin} from 'clean-webpack-plugin';
-import * as path from 'path';
-import * as webpack from 'webpack';
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const { GitRevisionPlugin } = require('git-revision-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const path = require('path');
+const webpack = require('webpack');
 
 const gitRevisionPlugin = new GitRevisionPlugin({branch: true});
 
-export default (
-  env: Record<string, string>,
-  argv: {mode?: string},
-): Configuration => {
-  const isProd = argv.mode === 'production';
 
+module.exports = (env, argv) => {
+  const isProd = argv.mode === 'production';
   return {
+
     entry: './src/index.ts',
     module: {
       rules: [
