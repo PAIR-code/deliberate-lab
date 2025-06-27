@@ -731,7 +731,6 @@ export async function getChipResponseAssistance(
       const advisorPrompt = getChipResponseAssistanceAdvisorPrompt(
         playerName,
         playerChipValues,
-        chipsetDescription,
         playerChipQuantities,
         chipsetDescription,
         negotiationHistory,
