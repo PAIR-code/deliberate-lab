@@ -640,24 +640,18 @@ export async function getChipResponseAssistance(
     .join(', ');
   const offer = `You will give ${buyChips} and get ${sellChips}`;
 
-  let chipsetDescription = ``;
   const participantChipMap = publicData.participantChipMap;
   const participantIds = Object.keys(participantChipMap);
-  for (let i = 0; i < participantIds.length; i++) {
-    const participantId = participantIds[i];
-    const chipMap = participantChipMap[participantId];
-    const chipTypes = Object.keys(chipMap);
-
-    const chipQuantities = chipTypes
-      .map((chip) => `${chipMap[chip]} ${chip} chips`)
-      .join(', ');
-
-    chipsetDescription += `${participantId}: ${chipQuantities}`;
-
-    if (i < participantIds.length - 1) {
-      chipsetDescription += ' | ';
-    }
-  }
+  
+  const participantDescriptions = participantIds.map((participantId) => {
+      const chipMap = participantChipMap[participantId];
+      const chipTypes = Object.keys(chipMap);
+      const chipQuantities = chipTypes
+        .map((chip) => `${chipMap[chip]} ${chip} chips`)
+        .join(', ');
+      return `${participantId}: ${chipQuantities}`
+  });
+  const chipsetDescription = participantDescriptions.join(' | ');
 
   // Negotiation history
   const negotiationHistory = getChipLogs(
@@ -733,8 +727,8 @@ export async function getChipResponseAssistance(
       const advisorPrompt = getChipResponseAssistanceAdvisorPrompt(
         playerName,
         playerChipValues,
-        chipsetDescription,
         playerChipQuantities,
+        chipsetDescription,
         negotiationHistory,
         numRoundsLeft,
         offer,

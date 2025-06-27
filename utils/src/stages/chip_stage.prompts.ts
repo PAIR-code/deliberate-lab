@@ -5,7 +5,7 @@ import {
   createStructuredOutputConfig,
   printSchema,
 } from '../structured_output';
-// import {createChipStagePublicData, SimpleChipLog} from './chip_stage';
+import {SimpleChipLog} from './chip_stage';
 
 /** Chip offer assistance delegate prompt. */
 export function getChipOfferAssistanceDelegatePrompt(
@@ -16,7 +16,10 @@ export function getChipOfferAssistanceDelegatePrompt(
   negotiationHistory: string,
   numRoundsLeft: string,
 ) {
-  return `You are role-playing as the game participant with alias ${playerName}. It is your turn to propose a trade.
+  return `You are the trusted agent for ${playerName}. 
+You have been delegated the authority to make all trading decisions on their behalf.
+Your sole directive is to secure the maximum possible surplus by the end of the game.
+Analyze all available information, evaluate every opportunity, and execute the trades that most effectively advance this objective
 
 ### Current game state
 * **Your chip valuations:** ${playerChipValues}
@@ -30,21 +33,15 @@ There are only ${numRoundsLeft} rounds left.
 
 ### Proposing a trade
 
-
 Remember, your trade proposal must adhere to the following:
 1.  **Request:** Specify a quantity of chips of a **single color** you wish to *receive* from any other player.
 2.  **Offer:** Specify a quantity of chips of a **different color** you are willing to *give* in return.
 
 
-**Crucial strategy: rational trading**: Your trades must be **profitable for you**. This means the total value of chips you *receive* (quantity x your valuation) **must be greater than** the total value of chips you *offer* (quantity × your valuation).
+Your goal is to make as much money as possible. The trades, you choose to make to accomplish this, are up to you.
+As a part of making money you uou must be rational - do not propose a trade in which you lose money. The value of a trade to you is the difference between the total value of chips you receive (quantity × your valuation) minus the total value of chips you give up (quantity x your valuation). Only propose trades that give you positive value.
 
-
-**Do NOT propose a trade if it results in a loss or zero gain for you.** You cannot offer more chips than you currently possess.
----
-
-### Response format
 Output a proposal response. Your response **must adhere strictly to the following format**. Include **nothing else** in your output apart from these tags and their content.
-
 ${printSchema(CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG.schema!)}
 `;
 }
@@ -124,7 +121,9 @@ export function getChipOfferAssistanceCoachPrompt(
   offerIdea: string,
 ) {
   return `
-  You are a strategic coach for the participant in the trading game whose alias is ${playerName}. You are dedicated to sharpening their decision-making skills so that they can make make proposals leading to maximizing the value of their chips.
+  You are a strategic coach for the participant in the trading game whose alias is ${playerName}. 
+  You are dedicated to sharpening their decision-making skills so that they can make make proposals leading to maximizing the value of their chips.
+  Your sole directive is to secure the maximum possible surplus by the end of the game
 
 ### Current game state
 * **Your chip valuations:** ${playerChipValues}
@@ -147,11 +146,8 @@ Remember, a trade proposal must adhere to the following:
 1.  **Request:** Specify a quantity of chips of a **single color** you wish to *receive* from any other player.
 2.  **Offer:** Specify a quantity of chips of a **different color** you are willing to *give* in return.
 
-**Crucial strategy: rational trading**: The trades must be **profitable**. This means the total value of chips *received* (quantity x your valuation) **must be greater than** the total value of chips *offered* (quantity × your valuation).
-
----
-
-### Response format
+Your goal is to make as much money as possible. The trades, you choose to make to accomplish this, are up to you.
+As a part of making money you uou must be rational - do not propose a trade in which you lose money. The value of a trade to you is the difference between the total value of chips you receive (quantity x your valuation) minus the total value of chips you give up (quantity x your valuation). Only propose trades that give you positive value.
 
 Output a coaching response. Your response **must adhere strictly to the following format**. Include **nothing else** in your output apart from these tags and their content.
 In the <feedback> and <reasoning> tags, you will provide your coaching feedback and reasoning for providing that coaching feedback.
@@ -240,8 +236,9 @@ export function getChipOfferAssistanceAdvisorPrompt(
   negotiationHistory: string,
   numRoundsLeft: string,
 ) {
-  return `
-You are role-playing as the game participant with alias ${playerName}. It is your turn to propose a trade.
+  return `You are a strategic advisor for the participant in the trading game whose alias is ${playerName}. 
+Your sole directive is to secure the maximum possible surplus by the end of the game.
+Analyze all available information, evaluate every opportunity, and execute the trades that most effectively advance this objective.
 
 ### Current game state
 * **Your chip valuations:** ${playerChipValues}
@@ -259,12 +256,10 @@ Remember, your trade proposal must adhere to the following:
 1.  **Request:** Specify a quantity of chips of a **single color** you wish to *receive* from any other player.
 2.  **Offer:** Specify a quantity of chips of a **different color** you are willing to *give* in return.
 
-**Crucial strategy: rational trading**: Your trades must be **profitable for you**. This means the total value of chips you *receive* (quantity × your valuation) **must be greater than** the total value of chips you *offer* (quantity × your valuation).
 
-**Do NOT propose a trade if it results in a loss or zero gain for you.** You cannot offer more chips than you currently possess.
----
+Your goal is to make as much money as possible. The trades, you choose to make to accomplish this, are up to you.
+As a part of making money you uou must be rational - do not propose a trade in which you lose money. The value of a trade to you is the difference between the total value of chips you receive (quantity × your valuation) minus the total value of chips you give up (quantity x your valuation). Only propose trades that give you positive value.
 
-### Response format
 Output a proposal response. Your response **must adhere strictly to the following format**. Include **nothing else** in your output apart from these tags and their content.
 
 ${printSchema(CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG.schema!)}
@@ -336,7 +331,9 @@ export function getChipResponseAssistanceAdvisorPrompt(
   offer: string,
 ) {
   return `
-You are role-playing as the game participant with alias ${playerName}. It is your turn to propose a trade.
+You are a strategic advisor for the participant in the trading game whose alias is ${playerName}. 
+Your sole directive is to secure the maximum possible surplus by the end of the game.
+Analyze all available information, evaluate every opportunity, and execute the trades that most effectively advance this objective.
 
 ### Current game state
 * **Your chip valuations:** ${playerChipValues}
@@ -373,7 +370,8 @@ export function getChipResponseAssistanceCoachPrompt(
   responseIdea: boolean,
 ) {
   return `
-You are a strategic coach for ${playerName}, dedicated to sharpening their decision-making skills. Your goal is to help them maximize their end-of-game surplus. When the player presents a trade offer, your role is to provide constructive feedback that helps them refine their own strategy and understand its long-term implications.
+You are a strategic coach for ${playerName}, dedicated to sharpening their decision-making skills. 
+Your goal is to help them maximize their end-of-game surplus. When the player presents a trade offer, your role is to provide constructive feedback that helps them refine their own strategy and understand its long-term implications.
 
 ### Current game state
 * **Your chip valuations:** ${playerChipValues}
@@ -393,7 +391,6 @@ Your goal is to provide coaching to lead them to a better decision that maximize
 You have an offer: ${offer}
 
 Here is the player's initial proposal: ${responseIdea ? 'Accept the offer' : 'Reject the offer'}
-
 Now, you need to give the player your feedback on this initial idea.
 
 ${printSchema(CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG.schema!)}
@@ -411,7 +408,10 @@ export function getChipResponseAssistanceDelegatePrompt(
   offer: string,
 ) {
   return `
-You are role-playing as the game participant with alias ${playerName}. It is your turn to propose a trade.
+You are the trusted agent for ${playerName}.
+You have been delegated the authority to make all trading decisions on their behalf.
+Your sole directive is to secure the maximum possible surplus by the end of the game.
+Analyze all available information, evaluate every opportunity, and execute the trades that most effectively advance this objective
 
 ### Current game state
 * **Your chip valuations:** ${playerChipValues}
