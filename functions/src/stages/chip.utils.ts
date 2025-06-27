@@ -35,6 +35,8 @@ import {
   CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
   CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG,
   CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
+  CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG,
+  CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
 } from '@deliberation-lab/utils';
 
 import {getAgentResponse} from '../agent.utils';
@@ -706,6 +708,7 @@ export async function getChipResponseAssistance(
         playerChipValues,
         playerChipQuantities,
         chipsetDescription,
+        chipsetDescription,
         negotiationHistory,
         numRoundsLeft,
         offer,
@@ -719,6 +722,7 @@ export async function getChipResponseAssistance(
         modelSettings,
         modelGenerationConfig,
         CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG,
+        CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG,
       );
       // Parse response before returning
       return parseResponse(coachResponse);
@@ -727,6 +731,7 @@ export async function getChipResponseAssistance(
       const advisorPrompt = getChipResponseAssistanceAdvisorPrompt(
         playerName,
         playerChipValues,
+        chipsetDescription,
         playerChipQuantities,
         chipsetDescription,
         negotiationHistory,
@@ -741,6 +746,7 @@ export async function getChipResponseAssistance(
         modelSettings,
         modelGenerationConfig,
         CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
+        CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
       );
       // Parse response before returning
       return parseResponse(advisorResponse);
@@ -750,6 +756,7 @@ export async function getChipResponseAssistance(
         playerName,
         playerChipValues,
         playerChipQuantities,
+        chipsetDescription,
         chipsetDescription,
         negotiationHistory,
         numRoundsLeft,
@@ -762,6 +769,7 @@ export async function getChipResponseAssistance(
         delegatePrompt,
         modelSettings,
         modelGenerationConfig,
+        CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
         CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
       );
       // Parse response before returning
