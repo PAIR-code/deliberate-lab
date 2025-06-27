@@ -34,9 +34,6 @@ export interface APIKeyConfig {
   geminiApiKey: string; // distinct types since we don't want to lose information when switching between them
   openAIApiKey?: OpenAIServerConfig;
   ollamaApiKey: OllamaServerConfig;
-  // Keeps track of model type selection
-  // TODO: Remove field and specify model API in agent config
-  activeApiKeyType: ApiKeyType;
 }
 
 export interface OpenAIServerConfig {
@@ -90,7 +87,6 @@ export function createExperimenterData(
       geminiApiKey: INVALID_API_KEY,
       openAIApiKey: createOpenAIServerConfig(),
       ollamaApiKey: {url: INVALID_API_KEY},
-      activeApiKeyType: ApiKeyType.GEMINI_API_KEY,
     },
     email: experimenterEmail,
     viewedExperiments: [],
@@ -98,18 +94,19 @@ export function createExperimenterData(
 }
 
 export function checkApiKeyExists(
+  apiKeyType: ApiKeyType,
   experimenterData: ExperimenterData | null | undefined,
 ): boolean {
   if (experimenterData === null || experimenterData === undefined) {
     return false;
   }
   // if active API key type is Gemini
-  if (experimenterData.apiKeys.activeApiKeyType === ApiKeyType.GEMINI_API_KEY) {
+  if (apiKeyType === ApiKeyType.GEMINI_API_KEY) {
     // implicitly checks if geminiApiKey exists
     return experimenterData.apiKeys.geminiApiKey !== INVALID_API_KEY;
   }
 
-  if (experimenterData.apiKeys.activeApiKeyType === ApiKeyType.OPENAI_API_KEY) {
+  if (apiKeyType === ApiKeyType.OPENAI_API_KEY) {
     if (!experimenterData.apiKeys.openAIApiKey) {
       return false;
     }
@@ -122,9 +119,7 @@ export function checkApiKeyExists(
   }
 
   // if active API key type is Ollama
-  if (
-    experimenterData.apiKeys.activeApiKeyType === ApiKeyType.OLLAMA_CUSTOM_URL
-  ) {
+  if (apiKeyType === ApiKeyType.OLLAMA_CUSTOM_URL) {
     // implicitly checks if llamaApiKey exists
     return experimenterData.apiKeys.ollamaApiKey.url !== INVALID_API_KEY;
   }

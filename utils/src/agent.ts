@@ -24,7 +24,6 @@ export interface CustomRequestBodyField {
 }
 
 /** Specifies which API to use for model calls. */
-// TODO: Rename enum (ApiType? LLMApiType?)
 export enum ApiKeyType {
   GEMINI_API_KEY = 'GEMINI',
   OPENAI_API_KEY = 'OPENAI',
