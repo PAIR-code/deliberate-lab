@@ -4,7 +4,6 @@ import './stage_footer';
 
 import '@material/web/button/filled-button.js';
 import '@material/web/button/outlined-button.js';
-import '@material/web/button/text-button.js';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -13,18 +12,16 @@ import {classMap} from 'lit/directives/class-map.js';
 import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 
 import {
-  FlipCardStageConfig,
-  FlipCard,
-  FlipCardStageParticipantAnswer,
+  canProceedWithMinCardsFlipped,
   createFlipCardStageParticipantAnswer,
   FlipAction,
-} from '@deliberation-lab/utils';
-import {
+  FlipCard,
+  FlipCardStageConfig,
+  FlipCardStageParticipantAnswer,
   getUniqueFlippedCardsCount,
-  canProceedWithMinCardsFlipped,
   isStageComplete,
-} from '@deliberation-lab/utils/src/stages/flipcard_stage.utils';
-import {shuffleWithSeed} from '@deliberation-lab/utils/src/utils/random.utils';
+  shuffleWithSeed,
+} from '@deliberation-lab/utils';
 import {Timestamp} from 'firebase/firestore';
 
 import {core} from '../../core/core';
