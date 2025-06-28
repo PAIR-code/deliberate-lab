@@ -3,6 +3,7 @@ import '../../pair-components/icon_button';
 import '../../pair-components/textarea';
 import '../../pair-components/tooltip';
 
+import '../chat/chat_input';
 import '../participant_profile/avatar_icon';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -33,71 +34,6 @@ export class Chat extends MobxLitElement {
   @state() name = 'Moderator';
   @state() avatar = '🙋';
   @state() isLoading = false;
-
-  private async sendUserInput() {
-    if (this.value.trim() === '') return;
-    this.isLoading = true;
-
-    // Send chat message
-    await this.experimentManager.createManualChatMessage(
-      this.participantService.currentStageViewId ?? '',
-      {
-        message: this.value.trim(),
-        profile: {name: this.name, avatar: this.avatar, pronouns: null},
-      },
-    );
-
-    this.value = '';
-    this.isLoading = false;
-  }
-
-  private renderInput() {
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        this.sendUserInput();
-        e.stopPropagation();
-      }
-    };
-
-    const handleInput = (e: Event) => {
-      this.value = (e.target as HTMLTextAreaElement).value;
-    };
-
-    const autoFocus = () => {
-      // Only auto-focus chat input if on desktop
-      return navigator.maxTouchPoints === 0;
-    };
-
-    return html`<div class="input-wrapper">
-      <div class="input">
-        <pr-textarea
-          size="small"
-          placeholder="Send message"
-          .value=${this.value}
-          ?focused=${autoFocus()}
-          ?disabled=${this.isLoading}
-          @keyup=${handleKeyUp}
-          @input=${handleInput}
-        >
-        </pr-textarea>
-        <pr-tooltip
-          text="Send message"
-          color="tertiary"
-          variant="outlined"
-          position="TOP_END"
-        >
-          <pr-icon-button
-            icon="send"
-            variant="tonal"
-            .disabled=${this.value.trim() === '' || this.isLoading}
-            ?loading=${this.isLoading}
-            @click=${this.sendUserInput}
-          >
-          </pr-icon-button>
-        </pr-tooltip>
-      </div>
-    </div>`;
-  }
 
   private renderName() {
     const updateName = (e: InputEvent) => {
@@ -167,9 +103,28 @@ export class Chat extends MobxLitElement {
 
     return html`
       ${this.renderName()} ${this.renderAvatars()}
-      <div class="input-row-wrapper">
-        <div class="input-row">${this.renderInput()}</div>
-      </div>
+      <chat-input
+        .stageId=${stageId}
+        .sendUserInput=${async (input: string) => {
+          if (input.trim() === '') return;
+          this.isLoading = true;
+          // Send chat message
+          await this.experimentManager.createManualChatMessage(
+            this.participantService.currentStageViewId ?? '',
+            {
+              message: this.value.trim(),
+              profile: {name: this.name, avatar: this.avatar, pronouns: null},
+            },
+          );
+          this.value = '';
+          this.isLoading = false;
+        }}
+        .storeUserInput=${(input: string) => {
+          this.value = input;
+        }}
+        .getUserInput=${() => this.value}
+      >
+      </chat-input>
     `;
   }
 }
