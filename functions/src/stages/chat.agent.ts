@@ -105,7 +105,7 @@ export async function checkAgentParticipantReadyToEndChat(
   );
 
   const response = await getAgentResponse(
-    await getExperimenterDataFromExperiment(experimentId),
+    (await getExperimenterDataFromExperiment(experimentId)).apiKeys,
     prompt,
     participant.agentConfig.modelSettings,
     promptConfig.generationConfig,

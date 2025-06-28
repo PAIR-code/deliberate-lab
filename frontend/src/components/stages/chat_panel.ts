@@ -22,7 +22,6 @@ import {
   MediatorProfile,
   MediatorStatus,
   ParticipantProfile,
-  checkApiKeyExists,
 } from '@deliberation-lab/utils';
 import {
   convertUnifiedTimestampToDate,
@@ -139,21 +138,6 @@ export class ChatPanel extends MobxLitElement {
         .toString()
         .padStart(2, '0')}`;
     }
-  }
-
-  private renderApiCheck() {
-    if (
-      !checkApiKeyExists(this.authService.experimenterData) &&
-      this.authService.isExperimenter
-    ) {
-      return html`
-        <div class="warning">
-          <b>Note:</b> In order for LLM calls to work, you must add an API key
-          or server configuration under Experimenter Settings.
-        </div>
-      `;
-    }
-    return nothing;
   }
 
   private renderParticipantList() {

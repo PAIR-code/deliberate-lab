@@ -119,7 +119,7 @@ export async function completeStageAsAgentParticipant(
       }
       const rankingAnswer = await getAgentParticipantRankingStageResponse(
         experimentId,
-        experimenterData,
+        experimenterData.apiKeys,
         participant,
         stage,
       );
@@ -134,7 +134,7 @@ export async function completeStageAsAgentParticipant(
       }
       const surveyAnswer = await getAgentParticipantSurveyStageResponse(
         experimentId,
-        experimenterData,
+        experimenterData.apiKeys,
         participant,
         stage,
       );
