@@ -206,9 +206,7 @@ export class ChatPanel extends MobxLitElement {
       <div class="profile">
         <profile-display
           .profile=${profile}
-          .color=${getHashBasedColor(
-            profile.agentConfig?.agentId ?? profile.id ?? '',
-          )}
+          .color=${getHashBasedColor(profile.id ?? '')}
           displayType="chat"
         >
         </profile-display>
