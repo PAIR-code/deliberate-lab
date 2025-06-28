@@ -2,8 +2,8 @@ import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
 import '../participant_profile/avatar_icon';
 import '../participant_profile/profile_display';
-import './stage_description';
-import './stage_footer';
+import '../stages/stage_description';
+import '../stages/stage_footer';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -27,10 +27,10 @@ import {
   convertUnifiedTimestampToDate,
   getHashBasedColor,
 } from '../../shared/utils';
-import {styles} from './chat_panel.scss';
+import {styles} from './chat_info_panel.scss';
 
-/** Chat panel view with stage info, participants. */
-@customElement('chat-panel')
+/** Chat panel view with stage info, timer, participants. */
+@customElement('chat-info-panel')
 export class ChatPanel extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -231,6 +231,6 @@ export class ChatPanel extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'chat-panel': ChatPanel;
+    'chat-info-panel': ChatPanel;
   }
 }
