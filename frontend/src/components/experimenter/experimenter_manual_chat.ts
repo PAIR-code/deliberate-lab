@@ -14,6 +14,7 @@ import {AuthService} from '../../services/auth.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ParticipantService} from '../../services/participant.service';
 
+import {EXPERIMENTER_MANUAL_CHAT_SENDER_ID} from '@deliberation-lab/utils';
 import {LLM_AGENT_AVATARS} from '../../shared/constants';
 import {getHashBasedColor} from '../../shared/utils';
 
@@ -140,7 +141,7 @@ export class Chat extends MobxLitElement {
           <avatar-icon
             .emoji=${emoji}
             .square=${true}
-            .color=${getHashBasedColor(emoji)}
+            .color=${getHashBasedColor(EXPERIMENTER_MANUAL_CHAT_SENDER_ID)}
           >
           </avatar-icon>
         </div>

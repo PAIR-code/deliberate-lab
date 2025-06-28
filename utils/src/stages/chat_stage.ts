@@ -136,6 +136,10 @@ export interface ChatStagePublicData extends BaseStagePublicData {
   discussionEndTimestamp: UnifiedTimestamp | null;
 }
 
+// Sender ID for chat messages manually sent by experimenter
+// This should be consistent to ensure same background color for each message
+export const EXPERIMENTER_MANUAL_CHAT_SENDER_ID = 'experimenter';
+
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
@@ -227,7 +231,7 @@ export function createExperimenterChatMessage(
     message: config.message ?? '',
     timestamp: config.timestamp ?? Timestamp.now(),
     profile: config.profile ?? {name: 'Mediator', avatar: '⭐', pronouns: null},
-    senderId: config.senderId ?? '',
+    senderId: EXPERIMENTER_MANUAL_CHAT_SENDER_ID,
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
   };
