@@ -5,6 +5,7 @@ import '../../pair-components/tooltip';
 
 import '../progress/progress_chat_discussion_completed';
 import '../progress/progress_stage_completed';
+import '../chat/chat_input';
 import '../chat/chat_message';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -237,63 +238,15 @@ export class ChatInterface extends MobxLitElement {
   }
 
   private renderInput() {
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        this.sendUserInput();
-        e.stopPropagation();
-      }
-    };
-
-    const handleInput = (e: Event) => {
-      if (!this.stage) return;
-
-      const value = (e.target as HTMLTextAreaElement).value;
-      this.participantAnswerService.updateChatInput(this.stage.id, value);
-    };
-
-    const autoFocus = () => {
-      // Only auto-focus chat input if on desktop
-      return navigator.maxTouchPoints === 0;
-    };
-
-    return html`<div class="input-wrapper">
-      <div class="input">
-        <pr-textarea
-          size="small"
-          placeholder="Send message"
-          .value=${this.participantAnswerService.getChatInput(
-            this.stage?.id ?? '',
-          )}
-          ?focused=${autoFocus()}
-          ?disabled=${this.disableInput ||
-          this.participantService.disableStage ||
-          this.isConversationOver()}
-          @keyup=${handleKeyUp}
-          @input=${handleInput}
-        >
-        </pr-textarea>
-        <pr-tooltip
-          text="Send message"
-          color="tertiary"
-          variant="outlined"
-          position="TOP_END"
-        >
-          <pr-icon-button
-            icon="send"
-            variant="tonal"
-            .disabled=${this.participantAnswerService
-              .getChatInput(this.stage?.id ?? '')
-              .trim() === '' ||
-            this.disableInput ||
-            this.participantService.disableStage ||
-            this.isConversationOver()}
-            ?loading=${this.participantService.isSendingChat}
-            @click=${this.sendUserInput}
-          >
-          </pr-icon-button>
-        </pr-tooltip>
-      </div>
-    </div>`;
+    return html`
+      <chat-input
+        .stageId=${this.stage?.id ?? ''}
+        .isDisabled=${this.disableInput ||
+        this.participantService.disableStage ||
+        this.isConversationOver()}
+      >
+      </chat-input>
+    `;
   }
 
   private renderEndDiscussionButton(currentDiscussionId: string | null) {
