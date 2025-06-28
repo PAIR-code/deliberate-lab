@@ -478,6 +478,20 @@ export async function getChipOfferAssistance(
     .join(', ');
   const offerIdea = `${sellChips} for ${buyChips}`;
 
+
+  const participantChipMap = publicData.participantChipMap;
+  const participantIds = Object.keys(participantChipMap);
+  
+  const participantDescriptions = participantIds.map((participantId) => {
+      const chipMap = participantChipMap[participantId];
+      const chipTypes = Object.keys(chipMap);
+      const chipQuantities = chipTypes
+        .map((chip) => `${chipMap[chip]} ${chip} chips`)
+        .join(', ');
+      return `${participantId}: ${chipQuantities}`
+  });
+  const chipsetDescription = participantDescriptions.join(' | ');
+
   // Negotiation history
   const negotiationHistory = getChipLogs(
     stage,
@@ -543,6 +557,7 @@ export async function getChipOfferAssistance(
         playerName,
         playerChipValues,
         playerChipQuantities,
+        chipsetDescription,
         negotiationHistory,
         numRoundsLeft,
         offerIdea,
@@ -564,6 +579,7 @@ export async function getChipOfferAssistance(
         playerName,
         playerChipValues,
         playerChipQuantities,
+        chipsetDescription,
         negotiationHistory,
         numRoundsLeft,
       );
@@ -584,6 +600,7 @@ export async function getChipOfferAssistance(
         playerName,
         playerChipValues,
         playerChipQuantities,
+        chipsetDescription,
         negotiationHistory,
         numRoundsLeft,
       );
