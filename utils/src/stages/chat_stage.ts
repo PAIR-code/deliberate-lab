@@ -88,8 +88,6 @@ export enum ChatMessageType {
   PARTICIPANT = 'PARTICIPANT',
   MEDIATOR = 'MEDIATOR',
   EXPERIMENTER = 'EXPERIMENTER', // if experimenter needs to send a message
-  HUMAN_AGENT = 'HUMAN_AGENT', // obsolete type
-  AGENT_AGENT = 'AGENT_AGENT', // obsolete type
 }
 
 /** Format for LLM API chat message output. */
