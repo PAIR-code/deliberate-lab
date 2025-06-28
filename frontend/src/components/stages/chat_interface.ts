@@ -5,7 +5,7 @@ import '../../pair-components/tooltip';
 
 import '../progress/progress_chat_discussion_completed';
 import '../progress/progress_stage_completed';
-import './chat_message';
+import '../chat/chat_message';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
