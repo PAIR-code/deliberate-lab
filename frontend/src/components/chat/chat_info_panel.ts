@@ -14,19 +14,19 @@ import {AgentManager} from '../../services/agent.manager';
 import {AuthService} from '../../services/auth.service';
 import {CohortService} from '../../services/cohort.service';
 import {ParticipantService} from '../../services/participant.service';
-import {getChatTimeRemainingInSeconds} from '../../shared/stage.utils';
-
 import {
   ChatStageConfig,
   ChatStagePublicData,
   MediatorProfile,
   MediatorStatus,
   ParticipantProfile,
+  convertUnifiedTimestampToTime,
 } from '@deliberation-lab/utils';
 import {
-  convertUnifiedTimestampToDate,
-  getHashBasedColor,
-} from '../../shared/utils';
+  getChatStartTimestamp,
+  getChatTimeRemainingInSeconds,
+} from '../../shared/stage.utils';
+import {getHashBasedColor} from '../../shared/utils';
 import {styles} from './chat_info_panel.scss';
 
 /** Chat panel view with stage info, timer, participants. */
@@ -83,61 +83,45 @@ export class ChatPanel extends MobxLitElement {
     }
 
     return html`
-      <stage-description .stage=${this.stage}></stage-description>
-      ${this.renderTimeRemaining()} ${this.renderParticipantList()}
+      <stage-description .stage=${this.stage} noPadding> </stage-description>
+      ${this.renderTimer()} ${this.renderParticipantList()}
     `;
   }
 
-  private renderTimeRemaining() {
-    if (!this.stage || this.stage.timeLimitInMinutes === null) {
-      return '';
-    }
+  private renderTimer() {
+    if (!this.stage) return nothing;
 
     const publicStageData = this.cohortService.stagePublicDataMap[
       this.stage.id
     ] as ChatStagePublicData;
-    if (!publicStageData || !this.stage.timeLimitInMinutes) return;
+    if (!publicStageData || !this.stage.timeLimitInMinutes) return nothing;
 
-    let timerHtml = html``;
-    if (publicStageData.discussionEndTimestamp) {
-      timerHtml = html`<div class="ended countdown">
-        Discussion ended at
-        ${convertUnifiedTimestampToDate(
-          publicStageData.discussionEndTimestamp,
-          false,
-        )}.
-      </div>`;
-    } else if (publicStageData.discussionStartTimestamp) {
-      const startText = `Conversation started at: ${convertUnifiedTimestampToDate(
-        publicStageData.discussionStartTimestamp,
-        false,
-      )}`;
-      // TODO: Remove timer in favor of "end conversation" button
-      timerHtml = html`<div class="countdown">
-        ${startText} (time limit: ${this.stage.timeLimitInMinutes} minutes)
-      </div>`;
-    }
+    const renderStatus = () => {
+      if (!publicStageData.discussionStartTimestamp) {
+        return nothing;
+      }
+
+      const end = publicStageData.discussionEndTimestamp;
+      if (end) {
+        return html`(ended at ${convertUnifiedTimestampToTime(end, false)})`;
+      }
+
+      const start = getChatStartTimestamp(
+        this.stage?.id ?? '',
+        this.cohortService.chatMap,
+      );
+      if (!start) return nothing;
+      return html`(started at ${convertUnifiedTimestampToTime(start, false)})`;
+    };
 
     return html`
-      ${timerHtml}
+      <div
+        class=${`countdown ${publicStageData.discussionEndTimestamp ? 'ended' : ''}`}
+      >
+        ${this.stage.timeLimitInMinutes} min chat ${renderStatus()}
+      </div>
       <div class="divider"></div>
     `;
-  }
-
-  private formatTime(seconds: number): string {
-    const hours = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-
-    if (hours > 0) {
-      return `${hours.toString().padStart(2, '0')}:${mins
-        .toString()
-        .padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    } else {
-      return `${mins.toString().padStart(2, '0')}:${secs
-        .toString()
-        .padStart(2, '0')}`;
-    }
   }
 
   private renderParticipantList() {

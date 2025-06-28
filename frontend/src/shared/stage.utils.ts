@@ -3,7 +3,9 @@ import {
   SurveyAnswer,
   SurveyQuestion,
   SurveyQuestionKind,
+  UnifiedTimestamp,
 } from '@deliberation-lab/utils';
+import {Timestamp} from 'firebase/firestore';
 
 /** Returns required questions from survey stage. */
 export function getRequiredSurveyQuestions(questions: SurveyQuestion[]) {
@@ -49,14 +51,14 @@ export function isSurveyAnswerComplete(answer: SurveyAnswer | undefined) {
   return true;
 }
 
-/** Returns the timestamp (seconds) of the first chat message, or null if none. */
+/** Returns the timestamp of the first chat message, or null if none. */
 export function getChatStartTimestamp(
   chatStageId: string,
   chatMap: Record<string, ChatMessage[]>,
-): number | null {
+): UnifiedTimestamp | null {
   const messages = chatMap[chatStageId] ?? [];
   if (messages.length) {
-    return messages[0].timestamp?.seconds ?? null;
+    return messages[0].timestamp;
   }
   return null;
 }
@@ -67,8 +69,8 @@ export function getChatTimeElapsedInSeconds(
   chatMap: Record<string, ChatMessage[]>,
 ): number | null {
   const start = getChatStartTimestamp(chatStageId, chatMap);
-  if (start == null) return null;
-  return Date.now() / 1000 - start;
+  if (!start) return null;
+  return Timestamp.now().seconds - start.seconds;
 }
 
 /** Returns time remaining in seconds for the chat, or null if not started or no limit. */

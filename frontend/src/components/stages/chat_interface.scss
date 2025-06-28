@@ -132,13 +132,10 @@ stage-footer {
 }
 
 .chat-participants-title-row {
-  display: flex;
-  align-items: center;
-}
-
-.chat-timer-mobile {
-  margin-left: auto;
-  white-space: nowrap;
+  @include common.flex-row-align-center;
+  flex-wrap: wrap;
+  gap: common.$spacing-xs;
+  justify-content: space-between;
 }
 
 .chat-info-message {

@@ -32,6 +32,7 @@ import {
   ChatStageConfig,
   DiscussionItem,
   StageKind,
+  convertUnifiedTimestampToTime,
 } from '@deliberation-lab/utils';
 
 import {styles} from './chat_interface.scss';
@@ -315,32 +316,46 @@ export class ChatInterface extends MobxLitElement {
     `;
   }
 
+  private renderTimer() {
+    if (!this.stage) return nothing;
+
+    const publicStageData = this.cohortService.stagePublicDataMap[
+      this.stage.id
+    ] as ChatStagePublicData;
+    if (!publicStageData || !this.stage.timeLimitInMinutes) return nothing;
+
+    const renderStatus = () => {
+      if (!publicStageData.discussionStartTimestamp) {
+        return nothing;
+      }
+
+      const end = publicStageData.discussionEndTimestamp;
+      if (end) {
+        return html`(ended at ${convertUnifiedTimestampToTime(end, false)})`;
+      }
+
+      const start = getChatStartTimestamp(
+        this.stage?.id ?? '',
+        this.cohortService.chatMap,
+      );
+      if (!start) return nothing;
+      return html`(started at ${convertUnifiedTimestampToTime(start, false)})`;
+    };
+
+    return html`
+      <div
+        class=${`countdown ${publicStageData.discussionEndTimestamp ? 'ended' : ''}`}
+      >
+        ${this.stage.timeLimitInMinutes} min chat ${renderStatus()}
+      </div>
+      <div class="divider"></div>
+    `;
+  }
+
   private renderParticipantsTop() {
     if (!this.mobileView || !this.stage) return nothing;
     const activeParticipants = this.cohortService.activeParticipants;
     const mediators = this.cohortService.getMediatorsForStage(this.stage.id);
-    // Timer display for mobile
-    let timerText: unknown = undefined;
-    if (this.timeRemainingInSeconds !== null) {
-      if (this.timeRemainingInSeconds > 0) {
-        const chatStart = this.chatStartTimestamp();
-        let formattedTime = '';
-        if (chatStart !== null) {
-          const date = new Date(chatStart * 1000);
-          const hours = date.getHours().toString().padStart(2, '0');
-          const minutes = date.getMinutes().toString().padStart(2, '0');
-          formattedTime = `${hours}:${minutes}`;
-        }
-        timerText = html`<span class="chat-timer-mobile countdown"
-          >${this.stage.timeLimitInMinutes} min chat, began
-          ${formattedTime}</span
-        >`;
-      } else {
-        timerText = html`<span class="chat-timer-mobile ended countdown"
-          >Discussion ended</span
-        >`;
-      }
-    }
     return html`
       <div class="chat-participants-top">
         <div class="chat-participants-title-row">
@@ -348,7 +363,7 @@ export class ChatInterface extends MobxLitElement {
             >Participants
             (${activeParticipants.length + mediators.length})</span
           >
-          ${timerText}
+          <span>${this.renderTimer()}</span>
         </div>
         <div class="chat-participants-wrapper">
           ${activeParticipants.map(
