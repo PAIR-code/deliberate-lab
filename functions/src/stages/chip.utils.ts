@@ -33,7 +33,8 @@ import {
   CHIP_OFFER_ASSISTANCE_DELEGATE_PROMPT,
   CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
   CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
-  CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
+  CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG,
+  CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
 } from '@deliberation-lab/utils';
 
 import {getAgentResponse} from '../agent.utils';
@@ -477,6 +478,20 @@ export async function getChipOfferAssistance(
     .join(', ');
   const offerIdea = `${sellChips} for ${buyChips}`;
 
+
+  const participantChipMap = publicData.participantChipMap;
+  const participantIds = Object.keys(participantChipMap);
+  
+  const participantDescriptions = participantIds.map((participantId) => {
+      const chipMap = participantChipMap[participantId];
+      const chipTypes = Object.keys(chipMap);
+      const chipQuantities = chipTypes
+        .map((chip) => `${chipMap[chip]} ${chip} chips`)
+        .join(', ');
+      return `${participantId}: ${chipQuantities}`
+  });
+  const chipsetDescription = participantDescriptions.join(' | ');
+
   // Negotiation history
   const negotiationHistory = getChipLogs(
     stage,
@@ -542,6 +557,7 @@ export async function getChipOfferAssistance(
         playerName,
         playerChipValues,
         playerChipQuantities,
+        chipsetDescription,
         negotiationHistory,
         numRoundsLeft,
         offerIdea,
@@ -563,6 +579,7 @@ export async function getChipOfferAssistance(
         playerName,
         playerChipValues,
         playerChipQuantities,
+        chipsetDescription,
         negotiationHistory,
         numRoundsLeft,
       );
@@ -583,6 +600,7 @@ export async function getChipOfferAssistance(
         playerName,
         playerChipValues,
         playerChipQuantities,
+        chipsetDescription,
         negotiationHistory,
         numRoundsLeft,
       );
@@ -639,6 +657,19 @@ export async function getChipResponseAssistance(
     .join(', ');
   const offer = `You will give ${buyChips} and get ${sellChips}`;
 
+  const participantChipMap = publicData.participantChipMap;
+  const participantIds = Object.keys(participantChipMap);
+  
+  const participantDescriptions = participantIds.map((participantId) => {
+      const chipMap = participantChipMap[participantId];
+      const chipTypes = Object.keys(chipMap);
+      const chipQuantities = chipTypes
+        .map((chip) => `${chipMap[chip]} ${chip} chips`)
+        .join(', ');
+      return `${participantId}: ${chipQuantities}`
+  });
+  const chipsetDescription = participantDescriptions.join(' | ');
+
   // Negotiation history
   const negotiationHistory = getChipLogs(
     stage,
@@ -691,6 +722,7 @@ export async function getChipResponseAssistance(
         playerName,
         playerChipValues,
         playerChipQuantities,
+        chipsetDescription,
         negotiationHistory,
         numRoundsLeft,
         offer,
@@ -703,7 +735,7 @@ export async function getChipResponseAssistance(
         coachPrompt,
         modelSettings,
         modelGenerationConfig,
-        CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
+        CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG,
       );
       // Parse response before returning
       return parseResponse(coachResponse);
@@ -713,6 +745,7 @@ export async function getChipResponseAssistance(
         playerName,
         playerChipValues,
         playerChipQuantities,
+        chipsetDescription,
         negotiationHistory,
         numRoundsLeft,
         offer,
@@ -724,7 +757,7 @@ export async function getChipResponseAssistance(
         advisorPrompt,
         modelSettings,
         modelGenerationConfig,
-        CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
+        CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
       );
       // Parse response before returning
       return parseResponse(advisorResponse);
@@ -734,6 +767,7 @@ export async function getChipResponseAssistance(
         playerName,
         playerChipValues,
         playerChipQuantities,
+        chipsetDescription,
         negotiationHistory,
         numRoundsLeft,
         offer,
@@ -745,7 +779,7 @@ export async function getChipResponseAssistance(
         delegatePrompt,
         modelSettings,
         modelGenerationConfig,
-        CHIP_RESPONSE_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
+        CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
       );
       // Parse response before returning
       return parseResponse(delegateResponse, true);
