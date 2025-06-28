@@ -219,8 +219,6 @@ export const sendChipResponse = onCall(async (request) => {
 export const requestChipAssistance = onCall(async (request) => {
   const {data} = request;
 
-  console.log(data)
-
   const participant = await getFirestoreParticipant(
     data.experimentId,
     data.participantId,
