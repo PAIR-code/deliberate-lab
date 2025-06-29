@@ -1,5 +1,5 @@
 import {
-  ExperimenterData,
+  APIKeyConfig,
   ParticipantProfileExtended,
   SurveyStageConfig,
   SurveyQuestionKind,
@@ -16,7 +16,7 @@ import {getPastStagesPromptContext} from './stage.utils';
 /** Use LLM call to generation agent participant response to survey stage. */
 export async function getAgentParticipantSurveyStageResponse(
   experimentId: string,
-  experimenterData: ExperimenterData, // for making LLM call
+  apiKeyConfig: APIKeyConfig, // for making LLM call
   participant: ParticipantProfileExtended,
   stage: SurveyStageConfig,
 ) {
@@ -31,7 +31,7 @@ export async function getAgentParticipantSurveyStageResponse(
   for (const question of stage.questions) {
     const answer = await getAgentParticipantSurveyQuestionResponse(
       experimentId,
-      experimenterData,
+      apiKeyConfig,
       stage,
       participant,
       question,
@@ -56,7 +56,7 @@ export async function getAgentParticipantSurveyStageResponse(
 
 async function getAgentParticipantSurveyQuestionResponse(
   experimentId: string,
-  experimenterData: ExperimenterData, // for making LLM call
+  apiKeyConfig: APIKeyConfig, // for making LLM call
   stage: StageConfig,
   participant: ParticipantProfileExtended,
   question: SurveyQuestion, // current question
@@ -101,7 +101,7 @@ async function getAgentParticipantSurveyQuestionResponse(
   );
   // TODO: Use structured output
   const rawResponse = await getAgentResponse(
-    experimenterData,
+    apiKeyConfig,
     prompt,
     participant.agentConfig.modelSettings,
     generationConfig,

@@ -6,7 +6,7 @@ import {
   StageTextConfigSchema,
   StageProgressConfigSchema,
 } from './stage.validation';
-import {ChatMessageType} from './chat_stage';
+import {ChatMessageType} from '../chat_message';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -36,8 +36,6 @@ export const ChatMessageTypeData = Type.Union([
   Type.Literal(ChatMessageType.PARTICIPANT),
   Type.Literal(ChatMessageType.MEDIATOR),
   Type.Literal(ChatMessageType.EXPERIMENTER),
-  Type.Literal(ChatMessageType.HUMAN_AGENT),
-  Type.Literal(ChatMessageType.AGENT_AGENT),
 ]);
 
 /** ChatMessage input validation. */

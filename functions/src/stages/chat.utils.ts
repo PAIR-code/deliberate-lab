@@ -36,6 +36,7 @@ import {
   getFirestoreExperiment,
   getFirestoreParticipantAnswer,
   getFirestoreParticipantAnswerRef,
+  getFirestoreParticipantRef,
   getFirestoreStagePublicData,
 } from '../utils/firestore';
 import {getPastStagesPromptContext} from './stage.utils';
@@ -250,7 +251,7 @@ export async function getAgentChatAPIResponse(
   );
 
   const response = await getAgentResponse(
-    experimenterData,
+    experimenterData.apiKeys,
     prompt,
     agentConfig.modelSettings,
     promptConfig.generationConfig,
@@ -266,22 +267,7 @@ export async function getAgentChatAPIResponse(
   let message = response.text!;
   let parsed = '';
 
-  if (promptConfig.responseConfig?.isJSON) {
-    // Reset message to empty before trying to fill with JSON response
-    message = '';
-
-    try {
-      const cleanedText = response
-        .text!.replace(/```json\s*|\s*```/g, '')
-        .trim();
-      parsed = JSON.parse(cleanedText);
-    } catch {
-      // Response is already logged in console during Gemini API call
-      console.log('Could not parse JSON!');
-      return null;
-    }
-    message = parsed[promptConfig.responseConfig?.messageField] ?? '';
-  } else if (structuredOutputEnabled(promptConfig.structuredOutputConfig)) {
+  if (structuredOutputEnabled(promptConfig.structuredOutputConfig)) {
     // Reset message to empty before trying to fill with JSON response
     message = '';
 
@@ -328,6 +314,14 @@ export async function sendAgentChatMessage(
   stageId: string,
   chatId: string, // ID of chat that is being responded to
 ) {
+  // Wait for typing delay
+  // TODO: Decrease typing delay to account for LLM API call latencies?
+  // TODO: Don't send message if conversation continues while agent is typing?
+  await awaitTypingDelay(
+    agentResponse.message,
+    agentResponse.promptConfig.chatSettings.wordsPerMinute,
+  );
+
   // Don't send a message if the conversation has moved on
   const numChatsAfterAgent = await getChatMessageCount(
     experimentId,
@@ -338,14 +332,6 @@ export async function sendAgentChatMessage(
     // TODO: Write log to Firestore
     return;
   }
-
-  // Wait for typing delay
-  // TODO: Decrease typing delay to account for LLM API call latencies?
-  // TODO: Don't send message if conversation continues while agent is typing?
-  await awaitTypingDelay(
-    agentResponse.message,
-    agentResponse.promptConfig.chatSettings.wordsPerMinute,
-  );
 
   // Don't send a message if the conversation already has a response
   // to the trigger message by the same type of agent (participant, mediator)
@@ -562,7 +548,7 @@ export async function updateParticipantReadyToEndChat(
 
     const participantDoc = getFirestoreParticipantRef(
       experimentId,
-      participantId,
+      participant.privateId,
     );
     await app.firestore().runTransaction(async (transaction) => {
       await transaction.set(participantDoc, participant);

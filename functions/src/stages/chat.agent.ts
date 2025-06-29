@@ -9,6 +9,7 @@ import {
   createModelGenerationConfig,
   createParticipantChatMessage,
   getDefaultChatPrompt,
+  DEFAULT_AGENT_PARTICIPANT_PROMPT,
   DEFAULT_AGENT_PARTICIPANT_READY_TO_END_CHAT_PROMPT,
   DEFAULT_AGENT_PARTICIPANT_READY_TO_END_CHAT_STRUCTURED_OUTPUT,
 } from '@deliberation-lab/utils';
@@ -105,7 +106,7 @@ export async function checkAgentParticipantReadyToEndChat(
   );
 
   const response = await getAgentResponse(
-    await getExperimenterDataFromExperiment(experimentId),
+    (await getExperimenterDataFromExperiment(experimentId)).apiKeys,
     prompt,
     participant.agentConfig.modelSettings,
     promptConfig.generationConfig,

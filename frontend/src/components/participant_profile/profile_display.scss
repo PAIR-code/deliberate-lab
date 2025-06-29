@@ -18,6 +18,10 @@ profile-display {
   flex-wrap: wrap;
   gap: common.$spacing-large;
   width: max-content;
+
+  &.small {
+    gap: common.$spacing-small;
+  }
 }
 
 .waiting-profile {
