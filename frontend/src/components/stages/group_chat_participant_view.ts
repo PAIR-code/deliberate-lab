@@ -5,8 +5,7 @@ import '../../pair-components/tooltip';
 
 import '../progress/progress_chat_discussion_completed';
 import '../progress/progress_stage_completed';
-import '../chat/chat_info_panel';
-import '../chat/chat_input';
+import '../chat/chat_interface';
 import '../chat/chat_message';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -18,13 +17,6 @@ import {AuthService} from '../../services/auth.service';
 import {CohortService} from '../../services/cohort.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
-import {ParticipantAnswerService} from '../../services/participant.answer';
-import {RouterService} from '../../services/router.service';
-import {getHashBasedColor} from '../../shared/utils';
-import {
-  getChatStartTimestamp,
-  getChatTimeRemainingInSeconds,
-} from '../../shared/stage.utils';
 
 import {
   ChatDiscussionType,
@@ -33,62 +25,28 @@ import {
   ChatStageConfig,
   DiscussionItem,
   StageKind,
-  convertUnifiedTimestampToTime,
 } from '@deliberation-lab/utils';
 
-import {styles} from './chat_interface.scss';
+import {styles} from './group_chat_participant_view.scss';
 
-/** Chat interface component */
-@customElement('chat-interface')
-export class ChatInterface extends MobxLitElement {
+/** Group chat interface for participants */
+@customElement('group-chat-participant-view')
+export class GroupChatView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly authService = core.getService(AuthService);
   private readonly cohortService = core.getService(CohortService);
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
-  private readonly participantAnswerService = core.getService(
-    ParticipantAnswerService,
-  );
-  private readonly routerService = core.getService(RouterService);
 
   @property() stage: ChatStageConfig | undefined = undefined;
   @property() disableInput = false;
   @property() showInfo = false;
   @state() readyToEndDiscussionLoading = false;
   @state() isAlertLoading = false;
-  @state() mobileView = false;
-
-  private updateResponsiveState = () => {
-    this.mobileView = window.innerWidth <= 1024;
-  };
-
-  connectedCallback() {
-    super.connectedCallback();
-    this.updateResponsiveState();
-    window.addEventListener('resize', this.updateResponsiveState);
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    window.removeEventListener('resize', this.updateResponsiveState);
-  }
-
-  private sendUserInput() {
-    if (!this.stage) return;
-
-    const value = this.participantAnswerService.getChatInput(this.stage.id);
-    if (value.trim() === '') return;
-    this.participantService.createChatMessage({message: value.trim()});
-    this.participantAnswerService.updateChatInput(this.stage.id, '');
-  }
 
   private renderChatMessage(chatMessage: ChatMessage) {
-    return html`
-      <div class="chat-message-wrapper">
-        <chat-message .chat=${chatMessage}></chat-message>
-      </div>
-    `;
+    return html` <chat-message .chat=${chatMessage}></chat-message> `;
   }
 
   private isConversationOver() {
@@ -111,13 +69,6 @@ export class ChatInterface extends MobxLitElement {
     // Non-discussion messages
     const messages = this.cohortService.chatMap[stageId] ?? [];
 
-    // Only show intro text in chat on small screens
-    const introNode = this.mobileView
-      ? html`
-          <div class="chat-info-message">${this.renderStageDescription()}</div>
-        `
-      : nothing;
-
     // If discussion threads, render each thread
     if (stage.discussions.length > 0) {
       let discussions = stage.discussions;
@@ -132,7 +83,6 @@ export class ChatInterface extends MobxLitElement {
       return html`
         <div class="chat-scroll">
           <div class="chat-history">
-            ${introNode}
             ${discussions.map((discussion, index) =>
               this.renderChatDiscussionThread(stage, index),
             )}
@@ -148,7 +98,7 @@ export class ChatInterface extends MobxLitElement {
     return html`
       <div class="chat-scroll">
         <div class="chat-history">
-          ${introNode} ${messages.map(this.renderChatMessage.bind(this))}
+          ${messages.map(this.renderChatMessage.bind(this))}
         </div>
       </div>
     `;
@@ -205,18 +155,6 @@ export class ChatInterface extends MobxLitElement {
         ${renderDiscussionItems()}
       </div>
       ${renderMessages()}
-    `;
-  }
-
-  private renderInput() {
-    return html`
-      <chat-input
-        .stageId=${this.stage?.id ?? ''}
-        .isDisabled=${this.disableInput ||
-        this.participantService.disableStage ||
-        this.isConversationOver()}
-      >
-      </chat-input>
     `;
   }
 
@@ -286,19 +224,11 @@ export class ChatInterface extends MobxLitElement {
     `;
   }
 
-  private renderParticipantsTop() {
-    if (!this.mobileView || !this.stage) return nothing;
-    return html`
-      <chat-info-panel .stage=${this.stage} topLayout></chat-info-panel>
-    `;
-  }
-
   private renderStageDescription() {
     if (!this.stage) return nothing;
-    // Pass noBorder=true when rendering in chat-info-message
+
     return html`
-      <stage-description .stage=${this.stage} noBorder noPadding>
-      </stage-description>
+      <stage-description .stage=${this.stage} noPadding> </stage-description>
     `;
   }
 
@@ -337,15 +267,18 @@ export class ChatInterface extends MobxLitElement {
     };
 
     return html`
-      ${this.renderParticipantsTop()}
-      <div class="chat-content">
+      <chat-interface
+        .stage=${this.stage}
+        .disableInput=${this.disableInput ||
+        this.participantService.disableStage ||
+        this.isConversationOver()}
+        showPanel
+      >
+        <div slot="mobile-description">${this.renderStageDescription()}</div>
         ${this.cohortService.isChatLoading
           ? html`<div>Loading...</div>`
           : this.renderChatHistory(currentDiscussionId)}
-      </div>
-      <div class="input-row-wrapper">
-        <div class="input-row">${this.renderInput()}</div>
-      </div>
+      </chat-interface>
       <stage-footer
         .showNextButton=${currentDiscussionId === null}
         .disabled=${disableNext}
@@ -359,6 +292,6 @@ export class ChatInterface extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'chat-interface': ChatInterface;
+    'group-chat-participant-view': GroupChatView;
   }
 }

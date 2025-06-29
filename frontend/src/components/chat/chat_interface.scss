@@ -1,0 +1,53 @@
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.flex-column;
+  flex-grow: 1;
+  justify-content: end;
+  width: 100%;
+}
+
+.interface-wrapper {
+  @include common.flex-row;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  flex-grow: 1;
+  overflow: hidden;
+
+  &.vertical {
+    flex-direction: column;
+  }
+}
+
+.main-content {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface-variant);
+  flex-grow: 1;
+  overflow: auto;
+}
+
+.chat-content {
+  display: flex;
+  flex-direction: column-reverse;
+  flex-grow: 1;
+  padding: common.$main-content-padding;
+}
+
+.chat-scroll {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.chat-history {
+  @include common.flex-column;
+  justify-content: flex-end;
+  padding: common.$spacing-xl;
+}
+
+chat-input {
+  background: var(--md-sys-color-surface-variant);
+  bottom: 0;
+  padding: common.$main-content-padding;
+  padding-top: 0;
+  position: sticky;
+}

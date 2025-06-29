@@ -6,6 +6,12 @@ $avatar-height: 30px;
 $bubble-radius: 20px;
 $bubble-radius-small: common.$spacing-small;
 
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-xs;
+  padding: common.$spacing-medium 0;
+}
+
 .chat-message {
   @include common.flex-row;
   align-items: end;

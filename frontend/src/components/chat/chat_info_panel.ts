@@ -50,10 +50,7 @@ export class ChatPanel extends MobxLitElement {
 
     if (this.topLayout) {
       return html`
-        <div class="top-layout">
-          ${this.renderParticipantList(true)}
-          <div class="divider"></div>
-        </div>
+        <div class="top-layout">${this.renderParticipantList(true)}</div>
       `;
     }
 
