@@ -9,6 +9,7 @@ import {
   createModelGenerationConfig,
   createParticipantChatMessage,
   getDefaultChatPrompt,
+  DEFAULT_AGENT_PARTICIPANT_PROMPT,
   DEFAULT_AGENT_PARTICIPANT_READY_TO_END_CHAT_PROMPT,
   DEFAULT_AGENT_PARTICIPANT_READY_TO_END_CHAT_STRUCTURED_OUTPUT,
 } from '@deliberation-lab/utils';
