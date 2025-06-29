@@ -72,36 +72,8 @@ export class Component extends MobxLitElement {
       `;
     }
     return html`
-      ${this.renderCohortListPanel()} ${this.renderCohortEditorPanel()}
       ${this.renderParticipantStatsPanel()}
       ${this.renderParticipantPreviewPanel()}
-    `;
-  }
-
-  private renderCohortListPanel() {
-    if (!this.experimentManager.showCohortList) {
-      return nothing;
-    }
-    return html`
-      <div class="cohort-panel">
-        <cohort-list></cohort-list>
-      </div>
-    `;
-  }
-
-  private renderCohortEditorPanel() {
-    if (!this.experimentManager.showCohortEditor) {
-      return nothing;
-    }
-    return html`
-      <div class="cohort-panel">
-        <cohort-editor
-          .cohort=${this.experimentManager.getCohort(
-            this.experimentManager.currentCohortId ?? '',
-          )}
-        >
-        </cohort-editor>
-      </div>
     `;
   }
 

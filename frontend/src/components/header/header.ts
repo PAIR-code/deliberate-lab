@@ -4,7 +4,7 @@ import '../../pair-components/tooltip';
 import '../../components/experiment_builder/experiment_builder_nav';
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
@@ -43,6 +43,8 @@ export class Header extends MobxLitElement {
   private readonly experimentService = core.getService(ExperimentService);
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
+
+  @state() isDownloading = false; // used for experiment download
 
   override render() {
     if (!this.authService.isExperimenter) {
@@ -280,12 +282,118 @@ export class Header extends MobxLitElement {
             </pr-button>
           `;
         }
-        return nothing;
+        return html`
+          ${this.renderExperimentDownloadButton()}
+          ${this.renderExperimentForkButton()}
+          ${this.renderExperimentEditButton()}
+          ${this.renderExperimentDeleteButton()}
+        `;
       case Pages.PARTICIPANT:
         return this.renderDebugModeButton();
       default:
         return nothing;
     }
+  }
+
+  private renderExperimentDownloadButton() {
+    const onClick = async () => {
+      this.isDownloading = true;
+      await this.experimentManager.downloadExperiment();
+      this.isDownloading = false;
+    };
+
+    return html`
+      <pr-tooltip text="Download experiment data" position="BOTTOM_END">
+        <pr-icon-button
+          icon="download"
+          color="secondary"
+          size="small"
+          variant="default"
+          ?loading=${this.isDownloading}
+          @click=${onClick}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
+  }
+
+  private renderExperimentForkButton() {
+    const onClick = () => {
+      // Display confirmation dialog
+      const isConfirmed = window.confirm(
+        'This will create a copy of this experiment. Are you sure you want to proceed?',
+      );
+      if (!isConfirmed) return;
+      this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_FORK);
+      this.experimentManager.forkExperiment();
+    };
+
+    return html`
+      <pr-tooltip text="Fork experiment" position="BOTTOM_END">
+        <pr-icon-button
+          icon="fork_right"
+          color="secondary"
+          size="small"
+          variant="default"
+          @click=${onClick}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
+  }
+
+  private renderExperimentEditButton() {
+    const tooltip = `
+      Experiment creators can edit metadata any time
+      + can edit stages if users have not joined the experiment.`;
+
+    const onClick = () => {
+      this.analyticsService.trackButtonClick(
+        this.experimentManager.isCreator
+          ? ButtonClick.EXPERIMENT_EDIT
+          : ButtonClick.EXPERIMENT_PREVIEW_CONFIG,
+      );
+      this.experimentManager.setIsEditing(true);
+    };
+
+    return html`
+      <pr-tooltip text=${tooltip} position="BOTTOM_END">
+        <pr-icon-button
+          icon=${this.experimentManager.isCreator ? 'edit_note' : 'overview'}
+          color="secondary"
+          size="small"
+          variant="default"
+          @click=${onClick}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
+  }
+
+  private renderExperimentDeleteButton() {
+    return html`
+      <pr-tooltip text="Delete experiment" position="BOTTOM_END">
+        <pr-icon-button
+          icon="delete"
+          color="error"
+          variant="default"
+          size="small"
+          ?disabled=${!this.experimentManager.isCreator}
+          @click=${() => {
+            const isConfirmed = window.confirm(
+              `Are you sure you want to delete this experiment?`,
+            );
+            if (!isConfirmed) return;
+
+            this.analyticsService.trackButtonClick(
+              ButtonClick.EXPERIMENT_DELETE,
+            );
+            this.experimentManager.deleteExperiment();
+          }}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
+    `;
   }
 
   private renderDebugModeButton() {

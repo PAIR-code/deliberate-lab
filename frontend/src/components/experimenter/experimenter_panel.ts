@@ -56,7 +56,6 @@ export class Panel extends MobxLitElement {
 
   @state() panelView: PanelView = PanelView.DEFAULT;
   @state() isLoading = false;
-  @state() isDownloading = false;
   @state() isAckAlertLoading = false;
   @state() participantSearchQuery = '';
 
@@ -72,7 +71,7 @@ export class Panel extends MobxLitElement {
     return html`
       <div class="panel-wrapper">
         <div class="sidebar">
-          <pr-tooltip text="Dashboard settings" position="RIGHT_END">
+          <pr-tooltip text="View cohorts" position="RIGHT_END">
             <pr-icon-button
               color="secondary"
               icon="tune"
@@ -185,15 +184,41 @@ export class Panel extends MobxLitElement {
   private renderDefaultPanel() {
     return html`
       <div class="main">
-        ${this.renderOutdatedWarning()}
+        ${this.renderOutdatedWarning()} ${this.renderCohortListPanel()}
+        ${this.renderCohortEditorPanel()}
         <div class="bottom">
-          <div class="header">Actions</div>
-          ${this.renderExperimentActions()}
           <div class="subtitle">
             Experiment Version: ${this.experimentService.experiment?.versionId}
             (latest version: ${EXPERIMENT_VERSION_ID})
           </div>
         </div>
+      </div>
+    `;
+  }
+
+  private renderCohortListPanel() {
+    if (!this.experimentManager.showCohortList) {
+      return nothing;
+    }
+    return html`
+      <div class="cohort-panel">
+        <cohort-list></cohort-list>
+      </div>
+    `;
+  }
+
+  private renderCohortEditorPanel() {
+    if (!this.experimentManager.showCohortEditor) {
+      return nothing;
+    }
+    return html`
+      <div class="cohort-panel">
+        <cohort-editor
+          .cohort=${this.experimentManager.getCohort(
+            this.experimentManager.currentCohortId ?? '',
+          )}
+        >
+        </cohort-editor>
       </div>
     `;
   }
@@ -345,105 +370,6 @@ export class Panel extends MobxLitElement {
           <experimenter-data-editor></experimenter-data-editor>
         </div>
       </div>
-    `;
-  }
-
-  private renderExperimentDownloadButton() {
-    const onClick = async () => {
-      this.isDownloading = true;
-      await this.experimentManager.downloadExperiment();
-      this.isDownloading = false;
-    };
-
-    return html`
-      <pr-button
-        color="secondary"
-        variant="outlined"
-        ?loading=${this.isDownloading}
-        @click=${onClick}
-      >
-        <pr-icon icon="download" color="secondary" variant="default"> </pr-icon>
-        <div>Download experiment data</div>
-      </pr-button>
-    `;
-  }
-
-  private renderExperimentForkButton() {
-    const onClick = () => {
-      // Display confirmation dialog
-      const isConfirmed = window.confirm(
-        'This will create a copy of this experiment. Are you sure you want to proceed?',
-      );
-      if (!isConfirmed) return;
-      this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_FORK);
-      this.experimentManager.forkExperiment();
-    };
-
-    return html`
-      <pr-button color="secondary" variant="outlined" @click=${onClick}>
-        <pr-icon icon="fork_right" color="secondary" variant="default">
-        </pr-icon>
-        <div>Fork experiment</div>
-      </pr-button>
-    `;
-  }
-
-  private renderExperimentEditButton() {
-    const tooltip = `
-      Experiment creators can edit metadata any time
-      + can edit stages if users have not joined the experiment.`;
-
-    const onClick = () => {
-      this.analyticsService.trackButtonClick(
-        this.experimentManager.isCreator
-          ? ButtonClick.EXPERIMENT_EDIT
-          : ButtonClick.EXPERIMENT_PREVIEW_CONFIG,
-      );
-      this.experimentManager.setIsEditing(true);
-    };
-
-    return html`
-      <pr-tooltip text=${tooltip} position="TOP_START">
-        <pr-button color="secondary" variant="outlined" @click=${onClick}>
-          <pr-icon
-            icon=${this.experimentManager.isCreator ? 'edit_note' : 'overview'}
-            color="secondary"
-            variant="default"
-          >
-          </pr-icon>
-          <div>Edit experiment</div>
-        </pr-button>
-      </pr-tooltip>
-    `;
-  }
-
-  private renderExperimentDeleteButton() {
-    return html`
-      <pr-button
-        color="error"
-        variant="outlined"
-        ?disabled=${!this.experimentManager.isCreator}
-        @click=${() => {
-          const isConfirmed = window.confirm(
-            `Are you sure you want to delete this experiment?`,
-          );
-          if (!isConfirmed) return;
-
-          this.analyticsService.trackButtonClick(ButtonClick.EXPERIMENT_DELETE);
-          this.experimentManager.deleteExperiment();
-        }}
-      >
-        <pr-icon icon="delete" color="error" variant="default"> </pr-icon>
-        <div>Delete experiment</div>
-      </pr-button>
-    `;
-  }
-
-  private renderExperimentActions() {
-    return html`
-      ${this.renderExperimentDownloadButton()}
-      ${this.renderExperimentForkButton()} ${this.renderExperimentEditButton()}
-      ${this.renderExperimentDeleteButton()}
     `;
   }
 }
