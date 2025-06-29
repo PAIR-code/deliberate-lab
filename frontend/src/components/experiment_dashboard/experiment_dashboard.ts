@@ -163,6 +163,10 @@ export class Component extends MobxLitElement {
   }
 
   private renderParticipantHeader(isPreview = false) {
+    if (!this.experimentManager.currentParticipant) {
+      return nothing;
+    }
+
     const getProfileString = () => {
       const currentParticipant = this.experimentManager.currentParticipant;
       if (!currentParticipant) {
