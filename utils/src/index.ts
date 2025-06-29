@@ -18,6 +18,9 @@ export * from './experiment.validation';
 // Experiment data
 export * from './data';
 
+// Chat message
+export * from './chat_message';
+
 // Cohort
 export * from './cohort';
 export * from './cohort.validation';

@@ -2,7 +2,7 @@ import {AgentDataObject} from './agent';
 import {CohortConfig} from './cohort';
 import {Experiment} from './experiment';
 import {ParticipantProfileExtended} from './participant';
-import {ChatMessage} from './stages/chat_stage';
+import {ChatMessage} from './chat_message';
 import {
   StageConfig,
   StageParticipantAnswer,

@@ -6,7 +6,7 @@ import {
   StageTextConfigSchema,
   StageProgressConfigSchema,
 } from './stage.validation';
-import {ChatMessageType} from './chat_stage';
+import {ChatMessageType} from '../chat_message';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;

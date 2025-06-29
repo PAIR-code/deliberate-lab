@@ -8,10 +8,10 @@ import {
   createStructuredOutputConfig,
   makeStructuredOutputPrompt,
 } from '../structured_output';
+import {ChatMessage} from '../chat_message';
 import {
   ChatDiscussion,
   ChatDiscussionType,
-  ChatMessage,
   ChatStageConfig,
 } from './chat_stage';
 import {StageKind} from './stage';
