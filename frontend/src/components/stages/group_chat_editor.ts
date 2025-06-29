@@ -11,10 +11,10 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {ChatStageConfig} from '@deliberation-lab/utils';
 
-import {styles} from './chat_editor.scss';
+import {styles} from './group_chat_editor.scss';
 
 /** Chat editor for configuring agents. */
-@customElement('chat-editor')
+@customElement('group-chat-editor')
 export class ChatEditor extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
@@ -121,6 +121,6 @@ export class ChatEditor extends MobxLitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'chat-editor': ChatEditor;
+    'group-chat-editor': ChatEditor;
   }
 }
