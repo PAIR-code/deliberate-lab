@@ -1,3 +1,4 @@
+import '../../pair-components/icon';
 import './gallery_card';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -113,7 +114,32 @@ export class HomeGalleryTabs extends MobxLitElement {
           Shared with me
         </div>
       </div>
-      <div class="divider"></div>
+    `;
+  }
+}
+
+/** Quick start cards for home/landing page */
+@customElement('quick-start-gallery')
+export class QuickStartGallery extends MobxLitElement {
+  static override styles: CSSResultGroup = [styles];
+
+  private readonly routerService = core.getService(RouterService);
+
+  override render() {
+    return html`
+      <div class="quick-start-wrapper">
+        <div class="gallery-wrapper">
+          <div
+            class="quick-start-card"
+            @click=${() => {
+              this.routerService.navigate(Pages.EXPERIMENT_CREATE);
+            }}
+          >
+            <pr-icon icon="experiment" color="neutral" size="large"></pr-icon>
+            <div>Start new experiment</div>
+          </div>
+        </div>
+      </div>
     `;
   }
 }
@@ -122,5 +148,6 @@ declare global {
   interface HTMLElementTagNameMap {
     'home-gallery': HomeGallery;
     'home-gallery-tabs': HomeGalleryTabs;
+    'quick-start-gallery': QuickStartGallery;
   }
 }

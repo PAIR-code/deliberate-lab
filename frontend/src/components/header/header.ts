@@ -210,16 +210,6 @@ export class Header extends MobxLitElement {
     switch (activePage) {
       case Pages.HOME:
         return html`
-          <pr-button
-            color="primary"
-            variant="tonal"
-            @click=${() => {
-              this.routerService.navigate(Pages.EXPERIMENT_CREATE);
-            }}
-          >
-            <pr-icon icon="add" color="primary" variant="tonal"></pr-icon>
-            New experiment
-          </pr-button>
           <pr-tooltip text="Read the documentation" position="BOTTOM_END">
             <pr-icon-button
               icon="article"
