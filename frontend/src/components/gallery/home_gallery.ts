@@ -113,6 +113,7 @@ export class HomeGalleryTabs extends MobxLitElement {
           Shared with me
         </div>
       </div>
+      <div class="divider"></div>
     `;
   }
 }

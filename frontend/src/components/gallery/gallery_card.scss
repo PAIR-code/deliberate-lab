@@ -1,6 +1,6 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -11,6 +11,10 @@
   padding: common.$spacing-large;
   width: 300px;
   word-break: break-word;
+
+  @include common.viewport-small {
+    width: 100%;
+  }
 }
 
 .header {

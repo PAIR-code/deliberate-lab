@@ -53,7 +53,6 @@ export class Header extends MobxLitElement {
     const headerClasses = classMap({
       header: true,
       banner: this.isBanner(),
-      'no-border': this.routerService.activePage === Pages.HOME,
     });
 
     return html`
