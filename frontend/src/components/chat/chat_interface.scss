@@ -23,19 +23,21 @@
   @include common.flex-column;
   background: var(--md-sys-color-surface-variant);
   flex-grow: 1;
-  overflow: auto;
+  overflow: hidden;
 }
 
 .chat-content {
   display: flex;
   flex-direction: column-reverse;
   flex-grow: 1;
-  padding: common.$main-content-padding;
+  overflow: hidden;
 }
 
 .chat-scroll {
   display: flex;
   flex-direction: column-reverse;
+  overflow: auto;
+  padding: common.$main-content-padding;
 }
 
 .chat-history {
