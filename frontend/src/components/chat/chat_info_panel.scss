@@ -4,8 +4,19 @@
 :host {
   @include common.flex-column;
   flex-shrink: 0;
+}
+
+.top-layout {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+}
+
+.side-layout {
+  @include common.flex-column;
   gap: common.$spacing-large;
   overflow: auto;
+  margin-right: common.$main-content-padding;
   width: 240px;
 
   @include common.viewport-medium {
@@ -20,6 +31,20 @@
 
 .panel-item-title {
   @include typescale.title-small;
+  @include common.flex-row-align-center;
+  flex-wrap: wrap;
+  gap: common.$spacing-small;
+  justify-content: space-between;
+}
+
+.panel-list {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+
+  &.wrap {
+    @include common.flex-row-align-center;
+    flex-wrap: wrap;
+  }
 }
 
 .panel-item-subtitle {

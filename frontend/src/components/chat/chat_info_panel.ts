@@ -40,55 +40,32 @@ export class ChatPanel extends MobxLitElement {
   private readonly participantService = core.getService(ParticipantService);
 
   @property() stage: ChatStageConfig | null = null;
-
-  @property({type: Number}) timeRemainingInSeconds: number | null = null;
-
-  @state() intervalId: number | null = null;
+  @property({type: Boolean}) topLayout = false;
   @state() isStatusLoading = false;
-
-  connectedCallback() {
-    super.connectedCallback();
-    this.startTimer();
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    this.clearTimer();
-  }
-
-  private startTimer() {
-    this.updateTimeRemaining();
-    this.intervalId = window.setInterval(() => {
-      this.updateTimeRemaining();
-    }, 1000);
-  }
-
-  private clearTimer() {
-    if (this.intervalId !== null) {
-      clearInterval(this.intervalId);
-      this.intervalId = null;
-    }
-  }
-
-  private updateTimeRemaining() {
-    this.timeRemainingInSeconds = getChatTimeRemainingInSeconds(
-      this.stage,
-      this.cohortService.chatMap,
-    );
-  }
 
   override render() {
     if (!this.stage) {
       return nothing;
     }
 
+    if (this.topLayout) {
+      return html`
+        <div class="top-layout">
+          ${this.renderParticipantList(true)}
+          <div class="divider"></div>
+        </div>
+      `;
+    }
+
     return html`
-      <stage-description .stage=${this.stage} noPadding> </stage-description>
-      ${this.renderTimer()} ${this.renderParticipantList()}
+      <div class="side-layout">
+        <stage-description .stage=${this.stage} noPadding> </stage-description>
+        ${this.renderTimer(true)} ${this.renderParticipantList()}
+      </div>
     `;
   }
 
-  private renderTimer() {
+  private renderTimer(showDivider = false) {
     if (!this.stage) return nothing;
 
     const publicStageData = this.cohortService.stagePublicDataMap[
@@ -120,11 +97,11 @@ export class ChatPanel extends MobxLitElement {
       >
         ${this.stage.timeLimitInMinutes} min chat ${renderStatus()}
       </div>
-      <div class="divider"></div>
+      ${this.topLayout ? nothing : html`<div class="divider"></div>`}
     `;
   }
 
-  private renderParticipantList() {
+  private renderParticipantList(topLayout = false) {
     const activeParticipants = this.cohortService.activeParticipants;
     const mediators = this.cohortService.getMediatorsForStage(
       this.stage?.id ?? '',
@@ -137,17 +114,24 @@ export class ChatPanel extends MobxLitElement {
     return html`
       <div class="panel-item">
         <div class="panel-item-title">
-          Participants (${activeParticipants.length + mediators.length})
+          <div>
+            Participants (${activeParticipants.length + mediators.length})
+          </div>
+          ${topLayout ? this.renderTimer() : nothing}
         </div>
-        ${activeParticipants.map((participant) =>
-          this.renderProfile(participant),
-        )}
-        ${mediators.map((mediator) => this.renderMediator(mediator))}
+        <div class="panel-list ${topLayout ? 'wrap' : ''}">
+          ${activeParticipants.map((participant) =>
+            this.renderProfile(participant, topLayout),
+          )}
+          ${mediators.map((mediator) =>
+            this.renderMediator(mediator, topLayout),
+          )}
+        </div>
       </div>
     `;
   }
 
-  private renderMediator(profile: MediatorProfile) {
+  private renderMediator(profile: MediatorProfile, small = false) {
     const renderStatus = () => {
       if (!this.authService.isDebugMode || !profile.agentConfig) {
         return nothing;
@@ -191,7 +175,7 @@ export class ChatPanel extends MobxLitElement {
         <profile-display
           .profile=${profile}
           .color=${getHashBasedColor(profile.id ?? '')}
-          displayType="chat"
+          displayType=${small ? 'chatSmall' : 'chat'}
         >
         </profile-display>
         ${renderStatus()} ${renderPause()}
@@ -199,14 +183,14 @@ export class ChatPanel extends MobxLitElement {
     `;
   }
 
-  private renderProfile(profile: ParticipantProfile) {
+  private renderProfile(profile: ParticipantProfile, small = false) {
     const isCurrent =
       profile.publicId === this.participantService.profile?.publicId;
     return html`
       <participant-profile-display
         .profile=${profile}
         .showIsSelf=${isCurrent}
-        displayType="chat"
+        displayType=${small ? 'chatSmall' : 'chat'}
       >
       </participant-profile-display>
     `;

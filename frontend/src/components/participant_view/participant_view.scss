@@ -1,6 +1,6 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-row;
@@ -37,7 +37,6 @@
 
   &.chat {
     @include common.flex-row;
-    gap: common.$main-content-padding;
     padding-bottom: 0;
   }
 }

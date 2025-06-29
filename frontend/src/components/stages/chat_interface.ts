@@ -5,6 +5,7 @@ import '../../pair-components/tooltip';
 
 import '../progress/progress_chat_discussion_completed';
 import '../progress/progress_stage_completed';
+import '../chat/chat_info_panel';
 import '../chat/chat_input';
 import '../chat/chat_message';
 
@@ -57,51 +58,20 @@ export class ChatInterface extends MobxLitElement {
   @state() readyToEndDiscussionLoading = false;
   @state() isAlertLoading = false;
   @state() mobileView = false;
-  @state() timeRemainingInSeconds: number | null = null;
 
   private updateResponsiveState = () => {
     this.mobileView = window.innerWidth <= 1024;
   };
 
-  private timerIntervalId: number | null = null;
-
   connectedCallback() {
     super.connectedCallback();
     this.updateResponsiveState();
     window.addEventListener('resize', this.updateResponsiveState);
-    this.startTimer();
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     window.removeEventListener('resize', this.updateResponsiveState);
-    this.clearTimer();
-  }
-
-  private startTimer() {
-    this.updateTimeRemaining();
-    this.timerIntervalId = window.setInterval(() => {
-      this.updateTimeRemaining();
-    }, 1000);
-  }
-
-  private clearTimer() {
-    if (this.timerIntervalId !== null) {
-      clearInterval(this.timerIntervalId);
-      this.timerIntervalId = null;
-    }
-  }
-
-  private updateTimeRemaining() {
-    this.timeRemainingInSeconds = getChatTimeRemainingInSeconds(
-      this.stage,
-      this.cohortService.chatMap,
-    );
-  }
-
-  private chatStartTimestamp() {
-    if (!this.stage) return null;
-    return getChatStartTimestamp(this.stage.id, this.cohortService.chatMap);
   }
 
   private sendUserInput() {
@@ -143,9 +113,9 @@ export class ChatInterface extends MobxLitElement {
 
     // Only show intro text in chat on small screens
     const introNode = this.mobileView
-      ? html`<div class="chat-info-message">
-          ${this.renderStageDescription()}
-        </div>`
+      ? html`
+          <div class="chat-info-message">${this.renderStageDescription()}</div>
+        `
       : nothing;
 
     // If discussion threads, render each thread
@@ -316,89 +286,20 @@ export class ChatInterface extends MobxLitElement {
     `;
   }
 
-  private renderTimer() {
-    if (!this.stage) return nothing;
-
-    const publicStageData = this.cohortService.stagePublicDataMap[
-      this.stage.id
-    ] as ChatStagePublicData;
-    if (!publicStageData || !this.stage.timeLimitInMinutes) return nothing;
-
-    const renderStatus = () => {
-      if (!publicStageData.discussionStartTimestamp) {
-        return nothing;
-      }
-
-      const end = publicStageData.discussionEndTimestamp;
-      if (end) {
-        return html`(ended at ${convertUnifiedTimestampToTime(end, false)})`;
-      }
-
-      const start = getChatStartTimestamp(
-        this.stage?.id ?? '',
-        this.cohortService.chatMap,
-      );
-      if (!start) return nothing;
-      return html`(started at ${convertUnifiedTimestampToTime(start, false)})`;
-    };
-
-    return html`
-      <div
-        class=${`countdown ${publicStageData.discussionEndTimestamp ? 'ended' : ''}`}
-      >
-        ${this.stage.timeLimitInMinutes} min chat ${renderStatus()}
-      </div>
-      <div class="divider"></div>
-    `;
-  }
-
   private renderParticipantsTop() {
     if (!this.mobileView || !this.stage) return nothing;
-    const activeParticipants = this.cohortService.activeParticipants;
-    const mediators = this.cohortService.getMediatorsForStage(this.stage.id);
     return html`
-      <div class="chat-participants-top">
-        <div class="chat-participants-title-row">
-          <span
-            >Participants
-            (${activeParticipants.length + mediators.length})</span
-          >
-          <span>${this.renderTimer()}</span>
-        </div>
-        <div class="chat-participants-wrapper">
-          ${activeParticipants.map(
-            (participant) => html`
-              <participant-profile-display
-                .profile=${participant}
-                .showIsSelf=${participant.publicId ===
-                this.participantService.profile?.publicId}
-                displayType="chat"
-              ></participant-profile-display>
-            `,
-          )}
-          ${mediators.map(
-            (mediator) => html`
-              <profile-display
-                .profile=${mediator}
-                .color=${getHashBasedColor(
-                  mediator.agentConfig?.agentId ?? mediator.id ?? '',
-                )}
-                displayType="chat"
-              ></profile-display>
-            `,
-          )}
-        </div>
-      </div>
+      <chat-info-panel .stage=${this.stage} topLayout></chat-info-panel>
     `;
   }
 
   private renderStageDescription() {
     if (!this.stage) return nothing;
     // Pass noBorder=true when rendering in chat-info-message
-    return html`<stage-description
-      .stage=${this.stage}
-      noBorder
-    ></stage-description>`;
+    return html`
+      <stage-description .stage=${this.stage} noBorder noPadding>
+      </stage-description>
+    `;
   }
 
   override render() {
@@ -409,12 +310,16 @@ export class ChatInterface extends MobxLitElement {
 
     // Determine if Next Stage button should be disabled
     let disableNext = false;
-    const requireFullTime = this.stage.requireFullTime === true;
-    if (requireFullTime && this.stage.timeLimitInMinutes !== null) {
-      if (
-        this.timeRemainingInSeconds == null || // chat hasn't begun yet
-        this.timeRemainingInSeconds > 0
-      ) {
+    const requireFullTime = this.stage.requireFullTime;
+    const publicStageData = this.cohortService.stagePublicDataMap[
+      this.stage.id
+    ] as ChatStagePublicData;
+    if (
+      publicStageData &&
+      requireFullTime &&
+      this.stage.timeLimitInMinutes !== null
+    ) {
+      if (!publicStageData.discussionEndTimestamp) {
         disableNext = true;
       }
     }
