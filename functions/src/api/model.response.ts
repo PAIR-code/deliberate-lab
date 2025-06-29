@@ -36,4 +36,7 @@ export interface ModelResponse {
   // TODO(mkbehr): Parse the response during response creation.
   parsedResponse?: object;
   errorMessage?: string;
+  // TODO(mkbehr): Ad-hoc reasoning output for the chip game. This could be
+  // plumbed through to the chat stage's explanation field, but currently isn't.
+  reasoning?: string;
 }
