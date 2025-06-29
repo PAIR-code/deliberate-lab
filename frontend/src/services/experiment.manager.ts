@@ -129,8 +129,8 @@ export class ExperimentManager extends Service {
   @observable currentParticipantId: string | undefined = undefined;
   @observable currentCohortId: string | undefined = undefined;
   @observable showCohortEditor = true;
-  @observable showCohortList = true;
-  @observable showParticipantStats = true;
+  @observable showCohortList = false;
+  @observable showParticipantStats = false;
   @observable showParticipantPreview = true;
   @observable hideLockedCohorts = false;
   @observable expandAllCohorts = true;
@@ -227,20 +227,32 @@ export class ExperimentManager extends Service {
     this.cohortEditing = cohort;
   }
 
-  setShowCohortEditor(showCohortEditor: boolean) {
+  setShowCohortEditor(showCohortEditor: boolean, toggle: boolean) {
     this.showCohortEditor = showCohortEditor;
+    if (toggle) {
+      this.showCohortList = !showCohortEditor;
+    }
   }
 
-  setShowCohortList(showCohortList: boolean) {
+  setShowCohortList(showCohortList: boolean, toggle: boolean) {
     this.showCohortList = showCohortList;
+    if (toggle) {
+      this.showCohortEditor = !showCohortList;
+    }
   }
 
-  setShowParticipantPreview(showParticipantPreview: boolean) {
+  setShowParticipantPreview(showParticipantPreview: boolean, toggle: boolean) {
     this.showParticipantPreview = showParticipantPreview;
+    if (toggle) {
+      this.showParticipantStats = !showParticipantPreview;
+    }
   }
 
-  setShowParticipantStats(showParticipantStats: boolean) {
+  setShowParticipantStats(showParticipantStats: boolean, toggle: boolean) {
     this.showParticipantStats = showParticipantStats;
+    if (toggle) {
+      this.showParticipantPreview = !showParticipantStats;
+    }
   }
 
   setHideLockedCohorts(hideLockedCohorts: boolean) {

@@ -241,26 +241,26 @@ export class Component extends MobxLitElement {
       return html` <div class="participant-status-banner">${text}</div> `;
     };
 
+    const renderToggle = () => {
+      return html`
+        <pr-button
+          color="secondary"
+          variant="default"
+          size="small"
+          @click=${() => {
+            this.experimentManager.setShowParticipantStats(isPreview, true);
+          }}
+        >
+          Show ${isPreview ? 'stats' : 'preview'}
+        </pr-button>
+      `;
+    };
+
     return html`
       <div class="header">
         <div class="left">
-          <pr-tooltip text="Hide panel" position="RIGHT">
-            <pr-icon-button
-              icon="visibility_off"
-              size="small"
-              color="neutral"
-              variant="default"
-              @click=${() => {
-                if (isPreview) {
-                  this.experimentManager.setShowParticipantPreview(false);
-                } else {
-                  this.experimentManager.setShowParticipantStats(false);
-                }
-              }}
-            >
-            </pr-icon-button>
-          </pr-tooltip>
           ${!isPreview ? getProfileString() : ''} ${renderStatusBanner()}
+          ${renderToggle()}
         </div>
         <div class="right">
           ${renderAgentParticipantButton()} ${this.renderTransferMenu()}

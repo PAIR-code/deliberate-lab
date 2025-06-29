@@ -128,16 +128,16 @@ export class CohortSummary extends MobxLitElement {
 
   private renderEditButton() {
     return html`
-      <pr-tooltip text="Edit cohort" position="BOTTOM_END">
+      <pr-tooltip text="Manage this cohort" position="BOTTOM_END">
         <pr-icon-button
-          icon="edit_note"
+          icon="arrow_forward"
           color="neutral"
           variant="default"
           @click=${() => {
             this.experimentManager.setCurrentCohortId(
               this.cohort?.id ?? undefined,
             );
-            this.experimentManager.setShowCohortEditor(true);
+            this.experimentManager.setShowCohortEditor(true, true);
           }}
         >
         </pr-icon-button>

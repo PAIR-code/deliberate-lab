@@ -183,81 +183,9 @@ export class Panel extends MobxLitElement {
   }
 
   private renderDefaultPanel() {
-    const showCohortList = this.experimentManager.showCohortList;
-    const showCohortEditor = this.experimentManager.showCohortEditor;
-    const hideLockedCohorts = this.experimentManager.hideLockedCohorts;
-    const expandAllCohorts = this.experimentManager.expandAllCohorts;
-
     return html`
       <div class="main">
         ${this.renderOutdatedWarning()}
-        <div class="top">
-          <div class="header">Cohort Panel</div>
-          <div
-            class="checkbox-wrapper"
-            @click=${() => {
-              this.experimentManager.setShowCohortList(!showCohortList);
-            }}
-          >
-            <pr-icon-button
-              color="tertiary"
-              size="medium"
-              variant="default"
-              icon=${showCohortList ? 'visibility_off' : 'visibility'}
-            >
-            </pr-icon-button>
-            <div>${showCohortList ? 'Hide' : 'Show'} cohort list</div>
-          </div>
-          <div
-            class="checkbox-wrapper"
-            @click=${() => {
-              this.experimentManager.setHideLockedCohorts(!hideLockedCohorts);
-            }}
-          >
-            <pr-icon-button
-              color="tertiary"
-              size="medium"
-              variant="default"
-              icon=${hideLockedCohorts ? 'filter_list' : 'filter_list_off'}
-            >
-            </pr-icon-button>
-            <div>
-              ${hideLockedCohorts ? 'Show all cohorts' : 'Hide locked cohorts'}
-            </div>
-          </div>
-          <div
-            class="checkbox-wrapper"
-            @click=${() => {
-              this.experimentManager.setExpandAllCohorts(!expandAllCohorts);
-            }}
-          >
-            <pr-icon-button
-              color="tertiary"
-              size="medium"
-              variant="default"
-              icon=${expandAllCohorts ? 'collapse_all' : 'expand_all'}
-            >
-            </pr-icon-button>
-            <div>${expandAllCohorts ? 'Collapse' : 'Expand'} all cohorts</div>
-          </div>
-          <div class="header">Cohort Editor</div>
-          <div
-            class="checkbox-wrapper"
-            @click=${() => {
-              this.experimentManager.setShowCohortEditor(!showCohortEditor);
-            }}
-          >
-            <pr-icon-button
-              color="tertiary"
-              size="medium"
-              variant="default"
-              icon=${showCohortEditor ? 'visibility_off' : 'visibility'}
-            >
-            </pr-icon-button>
-            <div>${showCohortEditor ? 'Hide' : 'Show'} cohort editor</div>
-          </div>
-          ${this.renderParticipantSettingsPanel()}
-        </div>
         <div class="bottom">
           <div class="header">Actions</div>
           ${this.renderExperimentActions()}
@@ -270,45 +198,6 @@ export class Panel extends MobxLitElement {
     `;
   }
 
-  private renderParticipantSettingsPanel() {
-    if (!this.experimentManager.currentParticipantId) {
-      return;
-    }
-    const showCohortList = this.experimentManager.showCohortList;
-    const showPreview = this.experimentManager.showParticipantPreview;
-    const showStats = this.experimentManager.showParticipantStats;
-    return html`<div class="header">Participant panels</div>
-      <div
-        class="checkbox-wrapper"
-        @click=${() => {
-          this.experimentManager.setShowParticipantStats(!showStats);
-        }}
-      >
-        <pr-icon-button
-          color="tertiary"
-          size="medium"
-          variant="default"
-          icon=${showStats ? 'visibility_off' : 'visibility'}
-        >
-        </pr-icon-button>
-        <div>${showStats ? 'Hide' : 'Show'} participant details</div>
-      </div>
-      <div
-        class="checkbox-wrapper"
-        @click=${() => {
-          this.experimentManager.setShowParticipantPreview(!showPreview);
-        }}
-      >
-        <pr-icon-button
-          color="tertiary"
-          size="medium"
-          variant="default"
-          icon=${showPreview ? 'visibility_off' : 'visibility'}
-        >
-        </pr-icon-button>
-        <div>${showPreview ? 'Hide' : 'Show'} participant preview</div>
-      </div>`;
-  }
   private renderParticipantSearchPanel() {
     const handleInput = (e: Event) => {
       this.participantSearchQuery = (e.target as HTMLTextAreaElement).value;
