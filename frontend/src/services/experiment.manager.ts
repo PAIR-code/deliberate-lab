@@ -669,6 +669,8 @@ export class ExperimentManager extends Service {
         experimentId: this.experimentId,
         cohortConfig,
       });
+      // Set to current cohort
+      this.setCurrentCohortId(cohortConfig.id);
     }
     this.isWritingCohort = false;
     return response;
