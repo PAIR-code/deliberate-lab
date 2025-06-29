@@ -68,7 +68,11 @@ export class Component extends MobxLitElement {
           <option value=${undefined}></option>
           ${Object.values(this.experimentManager.cohortMap).map(
             (cohort) =>
-              html`<option value=${cohort.id}>
+              html`<option
+                value=${cohort.id}
+                ?selected=${cohort.id ===
+                this.experimentManager.currentCohortId}
+              >
                 ${cohort.metadata.name} (${cohort.id})
               </option>`,
           )}

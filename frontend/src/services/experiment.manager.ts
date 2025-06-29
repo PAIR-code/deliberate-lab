@@ -460,7 +460,15 @@ export class ExperimentManager extends Service {
           changedDocs.forEach((doc) => {
             const data = doc.data() as CohortConfig;
             this.cohortMap[doc.id] = data;
+            this.currentCohortId = doc.id;
           });
+
+          // If multiple cohorts, show cohort list
+          if (changedDocs.length > 1) {
+            this.setShowCohortList(true, true);
+          } else if (changedDocs.length === 0) {
+            this.setShowCohortEditor(true, true);
+          }
 
           this.isCohortsLoading = false;
         },
