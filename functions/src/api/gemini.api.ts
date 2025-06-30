@@ -11,7 +11,11 @@ import {
   StructuredOutputConfig,
   StructuredOutputSchema,
 } from '@deliberation-lab/utils';
-import {ModelResponseStatus, ModelResponse} from './model.response';
+import {
+  ModelResponseStatus,
+  ModelResponse,
+  addParsedModelResponse,
+} from './model.response';
 
 const GEMINI_DEFAULT_MODEL = 'gemini-1.5-pro-latest';
 const DEFAULT_FETCH_TIMEOUT = 300 * 1000; // This is the Chrome default
@@ -111,6 +115,7 @@ export async function callGemini(
   prompt: string,
   generationConfig: GenerationConfig,
   modelName = GEMINI_DEFAULT_MODEL,
+  parseResponse = false, // parse if structured output
 ) {
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
@@ -146,10 +151,14 @@ export async function callGemini(
     };
   }
 
-  return {
+  const modelResponse = {
     status: ModelResponseStatus.OK,
     text: response.text(),
   };
+  if (parseResponse) {
+    return addParsedModelResponse(modelResponse);
+  }
+  return modelResponse;
 }
 
 /** Constructs Gemini API query and returns response. */
@@ -190,7 +199,13 @@ export async function getGeminiAPIResponse(
   };
 
   try {
-    return await callGemini(apiKey, promptText, geminiConfig, modelName);
+    return await callGemini(
+      apiKey,
+      promptText,
+      geminiConfig,
+      modelName,
+      structuredOutputConfig !== null,
+    );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     // The GenerativeAI client doesn't return responses in a parseable format,

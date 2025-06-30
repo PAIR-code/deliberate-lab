@@ -33,7 +33,22 @@ export interface ModelResponse {
   status: ModelResponseStatus;
   // The model's response, in plaintext. Null if the provider didn't return a response.
   text?: string;
-  // TODO(mkbehr): Parse the response during response creation.
   parsedResponse?: object;
   errorMessage?: string;
+}
+
+/** Helper function for parsing model response. */
+export function addParsedModelResponse(response: ModelResponse) {
+  if (response.status !== ModelResponseStatus.OK) {
+    return;
+  }
+
+  try {
+    const cleanedText = response.text!.replace(/```json\s*|\s*```/g, '').trim();
+    response.parsedResponse = JSON.parse(cleanedText);
+    return response;
+  } catch {
+    response.status = ModelResponseStatus.STRUCTURED_OUTPUT_PARSE_ERROR;
+    return response;
+  }
 }
