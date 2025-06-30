@@ -21,7 +21,9 @@ import {AgentChatPromptConfig} from './agent';
  */
 export interface ChatMessage {
   id: string;
-  discussionId: string | null; // discussion during which message was sent
+  // in GROUP_CHAT (currently CHAT), the current thread within the group chat
+  // in CHAT_APP (forthcoming), the ID of the separate discussion chat
+  discussionId: string | null;
   type: UserType;
   message: string;
   timestamp: UnifiedTimestamp;

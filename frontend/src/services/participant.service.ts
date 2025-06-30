@@ -498,6 +498,8 @@ export class ParticipantService extends Service {
   }
 
   /** Send chat message. */
+  // createChatMessageCallable will route the chat message to the correct
+  // spot based on the stage kind
   async createChatMessage(config: Partial<ChatMessage> = {}) {
     let response = {};
     this.isSendingChat = true;
@@ -519,6 +521,7 @@ export class ParticipantService extends Service {
         experimentId: this.experimentId,
         cohortId: this.profile.currentCohortId,
         stageId: this.profile.currentStageId,
+        participantId: this.profile.privateId,
         chatMessage,
       };
 
