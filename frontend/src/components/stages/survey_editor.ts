@@ -473,42 +473,36 @@ export class SurveyEditor extends MobxLitElement {
         scale.
       </div>
       <div class="scale-text-editors">
-        <div class="scale-text-editor">
-          <label>Lower text (${question.lowerValue})</label>
-          <pr-textarea
-            placeholder="e.g., Strongly disagree"
-            size="small"
-            .value=${question.lowerText ?? ''}
-            ?disabled=${!this.experimentEditor.canEditStages}
-            @input=${updateLowerText}
-          >
-          </pr-textarea>
-        </div>
-        <div class="scale-text-editor">
-          <label>Upper text (${question.upperValue})</label>
-          <pr-textarea
-            placeholder="e.g., Strongly agree"
-            size="small"
-            .value=${question.upperText ?? ''}
-            ?disabled=${!this.experimentEditor.canEditStages}
-            @input=${updateUpperText}
-          >
-          </pr-textarea>
-        </div>
-        <div class="scale-text-editor">
-          <label>Middle text (optional)</label>
-          <pr-textarea
-            placeholder="e.g., Neutral"
-            size="small"
-            .value=${question.middleText ?? ''}
-            ?disabled=${!this.experimentEditor.canEditStages}
-            @input=${updateMiddleText}
-          >
-          </pr-textarea>
-        </div>
-      </div>
-      <div class="description">
-        <b>Optional:</b> Display the scale as a slider instead of radio buttons.
+        <pr-textarea
+          label="Lower text (${question.lowerValue})"
+          variant="outlined"
+          placeholder="e.g., Strongly disagree"
+          size="small"
+          .value=${question.lowerText ?? ''}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @input=${updateLowerText}
+        >
+        </pr-textarea>
+        <pr-textarea
+          label="Upper text (${question.upperValue})"
+          variant="outlined"
+          placeholder="e.g., Strongly agree"
+          size="small"
+          .value=${question.upperText ?? ''}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @input=${updateUpperText}
+        >
+        </pr-textarea>
+        <pr-textarea
+          label="Middle text (optional)"
+          variant="outlined"
+          placeholder="e.g., Neutral"
+          size="small"
+          .value=${question.middleText ?? ''}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @input=${updateMiddleText}
+        >
+        </pr-textarea>
       </div>
       <label class="checkbox-wrapper">
         <md-checkbox
@@ -518,7 +512,9 @@ export class SurveyEditor extends MobxLitElement {
           @click=${toggleUseSlider}
         >
         </md-checkbox>
-        <span class="checkbox-label">Use slider</span>
+        <span class="checkbox-label">
+          Optional: Display the scale as a slider instead of radio buttons
+        </span>
       </label>
     `;
   }

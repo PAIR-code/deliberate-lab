@@ -92,15 +92,7 @@ pr-textarea {
 .scale-value-editor,
 .scale-text-editor {
   @include common.flex-column;
+  @include common.number-input;
   flex: 1;
   gap: common.$spacing-small;
-
-  label {
-    @include typescale.label-small;
-    color: var(--md-sys-color-on-surface-variant);
-  }
-
-  input {
-    @include common.number-input;
-  }
 }
