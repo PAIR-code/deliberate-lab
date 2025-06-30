@@ -237,6 +237,7 @@ export class CohortService extends Service {
   }
 
   // Returns chat discussion ID (or null if none or finished with all chats)
+  // TODO: Return different type of discussion ID based on chat stage kind
   getChatDiscussionId(stageId: string): string | null {
     const stageData = this.stagePublicDataMap[stageId];
     if (!stageData || stageData.kind !== StageKind.CHAT) {

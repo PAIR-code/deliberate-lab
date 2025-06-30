@@ -973,6 +973,7 @@ export class ExperimentManager extends Service {
         experimentId,
         cohortId,
         stageId,
+        participantId: '',
         chatMessage,
       };
 

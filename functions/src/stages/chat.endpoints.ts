@@ -13,6 +13,7 @@ import * as functions from 'firebase-functions';
 import {onCall} from 'firebase-functions/v2/https';
 
 import {app} from '../app';
+import {getFirestoreStage} from '../utils/firestore';
 import {
   checkConfigDataUnionOnPath,
   isUnionError,
@@ -26,7 +27,7 @@ import {
 // createChatMessage endpoint                                                //
 //                                                                           //
 // Input structure: {                                                        //
-//   experimentId, cohortId, stageId, chatMessage                            //
+//   experimentId, cohortId, stageId, participantId (private), chatMessage   //
 // }                                                                         //
 // Validation: utils/src/chat.validation.ts                                  //
 // ************************************************************************* //
@@ -34,8 +35,19 @@ import {
 export const createChatMessage = onCall(async (request) => {
   const {data} = request;
 
-  // Define document reference
-  const document = app
+  // Define document references
+  const privateChatDocument = app
+    .firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('participants')
+    .doc(data.participantId)
+    .collection('stageData')
+    .doc(data.stageId)
+    .collection('privateChats')
+    .doc(data.chatMessage.id);
+
+  const groupChatDocument = app
     .firestore()
     .collection('experiments')
     .doc(data.experimentId)
@@ -48,14 +60,24 @@ export const createChatMessage = onCall(async (request) => {
 
   const chatMessage = {...data.chatMessage, timestamp: Timestamp.now()};
 
+  const stage = await getFirestoreStage(data.experimentId, data.stageId);
+
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
     // Add chat message
     // (see chat.triggers for auto-generated agent responses)
-    transaction.set(document, chatMessage);
+    switch (stage.kind) {
+      case StageKind.PRIVATE_CHAT:
+        transaction.set(privateChatDocument, chatMessage);
+        return {id: privateChatDocument.id};
+      default:
+        // Otherwise, write to public data
+        transaction.set(groupChatDocument, chatMessage);
+        return {id: groupChatDocument.id};
+    }
   });
 
-  return {id: document.id};
+  return {id: ''};
 });
 
 // ************************************************************************* //

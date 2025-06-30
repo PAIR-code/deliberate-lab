@@ -61,6 +61,8 @@ export const CreateChatMessageData = Type.Object(
     experimentId: Type.String({minLength: 1}),
     cohortId: Type.String({minLength: 1}),
     stageId: Type.String({minLength: 1}),
+    // private participant ID (used in private chat cases)
+    participantId: Type.String({minLength: 1}),
     chatMessage: ChatMessageData,
   },
   strict,
