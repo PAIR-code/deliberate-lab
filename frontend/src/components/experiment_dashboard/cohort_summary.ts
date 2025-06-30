@@ -1,6 +1,7 @@
 import '../../pair-components/button';
 import '../../pair-components/icon';
 import '../../pair-components/icon_button';
+import '../../pair-components/menu';
 import '../../pair-components/tooltip';
 
 import '../progress/cohort_progress_bar';
@@ -110,11 +111,49 @@ export class CohortSummary extends MobxLitElement {
           </div>
         </div>
         <div class="right">
-          ${this.renderLockButton()} ${this.renderCopyButton()}
-          ${this.renderEditButton()}
+          ${this.renderAdd()} ${this.renderLockButton()}
+          ${this.renderCopyButton()} ${this.renderEditButton()}
         </div>
       </div>
       ${this.renderDescription()}
+    `;
+  }
+
+  private renderAdd() {
+    return html`
+      <pr-menu
+        name="Add"
+        icon="person_add"
+        color="tertiary"
+        ?loading=${this.experimentManager.isWritingParticipant}
+        useIconButton
+      >
+        <div class="menu-wrapper">
+          <div
+            class="menu-item"
+            @click=${async () => {
+              if (!this.cohort) return;
+              this.analyticsService.trackButtonClick(
+                ButtonClick.PARTICIPANT_ADD,
+              );
+              await this.experimentManager.createParticipant(this.cohort.id);
+            }}
+          >
+            Add human participant
+          </div>
+          <div
+            class="menu-item"
+            @click=${() => {
+              this.experimentManager.setCurrentCohortId(
+                this.cohort?.id ?? undefined,
+              );
+              this.experimentManager.setShowCohortEditor(true, true);
+            }}
+          >
+            Add agent
+          </div>
+        </div>
+      </pr-menu>
     `;
   }
 
