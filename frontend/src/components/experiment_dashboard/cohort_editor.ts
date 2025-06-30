@@ -151,7 +151,7 @@ export class Component extends MobxLitElement {
       <div class="content">
         <div class="content-header">
           <div>
-            <div>${this.cohort?.metadata.name}</div>
+            <div>${this.cohort?.metadata.name ?? 'Untitled cohort'}</div>
             <div class="subtitle">${this.cohort?.id}</div>
           </div>
           <div class="toolbar">
