@@ -96,6 +96,23 @@ export class Component extends MobxLitElement {
     };
 
     return html`
+      <div class="content-banner">
+        <div
+          class="back-button"
+          @click=${() => {
+            this.experimentManager.setShowCohortList(true, true);
+          }}
+        >
+          <pr-icon
+            icon="chevron_backward"
+            size="small"
+            variant="default"
+            color="secondary"
+          >
+          </pr-icon>
+          <div>View all cohorts</div>
+        </div>
+      </div>
       <div class="header">
         <div class="left">${renderSelection()}</div>
         <div class="right">${renderAdd()}</div>
@@ -132,23 +149,6 @@ export class Component extends MobxLitElement {
 
     return html`
       <div class="content">
-        <div class="content-banner">
-          <div
-            class="back-button"
-            @click=${() => {
-              this.experimentManager.setShowCohortList(true, true);
-            }}
-          >
-            <pr-icon
-              icon="chevron_backward"
-              size="small"
-              variant="default"
-              color="secondary"
-            >
-            </pr-icon>
-            <div>View all cohorts</div>
-          </div>
-        </div>
         <div class="content-header">
           <div>
             <div>${this.cohort?.metadata.name}</div>

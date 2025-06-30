@@ -118,7 +118,7 @@ select {
   @include typescale.title-large;
   gap: common.$spacing-medium;
   justify-content: space-between;
-  padding: 0 common.$main-content-padding;
+  padding: common.$main-content-padding common.$main-content-padding 0;
 }
 
 .toolbar {
