@@ -245,10 +245,6 @@ export class SurveyEditor extends MobxLitElement {
         </div>
         <div class="right">${this.renderQuestionNav(question, index)}</div>
       </div>
-      <div class="description">
-        <b>Optional:</b> Mark this checkbox to indicate if the question is
-        required for participants.
-      </div>
       <label class="checkbox-wrapper">
         <md-checkbox
           touch-target="wrapper"
@@ -257,7 +253,9 @@ export class SurveyEditor extends MobxLitElement {
           @click=${toggleIsRequired}
         >
         </md-checkbox>
-        <span class="checkbox-label">Required</span>
+        <span class="checkbox-label"
+          >Make this question required for participants</span
+        >
       </label>
     `;
   }
