@@ -1,6 +1,6 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -36,4 +36,10 @@ participant-profile-display {
   border-radius: common.$spacing-medium;
   height: calc(common.$header-height - common.$spacing-large);
   padding: 0 common.$spacing-medium;
+}
+
+@include common.viewport-small {
+  .menu-button {
+    display: none;
+  }
 }

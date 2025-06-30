@@ -77,7 +77,9 @@ export class ParticipantView extends MobxLitElement {
     };
 
     return html`
-      <participant-nav></participant-nav>
+      ${this.participantService.showParticipantSidenav
+        ? html`<participant-nav></participant-nav>`
+        : nothing}
       <div
         class="participant-previewer ${!this.authService.isExperimenter
           ? 'full-view'

@@ -40,6 +40,7 @@ import {
   ParticipantStatus,
   ProfileAgentConfig,
   StageConfig,
+  StageKind,
   createCohortConfig,
   createExperimenterChatMessage,
   generateId,
@@ -129,8 +130,8 @@ export class ExperimentManager extends Service {
   @observable currentParticipantId: string | undefined = undefined;
   @observable currentCohortId: string | undefined = undefined;
   @observable showCohortEditor = true;
-  @observable showCohortList = true;
-  @observable showParticipantStats = true;
+  @observable showCohortList = false;
+  @observable showParticipantStats = false;
   @observable showParticipantPreview = true;
   @observable hideLockedCohorts = false;
   @observable expandAllCohorts = true;
@@ -227,20 +228,32 @@ export class ExperimentManager extends Service {
     this.cohortEditing = cohort;
   }
 
-  setShowCohortEditor(showCohortEditor: boolean) {
+  setShowCohortEditor(showCohortEditor: boolean, toggle: boolean) {
     this.showCohortEditor = showCohortEditor;
+    if (toggle) {
+      this.showCohortList = !showCohortEditor;
+    }
   }
 
-  setShowCohortList(showCohortList: boolean) {
+  setShowCohortList(showCohortList: boolean, toggle: boolean) {
     this.showCohortList = showCohortList;
+    if (toggle) {
+      this.showCohortEditor = !showCohortList;
+    }
   }
 
-  setShowParticipantPreview(showParticipantPreview: boolean) {
+  setShowParticipantPreview(showParticipantPreview: boolean, toggle: boolean) {
     this.showParticipantPreview = showParticipantPreview;
+    if (toggle) {
+      this.showParticipantStats = !showParticipantPreview;
+    }
   }
 
-  setShowParticipantStats(showParticipantStats: boolean) {
+  setShowParticipantStats(showParticipantStats: boolean, toggle: boolean) {
     this.showParticipantStats = showParticipantStats;
+    if (toggle) {
+      this.showParticipantPreview = !showParticipantStats;
+    }
   }
 
   setHideLockedCohorts(hideLockedCohorts: boolean) {
@@ -331,6 +344,17 @@ export class ExperimentManager extends Service {
 
   getCohort(id: string) {
     return this.cohortMap[id];
+  }
+
+  // Return name for next cohort based on number of cohorts
+  getNextCohortName(numCohorts = this.cohortList.length) {
+    const hasTransfer = this.sp.experimentService.stages.find(
+      (stage) => stage.kind === StageKind.TRANSFER,
+    );
+    if (numCohorts > 0 || !hasTransfer) {
+      return `Cohort ${String(numCohorts).padStart(2, '0')}`;
+    }
+    return 'Lobby';
   }
 
   isFullCohort(cohort: CohortConfig) {
@@ -448,7 +472,15 @@ export class ExperimentManager extends Service {
           changedDocs.forEach((doc) => {
             const data = doc.data() as CohortConfig;
             this.cohortMap[doc.id] = data;
+            this.currentCohortId = doc.id;
           });
+
+          // If multiple cohorts, show cohort list
+          if (changedDocs.length > 1) {
+            this.setShowCohortList(true, true);
+          } else if (changedDocs.length === 0) {
+            this.setShowCohortEditor(true, true);
+          }
 
           this.isCohortsLoading = false;
         },
@@ -669,6 +701,8 @@ export class ExperimentManager extends Service {
         experimentId: this.experimentId,
         cohortConfig,
       });
+      // Set to current cohort
+      this.setCurrentCohortId(cohortConfig.id);
     }
     this.isWritingCohort = false;
     return response;

@@ -5,6 +5,8 @@ import '../../pair-components/tooltip';
 
 import './cohort_summary';
 
+import '@material/web/checkbox/checkbox.js';
+
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
@@ -32,31 +34,63 @@ export class Component extends MobxLitElement {
   override render() {
     return html`
       <div class="experiment-manager">
-        ${this.renderHeader()} ${this.renderContent()}
+        ${this.renderHeader()} ${this.renderActions()} ${this.renderContent()}
+      </div>
+    `;
+  }
+
+  private renderActions() {
+    const hideLockedCohorts = this.experimentManager.hideLockedCohorts;
+    const expandAllCohorts = this.experimentManager.expandAllCohorts;
+
+    return html`
+      <div class="header">
+        <div class="left">
+          <div
+            class="checkbox-wrapper"
+            @click=${() => {
+              this.experimentManager.setHideLockedCohorts(!hideLockedCohorts);
+            }}
+          >
+            <pr-icon
+              color="secondary"
+              size="small"
+              variant="default"
+              icon=${hideLockedCohorts ? 'filter_list' : 'filter_list_off'}
+            >
+            </pr-icon>
+            <div>
+              ${hideLockedCohorts ? 'Show all cohorts' : 'Hide locked cohorts'}
+            </div>
+          </div>
+          <div
+            class="checkbox-wrapper"
+            @click=${() => {
+              this.experimentManager.setExpandAllCohorts(!expandAllCohorts);
+            }}
+          >
+            <pr-icon
+              color="secondary"
+              size="small"
+              variant="default"
+              icon=${expandAllCohorts ? 'collapse_all' : 'expand_all'}
+            >
+            </pr-icon>
+            <div>${expandAllCohorts ? 'Collapse' : 'Expand'} all cohorts</div>
+          </div>
+        </div>
       </div>
     `;
   }
 
   private renderHeader() {
     const getCohortName = (length: number) => {
-      return `Cohort ${String(length).padStart(2, '0')}`;
+      return this.experimentManager.getNextCohortName(length);
     };
 
     return html`
       <div class="header">
         <div class="left">
-          <pr-tooltip text="Hide panel" position="RIGHT">
-            <pr-icon-button
-              icon="visibility_off"
-              size="small"
-              color="neutral"
-              variant="default"
-              @click=${() => {
-                this.experimentManager.setShowCohortList(false);
-              }}
-            >
-            </pr-icon-button>
-          </pr-tooltip>
           <div>${this.experimentManager.numCohorts} cohorts</div>
           <small>
             (${this.experimentManager.getNumExperimentParticipants(false)}
