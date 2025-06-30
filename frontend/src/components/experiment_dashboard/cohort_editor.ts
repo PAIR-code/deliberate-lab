@@ -121,6 +121,7 @@ export class Component extends MobxLitElement {
           ${numCohorts > 0
             ? html`<div>Use the dropdown above to select a cohort.</div>`
             : html`
+                <div>To begin running your experiment, create a cohort:</div>
                 <pr-button variant="tonal" @click=${this.addCohort}>
                   Create new cohort
                 </pr-button>
