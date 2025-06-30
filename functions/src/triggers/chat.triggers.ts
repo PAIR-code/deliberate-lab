@@ -14,8 +14,8 @@ import {sendAgentParticipantSalespersonMessage} from '../stages/salesperson.agen
 // TRIGGER FUNCTIONS                                                         //
 // ************************************************************************* //
 
-/** When a chat message is created */
-export const onChatMessageCreated = onDocumentCreated(
+/** When a chat message is created under publicStageData */
+export const onPublicChatMessageCreated = onDocumentCreated(
   'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}',
   async (event) => {
     const stage = await getFirestoreStage(
@@ -81,5 +81,20 @@ export const onChatMessageCreated = onDocumentCreated(
         participant,
       );
     });
+  },
+);
+
+/** When a chat message is created under private participant stageData */
+export const onPrivateChatMessageCreated = onDocumentCreated(
+  'experiments/{experimentId}/participants/{participantId}/stageData/{stageId}/privateChats/{chatId}',
+  async (event) => {
+    const stage = await getFirestoreStage(
+      event.params.experimentId,
+      event.params.stageId,
+    );
+    if (!stage) return;
+
+    // TODO: Send agent mediator messages to private chat path
+    console.log('onPrivateChatMessageCreated');
   },
 );
