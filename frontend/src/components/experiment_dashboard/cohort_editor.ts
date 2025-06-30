@@ -65,7 +65,6 @@ export class Component extends MobxLitElement {
       return html`
         <div>Edit cohort:</div>
         <select .value=${this.cohort?.id} @change=${updateCohort}>
-          <option value=${undefined}></option>
           ${Object.values(this.experimentManager.cohortMap).map(
             (cohort) =>
               html`<option
