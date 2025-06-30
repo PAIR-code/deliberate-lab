@@ -6,6 +6,9 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
+import {core} from '../../core/core';
+import {ParticipantService} from '../../services/participant.service';
+
 import {PrivateChatStageConfig} from '@deliberation-lab/utils';
 
 import {styles} from './group_chat_participant_view.scss';
@@ -15,14 +18,21 @@ import {styles} from './group_chat_participant_view.scss';
 export class PrivateChatView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
+  private readonly participantService = core.getService(ParticipantService);
+
   @property() stage: PrivateChatStageConfig | undefined = undefined;
 
   override render() {
     if (!this.stage) return nothing;
 
+    const chatMessages =
+      this.participantService.privateChatMap[this.stage.id] ?? [];
+
     return html`
-      <chat-interface .stage=${this.stage} disableInput>
-        <div>Private chat coming soon</div>
+      <chat-interface .stage=${this.stage}>
+        ${chatMessages.map(
+          (message) => html`<chat-message .chat=${message}></chat-message`,
+        )}
       </chat-interface>
       <stage-footer>
         ${this.stage.progress.showParticipantProgress
