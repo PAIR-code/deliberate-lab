@@ -20,6 +20,7 @@ import {
   createInfoStage,
   createFlipCardStage,
   createPayoutStage,
+  createPrivateChatStage,
   createProfileStage,
   createRevealStage,
   createSurveyPerParticipantStage,
@@ -152,7 +153,9 @@ export class StageBuilderDialog extends MobxLitElement {
 
       <div class="gallery-section">
         <div class="gallery-title">Chat stages</div>
-        <div class="card-gallery-wrapper">${this.renderGroupChatCard()}</div>
+        <div class="card-gallery-wrapper">
+          ${this.renderGroupChatCard()} ${this.renderPrivateChatCard()}
+        </div>
       </div>
 
       <div class="gallery-section">
@@ -309,7 +312,23 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addStage}>
         <div class="title">Group chat</div>
         <div>
-          Host a conversation among all participants in a cohort and optional
+          Host a conversation among <i>all</i> participants in a cohort and
+          optional mediator(s).
+        </div>
+      </div>
+    `;
+  }
+
+  private renderPrivateChatCard() {
+    const addStage = () => {
+      this.addStage(createPrivateChatStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">Private chat</div>
+        <div>
+          Enable each participant to privately chat <i>only</i> with added
           mediator(s).
         </div>
       </div>
