@@ -67,43 +67,6 @@ export interface DiscussionItem {
 export type ChatDiscussion = DefaultChatDiscussion | CompareChatDiscussion;
 
 /**
- * ChatMessage.
- *
- * Saved as docs under
- * experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats
- */
-export interface ChatMessage {
-  id: string;
-  discussionId: string | null; // discussion during which message was sent
-  type: ChatMessageType;
-  message: string;
-  timestamp: UnifiedTimestamp;
-  profile: ParticipantProfileBase;
-  senderId: string; // participant public ID or mediator ID
-  agentId: string; // agent persona used (or blank if none)
-  explanation: string; // agent reasoning (or blank if none)
-}
-
-export enum ChatMessageType {
-  PARTICIPANT = 'PARTICIPANT',
-  MEDIATOR = 'MEDIATOR',
-  EXPERIMENTER = 'EXPERIMENTER', // if experimenter needs to send a message
-  HUMAN_AGENT = 'HUMAN_AGENT', // obsolete type
-  AGENT_AGENT = 'AGENT_AGENT', // obsolete type
-}
-
-/** Format for LLM API chat message output. */
-export interface AgentChatResponse {
-  profile: ParticipantProfileBase;
-  profileId: string; // ID of participant or mediator
-  agentId: string; // ID of agent persona
-  promptConfig: AgentChatPromptConfig;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  parsed: any;
-  message: string;
-}
-
-/**
  * ChatStageParticipantAnswer.
  *
  * This is saved as a stage doc (with stage ID as doc ID) under
@@ -181,57 +144,6 @@ export function createCompareChatDiscussion(
     type: ChatDiscussionType.COMPARE,
     description: config.description ?? '',
     items: config.items ?? [],
-  };
-}
-
-/** Create participant chat message. */
-export function createParticipantChatMessage(
-  config: Partial<ChatMessage> = {},
-): ChatMessage {
-  return {
-    id: config.id ?? generateId(),
-    discussionId: config.discussionId ?? null,
-    type: ChatMessageType.PARTICIPANT,
-    message: config.message ?? '',
-    timestamp: config.timestamp ?? Timestamp.now(),
-    profile: config.profile ?? createParticipantProfileBase(),
-    senderId: config.senderId ?? '',
-    agentId: config.agentId ?? '',
-    explanation: config.explanation ?? '',
-  };
-}
-
-/** Create mediator chat message. */
-export function createMediatorChatMessage(
-  config: Partial<ChatMessage> = {},
-): ChatMessage {
-  return {
-    id: config.id ?? generateId(),
-    discussionId: config.discussionId ?? null,
-    type: ChatMessageType.MEDIATOR,
-    message: config.message ?? '',
-    timestamp: config.timestamp ?? Timestamp.now(),
-    profile: config.profile ?? {name: 'Agent', avatar: '🤖', pronouns: null},
-    senderId: config.senderId ?? '',
-    agentId: config.agentId ?? '',
-    explanation: config.explanation ?? '',
-  };
-}
-
-/** Create experimenter chat message. */
-export function createExperimenterChatMessage(
-  config: Partial<ChatMessage> = {},
-): ChatMessage {
-  return {
-    id: config.id ?? generateId(),
-    discussionId: config.discussionId ?? null,
-    type: ChatMessageType.EXPERIMENTER,
-    message: config.message ?? '',
-    timestamp: config.timestamp ?? Timestamp.now(),
-    profile: config.profile ?? {name: 'Mediator', avatar: '⭐', pronouns: null},
-    senderId: config.senderId ?? '',
-    agentId: config.agentId ?? '',
-    explanation: config.explanation ?? '',
   };
 }
 

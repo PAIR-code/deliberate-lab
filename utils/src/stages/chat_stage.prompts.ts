@@ -2,15 +2,16 @@ import {UnifiedTimestamp} from '../shared';
 import {BaseAgentPromptConfig, ProfileAgentConfig} from '../agent';
 import {ParticipantProfileBase} from '../participant';
 import {getParticipantProfilePromptContext} from '../participant.prompts';
+import {convertUnifiedTimestampToTime} from '../shared';
 import {
   StructuredOutputDataType,
   createStructuredOutputConfig,
   makeStructuredOutputPrompt,
 } from '../structured_output';
+import {ChatMessage} from '../chat_message';
 import {
   ChatDiscussion,
   ChatDiscussionType,
-  ChatMessage,
   ChatStageConfig,
 } from './chat_stage';
 import {StageKind} from './stage';
@@ -116,15 +117,7 @@ Each message is displayed in chronological order, with the most recent message a
 
 /** Convert chat message to prompt format. */
 export function convertChatMessageToPromptFormat(message: ChatMessage) {
-  // TODO: Move to shared utils functions
-  const getTime = (timestamp: UnifiedTimestamp) => {
-    const date = new Date(timestamp.seconds * 1000);
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `(${hours}:${minutes})`;
-  };
-
-  return `${getTime(message.timestamp)} ${message.profile.name}: ${message.message}`;
+  return `${convertUnifiedTimestampToTime(message.timestamp)} ${message.profile.name}: ${message.message}`;
 }
 
 /** Convert chat messages into chat history string for prompt. */

@@ -21,9 +21,12 @@ enum ProfileDisplayType {
   // horizontal with small circle avatar + name (no pronouns)
   // (experimenter dashboard, header)
   DEFAULT = 'default',
-  // horizontal with small circle avatar + name + pronouns
+  // horizontal with big circle avatar + name + pronouns
   // (chat panel)
   CHAT = 'chat',
+  // horizontal with small circle avatar + name + pronouns
+  // (small chat panel)
+  CHAT_SMALL = 'chatSmall',
   // horizontal with big square avatar + name + pronouns
   // (ranking, per-participant survey stages)
   STAGE = 'stage',
@@ -154,7 +157,7 @@ export class ProfileDisplay extends MobxLitElement {
 
     if (this.displayType === ProfileDisplayType.DEFAULT) {
       return html`
-        <div class="horizontal-profile">
+        <div class="horizontal-profile small">
           <avatar-icon
             .emoji=${this.profile.avatar}
             .isDisabled=${this.isDisabled}
@@ -169,13 +172,18 @@ export class ProfileDisplay extends MobxLitElement {
       `;
     }
 
-    if (this.displayType === ProfileDisplayType.CHAT) {
+    if (
+      this.displayType === ProfileDisplayType.CHAT ||
+      this.displayType === ProfileDisplayType.CHAT_SMALL
+    ) {
+      const isSmall = this.displayType === ProfileDisplayType.CHAT_SMALL;
       return html`
-        <div class="horizontal-profile">
+        <div class="horizontal-profile ${isSmall ? 'small' : ''}">
           <avatar-icon
             .emoji=${this.profile.avatar}
             .color=${getColor()}
             .isDisabled=${this.isDisabled}
+            .small=${isSmall}
           >
           </avatar-icon>
           <div class="display-name-wrapper">

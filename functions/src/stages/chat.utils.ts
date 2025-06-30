@@ -314,6 +314,14 @@ export async function sendAgentChatMessage(
   stageId: string,
   chatId: string, // ID of chat that is being responded to
 ) {
+  // Wait for typing delay
+  // TODO: Decrease typing delay to account for LLM API call latencies?
+  // TODO: Don't send message if conversation continues while agent is typing?
+  await awaitTypingDelay(
+    agentResponse.message,
+    agentResponse.promptConfig.chatSettings.wordsPerMinute,
+  );
+
   // Don't send a message if the conversation has moved on
   const numChatsAfterAgent = await getChatMessageCount(
     experimentId,
@@ -324,14 +332,6 @@ export async function sendAgentChatMessage(
     // TODO: Write log to Firestore
     return;
   }
-
-  // Wait for typing delay
-  // TODO: Decrease typing delay to account for LLM API call latencies?
-  // TODO: Don't send message if conversation continues while agent is typing?
-  await awaitTypingDelay(
-    agentResponse.message,
-    agentResponse.promptConfig.chatSettings.wordsPerMinute,
-  );
 
   // Don't send a message if the conversation already has a response
   // to the trigger message by the same type of agent (participant, mediator)

@@ -1,6 +1,7 @@
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
+import {classMap} from 'lit/directives/class-map.js';
 
 import {StageConfig} from '@deliberation-lab/utils';
 
@@ -15,13 +16,21 @@ export class StageDescription extends MobxLitElement {
 
   @property() stage: StageConfig | null = null;
   @property({type: Boolean}) noBorder = false;
+  @property({type: Boolean}) noPadding = false;
 
   override render() {
     if (!this.stage || this.stage.descriptions.primaryText.length === 0) {
       return nothing;
     }
+
+    const descriptionClasses = classMap({
+      'description-wrapper': true,
+      border: !this.noBorder,
+      padding: !this.noPadding,
+    });
+
     return html`
-      <div class="description-wrapper${this.noBorder ? ' no-border' : ''}">
+      <div class=${descriptionClasses}>
         <div class="description html-wrapper">
           ${unsafeHTML(
             convertMarkdownToHTML(this.stage.descriptions.primaryText),
