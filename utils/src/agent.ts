@@ -31,6 +31,7 @@ export enum ApiKeyType {
 }
 
 /** Agent config applied to ParticipantProfile or MediatorProfile. */
+// promptContext and modelSettings are copied over from persona configs
 export interface ProfileAgentConfig {
   agentId: string; // ID of agent persona used
   promptContext: string; // Additional text to concatenate to agent prompts
@@ -38,6 +39,7 @@ export interface ProfileAgentConfig {
 }
 
 /** Generation config for a specific stage's model call. */
+// TODO: Move to structured_prompt.ts
 export interface ModelGenerationConfig {
   maxTokens: number; // Max tokens per model call response
   stopSequences: string[];
@@ -55,6 +57,7 @@ export interface AgentModelSettings {
   modelName: string;
 }
 
+// TODO: Move to structured_prompt.ts
 export interface AgentPromptSettings {
   // Number of times to retry prompt call if it fails
   numRetries: number;

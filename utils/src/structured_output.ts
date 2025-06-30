@@ -25,6 +25,7 @@ export interface StructuredOutputSchema {
   arrayItems?: StructuredOutputSchema;
 }
 
+// TODO: Add StageKind to differentiate different structured outputs
 export interface StructuredOutputConfig {
   enabled: boolean;
   type: StructuredOutputType;
