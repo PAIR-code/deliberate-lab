@@ -9,6 +9,7 @@ import {
   DEFAULT_AGENT_PARTICIPANT_CHAT_PROMPT,
 } from './stages/chat_stage.prompts';
 import {
+  ChatMediatorStructuredOutputConfig,
   StructuredOutputConfig,
   createStructuredOutputConfig,
 } from './structured_output';
@@ -90,7 +91,7 @@ export interface BaseAgentPromptConfig {
   promptContext: string; // custom prompt content
   generationConfig: ModelGenerationConfig;
   promptSettings: AgentPromptSettings;
-  structuredOutputConfig: StructuredOutputConfig;
+  structuredOutputConfig: ChatMediatorStructuredOutputConfig;
 }
 
 /** Prompt config for completing stage (e.g., survey questions). */

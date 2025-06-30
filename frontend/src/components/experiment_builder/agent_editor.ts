@@ -22,7 +22,6 @@ import {
   ApiKeyType,
   StageConfig,
   StageKind,
-  StructuredOutputConfig,
   StructuredOutputType,
   StructuredOutputDataType,
   StructuredOutputSchema,

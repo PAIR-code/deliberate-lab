@@ -75,17 +75,7 @@ export class AgentManager extends Service {
             'chatPrompts',
           ),
         )
-      ).docs.map(
-        (doc) =>
-          ({
-            // Include false, empty structured output config for experiments
-            // created before version 17
-            structuredOutputConfig: createStructuredOutputConfig({
-              enabled: false,
-            }),
-            ...doc.data(),
-          }) as AgentChatPromptConfig,
-      );
+      ).docs.map((doc) => doc.data() as AgentChatPromptConfig);
       const agentObject: AgentDataObject = {
         persona,
         participantPromptMap: {},

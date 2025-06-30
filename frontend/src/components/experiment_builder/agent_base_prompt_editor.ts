@@ -21,7 +21,7 @@ import {
   BaseAgentPromptConfig,
   StageConfig,
   StageKind,
-  StructuredOutputConfig,
+  ChatMediatorStructuredOutputConfig,
   StructuredOutputType,
   StructuredOutputDataType,
   StructuredOutputSchema,
@@ -562,7 +562,7 @@ export class AgentEditorComponent extends MobxLitElement {
   ) {
     const config = agentPromptConfig.structuredOutputConfig;
     const updateConfig = (
-      structuredOutputConfig: Partial<StructuredOutputConfig>,
+      structuredOutputConfig: Partial<ChatMediatorStructuredOutputConfig>,
     ) => {
       this.agentEditor.updateAgentChatStructuredOutputConfig(
         agent.id,
@@ -662,7 +662,7 @@ export class AgentEditorComponent extends MobxLitElement {
       );
     };
     const updateConfig = (
-      structuredOutputConfig: Partial<StructuredOutputConfig>,
+      structuredOutputConfig: Partial<ChatMediatorStructuredOutputConfig>,
     ) => {
       this.agentEditor.updateAgentChatStructuredOutputConfig(
         agent.id,

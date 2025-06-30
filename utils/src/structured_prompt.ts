@@ -1,7 +1,10 @@
 /** Structured prompt types, constants, and functions. */
 import {AgentChatPromptConfig, ModelGenerationConfig} from './agent';
 import {StageKind} from './stages/stage';
-import {StructuredOutputConfig} from './structured_output';
+import {
+  StructuredOutputConfig,
+  ChatMediatorStructuredOutputConfig,
+} from './structured_output';
 
 // ****************************************************************************
 // TYPES
@@ -15,6 +18,14 @@ export interface BasePromptConfig {
   numRetries: number;
   generationConfig: ModelGenerationConfig;
   structuredOutputConfig: StructuredOutputConfig;
+}
+
+// NOTE: This currently supports agent mediators only, not agent participants
+export type MediatorPromptConfig = ChatMediatorPromptConfig;
+
+export interface ChatMediatorPromptConfig extends BasePromptConfig {
+  type: StageKind.CHAT;
+  structuredOutputConfig: ChatMediatorStructuredOutputConfig;
 }
 
 /** PromptItem, where a prompt is composed of an ordered list of PromptItems.*/

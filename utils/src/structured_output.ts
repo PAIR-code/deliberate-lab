@@ -25,20 +25,26 @@ export interface StructuredOutputSchema {
   arrayItems?: StructuredOutputSchema;
 }
 
-// TODO: Add StageKind to differentiate different structured outputs
+// TODO: Add StageKind or new enum to differentiate different configs
 export interface StructuredOutputConfig {
   enabled: boolean;
   type: StructuredOutputType;
   schema?: StructuredOutputSchema;
   appendToPrompt: boolean;
+  explanationField: string; // field for model reasoning
+}
+
+// TODO: Move to mediator or chat file
+export interface ChatMediatorStructuredOutputConfig
+  extends StructuredOutputConfig {
   shouldRespondField: string;
-  explanationField: string;
   messageField: string;
 }
 
 // ****************************************************************************
 // CONSTANTS
 // ****************************************************************************
+// TODO: Move constants to group_chat.structured_output.ts
 export const DEFAULT_SHOULD_RESPOND_FIELD = 'shouldRespond';
 export const DEFAULT_RESPONSE_FIELD = 'response';
 export const DEFAULT_EXPLANATION_FIELD = 'explanation';
@@ -48,8 +54,8 @@ export const DEFAULT_EXPLANATION_FIELD = 'explanation';
 // ****************************************************************************
 
 export function createStructuredOutputConfig(
-  config: Partial<StructuredOutputConfig> = {},
-): StructuredOutputConfig {
+  config: Partial<ChatMediatorStructuredOutputConfig> = {},
+): ChatMediatorStructuredOutputConfig {
   const schema = config.schema ?? {
     type: StructuredOutputDataType.OBJECT,
     properties: [
