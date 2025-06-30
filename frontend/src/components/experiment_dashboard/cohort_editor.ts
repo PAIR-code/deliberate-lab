@@ -58,48 +58,97 @@ export class Component extends MobxLitElement {
       this.experimentManager.setCurrentCohortId(id);
     };
 
+    const numCohorts = this.experimentManager.cohortList.length;
+
+    const renderSelection = () => {
+      if (numCohorts === 0) return html`Cohort editor`;
+      return html`
+        <div>Edit cohort:</div>
+        <select .value=${this.cohort?.id} @change=${updateCohort}>
+          <option value=${undefined}></option>
+          ${Object.values(this.experimentManager.cohortMap).map(
+            (cohort) =>
+              html`<option
+                value=${cohort.id}
+                ?selected=${cohort.id ===
+                this.experimentManager.currentCohortId}
+              >
+                ${cohort.metadata.name} (${cohort.id})
+              </option>`,
+          )}
+        </select>
+      `;
+    };
+
+    const renderAdd = () => {
+      if (numCohorts === 0) return nothing;
+      return html`
+        <pr-tooltip text="Add new cohort" position="LEFT">
+          <pr-icon-button
+            color="secondary"
+            variant="tonal"
+            icon="add"
+            @click=${this.addCohort}
+          >
+          </pr-icon-button>
+        </pr-tooltip>
+      `;
+    };
+
     return html`
       <div class="header">
-        <div class="left">
-          <pr-tooltip text="Hide panel" position="RIGHT">
-            <pr-icon-button
-              icon="visibility_off"
-              size="small"
-              color="neutral"
-              variant="default"
-              @click=${() => {
-                this.experimentManager.setShowCohortEditor(false);
-              }}
-            >
-            </pr-icon-button>
-          </pr-tooltip>
-          <div>Edit cohort:</div>
-          <select .value=${this.cohort?.id} @change=${updateCohort}>
-            <option value=${undefined}></option>
-            ${Object.values(this.experimentManager.cohortMap).map(
-              (cohort) =>
-                html`<option value=${cohort.id}>
-                  ${cohort.metadata.name} (${cohort.id})
-                </option>`,
-            )}
-          </select>
-        </div>
-        <div class="right"></div>
+        <div class="left">${renderSelection()}</div>
+        <div class="right">${renderAdd()}</div>
       </div>
     `;
   }
 
+  private async addCohort() {
+    const numCohorts = this.experimentManager.cohortList.length;
+    const cohortName =
+      numCohorts === 0
+        ? 'Lobby'
+        : `Cohort ${String(numCohorts).padStart(2, '0')}`;
+    const response = await this.experimentManager.createCohort({}, cohortName);
+  }
+
   private renderContent() {
+    const numCohorts = this.experimentManager.cohortList.length;
+
     if (!this.cohort) {
       return html`
         <div class="empty-message">
-          <div>Use the dropdown above to select a cohort.</div>
+          ${numCohorts > 0
+            ? html`<div>Use the dropdown above to select a cohort.</div>`
+            : html`
+                <div>To begin running your experiment, create a cohort:</div>
+                <pr-button variant="tonal" @click=${this.addCohort}>
+                  Create new cohort
+                </pr-button>
+              `}
         </div>
       `;
     }
 
     return html`
       <div class="content">
+        <div class="content-banner">
+          <div
+            class="back-button"
+            @click=${() => {
+              this.experimentManager.setShowCohortList(true, true);
+            }}
+          >
+            <pr-icon
+              icon="chevron_backward"
+              size="small"
+              variant="default"
+              color="secondary"
+            >
+            </pr-icon>
+            <div>View all cohorts</div>
+          </div>
+        </div>
         <div class="content-header">
           <div>
             <div>${this.cohort?.metadata.name}</div>

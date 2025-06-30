@@ -72,36 +72,8 @@ export class Component extends MobxLitElement {
       `;
     }
     return html`
-      ${this.renderCohortListPanel()} ${this.renderCohortEditorPanel()}
       ${this.renderParticipantStatsPanel()}
       ${this.renderParticipantPreviewPanel()}
-    `;
-  }
-
-  private renderCohortListPanel() {
-    if (!this.experimentManager.showCohortList) {
-      return nothing;
-    }
-    return html`
-      <div class="cohort-panel">
-        <cohort-list></cohort-list>
-      </div>
-    `;
-  }
-
-  private renderCohortEditorPanel() {
-    if (!this.experimentManager.showCohortEditor) {
-      return nothing;
-    }
-    return html`
-      <div class="cohort-panel">
-        <cohort-editor
-          .cohort=${this.experimentManager.getCohort(
-            this.experimentManager.currentCohortId ?? '',
-          )}
-        >
-        </cohort-editor>
-      </div>
     `;
   }
 
@@ -191,6 +163,10 @@ export class Component extends MobxLitElement {
   }
 
   private renderParticipantHeader(isPreview = false) {
+    if (!this.experimentManager.currentParticipant) {
+      return nothing;
+    }
+
     const getProfileString = () => {
       const currentParticipant = this.experimentManager.currentParticipant;
       if (!currentParticipant) {
@@ -241,26 +217,26 @@ export class Component extends MobxLitElement {
       return html` <div class="participant-status-banner">${text}</div> `;
     };
 
+    const renderToggle = () => {
+      return html`
+        <pr-button
+          color="secondary"
+          variant="default"
+          size="small"
+          @click=${() => {
+            this.experimentManager.setShowParticipantStats(isPreview, true);
+          }}
+        >
+          Show ${isPreview ? 'stats' : 'preview'}
+        </pr-button>
+      `;
+    };
+
     return html`
       <div class="header">
         <div class="left">
-          <pr-tooltip text="Hide panel" position="RIGHT">
-            <pr-icon-button
-              icon="visibility_off"
-              size="small"
-              color="neutral"
-              variant="default"
-              @click=${() => {
-                if (isPreview) {
-                  this.experimentManager.setShowParticipantPreview(false);
-                } else {
-                  this.experimentManager.setShowParticipantStats(false);
-                }
-              }}
-            >
-            </pr-icon-button>
-          </pr-tooltip>
           ${!isPreview ? getProfileString() : ''} ${renderStatusBanner()}
+          ${renderToggle()}
         </div>
         <div class="right">
           ${renderAgentParticipantButton()} ${this.renderTransferMenu()}

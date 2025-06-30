@@ -1,6 +1,6 @@
-@use "../../sass/colors";
-@use "../../sass/common";
-@use "../../sass/typescale";
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
 
 :host {
   @include common.flex-column;
@@ -12,6 +12,20 @@
   @include common.flex-column;
   flex-grow: 1;
   overflow: auto;
+}
+
+.checkbox-wrapper {
+  @include typescale.body-small;
+  @include common.flex-row-align-center;
+  color: var(--md-sys-color-outline);
+  cursor: pointer;
+  gap: common.$spacing-xs;
+  overflow-wrap: break-word;
+
+  &:focus,
+  &:hover {
+    color: var(--md-sys-color-secondary);
+  }
 }
 
 .header {

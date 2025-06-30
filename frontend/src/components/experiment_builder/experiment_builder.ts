@@ -4,7 +4,7 @@ import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
 import '../experimenter/experimenter_data_editor';
 import '../stages/base_stage_editor';
-import '../stages/chat_editor';
+import '../stages/group_chat_editor';
 import '../stages/flipcard_editor';
 import '../stages/ranking_editor';
 import '../stages/info_editor';
@@ -431,7 +431,7 @@ export class ExperimentBuilder extends MobxLitElement {
       case StageKind.CHAT:
         return html`
           <base-stage-editor .stage=${stage}></base-stage-editor>
-          <chat-editor .stage=${stage}></chat-editor>
+          <group-chat-editor .stage=${stage}></group-chat-editor>
         `;
       case StageKind.FLIPCARD:
         return html`

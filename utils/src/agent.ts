@@ -24,7 +24,6 @@ export interface CustomRequestBodyField {
 }
 
 /** Specifies which API to use for model calls. */
-// TODO: Rename enum (ApiType? LLMApiType?)
 export enum ApiKeyType {
   GEMINI_API_KEY = 'GEMINI',
   OPENAI_API_KEY = 'OPENAI',
@@ -65,8 +64,6 @@ export interface AgentPromptSettings {
   // Whether or not to include information (stage description/info/help)
   // shown to users
   includeStageInfo: boolean;
-  // TODO(mkbehr): Add few-shot examples
-  // (that align with generation config's response schema)
 }
 
 /** Model settings for agent in a chat discussion. */
@@ -81,19 +78,6 @@ export interface AgentChatSettings {
   // Maximum total responses agent can make during the chat conversation
   // (or null if no max)
   maxResponses: number | null;
-}
-
-/** DEPRECATED: Settings for formatting agent response
- *  (e.g., expect JSON, use specific JSON field for response, use end token)
- *  New config is StructuredOutputConfig.
- */
-export interface AgentResponseConfig {
-  isJSON: boolean;
-  // JSON field to extract chat message from
-  messageField: string;
-  // JSON field to extract explanation from
-  explanationField: string;
-  formattingInstructions: string;
 }
 
 /** Specifies how prompt should be sent to API. */
@@ -114,8 +98,6 @@ export type AgentParticipantPromptConfig = BaseAgentPromptConfig;
  */
 export interface AgentChatPromptConfig extends BaseAgentPromptConfig {
   chatSettings: AgentChatSettings;
-  // DEPRECATED: Use structuredOutputConfig, not responseConfig
-  responseConfig?: AgentResponseConfig;
 }
 
 export enum AgentPersonaType {

@@ -2,8 +2,7 @@ import '../popup/accept_transfer_popup';
 import '../popup/attention_check_popup';
 import '../popup/booted_popup';
 import '../progress/progress_stage_waiting';
-import '../stages/chat_interface';
-import '../stages/chat_panel';
+import '../stages/group_chat_participant_view';
 import '../stages/chip_participant_view';
 import '../stages/comprehension_participant_view';
 import '../stages/flipcard_participant_view';
@@ -78,7 +77,9 @@ export class ParticipantView extends MobxLitElement {
     };
 
     return html`
-      <participant-nav></participant-nav>
+      ${this.participantService.showParticipantSidenav
+        ? html`<participant-nav></participant-nav>`
+        : nothing}
       <div
         class="participant-previewer ${!this.authService.isExperimenter
           ? 'full-view'
@@ -217,10 +218,8 @@ export class ParticipantView extends MobxLitElement {
         `;
       case StageKind.CHAT:
         return html`
-          <div class="content chat">
-            <chat-panel .stage=${stage}></chat-panel>
-            <chat-interface .stage=${stage}></chat-interface>
-          </div>
+          <group-chat-participant-view .stage=${stage}>
+          </group-chat-particpant-view>
         `;
       case StageKind.CHIP:
         return html`

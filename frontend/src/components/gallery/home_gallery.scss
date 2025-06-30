@@ -8,48 +8,76 @@
   width: 100%;
 }
 
+$gallery-width: 956px; // 3 gallery cards including gap
+
 .gallery-wrapper {
   @include common.flex-row;
   flex-wrap: wrap;
   gap: common.$spacing-large;
-  max-width: 924px; // 3 gallery cards including gap
+  max-width: $gallery-width;
+  padding: common.$main-content-padding;
   width: 100%;
 }
 
 .gallery-tabs {
   @include common.flex-row;
   align-items: center;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  padding: 0 common.$main-content-padding;
+  max-width: $gallery-width;
+  padding: common.$main-content-padding;
+  padding-bottom: 0;
   position: sticky;
   top: common.$header-height;
   width: 100%;
 }
 
+.divider {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  width: 100%;
+}
+
+.gallery-header {
+  @include common.flex-row-align-center;
+  color: var(--md-sys-color-secondary);
+  justify-content: space-between;
+  max-width: $gallery-width;
+  padding: common.$spacing-large common.$spacing-large 0;
+  width: 100%;
+}
+
 .gallery-tab {
+  @include typescale.label-medium;
   @include common.flex-row;
   align-items: center;
-  border-bottom: 2px solid transparent;
+  border: 1px solid var(--md-sys-color-outline-variant);
   color: var(--md-sys-color-outline);
-  height: common.$header-height;
-  padding: 0 common.$spacing-large;
+  height: 100%;
+  padding: common.$spacing-small common.$spacing-large;
+
+  &:first-of-type {
+    border-radius: common.$spacing-medium 0 0 common.$spacing-medium;
+  }
+
+  &:last-of-type {
+    border-radius: 0 common.$spacing-medium common.$spacing-medium 0;
+  }
 
   &:focus,
   &:hover {
+    color: var(--md-sys-color-secondary);
     cursor: pointer;
-    color: var(--md-sys-color-on-surface);
   }
 
   &.active {
-    color: var(--md-sys-color-tertiary);
-    border-color: var(--md-sys-color-tertiary);
+    background: var(--md-sys-color-secondary-container);
+    border-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
   }
 }
 
 gallery-card {
   &:focus,
   &:hover {
-    border: 2px solid var(--md-sys-color-primary);
+    border: 1px solid var(--md-sys-color-secondary);
   }
 }
 
@@ -64,8 +92,34 @@ gallery-card {
 .empty-message {
   color: var(--md-sys-color-outline);
   font-style: italic;
+  text-align: center;
+  width: 100%;
 }
 
 h1 {
   @include typescale.title-medium;
+}
+
+.quick-start-wrapper {
+  @include common.flex-column-align-center;
+  background: var(--md-sys-color-surface-variant);
+  padding: common.$main-content-padding 0;
+  width: 100%;
+}
+
+.quick-start-card {
+  @include common.flex-column-align-center;
+  border: 2px dashed var(--md-sys-color-outline);
+  border-radius: common.$spacing-medium;
+  cursor: pointer;
+  gap: common.$spacing-medium;
+  justify-content: center;
+  min-height: 120px;
+  padding: common.$spacing-medium;
+  min-width: 200px;
+
+  &:focus,
+  &:hover {
+    border-color: var(--md-sys-color-secondary);
+  }
 }

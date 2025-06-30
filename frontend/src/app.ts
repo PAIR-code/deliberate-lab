@@ -53,10 +53,9 @@ export class App extends MobxLitElement {
         }
         return html`
           <page-header></page-header>
+          <quick-start-gallery></quick-start-gallery>
           <home-gallery-tabs></home-gallery-tabs>
-          <div class="content">
-            <home-gallery></home-gallery>
-          </div>
+          <home-gallery></home-gallery>
         `;
       case Pages.ADMIN:
         return html`

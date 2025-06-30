@@ -1,5 +1,6 @@
 import './button';
 import './icon';
+import './icon_button';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -17,8 +18,11 @@ export class Menu extends MobxLitElement {
 
   @property() name = '';
   @property() icon = '';
+  @property() color = '';
   @property() variant: MenuVariant = 'default';
   @property({type: Boolean}) disabled = false;
+  @property({type: Boolean}) loading = false;
+  @property({type: Boolean}) useIconButton = false;
 
   @state() showMenu = false;
 
@@ -32,11 +36,31 @@ export class Menu extends MobxLitElement {
       'show-menu': this.showMenu && !this.disabled,
     });
 
+    if (this.useIconButton) {
+      return html`
+        <pr-icon-button
+          icon=${this.icon}
+          color=${this.color}
+          variant=${this.variant}
+          @click=${toggleMenu}
+          ?disabled=${this.disabled}
+          ?loading=${this.loading}
+        >
+        </pr-icon-button>
+        <div class=${menuClasses} @click=${toggleMenu}>
+          <div class="menu">
+            ${this.disabled ? nothing : html`<slot></slot>`}
+          </div>
+        </div>
+      `;
+    }
+
     return html`
       <pr-button
         variant=${this.variant}
         @click=${toggleMenu}
         ?disabled=${this.disabled}
+        ?loading=${this.loading}
       >
         <div class="button-content">
           ${this.renderIcon(this.icon)}

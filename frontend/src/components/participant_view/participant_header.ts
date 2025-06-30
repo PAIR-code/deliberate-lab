@@ -9,6 +9,9 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
+import {core} from '../../core/core';
+import {ParticipantService} from '../../services/participant.service';
+
 import {ParticipantProfile, StageConfig} from '@deliberation-lab/utils';
 import {styles} from './participant_header.scss';
 
@@ -16,6 +19,8 @@ import {styles} from './participant_header.scss';
 @customElement('participant-header')
 export class Header extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
+
+  private readonly participantService = core.getService(ParticipantService);
 
   @property() stage: StageConfig | undefined = undefined;
   @property() profile: ParticipantProfile | undefined = undefined;
@@ -27,11 +32,27 @@ export class Header extends MobxLitElement {
 
     return html`
       <div class="header">
-        <div class="left">${this.stage.name}</div>
+        <div class="left">${this.renderMenu()} ${this.stage.name}</div>
         <div class="right">
           ${this.renderInfo()} ${this.renderHelp()} ${this.renderProfile()}
         </div>
       </div>
+    `;
+  }
+
+  private renderMenu() {
+    return html`
+      <pr-icon-button
+        class="menu-button"
+        icon="menu"
+        color="neutral"
+        variant="default"
+        @click=${() =>
+          this.participantService.setShowParticipantSidenav(
+            !this.participantService.showParticipantSidenav,
+          )}
+      >
+      </pr-icon-button>
     `;
   }
 

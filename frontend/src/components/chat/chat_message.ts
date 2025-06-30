@@ -96,7 +96,7 @@ export class ChatMessageComponent extends MobxLitElement {
       <div class="chat-message">
         <avatar-icon
           .emoji=${profile.avatar}
-          .color=${getHashBasedColor(profile?.avatar ?? '')}
+          .color=${getHashBasedColor(chatMessage.senderId ?? '')}
         >
         </avatar-icon>
         <div class="content">

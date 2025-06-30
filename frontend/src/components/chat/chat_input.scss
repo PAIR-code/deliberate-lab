@@ -1,0 +1,24 @@
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  width: 100%;
+}
+
+.input {
+  align-items: center;
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 50px;
+  box-sizing: border-box;
+  display: flex;
+  gap: common.$spacing-small;
+  padding: common.$spacing-large common.$spacing-xl common.$spacing-large
+    common.$spacing-xxl;
+  width: 100%;
+
+  pr-textarea {
+    flex-grow: 1;
+  }
+}

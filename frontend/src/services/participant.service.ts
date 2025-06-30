@@ -97,6 +97,9 @@ export class ParticipantService extends Service {
   @observable isProfileLoading = false;
   @observable areAnswersLoading = false;
 
+  // Sidenav
+  @observable showParticipantSidenav = true;
+
   // Chat creation loading
   @observable isSendingChat = false;
 
@@ -107,6 +110,10 @@ export class ParticipantService extends Service {
   set isLoading(value: boolean) {
     this.isProfileLoading = value;
     this.areAnswersLoading = value;
+  }
+
+  setShowParticipantSidenav(showParticipantSidenav: boolean) {
+    this.showParticipantSidenav = showParticipantSidenav;
   }
 
   setParticipant(experimentId: string | null, participantId: string | null) {
