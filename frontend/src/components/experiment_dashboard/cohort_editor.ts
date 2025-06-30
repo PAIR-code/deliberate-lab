@@ -62,6 +62,12 @@ export class Component extends MobxLitElement {
 
     const renderSelection = () => {
       if (numCohorts === 0) return html`Cohort editor`;
+      const getNameDisplay = (cohort: CohortConfig) => {
+        if (cohort.metadata.name) {
+          return `${cohort.metadata.name} (${cohort.id.slice(0, 8)})`;
+        }
+        return `Cohort ${cohort.id.slice(0, 8)}`;
+      };
       return html`
         <div>Edit cohort:</div>
         <select .value=${this.cohort?.id} @change=${updateCohort}>
@@ -72,7 +78,7 @@ export class Component extends MobxLitElement {
                 ?selected=${cohort.id ===
                 this.experimentManager.currentCohortId}
               >
-                ${cohort.metadata.name} (${cohort.id})
+                ${getNameDisplay(cohort)}
               </option>`,
           )}
         </select>
@@ -146,7 +152,11 @@ export class Component extends MobxLitElement {
       <div class="content">
         <div class="content-header">
           <div>
-            <div>${this.cohort?.metadata.name ?? 'Untitled cohort'}</div>
+            <div>
+              ${this.cohort?.metadata.name.length === 0
+                ? 'Untitled cohort'
+                : this.cohort?.metadata.name}
+            </div>
             <div class="subtitle">${this.cohort?.id}</div>
           </div>
           <div class="toolbar">
