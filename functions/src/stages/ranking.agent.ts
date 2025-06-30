@@ -1,6 +1,6 @@
 import {
   AgentModelSettings,
-  ExperimenterData,
+  APIKeyConfig,
   ModelGenerationConfig,
   ParticipantProfileExtended,
   ParticipantStatus,
@@ -24,7 +24,7 @@ import {app} from '../app';
 /** Use LLM call to generate agent participant response to ranking stage. */
 export async function getAgentParticipantRankingStageResponse(
   experimentId: string,
-  experimenterData: ExperimenterData, // for making LLM call
+  apiKeyConfig: APIKeyConfig, // for making LLM call
   participant: ParticipantProfileExtended,
   stage: RankingStageConfig,
 ) {
@@ -89,7 +89,7 @@ export async function getAgentParticipantRankingStageResponse(
 
   // TODO: Use structured output
   const rawResponse = await getAgentResponse(
-    experimenterData,
+    apiKeyConfig,
     prompt,
     participant.agentConfig.modelSettings,
     generationConfig,

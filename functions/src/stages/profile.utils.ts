@@ -63,7 +63,7 @@ export async function completeProfile(
   if (!experimenterData) return null;
 
   const response = await getAgentResponse(
-    experimenterData,
+    experimenterData.apiKeys,
     `${participant.agentConfig.promptContext}\n\nPlease fill out your profile name, emoji, and pronouns.`,
     participant.agentConfig.modelSettings,
     createModelGenerationConfig(),
