@@ -85,10 +85,7 @@ export class Component extends MobxLitElement {
 
   private renderHeader() {
     const getCohortName = (length: number) => {
-      if (length === 0) {
-        return `Lobby`;
-      }
-      return `Cohort ${String(length).padStart(2, '0')}`;
+      return this.experimentManager.getNextCohortName(length);
     };
 
     return html`

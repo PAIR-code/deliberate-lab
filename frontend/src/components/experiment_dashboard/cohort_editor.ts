@@ -120,11 +120,7 @@ export class Component extends MobxLitElement {
   }
 
   private async addCohort() {
-    const numCohorts = this.experimentManager.cohortList.length;
-    const cohortName =
-      numCohorts === 0
-        ? 'Lobby'
-        : `Cohort ${String(numCohorts).padStart(2, '0')}`;
+    const cohortName = this.experimentManager.getNextCohortName();
     const response = await this.experimentManager.createCohort({}, cohortName);
   }
 

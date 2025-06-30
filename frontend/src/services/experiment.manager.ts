@@ -40,6 +40,7 @@ import {
   ParticipantStatus,
   ProfileAgentConfig,
   StageConfig,
+  StageKind,
   createCohortConfig,
   createExperimenterChatMessage,
   generateId,
@@ -343,6 +344,17 @@ export class ExperimentManager extends Service {
 
   getCohort(id: string) {
     return this.cohortMap[id];
+  }
+
+  // Return name for next cohort based on number of cohorts
+  getNextCohortName(numCohorts = this.cohortList.length) {
+    const hasTransfer = this.sp.experimentService.stages.find(
+      (stage) => stage.kind === StageKind.TRANSFER,
+    );
+    if (numCohorts > 0 || !hasTransfer) {
+      return `Cohort ${String(numCohorts).padStart(2, '0')}`;
+    }
+    return 'Lobby';
   }
 
   isFullCohort(cohort: CohortConfig) {
