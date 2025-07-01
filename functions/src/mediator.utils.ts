@@ -1,6 +1,7 @@
 import {
   AgentChatPromptConfig,
   AgentPersonaConfig,
+  AgentPersonaType,
   MediatorProfile,
   ProfileAgentConfig,
   createMediatorProfileFromAgentPersona,
@@ -21,7 +22,10 @@ export async function createMediatorsForCohort(
   const personas = await getAgentPersonas(experimentId);
   const mediators: MediatorProfile[] = [];
   for (const persona of personas) {
-    if (persona.isDefaultAddToCohort) {
+    if (
+      persona.isDefaultAddToCohort &&
+      persona.type === AgentPersonaType.MEDIATOR
+    ) {
       const chatPrompts = (
         await app
           .firestore()
