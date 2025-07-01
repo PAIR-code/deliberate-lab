@@ -48,9 +48,8 @@ import {
   getSalespersonStageConfigs,
 } from '../../shared/templates/salesperson';
 import {
-  TG_METADATA,
-  getTgStageConfigs,
-  TG_AGENTS,
+  FRUIT_TEST_METADATA,
+  getFruitTestExperimentTemplate,
 } from '../../shared/templates/fruit_test';
 import {
   FLIPCARD_TEMPLATE_METADATA,
@@ -139,7 +138,7 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderLASCard()} ${this.renderLASCard(true)}
         ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
         ${this.renderSalespersonGameCard()} ${this.renderFlipCardTemplateCard()}
-        ${this.renderTestGameCard()}
+        ${this.renderFruitTestTemplateCard()}
       </div>
     `;
   }
@@ -251,15 +250,15 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
-  private renderTestGameCard() {
-    const addGame = () => {
-      this.addGame(TG_METADATA, getTgStageConfigs(), TG_AGENTS);
+  private renderFruitTestTemplateCard() {
+    const addTemplate = () => {
+      this.addTemplate(getFruitTestExperimentTemplate());
     };
 
     return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">${TG_METADATA.publicName}</div>
-        <div>${TG_METADATA.description}</div>
+      <div class="card" @click=${addTemplate}>
+        <div class="title">${FRUIT_TEST_METADATA.name}</div>
+        <div>${FRUIT_TEST_METADATA.description}</div>
       </div>
     `;
   }

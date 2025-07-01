@@ -9,6 +9,8 @@ import {
   createAgentPersonaConfig,
   createChatStage,
   createCheckSurveyQuestion,
+  createExperimentConfig,
+  createExperimentTemplate,
   createInfoStage,
   createMetadataConfig,
   createMultipleChoiceItem,
@@ -23,6 +25,7 @@ import {
   createTextSurveyQuestion,
   createTOSStage,
   createTransferStage,
+  ExperimentTemplate,
   MultipleChoiceItem,
   ProfileType,
   ScaleSurveyQuestion,
@@ -32,15 +35,27 @@ import {
   SurveyStageConfig,
 } from '@deliberation-lab/utils';
 
-export const TG_METADATA = createMetadataConfig({
-  name: 'Fruit test',
+export function getFruitTestExperimentTemplate(): ExperimentTemplate {
+  const stageConfigs = getFruitStageConfigs();
+  return createExperimentTemplate({
+    experiment: createExperimentConfig(stageConfigs, {
+      metadata: FRUIT_TEST_METADATA,
+    }),
+    stageConfigs,
+    agentMediatorPersonas: TG_MEDIATOR_AGENTS,
+  });
+}
+
+export const FRUIT_TEST_METADATA = createMetadataConfig({
+  name: 'Fruit Test',
   publicName: 'Fruit Chat',
-  description: 'A discussion about fruit',
+  description:
+    'Includes auto-transfer into groups for a discussion about fruit',
 });
 
-export const TG_CHAT_STAGE_ID = 'test_game_chat';
+const TG_CHAT_STAGE_ID = 'fruit_test_chat';
 
-export function getTgStageConfigs(): StageConfig[] {
+function getFruitStageConfigs(): StageConfig[] {
   const stages: StageConfig[] = [];
 
   stages.push(TG_TOS_STAGE);
@@ -165,4 +180,4 @@ const createBbotAgent = () => {
   return {persona, participantPromptMap: {}, chatPromptMap};
 };
 
-export const TG_AGENTS = [createBbotAgent()];
+const TG_MEDIATOR_AGENTS = [createBbotAgent()];
