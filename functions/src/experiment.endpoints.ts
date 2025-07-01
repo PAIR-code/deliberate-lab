@@ -63,6 +63,7 @@ export const writeExperiment = onCall(async (request) => {
     }
 
     // Add agent configs and prompts
+    // TODO: Remove old collection once new paths are fully connected
     for (const agent of [
       ...template.agentMediatorPersonas,
       ...template.agentParticipantPersonas,
@@ -76,6 +77,26 @@ export const writeExperiment = onCall(async (request) => {
         );
       }
     }
+
+    // Add agent mediators under `agentParticipantPersonas` collection
+    template.agentMediatorPersonas.forEach((agent) => {
+      const doc = document.collection('agentMediators').doc(agent.persona.id);
+      transaction.set(doc, agent.persona);
+      for (const prompt of Object.values(agent.promptMap)) {
+        transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
+      }
+    });
+
+    // Add agent particiapnts under `agentMediatorPersonas` collection
+    template.agentParticipantPersonas.forEach((agent) => {
+      const doc = document
+        .collection('agentParticipants')
+        .doc(agent.persona.id);
+      transaction.set(doc, agent.persona);
+      for (const prompt of Object.values(agent.promptMap)) {
+        transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
+      }
+    });
   });
 
   return {id: document.id};
@@ -132,6 +153,7 @@ export const updateExperiment = onCall(async (request) => {
     }
 
     // Add agent configs and prompts
+    // TODO: Remove old collection once new paths are fully connected
     for (const agent of [
       ...template.agentMediatorPersonas,
       ...template.agentParticipantPersonas,
@@ -145,6 +167,26 @@ export const updateExperiment = onCall(async (request) => {
         );
       }
     }
+
+    // Add agent mediators under `agentParticipantPersonas` collection
+    template.agentMediatorPersonas.forEach((agent) => {
+      const doc = document.collection('agentMediators').doc(agent.persona.id);
+      transaction.set(doc, agent.persona);
+      for (const prompt of Object.values(agent.promptMap)) {
+        transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
+      }
+    });
+
+    // Add agent particiapnts under `agentMediatorPersonas` collection
+    template.agentParticipantPersonas.forEach((agent) => {
+      const doc = document
+        .collection('agentParticipants')
+        .doc(agent.persona.id);
+      transaction.set(doc, agent.persona);
+      for (const prompt of Object.values(agent.promptMap)) {
+        transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
+      }
+    });
   });
 
   return {success: true};
