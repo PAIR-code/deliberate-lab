@@ -204,7 +204,7 @@ export async function getGeminiAPIResponse(
       promptText,
       geminiConfig,
       modelName,
-      structuredOutputConfig !== null,
+      structuredOutputConfig?.enabled,
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
