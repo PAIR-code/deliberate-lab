@@ -25,7 +25,8 @@ import {
 // writeExperiment endpoint                                                  //
 // (create new experiment to specified Firestore collection)                 //
 //                                                                           //
-// Input structure: { collectionName, experimentConfig, stageConfigs }       //
+// Input structure: { collectionName, experimentConfig,                      //
+//                  stageConfigs, agentConfigs }                             //
 // Validation: utils/src/experiment.validation.ts                            //
 // ************************************************************************* //
 export const writeExperiment = onCall(async (request) => {

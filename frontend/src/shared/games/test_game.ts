@@ -27,7 +27,6 @@ import {
   ProfileType,
   ScaleSurveyQuestion,
   StageConfig,
-  StageGame,
   StageKind,
   SurveyQuestion,
   SurveyStageConfig,
@@ -60,7 +59,6 @@ const TG_AGENT_PROMPT = `You don't like apples or pears, but you do like bananas
 
 const TG_TOS_STAGE = createTOSStage({
   id: 'tos',
-  game: StageGame.TG,
   name: 'Consent',
   tosLines: TG_CONSENT.split('\n'),
 });
@@ -72,14 +70,12 @@ const TG_PROFILE_STAGE = createProfileStage({
     primaryText:
       "This is how other participants will see you during today's experiment. Click 'Next stage' below to continue.",
   }),
-  game: StageGame.TG,
   profileType: ProfileType.ANONYMOUS_ANIMAL,
 });
 
 const TG_SURVEY_STAGE = createSurveyStage({
   id: 'tg_survey',
   name: 'Preferences',
-  game: StageGame.TG,
   questions: [
     createMultipleChoiceSurveyQuestion({
       id: 'fruit_preference',
@@ -98,7 +94,6 @@ const TG_TRANSFER_TEXT =
 const TG_TRANSFER_STAGE = createTransferStage({
   id: 'participant_matching_transfer',
   name: 'Wait for other participants',
-  game: StageGame.TG,
   enableTimeout: false,
   descriptions: createStageTextConfig({primaryText: TG_TRANSFER_TEXT}),
   autoTransferConfig: createSurveyAutoTransferConfig({
@@ -117,7 +112,6 @@ const TG_CHAT_INTRO_STAGE = createInfoStage({
 });
 
 const TG_CHAT_STAGE = createChatStage({
-  game: StageGame.TG,
   id: TG_CHAT_STAGE_ID,
   name: 'Group discussion',
   timeLimitInMinutes: 10,

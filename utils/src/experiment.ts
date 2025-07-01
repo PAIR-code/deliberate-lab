@@ -49,6 +49,8 @@ export interface Experiment {
   cohortLockMap: Record<string, boolean>; // maps cohort ID to is locked
 }
 
+/** Experiment template (used to load experiments). */
+
 /** Experiment config for participant options. */
 export interface CohortParticipantConfig {
   // Min number of participants required for experiment cohort to begin

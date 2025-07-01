@@ -8,7 +8,6 @@ import {
   createTOSStage,
   ProfileType,
   StageConfig,
-  StageGame,
 } from '@deliberation-lab/utils';
 
 export const FLIPCARD_GAME_METADATA = createMetadataConfig({
@@ -33,7 +32,6 @@ const FLIPCARD_CONSENT =
 
 const FLIPCARD_TOS_STAGE = createTOSStage({
   id: 'flipcard_tos',
-  game: StageGame.NONE,
   name: 'Consent',
   tosLines: [FLIPCARD_CONSENT],
 });
@@ -45,7 +43,6 @@ const FLIPCARD_PROFILE_STAGE = createProfileStage({
     primaryText:
       "This is how you'll be identified during the card selection game. Click 'Next stage' below to continue.",
   }),
-  game: StageGame.NONE,
   profileType: ProfileType.ANONYMOUS_ANIMAL,
 });
 

@@ -11,7 +11,6 @@ import {
   AgentPersonaType,
   ProfileType,
   StageConfig,
-  StageGame,
   StageKind,
 } from '@deliberation-lab/utils';
 // ****************************************************************************
@@ -30,13 +29,11 @@ export function getRTVStageConfigs(): StageConfig[] {
   const stages: StageConfig[] = [];
   stages.push(
     createProfileStage({
-      game: StageGame.RTV,
       name: 'View your profile',
       profileType: ProfileType.ANONYMOUS_ANIMAL,
     }),
     createChatStage({
       id: RTV_CHAT_STAGE_ID,
-      game: StageGame.RTV,
       name: 'Group discussion',
       descriptions: {
         primaryText:

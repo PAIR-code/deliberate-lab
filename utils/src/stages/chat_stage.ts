@@ -4,7 +4,6 @@ import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
   BaseStagePublicData,
-  StageGame,
   StageKind,
   createStageTextConfig,
   createStageProgressConfig,
@@ -112,7 +111,6 @@ export function createChatStage(
   return {
     id: config.id ?? generateId(),
     kind: StageKind.CHAT,
-    game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Group chat',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress:

@@ -1,7 +1,6 @@
 import {Type, type Static} from '@sinclair/typebox';
 import {StageKind} from './stage';
 import {
-  StageGameSchema,
   StageProgressConfigSchema,
   StageTextConfigSchema,
 } from './stage.validation';
@@ -87,7 +86,6 @@ export const SurveyStageConfigData = Type.Object(
   {
     id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.SURVEY),
-    game: StageGameSchema,
     name: Type.String({minLength: 1}),
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,
@@ -101,7 +99,6 @@ export const SurveyPerParticipantStageConfigData = Type.Object(
   {
     id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.SURVEY_PER_PARTICIPANT),
-    game: StageGameSchema,
     name: Type.String({minLength: 1}),
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,

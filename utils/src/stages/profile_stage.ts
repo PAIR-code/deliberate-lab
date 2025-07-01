@@ -1,7 +1,6 @@
 import {generateId} from '../shared';
 import {
   BaseStageConfig,
-  StageGame,
   StageKind,
   createStageProgressConfig,
   createStageTextConfig,
@@ -34,7 +33,6 @@ export function createProfileStage(
   return {
     id: config.id ?? generateId(),
     kind: StageKind.PROFILE,
-    game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Set profile',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig(),
