@@ -21,6 +21,7 @@ import {
   createStageTextConfig,
   createScaleSurveyQuestion,
   createTextSurveyQuestion,
+  createMultipleChoiceSurveyQuestion,
   randint,
 } from '@deliberation-lab/utils';
 
@@ -95,8 +96,21 @@ export function getChipNegotiationStageConfigs(numChips = 3): StageConfig[] {
   stages.push(CHIP_INFO_STAGE_PAYOUT);
   stages.push(createChipInfoPayout(numChips));
 
+  // Pre-game survey stage
+  stages.push(CHIP_PRE_SURVEY_STAGE);
+
   // Transfer
   stages.push(TRANSFER_STAGE);
+  
+
+  // Coach mode survey stage
+  stages.push(CHIP_COACH_FEEDBACK_STAGE);
+
+  // Advisor mode survey stage
+  stages.push(CHIP_ADVISOR_FEEDBACK_STAGE);
+
+  // Delegate mode survey stage
+  stages.push(CHIP_DELEGATE_FEEDBACK_STAGE);
 
   // Round 1
   stages.push(getChipNegotiationStage1(numChips));
@@ -108,7 +122,7 @@ export function getChipNegotiationStageConfigs(numChips = 3): StageConfig[] {
   stages.push(CHIP_PAYOUT_STAGE);
 
   // Post-negotiation survey stage
-  stages.push(CHIP_SURVEY_STAGE);
+  stages.push(CHIP_POST_SURVEY_STAGE);
 
   return stages;
 }
@@ -167,6 +181,7 @@ const CHIP_ALTERNATE_PROFILE_STAGE = createProfileStage({
     showParticipantProgress: false,
   }),
 });
+
 
 // ****************************************************************************
 // Info stage for chip negotiation
@@ -818,3 +833,337 @@ const CHIP_SURVEY_STAGE = createSurveyStage({
     }),
   ],
 });
+
+
+// ****************************************************************************
+// Pre-negotiation survey stage
+// ****************************************************************************
+const CHIP_PRE_SURVEY_STAGE = createSurveyStage({
+  id: 'pre survey',
+  name: 'Pre-game survey',
+  descriptions: createStageTextConfig({
+    primaryText:
+      "Before you play the bargaining games, please complete this short survey so we can better understand your background and perspectives. \
+      Completion of this survey is required to receive bonus payouts.",
+  }),
+  game: StageGame.CHP,
+  questions: [
+    // Relevant skills section
+    createScaleSurveyQuestion({
+      questionTitle:
+        "Based on the instructions you just read, how confident do you feel in your ability to play this game well?",
+      lowerText: 'Not at all confident',
+      lowerValue: 1,
+      upperText: 'Very confident',
+      upperValue: 5,
+    }),
+    createTextSurveyQuestion({
+      questionTitle:
+        'Please describe any background, skills, or experiences that might help you in this game (e.g., negotiation, bargaining, math, logic, strategic thinking—even informal or everyday situations).',
+    }),
+
+    // Perspectives on AI tooling
+    createScaleSurveyQuestion({
+      questionTitle:
+        "I believe that having access to the AI tools will improve my performance in this game.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "I believe that the AI tools will provide information I can trust.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "I believe that the AI tools will help me see options or strategies I might otherwise miss.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "I believe that the AI tools will help lighten the mental workload of playing this game.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+  ],
+});
+
+// ****************************************************************************
+// Post-negotiation survey stage
+// ****************************************************************************
+
+const CHIP_POST_SURVEY_STAGE = createSurveyStage({
+  id: 'post survey',
+  name: 'Post-game survey',
+  descriptions: createStageTextConfig({
+    primaryText:
+      "Thank you for completing the games. Please complete this short survey so we can learn more about your experience today.",
+  }),
+  game: StageGame.CHP,
+  questions: [
+    // General gameplay
+    createTextSurveyQuestion({
+      questionTitle:
+        "Please describe your strategy in the games in a few sentences.",
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "How satisfied are you with your final trading outcomes?",
+      lowerText: 'Not at all satisfied',
+      lowerValue: 1,
+      upperText: 'Very satisfied',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "Thinking about both the difficulty of the games and your own effort, how mentally intensive was today’s experience overall?",
+      lowerText: 'Not at all intensive',
+      lowerValue: 1,
+      upperText: 'Very intensive',
+      upperValue: 5,
+    }),
+
+    createMultipleChoiceSurveyQuestion({
+      questionTitle:
+        "If you were to play again, which AI assistance mode would you prefer to use—and why?",
+      options: [
+        createMultipleChoiceItem({ text: 'Coach mode: the AI gave feedback on your decisions after you made them.' }),
+        createMultipleChoiceItem({ text: 'Advisor mode: the AI offered suggestions before you made your decisions.' }),
+        createMultipleChoiceItem({ text: 'Delegate mode: the AI made decisions on your behalf.' }),
+        createMultipleChoiceItem({ text: 'None of the above' }),
+      ],
+    }),
+
+    // Additional context
+    createTextSurveyQuestion({
+      questionTitle:
+        "Provide additional context on your answer above: If you had a preference, why did you prefer that mode? What influenced your choice — ease of use, effectiveness, alignment with your goals, or something else? If you didn’t prefer any of the modes, why not?",
+    }),
+
+    // Feedback
+    createTextSurveyQuestion({
+      questionTitle:
+        "Please help us improve the experiment. How was your experience today? Were there any parts of the instructions, interface, or gameplay that felt confusing or unclear?",
+    }),
+  ],
+});
+
+
+// ****************************************************************************
+// Coach mode survey stage
+// ****************************************************************************
+
+const CHIP_COACH_FEEDBACK_STAGE = createSurveyStage({
+  id: 'coach feedback survey',
+  name: 'Coach Feedback Survey',
+  descriptions: createStageTextConfig({
+    primaryText:
+      "Please fill out this brief survey about the previous game, where you had access to an LLM-powered coach. Completion of this survey is required to receive bonus payouts.",
+  }),
+  game: StageGame.CHP,
+  questions: [
+    createScaleSurveyQuestion({
+      questionTitle:
+        "Having access to the coach improved my performance in the game.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "Having access to the coach helped lighten the mental load of the game.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "The coach provided insights I wouldn’t have thought of on my own.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "The coach’s feedback was clear and easy to understand.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "I trusted the coach's feedback.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "I am satisfied with the coach's feedback.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createTextSurveyQuestion({
+      questionTitle:
+        "Please share any additional context on your answers. How did you decide to use (or not use) the coach? What did you think of the quality or usefulness of its suggestions?",
+    }),
+  ],
+});
+
+// ****************************************************************************
+// Advisor mode survey stage
+// ****************************************************************************
+
+const CHIP_ADVISOR_FEEDBACK_STAGE = createSurveyStage({
+  id: 'advisor feedback survey',
+  name: 'Advisor Feedback Survey',
+  descriptions: createStageTextConfig({
+    primaryText:
+      "Please fill out this brief survey about the previous game, where you had access to an LLM-powered advisor. Completion of this survey is required to receive bonus payouts.",
+  }),
+  game: StageGame.CHP,
+  questions: [
+    createScaleSurveyQuestion({
+      questionTitle:
+        "Having access to the advisor helped me perform better in the game.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "Having access to the advisor helped lighten the mental load of the game.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "The advisor provided recommendations I wouldn’t have thought of on my own.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "The advisor’s suggestions were clear and easy to understand.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "I trusted the advisor's recommendations.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "I am satisfied with the advisor's recommendations.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createTextSurveyQuestion({
+      questionTitle:
+        "Please share any additional context on your answers. How did you decide to use (or not use) the coach? What did you think of the quality or usefulness of its suggestions?",
+    }),
+  ],
+});
+
+// ****************************************************************************
+// Delegate mode survey stage
+// ****************************************************************************
+const CHIP_DELEGATE_FEEDBACK_STAGE = createSurveyStage({
+  id: 'delegate feedback survey',
+  name: 'Delegation Feedback Survey',
+  descriptions: createStageTextConfig({
+    primaryText:
+      "Please fill out this brief survey about the previous game, where you had access to an LLM-powered delegate. Completion of this survey is required to receive bonus payouts.",
+  }),
+  game: StageGame.CHP,
+  questions: [
+    createScaleSurveyQuestion({
+      questionTitle:
+        "Having access to the delegate helped me perform better in the game.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "Having access to the delegate helped lighten the mental load of the game.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "The delegate took actions I wouldn’t have thought of on my own.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "The delegate's actions and reasoning were clear and easy to understand.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "I trusted the delegate's decisions.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "I am satisfied with the delegate's decisions.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createTextSurveyQuestion({
+      questionTitle:
+        "Please share any additional context on your answers. How did you decide to use (or not use) the coach? What did you think of the quality or usefulness of its suggestions?",
+    }),
+  ],
+});
+
+
+
+
+
+
