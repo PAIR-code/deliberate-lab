@@ -57,7 +57,6 @@ import {
   sendParticipantCheckCallable,
   setExperimentCohortLockCallable,
   testAgentConfigCallable,
-  testAgentParticipantPromptCallable,
   updateCohortMetadataCallable,
   writeExperimentCallable,
 } from '../shared/callables';
@@ -914,20 +913,6 @@ export class ExperimentManager extends Service {
       }
     }
     return data;
-  }
-
-  /** TEMPORARY: Test agent participant prompt for given participant/stage. */
-  async testAgentParticipantPrompt(participantId: string, stageId: string) {
-    if (this.experimentId) {
-      await testAgentParticipantPromptCallable(
-        this.sp.firebaseService.functions,
-        {
-          experimentId: this.experimentId,
-          participantId,
-          stageId,
-        },
-      );
-    }
   }
 
   /** Test given agent config. */

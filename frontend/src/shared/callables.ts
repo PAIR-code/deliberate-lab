@@ -1,7 +1,6 @@
 import {
   AckAlertMessageData,
   AgentConfigTestData,
-  AgentParticipantPromptTestData,
   BaseParticipantData,
   CreateChatMessageData,
   CohortCreationData,
@@ -464,21 +463,6 @@ export const updateMediatorStatusCallable = async (
   const {data} = await httpsCallable<UpdateMediatorStatusData, SuccessResponse>(
     functions,
     'updateMediatorStatus',
-  )(config);
-  return data;
-};
-
-/** Generic endpoint for testing agent participant stage prompts. */
-export const testAgentParticipantPromptCallable = async (
-  functions: Functions,
-  config: AgentParticipantPromptTestData,
-) => {
-  const {data} = await httpsCallable<
-    AgentParticipantPromptTestData,
-    SimpleResponse<string>
-  >(
-    functions,
-    'testAgentParticipantPrompt',
   )(config);
   return data;
 };
