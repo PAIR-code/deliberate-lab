@@ -39,9 +39,8 @@ import {
   getChipNegotiationStageConfigs,
 } from '../../shared/templates/chip_negotiation';
 import {
-  RTV_AGENTS,
   RTV_METADATA,
-  getRTVStageConfigs,
+  getRealityTVExperimentTemplate,
 } from '../../shared/templates/reality_tv_chat';
 import {
   SALESPERSON_GAME_METADATA,
@@ -202,12 +201,12 @@ export class StageBuilderDialog extends MobxLitElement {
   }
 
   private renderRealityTVCard() {
-    const addGame = () => {
-      this.addGame(RTV_METADATA, getRTVStageConfigs(), RTV_AGENTS);
+    const addTemplate = () => {
+      this.addTemplate(getRealityTVExperimentTemplate());
     };
     return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">📺 ${RTV_METADATA.name}</div>
+      <div class="card" @click=${addTemplate}>
+        <div class="title">${RTV_METADATA.name}</div>
         <div>${RTV_METADATA.description}</div>
       </div>
     `;
