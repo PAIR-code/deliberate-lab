@@ -4,7 +4,11 @@ import {
   PermissionsConfigSchema,
 } from './shared.validation';
 import {StageConfigData} from './stages/stage.validation';
-import {AgentDataObjectData} from './agent.validation';
+import {
+  AgentDataObjectData,
+  AgentMediatorTemplateData,
+  AgentParticipantTemplateData,
+} from './agent.validation';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -88,8 +92,8 @@ export const ExperimentCreationData = Type.Object(
         strict,
       ),
       stageConfigs: Type.Array(StageConfigData),
-      agentMediatorPersonas: Type.Array(AgentDataObjectData),
-      agentParticipantPersonas: Type.Array(AgentDataObjectData),
+      agentMediatorPersonas: Type.Array(AgentMediatorTemplateData),
+      agentParticipantPersonas: Type.Array(AgentParticipantTemplateData),
     }),
   },
   strict,

@@ -1,6 +1,7 @@
 import {
-  AgentDataObject,
+  AgentMediatorTemplate,
   AgentPersonaType,
+  AgentParticipantTemplate,
   CohortParticipantConfig,
   Experiment,
   ExperimentTemplate,
@@ -9,7 +10,7 @@ import {
   ProlificConfig,
   StageConfig,
   StageKind,
-  createAgentPersonaConfig,
+  createAgentMediatorPersonaConfig,
   createAgentParticipantPersonaConfig,
   createExperimentConfig,
   createMetadataConfig,
@@ -53,8 +54,8 @@ export class ExperimentEditor extends Service {
   // TODO: Consolidate these fields into ExperimentTemplate
   @observable experiment: Experiment = createExperimentConfig();
   @observable stages: StageConfig[] = [];
-  @observable agentMediatorPersonas: AgentDataObject[] = [];
-  @observable agentParticipantPersonas: AgentDataObject[] = [];
+  @observable agentMediatorPersonas: AgentMediatorTemplate[] = [];
+  @observable agentParticipantPersonas: AgentParticipantTemplate[] = [];
 
   // Loading
   @observable isWritingExperiment = false;
@@ -258,20 +259,19 @@ export class ExperimentEditor extends Service {
     this.currentAgentId = id;
   }
 
-  setAgentMediatorPersonas(personas: AgentDataObject[]) {
+  setAgentMediatorPersonas(personas: AgentMediatorTemplate[]) {
     this.agentMediatorPersonas = personas;
   }
 
-  setAgentParticipantPersonas(personas: AgentDataObject[]) {
+  setAgentParticipantPersonas(personas: AgentParticipantTemplate[]) {
     this.agentParticipantPersonas = personas;
   }
 
   addAgentMediator(setAsCurrent = true) {
-    const persona = createAgentPersonaConfig();
+    const persona = createAgentMediatorPersonaConfig();
     this.agentMediatorPersonas.push({
       persona,
-      participantPromptMap: {},
-      chatPromptMap: {},
+      promptMap: {},
     });
     if (setAsCurrent) {
       this.setCurrentAgentId(persona.id);
@@ -282,8 +282,7 @@ export class ExperimentEditor extends Service {
     const persona = createAgentParticipantPersonaConfig();
     this.agentParticipantPersonas.push({
       persona,
-      participantPromptMap: {},
-      chatPromptMap: {},
+      promptMap: {},
     });
     if (setAsCurrent) {
       this.setCurrentAgentId(persona.id);
@@ -343,16 +342,8 @@ export class ExperimentEditor extends Service {
           id: '',
           experiment: this.experiment,
           stageConfigs: this.stages,
-          agentMediatorPersonas: this.sp.agentEditor
-            .getAgentData()
-            .filter(
-              (agent) => agent.persona.type === AgentPersonaType.MEDIATOR,
-            ),
-          agentParticipantPersonas: this.sp.agentEditor
-            .getAgentData()
-            .filter(
-              (agent) => agent.persona.type === AgentPersonaType.PARTICIPANT,
-            ),
+          agentMediatorPersonas: this.agentMediatorPersonas,
+          agentParticipantPersonas: this.agentParticipantPersonas,
         },
       },
     );
@@ -378,16 +369,8 @@ export class ExperimentEditor extends Service {
           id: '',
           experiment: this.experiment,
           stageConfigs: this.stages,
-          agentMediatorPersonas: this.sp.agentEditor
-            .getAgentData()
-            .filter(
-              (agent) => agent.persona.type === AgentPersonaType.MEDIATOR,
-            ),
-          agentParticipantPersonas: this.sp.agentEditor
-            .getAgentData()
-            .filter(
-              (agent) => agent.persona.type === AgentPersonaType.PARTICIPANT,
-            ),
+          agentMediatorPersonas: this.agentMediatorPersonas,
+          agentParticipantPersonas: this.agentParticipantPersonas,
         },
       },
     );

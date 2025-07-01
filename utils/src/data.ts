@@ -1,4 +1,8 @@
-import {AgentDataObject} from './agent';
+import {
+  AgentDataObject,
+  AgentMediatorTemplate,
+  AgentParticipantTemplate,
+} from './agent';
 import {CohortConfig} from './cohort';
 import {Experiment} from './experiment';
 import {ParticipantProfileExtended} from './participant';

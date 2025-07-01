@@ -36,3 +36,13 @@ export const AgentDataObjectData = Type.Object({
   participantPromptMap: Type.Record(Type.String(), PromptConfigData),
   chatPromptMap: Type.Record(Type.String(), PromptConfigData),
 });
+
+export const AgentMediatorTemplateData = Type.Object({
+  persona: AgentConfigData,
+  promptMap: Type.Record(Type.String(), Type.Object({})),
+});
+
+export const AgentParticipantTemplateData = Type.Object({
+  persona: AgentConfigData,
+  promptMap: Type.Record(Type.String(), Type.Object({})),
+});

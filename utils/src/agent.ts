@@ -13,6 +13,10 @@ import {
   StructuredOutputConfig,
   createStructuredOutputConfig,
 } from './structured_output';
+import {
+  MediatorPromptConfig,
+  ParticipantPromptConfig,
+} from './structured_prompt';
 
 /** Agent types and functions. */
 
@@ -135,13 +139,25 @@ export interface AgentMediatorPersonaConfig extends BaseAgentPersonaConfig {
 }
 
 /** Format used to send agent data from frontend to backend. */
-// TODO: Refactor to support new mediator and participant prompt configs
 export interface AgentDataObject {
   persona: AgentPersonaConfig;
   // Maps from stage ID to prompt for completing stage
   participantPromptMap: Record<string, AgentParticipantPromptConfig>;
   // Maps from stage ID to prompt for sending chat messages
   chatPromptMap: Record<string, AgentChatPromptConfig>;
+}
+
+// TODO: Refactor to support new mediator and participant prompt configs
+export interface AgentMediatorTemplate {
+  persona: AgentMediatorPersonaConfig;
+  // Maps from stage ID to prompt
+  promptMap: Record<string, MediatorPromptConfig>;
+}
+
+export interface AgentParticipantTemplate {
+  persona: AgentParticipantPersonaConfig;
+  // Maps from stage ID to prompt
+  promptMap: Record<string, ParticipantPromptConfig>;
 }
 
 // ************************************************************************* //
@@ -228,19 +244,19 @@ export function createAgentChatPromptConfig(
   };
 }
 
-export function createAgentPersonaConfig(
+export function createAgentMediatorPersonaConfig(
   config: Partial<AgentPersonaConfig> = {},
-): AgentPersonaConfig {
-  const type = config.type ?? AgentPersonaType.MEDIATOR;
+): AgentMediatorPersonaConfig {
+  const type = AgentPersonaType.MEDIATOR;
   return {
     id: config.id ?? generateId(),
     name: config.name ?? '',
-    type,
+    type: AgentPersonaType.MEDIATOR,
     isDefaultAddToCohort: config.isDefaultAddToCohort ?? true,
     defaultProfile:
       config.defaultProfile ??
       createParticipantProfileBase({
-        name: type === AgentPersonaType.MEDIATOR ? 'Mediator' : '',
+        name: 'Mediator',
         avatar: '🙋',
       }),
     defaultModelSettings:
@@ -250,7 +266,7 @@ export function createAgentPersonaConfig(
 
 export function createAgentParticipantPersonaConfig(
   config: Partial<AgentPersonaConfig> = {},
-): AgentPersonaConfig {
+): AgentParticipantPersonaConfig {
   return {
     id: config.id ?? generateId(),
     name: config.name ?? 'Agent Participant',

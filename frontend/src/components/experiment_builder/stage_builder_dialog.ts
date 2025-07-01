@@ -10,7 +10,6 @@ import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
-  AgentDataObject,
   AgentPersonaType,
   ExperimentTemplate,
   MetadataConfig,
@@ -168,24 +167,11 @@ export class StageBuilderDialog extends MobxLitElement {
   }
 
   // TODO: Remove in favor of identical addTemplate
-  private addGame(
-    metadata: Partial<MetadataConfig>,
-    stages: StageConfig[],
-    agents: AgentDataObject[] = [],
-  ) {
+  // WARNING: This does NOT add agents
+  private addGame(metadata: Partial<MetadataConfig>, stages: StageConfig[]) {
     this.analyticsService.trackButtonClick(ButtonClick.TEMPLATE_LOAD);
     this.experimentEditor.updateMetadata(metadata);
     this.experimentEditor.setStages(stages);
-    this.experimentEditor.setAgentMediatorPersonas(
-      agents.filter(
-        (agent) => agent.persona.type === AgentPersonaType.MEDIATOR,
-      ),
-    );
-    this.experimentEditor.setAgentParticipantPersonas(
-      agents.filter(
-        (agent) => agent.persona.type === AgentPersonaType.PARTICIPANT,
-      ),
-    );
     this.experimentEditor.toggleStageBuilderDialog();
   }
 

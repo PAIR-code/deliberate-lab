@@ -1,13 +1,14 @@
 import {
-  BaseAgentPromptConfig,
+  BasePromptConfig,
   ChatMessage,
   ChatStageConfig,
   StageKind,
-  createAgentChatPromptConfig,
   createAgentPromptSettings,
+  createChatPromptConfig,
   createMediatorChatMessage,
   createModelGenerationConfig,
   createParticipantChatMessage,
+  createPromptItemFromText,
   getDefaultChatPrompt,
   DEFAULT_AGENT_PARTICIPANT_PROMPT,
   DEFAULT_AGENT_PARTICIPANT_READY_TO_END_CHAT_PROMPT,
@@ -86,12 +87,16 @@ export async function checkAgentParticipantReadyToEndChat(
     true,
   );
 
-  const promptConfig: BaseAgentPromptConfig = {
+  const promptConfig: BasePromptConfig = {
     id: stage.id,
     type: StageKind.CHAT,
-    promptContext: DEFAULT_AGENT_PARTICIPANT_READY_TO_END_CHAT_PROMPT,
+    prompt: [
+      createPromptItemFromText(
+        DEFAULT_AGENT_PARTICIPANT_READY_TO_END_CHAT_PROMPT,
+      ),
+    ],
     generationConfig: createModelGenerationConfig(),
-    promptSettings: createAgentPromptSettings(),
+    numRetries: 0,
     structuredOutputConfig:
       DEFAULT_AGENT_PARTICIPANT_READY_TO_END_CHAT_STRUCTURED_OUTPUT,
   };
@@ -239,18 +244,12 @@ export async function sendAgentParticipantMessage(
         stageId,
         participant.agentConfig.agentId,
       )) ??
-      createAgentChatPromptConfig(stageId, StageKind.CHAT, {
-        promptContext: DEFAULT_AGENT_PARTICIPANT_PROMPT,
+      createChatPromptConfig(stageId, {
+        prompt: [createPromptItemFromText(DEFAULT_AGENT_PARTICIPANT_PROMPT)],
       });
 
-    const pastStageContext = promptConfig.promptSettings.includeStageHistory
-      ? await getPastStagesPromptContext(
-          experimentId,
-          stageId,
-          participant.privateId,
-          promptConfig.promptSettings.includeStageInfo,
-        )
-      : '';
+    // TODO: Check prompt items for whether or not to include history
+    const pastStageContext = '';
 
     const response = await getAgentChatAPIResponse(
       participant, // profile

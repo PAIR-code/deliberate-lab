@@ -1,17 +1,21 @@
 import {
-  createAgentChatPromptConfig,
   createAgentChatSettings,
-  createAgentPersonaConfig,
+  createAgentMediatorPersonaConfig,
+  createAgentParticipantPersonaConfig,
+  createChatPromptConfig,
   createChatStage,
   createExperimentConfig,
   createExperimentTemplate,
   createMetadataConfig,
   createParticipantProfileBase,
   createProfileStage,
-  AgentChatPromptConfig,
-  AgentDataObject,
+  createPromptItemFromText,
+  AgentMediatorTemplate,
+  AgentParticipantTemplate,
   AgentPersonaType,
   ExperimentTemplate,
+  MediatorPromptConfig,
+  ParticipantPromptConfig,
   ProfileType,
   StageConfig,
   StageKind,
@@ -59,32 +63,32 @@ function getRTVStageConfigs(): StageConfig[] {
   return stages;
 }
 
-const RTV_MEDIATOR_AGENTS: AgentDataObject[] = [createModeratorAgent()];
-const RTV_PARTICIPANT_AGENTS: AgentDataObject[] = [
+const RTV_MEDIATOR_AGENTS: AgentMediatorTemplate[] = [createModeratorAgent()];
+const RTV_PARTICIPANT_AGENTS: AgentParticipantTemplate[] = [
   createLennyAgent(),
   createBobAgent(),
   createRhondaAgent(),
 ];
 
-function createLennyAgent(): AgentDataObject {
-  const persona = createAgentPersonaConfig({
+function createLennyAgent(): AgentParticipantTemplate {
+  const persona = createAgentParticipantPersonaConfig({
     name: 'Lenny (Love is Blind)',
     isDefaultAddToCohort: true,
     defaultProfile: createParticipantProfileBase({
       name: 'Lenny',
       avatar: '🤦🏻‍♂️',
     }),
-    type: AgentPersonaType.PARTICIPANT,
   });
 
-  const chatPromptMap: Record<string, AgentChatPromptConfig> = {};
-  chatPromptMap[RTV_CHAT_STAGE_ID] = createAgentChatPromptConfig(
+  const promptMap: Record<string, ParticipantPromptConfig> = {};
+  promptMap[RTV_CHAT_STAGE_ID] = createChatPromptConfig(
     RTV_CHAT_STAGE_ID, // stage ID
-    StageKind.CHAT, // stage kind,
-    AgentPersonaType.PARTICIPANT,
     {
-      promptContext:
-        'You are engaged in a debate about which TV show is the best. Your goal is to convince the others in the conversation that Love is Blind is the best TV show. You are sure about this and your mind will not be changed. When you feel that a consensus has been made about which TV show is the best, you can stop responding.\n ',
+      prompt: [
+        createPromptItemFromText(
+          'You are engaged in a debate about which TV show is the best. Your goal is to convince the others in the conversation that Love is Blind is the best TV show. You are sure about this and your mind will not be changed. When you feel that a consensus has been made about which TV show is the best, you can stop responding.\n',
+        ),
+      ],
       chatSettings: createAgentChatSettings({
         wordsPerMinute: 300,
         canSelfTriggerCalls: false,
@@ -93,28 +97,28 @@ function createLennyAgent(): AgentDataObject {
     },
   );
 
-  return {persona, participantPromptMap: {}, chatPromptMap};
+  return {persona, promptMap};
 }
 
-function createBobAgent(): AgentDataObject {
-  const persona = createAgentPersonaConfig({
+function createBobAgent(): AgentParticipantTemplate {
+  const persona = createAgentParticipantPersonaConfig({
     name: 'Bob (The Bachelor)',
     isDefaultAddToCohort: true,
     defaultProfile: createParticipantProfileBase({
       name: 'Bob',
       avatar: '👴🏾',
     }),
-    type: AgentPersonaType.PARTICIPANT,
   });
 
-  const chatPromptMap: Record<string, AgentChatPromptConfig> = {};
-  chatPromptMap[RTV_CHAT_STAGE_ID] = createAgentChatPromptConfig(
+  const promptMap: Record<string, ParticipantPromptConfig> = {};
+  promptMap[RTV_CHAT_STAGE_ID] = createChatPromptConfig(
     RTV_CHAT_STAGE_ID, // stage ID
-    StageKind.CHAT, // stage kind,
-    AgentPersonaType.PARTICIPANT,
     {
-      promptContext:
-        "You are engaged in a debate about which TV show is the best. You've watched a few episodes of the Bachelor, so you think that is the best show. However, you could be convinced otherwise. When you feel that a consensus has been made about which TV show is the best, you can stop responding.\n ",
+      prompt: [
+        createPromptItemFromText(
+          "You are engaged in a debate about which TV show is the best. You've watched a few episodes of the Bachelor, so you think that is the best show. However, you could be convinced otherwise. When you feel that a consensus has been made about which TV show is the best, you can stop responding.\n",
+        ),
+      ],
       chatSettings: createAgentChatSettings({
         wordsPerMinute: 150,
         canSelfTriggerCalls: false,
@@ -123,28 +127,28 @@ function createBobAgent(): AgentDataObject {
     },
   );
 
-  return {persona, participantPromptMap: {}, chatPromptMap};
+  return {persona, promptMap};
 }
 
-function createRhondaAgent(): AgentDataObject {
-  const persona = createAgentPersonaConfig({
+function createRhondaAgent(): AgentParticipantTemplate {
+  const persona = createAgentParticipantPersonaConfig({
     name: 'Rhonda (no show preference)',
     isDefaultAddToCohort: true,
     defaultProfile: createParticipantProfileBase({
       name: 'Rhonda',
       avatar: '💁🏽‍♀️',
     }),
-    type: AgentPersonaType.PARTICIPANT,
   });
 
-  const chatPromptMap: Record<string, AgentChatPromptConfig> = {};
-  chatPromptMap[RTV_CHAT_STAGE_ID] = createAgentChatPromptConfig(
+  const promptMap: Record<string, ParticipantPromptConfig> = {};
+  promptMap[RTV_CHAT_STAGE_ID] = createChatPromptConfig(
     RTV_CHAT_STAGE_ID, // stage ID
-    StageKind.CHAT, // stage kind,
-    AgentPersonaType.PARTICIPANT,
     {
-      promptContext:
-        "You are engaged in a debate about which TV show is the best. You don't have a preference and are open to hearing all perspectives. When you feel that a consensus has been made about which TV show is the best, you can stop responding.\n ",
+      prompt: [
+        createPromptItemFromText(
+          "You are engaged in a debate about which TV show is the best. You don't have a preference and are open to hearing all perspectives. When you feel that a consensus has been made about which TV show is the best, you can stop responding.\n",
+        ),
+      ],
       chatSettings: createAgentChatSettings({
         wordsPerMinute: 100,
         canSelfTriggerCalls: false,
@@ -153,11 +157,11 @@ function createRhondaAgent(): AgentDataObject {
     },
   );
 
-  return {persona, participantPromptMap: {}, chatPromptMap};
+  return {persona, promptMap};
 }
 
-function createModeratorAgent(): AgentDataObject {
-  const persona = createAgentPersonaConfig({
+function createModeratorAgent(): AgentMediatorTemplate {
+  const persona = createAgentMediatorPersonaConfig({
     name: 'Moderator',
     isDefaultAddToCohort: true,
     defaultProfile: createParticipantProfileBase({
@@ -166,14 +170,15 @@ function createModeratorAgent(): AgentDataObject {
     }),
   });
 
-  const chatPromptMap: Record<string, AgentChatPromptConfig> = {};
-  chatPromptMap[RTV_CHAT_STAGE_ID] = createAgentChatPromptConfig(
+  const promptMap: Record<string, MediatorPromptConfig> = {};
+  promptMap[RTV_CHAT_STAGE_ID] = createChatPromptConfig(
     RTV_CHAT_STAGE_ID, // stage ID
-    StageKind.CHAT, // stage kind,
-    AgentPersonaType.MEDIATOR,
     {
-      promptContext:
-        'You are facilitating a debate on the best TV show. Intervene only if the conversation stalls or veers off-track, and only to help participants reach consensus.',
+      prompt: [
+        createPromptItemFromText(
+          'You are facilitating a debate on the best TV show. Intervene only if the conversation stalls or veers off-track, and only to help participants reach consensus.',
+        ),
+      ],
       chatSettings: createAgentChatSettings({
         wordsPerMinute: 300,
         canSelfTriggerCalls: false,
@@ -182,5 +187,5 @@ function createModeratorAgent(): AgentDataObject {
     },
   );
 
-  return {persona, participantPromptMap: {}, chatPromptMap};
+  return {persona, promptMap};
 }

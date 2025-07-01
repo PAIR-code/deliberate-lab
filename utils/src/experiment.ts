@@ -1,4 +1,4 @@
-import {AgentDataObject} from './agent';
+import {AgentMediatorTemplate, AgentParticipantTemplate} from './agent';
 import {
   MetadataConfig,
   PermissionsConfig,
@@ -57,8 +57,8 @@ export interface ExperimentTemplate {
   // WARNING: Not used to for stage ID ordering (instead, see stageConfigs)
   experiment: Experiment;
   stageConfigs: StageConfig[];
-  agentMediatorPersonas: AgentDataObject[];
-  agentParticipantPersonas: AgentDataObject[];
+  agentMediatorPersonas: AgentMediatorTemplate[];
+  agentParticipantPersonas: AgentParticipantTemplate[];
 }
 
 /** Experiment config for participant options. */

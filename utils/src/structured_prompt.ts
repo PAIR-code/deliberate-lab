@@ -1,9 +1,16 @@
 /** Structured prompt types, constants, and functions. */
-import {AgentChatPromptConfig, ModelGenerationConfig} from './agent';
+import {
+  AgentChatPromptConfig,
+  AgentChatSettings,
+  ModelGenerationConfig,
+  createAgentChatSettings,
+  createModelGenerationConfig,
+} from './agent';
 import {StageKind} from './stages/stage';
 import {
   StructuredOutputConfig,
   ChatMediatorStructuredOutputConfig,
+  createStructuredOutputConfig,
 } from './structured_output';
 
 // ****************************************************************************
@@ -20,12 +27,15 @@ export interface BasePromptConfig {
   structuredOutputConfig: StructuredOutputConfig;
 }
 
-// NOTE: This currently supports agent mediators only, not agent participants
-export type MediatorPromptConfig = ChatMediatorPromptConfig;
+export type MediatorPromptConfig = ChatPromptConfig;
 
-export interface ChatMediatorPromptConfig extends BasePromptConfig {
+export type ParticipantPromptConfig = ChatPromptConfig;
+
+// Currently used for both mediator and participant chat prompts
+export interface ChatPromptConfig extends BasePromptConfig {
   type: StageKind.CHAT;
   structuredOutputConfig: ChatMediatorStructuredOutputConfig;
+  chatSettings: AgentChatSettings;
 }
 
 /** PromptItem, where a prompt is composed of an ordered list of PromptItems.*/
@@ -54,4 +64,28 @@ export interface StageContextPromptItem extends BasePromptItem {
   includeInfoText: boolean;
   includeHelpText: boolean;
   includeParticipantAnswers: boolean;
+}
+
+// ****************************************************************************
+// FUNCTIONS
+// ****************************************************************************
+
+export function createChatPromptConfig(
+  id: string, // stage ID
+  config: Partial<ChatPromptConfig> = {},
+): ChatPromptConfig {
+  return {
+    id,
+    type: StageKind.CHAT,
+    prompt: config.prompt ?? [],
+    numRetries: config.numRetries ?? 0,
+    generationConfig: config.generationConfig ?? createModelGenerationConfig(),
+    structuredOutputConfig:
+      config.structuredOutputConfig ?? createStructuredOutputConfig(),
+    chatSettings: config.chatSettings ?? createAgentChatSettings(),
+  };
+}
+
+export function createPromptItemFromText(text: string): PromptItem {
+  return {type: PromptItemType.TEXT, text};
 }

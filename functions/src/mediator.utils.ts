@@ -35,7 +35,7 @@ export async function createMediatorsForCohort(
           .doc(persona.id)
           .collection('chatPrompts')
           .get()
-      ).docs.map((doc) => doc.data() as AgentChatPromptConfig);
+      ).docs.map((doc) => doc.data() as ChatPromptConfig);
       const mediator = createMediatorProfileFromAgentPersona(
         cohortId,
         persona,

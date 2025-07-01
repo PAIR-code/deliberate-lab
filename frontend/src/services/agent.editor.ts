@@ -9,6 +9,7 @@ import {
   AgentChatPromptConfig,
   AgentChatSettings,
   AgentDataObject,
+  AgentMediatorPersonaConfig,
   AgentModelSettings,
   AgentParticipantPromptConfig,
   AgentPersonaConfig,
@@ -25,7 +26,7 @@ import {
   ModelGenerationConfig,
   createAgentChatPromptConfig,
   createAgentParticipantPersonaConfig,
-  createAgentPersonaConfig,
+  createAgentMediatorPersonaConfig,
 } from '@deliberation-lab/utils';
 
 interface ServiceProvider {
@@ -100,7 +101,7 @@ export class AgentEditor extends Service {
   }
 
   addAgentMediator(setAsCurrent = true) {
-    const agent = createAgentPersonaConfig();
+    const agent = createAgentMediatorPersonaConfig();
     this.agents.push(agent);
     this.agentChatPromptMap[agent.id] = {};
     if (setAsCurrent) {

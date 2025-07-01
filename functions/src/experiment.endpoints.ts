@@ -69,13 +69,7 @@ export const writeExperiment = onCall(async (request) => {
     ]) {
       const agentDoc = document.collection('agents').doc(agent.persona.id);
       transaction.set(agentDoc, agent.persona);
-      for (const prompt of Object.values(agent.participantPromptMap)) {
-        transaction.set(
-          agentDoc.collection('participantPrompts').doc(prompt.id),
-          prompt,
-        );
-      }
-      for (const prompt of Object.values(agent.chatPromptMap)) {
+      for (const prompt of Object.values(agent.promptMap)) {
         transaction.set(
           agentDoc.collection('chatPrompts').doc(prompt.id),
           prompt,
@@ -144,13 +138,7 @@ export const updateExperiment = onCall(async (request) => {
     ]) {
       const agentDoc = document.collection('agents').doc(agent.persona.id);
       transaction.set(agentDoc, agent.persona);
-      for (const prompt of Object.values(agent.participantPromptMap)) {
-        transaction.set(
-          agentDoc.collection('participantPrompts').doc(prompt.id),
-          prompt,
-        );
-      }
-      for (const prompt of Object.values(agent.chatPromptMap)) {
+      for (const prompt of Object.values(agent.promptMap)) {
         transaction.set(
           agentDoc.collection('chatPrompts').doc(prompt.id),
           prompt,

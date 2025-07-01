@@ -1,12 +1,9 @@
 import {
-  AgentChatPromptConfig,
-  AgentPersonaType,
-  ApiKeyType,
-  createAgentChatPromptConfig,
   createAgentPromptSettings,
   createAgentChatSettings,
   createAgentModelSettings,
-  createAgentPersonaConfig,
+  createAgentMediatorPersonaConfig,
+  createChatPromptConfig,
   createChatStage,
   createCheckSurveyQuestion,
   createExperimentConfig,
@@ -17,6 +14,7 @@ import {
   createMultipleChoiceSurveyQuestion,
   createParticipantProfileBase,
   createProfileStage,
+  createPromptItemFromText,
   createScaleSurveyQuestion,
   createStageProgressConfig,
   createStageTextConfig,
@@ -25,7 +23,10 @@ import {
   createTextSurveyQuestion,
   createTOSStage,
   createTransferStage,
+  AgentPersonaType,
+  ApiKeyType,
   ExperimentTemplate,
+  MediatorPromptConfig,
   MultipleChoiceItem,
   ProfileType,
   ScaleSurveyQuestion,
@@ -144,7 +145,7 @@ const TG_CHAT_STAGE = createChatStage({
 });
 
 const createBbotAgent = () => {
-  const persona = createAgentPersonaConfig({
+  const persona = createAgentMediatorPersonaConfig({
     name: 'BridgingBot',
     isDefaultAddToCohort: true,
     defaultProfile: createParticipantProfileBase({
@@ -157,17 +158,11 @@ const createBbotAgent = () => {
     }),
   });
 
-  const chatPromptMap: Record<string, AgentChatPromptConfig> = {};
-  chatPromptMap[TG_CHAT_STAGE_ID] = createAgentChatPromptConfig(
+  const promptMap: Record<string, MediatorPromptConfig> = {};
+  promptMap[TG_CHAT_STAGE_ID] = createChatPromptConfig(
     TG_CHAT_STAGE_ID, // stage ID
-    StageKind.CHAT, // stage kind,
-    AgentPersonaType.MEDIATOR,
     {
-      promptContext: TG_AGENT_PROMPT,
-      promptSettings: createAgentPromptSettings({
-        includeStageHistory: false,
-        includeStageInfo: false, // Do not include the chat description, since it could be confusing
-      }),
+      prompt: [createPromptItemFromText(TG_AGENT_PROMPT)],
       chatSettings: createAgentChatSettings({
         wordsPerMinute: 300,
         minMessagesBeforeResponding: 5,
@@ -177,7 +172,7 @@ const createBbotAgent = () => {
     },
   );
 
-  return {persona, participantPromptMap: {}, chatPromptMap};
+  return {persona, promptMap};
 };
 
 const TG_MEDIATOR_AGENTS = [createBbotAgent()];

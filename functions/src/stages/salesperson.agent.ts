@@ -47,14 +47,8 @@ export async function sendAgentParticipantSalespersonMessage(
     // Temporary: Always allow a lot of responses for this game!
     promptConfig.chatSettings.maxResponses = 10000;
 
-    const pastStageContext = promptConfig.promptSettings.includeStageHistory
-      ? await getPastStagesPromptContext(
-          experimentId,
-          stage.id,
-          participant.privateId,
-          promptConfig.promptSettings.includeStageInfo,
-        )
-      : '';
+    // TODO: Check prompt items for whether or not to include history
+    const pastStageContext = '';
     promptConfig.promptContext = await getSalespersonChatPrompt(
       experimentId,
       participant.privateId,
