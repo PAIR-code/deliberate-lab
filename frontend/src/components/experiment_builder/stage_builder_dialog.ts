@@ -32,29 +32,29 @@ import {
   ANON_LAS_METADATA,
   getLASStageConfigs,
   getAnonLASStageConfigs,
-} from '../../shared/games/lost_at_sea';
+} from '../../shared/templates/lost_at_sea';
 import {
   getChipMetadata,
   getChipNegotiationStageConfigs,
-} from '../../shared/games/chip_negotiation';
+} from '../../shared/templates/chip_negotiation';
 import {
   RTV_AGENTS,
   RTV_METADATA,
   getRTVStageConfigs,
-} from '../../shared/games/reality_tv_chat';
+} from '../../shared/templates/reality_tv_chat';
 import {
   SALESPERSON_GAME_METADATA,
   getSalespersonStageConfigs,
-} from '../../shared/games/salesperson';
+} from '../../shared/templates/salesperson';
 import {
   TG_METADATA,
   getTgStageConfigs,
   TG_AGENTS,
-} from '../../shared/games/test_game';
+} from '../../shared/templates/fruit_test';
 import {
   FLIPCARD_GAME_METADATA,
   getFlipCardGameStageConfigs,
-} from '../../shared/games/flipcard_game';
+} from '../../shared/templates/flipcard';
 
 import {styles} from './stage_builder_dialog.scss';
 
