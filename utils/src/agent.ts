@@ -110,7 +110,11 @@ export enum AgentPersonaType {
 }
 
 /** Top-level agent persona config (basically, template for agents). */
-export interface AgentPersonaConfig {
+export type AgentPersonaConfig =
+  | AgentMediatorPersonaConfig
+  | AgentParticipantPersonaConfig;
+
+export interface BaseAgentPersonaConfig {
   id: string;
   // Viewable only to experimenters
   name: string;
@@ -122,7 +126,16 @@ export interface AgentPersonaConfig {
   defaultModelSettings: AgentModelSettings;
 }
 
+export interface AgentParticipantPersonaConfig extends BaseAgentPersonaConfig {
+  type: AgentPersonaType.PARTICIPANT;
+}
+
+export interface AgentMediatorPersonaConfig extends BaseAgentPersonaConfig {
+  type: AgentPersonaType.MEDIATOR;
+}
+
 /** Format used to send agent data from frontend to backend. */
+// TODO: Refactor to support new mediator and participant prompt configs
 export interface AgentDataObject {
   persona: AgentPersonaConfig;
   // Maps from stage ID to prompt for completing stage

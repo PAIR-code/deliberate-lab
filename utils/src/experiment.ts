@@ -1,3 +1,4 @@
+import {AgentDataObject} from './agent';
 import {
   MetadataConfig,
   PermissionsConfig,
@@ -50,6 +51,15 @@ export interface Experiment {
 }
 
 /** Experiment template (used to load experiments). */
+export interface ExperimentTemplate {
+  id: string; // template ID
+  // Used to extract metadata, prolific config, etc.
+  // WARNING: Not used to for stage ID ordering (instead, see stageConfigs)
+  experiment: Experiment;
+  stageConfigs: StageConfig[];
+  agentMediatorPersonas: AgentDataObject[];
+  agentParticipantPersonas: AgentDataObject[];
+}
 
 /** Experiment config for participant options. */
 export interface CohortParticipantConfig {
@@ -68,11 +78,6 @@ export interface ProlificConfig {
   defaultRedirectCode: string;
   attentionFailRedirectCode: string;
   bootedRedirectCode: string;
-}
-
-/** Experiment template with stage configs preloaded. */
-export interface ExperimentTemplate extends Experiment {
-  stageMap: Record<string, StageConfig>;
 }
 
 // ************************************************************************* //
@@ -94,6 +99,19 @@ export function createExperimentConfig(
     prolificConfig: config.prolificConfig ?? createProlificConfig(),
     stageIds: stages.map((stage) => stage.id),
     cohortLockMap: config.cohortLockMap ?? {},
+  };
+}
+
+/** Create experiment template. */
+export function createExperimentTemplate(
+  config: Partial<ExperimentTemplate>,
+): ExperimentTemplate {
+  return {
+    id: config.id ?? generateId(),
+    experiment: config.experiment ?? createExperimentConfig(),
+    stageConfigs: config.stageConfigs ?? [],
+    agentMediatorPersonas: config.agentMediatorPersonas ?? [],
+    agentParticipantPersonas: config.agentParticipantPersonas ?? [],
   };
 }
 

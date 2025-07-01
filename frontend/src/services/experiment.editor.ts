@@ -1,6 +1,7 @@
 import {
   CohortParticipantConfig,
   Experiment,
+  ExperimentTemplate,
   MetadataConfig,
   PermissionsConfig,
   ProlificConfig,
@@ -43,7 +44,7 @@ export class ExperimentEditor extends Service {
   }
 
   // Experiment config
-  // Use this.stages as source of truth for stage ordering,
+  // WARNING: Use this.stages as source of truth for stage ordering,
   // not this.experiment.stageIds (which will be overridden)
   @observable experiment: Experiment = createExperimentConfig();
   @observable stages: StageConfig[] = [];
@@ -199,6 +200,21 @@ export class ExperimentEditor extends Service {
   loadExperiment(experiment: Experiment, stages: StageConfig[]) {
     this.experiment = experiment;
     this.setStages(stages);
+  }
+
+  loadTemplate(template: ExperimentTemplate) {
+    // Only copy over relevant parts (e.g., not template ID)
+    this.experiment = createExperimentConfig(template.stageConfigs, {
+      metadata: template.experiment.metadata,
+      permissions: template.experiment.permissions,
+      defaultCohortConfig: template.experiment.defaultCohortConfig,
+      prolificConfig: template.experiment.prolificConfig,
+    });
+    this.setStages(template.stageConfigs);
+    this.sp.agentEditor.setAgentData([
+      ...template.agentMediatorPersonas,
+      ...template.agentParticipantPersonas,
+    ]);
   }
 
   resetExperiment() {
