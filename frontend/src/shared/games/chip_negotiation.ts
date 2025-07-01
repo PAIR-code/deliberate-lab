@@ -101,14 +101,16 @@ export function getChipNegotiationStageConfigs(numChips = 3): StageConfig[] {
 
   // Transfer
   stages.push(TRANSFER_STAGE);
-  
 
+  stages.push(COACH_MODE_INSTRUCTION);
   // Coach mode survey stage
   stages.push(CHIP_COACH_FEEDBACK_STAGE);
 
+  stages.push(ADVISOR_MODE_INSTRUCTION);
   // Advisor mode survey stage
   stages.push(CHIP_ADVISOR_FEEDBACK_STAGE);
 
+  stages.push(DELEGATE_MODE_INSTRUCTION);
   // Delegate mode survey stage
   stages.push(CHIP_DELEGATE_FEEDBACK_STAGE);
 
@@ -835,11 +837,61 @@ const CHIP_SURVEY_STAGE = createSurveyStage({
 });
 
 
+const COACH_MODE_INSTRUCTION = createInfoStage({
+  id: 'coach_instruction',
+  game: StageGame.CHP,
+  name: 'Instructions: AI Assistant as a coach',
+  infoLines: [
+    'In this game, the AI agent acts as your private coach. The Agent sees everything you see.',
+    '',
+    '**• Your Choice:** At each turn, you input your move. You can then either submit the move directly or ask the Coach for feedback on your idea.',
+    '**• How the Coach Works:** First, input the action you plan to take, then click the “Coach” button if you\'d like feedback from the AI agent. The agent will provide a one-time analysis to help you strengthen your approach.',
+    '**• Next Step:** After receiving feedback, you can revise your action before sending. You always have final control over what you send.',
+    '',
+    '![Example of the AI Coach giving feedback on the proposal](https://i.imgur.com/ImUM14D.png)',
+    '![Example of the AI Coach giving feedback on responding to an offer](https://i.imgur.com/ImUM14D.png)',
+  ],
+});
+
+
+const ADVISOR_MODE_INSTRUCTION = createInfoStage({
+  id: 'advisor_instruction',
+  game: StageGame.CHP,
+  name: 'Instructions: AI Assistant as an advisor',
+  infoLines: [
+    'In this game, the AI agent suggests a specific move and explains its reasoning. The Agent sees everything you see.',
+    '',
+    '**• Your Choice:** At each turn, you can either make your move directly or first ask the Advisor for a recommendation.',
+    '**• How the Advisor Works:** If you ask for advice, the Advisor will suggest a move and provide the strategic rationale behind it.',
+    "**• Next Step:** After seeing the recommendation, you can either accept the agent's move or ignore it and enter your own action.",
+    '',
+    '![Example of the AI Advisor giving recommendations for the proposal](https://i.imgur.com/ImUM14D.png)',
+    '![Example of the AI Coach giving recommendations for responding to an offer](https://i.imgur.com/ImUM14D.png)',
+  ],
+});
+
+const DELEGATE_MODE_INSTRUCTION = createInfoStage({
+  id: 'delegate_instruction',
+  game: StageGame.CHP,
+  name: 'Instructions: AI Assistant as a delegate',
+  infoLines: [
+    'In this game, the AI agent takes full control and negotiates on your behalf for the turn. The Agent sees everything you see.',
+    '',
+    '**• Your Choice:** At each turn, you can either make the move yourself or delegate the entire turn to the agent.',
+    '**• How the Delegate Works:** If you choose to delegate, the agent will autonomously decide and execute a move for you, and provide you with a reason.',
+    "**• Next Step:** After seeing the recommendation, you can either accept the agent's move or ignore it and enter your own action.",
+    '',
+    '![Example of the AI Delegate making an decision when proposing](https://i.imgur.com/ImUM14D.png)',
+    '![Example of the AI Delegate making an decision when responding to an offer](https://i.imgur.com/ImUM14D.png)',
+  ],
+});
+
+
 // ****************************************************************************
 // Pre-negotiation survey stage
 // ****************************************************************************
 const CHIP_PRE_SURVEY_STAGE = createSurveyStage({
-  id: 'pre survey',
+  id: 'pre_survey',
   name: 'Pre-game survey',
   descriptions: createStageTextConfig({
     primaryText:
@@ -903,7 +955,7 @@ const CHIP_PRE_SURVEY_STAGE = createSurveyStage({
 // ****************************************************************************
 
 const CHIP_POST_SURVEY_STAGE = createSurveyStage({
-  id: 'post survey',
+  id: 'post_survey',
   name: 'Post-game survey',
   descriptions: createStageTextConfig({
     primaryText:
@@ -964,7 +1016,7 @@ const CHIP_POST_SURVEY_STAGE = createSurveyStage({
 // ****************************************************************************
 
 const CHIP_COACH_FEEDBACK_STAGE = createSurveyStage({
-  id: 'coach feedback survey',
+  id: 'coach_feedback',
   name: 'Coach Feedback Survey',
   descriptions: createStageTextConfig({
     primaryText:
@@ -998,7 +1050,7 @@ const CHIP_COACH_FEEDBACK_STAGE = createSurveyStage({
     }),
     createScaleSurveyQuestion({
       questionTitle:
-        "The coach’s feedback was clear and easy to understand.",
+        "The coach's feedback was clear and easy to understand.",
       lowerText: 'Strongly disagree',
       lowerValue: 1,
       upperText: 'Strongly agree',
@@ -1032,7 +1084,7 @@ const CHIP_COACH_FEEDBACK_STAGE = createSurveyStage({
 // ****************************************************************************
 
 const CHIP_ADVISOR_FEEDBACK_STAGE = createSurveyStage({
-  id: 'advisor feedback survey',
+  id: 'advisor_feedback',
   name: 'Advisor Feedback Survey',
   descriptions: createStageTextConfig({
     primaryText:
@@ -1058,7 +1110,7 @@ const CHIP_ADVISOR_FEEDBACK_STAGE = createSurveyStage({
     }),
     createScaleSurveyQuestion({
       questionTitle:
-        "The advisor provided recommendations I wouldn’t have thought of on my own.",
+        "The advisor provided recommendations I wouldn't have thought of on my own.",
       lowerText: 'Strongly disagree',
       lowerValue: 1,
       upperText: 'Strongly agree',
@@ -1066,7 +1118,7 @@ const CHIP_ADVISOR_FEEDBACK_STAGE = createSurveyStage({
     }),
     createScaleSurveyQuestion({
       questionTitle:
-        "The advisor’s suggestions were clear and easy to understand.",
+        "The advisor's suggestions were clear and easy to understand.",
       lowerText: 'Strongly disagree',
       lowerValue: 1,
       upperText: 'Strongly agree',
@@ -1099,7 +1151,7 @@ const CHIP_ADVISOR_FEEDBACK_STAGE = createSurveyStage({
 // Delegate mode survey stage
 // ****************************************************************************
 const CHIP_DELEGATE_FEEDBACK_STAGE = createSurveyStage({
-  id: 'delegate feedback survey',
+  id: 'delegate_feedback',
   name: 'Delegation Feedback Survey',
   descriptions: createStageTextConfig({
     primaryText:
@@ -1125,7 +1177,7 @@ const CHIP_DELEGATE_FEEDBACK_STAGE = createSurveyStage({
     }),
     createScaleSurveyQuestion({
       questionTitle:
-        "The delegate took actions I wouldn’t have thought of on my own.",
+        "The delegate took actions I wouldn't have thought of on my own.",
       lowerText: 'Strongly disagree',
       lowerValue: 1,
       upperText: 'Strongly agree',
