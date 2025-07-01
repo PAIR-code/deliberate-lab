@@ -43,7 +43,7 @@ export function getFruitTestExperimentTemplate(): ExperimentTemplate {
       metadata: FRUIT_TEST_METADATA,
     }),
     stageConfigs,
-    agentMediatorPersonas: TG_MEDIATOR_AGENTS,
+    agentMediators: TG_MEDIATOR_AGENTS,
   });
 }
 

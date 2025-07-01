@@ -28,8 +28,8 @@ export function getRealityTVExperimentTemplate(): ExperimentTemplate {
   return createExperimentTemplate({
     experiment: createExperimentConfig(stageConfigs, {metadata: RTV_METADATA}),
     stageConfigs,
-    agentMediatorPersonas: RTV_MEDIATOR_AGENTS,
-    agentParticipantPersonas: RTV_PARTICIPANT_AGENTS,
+    agentMediators: RTV_MEDIATOR_AGENTS,
+    agentParticipants: RTV_PARTICIPANT_AGENTS,
   });
 }
 

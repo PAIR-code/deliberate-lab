@@ -157,7 +157,7 @@ export class ExperimentBuilder extends MobxLitElement {
             <div class="header-title">Agent Mediators</div>
             ${this.renderAddMediatorButton()}
           </div>
-          ${this.experimentEditor.agentMediatorPersonas.map(
+          ${this.experimentEditor.agentMediators.map(
             (mediator) => html`
               <div
                 class="agent-item ${this.experimentEditor.currentAgentId ===
@@ -185,7 +185,7 @@ export class ExperimentBuilder extends MobxLitElement {
             <div class="header-title">Agent Participants</div>
             ${this.renderAddParticipantButton()}
           </div>
-          ${this.experimentEditor.agentParticipantPersonas.map(
+          ${this.experimentEditor.agentParticipants.map(
             (agent) => html`
               <div
                 class="agent-item ${this.experimentEditor.currentAgentId ===

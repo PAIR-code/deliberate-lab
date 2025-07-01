@@ -635,9 +635,8 @@ export class ExperimentManager extends Service {
           id: '',
           experiment,
           stageConfigs: stages,
-          agentMediatorPersonas: this.sp.experimentEditor.agentMediatorPersonas,
-          agentParticipantPersonas:
-            this.sp.experimentEditor.agentParticipantPersonas,
+          agentMediators: this.sp.experimentEditor.agentMediators,
+          agentParticipants: this.sp.experimentEditor.agentParticipants,
         },
       },
     );

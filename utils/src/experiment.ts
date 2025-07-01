@@ -57,8 +57,8 @@ export interface ExperimentTemplate {
   // WARNING: Not used to for stage ID ordering (instead, see stageConfigs)
   experiment: Experiment;
   stageConfigs: StageConfig[];
-  agentMediatorPersonas: AgentMediatorTemplate[];
-  agentParticipantPersonas: AgentParticipantTemplate[];
+  agentMediators: AgentMediatorTemplate[];
+  agentParticipants: AgentParticipantTemplate[];
 }
 
 /** Experiment config for participant options. */
@@ -110,8 +110,8 @@ export function createExperimentTemplate(
     id: config.id ?? generateId(),
     experiment: config.experiment ?? createExperimentConfig(),
     stageConfigs: config.stageConfigs ?? [],
-    agentMediatorPersonas: config.agentMediatorPersonas ?? [],
-    agentParticipantPersonas: config.agentParticipantPersonas ?? [],
+    agentMediators: config.agentMediators ?? [],
+    agentParticipants: config.agentParticipants ?? [],
   };
 }
 

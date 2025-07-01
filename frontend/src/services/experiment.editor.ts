@@ -54,8 +54,8 @@ export class ExperimentEditor extends Service {
   // TODO: Consolidate these fields into ExperimentTemplate
   @observable experiment: Experiment = createExperimentConfig();
   @observable stages: StageConfig[] = [];
-  @observable agentMediatorPersonas: AgentMediatorTemplate[] = [];
-  @observable agentParticipantPersonas: AgentParticipantTemplate[] = [];
+  @observable agentMediators: AgentMediatorTemplate[] = [];
+  @observable agentParticipants: AgentParticipantTemplate[] = [];
 
   // Loading
   @observable isWritingExperiment = false;
@@ -107,15 +107,15 @@ export class ExperimentEditor extends Service {
       prolificConfig: template.experiment.prolificConfig,
     });
     this.setStages(template.stageConfigs);
-    this.setAgentMediatorPersonas(template.agentMediatorPersonas);
-    this.setAgentParticipantPersonas(template.agentParticipantPersonas);
+    this.setAgentMediators(template.agentMediators);
+    this.setAgentParticipants(template.agentParticipants);
   }
 
   resetExperiment() {
     this.experiment = createExperimentConfig();
     this.stages = [];
-    this.agentMediatorPersonas = [];
-    this.agentParticipantPersonas = [];
+    this.agentMediators = [];
+    this.agentParticipants = [];
 
     this.sp.agentEditor.resetAgents();
   }
@@ -249,27 +249,26 @@ export class ExperimentEditor extends Service {
   // AGENT PERSONA CONFIGS
   // **************************************************************************
   @computed get currentAgent() {
-    return [
-      ...this.agentMediatorPersonas,
-      ...this.agentParticipantPersonas,
-    ].find((agent) => agent.persona.id === this.currentAgentId);
+    return [...this.agentMediators, ...this.agentParticipants].find(
+      (agent) => agent.persona.id === this.currentAgentId,
+    );
   }
 
   setCurrentAgentId(id: string) {
     this.currentAgentId = id;
   }
 
-  setAgentMediatorPersonas(personas: AgentMediatorTemplate[]) {
-    this.agentMediatorPersonas = personas;
+  setAgentMediators(templates: AgentMediatorTemplate[]) {
+    this.agentMediators = templates;
   }
 
-  setAgentParticipantPersonas(personas: AgentParticipantTemplate[]) {
-    this.agentParticipantPersonas = personas;
+  setAgentParticipants(templates: AgentParticipantTemplate[]) {
+    this.agentParticipants = templates;
   }
 
   addAgentMediator(setAsCurrent = true) {
     const persona = createAgentMediatorPersonaConfig();
-    this.agentMediatorPersonas.push({
+    this.agentMediators.push({
       persona,
       promptMap: {},
     });
@@ -280,7 +279,7 @@ export class ExperimentEditor extends Service {
 
   addAgentParticipant(setAsCurrent = true) {
     const persona = createAgentParticipantPersonaConfig();
-    this.agentParticipantPersonas.push({
+    this.agentParticipants.push({
       persona,
       promptMap: {},
     });
@@ -290,35 +289,33 @@ export class ExperimentEditor extends Service {
   }
 
   deleteAgentMediator(id: string) {
-    const agentIndex = this.agentMediatorPersonas.findIndex(
+    const agentIndex = this.agentMediators.findIndex(
       (agent) => agent.persona.id === id,
     );
     if (agentIndex === -1) return;
-    this.agentMediatorPersonas = [
-      ...this.agentMediatorPersonas.slice(0, agentIndex),
-      ...this.agentMediatorPersonas.slice(agentIndex + 1),
+    this.agentMediators = [
+      ...this.agentMediators.slice(0, agentIndex),
+      ...this.agentMediators.slice(agentIndex + 1),
     ];
   }
 
   deleteAgentParticipant(id: string) {
-    const agentIndex = this.agentParticipantPersonas.findIndex(
+    const agentIndex = this.agentParticipants.findIndex(
       (agent) => agent.persona.id === id,
     );
     if (agentIndex === -1) return;
-    this.agentParticipantPersonas = [
-      ...this.agentParticipantPersonas.slice(0, agentIndex),
-      ...this.agentParticipantPersonas.slice(agentIndex + 1),
+    this.agentParticipants = [
+      ...this.agentParticipants.slice(0, agentIndex),
+      ...this.agentParticipants.slice(agentIndex + 1),
     ];
   }
 
   getAgentMediator(id: string) {
-    return this.agentMediatorPersonas.find((agent) => agent.persona.id === id);
+    return this.agentMediators.find((agent) => agent.persona.id === id);
   }
 
   getAgentParticipant(id: string) {
-    return this.agentParticipantPersonas.find(
-      (agent) => agent.persona.id === id,
-    );
+    return this.agentParticipants.find((agent) => agent.persona.id === id);
   }
 
   // *********************************************************************** //
@@ -342,8 +339,8 @@ export class ExperimentEditor extends Service {
           id: '',
           experiment: this.experiment,
           stageConfigs: this.stages,
-          agentMediatorPersonas: this.agentMediatorPersonas,
-          agentParticipantPersonas: this.agentParticipantPersonas,
+          agentMediators: this.agentMediators,
+          agentParticipants: this.agentParticipants,
         },
       },
     );
@@ -369,8 +366,8 @@ export class ExperimentEditor extends Service {
           id: '',
           experiment: this.experiment,
           stageConfigs: this.stages,
-          agentMediatorPersonas: this.agentMediatorPersonas,
-          agentParticipantPersonas: this.agentParticipantPersonas,
+          agentMediators: this.agentMediators,
+          agentParticipants: this.agentParticipants,
         },
       },
     );

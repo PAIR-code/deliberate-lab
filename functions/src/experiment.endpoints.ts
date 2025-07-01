@@ -65,8 +65,8 @@ export const writeExperiment = onCall(async (request) => {
     // Add agent configs and prompts
     // TODO: Remove old collection once new paths are fully connected
     for (const agent of [
-      ...template.agentMediatorPersonas,
-      ...template.agentParticipantPersonas,
+      ...template.agentMediators,
+      ...template.agentParticipants,
     ]) {
       const agentDoc = document.collection('agents').doc(agent.persona.id);
       transaction.set(agentDoc, agent.persona);
@@ -78,8 +78,8 @@ export const writeExperiment = onCall(async (request) => {
       }
     }
 
-    // Add agent mediators under `agentParticipantPersonas` collection
-    template.agentMediatorPersonas.forEach((agent) => {
+    // Add agent mediators under `agentParticipants` collection
+    template.agentMediators.forEach((agent) => {
       const doc = document.collection('agentMediators').doc(agent.persona.id);
       transaction.set(doc, agent.persona);
       for (const prompt of Object.values(agent.promptMap)) {
@@ -87,8 +87,8 @@ export const writeExperiment = onCall(async (request) => {
       }
     });
 
-    // Add agent particiapnts under `agentMediatorPersonas` collection
-    template.agentParticipantPersonas.forEach((agent) => {
+    // Add agent particiapnts under `agentMediators` collection
+    template.agentParticipants.forEach((agent) => {
       const doc = document
         .collection('agentParticipants')
         .doc(agent.persona.id);
@@ -155,8 +155,8 @@ export const updateExperiment = onCall(async (request) => {
     // Add agent configs and prompts
     // TODO: Remove old collection once new paths are fully connected
     for (const agent of [
-      ...template.agentMediatorPersonas,
-      ...template.agentParticipantPersonas,
+      ...template.agentMediators,
+      ...template.agentParticipants,
     ]) {
       const agentDoc = document.collection('agents').doc(agent.persona.id);
       transaction.set(agentDoc, agent.persona);
@@ -168,8 +168,8 @@ export const updateExperiment = onCall(async (request) => {
       }
     }
 
-    // Add agent mediators under `agentParticipantPersonas` collection
-    template.agentMediatorPersonas.forEach((agent) => {
+    // Add agent mediators under `agentParticipants` collection
+    template.agentMediators.forEach((agent) => {
       const doc = document.collection('agentMediators').doc(agent.persona.id);
       transaction.set(doc, agent.persona);
       for (const prompt of Object.values(agent.promptMap)) {
@@ -177,8 +177,8 @@ export const updateExperiment = onCall(async (request) => {
       }
     });
 
-    // Add agent particiapnts under `agentMediatorPersonas` collection
-    template.agentParticipantPersonas.forEach((agent) => {
+    // Add agent particiapnts under `agentMediators` collection
+    template.agentParticipants.forEach((agent) => {
       const doc = document
         .collection('agentParticipants')
         .doc(agent.persona.id);
