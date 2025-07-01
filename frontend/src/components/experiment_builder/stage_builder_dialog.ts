@@ -12,6 +12,7 @@ import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
   AgentDataObject,
+  ExperimentTemplate,
   MetadataConfig,
   StageConfig,
   StageKind,
@@ -52,8 +53,8 @@ import {
   TG_AGENTS,
 } from '../../shared/templates/fruit_test';
 import {
-  FLIPCARD_GAME_METADATA,
-  getFlipCardGameStageConfigs,
+  FLIPCARD_TEMPLATE_METADATA,
+  getFlipCardExperimentTemplate,
 } from '../../shared/templates/flipcard';
 
 import {styles} from './stage_builder_dialog.scss';
@@ -137,7 +138,7 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()} ${this.renderLASCard(true)}
         ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
-        ${this.renderSalespersonGameCard()} ${this.renderFlipCardGameCard()}
+        ${this.renderSalespersonGameCard()} ${this.renderFlipCardTemplateCard()}
         ${this.renderTestGameCard()}
       </div>
     `;
@@ -163,12 +164,19 @@ export class StageBuilderDialog extends MobxLitElement {
     this.experimentEditor.jumpToLastStage();
   }
 
+  private addTemplate(template: ExperimentTemplate) {
+    this.analyticsService.trackButtonClick(ButtonClick.TEMPLATE_LOAD);
+    this.experimentEditor.loadTemplate(template);
+    this.experimentEditor.toggleStageBuilderDialog();
+  }
+
+  // TODO: Remove in favor of identical addTemplate
   private addGame(
     metadata: Partial<MetadataConfig>,
     stages: StageConfig[],
     agents: AgentDataObject[] = [],
   ) {
-    this.analyticsService.trackButtonClick(ButtonClick.GAME_ADD);
+    this.analyticsService.trackButtonClick(ButtonClick.TEMPLATE_LOAD);
     this.experimentEditor.updateMetadata(metadata);
     this.experimentEditor.setStages(stages);
     this.agentEditor.setAgentData(agents);
@@ -423,17 +431,15 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
-  private renderFlipCardGameCard() {
-    const addGame = () => {
-      this.addGame(FLIPCARD_GAME_METADATA, getFlipCardGameStageConfigs(), []);
+  private renderFlipCardTemplateCard() {
+    const addTemplate = () => {
+      this.addTemplate(getFlipCardExperimentTemplate());
     };
 
     return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">🔄 FlipCard Game</div>
-        <div>
-          A demonstration of the FlipCard stage with adventure selection cards.
-        </div>
+      <div class="card" @click=${addTemplate}>
+        <div class="title">${FLIPCARD_TEMPLATE_METADATA.name}</div>
+        <div>${FLIPCARD_TEMPLATE_METADATA.description}</div>
       </div>
     `;
   }

@@ -1,4 +1,6 @@
 import {
+  createExperimentConfig,
+  createExperimentTemplate,
   createFlipCardStage,
   createFlipCard,
   createInfoStage,
@@ -6,17 +8,28 @@ import {
   createProfileStage,
   createStageTextConfig,
   createTOSStage,
+  ExperimentTemplate,
   ProfileType,
   StageConfig,
 } from '@deliberation-lab/utils';
 
-export const FLIPCARD_GAME_METADATA = createMetadataConfig({
-  name: 'FlipCard Game',
+export function getFlipCardExperimentTemplate(): ExperimentTemplate {
+  const stageConfigs = getFlipCardTemplateStageConfigs();
+  return createExperimentTemplate({
+    experiment: createExperimentConfig(stageConfigs, {
+      metadata: FLIPCARD_TEMPLATE_METADATA,
+    }),
+    stageConfigs,
+  });
+}
+
+export const FLIPCARD_TEMPLATE_METADATA = createMetadataConfig({
+  name: '🔄 FlipCard Template',
   publicName: 'Card Selection Game',
-  description: 'A demonstration game using the FlipCard stage functionality',
+  description: 'An example experiment using the FlipCard stage functionality',
 });
 
-export function getFlipCardGameStageConfigs(): StageConfig[] {
+function getFlipCardTemplateStageConfigs(): StageConfig[] {
   const stages: StageConfig[] = [];
 
   stages.push(FLIPCARD_TOS_STAGE);
