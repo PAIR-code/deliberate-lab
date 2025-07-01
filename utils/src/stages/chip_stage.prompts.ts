@@ -39,7 +39,7 @@ Remember, your trade proposal must adhere to the following:
 
 
 Your goal is to make as much money as possible. The trades, you choose to make to accomplish this, are up to you.
-As a part of making money you uou must be rational - do not propose a trade in which you lose money. The value of a trade to you is the difference between the total value of chips you receive (quantity × your valuation) minus the total value of chips you give up (quantity x your valuation). Only propose trades that give you positive value.
+As a part of making money you must be rational - do not propose a trade in which you lose money. The value of a trade to you is the difference between the total value of chips you receive (quantity x your valuation) minus the total value of chips you give up (quantity x your valuation). Only propose trades that give you positive value.
 
 Output a proposal response. Your response **must adhere strictly to the following format**. Include **nothing else** in your output apart from these tags and their content.
 ${printSchema(CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG.schema!)}
@@ -147,7 +147,7 @@ Remember, a trade proposal must adhere to the following:
 2.  **Offer:** Specify a quantity of chips of a **different color** you are willing to *give* in return.
 
 Your goal is to make as much money as possible. The trades, you choose to make to accomplish this, are up to you.
-As a part of making money you uou must be rational - do not propose a trade in which you lose money. The value of a trade to you is the difference between the total value of chips you receive (quantity x your valuation) minus the total value of chips you give up (quantity x your valuation). Only propose trades that give you positive value.
+As a part of making money you must be rational - do not propose a trade in which you lose money. The value of a trade to you is the difference between the total value of chips you receive (quantity x your valuation) minus the total value of chips you give up (quantity x your valuation). Only propose trades that give you positive value.
 
 Output a coaching response. Your response **must adhere strictly to the following format**. Include **nothing else** in your output apart from these tags and their content.
 In the <feedback> and <reasoning> tags, you will provide your coaching feedback and reasoning for providing that coaching feedback.
@@ -258,7 +258,7 @@ Remember, your trade proposal must adhere to the following:
 
 
 Your goal is to make as much money as possible. The trades, you choose to make to accomplish this, are up to you.
-As a part of making money you uou must be rational - do not propose a trade in which you lose money. The value of a trade to you is the difference between the total value of chips you receive (quantity × your valuation) minus the total value of chips you give up (quantity x your valuation). Only propose trades that give you positive value.
+As a part of making money you must be rational - do not propose a trade in which you lose money. The value of a trade to you is the difference between the total value of chips you receive (quantity x your valuation) minus the total value of chips you give up (quantity x your valuation). Only propose trades that give you positive value.
 
 Output a proposal response. Your response **must adhere strictly to the following format**. Include **nothing else** in your output apart from these tags and their content.
 
