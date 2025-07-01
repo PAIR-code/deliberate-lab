@@ -195,7 +195,7 @@ export async function callOpenAIChatCompletion(
     status: ModelResponseStatus.OK,
     text: response.choices[0].message.content,
   };
-  if (structuredOutputConfig) {
+  if (structuredOutputConfig?.enabled) {
     return addParsedModelResponse(modelResponse);
   }
   return modelResponse;
