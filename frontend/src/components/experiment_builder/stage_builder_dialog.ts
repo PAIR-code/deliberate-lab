@@ -6,12 +6,12 @@ import {customElement, property, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
-import {AgentEditor} from '../../services/agent.editor';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
   AgentDataObject,
+  AgentPersonaType,
   ExperimentTemplate,
   MetadataConfig,
   StageConfig,
@@ -62,7 +62,6 @@ import {styles} from './stage_builder_dialog.scss';
 export class StageBuilderDialog extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  private readonly agentEditor = core.getService(AgentEditor);
   private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
@@ -177,7 +176,16 @@ export class StageBuilderDialog extends MobxLitElement {
     this.analyticsService.trackButtonClick(ButtonClick.TEMPLATE_LOAD);
     this.experimentEditor.updateMetadata(metadata);
     this.experimentEditor.setStages(stages);
-    this.agentEditor.setAgentData(agents);
+    this.experimentEditor.setAgentMediatorPersonas(
+      agents.filter(
+        (agent) => agent.persona.type === AgentPersonaType.MEDIATOR,
+      ),
+    );
+    this.experimentEditor.setAgentParticipantPersonas(
+      agents.filter(
+        (agent) => agent.persona.type === AgentPersonaType.PARTICIPANT,
+      ),
+    );
     this.experimentEditor.toggleStageBuilderDialog();
   }
 

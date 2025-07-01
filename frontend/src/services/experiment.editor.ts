@@ -1,4 +1,5 @@
 import {
+  AgentDataObject,
   AgentPersonaType,
   CohortParticipantConfig,
   Experiment,
@@ -8,6 +9,8 @@ import {
   ProlificConfig,
   StageConfig,
   StageKind,
+  createAgentPersonaConfig,
+  createAgentParticipantPersonaConfig,
   createExperimentConfig,
   createMetadataConfig,
   createPermissionsConfig,
@@ -50,14 +53,21 @@ export class ExperimentEditor extends Service {
   // TODO: Consolidate these fields into ExperimentTemplate
   @observable experiment: Experiment = createExperimentConfig();
   @observable stages: StageConfig[] = [];
+  @observable agentMediatorPersonas: AgentDataObject[] = [];
+  @observable agentParticipantPersonas: AgentDataObject[] = [];
 
   // Loading
   @observable isWritingExperiment = false;
 
   // Editor tooling
+  @observable currentAgentId: string | undefined = undefined;
   @observable currentStageId: string | undefined = undefined;
   @observable showStageBuilderDialog = false;
   @observable showTemplatesTab = false;
+
+  // **************************************************************************
+  // EXPERIMENT LOADING
+  // **************************************************************************
 
   @computed get isValidExperimentConfig() {
     // TODO: Add other validation checks here
@@ -81,6 +91,37 @@ export class ExperimentEditor extends Service {
   @computed get canEditStages() {
     return this.sp.experimentManager.canEditExperimentStages;
   }
+
+  loadExperiment(experiment: Experiment, stages: StageConfig[]) {
+    this.experiment = experiment;
+    this.setStages(stages);
+  }
+
+  loadTemplate(template: ExperimentTemplate) {
+    // Only copy over relevant parts (e.g., not template ID)
+    this.experiment = createExperimentConfig(template.stageConfigs, {
+      metadata: template.experiment.metadata,
+      permissions: template.experiment.permissions,
+      defaultCohortConfig: template.experiment.defaultCohortConfig,
+      prolificConfig: template.experiment.prolificConfig,
+    });
+    this.setStages(template.stageConfigs);
+    this.setAgentMediatorPersonas(template.agentMediatorPersonas);
+    this.setAgentParticipantPersonas(template.agentParticipantPersonas);
+  }
+
+  resetExperiment() {
+    this.experiment = createExperimentConfig();
+    this.stages = [];
+    this.agentMediatorPersonas = [];
+    this.agentParticipantPersonas = [];
+
+    this.sp.agentEditor.resetAgents();
+  }
+
+  // **************************************************************************
+  // EXPERIMENT CONFIG
+  // **************************************************************************
 
   // Return true if creator or admin
   @computed get isCreator() {
@@ -119,6 +160,10 @@ export class ExperimentEditor extends Service {
       ...config,
     };
   }
+
+  // **************************************************************************
+  // STAGE CONFIGS
+  // **************************************************************************
 
   setCurrentStageId(id: string | undefined) {
     this.currentStageId = id;
@@ -199,30 +244,82 @@ export class ExperimentEditor extends Service {
     this.showTemplatesTab = showTemplates;
   }
 
-  loadExperiment(experiment: Experiment, stages: StageConfig[]) {
-    this.experiment = experiment;
-    this.setStages(stages);
+  // **************************************************************************
+  // AGENT PERSONA CONFIGS
+  // **************************************************************************
+  @computed get currentAgent() {
+    return [
+      ...this.agentMediatorPersonas,
+      ...this.agentParticipantPersonas,
+    ].find((agent) => agent.persona.id === this.currentAgentId);
   }
 
-  loadTemplate(template: ExperimentTemplate) {
-    // Only copy over relevant parts (e.g., not template ID)
-    this.experiment = createExperimentConfig(template.stageConfigs, {
-      metadata: template.experiment.metadata,
-      permissions: template.experiment.permissions,
-      defaultCohortConfig: template.experiment.defaultCohortConfig,
-      prolificConfig: template.experiment.prolificConfig,
+  setCurrentAgentId(id: string) {
+    this.currentAgentId = id;
+  }
+
+  setAgentMediatorPersonas(personas: AgentDataObject[]) {
+    this.agentMediatorPersonas = personas;
+  }
+
+  setAgentParticipantPersonas(personas: AgentDataObject[]) {
+    this.agentParticipantPersonas = personas;
+  }
+
+  addAgentMediator(setAsCurrent = true) {
+    const persona = createAgentPersonaConfig();
+    this.agentMediatorPersonas.push({
+      persona,
+      participantPromptMap: {},
+      chatPromptMap: {},
     });
-    this.setStages(template.stageConfigs);
-    this.sp.agentEditor.setAgentData([
-      ...template.agentMediatorPersonas,
-      ...template.agentParticipantPersonas,
-    ]);
+    if (setAsCurrent) {
+      this.setCurrentAgentId(persona.id);
+    }
   }
 
-  resetExperiment() {
-    this.experiment = createExperimentConfig();
-    this.stages = [];
-    this.sp.agentEditor.resetAgents();
+  addAgentParticipant(setAsCurrent = true) {
+    const persona = createAgentParticipantPersonaConfig();
+    this.agentParticipantPersonas.push({
+      persona,
+      participantPromptMap: {},
+      chatPromptMap: {},
+    });
+    if (setAsCurrent) {
+      this.setCurrentAgentId(persona.id);
+    }
+  }
+
+  deleteAgentMediator(id: string) {
+    const agentIndex = this.agentMediatorPersonas.findIndex(
+      (agent) => agent.persona.id === id,
+    );
+    if (agentIndex === -1) return;
+    this.agentMediatorPersonas = [
+      ...this.agentMediatorPersonas.slice(0, agentIndex),
+      ...this.agentMediatorPersonas.slice(agentIndex + 1),
+    ];
+  }
+
+  deleteAgentParticipant(id: string) {
+    const agentIndex = this.agentParticipantPersonas.findIndex(
+      (agent) => agent.persona.id === id,
+    );
+    if (agentIndex === -1) return;
+    this.agentParticipantPersonas = [
+      ...this.agentParticipantPersonas.slice(0, agentIndex),
+      ...this.agentParticipantPersonas.slice(agentIndex + 1),
+    ];
+  }
+
+  getAgentMediator(id: string) {
+    return this.agentMediatorPersonas.find((agent) => agent.persona.id === id);
+  }
+
+  getAgentParticipant(id: string) {
+    return this.agentParticipantPersonas.find(
+      (agent) => agent.persona.id === id,
+    );
   }
 
   // *********************************************************************** //
