@@ -1,5 +1,7 @@
 import {
   AgentMediatorTemplate,
+  AgentMediatorPersonaConfig,
+  AgentParticipantPersonaConfig,
   AgentPersonaType,
   AgentParticipantTemplate,
   CohortParticipantConfig,
@@ -316,6 +318,46 @@ export class ExperimentEditor extends Service {
 
   getAgentParticipant(id: string) {
     return this.agentParticipants.find((agent) => agent.persona.id === id);
+  }
+
+  updateAgentMediatorPersona(
+    id: string,
+    updatedPersona: Partial<AgentMediatorPersonaConfig>,
+  ) {
+    const agentIndex = this.agentMediators.findIndex(
+      (agent) => agent.persona.id === id,
+    );
+    if (agentIndex === -1) return;
+
+    const oldAgent = this.agentMediators[agentIndex];
+    this.agentMediators = [
+      ...this.agentMediators.slice(0, agentIndex),
+      {
+        persona: {...oldAgent.persona, ...updatedPersona},
+        promptMap: oldAgent.promptMap,
+      },
+      ...this.agentMediators.slice(agentIndex + 1),
+    ];
+  }
+
+  updateAgentParticipantPersona(
+    id: string,
+    updatedPersona: Partial<AgentParticipantPersonaConfig>,
+  ) {
+    const agentIndex = this.agentParticipants.findIndex(
+      (agent) => agent.persona.id === id,
+    );
+    if (agentIndex === -1) return;
+
+    const oldAgent = this.agentParticipants[agentIndex];
+    this.agentParticipants = [
+      ...this.agentParticipants.slice(0, agentIndex),
+      {
+        persona: {...oldAgent.persona, ...updatedPersona},
+        promptMap: oldAgent.promptMap,
+      },
+      ...this.agentParticipants.slice(agentIndex + 1),
+    ];
   }
 
   // *********************************************************************** //

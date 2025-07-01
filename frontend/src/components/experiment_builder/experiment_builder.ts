@@ -15,7 +15,7 @@ import '../stages/survey_editor';
 import '../stages/survey_per_participant_editor';
 import '../stages/tos_editor';
 import '../stages/transfer_editor';
-import './agent_editor';
+import './agent_persona_editor';
 import './experiment_builder_nav';
 import './experiment_settings_editor';
 import './stage_builder_dialog';
@@ -316,9 +316,7 @@ export class ExperimentBuilder extends MobxLitElement {
       const agent = this.experimentEditor.currentAgent;
       return html`
         <div class="experiment-builder">
-          <div>Agent editor coming soon</div>
-          <div>${JSON.stringify(agent)}</div>
-          <agent-editor .agent=${agent}></agent-editor>
+          <agent-persona-editor .agent=${agent?.persona}></agent-persona-editor>
         </div>
       `;
     } else if (this.panelView === PanelView.STAGES) {
