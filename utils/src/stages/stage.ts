@@ -35,6 +35,7 @@ import {
   SalespersonStagePublicData,
   createSalespersonStagePublicData,
 } from './salesperson_stage';
+import {StockInfoStageConfig} from './stockinfo_stage';
 import {
   SurveyPerParticipantStageConfig,
   SurveyPerParticipantStageParticipantAnswer,
@@ -66,6 +67,7 @@ export enum StageKind {
   PAYOUT = 'payout',
   REVEAL = 'reveal',
   SALESPERSON = 'salesperson', // co-op traveling salesperson game
+  STOCKINFO = 'stockinfo',
   SURVEY = 'survey',
   SURVEY_PER_PARTICIPANT = 'surveyPerParticipant',
   TRANSFER = 'transfer',
@@ -119,6 +121,7 @@ export type StageConfig =
   | ProfileStageConfig
   | RevealStageConfig
   | SalespersonStageConfig
+  | StockInfoStageConfig
   | SurveyStageConfig
   | SurveyPerParticipantStageConfig
   | TOSStageConfig
