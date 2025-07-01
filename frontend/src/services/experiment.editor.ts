@@ -1,4 +1,5 @@
 import {
+  AgentPersonaType,
   CohortParticipantConfig,
   Experiment,
   ExperimentTemplate,
@@ -46,6 +47,7 @@ export class ExperimentEditor extends Service {
   // Experiment config
   // WARNING: Use this.stages as source of truth for stage ordering,
   // not this.experiment.stageIds (which will be overridden)
+  // TODO: Consolidate these fields into ExperimentTemplate
   @observable experiment: Experiment = createExperimentConfig();
   @observable stages: StageConfig[] = [];
 
@@ -240,9 +242,21 @@ export class ExperimentEditor extends Service {
       this.sp.firebaseService.functions,
       {
         collectionName: 'experiments',
-        experimentConfig: this.experiment,
-        stageConfigs: this.stages,
-        agentConfigs: this.sp.agentEditor.getAgentData(),
+        experimentTemplate: {
+          id: '',
+          experiment: this.experiment,
+          stageConfigs: this.stages,
+          agentMediatorPersonas: this.sp.agentEditor
+            .getAgentData()
+            .filter(
+              (agent) => agent.persona.type === AgentPersonaType.MEDIATOR,
+            ),
+          agentParticipantPersonas: this.sp.agentEditor
+            .getAgentData()
+            .filter(
+              (agent) => agent.persona.type === AgentPersonaType.PARTICIPANT,
+            ),
+        },
       },
     );
 
@@ -263,9 +277,21 @@ export class ExperimentEditor extends Service {
       this.sp.firebaseService.functions,
       {
         collectionName: 'experiments',
-        experimentConfig: this.experiment,
-        stageConfigs: this.stages,
-        agentConfigs: this.sp.agentEditor.getAgentData(),
+        experimentTemplate: {
+          id: '',
+          experiment: this.experiment,
+          stageConfigs: this.stages,
+          agentMediatorPersonas: this.sp.agentEditor
+            .getAgentData()
+            .filter(
+              (agent) => agent.persona.type === AgentPersonaType.MEDIATOR,
+            ),
+          agentParticipantPersonas: this.sp.agentEditor
+            .getAgentData()
+            .filter(
+              (agent) => agent.persona.type === AgentPersonaType.PARTICIPANT,
+            ),
+        },
       },
     );
 

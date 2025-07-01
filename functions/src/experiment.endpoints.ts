@@ -25,18 +25,18 @@ import {
 // writeExperiment endpoint                                                  //
 // (create new experiment to specified Firestore collection)                 //
 //                                                                           //
-// Input structure: { collectionName, experimentConfig,                      //
-//                  stageConfigs, agentConfigs }                             //
+// Input structure: { collectionName, experimentTemplate }                   //
 // Validation: utils/src/experiment.validation.ts                            //
 // ************************************************************************* //
 export const writeExperiment = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
   const {data} = request;
+  const template = data.experimentTemplate;
 
   // Set up experiment config with stageIds
   const experimentConfig = createExperimentConfig(
-    data.stageConfigs,
-    data.experimentConfig,
+    template.stageConfigs,
+    template.experiment,
   );
 
   // Define document reference
@@ -58,12 +58,15 @@ export const writeExperiment = onCall(async (request) => {
     transaction.set(document, experimentConfig);
 
     // Add collection of stages
-    for (const stage of data.stageConfigs) {
+    for (const stage of template.stageConfigs) {
       transaction.set(document.collection('stages').doc(stage.id), stage);
     }
 
     // Add agent configs and prompts
-    for (const agent of data.agentConfigs) {
+    for (const agent of [
+      ...template.agentMediatorPersonas,
+      ...template.agentParticipantPersonas,
+    ]) {
       const agentDoc = document.collection('agents').doc(agent.persona.id);
       transaction.set(agentDoc, agent.persona);
       for (const prompt of Object.values(agent.participantPromptMap)) {
@@ -88,17 +91,18 @@ export const writeExperiment = onCall(async (request) => {
 // updateExperiment endpoint                                                 //
 // (Update existing experiment to specified Firestore collection)            //
 //                                                                           //
-// Input structure: { collectionName, experimentConfig, stageConfigs }       //
+// Input structure: { collectionName, experimentTemplate }                   //
 // Validation: utils/src/experiment.validation.ts                            //
 // ************************************************************************* //
 export const updateExperiment = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
   const {data} = request;
+  const template = data.experimentTemplate;
 
   // Set up experiment config with stageIds
   const experimentConfig = createExperimentConfig(
-    data.stageConfigs,
-    data.experimentConfig,
+    template.stageConfigs,
+    template.experiment,
   );
 
   // Define document reference
@@ -129,12 +133,15 @@ export const updateExperiment = onCall(async (request) => {
     await app.firestore().recursiveDelete(oldAgentCollection);
 
     // Add updated collection of stages
-    for (const stage of data.stageConfigs) {
+    for (const stage of template.stageConfigs) {
       transaction.set(document.collection('stages').doc(stage.id), stage);
     }
 
     // Add agent configs and prompts
-    for (const agent of data.agentConfigs) {
+    for (const agent of [
+      ...template.agentMediatorPersonas,
+      ...template.agentParticipantPersonas,
+    ]) {
       const agentDoc = document.collection('agents').doc(agent.persona.id);
       transaction.set(agentDoc, agent.persona);
       for (const prompt of Object.values(agent.participantPromptMap)) {

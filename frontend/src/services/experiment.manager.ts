@@ -631,9 +631,21 @@ export class ExperimentManager extends Service {
       this.sp.firebaseService.functions,
       {
         collectionName: 'experiments',
-        experimentConfig: experiment,
-        stageConfigs: stages,
-        agentConfigs: this.sp.agentEditor.getAgentData(),
+        experimentTemplate: {
+          id: '',
+          experiment,
+          stageConfigs: stages,
+          agentMediatorPersonas: this.sp.agentEditor
+            .getAgentData()
+            .filter(
+              (agent) => agent.persona.type === AgentPersonaType.MEDIATOR,
+            ),
+          agentParticipantPersonas: this.sp.agentEditor
+            .getAgentData()
+            .filter(
+              (agent) => agent.persona.type === AgentPersonaType.PARTICIPANT,
+            ),
+        },
       },
     );
 
