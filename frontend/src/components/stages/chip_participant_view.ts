@@ -791,6 +791,7 @@ export class ChipView extends MobxLitElement {
             this.assistanceDelegateResponse = '';
             const response =
               await this.participantService.requestChipAssistance(
+                this.stage?.id ?? '',
                 'delegate',
                 this.selectedBuyChip,
                 this.buyChipAmount,
@@ -823,6 +824,7 @@ export class ChipView extends MobxLitElement {
             this.assistanceAdvisorResponse = '';
             const response =
               await this.participantService.requestChipAssistance(
+                this.stage?.id ?? '',
                 'advisor',
                 this.selectedBuyChip,
                 this.buyChipAmount,
@@ -871,6 +873,7 @@ export class ChipView extends MobxLitElement {
       this.assistanceCoachResponse = '';
       this.assistanceCoachProposal = `You proposed giving ${this.sellChipAmount} ${this.selectedSellChip} chips to get ${this.buyChipAmount} ${this.selectedBuyChip} chips`;
       const response = await this.participantService.requestChipAssistance(
+        this.stage?.id ?? '',
         'coach',
         this.selectedBuyChip,
         this.buyChipAmount,
@@ -905,6 +908,7 @@ export class ChipView extends MobxLitElement {
       this.assistanceCoachResponse = '';
       this.assistanceCoachProposal = `You proposed accepting the offer`;
       const response = await this.participantService.requestChipAssistance(
+        this.stage?.id ?? '',
         'coach',
         this.selectedBuyChip,
         this.buyChipAmount,
@@ -922,6 +926,7 @@ export class ChipView extends MobxLitElement {
       this.assistanceCoachResponse = '';
       this.assistanceCoachProposal = `You proposed rejecting the offer`;
       const response = await this.participantService.requestChipAssistance(
+        this.stage?.id ?? '',
         'coach',
         this.selectedBuyChip,
         this.buyChipAmount,
