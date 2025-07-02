@@ -69,14 +69,12 @@ export class ChipView extends MobxLitElement {
   @state() buyChipAmount: number = 0;
   @state() sellChipAmount: number = 0;
 
-  // Tracks which assistance mode has been selected by user
-  @state() selectedAssistance: ChipAssistanceMode | null = null;
-
   // TODO: Remove temporary variables to track chip assistance mode, response
   @state() assistanceAdvisorResponse = '';
   @state() assistanceCoachProposal = ''; // proposed by user
   @state() assistanceCoachResponse = '';
   @state() assistanceDelegateResponse = '';
+  @state() isAssistanceNoneLoading = false;
   @state() isAssistanceAdvisorLoading = false;
   @state() isAssistanceCoachLoading = false;
   @state() isAssistanceDelegateLoading = false;
@@ -86,7 +84,6 @@ export class ChipView extends MobxLitElement {
     this.selectedSellChip = '';
     this.buyChipAmount = 0;
     this.sellChipAmount = 0;
-    this.selectedAssistance = null;
     this.assistanceAdvisorResponse = '';
     this.assistanceCoachProposal = '';
     this.assistanceCoachResponse = '';
@@ -286,7 +283,7 @@ export class ChipView extends MobxLitElement {
     modes: ChipAssistanceMode[],
     sendOffer: () => void,
   ) {
-    switch (this.selectedAssistance) {
+    switch (this.answer?.currentAssistance?.selectedMode) {
       case ChipAssistanceMode.NONE:
         return this.renderManualOffer(sendOffer);
       case ChipAssistanceMode.DELEGATE:
@@ -304,8 +301,14 @@ export class ChipView extends MobxLitElement {
         <pr-button
           color="secondary"
           variant="tonal"
-          @click=${() => {
-            this.selectedAssistance = ChipAssistanceMode.NONE;
+          ?loading=${this.isAssistanceNoneLoading}
+          @click=${async () => {
+            this.isAssistanceNoneLoading = true;
+            await this.participantService.selectChipAssistanceMode(
+              this.stage?.id ?? '',
+              'none',
+            );
+            this.isAssistanceNoneLoading = false;
           }}
         >
           Manually submit my own offer
@@ -318,8 +321,14 @@ export class ChipView extends MobxLitElement {
         <pr-button
           color="secondary"
           variant="tonal"
-          @click=${() => {
-            this.selectedAssistance = ChipAssistanceMode.COACH;
+          ?loading=${this.isAssistanceCoachLoading}
+          @click=${async () => {
+            this.isAssistanceCoachLoading = true;
+            await this.participantService.selectChipAssistanceMode(
+              this.stage?.id ?? '',
+              'coach',
+            );
+            this.isAssistanceCoachLoading = false;
           }}
         >
           Give me feedback on my proposed offer
@@ -560,7 +569,7 @@ export class ChipView extends MobxLitElement {
     acceptOffer: () => void,
     rejectOffer: () => void,
   ) {
-    switch (this.selectedAssistance) {
+    switch (this.answer?.currentAssistance?.selectedMode) {
       case ChipAssistanceMode.NONE:
         return this.renderManualResponse(acceptOffer, rejectOffer);
       case ChipAssistanceMode.DELEGATE:
@@ -578,8 +587,14 @@ export class ChipView extends MobxLitElement {
         <pr-button
           color="secondary"
           variant="tonal"
-          @click=${() => {
-            this.selectedAssistance = ChipAssistanceMode.NONE;
+          ?loading=${this.isAssistanceNoneLoading}
+          @click=${async () => {
+            this.isAssistanceNoneLoading = true;
+            await this.participantService.selectChipAssistanceMode(
+              this.stage?.id ?? '',
+              'none',
+            );
+            this.isAssistanceNoneLoading = false;
           }}
         >
           Manually submit my own response
@@ -592,8 +607,14 @@ export class ChipView extends MobxLitElement {
         <pr-button
           color="secondary"
           variant="tonal"
-          @click=${() => {
-            this.selectedAssistance = ChipAssistanceMode.COACH;
+          ?loading=${this.isAssistanceCoachLoading}
+          @click=${async () => {
+            this.isAssistanceCoachLoading = true;
+            await this.participantService.selectChipAssistanceMode(
+              this.stage?.id ?? '',
+              'coach',
+            );
+            this.isAssistanceCoachLoading = false;
           }}
         >
           Give me feedback on my proposed response
@@ -781,22 +802,16 @@ export class ChipView extends MobxLitElement {
     return html`
       <div class="button-wrapper">
         <pr-button
-          ?disabled=${disabled}
           color="secondary"
           variant="tonal"
           ?loading=${this.isAssistanceDelegateLoading}
           @click=${async () => {
             this.isAssistanceDelegateLoading = true;
-            this.selectedAssistance = ChipAssistanceMode.DELEGATE;
             this.assistanceDelegateResponse = '';
             const response =
-              await this.participantService.requestChipAssistance(
+              await this.participantService.selectChipAssistanceMode(
                 this.stage?.id ?? '',
                 'delegate',
-                this.selectedBuyChip,
-                this.buyChipAmount,
-                this.selectedSellChip,
-                this.sellChipAmount,
               );
             this.isAssistanceDelegateLoading = false;
             this.assistanceDelegateResponse = JSON.stringify(response.data);
@@ -814,22 +829,16 @@ export class ChipView extends MobxLitElement {
     return html`
       <div class="button-wrapper">
         <pr-button
-          ?disabled=${disabled}
           color="secondary"
           variant="tonal"
           ?loading=${this.isAssistanceAdvisorLoading}
           @click=${async () => {
             this.isAssistanceAdvisorLoading = true;
-            this.selectedAssistance = ChipAssistanceMode.ADVISOR;
             this.assistanceAdvisorResponse = '';
             const response =
-              await this.participantService.requestChipAssistance(
+              await this.participantService.selectChipAssistanceMode(
                 this.stage?.id ?? '',
                 'advisor',
-                this.selectedBuyChip,
-                this.buyChipAmount,
-                this.selectedSellChip,
-                this.sellChipAmount,
               );
             this.isAssistanceAdvisorLoading = false;
             this.assistanceAdvisorResponse = JSON.stringify(response.data);
@@ -914,6 +923,7 @@ export class ChipView extends MobxLitElement {
         this.buyChipAmount,
         this.selectedSellChip,
         this.sellChipAmount,
+        true,
       );
       this.isAssistanceCoachLoading = false;
       this.assistanceCoachResponse = JSON.stringify(response.data);
@@ -932,6 +942,7 @@ export class ChipView extends MobxLitElement {
         this.buyChipAmount,
         this.selectedSellChip,
         this.sellChipAmount,
+        false,
       );
       this.isAssistanceCoachLoading = false;
       this.assistanceCoachResponse = JSON.stringify(response.data);

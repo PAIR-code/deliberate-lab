@@ -445,6 +445,21 @@ export const requestChipAssistanceCallable = async (
   return data;
 };
 
+/** Generic endpoint for selecting chip assistance mode. */
+export const selectChipAssistanceModeCallable = async (
+  functions: Functions,
+  config: RequestChipAssistanceData,
+) => {
+  const {data} = await httpsCallable<
+    RequestChipAssistanceData,
+    SimpleResponse<string>
+  >(
+    functions,
+    'selectChipAssistanceMode',
+  )(config);
+  return data;
+};
+
 /** Generic endpoint for setting salesperson controller. */
 export const setSalespersonControllerCallable = async (
   functions: Functions,

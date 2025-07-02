@@ -155,8 +155,12 @@ export interface BaseChipAssistanceMove {
   turn: string; // public ID of participant whose turn it is
   type: ChipAssistanceType;
   selectedMode: ChipAssistanceMode;
-  selectedTime: UnifiedTimestamp; // timestamp of when mode was selected
-  endTime: UnifiedTimestamp; // timestamp of when assistance move was completed
+  // timestamp of when mode was selected
+  selectedTime: UnifiedTimestamp;
+  // timestamp of when model call finished
+  proposedTime: UnifiedTimestamp | null;
+  // timestamp of when assistance move was completed
+  endTime: UnifiedTimestamp | null;
   message: string | null; // explanation from model call to show to user
   reasoning: string | null; // reasoning from model call
   modelResponse: object; // parsed model response from call
