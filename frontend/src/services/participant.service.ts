@@ -41,6 +41,7 @@ import {
   acceptParticipantTransferCallable,
   createChatMessageCallable,
   requestChipAssistanceCallable,
+  selectChipAssistanceModeCallable,
   sendAlertMessageCallable,
   sendChipOfferCallable,
   sendChipResponseCallable,
@@ -794,6 +795,26 @@ export class ParticipantService extends Service {
           buyMap,
           sellMap,
           offerResponse,
+        },
+      );
+    }
+    return output;
+  }
+
+  async selectChipAssistanceMode(
+    stageId: string,
+    assistanceMode: string, // TODO: make enum
+  ) {
+    let output = {data: ''};
+    if (this.experimentId && this.profile) {
+      output = await selectChipAssistanceModeCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          stageId,
+          participantId: this.profile.privateId,
+          assistanceMode,
         },
       );
     }
