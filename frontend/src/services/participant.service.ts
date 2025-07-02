@@ -899,6 +899,7 @@ export class ParticipantService extends Service {
   }
 
   async requestChipAssistance(
+    stageId: string,
     assistanceMode: string, // TODO: make enum
     buyChipType: string,
     buyChipAmount: number,
@@ -919,7 +920,7 @@ export class ParticipantService extends Service {
         {
           experimentId: this.experimentId,
           cohortId: this.profile.currentCohortId,
-          stageId: this.profile.currentStageId,
+          stageId,
           participantId: this.profile.privateId,
           assistanceMode,
           buyMap,
