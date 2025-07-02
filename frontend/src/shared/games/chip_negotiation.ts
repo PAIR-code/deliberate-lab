@@ -97,7 +97,8 @@ export function getChipNegotiationStageConfigs(numChips = 3): StageConfig[] {
   stages.push(createChipInfoPayout(numChips));
 
   // Pre-game survey stage
-  stages.push(CHIP_PRE_SURVEY_STAGE);
+  stages.push(CHIP_PRE_SURVEY_STAGE1);
+  stages.push(CHIP_PRE_SURVEY_STAGE2);
 
   // Transfer
   stages.push(TRANSFER_STAGE);
@@ -137,7 +138,7 @@ const CHIP_TOS_STAGE = createTOSStage({
   game: StageGame.CHP,
   name: 'Terms of service',
   tosLines: [
-    'Thank you for your interest in this research. If you choose to participate, you will be asked to play negotiation games with other participants. In total, this will take around 25 minutes.',
+    'Thank you for your interest in this research. If you choose to participate, you will be asked to play negotiation games with other participants. In total, this will take up to 50 minutes, factoring in time you may spend waiting for others to join your live sessions.',
     '\n**Compensation**',
     'You will be paid a base amount for playing the games and completing the survey. You may receive an additional bonus on your performance in the games.',
     '\n**IRB**',
@@ -890,9 +891,9 @@ const DELEGATE_MODE_INSTRUCTION = createInfoStage({
 // ****************************************************************************
 // Pre-negotiation survey stage
 // ****************************************************************************
-const CHIP_PRE_SURVEY_STAGE = createSurveyStage({
-  id: 'pre_survey',
-  name: 'Pre-game survey',
+const CHIP_PRE_SURVEY_STAGE1 = createSurveyStage({
+  id: 'pre_survey_1',
+  name: 'Pre-game survey 1',
   descriptions: createStageTextConfig({
     primaryText:
       "Before you play the bargaining games, please complete this short survey so we can better understand your background and perspectives. \
@@ -914,6 +915,50 @@ const CHIP_PRE_SURVEY_STAGE = createSurveyStage({
         'Please describe any background, skills, or experiences that might help you in this game (e.g., negotiation, bargaining, math, logic, strategic thinking—even informal or everyday situations).',
     }),
 
+    // Perspectives on AI tooling
+    createScaleSurveyQuestion({
+      questionTitle:
+        "I believe that having access to the AI tools will improve my performance in this game.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "I believe that the AI tools will provide information I can trust.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "I believe that the AI tools will help me see options or strategies I might otherwise miss.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+    createScaleSurveyQuestion({
+      questionTitle:
+        "I believe that the AI tools will help lighten the mental workload of playing this game.",
+      lowerText: 'Strongly disagree',
+      lowerValue: 1,
+      upperText: 'Strongly agree',
+      upperValue: 5,
+    }),
+  ],
+});
+const CHIP_PRE_SURVEY_STAGE2 = createSurveyStage({
+  id: 'pre_survey_2',
+  name: 'Pre-game survey 2',
+  descriptions: createStageTextConfig({
+    primaryText:
+      "This section asks about your expectations about the different AI tools available to you in the game. As a reminder, you’ll have access to three types of AI tools (a coach, delegate, and advisor) over three games, all powered by Google Gemini 2.5 (a large language model) and built on the same underlying capabilities.\nPlease indicate how much you agree or disagree with the following statements based on your expectations.",
+  }),
+  game: StageGame.CHP,
+  questions: [
     // Perspectives on AI tooling
     createScaleSurveyQuestion({
       questionTitle:
@@ -1020,7 +1065,7 @@ const CHIP_COACH_FEEDBACK_STAGE = createSurveyStage({
   name: 'Coach Feedback Survey',
   descriptions: createStageTextConfig({
     primaryText:
-      "Please fill out this brief survey about the previous game, where you had access to an LLM-powered coach. Completion of this survey is required to receive bonus payouts.",
+      "Please fill out this brief survey about the previous game, where you had access to an LLM-powered coach. Completion of this survey is required to receive bonus payouts. Indicate how much you agree or disagree with the following statements, where 1 = Strongly disagree, 2 = Disagree, 3 = Neutral, 4 = Agree, 5 = Strongly agree.",
   }),
   game: StageGame.CHP,
   questions: [
@@ -1088,7 +1133,7 @@ const CHIP_ADVISOR_FEEDBACK_STAGE = createSurveyStage({
   name: 'Advisor Feedback Survey',
   descriptions: createStageTextConfig({
     primaryText:
-      "Please fill out this brief survey about the previous game, where you had access to an LLM-powered advisor. Completion of this survey is required to receive bonus payouts.",
+      "Please fill out this brief survey about the previous game, where you had access to an LLM-powered advisor. Completion of this survey is required to receive bonus payouts. Indicate how much you agree or disagree with the following statements, where 1 = Strongly disagree, 2 = Disagree, 3 = Neutral, 4 = Agree, 5 = Strongly agree.",
   }),
   game: StageGame.CHP,
   questions: [
@@ -1142,7 +1187,7 @@ const CHIP_ADVISOR_FEEDBACK_STAGE = createSurveyStage({
     }),
     createTextSurveyQuestion({
       questionTitle:
-        "Please share any additional context on your answers. How did you decide to use (or not use) the coach? What did you think of the quality or usefulness of its suggestions?",
+        "Please share any additional context on your answers. How did you decide to use (or not use) the advisor? What did you think of the quality or usefulness of its suggestions?",
     }),
   ],
 });
@@ -1155,7 +1200,7 @@ const CHIP_DELEGATE_FEEDBACK_STAGE = createSurveyStage({
   name: 'Delegation Feedback Survey',
   descriptions: createStageTextConfig({
     primaryText:
-      "Please fill out this brief survey about the previous game, where you had access to an LLM-powered delegate. Completion of this survey is required to receive bonus payouts.",
+      "Please fill out this brief survey about the previous game, where you had access to an LLM-powered delegate. Completion of this survey is required to receive bonus payouts. Indicate how much you agree or disagree with the following statements, where 1 = Strongly disagree, 2 = Disagree, 3 = Neutral, 4 = Agree, 5 = Strongly agree.",
   }),
   game: StageGame.CHP,
   questions: [
@@ -1209,7 +1254,7 @@ const CHIP_DELEGATE_FEEDBACK_STAGE = createSurveyStage({
     }),
     createTextSurveyQuestion({
       questionTitle:
-        "Please share any additional context on your answers. How did you decide to use (or not use) the coach? What did you think of the quality or usefulness of its suggestions?",
+        "Please share any additional context on your answers. How did you decide to use (or not use) the delegate? What did you think of the quality or usefulness of its suggestions?",
     }),
   ],
 });
