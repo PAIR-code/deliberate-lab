@@ -478,17 +478,16 @@ export async function getChipOfferAssistance(
     .join(', ');
   const offerIdea = `${sellChips} for ${buyChips}`;
 
-
   const participantChipMap = publicData.participantChipMap;
   const participantIds = Object.keys(participantChipMap);
-  
+
   const participantDescriptions = participantIds.map((participantId) => {
-      const chipMap = participantChipMap[participantId];
-      const chipTypes = Object.keys(chipMap);
-      const chipQuantities = chipTypes
-        .map((chip) => `${chipMap[chip]} ${chip} chips`)
-        .join(', ');
-      return `${participantId}: ${chipQuantities}`
+    const chipMap = participantChipMap[participantId];
+    const chipTypes = Object.keys(chipMap);
+    const chipQuantities = chipTypes
+      .map((chip) => `${chipMap[chip]} ${chip} chips`)
+      .join(', ');
+    return `${participantId}: ${chipQuantities}`;
   });
   const chipsetDescription = participantDescriptions.join(' | ');
 
@@ -541,11 +540,14 @@ export async function getChipOfferAssistance(
           },
         );
       }
-      return `Suggested: Give ${responseObj['suggestedSellQuantity']} ${responseObj['suggestedSellType']} to get ${responseObj['suggestedBuyQuantity']} ${responseObj['suggestedBuyType']} (${responseObj['reasoning']})`;
-    } catch (error) {
+      console.log(
+        `Suggested: Give ${responseObj['suggestedSellQuantity']} ${responseObj['suggestedSellType']} to get ${responseObj['suggestedBuyQuantity']} ${responseObj['suggestedBuyType']} (${responseObj['reasoning']})`,
+      );
+      return {success: true, modelResponse: responseObj};
+    } catch (errorMessage) {
       // Response is already logged in console during Gemini API call
-      console.log('Could not parse JSON:', error);
-      return '';
+      console.log('Could not parse JSON:', errorMessage);
+      return {success: false, errorMessage};
     }
   };
 
@@ -659,14 +661,14 @@ export async function getChipResponseAssistance(
 
   const participantChipMap = publicData.participantChipMap;
   const participantIds = Object.keys(participantChipMap);
-  
+
   const participantDescriptions = participantIds.map((participantId) => {
-      const chipMap = participantChipMap[participantId];
-      const chipTypes = Object.keys(chipMap);
-      const chipQuantities = chipTypes
-        .map((chip) => `${chipMap[chip]} ${chip} chips`)
-        .join(', ');
-      return `${participantId}: ${chipQuantities}`
+    const chipMap = participantChipMap[participantId];
+    const chipTypes = Object.keys(chipMap);
+    const chipQuantities = chipTypes
+      .map((chip) => `${chipMap[chip]} ${chip} chips`)
+      .join(', ');
+    return `${participantId}: ${chipQuantities}`;
   });
   const chipsetDescription = participantDescriptions.join(' | ');
 
@@ -706,11 +708,14 @@ export async function getChipResponseAssistance(
           responseObject['response'],
         );
       }
-      return `${responseObject['response']} ${responseObject['feedback']}`;
-    } catch (error) {
+      console.log(
+        `${responseObject['response']} ${responseObject['feedback']}`,
+      );
+      return {success: true, modelResponse: responseObject};
+    } catch (errorMessage) {
       // Response is already logged in console during Gemini API call
-      console.log('Could not parse JSON:', error);
-      return '';
+      console.log('Could not parse JSON:', errorMessage);
+      return {success: false, errorMessage};
     }
   };
 

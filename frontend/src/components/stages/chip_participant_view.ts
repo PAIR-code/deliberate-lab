@@ -798,7 +798,7 @@ export class ChipView extends MobxLitElement {
                 this.sellChipAmount,
               );
             this.isAssistanceDelegateLoading = false;
-            this.assistanceDelegateResponse = response.data;
+            this.assistanceDelegateResponse = JSON.stringify(response.data);
             this.resetChipValues(); // includes resetting assistance mode
           }}
         >
@@ -830,7 +830,7 @@ export class ChipView extends MobxLitElement {
                 this.sellChipAmount,
               );
             this.isAssistanceAdvisorLoading = false;
-            this.assistanceAdvisorResponse = response.data;
+            this.assistanceAdvisorResponse = JSON.stringify(response.data);
           }}
         >
           Get advice on what to do
@@ -878,7 +878,7 @@ export class ChipView extends MobxLitElement {
         this.sellChipAmount,
       );
       this.isAssistanceCoachLoading = false;
-      this.assistanceCoachResponse = response.data;
+      this.assistanceCoachResponse = JSON.stringify(response.data);
     };
     return html`
       <div>Submit your proposal below and I'll give you feedback:</div>
@@ -912,7 +912,7 @@ export class ChipView extends MobxLitElement {
         this.sellChipAmount,
       );
       this.isAssistanceCoachLoading = false;
-      this.assistanceCoachResponse = response.data;
+      this.assistanceCoachResponse = JSON.stringify(response.data);
       this.isAcceptOfferLoading = false; // temporary
     };
 
@@ -929,7 +929,7 @@ export class ChipView extends MobxLitElement {
         this.sellChipAmount,
       );
       this.isAssistanceCoachLoading = false;
-      this.assistanceCoachResponse = response.data;
+      this.assistanceCoachResponse = JSON.stringify(response.data);
       this.isRejectOfferLoading = false; // temporary
     };
     return html`
