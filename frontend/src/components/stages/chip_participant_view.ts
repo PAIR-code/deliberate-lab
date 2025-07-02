@@ -20,6 +20,7 @@ import {getParticipantInlineDisplay} from '../../shared/participant.utils';
 import {
   ChipAssistanceConfig,
   ChipAssistanceMode,
+  ChipAssistanceType,
   ChipItem,
   ChipLogEntry,
   ChipLogType,
@@ -69,11 +70,7 @@ export class ChipView extends MobxLitElement {
   @state() buyChipAmount: number = 0;
   @state() sellChipAmount: number = 0;
 
-  // TODO: Remove temporary variables to track chip assistance mode, response
-  @state() assistanceAdvisorResponse = '';
-  @state() assistanceCoachProposal = ''; // proposed by user
-  @state() assistanceCoachResponse = '';
-  @state() assistanceDelegateResponse = '';
+  // Loading states for assistance buttons
   @state() isAssistanceNoneLoading = false;
   @state() isAssistanceAdvisorLoading = false;
   @state() isAssistanceCoachLoading = false;
@@ -84,10 +81,6 @@ export class ChipView extends MobxLitElement {
     this.selectedSellChip = '';
     this.buyChipAmount = 0;
     this.sellChipAmount = 0;
-    this.assistanceAdvisorResponse = '';
-    this.assistanceCoachProposal = '';
-    this.assistanceCoachResponse = '';
-    this.assistanceDelegateResponse = '';
   }
 
   override render() {
@@ -807,22 +800,24 @@ export class ChipView extends MobxLitElement {
           ?loading=${this.isAssistanceDelegateLoading}
           @click=${async () => {
             this.isAssistanceDelegateLoading = true;
-            this.assistanceDelegateResponse = '';
             const response =
               await this.participantService.selectChipAssistanceMode(
                 this.stage?.id ?? '',
                 'delegate',
               );
             this.isAssistanceDelegateLoading = false;
-            this.assistanceDelegateResponse = JSON.stringify(response.data);
             this.resetChipValues(); // includes resetting assistance mode
           }}
         >
           Delegate decision to agent
         </pr-button>
       </div>
-      ${this.assistanceDelegateResponse}
+      ${this.getAssistanceMessage()}
     `;
+  }
+
+  private getAssistanceMessage() {
+    return this.answer?.currentAssistance?.message ?? '';
   }
 
   private renderAdvisorButton(disabled = false) {
@@ -834,14 +829,12 @@ export class ChipView extends MobxLitElement {
           ?loading=${this.isAssistanceAdvisorLoading}
           @click=${async () => {
             this.isAssistanceAdvisorLoading = true;
-            this.assistanceAdvisorResponse = '';
             const response =
               await this.participantService.selectChipAssistanceMode(
                 this.stage?.id ?? '',
                 'advisor',
               );
             this.isAssistanceAdvisorLoading = false;
-            this.assistanceAdvisorResponse = JSON.stringify(response.data);
           }}
         >
           Get advice on what to do
@@ -852,8 +845,8 @@ export class ChipView extends MobxLitElement {
 
   private renderAdvisorOffer(disabled = false) {
     return html`
-      ${this.renderAdvisorButton(disabled)} ${this.assistanceAdvisorResponse}
-      ${this.assistanceAdvisorResponse
+      ${this.renderAdvisorButton(disabled)} ${this.getAssistanceMessage()}
+      ${this.answer?.currentAssistance?.proposedTime
         ? this.renderManualOffer(this.sendOffer)
         : nothing}
     `;
@@ -861,26 +854,32 @@ export class ChipView extends MobxLitElement {
 
   private renderAdvisorResponse(disabled = false) {
     return html`
-      ${this.renderAdvisorButton(disabled)} ${this.assistanceAdvisorResponse}
-      ${this.assistanceAdvisorResponse
+      ${this.renderAdvisorButton(disabled)} ${this.getAssistanceMessage()}
+      ${this.answer?.currentAssistance?.proposedTime
         ? this.renderManualResponse(this.acceptOffer, this.rejectOffer)
         : nothing}
     `;
   }
 
   private renderCoachOffer() {
-    if (this.assistanceCoachResponse) {
+    if (this.answer?.currentAssistance?.proposedTime) {
+      const proposedOffer =
+        this.answer?.currentAssistance?.type === ChipAssistanceType.OFFER
+          ? this.answer.currentAssistance.proposedOffer
+          : null;
+      // TODO: Convert object into description
+      const proposal = proposedOffer
+        ? `You proposed giving ${JSON.stringify(proposedOffer.sell)} to get ${JSON.stringify(proposedOffer.buy)}`
+        : '';
       return html`
-        <div>${this.assistanceCoachProposal}</div>
-        <div>${this.assistanceCoachResponse}</div>
+        <div>${proposal}</div>
+        <div>${this.getAssistanceMessage()}</div>
         ${this.renderManualOffer(this.sendOffer)}
       `;
     }
 
     const sendCoachProposal = async () => {
       this.isAssistanceCoachLoading = true;
-      this.assistanceCoachResponse = '';
-      this.assistanceCoachProposal = `You proposed giving ${this.sellChipAmount} ${this.selectedSellChip} chips to get ${this.buyChipAmount} ${this.selectedBuyChip} chips`;
       const response = await this.participantService.requestChipAssistance(
         this.stage?.id ?? '',
         'coach',
@@ -890,7 +889,6 @@ export class ChipView extends MobxLitElement {
         this.sellChipAmount,
       );
       this.isAssistanceCoachLoading = false;
-      this.assistanceCoachResponse = JSON.stringify(response.data);
     };
     return html`
       <div>Submit your proposal below and I'll give you feedback:</div>
@@ -903,10 +901,21 @@ export class ChipView extends MobxLitElement {
   }
 
   private renderCoachResponse() {
-    if (this.assistanceCoachResponse) {
+    if (this.answer?.currentAssistance?.proposedTime) {
+      const proposedResponse =
+        this.answer?.currentAssistance?.type === ChipAssistanceType.RESPONSE
+          ? this.answer.currentAssistance.proposedResponse
+          : null;
+      const proposal =
+        proposedResponse !== null
+          ? proposedResponse
+            ? `You proposed accepting the offer`
+            : `You proposed rejecting the offer`
+          : '';
       return html`
-        <div>${this.assistanceCoachProposal}</div>
-        <div>${this.assistanceCoachResponse}</div>
+        <div>${proposal}</div>
+        <div>${this.getAssistanceMessage()}</div>
+        <div>Now, submit your final response to the offer:</div>
         ${this.renderManualResponse(this.acceptOffer, this.rejectOffer)}
       `;
     }
@@ -914,8 +923,6 @@ export class ChipView extends MobxLitElement {
     const acceptProposal = async () => {
       this.isAcceptOfferLoading = true; // temporary
       this.isAssistanceCoachLoading = true;
-      this.assistanceCoachResponse = '';
-      this.assistanceCoachProposal = `You proposed accepting the offer`;
       const response = await this.participantService.requestChipAssistance(
         this.stage?.id ?? '',
         'coach',
@@ -926,15 +933,12 @@ export class ChipView extends MobxLitElement {
         true,
       );
       this.isAssistanceCoachLoading = false;
-      this.assistanceCoachResponse = JSON.stringify(response.data);
       this.isAcceptOfferLoading = false; // temporary
     };
 
     const rejectProposal = async () => {
       this.isRejectOfferLoading = true; // temporary
       this.isAssistanceCoachLoading = true;
-      this.assistanceCoachResponse = '';
-      this.assistanceCoachProposal = `You proposed rejecting the offer`;
       const response = await this.participantService.requestChipAssistance(
         this.stage?.id ?? '',
         'coach',
@@ -945,7 +949,6 @@ export class ChipView extends MobxLitElement {
         false,
       );
       this.isAssistanceCoachLoading = false;
-      this.assistanceCoachResponse = JSON.stringify(response.data);
       this.isRejectOfferLoading = false; // temporary
     };
     return html`
