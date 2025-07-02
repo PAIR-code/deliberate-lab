@@ -59,6 +59,10 @@ export interface ChipStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.CHIP;
   chipMap: Record<string, number>; // chip ID to quantity left
   chipValueMap: Record<string, number>; // chip ID to value per chip
+  // Current assistance shown to user (or null if none)
+  currentAssistance: ChipAssistanceMove | null;
+  // Current assistance is moved to assistance history when complete
+  assistanceHistory: ChipAssistanceMove[];
 }
 
 /** Chip offer. */
@@ -139,6 +143,40 @@ export enum ChipAssistanceMode {
   ADVISOR = 'advisor',
   COACH = 'coach',
   DELEGATE = 'delegate',
+}
+
+/** Chip assistance move. */
+export type ChipAssistanceMove =
+  | ChipOfferAssistanceMove
+  | ChipResponseAssistanceMove;
+
+export interface BaseChipAssistanceMove {
+  round: number;
+  turn: string; // public ID of participant whose turn it is
+  type: ChipAssistanceType;
+  selectedMode: ChipAssistanceMode;
+  selectedTime: UnifiedTimestamp; // timestamp of when mode was selected
+  endTime: UnifiedTimestamp; // timestamp of when assistance move was completed
+  message: string | null; // explanation from model call to show to user
+  reasoning: string | null; // reasoning from model call
+  modelResponse: object; // parsed model response from call
+}
+
+export interface ChipOfferAssistanceMove extends BaseChipAssistanceMove {
+  type: ChipAssistanceType.OFFER;
+  proposedOffer: ChipOffer | null; // null if N/A (e.g., delegate/advisor mode)
+  finalOffer: ChipOffer;
+}
+
+export interface ChipResponseAssistanceMove extends BaseChipAssistanceMove {
+  type: ChipAssistanceType.RESPONSE;
+  proposedResponse: boolean | null; // null if N/A (e.g., delegate/advisor mode)
+  finalResponse: boolean | null;
+}
+
+export enum ChipAssistanceType {
+  OFFER = 'offer',
+  RESPONSE = 'response',
 }
 
 // TODO: Consider removing subcollections for chip logs and transactions,
@@ -253,6 +291,8 @@ export function createChipStageParticipantAnswer(
     kind: StageKind.CHIP,
     chipMap,
     chipValueMap,
+    currentAssistance: null,
+    assistanceHistory: [],
   };
 }
 
