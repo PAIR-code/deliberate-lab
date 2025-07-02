@@ -7,13 +7,16 @@ import {
   CohortParticipantConfig,
   Experiment,
   ExperimentTemplate,
+  MediatorPromptConfig,
   MetadataConfig,
+  ParticipantPromptConfig,
   PermissionsConfig,
   ProlificConfig,
   StageConfig,
   StageKind,
   createAgentMediatorPersonaConfig,
   createAgentParticipantPersonaConfig,
+  createChatPromptConfig,
   createExperimentConfig,
   createMetadataConfig,
   createPermissionsConfig,
@@ -312,12 +315,29 @@ export class ExperimentEditor extends Service {
     ];
   }
 
+  getAgent(id: string) {
+    const mediator = this.getAgentMediator(id);
+    return mediator ? mediator : this.getAgentParticipant(id);
+  }
+
   getAgentMediator(id: string) {
     return this.agentMediators.find((agent) => agent.persona.id === id);
   }
 
   getAgentParticipant(id: string) {
     return this.agentParticipants.find((agent) => agent.persona.id === id);
+  }
+
+  addAgentMediatorPrompt(agentId: string, stageId: string) {
+    const agent = this.getAgentMediator(agentId);
+    if (!agent) return;
+    agent.promptMap[stageId] = createChatPromptConfig(stageId);
+  }
+
+  addAgentParticipantPrompt(agentId: string, stageId: string) {
+    const agent = this.getAgentParticipant(agentId);
+    if (!agent) return;
+    agent.promptMap[stageId] = createChatPromptConfig(stageId);
   }
 
   updateAgentMediatorPersona(
@@ -338,6 +358,33 @@ export class ExperimentEditor extends Service {
       },
       ...this.agentMediators.slice(agentIndex + 1),
     ];
+  }
+
+  updateAgentMediatorPrompt(id: string, updatedPrompt: MediatorPromptConfig) {
+    const agent = this.getAgentMediator(id);
+    if (!agent) return;
+    agent.promptMap[updatedPrompt.id] = updatedPrompt;
+  }
+
+  deleteAgentMediatorPrompt(agentId: string, stageId: string) {
+    const agent = this.getAgentMediator(agentId);
+    if (!agent) return;
+    delete agent.promptMap[stageId];
+  }
+
+  updateAgentParticipantPrompt(
+    id: string,
+    updatedPrompt: ParticipantPromptConfig,
+  ) {
+    const agent = this.getAgentParticipant(id);
+    if (!agent) return;
+    agent.promptMap[updatedPrompt.id] = updatedPrompt;
+  }
+
+  deleteAgentParticipantPrompt(agentId: string, stageId: string) {
+    const agent = this.getAgentParticipant(agentId);
+    if (!agent) return;
+    delete agent.promptMap[stageId];
   }
 
   updateAgentParticipantPersona(

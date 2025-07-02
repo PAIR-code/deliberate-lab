@@ -15,6 +15,7 @@ import '../stages/survey_editor';
 import '../stages/survey_per_participant_editor';
 import '../stages/tos_editor';
 import '../stages/transfer_editor';
+import './agent_chat_prompt_editor';
 import './agent_persona_editor';
 import './experiment_builder_nav';
 import './experiment_settings_editor';
@@ -316,7 +317,18 @@ export class ExperimentBuilder extends MobxLitElement {
       const agent = this.experimentEditor.currentAgent;
       return html`
         <div class="experiment-builder">
-          <agent-persona-editor .agent=${agent?.persona}></agent-persona-editor>
+          <agent-persona-editor .agent=${agent?.persona}>
+            ${this.experimentEditor.stages.map(
+              (stage, index) => html`
+                <agent-chat-prompt-editor
+                  .agent=${agent?.persona}
+                  .stageId=${stage.id}
+                  .stageNamePrefix=${`${index + 1}. `}
+                >
+                </agent-chat-prompt-editor>
+              `,
+            )}
+          </agent-persona-editor>
         </div>
       `;
     } else if (this.panelView === PanelView.STAGES) {

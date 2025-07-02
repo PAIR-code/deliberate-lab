@@ -54,7 +54,9 @@ export class AgentPersonaEditorComponent extends MobxLitElement {
         ${this.renderAgentApiType(agentConfig)}
         ${this.renderAgentModel(agentConfig)}
       </div>
-      <div class="divider main"></div>
+      <div class="divider main">
+        <slot></slot>
+      </div>
       <div class="agent-wrapper">
         ${this.renderDeleteAgentButton(agentConfig)}
       </div>
