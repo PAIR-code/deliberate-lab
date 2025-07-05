@@ -50,6 +50,7 @@ export class EditorComponent extends MobxLitElement {
       return this.prompt.map((item) =>
         item.type === PromptItemType.TEXT
           ? html`<pr-textarea
+              placeholder="Add prompt context here"
               variant="outlined"
               .value=${item.text}
               @input=${onInput}

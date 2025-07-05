@@ -89,7 +89,7 @@ export function createChatPromptConfig(
   return {
     id,
     type: StageKind.CHAT,
-    prompt: config.prompt ?? [],
+    prompt: config.prompt ?? createDefaultPromptFromText('', id),
     numRetries: config.numRetries ?? 0,
     generationConfig: config.generationConfig ?? createModelGenerationConfig(),
     structuredOutputConfig:
