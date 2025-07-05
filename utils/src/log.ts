@@ -25,9 +25,9 @@ export interface ModelLogEntry extends BaseLogEntry {
   prompt: string;
   response: ModelResponse;
   // Time API call was made
-  queryTimestamp: UnifiedTimestamp;
+  queryTimestamp: UnifiedTimestamp | null;
   // Time API response was received
-  responseTimestamp: UnifiedTimestamp;
+  responseTimestamp: UnifiedTimestamp | null;
 }
 
 export function createModelLogEntry(
@@ -44,7 +44,7 @@ export function createModelLogEntry(
     prompt: config.prompt ?? '',
     response: {status: ModelResponseStatus.UNKNOWN_ERROR},
     createdTimestamp: config.createdTimestamp ?? Timestamp.now(),
-    queryTimestamp: config.queryTimestamp ?? Timestamp.now(),
-    responseTimestamp: config.responseTimestamp ?? Timestamp.now(),
+    queryTimestamp: config.queryTimestamp ?? null,
+    responseTimestamp: config.responseTimestamp ?? null,
   };
 }

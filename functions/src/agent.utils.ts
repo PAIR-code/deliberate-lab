@@ -21,6 +21,58 @@ import {ollamaChat} from './api/ollama.api';
 
 import {app} from './app';
 
+/** Calls API and writes ModelLogEntry to experiment. */
+export async function processModelResponse(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+  participantId: string,
+  description: string,
+  apiKeyConfig: APIKeyConfig,
+  prompt: string,
+  modelSettings: AgentModelSettings,
+  generationConfig: ModelGenerationConfig,
+  structuredOutputConfig?: StructuredOutputConfig,
+): Promise<ModelResponse> {
+  const log = createModelLogEntry({
+    experimentId,
+    cohortId,
+    stageId,
+    participantId,
+    description,
+    prompt,
+  });
+
+  const queryTimestamp = Timestamp.now();
+  const response = await getAgentResponse(
+    apiKeyConfig,
+    prompt,
+    modelSettings,
+    generationConfig,
+    structuredOutputConfig,
+  );
+  const responseTimestamp = Timestamp.now();
+
+  log.response = response;
+  log.queryTimestamp = queryTimestamp;
+  log.responseTimestamp = responseTimestamp;
+
+  // Write log
+  await app.firestore().runTransaction(async (transaction) => {
+    const logDoc = app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('logs')
+      .doc(log.id);
+
+    transaction.set(logDoc, log);
+  });
+
+  return response;
+}
+
+// TODO: Rename to getAPIResponse?
 export async function getAgentResponse(
   apiKeyConfig: APIKeyConfig,
   prompt: string,
