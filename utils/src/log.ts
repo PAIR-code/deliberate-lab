@@ -1,28 +1,50 @@
+import {ModelResponse, ModelResponseStatus} from './model_response';
 import {UnifiedTimestamp, generateId} from './shared';
 import {Timestamp} from 'firebase/firestore';
 
 /** Define experiment log. */
+export type LogEntry = ModelLogEntry;
 
-export interface LogEntry {
-  id: string;
+export interface BaseLogEntry {
+  id: string; // log ID
+  type: LogEntryType;
   experimentId: string;
   cohortId: string;
   stageId: string;
   participantId: string; // Public ID
-  summary: string; // Summary of log
-  trace: string; // Longer log data, e.g., prompt or LLM response
-  timestamp: UnifiedTimestamp;
+  description: string;
+  createdTimestamp: UnifiedTimestamp; // Timestamp created
 }
 
-export function createLogEntry(config: Partial<LogEntry> = {}): LogEntry {
+export enum LogEntryType {
+  MODEL = 'model',
+}
+
+export interface ModelLogEntry extends BaseLogEntry {
+  type: LogEntryType.MODEL;
+  prompt: string;
+  response: ModelResponse;
+  // Time API call was made
+  queryTimestamp: UnifiedTimestamp;
+  // Time API response was received
+  responseTimestamp: UnifiedTimestamp;
+}
+
+export function createModelLogEntry(
+  config: Partial<ModelLogEntry> = {},
+): ModelLogEntry {
   return {
     id: config.id ?? generateId(),
+    type: LogEntryType.MODEL,
     experimentId: config.experimentId ?? '',
     cohortId: config.cohortId ?? '',
     stageId: config.stageId ?? '',
     participantId: config.participantId ?? '',
-    summary: config.summary ?? '',
-    trace: config.trace ?? '',
-    timestamp: config.timestamp ?? Timestamp.now(),
+    description: config.description ?? '',
+    prompt: config.prompt ?? '',
+    response: {status: ModelResponseStatus.UNKNOWN_ERROR},
+    createdTimestamp: config.createdTimestamp ?? Timestamp.now(),
+    queryTimestamp: config.queryTimestamp ?? Timestamp.now(),
+    responseTimestamp: config.responseTimestamp ?? Timestamp.now(),
   };
 }
