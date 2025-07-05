@@ -13,6 +13,7 @@ import {
   StageKind,
   StructuredOutputConfig,
   UserProfile,
+  createModelLogEntry,
   makeStructuredOutputPrompt,
 } from '@deliberation-lab/utils';
 
@@ -21,6 +22,7 @@ import {getOpenAIAPIChatCompletionResponse} from './api/openai.api';
 import {ollamaChat} from './api/ollama.api';
 
 import {app} from './app';
+import {writeModelLogEntry} from './log.utils';
 
 /** Calls API and writes ModelLogEntry to experiment. */
 export async function processModelResponse(
@@ -46,33 +48,30 @@ export async function processModelResponse(
     privateId,
     description,
     prompt,
+    createdTimestamp: Timestamp.now(),
   });
 
-  const queryTimestamp = Timestamp.now();
-  const response = await getAgentResponse(
-    apiKeyConfig,
-    prompt,
-    modelSettings,
-    generationConfig,
-    structuredOutputConfig,
-  );
-  const responseTimestamp = Timestamp.now();
+  let response = {status: ModelResponseStatus.NONE};
+  try {
+    const queryTimestamp = Timestamp.now();
+    response = (await getAgentResponse(
+      apiKeyConfig,
+      prompt,
+      modelSettings,
+      generationConfig,
+      structuredOutputConfig,
+    )) as ModelResponse;
+    const responseTimestamp = Timestamp.now();
 
-  log.response = response;
-  log.queryTimestamp = queryTimestamp;
-  log.responseTimestamp = responseTimestamp;
+    log.response = response;
+    log.queryTimestamp = queryTimestamp;
+    log.responseTimestamp = responseTimestamp;
+  } catch (error) {
+    console.log(error);
+  }
 
   // Write log
-  await app.firestore().runTransaction(async (transaction) => {
-    const logDoc = app
-      .firestore()
-      .collection('experiments')
-      .doc(experimentId)
-      .collection('logs')
-      .doc(log.id);
-
-    transaction.set(logDoc, log);
-  });
+  writeModelLogEntry(experimentId, log);
 
   return response;
 }

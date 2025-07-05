@@ -7,8 +7,10 @@ import {Timestamp} from 'firebase-admin/firestore';
 import {app} from './app';
 
 /** Write model log for cohort. */
-export async function writeModelLogEntry(config: Partial<ModelLogEntry> = {}) {
-  const log = createModelLogEntry(config);
+export async function writeModelLogEntry(
+  experimentId: string,
+  log: ModelLogEntry,
+) {
   const logDoc = await app
     .firestore()
     .collection('experiments')

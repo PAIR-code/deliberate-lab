@@ -47,7 +47,7 @@ export function createModelLogEntry(
     privateId: config.privateId ?? '',
     description: config.description ?? '',
     prompt: config.prompt ?? '',
-    response: {status: ModelResponseStatus.UNKNOWN_ERROR},
+    response: config.response ?? {status: ModelResponseStatus.NONE},
     createdTimestamp: config.createdTimestamp ?? Timestamp.now(),
     queryTimestamp: config.queryTimestamp ?? null,
     responseTimestamp: config.responseTimestamp ?? null,
