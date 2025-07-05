@@ -1,7 +1,6 @@
 import {Type, type Static} from '@sinclair/typebox';
 import {StageKind} from './stage';
 import {
-  StageGameSchema,
   StageProgressConfigSchema,
   StageTextConfigSchema,
 } from './stage.validation';
@@ -52,7 +51,6 @@ export const RevealStageConfigData = Type.Object(
   {
     id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.REVEAL),
-    game: StageGameSchema,
     name: Type.String({minLength: 1}),
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,

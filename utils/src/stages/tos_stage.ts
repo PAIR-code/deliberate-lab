@@ -1,7 +1,6 @@
 import {generateId} from '../shared';
 import {
   BaseStageConfig,
-  StageGame,
   StageKind,
   createStageTextConfig,
   createStageProgressConfig,
@@ -29,7 +28,6 @@ export function createTOSStage(
   return {
     id: config.id ?? generateId(),
     kind: StageKind.TOS,
-    game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Terms of Service',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig(),

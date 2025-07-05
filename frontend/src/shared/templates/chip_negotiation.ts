@@ -3,7 +3,6 @@ import {
   ChipItem,
   ProfileType,
   StageConfig,
-  StageGame,
   createCheckSurveyQuestion,
   createChipPayoutItem,
   createChipStage,
@@ -118,7 +117,6 @@ export function getChipNegotiationStageConfigs(numChips = 3): StageConfig[] {
 // ****************************************************************************
 const CHIP_TOS_STAGE = createTOSStage({
   id: 'tos',
-  game: StageGame.CHP,
   name: 'Terms of service',
   tosLines: [
     'Thank you for your interest in this research. If you choose to participate, you will be asked to play negotiation games with other participants. In total, this will take around 25 minutes.',
@@ -147,7 +145,6 @@ const CHIP_PROFILE_STAGE = createProfileStage({
     primaryText:
       "This identity is how other players will see you during today's experiment.",
   }),
-  game: StageGame.CHP,
   profileType: ProfileType.ANONYMOUS_ANIMAL,
   progress: createStageProgressConfig({
     showParticipantProgress: false,
@@ -161,7 +158,6 @@ const CHIP_ALTERNATE_PROFILE_STAGE = createProfileStage({
     primaryText:
       'This identity is how other players will see you during the second game.',
   }),
-  game: StageGame.CHP,
   profileType: ProfileType.ANONYMOUS_ANIMAL,
   progress: createStageProgressConfig({
     showParticipantProgress: false,
@@ -198,7 +194,6 @@ function createChipInfoStage1(numChips: number) {
 
   return createInfoStage({
     id: 'info_overview1',
-    game: StageGame.CHP,
     name: 'Instructions: overview',
     infoLines,
     progress: createStageProgressConfig({
@@ -283,7 +278,6 @@ function createChipInfoStage2(numChips: number) {
 
   return createInfoStage({
     id: 'info_overview2',
-    game: StageGame.CHP,
     name: 'Instructions: chip valuations 1',
     infoLines,
     progress: createStageProgressConfig({
@@ -294,7 +288,6 @@ function createChipInfoStage2(numChips: number) {
 
 const CHIP_INFO_STAGE_OVERVIEW3 = createInfoStage({
   id: 'info_overview3',
-  game: StageGame.CHP,
   name: 'Instructions: chip valuations 2',
   infoLines: [
     'The following table is shown to you during the game. It provides the number of chips everyone has as well as a reminder of your own valuations.',
@@ -310,7 +303,6 @@ const CHIP_INFO_STAGE_OVERVIEW3 = createInfoStage({
 // ****************************************************************************
 export const CHIP_COMPREHENSION_CHECK = createComprehensionStage({
   id: 'comprehension_check1',
-  game: StageGame.CHP,
   name: 'Comprehension check',
   descriptions: createStageTextConfig({
     primaryText:
@@ -373,7 +365,6 @@ export const CHIP_COMPREHENSION_CHECK = createComprehensionStage({
 
 export const CHIP_COMPREHENSION_CHECK2 = createComprehensionStage({
   id: 'comprehension_check2',
-  game: StageGame.CHP,
   name: 'Comprehension check 2',
   progress: createStageProgressConfig({
     showParticipantProgress: false,
@@ -475,7 +466,6 @@ export const CHIP_COMPREHENSION_CHECK2 = createComprehensionStage({
 
 const CHIP_INFO_STAGE_GAMEPLAY = createInfoStage({
   id: 'info_gameplay',
-  game: StageGame.CHP,
   name: 'Gameplay: rounds',
   infoLines: [
     `## How the game works`,
@@ -488,7 +478,6 @@ const CHIP_INFO_STAGE_GAMEPLAY = createInfoStage({
 
 const CHIP_INFO_STAGE_GAMEPLAY2 = createInfoStage({
   id: 'info_gameplay2',
-  game: StageGame.CHP,
   name: 'Gameplay: proposing a trade',
   infoLines: [
     `## Trade proposals`,
@@ -510,7 +499,6 @@ const CHIP_INFO_STAGE_GAMEPLAY2 = createInfoStage({
 
 const CHIP_INFO_STAGE_GAMEPLAY4 = createInfoStage({
   id: 'info_gameplay4',
-  game: StageGame.CHP,
   name: 'Gameplay: completing a trade',
   infoLines: [
     `## Trade completion`,
@@ -528,7 +516,6 @@ const CHIP_INFO_STAGE_GAMEPLAY4 = createInfoStage({
 
 const CHIP_INFO_STAGE_GAMEPLAY5 = createInfoStage({
   id: 'info_gameplay5',
-  game: StageGame.CHP,
   name: 'Gameplay: summary',
   infoLines: [
     `## Key points to remember`,
@@ -548,7 +535,6 @@ const CHIP_INFO_STAGE_GAMEPLAY5 = createInfoStage({
 
 const CHIP_INFO_STAGE_PAYOUT = createInfoStage({
   id: 'info_payment1',
-  game: StageGame.CHP,
   name: 'Payment information',
   infoLines: [
     '## Bonus payment',
@@ -597,7 +583,6 @@ function createChipInfoPayout(numChips: number) {
 
   return createInfoStage({
     id: 'info_payment2',
-    game: StageGame.CHP,
     name: 'Payment information examples',
     infoLines,
     progress: createStageProgressConfig({
@@ -608,7 +593,6 @@ function createChipInfoPayout(numChips: number) {
 
 const CHIP_INFO_PART2 = createInfoStage({
   id: 'info_part2',
-  game: StageGame.CHP,
   name: 'Instructions for part 2',
   infoLines: [
     '# Congratulations!',
@@ -627,7 +611,6 @@ const CHIP_INFO_PART2 = createInfoStage({
 // ****************************************************************************/
 export const TRANSFER_STAGE = createTransferStage({
   id: 'transfer',
-  game: StageGame.CHP,
   name: 'Transfer stage',
   descriptions: createStageTextConfig({
     primaryText:
@@ -708,7 +691,6 @@ const CHIP_NEGOTIATION_STAGE2_ID = `negotiation2_${ALTERNATE_PROFILE_SET_ID}`;
 function getChipNegotiationStage1(numChips: number) {
   return createChipStage({
     id: CHIP_NEGOTIATION_STAGE1_ID,
-    game: StageGame.CHP,
     name: 'First negotiation game',
     descriptions: createStageTextConfig({
       infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
@@ -727,7 +709,6 @@ function getChipNegotiationStage1(numChips: number) {
 function getChipNegotiationStage2(numChips: number) {
   return createChipStage({
     id: CHIP_NEGOTIATION_STAGE2_ID,
-    game: StageGame.CHP,
     name: 'Second negotiation game',
     descriptions: createStageTextConfig({
       infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
@@ -764,7 +745,6 @@ export function createPayoutItems() {
 
 const CHIP_PAYOUT_STAGE = createPayoutStage({
   id: 'random_payout',
-  game: StageGame.CHP,
   payoutItems: createPayoutItems(),
 });
 
@@ -774,7 +754,6 @@ const CHIP_PAYOUT_STAGE = createPayoutStage({
 const CHIP_SURVEY_STAGE = createSurveyStage({
   id: 'survey',
   name: 'Final survey',
-  game: StageGame.CHP,
   questions: [
     createTextSurveyQuestion({
       questionTitle:

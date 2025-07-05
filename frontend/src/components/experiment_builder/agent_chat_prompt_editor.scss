@@ -5,6 +5,9 @@
 :host {
   @include common.flex-column;
   gap: common.$spacing-large;
+}
+
+.section {
   max-width: common.$info-content-max-width;
   padding: common.$main-content-padding;
 }

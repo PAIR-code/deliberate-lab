@@ -2,7 +2,6 @@ import {Type, type Static} from '@sinclair/typebox';
 import {UnifiedTimestampSchema} from '../shared.validation';
 import {StageKind} from './stage';
 import {
-  StageGameSchema,
   StageProgressConfigSchema,
   StageTextConfigSchema,
 } from './stage.validation';
@@ -30,7 +29,6 @@ export const FlipCardStageConfigData = Type.Object(
   {
     id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.FLIPCARD),
-    game: StageGameSchema,
     name: Type.String({minLength: 1}),
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,

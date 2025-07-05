@@ -1,7 +1,6 @@
 import {Type, type Static} from '@sinclair/typebox';
 import {StageKind} from './stage';
 import {
-  StageGameSchema,
   StageTextConfigSchema,
   StageProgressConfigSchema,
 } from './stage.validation';
@@ -18,7 +17,6 @@ export const TOSStageConfigData = Type.Object(
   {
     id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.TOS),
-    game: StageGameSchema,
     name: Type.String({minLength: 1}),
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,

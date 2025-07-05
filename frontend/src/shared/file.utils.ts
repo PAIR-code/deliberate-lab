@@ -13,8 +13,10 @@ import {
 } from 'firebase/firestore';
 import {
   AgentDataObject,
-  AgentChatPromptConfig,
-  AgentParticipantPromptConfig,
+  AgentMediatorPersonaConfig,
+  AgentMediatorTemplate,
+  AgentParticipantPersonaConfig,
+  AgentParticipantTemplate,
   AgentPersonaConfig,
   ChatMessage,
   ChatMessageType,
@@ -27,6 +29,8 @@ import {
   CohortDownload,
   Experiment,
   ExperimentDownload,
+  MediatorPromptConfig,
+  ParticipantPromptConfig,
   ParticipantDownload,
   ParticipantProfileExtended,
   PayoutItemType,
@@ -149,54 +153,72 @@ export async function getExperimentDownload(
     experimentDownload.participantMap[profile.publicId] = participantDownload;
   }
 
-  // For each agent, add AgentDataObject
-  const agentCollection = collection(
+  // For each agent mediator, add template
+  const agentMediatorCollection = collection(
     firestore,
     'experiments',
     experimentId,
-    'agents',
+    'agentMediators',
   );
-  const agents = (await getDocs(agentCollection)).docs.map(
-    (agent) => agent.data() as AgentPersonaConfig,
+  const mediatorAgents = (await getDocs(agentMediatorCollection)).docs.map(
+    (agent) => agent.data() as AgentMediatorPersonaConfig,
   );
-  for (const persona of agents) {
+  for (const persona of mediatorAgents) {
+    const mediatorPrompts = (
+      await getDocs(
+        collection(
+          firestore,
+          'experiments',
+          experimentId,
+          'agentMediators',
+          persona.id,
+          'prompts',
+        ),
+      )
+    ).docs.map((doc) => doc.data() as MediatorPromptConfig);
+    const mediatorTemplate: AgentMediatorTemplate = {
+      persona,
+      promptMap: {},
+    };
+    mediatorPrompts.forEach((prompt) => {
+      mediatorTemplate.promptMap[prompt.id] = prompt;
+    });
+    // Add to ExperimentDownload
+    experimentDownload.agentMediatorMap[persona.id] = mediatorTemplate;
+  }
+
+  // For each agent participant, add template
+  const agentParticipantCollection = collection(
+    firestore,
+    'experiments',
+    experimentId,
+    'agentParticipants',
+  );
+  const participantAgents = (
+    await getDocs(agentParticipantCollection)
+  ).docs.map((agent) => agent.data() as AgentParticipantPersonaConfig);
+  for (const persona of participantAgents) {
     const participantPrompts = (
       await getDocs(
         collection(
           firestore,
           'experiments',
           experimentId,
-          'agents',
+          'agentParticipants',
           persona.id,
-          'participantPrompts',
+          'prompts',
         ),
       )
-    ).docs.map((doc) => doc.data() as AgentParticipantPromptConfig);
-    const chatPrompts = (
-      await getDocs(
-        collection(
-          firestore,
-          'experiments',
-          experimentId,
-          'agents',
-          persona.id,
-          'chatPrompts',
-        ),
-      )
-    ).docs.map((doc) => doc.data() as AgentChatPromptConfig);
-    const agentObject: AgentDataObject = {
+    ).docs.map((doc) => doc.data() as ParticipantPromptConfig);
+    const participantTemplate: AgentParticipantTemplate = {
       persona,
-      participantPromptMap: {},
-      chatPromptMap: {},
+      promptMap: {},
     };
     participantPrompts.forEach((prompt) => {
-      agentObject.participantPromptMap[prompt.id] = prompt;
-    });
-    chatPrompts.forEach((prompt) => {
-      agentObject.chatPromptMap[prompt.id] = prompt;
+      participantTemplate.promptMap[prompt.id] = prompt;
     });
     // Add to ExperimentDownload
-    experimentDownload.agentMap[persona.id] = agentObject;
+    experimentDownload.agentParticipantMap[persona.id] = participantTemplate;
   }
 
   // For each cohort, add CohortDownload

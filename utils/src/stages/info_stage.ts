@@ -1,7 +1,6 @@
 import {generateId} from '../shared';
 import {
   BaseStageConfig,
-  StageGame,
   StageKind,
   createStageTextConfig,
   createStageProgressConfig,
@@ -29,7 +28,6 @@ export function createInfoStage(
   return {
     id: config.id ?? generateId(),
     kind: StageKind.INFO,
-    game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Info',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig(),

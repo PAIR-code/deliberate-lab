@@ -2,7 +2,6 @@ import {generateId, UnifiedTimestamp} from '../shared';
 import {
   BaseStageConfig,
   BaseStagePublicData,
-  StageGame,
   StageKind,
   createStageTextConfig,
   createStageProgressConfig,
@@ -113,7 +112,6 @@ export function createSalespersonStage(
   return {
     id: config.id ?? generateId(),
     kind: StageKind.SALESPERSON,
-    game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Traveling salesperson',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress:

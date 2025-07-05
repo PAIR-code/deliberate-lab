@@ -3,7 +3,6 @@ import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
   BaseStagePublicData,
-  StageGame,
   StageKind,
   createStageProgressConfig,
   createStageTextConfig,
@@ -68,7 +67,6 @@ export function createRevealStage(
   return {
     id: config.id ?? generateId(),
     kind: StageKind.REVEAL,
-    game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Reveal',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig(),

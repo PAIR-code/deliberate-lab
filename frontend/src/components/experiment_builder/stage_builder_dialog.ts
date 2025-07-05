@@ -6,12 +6,12 @@ import {customElement, property, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
-import {AgentEditor} from '../../services/agent.editor';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
-  AgentDataObject,
+  AgentPersonaType,
+  ExperimentTemplate,
   MetadataConfig,
   StageConfig,
   StageKind,
@@ -32,29 +32,27 @@ import {
   ANON_LAS_METADATA,
   getLASStageConfigs,
   getAnonLASStageConfigs,
-} from '../../shared/games/lost_at_sea';
+} from '../../shared/templates/lost_at_sea';
 import {
   getChipMetadata,
   getChipNegotiationStageConfigs,
-} from '../../shared/games/chip_negotiation';
+} from '../../shared/templates/chip_negotiation';
 import {
-  RTV_AGENTS,
   RTV_METADATA,
-  getRTVStageConfigs,
-} from '../../shared/games/reality_tv_chat';
+  getRealityTVExperimentTemplate,
+} from '../../shared/templates/reality_tv_chat';
 import {
   SALESPERSON_GAME_METADATA,
   getSalespersonStageConfigs,
-} from '../../shared/games/salesperson';
+} from '../../shared/templates/salesperson';
 import {
-  TG_METADATA,
-  getTgStageConfigs,
-  TG_AGENTS,
-} from '../../shared/games/test_game';
+  FRUIT_TEST_METADATA,
+  getFruitTestExperimentTemplate,
+} from '../../shared/templates/fruit_test';
 import {
-  FLIPCARD_GAME_METADATA,
-  getFlipCardGameStageConfigs,
-} from '../../shared/games/flipcard_game';
+  FLIPCARD_TEMPLATE_METADATA,
+  getFlipCardExperimentTemplate,
+} from '../../shared/templates/flipcard';
 
 import {styles} from './stage_builder_dialog.scss';
 
@@ -63,7 +61,6 @@ import {styles} from './stage_builder_dialog.scss';
 export class StageBuilderDialog extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  private readonly agentEditor = core.getService(AgentEditor);
   private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
 
@@ -137,8 +134,8 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()} ${this.renderLASCard(true)}
         ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
-        ${this.renderSalespersonGameCard()} ${this.renderFlipCardGameCard()}
-        ${this.renderTestGameCard()}
+        ${this.renderSalespersonGameCard()} ${this.renderFlipCardTemplateCard()}
+        ${this.renderFruitTestTemplateCard()}
       </div>
     `;
   }
@@ -163,15 +160,18 @@ export class StageBuilderDialog extends MobxLitElement {
     this.experimentEditor.jumpToLastStage();
   }
 
-  private addGame(
-    metadata: Partial<MetadataConfig>,
-    stages: StageConfig[],
-    agents: AgentDataObject[] = [],
-  ) {
-    this.analyticsService.trackButtonClick(ButtonClick.GAME_ADD);
+  private addTemplate(template: ExperimentTemplate) {
+    this.analyticsService.trackButtonClick(ButtonClick.TEMPLATE_LOAD);
+    this.experimentEditor.loadTemplate(template);
+    this.experimentEditor.toggleStageBuilderDialog();
+  }
+
+  // TODO: Remove in favor of identical addTemplate
+  // WARNING: This does NOT add agents
+  private addGame(metadata: Partial<MetadataConfig>, stages: StageConfig[]) {
+    this.analyticsService.trackButtonClick(ButtonClick.TEMPLATE_LOAD);
     this.experimentEditor.updateMetadata(metadata);
     this.experimentEditor.setStages(stages);
-    this.agentEditor.setAgentData(agents);
     this.experimentEditor.toggleStageBuilderDialog();
   }
 
@@ -195,12 +195,12 @@ export class StageBuilderDialog extends MobxLitElement {
   }
 
   private renderRealityTVCard() {
-    const addGame = () => {
-      this.addGame(RTV_METADATA, getRTVStageConfigs(), RTV_AGENTS);
+    const addTemplate = () => {
+      this.addTemplate(getRealityTVExperimentTemplate());
     };
     return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">📺 ${RTV_METADATA.name}</div>
+      <div class="card" @click=${addTemplate}>
+        <div class="title">${RTV_METADATA.name}</div>
         <div>${RTV_METADATA.description}</div>
       </div>
     `;
@@ -243,15 +243,15 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
-  private renderTestGameCard() {
-    const addGame = () => {
-      this.addGame(TG_METADATA, getTgStageConfigs(), TG_AGENTS);
+  private renderFruitTestTemplateCard() {
+    const addTemplate = () => {
+      this.addTemplate(getFruitTestExperimentTemplate());
     };
 
     return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">${TG_METADATA.publicName}</div>
-        <div>${TG_METADATA.description}</div>
+      <div class="card" @click=${addTemplate}>
+        <div class="title">${FRUIT_TEST_METADATA.name}</div>
+        <div>${FRUIT_TEST_METADATA.description}</div>
       </div>
     `;
   }
@@ -423,17 +423,15 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
-  private renderFlipCardGameCard() {
-    const addGame = () => {
-      this.addGame(FLIPCARD_GAME_METADATA, getFlipCardGameStageConfigs(), []);
+  private renderFlipCardTemplateCard() {
+    const addTemplate = () => {
+      this.addTemplate(getFlipCardExperimentTemplate());
     };
 
     return html`
-      <div class="card" @click=${addGame}>
-        <div class="title">🔄 FlipCard Game</div>
-        <div>
-          A demonstration of the FlipCard stage with adventure selection cards.
-        </div>
+      <div class="card" @click=${addTemplate}>
+        <div class="title">${FLIPCARD_TEMPLATE_METADATA.name}</div>
+        <div>${FLIPCARD_TEMPLATE_METADATA.description}</div>
       </div>
     `;
   }

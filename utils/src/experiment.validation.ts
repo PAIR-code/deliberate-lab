@@ -4,7 +4,11 @@ import {
   PermissionsConfigSchema,
 } from './shared.validation';
 import {StageConfigData} from './stages/stage.validation';
-import {AgentDataObjectData} from './agent.validation';
+import {
+  AgentDataObjectData,
+  AgentMediatorTemplateData,
+  AgentParticipantTemplateData,
+} from './agent.validation';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -71,22 +75,26 @@ export const ExperimentCreationData = Type.Object(
     // Firestore collection name to save experiment under
     // (e.g., 'experimentTemplates' if the experiment is a template)
     collectionName: FirestoreCollectionData,
-    // Experiment config (excluding ordered stage IDs)
-    experimentConfig: Type.Object(
-      {
-        id: Type.String(),
-        versionId: Type.Number(),
-        metadata: MetadataConfigSchema,
-        permissions: PermissionsConfigSchema,
-        defaultCohortConfig: CohortParticipantConfigSchema,
-        prolificConfig: ProlificConfigSchema,
-        stageIds: Type.Array(Type.String()),
-        cohortLockMap: Type.Record(Type.String(), Type.Boolean()),
-      },
-      strict,
-    ),
-    stageConfigs: Type.Array(StageConfigData),
-    agentConfigs: Type.Array(AgentDataObjectData),
+    experimentTemplate: Type.Object({
+      id: Type.String(),
+      // Experiment config (excluding ordered stage IDs)
+      experiment: Type.Object(
+        {
+          id: Type.String(),
+          versionId: Type.Number(),
+          metadata: MetadataConfigSchema,
+          permissions: PermissionsConfigSchema,
+          defaultCohortConfig: CohortParticipantConfigSchema,
+          prolificConfig: ProlificConfigSchema,
+          stageIds: Type.Array(Type.String()),
+          cohortLockMap: Type.Record(Type.String(), Type.Boolean()),
+        },
+        strict,
+      ),
+      stageConfigs: Type.Array(StageConfigData),
+      agentMediators: Type.Array(AgentMediatorTemplateData),
+      agentParticipants: Type.Array(AgentParticipantTemplateData),
+    }),
   },
   strict,
 );

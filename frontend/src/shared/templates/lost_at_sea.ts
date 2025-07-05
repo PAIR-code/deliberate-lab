@@ -6,7 +6,6 @@ import {
   PayoutCurrency,
   ProfileType,
   StageConfig,
-  StageGame,
   SurveyQuestion,
   SurveyQuestionKind,
   choice,
@@ -292,7 +291,6 @@ const LAS_TOS_LINES = [
 ];
 
 const LAS_TOS_STAGE = createTOSStage({
-  game: StageGame.LAS,
   tosLines: LAS_TOS_LINES,
   progress: createStageProgressConfig({
     showParticipantProgress: false,
@@ -315,7 +313,6 @@ const LAS_INTRO_INFO_LINES = [
 ];
 
 const LAS_INTRO_STAGE = createInfoStage({
-  game: StageGame.LAS,
   name: 'Welcome to the experiment',
   descriptions: createStageTextConfig({
     primaryText: LAS_INTRO_INFO_DESCRIPTION_PRIMARY,
@@ -327,7 +324,6 @@ const LAS_INTRO_STAGE = createInfoStage({
 });
 
 const LAS_PERSONAL_INFO_STAGE = createSurveyStage({
-  game: StageGame.LAS,
   name: 'Personal information',
   descriptions: createStageTextConfig({
     primaryText:
@@ -371,7 +367,6 @@ const LAS_PERSONAL_INFO_STAGE = createSurveyStage({
 // ****************************************************************************
 const ANON_LAS_PROFILE_STAGE = createProfileStage({
   id: 'profile',
-  game: StageGame.LAS,
   name: 'View randomly assigned profile',
   descriptions: createStageTextConfig({
     primaryText: 'This information may be visible to other participants.',
@@ -385,7 +380,6 @@ const ANON_LAS_PROFILE_STAGE = createProfileStage({
 
 const LAS_PROFILE_STAGE = createProfileStage({
   id: 'profile',
-  game: StageGame.LAS,
   name: 'Set your profile',
   descriptions: createStageTextConfig({
     primaryText: 'This information may be visible to other participants.',
@@ -412,7 +406,6 @@ const LAS_PART_1_INSTRUCTIONS_INFO_LINES = [
 ];
 
 const LAS_PART_1_INSTRUCTIONS_STAGE = createInfoStage({
-  game: StageGame.LAS,
   name: 'Part 1 instructions',
   infoLines: LAS_PART_1_INSTRUCTIONS_INFO_LINES,
 
@@ -428,7 +421,6 @@ export const LAS_PART_1_SURVIVAL_SURVEY_STAGE_ID = 'initial';
 
 const LAS_PART_1_SURVIVAL_SURVEY_STAGE = createSurveyStage({
   id: LAS_PART_1_SURVIVAL_SURVEY_STAGE_ID,
-  game: StageGame.LAS,
   name: 'Initial survival task',
   descriptions: createStageTextConfig({infoText: LAS_SCENARIO_REMINDER}),
   questions: createLASSurvivalSurvey(
@@ -447,7 +439,6 @@ export const LAS_PART_1_WTL_DESCRIPTION_PRIMARY =
   'Thank you for completing the task.\n\nNow, imagine that you are no longer doing the task alone, but as part of a group of four people. Your group must elect a leader whose role is to answer on behalf of the group the same types of questions you have just seen. In this scenario, the leader is the only one who chooses the most useful items for survival from pairs, and their answers determine the payment for each member of the group.';
 
 const LAS_PART_1_WTL_SURVEY_STAGE = createSurveyStage({
-  game: StageGame.LAS,
   name: 'Willingness to lead survey',
   descriptions: createStageTextConfig({
     primaryText: LAS_PART_1_WTL_DESCRIPTION_PRIMARY,
@@ -473,7 +464,6 @@ export const LAS_TRANSFER_DESCRIPTION_PRIMARY =
   'Please wait on this page for up to 10 minutes. There may be attention checks to make sure that you are waiting. If you leave this page before the time is up, you will not be approved for the payout. A link may appear offering you the option to continue to parts 2 and 3 of the experiment. These additional parts will take an estimated *30 minutes*. If you complete these additional parts, you will earn an additional **£6 fixed fee, as well as up to a £2 bonus**. Thank you for your patience.';
 
 export const LAS_TRANSFER_STAGE = createTransferStage({
-  game: StageGame.LAS,
   name: 'Lobby',
   descriptions: createStageTextConfig({
     primaryText: LAS_TRANSFER_DESCRIPTION_PRIMARY,
@@ -491,7 +481,6 @@ export const LAS_TRANSFER_STAGE = createTransferStage({
 // ****************************************************************************
 export const COMPREHENSION_CHECK = createComprehensionStage({
   id: 'comprehension_check1',
-  game: StageGame.CHP,
   name: 'Comprehension check',
   descriptions: createStageTextConfig({
     primaryText:
@@ -560,7 +549,6 @@ const LAS_PART_2_INSTRUCTIONS_INFO_LINES = [
 ];
 
 const LAS_PART_2_INSTRUCTIONS_STAGE = createInfoStage({
-  game: StageGame.LAS,
   name: 'Overview of part 2 and 3',
   infoLines: LAS_PART_2_INSTRUCTIONS_INFO_LINES,
 });
@@ -572,7 +560,6 @@ export const LAS_PART_2_PERFORMANCE_ESTIMATION_DESCRIPTION_PRIMARY =
   'Before you start the chat discussion, we would like you to guess how well you did in Part 1 compared to the other 3 members of your group. Please indicate your answer by clicking on one of the options below. If you think you earned the highest number of good answers in your group, click on the first option. If you think you earned the second highest number of good answers, click on the second option, and so on.';
 
 const LAS_PART_2_PERFORMANCE_ESTIMATION_SURVEY_STAGE = createSurveyStage({
-  game: StageGame.LAS,
   name: 'Performance estimation',
   descriptions: createStageTextConfig({
     primaryText: LAS_PART_2_PERFORMANCE_ESTIMATION_DESCRIPTION_PRIMARY,
@@ -625,7 +612,6 @@ const LAS_PART_2_GROUP_INSTRUCTIONS_INFO_LINES = [
 ];
 
 const LAS_PART_2_GROUP_INSTRUCTIONS_STAGE = createInfoStage({
-  game: StageGame.LAS,
   name: 'Group discussion instructions',
   infoLines: LAS_PART_2_GROUP_INSTRUCTIONS_INFO_LINES,
 });
@@ -651,7 +637,6 @@ const LAS_PART_2_CHAT_DISCUSSIONS = ITEMS_SET_1.map((itemSet) =>
 );
 
 const LAS_PART_2_CHAT_STAGE = createChatStage({
-  game: StageGame.LAS,
   name: 'Group discussion',
   discussions: LAS_PART_2_CHAT_DISCUSSIONS,
   progress: {
@@ -671,7 +656,6 @@ export const LAS_PART_2_UPDATED_TASK_INFO_LINES = [
 ];
 
 const LAS_PART_2_UPDATED_TASK_INFO_STAGE = createInfoStage({
-  game: StageGame.LAS,
   name: 'Update instructions',
   infoLines: LAS_PART_2_UPDATED_TASK_INFO_LINES,
 });
@@ -683,7 +667,6 @@ export const LAS_PART_2_UPDATED_TASK_SURVEY_STAGE_ID = 'updated';
 
 export const LAS_PART_2_UPDATED_TASK_SURVEY_STAGE = createSurveyStage({
   id: LAS_PART_2_UPDATED_TASK_SURVEY_STAGE_ID,
-  game: StageGame.LAS,
   name: 'Updated survival task',
   descriptions: createStageTextConfig({infoText: LAS_SCENARIO_REMINDER}),
   questions: createLASSurvivalSurvey(
@@ -709,7 +692,6 @@ export const LAS_PART_2_ELECTION_INFO_LINES = [
 ];
 
 const LAS_PART_2_ELECTION_INFO_STAGE = createInfoStage({
-  game: StageGame.LAS,
   name: 'Election instructions',
   infoLines: LAS_PART_2_ELECTION_INFO_LINES,
 });
@@ -722,7 +704,6 @@ export const LAS_PART_2_WTL_DESCRIPTION_PRIMARY =
 
 const LAS_PART_2_WTL_SURVEY_STAGE = createSurveyStage({
   id: LAS_WTL_STAGE_ID,
-  game: StageGame.LAS,
   name: 'Willingness to lead update',
   descriptions: createStageTextConfig({
     primaryText: LAS_PART_2_WTL_DESCRIPTION_PRIMARY,
@@ -747,7 +728,6 @@ export const LAS_PART_2_ELECTION_DESCRIPTION_PRIMARY = `On this page, you will s
 
 export const LAS_PART_2_ELECTION_STAGE = createRankingStage({
   id: LAS_PART_2_ELECTION_STAGE_ID,
-  game: StageGame.LAS,
   name: 'Representative election',
   descriptions: createStageTextConfig({
     primaryText: LAS_PART_2_ELECTION_DESCRIPTION_PRIMARY,
@@ -757,7 +737,6 @@ export const LAS_PART_2_ELECTION_STAGE = createRankingStage({
 // Rankings
 export const LAS_PART_2_ACCURACY_RANK = createRankingStage({
   id: 'accuracy_ranking',
-  game: StageGame.LAS,
   name: 'Accuracy ranking',
   descriptions: createStageTextConfig({
     primaryText:
@@ -769,7 +748,6 @@ export const LAS_PART_2_ACCURACY_RANK = createRankingStage({
 
 export const LAS_PART_2_CONFIDENCE_RANK = createRankingStage({
   id: 'confidence_ranking',
-  game: StageGame.LAS,
   name: 'Confidence ranking',
   descriptions: createStageTextConfig({
     primaryText:
@@ -781,7 +759,6 @@ export const LAS_PART_2_CONFIDENCE_RANK = createRankingStage({
 
 export const LAS_PART_2_WTL_RANK = createRankingStage({
   id: 'willingness_to_lead_ranking',
-  game: StageGame.LAS,
   name: 'Willingness to lead ranking',
   descriptions: createStageTextConfig({
     primaryText:
@@ -793,7 +770,6 @@ export const LAS_PART_2_WTL_RANK = createRankingStage({
 
 export const LAS_PART_2_ELECTION_RANK = createRankingStage({
   id: 'election_rank',
-  game: StageGame.LAS,
   name: 'Hypothesized election ranking',
   descriptions: createStageTextConfig({
     primaryText:
@@ -805,7 +781,6 @@ export const LAS_PART_2_ELECTION_RANK = createRankingStage({
 
 export const LAS_PART_2_GENDER_GUESS = createSurveyPerParticipantStage({
   id: 'gender_guess',
-  game: StageGame.LAS,
   name: 'Gender survey',
   descriptions: createStageTextConfig({
     primaryText:
@@ -850,7 +825,6 @@ const LAS_PART_3_INSTRUCTIONS_INFO_LINES = [
 ];
 
 const LAS_PART_3_INSTRUCTIONS_STAGE = createInfoStage({
-  game: StageGame.LAS,
   name: 'Part 3 instructions',
   infoLines: LAS_PART_3_INSTRUCTIONS_INFO_LINES,
 });
@@ -862,7 +836,6 @@ export const LAS_PART_3_LEADER_TASK_SURVEY_ID = 'representative';
 
 export const LAS_PART_3_LEADER_TASK_SURVEY_STAGE = createSurveyStage({
   id: LAS_PART_3_LEADER_TASK_SURVEY_ID,
-  game: StageGame.LAS,
   name: 'Representative task',
   descriptions: createStageTextConfig({infoText: LAS_SCENARIO_REMINDER}),
   questions: createLASSurvivalSurvey(
@@ -879,7 +852,6 @@ export const LAS_PART_3_REVEAL_DESCRIPTION_PRIMARY =
 export const LAS_PART_3_REVEAL_DESCRIPTION_INFO = `An explanation of the results can be found [here](https://raw.githubusercontent.com/PAIR-code/deliberate-lab/main/frontend/src/assets/lost_at_sea/lost_at_sea_answers.pdf).`;
 
 export const LAS_PART_3_REVEAL_STAGE = createRevealStage({
-  game: StageGame.LAS,
   name: 'Results reveal',
   descriptions: createStageTextConfig({
     infoText: LAS_PART_3_REVEAL_DESCRIPTION_INFO,
@@ -924,7 +896,6 @@ export const LAS_PAYMENT_INSTRUCTIONS_ALL = [
 ];
 
 const LAS_PAYOUT_INFO_STAGE = createInfoStage({
-  game: StageGame.LAS,
   name: 'Payment breakdown',
   infoLines: LAS_PAYMENT_INSTRUCTIONS_ALL,
 });
@@ -982,7 +953,6 @@ export function createLASPayoutItems() {
 
 const LAS_PAYOUT_STAGE = createPayoutStage({
   id: 'payout',
-  game: StageGame.LAS,
   currency: PayoutCurrency.GBP,
   descriptions: createStageTextConfig({
     infoText: LAS_PAYMENT_INSTRUCTIONS.join('\n'),
@@ -1060,7 +1030,6 @@ export const LAS_FINAL_SURVEY_QUESTIONS: SurveyQuestion[] = [
 ];
 
 const LAS_FINAL_SURVEY_STAGE = createSurveyStage({
-  game: StageGame.LAS,
   name: 'Final survey',
   descriptions: createStageTextConfig({
     primaryText: LAS_FINAL_DESCRIPTION_PRIMARY,

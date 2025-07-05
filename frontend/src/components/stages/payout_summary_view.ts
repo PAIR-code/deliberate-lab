@@ -22,7 +22,6 @@ import {
   PayoutResultConfig,
   PayoutItemResult,
   StageConfig,
-  StageGame,
   StageKind,
   SurveyPayoutItem,
   SurveyPayoutItemResult,

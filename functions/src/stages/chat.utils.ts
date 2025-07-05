@@ -1,8 +1,8 @@
 import {
-  AgentChatPromptConfig,
   AgentChatResponse,
   AgentChatSettings,
   ChatMessage,
+  ChatPromptConfig,
   ChatStageConfig,
   ChatStageParticipantAnswer,
   ChatStagePublicData,
@@ -13,9 +13,10 @@ import {
   ParticipantStatus,
   StageKind,
   awaitTypingDelay,
-  createAgentChatPromptConfig,
+  createChatPromptConfig,
   createChatStageParticipantAnswer,
   createParticipantChatMessage,
+  createPromptItemFromText,
   getDefaultChatPrompt,
   getTimeElapsed,
   structuredOutputEnabled,
@@ -151,7 +152,7 @@ export async function getAgentChatPrompt(
   experimentId: string,
   stageId: string,
   agentId: string,
-): AgentChatPromptConfig | null {
+): ChatPromptConfig | null {
   const prompt = await app
     .firestore()
     .collection('experiments')
@@ -165,7 +166,7 @@ export async function getAgentChatPrompt(
   if (!prompt.exists) {
     return null;
   }
-  return prompt.data() as AgentChatPromptConfig;
+  return prompt.data() as ChatPromptConfig;
 }
 
 /** Uses weighted sampling based on WPM to choose agent response. */
@@ -226,7 +227,7 @@ export async function getAgentChatAPIResponse(
   pastStageContext: string,
   chatMessages: ChatMessage[], // TODO: Get in current stage
   agentConfig: ProfileAgentConfig,
-  promptConfig: AgentChatPromptConfig,
+  promptConfig: ChatPromptConfig,
   stageConfig: StageConfig,
 ): AgentChatResponse | null {
   // Fetch experiment creator's API key.
@@ -390,9 +391,12 @@ export async function initiateChatDiscussion(
 
     const promptConfig =
       (await getAgentChatPrompt(experimentId, stageId, agentConfig.agentId)) ??
-      createAgentChatPromptConfig(stageId, StageKind.CHAT, {
-        promptContext:
-          'You are a participant. Respond in a quick sentence if you would like to say something. Otherwise, do not respond.',
+      createChatPromptConfig(stageId, {
+        prompt: [
+          createPromptItemFromText(
+            'You are a participant. Respond in a quick sentence if you would like to say something. Otherwise, do not respond.',
+          ),
+        ],
       });
 
     const chatMessages: ChatMessage[] = [];
@@ -405,14 +409,8 @@ export async function initiateChatDiscussion(
       return;
     }
 
-    const pastStageContext = promptConfig.promptSettings.includeStageHistory
-      ? await getPastStagesPromptContext(
-          experimentId,
-          stageId,
-          privateId,
-          promptConfig.promptSettings.includeStageInfo,
-        )
-      : '';
+    // TODO: Check prompt items for whether to include history
+    const pastStageContext = '';
 
     const response = await getAgentChatAPIResponse(
       profile, // profile
