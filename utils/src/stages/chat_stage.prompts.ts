@@ -101,7 +101,7 @@ export function getChatStagePromptContext(
 }
 
 /** Return prompt for processing chat history. */
-function getChatPromptMessageHistory(
+export function getChatPromptMessageHistory(
   messages: ChatMessage[],
   stage: ChatStageConfig,
 ) {

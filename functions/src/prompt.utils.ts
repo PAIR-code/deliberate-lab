@@ -7,6 +7,7 @@ import {
   StageContextPromptItem,
   StageKind,
   getChatPromptMessageHistory,
+  makeStructuredOutputPrompt,
 } from '@deliberation-lab/utils';
 import {
   getFirestoreExperiment,
@@ -28,26 +29,35 @@ export async function getStructuredPrompt(
   agentConfig: ProfileAgentConfig,
   promptConfig: BasePromptConfig,
 ) {
-  return promptConfig.prompt
-    .map(async (promptItem) => {
-      switch (promptItem.type) {
-        case PromptItemType.TEXT:
-          return promptItem.text;
-        case PromptItemType.PROFILE_CONTEXT:
-          return agentConfig.promptContext;
-        case PromptItemType.STAGE_CONTEXT:
-          return await getStageContextForPrompt(
+  const items: string[] = [];
+  for (const promptItem of promptConfig.prompt) {
+    switch (promptItem.type) {
+      case PromptItemType.TEXT:
+        items.push(promptItem.text);
+        break;
+      case PromptItemType.PROFILE_CONTEXT:
+        items.push(agentConfig.promptContext);
+        break;
+      case PromptItemType.STAGE_CONTEXT:
+        items.push(
+          await getStageContextForPrompt(
             experimentId,
             cohortId,
             participantId,
             stageId,
             promptItem,
-          );
-        default:
-          return '';
-      }
-    })
-    .join('\n');
+          ),
+        );
+        break;
+      default:
+        break;
+    }
+  }
+
+  // Add structured output if relevant
+  items.push(makeStructuredOutputPrompt(promptConfig.structuredOutputConfig));
+
+  return items.join('\n');
 }
 
 export async function getStageContextForPrompt(
@@ -107,7 +117,11 @@ export async function getStageContextForPrompt(
   };
 
   // For each stage in list, add context
-  return stageList.map(async (id) => await getContextForStage(id));
+  const items: string[] = [];
+  for (const id of stageList) {
+    items.push(await getContextForStage(id));
+  }
+  return items.join('\n');
 }
 
 export async function getStageDisplayForPrompt(
@@ -124,7 +138,7 @@ export async function getStageDisplayForPrompt(
     case StageKind.INFO:
       return stage.infoLines.join('\n');
     case StageKind.CHAT:
-      const messages = getFirestorePublicStageChatMessages(
+      const messages = await getFirestorePublicStageChatMessages(
         experimentId,
         cohortId,
         stage.id,

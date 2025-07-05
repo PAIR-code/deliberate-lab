@@ -86,13 +86,6 @@ export async function getAgentResponse(
 ): Promise<ModelResponse> {
   let response;
 
-  const structuredOutputPrompt = structuredOutputConfig
-    ? makeStructuredOutputPrompt(structuredOutputConfig)
-    : '';
-  if (structuredOutputPrompt) {
-    prompt = `${prompt}\n${structuredOutputPrompt}`;
-  }
-
   if (modelSettings.apiType === ApiKeyType.GEMINI_API_KEY) {
     response = await getGeminiResponse(
       apiKeyConfig,
