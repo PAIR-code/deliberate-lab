@@ -64,6 +64,8 @@ export interface StageContextPromptItem extends BasePromptItem {
   includeInfoText: boolean;
   includeHelpText: boolean;
   includeParticipantAnswers: boolean;
+  // Include participant view of stage, e.g., chat history, game board
+  includeStageDisplay: boolean;
 }
 
 // ****************************************************************************
@@ -86,6 +88,21 @@ export function createChatPromptConfig(
   };
 }
 
-export function createPromptItemFromText(text: string): PromptItem {
-  return {type: PromptItemType.TEXT, text};
+// Default prompt includes current stage context
+export function createDefaultPromptFromText(
+  text: string,
+  stageId: string,
+): PromptItem[] {
+  return [
+    {
+      type: PromptItemType.STAGE_CONTEXT,
+      stageId,
+      includePrimaryText: true,
+      includeInfoText: false,
+      includeHelpText: false,
+      includeParticipantAnswers: true,
+      includeStageDisplay: true,
+    },
+    {type: PromptItemType.TEXT, text},
+  ];
 }

@@ -25,7 +25,7 @@ import {
   StructuredOutputType,
   StructuredOutputDataType,
   StructuredOutputSchema,
-  createPromptItemFromText,
+  createDefaultPromptFromText,
   makeStructuredOutputPrompt,
   structuredOutputEnabled,
 } from '@deliberation-lab/utils';
@@ -206,7 +206,9 @@ export class EditorComponent extends MobxLitElement {
   ) {
     const updatePrompt = (e: InputEvent) => {
       const text = (e.target as HTMLTextAreaElement).value;
-      this.updatePrompt({prompt: [createPromptItemFromText(text)]});
+      this.updatePrompt({
+        prompt: createDefaultPromptFromText(text, this.stageId),
+      });
     };
 
     return html`

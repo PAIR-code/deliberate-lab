@@ -9,7 +9,7 @@ import {
   createMetadataConfig,
   createParticipantProfileBase,
   createProfileStage,
-  createPromptItemFromText,
+  createDefaultPromptFromText,
   AgentMediatorTemplate,
   AgentParticipantTemplate,
   AgentPersonaType,
@@ -84,11 +84,10 @@ function createLennyAgent(): AgentParticipantTemplate {
   promptMap[RTV_CHAT_STAGE_ID] = createChatPromptConfig(
     RTV_CHAT_STAGE_ID, // stage ID
     {
-      prompt: [
-        createPromptItemFromText(
-          'You are engaged in a debate about which TV show is the best. Your goal is to convince the others in the conversation that Love is Blind is the best TV show. You are sure about this and your mind will not be changed. When you feel that a consensus has been made about which TV show is the best, you can stop responding.\n',
-        ),
-      ],
+      prompt: createDefaultPromptFromText(
+        'You are engaged in a debate about which TV show is the best. Your goal is to convince the others in the conversation that Love is Blind is the best TV show. You are sure about this and your mind will not be changed. When you feel that a consensus has been made about which TV show is the best, you can stop responding.\n',
+        RTV_CHAT_STAGE_ID,
+      ),
       chatSettings: createAgentChatSettings({
         wordsPerMinute: 300,
         canSelfTriggerCalls: false,
@@ -114,11 +113,10 @@ function createBobAgent(): AgentParticipantTemplate {
   promptMap[RTV_CHAT_STAGE_ID] = createChatPromptConfig(
     RTV_CHAT_STAGE_ID, // stage ID
     {
-      prompt: [
-        createPromptItemFromText(
-          "You are engaged in a debate about which TV show is the best. You've watched a few episodes of the Bachelor, so you think that is the best show. However, you could be convinced otherwise. When you feel that a consensus has been made about which TV show is the best, you can stop responding.\n",
-        ),
-      ],
+      prompt: createDefaultPromptFromText(
+        "You are engaged in a debate about which TV show is the best. You've watched a few episodes of the Bachelor, so you think that is the best show. However, you could be convinced otherwise. When you feel that a consensus has been made about which TV show is the best, you can stop responding.\n",
+        RTV_CHAT_STAGE_ID,
+      ),
       chatSettings: createAgentChatSettings({
         wordsPerMinute: 150,
         canSelfTriggerCalls: false,
@@ -144,11 +142,10 @@ function createRhondaAgent(): AgentParticipantTemplate {
   promptMap[RTV_CHAT_STAGE_ID] = createChatPromptConfig(
     RTV_CHAT_STAGE_ID, // stage ID
     {
-      prompt: [
-        createPromptItemFromText(
-          "You are engaged in a debate about which TV show is the best. You don't have a preference and are open to hearing all perspectives. When you feel that a consensus has been made about which TV show is the best, you can stop responding.\n",
-        ),
-      ],
+      prompt: createDefaultPromptFromText(
+        "You are engaged in a debate about which TV show is the best. You don't have a preference and are open to hearing all perspectives. When you feel that a consensus has been made about which TV show is the best, you can stop responding.\n",
+        RTV_CHAT_STAGE_ID,
+      ),
       chatSettings: createAgentChatSettings({
         wordsPerMinute: 100,
         canSelfTriggerCalls: false,
@@ -174,11 +171,10 @@ function createModeratorAgent(): AgentMediatorTemplate {
   promptMap[RTV_CHAT_STAGE_ID] = createChatPromptConfig(
     RTV_CHAT_STAGE_ID, // stage ID
     {
-      prompt: [
-        createPromptItemFromText(
-          'You are facilitating a debate on the best TV show. Intervene only if the conversation stalls or veers off-track, and only to help participants reach consensus.',
-        ),
-      ],
+      prompt: createDefaultPromptFromText(
+        'You are facilitating a debate on the best TV show. Intervene only if the conversation stalls or veers off-track, and only to help participants reach consensus.',
+        RTV_CHAT_STAGE_ID,
+      ),
       chatSettings: createAgentChatSettings({
         wordsPerMinute: 300,
         canSelfTriggerCalls: false,

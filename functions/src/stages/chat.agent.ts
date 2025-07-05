@@ -8,8 +8,8 @@ import {
   createMediatorChatMessage,
   createModelGenerationConfig,
   createParticipantChatMessage,
-  createPromptItemFromText,
   getDefaultChatPrompt,
+  createDefaultPromptFromText,
   DEFAULT_AGENT_PARTICIPANT_PROMPT,
   DEFAULT_AGENT_PARTICIPANT_READY_TO_END_CHAT_PROMPT,
   DEFAULT_AGENT_PARTICIPANT_READY_TO_END_CHAT_STRUCTURED_OUTPUT,
@@ -90,11 +90,9 @@ export async function checkAgentParticipantReadyToEndChat(
   const promptConfig: BasePromptConfig = {
     id: stage.id,
     type: StageKind.CHAT,
-    prompt: [
-      createPromptItemFromText(
-        DEFAULT_AGENT_PARTICIPANT_READY_TO_END_CHAT_PROMPT,
-      ),
-    ],
+    prompt: createDefaultPromptFromText(
+      DEFAULT_AGENT_PARTICIPANT_READY_TO_END_CHAT_PROMPT,
+    ),
     generationConfig: createModelGenerationConfig(),
     numRetries: 0,
     structuredOutputConfig:
@@ -245,7 +243,7 @@ export async function sendAgentParticipantMessage(
         participant.agentConfig.agentId,
       )) ??
       createChatPromptConfig(stageId, {
-        prompt: [createPromptItemFromText(DEFAULT_AGENT_PARTICIPANT_PROMPT)],
+        prompt: createDefaultPromptFromText(DEFAULT_AGENT_PARTICIPANT_PROMPT),
       });
 
     // TODO: Check prompt items for whether or not to include history

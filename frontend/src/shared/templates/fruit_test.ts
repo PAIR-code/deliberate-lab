@@ -14,7 +14,7 @@ import {
   createMultipleChoiceSurveyQuestion,
   createParticipantProfileBase,
   createProfileStage,
-  createPromptItemFromText,
+  createDefaultPromptFromText,
   createScaleSurveyQuestion,
   createStageProgressConfig,
   createStageTextConfig,
@@ -162,7 +162,7 @@ const createBbotAgent = () => {
   promptMap[TG_CHAT_STAGE_ID] = createChatPromptConfig(
     TG_CHAT_STAGE_ID, // stage ID
     {
-      prompt: [createPromptItemFromText(TG_AGENT_PROMPT)],
+      prompt: createDefaultPromptFromText(TG_AGENT_PROMPT, TG_CHAT_STAGE_ID),
       chatSettings: createAgentChatSettings({
         wordsPerMinute: 300,
         minMessagesBeforeResponding: 5,

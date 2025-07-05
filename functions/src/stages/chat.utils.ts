@@ -16,7 +16,7 @@ import {
   createChatPromptConfig,
   createChatStageParticipantAnswer,
   createParticipantChatMessage,
-  createPromptItemFromText,
+  createDefaultPromptFromText,
   getDefaultChatPrompt,
   getTimeElapsed,
   structuredOutputEnabled,
@@ -392,11 +392,9 @@ export async function initiateChatDiscussion(
     const promptConfig =
       (await getAgentChatPrompt(experimentId, stageId, agentConfig.agentId)) ??
       createChatPromptConfig(stageId, {
-        prompt: [
-          createPromptItemFromText(
-            'You are a participant. Respond in a quick sentence if you would like to say something. Otherwise, do not respond.',
-          ),
-        ],
+        prompt: createDefaultPromptFromText(
+          'You are a participant. Respond in a quick sentence if you would like to say something. Otherwise, do not respond.',
+        ),
       });
 
     const chatMessages: ChatMessage[] = [];
