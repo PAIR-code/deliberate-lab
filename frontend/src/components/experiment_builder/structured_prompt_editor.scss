@@ -1,0 +1,22 @@
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+.prompt {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface-variant);
+  border-radius: common.$spacing-small;
+  gap: common.$spacing-large;
+  padding: common.$spacing-large;
+  wrap: flex-wrap;
+}
+
+.chip {
+  @include common.chip;
+  width: max-content;
+}

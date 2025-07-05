@@ -2,8 +2,9 @@ import '../../pair-components/button';
 import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 import '../../pair-components/textarea';
-import '@material/web/textfield/filled-text-field.js';
 import '@material/web/checkbox/checkbox.js';
+
+import './structured_prompt_editor';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -19,6 +20,7 @@ import {
   BaseAgentPromptConfig,
   ChatMediatorStructuredOutputConfig,
   ChatPromptConfig,
+  PromptItem,
   PromptItemType,
   StageConfig,
   StageKind,
@@ -166,7 +168,7 @@ export class EditorComponent extends MobxLitElement {
       >
         <div slot="title">${this.stageNamePrefix}${stageConfig.name}</div>
         <div class="section">
-          <div class="section-title">Prompt</div>
+          <div class="section-title">Prompt editor</div>
           ${this.renderAgentPrompt(this.agent, promptConfig)}
           <div class="section-title">Prompt settings</div>
           ${this.renderAgentStructuredOutputConfig(this.agent, promptConfig)}
@@ -205,27 +207,16 @@ export class EditorComponent extends MobxLitElement {
     agent: AgentPersonaConfig,
     agentPromptConfig: ChatPromptConfig,
   ) {
-    const updatePrompt = (e: InputEvent) => {
-      const text = (e.target as HTMLTextAreaElement).value;
-      this.updatePrompt({
-        prompt: createDefaultPromptFromText(text, this.stageId),
-      });
+    const updatePrompt = (prompt: PromptItem[]) => {
+      this.updatePrompt({prompt});
     };
 
     return html`
-      <md-filled-text-field
-        required
-        type="textarea"
-        rows="5"
-        label="Custom prompt for agent (will be concatenated with chat history and sent to model)"
-        .error=${!agentPromptConfig.prompt}
-        .value=${agentPromptConfig.prompt
-          .map((item) => (item.type === PromptItemType.TEXT ? item.text : ''))
-          .join('')}
-        ?disabled=${!this.experimentEditor.isCreator}
-        @input=${updatePrompt}
-      >
-      </md-filled-text-field>
+      <structured-prompt-editor
+        .prompt=${agentPromptConfig.prompt}
+        .stageId=${this.stageId}
+        .onUpdate=${updatePrompt}
+      ></structured-prompt-editor>
     `;
   }
 
