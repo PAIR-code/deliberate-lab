@@ -153,23 +153,7 @@ export const updateExperiment = onCall(async (request) => {
       transaction.set(document.collection('stages').doc(stage.id), stage);
     }
 
-    // Add agent configs and prompts
-    // TODO: Remove old collection once new paths are fully connected
-    for (const agent of [
-      ...template.agentMediators,
-      ...template.agentParticipants,
-    ]) {
-      const agentDoc = document.collection('agents').doc(agent.persona.id);
-      transaction.set(agentDoc, agent.persona);
-      for (const prompt of Object.values(agent.promptMap)) {
-        transaction.set(
-          agentDoc.collection('chatPrompts').doc(prompt.id),
-          prompt,
-        );
-      }
-    }
-
-    // Add agent mediators under `agentParticipants` collection
+    // Add agent mediators under `agentMediators` collection
     template.agentMediators.forEach((agent) => {
       const doc = document.collection('agentMediators').doc(agent.persona.id);
       transaction.set(doc, agent.persona);
@@ -178,7 +162,7 @@ export const updateExperiment = onCall(async (request) => {
       }
     });
 
-    // Add agent particiapnts under `agentMediators` collection
+    // Add agent participants under `agentParticipants` collection
     template.agentParticipants.forEach((agent) => {
       const doc = document
         .collection('agentParticipants')

@@ -101,9 +101,10 @@ export class ExperimentEditor extends Service {
     this.setStages(stages);
   }
 
-  loadTemplate(template: ExperimentTemplate) {
+  loadTemplate(template: ExperimentTemplate, loadExperimentId = false) {
     // Only copy over relevant parts (e.g., not template ID)
     this.experiment = createExperimentConfig(template.stageConfigs, {
+      id: loadExperimentId ? template.experiment.id : generateId(),
       metadata: template.experiment.metadata,
       permissions: template.experiment.permissions,
       defaultCohortConfig: template.experiment.defaultCohortConfig,

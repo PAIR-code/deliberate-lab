@@ -162,7 +162,7 @@ export class ExperimentManager extends Service {
             experimentId: this.experimentId,
           },
         );
-        this.sp.experimentEditor.loadTemplate(template);
+        this.sp.experimentEditor.loadTemplate(template, true);
         this.isEditing = true;
       }
     }
