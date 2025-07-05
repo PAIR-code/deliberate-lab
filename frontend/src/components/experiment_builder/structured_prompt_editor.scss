@@ -11,12 +11,50 @@
   @include common.flex-column;
   background: var(--md-sys-color-surface-variant);
   border-radius: common.$spacing-small;
-  gap: common.$spacing-large;
+  gap: common.$spacing-small;
   padding: common.$spacing-large;
   wrap: flex-wrap;
 }
 
 .chip {
   @include common.chip;
+  border-radius: common.$spacing-small;
+  margin-top: common.$spacing-small;
   width: max-content;
+}
+
+.chip-collapsible {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+}
+
+.prompt-item-wrapper {
+  @include common.flex-row;
+  align-items: start;
+  border: 1px solid transparent;
+  border-radius: common.$spacing-small;
+  gap: common.$spacing-small;
+  justify-content: space-between;
+  padding: common.$spacing-small common.$spacing-medium;
+
+  &:focus,
+  &:hover {
+    border-color: var(--md-sys-color-outline);
+  }
+}
+
+.prompt-item-editor {
+  flex-grow: 1;
+}
+
+.prompt-item-actions {
+  @include common.flex-row-align-center;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: common.$spacing-small;
+}
+
+pr-textarea {
+  padding: common.$spacing-small;
 }

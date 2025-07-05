@@ -16,6 +16,7 @@ import {
   StructuredOutputType,
   StructuredOutputDataType,
   StructuredOutputSchema,
+  TextPromptItem,
   createDefaultPromptFromText,
   makeStructuredOutputPrompt,
   structuredOutputEnabled,
@@ -40,22 +41,18 @@ export class EditorComponent extends MobxLitElement {
     return this.renderPromptPreview();
   }
 
-  private renderPromptPreview() {
-    const onInput = (e: InputEvent) => {
-      const text = (e.target as HTMLTextAreaElement).value;
-      this.onUpdate(createDefaultPromptFromText(text, this.stageId));
-    };
+  private updatePromptItem(index: number, newItem: PromptItem) {
+    this.onUpdate([
+      ...this.prompt.slice(0, index),
+      newItem,
+      ...this.prompt.slice(index + 1),
+    ]);
+  }
 
+  private renderPromptPreview() {
     const getPromptItems = () => {
-      return this.prompt.map((item) =>
-        item.type === PromptItemType.TEXT
-          ? html`<pr-textarea
-              placeholder="Add prompt context here"
-              variant="outlined"
-              .value=${item.text}
-              @input=${onInput}
-            ></pr-textarea>`
-          : html`<div class="chip tertiary">${item.type}</div>`,
+      return this.prompt.map((item, index) =>
+        this.renderPromptItem(item, index),
       );
     };
     const getStructuredOutput = () => {
@@ -68,6 +65,70 @@ export class EditorComponent extends MobxLitElement {
 
     return html`
       <div class="prompt">${getPromptItems()}${getStructuredOutput()}</div>
+    `;
+  }
+
+  private renderPromptItem(item: PromptItem, index: number) {
+    const renderItemEditor = () => {
+      switch (item.type) {
+        case PromptItemType.TEXT:
+          return this.renderTextPromptItemEditor(item, index);
+        default:
+          return html`
+            <details>
+              <summary class="chip tertiary">${item.type}</summary>
+              <div class="chip-collapsible">${JSON.stringify(item)}</div>
+            </details>
+          `;
+      }
+    };
+
+    return html`
+      <div class="prompt-item-wrapper">
+        <div class="prompt-item-editor">${renderItemEditor()}</div>
+        <div class="prompt-item-actions">
+          <pr-icon-button
+            disabled
+            icon="arrow_upward"
+            color="neutral"
+            variant="default"
+            size="small"
+          >
+          </pr-icon-button>
+          <pr-icon-button
+            disabled
+            icon="arrow_downward"
+            color="neutral"
+            variant="default"
+            size="small"
+          >
+          </pr-icon-button>
+          <pr-icon-button
+            disabled
+            icon="close"
+            color="neutral"
+            variant="default"
+            size="small"
+          >
+          </pr-icon-button>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderTextPromptItemEditor(item: TextPromptItem, index: number) {
+    const onInput = (e: InputEvent) => {
+      const text = (e.target as HTMLTextAreaElement).value;
+      this.updatePromptItem(index, {type: PromptItemType.TEXT, text});
+    };
+
+    return html`
+      <pr-textarea
+        placeholder="Add prompt context here"
+        .value=${item.text}
+        @input=${onInput}
+      >
+      </pr-textarea>
     `;
   }
 }
