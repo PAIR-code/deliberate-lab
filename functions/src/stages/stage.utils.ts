@@ -10,7 +10,7 @@ import {
   getSurveyStagePromptContext,
   getTOSStagePromptContext,
 } from '@deliberation-lab/utils';
-import {getChatMessages} from './chat.utils';
+import {getFirestorePublicStageChatMessages} from '../utils/firestore';
 import {app} from '../app';
 
 /** Assemble context from past stages for prompt. */
@@ -108,7 +108,7 @@ export async function getStagePromptContext(
     case StageKind.CHAT:
       // TODO: Use cohort at time participant was in stage,
       // NOT participant's current cohort
-      const chatMessages = await getChatMessages(
+      const chatMessages = await getFirestorePublicStageChatMessages(
         experimentId,
         participant.currentCohortId,
         stageId,
