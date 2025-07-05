@@ -3,7 +3,7 @@ import {
   AgentPersonaConfig,
   ProfileAgentConfig,
 } from './agent';
-import {ParticipantProfileBase} from './participant';
+import {UserProfileBase, UserType} from './participant';
 import {generateId} from './shared';
 
 /** Mediator types and functions. */
@@ -11,7 +11,8 @@ import {generateId} from './shared';
 // ************************************************************************* //
 // TYPES                                                                     //
 // ************************************************************************* //
-export interface MediatorProfile extends ParticipantProfileBase {
+export interface MediatorProfile extends UserProfileBase {
+  type: UserType.MEDIATOR;
   id: string; // mediator ID
   currentStatus: MediatorStatus;
   currentCohortId: string;
@@ -41,6 +42,7 @@ export function createMediatorProfileFromAgentPersona(
   });
 
   return {
+    type: UserType.MEDIATOR,
     id: generateId(),
     name: agentPersona.defaultProfile.name,
     avatar: agentPersona.defaultProfile.avatar,

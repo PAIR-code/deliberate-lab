@@ -1,4 +1,5 @@
 import {ProfileAgentConfig} from './agent';
+import {MediatorProfile} from './mediator';
 import {UnifiedTimestamp, generateId} from './shared';
 import {
   ALTERNATE_PROFILE_SET_ID,
@@ -20,14 +21,28 @@ import {
 // ************************************************************************* //
 
 /** Profile data that the participant can edit. */
+// TODO: Rename?
 export interface ParticipantProfileBase {
   pronouns: string | null;
   avatar: string | null; // emoji used as avatar
   name: string | null;
 }
 
+/** Profile. */
+export type UserProfile = ParticipantProfile | MediatorProfile;
+
+export interface UserProfileBase extends ParticipantProfileBase {
+  type: UserType;
+}
+
+export enum UserType {
+  PARTICIPANT = 'participant',
+  MEDIATOR = 'mediator',
+}
+
 /** Participant profile available in publicParticipantData collection. */
-export interface ParticipantProfile extends ParticipantProfileBase {
+export interface ParticipantProfile extends UserProfileBase {
+  type: UserType.PARTICIPANT;
   publicId: string;
   prolificId: string | null;
   currentStageId: string;
@@ -140,6 +155,7 @@ export function createParticipantProfileExtended(
   config: Partial<ParticipantProfileExtended> = {},
 ): ParticipantProfileExtended {
   return {
+    type: UserType.PARTICIPANT,
     pronouns: config.pronouns ?? null,
     name: config.name ?? null,
     avatar: config.avatar ?? null,
