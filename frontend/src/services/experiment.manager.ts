@@ -9,8 +9,6 @@ import {
   Unsubscribe,
   where,
 } from 'firebase/firestore';
-import {AgentEditor} from './agent.editor';
-import {AgentManager} from './agent.manager';
 import {AuthService} from './auth.service';
 import {CohortService} from './cohort.service';
 import {ExperimentEditor} from './experiment.editor';
@@ -35,6 +33,7 @@ import {
   Experiment,
   ExperimentDownload,
   MediatorProfile,
+  MediatorStatus,
   MetadataConfig,
   ParticipantProfileExtended,
   ParticipantStatus,
@@ -59,6 +58,7 @@ import {
   setExperimentCohortLockCallable,
   testAgentConfigCallable,
   updateCohortMetadataCallable,
+  updateMediatorStatusCallable,
   writeExperimentCallable,
 } from '../shared/callables';
 import {
@@ -81,11 +81,10 @@ import {
 } from '../shared/participant.utils';
 
 interface ServiceProvider {
-  agentEditor: AgentEditor;
-  agentManager: AgentManager;
   authService: AuthService;
   cohortService: CohortService;
   experimentEditor: ExperimentEditor;
+  experimentManager: ExperimentManager;
   experimentService: ExperimentService;
   firebaseService: FirebaseService;
   participantService: ParticipantService;
@@ -969,6 +968,23 @@ export class ExperimentManager extends Service {
       );
     }
 
+    return response;
+  }
+
+  /** Change mediator status. */
+  async updateMediatorStatus(mediatorId: string, status: MediatorStatus) {
+    let response = {};
+    const experimentId = this.sp.experimentManager.experimentId;
+    if (experimentId) {
+      response = await updateMediatorStatusCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId,
+          mediatorId,
+          status,
+        },
+      );
+    }
     return response;
   }
 }

@@ -31,14 +31,12 @@ import {
 } from '../shared/callables';
 
 import {AuthService} from './auth.service';
-import {AgentEditor} from './agent.editor';
 import {ExperimentManager} from './experiment.manager';
 import {FirebaseService} from './firebase.service';
 import {Service} from './service';
 import {setMustWaitForAllParticipants} from '../shared/experiment.utils';
 
 interface ServiceProvider {
-  agentEditor: AgentEditor;
   authService: AuthService;
   experimentManager: ExperimentManager;
   firebaseService: FirebaseService;
@@ -121,8 +119,6 @@ export class ExperimentEditor extends Service {
     this.stages = [];
     this.agentMediators = [];
     this.agentParticipants = [];
-
-    this.sp.agentEditor.resetAgents();
   }
 
   // **************************************************************************

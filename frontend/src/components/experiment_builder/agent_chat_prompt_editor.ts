@@ -2,7 +2,6 @@ import '../../pair-components/button';
 import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 import '../../pair-components/textarea';
-import './agent_base_prompt_dialog';
 import '@material/web/textfield/filled-text-field.js';
 import '@material/web/checkbox/checkbox.js';
 
@@ -11,9 +10,7 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
-import {AgentEditor} from '../../services/agent.editor';
 import {ExperimentEditor} from '../../services/experiment.editor';
-import {ExperimentService} from '../../services/experiment.service';
 
 import {
   AgentPersonaConfig,
@@ -35,7 +32,7 @@ import {
 import {LLM_AGENT_AVATARS} from '../../shared/constants';
 import {getHashBasedColor} from '../../shared/utils';
 
-import {styles} from './agent_base_prompt_editor.scss';
+import {styles} from './agent_chat_prompt_editor.scss';
 import {styles as dialogStyles} from './stage_builder_dialog.scss';
 
 /** Editor for configuring agent chat prompt. */
