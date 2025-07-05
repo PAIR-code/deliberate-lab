@@ -1,6 +1,5 @@
-import '../../pair-components/button';
-import '../../pair-components/icon';
 import '../../pair-components/icon_button';
+import '../../pair-components/menu';
 import '../../pair-components/textarea';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -19,6 +18,7 @@ import {
   StructuredOutputSchema,
   TextPromptItem,
   createDefaultPromptFromText,
+  createDefaultStageContextPromptItem,
   makeStructuredOutputPrompt,
   structuredOutputEnabled,
 } from '@deliberation-lab/utils';
@@ -50,8 +50,42 @@ export class EditorComponent extends MobxLitElement {
     ]);
   }
 
+  private addPromptItem(newItem: PromptItem) {
+    this.onUpdate([...this.prompt, newItem]);
+  }
+
+  private deletePromptItem(index: number) {
+    this.onUpdate([
+      ...this.prompt.slice(0, index),
+      ...this.prompt.slice(index + 1),
+    ]);
+  }
+
+  private movePromptItemUp(index: number) {
+    this.onUpdate([
+      ...this.prompt.slice(0, index - 1),
+      ...this.prompt.slice(index, index + 1),
+      ...this.prompt.slice(index - 1, index),
+      ...this.prompt.slice(index + 1),
+    ]);
+  }
+
+  private movePromptItemDown(index: number) {
+    this.onUpdate([
+      ...this.prompt.slice(0, index),
+      ...this.prompt.slice(index + 1, index + 2),
+      ...this.prompt.slice(index, index + 1),
+      ...this.prompt.slice(index + 2),
+    ]);
+  }
+
   private renderPromptPreview() {
     const getPromptItems = () => {
+      if (this.prompt.length === 0) {
+        return html`<div class="prompt-item-wrapper">
+          ⚠️ No items added yet
+        </div>`;
+      }
       return this.prompt.map((item, index) =>
         this.renderPromptItem(item, index),
       );
@@ -64,8 +98,65 @@ export class EditorComponent extends MobxLitElement {
       return '';
     };
 
+    const addText = () => {
+      this.addPromptItem({type: PromptItemType.TEXT, text: ''});
+    };
+
+    const addProfileContext = () => {
+      this.addPromptItem({type: PromptItemType.PROFILE_CONTEXT});
+    };
+
+    const addProfileInfo = () => {
+      this.addPromptItem({type: PromptItemType.PROFILE_INFO});
+    };
+
+    const addCurrentStageContext = () => {
+      this.addPromptItem(createDefaultStageContextPromptItem(this.stageId));
+    };
+
+    const addPastStageContext = () => {
+      this.addPromptItem(createDefaultStageContextPromptItem(null));
+    };
+
     return html`
-      <div class="prompt">${getPromptItems()}${getStructuredOutput()}</div>
+      <div class="prompt-wrapper">
+        <div class="header">
+          <div class="title">Prompt editor</div>
+          <pr-menu
+            name="Add item to prompt"
+            icon="add_circle"
+            color="neutral"
+            variant="default"
+          >
+            <div class="menu-wrapper">
+              <div class="menu-item" role="button" @click=${addText}>
+                Freeform text
+              </div>
+              <div
+                class="menu-item"
+                role="button"
+                @click=${addCurrentStageContext}
+              >
+                Context for current stage
+              </div>
+              <div
+                class="menu-item"
+                role="button"
+                @click=${addPastStageContext}
+              >
+                Context for all stages up to current stage (inclusive)
+              </div>
+              <div class="menu-item" role="button" @click=${addProfileContext}>
+                Custom agent context
+              </div>
+              <div class="menu-item" role="button" @click=${addProfileInfo}>
+                Profile info (avatar, name, pronouns)
+              </div>
+            </div>
+          </pr-menu>
+        </div>
+        <div class="prompt">${getPromptItems()}${getStructuredOutput()}</div>
+      </div>
     `;
   }
 
@@ -105,27 +196,33 @@ export class EditorComponent extends MobxLitElement {
         <div class="prompt-item-editor">${renderItemEditor()}</div>
         <div class="prompt-item-actions">
           <pr-icon-button
-            disabled
             icon="arrow_upward"
             color="neutral"
             variant="default"
             size="small"
+            @click=${() => {
+              this.movePromptItemUp(index);
+            }}
           >
           </pr-icon-button>
           <pr-icon-button
-            disabled
             icon="arrow_downward"
             color="neutral"
             variant="default"
             size="small"
+            @click=${() => {
+              this.movePromptItemDown(index);
+            }}
           >
           </pr-icon-button>
           <pr-icon-button
-            disabled
             icon="close"
             color="neutral"
             variant="default"
             size="small"
+            @click=${() => {
+              this.deletePromptItem(index);
+            }}
           >
           </pr-icon-button>
         </div>
@@ -141,7 +238,7 @@ export class EditorComponent extends MobxLitElement {
 
     return html`
       <pr-textarea
-        placeholder="Add prompt context here"
+        placeholder="Add freeform text here"
         .value=${item.text}
         @input=${onInput}
       >

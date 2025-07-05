@@ -168,7 +168,6 @@ export class EditorComponent extends MobxLitElement {
       >
         <div slot="title">${this.stageNamePrefix}${stageConfig.name}</div>
         <div class="section">
-          <div class="section-title">Prompt editor</div>
           ${this.renderAgentPrompt(this.agent, promptConfig)}
           <div class="section-title">Prompt settings</div>
           ${this.renderAgentStructuredOutputConfig(this.agent, promptConfig)}

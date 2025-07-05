@@ -107,6 +107,21 @@ export function createChatPromptConfig(
   };
 }
 
+// Default stage context
+export function createDefaultStageContextPromptItem(
+  stageId: string | null,
+): StageContextPromptItem {
+  return {
+    type: PromptItemType.STAGE_CONTEXT,
+    stageId,
+    includePrimaryText: true,
+    includeInfoText: false,
+    includeHelpText: false,
+    includeParticipantAnswers: true,
+    includeStageDisplay: true,
+  };
+}
+
 // Default prompt includes current stage context
 export function createDefaultPromptFromText(
   text: string,
@@ -119,15 +134,7 @@ export function createDefaultPromptFromText(
     },
     {type: PromptItemType.PROFILE_INFO},
     {type: PromptItemType.PROFILE_CONTEXT},
-    {
-      type: PromptItemType.STAGE_CONTEXT,
-      stageId,
-      includePrimaryText: true,
-      includeInfoText: false,
-      includeHelpText: false,
-      includeParticipantAnswers: true,
-      includeStageDisplay: true,
-    },
+    createDefaultStageContextPromptItem(stageId),
     {type: PromptItemType.TEXT, text},
   ];
 }
