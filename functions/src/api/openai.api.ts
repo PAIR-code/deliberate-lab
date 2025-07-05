@@ -162,7 +162,8 @@ export async function callOpenAIChatCompletion(
   if (!response || !response.choices) {
     return {
       status: ModelResponseStatus.UNKNOWN_ERROR,
-      text: `Model provider returned an unexpected response: ${response}`,
+      rawResponse: response ?? {},
+      errorMessage: `Model provider returned an unexpected response: ${response}`,
     };
   }
 
@@ -170,6 +171,7 @@ export async function callOpenAIChatCompletion(
   if (finishReason === MAX_TOKENS_FINISH_REASON) {
     return {
       status: ModelResponseStatus.LENGTH_ERROR,
+      rawResponse: response,
       text: response.choices[0].message.content,
       errorMessage: `Token limit (${generationConfig.maxOutputTokens}) exceeded`,
     };
@@ -179,11 +181,13 @@ export async function callOpenAIChatCompletion(
   ) {
     return {
       status: ModelResponseStatus.REFUSAL_ERROR,
+      rawResponse: response,
       errorMessage: `Refusal from provider: ${response.choices[0].message.refusal}`,
     };
   } else if (finishReason !== SUCCESS_FINISH_REASON) {
     return {
       status: ModelResponseStatus.UNKNOWN_ERROR,
+      rawResponse: response,
       text: response.choices[0].message.content,
       errorMessage: `Provider sent unrecognized finish_reason: ${finishReason}`,
     };
@@ -191,6 +195,7 @@ export async function callOpenAIChatCompletion(
 
   const modelResponse = {
     status: ModelResponseStatus.OK,
+    rawResponse: response,
     text: response.choices[0].message.content,
   };
   if (structuredOutputConfig?.enabled) {

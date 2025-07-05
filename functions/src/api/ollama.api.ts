@@ -54,6 +54,7 @@ export async function ollamaChat(
   return {
     // TODO(mkbehr): handle errors from this API
     status: ModelResponseStatus.OK,
+    rawResponse: response,
     text: responseMessage,
   };
 }

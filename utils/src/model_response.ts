@@ -31,8 +31,11 @@ export enum ModelResponseStatus {
  */
 export interface ModelResponse {
   status: ModelResponseStatus;
+  // The model's raw response (no parsing or extracting)
+  rawResponse?: object;
   // The model's response, in plaintext. Null if the provider didn't return a response.
   text?: string;
+  // The model's response in JSON
   parsedResponse?: object;
   errorMessage?: string;
 }
