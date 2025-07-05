@@ -166,8 +166,9 @@ export class EditorComponent extends MobxLitElement {
       >
         <div slot="title">${this.stageNamePrefix}${stageConfig.name}</div>
         <div class="section">
-          <div class="section-title">Prompt settings</div>
+          <div class="section-title">Prompt</div>
           ${this.renderAgentPrompt(this.agent, promptConfig)}
+          <div class="section-title">Prompt settings</div>
           ${this.renderAgentStructuredOutputConfig(this.agent, promptConfig)}
           ${this.renderPromptPreview(promptConfig)}
         </div>
@@ -220,7 +221,7 @@ export class EditorComponent extends MobxLitElement {
         .error=${!agentPromptConfig.prompt}
         .value=${agentPromptConfig.prompt
           .map((item) => (item.type === PromptItemType.TEXT ? item.text : ''))
-          .join('\n')}
+          .join('')}
         ?disabled=${!this.experimentEditor.isCreator}
         @input=${updatePrompt}
       >
@@ -229,17 +230,25 @@ export class EditorComponent extends MobxLitElement {
   }
 
   private renderPromptPreview(agentPromptConfig: ChatPromptConfig) {
-    const config = agentPromptConfig.structuredOutputConfig;
-    let prompt = agentPromptConfig.prompt
-      .map((item) => (item.type === PromptItemType.TEXT ? item.text : ''))
-      .join('\n');
-    if (structuredOutputEnabled(config) && config.schema) {
-      prompt += `\n${makeStructuredOutputPrompt(config)}`;
-    }
+    const getPromptItems = () => {
+      return agentPromptConfig.prompt.map((item) =>
+        item.type === PromptItemType.TEXT
+          ? html`<div>${item.text}</div>`
+          : html`<div class="chip tertiary">${item.type}</div>`,
+      );
+    };
+    const getStructuredOutput = () => {
+      const config = agentPromptConfig.structuredOutputConfig;
+      if (structuredOutputEnabled(config) && config.schema) {
+        return makeStructuredOutputPrompt(config);
+      }
+      return '';
+    };
+
     return html`
       <div class="code-wrapper">
         <div class="field-title">Prompt preview</div>
-        <pre><code>${prompt}</code></pre>
+        <pre><code>${getPromptItems()}${getStructuredOutput()}</code></pre>
       </div>
     `;
   }
