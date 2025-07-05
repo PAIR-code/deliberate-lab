@@ -14,48 +14,11 @@ import {
 } from '@deliberation-lab/utils';
 import {app} from '../app';
 
-/** Utils for agents interacting with salesperson stage. */
-// TODO: Move some of this to shared utils
-
-/** Assemble salesperson stage prompt. */
-export async function getSalespersonChatPrompt(
+export async function getSalespersonStageBoardContext(
   experimentId: string,
   participantId: string, // private ID
-  profile: ParticipantProfileBase,
-  agentConfig: ProfileAgentConfig, // TODO: Add to params
-  pastStageContext: string,
-  chatMessages: ChatMessage[],
-  promptConfig: AgentChatPromptConfig,
   stageConfig: ChatStageConfig,
 ) {
-  return [
-    // TODO: Move profile context up one level
-    getParticipantProfilePromptContext(
-      profile,
-      agentConfig?.promptContext ?? '',
-    ),
-    pastStageContext,
-    await getSalespersonStagePromptContext(
-      experimentId,
-      participantId,
-      chatMessages,
-      stageConfig,
-      promptConfig.promptSettings.includeStageInfo,
-    ),
-    promptConfig.promptContext,
-    makeStructuredOutputPrompt(promptConfig.structuredOutputConfig),
-  ];
-}
-
-export async function getSalespersonStagePromptContext(
-  experimentId: string,
-  participantId: string, // private ID
-  chatMessages: ChatMessage[],
-  stageConfig: ChatStageConfig,
-  includeStageInfo: boolean,
-) {
-  // TODO: Refactor board context into separate function
-
   const participant = (
     await app
       .firestore()
@@ -96,13 +59,5 @@ export async function getSalespersonStagePromptContext(
   );
   const moveContext = `\nThese were your previous moves:\n${moves}`;
 
-  const prompt = [
-    getBaseStagePrompt(stageConfig, includeStageInfo),
-    moveContext,
-    boardContext,
-    chatMessages
-      .map((message) => convertChatMessageToPromptFormat(message))
-      .join('\n'),
-  ].join('\n');
-  return prompt;
+  return `${moveContext}\n${boardContext}`;
 }
