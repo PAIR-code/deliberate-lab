@@ -6,6 +6,7 @@ import {
   APIKeyConfig,
   ApiKeyType,
   ModelGenerationConfig,
+  ModelResponseStatus,
   ParticipantProfileExtended,
   ParticipantStatus,
   StageConfig,
@@ -14,7 +15,6 @@ import {
   makeStructuredOutputPrompt,
 } from '@deliberation-lab/utils';
 
-import {ModelResponseStatus} from './api/model.response';
 import {getGeminiAPIResponse} from './api/gemini.api';
 import {getOpenAIAPIChatCompletionResponse} from './api/openai.api';
 import {ollamaChat} from './api/ollama.api';

@@ -10,12 +10,10 @@ import {
   StructuredOutputDataType,
   StructuredOutputConfig,
   StructuredOutputSchema,
-} from '@deliberation-lab/utils';
-import {
   ModelResponseStatus,
   ModelResponse,
   addParsedModelResponse,
-} from './model.response';
+} from '@deliberation-lab/utils';
 
 const GEMINI_DEFAULT_MODEL = 'gemini-1.5-pro-latest';
 const DEFAULT_FETCH_TIMEOUT = 300 * 1000; // This is the Chrome default

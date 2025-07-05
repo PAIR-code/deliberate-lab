@@ -3,11 +3,11 @@ import nock = require('nock');
 
 import {
   ModelGenerationConfig,
+  ModelResponse,
   StructuredOutputType,
   StructuredOutputDataType,
 } from '@deliberation-lab/utils';
 import {getGeminiAPIResponse} from './gemini.api';
-import {ModelResponse} from './model.response';
 
 const MODEL_NAME = 'gemini-1.5-flash';
 

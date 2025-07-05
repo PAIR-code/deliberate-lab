@@ -5,12 +5,10 @@ import {
   StructuredOutputDataType,
   StructuredOutputConfig,
   StructuredOutputSchema,
-} from '@deliberation-lab/utils';
-import {
   ModelResponse,
   ModelResponseStatus,
   addParsedModelResponse,
-} from './model.response';
+} from '@deliberation-lab/utils';
 
 const SUCCESS_FINISH_REASON = 'stop';
 const MAX_TOKENS_FINISH_REASON = 'length';

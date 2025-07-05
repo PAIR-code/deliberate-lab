@@ -5,6 +5,8 @@ import {
   ExperimenterData,
   StageConfig,
   StageKind,
+  ModelResponse,
+  ModelResponseStatus,
   ParticipantProfileExtended,
   createAgentModelSettings,
   createModelGenerationConfig,
@@ -15,7 +17,6 @@ import {
   getOpenAIAPIResponse,
   getOllamaResponse,
 } from './agent.utils';
-import {ModelResponseStatus, ModelResponse} from './api/model.response';
 import {getAgentParticipantRankingStageResponse} from './stages/ranking.agent';
 import {
   getExperimenterData,
