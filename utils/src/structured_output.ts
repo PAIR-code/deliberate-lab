@@ -39,6 +39,7 @@ export interface ChatMediatorStructuredOutputConfig
   extends StructuredOutputConfig {
   shouldRespondField: string;
   messageField: string;
+  readyToEndField: string;
 }
 
 // ****************************************************************************
@@ -48,6 +49,7 @@ export interface ChatMediatorStructuredOutputConfig
 export const DEFAULT_SHOULD_RESPOND_FIELD = 'shouldRespond';
 export const DEFAULT_RESPONSE_FIELD = 'response';
 export const DEFAULT_EXPLANATION_FIELD = 'explanation';
+export const DEFAULT_READY_TO_END_FIELD = 'readyToEndChat';
 
 // ****************************************************************************
 // FUNCTIONS
@@ -80,6 +82,14 @@ export function createStructuredOutputConfig(
           description: 'Your response.',
         },
       },
+      {
+        name: DEFAULT_READY_TO_END_FIELD,
+        schema: {
+          type: StructuredOutputDataType.BOOLEAN,
+          description:
+            'Whether or not you completed your goals and are ready to end the conversation.',
+        },
+      },
     ],
   };
   return {
@@ -91,6 +101,7 @@ export function createStructuredOutputConfig(
       config.shouldRespondField ?? DEFAULT_SHOULD_RESPOND_FIELD,
     messageField: config.messageField ?? DEFAULT_RESPONSE_FIELD,
     explanationField: config.explanationField ?? DEFAULT_EXPLANATION_FIELD,
+    readyToEndField: config.readyToEndField ?? DEFAULT_READY_TO_END_FIELD,
   };
 }
 
