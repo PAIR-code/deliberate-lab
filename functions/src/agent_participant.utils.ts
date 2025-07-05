@@ -13,7 +13,7 @@ import {
   updateCohortStageUnlocked,
   updateParticipantNextStage,
 } from './participant.utils';
-import {initiateChatDiscussion} from './stages/chat.utils';
+import {createAgentChatMessageFromPrompt} from './chat/chat.agent';
 import {completeProfile} from './stages/profile.utils';
 import {getAgentParticipantRankingStageResponse} from './stages/ranking.agent';
 import {getAgentParticipantSurveyStageResponse} from './stages/survey.agent';
@@ -86,14 +86,12 @@ export async function completeStageAsAgentParticipant(
     case StageKind.CHAT:
       // Do not complete stage as agent participant must chat first
       // Instead, check if participant should initiate conversation
-      initiateChatDiscussion(
+      createAgentChatMessageFromPrompt(
         experimentId,
         participant.currentCohortId,
-        stage,
-        participant.privateId,
-        participant.publicId,
+        stage.id,
+        '',
         participant, // profile
-        participant.agentConfig, // agent config
       );
       break;
     case StageKind.PROFILE:
@@ -102,14 +100,12 @@ export async function completeStageAsAgentParticipant(
       participantDoc.set(participant);
       break;
     case StageKind.SALESPERSON:
-      initiateChatDiscussion(
+      createAgentChatMessageFromPrompt(
         experimentId,
         participant.currentCohortId,
-        stage,
-        participant.privateId,
-        participant.publicId,
+        stage.id,
+        '',
         participant, // profile
-        participant.agentConfig, // agent config
       );
       break;
     case StageKind.RANKING:

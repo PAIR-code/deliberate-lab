@@ -9,7 +9,7 @@ import {
   getFirestoreStagePublicData,
 } from '../utils/firestore';
 import {updateTimeElapsed} from '../stages/chat.time';
-import {updateCurrentChatDiscussionId} from '../stages/chat.utils';
+import {updateCurrentChatDiscussionId} from '../stages/group_chat.utils';
 import {updateChipTurn} from '../stages/chip.utils';
 import {addParticipantAnswerToRankingStagePublicData} from '../stages/ranking.utils';
 import {addParticipantAnswerToSurveyStagePublicData} from '../stages/survey.utils';

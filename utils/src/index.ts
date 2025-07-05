@@ -39,9 +39,12 @@ export * from './participant.validation';
 export * from './profile_sets';
 
 // Agent
+// TODO: Organize these files into 'agent' subdirectory
 export * from './agent';
 export * from './agent.validation';
+export * from './model_response';
 export * from './structured_output';
+export * from './structured_prompt';
 
 // Stages
 export * from './stages/stage';

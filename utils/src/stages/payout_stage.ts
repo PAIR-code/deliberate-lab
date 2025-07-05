@@ -4,7 +4,6 @@ import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
   StageConfig,
-  StageGame,
   StageKind,
   StagePublicData,
   createStageTextConfig,
@@ -153,7 +152,6 @@ export function createPayoutStage(
   return {
     id: config.id ?? generateId(),
     kind: StageKind.PAYOUT,
-    game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Payout',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig(),

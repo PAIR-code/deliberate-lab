@@ -2,11 +2,10 @@ import {Type, type Static} from '@sinclair/typebox';
 import {UnifiedTimestampSchema} from '../shared.validation';
 import {StageKind} from './stage';
 import {
-  StageGameSchema,
   StageTextConfigSchema,
   StageProgressConfigSchema,
 } from './stage.validation';
-import {ChatMessageType} from '../chat_message';
+import {UserType} from '../participant';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -17,7 +16,6 @@ const strict = {additionalProperties: false} as const;
 export const ChatStageConfigData = Type.Object({
   id: Type.String(),
   kind: Type.Literal(StageKind.CHAT),
-  game: StageGameSchema,
   name: Type.String(),
   descriptions: StageTextConfigSchema,
   progress: StageProgressConfigSchema,
@@ -31,18 +29,20 @@ export const ChatStageConfigData = Type.Object({
 // updateChatMessage endpoint                                                //
 // ************************************************************************* //
 
-/** ChatMessageType input validation. */
-export const ChatMessageTypeData = Type.Union([
-  Type.Literal(ChatMessageType.PARTICIPANT),
-  Type.Literal(ChatMessageType.MEDIATOR),
-  Type.Literal(ChatMessageType.EXPERIMENTER),
+/** UserType input validation. */
+// TODO: Move to participant validation
+export const UserTypeData = Type.Union([
+  Type.Literal(UserType.PARTICIPANT),
+  Type.Literal(UserType.MEDIATOR),
+  Type.Literal(UserType.EXPERIMENTER),
+  Type.Literal(UserType.UNKNOWN),
 ]);
 
 /** ChatMessage input validation. */
 export const ChatMessageData = Type.Object({
   id: Type.String({minLength: 1}),
   discussionId: Type.Union([Type.Null(), Type.String()]),
-  type: ChatMessageTypeData,
+  type: UserTypeData,
   message: Type.String(),
   profile: Type.Object(
     {

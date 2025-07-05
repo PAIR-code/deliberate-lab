@@ -5,7 +5,6 @@ import {
   BaseStageParticipantAnswer,
   BaseStagePublicData,
   StageKind,
-  StageGame,
   createStageTextConfig,
   createStageProgressConfig,
 } from './stage';
@@ -81,7 +80,6 @@ export function createFlipCardStage(
   return {
     id: config.id ?? generateId(),
     kind: StageKind.FLIPCARD,
-    game: config.game ?? StageGame.NONE,
     name: config.name ?? 'FlipCard',
     descriptions:
       config.descriptions ??

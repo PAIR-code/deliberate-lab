@@ -24,6 +24,8 @@ export enum ModelResponseStatus {
   INTERNAL_ERROR = 'internal_error',
   // Catchall category for errors not covered above.
   UNKNOWN_ERROR = 'unknown_error',
+  // No response generated
+  NONE = 'none',
 }
 
 /**
@@ -31,8 +33,11 @@ export enum ModelResponseStatus {
  */
 export interface ModelResponse {
   status: ModelResponseStatus;
+  // The model's raw response (no parsing or extracting)
+  rawResponse?: string;
   // The model's response, in plaintext. Null if the provider didn't return a response.
   text?: string;
+  // The model's response in JSON
   parsedResponse?: object;
   errorMessage?: string;
 }

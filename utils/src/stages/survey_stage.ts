@@ -3,7 +3,6 @@ import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
   BaseStagePublicData,
-  StageGame,
   StageKind,
   createStageProgressConfig,
   createStageTextConfig,
@@ -160,7 +159,6 @@ export function createSurveyStage(
   return {
     id: config.id ?? generateId(),
     kind: StageKind.SURVEY,
-    game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Survey',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig(),
@@ -176,7 +174,6 @@ export function createSurveyPerParticipantStage(
   return {
     id: config.id ?? generateId(),
     kind: StageKind.SURVEY_PER_PARTICIPANT,
-    game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Survey per participant',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig(),

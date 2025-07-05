@@ -1,20 +1,20 @@
 import {
-  AgentChatPromptConfig,
-  AgentPersonaType,
-  ApiKeyType,
-  createAgentChatPromptConfig,
   createAgentPromptSettings,
   createAgentChatSettings,
   createAgentModelSettings,
-  createAgentPersonaConfig,
+  createAgentMediatorPersonaConfig,
+  createChatPromptConfig,
   createChatStage,
   createCheckSurveyQuestion,
+  createExperimentConfig,
+  createExperimentTemplate,
   createInfoStage,
   createMetadataConfig,
   createMultipleChoiceItem,
   createMultipleChoiceSurveyQuestion,
   createParticipantProfileBase,
   createProfileStage,
+  createDefaultPromptFromText,
   createScaleSurveyQuestion,
   createStageProgressConfig,
   createStageTextConfig,
@@ -23,25 +23,40 @@ import {
   createTextSurveyQuestion,
   createTOSStage,
   createTransferStage,
+  AgentPersonaType,
+  ApiKeyType,
+  ExperimentTemplate,
+  MediatorPromptConfig,
   MultipleChoiceItem,
   ProfileType,
   ScaleSurveyQuestion,
   StageConfig,
-  StageGame,
   StageKind,
   SurveyQuestion,
   SurveyStageConfig,
 } from '@deliberation-lab/utils';
 
-export const TG_METADATA = createMetadataConfig({
-  name: 'Fruit test',
+export function getFruitTestExperimentTemplate(): ExperimentTemplate {
+  const stageConfigs = getFruitStageConfigs();
+  return createExperimentTemplate({
+    experiment: createExperimentConfig(stageConfigs, {
+      metadata: FRUIT_TEST_METADATA,
+    }),
+    stageConfigs,
+    agentMediators: TG_MEDIATOR_AGENTS,
+  });
+}
+
+export const FRUIT_TEST_METADATA = createMetadataConfig({
+  name: 'Fruit Test',
   publicName: 'Fruit Chat',
-  description: 'A discussion about fruit',
+  description:
+    'Includes auto-transfer into groups for a discussion about fruit',
 });
 
-export const TG_CHAT_STAGE_ID = 'test_game_chat';
+const TG_CHAT_STAGE_ID = 'fruit_test_chat';
 
-export function getTgStageConfigs(): StageConfig[] {
+function getFruitStageConfigs(): StageConfig[] {
   const stages: StageConfig[] = [];
 
   stages.push(TG_TOS_STAGE);
@@ -60,7 +75,6 @@ const TG_AGENT_PROMPT = `You don't like apples or pears, but you do like bananas
 
 const TG_TOS_STAGE = createTOSStage({
   id: 'tos',
-  game: StageGame.TG,
   name: 'Consent',
   tosLines: TG_CONSENT.split('\n'),
 });
@@ -72,14 +86,12 @@ const TG_PROFILE_STAGE = createProfileStage({
     primaryText:
       "This is how other participants will see you during today's experiment. Click 'Next stage' below to continue.",
   }),
-  game: StageGame.TG,
   profileType: ProfileType.ANONYMOUS_ANIMAL,
 });
 
 const TG_SURVEY_STAGE = createSurveyStage({
   id: 'tg_survey',
   name: 'Preferences',
-  game: StageGame.TG,
   questions: [
     createMultipleChoiceSurveyQuestion({
       id: 'fruit_preference',
@@ -98,7 +110,6 @@ const TG_TRANSFER_TEXT =
 const TG_TRANSFER_STAGE = createTransferStage({
   id: 'participant_matching_transfer',
   name: 'Wait for other participants',
-  game: StageGame.TG,
   enableTimeout: false,
   descriptions: createStageTextConfig({primaryText: TG_TRANSFER_TEXT}),
   autoTransferConfig: createSurveyAutoTransferConfig({
@@ -117,7 +128,6 @@ const TG_CHAT_INTRO_STAGE = createInfoStage({
 });
 
 const TG_CHAT_STAGE = createChatStage({
-  game: StageGame.TG,
   id: TG_CHAT_STAGE_ID,
   name: 'Group discussion',
   timeLimitInMinutes: 10,
@@ -135,7 +145,7 @@ const TG_CHAT_STAGE = createChatStage({
 });
 
 const createBbotAgent = () => {
-  const persona = createAgentPersonaConfig({
+  const persona = createAgentMediatorPersonaConfig({
     name: 'BridgingBot',
     isDefaultAddToCohort: true,
     defaultProfile: createParticipantProfileBase({
@@ -148,17 +158,11 @@ const createBbotAgent = () => {
     }),
   });
 
-  const chatPromptMap: Record<string, AgentChatPromptConfig> = {};
-  chatPromptMap[TG_CHAT_STAGE_ID] = createAgentChatPromptConfig(
+  const promptMap: Record<string, MediatorPromptConfig> = {};
+  promptMap[TG_CHAT_STAGE_ID] = createChatPromptConfig(
     TG_CHAT_STAGE_ID, // stage ID
-    StageKind.CHAT, // stage kind,
-    AgentPersonaType.MEDIATOR,
     {
-      promptContext: TG_AGENT_PROMPT,
-      promptSettings: createAgentPromptSettings({
-        includeStageHistory: false,
-        includeStageInfo: false, // Do not include the chat description, since it could be confusing
-      }),
+      prompt: createDefaultPromptFromText(TG_AGENT_PROMPT, TG_CHAT_STAGE_ID),
       chatSettings: createAgentChatSettings({
         wordsPerMinute: 300,
         minMessagesBeforeResponding: 5,
@@ -168,7 +172,7 @@ const createBbotAgent = () => {
     },
   );
 
-  return {persona, participantPromptMap: {}, chatPromptMap};
+  return {persona, promptMap};
 };
 
-export const TG_AGENTS = [createBbotAgent()];
+const TG_MEDIATOR_AGENTS = [createBbotAgent()];

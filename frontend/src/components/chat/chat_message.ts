@@ -14,7 +14,7 @@ import {AuthService} from '../../services/auth.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {ParticipantService} from '../../services/participant.service';
 
-import {ChatMessage, ChatMessageType} from '@deliberation-lab/utils';
+import {ChatMessage, UserType} from '@deliberation-lab/utils';
 import {
   convertUnifiedTimestampToDate,
   getHashBasedColor,
@@ -40,7 +40,7 @@ export class ChatMessageComponent extends MobxLitElement {
     }
 
     switch (this.chat.type) {
-      case ChatMessageType.PARTICIPANT:
+      case UserType.PARTICIPANT:
         return this.renderParticipantMessage(this.chat);
       default:
         return this.renderMediatorMessage(this.chat);

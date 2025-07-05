@@ -12,7 +12,6 @@ import {
   createRankingStageParticipantAnswer,
 } from '@deliberation-lab/utils';
 import {getAgentResponse} from '../agent.utils';
-import {writeLogEntry} from '../log.utils';
 import {getPastStagesPromptContext} from './stage.utils';
 
 import * as admin from 'firebase-admin';
@@ -77,16 +76,6 @@ export async function getAgentParticipantRankingStageResponse(
   // TODO: Use generation config from agent persona prompt
   const generationConfig = createModelGenerationConfig();
 
-  // Call LLM API
-  writeLogEntry(
-    experimentId,
-    participant.currentCohortId,
-    stage.id,
-    participant.publicId,
-    `Sending agent participant prompt for ranking stage (${stage.name})`,
-    prompt,
-  );
-
   // TODO: Use structured output
   const rawResponse = await getAgentResponse(
     apiKeyConfig,
@@ -95,16 +84,6 @@ export async function getAgentParticipantRankingStageResponse(
     generationConfig,
   );
   const response = rawResponse.text ?? '';
-
-  // Add log entry
-  writeLogEntry(
-    experimentId,
-    participant.currentCohortId,
-    stage.id,
-    participant.publicId,
-    `Received agent participant response for ranking stage (${stage.name})`,
-    response,
-  );
 
   // Confirm that response is in expected format, e.g., list of strings
   try {

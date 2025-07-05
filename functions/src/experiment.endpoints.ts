@@ -4,6 +4,7 @@ import {
   ExperimentCreationData,
   ExperimentDeletionData,
   createExperimentConfig,
+  createExperimentTemplate,
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
@@ -25,17 +26,18 @@ import {
 // writeExperiment endpoint                                                  //
 // (create new experiment to specified Firestore collection)                 //
 //                                                                           //
-// Input structure: { collectionName, experimentConfig, stageConfigs }       //
+// Input structure: { collectionName, experimentTemplate }                   //
 // Validation: utils/src/experiment.validation.ts                            //
 // ************************************************************************* //
 export const writeExperiment = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
   const {data} = request;
+  const template = data.experimentTemplate;
 
   // Set up experiment config with stageIds
   const experimentConfig = createExperimentConfig(
-    data.stageConfigs,
-    data.experimentConfig,
+    template.stageConfigs,
+    template.experiment,
   );
 
   // Define document reference
@@ -57,27 +59,45 @@ export const writeExperiment = onCall(async (request) => {
     transaction.set(document, experimentConfig);
 
     // Add collection of stages
-    for (const stage of data.stageConfigs) {
+    for (const stage of template.stageConfigs) {
       transaction.set(document.collection('stages').doc(stage.id), stage);
     }
 
     // Add agent configs and prompts
-    for (const agent of data.agentConfigs) {
+    // TODO: Remove old collection once new paths are fully connected
+    for (const agent of [
+      ...template.agentMediators,
+      ...template.agentParticipants,
+    ]) {
       const agentDoc = document.collection('agents').doc(agent.persona.id);
       transaction.set(agentDoc, agent.persona);
-      for (const prompt of Object.values(agent.participantPromptMap)) {
-        transaction.set(
-          agentDoc.collection('participantPrompts').doc(prompt.id),
-          prompt,
-        );
-      }
-      for (const prompt of Object.values(agent.chatPromptMap)) {
+      for (const prompt of Object.values(agent.promptMap)) {
         transaction.set(
           agentDoc.collection('chatPrompts').doc(prompt.id),
           prompt,
         );
       }
     }
+
+    // Add agent mediators under `agentParticipants` collection
+    template.agentMediators.forEach((agent) => {
+      const doc = document.collection('agentMediators').doc(agent.persona.id);
+      transaction.set(doc, agent.persona);
+      for (const prompt of Object.values(agent.promptMap)) {
+        transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
+      }
+    });
+
+    // Add agent particiapnts under `agentMediators` collection
+    template.agentParticipants.forEach((agent) => {
+      const doc = document
+        .collection('agentParticipants')
+        .doc(agent.persona.id);
+      transaction.set(doc, agent.persona);
+      for (const prompt of Object.values(agent.promptMap)) {
+        transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
+      }
+    });
   });
 
   return {id: document.id};
@@ -87,17 +107,18 @@ export const writeExperiment = onCall(async (request) => {
 // updateExperiment endpoint                                                 //
 // (Update existing experiment to specified Firestore collection)            //
 //                                                                           //
-// Input structure: { collectionName, experimentConfig, stageConfigs }       //
+// Input structure: { collectionName, experimentTemplate }                   //
 // Validation: utils/src/experiment.validation.ts                            //
 // ************************************************************************* //
 export const updateExperiment = onCall(async (request) => {
   await AuthGuard.isExperimenter(request);
   const {data} = request;
+  const template = data.experimentTemplate;
 
   // Set up experiment config with stageIds
   const experimentConfig = createExperimentConfig(
-    data.stageConfigs,
-    data.experimentConfig,
+    template.stageConfigs,
+    template.experiment,
   );
 
   // Define document reference
@@ -128,27 +149,29 @@ export const updateExperiment = onCall(async (request) => {
     await app.firestore().recursiveDelete(oldAgentCollection);
 
     // Add updated collection of stages
-    for (const stage of data.stageConfigs) {
+    for (const stage of template.stageConfigs) {
       transaction.set(document.collection('stages').doc(stage.id), stage);
     }
 
-    // Add agent configs and prompts
-    for (const agent of data.agentConfigs) {
-      const agentDoc = document.collection('agents').doc(agent.persona.id);
-      transaction.set(agentDoc, agent.persona);
-      for (const prompt of Object.values(agent.participantPromptMap)) {
-        transaction.set(
-          agentDoc.collection('participantPrompts').doc(prompt.id),
-          prompt,
-        );
+    // Add agent mediators under `agentMediators` collection
+    template.agentMediators.forEach((agent) => {
+      const doc = document.collection('agentMediators').doc(agent.persona.id);
+      transaction.set(doc, agent.persona);
+      for (const prompt of Object.values(agent.promptMap)) {
+        transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
       }
-      for (const prompt of Object.values(agent.chatPromptMap)) {
-        transaction.set(
-          agentDoc.collection('chatPrompts').doc(prompt.id),
-          prompt,
-        );
+    });
+
+    // Add agent participants under `agentParticipants` collection
+    template.agentParticipants.forEach((agent) => {
+      const doc = document
+        .collection('agentParticipants')
+        .doc(agent.persona.id);
+      transaction.set(doc, agent.persona);
+      for (const prompt of Object.values(agent.promptMap)) {
+        transaction.set(doc.collection('prompts').doc(prompt.id), prompt);
       }
-    }
+    });
   });
 
   return {success: true};
@@ -190,6 +213,104 @@ export const deleteExperiment = onCall(async (request) => {
     .doc(`${data.collectionName}/${data.experimentId}`);
   app.firestore().recursiveDelete(doc);
   return {success: true};
+});
+
+// ************************************************************************* //
+// getExperimentTemplate endpoint                                            //
+//                                                                           //
+// Input structure: { collectionName, experimentId }                         //
+// Validation: utils/src/experiment.validation.ts                            //
+// ************************************************************************* //
+export const getExperimentTemplate = onCall(async (request) => {
+  await AuthGuard.isExperimenter(request);
+  const {data} = request;
+
+  const experiment = (
+    await app
+      .firestore()
+      .collection(data.collectionName)
+      .doc(data.experimentId)
+      .get()
+  ).data();
+
+  const template = createExperimentTemplate({
+    id: '',
+    experiment,
+  });
+
+  // Add stage configs
+  const stageConfigs = (
+    await app
+      .firestore()
+      .collection(data.collectionName)
+      .doc(data.experimentId)
+      .collection('stages')
+      .get()
+  ).docs.map((doc) => doc.data() as StageConfig);
+  template.stageConfigs = stageConfigs;
+
+  // For each agent mediator, add template
+  const agentMediatorCollection = app
+    .firestore()
+    .collection(data.collectionName)
+    .doc(data.experimentId)
+    .collection('agentMediators');
+
+  const mediatorAgents = (await agentMediatorCollection.get()).docs.map(
+    (agent) => agent.data() as AgentMediatorPersonaConfig,
+  );
+  for (const persona of mediatorAgents) {
+    const mediatorPrompts = (
+      await app
+        .firestore()
+        .collection(data.collectionName)
+        .doc(data.experimentId)
+        .collection('agentMediators')
+        .doc(persona.id)
+        .collection('prompts')
+        .get()
+    ).docs.map((doc) => doc.data() as MediatorPromptConfig);
+    const mediatorTemplate: AgentMediatorTemplate = {
+      persona,
+      promptMap: {},
+    };
+    mediatorPrompts.forEach((prompt) => {
+      mediatorTemplate.promptMap[prompt.id] = prompt;
+    });
+    template.agentMediators.push(mediatorTemplate);
+  }
+
+  // For each agent participant, add template
+  const agentParticipantCollection = app
+    .firestore()
+    .collection(data.collectionName)
+    .doc(data.experimentId)
+    .collection('agentParticipants');
+  const participantAgents = (await agentParticipantCollection.get()).docs.map(
+    (agent) => agent.data() as AgentParticipantPersonaConfig,
+  );
+  for (const persona of participantAgents) {
+    const participantPrompts = (
+      await app
+        .firestore()
+        .collection(data.collectionName)
+        .doc(data.experimentId)
+        .collection('agentParticipants')
+        .doc(persona.id)
+        .collection('prompts')
+        .get()
+    ).docs.map((doc) => doc.data() as ParticipantPromptConfig);
+    const participantTemplate: AgentParticipantTemplate = {
+      persona,
+      promptMap: {},
+    };
+    participantPrompts.forEach((prompt) => {
+      participantTemplate.promptMap[prompt.id] = prompt;
+    });
+    template.agentParticipants.push(participantTemplate);
+  }
+
+  return template;
 });
 
 // ************************************************************************* //

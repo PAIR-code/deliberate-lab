@@ -1,6 +1,10 @@
-import { CohortConfig, StageConfig, createPublicDataFromStageConfigs } from '@deliberation-lab/utils';
-import { createMediatorsForCohort } from './mediator.utils';
-import { app } from './app';
+import {
+  CohortConfig,
+  StageConfig,
+  createPublicDataFromStageConfigs,
+} from '@deliberation-lab/utils';
+import {createMediatorsForCohort} from './mediator.utils';
+import {app} from './app';
 
 /**
  * Creates a cohort with the given configuration.
@@ -25,7 +29,9 @@ export async function createCohortInternal(
   const stageDocs = await firestore
     .collection(`experiments/${experimentId}/stages`)
     .get();
-  const stages = stageDocs.docs.map((stageDoc) => stageDoc.data()) as StageConfig[];
+  const stages = stageDocs.docs.map((stageDoc) =>
+    stageDoc.data(),
+  ) as StageConfig[];
 
   const publicData = createPublicDataFromStageConfigs(stages);
 
@@ -55,13 +61,16 @@ export async function createCohortInternal(
   transaction.set(document, cohortConfig);
 
   // Add relevant mediators to cohort
-  const mediators = await createMediatorsForCohort(experimentId, cohortConfig.id);
+  const mediators = await createMediatorsForCohort(
+    experimentId,
+    cohortConfig.id,
+  );
   for (const mediator of mediators) {
     const mediatorDoc = firestore
       .collection('experiments')
       .doc(experimentId)
       .collection('mediators')
-      .doc(mediator.id);
+      .doc(mediator.privateId);
     transaction.set(mediatorDoc, mediator);
   }
 }

@@ -525,7 +525,7 @@ export class CohortService extends Service {
 
           changedDocs.forEach((doc) => {
             const profile = doc.data() as MediatorProfile;
-            this.mediatorMap[profile.id] = profile;
+            this.mediatorMap[profile.publicId] = profile;
           });
           this.isMediatorsLoading = false;
         },

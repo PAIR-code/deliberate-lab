@@ -5,6 +5,9 @@
 :host {
   @include common.flex-column;
   gap: common.$spacing-large;
+}
+
+.section {
   max-width: common.$info-content-max-width;
   padding: common.$main-content-padding;
 }
@@ -102,8 +105,18 @@ pre {
   padding: common.$spacing-medium;
 }
 
+code {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
 .section,
 .subsection {
   @include common.flex-column;
   gap: common.$spacing-large;
+}
+
+.chip {
+  @include common.chip;
+  width: max-content;
 }

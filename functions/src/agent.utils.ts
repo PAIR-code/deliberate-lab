@@ -6,21 +6,77 @@ import {
   APIKeyConfig,
   ApiKeyType,
   ModelGenerationConfig,
+  ModelResponseStatus,
   ParticipantProfileExtended,
   ParticipantStatus,
   StageConfig,
   StageKind,
   StructuredOutputConfig,
+  UserProfile,
+  createModelLogEntry,
   makeStructuredOutputPrompt,
 } from '@deliberation-lab/utils';
 
-import {ModelResponseStatus} from './api/model.response';
 import {getGeminiAPIResponse} from './api/gemini.api';
 import {getOpenAIAPIChatCompletionResponse} from './api/openai.api';
 import {ollamaChat} from './api/ollama.api';
 
 import {app} from './app';
+import {writeModelLogEntry} from './log.utils';
 
+/** Calls API and writes ModelLogEntry to experiment. */
+export async function processModelResponse(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+  userProfile: UserProfile,
+  publicId: string,
+  privateId: string,
+  description: string,
+  apiKeyConfig: APIKeyConfig,
+  prompt: string,
+  modelSettings: AgentModelSettings,
+  generationConfig: ModelGenerationConfig,
+  structuredOutputConfig?: StructuredOutputConfig,
+): Promise<ModelResponse> {
+  const log = createModelLogEntry({
+    experimentId,
+    cohortId,
+    stageId,
+    userProfile,
+    publicId,
+    privateId,
+    description,
+    prompt,
+    createdTimestamp: Timestamp.now(),
+  });
+
+  let response = {status: ModelResponseStatus.NONE};
+  try {
+    const queryTimestamp = Timestamp.now();
+    response = (await getAgentResponse(
+      apiKeyConfig,
+      prompt,
+      modelSettings,
+      generationConfig,
+      structuredOutputConfig,
+    )) as ModelResponse;
+    const responseTimestamp = Timestamp.now();
+
+    log.response = response;
+    log.queryTimestamp = queryTimestamp;
+    log.responseTimestamp = responseTimestamp;
+  } catch (error) {
+    console.log(error);
+  }
+
+  // Write log
+  writeModelLogEntry(experimentId, log);
+
+  return response;
+}
+
+// TODO: Rename to getAPIResponse?
 export async function getAgentResponse(
   apiKeyConfig: APIKeyConfig,
   prompt: string,
@@ -29,13 +85,6 @@ export async function getAgentResponse(
   structuredOutputConfig?: StructuredOutputConfig,
 ): Promise<ModelResponse> {
   let response;
-
-  const structuredOutputPrompt = structuredOutputConfig
-    ? makeStructuredOutputPrompt(structuredOutputConfig)
-    : '';
-  if (structuredOutputPrompt) {
-    prompt = `${prompt}\n${structuredOutputPrompt}`;
-  }
 
   if (modelSettings.apiType === ApiKeyType.GEMINI_API_KEY) {
     response = await getGeminiResponse(
