@@ -11,6 +11,7 @@ import {
   ExperimentCreationData,
   ExperimentDeletionData,
   ExperimentDownloadResponse,
+  ExperimentTemplate,
   InitiateParticipantTransferData,
   ParticipantNextStageResponse,
   ParticipantProfile,
@@ -74,6 +75,21 @@ export const deleteExperimentCallable = async (
     functions,
     'deleteExperiment',
   )(deletion);
+  return data;
+};
+
+/** Generic endpoint to get experiment template. */
+export const getExperimentTemplateCallable = async (
+  functions: Functions,
+  config: ExperimentDeletionData,
+) => {
+  const {data} = await httpsCallable<
+    ExperimentDeletionData,
+    ExperimentTemplate
+  >(
+    functions,
+    'getExperimentTemplate',
+  )(config);
   return data;
 };
 

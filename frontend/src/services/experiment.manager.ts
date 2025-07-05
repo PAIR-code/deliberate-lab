@@ -53,6 +53,7 @@ import {
   createParticipantCallable,
   deleteCohortCallable,
   deleteExperimentCallable,
+  getExperimentTemplateCallable,
   initiateParticipantTransferCallable,
   sendParticipantCheckCallable,
   setExperimentCohortLockCallable,
@@ -152,25 +153,17 @@ export class ExperimentManager extends Service {
         this.sp.experimentService.loadExperiment(this.experimentId);
       }
     } else {
-      // Load current experiment into editor
-      const experiment = this.sp.experimentService.experiment;
-      if (!experiment) return;
-
-      const stages: StageConfig[] = [];
-      experiment.stageIds.forEach((id) => {
-        const stage = this.sp.experimentService.stageConfigMap[id];
-        if (stage) stages.push(stage);
-      });
-
-      // Load agent configs from snapshot listener in agent service
       if (this.experimentId) {
-        this.sp.agentEditor.setAgentData(
-          await this.sp.agentManager.getAgentDataObjects(this.experimentId),
+        const template = await getExperimentTemplateCallable(
+          this.sp.firebaseService.functions,
+          {
+            collectionName: 'experiments',
+            experimentId: this.experimentId,
+          },
         );
+        this.sp.experimentEditor.loadTemplate(template);
+        this.isEditing = true;
       }
-
-      this.sp.experimentEditor.loadExperiment(experiment, stages);
-      this.isEditing = true;
     }
   }
 
@@ -609,41 +602,34 @@ export class ExperimentManager extends Service {
   }
 
   /** Fork the current experiment. */
-  // TODO: Add forkExperiment cloud function on backend
-  // that takes in ID of experiment to fork (instead of experiment copy)
   async forkExperiment() {
     const experiment = this.sp.experimentService.experiment;
-    if (!experiment) return;
+    if (!experiment || !this.experimentId) return;
+
+    const experimentTemplate = await getExperimentTemplateCallable(
+      this.sp.firebaseService.functions,
+      {
+        collectionName: 'experiments',
+        experimentId: this.experimentId,
+      },
+    );
 
     // Change ID (creator will be changed by cloud functions)
-    experiment.id = generateId();
-    experiment.metadata.name = `Copy of ${experiment.metadata.name}`;
-
-    // Get ordered list of stages
-    const stages: StageConfig[] = [];
-    experiment.stageIds.forEach((id) => {
-      const stage = this.sp.experimentService.stageConfigMap[id];
-      if (stage) stages.push(stage);
-    });
+    experimentTemplate.experiment.id = generateId();
+    experimentTemplate.experiment.metadata.name = `Copy of ${experiment.metadata.name}`;
 
     let response = {};
     response = await writeExperimentCallable(
       this.sp.firebaseService.functions,
       {
         collectionName: 'experiments',
-        experimentTemplate: {
-          id: '',
-          experiment,
-          stageConfigs: stages,
-          agentMediators: this.sp.experimentEditor.agentMediators,
-          agentParticipants: this.sp.experimentEditor.agentParticipants,
-        },
+        experimentTemplate,
       },
     );
 
     // Route to new experiment and reload to update changes
     this.sp.routerService.navigate(Pages.EXPERIMENT, {
-      experiment: experiment.id,
+      experiment: experimentTemplate.experiment.id,
     });
 
     return response;
