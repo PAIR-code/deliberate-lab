@@ -39,7 +39,10 @@ export interface ChatPromptConfig extends BasePromptConfig {
 }
 
 /** PromptItem, where a prompt is composed of an ordered list of PromptItems.*/
-export type PromptItem = TextPromptItem | StageContextPromptItem;
+export type PromptItem =
+  | TextPromptItem
+  | ProfileContextPromptItem
+  | StageContextPromptItem;
 
 export interface BasePromptItem {
   type: PromptItemType;
@@ -47,6 +50,8 @@ export interface BasePromptItem {
 
 export enum PromptItemType {
   TEXT = 'TEXT',
+  // Context from the agent config
+  PROFILE_CONTEXT = 'PROFILE_CONTEXT',
   // Context from specified stage (or all stages up to present if null)
   STAGE_CONTEXT = 'STAGE_CONTEXT',
 }
@@ -54,6 +59,10 @@ export enum PromptItemType {
 export interface TextPromptItem extends BasePromptItem {
   type: PromptItemType.TEXT;
   text: string;
+}
+
+export interface ProfileContextPromptItem extends BasePromptItem {
+  type: PromptItemType.PROFILE_CONTEXT;
 }
 
 export interface StageContextPromptItem extends BasePromptItem {
@@ -94,6 +103,7 @@ export function createDefaultPromptFromText(
   stageId: string,
 ): PromptItem[] {
   return [
+    {type: PromptItemType.PROFILE_CONTEXT},
     {
       type: PromptItemType.STAGE_CONTEXT,
       stageId,
