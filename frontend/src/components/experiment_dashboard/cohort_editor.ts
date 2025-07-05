@@ -10,7 +10,7 @@ import './participant_summary';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from '../../core/core';
@@ -21,7 +21,8 @@ import {Pages, RouterService} from '../../services/router.service';
 
 import {
   CohortConfig,
-  MediatorProfile,
+  MediatorProfileExtended,
+  MediatorStatus,
   ParticipantProfile,
   ParticipantProfileExtended,
   ParticipantStatus,
@@ -43,6 +44,8 @@ export class Component extends MobxLitElement {
 
   @property() cohort: CohortConfig | undefined = undefined;
   @property() showAgentParticipantDialog = false;
+
+  @state() isStatusLoading = false;
 
   override render() {
     return html`
@@ -182,7 +185,10 @@ export class Component extends MobxLitElement {
     `;
   }
 
-  private renderMediatorTable(title: string, mediators: MediatorProfile[]) {
+  private renderMediatorTable(
+    title: string,
+    mediators: MediatorProfileExtended[],
+  ) {
     const renderEmptyMessage = () => {
       if (mediators.length === 0) {
         return html`<div class="table-row">No mediators yet</div>`;
@@ -190,10 +196,48 @@ export class Component extends MobxLitElement {
       return nothing;
     };
 
-    const renderMediator = (mediator: MediatorProfile) => {
+    const renderMediator = (mediator: MediatorProfileExtended) => {
+      const renderStatus = () => {
+        if (!mediator.agentConfig) {
+          return nothing;
+        }
+        return html`
+          <div class="chip secondary">🤖 ${mediator.currentStatus}</div>
+        `;
+      };
+
+      const toggleStatus = async () => {
+        this.isStatusLoading = true;
+        await this.experimentManager.updateMediatorStatus(
+          mediator.privateId,
+          mediator.currentStatus === MediatorStatus.ACTIVE
+            ? MediatorStatus.PAUSED
+            : MediatorStatus.ACTIVE,
+        );
+        this.isStatusLoading = false;
+      };
+
+      const renderPause = () => {
+        if (!mediator.agentConfig) {
+          return nothing;
+        }
+        return html`
+          <pr-icon-button
+            ?loading=${this.isStatusLoading}
+            variant="default"
+            icon=${mediator.currentStatus === MediatorStatus.PAUSED
+              ? 'play_circle'
+              : 'pause'}
+            @click=${toggleStatus}
+          >
+          </pr-icon-button>
+        `;
+      };
+
       return html`
         <div class="table-row">
           <profile-display .profile=${mediator}></profile-display>
+          ${renderStatus()} ${renderPause()}
         </div>
       `;
     };

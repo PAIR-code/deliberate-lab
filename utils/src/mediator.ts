@@ -13,11 +13,15 @@ import {generateId} from './shared';
 // ************************************************************************* //
 export interface MediatorProfile extends UserProfileBase {
   type: UserType.MEDIATOR;
-  id: string; // mediator ID
+  publicId: string; // public ID
   currentStatus: MediatorStatus;
   currentCohortId: string;
   // Maps from stage ID to if the mediator is present in that stage
   activeStageMap: Record<string, boolean>;
+}
+
+export interface MediatorProfileExtended extends MediatorProfile {
+  privateId: string;
   // If null, operated by human (otherwise, specifies agent persona, model)
   agentConfig: ProfileAgentConfig | null;
 }
@@ -35,15 +39,19 @@ export function createMediatorProfileFromAgentPersona(
   currentCohortId: string,
   agentPersona: AgentPersonaConfig,
   activeStageIds: string[],
-): MediatorProfile {
+): MediatorProfileExtended {
   const activeStageMap: Record<string, boolean> = {};
   activeStageIds.forEach((stageId) => {
     activeStageMap[stageId] = true;
   });
 
+  // TODO: Set public ID appropriately
+  const id = generateId();
+
   return {
     type: UserType.MEDIATOR,
-    id: generateId(),
+    publicId: id.substring(0, 8),
+    privateId: id,
     name: agentPersona.defaultProfile.name,
     avatar: agentPersona.defaultProfile.avatar,
     pronouns: agentPersona.defaultProfile.pronouns,

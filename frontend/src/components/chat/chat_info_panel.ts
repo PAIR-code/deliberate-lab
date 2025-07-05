@@ -129,53 +129,15 @@ export class ChatPanel extends MobxLitElement {
   }
 
   private renderMediator(profile: MediatorProfile, small = false) {
-    const renderStatus = () => {
-      if (!this.authService.isDebugMode || !profile.agentConfig) {
-        return nothing;
-      }
-      return html`
-        <div class="chip secondary">🤖 ${profile.currentStatus}</div>
-      `;
-    };
-
-    const toggleStatus = async () => {
-      this.isStatusLoading = true;
-      await this.experimentManager.updateMediatorStatus(
-        profile.id,
-        profile.currentStatus === MediatorStatus.ACTIVE
-          ? MediatorStatus.PAUSED
-          : MediatorStatus.ACTIVE,
-      );
-      this.isStatusLoading = false;
-    };
-
-    const renderPause = () => {
-      if (!this.authService.isDebugMode || !profile.agentConfig) {
-        return nothing;
-      }
-      return html`
-        <pr-icon-button
-          ?loading=${this.isStatusLoading}
-          variant="default"
-          icon=${profile.currentStatus === MediatorStatus.PAUSED
-            ? 'play_circle'
-            : 'pause'}
-          @click=${toggleStatus}
-        >
-        </pr-icon-button>
-      `;
-    };
-
     // TODO: Calculate if mediator is out of messages (maxResponses)
     return html`
       <div class="profile">
         <profile-display
           .profile=${profile}
-          .color=${getHashBasedColor(profile.id ?? '')}
+          .color=${getHashBasedColor(profile.publicId ?? '')}
           displayType=${small ? 'chatSmall' : 'chat'}
         >
         </profile-display>
-        ${renderStatus()} ${renderPause()}
       </div>
     `;
   }

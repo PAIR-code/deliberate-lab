@@ -32,7 +32,7 @@ import {
   CreateChatMessageData,
   Experiment,
   ExperimentDownload,
-  MediatorProfile,
+  MediatorProfileExtended,
   MediatorStatus,
   MetadataConfig,
   ParticipantProfileExtended,
@@ -107,7 +107,7 @@ export class ExperimentManager extends Service {
   @observable cohortMap: Record<string, CohortConfig> = {};
   @observable agentPersonaMap: Record<string, AgentPersonaConfig> = {};
   @observable participantMap: Record<string, ParticipantProfileExtended> = {};
-  @observable mediatorMap: Record<string, MediatorProfile> = {};
+  @observable mediatorMap: Record<string, MediatorProfileExtended> = {};
   @observable alertMap: Record<string, AlertMessage> = {};
 
   // Loading
@@ -531,7 +531,7 @@ export class ExperimentManager extends Service {
             const data = {
               agentConfig: null,
               ...doc.data(),
-            } as MediatorProfile;
+            } as MediatorProfileExtended;
             this.mediatorMap[doc.id] = data;
           });
 
