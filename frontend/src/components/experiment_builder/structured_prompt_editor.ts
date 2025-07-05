@@ -11,6 +11,7 @@ import {
   PromptItem,
   PromptItemType,
   StageConfig,
+  StageContextPromptItem,
   StageKind,
   StructuredOutputConfig,
   StructuredOutputType,
@@ -73,13 +74,29 @@ export class EditorComponent extends MobxLitElement {
       switch (item.type) {
         case PromptItemType.TEXT:
           return this.renderTextPromptItemEditor(item, index);
-        default:
+        case PromptItemType.STAGE_CONTEXT:
+          return this.renderStageContextPromptItemEditor(item, index);
+        case PromptItemType.PROFILE_INFO:
           return html`
             <details>
-              <summary class="chip tertiary">${item.type}</summary>
-              <div class="chip-collapsible">${JSON.stringify(item)}</div>
+              <summary class="chip tertiary">Profile info</summary>
+              <div class="chip-collapsible">
+                Name, avatar, pronouns (if defined)
+              </div>
             </details>
           `;
+        case PromptItemType.PROFILE_CONTEXT:
+          return html`
+            <details>
+              <summary class="chip tertiary">Custom agent context</summary>
+              <div class="chip-collapsible">
+                Context string provided when specific agent is created (or empty
+                string if none)
+              </div>
+            </details>
+          `;
+        default:
+          return nothing;
       }
     };
 
@@ -119,7 +136,7 @@ export class EditorComponent extends MobxLitElement {
   private renderTextPromptItemEditor(item: TextPromptItem, index: number) {
     const onInput = (e: InputEvent) => {
       const text = (e.target as HTMLTextAreaElement).value;
-      this.updatePromptItem(index, {type: PromptItemType.TEXT, text});
+      this.updatePromptItem(index, {...item, text});
     };
 
     return html`
@@ -129,6 +146,106 @@ export class EditorComponent extends MobxLitElement {
         @input=${onInput}
       >
       </pr-textarea>
+    `;
+  }
+
+  private renderStageContextPromptItemEditor(
+    item: StageContextPromptItem,
+    index: number,
+  ) {
+    const updatePrimaryText = (e: InputEvent) => {
+      this.updatePromptItem(index, {
+        ...item,
+        includePrimaryText: (e.target as HTMLInputElement).checked,
+      });
+    };
+
+    const updateInfoText = (e: InputEvent) => {
+      this.updatePromptItem(index, {
+        ...item,
+        includeInfoText: (e.target as HTMLInputElement).checked,
+      });
+    };
+
+    const updateHelpText = (e: InputEvent) => {
+      this.updatePromptItem(index, {
+        ...item,
+        includeHelpText: (e.target as HTMLInputElement).checked,
+      });
+    };
+
+    const updateStageDisplay = (e: InputEvent) => {
+      this.updatePromptItem(index, {
+        ...item,
+        includeStageDisplay: (e.target as HTMLInputElement).checked,
+      });
+    };
+
+    const updateParticipantAnswers = (e: InputEvent) => {
+      this.updatePromptItem(index, {
+        ...item,
+        includeParticipantAnswers: (e.target as HTMLInputElement).checked,
+      });
+    };
+
+    const getTitle = () => {
+      if (item.stageId === this.stageId) {
+        return 'Context for current stage';
+      } else if (!item.stageId) {
+        return 'Context for all stages up to current stage (inclusive)';
+      } else {
+        return `Context for stage "${item.stageId}"`;
+      }
+    };
+
+    return html`
+      <details>
+        <summary class="chip primary">${getTitle()}</summary>
+        <div class="chip-collapsible secondary">
+          <label class="checkbox-wrapper">
+            <input
+              type="checkbox"
+              .checked=${item.includePrimaryText}
+              @input=${updatePrimaryText}
+            />
+            <div>Include stage description</div>
+          </label>
+          <label class="checkbox-wrapper">
+            <input
+              type="checkbox"
+              .checked=${item.includeInfoText}
+              @input=${updateInfoText}
+            />
+            <div>Include stage info popup</div>
+          </label>
+          <label class="checkbox-wrapper">
+            <input
+              type="checkbox"
+              .checked=${item.includeHelpText}
+              @input=${updateHelpText}
+            />
+            <div>Include stage help popup</div>
+          </label>
+          <label class="checkbox-wrapper">
+            <input
+              type="checkbox"
+              .checked=${item.includeStageDisplay}
+              @input=${updateStageDisplay}
+            />
+            <div>
+              Include stage content (e.g., chat history, survey questions)
+            </div>
+          </label>
+          <label class="checkbox-wrapper">
+            <input
+              type="checkbox"
+              .checked=${item.includeParticipantAnswers}
+              @input=${updateParticipantAnswers}
+            />
+            <div>Include participant stage answers</div>
+          </label>
+        </div>
+      </details>
     `;
   }
 }

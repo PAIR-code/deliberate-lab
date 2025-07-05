@@ -25,8 +25,13 @@
 
 .chip-collapsible {
   @include common.flex-column;
+  color: var(--md-sys-color-outline);
   gap: common.$spacing-medium;
   padding: common.$spacing-medium;
+
+  &.secondary {
+    color: var(--md-sys-color-secondary);
+  }
 }
 
 .prompt-item-wrapper {
@@ -57,4 +62,9 @@
 
 pr-textarea {
   padding: common.$spacing-small;
+}
+
+.checkbox-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
 }
