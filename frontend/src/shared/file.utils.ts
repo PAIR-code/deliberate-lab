@@ -19,7 +19,6 @@ import {
   AgentParticipantTemplate,
   AgentPersonaConfig,
   ChatMessage,
-  ChatMessageType,
   ChipItem,
   ChipStageConfig,
   ChipStagePublicData,

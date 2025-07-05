@@ -38,6 +38,8 @@ export interface UserProfileBase extends ParticipantProfileBase {
 export enum UserType {
   PARTICIPANT = 'participant',
   MEDIATOR = 'mediator',
+  EXPERIMENTER = 'experimenter', // if experimenter needs to intervene
+  UNKNOWN = 'unknown',
 }
 
 /** Participant profile available in publicParticipantData collection. */
