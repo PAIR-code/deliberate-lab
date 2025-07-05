@@ -40,11 +40,15 @@ export class ChatInputComponent extends MobxLitElement {
   @property() isLoading = false;
 
   override render() {
+    const sendInput = async () => {
+      this.isLoading = true;
+      await this.sendUserInput(this.getUserInput());
+      this.isLoading = false;
+    };
+
     const handleKeyUp = async (e: KeyboardEvent) => {
       if (e.key === 'Enter') {
-        this.isLoading = true;
-        await this.sendUserInput(this.getUserInput());
-        this.isLoading = false;
+        sendInput();
         e.stopPropagation();
       }
     };
@@ -84,7 +88,7 @@ export class ChatInputComponent extends MobxLitElement {
             variant="tonal"
             ?disabled=${this.isDisabled}
             ?loading=${this.isLoading}
-            @click=${this.sendUserInput}
+            @click=${sendInput}
           >
           </pr-icon-button>
         </pr-tooltip>
