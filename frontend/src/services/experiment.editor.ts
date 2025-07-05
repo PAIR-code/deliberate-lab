@@ -1,11 +1,22 @@
 import {
+  AgentMediatorTemplate,
+  AgentMediatorPersonaConfig,
+  AgentParticipantPersonaConfig,
+  AgentPersonaType,
+  AgentParticipantTemplate,
   CohortParticipantConfig,
   Experiment,
+  ExperimentTemplate,
+  MediatorPromptConfig,
   MetadataConfig,
+  ParticipantPromptConfig,
   PermissionsConfig,
   ProlificConfig,
   StageConfig,
   StageKind,
+  createAgentMediatorPersonaConfig,
+  createAgentParticipantPersonaConfig,
+  createChatPromptConfig,
   createExperimentConfig,
   createMetadataConfig,
   createPermissionsConfig,
@@ -20,14 +31,12 @@ import {
 } from '../shared/callables';
 
 import {AuthService} from './auth.service';
-import {AgentEditor} from './agent.editor';
 import {ExperimentManager} from './experiment.manager';
 import {FirebaseService} from './firebase.service';
 import {Service} from './service';
 import {setMustWaitForAllParticipants} from '../shared/experiment.utils';
 
 interface ServiceProvider {
-  agentEditor: AgentEditor;
   authService: AuthService;
   experimentManager: ExperimentManager;
   firebaseService: FirebaseService;
@@ -43,18 +52,26 @@ export class ExperimentEditor extends Service {
   }
 
   // Experiment config
-  // Use this.stages as source of truth for stage ordering,
+  // WARNING: Use this.stages as source of truth for stage ordering,
   // not this.experiment.stageIds (which will be overridden)
+  // TODO: Consolidate these fields into ExperimentTemplate
   @observable experiment: Experiment = createExperimentConfig();
   @observable stages: StageConfig[] = [];
+  @observable agentMediators: AgentMediatorTemplate[] = [];
+  @observable agentParticipants: AgentParticipantTemplate[] = [];
 
   // Loading
   @observable isWritingExperiment = false;
 
   // Editor tooling
+  @observable currentAgentId: string | undefined = undefined;
   @observable currentStageId: string | undefined = undefined;
   @observable showStageBuilderDialog = false;
   @observable showTemplatesTab = false;
+
+  // **************************************************************************
+  // EXPERIMENT LOADING
+  // **************************************************************************
 
   @computed get isValidExperimentConfig() {
     // TODO: Add other validation checks here
@@ -78,6 +95,36 @@ export class ExperimentEditor extends Service {
   @computed get canEditStages() {
     return this.sp.experimentManager.canEditExperimentStages;
   }
+
+  loadExperiment(experiment: Experiment, stages: StageConfig[]) {
+    this.experiment = experiment;
+    this.setStages(stages);
+  }
+
+  loadTemplate(template: ExperimentTemplate, loadExperimentId = false) {
+    // Only copy over relevant parts (e.g., not template ID)
+    this.experiment = createExperimentConfig(template.stageConfigs, {
+      id: loadExperimentId ? template.experiment.id : generateId(),
+      metadata: template.experiment.metadata,
+      permissions: template.experiment.permissions,
+      defaultCohortConfig: template.experiment.defaultCohortConfig,
+      prolificConfig: template.experiment.prolificConfig,
+    });
+    this.setStages(template.stageConfigs);
+    this.setAgentMediators(template.agentMediators);
+    this.setAgentParticipants(template.agentParticipants);
+  }
+
+  resetExperiment() {
+    this.experiment = createExperimentConfig();
+    this.stages = [];
+    this.agentMediators = [];
+    this.agentParticipants = [];
+  }
+
+  // **************************************************************************
+  // EXPERIMENT CONFIG
+  // **************************************************************************
 
   // Return true if creator or admin
   @computed get isCreator() {
@@ -116,6 +163,10 @@ export class ExperimentEditor extends Service {
       ...config,
     };
   }
+
+  // **************************************************************************
+  // STAGE CONFIGS
+  // **************************************************************************
 
   setCurrentStageId(id: string | undefined) {
     this.currentStageId = id;
@@ -196,15 +247,161 @@ export class ExperimentEditor extends Service {
     this.showTemplatesTab = showTemplates;
   }
 
-  loadExperiment(experiment: Experiment, stages: StageConfig[]) {
-    this.experiment = experiment;
-    this.setStages(stages);
+  // **************************************************************************
+  // AGENT PERSONA CONFIGS
+  // **************************************************************************
+  @computed get currentAgent() {
+    return [...this.agentMediators, ...this.agentParticipants].find(
+      (agent) => agent.persona.id === this.currentAgentId,
+    );
   }
 
-  resetExperiment() {
-    this.experiment = createExperimentConfig();
-    this.stages = [];
-    this.sp.agentEditor.resetAgents();
+  setCurrentAgentId(id: string) {
+    this.currentAgentId = id;
+  }
+
+  setAgentMediators(templates: AgentMediatorTemplate[]) {
+    this.agentMediators = templates;
+  }
+
+  setAgentParticipants(templates: AgentParticipantTemplate[]) {
+    this.agentParticipants = templates;
+  }
+
+  addAgentMediator(setAsCurrent = true) {
+    const persona = createAgentMediatorPersonaConfig();
+    this.agentMediators.push({
+      persona,
+      promptMap: {},
+    });
+    if (setAsCurrent) {
+      this.setCurrentAgentId(persona.id);
+    }
+  }
+
+  addAgentParticipant(setAsCurrent = true) {
+    const persona = createAgentParticipantPersonaConfig();
+    this.agentParticipants.push({
+      persona,
+      promptMap: {},
+    });
+    if (setAsCurrent) {
+      this.setCurrentAgentId(persona.id);
+    }
+  }
+
+  deleteAgentMediator(id: string) {
+    const agentIndex = this.agentMediators.findIndex(
+      (agent) => agent.persona.id === id,
+    );
+    if (agentIndex === -1) return;
+    this.agentMediators = [
+      ...this.agentMediators.slice(0, agentIndex),
+      ...this.agentMediators.slice(agentIndex + 1),
+    ];
+  }
+
+  deleteAgentParticipant(id: string) {
+    const agentIndex = this.agentParticipants.findIndex(
+      (agent) => agent.persona.id === id,
+    );
+    if (agentIndex === -1) return;
+    this.agentParticipants = [
+      ...this.agentParticipants.slice(0, agentIndex),
+      ...this.agentParticipants.slice(agentIndex + 1),
+    ];
+  }
+
+  getAgent(id: string) {
+    const mediator = this.getAgentMediator(id);
+    return mediator ? mediator : this.getAgentParticipant(id);
+  }
+
+  getAgentMediator(id: string) {
+    return this.agentMediators.find((agent) => agent.persona.id === id);
+  }
+
+  getAgentParticipant(id: string) {
+    return this.agentParticipants.find((agent) => agent.persona.id === id);
+  }
+
+  addAgentMediatorPrompt(agentId: string, stageId: string) {
+    const agent = this.getAgentMediator(agentId);
+    if (!agent) return;
+    agent.promptMap[stageId] = createChatPromptConfig(stageId);
+  }
+
+  addAgentParticipantPrompt(agentId: string, stageId: string) {
+    const agent = this.getAgentParticipant(agentId);
+    if (!agent) return;
+    agent.promptMap[stageId] = createChatPromptConfig(stageId);
+  }
+
+  updateAgentMediatorPersona(
+    id: string,
+    updatedPersona: Partial<AgentMediatorPersonaConfig>,
+  ) {
+    const agentIndex = this.agentMediators.findIndex(
+      (agent) => agent.persona.id === id,
+    );
+    if (agentIndex === -1) return;
+
+    const oldAgent = this.agentMediators[agentIndex];
+    this.agentMediators = [
+      ...this.agentMediators.slice(0, agentIndex),
+      {
+        persona: {...oldAgent.persona, ...updatedPersona},
+        promptMap: oldAgent.promptMap,
+      },
+      ...this.agentMediators.slice(agentIndex + 1),
+    ];
+  }
+
+  updateAgentMediatorPrompt(id: string, updatedPrompt: MediatorPromptConfig) {
+    const agent = this.getAgentMediator(id);
+    if (!agent) return;
+    agent.promptMap[updatedPrompt.id] = updatedPrompt;
+  }
+
+  deleteAgentMediatorPrompt(agentId: string, stageId: string) {
+    const agent = this.getAgentMediator(agentId);
+    if (!agent) return;
+    delete agent.promptMap[stageId];
+  }
+
+  updateAgentParticipantPrompt(
+    id: string,
+    updatedPrompt: ParticipantPromptConfig,
+  ) {
+    const agent = this.getAgentParticipant(id);
+    if (!agent) return;
+    agent.promptMap[updatedPrompt.id] = updatedPrompt;
+  }
+
+  deleteAgentParticipantPrompt(agentId: string, stageId: string) {
+    const agent = this.getAgentParticipant(agentId);
+    if (!agent) return;
+    delete agent.promptMap[stageId];
+  }
+
+  updateAgentParticipantPersona(
+    id: string,
+    updatedPersona: Partial<AgentParticipantPersonaConfig>,
+  ) {
+    const agentIndex = this.agentParticipants.findIndex(
+      (agent) => agent.persona.id === id,
+    );
+    if (agentIndex === -1) return;
+
+    const oldAgent = this.agentParticipants[agentIndex];
+    this.agentParticipants = [
+      ...this.agentParticipants.slice(0, agentIndex),
+      {
+        persona: {...oldAgent.persona, ...updatedPersona},
+        promptMap: oldAgent.promptMap,
+      },
+      ...this.agentParticipants.slice(agentIndex + 1),
+    ];
   }
 
   // *********************************************************************** //
@@ -224,9 +421,13 @@ export class ExperimentEditor extends Service {
       this.sp.firebaseService.functions,
       {
         collectionName: 'experiments',
-        experimentConfig: this.experiment,
-        stageConfigs: this.stages,
-        agentConfigs: this.sp.agentEditor.getAgentData(),
+        experimentTemplate: {
+          id: '',
+          experiment: this.experiment,
+          stageConfigs: this.stages,
+          agentMediators: this.agentMediators,
+          agentParticipants: this.agentParticipants,
+        },
       },
     );
 
@@ -247,9 +448,13 @@ export class ExperimentEditor extends Service {
       this.sp.firebaseService.functions,
       {
         collectionName: 'experiments',
-        experimentConfig: this.experiment,
-        stageConfigs: this.stages,
-        agentConfigs: this.sp.agentEditor.getAgentData(),
+        experimentTemplate: {
+          id: '',
+          experiment: this.experiment,
+          stageConfigs: this.stages,
+          agentMediators: this.agentMediators,
+          agentParticipants: this.agentParticipants,
+        },
       },
     );
 

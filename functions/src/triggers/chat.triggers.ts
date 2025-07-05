@@ -1,14 +1,12 @@
 import {onDocumentCreated} from 'firebase-functions/v2/firestore';
 import {StageKind} from '@deliberation-lab/utils';
 import {
+  getFirestoreActiveMediators,
+  getFirestoreActiveParticipants,
   getFirestoreStage,
   getFirestoreStagePublicData,
 } from '../utils/firestore';
-import {
-  checkAgentsReadyToEndChat,
-  sendAgentMediatorMessage,
-  sendAgentParticipantMessage,
-} from '../stages/chat.agent';
+import {createAgentChatMessageFromPrompt} from '../chat/chat.agent';
 import {startTimeElapsed} from '../stages/chat.time';
 import {sendAgentParticipantSalespersonMessage} from '../stages/salesperson.agent';
 
@@ -44,40 +42,44 @@ export const onChatMessageCreated = onDocumentCreated(
         );
         break;
       case StageKind.SALESPERSON:
-        sendAgentParticipantSalespersonMessage(
-          event.params.experimentId,
-          event.params.cohortId,
-          event.params.stageId,
-          stage,
-          event.params.chatId,
-        );
+        // TODO: Add API calls for salesperson back in
         return; // Don't call any of the usual chat functions
       default:
         break;
     }
 
     // Send agent mediator messages
-    sendAgentMediatorMessage(
+    const mediators = await getFirestoreActiveMediators(
       event.params.experimentId,
       event.params.cohortId,
-      stage,
-      publicStageData,
-      event.params.chatId,
+      stage.id,
+      true,
     );
+    mediators.forEach((mediator) => {
+      createAgentChatMessageFromPrompt(
+        event.params.experimentId,
+        event.params.cohortId,
+        stage.id,
+        event.params.chatId,
+        mediator,
+      );
+    });
+
     // Send agent participant messages
-    sendAgentParticipantMessage(
+    const participants = await getFirestoreActiveParticipants(
       event.params.experimentId,
       event.params.cohortId,
-      stage,
-      publicStageData,
-      event.params.chatId,
+      stage.id,
+      true,
     );
-    // Check ready to end chat
-    checkAgentsReadyToEndChat(
-      event.params.experimentId,
-      event.params.cohortId,
-      stage,
-      publicStageData,
-    );
+    participants.forEach((participant) => {
+      createAgentChatMessageFromPrompt(
+        event.params.experimentId,
+        event.params.cohortId,
+        stage.id,
+        event.params.chatId,
+        participant,
+      );
+    });
   },
 );

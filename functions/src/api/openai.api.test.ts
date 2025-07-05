@@ -3,12 +3,13 @@ import nock = require('nock');
 
 import {
   ModelGenerationConfig,
+  ModelResponse,
+  ModelResponseStatus,
   StructuredOutputType,
   StructuredOutputDataType,
   createStructuredOutputConfig,
 } from '@deliberation-lab/utils';
 import {getOpenAIAPIChatCompletionResponse} from './openai.api';
-import {ModelResponse, ModelResponseStatus} from './model.response';
 
 const DEFAULT_GENERATION_CONFIG: ModelGenerationConfig = {
   maxTokens: 300,

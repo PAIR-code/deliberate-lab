@@ -2,6 +2,7 @@ import {Timestamp} from 'firebase/firestore';
 import {generateId, UnifiedTimestamp} from './shared';
 import {
   ParticipantProfileBase,
+  UserType,
   createParticipantProfileBase,
 } from './participant';
 import {AgentChatPromptConfig} from './agent';
@@ -21,19 +22,13 @@ import {AgentChatPromptConfig} from './agent';
 export interface ChatMessage {
   id: string;
   discussionId: string | null; // discussion during which message was sent
-  type: ChatMessageType;
+  type: UserType;
   message: string;
   timestamp: UnifiedTimestamp;
   profile: ParticipantProfileBase;
-  senderId: string; // participant public ID or mediator ID
+  senderId: string; // participant public ID or mediator public ID
   agentId: string; // agent persona used (or blank if none)
   explanation: string; // agent reasoning (or blank if none)
-}
-
-export enum ChatMessageType {
-  PARTICIPANT = 'PARTICIPANT',
-  MEDIATOR = 'MEDIATOR',
-  EXPERIMENTER = 'EXPERIMENTER', // if experimenter needs to send a message
 }
 
 /** Format for LLM API chat message output. */
@@ -59,6 +54,23 @@ export const EXPERIMENTER_MANUAL_CHAT_SENDER_ID = 'experimenter';
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
 
+/** Create chat message. */
+export function createChatMessage(
+  config: Partial<ChatMessage> = {},
+): ChatMessage {
+  return {
+    id: config.id ?? generateId(),
+    discussionId: config.discussionId ?? null,
+    type: config.type ?? UserType.UNKNOWN,
+    message: config.message ?? '',
+    timestamp: config.timestamp ?? Timestamp.now(),
+    profile: config.profile ?? createParticipantProfileBase(),
+    senderId: config.senderId ?? '',
+    agentId: config.agentId ?? '',
+    explanation: config.explanation ?? '',
+  };
+}
+
 /** Create participant chat message. */
 export function createParticipantChatMessage(
   config: Partial<ChatMessage> = {},
@@ -66,7 +78,7 @@ export function createParticipantChatMessage(
   return {
     id: config.id ?? generateId(),
     discussionId: config.discussionId ?? null,
-    type: ChatMessageType.PARTICIPANT,
+    type: UserType.PARTICIPANT,
     message: config.message ?? '',
     timestamp: config.timestamp ?? Timestamp.now(),
     profile: config.profile ?? createParticipantProfileBase(),
@@ -83,7 +95,7 @@ export function createMediatorChatMessage(
   return {
     id: config.id ?? generateId(),
     discussionId: config.discussionId ?? null,
-    type: ChatMessageType.MEDIATOR,
+    type: UserType.MEDIATOR,
     message: config.message ?? '',
     timestamp: config.timestamp ?? Timestamp.now(),
     profile: config.profile ?? {name: 'Agent', avatar: '🤖', pronouns: null},
@@ -100,7 +112,7 @@ export function createExperimenterChatMessage(
   return {
     id: config.id ?? generateId(),
     discussionId: config.discussionId ?? null,
-    type: ChatMessageType.EXPERIMENTER,
+    type: UserType.EXPERIMENTER,
     message: config.message ?? '',
     timestamp: config.timestamp ?? Timestamp.now(),
     profile: config.profile ?? {name: 'Mediator', avatar: '⭐', pronouns: null},

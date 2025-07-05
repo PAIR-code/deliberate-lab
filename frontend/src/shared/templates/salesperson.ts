@@ -5,7 +5,6 @@ import {
   SalespersonBoardConfig,
   SalespersonBoardCoord,
   StageConfig,
-  StageGame,
   createInfoStage,
   createMetadataConfig,
   createProfileStage,
@@ -40,7 +39,6 @@ const PROFILE_STAGE = createProfileStage({
     primaryText:
       "This identity is how other players will see you during today's experiment.",
   }),
-  game: StageGame.CTS,
   profileType: ProfileType.ANONYMOUS_ANIMAL,
 });
 
@@ -60,7 +58,6 @@ const INFO_STAGE = createInfoStage({
   id: 'info',
   name: 'Game rules',
   infoLines: [GAME_RULES],
-  game: StageGame.CTS,
 });
 
 function getCoinMap() {
@@ -91,7 +88,6 @@ const GAME_BOARD: SalespersonBoardConfig = {
 const BOARD_STAGE = createSalespersonStage(GAME_BOARD, {
   id: 'salesperson',
   name: 'Cooperative Traveling Salesperson Game',
-  game: StageGame.CTS,
   progress: {
     minParticipants: 2,
     waitForAllParticipants: false,

@@ -73,16 +73,6 @@ export enum StageKind {
   TRANSFER = 'transfer',
 }
 
-/** Specific game associated with stage. */
-export enum StageGame {
-  NONE = 'none',
-  LAS = 'las', // Lost at Sea
-  RTV = 'rtv', // Reality TV Debate.
-  CHP = 'chp', // Chip Negotiation
-  CTS = 'cts', // Co-op Traveling Salesperson
-  TG = 'TG', // Test Game
-}
-
 /**
  * Base stage config.
  *
@@ -92,7 +82,6 @@ export enum StageGame {
 export interface BaseStageConfig {
   id: string;
   kind: StageKind;
-  game: StageGame;
   name: string;
   descriptions: StageTextConfig;
   progress: StageProgressConfig;

@@ -10,12 +10,10 @@ import {
   StructuredOutputDataType,
   StructuredOutputConfig,
   StructuredOutputSchema,
-} from '@deliberation-lab/utils';
-import {
   ModelResponseStatus,
   ModelResponse,
   addParsedModelResponse,
-} from './model.response';
+} from '@deliberation-lab/utils';
 
 const GEMINI_DEFAULT_MODEL = 'gemini-1.5-pro-latest';
 const DEFAULT_FETCH_TIMEOUT = 300 * 1000; // This is the Chrome default
@@ -130,6 +128,7 @@ export async function callGemini(
   if (response.promptFeedback) {
     return {
       status: ModelResponseStatus.REFUSAL_ERROR,
+      rawResponse: JSON.stringify(response),
       errorMessage:
         response.promptFeedback.blockReasonMessage ??
         JSON.stringify(response.promptFeedback),
@@ -139,6 +138,7 @@ export async function callGemini(
   if (!response.candidates) {
     return {
       status: ModelResponseStatus.UNKNOWN_ERROR,
+      rawResponse: JSON.stringify(response),
       errorMessage: `Model provider returned an unexpected response (no response candidates): ${response}`,
     };
   }
@@ -147,12 +147,14 @@ export async function callGemini(
   if (finishReason === MAX_TOKENS_FINISH_REASON) {
     return {
       status: ModelResponseStatus.LENGTH_ERROR,
+      rawResponse: JSON.stringify(response),
       errorMessage: `Error: Token limit (${generationConfig.maxOutputTokens}) exceeded`,
     };
   }
 
   const modelResponse = {
     status: ModelResponseStatus.OK,
+    rawResponse: JSON.stringify(response),
     text: response.text(),
   };
   if (parseResponse) {

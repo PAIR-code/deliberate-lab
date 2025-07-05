@@ -2,113 +2,196 @@ import '../../pair-components/button';
 import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 import '../../pair-components/textarea';
-import './agent_base_prompt_dialog';
-import '@material/web/textfield/filled-text-field.js';
 import '@material/web/checkbox/checkbox.js';
+
+import './structured_prompt_editor';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
-import {AgentEditor} from '../../services/agent.editor';
 import {ExperimentEditor} from '../../services/experiment.editor';
-import {ExperimentService} from '../../services/experiment.service';
 
 import {
   AgentPersonaConfig,
+  AgentPersonaType,
   ApiKeyType,
   BaseAgentPromptConfig,
+  ChatMediatorStructuredOutputConfig,
+  ChatPromptConfig,
+  PromptItem,
+  PromptItemType,
   StageConfig,
   StageKind,
-  StructuredOutputConfig,
   StructuredOutputType,
   StructuredOutputDataType,
   StructuredOutputSchema,
+  createDefaultPromptFromText,
   makeStructuredOutputPrompt,
   structuredOutputEnabled,
 } from '@deliberation-lab/utils';
 import {LLM_AGENT_AVATARS} from '../../shared/constants';
 import {getHashBasedColor} from '../../shared/utils';
 
-import {styles} from './agent_base_prompt_editor.scss';
+import {styles} from './agent_chat_prompt_editor.scss';
+import {styles as dialogStyles} from './stage_builder_dialog.scss';
 
-/** Editor for configuring agent base prompt. */
-@customElement('agent-base-prompt-editor')
-export class AgentEditorComponent extends MobxLitElement {
+/** Editor for configuring agent chat prompt. */
+@customElement('agent-chat-prompt-editor')
+export class EditorComponent extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  private readonly agentEditor = core.getService(AgentEditor);
   private readonly experimentEditor = core.getService(ExperimentEditor);
-  private readonly experimentService = core.getService(ExperimentService);
 
-  @property() agentConfig: AgentPersonaConfig | undefined = undefined;
-  @property() stageConfig: StageConfig | undefined = undefined;
+  @property() agent: AgentPersonaConfig | undefined = undefined;
+  @property() stageNamePrefix = ''; // e.g., number of stage to show before name
+  @property() stageId = '';
+
+  @state() showDialog = false;
   @state() isTestButtonLoading = false;
 
   override render() {
-    if (!this.agentConfig || !this.stageConfig) {
+    if (!this.agent) {
       return nothing;
     }
 
-    const promptConfig = this.agentEditor.getAgentChatPrompt(
-      this.agentConfig.id,
-      this.stageConfig.id,
-    );
+    const stageConfig = this.experimentEditor.getStage(this.stageId);
+    if (!stageConfig) {
+      return nothing;
+    } else if (stageConfig.kind !== StageKind.CHAT) {
+      if (this.agent.type === AgentPersonaType.PARTICIPANT) {
+        return html`
+          <div class="section">
+            <div class="section-title">
+              ${this.stageNamePrefix}${stageConfig.name}
+            </div>
+            <div class="description">
+              No prompt customizations currently available for this stage.
+            </div>
+          </div>
+        `;
+      } else {
+        return nothing;
+      }
+    }
+
+    const promptConfig = this.getPrompt();
 
     return html`
-      <div class="section-header">
-        <div class="section-title">${this.stageConfig.name}</div>
-        ${this.renderDialogButton(
-          this.stageConfig,
-          this.agentConfig,
-          promptConfig,
-        )}
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">
+            ${this.stageNamePrefix}${stageConfig.name}
+          </div>
+          ${promptConfig ? this.renderDialogButton() : nothing}
+        </div>
+        ${promptConfig
+          ? html`
+              ${this.renderAgentPrompt(this.agent, promptConfig)}
+              ${this.renderDialog(stageConfig, promptConfig)}
+            `
+          : this.renderAddButton()}
       </div>
-      ${this.renderMainPromptEditor(
-        this.stageConfig,
-        this.agentConfig,
-        promptConfig,
-      )}
-      ${this.renderDialog(this.stageConfig, this.agentConfig, promptConfig)}
     `;
+  }
+
+  private renderAddButton() {
+    return html`
+      <pr-button variant="tonal" @click=${this.addPrompt}>Add prompt</pr-button>
+    `;
+  }
+
+  private addPrompt() {
+    if (!this.agent) {
+      return;
+    } else if (this.agent.type === AgentPersonaType.MEDIATOR) {
+      this.experimentEditor.addAgentMediatorPrompt(this.agent.id, this.stageId);
+    } else if (this.agent.type === AgentPersonaType.PARTICIPANT) {
+      this.experimentEditor.addAgentParticipantPrompt(
+        this.agent.id,
+        this.stageId,
+      );
+    }
+  }
+
+  private getPrompt() {
+    return this.experimentEditor.getAgent(this.agent?.id ?? '')?.promptMap[
+      this.stageId
+    ];
+  }
+
+  private deletePrompt() {
+    if (!this.agent) {
+      return;
+    } else if (this.agent.type === AgentPersonaType.MEDIATOR) {
+      this.experimentEditor.deleteAgentMediatorPrompt(
+        this.agent.id,
+        this.stageId,
+      );
+    } else if (this.agent.type === AgentPersonaType.PARTICIPANT) {
+      this.experimentEditor.deleteAgentParticipantPrompt(
+        this.agent.id,
+        this.stageId,
+      );
+    }
+  }
+
+  private updatePrompt(updatedPrompt: Partial<ChatPromptConfig>) {
+    const oldPrompt = this.getPrompt();
+    if (!this.agent || !oldPrompt) {
+      return;
+    }
+
+    const newPrompt = {...oldPrompt, ...updatedPrompt};
+    if (this.agent.type === AgentPersonaType.MEDIATOR) {
+      this.experimentEditor.updateAgentMediatorPrompt(this.agent.id, newPrompt);
+    } else if (this.agent.type === AgentPersonaType.PARTICIPANT) {
+      this.experimentEditor.updateAgentParticipantPrompt(
+        this.agent.id,
+        newPrompt,
+      );
+    }
   }
 
   private renderDialog(
     stageConfig: StageConfig,
-    agentConfig: AgentPersonaConfig,
-    promptConfig: BaseAgentPromptConfig | undefined,
+    promptConfig: ChatPromptConfig,
   ) {
-    if (stageConfig.id !== this.agentEditor.activeStageId) {
-      return nothing;
-    }
+    if (!this.agent || !this.showDialog) return nothing;
 
     return html`
-      <base-agent-prompt-dialog
-        .stageConfig=${stageConfig}
-        .agentConfig=${agentConfig}
+      <agent-chat-prompt-dialog
+        .onClose=${() => {
+          this.showDialog = false;
+        }}
       >
-        ${this.renderStageEditor(stageConfig, agentConfig, promptConfig)}
-        <slot></slot>
-      </base-agent-prompt-dialog>
+        <div slot="title">${this.stageNamePrefix}${stageConfig.name}</div>
+        <div class="section">
+          ${this.renderAgentPrompt(this.agent, promptConfig)}
+          <div class="section-title">Prompt settings</div>
+          ${this.renderAgentStructuredOutputConfig(this.agent, promptConfig)}
+          ${this.renderPromptPreview(promptConfig)}
+        </div>
+        <div class="divider"></div>
+        ${this.renderAgentSamplingParameters(this.agent, promptConfig)}
+        <div class="divider"></div>
+        ${this.renderAgentCustomRequestBodyFields(this.agent, promptConfig)}
+        <div class="divider"></div>
+        <pr-button color="error" variant="outlined" @click=${this.deletePrompt}>
+          Delete prompt
+        </pr-button>
+      </agent-chat-prompt-dialog>
     `;
   }
 
-  private renderDialogButton(
-    stageConfig: StageConfig,
-    agentConfig: AgentPersonaConfig,
-    promptConfig: BaseAgentPromptConfig | undefined,
-  ) {
-    if (!promptConfig) {
-      return nothing;
-    }
-
+  private renderDialogButton() {
     return html`
       <pr-button
         variant="default"
         color="neutral"
         @click=${() => {
-          this.agentEditor.setActiveStageId(stageConfig.id);
+          this.showDialog = true;
         }}
       >
         <div class="button-wrapper">
@@ -119,261 +202,95 @@ export class AgentEditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderStageEditor(
-    stageConfig: StageConfig,
-    agentConfig: AgentPersonaConfig,
-    promptConfig: BaseAgentPromptConfig | undefined,
-  ) {
-    const renderPromptSettings = (promptConfig: BaseAgentPromptConfig) => {
-      return html`
-        <div>${this.renderTestPromptButton(agentConfig, promptConfig)}</div>
-        <div class="divider"></div>
-        <div class="section">
-          <div class="section-title">Prompt settings</div>
-          ${this.renderAgentPrompt(agentConfig, promptConfig)}
-          ${this.renderAgentStructuredOutputConfig(agentConfig, promptConfig)}
-          ${this.renderPromptPreview(promptConfig)}
-        </div>
-        <div class="divider"></div>
-        ${this.renderAgentSamplingParameters(agentConfig, promptConfig)}
-        <div class="divider"></div>
-        ${this.renderAgentCustomRequestBodyFields(agentConfig, promptConfig)}
-        <div class="divider"></div>
-        <slot></slot>
-        <div class="divider"></div>
-        <pr-button
-          color="error"
-          variant="outlined"
-          @click=${() => {
-            this.agentEditor.deleteAgentChatPrompt(
-              agentConfig.id,
-              stageConfig.id,
-            );
-          }}
-        >
-          Delete prompt
-        </pr-button>
-      `;
-    };
-
-    const renderAddButton = () => {
-      return html`
-        <div class="field">
-          <pr-button
-            @click=${() => {
-              this.agentEditor.addAgentChatPrompt(agentConfig.id, stageConfig);
-            }}
-          >
-            Add prompt
-          </pr-button>
-          <div class="description">
-            If no prompt, the agent will not be called during this stage.
-          </div>
-        </div>
-      `;
-    };
-
-    return html`
-      <div class="agent-wrapper">
-        ${promptConfig ? renderPromptSettings(promptConfig) : renderAddButton()}
-      </div>
-    `;
-  }
-
-  private renderMainPromptEditor(
-    stageConfig: StageConfig,
-    agentConfig: AgentPersonaConfig,
-    promptConfig: BaseAgentPromptConfig | undefined,
-  ) {
-    const renderPromptSettings = (promptConfig: BaseAgentPromptConfig) => {
-      return html` ${this.renderAgentPrompt(agentConfig, promptConfig)} `;
-    };
-
-    const renderAddButton = () => {
-      return html`
-        <div class="field">
-          <pr-button
-            @click=${() => {
-              this.agentEditor.addAgentChatPrompt(agentConfig.id, stageConfig);
-            }}
-          >
-            Add prompt
-          </pr-button>
-          <div class="description">
-            If no prompt, the agent will not be called during this stage.
-          </div>
-        </div>
-      `;
-    };
-
-    return html`
-      <div class="agent-wrapper">
-        ${promptConfig ? renderPromptSettings(promptConfig) : renderAddButton()}
-      </div>
-    `;
-  }
-
-  private renderTestPromptButton(
-    agentConfig: AgentPersonaConfig,
-    promptConfig: BaseAgentPromptConfig,
-  ) {
-    const onClick = async () => {
-      this.isTestButtonLoading = true;
-      await this.agentEditor.testAgentConfig(agentConfig, promptConfig);
-      this.isTestButtonLoading = false;
-    };
-
-    // TODO: Test prompt with fake chat data?
-    const response = this.agentEditor.getTestResponse(
-      agentConfig.id,
-      promptConfig.id,
-    );
-    return html`
-      <div class="field">
-        <pr-button
-          ?loading=${this.isTestButtonLoading}
-          color="secondary"
-          variant="tonal"
-          @click=${onClick}
-        >
-          Test prompt
-        </pr-button>
-        ${response.length > 0 ? html`<div>${response}</div>` : nothing}
-      </div>
-    `;
-  }
-
   private renderAgentPrompt(
     agent: AgentPersonaConfig,
-    agentPromptConfig: BaseAgentPromptConfig,
+    agentPromptConfig: ChatPromptConfig,
   ) {
-    const updatePrompt = (e: InputEvent) => {
-      const promptContext = (e.target as HTMLTextAreaElement).value;
-      this.agentEditor.updateAgentChatPromptConfig(
-        agent.id,
-        agentPromptConfig.id,
-        {promptContext},
-      );
+    const updatePrompt = (prompt: PromptItem[]) => {
+      this.updatePrompt({prompt});
     };
 
     return html`
-      <md-filled-text-field
-        required
-        type="textarea"
-        rows="5"
-        label="Custom prompt for agent (will be concatenated with chat history and sent to model)"
-        .error=${!agentPromptConfig.promptContext}
-        .value=${agentPromptConfig.promptContext}
-        ?disabled=${!this.experimentEditor.isCreator}
-        @input=${updatePrompt}
-      >
-      </md-filled-text-field>
+      <structured-prompt-editor
+        .prompt=${agentPromptConfig.prompt}
+        .stageId=${this.stageId}
+        .onUpdate=${updatePrompt}
+      ></structured-prompt-editor>
     `;
   }
 
-  private renderPromptPreview(agentPromptConfig: BaseAgentPromptConfig) {
-    const config = agentPromptConfig.structuredOutputConfig;
-    let prompt = agentPromptConfig.promptContext;
-    if (structuredOutputEnabled(config) && config.schema) {
-      prompt += `\n${makeStructuredOutputPrompt(config)}`;
-    }
+  private renderPromptPreview(agentPromptConfig: ChatPromptConfig) {
+    const getPromptItems = () => {
+      return agentPromptConfig.prompt.map((item) =>
+        item.type === PromptItemType.TEXT
+          ? html`<div>${item.text}</div>`
+          : html`<div class="chip tertiary">${item.type}</div>`,
+      );
+    };
+    const getStructuredOutput = () => {
+      const config = agentPromptConfig.structuredOutputConfig;
+      if (structuredOutputEnabled(config) && config.schema) {
+        return makeStructuredOutputPrompt(config);
+      }
+      return '';
+    };
+
     return html`
       <div class="code-wrapper">
         <div class="field-title">Prompt preview</div>
-        <pre><code>${prompt}</code></pre>
-      </div>
-    `;
-  }
-
-  private renderAvatars(agent: AgentPersonaConfig) {
-    const handleAvatarClick = (e: Event) => {
-      const value = Number((e.target as HTMLInputElement).value);
-      const avatar = LLM_AGENT_AVATARS[value];
-      this.agentEditor.updateAgentProfile(agent.id, {avatar});
-    };
-
-    const renderAvatarRadio = (emoji: string, index: number) => {
-      return html`
-        <div class="radio-button">
-          <md-radio
-            id=${emoji}
-            name="${agent.id}-avatar"
-            value=${index}
-            aria-label=${emoji}
-            ?checked=${agent.defaultProfile.avatar === emoji}
-            ?disabled=${!this.experimentEditor.canEditStages}
-            @change=${handleAvatarClick}
-          >
-          </md-radio>
-          <avatar-icon
-            .emoji=${emoji}
-            .square=${true}
-            .color=${getHashBasedColor(emoji)}
-          >
-          </avatar-icon>
-        </div>
-      `;
-    };
-
-    return html`
-      <div class="radio-question">
-        <div class="radio-question-label">Avatar</div>
-        <div class="radio-wrapper">
-          ${LLM_AGENT_AVATARS.map((avatar, index) =>
-            renderAvatarRadio(avatar, index),
-          )}
-        </div>
+        <pre><code>${getPromptItems()}${getStructuredOutput()}</code></pre>
       </div>
     `;
   }
 
   private renderAgentSamplingParameters(
     agent: AgentPersonaConfig,
-    agentPromptConfig: BaseAgentPromptConfig,
+    agentPromptConfig: ChatPromptConfig,
   ) {
     const generationConfig = agentPromptConfig.generationConfig;
 
     const updateTemperature = (e: InputEvent) => {
       const temperature = Number((e.target as HTMLInputElement).value);
       if (!isNaN(temperature)) {
-        this.agentEditor.updateAgentChatGenerationConfig(
-          agent.id,
-          agentPromptConfig.id,
-          {temperature},
-        );
+        this.updatePrompt({
+          generationConfig: {
+            ...agentPromptConfig.generationConfig,
+            temperature,
+          },
+        });
       }
     };
 
     const updateTopP = (e: InputEvent) => {
       const topP = Number((e.target as HTMLInputElement).value);
       if (!isNaN(topP)) {
-        this.agentEditor.updateAgentChatGenerationConfig(
-          agent.id,
-          agentPromptConfig.id,
-          {topP},
-        );
+        this.updatePrompt({
+          generationConfig: {...agentPromptConfig.generationConfig, topP},
+        });
       }
     };
 
     const updateFrequencyPenalty = (e: InputEvent) => {
       const frequencyPenalty = Number((e.target as HTMLInputElement).value);
       if (!isNaN(frequencyPenalty)) {
-        this.agentEditor.updateAgentChatGenerationConfig(
-          agent.id,
-          agentPromptConfig.id,
-          {frequencyPenalty},
-        );
+        this.updatePrompt({
+          generationConfig: {
+            ...agentPromptConfig.generationConfig,
+            frequencyPenalty,
+          },
+        });
       }
     };
 
     const updatePresencePenalty = (e: InputEvent) => {
       const presencePenalty = Number((e.target as HTMLInputElement).value);
       if (!isNaN(presencePenalty)) {
-        this.agentEditor.updateAgentChatGenerationConfig(
-          agent.id,
-          agentPromptConfig.id,
-          {presencePenalty},
-        );
+        this.updatePrompt({
+          generationConfig: {
+            ...agentPromptConfig.generationConfig,
+            presencePenalty,
+          },
+        });
       }
     };
 
@@ -464,13 +381,19 @@ export class AgentEditorComponent extends MobxLitElement {
 
   private renderAgentCustomRequestBodyFields(
     agent: AgentPersonaConfig,
-    agentPromptConfig: BaseAgentPromptConfig,
+    agentPromptConfig: ChatPromptConfig,
   ) {
     const addField = () => {
-      this.agentEditor.addAgentChatCustomRequestBodyField(
-        agent.id,
-        agentPromptConfig.id,
-      );
+      const customRequestBodyFields = [
+        ...agentPromptConfig.generationConfig.customRequestBodyFields,
+        {name: '', value: ''},
+      ];
+      this.updatePrompt({
+        generationConfig: {
+          ...agentPromptConfig.generationConfig,
+          customRequestBodyFields,
+        },
+      });
     };
 
     const generationConfig = agentPromptConfig.generationConfig;
@@ -496,36 +419,45 @@ export class AgentEditorComponent extends MobxLitElement {
 
   private renderAgentCustomRequestBodyField(
     agent: AgentPersonaConfig,
-    agentPromptConfig: BaseAgentPromptConfig,
+    agentPromptConfig: ChatPromptConfig,
     field: {name: string; value: string},
     fieldIndex: number,
   ) {
     const updateName = (e: InputEvent) => {
       const name = (e.target as HTMLTextAreaElement).value;
-      this.agentEditor.updateAgentChatCustomRequestBodyField(
-        agent.id,
-        agentPromptConfig.id,
-        fieldIndex,
-        {name},
-      );
+      const genConfig = agentPromptConfig.generationConfig;
+      const customRequestBodyFields = [
+        ...genConfig.customRequestBodyFields.slice(0, fieldIndex),
+        {...genConfig.customRequestBodyFields[fieldIndex], name},
+        ...genConfig.customRequestBodyFields.slice(fieldIndex + 1),
+      ];
+      this.updatePrompt({
+        generationConfig: {...genConfig, customRequestBodyFields},
+      });
     };
 
     const updateValue = (e: InputEvent) => {
       const value = (e.target as HTMLTextAreaElement).value;
-      this.agentEditor.updateAgentChatCustomRequestBodyField(
-        agent.id,
-        agentPromptConfig.id,
-        fieldIndex,
-        {value},
-      );
+      const genConfig = agentPromptConfig.generationConfig;
+      const customRequestBodyFields = [
+        ...genConfig.customRequestBodyFields.slice(0, fieldIndex),
+        {...genConfig.customRequestBodyFields[fieldIndex], value},
+        ...genConfig.customRequestBodyFields.slice(fieldIndex + 1),
+      ];
+      this.updatePrompt({
+        generationConfig: {...genConfig, customRequestBodyFields},
+      });
     };
 
     const deleteField = () => {
-      this.agentEditor.deleteAgentChatCustomRequestBodyField(
-        agent.id,
-        agentPromptConfig.id,
-        fieldIndex,
-      );
+      const genConfig = agentPromptConfig.generationConfig;
+      const customRequestBodyFields = [
+        ...genConfig.customRequestBodyFields.slice(0, fieldIndex),
+        ...genConfig.customRequestBodyFields.slice(fieldIndex + 1),
+      ];
+      this.updatePrompt({
+        generationConfig: {...genConfig, customRequestBodyFields},
+      });
     };
     return html`
       <div class="name-value-input">
@@ -558,17 +490,18 @@ export class AgentEditorComponent extends MobxLitElement {
   // TODO(mkbehr): allow for reordering config fields
   private renderAgentStructuredOutputConfig(
     agent: AgentPersonaConfig,
-    agentPromptConfig: BaseAgentPromptConfig,
+    agentPromptConfig: ChatPromptConfig,
   ) {
     const config = agentPromptConfig.structuredOutputConfig;
     const updateConfig = (
-      structuredOutputConfig: Partial<StructuredOutputConfig>,
+      structuredOutputConfig: Partial<ChatMediatorStructuredOutputConfig>,
     ) => {
-      this.agentEditor.updateAgentChatStructuredOutputConfig(
-        agent.id,
-        agentPromptConfig.id,
-        structuredOutputConfig,
-      );
+      this.updatePrompt({
+        structuredOutputConfig: {
+          ...agentPromptConfig.structuredOutputConfig,
+          ...structuredOutputConfig,
+        },
+      });
     };
     const updateEnabled = () => {
       const enabled = !config.enabled;
@@ -652,23 +585,30 @@ export class AgentEditorComponent extends MobxLitElement {
 
   private renderAgentStructuredOutputSchemaFields(
     agent: AgentPersonaConfig,
-    agentPromptConfig: BaseAgentPromptConfig,
+    agentPromptConfig: ChatPromptConfig,
   ) {
     const config = agentPromptConfig.structuredOutputConfig;
     const addField = () => {
-      this.agentEditor.addAgentChatStructuredOutputSchemaField(
-        agent.id,
-        agentPromptConfig.id,
-      );
+      const newField = {
+        name: '',
+        schema: {type: StructuredOutputDataType.STRING, description: ''},
+      };
+      const schema = agentPromptConfig.structuredOutputConfig.schema ?? {
+        type: StructuredOutputDataType.OBJECT,
+        properties: [newField],
+      };
+      schema.properties = [...(schema.properties ?? []), newField];
+      updateConfig({schema});
     };
     const updateConfig = (
-      structuredOutputConfig: Partial<StructuredOutputConfig>,
+      structuredOutputConfig: Partial<ChatMediatorStructuredOutputConfig>,
     ) => {
-      this.agentEditor.updateAgentChatStructuredOutputConfig(
-        agent.id,
-        agentPromptConfig.id,
-        structuredOutputConfig,
-      );
+      this.updatePrompt({
+        structuredOutputConfig: {
+          ...agentPromptConfig.structuredOutputConfig,
+          ...structuredOutputConfig,
+        },
+      });
     };
     const updateMessageField = (e: InputEvent) => {
       const messageField = (e.target as HTMLTextAreaElement).value;
@@ -739,47 +679,67 @@ export class AgentEditorComponent extends MobxLitElement {
 
   private renderAgentStructuredOutputSchemaField(
     agent: AgentPersonaConfig,
-    agentPromptConfig: BaseAgentPromptConfig,
+    agentPromptConfig: ChatPromptConfig,
     field: {name: string; schema: StructuredOutputSchema},
     fieldIndex: number,
   ) {
+    const updateConfig = (
+      structuredOutputConfig: Partial<ChatMediatorStructuredOutputConfig>,
+    ) => {
+      this.updatePrompt({
+        structuredOutputConfig: {
+          ...agentPromptConfig.structuredOutputConfig,
+          ...structuredOutputConfig,
+        },
+      });
+    };
+
     const updateName = (e: InputEvent) => {
       const name = (e.target as HTMLTextAreaElement).value;
-      this.agentEditor.updateAgentChatStructuredOutputSchemaField(
-        agent.id,
-        agentPromptConfig.id,
-        fieldIndex,
-        {name: name},
-      );
+      const schema = agentPromptConfig.structuredOutputConfig.schema;
+      if (schema && schema.properties) {
+        schema.properties[fieldIndex] = {
+          name,
+          schema: schema.properties[fieldIndex].schema,
+        };
+        updateConfig({schema});
+      }
     };
 
     const updateType = (e: Event) => {
       const type = (e.target as HTMLSelectElement)
         .value as StructuredOutputDataType;
-      this.agentEditor.updateAgentChatStructuredOutputSchemaField(
-        agent.id,
-        agentPromptConfig.id,
-        fieldIndex,
-        {schema: {type: type}},
-      );
+      const schema = agentPromptConfig.structuredOutputConfig.schema;
+      if (schema && schema.properties) {
+        schema.properties[fieldIndex] = {
+          name: schema.properties[fieldIndex].name,
+          schema: {...schema.properties[fieldIndex].schema, type},
+        };
+        updateConfig({schema});
+      }
     };
 
     const updateDescription = (e: InputEvent) => {
       const description = (e.target as HTMLTextAreaElement).value;
-      this.agentEditor.updateAgentChatStructuredOutputSchemaField(
-        agent.id,
-        agentPromptConfig.id,
-        fieldIndex,
-        {schema: {description: description}},
-      );
+      const schema = agentPromptConfig.structuredOutputConfig.schema;
+      if (schema && schema.properties) {
+        schema.properties[fieldIndex] = {
+          name: schema.properties[fieldIndex].name,
+          schema: {...schema.properties[fieldIndex].schema, description},
+        };
+        updateConfig({schema});
+      }
     };
 
     const deleteField = () => {
-      this.agentEditor.deleteAgentChatStructuredOutputSchemaField(
-        agent.id,
-        agentPromptConfig.id,
-        fieldIndex,
-      );
+      const schema = agentPromptConfig.structuredOutputConfig.schema;
+      if (schema && schema.properties) {
+        schema.properties = [
+          ...schema.properties.slice(0, fieldIndex),
+          ...schema.properties.slice(fieldIndex + 1),
+        ];
+        updateConfig({schema});
+      }
     };
 
     return html`
@@ -821,8 +781,38 @@ export class AgentEditorComponent extends MobxLitElement {
   }
 }
 
+/** Agent chat prompt dialog */
+// TODO: Generalize component for platform-wide dialog use?
+@customElement('agent-chat-prompt-dialog')
+export class DialogComponent extends MobxLitElement {
+  static override styles: CSSResultGroup = [dialogStyles];
+
+  @property() onClose: () => void = () => {};
+
+  override render() {
+    return html`
+      <div class="dialog full">
+        <div class="header">
+          <slot name="title"></slot>
+          <pr-icon-button
+            color="neutral"
+            icon="close"
+            variant="default"
+            @click=${this.onClose}
+          >
+          </pr-icon-button>
+        </div>
+        <div class="body">
+          <slot></slot>
+        </div>
+      </div>
+    `;
+  }
+}
+
 declare global {
   interface HTMLElementTagNameMap {
-    'agent-base-prompt-editor': AgentEditorComponent;
+    'agent-chat-prompt-editor': EditorComponent;
+    'agent-chat-prompt-dialog': DialogComponent;
   }
 }

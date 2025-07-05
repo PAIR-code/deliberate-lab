@@ -18,7 +18,6 @@ import {ButtonClick, AnalyticsService} from '../../services/analytics.service';
 import {AuthService} from '../../services/auth.service';
 import {ExperimentManager} from '../../services/experiment.manager';
 import {ExperimentService} from '../../services/experiment.service';
-import {AgentEditor} from '../../services/agent.editor';
 import {ParticipantService} from '../../services/participant.service';
 import {RouterService} from '../../services/router.service';
 
@@ -50,7 +49,6 @@ export class Panel extends MobxLitElement {
   private readonly authService = core.getService(AuthService);
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly experimentService = core.getService(ExperimentService);
-  private readonly agentEditor = core.getService(AgentEditor);
   private readonly participantService = core.getService(ParticipantService);
   private readonly routerService = core.getService(RouterService);
 

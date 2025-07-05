@@ -1,7 +1,6 @@
 import {
   AckAlertMessageData,
   AgentConfigTestData,
-  AgentParticipantPromptTestData,
   BaseParticipantData,
   CreateChatMessageData,
   CohortCreationData,
@@ -12,6 +11,7 @@ import {
   ExperimentCreationData,
   ExperimentDeletionData,
   ExperimentDownloadResponse,
+  ExperimentTemplate,
   InitiateParticipantTransferData,
   ParticipantNextStageResponse,
   ParticipantProfile,
@@ -75,6 +75,21 @@ export const deleteExperimentCallable = async (
     functions,
     'deleteExperiment',
   )(deletion);
+  return data;
+};
+
+/** Generic endpoint to get experiment template. */
+export const getExperimentTemplateCallable = async (
+  functions: Functions,
+  config: ExperimentDeletionData,
+) => {
+  const {data} = await httpsCallable<
+    ExperimentDeletionData,
+    ExperimentTemplate
+  >(
+    functions,
+    'getExperimentTemplate',
+  )(config);
   return data;
 };
 
@@ -464,21 +479,6 @@ export const updateMediatorStatusCallable = async (
   const {data} = await httpsCallable<UpdateMediatorStatusData, SuccessResponse>(
     functions,
     'updateMediatorStatus',
-  )(config);
-  return data;
-};
-
-/** Generic endpoint for testing agent participant stage prompts. */
-export const testAgentParticipantPromptCallable = async (
-  functions: Functions,
-  config: AgentParticipantPromptTestData,
-) => {
-  const {data} = await httpsCallable<
-    AgentParticipantPromptTestData,
-    SimpleResponse<string>
-  >(
-    functions,
-    'testAgentParticipantPrompt',
   )(config);
   return data;
 };

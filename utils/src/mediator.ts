@@ -3,7 +3,7 @@ import {
   AgentPersonaConfig,
   ProfileAgentConfig,
 } from './agent';
-import {ParticipantProfileBase} from './participant';
+import {UserProfileBase, UserType} from './participant';
 import {generateId} from './shared';
 
 /** Mediator types and functions. */
@@ -11,12 +11,17 @@ import {generateId} from './shared';
 // ************************************************************************* //
 // TYPES                                                                     //
 // ************************************************************************* //
-export interface MediatorProfile extends ParticipantProfileBase {
-  id: string; // mediator ID
+export interface MediatorProfile extends UserProfileBase {
+  type: UserType.MEDIATOR;
+  publicId: string; // public ID
   currentStatus: MediatorStatus;
   currentCohortId: string;
   // Maps from stage ID to if the mediator is present in that stage
   activeStageMap: Record<string, boolean>;
+}
+
+export interface MediatorProfileExtended extends MediatorProfile {
+  privateId: string;
   // If null, operated by human (otherwise, specifies agent persona, model)
   agentConfig: ProfileAgentConfig | null;
 }
@@ -34,14 +39,19 @@ export function createMediatorProfileFromAgentPersona(
   currentCohortId: string,
   agentPersona: AgentPersonaConfig,
   activeStageIds: string[],
-): MediatorProfile {
+): MediatorProfileExtended {
   const activeStageMap: Record<string, boolean> = {};
   activeStageIds.forEach((stageId) => {
     activeStageMap[stageId] = true;
   });
 
+  // TODO: Set public ID appropriately
+  const id = generateId();
+
   return {
-    id: generateId(),
+    type: UserType.MEDIATOR,
+    publicId: id.substring(0, 8),
+    privateId: id,
     name: agentPersona.defaultProfile.name,
     avatar: agentPersona.defaultProfile.avatar,
     pronouns: agentPersona.defaultProfile.pronouns,

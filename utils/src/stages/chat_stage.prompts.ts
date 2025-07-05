@@ -8,6 +8,7 @@ import {
   createStructuredOutputConfig,
   makeStructuredOutputPrompt,
 } from '../structured_output';
+import {ChatPromptConfig, PromptItemType} from '../structured_prompt';
 import {ChatMessage} from '../chat_message';
 import {
   ChatDiscussion,
@@ -62,9 +63,10 @@ export function getDefaultChatPrompt(
   agentConfig: ProfileAgentConfig, // TODO: Add to params
   pastStageContext: string,
   chatMessages: ChatMessage[],
-  promptConfig: BaseAgentPromptConfig,
+  promptConfig: ChatPromptConfig,
   stageConfig: ChatStageConfig,
 ) {
+  // TODO: Structure based on order of PromptItems
   return [
     // TODO: Move profile context up one level
     getParticipantProfilePromptContext(
@@ -75,9 +77,11 @@ export function getDefaultChatPrompt(
     getChatStagePromptContext(
       chatMessages,
       stageConfig,
-      promptConfig.promptSettings.includeStageInfo,
+      false, // TODO: check whether to include stage info
     ),
-    promptConfig.promptContext,
+    promptConfig.prompt
+      .map((item) => (item.type === PromptItemType.TEXT ? item.text : ''))
+      .join('\n'),
     makeStructuredOutputPrompt(promptConfig.structuredOutputConfig),
   ].join('\n');
 }
@@ -97,7 +101,7 @@ export function getChatStagePromptContext(
 }
 
 /** Return prompt for processing chat history. */
-function getChatPromptMessageHistory(
+export function getChatPromptMessageHistory(
   messages: ChatMessage[],
   stage: ChatStageConfig,
 ) {

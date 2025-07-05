@@ -1,5 +1,4 @@
 import {Type} from '@sinclair/typebox';
-import {StageGame} from './stage';
 import {ChatStageConfigData} from './chat_stage.validation';
 import {ChipStageConfigData} from './chip_stage.validation';
 import {ComprehensionStageConfigData} from './comprehension_stage.validation';
@@ -39,16 +38,6 @@ export const StageConfigData = Type.Union([
   SurveyStageConfigData,
   TOSStageConfigData,
   TransferStageConfigData,
-]);
-
-/** StageGame input validation. */
-export const StageGameSchema = Type.Union([
-  Type.Literal(StageGame.NONE),
-  Type.Literal(StageGame.LAS),
-  Type.Literal(StageGame.RTV),
-  Type.Literal(StageGame.CHP),
-  Type.Literal(StageGame.CTS),
-  Type.Literal(StageGame.TG),
 ]);
 
 /** StageTextConfig input validation. */
