@@ -26,6 +26,7 @@ export async function getStructuredPrompt(
   cohortId: string,
   participantId: string | null, // participant ID or null if mediator
   stageId: string, // current stage ID
+  userProfile: UserProfile,
   agentConfig: ProfileAgentConfig,
   promptConfig: BasePromptConfig,
 ) {
@@ -37,6 +38,19 @@ export async function getStructuredPrompt(
         break;
       case PromptItemType.PROFILE_CONTEXT:
         items.push(agentConfig.promptContext);
+        break;
+      case PromptItemType.PROFILE_INFO:
+        const profileInfo: string[] = [];
+        if (userProfile.avatar) {
+          profileInfo.push(userProfile.avatar);
+        }
+        if (userProfile.name) {
+          profileInfo.push(userProfile.name);
+        }
+        if (userProfile.pronouns) {
+          profileInfo.push(`(${userProfile.pronouns})`);
+        }
+        items.push(profileInfo.join(' '));
         break;
       case PromptItemType.STAGE_CONTEXT:
         items.push(

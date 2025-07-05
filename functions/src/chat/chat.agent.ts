@@ -112,6 +112,7 @@ export async function getAgentChatMessage(
     cohortId,
     userProfile.type === UserType.PARTICIPANT ? privateId : null,
     stageId,
+    userProfile,
     agentConfig,
     promptConfig,
   );

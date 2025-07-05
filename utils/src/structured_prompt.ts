@@ -42,6 +42,7 @@ export interface ChatPromptConfig extends BasePromptConfig {
 export type PromptItem =
   | TextPromptItem
   | ProfileContextPromptItem
+  | ProfileInfoPromptItem
   | StageContextPromptItem;
 
 export interface BasePromptItem {
@@ -50,7 +51,9 @@ export interface BasePromptItem {
 
 export enum PromptItemType {
   TEXT = 'TEXT',
-  // Context from the agent config
+  // Profile name/avatar/pronouns
+  PROFILE_INFO = 'PROFILE_INFO',
+  // Context specified in the agent config
   PROFILE_CONTEXT = 'PROFILE_CONTEXT',
   // Context from specified stage (or all stages up to present if null)
   STAGE_CONTEXT = 'STAGE_CONTEXT',
@@ -61,8 +64,14 @@ export interface TextPromptItem extends BasePromptItem {
   text: string;
 }
 
+/** Context specified in the agent config. */
 export interface ProfileContextPromptItem extends BasePromptItem {
   type: PromptItemType.PROFILE_CONTEXT;
+}
+
+/** Profile name, avatar, and pronouns. */
+export interface ProfileInfoPromptItem extends BasePromptItem {
+  type: PromptItemType.PROFILE_INFO;
 }
 
 export interface StageContextPromptItem extends BasePromptItem {
@@ -104,6 +113,11 @@ export function createDefaultPromptFromText(
   stageId: string,
 ): PromptItem[] {
   return [
+    {
+      type: PromptItemType.TEXT,
+      text: 'You are participating in an experiment with the following online profile:',
+    },
+    {type: PromptItemType.PROFILE_INFO},
     {type: PromptItemType.PROFILE_CONTEXT},
     {
       type: PromptItemType.STAGE_CONTEXT,
