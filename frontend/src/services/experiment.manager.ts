@@ -4,6 +4,7 @@ import {
   doc,
   getDocs,
   onSnapshot,
+  orderBy,
   query,
   Timestamp,
   Unsubscribe,
@@ -32,6 +33,7 @@ import {
   CreateChatMessageData,
   Experiment,
   ExperimentDownload,
+  LogEntry,
   MediatorProfileExtended,
   MediatorStatus,
   MetadataConfig,
@@ -831,6 +833,23 @@ export class ExperimentManager extends Service {
 
         // Add experiment JSON to zip
         zip.file(`${experimentName}.json`, JSON.stringify(result, null, 2));
+
+        // TODO: Refactor
+        // Add logs to zip
+        const logs = (
+          await getDocs(
+            query(
+              collection(
+                this.sp.firebaseService.firestore,
+                'experiments',
+                experimentId,
+                'logs',
+              ),
+              orderBy('createdTimestamp', 'asc'),
+            ),
+          )
+        ).docs.map((doc) => doc.data() as LogEntry);
+        zip.file(`${experimentName}_Logs.json`, JSON.stringify(logs, null, 2));
 
         // Add chip negotiation data
         const chipData = getChipNegotiationData(result);
