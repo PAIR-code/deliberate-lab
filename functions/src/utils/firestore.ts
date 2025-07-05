@@ -2,6 +2,7 @@ import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
 
 import {
+  ChatMessage,
   CohortConfig,
   Experiment,
   ExperimenterData,
@@ -250,4 +251,26 @@ export async function getAgentParticipantPrompt(
     return null;
   }
   return prompt.data() as AgentParticipantPromptConfig;
+}
+
+/** Get chat messages for given cohort and stage ID. */
+export async function getFirestorePublicStageChatMessages(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+): Promise<ChatMessage[]> {
+  try {
+    return (
+      await app
+        .firestore()
+        .collection(
+          `experiments/${experimentId}/cohorts/${cohortId}/publicStageData/${stageId}/chats`,
+        )
+        .orderBy('timestamp', 'asc')
+        .get()
+    ).docs.map((doc) => doc.data() as ChatMessage);
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
 }

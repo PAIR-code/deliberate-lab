@@ -72,9 +72,10 @@ export interface StageContextPromptItem extends BasePromptItem {
   includePrimaryText: boolean;
   includeInfoText: boolean;
   includeHelpText: boolean;
-  includeParticipantAnswers: boolean;
   // Include participant view of stage, e.g., chat history, game board
   includeStageDisplay: boolean;
+  // Include answers for current participant (or all participants if mediator)
+  includeParticipantAnswers: boolean;
 }
 
 // ****************************************************************************
