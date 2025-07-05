@@ -12,6 +12,7 @@ import {
   StageConfig,
   StageKind,
   StructuredOutputConfig,
+  UserProfile,
   makeStructuredOutputPrompt,
 } from '@deliberation-lab/utils';
 
@@ -26,7 +27,9 @@ export async function processModelResponse(
   experimentId: string,
   cohortId: string,
   stageId: string,
-  participantId: string,
+  userProfile: UserProfile,
+  publicId: string,
+  privateId: string,
   description: string,
   apiKeyConfig: APIKeyConfig,
   prompt: string,
@@ -38,7 +41,9 @@ export async function processModelResponse(
     experimentId,
     cohortId,
     stageId,
-    participantId,
+    userProfile,
+    publicId,
+    privateId,
     description,
     prompt,
   });

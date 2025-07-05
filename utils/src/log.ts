@@ -1,4 +1,5 @@
 import {ModelResponse, ModelResponseStatus} from './model_response';
+import {UserProfile} from './participant';
 import {UnifiedTimestamp, generateId} from './shared';
 import {Timestamp} from 'firebase/firestore';
 
@@ -11,7 +12,9 @@ export interface BaseLogEntry {
   experimentId: string;
   cohortId: string;
   stageId: string;
-  participantId: string; // Public ID
+  userProfile: UserProfile | null; // user profile of participant/mediator
+  publicId: string; // Public ID of participant/mediator
+  privateId: string; // Private ID of participant/mediator
   description: string;
   createdTimestamp: UnifiedTimestamp; // Timestamp created
 }
@@ -39,7 +42,9 @@ export function createModelLogEntry(
     experimentId: config.experimentId ?? '',
     cohortId: config.cohortId ?? '',
     stageId: config.stageId ?? '',
-    participantId: config.participantId ?? '',
+    userProfile: config.userProfile ?? null,
+    publicId: config.publicId ?? '',
+    privateId: config.privateId ?? '',
     description: config.description ?? '',
     prompt: config.prompt ?? '',
     response: {status: ModelResponseStatus.UNKNOWN_ERROR},
