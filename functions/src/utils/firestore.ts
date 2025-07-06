@@ -280,7 +280,7 @@ export async function getAgentParticipantPrompt(
   return prompt.data() as AgentParticipantPromptConfig;
 }
 
-/** Get chat messages for given cohort and stage ID. */
+/** Get group chat messages for given cohort and stage ID. */
 export async function getFirestorePublicStageChatMessages(
   experimentId: string,
   cohortId: string,
@@ -292,6 +292,28 @@ export async function getFirestorePublicStageChatMessages(
         .firestore()
         .collection(
           `experiments/${experimentId}/cohorts/${cohortId}/publicStageData/${stageId}/chats`,
+        )
+        .orderBy('timestamp', 'asc')
+        .get()
+    ).docs.map((doc) => doc.data() as ChatMessage);
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+}
+
+/** Get private chat messages for given participant and stage ID. */
+export async function getFirestorePrivateChatMessages(
+  experimentId: string,
+  participantId: string,
+  stageId: string,
+): Promise<ChatMessage[]> {
+  try {
+    return (
+      await app
+        .firestore()
+        .collection(
+          `experiments/${experimentId}/participants/${participantId}/stageData/${stageId}/privateChats`,
         )
         .orderBy('timestamp', 'asc')
         .get()

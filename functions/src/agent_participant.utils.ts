@@ -89,6 +89,7 @@ export async function completeStageAsAgentParticipant(
       createAgentChatMessageFromPrompt(
         experimentId,
         participant.currentCohortId,
+        participant.privateId,
         stage.id,
         '',
         participant, // profile
@@ -103,6 +104,7 @@ export async function completeStageAsAgentParticipant(
       createAgentChatMessageFromPrompt(
         experimentId,
         participant.currentCohortId,
+        participant.privateId,
         stage.id,
         '',
         participant, // profile

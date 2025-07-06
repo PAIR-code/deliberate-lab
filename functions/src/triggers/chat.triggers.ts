@@ -3,6 +3,7 @@ import {StageKind} from '@deliberation-lab/utils';
 import {
   getFirestoreActiveMediators,
   getFirestoreActiveParticipants,
+  getFirestoreParticipant,
   getFirestoreStage,
   getFirestoreStagePublicData,
 } from '../utils/firestore';
@@ -59,6 +60,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
       createAgentChatMessageFromPrompt(
         event.params.experimentId,
         event.params.cohortId,
+        '', // no relevant participant ID
         stage.id,
         event.params.chatId,
         mediator,
@@ -76,6 +78,7 @@ export const onPublicChatMessageCreated = onDocumentCreated(
       createAgentChatMessageFromPrompt(
         event.params.experimentId,
         event.params.cohortId,
+        participant.privateId,
         stage.id,
         event.params.chatId,
         participant,
@@ -94,7 +97,30 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
     );
     if (!stage) return;
 
-    // TODO: Send agent mediator messages to private chat path
-    console.log('onPrivateChatMessageCreated');
+    // Send agent mediator messages
+    const participant = await getFirestoreParticipant(
+      event.params.experimentId,
+      event.params.participantId,
+    );
+
+    const mediators = await getFirestoreActiveMediators(
+      event.params.experimentId,
+      participant.currentCohortId,
+      stage.id,
+      true,
+    );
+    mediators.forEach((mediator) => {
+      createAgentChatMessageFromPrompt(
+        event.params.experimentId,
+        participant.currentCohortId,
+        participant.privateId,
+        stage.id,
+        event.params.chatId,
+        mediator,
+        true,
+      );
+    });
+    // TODO: If no mediator, return error (otherwise participant may wait
+    // indefinitely for a response).
   },
 );

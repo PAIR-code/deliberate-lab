@@ -28,6 +28,7 @@ import {writeModelLogEntry} from './log.utils';
 export async function processModelResponse(
   experimentId: string,
   cohortId: string,
+  participantId: string,
   stageId: string,
   userProfile: UserProfile,
   publicId: string,
@@ -42,6 +43,7 @@ export async function processModelResponse(
   const log = createModelLogEntry({
     experimentId,
     cohortId,
+    participantId,
     stageId,
     userProfile,
     publicId,
