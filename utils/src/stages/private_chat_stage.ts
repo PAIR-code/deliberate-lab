@@ -2,7 +2,6 @@ import {generateId} from '../shared';
 import {
   BaseStageConfig,
   StageKind,
-  StageGame,
   createStageTextConfig,
   createStageProgressConfig,
 } from './stage';
@@ -39,7 +38,6 @@ export function createPrivateChatStage(
   return {
     id: config.id ?? generateId(),
     kind: StageKind.PRIVATE_CHAT,
-    game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Private chat',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress:
