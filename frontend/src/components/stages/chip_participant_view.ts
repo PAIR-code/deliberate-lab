@@ -113,6 +113,15 @@ export class ChipView extends MobxLitElement {
     `;
   }
 
+  private isAssistanceLoading() {
+    return (
+      this.isAssistanceNoneLoading ||
+      this.isAssistanceAdvisorLoading ||
+      this.isAssistanceCoachLoading ||
+      this.isAssistanceDelegateLoading
+    );
+  }
+
   private renderStatusPanel() {
     if (!this.stage) return nothing;
 
@@ -294,6 +303,7 @@ export class ChipView extends MobxLitElement {
         <pr-button
           color="secondary"
           variant="tonal"
+          ?disabled=${this.isAssistanceLoading()}
           ?loading=${this.isAssistanceNoneLoading}
           @click=${async () => {
             this.isAssistanceNoneLoading = true;
@@ -314,6 +324,7 @@ export class ChipView extends MobxLitElement {
         <pr-button
           color="secondary"
           variant="tonal"
+          ?disabled=${this.isAssistanceLoading()}
           ?loading=${this.isAssistanceCoachLoading}
           @click=${async () => {
             this.isAssistanceCoachLoading = true;
@@ -580,6 +591,7 @@ export class ChipView extends MobxLitElement {
         <pr-button
           color="secondary"
           variant="tonal"
+          ?disabled=${this.isAssistanceLoading()}
           ?loading=${this.isAssistanceNoneLoading}
           @click=${async () => {
             this.isAssistanceNoneLoading = true;
@@ -600,6 +612,7 @@ export class ChipView extends MobxLitElement {
         <pr-button
           color="secondary"
           variant="tonal"
+          ?disabled=${this.isAssistanceLoading()}
           ?loading=${this.isAssistanceCoachLoading}
           @click=${async () => {
             this.isAssistanceCoachLoading = true;
@@ -797,6 +810,7 @@ export class ChipView extends MobxLitElement {
         <pr-button
           color="secondary"
           variant="tonal"
+          ?disabled=${this.isAssistanceLoading()}
           ?loading=${this.isAssistanceDelegateLoading}
           @click=${async () => {
             this.isAssistanceDelegateLoading = true;
@@ -826,6 +840,7 @@ export class ChipView extends MobxLitElement {
         <pr-button
           color="secondary"
           variant="tonal"
+          ?disabled=${this.isAssistanceLoading()}
           ?loading=${this.isAssistanceAdvisorLoading}
           @click=${async () => {
             this.isAssistanceAdvisorLoading = true;
