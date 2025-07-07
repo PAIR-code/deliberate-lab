@@ -928,7 +928,6 @@ const CHIP_PRE_SURVEY_STAGE2 = createSurveyStage({
     primaryText:
       'This section asks about your expectations about the different AI tools available to you in the game. As a reminder, you’ll have access to three types of AI tools (a coach, delegate, and advisor) over three games, all powered by Google Gemini 2.5 (a large language model) and built on the same underlying capabilities.\nPlease indicate how much you agree or disagree with the following statements based on your expectations.',
   }),
-  game: StageGame.CHP,
   questions: [
     // Perspectives on AI tooling
     createScaleSurveyQuestion({
