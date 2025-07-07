@@ -28,11 +28,27 @@ export class PrivateChatView extends MobxLitElement {
     const chatMessages =
       this.participantService.privateChatMap[this.stage.id] ?? [];
 
+    // Disable input if turn-taking is set and latest message
+    // is from participant
+    const isDisabledInput = () => {
+      if (!this.stage?.isTurnBasedChat) {
+        return false;
+      }
+      if (chatMessages.length === 0) {
+        return false;
+      }
+      const publicId = this.participantService.profile?.publicId ?? '';
+      return chatMessages[chatMessages.length - 1].senderId === publicId;
+    };
+
     return html`
-      <chat-interface .stage=${this.stage}>
+      <chat-interface .stage=${this.stage} .disableInput=${isDisabledInput()}>
         ${chatMessages.map(
           (message) => html`<chat-message .chat=${message}></chat-message`,
         )}
+        ${isDisabledInput()
+          ? html`<div>Waiting for a response...</div>`
+          : nothing}
       </chat-interface>
       <stage-footer>
         ${this.stage.progress.showParticipantProgress
