@@ -567,7 +567,7 @@ export async function getChipOfferAssistance(
       console.log('Chip offer assistance coach prompt:', coachPrompt);
       // Call API
       const coachResponse = await getAgentResponse(
-        experimenterData,
+        experimenterData.apiKeys,
         coachPrompt,
         modelSettings,
         modelGenerationConfig,
@@ -588,7 +588,7 @@ export async function getChipOfferAssistance(
       console.log('Chip offer assistance advisor prompt:', advisorPrompt);
       // Call API
       const advisorResponse = await getAgentResponse(
-        experimenterData,
+        experimenterData.apiKeys,
         advisorPrompt,
         modelSettings,
         modelGenerationConfig,
@@ -609,7 +609,7 @@ export async function getChipOfferAssistance(
       console.log('Chip offer assistance delegate prompt:', delegatePrompt);
       // Call API
       const delegateResponse = await getAgentResponse(
-        experimenterData,
+        experimenterData.apiKeys,
         delegatePrompt,
         modelSettings,
         modelGenerationConfig,
@@ -736,7 +736,7 @@ export async function getChipResponseAssistance(
       console.log('Chip response assistance coach prompt:', coachPrompt);
       // Call API
       const coachResponse = await getAgentResponse(
-        experimenterData,
+        experimenterData.apiKeys,
         coachPrompt,
         modelSettings,
         modelGenerationConfig,
@@ -758,7 +758,7 @@ export async function getChipResponseAssistance(
       console.log('Chip response assistance advisor prompt:', advisorPrompt);
       // Call API
       const advisorResponse = await getAgentResponse(
-        experimenterData,
+        experimenterData.apiKeys,
         advisorPrompt,
         modelSettings,
         modelGenerationConfig,
@@ -780,7 +780,7 @@ export async function getChipResponseAssistance(
       console.log('Chip response assistance delegate prompt:', delegatePrompt);
       // Call API
       const delegateResponse = await getAgentResponse(
-        experimenterData,
+        experimenterData.apiKeys,
         delegatePrompt,
         modelSettings,
         modelGenerationConfig,
