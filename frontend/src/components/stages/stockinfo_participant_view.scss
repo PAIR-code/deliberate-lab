@@ -1,0 +1,201 @@
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.flex-column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.stage-container {
+  @include common.flex-column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.stock-content {
+  @include common.flex-column;
+  gap: common.$spacing-xl;
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: common.$main-content-padding;
+}
+
+.stock-header {
+  text-align: left;
+  padding-bottom: common.$spacing-xl;
+  border-bottom: 2px solid var(--md-sys-color-outline);
+}
+
+.stock-title {
+  @include typescale.title-large;
+  color: var(--md-sys-color-primary);
+  margin: 0;
+}
+
+.info-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: common.$spacing-xl;
+}
+
+.info-card {
+  @include common.flex-column;
+  align-items: center;
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-medium;
+  padding: common.$spacing-large;
+  text-align: center;
+  transition: all 0.2s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  .card-title {
+    @include typescale.label-medium;
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: common.$spacing-medium;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .card-value {
+    @include typescale.title-large;
+    color: var(--md-sys-color-primary);
+    margin-bottom: common.$spacing-small;
+    font-weight: 600;
+  }
+
+  .card-subtext {
+    @include typescale.body-small;
+    color: var(--md-sys-color-on-surface-variant);
+    line-height: 1.4;
+  }
+}
+
+.main-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: common.$spacing-xl;
+}
+
+.chart-container,
+.description-container {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-medium;
+  padding: common.$spacing-xxl;
+  gap: common.$spacing-xl;
+
+  h3 {
+    @include typescale.title-medium;
+    color: var(--md-sys-color-on-surface);
+    margin: 0;
+    padding-bottom: common.$spacing-medium;
+    border-bottom: 2px solid var(--md-sys-color-primary);
+  }
+}
+
+.chart {
+  @include common.flex-column;
+  align-items: center;
+  gap: common.$spacing-medium;
+
+  svg {
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: common.$spacing-small;
+    background: var(--md-sys-color-surface-container-highest);
+  }
+}
+
+.chart-labels {
+  @include common.flex-row;
+  justify-content: space-between;
+  width: 100%;
+
+  .chart-label-start,
+  .chart-label-end {
+    @include typescale.body-small;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+}
+
+.no-data {
+  @include common.flex-column-align-center;
+  @include typescale.body-medium;
+  color: var(--md-sys-color-on-surface-variant);
+  background: var(--md-sys-color-surface-variant);
+  border-radius: common.$spacing-small;
+  padding: calc(common.$spacing-xxl * 2);
+  text-align: center;
+  font-style: italic;
+}
+
+.stock-description {
+  @include typescale.body-small;
+  color: var(--md-sys-color-on-surface);
+  line-height: 1.5;
+
+  p {
+    margin-bottom: common.$spacing-xl;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  strong {
+    color: var(--md-sys-color-primary);
+    font-weight: 600;
+  }
+}
+
+.stock-navigation {
+  @include common.flex-row;
+  justify-content: center;
+  gap: common.$spacing-medium;
+  flex-wrap: wrap;
+  padding: common.$spacing-large;
+  background: var(--md-sys-color-surface-variant);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  flex-shrink: 0;
+
+  .stock-nav-button {
+    min-width: 120px;
+  }
+}
+
+// Responsive design
+@include common.viewport-small {
+  .main-content {
+    grid-template-columns: 1fr;
+    gap: common.$spacing-xxl;
+  }
+
+  .info-cards {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: common.$spacing-large;
+  }
+
+  .chart-container,
+  .description-container {
+    padding: common.$spacing-xl;
+  }
+
+  .stock-navigation {
+    @include common.flex-column;
+    align-items: center;
+
+    .stock-nav-button {
+      min-width: 200px;
+    }
+  }
+}

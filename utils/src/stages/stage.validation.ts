@@ -10,6 +10,7 @@ import {PrivateChatStageConfigData} from './private_chat_stage.validation';
 import {ProfileStageConfigData} from './profile_stage.validation';
 import {RevealStageConfigData} from './reveal_stage.validation';
 import {SalespersonStageConfigData} from './salesperson_stage.validation';
+import {StockInfoStageConfigData} from './stockinfo_stage.validation';
 import {
   SurveyPerParticipantStageConfigData,
   SurveyStageConfigData,
@@ -34,6 +35,7 @@ export const StageConfigData = Type.Union([
   RankingStageConfigData,
   RevealStageConfigData,
   SalespersonStageConfigData,
+  StockInfoStageConfigData,
   SurveyPerParticipantStageConfigData,
   SurveyStageConfigData,
   TOSStageConfigData,
