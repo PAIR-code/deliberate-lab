@@ -39,7 +39,7 @@ depending on the stage, e.g., for chip stage, check if the transaction is
 ready to be cleared.
 
 
-## onChatMessageCreated
+## onPublicChatMessageCreated
 *When document is updated at `experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}`*
 
 When a new group chat message is created:
@@ -51,6 +51,13 @@ When a new group chat message is created:
 This includes specific actions for specific stages, e.g., for salesperson
 stage, call different function to build agent chat messages (that sends
 the salesperson game board as part of the prompt).
+
+
+## onPrivateChatMessageCreated
+*When document is updated at `experiments/{experimentId}/participants/{participantId}/stageData/{stageId}/privateChats/{chatId}`*
+
+When a new private chat (only between current participant and mediators) is
+created, generate agent mediator responses to the chat message.
 
 
 ## onChipTransactionCreated

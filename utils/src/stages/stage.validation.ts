@@ -6,6 +6,7 @@ import {FlipCardStageConfigData} from './flipcard_stage.validation';
 import {RankingStageConfigData} from './ranking_stage.validation';
 import {InfoStageConfigData} from './info_stage.validation';
 import {PayoutStageConfigData} from './payout_stage.validation';
+import {PrivateChatStageConfigData} from './private_chat_stage.validation';
 import {ProfileStageConfigData} from './profile_stage.validation';
 import {RevealStageConfigData} from './reveal_stage.validation';
 import {SalespersonStageConfigData} from './salesperson_stage.validation';
@@ -29,6 +30,7 @@ export const StageConfigData = Type.Union([
   FlipCardStageConfigData,
   InfoStageConfigData,
   PayoutStageConfigData,
+  PrivateChatStageConfigData,
   ProfileStageConfigData,
   RankingStageConfigData,
   RevealStageConfigData,

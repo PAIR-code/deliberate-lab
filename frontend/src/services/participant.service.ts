@@ -15,6 +15,7 @@ import {
   SurveyStageParticipantAnswer,
   UnifiedTimestamp,
   UpdateChatStageParticipantAnswerData,
+  createChatMessage,
   createChatStageParticipantAnswer,
   createParticipantChatMessage,
   createSurveyPerParticipantStageParticipantAnswer,
@@ -25,7 +26,10 @@ import {
   Unsubscribe,
   collection,
   doc,
+  getDoc,
   onSnapshot,
+  orderBy,
+  query,
   setDoc,
   updateDoc,
 } from 'firebase/firestore';
@@ -91,10 +95,12 @@ export class ParticipantService extends Service {
   @observable profile: ParticipantProfileExtended | undefined = undefined;
   @observable answerMap: Record<string, StageParticipantAnswer | undefined> =
     {};
+  @observable privateChatMap: Record<string, ChatMessage[]> = {};
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
   @observable isProfileLoading = false;
+  @observable isPrivateChatLoading = false;
   @observable areAnswersLoading = false;
 
   // Sidenav
@@ -109,6 +115,7 @@ export class ParticipantService extends Service {
 
   set isLoading(value: boolean) {
     this.isProfileLoading = value;
+    this.isPrivateChatLoading = value;
     this.areAnswersLoading = value;
   }
 
@@ -295,6 +302,62 @@ export class ParticipantService extends Service {
         },
       ),
     );
+
+    // Subscribe to private chats
+    this.loadPrivateChatMessages();
+  }
+
+  /** Subscribe to private chat message collections for each stage ID. */
+  private async loadPrivateChatMessages() {
+    if (!this.experimentId || !this.participantId) return;
+
+    // Get stageIds from experiment doc
+    // (as they may not have loaded in experiment service yet)
+    const experimentRef = doc(
+      this.sp.firebaseService.firestore,
+      'experiments',
+      this.experimentId,
+    );
+    const experimentSnap = await getDoc(experimentRef);
+    if (!experimentSnap.exists()) return;
+    const experimentData = experimentSnap.data();
+    if (experimentData?.stageIds.length === 0) return;
+
+    this.isPrivateChatLoading = true;
+    for (const stageId of experimentData.stageIds) {
+      this.unsubscribe.push(
+        onSnapshot(
+          query(
+            collection(
+              this.sp.firebaseService.firestore,
+              'experiments',
+              this.experimentId,
+              'participants',
+              this.participantId,
+              'stageData',
+              stageId,
+              'privateChats',
+            ),
+            orderBy('timestamp', 'asc'),
+          ),
+          (snapshot) => {
+            let changedDocs = snapshot.docChanges().map((change) => change.doc);
+            if (changedDocs.length === 0) {
+              changedDocs = snapshot.docs;
+            }
+
+            changedDocs.forEach((doc) => {
+              if (!this.privateChatMap[stageId]) {
+                this.privateChatMap[stageId] = [];
+              }
+              const message = doc.data() as ChatMessage;
+              this.privateChatMap[stageId].push(message);
+            });
+            this.isPrivateChatLoading = false;
+          },
+        ),
+      );
+    }
   }
 
   unsubscribeAll() {
@@ -303,6 +366,7 @@ export class ParticipantService extends Service {
 
     this.profile = undefined;
     this.answerMap = {};
+    this.privateChatMap = {};
     this.sp.participantAnswerService.reset();
   }
 
@@ -498,6 +562,8 @@ export class ParticipantService extends Service {
   }
 
   /** Send chat message. */
+  // createChatMessageCallable will route the chat message to the correct
+  // spot based on the stage kind
   async createChatMessage(config: Partial<ChatMessage> = {}) {
     let response = {};
     this.isSendingChat = true;
@@ -519,6 +585,38 @@ export class ParticipantService extends Service {
         experimentId: this.experimentId,
         cohortId: this.profile.currentCohortId,
         stageId: this.profile.currentStageId,
+        participantId: this.profile.privateId,
+        chatMessage,
+      };
+
+      response = await createChatMessageCallable(
+        this.sp.firebaseService.functions,
+        createData,
+      );
+    }
+    this.isSendingChat = false;
+    return response;
+  }
+
+  /** Send error chat message. */
+  // createChatMessageCallable will route the chat message based on stage kind
+  async sendErrorChatMessage(config: Partial<ChatMessage> = {}) {
+    let response = {};
+    this.isSendingChat = true;
+    if (this.experimentId && this.profile) {
+      const chatMessage = createChatMessage({
+        ...config,
+        discussionId: this.sp.cohortService.getChatDiscussionId(
+          this.profile.currentStageId,
+        ),
+        isError: true,
+      });
+
+      const createData: CreateChatMessageData = {
+        experimentId: this.experimentId,
+        cohortId: this.profile.currentCohortId,
+        stageId: this.profile.currentStageId,
+        participantId: this.profile.privateId,
         chatMessage,
       };
 

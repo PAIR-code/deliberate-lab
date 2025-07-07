@@ -59,3 +59,15 @@ stage-footer {
     width: 100%;
   }
 }
+
+.description {
+  @include common.flex-row-align-center;
+  color: var(--md-sys-color-outline);
+  font-style: italic;
+  gap: common.$spacing-small;
+  padding: common.$spacing-medium 0;
+
+  &.error {
+    color: var(--md-sys-color-error);
+  }
+}

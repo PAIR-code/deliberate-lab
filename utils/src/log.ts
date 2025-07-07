@@ -9,9 +9,10 @@ export type LogEntry = ModelLogEntry;
 export interface BaseLogEntry {
   id: string; // log ID
   type: LogEntryType;
-  experimentId: string;
-  cohortId: string;
-  stageId: string;
+  experimentId: string; // path to file log under
+  cohortId: string; // path to file log under
+  participantId: string; // path to file log under
+  stageId: string; // path to file log under
   userProfile: UserProfile | null; // user profile of participant/mediator
   publicId: string; // Public ID of participant/mediator
   privateId: string; // Private ID of participant/mediator
@@ -41,6 +42,7 @@ export function createModelLogEntry(
     type: LogEntryType.MODEL,
     experimentId: config.experimentId ?? '',
     cohortId: config.cohortId ?? '',
+    participantId: config.participantId ?? '',
     stageId: config.stageId ?? '',
     userProfile: config.userProfile ?? null,
     publicId: config.publicId ?? '',

@@ -444,6 +444,8 @@ export class ExperimentBuilder extends MobxLitElement {
           <base-stage-editor .stage=${stage}></base-stage-editor>
           <group-chat-editor .stage=${stage}></group-chat-editor>
         `;
+      case StageKind.PRIVATE_CHAT:
+        return html` <base-stage-editor .stage=${stage}></base-stage-editor> `;
       case StageKind.FLIPCARD:
         return html`
           <base-stage-editor .stage=${stage}></base-stage-editor>

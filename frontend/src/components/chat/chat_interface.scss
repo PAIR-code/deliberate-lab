@@ -8,10 +8,13 @@
   width: 100%;
 }
 
+$chat-window-max-width: 1000px;
+
 .interface-wrapper {
   @include common.flex-row;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   flex-grow: 1;
+  justify-content: center;
   overflow: hidden;
 
   &.vertical {
@@ -21,6 +24,7 @@
 
 .main-content {
   @include common.flex-column;
+  align-items: center;
   background: var(--md-sys-color-surface-variant);
   flex-grow: 1;
   overflow: hidden;
@@ -31,6 +35,8 @@
   flex-direction: column-reverse;
   flex-grow: 1;
   overflow: hidden;
+  max-width: $chat-window-max-width;
+  width: 100%;
 }
 
 .chat-scroll {
@@ -49,6 +55,7 @@
 chat-input {
   background: var(--md-sys-color-surface-variant);
   bottom: 0;
+  max-width: $chat-window-max-width;
   padding: common.$main-content-padding;
   padding-top: 0;
   position: sticky;

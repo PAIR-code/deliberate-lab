@@ -68,6 +68,8 @@ export * from './stages/info_stage.prompts';
 export * from './stages/info_stage.validation';
 export * from './stages/payout_stage';
 export * from './stages/payout_stage.validation';
+export * from './stages/private_chat_stage';
+export * from './stages/private_chat_stage.validation';
 export * from './stages/profile_stage';
 export * from './stages/profile_stage.validation';
 export * from './stages/reveal_stage';

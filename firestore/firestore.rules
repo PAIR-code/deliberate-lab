@@ -208,6 +208,11 @@ service cloud.firestore {
 
           // Participants can use cloud function endpoints
           allow write: if false;
+
+          match /privateChats/{chatId} {
+            allow read: if true;
+            allow write: if false; // Use Cloud functions
+          }
         }
 
         match /alerts/{alertId} {
