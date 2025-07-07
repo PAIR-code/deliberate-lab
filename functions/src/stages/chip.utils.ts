@@ -509,7 +509,10 @@ export async function getChipOfferAssistance(
     apiType: ApiKeyType.GEMINI_API_KEY,
     modelName: 'gemini-2.5-flash',
   };
-  const modelGenerationConfig = createModelGenerationConfig();
+  const modelGenerationConfig = createModelGenerationConfig({
+    reasoningBudget: 2048,
+    includeReasoning: true,
+  });
 
   // Helper function to parse structured output response
   const parseResponse = (response: string, sendOffer = false) => {
@@ -690,7 +693,10 @@ export async function getChipResponseAssistance(
     apiType: ApiKeyType.GEMINI_API_KEY,
     modelName: 'gemini-2.5-flash',
   };
-  const modelGenerationConfig = createModelGenerationConfig();
+  const modelGenerationConfig = createModelGenerationConfig({
+    reasoningBudget: 2048,
+    includeReasoning: true,
+  });
 
   // Helper function to parse structured output response
   const parseResponse = (response: string, sendResponse = false) => {
