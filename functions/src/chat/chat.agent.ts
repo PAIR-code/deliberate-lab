@@ -41,7 +41,7 @@ export async function createAgentChatMessageFromPrompt(
   // Profile of agent who will be sending the chat message
   user: ParticipantProfileExtended | MediatorProfileExtended,
 ) {
-  if (!user.agentConfig) return;
+  if (!user.agentConfig) return false;
 
   const promptConfig = (
     await app
@@ -72,11 +72,11 @@ export async function createAgentChatMessageFromPrompt(
   );
 
   if (!message) {
-    return;
+    return false;
   }
 
   if (stage?.kind === StageKind.PRIVATE_CHAT) {
-    sendAgentPrivateChatMessage(
+    return await sendAgentPrivateChatMessage(
       experimentId,
       participantId,
       stageId,
@@ -85,7 +85,7 @@ export async function createAgentChatMessageFromPrompt(
       promptConfig.chatSettings,
     );
   } else {
-    sendAgentGroupChatMessage(
+    return await sendAgentGroupChatMessage(
       experimentId,
       cohortId,
       stageId,
@@ -231,7 +231,7 @@ export async function sendAgentGroupChatMessage(
   ) {
     // TODO: Write chat log
     console.log('Conversation has moved on');
-    return;
+    return false;
   }
 
   // Don't send a message if the conversation already has a response
@@ -249,7 +249,7 @@ export async function sendAgentGroupChatMessage(
   const hasTriggerResponse = (await triggerResponseDoc.get()).exists;
   if (hasTriggerResponse) {
     console.log('Someone already responded');
-    return;
+    return false;
   }
 
   // Otherwise, log response ID as trigger message
@@ -297,7 +297,7 @@ export async function sendAgentPrivateChatMessage(
   ) {
     // TODO: Write chat log
     console.log('Conversation has moved on');
-    return;
+    return false;
   }
 
   // Don't send a message if the conversation already has a response
@@ -315,7 +315,7 @@ export async function sendAgentPrivateChatMessage(
   const hasTriggerResponse = (await triggerResponseDoc.get()).exists;
   if (hasTriggerResponse) {
     console.log('Someone already responded');
-    return;
+    return false;
   }
 
   // Otherwise, log response ID as trigger message
@@ -335,6 +335,8 @@ export async function sendAgentPrivateChatMessage(
 
   chatMessage.timestamp = Timestamp.now();
   agentDocument.set(chatMessage);
+
+  return true;
 }
 
 /** Checks if current participant/mediator can send a chat message

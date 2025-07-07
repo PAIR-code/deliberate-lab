@@ -109,8 +109,8 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
       stage.id,
       true,
     );
-    mediators.forEach((mediator) => {
-      createAgentChatMessageFromPrompt(
+    mediators.forEach(async (mediator) => {
+      const result = await createAgentChatMessageFromPrompt(
         event.params.experimentId,
         participant.currentCohortId,
         participant.privateId,
@@ -119,8 +119,14 @@ export const onPrivateChatMessageCreated = onDocumentCreated(
         mediator,
         true,
       );
+      if (!result) {
+        // TODO: Mark participant as failed response
+      }
     });
     // TODO: If no mediator, return error (otherwise participant may wait
     // indefinitely for a response).
+    if (mediators.length === 0) {
+      // Mark participant as failed response
+    }
   },
 );
