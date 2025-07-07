@@ -191,7 +191,6 @@ export class ChipView extends MobxLitElement {
     return html`
       <div class="status-panel-wrapper">
         <div class="status-panel">${renderTopLeftPanel()}</div>
-        ${this.renderDebug()}
       </div>
     `;
   }
@@ -969,19 +968,6 @@ export class ChipView extends MobxLitElement {
     return html`
       <div>Submit your proposal below and I'll give you feedback:</div>
       ${this.renderManualResponse(acceptProposal, rejectProposal)}
-    `;
-  }
-
-  private renderDebug() {
-    if (!this.authService.isDebugMode) {
-      return nothing;
-    }
-
-    return html`
-      <div class="debug-panel">
-        <div>Chip assistance</div>
-        ${this.renderDelegateButton()} ${this.renderAdvisorButton()}
-      </div>
     `;
   }
 
