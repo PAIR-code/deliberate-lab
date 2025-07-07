@@ -69,7 +69,11 @@ export class FlipCardParticipantView extends MobxLitElement {
               </div>
             `
           : nothing}
-        <stage-footer .stage=${this.stage} .disabled=${!isComplete}>
+        <stage-footer
+          .stage=${this.stage}
+          .disabled=${!isComplete}
+          .onNextClick=${this.saveAndProgress}
+        >
           ${isComplete
             ? html`<progress-stage-completed></progress-stage-completed>`
             : nothing}
