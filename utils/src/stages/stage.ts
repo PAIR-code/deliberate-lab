@@ -28,6 +28,7 @@ import {
 } from './ranking_stage';
 import {InfoStageConfig} from './info_stage';
 import {PayoutStageConfig, PayoutStageParticipantAnswer} from './payout_stage';
+import {PrivateChatStageConfig} from './private_chat_stage';
 import {ProfileStageConfig} from './profile_stage';
 import {RevealStageConfig} from './reveal_stage';
 import {
@@ -64,6 +65,7 @@ export enum StageKind {
   FLIPCARD = 'flipcard', // flip card selection
   RANKING = 'ranking',
   PAYOUT = 'payout',
+  PRIVATE_CHAT = 'privateChat', // participant plus any mediators
   REVEAL = 'reveal',
   SALESPERSON = 'salesperson', // co-op traveling salesperson game
   SURVEY = 'survey',
@@ -105,6 +107,7 @@ export type StageConfig =
   | RankingStageConfig
   | InfoStageConfig
   | PayoutStageConfig
+  | PrivateChatStageConfig
   | ProfileStageConfig
   | RevealStageConfig
   | SalespersonStageConfig

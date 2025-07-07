@@ -121,7 +121,7 @@ Each message is displayed in chronological order, with the most recent message a
 
 /** Convert chat message to prompt format. */
 export function convertChatMessageToPromptFormat(message: ChatMessage) {
-  return `${convertUnifiedTimestampToTime(message.timestamp)} ${message.profile.name}: ${message.message}`;
+  return `${convertUnifiedTimestampToTime(message.timestamp)} ${message.profile.name ?? message.senderId}: ${message.message}`;
 }
 
 /** Convert chat messages into chat history string for prompt. */

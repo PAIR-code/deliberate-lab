@@ -1,21 +1,28 @@
 import {onDocumentCreated} from 'firebase-functions/v2/firestore';
-import {StageKind} from '@deliberation-lab/utils';
+import {
+  ChatMessage,
+  StageKind,
+  createParticipantProfileBase,
+} from '@deliberation-lab/utils';
 import {
   getFirestoreActiveMediators,
   getFirestoreActiveParticipants,
+  getFirestoreParticipant,
   getFirestoreStage,
   getFirestoreStagePublicData,
 } from '../utils/firestore';
 import {createAgentChatMessageFromPrompt} from '../chat/chat.agent';
+import {sendErrorPrivateChatMessage} from '../chat/chat.utils';
 import {startTimeElapsed} from '../stages/chat.time';
 import {sendAgentParticipantSalespersonMessage} from '../stages/salesperson.agent';
+import {app} from '../app';
 
 // ************************************************************************* //
 // TRIGGER FUNCTIONS                                                         //
 // ************************************************************************* //
 
-/** When a chat message is created */
-export const onChatMessageCreated = onDocumentCreated(
+/** When a chat message is created under publicStageData */
+export const onPublicChatMessageCreated = onDocumentCreated(
   'experiments/{experimentId}/cohorts/{cohortId}/publicStageData/{stageId}/chats/{chatId}',
   async (event) => {
     const stage = await getFirestoreStage(
@@ -59,6 +66,7 @@ export const onChatMessageCreated = onDocumentCreated(
       createAgentChatMessageFromPrompt(
         event.params.experimentId,
         event.params.cohortId,
+        '', // no relevant participant ID
         stage.id,
         event.params.chatId,
         mediator,
@@ -76,10 +84,93 @@ export const onChatMessageCreated = onDocumentCreated(
       createAgentChatMessageFromPrompt(
         event.params.experimentId,
         event.params.cohortId,
+        participant.privateId,
         stage.id,
         event.params.chatId,
         participant,
       );
     });
+  },
+);
+
+/** When a chat message is created under private participant stageData */
+export const onPrivateChatMessageCreated = onDocumentCreated(
+  'experiments/{experimentId}/participants/{participantId}/stageData/{stageId}/privateChats/{chatId}',
+  async (event) => {
+    // Ignore if error message
+    const message = (
+      await app
+        .firestore()
+        .collection('experiments')
+        .doc(event.params.experimentId)
+        .collection('participants')
+        .doc(event.params.participantId)
+        .collection('stageData')
+        .doc(event.params.stageId)
+        .collection('privateChats')
+        .doc(event.params.chatId)
+        .get()
+    ).data() as ChatMessage;
+    if (message.isError) {
+      return;
+    }
+
+    const stage = await getFirestoreStage(
+      event.params.experimentId,
+      event.params.stageId,
+    );
+    if (!stage) return;
+
+    // Send agent mediator messages
+    const participant = await getFirestoreParticipant(
+      event.params.experimentId,
+      event.params.participantId,
+    );
+
+    const mediators = await getFirestoreActiveMediators(
+      event.params.experimentId,
+      participant.currentCohortId,
+      stage.id,
+      true,
+    );
+    mediators.forEach(async (mediator) => {
+      const result = await createAgentChatMessageFromPrompt(
+        event.params.experimentId,
+        participant.currentCohortId,
+        participant.privateId,
+        stage.id,
+        event.params.chatId,
+        mediator,
+        true,
+      );
+      if (!result) {
+        sendErrorPrivateChatMessage(
+          event.params.experimentId,
+          participant.privateId,
+          stage.id,
+          {
+            discussionId: message.discussionId,
+            message: 'Error fetching response',
+            type: mediator.type,
+            profile: createParticipantProfileBase(mediator),
+            senderId: mediator.publicId,
+            agentId: mediator.agentConfig?.agentId ?? '',
+          },
+        );
+      }
+    });
+    // If no mediator, return error (otherwise participant may wait
+    // indefinitely for a response).
+    if (mediators.length === 0) {
+      sendErrorPrivateChatMessage(
+        event.params.experimentId,
+        participant.privateId,
+        stage.id,
+        {
+          discussionId: message.discussionId,
+          message: 'No mediators found',
+        },
+      );
+    }
   },
 );

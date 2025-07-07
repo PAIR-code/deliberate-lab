@@ -55,17 +55,23 @@ export class ChatInterface extends MobxLitElement {
           <div class="chat-content">
             <div class="chat-scroll">
               <div class="chat-history">
-                ${this.mobileView
-                  ? html`<slot name="mobile-description"></slot>`
-                  : nothing}
+                ${
+                  this.mobileView
+                    ? html`<slot name="mobile-description"></slot>`
+                    : nothing
+                }
                 <slot></slot>
               </div>
             </div>
           </div>
-          <chat-input
-            .stageId=${this.stage?.id ?? ''}
-            .isDisabled=${this.disableInput}
-          >
+          ${
+            !this.showInput
+              ? nothing
+              : html`<chat-input
+                  .stageId=${this.stage?.id ?? ''}
+                  .isDisabled=${this.disableInput}
+                ></chat-input>`
+          }
           </chat-input>
         </div>
       </div>

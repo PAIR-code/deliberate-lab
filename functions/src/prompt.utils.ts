@@ -13,6 +13,7 @@ import {
   getFirestoreExperiment,
   getFirestoreStage,
   getFirestorePublicStageChatMessages,
+  getFirestorePrivateChatMessages,
 } from './utils/firestore';
 import {app} from '../app';
 
@@ -24,7 +25,9 @@ import {app} from '../app';
 export async function getStructuredPrompt(
   experimentId: string,
   cohortId: string,
-  participantId: string | null, // participant ID or null if mediator
+  // participant ID to include answers for, or null if mediator (include all)
+  // TODO: Update field to list of participants to include for answers
+  participantId: string | null,
   stageId: string, // current stage ID
   userProfile: UserProfile,
   agentConfig: ProfileAgentConfig,
@@ -158,6 +161,13 @@ export async function getStageDisplayForPrompt(
         stage.id,
       );
       return getChatPromptMessageHistory(messages, stage);
+    case StageKind.PRIVATE_CHAT:
+      const privateMessages = await getFirestorePrivateChatMessages(
+        experimentId,
+        participantId,
+        stage.id,
+      );
+      return getChatPromptMessageHistory(privateMessages, stage);
     default:
       // TODO: Set up display/answers for ranking stage
       // TODO: Set up display/answers for survey stage

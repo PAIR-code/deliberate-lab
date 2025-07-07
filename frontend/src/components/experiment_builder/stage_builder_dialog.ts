@@ -20,6 +20,7 @@ import {
   createInfoStage,
   createFlipCardStage,
   createPayoutStage,
+  createPrivateChatStage,
   createProfileStage,
   createRevealStage,
   createSurveyPerParticipantStage,
@@ -142,13 +143,29 @@ export class StageBuilderDialog extends MobxLitElement {
 
   private renderStageCards() {
     return html`
-      <div class="card-gallery-wrapper">
-        ${this.renderTOSCard()} ${this.renderInfoCard()}
-        ${this.renderTransferCard()} ${this.renderProfileCard()}
-        ${this.renderSurveyCard()} ${this.renderSurveyPerParticipantCard()}
-        ${this.renderChatCard()} ${this.renderFlipCardCard()}
-        ${this.renderRankingCard()} ${this.renderRevealCard()}
-        ${this.renderPayoutCard()}
+      <div class="gallery-section">
+        <div class="gallery-title">Basic stages</div>
+        <div class="card-gallery-wrapper">
+          ${this.renderTOSCard()} ${this.renderInfoCard()}
+          ${this.renderProfileCard()}
+        </div>
+      </div>
+
+      <div class="gallery-section">
+        <div class="gallery-title">Chat stages</div>
+        <div class="card-gallery-wrapper">
+          ${this.renderGroupChatCard()} ${this.renderPrivateChatCard()}
+        </div>
+      </div>
+
+      <div class="gallery-section">
+        <div class="gallery-title">Other stages</div>
+        <div class="card-gallery-wrapper">
+          ${this.renderTransferCard()} ${this.renderSurveyCard()}
+          ${this.renderSurveyPerParticipantCard()} ${this.renderFlipCardCard()}
+          ${this.renderRankingCard()} ${this.renderRevealCard()}
+          ${this.renderPayoutCard()}
+        </div>
       </div>
     `;
   }
@@ -286,15 +303,34 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
-  private renderChatCard() {
+  private renderGroupChatCard() {
     const addStage = () => {
       this.addStage(createChatStage());
     };
 
     return html`
       <div class="card" @click=${addStage}>
-        <div class="title">💬 Group chat</div>
-        <div>Host a conversation among participants and optional LLMs.</div>
+        <div class="title">Group chat</div>
+        <div>
+          Host a conversation among <i>all</i> participants in a cohort and
+          optional mediator(s).
+        </div>
+      </div>
+    `;
+  }
+
+  private renderPrivateChatCard() {
+    const addStage = () => {
+      this.addStage(createPrivateChatStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">Private chat</div>
+        <div>
+          Enable each participant to privately chat <i>only</i> with added
+          mediator(s).
+        </div>
       </div>
     `;
   }

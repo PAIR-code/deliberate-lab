@@ -59,7 +59,10 @@ export class EditorComponent extends MobxLitElement {
     const stageConfig = this.experimentEditor.getStage(this.stageId);
     if (!stageConfig) {
       return nothing;
-    } else if (stageConfig.kind !== StageKind.CHAT) {
+    } else if (
+      stageConfig.kind !== StageKind.CHAT &&
+      stageConfig.kind !== StageKind.PRIVATE_CHAT
+    ) {
       if (this.agent.type === AgentPersonaType.PARTICIPANT) {
         return html`
           <div class="section">

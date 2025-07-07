@@ -15,6 +15,7 @@ import {
 import {AgentChatPromptConfig} from '../agent';
 
 /** Group chat stage types and functions. */
+// TODO: Rename file to group_chat_stage.ts
 
 // ************************************************************************* //
 // TYPES                                                                     //
@@ -29,7 +30,7 @@ export interface ChatStageConfig extends BaseStageConfig {
   kind: StageKind.CHAT;
   discussions: ChatDiscussion[]; // ordered list of discussions
   timeLimitInMinutes: number | null; // How long remaining in the chat.
-  requireFullTime: boolean | null; // Require participants to stay in chat until time limit is up
+  requireFullTime: boolean; // Require participants to stay in chat until time limit is up
 }
 
 /** Chat discussion. */
