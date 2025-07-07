@@ -54,7 +54,7 @@ import {
 import {
   STOCKINFO_GAME_METADATA,
   getStockInfoGameStageConfigs,
-} from '../../shared/games/stockinfo_game';
+} from '../../shared/templates/stockinfo_template';
 import {
   FLIPCARD_TEMPLATE_METADATA,
   getFlipCardExperimentTemplate,
@@ -140,10 +140,9 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()} ${this.renderLASCard(true)}
         ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
-        ${this.renderStockInfoGameCard()}
-        ${this.renderSalespersonGameCard()} ${this.renderFlipCardTemplateCard()}
+        ${this.renderStockInfoGameCard()} ${this.renderSalespersonGameCard()}
+        ${this.renderFlipCardTemplateCard()}
         ${this.renderFruitTestTemplateCard()}
-
       </div>
     `;
   }
@@ -170,9 +169,8 @@ export class StageBuilderDialog extends MobxLitElement {
         <div class="card-gallery-wrapper">
           ${this.renderTransferCard()} ${this.renderSurveyCard()}
           ${this.renderSurveyPerParticipantCard()} ${this.renderFlipCardCard()}
-          ${this.renderStockInfoCard()}
-          ${this.renderRankingCard()} ${this.renderRevealCard()}
-          ${this.renderPayoutCard()}
+          ${this.renderStockInfoCard()} ${this.renderRankingCard()}
+          ${this.renderRevealCard()} ${this.renderPayoutCard()}
         </div>
       </div>
     `;
@@ -498,7 +496,7 @@ export class StageBuilderDialog extends MobxLitElement {
 
   private renderStockInfoGameCard() {
     const addGame = () => {
-      this.addGame(STOCKINFO_GAME_METADATA, getStockInfoGameStageConfigs(), []);
+      this.addGame(STOCKINFO_GAME_METADATA, getStockInfoGameStageConfigs());
     };
 
     return html`

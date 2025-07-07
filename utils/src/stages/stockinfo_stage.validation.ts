@@ -1,7 +1,6 @@
 import {Type} from '@sinclair/typebox';
 import {StageKind} from './stage';
 import {
-  StageGameSchema,
   StageProgressConfigSchema,
   StageTextConfigSchema,
 } from './stage.validation';
@@ -52,7 +51,6 @@ export const StockInfoStageConfigData = Type.Object(
   {
     id: Type.String({minLength: 1}),
     kind: Type.Literal(StageKind.STOCKINFO),
-    game: StageGameSchema,
     name: Type.String({minLength: 1}),
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,

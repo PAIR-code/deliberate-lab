@@ -3,7 +3,6 @@ import {parseStockData} from './stockinfo_stage.utils';
 import {
   BaseStageConfig,
   StageKind,
-  StageGame,
   createStageTextConfig,
   createStageProgressConfig,
 } from './stage';
@@ -89,7 +88,6 @@ export function createStockInfoStage(
   return {
     id: config.id ?? generateId(),
     kind: StageKind.STOCKINFO,
-    game: config.game ?? StageGame.NONE,
     name: config.name ?? 'StockInfo',
     descriptions:
       config.descriptions ??

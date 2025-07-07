@@ -9,7 +9,6 @@ import {
   createTOSStage,
   ProfileType,
   StageConfig,
-  StageGame,
 } from '@deliberation-lab/utils';
 
 export const STOCKINFO_GAME_METADATA = createMetadataConfig({
@@ -35,7 +34,6 @@ const STOCKINFO_CONSENT =
 
 const STOCKINFO_TOS_STAGE = createTOSStage({
   id: 'stockinfo_tos',
-  game: StageGame.NONE,
   name: 'Consent',
   tosLines: [STOCKINFO_CONSENT],
 });
@@ -47,7 +45,6 @@ const STOCKINFO_PROFILE_STAGE = createProfileStage({
     primaryText:
       "This is how you'll be identified during the stock analysis study. Click 'Next stage' below to continue.",
   }),
-  game: StageGame.NONE,
   profileType: ProfileType.ANONYMOUS_ANIMAL,
 });
 
