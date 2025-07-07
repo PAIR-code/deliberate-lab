@@ -62,6 +62,7 @@
 .stocks-list {
   @include common.flex-column;
   gap: common.$spacing-xxl;
+  padding-top: common.$spacing-xxl;
 }
 
 .stock-editor {
