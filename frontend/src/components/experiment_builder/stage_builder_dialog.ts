@@ -23,6 +23,7 @@ import {
   createPrivateChatStage,
   createProfileStage,
   createRevealStage,
+  createStockInfoStage,
   createSurveyPerParticipantStage,
   createSurveyStage,
   createTOSStage,
@@ -50,6 +51,10 @@ import {
   FRUIT_TEST_METADATA,
   getFruitTestExperimentTemplate,
 } from '../../shared/templates/fruit_test';
+import {
+  STOCKINFO_GAME_METADATA,
+  getStockInfoGameStageConfigs,
+} from '../../shared/templates/stockinfo_template';
 import {
   FLIPCARD_TEMPLATE_METADATA,
   getFlipCardExperimentTemplate,
@@ -135,7 +140,8 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()} ${this.renderLASCard(true)}
         ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
-        ${this.renderSalespersonGameCard()} ${this.renderFlipCardTemplateCard()}
+        ${this.renderStockInfoGameCard()} ${this.renderSalespersonGameCard()}
+        ${this.renderFlipCardTemplateCard()}
         ${this.renderFruitTestTemplateCard()}
       </div>
     `;
@@ -163,8 +169,8 @@ export class StageBuilderDialog extends MobxLitElement {
         <div class="card-gallery-wrapper">
           ${this.renderTransferCard()} ${this.renderSurveyCard()}
           ${this.renderSurveyPerParticipantCard()} ${this.renderFlipCardCard()}
-          ${this.renderRankingCard()} ${this.renderRevealCard()}
-          ${this.renderPayoutCard()}
+          ${this.renderStockInfoCard()} ${this.renderRankingCard()}
+          ${this.renderRevealCard()} ${this.renderPayoutCard()}
         </div>
       </div>
     `;
@@ -351,6 +357,22 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
+  private renderStockInfoCard() {
+    const addStage = () => {
+      this.addStage(createStockInfoStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">📈 Stock Info</div>
+        <div>
+          Display stock information with charts, performance metrics, and
+          configurable data cards.
+        </div>
+      </div>
+    `;
+  }
+
   private renderRankingCard() {
     const addStage = () => {
       this.addStage(createRankingStage());
@@ -468,6 +490,21 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addTemplate}>
         <div class="title">${FLIPCARD_TEMPLATE_METADATA.name}</div>
         <div>${FLIPCARD_TEMPLATE_METADATA.description}</div>
+      </div>
+    `;
+  }
+
+  private renderStockInfoGameCard() {
+    const addGame = () => {
+      this.addGame(STOCKINFO_GAME_METADATA, getStockInfoGameStageConfigs());
+    };
+
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">📈 Stock Analysis Game</div>
+        <div>
+          A demonstration of the StockInfo stage with financial data analysis.
+        </div>
       </div>
     `;
   }

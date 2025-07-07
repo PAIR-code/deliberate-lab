@@ -1,0 +1,209 @@
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-xl;
+  width: 100%;
+}
+
+.section {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+.header {
+  @include common.flex-row-align-center;
+  justify-content: space-between;
+  padding-bottom: common.$spacing-medium;
+  border-bottom: 2px solid var(--md-sys-color-outline);
+  gap: common.$spacing-large;
+}
+
+.title {
+  @include typescale.title-medium;
+  color: var(--md-sys-color-on-surface);
+  font-weight: 600;
+}
+
+.settings {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface-variant);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-medium;
+  padding: common.$spacing-xl;
+  gap: common.$spacing-large;
+}
+
+.setting-row {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.checkbox-label {
+  @include common.flex-row-align-center;
+  @include typescale.body-medium;
+  gap: common.$spacing-medium;
+  cursor: pointer;
+  color: var(--md-sys-color-on-surface);
+}
+
+.stocks-section {
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-medium;
+  padding: common.$spacing-xxl;
+}
+
+.stocks-list {
+  @include common.flex-column;
+  gap: common.$spacing-xxl;
+  padding-top: common.$spacing-xxl;
+}
+
+.stock-editor {
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-medium;
+  padding: common.$spacing-xl;
+}
+
+.stock-header {
+  @include common.flex-row-align-center;
+  justify-content: space-between;
+  padding-bottom: common.$spacing-medium;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  margin-bottom: common.$spacing-xl;
+  gap: common.$spacing-medium;
+}
+
+.stock-title-label {
+  @include typescale.title-small;
+  color: var(--md-sys-color-on-surface);
+  font-weight: 600;
+}
+
+.stock-fields {
+  @include common.flex-column;
+  gap: common.$spacing-xl;
+}
+
+.field-row {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
+md-filled-text-field,
+md-outlined-text-field {
+  width: 100%;
+}
+
+.data-preview {
+  @include common.flex-row;
+  align-items: flex-start;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-large;
+  border-radius: common.$spacing-small;
+  margin-top: common.$spacing-medium;
+
+  &.success {
+    background: var(--md-sys-color-success-container, #d4edda);
+    color: var(--md-sys-color-on-success-container, #155724);
+    border: 1px solid var(--md-sys-color-success, #28a745);
+  }
+
+  &.error {
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+    border: 1px solid var(--md-sys-color-error);
+  }
+
+  md-icon {
+    --md-icon-size: 18px;
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+}
+
+.preview-content {
+  @include common.flex-column;
+  @include typescale.body-small;
+  gap: common.$spacing-xs;
+  flex-grow: 1;
+}
+
+.custom-cards-section {
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  padding-top: common.$spacing-xl;
+  margin-top: common.$spacing-xl;
+}
+
+.cards-header {
+  @include common.flex-row-align-center;
+  justify-content: space-between;
+  margin-bottom: common.$spacing-large;
+  gap: common.$spacing-medium;
+}
+
+.cards-title {
+  @include typescale.title-small;
+  color: var(--md-sys-color-on-surface);
+  font-weight: 600;
+}
+
+.custom-cards-list {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+.custom-card-editor {
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-small;
+  padding: common.$spacing-large;
+}
+
+.card-header {
+  @include common.flex-row-align-center;
+  justify-content: space-between;
+  margin-bottom: common.$spacing-large;
+  gap: common.$spacing-medium;
+}
+
+.card-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: common.$spacing-large;
+}
+
+// Responsive design
+@include common.viewport-small {
+  .header {
+    @include common.flex-column;
+    align-items: flex-start;
+    gap: common.$spacing-large;
+  }
+
+  .stock-header,
+  .cards-header,
+  .card-header {
+    @include common.flex-column;
+    align-items: flex-start;
+    gap: common.$spacing-medium;
+  }
+
+  .card-fields {
+    grid-template-columns: 1fr;
+    gap: common.$spacing-medium;
+  }
+
+  .data-preview {
+    @include common.flex-column;
+    gap: common.$spacing-small;
+    align-items: flex-start;
+  }
+}
