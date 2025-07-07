@@ -29,7 +29,7 @@ Analyze all available information, evaluate every opportunity, and execute the t
 * **All players' chip inventory:** ${chipsetDescription}
 * **Transaction history:** ${negotiationHistory}
  * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
-There are only ${numRoundsLeft} rounds left.
+After this turn, you have ${numRoundsLeft} turns left.
 
 ### Proposing a trade
 
@@ -40,6 +40,24 @@ Remember, your trade proposal must adhere to the following:
 
 Your goal is to make as much money as possible. The trades, you choose to make to accomplish this, are up to you.
 As a part of making money you must be rational - do not propose a trade in which you lose money. The value of a trade to you is the difference between the total value of chips you receive (quantity x your valuation) minus the total value of chips you give up (quantity x your valuation). Only propose trades that give you positive value.
+
+## Good Examples
+### Example 1:
+suggestedBuyType: red,
+suggestedBuyQuantity: 4,
+suggestedSellType: purple,
+suggestedSellQuantity: 4,
+tradeExplanation: By offering 4 purple chips (worth $0.40 to you) for 4 blue chips (worth $2.4 for you), I exchange my least-valued asset for my most-valued. Player C has consistently sought purple chips and holds 4 red chips; a 4-for-4 offer gives me $2.0 in surplus and is likely to be accepted.
+
+### Example 2:
+suggestedBuyType: blue,
+suggestedBuyQuantity: 6,
+suggestedSellType: red,
+suggestedSellQuantity: 4,
+tradeExplanation: Both Player B and Player C avoid purple but seem eager for red. Testing whether they undervalue blue, I’ll offer 4 red for 6 blue. If accepted, I can gain a lot and shed medium-value chips.
+
+## Bad Examples
+try to AVOID VERY CONSERVATIVE trade, e.g. 1 chip for 1 chip. Remember you only have 3 chance to propose.
 
 Output a proposal response. Your response **must adhere strictly to the following format**. Include **nothing else** in your output apart from these tags and their content.
 ${printSchema(CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG.schema!)}
@@ -103,7 +121,7 @@ export const CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG =
           schema: {
             type: StructuredOutputDataType.STRING,
             description:
-              'An explanation of why you chose the suggested buy chip type/quantity and sell chip type/quantity',
+              '2-3 concise sentences explaining why this trade advances your surplus goal',
           },
         },
       ],
@@ -133,8 +151,7 @@ export function getChipOfferAssistanceCoachPrompt(
 * **All players' chip inventory:** ${chipsetDescription}
 * **Transaction history:** ${negotiationHistory}
  * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
-There are only ${numRoundsLeft} rounds left.
-
+After this turn, you have ${numRoundsLeft} turns left.
 
 ### Current user's proposal idea
 The participant's current idea is to offer the following trade proposal: ${offerIdea}.
@@ -148,6 +165,24 @@ Remember, a trade proposal must adhere to the following:
 
 Your goal is to make as much money as possible. The trades, you choose to make to accomplish this, are up to you.
 As a part of making money you must be rational - do not propose a trade in which you lose money. The value of a trade to you is the difference between the total value of chips you receive (quantity x your valuation) minus the total value of chips you give up (quantity x your valuation). Only propose trades that give you positive value.
+
+## Good Examples
+### Example 1:
+suggestedBuyType: red,
+suggestedBuyQuantity: 4,
+suggestedSellType: purple,
+suggestedSellQuantity: 4,
+tradeExplanation: By offering 4 purple chips (worth $0.40 to you) for 4 blue chips (worth $2.4 for you), I exchange my least-valued asset for my most-valued. Player C has consistently sought purple chips and holds 4 red chips; a 4-for-4 offer gives me $2.0 in surplus and is likely to be accepted.
+
+### Example 2:
+suggestedBuyType: blue,
+suggestedBuyQuantity: 6,
+suggestedSellType: red,
+suggestedSellQuantity: 4,
+tradeExplanation: Both Player B and Player C avoid purple but seem eager for red. Testing whether they undervalue blue, I’ll offer 4 red for 6 blue. If accepted, I can gain a lot and shed medium-value chips.
+
+## Bad Examples
+try to AVOID VERY CONSERVATIVE trade, e.g. 1 chip for 1 chip. Remember you only have 3 chance to propose.
 
 Output a coaching response. Your response **must adhere strictly to the following format**. Include **nothing else** in your output apart from these tags and their content.
 In the <feedback> and <reasoning> tags, you will provide your coaching feedback and reasoning for providing that coaching feedback.
@@ -220,7 +255,7 @@ export const CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG =
           schema: {
             type: StructuredOutputDataType.STRING,
             description:
-              'An explanation of why you chose the suggested buy chip type/quantity and sell chip type/quantity',
+              '2-3 concise sentences explaining why this trade advances your surplus goal',
           },
         },
       ],
@@ -248,7 +283,7 @@ Analyze all available information, evaluate every opportunity, and execute the t
 * **All players' chip inventory:** ${chipsetDescription}
 * **Transaction history:** ${negotiationHistory}
  * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
-There are only ${numRoundsLeft} rounds left.
+After this turn, you have ${numRoundsLeft} turns left.
 
 ### Proposing a trade
 
@@ -256,9 +291,26 @@ Remember, your trade proposal must adhere to the following:
 1.  **Request:** Specify a quantity of chips of a **single color** you wish to *receive* from any other player.
 2.  **Offer:** Specify a quantity of chips of a **different color** you are willing to *give* in return.
 
-
 Your goal is to make as much money as possible. The trades, you choose to make to accomplish this, are up to you.
 As a part of making money you must be rational - do not propose a trade in which you lose money. The value of a trade to you is the difference between the total value of chips you receive (quantity x your valuation) minus the total value of chips you give up (quantity x your valuation). Only propose trades that give you positive value.
+
+## Good Examples
+### Example 1:
+suggestedBuyType: red,
+suggestedBuyQuantity: 4,
+suggestedSellType: purple,
+suggestedSellQuantity: 4,
+tradeExplanation: By offering 4 purple chips (worth $0.40 to you) for 4 blue chips (worth $2.4 for you), I exchange my least-valued asset for my most-valued. Player C has consistently sought purple chips and holds 4 red chips; a 4-for-4 offer gives me $2.0 in surplus and is likely to be accepted.
+
+### Example 2:
+suggestedBuyType: blue,
+suggestedBuyQuantity: 6,
+suggestedSellType: red,
+suggestedSellQuantity: 4,
+tradeExplanation: Both Player B and Player C avoid purple but seem eager for red. Testing whether they undervalue blue, I’ll offer 4 red for 6 blue. If accepted, I can gain a lot and shed medium-value chips.
+
+## Bad Examples
+try to AVOID VERY CONSERVATIVE trade, e.g. 1 chip for 1 chip. Remember you only have 3 chance to propose.
 
 Output a proposal response. Your response **must adhere strictly to the following format**. Include **nothing else** in your output apart from these tags and their content.
 
@@ -275,14 +327,14 @@ export const CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG =
           name: 'feedback',
           schema: {
             type: StructuredOutputDataType.STRING,
-            description: 'Your feedback to show to the player',
+            description: 'Your feedback to show to the player, be concise, in 2-3 sentences',
           },
         },
         {
           name: 'reasoning',
           schema: {
             type: StructuredOutputDataType.STRING,
-            description: 'Your concise reasoning in a few sentences',
+            description: 'Your concise reasoning in a 2-3 sentences. Be concise.',
           },
         },
         {
@@ -306,7 +358,7 @@ export const CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG =
           name: 'reasoning',
           schema: {
             type: StructuredOutputDataType.STRING,
-            description: 'Your concise reasoning in a few sentences',
+            description: 'Your concise reasoning in 2-3 sentences. Be concise.',
           },
         },
         {
@@ -343,7 +395,7 @@ Analyze all available information, evaluate every opportunity, and execute the t
 * **All players' chip inventory:** ${chipsetDescription}
 * **Transaction history:** ${negotiationHistory}
  * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
-There are only ${numRoundsLeft} rounds left.
+After this turn, you have ${numRoundsLeft} turns left.
 
 ### Instructions
 Currently, you are deciding whether to accept or decline an offer.
@@ -381,7 +433,7 @@ Your goal is to help them maximize their end-of-game surplus. When the player pr
 * **All players' chip inventory:** ${chipsetDescription}
 * **Transaction history:** ${negotiationHistory}
  * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
-There are only ${numRoundsLeft} rounds left.
+After this turn, you have ${numRoundsLeft} turns left.
 
 ### Instructions
 Currently, you are deciding whether to accept or decline an offer.
@@ -421,7 +473,7 @@ Analyze all available information, evaluate every opportunity, and execute the t
 * **All players' chip inventory:** ${chipsetDescription}
 * **Transaction history:** ${negotiationHistory}
  * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
-There are only ${numRoundsLeft} rounds left.
+After this turn, you have ${numRoundsLeft} turns left.
 
 ### Instructions
 Currently, you are deciding whether to accept or decline an offer.
