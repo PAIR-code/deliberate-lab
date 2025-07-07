@@ -29,7 +29,7 @@ Analyze all available information, evaluate every opportunity, and execute the t
 * **All players' chip inventory:** ${chipsetDescription}
 * **Transaction history:** ${negotiationHistory}
  * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
-After this turn, you have ${numRoundsLeft} turns left.
+After this round, there are ${numRoundsLeft} rounds left.
 
 ### Proposing a trade
 
@@ -151,7 +151,7 @@ export function getChipOfferAssistanceCoachPrompt(
 * **All players' chip inventory:** ${chipsetDescription}
 * **Transaction history:** ${negotiationHistory}
  * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
-After this turn, you have ${numRoundsLeft} turns left.
+After this round, there are ${numRoundsLeft} rounds left.
 
 ### Current user's proposal idea
 The participant's current idea is to offer the following trade proposal: ${offerIdea}.
@@ -283,7 +283,7 @@ Analyze all available information, evaluate every opportunity, and execute the t
 * **All players' chip inventory:** ${chipsetDescription}
 * **Transaction history:** ${negotiationHistory}
  * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
-After this turn, you have ${numRoundsLeft} turns left.
+After this round, there are ${numRoundsLeft} rounds left.
 
 ### Proposing a trade
 
@@ -395,7 +395,7 @@ Analyze all available information, evaluate every opportunity, and execute the t
 * **All players' chip inventory:** ${chipsetDescription}
 * **Transaction history:** ${negotiationHistory}
  * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
-After this turn, you have ${numRoundsLeft} turns left.
+After this round, there are ${numRoundsLeft} rounds left.
 
 ### Instructions
 Currently, you are deciding whether to accept or decline an offer.
@@ -433,7 +433,7 @@ Your goal is to help them maximize their end-of-game surplus. When the player pr
 * **All players' chip inventory:** ${chipsetDescription}
 * **Transaction history:** ${negotiationHistory}
  * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
-After this turn, you have ${numRoundsLeft} turns left.
+After this round, there are ${numRoundsLeft} rounds left.
 
 ### Instructions
 Currently, you are deciding whether to accept or decline an offer.
@@ -473,7 +473,7 @@ Analyze all available information, evaluate every opportunity, and execute the t
 * **All players' chip inventory:** ${chipsetDescription}
 * **Transaction history:** ${negotiationHistory}
  * Remember that there are 3 rounds of trading; in each round, every player gets to propose one trade and respond to other player's trades.
-After this turn, you have ${numRoundsLeft} turns left.
+After this round, there are ${numRoundsLeft} rounds left.
 
 ### Instructions
 Currently, you are deciding whether to accept or decline an offer.
