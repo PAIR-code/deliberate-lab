@@ -93,9 +93,8 @@ export class ChipView extends MobxLitElement {
       return nothing;
     }
 
-    return html`
-      <stage-description .stage=${this.stage}></stage-description>
-      <div class="panel-wrapper">
+    const renderBody = () => {
+      return html`
         <div class="reveal-panel">
           <chip-reveal-view .stage=${this.stage} .publicData=${publicData}>
           </chip-reveal-view>
@@ -104,12 +103,40 @@ export class ChipView extends MobxLitElement {
           <div class="game-panel">${this.renderLogsPanel()}</div>
           ${this.renderStatusPanel()}
         </div>
+      `;
+    };
+
+    return html`
+      <stage-description .stage=${this.stage}></stage-description>
+      <div class="panel-wrapper">
+        ${publicData.currentTurn === null ? this.renderStart() : renderBody()}
       </div>
       <stage-footer .disabled=${!publicData.isGameOver}>
         ${this.stage.progress.showParticipantProgress
           ? html`<progress-stage-completed></progress-stage-completed>`
           : nothing}
       </stage-footer>
+    `;
+  }
+
+  private renderStart() {
+    const setTurn = async () => {
+      if (!this.stage) return;
+      this.isSetTurnLoading = true;
+      await this.participantAnswerService.setChipTurn(this.stage.id);
+      this.isSetTurnLoading = false;
+    };
+
+    return html`
+      <div class="subpanel">
+        <pr-button
+          variant="tonal"
+          ?loading=${this.isSetTurnLoading}
+          @click=${setTurn}
+        >
+          Start chip negotiation
+        </pr-button>
+      </div>
     `;
   }
 
@@ -143,25 +170,6 @@ export class ChipView extends MobxLitElement {
           <div class="offer-panel">
             ‼️ This game has ended. Please continue to the next stage.
           </div>
-        </div>
-      `;
-    } else if (publicData.currentTurn === null) {
-      const setTurn = async () => {
-        if (!this.stage) return;
-        this.isSetTurnLoading = true;
-        await this.participantAnswerService.setChipTurn(this.stage.id);
-        this.isSetTurnLoading = false;
-      };
-
-      return html`
-        <div class="status-panel">
-          <pr-button
-            variant="tonal"
-            ?loading=${this.isSetTurnLoading}
-            @click=${setTurn}
-          >
-            Start chip negotiation
-          </pr-button>
         </div>
       `;
     }
