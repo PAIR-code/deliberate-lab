@@ -246,13 +246,13 @@ export async function getFirestoreStagePublicData(
   return doc.data() as StagePublicData;
 }
 
-/** Return all agent personas for a given experiment. */
-export async function getAgentPersonas(experimentId: string) {
+/** Return all agent mediator personas for a given experiment. */
+export async function getAgentMediatorPersonas(experimentId: string) {
   const agentCollection = app
     .firestore()
     .collection('experiments')
     .doc(experimentId)
-    .collection('agents');
+    .collection('agentMediators');
   return (await agentCollection.get()).docs.map(
     (agent) => agent.data() as AgentPersonaConfig,
   );
