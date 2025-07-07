@@ -62,7 +62,7 @@ export async function createAgentChatMessageFromPrompt(
   // Stage (in order to determin stage kind)
   const stage = await getFirestoreStage(experimentId, stageId);
 
-  const message = await getAgentChatMessage(
+  const response = await getAgentChatMessage(
     experimentId,
     cohortId,
     participantId,
@@ -71,12 +71,13 @@ export async function createAgentChatMessageFromPrompt(
     promptConfig,
   );
 
+  const message = response.message;
   if (!message) {
-    return false;
+    return response.success;
   }
 
   if (stage?.kind === StageKind.PRIVATE_CHAT) {
-    return await sendAgentPrivateChatMessage(
+    sendAgentPrivateChatMessage(
       experimentId,
       participantId,
       stageId,
@@ -85,7 +86,7 @@ export async function createAgentChatMessageFromPrompt(
       promptConfig.chatSettings,
     );
   } else {
-    return await sendAgentGroupChatMessage(
+    sendAgentGroupChatMessage(
       experimentId,
       cohortId,
       stageId,
@@ -94,6 +95,8 @@ export async function createAgentChatMessageFromPrompt(
       promptConfig.chatSettings,
     );
   }
+
+  return true;
 }
 
 /** Query for and return chat message for given agent and chat prompt configs. */
@@ -105,13 +108,13 @@ export async function getAgentChatMessage(
   // Agent who will be sending the message
   user: ParticipantProfileExtended | MediatorProfileExtended,
   promptConfig: ChatPromptConfig,
-) {
+): Promise<{message: ChatMessage | null; success: boolean}> {
   const stageId = stage.id;
 
   // Fetch experiment creator's API key.
   const experimenterData =
     await getExperimenterDataFromExperiment(experimentId);
-  if (!experimenterData) return null;
+  if (!experimenterData) return {message: null, success: false};
 
   // Get chat messages from private/public data based on stage kind
   const chatMessages =
@@ -130,7 +133,7 @@ export async function getAgentChatMessage(
   // Confirm that agent can send chat messages based on prompt config
   const chatSettings = promptConfig.chatSettings;
   if (!canSendAgentChatMessage(user.publicId, chatSettings, chatMessages)) {
-    return null;
+    return {message: null, success: true};
   }
 
   // Get prompt
@@ -163,7 +166,7 @@ export async function getAgentChatMessage(
 
   // Process response
   if (response.status !== ModelResponseStatus.OK || !response.parsedResponse) {
-    return null;
+    return {message: null, success: false};
   }
 
   const structured = promptConfig.structuredOutputConfig;
@@ -179,7 +182,7 @@ export async function getAgentChatMessage(
   }
 
   if (!shouldRespond) {
-    return null;
+    return {message: null, success: true};
   }
 
   // If stage includes discussions, figure out what discussion ID should be
@@ -194,7 +197,7 @@ export async function getAgentChatMessage(
     discussionId = publicData?.currentDiscussionId ?? null;
   }
 
-  return createChatMessage({
+  const chatMessage = createChatMessage({
     type: user.type,
     discussionId,
     message,
@@ -203,6 +206,7 @@ export async function getAgentChatMessage(
     senderId: user.publicId,
     agentId: user.agentConfig.agentId,
   });
+  return {message: chatMessage, success: true};
 }
 
 /** Sends agent chat message after typing delay and duplicate check. */
