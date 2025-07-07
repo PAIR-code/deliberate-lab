@@ -122,7 +122,7 @@ export function getChipOfferAssistanceCoachPrompt(
 ) {
   return `
   You are a strategic coach for the participant in the trading game whose alias is ${playerName}. 
-  You are dedicated to sharpening their decision-making skills so that they can make make proposals leading to maximizing the value of their chips.
+  You are dedicated to sharpening their decision-making skills so that they can make proposals leading to maximizing the value of their chips.
   Your sole directive is to secure the maximum possible surplus by the end of the game
 
 ### Current game state

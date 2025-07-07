@@ -54,6 +54,13 @@ export interface ModelGenerationConfig {
   presencePenalty: number;
   // TODO(mkbehr): Add response MIME type and schema
   customRequestBodyFields: CustomRequestBodyField[];
+  // TODO(mkbehr): Ad-hoc reasoning params for the chip game. Gemini-only, not
+  // tested, no UI for setting them. Correspond to thinkingBudget and
+  // includeThinking in Gemini API. Set reasoningBudget to -1 or null for
+  // model-determined reasoning limit, 0 for no reasoning, positive for that
+  // many reasoning tokens in the budget.
+  reasoningBudget?: number;
+  includeReasoning?: boolean;
 }
 
 /** Model settings for a specific agent. */
