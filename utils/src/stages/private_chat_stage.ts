@@ -35,6 +35,8 @@ export interface PrivateChatStageConfig extends BaseStageConfig {
   // If true, requires participant to go back and forth with mediator(s)
   // (rather than being able to send multiple messages at once)
   isTurnBasedChat: boolean;
+  // Minimum number of messages participant must send to move on
+  minNumberOfTurns: number;
   // If turn based chat set to true, this specifies the max
   // number of messages the participant can send (since the participant
   // can only send one message per turn)
@@ -59,6 +61,7 @@ export function createPrivateChatStage(
     timeLimitInMinutes: config.timeLimitInMinutes ?? null,
     requireFullTime: config.requireFullTime ?? false,
     isTurnBasedChat: config.isTurnBasedChat ?? true,
+    minNumberOfTurns: config.minNumberOfTurns ?? 0,
     maxNumberOfTurns: config.maxNumberOfTurns ?? null,
   };
 }
