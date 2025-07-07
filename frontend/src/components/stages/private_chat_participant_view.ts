@@ -9,7 +9,7 @@ import {customElement, property, state} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {ParticipantService} from '../../services/participant.service';
 
-import {PrivateChatStageConfig} from '@deliberation-lab/utils';
+import {ChatMessage, PrivateChatStageConfig} from '@deliberation-lab/utils';
 
 import {styles} from './group_chat_participant_view.scss';
 
@@ -43,12 +43,8 @@ export class PrivateChatView extends MobxLitElement {
 
     return html`
       <chat-interface .stage=${this.stage} .disableInput=${isDisabledInput()}>
-        ${chatMessages.map(
-          (message) => html`<chat-message .chat=${message}></chat-message`,
-        )}
-        ${isDisabledInput()
-          ? html`<div>Waiting for a response...</div>`
-          : nothing}
+        ${chatMessages.map((message) => this.renderChatMessage(message))}
+        ${isDisabledInput() ? this.renderWaitingMessage() : nothing}
       </chat-interface>
       <stage-footer>
         ${this.stage.progress.showParticipantProgress
@@ -56,6 +52,36 @@ export class PrivateChatView extends MobxLitElement {
           : nothing}
       </stage-footer>
     `;
+  }
+
+  private renderWaitingMessage() {
+    const sendError = () => {
+      this.participantService.sendErrorChatMessage({
+        message: 'Request canceled',
+      });
+    };
+
+    return html`
+      <div class="description">
+        <div>Waiting for a response...</div>
+        <pr-tooltip text="Cancel">
+          <pr-icon-button
+            icon="stop_circle"
+            color="neutral"
+            variant="default"
+            @click=${sendError}
+          >
+          </pr-icon-button>
+        </pr-tooltip>
+      </div>
+    `;
+  }
+
+  private renderChatMessage(chatMessage: ChatMessage) {
+    if (chatMessage.isError) {
+      return html`<div class="description error">${chatMessage.message}</div>`;
+    }
+    return html`<chat-message .chat=${chatMessage}></chat-message>`;
   }
 }
 

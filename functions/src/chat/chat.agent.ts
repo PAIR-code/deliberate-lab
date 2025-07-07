@@ -231,7 +231,7 @@ export async function sendAgentGroupChatMessage(
   ) {
     // TODO: Write chat log
     console.log('Conversation has moved on');
-    return false;
+    return true; // expected outcome (TODO: return status enum)
   }
 
   // Don't send a message if the conversation already has a response
@@ -249,7 +249,7 @@ export async function sendAgentGroupChatMessage(
   const hasTriggerResponse = (await triggerResponseDoc.get()).exists;
   if (hasTriggerResponse) {
     console.log('Someone already responded');
-    return false;
+    return true; // expected outcome (TODO: return status enum)
   }
 
   // Otherwise, log response ID as trigger message
@@ -269,6 +269,8 @@ export async function sendAgentGroupChatMessage(
 
   chatMessage.timestamp = Timestamp.now();
   agentDocument.set(chatMessage);
+
+  return true;
 }
 
 /** Sends agent chat message after typing delay and duplicate check. */
@@ -297,7 +299,7 @@ export async function sendAgentPrivateChatMessage(
   ) {
     // TODO: Write chat log
     console.log('Conversation has moved on');
-    return false;
+    return true; // expected outcome (TODO: return status enum)
   }
 
   // Don't send a message if the conversation already has a response
@@ -315,7 +317,7 @@ export async function sendAgentPrivateChatMessage(
   const hasTriggerResponse = (await triggerResponseDoc.get()).exists;
   if (hasTriggerResponse) {
     console.log('Someone already responded');
-    return false;
+    return true; // expected outcome (TODO: return status enum)
   }
 
   // Otherwise, log response ID as trigger message

@@ -31,6 +31,7 @@ export interface ChatMessage {
   senderId: string; // participant public ID or mediator public ID
   agentId: string; // agent persona used (or blank if none)
   explanation: string; // agent reasoning (or blank if none)
+  isError: boolean; // is error message (used for private chats)
 }
 
 /** Format for LLM API chat message output. */
@@ -70,6 +71,7 @@ export function createChatMessage(
     senderId: config.senderId ?? '',
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
+    isError: config.isError ?? false,
   };
 }
 
@@ -87,6 +89,7 @@ export function createParticipantChatMessage(
     senderId: config.senderId ?? '',
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
+    isError: config.isError ?? false,
   };
 }
 
@@ -104,6 +107,7 @@ export function createMediatorChatMessage(
     senderId: config.senderId ?? '',
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
+    isError: config.isError ?? false,
   };
 }
 
@@ -121,5 +125,6 @@ export function createExperimenterChatMessage(
     senderId: EXPERIMENTER_MANUAL_CHAT_SENDER_ID,
     agentId: config.agentId ?? '',
     explanation: config.explanation ?? '',
+    isError: config.isError ?? false,
   };
 }

@@ -15,6 +15,7 @@ import {
   SurveyStageParticipantAnswer,
   UnifiedTimestamp,
   UpdateChatStageParticipantAnswerData,
+  createChatMessage,
   createChatStageParticipantAnswer,
   createParticipantChatMessage,
   createSurveyPerParticipantStageParticipantAnswer,
@@ -578,6 +579,37 @@ export class ParticipantService extends Service {
           avatar: this.profile.avatar,
           pronouns: this.profile.pronouns,
         },
+      });
+
+      const createData: CreateChatMessageData = {
+        experimentId: this.experimentId,
+        cohortId: this.profile.currentCohortId,
+        stageId: this.profile.currentStageId,
+        participantId: this.profile.privateId,
+        chatMessage,
+      };
+
+      response = await createChatMessageCallable(
+        this.sp.firebaseService.functions,
+        createData,
+      );
+    }
+    this.isSendingChat = false;
+    return response;
+  }
+
+  /** Send error chat message. */
+  // createChatMessageCallable will route the chat message based on stage kind
+  async sendErrorChatMessage(config: Partial<ChatMessage> = {}) {
+    let response = {};
+    this.isSendingChat = true;
+    if (this.experimentId && this.profile) {
+      const chatMessage = createChatMessage({
+        ...config,
+        discussionId: this.sp.cohortService.getChatDiscussionId(
+          this.profile.currentStageId,
+        ),
+        isError: true,
       });
 
       const createData: CreateChatMessageData = {
