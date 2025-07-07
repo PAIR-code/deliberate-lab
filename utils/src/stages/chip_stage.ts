@@ -9,7 +9,6 @@ import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
   BaseStagePublicData,
-  StageGame,
   StageKind,
   createStageTextConfig,
   createStageProgressConfig,
@@ -208,7 +207,6 @@ export function createChipStage(
   return {
     id: config.id ?? generateId(),
     kind: StageKind.CHIP,
-    game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Chip negotiation',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress:

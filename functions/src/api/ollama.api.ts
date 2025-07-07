@@ -11,8 +11,9 @@
 import {
   OllamaServerConfig,
   ModelGenerationConfig,
+  ModelResponse,
+  ModelResponseStatus,
 } from '@deliberation-lab/utils';
-import {ModelResponse, ModelResponseStatus} from './model.response';
 
 /**
  * The JSON schema for LLM input understood by Ollama.
@@ -53,6 +54,7 @@ export async function ollamaChat(
   return {
     // TODO(mkbehr): handle errors from this API
     status: ModelResponseStatus.OK,
+    rawResponse: response,
     text: responseMessage,
   };
 }

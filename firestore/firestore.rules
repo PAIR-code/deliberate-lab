@@ -110,6 +110,26 @@ service cloud.firestore {
         allow write: if isExperimenter();
       }
 
+      match /agentMediators/{agentId} {
+        allow read: if isExperimenter();
+        allow write: if false; // Use cloud functions
+
+        match /prompts/{promptId} {
+          allow read: if isExperimenter();
+          allow write: if false; // Use cloud functions
+        }
+      }
+
+      match /agentParticipants/{agentId} {
+        allow read: if isExperimenter();
+        allow write: if false; // Use cloud functions
+
+        match /prompts/{promptId} {
+          allow read: if isExperimenter();
+          allow write: if false; // Use cloud functions
+        }
+      }
+
       match /agents/{agentId} {
         allow get: if isExperimenter();
         allow list: if isExperimenter();
@@ -188,6 +208,11 @@ service cloud.firestore {
 
           // Participants can use cloud function endpoints
           allow write: if false;
+
+          match /privateChats/{chatId} {
+            allow read: if true;
+            allow write: if false; // Use Cloud functions
+          }
         }
 
         match /alerts/{alertId} {

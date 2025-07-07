@@ -15,6 +15,12 @@ import {
   ComprehensionStageParticipantAnswer,
 } from './comprehension_stage';
 import {
+  FlipCardStageConfig,
+  FlipCardStageParticipantAnswer,
+  FlipCardStagePublicData,
+  createFlipCardStagePublicData,
+} from './flipcard_stage';
+import {
   RankingStageConfig,
   RankingStageParticipantAnswer,
   RankingStagePublicData,
@@ -22,6 +28,7 @@ import {
 } from './ranking_stage';
 import {InfoStageConfig} from './info_stage';
 import {PayoutStageConfig, PayoutStageParticipantAnswer} from './payout_stage';
+import {PrivateChatStageConfig} from './private_chat_stage';
 import {ProfileStageConfig} from './profile_stage';
 import {RevealStageConfig} from './reveal_stage';
 import {
@@ -55,23 +62,15 @@ export enum StageKind {
   CHAT = 'chat', // group chat
   CHIP = 'chip', // "chip" negotiation
   COMPREHENSION = 'comprehension',
+  FLIPCARD = 'flipcard', // flip card selection
   RANKING = 'ranking',
   PAYOUT = 'payout',
+  PRIVATE_CHAT = 'privateChat', // participant plus any mediators
   REVEAL = 'reveal',
   SALESPERSON = 'salesperson', // co-op traveling salesperson game
   SURVEY = 'survey',
   SURVEY_PER_PARTICIPANT = 'surveyPerParticipant',
   TRANSFER = 'transfer',
-}
-
-/** Specific game associated with stage. */
-export enum StageGame {
-  NONE = 'none',
-  LAS = 'las', // Lost at Sea
-  RTV = 'rtv', // Reality TV Debate.
-  CHP = 'chp', // Chip Negotiation
-  CTS = 'cts', // Co-op Traveling Salesperson
-  TG = 'TG', // Test Game
 }
 
 /**
@@ -83,7 +82,6 @@ export enum StageGame {
 export interface BaseStageConfig {
   id: string;
   kind: StageKind;
-  game: StageGame;
   name: string;
   descriptions: StageTextConfig;
   progress: StageProgressConfig;
@@ -105,9 +103,11 @@ export type StageConfig =
   | ChatStageConfig
   | ChipStageConfig
   | ComprehensionStageConfig
+  | FlipCardStageConfig
   | RankingStageConfig
   | InfoStageConfig
   | PayoutStageConfig
+  | PrivateChatStageConfig
   | ProfileStageConfig
   | RevealStageConfig
   | SalespersonStageConfig
@@ -132,6 +132,7 @@ export type StageParticipantAnswer =
   | ChatStageParticipantAnswer
   | ChipStageParticipantAnswer
   | ComprehensionStageParticipantAnswer
+  | FlipCardStageParticipantAnswer
   | PayoutStageParticipantAnswer
   | RankingStageParticipantAnswer
   | SurveyStageParticipantAnswer
@@ -153,6 +154,7 @@ export interface BaseStagePublicData {
 export type StagePublicData =
   | ChatStagePublicData
   | ChipStagePublicData
+  | FlipCardStagePublicData
   | RankingStagePublicData
   | SalespersonStagePublicData
   | SurveyStagePublicData;
@@ -198,6 +200,9 @@ export function createPublicDataFromStageConfigs(stages: StageConfig[]) {
         break;
       case StageKind.CHIP:
         publicData.push(createChipStagePublicData(stage.id));
+        break;
+      case StageKind.FLIPCARD:
+        publicData.push(createFlipCardStagePublicData(stage.id));
         break;
       case StageKind.RANKING:
         publicData.push(createRankingStagePublicData(stage.id));

@@ -1,5 +1,5 @@
 import {Value} from '@sinclair/typebox/value';
-import {MediatorProfile} from '@deliberation-lab/utils';
+import {MediatorProfileExtended} from '@deliberation-lab/utils';
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import {onCall} from 'firebase-functions/v2/https';
@@ -26,7 +26,9 @@ export const updateMediatorStatus = onCall(async (request) => {
     .doc(data.mediatorId);
 
   await app.firestore().runTransaction(async (transaction) => {
-    const mediator = (await mediatorDoc.get()).data() as MediatorProfile;
+    const mediator = (
+      await mediatorDoc.get()
+    ).data() as MediatorProfileExtended;
     mediator.currentStatus = data.status;
 
     transaction.set(mediatorDoc, mediator);

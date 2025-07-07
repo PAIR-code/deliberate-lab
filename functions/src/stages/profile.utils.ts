@@ -1,4 +1,5 @@
 import {
+  ModelResponseStatus,
   ParticipantProfileExtended,
   ProfileType,
   ProfileStageConfig,
@@ -12,7 +13,6 @@ import * as functions from 'firebase-functions';
 import {Timestamp} from 'firebase-admin/firestore';
 import {onCall} from 'firebase-functions/v2/https';
 
-import {ModelResponseStatus} from '../api/model.response';
 import {app} from '../app';
 import {getAgentResponse} from '../agent.utils';
 import {getExperimenterDataFromExperiment} from '../utils/firestore';
@@ -63,7 +63,7 @@ export async function completeProfile(
   if (!experimenterData) return null;
 
   const response = await getAgentResponse(
-    experimenterData,
+    experimenterData.apiKeys,
     `${participant.agentConfig.promptContext}\n\nPlease fill out your profile name, emoji, and pronouns.`,
     participant.agentConfig.modelSettings,
     createModelGenerationConfig(),

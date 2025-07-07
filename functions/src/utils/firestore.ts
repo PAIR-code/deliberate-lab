@@ -2,8 +2,12 @@ import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
 
 import {
+  ChatMessage,
   CohortConfig,
+  Experiment,
   ExperimenterData,
+  MediatorProfileExtended,
+  MediatorStatus,
   ParticipantProfileExtended,
   ParticipantStatus,
   StageConfig,
@@ -40,6 +44,21 @@ export async function getExperimenterDataFromExperiment(experimentId: string) {
   }
   const creatorId = experimentDoc.data().metadata.creator;
   return await getExperimenterData(creatorId);
+}
+
+/** Return ref for experiment doc. */
+export function getFirestoreExperimentRef(experimentId: string) {
+  return app.firestore().collection('experiments').doc(experimentId);
+}
+
+/** Fetch experiment from Firestore */
+export async function getFirestoreExperiment(experimentId: string) {
+  const ref = getFirestoreExperimentRef(experimentId);
+
+  const doc = await ref.get();
+  if (!doc.exists) return undefined;
+
+  return doc.data() as Experiment;
 }
 
 /** Return ref for participant doc. */
@@ -81,6 +100,31 @@ export async function getFirestoreCohortParticipants(
       .where('currentCohortId', '==', cohortId)
       .get()
   ).docs.map((doc) => doc.data() as ParticipantProfileExtended);
+}
+
+/** Fetch active mediators for current cohort/stage. */
+export async function getFirestoreActiveMediators(
+  experimentId: string,
+  cohortId: string,
+  stageId: string | null = null, // if null, can be in any stage
+  checkIsAgent = false, // whether to check if participant is agent
+) {
+  const activeMediators = (
+    await app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('mediators')
+      .where('currentCohortId', '==', cohortId)
+      .get()
+  ).docs
+    .map((doc) => doc.data() as MediatorProfileExtended)
+    .filter(
+      (participant) =>
+        participant.currentStatus === MediatorStatus.ACTIVE &&
+        (checkIsAgent ? participant.agentConfig : true),
+    );
+  return activeMediators;
 }
 
 /** Fetch active participants for current cohort/stage. */
@@ -218,13 +262,14 @@ export async function getFirestoreStagePublicData(
   return doc.data() as StagePublicData;
 }
 
-/** Return all agent personas for a given experiment. */
-export async function getAgentPersonas(experimentId: string) {
+/** Return all agent mediator personas for a given experiment. */
+export async function getAgentMediatorPersonas(experimentId: string) {
   const agentCollection = app
     .firestore()
     .collection('experiments')
     .doc(experimentId)
-    .collection('agents');
+    .collection('agentMediators');
+
   return (await agentCollection.get()).docs.map(
     (agent) => agent.data() as AgentPersonaConfig,
   );
@@ -250,4 +295,48 @@ export async function getAgentParticipantPrompt(
     return null;
   }
   return prompt.data() as AgentParticipantPromptConfig;
+}
+
+/** Get group chat messages for given cohort and stage ID. */
+export async function getFirestorePublicStageChatMessages(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+): Promise<ChatMessage[]> {
+  try {
+    return (
+      await app
+        .firestore()
+        .collection(
+          `experiments/${experimentId}/cohorts/${cohortId}/publicStageData/${stageId}/chats`,
+        )
+        .orderBy('timestamp', 'asc')
+        .get()
+    ).docs.map((doc) => doc.data() as ChatMessage);
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+}
+
+/** Get private chat messages for given participant and stage ID. */
+export async function getFirestorePrivateChatMessages(
+  experimentId: string,
+  participantId: string,
+  stageId: string,
+): Promise<ChatMessage[]> {
+  try {
+    return (
+      await app
+        .firestore()
+        .collection(
+          `experiments/${experimentId}/participants/${participantId}/stageData/${stageId}/privateChats`,
+        )
+        .orderBy('timestamp', 'asc')
+        .get()
+    ).docs.map((doc) => doc.data() as ChatMessage);
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
 }

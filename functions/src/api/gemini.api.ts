@@ -10,8 +10,10 @@ import {
   StructuredOutputDataType,
   StructuredOutputConfig,
   StructuredOutputSchema,
+  ModelResponseStatus,
+  ModelResponse,
+  addParsedModelResponse,
 } from '@deliberation-lab/utils';
-import {ModelResponseStatus, ModelResponse} from './model.response';
 
 const GEMINI_DEFAULT_MODEL = 'gemini-1.5-pro-latest';
 const DEFAULT_FETCH_TIMEOUT = 300 * 1000; // This is the Chrome default
@@ -111,6 +113,7 @@ export async function callGemini(
   prompt: string,
   generationConfig: GenerationConfig,
   modelName = GEMINI_DEFAULT_MODEL,
+  parseResponse = false, // parse if structured output
 ) {
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
@@ -125,6 +128,7 @@ export async function callGemini(
   if (response.promptFeedback) {
     return {
       status: ModelResponseStatus.REFUSAL_ERROR,
+      rawResponse: JSON.stringify(response),
       errorMessage:
         response.promptFeedback.blockReasonMessage ??
         JSON.stringify(response.promptFeedback),
@@ -134,6 +138,7 @@ export async function callGemini(
   if (!response.candidates) {
     return {
       status: ModelResponseStatus.UNKNOWN_ERROR,
+      rawResponse: JSON.stringify(response),
       errorMessage: `Model provider returned an unexpected response (no response candidates): ${response}`,
     };
   }
@@ -142,14 +147,20 @@ export async function callGemini(
   if (finishReason === MAX_TOKENS_FINISH_REASON) {
     return {
       status: ModelResponseStatus.LENGTH_ERROR,
+      rawResponse: JSON.stringify(response),
       errorMessage: `Error: Token limit (${generationConfig.maxOutputTokens}) exceeded`,
     };
   }
 
-  return {
+  const modelResponse = {
     status: ModelResponseStatus.OK,
+    rawResponse: JSON.stringify(response),
     text: response.text(),
   };
+  if (parseResponse) {
+    return addParsedModelResponse(modelResponse);
+  }
+  return modelResponse;
 }
 
 /** Constructs Gemini API query and returns response. */
@@ -190,7 +201,13 @@ export async function getGeminiAPIResponse(
   };
 
   try {
-    return await callGemini(apiKey, promptText, geminiConfig, modelName);
+    return await callGemini(
+      apiKey,
+      promptText,
+      geminiConfig,
+      modelName,
+      structuredOutputConfig?.enabled,
+    );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     // The GenerativeAI client doesn't return responses in a parseable format,

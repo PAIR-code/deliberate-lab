@@ -1,8 +1,8 @@
-import {AgentDataObject} from './agent';
+import {AgentMediatorTemplate, AgentParticipantTemplate} from './agent';
 import {CohortConfig} from './cohort';
 import {Experiment} from './experiment';
 import {ParticipantProfileExtended} from './participant';
-import {ChatMessage} from './stages/chat_stage';
+import {ChatMessage} from './chat_message';
 import {
   StageConfig,
   StageParticipantAnswer,
@@ -20,13 +20,15 @@ export interface ExperimentDownload {
   experiment: Experiment;
   // Maps from stage ID to stage config
   stageMap: Record<string, StageConfig>;
+  // TODO: Add mediator map
   // Maps from participant public ID to participant download
   participantMap: Record<string, ParticipantDownload>;
   // Maps from cohort ID to cohort download
   cohortMap: Record<string, CohortDownload>;
-  // Maps from agent persona ID to agent data
-  agentMap: Record<string, AgentDataObject>;
-  // TODO: add roleMap once roles are added
+  // Maps from agent mediator persona ID to agent template
+  agentMediatorMap: Record<string, AgentMediatorTemplate>;
+  // Maps from agent participant ID to agent template
+  agentParticipantMap: Record<string, AgentParticipantTemplate>;
 }
 
 export interface ParticipantDownload {
@@ -52,7 +54,8 @@ export function createExperimentDownload(
     stageMap: {},
     participantMap: {},
     cohortMap: {},
-    agentMap: {},
+    agentMediatorMap: {},
+    agentParticipantMap: {},
   };
 }
 

@@ -18,7 +18,7 @@ import {
   ExperimenterData,
   StageKind,
   createAgentModelSettings,
-  createAgentPersonaConfig,
+  createAgentMediatorPersonaConfig,
   createAgentPromptSettings,
   createModelGenerationConfig,
   checkApiKeyExists,
@@ -49,7 +49,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
   }
 
   private renderCheckApiKey(apiType: ApiKeyType) {
-    const agentConfig = createAgentPersonaConfig({
+    const agentConfig = createAgentMediatorPersonaConfig({
       defaultModelSettings: createAgentModelSettings({apiType}),
     });
     const promptConfig: BaseAgentPromptConfig = {

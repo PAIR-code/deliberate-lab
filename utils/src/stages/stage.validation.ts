@@ -1,11 +1,12 @@
 import {Type} from '@sinclair/typebox';
-import {StageGame} from './stage';
 import {ChatStageConfigData} from './chat_stage.validation';
 import {ChipStageConfigData} from './chip_stage.validation';
 import {ComprehensionStageConfigData} from './comprehension_stage.validation';
+import {FlipCardStageConfigData} from './flipcard_stage.validation';
 import {RankingStageConfigData} from './ranking_stage.validation';
 import {InfoStageConfigData} from './info_stage.validation';
 import {PayoutStageConfigData} from './payout_stage.validation';
+import {PrivateChatStageConfigData} from './private_chat_stage.validation';
 import {ProfileStageConfigData} from './profile_stage.validation';
 import {RevealStageConfigData} from './reveal_stage.validation';
 import {SalespersonStageConfigData} from './salesperson_stage.validation';
@@ -25,8 +26,10 @@ export const StageConfigData = Type.Union([
   ChatStageConfigData,
   ChipStageConfigData,
   ComprehensionStageConfigData,
+  FlipCardStageConfigData,
   InfoStageConfigData,
   PayoutStageConfigData,
+  PrivateChatStageConfigData,
   ProfileStageConfigData,
   RankingStageConfigData,
   RevealStageConfigData,
@@ -35,16 +38,6 @@ export const StageConfigData = Type.Union([
   SurveyStageConfigData,
   TOSStageConfigData,
   TransferStageConfigData,
-]);
-
-/** StageGame input validation. */
-export const StageGameSchema = Type.Union([
-  Type.Literal(StageGame.NONE),
-  Type.Literal(StageGame.LAS),
-  Type.Literal(StageGame.RTV),
-  Type.Literal(StageGame.CHP),
-  Type.Literal(StageGame.CTS),
-  Type.Literal(StageGame.TG),
 ]);
 
 /** StageTextConfig input validation. */

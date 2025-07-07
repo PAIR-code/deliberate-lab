@@ -1,0 +1,73 @@
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.flex-column;
+}
+
+chat-interface {
+  height: calc(100vh - common.$header-height * 3);
+}
+
+stage-footer {
+  background: inherit;
+  border: none;
+  flex-shrink: 0;
+  padding: 0 common.$main-content-padding;
+}
+
+.discussion {
+  @include common.flex-column-align-center;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  justify-content: center;
+  margin-top: common.$spacing-large;
+  padding: 0 common.$spacing-large common.$spacing-large;
+}
+
+.discussion-title {
+  @include typescale.label-small;
+  background: var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-small;
+  color: var(--md-sys-color-outline);
+  padding: common.$spacing-small common.$spacing-medium;
+  text-transform: uppercase;
+  transform: translateY(calc(-1 * common.$spacing-large));
+}
+
+.discussion-items {
+  @include common.flex-row;
+  flex-wrap: wrap;
+  gap: common.$spacing-large;
+}
+
+.discussion-item {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+  overflow-wrap: anywhere;
+}
+
+.img-wrapper {
+  @include common.flex-row-align-center;
+  aspect-ratio: 1 / 1;
+  background: var(--md-sys-color-outline-variant);
+  border-radius: 100%;
+  overflow: hidden;
+  width: 30px;
+
+  img {
+    height: auto;
+    width: 100%;
+  }
+}
+
+.description {
+  @include common.flex-row-align-center;
+  color: var(--md-sys-color-outline);
+  font-style: italic;
+  gap: common.$spacing-small;
+  padding: common.$spacing-medium 0;
+
+  &.error {
+    color: var(--md-sys-color-error);
+  }
+}

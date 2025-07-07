@@ -93,6 +93,22 @@ export function generateId(isSequential: boolean = false): string {
   return uuidv4();
 }
 
+/** Convert UnifiedTimestamp to (hh:mm) format. */
+export function convertUnifiedTimestampToTime(
+  timestamp: UnifiedTimestamp,
+  includeParentheses = true,
+) {
+  const date = new Date(timestamp.seconds * 1000);
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const time = `${hours}:${minutes}`;
+
+  if (includeParentheses) {
+    return `(${time})`;
+  }
+  return time;
+}
+
 /** Await typing delay (e.g., for chat messages). */
 export async function awaitTypingDelay(
   message: string,

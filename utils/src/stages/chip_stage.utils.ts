@@ -7,7 +7,6 @@ import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
   BaseStagePublicData,
-  StageGame,
   StageKind,
   createStageTextConfig,
   createStageProgressConfig,

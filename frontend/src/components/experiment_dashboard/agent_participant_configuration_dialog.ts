@@ -129,8 +129,8 @@ export class AgentParticipantDialog extends MobxLitElement {
       }
       return html`
         <div class="error">
-          No agent personas have been configured. Use the edit button in the
-          left panel to add a persona.
+          No agent personas have been configured. Use the edit button at the top
+          of the experiment dashboard to add a persona.
         </div>
       `;
     };

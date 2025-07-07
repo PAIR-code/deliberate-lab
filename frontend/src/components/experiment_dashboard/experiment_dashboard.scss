@@ -17,7 +17,7 @@
   border-right: 2px solid var(--md-sys-color-outline);
   flex-shrink: 0;
   height: 100vh;
-  width: 340px;
+  width: 550px;
 }
 
 .cohort-panel {
@@ -43,12 +43,9 @@
 
 .stats-panel {
   @include common.flex-column;
-  border-right: 1px solid var(--md-sys-color-outline-variant);
   flex-grow: 0;
-  flex-shrink: 0;
   height: 100vh;
   overflow: auto;
-  width: 550px;
 }
 
 experimenter-panel {
@@ -150,7 +147,10 @@ code {
 .toggle-option {
   padding: 0.5em 1em;
   text-align: center;
-  transition: background-color 0.2s, color 0.2s, border-radius 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    border-radius 0.2s;
 }
 
 /* Active state for left (Details) */

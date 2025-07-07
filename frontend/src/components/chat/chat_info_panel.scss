@@ -1,0 +1,90 @@
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.flex-column;
+  flex-shrink: 0;
+}
+
+.top-layout {
+  @include common.flex-column;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+}
+
+.side-layout {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: common.$main-content-padding;
+  width: 240px;
+}
+
+.panel-item {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.panel-item-title {
+  @include typescale.title-small;
+  @include common.flex-row-align-center;
+  flex-wrap: wrap;
+  gap: common.$spacing-small;
+  justify-content: space-between;
+}
+
+.panel-list {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+
+  &.wrap {
+    @include common.flex-row-align-center;
+    flex-wrap: wrap;
+  }
+}
+
+.panel-item-subtitle {
+  @include typescale.label-small;
+  color: var(--md-sys-color-tertiary);
+}
+
+.profile {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  word-break: break-all;
+}
+
+.name {
+  @include typescale.body-small;
+  color: var(--md-sys-color-outline);
+  font-weight: 500;
+}
+
+.warning {
+  @include typescale.label-small;
+  background: var(--md-sys-color-error-container);
+  border-radius: common.$spacing-medium;
+  color: var(--md-sys-color-on-error-container);
+  padding: common.$spacing-small common.$spacing-medium;
+}
+
+.countdown {
+  @include typescale.label-medium;
+  font-style: italic;
+  color: var(--md-sys-color-secondary);
+}
+
+.ended {
+  color: var(--md-sys-color-tertiary);
+}
+
+.divider {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.chip {
+  @include typescale.label-small;
+  @include common.chip;
+}

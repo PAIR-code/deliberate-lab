@@ -2,7 +2,6 @@ import {generateId} from '../shared';
 import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
-  StageGame,
   StageKind,
   createStageTextConfig,
   createStageProgressConfig,
@@ -64,7 +63,6 @@ export function createComprehensionStage(
   return {
     id: config.id ?? generateId(),
     kind: StageKind.COMPREHENSION,
-    game: config.game ?? StageGame.NONE,
     name: config.name ?? 'Comprehension check',
     descriptions: config.descriptions ?? createStageTextConfig(),
     progress: config.progress ?? createStageProgressConfig(),
