@@ -36,7 +36,10 @@ import {
   SalespersonStagePublicData,
   createSalespersonStagePublicData,
 } from './salesperson_stage';
-import {StockInfoStageConfig} from './stockinfo_stage';
+import {
+  StockInfoStageConfig,
+  StockInfoStageParticipantAnswer,
+} from './stockinfo_stage';
 import {
   SurveyPerParticipantStageConfig,
   SurveyPerParticipantStageParticipantAnswer,
@@ -138,6 +141,7 @@ export type StageParticipantAnswer =
   | FlipCardStageParticipantAnswer
   | PayoutStageParticipantAnswer
   | RankingStageParticipantAnswer
+  | StockInfoStageParticipantAnswer
   | SurveyStageParticipantAnswer
   | SurveyPerParticipantStageParticipantAnswer;
 

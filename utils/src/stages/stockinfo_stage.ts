@@ -2,6 +2,7 @@ import {generateId} from '../shared';
 import {parseStockData} from './stockinfo_stage.utils';
 import {
   BaseStageConfig,
+  BaseStageParticipantAnswer,
   StageKind,
   createStageTextConfig,
   createStageProgressConfig,
@@ -47,11 +48,32 @@ export interface StockInfoStageConfig extends BaseStageConfig {
   showInvestmentGrowth: boolean;
 }
 
+/** StockInfo stage participant answer. */
+export interface StockInfoStageParticipantAnswer
+  extends BaseStageParticipantAnswer {
+  kind: StageKind.STOCKINFO;
+  viewedStockIds: string[];
+  currentStockIndex: number;
+}
+
 // ************************************************************************* //
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
 
 export {parseStockData} from './stockinfo_stage.utils';
+
+/** Create StockInfo stage participant answer. */
+export function createStockInfoStageParticipantAnswer(
+  stageId: string,
+  config: Partial<StockInfoStageParticipantAnswer> = {},
+): StockInfoStageParticipantAnswer {
+  return {
+    id: config.id ?? stageId,
+    kind: StageKind.STOCKINFO,
+    viewedStockIds: config.viewedStockIds ?? [],
+    currentStockIndex: config.currentStockIndex ?? 0,
+  };
+}
 
 /** Create stock info card. */
 export function createStockInfoCard(
