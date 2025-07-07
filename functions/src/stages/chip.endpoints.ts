@@ -462,11 +462,11 @@ export const selectChipAssistanceMode = onCall(async (request) => {
     return {data: ''};
   }
 
-  // TODO: Re-enable check if participant answer already has current assistance
-  // if (participantAnswer.currentAssistance) {
-  //   console.log('Current assistance already set!');
-  //   return {data: ''};
-  // }
+  // Re-enable check if participant answer already has current assistance
+  if (participantAnswer.currentAssistance) {
+    console.log('Current assistance already set!');
+    return {data: ''};
+  }
 
   const currentAssistance: ChipAssistanceMove = {
     round,
