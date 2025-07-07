@@ -388,7 +388,7 @@ const GLOBALCONNECT_CSV_DATA = `Date,Close
 2025-12-22,165.00
 2025-12-29,166.65`;
 
-const STOCKINFO_MAIN_STAGE = createStockInfoStage({
+export const STOCKINFO_MAIN_STAGE = createStockInfoStage({
   id: 'stockinfo_main',
   name: 'Stock Analysis',
   stocks: [

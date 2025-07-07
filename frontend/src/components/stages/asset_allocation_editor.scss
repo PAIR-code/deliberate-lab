@@ -1,0 +1,216 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.editor-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 16px;
+}
+
+.header {
+  h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+  }
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: 8px;
+
+  h4 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+  }
+}
+
+.info-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+// Stock Info Stage Selector
+.stock-info-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.current-selection {
+  padding: 12px;
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--md-sys-color-on-surface);
+
+  .selected-stage {
+    font-weight: 500;
+    color: var(--md-sys-color-primary);
+  }
+
+  .no-selection {
+    font-style: italic;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+}
+
+.stage-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.no-stages {
+  padding: 16px;
+  text-align: center;
+  color: var(--md-sys-color-on-surface-variant);
+  font-style: italic;
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: 6px;
+  margin: 0;
+}
+
+.stage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stage-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  background-color: var(--md-sys-color-surface-container);
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(.selected) {
+    background-color: var(--md-sys-color-surface-container-high);
+    border-color: var(--md-sys-color-outline-variant);
+  }
+
+  &.selected {
+    background-color: var(--md-sys-color-primary-container);
+    border-color: var(--md-sys-color-primary);
+
+    .stage-name {
+      color: var(--md-sys-color-on-primary-container);
+    }
+  }
+
+  &.disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    background-color: var(--md-sys-color-surface-container-low);
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-low);
+      border-color: transparent;
+    }
+
+    .stage-name {
+      color: var(--md-sys-color-on-surface-variant);
+    }
+  }
+}
+
+.stage-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+
+  .stage-number {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 14px;
+  }
+
+  .stage-name {
+    flex: 1;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .selected-indicator {
+    color: var(--md-sys-color-primary);
+    font-weight: bold;
+  }
+}
+
+.stage-details {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant);
+
+  .stock-count {
+    font-weight: 500;
+  }
+
+  .stocks-preview {
+    font-style: italic;
+  }
+
+  .warning {
+    color: var(--md-sys-color-error);
+    font-weight: 500;
+  }
+}
+
+.clear-selection {
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+}
+
+// Simple Stock Configuration
+.simple-stocks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stock-config {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: 6px;
+}
+
+.simple-stock-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  md-outlined-text-field {
+    width: 100%;
+  }
+}

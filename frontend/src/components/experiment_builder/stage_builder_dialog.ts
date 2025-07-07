@@ -15,6 +15,7 @@ import {
   MetadataConfig,
   StageConfig,
   StageKind,
+  createAssetAllocationStage,
   createChatStage,
   createRankingStage,
   createInfoStage,
@@ -59,6 +60,10 @@ import {
   FLIPCARD_TEMPLATE_METADATA,
   getFlipCardExperimentTemplate,
 } from '../../shared/templates/flipcard';
+import {
+  ASSET_ALLOCATION_GAME_METADATA,
+  getAssetAllocationGameStageConfigs,
+} from '../../shared/templates/asset_allocation_template';
 
 import {styles} from './stage_builder_dialog.scss';
 
@@ -140,9 +145,9 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()} ${this.renderLASCard(true)}
         ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
-        ${this.renderStockInfoGameCard()} ${this.renderSalespersonGameCard()}
-        ${this.renderFlipCardTemplateCard()}
-        ${this.renderFruitTestTemplateCard()}
+        ${this.renderSalespersonGameCard()} ${this.renderFlipCardTemplateCard()}
+        ${this.renderFruitTestTemplateCard()} ${this.renderStockInfoGameCard()}
+        ${this.renderAssetAllocationGameCard()}
       </div>
     `;
   }
@@ -169,8 +174,9 @@ export class StageBuilderDialog extends MobxLitElement {
         <div class="card-gallery-wrapper">
           ${this.renderTransferCard()} ${this.renderSurveyCard()}
           ${this.renderSurveyPerParticipantCard()} ${this.renderFlipCardCard()}
-          ${this.renderStockInfoCard()} ${this.renderRankingCard()}
-          ${this.renderRevealCard()} ${this.renderPayoutCard()}
+          ${this.renderRankingCard()} ${this.renderRevealCard()}
+          ${this.renderPayoutCard()} ${this.renderStockInfoCard()}
+          ${this.renderAssetAllocationCard()}
         </div>
       </div>
     `;
@@ -373,6 +379,22 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
+  private renderAssetAllocationCard() {
+    const addStage = () => {
+      this.addStage(createAssetAllocationStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">💰 Asset Allocation</div>
+        <div>
+          Allow participants to allocate investment portfolios between multiple
+          stocks using interactive sliders.
+        </div>
+      </div>
+    `;
+  }
+
   private renderRankingCard() {
     const addStage = () => {
       this.addStage(createRankingStage());
@@ -504,6 +526,25 @@ export class StageBuilderDialog extends MobxLitElement {
         <div class="title">📈 Stock Analysis Game</div>
         <div>
           A demonstration of the StockInfo stage with financial data analysis.
+        </div>
+      </div>
+    `;
+  }
+
+  private renderAssetAllocationGameCard() {
+    const addGame = () => {
+      this.addGame(
+        ASSET_ALLOCATION_GAME_METADATA,
+        getAssetAllocationGameStageConfigs(),
+      );
+    };
+
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">💰 Investment Portfolio Game</div>
+        <div>
+          A complete investment study with stock analysis and portfolio
+          allocation decisions.
         </div>
       </div>
     `;

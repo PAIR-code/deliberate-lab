@@ -14,6 +14,7 @@ import '../stages/profile_participant_editor';
 import '../stages/profile_participant_view';
 import '../stages/reveal_participant_view';
 import '../stages/salesperson_participant_view';
+import '../stages/asset_allocation_participant_view';
 import '../stages/stockinfo_participant_view';
 import '../stages/survey_view';
 import '../stages/survey_per_participant_view';
@@ -265,6 +266,10 @@ export class ParticipantView extends MobxLitElement {
         return html`<stockinfo-participant-view
           .stage=${stage}
         ></stockinfo-participant-view>`;
+      case StageKind.ASSET_ALLOCATION:
+        return html`<asset-allocation-participant-view
+          .stage=${stage}
+        ></asset-allocation-participant-view>`;
       case StageKind.SURVEY:
         return html`<survey-view .stage=${stage}></survey-view>`;
       case StageKind.SURVEY_PER_PARTICIPANT:
