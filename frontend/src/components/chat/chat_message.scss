@@ -5,6 +5,7 @@
 $avatar-height: 30px;
 $bubble-radius: 20px;
 $bubble-radius-small: common.$spacing-small;
+$bubble-width: 400px;
 
 :host {
   @include common.flex-column;
@@ -44,7 +45,7 @@ $bubble-radius-small: common.$spacing-small;
   border-radius: $bubble-radius $bubble-radius $bubble-radius
     $bubble-radius-small;
   color: var(--md-sys-color-on-secondary-container);
-  max-width: max-content;
+  max-width: $bubble-width;
   overflow-wrap: anywhere;
 }
 
@@ -108,4 +109,5 @@ $bubble-radius-small: common.$spacing-small;
 .debug {
   @include typescale.label-small;
   color: var(--md-sys-color-tertiary);
+  max-width: $bubble-width;
 }
