@@ -37,7 +37,7 @@ import {
   CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
 } from '@deliberation-lab/utils';
 
-import {getAgentResponse} from '../agent.utils';
+import {processModelResponse} from '../agent.utils';
 import {getFirestoreStagePublicDataRef} from '../utils/firestore';
 
 import * as admin from 'firebase-admin';
@@ -515,12 +515,9 @@ export async function getChipOfferAssistance(
   });
 
   // Helper function to parse structured output response
-  const parseResponse = (response: string, sendOffer = false) => {
+  const parseResponse = (response: ModelResponse, sendOffer = false) => {
     try {
-      const cleanedText = response
-        .text!.replace(/```json\s*|\s*```/g, '')
-        .trim();
-      const responseObj = JSON.parse(cleanedText);
+      const responseObj = response.parsedResponse;
       if (sendOffer) {
         const buy: Record<string, number> = {};
         const sell: Record<string, number> = {};
@@ -569,7 +566,15 @@ export async function getChipOfferAssistance(
       );
       console.log('Chip offer assistance coach prompt:', coachPrompt);
       // Call API
-      const coachResponse = await getAgentResponse(
+      const coachResponse = await processModelResponse(
+        experimentId,
+        participant.currentCohortId,
+        participant.privateId,
+        stage.id,
+        participant, // NOTE: This should actually be the agent profile
+        '', // No agent private ID
+        '', // No agent public ID
+        '', // No description
         experimenterData.apiKeys,
         coachPrompt,
         modelSettings,
@@ -590,7 +595,15 @@ export async function getChipOfferAssistance(
       );
       console.log('Chip offer assistance advisor prompt:', advisorPrompt);
       // Call API
-      const advisorResponse = await getAgentResponse(
+      const advisorResponse = await processModelResponse(
+        experimentId,
+        participant.currentCohortId,
+        participant.privateId,
+        stage.id,
+        participant, // NOTE: This should actually be the agent profile
+        '', // No agent private ID
+        '', // No agent public ID
+        '', // No description
         experimenterData.apiKeys,
         advisorPrompt,
         modelSettings,
@@ -611,7 +624,15 @@ export async function getChipOfferAssistance(
       );
       console.log('Chip offer assistance delegate prompt:', delegatePrompt);
       // Call API
-      const delegateResponse = await getAgentResponse(
+      const delegateResponse = await processModelResponse(
+        experimentId,
+        participant.currentCohortId,
+        participant.privateId,
+        stage.id,
+        participant, // NOTE: This should actually be the agent profile
+        '', // No agent private ID
+        '', // No agent public ID
+        '', // No description
         experimenterData.apiKeys,
         delegatePrompt,
         modelSettings,
@@ -699,12 +720,9 @@ export async function getChipResponseAssistance(
   });
 
   // Helper function to parse structured output response
-  const parseResponse = (response: string, sendResponse = false) => {
+  const parseResponse = (response: ModelResponse, sendResponse = false) => {
     try {
-      const cleanedText = response
-        .text!.replace(/```json\s*|\s*```/g, '')
-        .trim();
-      const responseObject = JSON.parse(cleanedText);
+      const responseObject = response.parsedResponse;
       if (sendResponse) {
         addChipResponseToPublicData(
           experimentId,
@@ -741,7 +759,15 @@ export async function getChipResponseAssistance(
       );
       console.log('Chip response assistance coach prompt:', coachPrompt);
       // Call API
-      const coachResponse = await getAgentResponse(
+      const coachResponse = await processModelResponse(
+        experimentId,
+        participant.currentCohortId,
+        participant.privateId,
+        stage.id,
+        participant, // NOTE: This should actually be the agent profile
+        '', // No agent private ID
+        '', // No agent public ID
+        '', // No description
         experimenterData.apiKeys,
         coachPrompt,
         modelSettings,
@@ -763,7 +789,15 @@ export async function getChipResponseAssistance(
       );
       console.log('Chip response assistance advisor prompt:', advisorPrompt);
       // Call API
-      const advisorResponse = await getAgentResponse(
+      const advisorResponse = await processModelResponse(
+        experimentId,
+        participant.currentCohortId,
+        participant.privateId,
+        stage.id,
+        participant, // NOTE: This should actually be the agent profile
+        '', // No agent private ID
+        '', // No agent public ID
+        '', // No description
         experimenterData.apiKeys,
         advisorPrompt,
         modelSettings,
@@ -785,7 +819,15 @@ export async function getChipResponseAssistance(
       );
       console.log('Chip response assistance delegate prompt:', delegatePrompt);
       // Call API
-      const delegateResponse = await getAgentResponse(
+      const delegateResponse = await processModelResponse(
+        experimentId,
+        participant.currentCohortId,
+        participant.privateId,
+        stage.id,
+        participant, // NOTE: This should actually be the agent profile
+        '', // No agent private ID
+        '', // No agent public ID
+        '', // No description
         experimenterData.apiKeys,
         delegatePrompt,
         modelSettings,
