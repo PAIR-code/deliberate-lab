@@ -713,7 +713,6 @@ const CHIP_NEGOTIATION_STAGE2_ID = `negotiation2_${ALTERNATE_PROFILE_SET_ID}`;
 function getChipNegotiationCoach(numChips: number) {
   return createChipStage({
     id: 'chip_coach',
-    game: StageGame.CHP,
     name: 'Chip negotiation with coaching option',
     descriptions: createStageTextConfig({
       infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
@@ -731,7 +730,6 @@ function getChipNegotiationCoach(numChips: number) {
 function getChipNegotiationAdvisor(numChips: number) {
   return createChipStage({
     id: 'chip_advisor',
-    game: StageGame.CHP,
     name: 'Chip negotiation with advisor option',
     descriptions: createStageTextConfig({
       infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
@@ -749,7 +747,6 @@ function getChipNegotiationAdvisor(numChips: number) {
 function getChipNegotiationDelegate(numChips: number) {
   return createChipStage({
     id: 'chip_delegate',
-    game: StageGame.CHP,
     name: 'Chip negotiation with delegate option',
     descriptions: createStageTextConfig({
       infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
