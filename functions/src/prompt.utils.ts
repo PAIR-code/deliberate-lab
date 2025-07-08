@@ -8,6 +8,7 @@ import {
   StageKind,
   getChatPromptMessageHistory,
   makeStructuredOutputPrompt,
+  getStockInfoSummaryText,
 } from '@deliberation-lab/utils';
 import {
   getFirestoreExperiment,
@@ -168,6 +169,8 @@ export async function getStageDisplayForPrompt(
         stage.id,
       );
       return getChatPromptMessageHistory(privateMessages, stage);
+    case StageKind.STOCKINFO:
+      return getStockInfoSummaryText(stage);
     default:
       // TODO: Set up display/answers for ranking stage
       // TODO: Set up display/answers for survey stage
