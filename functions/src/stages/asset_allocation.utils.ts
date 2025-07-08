@@ -8,6 +8,7 @@ import {
 
 import * as admin from 'firebase-admin';
 import {app} from '../app';
+import {getFirestoreStagePublicDataRef} from '../utils/firestore';
 
 /** Update AssetAllocation stage public data. */
 export async function addParticipantAnswerToAssetAllocationStagePublicData(
@@ -18,14 +19,11 @@ export async function addParticipantAnswerToAssetAllocationStagePublicData(
 ) {
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
-    const publicDocument = app
-      .firestore()
-      .collection('experiments')
-      .doc(experimentId)
-      .collection('cohorts')
-      .doc(participant.currentCohortId)
-      .collection('publicStageData')
-      .doc(stage.id);
+    const publicDocument = getFirestoreStagePublicDataRef(
+      experimentId,
+      participant.currentCohortId,
+      stage.id,
+    );
 
     // Read current public data first (all reads must come before writes)
     const publicDoc = await transaction.get(publicDocument);
