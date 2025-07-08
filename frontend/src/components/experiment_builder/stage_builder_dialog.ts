@@ -61,8 +61,8 @@ import {
   getFlipCardExperimentTemplate,
 } from '../../shared/templates/flipcard';
 import {
-  ASSET_ALLOCATION_GAME_METADATA,
-  getAssetAllocationGameStageConfigs,
+  ASSET_ALLOCATION_TEMPLATE_METADATA,
+  getAssetAllocationTemplate,
 } from '../../shared/templates/asset_allocation_template';
 
 import {styles} from './stage_builder_dialog.scss';
@@ -147,7 +147,7 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
         ${this.renderSalespersonGameCard()} ${this.renderFlipCardTemplateCard()}
         ${this.renderFruitTestTemplateCard()} ${this.renderStockInfoGameCard()}
-        ${this.renderAssetAllocationGameCard()}
+        ${this.renderAssetAllocationTemplateCard()}
       </div>
     `;
   }
@@ -531,11 +531,11 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
-  private renderAssetAllocationGameCard() {
+  private renderAssetAllocationTemplateCard() {
     const addGame = () => {
       this.addGame(
-        ASSET_ALLOCATION_GAME_METADATA,
-        getAssetAllocationGameStageConfigs(),
+        ASSET_ALLOCATION_TEMPLATE_METADATA,
+        getAssetAllocationTemplate(),
       );
     };
 

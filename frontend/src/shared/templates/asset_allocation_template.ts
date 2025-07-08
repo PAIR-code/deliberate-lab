@@ -10,14 +10,14 @@ import {
 } from '@deliberation-lab/utils';
 import {STOCKINFO_MAIN_STAGE} from './stockinfo_template';
 
-export const ASSET_ALLOCATION_GAME_METADATA = createMetadataConfig({
+export const ASSET_ALLOCATION_TEMPLATE_METADATA = createMetadataConfig({
   name: 'Investment Portfolio Allocation',
   publicName: 'Portfolio Management Study',
   description:
     'A demonstration game using the AssetAllocation stage functionality for investment decision-making',
 });
 
-export function getAssetAllocationGameStageConfigs(): StageConfig[] {
+export function getAssetAllocationTemplate(): StageConfig[] {
   const stages: StageConfig[] = [];
 
   stages.push(ASSET_ALLOCATION_TOS_STAGE);
