@@ -13,9 +13,8 @@ import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 import {
   Stock,
   StockInfoStageConfig,
-  getBestAndWorstYearPerformance,
-  StockInfoCard,
   generateSVGChart,
+  generateStockInfoCards,
 } from '@deliberation-lab/utils';
 import {core} from '../../core/core';
 import {ParticipantAnswerService} from '../../services/participant.answer';
@@ -78,35 +77,7 @@ export class StockInfoParticipantView extends MobxLitElement {
   }
 
   private renderInfoCards(stock: Stock) {
-    const cards: StockInfoCard[] = [];
-
-    // Add default cards if enabled
-    if (this.stage?.showBestYearCard || this.stage?.showWorstYearCard) {
-      const performance = getBestAndWorstYearPerformance(stock.parsedData);
-
-      if (this.stage.showBestYearCard && performance.best) {
-        cards.push({
-          id: 'best-year',
-          title: 'Best Year Performance',
-          value: `$${Math.abs(performance.best.dollarChange).toFixed(0)}`,
-          subtext: `${performance.best.percentChange.toFixed(1)}% (${performance.best.year})`,
-          enabled: true,
-        });
-      }
-
-      if (this.stage.showWorstYearCard && performance.worst) {
-        cards.push({
-          id: 'worst-year',
-          title: 'Worst Year Performance',
-          value: `$${Math.abs(performance.worst.dollarChange).toFixed(0)}`,
-          subtext: `${performance.worst.percentChange.toFixed(1)}% (${performance.worst.year})`,
-          enabled: true,
-        });
-      }
-    }
-
-    // Add custom cards
-    cards.push(...stock.customCards.filter((card) => card.enabled));
+    const cards = generateStockInfoCards(stock, this.stage!);
 
     if (cards.length === 0) {
       return nothing;
