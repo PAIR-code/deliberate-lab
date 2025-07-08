@@ -1,11 +1,11 @@
 import {
   BasePromptConfig,
   ProfileAgentConfig,
-  PromptItem,
   PromptItemType,
   StageConfig,
   StageContextPromptItem,
   StageKind,
+  UserProfile,
   getChatPromptMessageHistory,
   makeStructuredOutputPrompt,
   getStockInfoSummaryText,
@@ -16,7 +16,6 @@ import {
   getFirestorePublicStageChatMessages,
   getFirestorePrivateChatMessages,
 } from './utils/firestore';
-import {app} from '../app';
 
 // ****************************************************************************
 // Helper functions related to assembling structured prompts.
@@ -61,7 +60,7 @@ export async function getStructuredPrompt(
           await getStageContextForPrompt(
             experimentId,
             cohortId,
-            participantId,
+            participantId!,
             stageId,
             promptItem,
           ),
