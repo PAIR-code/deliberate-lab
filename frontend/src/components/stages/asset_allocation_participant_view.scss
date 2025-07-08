@@ -1,0 +1,295 @@
+@use '../../sass/common';
+
+:host {
+  @include common.flex-column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.stage-container {
+  @include common.flex-column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.allocation-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: calc(common.$spacing-xxl * 2);
+  flex: 1;
+  align-items: start;
+  overflow-y: auto;
+  padding: common.$spacing-xxl common.$spacing-xxl 0 common.$spacing-xxl; // Remove bottom padding
+
+  @include common.viewport-medium {
+    grid-template-columns: 1fr;
+    gap: calc(common.$spacing-xl * 2);
+  }
+
+  @include common.viewport-small {
+    grid-template-columns: 1fr;
+    gap: common.$spacing-xxl;
+    padding: common.$spacing-xl common.$spacing-xl 0 common.$spacing-xl;
+  }
+}
+
+// Allocation Section (Left column)
+.allocation-section {
+  @include common.flex-column;
+  gap: common.$spacing-xl;
+}
+
+.allocation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+    text-align: left;
+  }
+
+  md-filled-button {
+    min-width: 180px;
+  }
+}
+
+// Donut Chart Section
+.chart-section {
+  @include common.flex-column;
+  align-items: center;
+  gap: common.$spacing-medium;
+}
+
+.donut-chart {
+  width: 100%;
+  height: auto;
+}
+
+.donut-text {
+  font-size: 1rem;
+  fill: var(--md-sys-color-on-surface);
+
+  .stock-label {
+    font-weight: 500;
+  }
+}
+
+// Global legend color styles (used in multiple sections)
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: common.$spacing-small;
+  flex-shrink: 0; // Prevent shrinking in flex containers
+
+  &.stock-a {
+    background-color: #2196f3; /* Blue */
+  }
+
+  &.stock-b {
+    background-color: #ff9800; /* Orange */
+  }
+}
+
+// Sliders Section (now part of allocation section)
+.sliders-section {
+  @include common.flex-column;
+  gap: common.$spacing-xl;
+}
+
+.slider-container {
+  @include common.flex-column;
+  gap: common.$spacing-xxl;
+  padding: common.$spacing-xl 0;
+}
+
+.slider-group {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: common.$spacing-medium;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+
+    .stock-name {
+      flex: 1; // Take up remaining space
+    }
+
+    .percentage-display {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--md-sys-color-primary);
+      margin-left: auto; // Push to the right
+    }
+  }
+
+  md-slider {
+    width: 100%;
+  }
+}
+
+// Stock Info Section
+.info-section {
+  @include common.flex-column;
+  gap: common.$spacing-xl;
+  height: 100%; // Full height within grid cell
+  min-height: 0; // Allow flex child to shrink
+
+  h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+    flex-shrink: 0; // Keep header fixed
+  }
+
+  @include common.viewport-medium {
+    height: auto; // Allow natural height in single column
+    min-height: 400px; // Ensure minimum visible height
+  }
+}
+
+.stock-info-container {
+  @include common.flex-column;
+  gap: common.$spacing-xl;
+  flex: 1; // Take remaining space
+  min-height: 0; // Allow flex child to shrink
+}
+
+.stock-content {
+  @include common.flex-column;
+  gap: common.$spacing-xl;
+  flex: 1; // Take remaining space
+  overflow-y: auto; // Enable vertical scrolling
+}
+
+.stock-toggle {
+  display: flex;
+  gap: common.$spacing-medium;
+  justify-content: center;
+  flex-shrink: 0; // Keep toggle buttons fixed
+
+  md-filled-button,
+  md-filled-tonal-button,
+  md-outlined-button {
+    flex: 1;
+    min-width: 120px;
+  }
+}
+
+.stock-chart {
+  flex: 0 0 auto; // Don't grow, fixed size
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px; // Reduced from min-height: 300px
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: common.$spacing-medium;
+  padding: common.$spacing-large; // Reduced padding
+
+  .chart-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      max-width: 100%;
+      max-height: 100%; // Ensure chart fits in container
+      height: auto;
+    }
+  }
+}
+
+.stock-description {
+  padding: common.$spacing-xl;
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: common.$spacing-medium;
+
+  &.simple {
+    @include common.flex-column;
+    justify-content: flex-start; // Align to top instead of center
+    align-items: center;
+    text-align: center;
+  }
+
+  h4 {
+    margin: 0 0 common.$spacing-large 0; // Slightly more space below title
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  p,
+  div {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.6; // Improved line spacing
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  // Style markdown content
+  div {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      margin: common.$spacing-xl 0 common.$spacing-medium 0;
+      color: var(--md-sys-color-on-surface);
+    }
+
+    ul,
+    ol {
+      margin: common.$spacing-medium 0;
+      padding-left: calc(common.$spacing-xl + common.$spacing-small);
+    }
+
+    strong {
+      font-weight: 600;
+      color: var(--md-sys-color-on-surface);
+    }
+
+    a {
+      color: var(--md-sys-color-primary);
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+// Dialog
+md-dialog {
+  [slot='content'] {
+    p {
+      margin: common.$spacing-medium 0;
+    }
+
+    ul {
+      margin: common.$spacing-medium 0;
+      padding-left: common.$spacing-xxl;
+
+      li {
+        margin: common.$spacing-small 0;
+      }
+    }
+  }
+
+  [slot='actions'] {
+    display: flex;
+    gap: common.$spacing-medium;
+    justify-content: flex-end;
+  }
+}

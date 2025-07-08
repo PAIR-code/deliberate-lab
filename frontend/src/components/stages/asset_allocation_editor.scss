@@ -1,0 +1,211 @@
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.editor-container {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+  padding: common.$spacing-medium;
+}
+
+.header {
+  h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+  }
+}
+
+.section {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: common.$spacing-small;
+
+  h4 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+  }
+}
+
+.info-text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+// Stock Info Stage Selector
+.stock-info-selector {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.current-selection {
+  padding: common.$spacing-large;
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: common.$spacing-medium;
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface);
+
+  .selected-stage {
+    font-weight: 500;
+    color: var(--md-sys-color-primary);
+  }
+
+  .no-selection {
+    font-style: italic;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+}
+
+.stage-options {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+}
+
+.no-stages {
+  padding: common.$spacing-medium;
+  text-align: center;
+  color: var(--md-sys-color-on-surface-variant);
+  font-style: italic;
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: common.$spacing-medium;
+  margin: 0;
+}
+
+.stage-list {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+}
+
+.stage-option {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+  padding: common.$spacing-large;
+  background-color: var(--md-sys-color-surface-container);
+  border: 2px solid transparent;
+  border-radius: common.$spacing-medium;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(.selected) {
+    background-color: var(--md-sys-color-surface-container-high);
+    border-color: var(--md-sys-color-outline-variant);
+  }
+
+  &.selected {
+    background-color: var(--md-sys-color-primary-container);
+    border-color: var(--md-sys-color-primary);
+
+    .stage-name {
+      color: var(--md-sys-color-on-primary-container);
+    }
+  }
+
+  &.disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    background-color: var(--md-sys-color-surface-container-low);
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-low);
+      border-color: transparent;
+    }
+
+    .stage-name {
+      color: var(--md-sys-color-on-surface-variant);
+    }
+  }
+}
+
+.stage-header {
+  display: flex;
+  align-items: center;
+  gap: common.$spacing-small;
+  font-weight: 500;
+
+  .stage-number {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.875rem;
+  }
+
+  .stage-name {
+    flex: 1;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .selected-indicator {
+    color: var(--md-sys-color-primary);
+    font-weight: bold;
+  }
+}
+
+.stage-details {
+  display: flex;
+  gap: common.$spacing-large;
+  font-size: 0.75rem;
+  color: var(--md-sys-color-on-surface-variant);
+
+  .stock-count {
+    font-weight: 500;
+  }
+
+  .stocks-preview {
+    font-style: italic;
+  }
+
+  .warning {
+    color: var(--md-sys-color-error);
+    font-weight: 500;
+  }
+}
+
+.clear-selection {
+  display: flex;
+  justify-content: center;
+  padding-top: common.$spacing-small;
+}
+
+// Simple Stock Configuration
+.simple-stocks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: common.$spacing-large;
+
+  @include common.viewport-small {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stock-config {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+  padding: common.$spacing-medium;
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: common.$spacing-medium;
+}
+
+.simple-stock-editor {
+  @include common.flex-column;
+  gap: common.$spacing-large;
+
+  md-outlined-text-field {
+    width: 100%;
+  }
+}

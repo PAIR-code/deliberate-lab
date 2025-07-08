@@ -41,6 +41,12 @@ import {
   StockInfoStageParticipantAnswer,
 } from './stockinfo_stage';
 import {
+  AssetAllocationStageConfig,
+  AssetAllocationStageParticipantAnswer,
+  AssetAllocationStagePublicData,
+  createAssetAllocationStagePublicData,
+} from './asset_allocation_stage';
+import {
   SurveyPerParticipantStageConfig,
   SurveyPerParticipantStageParticipantAnswer,
   SurveyStageConfig,
@@ -73,6 +79,7 @@ export enum StageKind {
   REVEAL = 'reveal',
   SALESPERSON = 'salesperson', // co-op traveling salesperson game
   STOCKINFO = 'stockinfo',
+  ASSET_ALLOCATION = 'assetAllocation', // asset allocation between stocks
   SURVEY = 'survey',
   SURVEY_PER_PARTICIPANT = 'surveyPerParticipant',
   TRANSFER = 'transfer',
@@ -117,6 +124,7 @@ export type StageConfig =
   | RevealStageConfig
   | SalespersonStageConfig
   | StockInfoStageConfig
+  | AssetAllocationStageConfig
   | SurveyStageConfig
   | SurveyPerParticipantStageConfig
   | TOSStageConfig
@@ -135,6 +143,7 @@ export interface BaseStageParticipantAnswer {
 }
 
 export type StageParticipantAnswer =
+  | AssetAllocationStageParticipantAnswer
   | ChatStageParticipantAnswer
   | ChipStageParticipantAnswer
   | ComprehensionStageParticipantAnswer
@@ -164,6 +173,7 @@ export type StagePublicData =
   | FlipCardStagePublicData
   | RankingStagePublicData
   | SalespersonStagePublicData
+  | AssetAllocationStagePublicData
   | SurveyStagePublicData;
 
 // ************************************************************************* //
@@ -221,6 +231,9 @@ export function createPublicDataFromStageConfigs(stages: StageConfig[]) {
         break;
       case StageKind.SURVEY:
         publicData.push(createSurveyStagePublicData(stage.id));
+        break;
+      case StageKind.ASSET_ALLOCATION:
+        publicData.push(createAssetAllocationStagePublicData({id: stage.id}));
         break;
       default:
         break;

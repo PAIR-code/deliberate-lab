@@ -12,6 +12,8 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import {
+  AssetAllocation,
+  AssetAllocationStageParticipantAnswer,
   ParticipantProfileBase,
   RankingStageParticipantAnswer,
   StageKind,
@@ -21,6 +23,7 @@ import {
   SurveyStageConfig,
   SurveyStageParticipantAnswer,
   SurveyQuestionKind,
+  createAssetAllocationStageParticipantAnswer,
   createChipOffer,
   createComprehensionStageParticipantAnswer,
   createRankingStageParticipantAnswer,
@@ -89,6 +92,37 @@ export class ParticipantAnswerService extends Service {
     return answer.answerMap && answer.answerMap[participantId]
       ? answer.answerMap[participantId][questionId]
       : undefined;
+  }
+
+  getAssetAllocation(stageId: string) {
+    const answer = this.answerMap[stageId];
+    if (!answer || answer.kind !== StageKind.ASSET_ALLOCATION) return undefined;
+    return answer.allocation;
+  }
+
+  isAssetAllocationConfirmed(stageId: string) {
+    const answer = this.answerMap[stageId];
+    if (!answer || answer.kind !== StageKind.ASSET_ALLOCATION) return false;
+    return answer.confirmed;
+  }
+
+  getAssetAllocationParticipantAnswer(
+    stageId: string,
+  ): AssetAllocationStageParticipantAnswer {
+    const answer = this.answerMap[stageId] as
+      | AssetAllocationStageParticipantAnswer
+      | undefined;
+
+    if (answer && answer.kind === StageKind.ASSET_ALLOCATION) {
+      return answer;
+    }
+
+    const newAnswer = createAssetAllocationStageParticipantAnswer({
+      id: stageId,
+    });
+
+    this.addAnswer(stageId, newAnswer);
+    return newAnswer;
   }
 
   setIds(experimentId: string, participantId: string) {
@@ -276,6 +310,21 @@ export class ParticipantAnswerService extends Service {
     this.answerMap[stageId] = answer;
   }
 
+  updateAssetAllocation(
+    stageId: string,
+    allocation: AssetAllocation,
+    confirmed: boolean,
+  ) {
+    let answer = this.answerMap[stageId];
+    if (!answer || answer.kind !== StageKind.ASSET_ALLOCATION) {
+      answer = createAssetAllocationStageParticipantAnswer({id: stageId});
+    }
+
+    answer.allocation = allocation;
+    answer.confirmed = confirmed;
+    this.answerMap[stageId] = answer;
+  }
+
   async setChipTurn(stageId: string) {
     await this.sp.participantService.setChipTurn(stageId);
   }
@@ -304,6 +353,16 @@ export class ParticipantAnswerService extends Service {
     await this.sp.participantService.updateSurveyPerParticipantStageParticipantAnswerMap(
       stageId,
       answer.answerMap,
+    );
+  }
+
+  async saveAssetAllocationAnswer(stageId: string) {
+    const answer = this.answerMap[stageId];
+    if (!answer || answer.kind !== StageKind.ASSET_ALLOCATION) return;
+    await this.sp.participantService.updateAssetAllocationStageParticipantAnswer(
+      stageId,
+      answer.allocation,
+      answer.confirmed,
     );
   }
 

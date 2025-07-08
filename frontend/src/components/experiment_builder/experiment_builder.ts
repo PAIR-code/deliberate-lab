@@ -3,6 +3,7 @@ import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
 import '../experimenter/experimenter_data_editor';
+import '../stages/asset_allocation_editor';
 import '../stages/base_stage_editor';
 import '../stages/group_chat_editor';
 import '../stages/flipcard_editor';
@@ -465,6 +466,11 @@ export class ExperimentBuilder extends MobxLitElement {
         return html`
           <base-stage-editor .stage=${stage}></base-stage-editor>
           <stockinfo-editor .stage=${stage}></stockinfo-editor>
+        `;
+      case StageKind.ASSET_ALLOCATION:
+        return html`
+          <base-stage-editor .stage=${stage}></base-stage-editor>
+          <asset-allocation-editor .stage=${stage}></asset-allocation-editor>
         `;
       case StageKind.SURVEY:
         return html`
