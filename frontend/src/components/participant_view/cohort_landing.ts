@@ -9,11 +9,9 @@ import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentService} from '../../services/experiment.service';
 import {FirebaseService} from '../../services/firebase.service';
 import {Pages, RouterService} from '../../services/router.service';
+import {ExperimentManager} from '../../services/experiment.manager';
 
-import {StageKind} from '@deliberation-lab/utils';
-
-import {createParticipantCallable} from '../../shared/callables';
-import {requiresAnonymousProfiles} from '../../shared/participant.utils';
+import {bootParticipantCallable} from '../../shared/callables';
 
 import {styles} from './cohort_landing.scss';
 
@@ -28,6 +26,8 @@ export class CohortLanding extends MobxLitElement {
   private readonly routerService = core.getService(RouterService);
 
   @state() isLoading = false;
+  @state() showResumeDialog = false;
+  @state() resumeParticipantId: string = '';
 
   override render() {
     const isLockedCohort = () => {
@@ -56,12 +56,30 @@ export class CohortLanding extends MobxLitElement {
         <div class="action-buttons">
           <pr-button
             ?loading=${this.isLoading}
-            ?disabled=${isLockedCohort()}
+            ?disabled=${isLockedCohort() ||
+            this.isLoading ||
+            this.showResumeDialog}
             @click=${this.joinExperiment}
           >
             Join experiment
           </pr-button>
         </div>
+        ${this.showResumeDialog
+          ? html`<div class="resume-dialog">
+              <div>
+                A previous session was found for your Prolific ID.<br />
+                Would you like to resume your previous session or start over?
+              </div>
+              <div class="resume-dialog-buttons">
+                <pr-button @click=${this.handleResume}>Resume</pr-button>
+                <pr-button
+                  @click=${this.handleStartOver}
+                  .loading=${this.isLoading}
+                  >Start Over</pr-button
+                >
+              </div>
+            </div>`
+          : nothing}
       </div>
     `;
   }
@@ -71,14 +89,11 @@ export class CohortLanding extends MobxLitElement {
     this.analyticsService.trackButtonClick(ButtonClick.PARTICIPANT_JOIN);
 
     const params = this.routerService.activeRoute.params;
-    const isAnonymous = requiresAnonymousProfiles(
-      this.experimentService.stages,
-    );
 
     const prolificIdMatch = window.location.href.match(
       /[?&]PROLIFIC_PID=([^&]+)/,
     );
-    const prolificId = prolificIdMatch ? prolificIdMatch[1] : null;
+    const prolificId = prolificIdMatch ? prolificIdMatch[1] : undefined;
     if (
       this.experimentService.experiment!.prolificConfig!
         .enableProlificIntegration &&
@@ -89,22 +104,63 @@ export class CohortLanding extends MobxLitElement {
       );
     }
 
-    const response = await createParticipantCallable(
-      this.firebaseService.functions,
-      {
-        experimentId: params['experiment'],
-        cohortId: params['cohort'],
-        isAnonymous,
-        prolificId,
-      },
-    );
+    // Use ExperimentManager's createParticipant
+    const response = await core
+      .getService(ExperimentManager)
+      .createParticipant(params['cohort'], prolificId);
 
-    // Route to participant page
+    if (response.exists && response.participant) {
+      // Existing participant found, show dialog
+      this.resumeParticipantId = response.participant.privateId || '';
+      this.showResumeDialog = true;
+      this.isLoading = false;
+      return;
+    }
+
+    // New participant created
     this.routerService.navigate(Pages.PARTICIPANT, {
       experiment: params['experiment'],
-      participant: response.id,
+      participant: response.id!,
     });
     this.isLoading = false;
+  }
+
+  private async handleResume() {
+    // Resume with existing participant
+    const params = this.routerService.activeRoute.params;
+    this.routerService.navigate(Pages.PARTICIPANT, {
+      experiment: params['experiment'],
+      participant: this.resumeParticipantId!,
+    });
+    this.showResumeDialog = false;
+  }
+
+  private async handleStartOver() {
+    // Boot old participant, then create new one
+    this.isLoading = true;
+    const params = this.routerService.activeRoute.params;
+    await bootParticipantCallable(this.firebaseService.functions, {
+      experimentId: params['experiment'],
+      participantId: this.resumeParticipantId!,
+    });
+    // Create new participant (forceNew)
+    const prolificIdMatch = window.location.href.match(
+      /[?&]PROLIFIC_PID=([^&]+)/,
+    );
+    const prolificId = prolificIdMatch ? prolificIdMatch[1] : undefined;
+    const response = await core.getService(ExperimentManager).createParticipant(
+      params['cohort'],
+      prolificId,
+      true, // forceNew
+    );
+    this.routerService.navigate(Pages.PARTICIPANT, {
+      experiment: params['experiment'],
+      participant: response.participant
+        ? response.participant.privateId!
+        : response.id!,
+    });
+    this.isLoading = false;
+    this.showResumeDialog = false;
   }
 }
 

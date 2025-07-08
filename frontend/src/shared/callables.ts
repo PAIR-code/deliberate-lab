@@ -11,10 +11,8 @@ import {
   ExperimentCohortLockData,
   ExperimentCreationData,
   ExperimentDeletionData,
-  ExperimentDownloadResponse,
   InitiateParticipantTransferData,
   ParticipantNextStageResponse,
-  ParticipantProfile,
   SendAlertMessageData,
   SendChipOfferData,
   SendChipResponseData,
@@ -133,6 +131,18 @@ export const createParticipantCallable = async (
   const {data} = await httpsCallable<CreateParticipantData, CreationResponse>(
     functions,
     'createParticipant',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint to check or create participant. */
+export const checkOrCreateParticipantCallable = async (
+  functions: Functions,
+  config: CreateParticipantData,
+) => {
+  const {data} = await httpsCallable<CreateParticipantData, CreationResponse>(
+    functions,
+    'checkOrCreateParticipant',
   )(config);
   return data;
 };
