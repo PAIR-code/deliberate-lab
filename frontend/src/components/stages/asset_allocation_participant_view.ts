@@ -18,9 +18,7 @@ import {MdSlider} from '@material/web/slider/slider';
 import {
   AssetAllocationStageConfig,
   AssetAllocationStageParticipantAnswer,
-  createAssetAllocationStageParticipantAnswer,
   Stock,
-  StageKind,
   StockInfoStageConfig,
   generateSVGChart,
   generateDonutChartSVG,
@@ -92,7 +90,10 @@ export class AssetAllocationParticipantView extends MobxLitElement {
       }
     }
 
-    const answer = this.getParticipantAnswer();
+    const answer =
+      this.participantAnswerService.getAssetAllocationParticipantAnswer(
+        this.stage.id,
+      );
     // Ensure allocation is synced with answer allocation
     if (!answer.confirmed) {
       this.allocation = {...answer.allocation};
@@ -385,8 +386,13 @@ export class AssetAllocationParticipantView extends MobxLitElement {
     if (stockBSlider) stockBSlider.value = this.allocation.stockBPercentage;
 
     // Update the answer but don't save to Firebase yet
-    const answer = this.getParticipantAnswer();
-    answer.allocation = {...this.allocation};
+    if (this.stage) {
+      const answer =
+        this.participantAnswerService.getAssetAllocationParticipantAnswer(
+          this.stage.id,
+        );
+      answer.allocation = {...this.allocation};
+    }
     this.requestUpdate();
   }
 
@@ -423,25 +429,6 @@ export class AssetAllocationParticipantView extends MobxLitElement {
     );
 
     this.requestUpdate();
-  }
-
-  private getParticipantAnswer(): AssetAllocationStageParticipantAnswer {
-    if (!this.stage) return createAssetAllocationStageParticipantAnswer({});
-
-    const answer = this.participantAnswerService.answerMap[this.stage.id] as
-      | AssetAllocationStageParticipantAnswer
-      | undefined;
-
-    if (answer && answer.kind === StageKind.ASSET_ALLOCATION) {
-      return answer;
-    }
-
-    const newAnswer = createAssetAllocationStageParticipantAnswer({
-      id: this.stage.id,
-    });
-
-    this.participantAnswerService.addAnswer(this.stage.id, newAnswer);
-    return newAnswer;
   }
 
   private getStockInfoStage(): StockInfoStageConfig | null {

@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import {
   AssetAllocation,
+  AssetAllocationStageParticipantAnswer,
   ParticipantProfileBase,
   RankingStageParticipantAnswer,
   StageKind,
@@ -101,6 +102,25 @@ export class ParticipantAnswerService extends Service {
     const answer = this.answerMap[stageId];
     if (!answer || answer.kind !== StageKind.ASSET_ALLOCATION) return false;
     return answer.confirmed;
+  }
+
+  getAssetAllocationParticipantAnswer(
+    stageId: string,
+  ): AssetAllocationStageParticipantAnswer {
+    const answer = this.answerMap[stageId] as
+      | AssetAllocationStageParticipantAnswer
+      | undefined;
+
+    if (answer && answer.kind === StageKind.ASSET_ALLOCATION) {
+      return answer;
+    }
+
+    const newAnswer = createAssetAllocationStageParticipantAnswer({
+      id: stageId,
+    });
+
+    this.addAnswer(stageId, newAnswer);
+    return newAnswer;
   }
 
   setIds(experimentId: string, participantId: string) {
