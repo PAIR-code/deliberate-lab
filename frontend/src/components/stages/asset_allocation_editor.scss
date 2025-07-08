@@ -1,13 +1,15 @@
+@use '../../sass/common';
+@use '../../sass/typescale';
+
 :host {
   display: block;
   width: 100%;
 }
 
 .editor-container {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  padding: 16px;
+  @include common.flex-column;
+  gap: common.$spacing-large;
+  padding: common.$spacing-medium;
 }
 
 .header {
@@ -20,12 +22,11 @@
 }
 
 .section {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 16px;
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
   background-color: var(--md-sys-color-surface-container-low);
-  border-radius: 8px;
+  border-radius: common.$spacing-small;
 
   h4 {
     margin: 0;
@@ -44,23 +45,22 @@
 
 .info-text {
   margin: 0;
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.5;
   color: var(--md-sys-color-on-surface-variant);
 }
 
 // Stock Info Stage Selector
 .stock-info-selector {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  @include common.flex-column;
+  gap: common.$spacing-medium;
 }
 
 .current-selection {
-  padding: 12px;
+  padding: common.$spacing-large;
   background-color: var(--md-sys-color-surface-container);
-  border-radius: 6px;
-  font-size: 14px;
+  border-radius: common.$spacing-medium;
+  font-size: 0.875rem;
   color: var(--md-sys-color-on-surface);
 
   .selected-stage {
@@ -75,35 +75,32 @@
 }
 
 .stage-options {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  @include common.flex-column;
+  gap: common.$spacing-large;
 }
 
 .no-stages {
-  padding: 16px;
+  padding: common.$spacing-medium;
   text-align: center;
   color: var(--md-sys-color-on-surface-variant);
   font-style: italic;
   background-color: var(--md-sys-color-surface-container);
-  border-radius: 6px;
+  border-radius: common.$spacing-medium;
   margin: 0;
 }
 
 .stage-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  @include common.flex-column;
+  gap: common.$spacing-small;
 }
 
 .stage-option {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px;
+  @include common.flex-column;
+  gap: common.$spacing-small;
+  padding: common.$spacing-large;
   background-color: var(--md-sys-color-surface-container);
   border: 2px solid transparent;
-  border-radius: 6px;
+  border-radius: common.$spacing-medium;
   cursor: pointer;
   transition: all 0.2s ease;
 
@@ -140,12 +137,12 @@
 .stage-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: common.$spacing-small;
   font-weight: 500;
 
   .stage-number {
     color: var(--md-sys-color-on-surface-variant);
-    font-size: 14px;
+    font-size: 0.875rem;
   }
 
   .stage-name {
@@ -161,8 +158,8 @@
 
 .stage-details {
   display: flex;
-  gap: 12px;
-  font-size: 12px;
+  gap: common.$spacing-large;
+  font-size: 0.75rem;
   color: var(--md-sys-color-on-surface-variant);
 
   .stock-count {
@@ -182,33 +179,31 @@
 .clear-selection {
   display: flex;
   justify-content: center;
-  padding-top: 8px;
+  padding-top: common.$spacing-small;
 }
 
 // Simple Stock Configuration
 .simple-stocks {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: common.$spacing-large;
 
-  @media (max-width: 768px) {
+  @include common.viewport-small {
     grid-template-columns: 1fr;
   }
 }
 
 .stock-config {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
+  @include common.flex-column;
+  gap: common.$spacing-large;
+  padding: common.$spacing-medium;
   background-color: var(--md-sys-color-surface-container);
-  border-radius: 6px;
+  border-radius: common.$spacing-medium;
 }
 
 .simple-stock-editor {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  @include common.flex-column;
+  gap: common.$spacing-large;
 
   md-outlined-text-field {
     width: 100%;

@@ -1,15 +1,13 @@
 @use '../../sass/common';
 
 :host {
-  display: flex;
-  flex-direction: column;
+  @include common.flex-column;
   height: 100%;
   overflow: hidden;
 }
 
 .stage-container {
-  display: flex;
-  flex-direction: column;
+  @include common.flex-column;
   height: 100%;
   overflow: hidden;
 }
@@ -17,29 +15,28 @@
 .allocation-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 48px;
+  gap: calc(common.$spacing-xxl * 2);
   flex: 1;
   align-items: start;
   overflow-y: auto;
-  padding: 24px 24px 0 24px; // Remove bottom padding
+  padding: common.$spacing-xxl common.$spacing-xxl 0 common.$spacing-xxl; // Remove bottom padding
 
   @include common.viewport-medium {
     grid-template-columns: 1fr;
-    gap: 32px;
+    gap: calc(common.$spacing-xl * 2);
   }
 
   @include common.viewport-small {
     grid-template-columns: 1fr;
-    gap: 24px;
-    padding: 16px 16px 0 16px;
+    gap: common.$spacing-xxl;
+    padding: common.$spacing-xl common.$spacing-xl 0 common.$spacing-xl;
   }
 }
 
 // Allocation Section (Left column)
 .allocation-section {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  @include common.flex-column;
+  gap: common.$spacing-xl;
 }
 
 .allocation-header {
@@ -62,10 +59,9 @@
 
 // Donut Chart Section
 .chart-section {
-  display: flex;
-  flex-direction: column;
+  @include common.flex-column;
   align-items: center;
-  gap: 8px;
+  gap: common.$spacing-medium;
 }
 
 .donut-chart {
@@ -74,7 +70,7 @@
 }
 
 .donut-text {
-  font-size: 16px;
+  font-size: 1rem;
   fill: var(--md-sys-color-on-surface);
 
   .stock-label {
@@ -86,7 +82,7 @@
 .legend-color {
   width: 16px;
   height: 16px;
-  border-radius: 4px;
+  border-radius: common.$spacing-small;
   flex-shrink: 0; // Prevent shrinking in flex containers
 
   &.stock-a {
@@ -100,28 +96,25 @@
 
 // Sliders Section (now part of allocation section)
 .sliders-section {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  @include common.flex-column;
+  gap: common.$spacing-xl;
 }
 
 .slider-container {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  padding: 16px 0;
+  @include common.flex-column;
+  gap: common.$spacing-xxl;
+  padding: common.$spacing-xl 0;
 }
 
 .slider-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  @include common.flex-column;
+  gap: common.$spacing-medium;
 
   label {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 14px;
+    gap: common.$spacing-medium;
+    font-size: 0.875rem;
     font-weight: 500;
     color: var(--md-sys-color-on-surface);
 
@@ -130,7 +123,7 @@
     }
 
     .percentage-display {
-      font-size: 18px;
+      font-size: 1.125rem;
       font-weight: 600;
       color: var(--md-sys-color-primary);
       margin-left: auto; // Push to the right
@@ -144,9 +137,8 @@
 
 // Stock Info Section
 .info-section {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  @include common.flex-column;
+  gap: common.$spacing-xl;
   height: 100%; // Full height within grid cell
   min-height: 0; // Allow flex child to shrink
 
@@ -165,25 +157,22 @@
 }
 
 .stock-info-container {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  @include common.flex-column;
+  gap: common.$spacing-xl;
   flex: 1; // Take remaining space
   min-height: 0; // Allow flex child to shrink
 }
 
 .stock-content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  @include common.flex-column;
+  gap: common.$spacing-xl;
   flex: 1; // Take remaining space
   overflow-y: auto; // Enable vertical scrolling
-  padding-right: 8px; // Add space for scrollbar
 }
 
 .stock-toggle {
   display: flex;
-  gap: 8px;
+  gap: common.$spacing-medium;
   justify-content: center;
   flex-shrink: 0; // Keep toggle buttons fixed
 
@@ -201,8 +190,8 @@
   justify-content: center;
   height: 200px; // Reduced from min-height: 300px
   background-color: var(--md-sys-color-surface-container-low);
-  border-radius: 8px;
-  padding: 12px; // Reduced padding
+  border-radius: common.$spacing-medium;
+  padding: common.$spacing-large; // Reduced padding
 
   .chart-wrapper {
     width: 100%;
@@ -220,20 +209,19 @@
 }
 
 .stock-description {
-  padding: 16px;
+  padding: common.$spacing-xl;
   background-color: var(--md-sys-color-surface-container-low);
-  border-radius: 8px;
+  border-radius: common.$spacing-medium;
 
   &.simple {
-    display: flex;
-    flex-direction: column;
+    @include common.flex-column;
     justify-content: flex-start; // Align to top instead of center
     align-items: center;
     text-align: center;
   }
 
   h4 {
-    margin: 0 0 12px 0; // Slightly more space below title
+    margin: 0 0 common.$spacing-large 0; // Slightly more space below title
     font-size: 1.125rem;
     font-weight: 500;
     color: var(--md-sys-color-on-surface);
@@ -242,7 +230,7 @@
   p,
   div {
     margin: 0;
-    font-size: 14px;
+    font-size: 0.875rem;
     line-height: 1.6; // Improved line spacing
     color: var(--md-sys-color-on-surface-variant);
   }
@@ -255,14 +243,14 @@
     h4,
     h5,
     h6 {
-      margin: 16px 0 8px 0;
+      margin: common.$spacing-xl 0 common.$spacing-medium 0;
       color: var(--md-sys-color-on-surface);
     }
 
     ul,
     ol {
-      margin: 8px 0;
-      padding-left: 20px;
+      margin: common.$spacing-medium 0;
+      padding-left: calc(common.$spacing-xl + common.$spacing-small);
     }
 
     strong {
@@ -285,22 +273,22 @@
 md-dialog {
   [slot='content'] {
     p {
-      margin: 8px 0;
+      margin: common.$spacing-medium 0;
     }
 
     ul {
-      margin: 8px 0;
-      padding-left: 24px;
+      margin: common.$spacing-medium 0;
+      padding-left: common.$spacing-xxl;
 
       li {
-        margin: 4px 0;
+        margin: common.$spacing-small 0;
       }
     }
   }
 
   [slot='actions'] {
     display: flex;
-    gap: 8px;
+    gap: common.$spacing-medium;
     justify-content: flex-end;
   }
 }
