@@ -611,6 +611,9 @@ async function createParticipantInternal(data: CreateParticipantData) {
     prolificId: data.prolificId,
   });
 
+  // Temporarily always mark participants as connected (PR #537)
+  participantConfig.connected = true; // TODO: Remove this line
+
   // If agent config is specified, add to participant config
   if (data.agentConfig) {
     participantConfig.agentConfig =
