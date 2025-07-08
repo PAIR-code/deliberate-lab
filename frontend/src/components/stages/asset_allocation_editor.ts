@@ -262,7 +262,7 @@ export class AssetAllocationEditor extends MobxLitElement {
   }
 
   private getStockInfoStage(stageId: string): StockInfoStageConfig | null {
-    const stage = this.experimentEditor.stages.find((s) => s.id === stageId);
+    const stage = this.experimentEditor.getStage(stageId);
     return (
       stage?.kind === StageKind.STOCKINFO ? stage : null
     ) as StockInfoStageConfig | null;

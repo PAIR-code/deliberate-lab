@@ -18,6 +18,7 @@ import {MdSlider} from '@material/web/slider/slider';
 import {
   AssetAllocationStageConfig,
   AssetAllocationStageParticipantAnswer,
+  StageKind,
   Stock,
   StockInfoStageConfig,
   generateSVGChart,
@@ -132,11 +133,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
           </div>
         </div>
 
-        <stage-footer
-          .stage=${this.stage}
-          .disabled=${!answer.confirmed}
-          .onNextClick=${() => this.participantService.progressToNextStage()}
-        >
+        <stage-footer .stage=${this.stage} .disabled=${!answer.confirmed}>
           ${answer.confirmed
             ? html`<progress-stage-completed></progress-stage-completed>`
             : nothing}
@@ -432,15 +429,11 @@ export class AssetAllocationParticipantView extends MobxLitElement {
   }
 
   private getStockInfoStage(): StockInfoStageConfig | null {
-    if (!this.stage?.stockInfoStageConfig) return null;
-
-    const stages = this.experimentService.stages;
-    if (!stages) return null;
-
-    const foundStage = stages.find(
-      (stage) => stage.id === this.stage?.stockInfoStageConfig?.id,
+    const stage = this.experimentService.getStage(
+      this.stage?.stockInfoStageConfig?.id ?? '',
     );
-    return (foundStage as StockInfoStageConfig | undefined) || null;
+    if (stage?.kind !== StageKind.STOCKINFO) return null;
+    return stage;
   }
 
   private getStocks(stockInfoStage: StockInfoStageConfig | null): Stock[] {
