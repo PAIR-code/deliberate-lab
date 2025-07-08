@@ -727,9 +727,7 @@ export class ParticipantService extends Service {
         this.sp.firebaseService.functions,
         {
           experimentId: this.experimentId,
-          cohortId: this.profile.currentCohortId,
           participantPrivateId: this.profile.privateId,
-          participantPublicId: this.profile.publicId,
           stageId: id,
           allocation,
           confirmed,

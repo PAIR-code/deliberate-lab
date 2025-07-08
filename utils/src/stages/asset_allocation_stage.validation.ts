@@ -98,8 +98,6 @@ export const UpdateAssetAllocationStageParticipantAnswerData = Type.Object(
   {
     experimentId: Type.String({minLength: 1}),
     participantPrivateId: Type.String({minLength: 1}),
-    participantPublicId: Type.String({minLength: 1}),
-    cohortId: Type.String({minLength: 1}),
     stageId: Type.String({minLength: 1}),
     allocation: AssetAllocationData,
     confirmed: Type.Boolean(),
