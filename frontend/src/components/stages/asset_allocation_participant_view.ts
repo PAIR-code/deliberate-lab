@@ -3,6 +3,7 @@ import './stage_description';
 import './stage_footer';
 
 import '@material/web/button/filled-button.js';
+import '@material/web/button/filled-tonal-button.js';
 import '@material/web/button/outlined-button.js';
 import '@material/web/button/text-button.js';
 import '@material/web/dialog/dialog.js';
@@ -236,22 +237,22 @@ export class AssetAllocationParticipantView extends MobxLitElement {
       <div class="stock-info-container">
         <div class="stock-toggle">
           ${this.selectedStockIndex === 0
-            ? html`<md-filled-button
+            ? html`<md-filled-tonal-button
                 @click=${() => (this.selectedStockIndex = 0)}
               >
                 ${this.stocks.stockA?.title}
-              </md-filled-button>`
+              </md-filled-tonal-button>`
             : html`<md-outlined-button
                 @click=${() => (this.selectedStockIndex = 0)}
               >
                 ${this.stocks.stockA?.title}
               </md-outlined-button>`}
           ${this.selectedStockIndex === 1
-            ? html`<md-filled-button
+            ? html`<md-filled-tonal-button
                 @click=${() => (this.selectedStockIndex = 1)}
               >
                 ${this.stocks.stockB?.title}
-              </md-filled-button>`
+              </md-filled-tonal-button>`
             : html`<md-outlined-button
                 @click=${() => (this.selectedStockIndex = 1)}
               >
@@ -288,22 +289,22 @@ export class AssetAllocationParticipantView extends MobxLitElement {
       <div class="stock-info-container">
         <div class="stock-toggle">
           ${this.selectedStockIndex === 0
-            ? html`<md-filled-button
+            ? html`<md-filled-tonal-button
                 @click=${() => (this.selectedStockIndex = 0)}
               >
                 ${this.stocks.stockA?.title}
-              </md-filled-button>`
+              </md-filled-tonal-button>`
             : html`<md-outlined-button
                 @click=${() => (this.selectedStockIndex = 0)}
               >
                 ${this.stocks.stockA?.title}
               </md-outlined-button>`}
           ${this.selectedStockIndex === 1
-            ? html`<md-filled-button
+            ? html`<md-filled-tonal-button
                 @click=${() => (this.selectedStockIndex = 1)}
               >
                 ${this.stocks.stockB?.title}
-              </md-filled-button>`
+              </md-filled-tonal-button>`
             : html`<md-outlined-button
                 @click=${() => (this.selectedStockIndex = 1)}
               >
