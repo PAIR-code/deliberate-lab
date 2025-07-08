@@ -18,6 +18,7 @@ import {
   generateSVGChart,
 } from '@deliberation-lab/utils';
 import {core} from '../../core/core';
+import {ParticipantAnswerService} from '../../services/participant.answer';
 import {ParticipantService} from '../../services/participant.service';
 import {convertMarkdownToHTML} from '../../shared/utils';
 
@@ -29,17 +30,20 @@ export class StockInfoParticipantView extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly participantService = core.getService(ParticipantService);
+  private readonly participantAnswerService = core.getService(
+    ParticipantAnswerService,
+  );
 
   @property({type: Object}) stage: StockInfoStageConfig | undefined = undefined;
-  @property({type: Number}) private currentStockIndex = 0;
-  @property({type: Array}) private viewedStockIds: string[] = [];
 
   override render() {
     if (!this.stage || !this.participantService.profile) {
       return nothing;
     }
 
-    const currentStock = this.stage.stocks[this.currentStockIndex];
+    const currentStockIndex =
+      this.participantAnswerService.getCurrentStockIndex(this.stage.id);
+    const currentStock = this.stage.stocks[currentStockIndex];
     if (!currentStock) {
       return nothing;
     }
@@ -58,11 +62,7 @@ export class StockInfoParticipantView extends MobxLitElement {
 
         ${this.renderStockNavigation()}
 
-        <stage-footer
-          .stage=${this.stage}
-          .disabled=${!isComplete}
-          .onNextClick=${this.saveAndProgress}
-        >
+        <stage-footer .stage=${this.stage} .disabled=${!isComplete}>
           <progress-stage-completed></progress-stage-completed>
         </stage-footer>
       </div>
@@ -168,10 +168,13 @@ export class StockInfoParticipantView extends MobxLitElement {
       return nothing;
     }
 
+    const currentStockIndex =
+      this.participantAnswerService.getCurrentStockIndex(this.stage!.id);
+
     return html`
       <div class="stock-navigation">
         ${this.stage!.stocks.map((stock, index) => {
-          const isActive = index === this.currentStockIndex;
+          const isActive = index === currentStockIndex;
           return isActive
             ? html`
                 <md-filled-button
@@ -195,13 +198,24 @@ export class StockInfoParticipantView extends MobxLitElement {
   }
 
   private switchToStock(index: number) {
-    if (index !== this.currentStockIndex) {
-      this.currentStockIndex = index;
+    const currentStockIndex =
+      this.participantAnswerService.getCurrentStockIndex(this.stage!.id);
+    if (index !== currentStockIndex) {
+      // Update current stock index
+      this.participantAnswerService.updateStockInfoAnswer(this.stage!.id, {
+        currentStockIndex: index,
+      });
 
       // Record view of new stock
       const stockId = this.stage!.stocks[index].id;
-      if (!this.viewedStockIds.includes(stockId)) {
-        this.viewedStockIds = [...this.viewedStockIds, stockId];
+      const viewedStockIds = this.participantAnswerService.getViewedStockIds(
+        this.stage!.id,
+      );
+      if (!viewedStockIds.includes(stockId)) {
+        const updatedViewedStockIds = [...viewedStockIds, stockId];
+        this.participantAnswerService.updateStockInfoAnswer(this.stage!.id, {
+          viewedStockIds: updatedViewedStockIds,
+        });
       }
     }
   }
@@ -213,21 +227,26 @@ export class StockInfoParticipantView extends MobxLitElement {
 
     // Check if all stocks have been viewed
     const allStockIds = this.stage.stocks.map((stock) => stock.id);
-    return allStockIds.every((stockId) =>
-      this.viewedStockIds.includes(stockId),
+    const viewedStockIds = this.participantAnswerService.getViewedStockIds(
+      this.stage.id,
     );
+    return allStockIds.every((stockId) => viewedStockIds.includes(stockId));
   }
-
-  private saveAndProgress = async () => {
-    this.participantService.progressToNextStage();
-  };
 
   protected override firstUpdated() {
     // Record initial stock view
     const currentStockId = this.stage?.stocks[0]?.id;
 
-    if (currentStockId && !this.viewedStockIds.includes(currentStockId)) {
-      this.viewedStockIds = [currentStockId];
+    if (currentStockId) {
+      const viewedStockIds = this.participantAnswerService.getViewedStockIds(
+        this.stage!.id,
+      );
+      if (!viewedStockIds.includes(currentStockId)) {
+        const updatedViewedStockIds = [...viewedStockIds, currentStockId];
+        this.participantAnswerService.updateStockInfoAnswer(this.stage!.id, {
+          viewedStockIds: updatedViewedStockIds,
+        });
+      }
     }
   }
 }

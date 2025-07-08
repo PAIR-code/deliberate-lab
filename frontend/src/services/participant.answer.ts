@@ -18,6 +18,7 @@ import {
   RankingStageParticipantAnswer,
   StageKind,
   StageParticipantAnswer,
+  StockInfoStageParticipantAnswer,
   SurveyAnswer,
   SurveyStageConfig,
   SurveyStageParticipantAnswer,
@@ -26,6 +27,7 @@ import {
   createChipOffer,
   createComprehensionStageParticipantAnswer,
   createRankingStageParticipantAnswer,
+  createStockInfoStageParticipantAnswer,
   createSurveyPerParticipantStageParticipantAnswer,
   createSurveyStageParticipantAnswer,
   ChipOffer,
@@ -271,6 +273,40 @@ export class ParticipantAnswerService extends Service {
     }
 
     answer.answerMap[participantId][surveyAnswer.id] = surveyAnswer;
+    this.answerMap[stageId] = answer;
+  }
+
+  getStockInfoAnswer(stageId: string): StockInfoStageParticipantAnswer | null {
+    const answer = this.answerMap[stageId];
+    if (!answer || answer.kind !== StageKind.STOCKINFO) return null;
+    return answer as StockInfoStageParticipantAnswer;
+  }
+
+  getViewedStockIds(stageId: string): string[] {
+    const answer = this.getStockInfoAnswer(stageId);
+    return answer?.viewedStockIds ?? [];
+  }
+
+  getCurrentStockIndex(stageId: string): number {
+    const answer = this.getStockInfoAnswer(stageId);
+    return answer?.currentStockIndex ?? 0;
+  }
+
+  updateStockInfoAnswer(
+    stageId: string,
+    updates: Partial<{viewedStockIds: string[]; currentStockIndex: number}>,
+  ) {
+    let answer = this.answerMap[stageId];
+    if (!answer || answer.kind !== StageKind.STOCKINFO) {
+      answer = createStockInfoStageParticipantAnswer(stageId);
+    }
+
+    if (updates.viewedStockIds !== undefined) {
+      answer.viewedStockIds = updates.viewedStockIds;
+    }
+    if (updates.currentStockIndex !== undefined) {
+      answer.currentStockIndex = updates.currentStockIndex;
+    }
     this.answerMap[stageId] = answer;
   }
 

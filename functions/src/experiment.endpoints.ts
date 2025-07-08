@@ -247,7 +247,14 @@ export const getExperimentTemplate = onCall(async (request) => {
       .collection('stages')
       .get()
   ).docs.map((doc) => doc.data() as StageConfig);
-  template.stageConfigs = stageConfigs;
+
+  // Order stage configs correctly
+  for (const stageId of experiment.stageIds) {
+    const stage = stageConfigs.find((stage) => stage.id === stageId);
+    if (stage) {
+      template.stageConfigs.push(stage);
+    }
+  }
 
   // For each agent mediator, add template
   const agentMediatorCollection = app

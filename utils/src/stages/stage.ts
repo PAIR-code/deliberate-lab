@@ -36,7 +36,10 @@ import {
   SalespersonStagePublicData,
   createSalespersonStagePublicData,
 } from './salesperson_stage';
-import {StockInfoStageConfig} from './stockinfo_stage';
+import {
+  StockInfoStageConfig,
+  StockInfoStageParticipantAnswer,
+} from './stockinfo_stage';
 import {
   AssetAllocationStageConfig,
   AssetAllocationStageParticipantAnswer,
@@ -140,13 +143,14 @@ export interface BaseStageParticipantAnswer {
 }
 
 export type StageParticipantAnswer =
+  | AssetAllocationStageParticipantAnswer
   | ChatStageParticipantAnswer
   | ChipStageParticipantAnswer
   | ComprehensionStageParticipantAnswer
   | FlipCardStageParticipantAnswer
   | PayoutStageParticipantAnswer
   | RankingStageParticipantAnswer
-  | AssetAllocationStageParticipantAnswer
+  | StockInfoStageParticipantAnswer
   | SurveyStageParticipantAnswer
   | SurveyPerParticipantStageParticipantAnswer;
 
