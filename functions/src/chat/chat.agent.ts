@@ -220,7 +220,9 @@ export async function sendAgentGroupChatMessage(
 ) {
   // TODO: Decrease typing delay to account for LLM API call latencies?
   // TODO: Don't send message if conversation continues while agent is typing?
-  await awaitTypingDelay(chatMessage.message, chatSettings.wordsPerMinute);
+  if (chatSettings.wordsPerMinute) {
+    await awaitTypingDelay(chatMessage.message, chatSettings.wordsPerMinute);
+  }
 
   // Check if the conversation has moved on,
   // i.e., trigger chat ID is no longer that latest message
@@ -288,7 +290,9 @@ export async function sendAgentPrivateChatMessage(
 ) {
   // TODO: Decrease typing delay to account for LLM API call latencies?
   // TODO: Don't send message if conversation continues while agent is typing?
-  await awaitTypingDelay(chatMessage.message, chatSettings.wordsPerMinute);
+  if (chatSettings.wordsPerMinute) {
+    await awaitTypingDelay(chatMessage.message, chatSettings.wordsPerMinute);
+  }
 
   // Check if the conversation has moved on,
   // i.e., trigger chat ID is no longer that latest message

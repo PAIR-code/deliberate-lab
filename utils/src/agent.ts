@@ -77,7 +77,8 @@ export interface AgentPromptSettings {
 /** Model settings for agent in a chat discussion. */
 export interface AgentChatSettings {
   // Agent's "typing speed" during the chat conversation
-  wordsPerMinute: number;
+  // or null to automatically send
+  wordsPerMinute: number | null;
   // Number of chat messages that must exist before the agent can respond
   minMessagesBeforeResponding: number;
   // Whether the agent can respond multiple times in a row
@@ -205,7 +206,7 @@ export function createAgentChatSettings(
   config: Partial<AgentChatSettings> = {},
 ): AgentChatSettings {
   return {
-    wordsPerMinute: config.wordsPerMinute ?? 100,
+    wordsPerMinute: config.wordsPerMinute ?? null,
     minMessagesBeforeResponding: config.minMessagesBeforeResponding ?? 0,
     canSelfTriggerCalls: config.canSelfTriggerCalls ?? false,
     maxResponses: config.maxResponses ?? 100,
