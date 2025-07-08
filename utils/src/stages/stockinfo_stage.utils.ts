@@ -1,4 +1,8 @@
-import {StockDataPoint, StockInfoCard} from './stockinfo_stage';
+import {
+  StockDataPoint,
+  StockInfoCard,
+  StockInfoStageConfig,
+} from './stockinfo_stage';
 
 // ************************************************************************* //
 // CHART CONFIGURATION                                                       //
@@ -402,4 +406,33 @@ export function generateStockInfoCards(
   cards.push(...stock.customCards.filter((card) => card.enabled));
 
   return cards;
+}
+
+// ************************************************************************* //
+// PROMPT UTILITIES                                                          //
+// ************************************************************************* //
+
+export function getStockInfoSummaryText(stage: StockInfoStageConfig): string {
+  const stockDisplay = stage.stocks.map((stock) => {
+    const stockInfo = [
+      `## Stock Information: ${stock.title}`,
+      stock.description,
+    ];
+
+    // Generate all cards using the shared utility
+    const cards = generateStockInfoCards(stock, stage);
+
+    if (cards.length > 0) {
+      stockInfo.push('Key Information:');
+      cards.forEach((card) => {
+        stockInfo.push(`- ${card.title}: ${card.value}`);
+        if (card.subtext) {
+          stockInfo.push(`  ${card.subtext}`);
+        }
+      });
+    }
+
+    return stockInfo.join('\n');
+  });
+  return stockDisplay.join('\n\n');
 }
