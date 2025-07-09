@@ -54,11 +54,11 @@ Welcome to the Investment Portfolio Allocation demonstration!
 In this study, you'll:
 1. **Review stock information** for two different companies
 2. **Analyze performance data** including charts and key metrics
-3. **Make investment decisions** by allocating a $10,000 portfolio between the two stocks
+3. **Make investment decisions** by allocating a $1,000 portfolio between the two stocks
 4. **Confirm your allocation** before proceeding
 
 **Your Task:**
-You have $10,000 to invest and must decide how to split it between two stocks. You can allocate anywhere from 0% to 100% to each stock, but your total allocation must equal 100%.
+You have $1,000 to invest and must decide how to split it between two stocks. You can allocate anywhere from 0% to 100% to each stock, but your total allocation must equal 100%.
 
 **Important Note:** This demonstration uses entirely fictional companies and simulated data. This is for demonstration and research purposes only. The information shown does not constitute financial advice and should not be used for actual investment decisions.
 `;
@@ -80,7 +80,7 @@ const ASSET_ALLOCATION_STOCKINFO_STAGE = {
   }),
   // Only keep the first two stocks from the template
   stocks: STOCKINFO_MAIN_STAGE.stocks.slice(0, 2),
-  requireViewAllStocks: true,
+  showInvestmentGrowth: true,
 };
 
 const ASSET_ALLOCATION_MAIN_STAGE = createAssetAllocationStage({
@@ -88,9 +88,9 @@ const ASSET_ALLOCATION_MAIN_STAGE = createAssetAllocationStage({
   name: 'Portfolio Allocation Decision',
   descriptions: createStageTextConfig({
     primaryText:
-      'Allocate your $10,000 investment between NexTech Solutions (NXTS) and GreenWave Energy (GRWV). Use the sliders to adjust your allocation.',
+      'Allocate your $1,000 investment between NexTech Solutions (NXTS) and GreenWave Energy (GRWV). Use the sliders to adjust your allocation.',
     infoText:
-      'Based on the stock information you reviewed, decide how to split your $10,000 portfolio between the two stocks. Your allocations must total 100%.',
+      'Based on the stock information you reviewed, decide how to split your $1,000 portfolio between the two stocks. Your allocations must total 100%.',
     helpText:
       'Drag the sliders to set your desired allocation percentages. The dollar amounts will update automatically. Click "Confirm Allocation" when you are satisfied with your decision.',
   }),
