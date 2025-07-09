@@ -38,7 +38,7 @@ import {
   createChipOffer,
   displayChipOfferText,
   getChipLogs,
-  isChipOfferAcceptable,
+  getChipOfferChecks,
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
@@ -215,46 +215,6 @@ export class ChipView extends MobxLitElement {
     return this.getCurrentTransaction()?.offer ?? false;
   }
 
-  private isOfferIncomplete() {
-    return (
-      this.selectedBuyChip === '' ||
-      this.selectedSellChip === '' ||
-      this.buyChipAmount === 0 ||
-      this.sellChipAmount === 0
-    );
-  }
-
-  private isOfferEmpty() {
-    return this.buyChipAmount === 0 && this.sellChipAmount === 0;
-  }
-
-  private getAvailableSell() {
-    /* Returns how many chips of the current selected chip we can sell. */
-    const publicData =
-      this.cohortService.stagePublicDataMap[this.stage?.id ?? ''];
-    if (publicData?.kind !== StageKind.CHIP) return 0;
-
-    const publicId = this.participantService.profile?.publicId ?? '';
-    const participantChipMap = publicData.participantChipMap[publicId] ?? {};
-    const availableSell = participantChipMap[this.selectedSellChip] ?? 0;
-
-    return availableSell;
-  }
-
-  private isOfferValid() {
-    return (
-      // Ensure different chips are selected
-      this.selectedBuyChip !== this.selectedSellChip &&
-      this.selectedBuyChip !== '' &&
-      this.selectedSellChip !== '' &&
-      Number.isInteger(this.buyChipAmount) &&
-      Number.isInteger(this.sellChipAmount) &&
-      this.buyChipAmount > 0 &&
-      this.sellChipAmount > 0 &&
-      this.sellChipAmount <= this.getAvailableSell()
-    );
-  }
-
   private renderSenderView() {
     if (this.isOfferPending()) {
       return html`
@@ -356,8 +316,21 @@ export class ChipView extends MobxLitElement {
     loading = this.isOfferLoading,
     buttonText = 'Submit offer',
   ) {
+    const publicData =
+      this.cohortService.stagePublicDataMap[this.stage?.id ?? ''];
+    if (publicData?.kind !== StageKind.CHIP) return nothing;
+
+    const checks = getChipOfferChecks(
+      publicData,
+      this.participantService.profile?.publicId ?? '',
+      this.selectedBuyChip,
+      this.buyChipAmount,
+      this.selectedSellChip,
+      this.sellChipAmount,
+    );
+
     const renderOfferPayout = () => {
-      if (this.isOfferIncomplete() || !this.isOfferValid()) {
+      if (!checks.isCompleteOffer || !checks.isValidOffer) {
         return nothing;
       }
 
@@ -366,47 +339,6 @@ export class ChipView extends MobxLitElement {
         {[this.selectedBuyChip]: this.buyChipAmount},
         {[this.selectedSellChip]: this.sellChipAmount},
       );
-    };
-
-    const renderValidationMessages = () => {
-      if (this.isOfferIncomplete()) {
-        return nothing;
-      }
-
-      const errors: string[] = [];
-      // Check if the offer is unacceptable
-      const publicData =
-        this.cohortService.stagePublicDataMap[this.stage?.id ?? ''];
-      const isAcceptable =
-        publicData?.kind === StageKind.CHIP
-          ? isChipOfferAcceptable(
-              this.selectedBuyChip,
-              this.buyChipAmount,
-              publicData,
-              this.participantService.profile?.publicId ?? '',
-            )
-          : false;
-      if (!isAcceptable) {
-        errors.push(
-          `⚠️ No other players have enough chips to accept your offer.`,
-        );
-      }
-      if (
-        !this.isOfferValid() &&
-        this.getAvailableSell() < this.sellChipAmount
-      ) {
-        errors.push(`‼️ You cannot give more chips than you have.`);
-      }
-      if (this.selectedBuyChip === this.selectedSellChip) {
-        errors.push(`‼️ You cannot offer to buy and sell the same chip type.`);
-      }
-
-      // Return all collected errors
-      return html`
-        <div class="warnings-panel">
-          ${errors.map((error) => html`<div class="warning">${error}</div>`)}
-        </div>
-      `;
     };
 
     return html`
@@ -433,14 +365,21 @@ export class ChipView extends MobxLitElement {
       <div class="buttons">
         <pr-button
           ?loading=${loading}
-          ?disabled=${this.isOfferEmpty() ||
-          !this.isOfferValid() ||
+          ?disabled=${!checks.isCompleteOffer ||
+          !checks.isValidOffer ||
           this.isOfferPending()}
           @click=${sendOffer}
         >
           ${this.isOfferPending() ? 'Offer sent and pending...' : buttonText}
         </pr-button>
-        <div>${renderOfferPayout()} ${renderValidationMessages()}</div>
+        <div>
+          ${renderOfferPayout()}
+          <div class="warnings-panel">
+            ${checks.errors.map(
+              (error) => html`<div class="warning">${error}</div>`,
+            )}
+          </div>
+        </div>
       </div>
     `;
   }
