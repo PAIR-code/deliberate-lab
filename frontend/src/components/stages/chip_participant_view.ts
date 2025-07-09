@@ -158,13 +158,15 @@ export class ChipView extends MobxLitElement {
     }
 
     if (
-      !publicData.isGameOver &&
-      this.participantService.completedStage(this.stage.id)
+      (!publicData.isGameOver &&
+        this.participantService.completedStage(this.stage.id)) ||
+      publicData.isGameOver
     ) {
       // If game was never started because participants transferred
       // from different stage
       // TODO: Show results from the cohort game that participant
       // was in
+      // OR if game is over
       return html`
         <div class="status-panel">
           <div class="offer-panel">
@@ -182,23 +184,13 @@ export class ChipView extends MobxLitElement {
       );
     };
 
-    const renderTopLeftPanel = () => {
-      if (publicData.isGameOver) {
-        return html`
-          <div class="offer-panel">
-            ‼️ This game has ended. Please continue to the next stage.
-          </div>
-        `;
-      }
-      if (isCurrentTurn()) {
-        return this.renderSenderView();
-      }
-      return this.renderRecipientView();
-    };
-
     return html`
       <div class="status-panel-wrapper">
-        <div class="status-panel">${renderTopLeftPanel()}</div>
+        <div class="status-panel">
+          ${isCurrentTurn()
+            ? this.renderSenderView()
+            : this.renderRecipientView()}
+        </div>
       </div>
     `;
   }
@@ -977,21 +969,6 @@ export class ChipView extends MobxLitElement {
       <div>Submit your proposal below and I'll give you feedback:</div>
       ${this.renderManualResponse(acceptProposal, rejectProposal)}
     `;
-  }
-
-  private getParticipant(participantId: string) {
-    return this.cohortService
-      .getAllParticipants()
-      .find((p) => p.publicId === participantId);
-  }
-
-  private getParticipantDisplay(participant: ParticipantProfile | undefined) {
-    if (!participant) return '';
-    return getParticipantInlineDisplay(
-      participant,
-      false,
-      this.stage?.id ?? '',
-    );
   }
 
   private renderLogEntry(log: SimpleChipLog, isLatestEntry: boolean = false) {
