@@ -821,7 +821,7 @@ export class ChipView extends MobxLitElement {
       const suggestedSellAmount = proposedOffer?.sell[suggestedSellType] ?? 0;
       return html`
         <div>${proposal}</div>
-        <div><b>Feedback:</b> ${this.getAssistanceMessage()}</div>
+        <div><b>Feedback:</b> ${this.getDelegateMessage()}</div>
         ${this.renderManualOffer(
           this.sendOffer,
           suggestedBuyType,
