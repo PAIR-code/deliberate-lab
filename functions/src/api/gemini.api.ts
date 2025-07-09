@@ -152,10 +152,25 @@ export async function callGemini(
     };
   }
 
+  let text = null;
+  let reasoning = null;
+
+  for (const part of response.candidates[0].content.parts) {
+    if (!part.text) {
+      continue;
+    }
+    if (part.thought) {
+      reasoning = part.text;
+    } else {
+      text = part.text;
+    }
+  }
+
   const modelResponse = {
     status: ModelResponseStatus.OK,
+    text: text,
     rawResponse: JSON.stringify(response),
-    text: response.text(),
+    reasoning: reasoning,
   };
   if (parseResponse) {
     return addParsedModelResponse(modelResponse);
@@ -188,6 +203,10 @@ export async function getGeminiAPIResponse(
       errorMessage: error.message,
     };
   }
+  const thinkingConfig = {
+    thinkingBudget: generationConfig.reasoningBudget,
+    includeThoughts: generationConfig.includeReasoning,
+  };
   const geminiConfig: GenerationConfig = {
     stopSequences: generationConfig.stopSequences,
     maxOutputTokens: generationConfig.maxTokens,
@@ -196,6 +215,7 @@ export async function getGeminiAPIResponse(
     topK: 16,
     presencePenalty: generationConfig.presencePenalty,
     frequencyPenalty: generationConfig.frequencyPenalty,
+    thinkingConfig: thinkingConfig,
     ...structuredOutputGenerationConfig,
     ...customFields,
   };

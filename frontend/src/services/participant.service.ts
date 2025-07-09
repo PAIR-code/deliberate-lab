@@ -46,6 +46,8 @@ import {
   acceptParticipantExperimentStartCallable,
   acceptParticipantTransferCallable,
   createChatMessageCallable,
+  requestChipAssistanceCallable,
+  selectChipAssistanceModeCallable,
   sendAlertMessageCallable,
   sendChipOfferCallable,
   sendChipResponseCallable,
@@ -921,6 +923,60 @@ export class ParticipantService extends Service {
       );
     }
     return output.success;
+  }
+
+  async requestChipAssistance(
+    stageId: string,
+    assistanceMode: string, // TODO: make enum
+    buyChipType: string,
+    buyChipAmount: number,
+    sellChipType: string,
+    sellChipAmount: number,
+    offerResponse: boolean | undefined = undefined,
+  ) {
+    const buyMap: Record<string, number> = {};
+    buyMap[buyChipType] = buyChipAmount;
+
+    const sellMap: Record<string, number> = {};
+    sellMap[sellChipType] = sellChipAmount;
+
+    let output = {data: ''};
+    if (this.experimentId && this.profile) {
+      output = await requestChipAssistanceCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          stageId,
+          participantId: this.profile.privateId,
+          assistanceMode,
+          buyMap,
+          sellMap,
+          offerResponse,
+        },
+      );
+    }
+    return output;
+  }
+
+  async selectChipAssistanceMode(
+    stageId: string,
+    assistanceMode: string, // TODO: make enum
+  ) {
+    let output = {data: ''};
+    if (this.experimentId && this.profile) {
+      output = await selectChipAssistanceModeCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          stageId,
+          participantId: this.profile.privateId,
+          assistanceMode,
+        },
+      );
+    }
+    return output;
   }
 
   async sendAlertMessage(message: string) {

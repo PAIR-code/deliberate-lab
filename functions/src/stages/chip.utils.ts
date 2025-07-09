@@ -1,9 +1,17 @@
+import {Timestamp} from 'firebase-admin/firestore';
 import {
+  AgentModelSettings,
+  ApiKeyType,
+  ChipAssistanceMode,
   ChipOffer,
+  ChipStageConfig,
+  ChipStageParticipantAnswer,
   ChipStagePublicData,
   ChipTransactionStatus,
+  ExperimenterData,
   ParticipantProfile,
   ParticipantStatus,
+  convertChipLogToPromptFormat,
   createChipInfoLogEntry,
   createChipOfferLogEntry,
   createChipOfferDeclinedLogEntry,
@@ -11,9 +19,25 @@ import {
   createChipTransaction,
   createChipTurn,
   createChipTurnLogEntry,
+  createModelGenerationConfig,
+  generateId,
+  getChipLogs,
+  getChipOfferAssistanceAdvisorPrompt,
+  getChipOfferAssistanceCoachPrompt,
+  getChipOfferAssistanceDelegatePrompt,
+  getChipResponseAssistanceAdvisorPrompt,
+  getChipResponseAssistanceCoachPrompt,
+  getChipResponseAssistanceDelegatePrompt,
   sortParticipantsByRandomProfile,
+  CHIP_OFFER_ASSISTANCE_COACH_PROMPT,
+  CHIP_OFFER_ASSISTANCE_DELEGATE_PROMPT,
+  CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
+  CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
+  CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG,
+  CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
 } from '@deliberation-lab/utils';
 
+import {processModelResponse} from '../agent.utils';
 import {getFirestoreStagePublicDataRef} from '../utils/firestore';
 
 import * as admin from 'firebase-admin';
@@ -415,4 +439,404 @@ export async function addChipResponseToPublicData(
   });
 
   return true;
+}
+
+export async function getChipOfferAssistance(
+  experimentId: string,
+  stage: ChipStageConfig,
+  publicData: ChipStagePublicData,
+  participants: ParticipantProfile[], // participants in cohort
+  participant: ParticipantProfile, // current participant
+  participantAnswer: ChipStageParticipantAnswer,
+  experimenterData: ExperimenterData,
+  assistanceMode: ChipAssistanceMode,
+  buyMap: Record<string, number> = {}, // for COACH mode only
+  sellMap: Record<string, number> = {}, // for COACH mode only
+) {
+  // Player name
+  const playerName = participant.name;
+
+  // Player chip values
+  const playerChipValues = Object.keys(participantAnswer.chipValueMap)
+    .map(
+      (chip) =>
+        `${chip} chips = $${participantAnswer.chipValueMap[chip].toFixed(2)} each`,
+    )
+    .join(', ');
+
+  // Player chip quantities
+  const playerChipQuantities = Object.keys(participantAnswer.chipMap)
+    .map((chip) => `${participantAnswer.chipMap[chip]} ${chip} chips`)
+    .join(', ');
+
+  // Player's proposed offer
+  const sellChips = Object.keys(sellMap)
+    .map((chip) => `${sellMap[chip]} ${chip} chips`)
+    .join(', ');
+  const buyChips = Object.keys(buyMap)
+    .map((chip) => `${buyMap[chip]} ${chip} chips`)
+    .join(', ');
+  const offerIdea = `${sellChips} for ${buyChips}`;
+
+  const participantChipMap = publicData.participantChipMap;
+  const participantIds = Object.keys(participantChipMap);
+
+  const participantDescriptions = participantIds.map((participantId) => {
+    const chipMap = participantChipMap[participantId];
+    const chipTypes = Object.keys(chipMap);
+    const chipQuantities = chipTypes
+      .map((chip) => `${chipMap[chip]} ${chip} chips`)
+      .join(', ');
+    return `${participantId}: ${chipQuantities}`;
+  });
+  const chipsetDescription = participantDescriptions.join(' | ');
+
+  // Negotiation history
+  const negotiationHistory = getChipLogs(
+    stage,
+    publicData,
+    participants,
+    participant.publicId,
+  )
+    .map((log) => convertChipLogToPromptFormat(log))
+    .join('\n');
+
+  // Number of rounds left
+  const numRoundsLeft = stage.numRounds - (publicData.currentRound + 1);
+
+  // Model settings
+  const modelSettings: AgentModelSettings = {
+    apiType: ApiKeyType.GEMINI_API_KEY,
+    modelName: 'gemini-2.5-flash',
+  };
+  const modelGenerationConfig = createModelGenerationConfig({
+    reasoningBudget: 2048,
+    includeReasoning: true,
+  });
+
+  // Helper function to parse structured output response
+  const parseResponse = (response: ModelResponse, sendOffer = false) => {
+    try {
+      const responseObj = response.parsedResponse;
+      if (sendOffer) {
+        const buy: Record<string, number> = {};
+        const sell: Record<string, number> = {};
+        buy[responseObj['suggestedBuyType']] =
+          responseObj['suggestedBuyQuantity'];
+        sell[responseObj['suggestedSellType']] =
+          responseObj['suggestedSellQuantity'];
+        console.log(buy, sell);
+        addChipOfferToPublicData(
+          experimentId,
+          participant.currentCohortId,
+          stage.id,
+          {
+            id: generateId(),
+            round: publicData.currentRound,
+            senderId: participant.publicId,
+            buy,
+            sell,
+            timestamp: Timestamp.now(),
+          },
+        );
+      }
+      console.log(
+        `Suggested: Give ${responseObj['suggestedSellQuantity']} ${responseObj['suggestedSellType']} to get ${responseObj['suggestedBuyQuantity']} ${responseObj['suggestedBuyType']} (${responseObj['reasoning']})`,
+      );
+      return {success: true, modelResponse: responseObj};
+    } catch (errorMessage) {
+      // Response is already logged in console during Gemini API call
+      console.log('Could not parse JSON:', errorMessage);
+      return {success: false, errorMessage};
+    }
+  };
+
+  // Call different LLM API prompt based on assistance mode
+  switch (assistanceMode) {
+    case ChipAssistanceMode.COACH:
+      // Construct prompt using helper function
+      const coachPrompt = getChipOfferAssistanceCoachPrompt(
+        playerName,
+        playerChipValues,
+        playerChipQuantities,
+        chipsetDescription,
+        negotiationHistory,
+        numRoundsLeft,
+        offerIdea,
+      );
+      console.log('Chip offer assistance coach prompt:', coachPrompt);
+      // Call API
+      const coachResponse = await processModelResponse(
+        experimentId,
+        participant.currentCohortId,
+        participant.privateId,
+        stage.id,
+        participant, // NOTE: This should actually be the agent profile
+        '', // No agent private ID
+        '', // No agent public ID
+        '', // No description
+        experimenterData.apiKeys,
+        coachPrompt,
+        modelSettings,
+        modelGenerationConfig,
+        CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
+      );
+      // Parse response before returning
+      return parseResponse(coachResponse);
+    case ChipAssistanceMode.ADVISOR:
+      // Construct prompt using helper function
+      const advisorPrompt = getChipOfferAssistanceAdvisorPrompt(
+        playerName,
+        playerChipValues,
+        playerChipQuantities,
+        chipsetDescription,
+        negotiationHistory,
+        numRoundsLeft,
+      );
+      console.log('Chip offer assistance advisor prompt:', advisorPrompt);
+      // Call API
+      const advisorResponse = await processModelResponse(
+        experimentId,
+        participant.currentCohortId,
+        participant.privateId,
+        stage.id,
+        participant, // NOTE: This should actually be the agent profile
+        '', // No agent private ID
+        '', // No agent public ID
+        '', // No description
+        experimenterData.apiKeys,
+        advisorPrompt,
+        modelSettings,
+        modelGenerationConfig,
+        CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
+      );
+      // Parse response before returning
+      return parseResponse(advisorResponse);
+    case ChipAssistanceMode.DELEGATE:
+      // Construct prompt using helper function
+      const delegatePrompt = getChipOfferAssistanceDelegatePrompt(
+        playerName,
+        playerChipValues,
+        playerChipQuantities,
+        chipsetDescription,
+        negotiationHistory,
+        numRoundsLeft,
+      );
+      console.log('Chip offer assistance delegate prompt:', delegatePrompt);
+      // Call API
+      const delegateResponse = await processModelResponse(
+        experimentId,
+        participant.currentCohortId,
+        participant.privateId,
+        stage.id,
+        participant, // NOTE: This should actually be the agent profile
+        '', // No agent private ID
+        '', // No agent public ID
+        '', // No description
+        experimenterData.apiKeys,
+        delegatePrompt,
+        modelSettings,
+        modelGenerationConfig,
+        CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
+      );
+      // Parse response before returning
+      return parseResponse(delegateResponse, true);
+    default:
+      return '';
+  }
+}
+
+export async function getChipResponseAssistance(
+  experimentId: string,
+  stage: ChipStageConfig,
+  publicData: ChipStagePublicData,
+  participants: ParticipantProfile[], // participants in cohort
+  participant: ParticipantProfile, // current participant
+  participantAnswer: ChipStageParticipantAnswer,
+  experimenterData: ExperimenterData,
+  assistanceMode: ChipAssistanceMode,
+  currentOffer: ChipOffer,
+  responseIdea: boolean,
+) {
+  // Player name
+  const playerName = participant.name;
+
+  // Player chip values
+  const playerChipValues = Object.keys(participantAnswer.chipValueMap)
+    .map(
+      (chip) =>
+        `${chip} chips = $${participantAnswer.chipValueMap[chip].toFixed(2)} each`,
+    )
+    .join(', ');
+
+  // Player chip quantities
+  const playerChipQuantities = Object.keys(participantAnswer.chipMap)
+    .map((chip) => `${participantAnswer.chipMap[chip]} ${chip} chips`)
+    .join(', ');
+
+  // Player's proposed offer
+  const sellChips = Object.keys(currentOffer.sell)
+    .map((chip) => `${currentOffer.sell[chip]} ${chip} chips`)
+    .join(', ');
+  const buyChips = Object.keys(currentOffer.buy)
+    .map((chip) => `${currentOffer.buy[chip]} ${chip} chips`)
+    .join(', ');
+  const offer = `You will give ${buyChips} and get ${sellChips}`;
+
+  const participantChipMap = publicData.participantChipMap;
+  const participantIds = Object.keys(participantChipMap);
+
+  const participantDescriptions = participantIds.map((participantId) => {
+    const chipMap = participantChipMap[participantId];
+    const chipTypes = Object.keys(chipMap);
+    const chipQuantities = chipTypes
+      .map((chip) => `${chipMap[chip]} ${chip} chips`)
+      .join(', ');
+    return `${participantId}: ${chipQuantities}`;
+  });
+  const chipsetDescription = participantDescriptions.join(' | ');
+
+  // Negotiation history
+  const negotiationHistory = getChipLogs(
+    stage,
+    publicData,
+    participants,
+    participant.publicId,
+  )
+    .map((log) => convertChipLogToPromptFormat(log))
+    .join('\n');
+
+  // Number of rounds left
+  const numRoundsLeft = stage.numRounds - (publicData.currentRound + 1);
+
+  // Model settings
+  const modelSettings: AgentModelSettings = {
+    apiType: ApiKeyType.GEMINI_API_KEY,
+    modelName: 'gemini-2.5-flash',
+  };
+  const modelGenerationConfig = createModelGenerationConfig({
+    reasoningBudget: 2048,
+    includeReasoning: true,
+  });
+
+  // Helper function to parse structured output response
+  const parseResponse = (response: ModelResponse, sendResponse = false) => {
+    try {
+      const responseObject = response.parsedResponse;
+      if (sendResponse) {
+        addChipResponseToPublicData(
+          experimentId,
+          participant.currentCohortId,
+          stage.id,
+          participant.publicId,
+          responseObject['response'],
+        );
+      }
+      console.log(
+        `${responseObject['response']} ${responseObject['feedback']}`,
+      );
+      return {success: true, modelResponse: responseObject};
+    } catch (errorMessage) {
+      // Response is already logged in console during Gemini API call
+      console.log('Could not parse JSON:', errorMessage);
+      return {success: false, errorMessage};
+    }
+  };
+
+  // Call different LLM API prompt based on assistance mode
+  switch (assistanceMode) {
+    case ChipAssistanceMode.COACH:
+      // Construct prompt using helper function
+      const coachPrompt = getChipResponseAssistanceCoachPrompt(
+        playerName,
+        playerChipValues,
+        playerChipQuantities,
+        chipsetDescription,
+        negotiationHistory,
+        numRoundsLeft,
+        offer,
+        responseIdea,
+      );
+      console.log('Chip response assistance coach prompt:', coachPrompt);
+      // Call API
+      const coachResponse = await processModelResponse(
+        experimentId,
+        participant.currentCohortId,
+        participant.privateId,
+        stage.id,
+        participant, // NOTE: This should actually be the agent profile
+        '', // No agent private ID
+        '', // No agent public ID
+        '', // No description
+        experimenterData.apiKeys,
+        coachPrompt,
+        modelSettings,
+        modelGenerationConfig,
+        CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG,
+      );
+      // Parse response before returning
+      return parseResponse(coachResponse);
+    case ChipAssistanceMode.ADVISOR:
+      // Construct prompt using helper function
+      const advisorPrompt = getChipResponseAssistanceAdvisorPrompt(
+        playerName,
+        playerChipValues,
+        playerChipQuantities,
+        chipsetDescription,
+        negotiationHistory,
+        numRoundsLeft,
+        offer,
+      );
+      console.log('Chip response assistance advisor prompt:', advisorPrompt);
+      // Call API
+      const advisorResponse = await processModelResponse(
+        experimentId,
+        participant.currentCohortId,
+        participant.privateId,
+        stage.id,
+        participant, // NOTE: This should actually be the agent profile
+        '', // No agent private ID
+        '', // No agent public ID
+        '', // No description
+        experimenterData.apiKeys,
+        advisorPrompt,
+        modelSettings,
+        modelGenerationConfig,
+        CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
+      );
+      // Parse response before returning
+      return parseResponse(advisorResponse);
+    case ChipAssistanceMode.DELEGATE:
+      // Construct prompt using helper function
+      const delegatePrompt = getChipResponseAssistanceDelegatePrompt(
+        playerName,
+        playerChipValues,
+        playerChipQuantities,
+        chipsetDescription,
+        negotiationHistory,
+        numRoundsLeft,
+        offer,
+      );
+      console.log('Chip response assistance delegate prompt:', delegatePrompt);
+      // Call API
+      const delegateResponse = await processModelResponse(
+        experimentId,
+        participant.currentCohortId,
+        participant.privateId,
+        stage.id,
+        participant, // NOTE: This should actually be the agent profile
+        '', // No agent private ID
+        '', // No agent public ID
+        '', // No description
+        experimenterData.apiKeys,
+        delegatePrompt,
+        modelSettings,
+        modelGenerationConfig,
+        CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
+      );
+      // Parse response before returning
+      return parseResponse(delegateResponse, true);
+    default:
+      return '';
+  }
 }

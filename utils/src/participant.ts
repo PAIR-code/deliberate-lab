@@ -239,7 +239,7 @@ export function setProfile(
  */
 export function sortParticipantsByRandomProfile(
   participants: ParticipantProfile[],
-  stageId: string,
+  stageId: string = '', // empty string will default to random 1 ID
 ) {
   participants.sort((p1: ParticipantProfile, p2: ParticipantProfile) => {
     let sortKey1 = '';
@@ -260,4 +260,17 @@ export function sortParticipantsByRandomProfile(
     return sortKey1.localeCompare(sortKey2);
   });
   return participants;
+}
+
+export function getNameFromPublicId(
+  participants: ParticipantProfile[],
+  publicId: string,
+  includeAvatar = true,
+) {
+  const profile = participants.find((p) => p.publicId === publicId);
+  if (profile && profile.name) {
+    const avatar = includeAvatar && profile.avatar ? `${profile.avatar} ` : '';
+    return `${avatar}${profile.name}`;
+  }
+  return publicId;
 }

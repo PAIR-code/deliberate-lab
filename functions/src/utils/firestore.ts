@@ -86,6 +86,22 @@ export async function getFirestoreParticipant(
   return doc.data() as ParticipantProfileExtended;
 }
 
+/** Fetch participants for current cohort. */
+export async function getFirestoreCohortParticipants(
+  experimentId: string,
+  cohortId: string,
+) {
+  return (
+    await app
+      .firestore()
+      .collection('experiments')
+      .doc(experimentId)
+      .collection('participants')
+      .where('currentCohortId', '==', cohortId)
+      .get()
+  ).docs.map((doc) => doc.data() as ParticipantProfileExtended);
+}
+
 /** Fetch active mediators for current cohort/stage. */
 export async function getFirestoreActiveMediators(
   experimentId: string,
@@ -253,6 +269,7 @@ export async function getAgentMediatorPersonas(experimentId: string) {
     .collection('experiments')
     .doc(experimentId)
     .collection('agentMediators');
+
   return (await agentCollection.get()).docs.map(
     (agent) => agent.data() as AgentPersonaConfig,
   );

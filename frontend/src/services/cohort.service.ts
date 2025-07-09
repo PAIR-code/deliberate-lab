@@ -21,7 +21,6 @@ import {
   ChatDiscussion,
   ChatMessage,
   ChatStageConfig,
-  ChipLogEntry,
   CohortConfig,
   MediatorProfile,
   MediatorStatus,
@@ -76,8 +75,6 @@ export class CohortService extends Service {
   // Stage ID to map of discussion ID to list of chat messages
   @observable chatDiscussionMap: Record<string, Record<string, ChatMessage[]>> =
     {};
-  // Stage ID to list of chip negotiation log entries
-  @observable chipLogMap: Record<string, ChipLogEntry[]> = {};
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -247,10 +244,6 @@ export class CohortService extends Service {
     return stageData.currentDiscussionId;
   }
 
-  getChipLogEntries(stageId: string) {
-    return this.chipLogMap[stageId] ?? [];
-  }
-
   // Called from participant service on participant snapshot listener
   // (i.e., when participant's current cohort may have changed)
   async loadCohortData(experimentId: string, id: string) {
@@ -267,7 +260,6 @@ export class CohortService extends Service {
     this.loadCohortConfig();
     this.loadPublicStageData();
     this.loadChatMessages();
-    this.loadChipLogEntries();
     this.loadParticipantProfiles();
     this.loadMediatorProfiles();
   }
@@ -325,59 +317,6 @@ export class CohortService extends Service {
         },
       ),
     );
-  }
-
-  /** Subscribe to chip negotiation log entries for each stage ID. */
-  private async loadChipLogEntries() {
-    if (!this.experimentId || !this.cohortId) return;
-
-    // Get stageIds from experiment doc
-    // (as they may not have loaded in experiment service yet)
-    const experimentRef = doc(
-      this.sp.firebaseService.firestore,
-      'experiments',
-      this.experimentId,
-    );
-    const experimentSnap = await getDoc(experimentRef);
-    if (!experimentSnap.exists()) return;
-    const experimentData = experimentSnap.data();
-    if (experimentData?.stageIds.length === 0) return;
-
-    this.isChipLoading = true;
-    for (const stageId of experimentData.stageIds) {
-      this.unsubscribe.push(
-        onSnapshot(
-          query(
-            collection(
-              this.sp.firebaseService.firestore,
-              'experiments',
-              this.experimentId,
-              'cohorts',
-              this.cohortId,
-              'publicStageData',
-              stageId,
-              'logs',
-            ),
-            orderBy('timestamp', 'asc'),
-          ),
-          (snapshot) => {
-            let changedDocs = snapshot.docChanges().map((change) => change.doc);
-            if (changedDocs.length === 0) {
-              changedDocs = snapshot.docs;
-            }
-
-            changedDocs.forEach((doc) => {
-              if (!this.chipLogMap[stageId]) {
-                this.chipLogMap[stageId] = [];
-              }
-              const chipLogEntry = doc.data() as ChipLogEntry;
-              this.chipLogMap[stageId].push(chipLogEntry);
-            });
-            this.isChipLoading = false;
-          },
-        ),
-      );
-    }
   }
 
   /** Subscribe to chat message collections for each stage ID. */
@@ -543,7 +482,6 @@ export class CohortService extends Service {
     this.participantMap = {};
     this.chatMap = {};
     this.chatDiscussionMap = {};
-    this.chipLogMap = {};
     this.transferParticipantMap = {};
     this.stagePublicDataMap = {};
     this.mediatorMap = {};
