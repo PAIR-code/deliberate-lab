@@ -587,7 +587,7 @@ export class ExperimentManager extends Service {
             id,
             'logs',
           ),
-          orderBy('createdTimestamp', 'asc'),
+          orderBy('createdTimestamp', 'desc'),
         ),
         (snapshot) => {
           let changedDocs = snapshot.docChanges().map((change) => change.doc);

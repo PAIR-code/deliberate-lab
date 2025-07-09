@@ -8,7 +8,12 @@ import {customElement, property} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {ExperimentManager} from '../../services/experiment.manager';
 
-import {LogEntry, LogEntryType, ModelLogEntry} from '@deliberation-lab/utils';
+import {
+  LogEntry,
+  LogEntryType,
+  ModelLogEntry,
+  ModelResponseStatus,
+} from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToISO} from '../../shared/utils';
 
 import {styles} from './log_dashboard.scss';
@@ -59,8 +64,23 @@ export class Component extends MobxLitElement {
 
   private renderModelLogFields(log: ModelLogEntry) {
     const status = log.response.status;
+
+    const renderReasoning = () => {
+      if (!log.response.reasoning) return nothing;
+      return html`
+        <details>
+          <summary>Model reasoning</summary>
+          <div>${log.response.reasoning}</div>
+        </details>
+      `;
+    };
+
     return html`
-      <div class="chip secondary">${status}</div>
+      <div
+        class="chip ${status === ModelResponseStatus.OK ? 'success' : 'error'}"
+      >
+        ${status}
+      </div>
       <div>
         Start timestamp:
         ${log.queryTimestamp
@@ -81,6 +101,7 @@ export class Component extends MobxLitElement {
         <summary>Model response</summary>
         <pre><code>${JSON.stringify(log.response, null, 2)}</code></pre>
       </details>
+      ${renderReasoning()}
     `;
   }
 

@@ -234,7 +234,7 @@ export class Component extends MobxLitElement {
           >
             Open log dashboard
           </pr-button>
-          ${this.renderDebugModeButton()} ${this.renderTransferMenu()} /div>
+          ${this.renderDebugModeButton()} ${this.renderTransferMenu()}
         </div>
       </div>
     `;

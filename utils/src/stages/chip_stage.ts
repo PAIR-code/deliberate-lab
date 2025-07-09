@@ -168,7 +168,7 @@ export interface BaseChipAssistanceMove {
 
 export interface ChipOfferAssistanceMove extends BaseChipAssistanceMove {
   type: ChipAssistanceType.OFFER;
-  proposedOffer: ChipOffer | null; // null if N/A (e.g., delegate/advisor mode)
+  proposedOffer: ChipOffer | null;
   finalOffer: ChipOffer;
 }
 

@@ -257,3 +257,42 @@ export function calculateChipOfferPayout(
     after: currentTotalPayout + addAmount - removeAmount,
   };
 }
+
+/** Returns checks and list of errors for given chip offer. */
+export function getChipOfferChecks(
+  publicData: ChipStagePublicData,
+  publicId: string, // public ID of participant making the offer
+  buyType: string,
+  buyQuantity: number,
+  sellType: string,
+  sellQuantity: number,
+): {errors: string[]; isCompleteOffer: boolean; isValidOffer: boolean} {
+  // Check if offer is incomplete
+  const isCompleteOffer =
+    buyType !== '' && sellType !== '' && buyQuantity > 0 && sellQuantity > 0;
+
+  // Check if the participant has enough chips to sell
+  const canSell = () => {
+    const chipMap = publicData.participantChipMap[publicId];
+    return (chipMap[sellType] ?? 0) >= sellQuantity;
+  };
+
+  // Check if offer is valid
+  const isValidOffer = isCompleteOffer && buyType !== sellType && canSell();
+
+  const errors: string[] = [];
+  // No other players can accept the offer
+  if (!isChipOfferAcceptable(buyType, buyQuantity, publicData, publicId)) {
+    errors.push(`⚠️ No other players have enough chips to accept your offer.`);
+  }
+  // Offer is trying to give too many chips
+  if (!canSell()) {
+    errors.push(`‼️ You cannot give more chips than you have.`);
+  }
+  // Offer has same buy and sell chip type
+  if (buyType === sellType) {
+    errors.push(`‼️ You cannot offer to buy and sell the same chip type.`);
+  }
+
+  return {errors, isCompleteOffer, isValidOffer};
+}
