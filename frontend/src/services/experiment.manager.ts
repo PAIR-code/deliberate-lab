@@ -1,11 +1,8 @@
 import {computed, makeObservable, observable} from 'mobx';
 import {
   collection,
-  doc,
-  getDocs,
   onSnapshot,
   query,
-  Timestamp,
   Unsubscribe,
   where,
 } from 'firebase/firestore';
@@ -22,7 +19,6 @@ import {Service} from './service';
 import JSZip from 'jszip';
 
 import {
-  DEFAULT_AGENT_MODEL_SETTINGS,
   AlertMessage,
   AlertStatus,
   AgentPersonaConfig,
@@ -32,8 +28,6 @@ import {
   CohortConfig,
   CohortParticipantConfig,
   CreateChatMessageData,
-  Experiment,
-  ExperimentDownload,
   MediatorProfile,
   MetadataConfig,
   ParticipantProfileExtended,
@@ -50,6 +44,7 @@ import {
   createChatMessageCallable,
   createCohortCallable,
   createParticipantCallable,
+  checkOrCreateParticipantCallable,
   deleteCohortCallable,
   deleteExperimentCallable,
   initiateParticipantTransferCallable,
@@ -65,8 +60,6 @@ import {
   hasMaxParticipantsInCohort,
 } from '../shared/cohort.utils';
 import {
-  downloadCSV,
-  downloadJSON,
   getChatHistoryData,
   getChipNegotiationCSV,
   getChipNegotiationData,
@@ -703,21 +696,35 @@ export class ExperimentManager extends Service {
   }
 
   /** Create human participant. */
-  async createParticipant(cohortId: string) {
+  async createParticipant(
+    cohortId: string,
+    prolificId?: string,
+    forceNew?: boolean,
+  ): Promise<{
+    exists?: boolean;
+    participant?: ParticipantProfileExtended;
+    id?: string;
+  }> {
     this.isWritingParticipant = true;
-    let response = {};
+    let response: {
+      exists?: boolean;
+      participant?: ParticipantProfileExtended;
+      id?: string;
+    } = {};
 
     if (this.experimentId) {
       const isAnonymous = requiresAnonymousProfiles(
         this.sp.experimentService.stages,
       );
 
-      response = await createParticipantCallable(
+      response = await checkOrCreateParticipantCallable(
         this.sp.firebaseService.functions,
         {
           experimentId: this.experimentId,
           cohortId,
           isAnonymous,
+          prolificId: prolificId || undefined,
+          forceNew: forceNew || false,
         },
       );
     }

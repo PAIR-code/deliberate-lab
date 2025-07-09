@@ -155,6 +155,7 @@ export const CreateParticipantData = Type.Object(
       }),
     ),
     prolificId: Type.Optional(Type.Union([Type.Null(), Type.String()])),
+    forceNew: Type.Optional(Type.Boolean()),
   },
   strict,
 );

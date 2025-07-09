@@ -19,7 +19,6 @@ import {
 
 import * as functions from 'firebase-functions';
 import {onCall} from 'firebase-functions/v2/https';
-
 import {app} from './app';
 import {AuthGuard} from './utils/auth-guard';
 import {
@@ -47,66 +46,7 @@ export const createParticipant = onCall(async (request) => {
     handleCreateParticipantValidationErrors(data);
   }
 
-  // Create initial participant config
-  const participantConfig = createParticipantProfileExtended({
-    currentCohortId: data.cohortId,
-    prolificId: data.prolificId,
-  });
-
-  // Temporarily always mark participants as connected (PR #537)
-  participantConfig.connected = true; // TODO: Remove this line
-
-  // If agent config is specified, add to participant config
-  if (data.agentConfig) {
-    participantConfig.agentConfig = data.agentConfig;
-    participantConfig.connected = true; // agent is always connected
-  }
-
-  // Define document reference
-  const document = app
-    .firestore()
-    .collection('experiments')
-    .doc(data.experimentId)
-    .collection('participants')
-    .doc(participantConfig.privateId);
-
-  // Set random timeout to avoid data contention with transaction
-  await new Promise((resolve) => {
-    setTimeout(resolve, Math.random() * 2000);
-  });
-
-  // Run document write as transaction to ensure consistency
-  await app.firestore().runTransaction(async (transaction) => {
-    // TODO: Confirm that cohort is not at max capacity
-
-    // Confirm that cohort is not locked
-    const experiment = (
-      await app.firestore().doc(`experiments/${data.experimentId}`).get()
-    ).data() as Experiment;
-    if (experiment.cohortLockMap[data.cohortId]) {
-      // TODO: Return failure and handle accordingly on frontend
-      return;
-    }
-
-    // Set participant profile fields
-    const numParticipants = (
-      await app
-        .firestore()
-        .collection(`experiments/${data.experimentId}/participants`)
-        .count()
-        .get()
-    ).data().count;
-
-    setProfile(numParticipants, participantConfig, data.isAnonymous);
-
-    // Set current stage ID in participant config
-    participantConfig.currentStageId = experiment.stageIds[0];
-
-    // Write new participant document
-    transaction.set(document, participantConfig);
-  });
-
-  return {id: document.id};
+  return await createParticipantInternal(data);
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -619,3 +559,111 @@ export const initiateParticipantTransfer = onCall(async (request) => {
 
   return {success: true};
 });
+
+// ************************************************************************* //
+// checkOrCreateParticipant endpoint                                        //
+// Checks for existing participant with prolificId, or creates new one      //
+// ************************************************************************* //
+export const checkOrCreateParticipant = onCall(async (request) => {
+  const participantData: CreateParticipantData = request.data;
+  // Validate input
+  const validInput = Value.Check(CreateParticipantData, participantData);
+  if (!validInput) {
+    handleCreateParticipantValidationErrors(participantData);
+  }
+
+  // If prolificId is provided, check for existing participant
+  if (participantData.prolificId) {
+    const querySnap = await app
+      .firestore()
+      .collection('experiments')
+      .doc(participantData.experimentId)
+      .collection('participants')
+      .where('prolificId', '==', participantData.prolificId)
+      .get();
+    if (!querySnap.empty && !participantData.forceNew) {
+      // Find the first participant in a valid active state
+      const validStates = [
+        ParticipantStatus.IN_PROGRESS,
+        ParticipantStatus.ATTENTION_CHECK,
+        ParticipantStatus.TRANSFER_PENDING,
+      ];
+      const validDoc = querySnap.docs.find((doc) =>
+        validStates.includes(doc.data().currentStatus),
+      );
+      if (validDoc) {
+        const existing = validDoc.data();
+        return {exists: true, participant: existing};
+      }
+      // If none are valid, fall through to create new
+    }
+  }
+
+  // No existing participant, create as normal
+  const result = await createParticipantInternal(participantData);
+  return {exists: false, id: result.id};
+});
+
+async function createParticipantInternal(data: CreateParticipantData) {
+  // Create initial participant config
+  const participantConfig = createParticipantProfileExtended({
+    currentCohortId: data.cohortId,
+    prolificId: data.prolificId,
+  });
+
+  // Temporarily always mark participants as connected (PR #537)
+  participantConfig.connected = true; // TODO: Remove this line
+
+  // If agent config is specified, add to participant config
+  if (data.agentConfig) {
+    participantConfig.agentConfig =
+      data.agentConfig as ParticipantProfileExtended['agentConfig'];
+    participantConfig.connected = true; // agent is always connected
+  }
+
+  // Define document reference
+  const document = app
+    .firestore()
+    .collection('experiments')
+    .doc(data.experimentId)
+    .collection('participants')
+    .doc(participantConfig.privateId);
+
+  // Set random timeout to avoid data contention with transaction
+  await new Promise((resolve) => {
+    setTimeout(resolve, Math.random() * 2000);
+  });
+
+  // Run document write as transaction to ensure consistency
+  await app.firestore().runTransaction(async (transaction) => {
+    // TODO: Confirm that cohort is not at max capacity
+
+    // Confirm that cohort is not locked
+    const experiment = (
+      await app.firestore().doc(`experiments/${data.experimentId}`).get()
+    ).data() as Experiment;
+    if (experiment.cohortLockMap[data.cohortId]) {
+      // TODO: Return failure and handle accordingly on frontend
+      return;
+    }
+
+    // Set participant profile fields
+    const numParticipants = (
+      await app
+        .firestore()
+        .collection(`experiments/${data.experimentId}/participants`)
+        .count()
+        .get()
+    ).data().count;
+
+    setProfile(numParticipants, participantConfig, data.isAnonymous);
+
+    // Set current stage ID in participant config
+    participantConfig.currentStageId = experiment.stageIds[0];
+
+    // Write new participant document
+    transaction.set(document, participantConfig);
+  });
+
+  return {id: document.id};
+}
