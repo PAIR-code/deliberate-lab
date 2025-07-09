@@ -14,11 +14,21 @@ const strict = {additionalProperties: false} as const;
 // AssetAllocation stage validation                                          //
 // ************************************************************************* //
 
+/** Stock allocation validation. */
+export const StockAllocationData = Type.Object(
+  {
+    id: Type.String({minLength: 1}),
+    name: Type.String({minLength: 1}),
+    percentage: Type.Number({minimum: 0, maximum: 100}),
+  },
+  strict,
+);
+
 /** Asset allocation validation. */
 export const AssetAllocationData = Type.Object(
   {
-    stockAPercentage: Type.Number({minimum: 0, maximum: 100}),
-    stockBPercentage: Type.Number({minimum: 0, maximum: 100}),
+    stockA: StockAllocationData,
+    stockB: StockAllocationData,
   },
   strict,
 );

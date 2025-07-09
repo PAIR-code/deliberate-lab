@@ -19,12 +19,14 @@ import {MdSlider} from '@material/web/slider/slider';
 import {
   AssetAllocationStageConfig,
   AssetAllocationStageParticipantAnswer,
+  AssetAllocation,
   StageKind,
-  Stock,
   StockInfoStageConfig,
   generateSVGChart,
   generateDonutChartSVG,
   getStockTicker,
+  createAssetAllocation,
+  createAssetAllocationStageParticipantAnswer,
 } from '@deliberation-lab/utils';
 
 import {core} from '../../core/core';
@@ -67,12 +69,20 @@ export class AssetAllocationParticipantView extends MobxLitElement {
       return nothing;
     }
 
-    const answer =
+    let answer =
       this.participantAnswerService.getAssetAllocationParticipantAnswer(
         this.stage.id,
       );
-    // Ensure allocation is synced with answer allocation
-    this.allocation = {...answer.allocation};
+
+    // Initialize answer if it doesn't exist
+    if (!answer) {
+      answer = this.createInitialAnswer();
+      this.participantAnswerService.addAnswer(this.stage.id, answer);
+    }
+
+    // Sync state with answer allocation percentages
+    this.allocation.stockAPercentage = answer.allocation.stockA.percentage;
+    this.allocation.stockBPercentage = answer.allocation.stockB.percentage;
 
     return html`
       <div class="stage-container">
@@ -91,7 +101,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
               </md-filled-button>
             </div>
             <div class="chart-section">
-              ${this.renderDonutChart(this.allocation)}
+              ${this.renderDonutChart(answer.allocation)}
             </div>
             <div class="sliders-section">${this.renderSliders(answer)}</div>
           </div>
@@ -114,10 +124,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
     `;
   }
 
-  private renderDonutChart(allocation: {
-    stockAPercentage: number;
-    stockBPercentage: number;
-  }) {
+  private renderDonutChart(allocation: AssetAllocation) {
     if (!this.stocks.stockA || !this.stocks.stockB) return nothing;
 
     const stockTickers = {
@@ -301,7 +308,12 @@ export class AssetAllocationParticipantView extends MobxLitElement {
         this.participantAnswerService.getAssetAllocationParticipantAnswer(
           this.stage.id,
         );
-      answer.allocation = {...this.allocation};
+      answer!.allocation = createAssetAllocation(
+        this.stocks.stockA!,
+        this.stocks.stockB!,
+        this.allocation.stockAPercentage,
+        this.allocation.stockBPercentage,
+      );
     }
     this.requestUpdate();
   }
@@ -321,15 +333,23 @@ export class AssetAllocationParticipantView extends MobxLitElement {
   }
 
   private async saveAllocation() {
-    if (!this.stage) return;
+    if (!this.stage || !this.stocks.stockA || !this.stocks.stockB) return;
 
     // Close dialog immediately
     this.closeDialog();
 
+    // Create allocation with the new structure
+    const allocation = createAssetAllocation(
+      this.stocks.stockA,
+      this.stocks.stockB,
+      this.allocation.stockAPercentage,
+      this.allocation.stockBPercentage,
+    );
+
     // Update local answer
     this.participantAnswerService.updateAssetAllocation(
       this.stage.id,
-      {...this.allocation},
+      allocation,
       true,
     );
 
@@ -347,5 +367,16 @@ export class AssetAllocationParticipantView extends MobxLitElement {
     );
     if (stage?.kind !== StageKind.STOCKINFO) return null;
     return stage;
+  }
+
+  private createInitialAnswer(): AssetAllocationStageParticipantAnswer {
+    const allocation = createAssetAllocation(
+      this.stocks.stockA!,
+      this.stocks.stockB!,
+    );
+    return createAssetAllocationStageParticipantAnswer({
+      id: this.stage!.id,
+      allocation,
+    });
   }
 }

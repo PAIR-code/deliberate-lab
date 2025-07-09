@@ -58,29 +58,16 @@ export async function addParticipantAnswerToAssetAllocationStagePublicData(
 // PROMPT UTILITIES                                                          //
 // ************************************************************************* //
 
-/** Get stock names from asset allocation stage configuration. */
-function getStockNames(stage: AssetAllocationStageConfig): {
-  stockA: string;
-  stockB: string;
-} {
-  return {
-    stockA: stage.stockConfig.stockA.name,
-    stockB: stage.stockConfig.stockB.name,
-  };
-}
-
 export function getAssetAllocationSummaryText(
   stage: AssetAllocationStageConfig,
 ): string {
-  const stockNames = getStockNames(stage);
   const overview =
     '## Asset Allocation: User has $1,000 to allocate between two stocks:';
 
-  return `${overview}\n* ${stockNames.stockA}\n* ${stockNames.stockB}`;
+  return `${overview}\n* ${stage.stockConfig.stockA.name}\n* ${stage.stockConfig.stockB.name}`;
 }
 
 export function getAssetAllocationAnswersText(
-  stage: AssetAllocationStageConfig,
   participantAnswers: Array<{
     participantId: string;
     answer: AssetAllocationStageParticipantAnswer;
@@ -90,15 +77,13 @@ export function getAssetAllocationAnswersText(
     return '';
   }
 
-  const stockNames = getStockNames(stage);
-
   const answerSummaries = participantAnswers.map(({participantId, answer}) => {
     const allocation = answer.allocation;
     // Only include Participant IDs if there are multiple participants.
     const prefix =
       participantAnswers.length > 1 ? `Participant ${participantId}:\n` : '';
 
-    return `${prefix}${stockNames.stockA}: ${allocation.stockAPercentage}%, ${stockNames.stockB}: ${allocation.stockBPercentage}%`;
+    return `${prefix}${allocation.stockA.name}: ${allocation.stockA.percentage}%, ${allocation.stockB.name}: ${allocation.stockB.percentage}%`;
   });
 
   return `## Current Asset Allocation:\n${answerSummaries.join('\n')}`;

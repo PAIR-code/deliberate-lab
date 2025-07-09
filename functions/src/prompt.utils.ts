@@ -214,7 +214,7 @@ export async function getStageAnswersForPrompt(
           stage.id,
           participantId ? [participantId] : undefined,
         );
-      return getAssetAllocationAnswersText(stage, participantAnswers);
+      return getAssetAllocationAnswersText(participantAnswers);
     default:
       return '';
   }
