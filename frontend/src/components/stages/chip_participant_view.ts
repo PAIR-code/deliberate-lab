@@ -200,6 +200,11 @@ export class ChipView extends MobxLitElement {
   private renderSenderView() {
     const isOfferPending = this.getCurrentTransaction()?.offer;
     if (isOfferPending) {
+      // TODO: Check the participant's answer for the last chip
+      // assistance. If it was a 'delegate' and corresponds with the
+      // current round / turn marked in public data, then extract
+      // the model's explanation for the delegated offer and display that
+      // instead.
       return html`
         <div class="offer-panel">
           Waiting for others to respond to your offer...
@@ -505,6 +510,11 @@ export class ChipView extends MobxLitElement {
   ) {
     const offer = this.getCurrentTransaction()?.offer ?? null;
     if (this.isResponsePending()) {
+      // TODO: Check the participant's answer for the last chip
+      // assistance. If it was a 'delegate' and corresponds with the
+      // current round / turn marked in public data, then extract
+      // the model's explanation for the delegated response and display that
+      // instead.
       return html`<div class="offer-panel">
         Waiting for others to respond...
       </div>`;
