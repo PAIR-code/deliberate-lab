@@ -5,6 +5,7 @@ import {
   StageProgressConfigSchema,
   StageTextConfigSchema,
 } from './stage.validation';
+import {StockData} from './stockinfo_stage.validation';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -12,16 +13,6 @@ const strict = {additionalProperties: false} as const;
 // ************************************************************************* //
 // AssetAllocation stage validation                                          //
 // ************************************************************************* //
-
-/** Simple stock validation. */
-export const SimpleStockData = Type.Object(
-  {
-    id: Type.String({minLength: 1}),
-    name: Type.String({minLength: 1}),
-    description: Type.String(),
-  },
-  strict,
-);
 
 /** Asset allocation validation. */
 export const AssetAllocationData = Type.Object(
@@ -35,8 +26,8 @@ export const AssetAllocationData = Type.Object(
 /** Simple stock config validation. */
 export const SimpleStockConfigData = Type.Object(
   {
-    stockA: SimpleStockData,
-    stockB: SimpleStockData,
+    stockA: StockData,
+    stockB: StockData,
   },
   strict,
 );

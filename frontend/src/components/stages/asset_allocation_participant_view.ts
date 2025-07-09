@@ -71,7 +71,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
           stockB: stockInfoStage.stocks[1],
         };
       } else if (this.stage.simpleStockConfig) {
-        // Create Stock objects from SimpleStock data
+        // Create Stock objects from simple stock config
         this.stocks = {
           stockA: createStock({
             id: this.stage.simpleStockConfig.stockA.id,

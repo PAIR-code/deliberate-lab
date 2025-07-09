@@ -13,10 +13,10 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {
   AssetAllocationStageConfig,
-  SimpleStock,
+  Stock,
   StageKind,
   StockInfoStageConfig,
-  createSimpleStock,
+  createStock,
   createSimpleStockConfig,
 } from '@deliberation-lab/utils';
 
@@ -180,7 +180,7 @@ export class AssetAllocationEditor extends MobxLitElement {
             <h5>Stock A</h5>
             ${this.renderSimpleStockEditor(
               this.stage.simpleStockConfig?.stockA ||
-                createSimpleStock({name: 'Stock A'}),
+                createStock({name: 'Stock A'}),
               'A',
             )}
           </div>
@@ -189,7 +189,7 @@ export class AssetAllocationEditor extends MobxLitElement {
             <h5>Stock B</h5>
             ${this.renderSimpleStockEditor(
               this.stage.simpleStockConfig?.stockB ||
-                createSimpleStock({name: 'Stock B'}),
+                createStock({name: 'Stock B'}),
               'B',
             )}
           </div>
@@ -198,10 +198,10 @@ export class AssetAllocationEditor extends MobxLitElement {
     `;
   }
 
-  private renderSimpleStockEditor(stock: SimpleStock, stockLetter: 'A' | 'B') {
+  private renderSimpleStockEditor(stock: Stock, stockLetter: 'A' | 'B') {
     if (!this.stage || !this.stage.simpleStockConfig) return nothing;
 
-    const updateStock = (updates: Partial<SimpleStock>) => {
+    const updateStock = (updates: Partial<Stock>) => {
       if (
         !this.stage ||
         !this.experimentEditor.canEditStages ||
