@@ -30,10 +30,10 @@ export interface StockInfoCard {
 /** Stock configuration. */
 export interface Stock {
   id: string;
-  title: string;
+  name: string;
+  description: string;
   csvData: string; // CSV string with Date,Close columns
   parsedData: StockDataPoint[]; // Parsed data for calculations
-  description: string;
   customCards: StockInfoCard[];
 }
 
@@ -95,10 +95,10 @@ export function createStock(config: Partial<Stock> = {}): Stock {
 
   return {
     id: config.id ?? generateId(),
-    title: config.title ?? '',
+    name: config.name ?? '',
+    description: config.description ?? '',
     csvData,
     parsedData,
-    description: config.description ?? '',
     customCards: config.customCards ?? [],
   };
 }

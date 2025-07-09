@@ -415,7 +415,7 @@ export function generateStockInfoCards(
 export function getStockInfoSummaryText(stage: StockInfoStageConfig): string {
   const stockDisplay = stage.stocks.map((stock) => {
     const stockInfo = [
-      `## Stock Information: ${stock.title}`,
+      `## Stock Information: ${stock.name}`,
       stock.description,
     ];
 

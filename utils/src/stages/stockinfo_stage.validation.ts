@@ -37,10 +37,10 @@ export const StockInfoCardData = Type.Object(
 export const StockData = Type.Object(
   {
     id: Type.String({minLength: 1}),
-    title: Type.String({minLength: 1}),
+    name: Type.String({minLength: 1}),
+    description: Type.String(),
     csvData: Type.String(),
     parsedData: Type.Array(StockDataPointData),
-    description: Type.String(),
     customCards: Type.Array(StockInfoCardData),
   },
   strict,

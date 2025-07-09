@@ -394,7 +394,7 @@ export const STOCKINFO_MAIN_STAGE = createStockInfoStage({
   stocks: [
     createStock({
       id: 'nextech_stock',
-      title: 'NexTech Solutions (NXTS)',
+      name: 'NexTech Solutions (NXTS)',
       csvData: NEXTECH_CSV_DATA,
       description: `**NexTech Solutions** is a fictional technology company specializing in cloud computing, artificial intelligence, and enterprise software solutions.
 
@@ -425,7 +425,7 @@ export const STOCKINFO_MAIN_STAGE = createStockInfoStage({
     }),
     createStock({
       id: 'greenwave_stock',
-      title: 'GreenWave Energy (GRWV)',
+      name: 'GreenWave Energy (GRWV)',
       csvData: GREENWAVE_CSV_DATA,
       description: `**GreenWave Energy** is a fictional renewable energy company focused on solar, wind, and battery storage technologies.
 
@@ -456,7 +456,7 @@ export const STOCKINFO_MAIN_STAGE = createStockInfoStage({
     }),
     createStock({
       id: 'globalconnect_stock',
-      title: 'GlobalConnect Corp (GLBC)',
+      name: 'GlobalConnect Corp (GLBC)',
       csvData: GLOBALCONNECT_CSV_DATA,
       description: `**GlobalConnect Corp** is a fictional telecommunications and networking company providing connectivity solutions worldwide.
 

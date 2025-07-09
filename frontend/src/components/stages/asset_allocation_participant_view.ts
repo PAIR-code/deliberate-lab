@@ -75,12 +75,12 @@ export class AssetAllocationParticipantView extends MobxLitElement {
         this.stocks = {
           stockA: createStock({
             id: this.stage.simpleStockConfig.stockA.id,
-            title: this.stage.simpleStockConfig.stockA.name,
+            name: this.stage.simpleStockConfig.stockA.name,
             description: this.stage.simpleStockConfig.stockA.description,
           }),
           stockB: createStock({
             id: this.stage.simpleStockConfig.stockB.id,
-            title: this.stage.simpleStockConfig.stockB.name,
+            name: this.stage.simpleStockConfig.stockB.name,
             description: this.stage.simpleStockConfig.stockB.description,
           }),
         };
@@ -141,8 +141,8 @@ export class AssetAllocationParticipantView extends MobxLitElement {
     if (!this.stocks.stockA || !this.stocks.stockB) return nothing;
 
     const stockTickers = {
-      stockA: getStockTicker(this.stocks.stockA.title),
-      stockB: getStockTicker(this.stocks.stockB.title),
+      stockA: getStockTicker(this.stocks.stockA.name),
+      stockB: getStockTicker(this.stocks.stockB.name),
     };
     const svgContent = generateDonutChartSVG(allocation, stockTickers);
     return unsafeHTML(svgContent);
@@ -156,7 +156,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
         <div class="slider-group">
           <label for="stock-a-slider">
             <span class="legend-color stock-a"></span>
-            <span class="stock-name">${this.stocks.stockA?.title}</span>
+            <span class="stock-name">${this.stocks.stockA?.name}</span>
             <span class="percentage-display"
               >${this.allocation.stockAPercentage}%</span
             >
@@ -177,7 +177,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
         <div class="slider-group">
           <label for="stock-b-slider">
             <span class="legend-color stock-b"></span>
-            <span class="stock-name">${this.stocks.stockB?.title}</span>
+            <span class="stock-name">${this.stocks.stockB?.name}</span>
             <span class="percentage-display"
               >${this.allocation.stockBPercentage}%</span
             >
@@ -221,23 +221,23 @@ export class AssetAllocationParticipantView extends MobxLitElement {
             ? html`<md-filled-tonal-button
                 @click=${() => (this.selectedStockIndex = 0)}
               >
-                ${this.stocks.stockA.title}
+                ${this.stocks.stockA.name}
               </md-filled-tonal-button>`
             : html`<md-outlined-button
                 @click=${() => (this.selectedStockIndex = 0)}
               >
-                ${this.stocks.stockA.title}
+                ${this.stocks.stockA.name}
               </md-outlined-button>`}
           ${this.selectedStockIndex === 1
             ? html`<md-filled-tonal-button
                 @click=${() => (this.selectedStockIndex = 1)}
               >
-                ${this.stocks.stockB.title}
+                ${this.stocks.stockB.name}
               </md-filled-tonal-button>`
             : html`<md-outlined-button
                 @click=${() => (this.selectedStockIndex = 1)}
               >
-                ${this.stocks.stockB.title}
+                ${this.stocks.stockB.name}
               </md-outlined-button>`}
         </div>
 
@@ -249,7 +249,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
             : nothing}
 
           <div class="stock-description ${chartSvg ? '' : 'simple'}">
-            <h4>${selectedStock.title}</h4>
+            <h4>${selectedStock.name}</h4>
             <div>
               ${unsafeHTML(convertMarkdownToHTML(selectedStock.description))}
             </div>
@@ -267,10 +267,10 @@ export class AssetAllocationParticipantView extends MobxLitElement {
           <p>You have allocated:</p>
           <ul>
             <li>
-              ${this.stocks.stockA?.title}: ${this.allocation.stockAPercentage}%
+              ${this.stocks.stockA?.name}: ${this.allocation.stockAPercentage}%
             </li>
             <li>
-              ${this.stocks.stockB?.title}: ${this.allocation.stockBPercentage}%
+              ${this.stocks.stockB?.name}: ${this.allocation.stockBPercentage}%
             </li>
           </ul>
           <p>Are you sure you want to confirm this allocation?</p>
