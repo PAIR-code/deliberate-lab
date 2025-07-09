@@ -17,6 +17,7 @@ import {CohortService} from '../../services/cohort.service';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 import {getParticipantInlineDisplay} from '../../shared/participant.utils';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import {
   ChipAssistanceConfig,
   ChipAssistanceMode,
@@ -833,12 +834,35 @@ export class ChipView extends MobxLitElement {
           Delegate decision to agent
         </pr-button>
       </div>
-      ${this.getAssistanceMessage()}
+      ${this.getDelegateMessage()}
     `;
+  }
+  private getDelegateMessage() {
+    return this.answer?.currentAssistance?.message ?? '';
   }
 
   private getAssistanceMessage() {
-    return this.answer?.currentAssistance?.message ?? '';
+    const message = this.answer?.currentAssistance?.message ?? '';
+    const type = this.answer?.currentAssistance?.type;
+    let proposalLine = '<b>💡 Advisor says:</b>';
+  
+    if (type === ChipAssistanceType.OFFER) {
+      const proposedOffer = this.answer?.currentAssistance?.proposedOffer;
+      if (proposedOffer) {
+        proposalLine += ` give ${this.describeChipMap(proposedOffer.sell)} to get ${this.describeChipMap(proposedOffer.buy)}.`;
+      }
+    } else if (type === ChipAssistanceType.RESPONSE) {
+      const proposedResponse = this.answer?.currentAssistance?.proposedResponse;
+      if (proposedResponse !== undefined && proposedResponse !== null) {
+        const responseStr = proposedResponse ? 'Accept' : 'Reject';
+        proposalLine += ` ${responseStr} the offer.`;
+      }
+    }
+  
+    return html`
+      <div>${unsafeHTML(proposalLine)}</div>
+      <div>${message}</div>
+    `;
   }
 
   private renderAdvisorButton(disabled = false) {
@@ -883,19 +907,25 @@ export class ChipView extends MobxLitElement {
     `;
   }
 
+  private describeChipMap(chipMap: Record<string, number>): string {
+    return Object.entries(chipMap)
+      .map(([chip, quantity]) => `${quantity} ${chip} chip${quantity > 1 ? 's' : ''}`)
+      .join(', ');
+  }  
+
   private renderCoachOffer() {
     if (this.answer?.currentAssistance?.proposedTime) {
       const proposedOffer =
         this.answer?.currentAssistance?.type === ChipAssistanceType.OFFER
           ? this.answer.currentAssistance.proposedOffer
           : null;
-      // TODO: Convert object into description
+      // Convert object into description
       const proposal = proposedOffer
-        ? `You proposed giving ${JSON.stringify(proposedOffer.sell)} to get ${JSON.stringify(proposedOffer.buy)}`
+        ? html`<b>Initial Proposal:</b> to give ${this.describeChipMap(proposedOffer.sell)} to get ${this.describeChipMap(proposedOffer.buy)}`
         : '';
       return html`
         <div>${proposal}</div>
-        <div>${this.getAssistanceMessage()}</div>
+        <div><b>Feedback:</b> ${this.getAssistanceMessage()}</div>
         ${this.renderManualOffer(this.sendOffer)}
       `;
     }
@@ -930,13 +960,11 @@ export class ChipView extends MobxLitElement {
           : null;
       const proposal =
         proposedResponse !== null
-          ? proposedResponse
-            ? `You proposed accepting the offer`
-            : `You proposed rejecting the offer`
+          ? html`<b>Initial Response:</b> ${proposedResponse ? 'Accept' : 'Reject'} the offer`
           : '';
       return html`
         <div>${proposal}</div>
-        <div>${this.getAssistanceMessage()}</div>
+        <div><b>Feedback:</b> ${this.getAssistanceMessage()}</div>
         <div>Now, submit your final response to the offer:</div>
         ${this.renderManualResponse(this.acceptOffer, this.rejectOffer)}
       `;

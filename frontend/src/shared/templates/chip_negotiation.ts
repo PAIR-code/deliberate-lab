@@ -312,7 +312,7 @@ const CHIP_INFO_STAGE_OVERVIEW3 = createInfoStage({
   name: 'Instructions: chip valuations 2',
   infoLines: [
     'The following table is shown to you during the game. It provides the number of chips everyone has as well as a reminder of your own valuations.',
-    '![Example of chip count table](https://i.imgur.com/ImUM14D.png)',
+    '![Example of chip count table](https://imgur.com/a/rxi1khQ)',
   ],
   progress: createStageProgressConfig({
     showParticipantProgress: false,
