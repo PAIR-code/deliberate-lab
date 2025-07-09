@@ -321,6 +321,9 @@ export class ChipView extends MobxLitElement {
 
     const isOfferPending = this.getCurrentTransaction()?.offer;
 
+    // WARNING: Temporary hack converts chip type IDs to uppercase because
+    // we expect that for the "chip negotiation template" and the model
+    // sometimes returns lowercase IDs in the proposal
     return html`
       <chip-offer-form
         .stage=${this.stage}
@@ -329,9 +332,9 @@ export class ChipView extends MobxLitElement {
         .sendOffer=${sendOffer}
         .isPending=${isLoading || isOfferPending}
         .buttonText=${buttonText}
-        selectedBuyChip=${selectedBuyChip}
+        selectedBuyChip=${selectedBuyChip.toUpperCase()}
         buyChipAmount=${buyChipAmount}
-        selectedSellChip=${selectedSellChip}
+        selectedSellChip=${selectedSellChip.toUpperCase()}
         sellChipAmount=${sellChipAmount}
       >
       </chip-offer-form>
