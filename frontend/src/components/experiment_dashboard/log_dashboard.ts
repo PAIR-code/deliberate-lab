@@ -8,7 +8,12 @@ import {customElement, property} from 'lit/decorators.js';
 import {core} from '../../core/core';
 import {ExperimentManager} from '../../services/experiment.manager';
 
-import {LogEntry, LogEntryType, ModelLogEntry} from '@deliberation-lab/utils';
+import {
+  LogEntry,
+  LogEntryType,
+  ModelLogEntry,
+  ModelResponseStatus,
+} from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToISO} from '../../shared/utils';
 
 import {styles} from './log_dashboard.scss';
@@ -71,7 +76,11 @@ export class Component extends MobxLitElement {
     };
 
     return html`
-      <div class="chip secondary">${status}</div>
+      <div
+        class="chip ${status === ModelResponseStatus.OK ? 'success' : 'error'}"
+      >
+        ${status}
+      </div>
       <div>
         Start timestamp:
         ${log.queryTimestamp
