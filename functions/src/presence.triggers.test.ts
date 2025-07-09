@@ -44,13 +44,8 @@ describe('mirrorPresenceToFirestore', () => {
     child: jest.Mock<{set: jest.Mock}>;
   }
 
-  interface MockSnapshot {
-    ref: {parent: MockParent};
-    val: () => {connected: boolean; last_changed: number};
-  }
-
-  let beforeSnap: MockSnapshot;
-  let afterSnap: MockSnapshot;
+  let beforeSnap: DataSnapshot;
+  let afterSnap: DataSnapshot;
   let change: {before: typeof beforeSnap; after: typeof afterSnap};
 
   beforeEach(() => {
@@ -64,14 +59,14 @@ describe('mirrorPresenceToFirestore', () => {
       child: jest.fn().mockReturnValue({set: jest.fn()}),
     };
 
+    // @ts-expect-error Type is not really compatible with DataSnapshot, but this is just a mock
     afterSnap = {
       ref: {parent: mockParent},
       val: () => ({connected: true, last_changed: 1234567890}),
-    } as MockSnapshot;
+    } as DataSnapshot;
 
-    beforeSnap = afterSnap; // before is not actually used
+    beforeSnap = afterSnap as DataSnapshot; // before is not actually used
 
-    // @ts-expect-error Change type is not compatible with DataSnapshot, but this is just a mock
     change = {before: beforeSnap, after: afterSnap} as Change<DataSnapshot>;
   });
 
@@ -84,6 +79,7 @@ describe('mirrorPresenceToFirestore', () => {
       data: jest.fn(() => ({connected: true})),
     });
 
+    // @ts-expect-error mocks don't completely duplicate the real types
     await wrapped(change, {
       params: {
         experimentId: 'exp123',
@@ -114,6 +110,7 @@ describe('mirrorPresenceToFirestore', () => {
       data: jest.fn(() => mockFirestoreProfile),
     });
 
+    // @ts-expect-error mocks don't completely duplicate the real types
     await wrapped(change, {
       params: {
         experimentId: 'exp123',
