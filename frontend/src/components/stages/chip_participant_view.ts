@@ -18,6 +18,7 @@ import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 import {getParticipantInlineDisplay} from '../../shared/participant.utils';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
+import { ChipAssistanceMove } from '@deliberation-lab/utils';
 import {
   ChipAssistanceConfig,
   ChipAssistanceMode,
