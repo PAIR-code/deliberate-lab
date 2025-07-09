@@ -7,6 +7,7 @@ import '../participant_view/participant_view';
 import './cohort_editor';
 import './cohort_settings_dialog';
 import './cohort_list';
+import './log_dashboard';
 import './participant_stats';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -76,6 +77,9 @@ export class Component extends MobxLitElement {
     return html`
       ${this.renderParticipantStatsPanel()}
       ${this.renderParticipantPreviewPanel()}
+      ${this.experimentManager.showLogs
+        ? html`<log-dashboard></log-dashboard>`
+        : nothing}
     `;
   }
 
@@ -105,7 +109,10 @@ export class Component extends MobxLitElement {
   }
 
   private renderParticipantStatsPanel() {
-    if (!this.experimentManager.showParticipantStats) {
+    if (
+      !this.experimentManager.showParticipantStats ||
+      this.experimentManager.showLogs
+    ) {
       return nothing;
     }
 
@@ -139,7 +146,10 @@ export class Component extends MobxLitElement {
   }
 
   private renderParticipantPreviewPanel() {
-    if (!this.experimentManager.showParticipantPreview) {
+    if (
+      !this.experimentManager.showParticipantPreview ||
+      this.experimentManager.showLogs
+    ) {
       return nothing;
     }
 
@@ -239,6 +249,16 @@ export class Component extends MobxLitElement {
           ${renderToggle()}
         </div>
         <div class="right">
+          <pr-button
+            color="tertiary"
+            variant="default"
+            size="small"
+            @click=${() => {
+              this.experimentManager.setShowLogs(true);
+            }}
+          >
+            Open log dashboard
+          </pr-button>
           ${this.renderDebugModeButton()} ${this.renderTransferMenu()}
         </div>
       </div>
