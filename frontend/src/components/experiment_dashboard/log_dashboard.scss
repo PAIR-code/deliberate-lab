@@ -32,7 +32,8 @@
 }
 
 .main-wrapper {
-  @include common.flex-column;
+  display: flex;
+  flex-direction: column-reverse;
   flex-grow: 1;
   overflow: auto;
 }
