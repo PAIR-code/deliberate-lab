@@ -1,8 +1,4 @@
-import {
-  AssetAllocation,
-  AssetAllocationStageConfig,
-} from './asset_allocation_stage';
-import {StockInfoStageConfig} from './stockinfo_stage';
+import {AssetAllocation} from './asset_allocation_stage';
 
 // ************************************************************************* //
 // DONUT CHART UTILITIES                                                     //
@@ -51,7 +47,6 @@ export function calculateDonutChartConfig(): DonutChartConfig {
 
 export function generateDonutChartSVG(
   allocation: AssetAllocation,
-  _stockNames: {stockA: string; stockB: string},
   stockTickers: {stockA: string; stockB: string},
 ): string {
   const config = calculateDonutChartConfig();
@@ -158,32 +153,4 @@ export function getStockTicker(stockName: string): string {
 
   // If no ticker found, return the full name
   return stockName;
-}
-
-export function getStockNames(
-  assetAllocationStage: AssetAllocationStageConfig,
-  stockInfoStage: StockInfoStageConfig | null,
-): {stockA: string; stockB: string} {
-  if (stockInfoStage && stockInfoStage.stocks.length >= 2) {
-    return {
-      stockA: stockInfoStage.stocks[0].title,
-      stockB: stockInfoStage.stocks[1].title,
-    };
-  }
-
-  return {
-    stockA: assetAllocationStage.simpleStockConfig!.stockA.name,
-    stockB: assetAllocationStage.simpleStockConfig!.stockB.name,
-  };
-}
-
-export function getStockTickers(
-  assetAllocationStage: AssetAllocationStageConfig,
-  stockInfoStage: StockInfoStageConfig | null,
-): {stockA: string; stockB: string} {
-  const names = getStockNames(assetAllocationStage, stockInfoStage);
-  return {
-    stockA: getStockTicker(names.stockA),
-    stockB: getStockTicker(names.stockB),
-  };
 }
