@@ -6,7 +6,7 @@
   @include common.flex-column;
   flex-grow: 1;
   height: calc(100vh - common.$header-height);
-  overflow: auto;
+  overflow: hidden;
   width: 100%;
 }
 
@@ -29,6 +29,12 @@
     @include common.flex-row-align-center;
     gap: common.$spacing-medium;
   }
+}
+
+.main-wrapper {
+  @include common.flex-column;
+  flex-grow: 1;
+  overflow: auto;
 }
 
 .empty-message {
