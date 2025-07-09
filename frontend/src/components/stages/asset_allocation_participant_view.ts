@@ -25,7 +25,6 @@ import {
   generateSVGChart,
   generateDonutChartSVG,
   getStockTicker,
-  createStock,
 } from '@deliberation-lab/utils';
 
 import {core} from '../../core/core';
@@ -52,39 +51,20 @@ export class AssetAllocationParticipantView extends MobxLitElement {
 
   @state() private selectedStockIndex = 0; // 0 for Stock A, 1 for Stock B
   @state() private allocation = {stockAPercentage: 50, stockBPercentage: 50};
-  @state() private stocks = {
-    stockA: null as Stock | null,
-    stockB: null as Stock | null,
-  };
+
+  private get stocks() {
+    if (!this.stage) {
+      return {stockA: null, stockB: null};
+    }
+    return {
+      stockA: this.stage.stockConfig.stockA,
+      stockB: this.stage.stockConfig.stockB,
+    };
+  }
 
   override render() {
     if (!this.stage || !this.participantService.profile) {
       return nothing;
-    }
-
-    // Initialize stocks if needed
-    if (!this.stocks.stockA && !this.stocks.stockB) {
-      const stockInfoStage = this.getStockInfoStage();
-      if (stockInfoStage && stockInfoStage.stocks.length >= 2) {
-        this.stocks = {
-          stockA: stockInfoStage.stocks[0],
-          stockB: stockInfoStage.stocks[1],
-        };
-      } else if (this.stage.simpleStockConfig) {
-        // Create Stock objects from simple stock config
-        this.stocks = {
-          stockA: createStock({
-            id: this.stage.simpleStockConfig.stockA.id,
-            name: this.stage.simpleStockConfig.stockA.name,
-            description: this.stage.simpleStockConfig.stockA.description,
-          }),
-          stockB: createStock({
-            id: this.stage.simpleStockConfig.stockB.id,
-            name: this.stage.simpleStockConfig.stockB.name,
-            description: this.stage.simpleStockConfig.stockB.description,
-          }),
-        };
-      }
     }
 
     const answer =
@@ -201,12 +181,13 @@ export class AssetAllocationParticipantView extends MobxLitElement {
   private renderStockInfo() {
     if (!this.stocks.stockA || !this.stocks.stockB) return nothing;
 
-    // Get the stockInfoStage internally
-    const stockInfoStage = this.getStockInfoStage();
-
     const selectedStock =
       this.selectedStockIndex === 0 ? this.stocks.stockA : this.stocks.stockB;
 
+    // Get the stockInfoStage only if referenced
+    const stockInfoStage = this.stage?.stockConfig.stockInfoStageId
+      ? this.getStockInfoStage()
+      : null;
     const chartSvg = stockInfoStage
       ? generateSVGChart(selectedStock.parsedData, {
           isInvestmentGrowth: stockInfoStage.showInvestmentGrowth,
@@ -362,7 +343,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
 
   private getStockInfoStage(): StockInfoStageConfig | null {
     const stage = this.experimentService.getStage(
-      this.stage?.stockInfoStageConfig?.id ?? '',
+      this.stage?.stockConfig.stockInfoStageId ?? '',
     );
     if (stage?.kind !== StageKind.STOCKINFO) return null;
     return stage;

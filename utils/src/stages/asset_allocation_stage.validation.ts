@@ -23,21 +23,12 @@ export const AssetAllocationData = Type.Object(
   strict,
 );
 
-/** Simple stock config validation. */
-export const SimpleStockConfigData = Type.Object(
-  {
-    stockA: StockData,
-    stockB: StockData,
-  },
-  strict,
-);
-
-/** AssetAllocation StockInfo config validation. */
+/** AssetAllocation stock config validation. */
 export const AssetAllocationStockInfoConfigData = Type.Object(
   {
-    id: Type.String({minLength: 1}),
-    stockAId: Type.String({minLength: 1}),
-    stockBId: Type.String({minLength: 1}),
+    stockInfoStageId: Type.Optional(Type.String({minLength: 1})),
+    stockA: StockData,
+    stockB: StockData,
   },
   strict,
 );
@@ -50,11 +41,7 @@ export const AssetAllocationStageConfigData = Type.Object(
     name: Type.String({minLength: 1}),
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,
-    stockInfoStageConfig: Type.Union([
-      AssetAllocationStockInfoConfigData,
-      Type.Null(),
-    ]),
-    simpleStockConfig: Type.Union([SimpleStockConfigData, Type.Null()]),
+    stockConfig: AssetAllocationStockInfoConfigData,
   },
   strict,
 );

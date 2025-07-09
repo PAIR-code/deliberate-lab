@@ -14,30 +14,23 @@ import {Stock, createStock} from './stockinfo_stage';
 // TYPES                                                                     //
 // ************************************************************************* //
 
-/** Simple stock configuration for asset allocation. */
-export interface SimpleStockConfig {
-  stockA: Stock;
-  stockB: Stock;
-}
-
 /** Asset allocation configuration. */
 export interface AssetAllocation {
   stockAPercentage: number; // 0-100
   stockBPercentage: number; // 0-100
 }
 
-/** StockInfo stage reference for asset allocation. */
+/** Stock configuration for asset allocation. */
 export interface AssetAllocationStockInfoConfig {
-  id: string;
-  stockAId: string;
-  stockBId: string;
+  stockInfoStageId?: string; // Optional reference to StockInfo stage
+  stockA: Stock;
+  stockB: Stock;
 }
 
 /** AssetAllocation stage config. */
 export interface AssetAllocationStageConfig extends BaseStageConfig {
   kind: StageKind.ASSET_ALLOCATION;
-  stockInfoStageConfig: AssetAllocationStockInfoConfig | null; // Reference to StockInfo stage with stock IDs
-  simpleStockConfig: SimpleStockConfig | null; // Simple stock configuration when not using StockInfo stage
+  stockConfig: AssetAllocationStockInfoConfig;
 }
 
 /** AssetAllocation stage participant answer. */
@@ -59,11 +52,12 @@ export interface AssetAllocationStagePublicData extends BaseStagePublicData {
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
 
-/** Create simple stock config with both stocks. */
-export function createSimpleStockConfig(
-  config: Partial<SimpleStockConfig> = {},
-): SimpleStockConfig {
+/** Create stock config for asset allocation. */
+export function createAssetAllocationStockInfoConfig(
+  config: Partial<AssetAllocationStockInfoConfig> = {},
+): AssetAllocationStockInfoConfig {
   return {
+    stockInfoStageId: config.stockInfoStageId,
     stockA: config.stockA ?? createStock({name: 'Stock A'}),
     stockB: config.stockB ?? createStock({name: 'Stock B'}),
   };
@@ -114,10 +108,7 @@ export function createAssetAllocationStage(
         waitForAllParticipants: false,
         showParticipantProgress: true,
       }),
-    stockInfoStageConfig: config.stockInfoStageConfig ?? null,
-    simpleStockConfig:
-      config.simpleStockConfig ??
-      (config.stockInfoStageConfig ? null : createSimpleStockConfig()),
+    stockConfig: config.stockConfig ?? createAssetAllocationStockInfoConfig(),
   };
 }
 

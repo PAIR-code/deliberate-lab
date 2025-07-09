@@ -177,10 +177,7 @@ export async function getStageDisplayForPrompt(
     case StageKind.STOCKINFO:
       return getStockInfoSummaryText(stage);
     case StageKind.ASSET_ALLOCATION:
-      const assetAllocationDisplay = await getAssetAllocationSummaryText(
-        experimentId,
-        stage,
-      );
+      const assetAllocationDisplay = getAssetAllocationSummaryText(stage);
 
       if (includeAnswers) {
         const assetAllocationAnswers = await getStageAnswersForPrompt(
@@ -217,11 +214,7 @@ export async function getStageAnswersForPrompt(
           stage.id,
           participantId ? [participantId] : undefined,
         );
-      return await getAssetAllocationAnswersText(
-        experimentId,
-        stage,
-        participantAnswers,
-      );
+      return getAssetAllocationAnswersText(stage, participantAnswers);
     default:
       return '';
   }
