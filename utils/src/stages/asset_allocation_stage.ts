@@ -14,10 +14,17 @@ import {Stock, createStock} from './stockinfo_stage';
 // TYPES                                                                     //
 // ************************************************************************* //
 
+/** Stock allocation details. */
+export interface StockAllocation {
+  id: string;
+  name: string;
+  percentage: number; // 0-100
+}
+
 /** Asset allocation configuration. */
 export interface AssetAllocation {
-  stockAPercentage: number; // 0-100
-  stockBPercentage: number; // 0-100
+  stockA: StockAllocation;
+  stockB: StockAllocation;
 }
 
 /** Stock configuration for asset allocation. */
@@ -65,23 +72,39 @@ export function createAssetAllocationStockInfoConfig(
 
 /** Create asset allocation. */
 export function createAssetAllocation(
-  config: Partial<AssetAllocation> = {},
+  stockA: Stock,
+  stockB: Stock,
+  stockAPercentage: number = 50,
+  stockBPercentage: number = 50,
 ): AssetAllocation {
-  const stockAPercentage = config.stockAPercentage ?? 50;
-  const stockBPercentage = config.stockBPercentage ?? 50;
-
   // Ensure percentages add up to 100
   const total = stockAPercentage + stockBPercentage;
   if (total !== 100) {
     return {
-      stockAPercentage: 50,
-      stockBPercentage: 50,
+      stockA: {
+        id: stockA.id,
+        name: stockA.name,
+        percentage: 50,
+      },
+      stockB: {
+        id: stockB.id,
+        name: stockB.name,
+        percentage: 50,
+      },
     };
   }
 
   return {
-    stockAPercentage,
-    stockBPercentage,
+    stockA: {
+      id: stockA.id,
+      name: stockA.name,
+      percentage: stockAPercentage,
+    },
+    stockB: {
+      id: stockB.id,
+      name: stockB.name,
+      percentage: stockBPercentage,
+    },
   };
 }
 
@@ -114,12 +137,14 @@ export function createAssetAllocationStage(
 
 /** Create AssetAllocation participant answer. */
 export function createAssetAllocationStageParticipantAnswer(
-  config: Partial<AssetAllocationStageParticipantAnswer> = {},
+  config: Partial<AssetAllocationStageParticipantAnswer> & {
+    allocation: AssetAllocation;
+  },
 ): AssetAllocationStageParticipantAnswer {
   return {
     id: config.id ?? generateId(),
     kind: StageKind.ASSET_ALLOCATION,
-    allocation: config.allocation ?? createAssetAllocation(),
+    allocation: config.allocation,
     confirmed: config.confirmed ?? false,
     timestamp: config.timestamp ?? Timestamp.now(),
   };

@@ -20,17 +20,12 @@ import {
   StageParticipantAnswer,
   StockInfoStageParticipantAnswer,
   SurveyAnswer,
-  SurveyStageConfig,
-  SurveyStageParticipantAnswer,
-  SurveyQuestionKind,
   createAssetAllocationStageParticipantAnswer,
-  createChipOffer,
   createComprehensionStageParticipantAnswer,
   createRankingStageParticipantAnswer,
   createStockInfoStageParticipantAnswer,
   createSurveyPerParticipantStageParticipantAnswer,
   createSurveyStageParticipantAnswer,
-  ChipOffer,
 } from '@deliberation-lab/utils';
 
 interface ServiceProvider {
@@ -108,21 +103,10 @@ export class ParticipantAnswerService extends Service {
 
   getAssetAllocationParticipantAnswer(
     stageId: string,
-  ): AssetAllocationStageParticipantAnswer {
-    const answer = this.answerMap[stageId] as
-      | AssetAllocationStageParticipantAnswer
-      | undefined;
-
-    if (answer && answer.kind === StageKind.ASSET_ALLOCATION) {
-      return answer;
-    }
-
-    const newAnswer = createAssetAllocationStageParticipantAnswer({
-      id: stageId,
-    });
-
-    this.addAnswer(stageId, newAnswer);
-    return newAnswer;
+  ): AssetAllocationStageParticipantAnswer | null {
+    const answer = this.answerMap[stageId];
+    if (!answer || answer.kind !== StageKind.ASSET_ALLOCATION) return null;
+    return answer as AssetAllocationStageParticipantAnswer;
   }
 
   setIds(experimentId: string, participantId: string) {
@@ -317,7 +301,11 @@ export class ParticipantAnswerService extends Service {
   ) {
     let answer = this.answerMap[stageId];
     if (!answer || answer.kind !== StageKind.ASSET_ALLOCATION) {
-      answer = createAssetAllocationStageParticipantAnswer({id: stageId});
+      // If no answer exists, create one with the provided allocation
+      answer = createAssetAllocationStageParticipantAnswer({
+        id: stageId,
+        allocation: allocation,
+      });
     }
 
     answer.allocation = allocation;

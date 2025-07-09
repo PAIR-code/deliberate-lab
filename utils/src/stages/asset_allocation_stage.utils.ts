@@ -53,16 +53,16 @@ export function generateDonutChartSVG(
   const circumference = 2 * Math.PI * config.radius;
 
   // Calculate segment lengths
-  const stockALength = (allocation.stockAPercentage / 100) * circumference;
-  const stockBLength = (allocation.stockBPercentage / 100) * circumference;
+  const stockALength = (allocation.stockA.percentage / 100) * circumference;
+  const stockBLength = (allocation.stockB.percentage / 100) * circumference;
 
   // Calculate label positions (adjusted for 90 degree rotation)
   const stockAAngleRadians =
-    Math.PI / 2 + (allocation.stockAPercentage / 200) * 2 * Math.PI;
+    Math.PI / 2 + (allocation.stockA.percentage / 200) * 2 * Math.PI;
   const stockAEndAngle =
-    Math.PI / 2 + (allocation.stockAPercentage / 100) * 2 * Math.PI;
+    Math.PI / 2 + (allocation.stockA.percentage / 100) * 2 * Math.PI;
   const stockBAngleRadians =
-    stockAEndAngle + (allocation.stockBPercentage / 200) * 2 * Math.PI;
+    stockAEndAngle + (allocation.stockB.percentage / 200) * 2 * Math.PI;
 
   const stockAX =
     config.centerX + config.labelRadius * Math.cos(stockAAngleRadians);
@@ -121,7 +121,7 @@ export function generateDonutChartSVG(
         font-size="${config.fontSize}"
         font-weight="600"
       >
-        ${stockTickers.stockA}: ${allocation.stockAPercentage}%
+        ${stockTickers.stockA}: ${allocation.stockA.percentage}%
       </text>
       
       <!-- Stock B label -->
@@ -134,7 +134,7 @@ export function generateDonutChartSVG(
         font-size="${config.fontSize}"
         font-weight="600"
       >
-        ${stockTickers.stockB}: ${allocation.stockBPercentage}%
+        ${stockTickers.stockB}: ${allocation.stockB.percentage}%
       </text>
     </svg>
   `;
