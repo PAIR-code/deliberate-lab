@@ -176,7 +176,7 @@ export async function getAgentChatMessage(
   const readyToEndChat = response.parsedResponse[structured.readyToEndField];
 
   // Only if agent participant is ready to end chat
-  if (readyToEndChat && userProfile.type === UserType.PARTICIPANT) {
+  if (readyToEndChat && user.type === UserType.PARTICIPANT) {
     // Call ready to end chat update to stage public data
     updateParticipantReadyToEndChat(experimentId, stageId, user.privateId);
   }
