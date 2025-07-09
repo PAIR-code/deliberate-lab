@@ -244,6 +244,8 @@ export class ChipView extends MobxLitElement {
     modes: ChipAssistanceMode[],
     sendOffer: () => void,
   ) {
+    // If the user already selected an assistance mode, render
+    // that specific mode
     switch (this.answer?.currentAssistance?.selectedMode) {
       case ChipAssistanceMode.NONE:
         return this.renderManualOffer(sendOffer);
@@ -257,57 +259,62 @@ export class ChipView extends MobxLitElement {
         break;
     }
 
-    const renderManual = () => {
-      return html`
-        <pr-button
-          color="secondary"
-          variant="tonal"
-          ?disabled=${this.isAssistanceLoading()}
-          ?loading=${this.isAssistanceNoneLoading}
-          @click=${async () => {
-            this.isAssistanceNoneLoading = true;
-            await this.participantService.selectChipAssistanceMode(
-              this.stage?.id ?? '',
-              'none',
-            );
-            this.isAssistanceNoneLoading = false;
-          }}
-        >
-          Manually submit my own offer
-        </pr-button>
-      `;
-    };
-
-    const renderCoach = () => {
-      return html`
-        <pr-button
-          color="secondary"
-          variant="tonal"
-          ?disabled=${this.isAssistanceLoading()}
-          ?loading=${this.isAssistanceCoachLoading}
-          @click=${async () => {
-            this.isAssistanceCoachLoading = true;
-            await this.participantService.selectChipAssistanceMode(
-              this.stage?.id ?? '',
-              'coach',
-            );
-            this.isAssistanceCoachLoading = false;
-          }}
-        >
-          Give me feedback on my proposed offer
-        </pr-button>
-      `;
-    };
-
+    // Otherwise, render buttons to select available assistance modes
     return html`
-      ${modes.includes(ChipAssistanceMode.NONE) ? renderManual() : nothing}
+      ${modes.includes(ChipAssistanceMode.NONE)
+        ? this.renderSelectManualOfferButton()
+        : nothing}
       ${modes.includes(ChipAssistanceMode.DELEGATE)
         ? this.renderDelegateButton()
         : nothing}
       ${modes.includes(ChipAssistanceMode.ADVISOR)
         ? this.renderAdvisorButton()
         : nothing}
-      ${modes.includes(ChipAssistanceMode.COACH) ? renderCoach() : nothing}
+      ${modes.includes(ChipAssistanceMode.COACH)
+        ? this.renderSelectCoachOfferButton()
+        : nothing}
+    `;
+  }
+
+  private renderSelectManualOfferButton() {
+    return html`
+      <pr-button
+        color="secondary"
+        variant="tonal"
+        ?disabled=${this.isAssistanceLoading()}
+        ?loading=${this.isAssistanceNoneLoading}
+        @click=${async () => {
+          this.isAssistanceNoneLoading = true;
+          await this.participantService.selectChipAssistanceMode(
+            this.stage?.id ?? '',
+            'none',
+          );
+          this.isAssistanceNoneLoading = false;
+        }}
+      >
+        Manually submit my own offer
+      </pr-button>
+    `;
+  }
+
+  private renderSelectCoachOfferButton() {
+    return html`
+      <pr-button
+        color="secondary"
+        variant="tonal"
+        ?disabled=${this.isAssistanceLoading()}
+        ?loading=${this.isAssistanceCoachLoading}
+        @click=${async () => {
+          this.isAssistanceCoachLoading = true;
+          await this.participantService.selectChipAssistanceMode(
+            this.stage?.id ?? '',
+            'coach',
+          );
+          this.isAssistanceCoachLoading = false;
+        }}
+      >
+        Give me feedback on my proposed offer
+      </pr-button>
     `;
   }
 
@@ -400,6 +407,7 @@ export class ChipView extends MobxLitElement {
       <div class="number-input">
         <input
           .disabled=${this.isOfferPending()}
+          default="4"
           type="number"
           min="0"
           .value=${value}
@@ -421,7 +429,9 @@ export class ChipView extends MobxLitElement {
         <option value=""></option>
         ${this.stage?.chips.map(
           (chip) =>
-            html`<option value=${chip.id}>${chip.avatar} ${chip.name}</option>`,
+            html`<option value=${chip.id} ?selected=${chip.id === 'RED'}>
+              ${chip.avatar} ${chip.name}
+            </option>`,
         )}
       </select>
     `;
@@ -511,6 +521,8 @@ export class ChipView extends MobxLitElement {
     acceptOffer: () => void,
     rejectOffer: () => void,
   ) {
+    // If the user already selected an assistance mode, render
+    // that specific mode
     switch (this.answer?.currentAssistance?.selectedMode) {
       case ChipAssistanceMode.NONE:
         return this.renderManualResponse(acceptOffer, rejectOffer);
@@ -524,57 +536,62 @@ export class ChipView extends MobxLitElement {
         break;
     }
 
-    const renderManual = () => {
-      return html`
-        <pr-button
-          color="secondary"
-          variant="tonal"
-          ?disabled=${this.isAssistanceLoading()}
-          ?loading=${this.isAssistanceNoneLoading}
-          @click=${async () => {
-            this.isAssistanceNoneLoading = true;
-            await this.participantService.selectChipAssistanceMode(
-              this.stage?.id ?? '',
-              'none',
-            );
-            this.isAssistanceNoneLoading = false;
-          }}
-        >
-          Manually submit my own response
-        </pr-button>
-      `;
-    };
-
-    const renderCoach = () => {
-      return html`
-        <pr-button
-          color="secondary"
-          variant="tonal"
-          ?disabled=${this.isAssistanceLoading()}
-          ?loading=${this.isAssistanceCoachLoading}
-          @click=${async () => {
-            this.isAssistanceCoachLoading = true;
-            await this.participantService.selectChipAssistanceMode(
-              this.stage?.id ?? '',
-              'coach',
-            );
-            this.isAssistanceCoachLoading = false;
-          }}
-        >
-          Give me feedback on my proposed response
-        </pr-button>
-      `;
-    };
-
+    // Otherwise, render buttons to select available assistance modes
     return html`
-      ${modes.includes(ChipAssistanceMode.NONE) ? renderManual() : nothing}
+      ${modes.includes(ChipAssistanceMode.NONE)
+        ? this.renderSelectManualResponseButton()
+        : nothing}
       ${modes.includes(ChipAssistanceMode.DELEGATE)
         ? this.renderDelegateButton()
         : nothing}
       ${modes.includes(ChipAssistanceMode.ADVISOR)
         ? this.renderAdvisorButton()
         : nothing}
-      ${modes.includes(ChipAssistanceMode.COACH) ? renderCoach() : nothing}
+      ${modes.includes(ChipAssistanceMode.COACH)
+        ? this.renderSelectCoachResponseButton()
+        : nothing}
+    `;
+  }
+
+  private renderSelectManualResponseButton() {
+    return html`
+      <pr-button
+        color="secondary"
+        variant="tonal"
+        ?disabled=${this.isAssistanceLoading()}
+        ?loading=${this.isAssistanceNoneLoading}
+        @click=${async () => {
+          this.isAssistanceNoneLoading = true;
+          await this.participantService.selectChipAssistanceMode(
+            this.stage?.id ?? '',
+            'none',
+          );
+          this.isAssistanceNoneLoading = false;
+        }}
+      >
+        Manually submit my own response
+      </pr-button>
+    `;
+  }
+
+  private renderSelectCoachResponseButton() {
+    return html`
+      <pr-button
+        color="secondary"
+        variant="tonal"
+        ?disabled=${this.isAssistanceLoading()}
+        ?loading=${this.isAssistanceCoachLoading}
+        @click=${async () => {
+          this.isAssistanceCoachLoading = true;
+          await this.participantService.selectChipAssistanceMode(
+            this.stage?.id ?? '',
+            'coach',
+          );
+          this.isAssistanceCoachLoading = false;
+        }}
+      >
+        Give me feedback on my proposed response
+      </pr-button>
     `;
   }
 
