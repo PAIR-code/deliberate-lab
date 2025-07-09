@@ -94,9 +94,9 @@ const ASSET_ALLOCATION_MAIN_STAGE = createAssetAllocationStage({
     helpText:
       'Drag the sliders to set your desired allocation percentages. The dollar amounts will update automatically. Click "Confirm Allocation" when you are satisfied with your decision.',
   }),
-  stockInfoStageConfig: {
-    id: 'asset_allocation_stockinfo',
-    stockAId: 'nextech_stock',
-    stockBId: 'greenwave_stock',
+  stockConfig: {
+    stockInfoStageId: 'asset_allocation_stockinfo',
+    stockA: ASSET_ALLOCATION_STOCKINFO_STAGE.stocks[0],
+    stockB: ASSET_ALLOCATION_STOCKINFO_STAGE.stocks[1],
   },
 });

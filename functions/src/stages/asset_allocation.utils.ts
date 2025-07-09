@@ -4,15 +4,11 @@ import {
   AssetAllocationStagePublicData,
   ParticipantProfileExtended,
   createAssetAllocationStagePublicData,
-  StockInfoStageConfig,
 } from '@deliberation-lab/utils';
 
 import * as admin from 'firebase-admin';
 import {app} from '../app';
-import {
-  getFirestoreStagePublicDataRef,
-  getFirestoreStage,
-} from '../utils/firestore';
+import {getFirestoreStagePublicDataRef} from '../utils/firestore';
 
 /** Update AssetAllocation stage public data. */
 export async function addParticipantAnswerToAssetAllocationStagePublicData(
@@ -63,63 +59,38 @@ export async function addParticipantAnswerToAssetAllocationStagePublicData(
 // ************************************************************************* //
 
 /** Get stock names from asset allocation stage configuration. */
-async function getStockNames(
-  experimentId: string,
-  stage: AssetAllocationStageConfig,
-): Promise<{stockA: string; stockB: string}> {
-  // Try to get from StockInfo stage first
-  if (stage.stockInfoStageConfig?.id) {
-    const stockInfoStage = (await getFirestoreStage(
-      experimentId,
-      stage.stockInfoStageConfig.id,
-    )) as StockInfoStageConfig;
-    if (stockInfoStage?.stocks && stockInfoStage.stocks.length >= 2) {
-      return {
-        stockA: stockInfoStage.stocks[0].name,
-        stockB: stockInfoStage.stocks[1].name,
-      };
-    }
-  }
-
-  // Fallback to simple stock config
-  if (stage.simpleStockConfig) {
-    return {
-      stockA: stage.simpleStockConfig.stockA.name,
-      stockB: stage.simpleStockConfig.stockB.name,
-    };
-  }
-
-  // Default fallback
+function getStockNames(stage: AssetAllocationStageConfig): {
+  stockA: string;
+  stockB: string;
+} {
   return {
-    stockA: 'Stock A',
-    stockB: 'Stock B',
+    stockA: stage.stockConfig.stockA.name,
+    stockB: stage.stockConfig.stockB.name,
   };
 }
 
-export async function getAssetAllocationSummaryText(
-  experimentId: string,
+export function getAssetAllocationSummaryText(
   stage: AssetAllocationStageConfig,
-): Promise<string> {
-  const stockNames = await getStockNames(experimentId, stage);
+): string {
+  const stockNames = getStockNames(stage);
   const overview =
     '## Asset Allocation: User has $1,000 to allocate between two stocks:';
 
   return `${overview}\n* ${stockNames.stockA}\n* ${stockNames.stockB}`;
 }
 
-export async function getAssetAllocationAnswersText(
-  experimentId: string,
+export function getAssetAllocationAnswersText(
   stage: AssetAllocationStageConfig,
   participantAnswers: Array<{
     participantId: string;
     answer: AssetAllocationStageParticipantAnswer;
   }>,
-): Promise<string> {
+): string {
   if (participantAnswers.length === 0) {
     return '';
   }
 
-  const stockNames = await getStockNames(experimentId, stage);
+  const stockNames = getStockNames(stage);
 
   const answerSummaries = participantAnswers.map(({participantId, answer}) => {
     const allocation = answer.allocation;
