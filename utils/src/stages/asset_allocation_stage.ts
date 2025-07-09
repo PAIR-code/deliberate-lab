@@ -8,22 +8,16 @@ import {
   createStageTextConfig,
   createStageProgressConfig,
 } from './stage';
+import {Stock, createStock} from './stockinfo_stage';
 
 // ************************************************************************* //
 // TYPES                                                                     //
 // ************************************************************************* //
 
-/** Simple stock configuration for when no StockInfo stage is referenced. */
-export interface SimpleStock {
-  id: string;
-  name: string;
-  description: string;
-}
-
 /** Simple stock configuration for asset allocation. */
 export interface SimpleStockConfig {
-  stockA: SimpleStock;
-  stockB: SimpleStock;
+  stockA: Stock;
+  stockB: Stock;
 }
 
 /** Asset allocation configuration. */
@@ -65,24 +59,13 @@ export interface AssetAllocationStagePublicData extends BaseStagePublicData {
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
 
-/** Create simple stock configuration. */
-export function createSimpleStock(
-  config: Partial<SimpleStock> = {},
-): SimpleStock {
-  return {
-    id: config.id ?? generateId(),
-    name: config.name ?? 'Stock',
-    description: config.description ?? '',
-  };
-}
-
 /** Create simple stock config with both stocks. */
 export function createSimpleStockConfig(
   config: Partial<SimpleStockConfig> = {},
 ): SimpleStockConfig {
   return {
-    stockA: config.stockA ?? createSimpleStock({name: 'Stock A'}),
-    stockB: config.stockB ?? createSimpleStock({name: 'Stock B'}),
+    stockA: config.stockA ?? createStock({name: 'Stock A'}),
+    stockB: config.stockB ?? createStock({name: 'Stock B'}),
   };
 }
 
