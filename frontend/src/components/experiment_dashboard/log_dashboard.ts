@@ -59,6 +59,17 @@ export class Component extends MobxLitElement {
 
   private renderModelLogFields(log: ModelLogEntry) {
     const status = log.response.status;
+
+    const renderReasoning = () => {
+      if (!log.response.reasoning) return nothing;
+      return html`
+        <details>
+          <summary>Model reasoning</summary>
+          <div>${log.response.reasoning}</div>
+        </details>
+      `;
+    };
+
     return html`
       <div class="chip secondary">${status}</div>
       <div>
@@ -81,6 +92,7 @@ export class Component extends MobxLitElement {
         <summary>Model response</summary>
         <pre><code>${JSON.stringify(log.response, null, 2)}</code></pre>
       </details>
+      ${renderReasoning()}
     `;
   }
 
