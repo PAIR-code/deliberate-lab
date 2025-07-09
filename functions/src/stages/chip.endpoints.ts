@@ -1,5 +1,8 @@
 import {Value} from '@sinclair/typebox/value';
 import {
+  ChipAssistanceMode,
+  ChipAssistanceMove,
+  ChipAssistanceType,
   ChipLogEntry,
   ChipOfferStatus,
   ChipStageConfig,
@@ -9,6 +12,7 @@ import {
   SendChipResponseData,
   SetChipTurnData,
   StageKind,
+  createChipOffer,
   createChipOfferLogEntry,
   createChipRoundLogEntry,
   createChipTurnLogEntry,
@@ -28,6 +32,7 @@ import {
   getFirestoreParticipant,
   getFirestoreParticipants,
   getFirestoreParticipantAnswer,
+  getFirestoreParticipantAnswerRef,
   getFirestoreStage,
   getFirestoreStagePublicData,
 } from '../utils/firestore';
@@ -172,6 +177,36 @@ export const sendChipOffer = onCall(async (request) => {
     data.chipOffer,
   );
 
+  // If success, move current assistance to history
+  // TODO: Refactor into helper function
+  if (success) {
+    const participantAnswer = await getFirestoreParticipantAnswer(
+      data.experimentId,
+      data.participantPrivateId,
+      data.stageId,
+    );
+    if (!participantAnswer) return {data: ''};
+    if (participantAnswer.currentAssistance) {
+      participantAnswer.currentAssistance.finalOffer = data.chipOffer;
+      participantAnswer.currentAssistance.endTime = Timestamp.now();
+      participantAnswer.assistanceHistory.push(
+        participantAnswer.currentAssistance,
+      );
+      participantAnswer.currentAssistance = null;
+    }
+
+    await app.firestore().runTransaction(async (transaction) => {
+      transaction.set(
+        getFirestoreParticipantAnswerRef(
+          data.experimentId,
+          data.participantPrivateId,
+          data.stageId,
+        ),
+        participantAnswer,
+      );
+    });
+  }
+
   return {success};
 });
 
@@ -202,11 +237,41 @@ export const sendChipResponse = onCall(async (request) => {
     data.chipResponse,
   );
 
+  // If success, move current assistance to history
+  // TODO: Refactor into helper function
+  if (success) {
+    const participantAnswer = await getFirestoreParticipantAnswer(
+      data.experimentId,
+      data.participantPrivateId,
+      data.stageId,
+    );
+    if (!participantAnswer) return {data: ''};
+    if (participantAnswer.currentAssistance) {
+      participantAnswer.currentAssistance.finalResponse = data.chipResponse;
+      participantAnswer.currentAssistance.endTime = Timestamp.now();
+      participantAnswer.assistanceHistory.push(
+        participantAnswer.currentAssistance,
+      );
+      participantAnswer.currentAssistance = null;
+    }
+
+    await app.firestore().runTransaction(async (transaction) => {
+      transaction.set(
+        getFirestoreParticipantAnswerRef(
+          data.experimentId,
+          data.participantPrivateId,
+          data.stageId,
+        ),
+        participantAnswer,
+      );
+    });
+  }
+
   return {success};
 });
 
 // ************************************************************************* //
-// requestChipAssistance endpoint                                       //
+// requestChipAssistance endpoint                                            //
 // Returns LLM API response to requested assistance with chip offer/response //
 //                                                                           //
 // Input structure: {                                                        //
@@ -218,6 +283,8 @@ export const sendChipResponse = onCall(async (request) => {
 // ************************************************************************* //
 export const requestChipAssistance = onCall(async (request) => {
   const {data} = request;
+
+  const requestTime = Timestamp.now(); // used for chip assistance
 
   const participant = await getFirestoreParticipant(
     data.experimentId,
@@ -242,7 +309,7 @@ export const requestChipAssistance = onCall(async (request) => {
   );
   if (publicData?.kind !== StageKind.CHIP) return {data: ''};
 
-  // If not current participant, give chip response assistance with offer
+  // If not current participant, give chip response assistance with response
   if (publicData.currentTurn !== participant.publicId) {
     const roundMap =
       publicData.participantOfferMap[publicData.currentRound] ?? {};
@@ -251,8 +318,190 @@ export const requestChipAssistance = onCall(async (request) => {
       return {data: null};
     }
 
-    return {
-      data: await getChipResponseAssistance(
+    const response = await getChipResponseAssistance(
+      data.experimentId,
+      stage,
+      publicData,
+      await getFirestoreCohortParticipants(data.experimentId, data.cohortId),
+      participant,
+      participantAnswer,
+      await getExperimenterDataFromExperiment(data.experimentId),
+      data.assistanceMode,
+      currentOffer,
+      data.offerResponse,
+    );
+
+    // If response is valid, add to current assistance
+    // If in coach assistance mode, record the proposed response and model feedback
+    if (data.assistanceMode === ChipAssistanceMode.COACH && response.success) {
+      const participantAnswer = await getFirestoreParticipantAnswer(
+        data.experimentId,
+        data.participantId,
+        data.stageId,
+      );
+      if (participantAnswer?.currentAssistance) {
+        const currentAssistance = participantAnswer.currentAssistance;
+        currentAssistance.proposedResponse = data.offerResponse;
+        currentAssistance.message =
+          response.modelResponse['feedback'] ??
+          response.modelResponse['tradeExplanation'] ??
+          '';
+        currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
+        currentAssistance.modelResponse = response.modelResponse;
+        currentAssistance.proposedTime = requestTime;
+        participantAnswer.currentAssistance = currentAssistance;
+
+        await app.firestore().runTransaction(async (transaction) => {
+          transaction.set(
+            getFirestoreParticipantAnswerRef(
+              data.experimentId,
+              data.participantId,
+              data.stageId,
+            ),
+            participantAnswer,
+          );
+        });
+      }
+    }
+
+    return response;
+  }
+
+  // Otherwise, assist with offer
+  const response = await getChipOfferAssistance(
+    data.experimentId,
+    stage,
+    publicData,
+    await getFirestoreCohortParticipants(data.experimentId, data.cohortId),
+    participant,
+    participantAnswer,
+    await getExperimenterDataFromExperiment(data.experimentId),
+    data.assistanceMode,
+    data.buyMap ?? {},
+    data.sellMap ?? {},
+  );
+
+  // If in coach assistance mode, record the proposed offer and model feedback
+  if (data.assistanceMode === ChipAssistanceMode.COACH && response.success) {
+    const participantAnswer = await getFirestoreParticipantAnswer(
+      data.experimentId,
+      data.participantId,
+      data.stageId,
+    );
+    if (participantAnswer?.currentAssistance) {
+      const currentAssistance = participantAnswer.currentAssistance;
+      currentAssistance.proposedOffer = createChipOffer({
+        round: publicData.currentRound,
+        senderId: participant.publicId,
+        buy: data.buyMap,
+        sell: data.sellMap,
+        timestamp: requestTime,
+      });
+      currentAssistance.message =
+        response.modelResponse['feedback'] ??
+        response.modelResponse['tradeExplanation'] ??
+        '';
+      currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
+      currentAssistance.modelResponse = response.modelResponse;
+      currentAssistance.proposedTime = requestTime;
+      participantAnswer.currentAssistance = currentAssistance;
+
+      await app.firestore().runTransaction(async (transaction) => {
+        transaction.set(
+          getFirestoreParticipantAnswerRef(
+            data.experimentId,
+            data.participantId,
+            data.stageId,
+          ),
+          participantAnswer,
+        );
+      });
+    }
+  }
+
+  return response;
+});
+
+// ************************************************************************* //
+// selectChipAssistanceMode endpoint                                         //
+// Creates new ChipAssistanceMove as current participant move                //
+// Input structure: {                                                        //
+//   experimentId, cohortId, stageId,                                        //
+//   participantId, assistanceMode,                                          //
+// }                                                                         //
+// Validation: utils/src/chip.validation.ts                                  //
+// ************************************************************************* //
+export const selectChipAssistanceMode = onCall(async (request) => {
+  const {data} = request;
+
+  const participant = await getFirestoreParticipant(
+    data.experimentId,
+    data.participantId,
+  );
+  if (!participant) return {data: ''};
+
+  const participantAnswer = await getFirestoreParticipantAnswer(
+    data.experimentId,
+    data.participantId,
+    data.stageId,
+  );
+  if (!participantAnswer) return {data: ''};
+
+  const publicData = await getFirestoreStagePublicData(
+    data.experimentId,
+    data.cohortId,
+    data.stageId,
+  );
+  if (publicData?.kind !== StageKind.CHIP) return {data: ''};
+
+  // Get current round and turn
+  const round = publicData.currentRound;
+  const turn = publicData.currentTurn;
+  if (!turn) {
+    console.log('Current turn in public chip data is empty', turn);
+    return {data: ''};
+  }
+
+  // Re-enable check if participant answer already has current assistance
+  if (participantAnswer.currentAssistance) {
+    console.log('Current assistance already set!');
+    return {data: ''};
+  }
+
+  const currentAssistance: ChipAssistanceMove = {
+    round,
+    turn,
+    type:
+      turn === participant.publicId
+        ? ChipAssistanceType.OFFER
+        : ChipAssistanceType.RESPONSE,
+    selectedMode: data.assistanceMode,
+    selectedTime: Timestamp.now(),
+    proposedTime: null,
+    endTime: null,
+    message: null,
+    reasoning: null,
+    modelResponse: {},
+  };
+
+  // If advisor or delegate, immediately call model
+  if (
+    data.assistanceMode === ChipAssistanceMode.ADVISOR ||
+    data.assistanceMode === ChipAssistanceMode.DELEGATE
+  ) {
+    const stage = await getFirestoreStage(data.experimentId, data.stageId);
+    if (stage?.kind !== StageKind.CHIP) return {data: ''};
+
+    // If not current participant, give chip response assistance with offer
+    if (publicData.currentTurn !== participant.publicId) {
+      const roundMap =
+        publicData.participantOfferMap[publicData.currentRound] ?? {};
+      const currentOffer = roundMap[publicData.currentTurn].offer;
+      if (!currentOffer) {
+        return {data: null};
+      }
+
+      const response = await getChipResponseAssistance(
         data.experimentId,
         stage,
         publicData,
@@ -263,13 +512,19 @@ export const requestChipAssistance = onCall(async (request) => {
         data.assistanceMode,
         currentOffer,
         data.offerResponse,
-      ),
-    };
-  }
+      );
+      // If response is valid, add to current assistance
+      if (response.success) {
+        currentAssistance.proposedResponse = response.modelResponse['response'];
+        currentAssistance.message = response.modelResponse['feedback'] ?? '';
+        currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
+        currentAssistance.modelResponse = response.modelResponse;
+      }
+      currentAssistance.proposedTime = Timestamp.now();
+    }
 
-  // Otherwise, assist with offer
-  return {
-    data: await getChipOfferAssistance(
+    // Otherwise, assist with offer
+    const response = await getChipOfferAssistance(
       data.experimentId,
       stage,
       publicData,
@@ -280,8 +535,54 @@ export const requestChipAssistance = onCall(async (request) => {
       data.assistanceMode,
       data.buyMap ?? {},
       data.sellMap ?? {},
-    ),
-  };
+    );
+    // If response is valid, add to current assistance
+    if (response.success) {
+      const buy: Record<string, number> = {};
+      buy[response.modelResponse['suggestedBuyType']] =
+        response.modelResponse['suggestedBuyQuantity'];
+      const sell: Record<string, number> = {};
+      sell[response.modelResponse['suggestedSellType']] =
+        response.modelResponse['suggestedSellQuantity'];
+
+      currentAssistance.proposedOffer = createChipOffer({
+        round,
+        senderId: participant.publicId,
+        buy,
+        sell,
+        timestamp: Timestamp.now(),
+      });
+      currentAssistance.message =
+        response.modelResponse['feedback'] ??
+        response.modelResponse['tradeExplanation'] ??
+        '';
+      currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
+      currentAssistance.modelResponse = response.modelResponse;
+    }
+    currentAssistance.proposedTime = Timestamp.now();
+  }
+
+  // If delegate, assistance is over
+  if (data.assistanceMode === ChipAssistanceMode.DELEGATE) {
+    currentAssistance.endTime = Timestamp.now();
+  }
+
+  // For all modes, write current assistance to participant answer
+  if (currentAssistance.endTime) {
+    participantAnswer.assistanceHistory.push(currentAssistance);
+  } else {
+    participantAnswer.currentAssistance = currentAssistance;
+  }
+  await app.firestore().runTransaction(async (transaction) => {
+    transaction.set(
+      getFirestoreParticipantAnswerRef(
+        data.experimentId,
+        data.participantId,
+        data.stageId,
+      ),
+      participantAnswer,
+    );
+  });
 });
 
 // ************************************************************************* //

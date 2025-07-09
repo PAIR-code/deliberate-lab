@@ -37,7 +37,7 @@ import {
   CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
 } from '@deliberation-lab/utils';
 
-import {getAgentResponse} from '../agent.utils';
+import {processModelResponse} from '../agent.utils';
 import {getFirestoreStagePublicDataRef} from '../utils/firestore';
 
 import * as admin from 'firebase-admin';
@@ -478,17 +478,16 @@ export async function getChipOfferAssistance(
     .join(', ');
   const offerIdea = `${sellChips} for ${buyChips}`;
 
-
   const participantChipMap = publicData.participantChipMap;
   const participantIds = Object.keys(participantChipMap);
-  
+
   const participantDescriptions = participantIds.map((participantId) => {
-      const chipMap = participantChipMap[participantId];
-      const chipTypes = Object.keys(chipMap);
-      const chipQuantities = chipTypes
-        .map((chip) => `${chipMap[chip]} ${chip} chips`)
-        .join(', ');
-      return `${participantId}: ${chipQuantities}`
+    const chipMap = participantChipMap[participantId];
+    const chipTypes = Object.keys(chipMap);
+    const chipQuantities = chipTypes
+      .map((chip) => `${chipMap[chip]} ${chip} chips`)
+      .join(', ');
+    return `${participantId}: ${chipQuantities}`;
   });
   const chipsetDescription = participantDescriptions.join(' | ');
 
@@ -510,15 +509,15 @@ export async function getChipOfferAssistance(
     apiType: ApiKeyType.GEMINI_API_KEY,
     modelName: 'gemini-2.5-flash',
   };
-  const modelGenerationConfig = createModelGenerationConfig();
+  const modelGenerationConfig = createModelGenerationConfig({
+    reasoningBudget: 2048,
+    includeReasoning: true,
+  });
 
   // Helper function to parse structured output response
-  const parseResponse = (response: string, sendOffer = false) => {
+  const parseResponse = (response: ModelResponse, sendOffer = false) => {
     try {
-      const cleanedText = response
-        .text!.replace(/```json\s*|\s*```/g, '')
-        .trim();
-      const responseObj = JSON.parse(cleanedText);
+      const responseObj = response.parsedResponse;
       if (sendOffer) {
         const buy: Record<string, number> = {};
         const sell: Record<string, number> = {};
@@ -541,11 +540,14 @@ export async function getChipOfferAssistance(
           },
         );
       }
-      return `Suggested: Give ${responseObj['suggestedSellQuantity']} ${responseObj['suggestedSellType']} to get ${responseObj['suggestedBuyQuantity']} ${responseObj['suggestedBuyType']} (${responseObj['reasoning']})`;
-    } catch (error) {
+      console.log(
+        `Suggested: Give ${responseObj['suggestedSellQuantity']} ${responseObj['suggestedSellType']} to get ${responseObj['suggestedBuyQuantity']} ${responseObj['suggestedBuyType']} (${responseObj['reasoning']})`,
+      );
+      return {success: true, modelResponse: responseObj};
+    } catch (errorMessage) {
       // Response is already logged in console during Gemini API call
-      console.log('Could not parse JSON:', error);
-      return '';
+      console.log('Could not parse JSON:', errorMessage);
+      return {success: false, errorMessage};
     }
   };
 
@@ -564,8 +566,16 @@ export async function getChipOfferAssistance(
       );
       console.log('Chip offer assistance coach prompt:', coachPrompt);
       // Call API
-      const coachResponse = await getAgentResponse(
-        experimenterData,
+      const coachResponse = await processModelResponse(
+        experimentId,
+        participant.currentCohortId,
+        participant.privateId,
+        stage.id,
+        participant, // NOTE: This should actually be the agent profile
+        '', // No agent private ID
+        '', // No agent public ID
+        '', // No description
+        experimenterData.apiKeys,
         coachPrompt,
         modelSettings,
         modelGenerationConfig,
@@ -585,8 +595,16 @@ export async function getChipOfferAssistance(
       );
       console.log('Chip offer assistance advisor prompt:', advisorPrompt);
       // Call API
-      const advisorResponse = await getAgentResponse(
-        experimenterData,
+      const advisorResponse = await processModelResponse(
+        experimentId,
+        participant.currentCohortId,
+        participant.privateId,
+        stage.id,
+        participant, // NOTE: This should actually be the agent profile
+        '', // No agent private ID
+        '', // No agent public ID
+        '', // No description
+        experimenterData.apiKeys,
         advisorPrompt,
         modelSettings,
         modelGenerationConfig,
@@ -606,8 +624,16 @@ export async function getChipOfferAssistance(
       );
       console.log('Chip offer assistance delegate prompt:', delegatePrompt);
       // Call API
-      const delegateResponse = await getAgentResponse(
-        experimenterData,
+      const delegateResponse = await processModelResponse(
+        experimentId,
+        participant.currentCohortId,
+        participant.privateId,
+        stage.id,
+        participant, // NOTE: This should actually be the agent profile
+        '', // No agent private ID
+        '', // No agent public ID
+        '', // No description
+        experimenterData.apiKeys,
         delegatePrompt,
         modelSettings,
         modelGenerationConfig,
@@ -659,14 +685,14 @@ export async function getChipResponseAssistance(
 
   const participantChipMap = publicData.participantChipMap;
   const participantIds = Object.keys(participantChipMap);
-  
+
   const participantDescriptions = participantIds.map((participantId) => {
-      const chipMap = participantChipMap[participantId];
-      const chipTypes = Object.keys(chipMap);
-      const chipQuantities = chipTypes
-        .map((chip) => `${chipMap[chip]} ${chip} chips`)
-        .join(', ');
-      return `${participantId}: ${chipQuantities}`
+    const chipMap = participantChipMap[participantId];
+    const chipTypes = Object.keys(chipMap);
+    const chipQuantities = chipTypes
+      .map((chip) => `${chipMap[chip]} ${chip} chips`)
+      .join(', ');
+    return `${participantId}: ${chipQuantities}`;
   });
   const chipsetDescription = participantDescriptions.join(' | ');
 
@@ -688,15 +714,15 @@ export async function getChipResponseAssistance(
     apiType: ApiKeyType.GEMINI_API_KEY,
     modelName: 'gemini-2.5-flash',
   };
-  const modelGenerationConfig = createModelGenerationConfig();
+  const modelGenerationConfig = createModelGenerationConfig({
+    reasoningBudget: 2048,
+    includeReasoning: true,
+  });
 
   // Helper function to parse structured output response
-  const parseResponse = (response: string, sendResponse = false) => {
+  const parseResponse = (response: ModelResponse, sendResponse = false) => {
     try {
-      const cleanedText = response
-        .text!.replace(/```json\s*|\s*```/g, '')
-        .trim();
-      const responseObject = JSON.parse(cleanedText);
+      const responseObject = response.parsedResponse;
       if (sendResponse) {
         addChipResponseToPublicData(
           experimentId,
@@ -706,11 +732,14 @@ export async function getChipResponseAssistance(
           responseObject['response'],
         );
       }
-      return `${responseObject['response']} (${responseObject['feedback']}) (${responseObject['reasoning']})`;
-    } catch (error) {
+      console.log(
+        `${responseObject['response']} ${responseObject['feedback']}`,
+      );
+      return {success: true, modelResponse: responseObject};
+    } catch (errorMessage) {
       // Response is already logged in console during Gemini API call
-      console.log('Could not parse JSON:', error);
-      return '';
+      console.log('Could not parse JSON:', errorMessage);
+      return {success: false, errorMessage};
     }
   };
 
@@ -730,8 +759,16 @@ export async function getChipResponseAssistance(
       );
       console.log('Chip response assistance coach prompt:', coachPrompt);
       // Call API
-      const coachResponse = await getAgentResponse(
-        experimenterData,
+      const coachResponse = await processModelResponse(
+        experimentId,
+        participant.currentCohortId,
+        participant.privateId,
+        stage.id,
+        participant, // NOTE: This should actually be the agent profile
+        '', // No agent private ID
+        '', // No agent public ID
+        '', // No description
+        experimenterData.apiKeys,
         coachPrompt,
         modelSettings,
         modelGenerationConfig,
@@ -752,8 +789,16 @@ export async function getChipResponseAssistance(
       );
       console.log('Chip response assistance advisor prompt:', advisorPrompt);
       // Call API
-      const advisorResponse = await getAgentResponse(
-        experimenterData,
+      const advisorResponse = await processModelResponse(
+        experimentId,
+        participant.currentCohortId,
+        participant.privateId,
+        stage.id,
+        participant, // NOTE: This should actually be the agent profile
+        '', // No agent private ID
+        '', // No agent public ID
+        '', // No description
+        experimenterData.apiKeys,
         advisorPrompt,
         modelSettings,
         modelGenerationConfig,
@@ -774,8 +819,16 @@ export async function getChipResponseAssistance(
       );
       console.log('Chip response assistance delegate prompt:', delegatePrompt);
       // Call API
-      const delegateResponse = await getAgentResponse(
-        experimenterData,
+      const delegateResponse = await processModelResponse(
+        experimentId,
+        participant.currentCohortId,
+        participant.privateId,
+        stage.id,
+        participant, // NOTE: This should actually be the agent profile
+        '', // No agent private ID
+        '', // No agent public ID
+        '', // No description
+        experimenterData.apiKeys,
         delegatePrompt,
         modelSettings,
         modelGenerationConfig,

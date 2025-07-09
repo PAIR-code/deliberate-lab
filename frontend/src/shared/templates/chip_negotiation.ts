@@ -1,5 +1,6 @@
 import {
   ALTERNATE_PROFILE_SET_ID,
+  ChipAssistanceMode,
   ChipItem,
   ProfileType,
   StageConfig,
@@ -97,30 +98,33 @@ export function getChipNegotiationStageConfigs(numChips = 3): StageConfig[] {
 
   // Pre-game survey stage
   stages.push(CHIP_PRE_SURVEY_STAGE1);
-  stages.push(CHIP_PRE_SURVEY_STAGE2);
+  // stages.push(CHIP_PRE_SURVEY_STAGE2);
 
   // Transfer
   stages.push(TRANSFER_STAGE);
 
   stages.push(COACH_MODE_INSTRUCTION);
+  stages.push(getChipNegotiationCoach(numChips));
   // Coach mode survey stage
   stages.push(CHIP_COACH_FEEDBACK_STAGE);
 
   stages.push(ADVISOR_MODE_INSTRUCTION);
+  stages.push(getChipNegotiationAdvisor(numChips));
   // Advisor mode survey stage
   stages.push(CHIP_ADVISOR_FEEDBACK_STAGE);
 
   stages.push(DELEGATE_MODE_INSTRUCTION);
+  stages.push(getChipNegotiationDelegate(numChips));
   // Delegate mode survey stage
   stages.push(CHIP_DELEGATE_FEEDBACK_STAGE);
 
   // Round 1
-  stages.push(getChipNegotiationStage1(numChips));
+  // stages.push(getChipNegotiationStage1(numChips));
 
   // Round 2
-  stages.push(CHIP_INFO_PART2);
-  stages.push(CHIP_ALTERNATE_PROFILE_STAGE);
-  stages.push(getChipNegotiationStage2(numChips));
+  // stages.push(CHIP_INFO_PART2);
+  // stages.push(CHIP_ALTERNATE_PROFILE_STAGE);
+  // stages.push(getChipNegotiationStage2(numChips));
   stages.push(CHIP_PAYOUT_STAGE);
 
   // Post-negotiation survey stage
@@ -221,7 +225,7 @@ function createChipInfoStage1(numChips: number) {
 
 function createChipInfoStage2(numChips: number) {
   const infoLines = [
-    'You will play this trading game two times against two different groups of participants. In each game, you and the other participants will start with:',
+    'You will play this trading game three times against three different groups of participants. In each game, you and the other participants will start with:',
   ];
 
   // Adjust the chips included based on numChips
@@ -555,7 +559,7 @@ const CHIP_INFO_STAGE_PAYOUT = createInfoStage({
   name: 'Payment information',
   infoLines: [
     '## Bonus payment',
-    'At the end of the study, we will randomly pick **one** of the two negotiation games you played and give you a bonus payment from that game.',
+    'At the end of the study, we will *average* the final surplus from three negotiation games you played and give you a bonus payment from the average.',
     'There are two important features to remember about the bonus:',
     '  * The bonus will be equivalent to how much money you earn through trading *beyond* what you start with.',
     '  * If you do not complete both games, you will not receive a bonus payment.',
@@ -704,6 +708,59 @@ function getChips(numChips: number) {
 
 const CHIP_NEGOTIATION_STAGE1_ID = 'negotiation1';
 const CHIP_NEGOTIATION_STAGE2_ID = `negotiation2_${ALTERNATE_PROFILE_SET_ID}`;
+
+// Begin temporary chip stages for testing assistance
+function getChipNegotiationCoach(numChips: number) {
+  return createChipStage({
+    id: 'chip_coach',
+    name: 'Chip negotiation with coaching option',
+    descriptions: createStageTextConfig({
+      infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
+      helpText: `If you see the "It's your turn" panel, that means others are waiting on you to make an offer! As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs.
+      `,
+    }),
+    chips: getChips(numChips),
+    assistanceConfig: {
+      offerModes: [ChipAssistanceMode.NONE, ChipAssistanceMode.COACH],
+      responseModes: [ChipAssistanceMode.NONE, ChipAssistanceMode.COACH],
+    },
+  });
+}
+
+function getChipNegotiationAdvisor(numChips: number) {
+  return createChipStage({
+    id: 'chip_advisor',
+    name: 'Chip negotiation with advisor option',
+    descriptions: createStageTextConfig({
+      infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
+      helpText: `If you see the "It's your turn" panel, that means others are waiting on you to make an offer! As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs.
+      `,
+    }),
+    chips: getChips(numChips),
+    assistanceConfig: {
+      offerModes: [ChipAssistanceMode.NONE, ChipAssistanceMode.ADVISOR],
+      responseModes: [ChipAssistanceMode.NONE, ChipAssistanceMode.ADVISOR],
+    },
+  });
+}
+
+function getChipNegotiationDelegate(numChips: number) {
+  return createChipStage({
+    id: 'chip_delegate',
+    name: 'Chip negotiation with delegate option',
+    descriptions: createStageTextConfig({
+      infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
+      helpText: `If you see the "It's your turn" panel, that means others are waiting on you to make an offer! As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs.
+      `,
+    }),
+    chips: getChips(numChips),
+    assistanceConfig: {
+      offerModes: [ChipAssistanceMode.NONE, ChipAssistanceMode.DELEGATE],
+      responseModes: [ChipAssistanceMode.NONE, ChipAssistanceMode.DELEGATE],
+    },
+  });
+}
+// End temporary chip stages
 
 function getChipNegotiationStage1(numChips: number) {
   return createChipStage({
@@ -869,7 +926,10 @@ const CHIP_PRE_SURVEY_STAGE1 = createSurveyStage({
   descriptions: createStageTextConfig({
     primaryText:
       'Before you play the bargaining games, please complete this short survey so we can better understand your background and perspectives. \
-      Completion of this survey is required to receive bonus payouts.',
+      Completion of this survey is required to receive bonus payouts. \n \
+      This section asks about your expectations about the different AI tools available to you in the game. You’ll have access to three types of AI tools (a coach, delegate, and advisor) over three games, all powered by Google Gemini 2.5 (a large language model) and built on the same underlying capabilities.\n \
+      Please indicate how much you agree or disagree with the following statements based on your expectations. ',
+      
   }),
   questions: [
     // Relevant skills section
@@ -921,49 +981,49 @@ const CHIP_PRE_SURVEY_STAGE1 = createSurveyStage({
     }),
   ],
 });
-const CHIP_PRE_SURVEY_STAGE2 = createSurveyStage({
-  id: 'pre_survey_2',
-  name: 'Pre-game survey 2',
-  descriptions: createStageTextConfig({
-    primaryText:
-      'This section asks about your expectations about the different AI tools available to you in the game. As a reminder, you’ll have access to three types of AI tools (a coach, delegate, and advisor) over three games, all powered by Google Gemini 2.5 (a large language model) and built on the same underlying capabilities.\nPlease indicate how much you agree or disagree with the following statements based on your expectations.',
-  }),
-  questions: [
-    // Perspectives on AI tooling
-    createScaleSurveyQuestion({
-      questionTitle:
-        'I believe that having access to the AI tools will improve my performance in this game.',
-      lowerText: 'Strongly disagree',
-      lowerValue: 1,
-      upperText: 'Strongly agree',
-      upperValue: 5,
-    }),
-    createScaleSurveyQuestion({
-      questionTitle:
-        'I believe that the AI tools will provide information I can trust.',
-      lowerText: 'Strongly disagree',
-      lowerValue: 1,
-      upperText: 'Strongly agree',
-      upperValue: 5,
-    }),
-    createScaleSurveyQuestion({
-      questionTitle:
-        'I believe that the AI tools will help me see options or strategies I might otherwise miss.',
-      lowerText: 'Strongly disagree',
-      lowerValue: 1,
-      upperText: 'Strongly agree',
-      upperValue: 5,
-    }),
-    createScaleSurveyQuestion({
-      questionTitle:
-        'I believe that the AI tools will help lighten the mental workload of playing this game.',
-      lowerText: 'Strongly disagree',
-      lowerValue: 1,
-      upperText: 'Strongly agree',
-      upperValue: 5,
-    }),
-  ],
-});
+// const CHIP_PRE_SURVEY_STAGE2 = createSurveyStage({
+//   id: 'pre_survey_2',
+//   name: 'Pre-game survey 2',
+//   descriptions: createStageTextConfig({
+//     primaryText:
+//       'This section asks about your expectations about the different AI tools available to you in the game. As a reminder, you’ll have access to three types of AI tools (a coach, delegate, and advisor) over three games, all powered by Google Gemini 2.5 (a large language model) and built on the same underlying capabilities.\nPlease indicate how much you agree or disagree with the following statements based on your expectations.',
+//   }),
+//   questions: [
+//     // Perspectives on AI tooling
+//     createScaleSurveyQuestion({
+//       questionTitle:
+//         'I believe that having access to the AI tools will improve my performance in this game.',
+//       lowerText: 'Strongly disagree',
+//       lowerValue: 1,
+//       upperText: 'Strongly agree',
+//       upperValue: 5,
+//     }),
+//     createScaleSurveyQuestion({
+//       questionTitle:
+//         'I believe that the AI tools will provide information I can trust.',
+//       lowerText: 'Strongly disagree',
+//       lowerValue: 1,
+//       upperText: 'Strongly agree',
+//       upperValue: 5,
+//     }),
+//     createScaleSurveyQuestion({
+//       questionTitle:
+//         'I believe that the AI tools will help me see options or strategies I might otherwise miss.',
+//       lowerText: 'Strongly disagree',
+//       lowerValue: 1,
+//       upperText: 'Strongly agree',
+//       upperValue: 5,
+//     }),
+//     createScaleSurveyQuestion({
+//       questionTitle:
+//         'I believe that the AI tools will help lighten the mental workload of playing this game.',
+//       lowerText: 'Strongly disagree',
+//       lowerValue: 1,
+//       upperText: 'Strongly agree',
+//       upperValue: 5,
+//     }),
+//   ],
+// });
 
 // ****************************************************************************
 // Post-negotiation survey stage

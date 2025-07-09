@@ -33,6 +33,8 @@ export interface ChipStageConfig extends BaseStageConfig {
   // has the opportunity to submit an offer that others accept/reject)
   numRounds: number;
   chips: ChipItem[];
+  // If set, use chip assistance workflow to send/respond to offers
+  assistanceConfig: ChipAssistanceConfig | null;
 }
 
 /** Chip item config. */
@@ -57,6 +59,10 @@ export interface ChipStageParticipantAnswer extends BaseStageParticipantAnswer {
   kind: StageKind.CHIP;
   chipMap: Record<string, number>; // chip ID to quantity left
   chipValueMap: Record<string, number>; // chip ID to value per chip
+  // Current assistance shown to user (or null if none)
+  currentAssistance: ChipAssistanceMove | null;
+  // Current assistance is moved to assistance history when complete
+  assistanceHistory: ChipAssistanceMove[];
 }
 
 /** Chip offer. */
@@ -123,11 +129,58 @@ export interface SimpleChipLog {
   timestamp: Timestamp | null;
 }
 
+/** Chip assistance workflow config. */
+export interface ChipAssistanceConfig {
+  // List of chip assistance modes to include in offer
+  offerModes: ChipAssistanceMode[];
+  // List of chip assistance modes to include in response
+  responseModes: ChipAssistanceMode[];
+}
+
 /** Chip assistance modes. */
 export enum ChipAssistanceMode {
+  NONE = 'none', // manually submit without assistance
   ADVISOR = 'advisor',
   COACH = 'coach',
   DELEGATE = 'delegate',
+}
+
+/** Chip assistance move. */
+export type ChipAssistanceMove =
+  | ChipOfferAssistanceMove
+  | ChipResponseAssistanceMove;
+
+export interface BaseChipAssistanceMove {
+  round: number;
+  turn: string; // public ID of participant whose turn it is
+  type: ChipAssistanceType;
+  selectedMode: ChipAssistanceMode;
+  // timestamp of when mode was selected
+  selectedTime: UnifiedTimestamp;
+  // timestamp of when model call finished
+  proposedTime: UnifiedTimestamp | null;
+  // timestamp of when assistance move was completed
+  endTime: UnifiedTimestamp | null;
+  message: string | null; // explanation from model call to show to user
+  reasoning: string | null; // reasoning from model call
+  modelResponse: object; // parsed model response from call
+}
+
+export interface ChipOfferAssistanceMove extends BaseChipAssistanceMove {
+  type: ChipAssistanceType.OFFER;
+  proposedOffer: ChipOffer | null; // null if N/A (e.g., delegate/advisor mode)
+  finalOffer: ChipOffer;
+}
+
+export interface ChipResponseAssistanceMove extends BaseChipAssistanceMove {
+  type: ChipAssistanceType.RESPONSE;
+  proposedResponse: boolean | null; // null if N/A (e.g., delegate/advisor mode)
+  finalResponse: boolean | null;
+}
+
+export enum ChipAssistanceType {
+  OFFER = 'offer',
+  RESPONSE = 'response',
 }
 
 // TODO: Consider removing subcollections for chip logs and transactions,
@@ -215,6 +268,7 @@ export function createChipStage(
     enableChat: config.enableChat ?? false,
     numRounds: config.numRounds ?? 3,
     chips: config.chips ?? [],
+    assistanceConfig: config.assistanceConfig ?? null,
   };
 }
 
@@ -241,6 +295,8 @@ export function createChipStageParticipantAnswer(
     kind: StageKind.CHIP,
     chipMap,
     chipValueMap,
+    currentAssistance: null,
+    assistanceHistory: [],
   };
 }
 

@@ -38,7 +38,6 @@
   height: 100%;
   justify-content: end;
   padding: common.$spacing-large;
-  width: 50%;
 }
 
 .status-panel {
@@ -218,9 +217,13 @@ code {
 }
 
 .bottom-panel-wrapper {
-  @include common.flex-row;
   align-items: end;
+  display: grid;
+  flex-grow: 1;
+  grid-template-columns: repeat(2, 1fr);
+  max-width: common.$info-content-max-width;
   overflow: hidden;
+  width: 100%;
 }
 
 .debug-panel {

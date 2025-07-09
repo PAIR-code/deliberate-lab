@@ -205,6 +205,8 @@ export function createModelGenerationConfig(
     frequencyPenalty: config.frequencyPenalty ?? 0.0,
     presencePenalty: config.presencePenalty ?? 0.0,
     customRequestBodyFields: config.customRequestBodyFields ?? [],
+    reasoningBudget: config.reasoningBudget,
+    includeReasoning: config.includeReasoning,
   };
 }
 
