@@ -920,6 +920,17 @@ export class ChipOfferForm extends MobxLitElement {
       this.isLoading = false;
     };
 
+    const renderWarnings = () => {
+      if (!checks.isCompleteOffer) return nothing;
+      return html`
+        <div class="warnings-panel">
+          ${checks.errors.map(
+            (error) => html`<div class="warning">${error}</div>`,
+          )}
+        </div>
+      `;
+    };
+
     return html`
       <div class="offer-form">
         <div class="offer-config">
@@ -951,14 +962,7 @@ export class ChipOfferForm extends MobxLitElement {
         >
           ${this.isPending ? 'Pending...' : this.buttonText}
         </pr-button>
-        <div>
-          ${renderOfferPayout()}
-          <div class="warnings-panel">
-            ${checks.errors.map(
-              (error) => html`<div class="warning">${error}</div>`,
-            )}
-          </div>
-        </div>
+        <div>${renderOfferPayout()} ${renderWarnings()}</div>
       </div>
     `;
   }
