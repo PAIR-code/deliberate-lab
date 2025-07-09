@@ -521,10 +521,19 @@ export async function getChipOfferAssistance(
       if (sendOffer) {
         const buy: Record<string, number> = {};
         const sell: Record<string, number> = {};
-        buy[responseObj['suggestedBuyType']] =
-          responseObj['suggestedBuyQuantity'];
-        sell[responseObj['suggestedSellType']] =
-          responseObj['suggestedSellQuantity'];
+        const buyType = responseObj['suggestedBuyType']?.toUpperCase();
+        const sellType = responseObj['suggestedSellType']?.toUpperCase();
+
+        if (buyType && typeof responseObj['suggestedBuyQuantity'] === 'number') {
+          buy[buyType] = responseObj['suggestedBuyQuantity'];
+        }
+        if (sellType && typeof responseObj['suggestedSellQuantity'] === 'number') {
+          sell[sellType] = responseObj['suggestedSellQuantity'];
+        }
+        // buy[responseObj['suggestedBuyType']] =
+        //   responseObj['suggestedBuyQuantity'];
+        // sell[responseObj['suggestedSellType']] =
+        //   responseObj['suggestedSellQuantity'];
         console.log(buy, sell);
         addChipOfferToPublicData(
           experimentId,

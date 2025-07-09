@@ -913,7 +913,7 @@ const DELEGATE_MODE_INSTRUCTION = createInfoStage({
     "**• Next Step:** After seeing the recommendation, you can either accept the agent's move or ignore it and enter your own action.",
     '',
     '![Example of the AI Delegate making an decision when proposing](https://imgur.com/Qbpwm1Z.png)',
-    '![Example of the AI Delegate making an decision when responding to an offer]TODO',
+    '![Example of the AI Delegate making an decision when responding to an offer](https://imgur.com/1Yev7H7.png)',
   ],
 });
 
