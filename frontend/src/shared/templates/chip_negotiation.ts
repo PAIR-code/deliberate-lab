@@ -559,7 +559,7 @@ const CHIP_INFO_STAGE_PAYOUT = createInfoStage({
   name: 'Payment information',
   infoLines: [
     '## Bonus payment',
-    'At the end of the study, we will *average* the final surplus from three negotiation games you played and give you a bonus payment from the average.',
+    'At the end of the study, we will *randomly* pick one of the three negotiation games you played and give you a bonus payment from that game',
     'There are two important features to remember about the bonus:',
     '  * The bonus will be equivalent to how much money you earn through trading *beyond* what you start with.',
     '  * If you do not complete both games, you will not receive a bonus payment.',
