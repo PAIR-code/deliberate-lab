@@ -25,6 +25,7 @@ import {
   generateSVGChart,
   generateDonutChartSVG,
   getStockTicker,
+  createStock,
 } from '@deliberation-lab/utils';
 
 import {core} from '../../core/core';
@@ -72,22 +73,16 @@ export class AssetAllocationParticipantView extends MobxLitElement {
       } else if (this.stage.simpleStockConfig) {
         // Create Stock objects from SimpleStock data
         this.stocks = {
-          stockA: {
+          stockA: createStock({
             id: this.stage.simpleStockConfig.stockA.id,
             title: this.stage.simpleStockConfig.stockA.name,
             description: this.stage.simpleStockConfig.stockA.description,
-            csvData: '',
-            parsedData: [],
-            customCards: [],
-          },
-          stockB: {
+          }),
+          stockB: createStock({
             id: this.stage.simpleStockConfig.stockB.id,
             title: this.stage.simpleStockConfig.stockB.name,
             description: this.stage.simpleStockConfig.stockB.description,
-            csvData: '',
-            parsedData: [],
-            customCards: [],
-          },
+          }),
         };
       }
     }
@@ -97,11 +92,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
         this.stage.id,
       );
     // Ensure allocation is synced with answer allocation
-    if (!answer.confirmed) {
-      this.allocation = {...answer.allocation};
-    }
-    const stockInfoStage = this.getStockInfoStage();
-    const stocks = this.getStocks(stockInfoStage);
+    this.allocation = {...answer.allocation};
 
     return html`
       <div class="stage-container">
@@ -128,9 +119,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
           <!-- Right: Stock Info -->
           <div class="info-section">
             <h3>Stock Information</h3>
-            ${stocks.length > 0
-              ? this.renderStockInfo(stocks, stockInfoStage)
-              : this.renderSimpleStockInfo()}
+            ${this.renderStockInfo()}
           </div>
         </div>
 
@@ -151,20 +140,11 @@ export class AssetAllocationParticipantView extends MobxLitElement {
   }) {
     if (!this.stocks.stockA || !this.stocks.stockB) return nothing;
 
-    const stockNames = {
-      stockA: this.stocks.stockA.title,
-      stockB: this.stocks.stockB.title,
-    };
     const stockTickers = {
       stockA: getStockTicker(this.stocks.stockA.title),
       stockB: getStockTicker(this.stocks.stockB.title),
     };
-
-    const svgContent = generateDonutChartSVG(
-      allocation,
-      stockNames,
-      stockTickers,
-    );
+    const svgContent = generateDonutChartSVG(allocation, stockTickers);
     return unsafeHTML(svgContent);
   }
 
@@ -218,20 +198,21 @@ export class AssetAllocationParticipantView extends MobxLitElement {
     `;
   }
 
-  private renderStockInfo(
-    stocks: Stock[],
-    stockInfoStage: StockInfoStageConfig | null,
-  ) {
-    if (stocks.length === 0) return nothing;
+  private renderStockInfo() {
+    if (!this.stocks.stockA || !this.stocks.stockB) return nothing;
 
-    const selectedStock = stocks[this.selectedStockIndex];
-    const chartSvg =
-      selectedStock.parsedData.length > 0
-        ? generateSVGChart(selectedStock.parsedData, {
-            isInvestmentGrowth: stockInfoStage?.showInvestmentGrowth ?? false,
-            useQuarterlyMarkers: stockInfoStage?.useQuarterlyMarkers ?? false,
-          })
-        : '';
+    // Get the stockInfoStage internally
+    const stockInfoStage = this.getStockInfoStage();
+
+    const selectedStock =
+      this.selectedStockIndex === 0 ? this.stocks.stockA : this.stocks.stockB;
+
+    const chartSvg = stockInfoStage
+      ? generateSVGChart(selectedStock.parsedData, {
+          isInvestmentGrowth: stockInfoStage.showInvestmentGrowth,
+          useQuarterlyMarkers: stockInfoStage.useQuarterlyMarkers,
+        })
+      : '';
 
     return html`
       <div class="stock-info-container">
@@ -240,88 +221,38 @@ export class AssetAllocationParticipantView extends MobxLitElement {
             ? html`<md-filled-tonal-button
                 @click=${() => (this.selectedStockIndex = 0)}
               >
-                ${this.stocks.stockA?.title}
+                ${this.stocks.stockA.title}
               </md-filled-tonal-button>`
             : html`<md-outlined-button
                 @click=${() => (this.selectedStockIndex = 0)}
               >
-                ${this.stocks.stockA?.title}
+                ${this.stocks.stockA.title}
               </md-outlined-button>`}
           ${this.selectedStockIndex === 1
             ? html`<md-filled-tonal-button
                 @click=${() => (this.selectedStockIndex = 1)}
               >
-                ${this.stocks.stockB?.title}
+                ${this.stocks.stockB.title}
               </md-filled-tonal-button>`
             : html`<md-outlined-button
                 @click=${() => (this.selectedStockIndex = 1)}
               >
-                ${this.stocks.stockB?.title}
+                ${this.stocks.stockB.title}
               </md-outlined-button>`}
         </div>
 
         <div class="stock-content">
-          <div class="stock-chart">
-            ${chartSvg
-              ? html`<div class="chart-wrapper">${unsafeHTML(chartSvg)}</div>`
-              : nothing}
-          </div>
+          ${chartSvg
+            ? html`<div class="stock-chart">
+                <div class="chart-wrapper">${unsafeHTML(chartSvg)}</div>
+              </div>`
+            : nothing}
 
-          <div class="stock-description">
+          <div class="stock-description ${chartSvg ? '' : 'simple'}">
             <h4>${selectedStock.title}</h4>
             <div>
               ${unsafeHTML(convertMarkdownToHTML(selectedStock.description))}
             </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  private renderSimpleStockInfo() {
-    if (!this.stage?.simpleStockConfig) return nothing;
-
-    const stockA = this.stage.simpleStockConfig.stockA;
-    const stockB = this.stage.simpleStockConfig.stockB;
-    const selectedStock = this.selectedStockIndex === 0 ? stockA : stockB;
-
-    return html`
-      <div class="stock-info-container">
-        <div class="stock-toggle">
-          ${this.selectedStockIndex === 0
-            ? html`<md-filled-tonal-button
-                @click=${() => (this.selectedStockIndex = 0)}
-              >
-                ${this.stocks.stockA?.title}
-              </md-filled-tonal-button>`
-            : html`<md-outlined-button
-                @click=${() => (this.selectedStockIndex = 0)}
-              >
-                ${this.stocks.stockA?.title}
-              </md-outlined-button>`}
-          ${this.selectedStockIndex === 1
-            ? html`<md-filled-tonal-button
-                @click=${() => (this.selectedStockIndex = 1)}
-              >
-                ${this.stocks.stockB?.title}
-              </md-filled-tonal-button>`
-            : html`<md-outlined-button
-                @click=${() => (this.selectedStockIndex = 1)}
-              >
-                ${this.stocks.stockB?.title}
-              </md-outlined-button>`}
-        </div>
-
-        <div class="stock-content">
-          <div class="stock-description simple">
-            <h4>${selectedStock.name}</h4>
-            ${selectedStock.description
-              ? html`<div>
-                  ${unsafeHTML(
-                    convertMarkdownToHTML(selectedStock.description),
-                  )}
-                </div>`
-              : nothing}
           </div>
         </div>
       </div>
@@ -435,10 +366,5 @@ export class AssetAllocationParticipantView extends MobxLitElement {
     );
     if (stage?.kind !== StageKind.STOCKINFO) return null;
     return stage;
-  }
-
-  private getStocks(stockInfoStage: StockInfoStageConfig | null): Stock[] {
-    if (!stockInfoStage) return [];
-    return stockInfoStage.stocks || [];
   }
 }
