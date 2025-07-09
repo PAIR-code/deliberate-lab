@@ -308,6 +308,10 @@ export class ChipView extends MobxLitElement {
       selectedSellChip: string,
       sellChipAmount: number,
     ) => void,
+    selectedBuyChip = '', // default to pass to offer form
+    buyChipAmount = 0, // default to pass to offer form
+    selectedSellChip = '', // default to pass to offer form
+    sellChipAmount = 0, // default to pass to offer form
     isLoading = false,
     buttonText = 'Submit offer',
   ) {
@@ -325,6 +329,10 @@ export class ChipView extends MobxLitElement {
         .sendOffer=${sendOffer}
         .isPending=${isLoading || isOfferPending}
         .buttonText=${buttonText}
+        selectedBuyChip=${selectedBuyChip}
+        buyChipAmount=${buyChipAmount}
+        selectedSellChip=${selectedSellChip}
+        sellChipAmount=${sellChipAmount}
       >
       </chip-offer-form>
     `;
@@ -706,11 +714,38 @@ export class ChipView extends MobxLitElement {
   }
 
   private renderAdvisorOffer(disabled = false) {
+    const renderOfferForm = () => {
+      const currentAssistance = this.answer?.currentAssistance;
+      if (
+        !currentAssistance?.proposedTime ||
+        currentAssistance.type !== ChipAssistanceType.OFFER
+      ) {
+        return nothing;
+      }
+
+      // Extract suggested values from current move
+      // TODO: Refactor into shared function
+      const offer = currentAssistance.proposedOffer;
+      if (!offer) return nothing;
+      // Quick hack to extract types as there is current only one type
+      // per offer
+      const suggestedBuyType = Object.keys(offer.buy).join('');
+      const suggestedSellType = Object.keys(offer.sell).join('');
+      const suggestedBuyAmount = offer.buy[suggestedBuyType];
+      const suggestedSellAmount = offer.sell[suggestedSellType];
+
+      return this.renderManualOffer(
+        this.sendOffer,
+        suggestedBuyType,
+        suggestedBuyAmount,
+        suggestedSellType,
+        suggestedSellAmount,
+      );
+    };
+
     return html`
       ${this.renderAdvisorButton(disabled)} ${this.getAssistanceMessage()}
-      ${this.answer?.currentAssistance?.proposedTime
-        ? this.renderManualOffer(this.sendOffer)
-        : nothing}
+      ${renderOfferForm()}
     `;
   }
 
@@ -733,10 +768,24 @@ export class ChipView extends MobxLitElement {
       const proposal = proposedOffer
         ? `You proposed giving ${JSON.stringify(proposedOffer.sell)} to get ${JSON.stringify(proposedOffer.buy)}`
         : '';
+
+      // TODO: Refactor into shared function
+      // Quick hack to extract types as there is current only one type
+      // per offer
+      const suggestedBuyType = Object.keys(proposedOffer?.buy ?? {}).join('');
+      const suggestedSellType = Object.keys(proposedOffer?.sell ?? {}).join('');
+      const suggestedBuyAmount = proposedOffer?.buy[suggestedBuyType] ?? 0;
+      const suggestedSellAmount = proposedOffer?.sell[suggestedSellType] ?? 0;
       return html`
         <div>${proposal}</div>
         <div>${this.getAssistanceMessage()}</div>
-        ${this.renderManualOffer(this.sendOffer)}
+        ${this.renderManualOffer(
+          this.sendOffer,
+          suggestedBuyType,
+          suggestedBuyAmount,
+          suggestedSellType,
+          suggestedSellAmount,
+        )}
       `;
     }
 
@@ -761,6 +810,10 @@ export class ChipView extends MobxLitElement {
       <div>Submit your proposal below and I'll give you feedback:</div>
       ${this.renderManualOffer(
         sendCoachProposal,
+        '',
+        0,
+        '',
+        0,
         this.isAssistanceCoachLoading,
         'Submit proposed offer',
       )}
