@@ -896,10 +896,10 @@ export class ChipView extends MobxLitElement {
       const response = await this.participantService.requestChipAssistance(
         this.stage?.id ?? '',
         'coach',
-        this.selectedBuyChip,
-        this.buyChipAmount,
-        this.selectedSellChip,
-        this.sellChipAmount,
+        '', // buy chip is N/A for response assistance
+        0, // buy amount is N/A for response assistance
+        '', // sell chip is N/A for response assistance
+        0, // buy amount is N/A for response assistance
         true,
       );
       this.isAssistanceCoachLoading = false;
@@ -912,10 +912,10 @@ export class ChipView extends MobxLitElement {
       const response = await this.participantService.requestChipAssistance(
         this.stage?.id ?? '',
         'coach',
-        this.selectedBuyChip,
-        this.buyChipAmount,
-        this.selectedSellChip,
-        this.sellChipAmount,
+        '', // buy chip is N/A for response assistance
+        0, // buy amount is N/A for response assistance
+        '', // sell chip is N/A for response assistance
+        0, // buy amount is N/A for response assistance
         false,
       );
       this.isAssistanceCoachLoading = false;
