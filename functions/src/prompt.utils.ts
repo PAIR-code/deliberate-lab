@@ -1,4 +1,5 @@
 import {
+  AssetAllocationStageParticipantAnswer,
   BasePromptConfig,
   ProfileAgentConfig,
   PromptItemType,
@@ -7,10 +8,15 @@ import {
   StageKind,
   UserProfile,
   getChatPromptMessageHistory,
-  makeStructuredOutputPrompt,
   getStockInfoSummaryText,
+  makeStructuredOutputPrompt,
 } from '@deliberation-lab/utils';
 import {
+  getAssetAllocationAnswersText,
+  getAssetAllocationSummaryText,
+} from './stages/asset_allocation.utils';
+import {
+  getFirestoreAnswersForStage,
   getFirestoreExperiment,
   getFirestoreStage,
   getFirestorePublicStageChatMessages,
@@ -170,6 +176,24 @@ export async function getStageDisplayForPrompt(
       return getChatPromptMessageHistory(privateMessages, stage);
     case StageKind.STOCKINFO:
       return getStockInfoSummaryText(stage);
+    case StageKind.ASSET_ALLOCATION:
+      const assetAllocationDisplay = await getAssetAllocationSummaryText(
+        experimentId,
+        stage,
+      );
+
+      if (includeAnswers) {
+        const assetAllocationAnswers = await getStageAnswersForPrompt(
+          experimentId,
+          cohortId,
+          participantId,
+          stage,
+        );
+        return assetAllocationAnswers
+          ? `${assetAllocationDisplay}\n\n${assetAllocationAnswers}`
+          : assetAllocationDisplay;
+      }
+      return assetAllocationDisplay;
     default:
       // TODO: Set up display/answers for ranking stage
       // TODO: Set up display/answers for survey stage
@@ -184,5 +208,21 @@ export async function getStageAnswersForPrompt(
   stage: StageConfig,
 ) {
   // TODO: Return participant answer(s)
-  return '';
+  switch (stage.kind) {
+    case StageKind.ASSET_ALLOCATION:
+      const participantAnswers =
+        await getFirestoreAnswersForStage<AssetAllocationStageParticipantAnswer>(
+          experimentId,
+          cohortId,
+          stage.id,
+          participantId ? [participantId] : undefined,
+        );
+      return await getAssetAllocationAnswersText(
+        experimentId,
+        stage,
+        participantAnswers,
+      );
+    default:
+      return '';
+  }
 }
