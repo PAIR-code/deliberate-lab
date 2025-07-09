@@ -1,50 +1,99 @@
-import {database} from 'firebase-functions';
+import * as admin from 'firebase-admin';
+
+import {database, pubsub} from 'firebase-functions';
 import {app} from './app';
 
+const dbInstance = database.instance(
+  `${process.env.GCLOUD_PROJECT}-default-rtdb`,
+);
+
 /**
- * Mirror the presence status from RTDB to Firestore.
+ * Mirror presence from RTDB → Firestore and maintain an aggregate node. Use
+ * separate connection IDs to track individual connections, to properly support
+ * multiple browser tabs or devices.
  *
- * This function is triggered when the presence status of a participant changes in the RTDB.
- * It updates the corresponding participant document in Firestore with the new status.
+ * RTDB write path:
+ *   /status/{experimentId}/{participantPrivateId}/{connectionId}
  *
- * Currently, rtdb is only used in Deliberate Lab for presence tracking (using the rtdb websocket).
+ * Firestore doc path:
+ *   experiments/{experimentId}/participants/{participantPrivateId}
  */
-export const mirrorPresenceToFirestore = database
-  .instance(`${process.env.GCLOUD_PROJECT}-default-rtdb`) // other parts of firebase use the -default-rtdb suffix, so stay consistent
-  .ref('/status/{experimentId}/{participantPrivateId}') // rtdb path, not firestore path
+export const mirrorPresenceToFirestore = dbInstance
+  .ref('/status/{experimentId}/{participantPrivateId}/{connectionId}')
   .onWrite(async (change, context) => {
-    const {experimentId, participantPrivateId} = context.params;
-    console.log(
-      `mirrorPresenceToFirestore triggered for experimentId=${experimentId} participantPrivateId=${participantPrivateId}`,
-    );
-    const status = change.after.val();
+    const {experimentId, participantPrivateId, connectionId} = context.params;
 
-    if (!status) return null; // status was deleted
+    if (connectionId.startsWith('_')) return null;
 
-    // Find the matching participant doc
-    const participantRef = app
+    const parentRef = change.after.ref.parent; // participantPrivateId
+    const aggRef = parentRef!.child('_aggregate');
+    const fsRef = app
       .firestore()
       .doc(`experiments/${experimentId}/participants/${participantPrivateId}`);
-    const participantSnapshot = await participantRef.get();
 
-    if (!participantSnapshot.exists) {
+    const siblingsSnapshot = await parentRef!.once('value');
+
+    let online = false;
+    for (const key in siblingsSnapshot.val()) {
+      if (key.startsWith('_')) {
+        // ignore _aggregate, future meta-nodes
+        continue;
+      }
+
+      if (siblingsSnapshot.val()[key].connected) {
+        online = true;
+        break;
+      }
+    }
+
+    await aggRef.set({
+      state: online ? 'online' : 'offline',
+      ts: admin.database.ServerValue.TIMESTAMP,
+    });
+
+    const snapshot = await fsRef.get();
+    if (!snapshot.exists) {
       console.warn(
-        `No participant found with id=${participantPrivateId} in experiment=${experimentId}`,
+        `No participant ${participantPrivateId} in experiment ${experimentId}`,
       );
       return null;
     }
-    const participant = participantSnapshot.data();
-
-    if (participant && participant.agentConfig) {
-      return null; // Don't update presence for agent participants
-    }
-
-    // Temporarily prevent participants from switching from connected
-    // to disconnected (PR #537)
-    // TODO: Remove this logic to resume actual presence detection
-    if (!status.connected) {
+    if (snapshot.data()?.agentConfig) {
+      // Skip bot/agent participants
       return null;
     }
 
-    return participantRef.set({connected: status.connected}, {merge: true});
+    return fsRef.set(
+      {
+        connected: online,
+        last_changed: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      {merge: true},
+    );
+  });
+
+export const scrubStalePresence = pubsub
+  .schedule('every 24 hours')
+  .onRun(async () => {
+    const cutoff = Date.now() - 72 * 60 * 60 * 1000; // 72 hours
+    const root = admin.app().database().ref('status');
+    const usersSnapshot = await root.get();
+    const userSnapshots: admin.database.DataSnapshot[] = [];
+    for (const userSnapshot of Object.values(usersSnapshot.val() || {})) {
+      userSnapshots.push(userSnapshot as admin.database.DataSnapshot);
+    }
+    for (const userSnapshot of userSnapshots) {
+      const connSnapshots: admin.database.DataSnapshot[] = [];
+      userSnapshot.forEach((connSnapshot) => {
+        connSnapshots.push(connSnapshot);
+      });
+      for (const connSnapshot of connSnapshots) {
+        if (
+          !connSnapshot.key!.startsWith('_') &&
+          connSnapshot.child('ts').val() < cutoff
+        ) {
+          connSnapshot.ref.remove();
+        }
+      }
+    }
   });

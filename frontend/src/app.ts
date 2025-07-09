@@ -11,9 +11,8 @@ import './components/participant_view/participant_view';
 import './components/settings/settings';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
-import {CSSResultGroup, html, nothing, TemplateResult} from 'lit';
+import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement} from 'lit/decorators.js';
-import {classMap} from 'lit/directives/class-map.js';
 
 import {core} from './core/core';
 import {AnalyticsService} from './services/analytics.service';
@@ -23,14 +22,18 @@ import {Pages, RouterService} from './services/router.service';
 import {SettingsService} from './services/settings.service';
 import {PresenceService} from './services/presence.service';
 
-import {ColorMode} from './shared/types';
-
 import {styles} from './app.scss';
 
 /** App main component. */
 @customElement('deliberation-lab')
 export class App extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
+
+  // Unique per-tab connection ID for presence tracking
+  private readonly connectionId: string =
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2) + Date.now();
 
   private readonly analyticsService = core.getService(AnalyticsService);
   private readonly authService = core.getService(AuthService);
@@ -92,6 +95,7 @@ export class App extends MobxLitElement {
         this.presenceService.setupPresence(
           this.routerService.activeRoute.params['experiment'],
           this.routerService.activeRoute.params['participant'],
+          this.connectionId,
         );
 
         return html`
