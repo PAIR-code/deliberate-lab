@@ -111,6 +111,7 @@ export class ExperimentManager extends Service {
   @observable participantMap: Record<string, ParticipantProfileExtended> = {};
   @observable mediatorMap: Record<string, MediatorProfileExtended> = {};
   @observable alertMap: Record<string, AlertMessage> = {};
+  @observable logs: LogEntry[] = [];
 
   // Loading
   @observable unsubscribe: Unsubscribe[] = [];
@@ -118,6 +119,7 @@ export class ExperimentManager extends Service {
   @observable isParticipantsLoading = false;
   @observable isMediatorsLoading = false;
   @observable isAgentsLoading = false;
+  @observable isLogsLoading = false;
 
   // Firestore loading (not included in general isLoading)
   @observable isWritingCohort = false;
@@ -134,6 +136,7 @@ export class ExperimentManager extends Service {
   @observable showCohortList = false;
   @observable showParticipantStats = false;
   @observable showParticipantPreview = true;
+  @observable showLogs = false;
   @observable hideLockedCohorts = false;
   @observable expandAllCohorts = true;
 
@@ -247,6 +250,10 @@ export class ExperimentManager extends Service {
     if (toggle) {
       this.showParticipantPreview = !showParticipantStats;
     }
+  }
+
+  setShowLogs(showLogs: boolean) {
+    this.showLogs = showLogs;
   }
 
   setHideLockedCohorts(hideLockedCohorts: boolean) {
@@ -407,6 +414,7 @@ export class ExperimentManager extends Service {
     this.isParticipantsLoading = value;
     this.isMediatorsLoading = value;
     this.isAgentsLoading = value;
+    this.isLogsLoading = value;
   }
 
   updateForRoute(experimentId: string) {
@@ -568,6 +576,32 @@ export class ExperimentManager extends Service {
         },
       ),
     );
+
+    // Subscribe to logs
+    this.unsubscribe.push(
+      onSnapshot(
+        query(
+          collection(
+            this.sp.firebaseService.firestore,
+            'experiments',
+            id,
+            'logs',
+          ),
+          orderBy('createdTimestamp', 'asc'),
+        ),
+        (snapshot) => {
+          let changedDocs = snapshot.docChanges().map((change) => change.doc);
+          if (changedDocs.length === 0) {
+            changedDocs = snapshot.docs;
+          }
+
+          changedDocs.forEach((doc) => {
+            this.logs.push(doc.data() as LogEntry);
+          });
+          this.isLogsLoading = false;
+        },
+      ),
+    );
   }
 
   unsubscribeAll() {
@@ -580,6 +614,7 @@ export class ExperimentManager extends Service {
     this.mediatorMap = {};
     this.agentPersonaMap = {};
     this.alertMap = {};
+    this.logs = [];
   }
 
   reset() {

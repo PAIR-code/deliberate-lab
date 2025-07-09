@@ -15,6 +15,7 @@ import {
   MetadataConfig,
   StageConfig,
   StageKind,
+  createAssetAllocationStage,
   createChatStage,
   createRankingStage,
   createInfoStage,
@@ -23,6 +24,7 @@ import {
   createPrivateChatStage,
   createProfileStage,
   createRevealStage,
+  createStockInfoStage,
   createSurveyPerParticipantStage,
   createSurveyStage,
   createTOSStage,
@@ -51,9 +53,17 @@ import {
   getFruitTestExperimentTemplate,
 } from '../../shared/templates/fruit_test';
 import {
+  STOCKINFO_GAME_METADATA,
+  getStockInfoGameStageConfigs,
+} from '../../shared/templates/stockinfo_template';
+import {
   FLIPCARD_TEMPLATE_METADATA,
   getFlipCardExperimentTemplate,
 } from '../../shared/templates/flipcard';
+import {
+  ASSET_ALLOCATION_TEMPLATE_METADATA,
+  getAssetAllocationTemplate,
+} from '../../shared/templates/asset_allocation_template';
 
 import {styles} from './stage_builder_dialog.scss';
 
@@ -136,7 +146,8 @@ export class StageBuilderDialog extends MobxLitElement {
         ${this.renderLASCard()} ${this.renderLASCard(true)}
         ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
         ${this.renderSalespersonGameCard()} ${this.renderFlipCardTemplateCard()}
-        ${this.renderFruitTestTemplateCard()}
+        ${this.renderFruitTestTemplateCard()} ${this.renderStockInfoGameCard()}
+        ${this.renderAssetAllocationTemplateCard()}
       </div>
     `;
   }
@@ -164,7 +175,8 @@ export class StageBuilderDialog extends MobxLitElement {
           ${this.renderTransferCard()} ${this.renderSurveyCard()}
           ${this.renderSurveyPerParticipantCard()} ${this.renderFlipCardCard()}
           ${this.renderRankingCard()} ${this.renderRevealCard()}
-          ${this.renderPayoutCard()}
+          ${this.renderPayoutCard()} ${this.renderStockInfoCard()}
+          ${this.renderAssetAllocationCard()}
         </div>
       </div>
     `;
@@ -351,6 +363,38 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
+  private renderStockInfoCard() {
+    const addStage = () => {
+      this.addStage(createStockInfoStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">📈 Stock Info</div>
+        <div>
+          Display stock information with charts, performance metrics, and
+          configurable data cards.
+        </div>
+      </div>
+    `;
+  }
+
+  private renderAssetAllocationCard() {
+    const addStage = () => {
+      this.addStage(createAssetAllocationStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">💰 Asset Allocation</div>
+        <div>
+          Allow participants to allocate investment portfolios between multiple
+          stocks using interactive sliders.
+        </div>
+      </div>
+    `;
+  }
+
   private renderRankingCard() {
     const addStage = () => {
       this.addStage(createRankingStage());
@@ -468,6 +512,40 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card" @click=${addTemplate}>
         <div class="title">${FLIPCARD_TEMPLATE_METADATA.name}</div>
         <div>${FLIPCARD_TEMPLATE_METADATA.description}</div>
+      </div>
+    `;
+  }
+
+  private renderStockInfoGameCard() {
+    const addGame = () => {
+      this.addGame(STOCKINFO_GAME_METADATA, getStockInfoGameStageConfigs());
+    };
+
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">📈 Stock Analysis Game</div>
+        <div>
+          A demonstration of the StockInfo stage with financial data analysis.
+        </div>
+      </div>
+    `;
+  }
+
+  private renderAssetAllocationTemplateCard() {
+    const addGame = () => {
+      this.addGame(
+        ASSET_ALLOCATION_TEMPLATE_METADATA,
+        getAssetAllocationTemplate(),
+      );
+    };
+
+    return html`
+      <div class="card" @click=${addGame}>
+        <div class="title">💰 Investment Portfolio Game</div>
+        <div>
+          A complete investment study with stock analysis and portfolio
+          allocation decisions.
+        </div>
       </div>
     `;
   }

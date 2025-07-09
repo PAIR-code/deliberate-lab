@@ -7,6 +7,7 @@ import '../participant_view/participant_view';
 import './cohort_editor';
 import './cohort_settings_dialog';
 import './cohort_list';
+import './log_dashboard';
 import './participant_stats';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
@@ -14,6 +15,7 @@ import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
 import {core} from '../../core/core';
+import {AuthService} from '../../services/auth.service';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {AuthService} from '../../services/auth.service';
 import {CohortService} from '../../services/cohort.service';
@@ -76,6 +78,9 @@ export class Component extends MobxLitElement {
     return html`
       ${this.renderParticipantStatsPanel()}
       ${this.renderParticipantPreviewPanel()}
+      ${this.experimentManager.showLogs
+        ? html`<log-dashboard></log-dashboard>`
+        : nothing}
     `;
   }
 
@@ -105,7 +110,10 @@ export class Component extends MobxLitElement {
   }
 
   private renderParticipantStatsPanel() {
-    if (!this.experimentManager.showParticipantStats) {
+    if (
+      !this.experimentManager.showParticipantStats ||
+      this.experimentManager.showLogs
+    ) {
       return nothing;
     }
 
@@ -139,7 +147,10 @@ export class Component extends MobxLitElement {
   }
 
   private renderParticipantPreviewPanel() {
-    if (!this.experimentManager.showParticipantPreview) {
+    if (
+      !this.experimentManager.showParticipantPreview ||
+      this.experimentManager.showLogs
+    ) {
       return nothing;
     }
 
@@ -161,6 +172,31 @@ export class Component extends MobxLitElement {
         <participant-view class="${popupStatus ? 'sepia' : ''}">
         </participant-view>
       </div>
+    `;
+  }
+
+  private renderDebugModeButton() {
+    if (!this.authService.isExperimenter) return nothing;
+
+    const debugMode = this.authService.isDebugMode;
+    const tooltipText = `
+      Turn debug mode ${debugMode ? 'off' : 'on'}.
+      (When on, experimenters can debugging statements in participant preview.
+      Note that only some stages have debugging statements.)
+    `;
+
+    return html`
+      <pr-tooltip text=${tooltipText} position="BOTTOM_END">
+        <pr-icon-button
+          icon=${debugMode ? 'code_off' : 'code'}
+          color="neutral"
+          variant="default"
+          @click=${() => {
+            this.authService.setDebugMode(!debugMode);
+          }}
+        >
+        </pr-icon-button>
+      </pr-tooltip>
     `;
   }
 
@@ -214,8 +250,18 @@ export class Component extends MobxLitElement {
           ${renderToggle()}
         </div>
         <div class="right">
+          <pr-button
+            color="tertiary"
+            variant="default"
+            size="small"
+            @click=${() => {
+              this.experimentManager.setShowLogs(true);
+            }}
+          >
+            Open log dashboard
+          </pr-button>
           ${this.renderDebugModeButton()} ${this.renderTransferMenu()}
-        </div>
+        /div>
       </div>
     `;
   }

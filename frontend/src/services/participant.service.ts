@@ -1,4 +1,5 @@
 import {
+  AssetAllocation,
   ChatMessage,
   ChatStageParticipantAnswer,
   ChipOffer,
@@ -54,6 +55,7 @@ import {
   setSalespersonControllerCallable,
   setSalespersonMoveCallable,
   setSalespersonResponseCallable,
+  updateAssetAllocationStageParticipantAnswerCallable,
   updateParticipantAcceptedTOSCallable,
   updateParticipantFailureCallable,
   updateParticipantProfileCallable,
@@ -707,6 +709,30 @@ export class ParticipantService extends Service {
           participantPrivateId: this.profile.privateId,
           participantPublicId: this.profile.publicId,
           flipCardStageParticipantAnswer: answer,
+        },
+      );
+    }
+
+    return response;
+  }
+
+  /** Update participant asset allocation answer. */
+  async updateAssetAllocationStageParticipantAnswer(
+    id: string, // asset allocation stage ID
+    allocation: AssetAllocation, // asset allocation
+    confirmed: boolean, // confirmation status
+  ) {
+    let response = {};
+
+    if (this.experimentId && this.profile) {
+      response = await updateAssetAllocationStageParticipantAnswerCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          participantPrivateId: this.profile.privateId,
+          stageId: id,
+          allocation,
+          confirmed,
         },
       );
     }

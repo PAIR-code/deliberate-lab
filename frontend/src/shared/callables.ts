@@ -26,6 +26,7 @@ import {
   SetSalespersonResponseData,
   SimpleResponse,
   SuccessResponse,
+  UpdateAssetAllocationStageParticipantAnswerData,
   UpdateChatStageParticipantAnswerData,
   UpdateCohortMetadataData,
   UpdateFlipCardStageParticipantAnswerData,
@@ -333,6 +334,21 @@ export const updateFlipCardStageParticipantAnswerCallable = async (
   >(
     functions,
     'updateFlipCardStageParticipantAnswer',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint to update asset allocation stage participant answers */
+export const updateAssetAllocationStageParticipantAnswerCallable = async (
+  functions: Functions,
+  config: UpdateAssetAllocationStageParticipantAnswerData,
+) => {
+  const {data} = await httpsCallable<
+    UpdateAssetAllocationStageParticipantAnswerData,
+    SuccessResponse
+  >(
+    functions,
+    'updateAssetAllocationStageParticipantAnswer',
   )(config);
   return data;
 };

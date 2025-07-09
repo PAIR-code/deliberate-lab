@@ -1,4 +1,5 @@
 import {Type} from '@sinclair/typebox';
+import {AssetAllocationStageConfigData} from './asset_allocation_stage.validation';
 import {ChatStageConfigData} from './chat_stage.validation';
 import {ChipStageConfigData} from './chip_stage.validation';
 import {ComprehensionStageConfigData} from './comprehension_stage.validation';
@@ -10,6 +11,7 @@ import {PrivateChatStageConfigData} from './private_chat_stage.validation';
 import {ProfileStageConfigData} from './profile_stage.validation';
 import {RevealStageConfigData} from './reveal_stage.validation';
 import {SalespersonStageConfigData} from './salesperson_stage.validation';
+import {StockInfoStageConfigData} from './stockinfo_stage.validation';
 import {
   SurveyPerParticipantStageConfigData,
   SurveyStageConfigData,
@@ -23,6 +25,7 @@ import {TOSStageConfigData} from './tos_stage.validation';
 
 /** StageConfig input validation. */
 export const StageConfigData = Type.Union([
+  AssetAllocationStageConfigData,
   ChatStageConfigData,
   ChipStageConfigData,
   ComprehensionStageConfigData,
@@ -34,6 +37,7 @@ export const StageConfigData = Type.Union([
   RankingStageConfigData,
   RevealStageConfigData,
   SalespersonStageConfigData,
+  StockInfoStageConfigData,
   SurveyPerParticipantStageConfigData,
   SurveyStageConfigData,
   TOSStageConfigData,

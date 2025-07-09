@@ -14,6 +14,7 @@ import {updateChipTurn} from '../stages/chip.utils';
 import {addParticipantAnswerToRankingStagePublicData} from '../stages/ranking.utils';
 import {addParticipantAnswerToSurveyStagePublicData} from '../stages/survey.utils';
 import {addParticipantAnswerToFlipCardStagePublicData} from '../stages/flipcard.utils';
+import {addParticipantAnswerToAssetAllocationStagePublicData} from '../stages/asset_allocation.utils';
 
 /** When participant (private) stage data is updated. */
 export const onParticipantStageDataUpdated = onDocumentWritten(
@@ -45,6 +46,14 @@ export const onParticipantStageDataUpdated = onDocumentWritten(
         break;
       case StageKind.FLIPCARD:
         addParticipantAnswerToFlipCardStagePublicData(
+          event.params.experimentId,
+          stage,
+          participant,
+          data,
+        );
+        break;
+      case StageKind.ASSET_ALLOCATION:
+        addParticipantAnswerToAssetAllocationStagePublicData(
           event.params.experimentId,
           stage,
           participant,

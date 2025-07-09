@@ -3,6 +3,7 @@ import '../../pair-components/icon';
 import '../../pair-components/icon_button';
 import '../../pair-components/tooltip';
 import '../experimenter/experimenter_data_editor';
+import '../stages/asset_allocation_editor';
 import '../stages/base_stage_editor';
 import '../stages/group_chat_editor';
 import '../stages/flipcard_editor';
@@ -11,6 +12,7 @@ import '../stages/info_editor';
 import '../stages/payout_editor';
 import '../stages/profile_stage_editor';
 import '../stages/reveal_editor';
+import '../stages/stockinfo_editor';
 import '../stages/survey_editor';
 import '../stages/survey_per_participant_editor';
 import '../stages/tos_editor';
@@ -459,6 +461,16 @@ export class ExperimentBuilder extends MobxLitElement {
         return html`
           <base-stage-editor .stage=${stage}></base-stage-editor>
           <reveal-editor .stage=${stage}></reveal-editor>
+        `;
+      case StageKind.STOCKINFO:
+        return html`
+          <base-stage-editor .stage=${stage}></base-stage-editor>
+          <stockinfo-editor .stage=${stage}></stockinfo-editor>
+        `;
+      case StageKind.ASSET_ALLOCATION:
+        return html`
+          <base-stage-editor .stage=${stage}></base-stage-editor>
+          <asset-allocation-editor .stage=${stage}></asset-allocation-editor>
         `;
       case StageKind.SURVEY:
         return html`
