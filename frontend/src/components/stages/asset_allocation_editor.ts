@@ -153,8 +153,8 @@ export class AssetAllocationEditor extends MobxLitElement {
           >
           ${hasExactlyTwoStocks
             ? html`<span class="stocks-preview"
-                >(${stockInfoStage.stocks[0]?.title || 'Stock A'},
-                ${stockInfoStage.stocks[1]?.title || 'Stock B'})</span
+                >(${stockInfoStage.stocks[0]?.name || 'Stock A'},
+                ${stockInfoStage.stocks[1]?.name || 'Stock B'})</span
               >`
             : html`<span class="warning"
                 >⚠️ Asset Allocation requires exactly 2 stocks</span

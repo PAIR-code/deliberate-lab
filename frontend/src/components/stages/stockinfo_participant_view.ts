@@ -71,7 +71,7 @@ export class StockInfoParticipantView extends MobxLitElement {
   private renderStockHeader(stock: Stock) {
     return html`
       <div class="stock-header">
-        <h2 class="stock-title">${stock.title}</h2>
+        <h2 class="stock-title">${stock.name}</h2>
       </div>
     `;
   }
@@ -152,7 +152,7 @@ export class StockInfoParticipantView extends MobxLitElement {
                   class="stock-nav-button active"
                   @click=${() => this.switchToStock(index)}
                 >
-                  ${stock.title || `Stock ${index + 1}`}
+                  ${stock.name || `Stock ${index + 1}`}
                 </md-filled-button>
               `
             : html`
@@ -160,7 +160,7 @@ export class StockInfoParticipantView extends MobxLitElement {
                   class="stock-nav-button"
                   @click=${() => this.switchToStock(index)}
                 >
-                  ${stock.title || `Stock ${index + 1}`}
+                  ${stock.name || `Stock ${index + 1}`}
                 </md-outlined-button>
               `;
         })}

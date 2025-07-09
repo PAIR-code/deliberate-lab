@@ -75,8 +75,8 @@ async function getStockNames(
     )) as StockInfoStageConfig;
     if (stockInfoStage?.stocks && stockInfoStage.stocks.length >= 2) {
       return {
-        stockA: stockInfoStage.stocks[0].title,
-        stockB: stockInfoStage.stocks[1].title,
+        stockA: stockInfoStage.stocks[0].name,
+        stockB: stockInfoStage.stocks[1].name,
       };
     }
   }
