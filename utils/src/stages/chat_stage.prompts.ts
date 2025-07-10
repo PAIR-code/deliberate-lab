@@ -21,7 +21,6 @@ import {getBaseStagePrompt} from './stage.prompts';
 // ************************************************************************* //
 // CONSTANTS                                                                 //
 // ************************************************************************* //
-export const DEFAULT_MODEL = 'gemini-1.5-pro-latest';
 export const DEFAULT_AGENT_MEDIATOR_PROMPT = `You are a agent for a chat conversation. Your task is to ensure that the conversation is polite.
 If you notice that participants are being rude, step in to make sure that everyone is respectful. 
 Otherwise, do not respond.`;
