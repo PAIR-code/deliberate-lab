@@ -31,9 +31,8 @@ import {
 export async function getStructuredPrompt(
   experimentId: string,
   cohortId: string,
-  // participant ID to include answers for, or null if mediator (include all)
-  // TODO: Update field to list of participants to include for answers
-  participantId: string | null,
+  // List of participant private IDs for participants to include for answers
+  participantIds: string[],
   stageId: string, // current stage ID
   userProfile: UserProfile,
   agentConfig: ProfileAgentConfig,
@@ -66,7 +65,7 @@ export async function getStructuredPrompt(
           await getStageContextForPrompt(
             experimentId,
             cohortId,
-            participantId!,
+            participantIds,
             stageId,
             promptItem,
           ),
@@ -86,7 +85,7 @@ export async function getStructuredPrompt(
 export async function getStageContextForPrompt(
   experimentId: string,
   cohortId: string,
-  participantId: string,
+  participantIds: string[],
   currentStageId: string,
   item: StageContextPromptItem,
 ) {
@@ -120,7 +119,7 @@ export async function getStageContextForPrompt(
         await getStageDisplayForPrompt(
           experimentId,
           cohortId,
-          participantId,
+          participantIds,
           stage,
           item.includeParticipantAnswers,
         ),
@@ -130,7 +129,7 @@ export async function getStageContextForPrompt(
         await getStageAnswersForPrompt(
           experimentId,
           cohortId,
-          participantId,
+          participantIds,
           stage,
         ),
       );
@@ -150,7 +149,7 @@ export async function getStageContextForPrompt(
 export async function getStageDisplayForPrompt(
   experimentId: string,
   cohortId: string,
-  participantId: string | null, // if null, include all participants
+  participantIds: string[], // participant private IDs for answer inclusion
   stage: StageConfig,
   includeAnswers: boolean,
 ) {
@@ -168,9 +167,12 @@ export async function getStageDisplayForPrompt(
       );
       return getChatPromptMessageHistory(messages, stage);
     case StageKind.PRIVATE_CHAT:
+      // Private chat should have exactly 1 participant
+      if (participantIds.length === 0) return '';
+      const participantIdForPrivate = participantIds[0];
       const privateMessages = await getFirestorePrivateChatMessages(
         experimentId,
-        participantId,
+        participantIdForPrivate,
         stage.id,
       );
       return getChatPromptMessageHistory(privateMessages, stage);
@@ -183,7 +185,7 @@ export async function getStageDisplayForPrompt(
         const assetAllocationAnswers = await getStageAnswersForPrompt(
           experimentId,
           cohortId,
-          participantId,
+          participantIds,
           stage,
         );
         return assetAllocationAnswers
@@ -201,7 +203,7 @@ export async function getStageDisplayForPrompt(
 export async function getStageAnswersForPrompt(
   experimentId: string,
   cohortId: string,
-  participantId: string | null, // if null, include all participants
+  participantIds: string[], // participant private IDs
   stage: StageConfig,
 ) {
   // TODO: Return participant answer(s)
@@ -212,7 +214,7 @@ export async function getStageAnswersForPrompt(
           experimentId,
           cohortId,
           stage.id,
-          participantId ? [participantId] : undefined,
+          participantIds,
         );
       return getAssetAllocationAnswersText(participantAnswers);
     default:

@@ -239,7 +239,7 @@ export async function getFirestoreAnswersForStage<
   experimentId: string,
   cohortId: string,
   stageId: string,
-  participantIds?: string[],
+  participantIds?: string[], // if undefined, use active cohort participants
 ): Promise<Array<{participantId: string; answer: T}>> {
   const targetParticipants =
     participantIds ??
