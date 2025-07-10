@@ -312,7 +312,7 @@ const CHIP_INFO_STAGE_OVERVIEW3 = createInfoStage({
   name: 'Instructions: chip valuations 2',
   infoLines: [
     'The following table is shown to you during the game. It provides the number of chips everyone has as well as a reminder of your own valuations.',
-    '<img src="https://i.imgur.com/pm3FrZs.png" style="max-width: 60%; height: auto;" />',
+    '![Example of a table](https://i.imgur.com/pm3FrZs.png)',
   ],
   progress: createStageProgressConfig({
     showParticipantProgress: false,
@@ -892,9 +892,9 @@ const COACH_MODE_INSTRUCTION = createInfoStage({
     '**• Next Step:** After receiving feedback, you can revise your action before sending. You always have final control over what you send.',
     '',
     'Here’s how the AI coach might help you with the proposal:',
-    '<img src="https://i.imgur.com/YTluFKf.png" style="max-width: 60%; height: auto;" />',
+    '![Example of receiving an offer](https://i.imgur.com/YTluFKf.png)',
     'Here’s how the AI coach might give feedback on the response:',
-    '<img src="https://i.imgur.com/h6E2hco.png" style="max-width: 60%; height: auto;" />',
+    '![Example of receiving an offer](https://i.imgur.com/h6E2hco.png)',
   ],
 });
 
@@ -909,9 +909,9 @@ const ADVISOR_MODE_INSTRUCTION = createInfoStage({
     "**• Next Step:** After seeing the recommendation, you can either accept the agent's move or ignore it and enter your own action.",
     '',
     'Here’s how the AI advisor might give suggestions on the proposal:',
-    '<img src="https://i.imgur.com/HyluDin.png" style="max-width: 60%; height: auto;" />',
+    '![Example of receiving an offer](https://i.imgur.com/HyluDin.png)',
     'Here’s how the AI coach might give suggestions on the response:',
-    '<img src="https://i.imgur.com/Q4tHXz2.png" style="max-width: 60%; height: auto;" />',
+    '![Example of receiving an offer](https://i.imgur.com/Q4tHXz2.png)',
   ],
 });
 
@@ -925,8 +925,11 @@ const DELEGATE_MODE_INSTRUCTION = createInfoStage({
     '**• How the Delegate Works:** If you choose to delegate, the agent will autonomously decide and execute a move for you, and provide you with a reason.',
     "**• Next Step:** After seeing the recommendation, you can either accept the agent's move or ignore it and enter your own action.",
     '',
+    'Here’s how you can delegate the proposal to the AI:',
     '![Example of the AI Delegate making an decision when proposing](https://i.imgur.com/Qbpwm1Z.png)',
-    '![Example of the AI Delegate making an decision when proposing](https://i.imgur.com/VNNn3Vu.png)',
+    'Remember it is the same underlying AI model, but you will only be shown the final decision, not the reasoning',
+    // '![Example of the AI Delegate making an decision when proposing](https://i.imgur.com/VNNn3Vu.png)',
+    'Here’s how you can delegate the response to the AI:',
     '![Example of the AI Delegate making an decision when responding to an offer](https://i.imgur.com/1Yev7H7.png)',
   ],
 });
