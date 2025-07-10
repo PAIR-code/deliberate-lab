@@ -206,6 +206,31 @@ export class ChipView extends MobxLitElement {
       // current round / turn marked in public data, then extract
       // the model's explanation for the delegated offer and display that
       // instead.
+      const publicData = this.cohortService.stagePublicDataMap[this.stage?.id ?? ''] as ChipStagePublicData;
+      const currentRound = publicData?.currentRound;
+      const participantId = this.participantService.profile?.publicId ?? '';
+
+      // Step 1: search delegate assistance
+      const history = this.answer?.assistanceHistory ?? [];
+      const delegateMove = history.find(
+        (move) =>
+          move.selectedMode === ChipAssistanceMode.DELEGATE &&
+          move.type === ChipAssistanceType.OFFER &&
+          move.round === currentRound &&
+          move.turn === participantId
+      );
+
+      if (delegateMove?.message) {
+        return html`
+          <div class="offer-panel">
+            <b>💡 Reasons for making this offer:</b>
+            <div>${delegateMove.message}</div>
+            <div>--------------------------------------</div>
+            <div>Waiting for others to respond to your offer...</div>
+          </div>
+        `;
+      }
+
       return html`
         <div class="offer-panel">
           Waiting for others to respond to your offer...
@@ -239,7 +264,7 @@ export class ChipView extends MobxLitElement {
       case ChipAssistanceMode.NONE:
         return this.renderManualOffer(sendOffer);
       case ChipAssistanceMode.DELEGATE:
-        return this.renderDelegateButton(true);
+        return this.renderDelegateOfferButton(true);
       case ChipAssistanceMode.ADVISOR:
         return this.renderAdvisorOffer(true);
       case ChipAssistanceMode.COACH:
@@ -254,7 +279,7 @@ export class ChipView extends MobxLitElement {
         ? this.renderSelectManualOfferButton()
         : nothing}
       ${modes.includes(ChipAssistanceMode.DELEGATE)
-        ? this.renderDelegateButton()
+        ? this.renderDelegateResponseButton()
         : nothing}
       ${modes.includes(ChipAssistanceMode.ADVISOR)
         ? this.renderAdvisorButton()
@@ -437,7 +462,7 @@ export class ChipView extends MobxLitElement {
       case ChipAssistanceMode.NONE:
         return this.renderManualResponse(acceptOffer, rejectOffer);
       case ChipAssistanceMode.DELEGATE:
-        return this.renderDelegateButton(true);
+        return this.renderDelegateOfferButton(true);
       case ChipAssistanceMode.ADVISOR:
         return this.renderAdvisorResponse(true);
       case ChipAssistanceMode.COACH:
@@ -452,7 +477,7 @@ export class ChipView extends MobxLitElement {
         ? this.renderSelectManualResponseButton()
         : nothing}
       ${modes.includes(ChipAssistanceMode.DELEGATE)
-        ? this.renderDelegateButton()
+        ? this.renderDelegateResponseButton()
         : nothing}
       ${modes.includes(ChipAssistanceMode.ADVISOR)
         ? this.renderAdvisorButton()
@@ -674,21 +699,20 @@ export class ChipView extends MobxLitElement {
     this.isRejectOfferLoading = false;
   }
 
-  private renderDelegateButton(disabled = false) {
+  private renderDelegateOfferButton(disabled = false) {
     return html`
       <div class="button-wrapper">
         <pr-button
           color="secondary"
           variant="tonal"
-          ?disabled=${this.isAssistanceLoading()}
+          ?disabled=${this.isAssistanceLoading() || disabled}
           ?loading=${this.isAssistanceDelegateLoading}
           @click=${async () => {
             this.isAssistanceDelegateLoading = true;
-            const response =
-              await this.participantService.selectChipAssistanceMode(
-                this.stage?.id ?? '',
-                'delegate',
-              );
+            await this.participantService.selectChipAssistanceMode(
+              this.stage?.id ?? '',
+              'delegate', // offer context
+            );
             this.isAssistanceDelegateLoading = false;
           }}
         >
@@ -698,11 +722,50 @@ export class ChipView extends MobxLitElement {
       ${this.getDelegateMessage()}
     `;
   }
+
+  private renderDelegateResponseButton(disabled = false) {
+    return html`
+      <div class="button-wrapper">
+        <pr-button
+          color="secondary"
+          variant="tonal"
+          ?disabled=${this.isAssistanceLoading() || disabled}
+          ?loading=${this.isAssistanceDelegateLoading}
+          @click=${async () => {
+            this.isAssistanceDelegateLoading = true;
+            // null as third argument means: delegate decides to accept or reject
+            await this.participantService.requestChipAssistance(
+              this.stage?.id ?? '',
+              'delegate',
+              '', 0, '', 0, undefined
+            );
+            this.isAssistanceDelegateLoading = false;
+          }}
+        >
+          Delegate decision to agent
+        </pr-button>
+      </div>
+      ${this.getDelegateMessage()}
+    `;
+  }
+
   private getDelegateMessage() {
     return this.answer?.currentAssistance?.message ?? '';
   }
 
+  private getCoachMessage() {
+    return this.answer?.currentAssistance?.message ?? '';
+  }
+
   private getAssistanceMessage() {
+    const assistance = this.answer?.currentAssistance;
+    if (!assistance || !assistance.type) {
+      // Assistance not yet available or malformed
+      return html`
+        <div> </div>
+      `;
+    }
+
     const message = this.answer?.currentAssistance?.message ?? '';
     const type = this.answer?.currentAssistance?.type;
     let proposalLine = '<b>💡 Advisor says:</b>';
@@ -821,7 +884,7 @@ export class ChipView extends MobxLitElement {
       const suggestedSellAmount = proposedOffer?.sell[suggestedSellType] ?? 0;
       return html`
         <div>${proposal}</div>
-        <div><b>Feedback:</b> ${this.getDelegateMessage()}</div>
+        <div><b>Feedback:</b> ${this.getCoachMessage()}</div>
         ${this.renderManualOffer(
           this.sendOffer,
           suggestedBuyType,

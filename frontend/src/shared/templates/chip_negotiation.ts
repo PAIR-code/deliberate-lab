@@ -225,7 +225,7 @@ function createChipInfoStage1(numChips: number) {
 
 function createChipInfoStage2(numChips: number) {
   const infoLines = [
-    'You will play this trading game three times against three different groups of participants. In each game, you and the other participants will start with:',
+    'You will play this trading game three times against different groups of participants. In each game, you and the other participants will start with:',
   ];
 
   // Adjust the chips included based on numChips
@@ -312,7 +312,7 @@ const CHIP_INFO_STAGE_OVERVIEW3 = createInfoStage({
   name: 'Instructions: chip valuations 2',
   infoLines: [
     'The following table is shown to you during the game. It provides the number of chips everyone has as well as a reminder of your own valuations.',
-    '![Example of chip count table](https://imgur.com/a/rxi1khQ.png)',
+    '![Example of chip count table](https://imgur.com/pm3FrZs.png)',
   ],
   progress: createStageProgressConfig({
     showParticipantProgress: false,
@@ -804,17 +804,26 @@ export function createPayoutItems() {
   const game1 = createChipPayoutItem({
     randomSelectionId: RANDOM_SELECTION_ID,
     name: 'Payout from game 1 (one game was randomly selected)',
-    stageId: CHIP_NEGOTIATION_STAGE1_ID,
+    stageId: 'chip_coach',
     baseCurrencyAmount: 0,
   });
 
   const game2 = createChipPayoutItem({
     randomSelectionId: RANDOM_SELECTION_ID,
     name: 'Payout from game 2 (one game was randomly selected)',
-    stageId: CHIP_NEGOTIATION_STAGE2_ID,
+    stageId: 'chip_advisor',
     baseCurrencyAmount: 0,
   });
-  return [game1, game2];
+
+  // Add the game 3 
+  const game3 = createChipPayoutItem({
+    randomSelectionId: RANDOM_SELECTION_ID,
+    name: 'Payout from game 3 (one game was randomly selected)',
+    stageId: 'chip_delegate',
+    baseCurrencyAmount: 0,
+  });
+  
+  return [game1, game2, game3];
 }
 
 const CHIP_PAYOUT_STAGE = createPayoutStage({
