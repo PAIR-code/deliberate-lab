@@ -113,6 +113,7 @@ export async function getAgentResponse(
   } else {
     response = {
       status: ModelResponseStatus.CONFIG_ERROR,
+      generationConfig,
       errorMessage: `Error: invalid apiKey type: ${apiKeyConfig.ollamaApiKey.apiKey}`,
     };
   }

@@ -128,6 +128,7 @@ export async function callGemini(
   if (response.promptFeedback) {
     return {
       status: ModelResponseStatus.REFUSAL_ERROR,
+      generationConfig,
       rawResponse: JSON.stringify(response),
       errorMessage:
         response.promptFeedback.blockReasonMessage ??
@@ -138,6 +139,7 @@ export async function callGemini(
   if (!response.candidates) {
     return {
       status: ModelResponseStatus.UNKNOWN_ERROR,
+      generationConfig,
       rawResponse: JSON.stringify(response),
       errorMessage: `Model provider returned an unexpected response (no response candidates): ${response}`,
     };
@@ -147,6 +149,7 @@ export async function callGemini(
   if (finishReason === MAX_TOKENS_FINISH_REASON) {
     return {
       status: ModelResponseStatus.LENGTH_ERROR,
+      generationConfig,
       rawResponse: JSON.stringify(response),
       errorMessage: `Error: Token limit (${generationConfig.maxOutputTokens}) exceeded`,
     };
@@ -170,6 +173,7 @@ export async function callGemini(
     status: ModelResponseStatus.OK,
     text: text,
     rawResponse: JSON.stringify(response),
+    generationConfig,
     reasoning: reasoning,
   };
   if (parseResponse) {
@@ -247,6 +251,7 @@ export async function getGeminiAPIResponse(
     }
     return {
       status: returnStatus,
+      generationConfig: geminiConfig,
       errorMessage: error.message,
     };
   }

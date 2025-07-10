@@ -83,19 +83,27 @@ export class Component extends MobxLitElement {
       </div>
       <div>
         Start timestamp:
-        ${log.queryTimestamp
-          ? convertUnifiedTimestampToISO(log.queryTimestamp)
-          : ''}
+        ${
+          log.queryTimestamp
+            ? convertUnifiedTimestampToISO(log.queryTimestamp)
+            : ''
+        }
       </div>
       <div>
         End timestamp:
-        ${log.responseTimestamp
-          ? convertUnifiedTimestampToISO(log.responseTimestamp)
-          : ''}
+        ${
+          log.responseTimestamp
+            ? convertUnifiedTimestampToISO(log.responseTimestamp)
+            : ''
+        }
       </div>
       <details>
         <summary>Prompt</summary>
         <pre><code>${log.prompt}</code></pre>
+      </details>
+      <details>
+        <summary>Generation config</summary>
+        <pre><code>${JSON.stringify(log.response.generationConfig, null, 2)}</pre></code>
       </details>
       <details>
         <summary>Model response</summary>
