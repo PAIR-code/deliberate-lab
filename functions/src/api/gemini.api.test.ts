@@ -9,7 +9,7 @@ import {
 } from '@deliberation-lab/utils';
 import {getGeminiAPIResponse} from './gemini.api';
 
-const MODEL_NAME = 'gemini-1.5-flash';
+const MODEL_NAME = 'gemini-2.5-flash';
 
 describe('Gemini API', () => {
   let scope: nock.Scope;
