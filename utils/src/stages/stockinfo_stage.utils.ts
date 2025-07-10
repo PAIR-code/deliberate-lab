@@ -1,4 +1,8 @@
-import {StockDataPoint} from './stockinfo_stage';
+import {
+  StockDataPoint,
+  StockInfoCard,
+  StockInfoStageConfig,
+} from './stockinfo_stage';
 
 // ************************************************************************* //
 // CHART CONFIGURATION                                                       //
@@ -360,4 +364,75 @@ export function validateStockData(data: StockDataPoint[]): {
     isValid: errors.length === 0,
     errors,
   };
+}
+
+// ************************************************************************* //
+// CARD GENERATION UTILITIES                                                 //
+// ************************************************************************* //
+
+/** Generate all info cards for a stock (performance + custom cards). */
+export function generateStockInfoCards(
+  stock: {parsedData: StockDataPoint[]; customCards: StockInfoCard[]},
+  stage: {showBestYearCard?: boolean; showWorstYearCard?: boolean},
+): StockInfoCard[] {
+  const cards: StockInfoCard[] = [];
+
+  // Add default cards if enabled
+  if (stage.showBestYearCard || stage.showWorstYearCard) {
+    const performance = getBestAndWorstYearPerformance(stock.parsedData);
+
+    if (stage.showBestYearCard && performance.best) {
+      cards.push({
+        id: 'best-year',
+        title: 'Best Year Performance',
+        value: `$${Math.abs(performance.best.dollarChange).toFixed(0)}`,
+        subtext: `${performance.best.percentChange.toFixed(1)}% (${performance.best.year})`,
+        enabled: true,
+      });
+    }
+
+    if (stage.showWorstYearCard && performance.worst) {
+      cards.push({
+        id: 'worst-year',
+        title: 'Worst Year Performance',
+        value: `$${Math.abs(performance.worst.dollarChange).toFixed(0)}`,
+        subtext: `${performance.worst.percentChange.toFixed(1)}% (${performance.worst.year})`,
+        enabled: true,
+      });
+    }
+  }
+
+  // Add custom cards
+  cards.push(...stock.customCards.filter((card) => card.enabled));
+
+  return cards;
+}
+
+// ************************************************************************* //
+// PROMPT UTILITIES                                                          //
+// ************************************************************************* //
+
+export function getStockInfoSummaryText(stage: StockInfoStageConfig): string {
+  const stockDisplay = stage.stocks.map((stock) => {
+    const stockInfo = [
+      `## Stock Information: ${stock.name}`,
+      stock.description,
+    ];
+
+    // Generate all cards using the shared utility
+    const cards = generateStockInfoCards(stock, stage);
+
+    if (cards.length > 0) {
+      stockInfo.push('Key Information:');
+      cards.forEach((card) => {
+        stockInfo.push(`- ${card.title}: ${card.value}`);
+        if (card.subtext) {
+          stockInfo.push(`  ${card.subtext}`);
+        }
+      });
+    }
+
+    return stockInfo.join('\n');
+  });
+  return stockDisplay.join('\n\n');
 }

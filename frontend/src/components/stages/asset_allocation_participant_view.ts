@@ -19,12 +19,14 @@ import {MdSlider} from '@material/web/slider/slider';
 import {
   AssetAllocationStageConfig,
   AssetAllocationStageParticipantAnswer,
+  AssetAllocation,
   StageKind,
-  Stock,
   StockInfoStageConfig,
   generateSVGChart,
   generateDonutChartSVG,
   getStockTicker,
+  createAssetAllocation,
+  createAssetAllocationStageParticipantAnswer,
 } from '@deliberation-lab/utils';
 
 import {core} from '../../core/core';
@@ -51,57 +53,36 @@ export class AssetAllocationParticipantView extends MobxLitElement {
 
   @state() private selectedStockIndex = 0; // 0 for Stock A, 1 for Stock B
   @state() private allocation = {stockAPercentage: 50, stockBPercentage: 50};
-  @state() private stocks = {
-    stockA: null as Stock | null,
-    stockB: null as Stock | null,
-  };
+
+  private get stocks() {
+    if (!this.stage) {
+      return {stockA: null, stockB: null};
+    }
+    return {
+      stockA: this.stage.stockConfig.stockA,
+      stockB: this.stage.stockConfig.stockB,
+    };
+  }
 
   override render() {
     if (!this.stage || !this.participantService.profile) {
       return nothing;
     }
 
-    // Initialize stocks if needed
-    if (!this.stocks.stockA && !this.stocks.stockB) {
-      const stockInfoStage = this.getStockInfoStage();
-      if (stockInfoStage && stockInfoStage.stocks.length >= 2) {
-        this.stocks = {
-          stockA: stockInfoStage.stocks[0],
-          stockB: stockInfoStage.stocks[1],
-        };
-      } else if (this.stage.simpleStockConfig) {
-        // Create Stock objects from SimpleStock data
-        this.stocks = {
-          stockA: {
-            id: this.stage.simpleStockConfig.stockA.id,
-            title: this.stage.simpleStockConfig.stockA.name,
-            description: this.stage.simpleStockConfig.stockA.description,
-            csvData: '',
-            parsedData: [],
-            customCards: [],
-          },
-          stockB: {
-            id: this.stage.simpleStockConfig.stockB.id,
-            title: this.stage.simpleStockConfig.stockB.name,
-            description: this.stage.simpleStockConfig.stockB.description,
-            csvData: '',
-            parsedData: [],
-            customCards: [],
-          },
-        };
-      }
-    }
-
-    const answer =
+    let answer =
       this.participantAnswerService.getAssetAllocationParticipantAnswer(
         this.stage.id,
       );
-    // Ensure allocation is synced with answer allocation
-    if (!answer.confirmed) {
-      this.allocation = {...answer.allocation};
+
+    // Initialize answer if it doesn't exist
+    if (!answer) {
+      answer = this.createInitialAnswer();
+      this.participantAnswerService.addAnswer(this.stage.id, answer);
     }
-    const stockInfoStage = this.getStockInfoStage();
-    const stocks = this.getStocks(stockInfoStage);
+
+    // Sync state with answer allocation percentages
+    this.allocation.stockAPercentage = answer.allocation.stockA.percentage;
+    this.allocation.stockBPercentage = answer.allocation.stockB.percentage;
 
     return html`
       <div class="stage-container">
@@ -120,7 +101,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
               </md-filled-button>
             </div>
             <div class="chart-section">
-              ${this.renderDonutChart(this.allocation)}
+              ${this.renderDonutChart(answer.allocation)}
             </div>
             <div class="sliders-section">${this.renderSliders(answer)}</div>
           </div>
@@ -128,9 +109,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
           <!-- Right: Stock Info -->
           <div class="info-section">
             <h3>Stock Information</h3>
-            ${stocks.length > 0
-              ? this.renderStockInfo(stocks, stockInfoStage)
-              : this.renderSimpleStockInfo()}
+            ${this.renderStockInfo()}
           </div>
         </div>
 
@@ -145,26 +124,14 @@ export class AssetAllocationParticipantView extends MobxLitElement {
     `;
   }
 
-  private renderDonutChart(allocation: {
-    stockAPercentage: number;
-    stockBPercentage: number;
-  }) {
+  private renderDonutChart(allocation: AssetAllocation) {
     if (!this.stocks.stockA || !this.stocks.stockB) return nothing;
 
-    const stockNames = {
-      stockA: this.stocks.stockA.title,
-      stockB: this.stocks.stockB.title,
-    };
     const stockTickers = {
-      stockA: getStockTicker(this.stocks.stockA.title),
-      stockB: getStockTicker(this.stocks.stockB.title),
+      stockA: getStockTicker(this.stocks.stockA.name),
+      stockB: getStockTicker(this.stocks.stockB.name),
     };
-
-    const svgContent = generateDonutChartSVG(
-      allocation,
-      stockNames,
-      stockTickers,
-    );
+    const svgContent = generateDonutChartSVG(allocation, stockTickers);
     return unsafeHTML(svgContent);
   }
 
@@ -176,7 +143,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
         <div class="slider-group">
           <label for="stock-a-slider">
             <span class="legend-color stock-a"></span>
-            <span class="stock-name">${this.stocks.stockA?.title}</span>
+            <span class="stock-name">${this.stocks.stockA?.name}</span>
             <span class="percentage-display"
               >${this.allocation.stockAPercentage}%</span
             >
@@ -197,7 +164,7 @@ export class AssetAllocationParticipantView extends MobxLitElement {
         <div class="slider-group">
           <label for="stock-b-slider">
             <span class="legend-color stock-b"></span>
-            <span class="stock-name">${this.stocks.stockB?.title}</span>
+            <span class="stock-name">${this.stocks.stockB?.name}</span>
             <span class="percentage-display"
               >${this.allocation.stockBPercentage}%</span
             >
@@ -218,20 +185,22 @@ export class AssetAllocationParticipantView extends MobxLitElement {
     `;
   }
 
-  private renderStockInfo(
-    stocks: Stock[],
-    stockInfoStage: StockInfoStageConfig | null,
-  ) {
-    if (stocks.length === 0) return nothing;
+  private renderStockInfo() {
+    if (!this.stocks.stockA || !this.stocks.stockB) return nothing;
 
-    const selectedStock = stocks[this.selectedStockIndex];
-    const chartSvg =
-      selectedStock.parsedData.length > 0
-        ? generateSVGChart(selectedStock.parsedData, {
-            isInvestmentGrowth: stockInfoStage?.showInvestmentGrowth ?? false,
-            useQuarterlyMarkers: stockInfoStage?.useQuarterlyMarkers ?? false,
-          })
-        : '';
+    const selectedStock =
+      this.selectedStockIndex === 0 ? this.stocks.stockA : this.stocks.stockB;
+
+    // Get the stockInfoStage only if referenced
+    const stockInfoStage = this.stage?.stockConfig.stockInfoStageId
+      ? this.getStockInfoStage()
+      : null;
+    const chartSvg = stockInfoStage
+      ? generateSVGChart(selectedStock.parsedData, {
+          isInvestmentGrowth: stockInfoStage.showInvestmentGrowth,
+          useQuarterlyMarkers: stockInfoStage.useQuarterlyMarkers,
+        })
+      : '';
 
     return html`
       <div class="stock-info-container">
@@ -240,88 +209,38 @@ export class AssetAllocationParticipantView extends MobxLitElement {
             ? html`<md-filled-tonal-button
                 @click=${() => (this.selectedStockIndex = 0)}
               >
-                ${this.stocks.stockA?.title}
+                ${this.stocks.stockA.name}
               </md-filled-tonal-button>`
             : html`<md-outlined-button
                 @click=${() => (this.selectedStockIndex = 0)}
               >
-                ${this.stocks.stockA?.title}
+                ${this.stocks.stockA.name}
               </md-outlined-button>`}
           ${this.selectedStockIndex === 1
             ? html`<md-filled-tonal-button
                 @click=${() => (this.selectedStockIndex = 1)}
               >
-                ${this.stocks.stockB?.title}
+                ${this.stocks.stockB.name}
               </md-filled-tonal-button>`
             : html`<md-outlined-button
                 @click=${() => (this.selectedStockIndex = 1)}
               >
-                ${this.stocks.stockB?.title}
+                ${this.stocks.stockB.name}
               </md-outlined-button>`}
         </div>
 
         <div class="stock-content">
-          <div class="stock-chart">
-            ${chartSvg
-              ? html`<div class="chart-wrapper">${unsafeHTML(chartSvg)}</div>`
-              : nothing}
-          </div>
+          ${chartSvg
+            ? html`<div class="stock-chart">
+                <div class="chart-wrapper">${unsafeHTML(chartSvg)}</div>
+              </div>`
+            : nothing}
 
-          <div class="stock-description">
-            <h4>${selectedStock.title}</h4>
+          <div class="stock-description ${chartSvg ? '' : 'simple'}">
+            <h4>${selectedStock.name}</h4>
             <div>
               ${unsafeHTML(convertMarkdownToHTML(selectedStock.description))}
             </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  private renderSimpleStockInfo() {
-    if (!this.stage?.simpleStockConfig) return nothing;
-
-    const stockA = this.stage.simpleStockConfig.stockA;
-    const stockB = this.stage.simpleStockConfig.stockB;
-    const selectedStock = this.selectedStockIndex === 0 ? stockA : stockB;
-
-    return html`
-      <div class="stock-info-container">
-        <div class="stock-toggle">
-          ${this.selectedStockIndex === 0
-            ? html`<md-filled-tonal-button
-                @click=${() => (this.selectedStockIndex = 0)}
-              >
-                ${this.stocks.stockA?.title}
-              </md-filled-tonal-button>`
-            : html`<md-outlined-button
-                @click=${() => (this.selectedStockIndex = 0)}
-              >
-                ${this.stocks.stockA?.title}
-              </md-outlined-button>`}
-          ${this.selectedStockIndex === 1
-            ? html`<md-filled-tonal-button
-                @click=${() => (this.selectedStockIndex = 1)}
-              >
-                ${this.stocks.stockB?.title}
-              </md-filled-tonal-button>`
-            : html`<md-outlined-button
-                @click=${() => (this.selectedStockIndex = 1)}
-              >
-                ${this.stocks.stockB?.title}
-              </md-outlined-button>`}
-        </div>
-
-        <div class="stock-content">
-          <div class="stock-description simple">
-            <h4>${selectedStock.name}</h4>
-            ${selectedStock.description
-              ? html`<div>
-                  ${unsafeHTML(
-                    convertMarkdownToHTML(selectedStock.description),
-                  )}
-                </div>`
-              : nothing}
           </div>
         </div>
       </div>
@@ -336,10 +255,10 @@ export class AssetAllocationParticipantView extends MobxLitElement {
           <p>You have allocated:</p>
           <ul>
             <li>
-              ${this.stocks.stockA?.title}: ${this.allocation.stockAPercentage}%
+              ${this.stocks.stockA?.name}: ${this.allocation.stockAPercentage}%
             </li>
             <li>
-              ${this.stocks.stockB?.title}: ${this.allocation.stockBPercentage}%
+              ${this.stocks.stockB?.name}: ${this.allocation.stockBPercentage}%
             </li>
           </ul>
           <p>Are you sure you want to confirm this allocation?</p>
@@ -389,7 +308,12 @@ export class AssetAllocationParticipantView extends MobxLitElement {
         this.participantAnswerService.getAssetAllocationParticipantAnswer(
           this.stage.id,
         );
-      answer.allocation = {...this.allocation};
+      answer!.allocation = createAssetAllocation(
+        this.stocks.stockA!,
+        this.stocks.stockB!,
+        this.allocation.stockAPercentage,
+        this.allocation.stockBPercentage,
+      );
     }
     this.requestUpdate();
   }
@@ -409,15 +333,23 @@ export class AssetAllocationParticipantView extends MobxLitElement {
   }
 
   private async saveAllocation() {
-    if (!this.stage) return;
+    if (!this.stage || !this.stocks.stockA || !this.stocks.stockB) return;
 
     // Close dialog immediately
     this.closeDialog();
 
+    // Create allocation with the new structure
+    const allocation = createAssetAllocation(
+      this.stocks.stockA,
+      this.stocks.stockB,
+      this.allocation.stockAPercentage,
+      this.allocation.stockBPercentage,
+    );
+
     // Update local answer
     this.participantAnswerService.updateAssetAllocation(
       this.stage.id,
-      {...this.allocation},
+      allocation,
       true,
     );
 
@@ -431,14 +363,20 @@ export class AssetAllocationParticipantView extends MobxLitElement {
 
   private getStockInfoStage(): StockInfoStageConfig | null {
     const stage = this.experimentService.getStage(
-      this.stage?.stockInfoStageConfig?.id ?? '',
+      this.stage?.stockConfig.stockInfoStageId ?? '',
     );
     if (stage?.kind !== StageKind.STOCKINFO) return null;
     return stage;
   }
 
-  private getStocks(stockInfoStage: StockInfoStageConfig | null): Stock[] {
-    if (!stockInfoStage) return [];
-    return stockInfoStage.stocks || [];
+  private createInitialAnswer(): AssetAllocationStageParticipantAnswer {
+    const allocation = createAssetAllocation(
+      this.stocks.stockA!,
+      this.stocks.stockB!,
+    );
+    return createAssetAllocationStageParticipantAnswer({
+      id: this.stage!.id,
+      allocation,
+    });
   }
 }

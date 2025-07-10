@@ -5,6 +5,7 @@ import {
   StageProgressConfigSchema,
   StageTextConfigSchema,
 } from './stage.validation';
+import {StockData} from './stockinfo_stage.validation';
 
 /** Shorthand for strict TypeBox object validation */
 const strict = {additionalProperties: false} as const;
@@ -13,12 +14,12 @@ const strict = {additionalProperties: false} as const;
 // AssetAllocation stage validation                                          //
 // ************************************************************************* //
 
-/** Simple stock validation. */
-export const SimpleStockData = Type.Object(
+/** Stock allocation validation. */
+export const StockAllocationData = Type.Object(
   {
     id: Type.String({minLength: 1}),
     name: Type.String({minLength: 1}),
-    description: Type.String(),
+    percentage: Type.Number({minimum: 0, maximum: 100}),
   },
   strict,
 );
@@ -26,27 +27,18 @@ export const SimpleStockData = Type.Object(
 /** Asset allocation validation. */
 export const AssetAllocationData = Type.Object(
   {
-    stockAPercentage: Type.Number({minimum: 0, maximum: 100}),
-    stockBPercentage: Type.Number({minimum: 0, maximum: 100}),
+    stockA: StockAllocationData,
+    stockB: StockAllocationData,
   },
   strict,
 );
 
-/** Simple stock config validation. */
-export const SimpleStockConfigData = Type.Object(
-  {
-    stockA: SimpleStockData,
-    stockB: SimpleStockData,
-  },
-  strict,
-);
-
-/** AssetAllocation StockInfo config validation. */
+/** AssetAllocation stock config validation. */
 export const AssetAllocationStockInfoConfigData = Type.Object(
   {
-    id: Type.String({minLength: 1}),
-    stockAId: Type.String({minLength: 1}),
-    stockBId: Type.String({minLength: 1}),
+    stockInfoStageId: Type.Optional(Type.String({minLength: 1})),
+    stockA: StockData,
+    stockB: StockData,
   },
   strict,
 );
@@ -59,11 +51,7 @@ export const AssetAllocationStageConfigData = Type.Object(
     name: Type.String({minLength: 1}),
     descriptions: StageTextConfigSchema,
     progress: StageProgressConfigSchema,
-    stockInfoStageConfig: Type.Union([
-      AssetAllocationStockInfoConfigData,
-      Type.Null(),
-    ]),
-    simpleStockConfig: Type.Union([SimpleStockConfigData, Type.Null()]),
+    stockConfig: AssetAllocationStockInfoConfigData,
   },
   strict,
 );

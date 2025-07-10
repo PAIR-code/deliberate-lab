@@ -53,3 +53,38 @@ export async function addParticipantAnswerToAssetAllocationStagePublicData(
     });
   });
 }
+
+// ************************************************************************* //
+// PROMPT UTILITIES                                                          //
+// ************************************************************************* //
+
+export function getAssetAllocationSummaryText(
+  stage: AssetAllocationStageConfig,
+): string {
+  const overview =
+    '## Asset Allocation: User has $1,000 to allocate between two stocks:';
+
+  return `${overview}\n* ${stage.stockConfig.stockA.name}\n* ${stage.stockConfig.stockB.name}`;
+}
+
+export function getAssetAllocationAnswersText(
+  participantAnswers: Array<{
+    participantId: string;
+    answer: AssetAllocationStageParticipantAnswer;
+  }>,
+): string {
+  if (participantAnswers.length === 0) {
+    return '';
+  }
+
+  const answerSummaries = participantAnswers.map(({participantId, answer}) => {
+    const allocation = answer.allocation;
+    // Only include Participant IDs if there are multiple participants.
+    const prefix =
+      participantAnswers.length > 1 ? `Participant ${participantId}:\n` : '';
+
+    return `${prefix}${allocation.stockA.name}: ${allocation.stockA.percentage}%, ${allocation.stockB.name}: ${allocation.stockB.percentage}%`;
+  });
+
+  return `## Current Asset Allocation:\n${answerSummaries.join('\n')}`;
+}

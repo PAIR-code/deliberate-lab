@@ -1,7 +1,6 @@
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
-
 import {
+  AgentParticipantPromptConfig,
+  AgentPersonaConfig,
   ChatMessage,
   CohortConfig,
   Experiment,
@@ -231,6 +230,39 @@ export async function getFirestoreParticipantAnswer(
   if (!doc.exists) return undefined;
 
   return doc.data() as StageParticipantAnswer;
+}
+
+/** Fetch a mapping of participantId: answer. */
+export async function getFirestoreAnswersForStage<
+  T extends StageParticipantAnswer,
+>(
+  experimentId: string,
+  cohortId: string,
+  stageId: string,
+  participantIds?: string[],
+): Promise<Array<{participantId: string; answer: T}>> {
+  const targetParticipants =
+    participantIds ??
+    (await getFirestoreActiveParticipants(experimentId, cohortId)).map(
+      (p) => p.privateId,
+    );
+
+  const answers: Array<{participantId: string; answer: T}> = [];
+
+  await Promise.all(
+    targetParticipants.map(async (participantId) => {
+      const answer = await getFirestoreParticipantAnswer(
+        experimentId,
+        participantId,
+        stageId,
+      );
+      if (answer) {
+        answers.push({participantId, answer: answer as T});
+      }
+    }),
+  );
+
+  return answers;
 }
 
 /** Return ref for stage public data doc. */

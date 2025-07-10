@@ -144,8 +144,8 @@ export class StockInfoEditor extends MobxLitElement {
           <div class="field-row">
             <md-filled-text-field
               label="Stock Title"
-              .value=${stock.title}
-              @input=${(e: Event) => this.updateStockTitle(index, e)}
+              .value=${stock.name}
+              @input=${(e: Event) => this.updateStockName(index, e)}
               placeholder="e.g., NexTech Solutions (NXTS)"
               ?disabled=${!this.experimentEditor.canEditStages}
             ></md-filled-text-field>
@@ -363,11 +363,11 @@ export class StockInfoEditor extends MobxLitElement {
     });
   };
 
-  private updateStockTitle = (index: number, e: Event) => {
+  private updateStockName = (index: number, e: Event) => {
     if (!this.stage) return;
     const value = (e.target as HTMLInputElement).value;
     const stocks = [...this.stage.stocks];
-    stocks[index] = {...stocks[index], title: value};
+    stocks[index] = {...stocks[index], name: value};
     this.experimentEditor.updateStage({
       ...this.stage,
       stocks,

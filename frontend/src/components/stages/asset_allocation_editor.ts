@@ -13,11 +13,11 @@ import {customElement, property} from 'lit/decorators.js';
 
 import {
   AssetAllocationStageConfig,
-  SimpleStock,
+  Stock,
   StageKind,
   StockInfoStageConfig,
-  createSimpleStock,
-  createSimpleStockConfig,
+  createStock,
+  createAssetAllocationStockInfoConfig,
 } from '@deliberation-lab/utils';
 
 import {core} from '../../core/core';
@@ -48,7 +48,7 @@ export class AssetAllocationEditor extends MobxLitElement {
           ${this.renderStockInfoStageSelector()}
         </div>
 
-        ${!this.stage.stockInfoStageConfig
+        ${!this.stage.stockConfig.stockInfoStageId
           ? this.renderSimpleStockConfiguration()
           : nothing}
       </div>
@@ -59,9 +59,10 @@ export class AssetAllocationEditor extends MobxLitElement {
     if (!this.stage) return nothing;
 
     const stockInfoStages = this.getAvailableStockInfoStages();
-    const selectedStage = this.stage.stockInfoStageConfig
-      ? this.getStockInfoStage(this.stage.stockInfoStageConfig.id)
-      : null;
+    const selectedStage =
+      stockInfoStages.find(
+        (s) => s.id === this.stage!.stockConfig.stockInfoStageId,
+      ) ?? null;
 
     return html`
       <div class="stock-info-selector">
@@ -99,7 +100,7 @@ export class AssetAllocationEditor extends MobxLitElement {
         <div class="clear-selection">
           <md-outlined-button
             @click=${() => this.clearStockInfoStage()}
-            ?disabled=${!this.stage.stockInfoStageConfig ||
+            ?disabled=${!this.stage.stockConfig.stockInfoStageId ||
             !this.experimentEditor.canEditStages}
           >
             Use Simple Stocks (No Charts)
@@ -111,7 +112,7 @@ export class AssetAllocationEditor extends MobxLitElement {
 
   private renderStockInfoStageOption(stockInfoStage: StockInfoStageConfig) {
     const isSelected =
-      this.stage?.stockInfoStageConfig?.id === stockInfoStage.id;
+      this.stage?.stockConfig.stockInfoStageId === stockInfoStage.id;
     const stageIndex = this.experimentEditor.stages.findIndex(
       (s) => s.id === stockInfoStage.id,
     );
@@ -124,12 +125,11 @@ export class AssetAllocationEditor extends MobxLitElement {
 
       this.experimentEditor.updateStage({
         ...this.stage,
-        stockInfoStageConfig: {
-          id: stockInfoStage.id,
-          stockAId: stockInfoStage.stocks[0]?.id || '',
-          stockBId: stockInfoStage.stocks[1]?.id || '',
+        stockConfig: {
+          stockInfoStageId: stockInfoStage.id,
+          stockA: stockInfoStage.stocks[0] || createStock({name: 'Stock A'}),
+          stockB: stockInfoStage.stocks[1] || createStock({name: 'Stock B'}),
         },
-        simpleStockConfig: null,
       });
     };
 
@@ -153,8 +153,8 @@ export class AssetAllocationEditor extends MobxLitElement {
           >
           ${hasExactlyTwoStocks
             ? html`<span class="stocks-preview"
-                >(${stockInfoStage.stocks[0]?.title || 'Stock A'},
-                ${stockInfoStage.stocks[1]?.title || 'Stock B'})</span
+                >(${stockInfoStage.stocks[0]?.name || 'Stock A'},
+                ${stockInfoStage.stocks[1]?.name || 'Stock B'})</span
               >`
             : html`<span class="warning"
                 >⚠️ Asset Allocation requires exactly 2 stocks</span
@@ -178,43 +178,30 @@ export class AssetAllocationEditor extends MobxLitElement {
         <div class="simple-stocks">
           <div class="stock-config">
             <h5>Stock A</h5>
-            ${this.renderSimpleStockEditor(
-              this.stage.simpleStockConfig?.stockA ||
-                createSimpleStock({name: 'Stock A'}),
-              'A',
-            )}
+            ${this.renderSimpleStockEditor(this.stage.stockConfig.stockA, 'A')}
           </div>
 
           <div class="stock-config">
             <h5>Stock B</h5>
-            ${this.renderSimpleStockEditor(
-              this.stage.simpleStockConfig?.stockB ||
-                createSimpleStock({name: 'Stock B'}),
-              'B',
-            )}
+            ${this.renderSimpleStockEditor(this.stage.stockConfig.stockB, 'B')}
           </div>
         </div>
       </div>
     `;
   }
 
-  private renderSimpleStockEditor(stock: SimpleStock, stockLetter: 'A' | 'B') {
-    if (!this.stage || !this.stage.simpleStockConfig) return nothing;
+  private renderSimpleStockEditor(stock: Stock, stockLetter: 'A' | 'B') {
+    if (!this.stage) return nothing;
 
-    const updateStock = (updates: Partial<SimpleStock>) => {
-      if (
-        !this.stage ||
-        !this.experimentEditor.canEditStages ||
-        !this.stage.simpleStockConfig
-      )
-        return;
+    const updateStock = (updates: Partial<Stock>) => {
+      if (!this.stage || !this.experimentEditor.canEditStages) return;
 
       const updatedStock = {...stock, ...updates};
 
       this.experimentEditor.updateStage({
         ...this.stage,
-        simpleStockConfig: {
-          ...this.stage.simpleStockConfig,
+        stockConfig: {
+          ...this.stage.stockConfig,
           [stockLetter === 'A' ? 'stockA' : 'stockB']: updatedStock,
         },
       });
@@ -261,20 +248,12 @@ export class AssetAllocationEditor extends MobxLitElement {
       );
   }
 
-  private getStockInfoStage(stageId: string): StockInfoStageConfig | null {
-    const stage = this.experimentEditor.getStage(stageId);
-    return (
-      stage?.kind === StageKind.STOCKINFO ? stage : null
-    ) as StockInfoStageConfig | null;
-  }
-
   private clearStockInfoStage() {
     if (!this.stage || !this.experimentEditor.canEditStages) return;
 
     this.experimentEditor.updateStage({
       ...this.stage,
-      stockInfoStageConfig: null,
-      simpleStockConfig: createSimpleStockConfig(),
+      stockConfig: createAssetAllocationStockInfoConfig(),
     });
   }
 }

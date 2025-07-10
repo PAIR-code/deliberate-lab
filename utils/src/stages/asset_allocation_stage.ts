@@ -8,42 +8,36 @@ import {
   createStageTextConfig,
   createStageProgressConfig,
 } from './stage';
+import {Stock, createStock} from './stockinfo_stage';
 
 // ************************************************************************* //
 // TYPES                                                                     //
 // ************************************************************************* //
 
-/** Simple stock configuration for when no StockInfo stage is referenced. */
-export interface SimpleStock {
+/** Stock allocation details. */
+export interface StockAllocation {
   id: string;
   name: string;
-  description: string;
-}
-
-/** Simple stock configuration for asset allocation. */
-export interface SimpleStockConfig {
-  stockA: SimpleStock;
-  stockB: SimpleStock;
+  percentage: number; // 0-100
 }
 
 /** Asset allocation configuration. */
 export interface AssetAllocation {
-  stockAPercentage: number; // 0-100
-  stockBPercentage: number; // 0-100
+  stockA: StockAllocation;
+  stockB: StockAllocation;
 }
 
-/** StockInfo stage reference for asset allocation. */
+/** Stock configuration for asset allocation. */
 export interface AssetAllocationStockInfoConfig {
-  id: string;
-  stockAId: string;
-  stockBId: string;
+  stockInfoStageId?: string; // Optional reference to StockInfo stage
+  stockA: Stock;
+  stockB: Stock;
 }
 
 /** AssetAllocation stage config. */
 export interface AssetAllocationStageConfig extends BaseStageConfig {
   kind: StageKind.ASSET_ALLOCATION;
-  stockInfoStageConfig: AssetAllocationStockInfoConfig | null; // Reference to StockInfo stage with stock IDs
-  simpleStockConfig: SimpleStockConfig | null; // Simple stock configuration when not using StockInfo stage
+  stockConfig: AssetAllocationStockInfoConfig;
 }
 
 /** AssetAllocation stage participant answer. */
@@ -65,46 +59,52 @@ export interface AssetAllocationStagePublicData extends BaseStagePublicData {
 // FUNCTIONS                                                                 //
 // ************************************************************************* //
 
-/** Create simple stock configuration. */
-export function createSimpleStock(
-  config: Partial<SimpleStock> = {},
-): SimpleStock {
+/** Create stock config for asset allocation. */
+export function createAssetAllocationStockInfoConfig(
+  config: Partial<AssetAllocationStockInfoConfig> = {},
+): AssetAllocationStockInfoConfig {
   return {
-    id: config.id ?? generateId(),
-    name: config.name ?? 'Stock',
-    description: config.description ?? '',
-  };
-}
-
-/** Create simple stock config with both stocks. */
-export function createSimpleStockConfig(
-  config: Partial<SimpleStockConfig> = {},
-): SimpleStockConfig {
-  return {
-    stockA: config.stockA ?? createSimpleStock({name: 'Stock A'}),
-    stockB: config.stockB ?? createSimpleStock({name: 'Stock B'}),
+    stockInfoStageId: config.stockInfoStageId,
+    stockA: config.stockA ?? createStock({name: 'Stock A'}),
+    stockB: config.stockB ?? createStock({name: 'Stock B'}),
   };
 }
 
 /** Create asset allocation. */
 export function createAssetAllocation(
-  config: Partial<AssetAllocation> = {},
+  stockA: Stock,
+  stockB: Stock,
+  stockAPercentage: number = 50,
+  stockBPercentage: number = 50,
 ): AssetAllocation {
-  const stockAPercentage = config.stockAPercentage ?? 50;
-  const stockBPercentage = config.stockBPercentage ?? 50;
-
   // Ensure percentages add up to 100
   const total = stockAPercentage + stockBPercentage;
   if (total !== 100) {
     return {
-      stockAPercentage: 50,
-      stockBPercentage: 50,
+      stockA: {
+        id: stockA.id,
+        name: stockA.name,
+        percentage: 50,
+      },
+      stockB: {
+        id: stockB.id,
+        name: stockB.name,
+        percentage: 50,
+      },
     };
   }
 
   return {
-    stockAPercentage,
-    stockBPercentage,
+    stockA: {
+      id: stockA.id,
+      name: stockA.name,
+      percentage: stockAPercentage,
+    },
+    stockB: {
+      id: stockB.id,
+      name: stockB.name,
+      percentage: stockBPercentage,
+    },
   };
 }
 
@@ -131,21 +131,20 @@ export function createAssetAllocationStage(
         waitForAllParticipants: false,
         showParticipantProgress: true,
       }),
-    stockInfoStageConfig: config.stockInfoStageConfig ?? null,
-    simpleStockConfig:
-      config.simpleStockConfig ??
-      (config.stockInfoStageConfig ? null : createSimpleStockConfig()),
+    stockConfig: config.stockConfig ?? createAssetAllocationStockInfoConfig(),
   };
 }
 
 /** Create AssetAllocation participant answer. */
 export function createAssetAllocationStageParticipantAnswer(
-  config: Partial<AssetAllocationStageParticipantAnswer> = {},
+  config: Partial<AssetAllocationStageParticipantAnswer> & {
+    allocation: AssetAllocation;
+  },
 ): AssetAllocationStageParticipantAnswer {
   return {
     id: config.id ?? generateId(),
     kind: StageKind.ASSET_ALLOCATION,
-    allocation: config.allocation ?? createAssetAllocation(),
+    allocation: config.allocation,
     confirmed: config.confirmed ?? false,
     timestamp: config.timestamp ?? Timestamp.now(),
   };

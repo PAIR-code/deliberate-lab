@@ -1,8 +1,4 @@
-import {
-  AssetAllocation,
-  AssetAllocationStageConfig,
-} from './asset_allocation_stage';
-import {StockInfoStageConfig} from './stockinfo_stage';
+import {AssetAllocation} from './asset_allocation_stage';
 
 // ************************************************************************* //
 // DONUT CHART UTILITIES                                                     //
@@ -51,23 +47,22 @@ export function calculateDonutChartConfig(): DonutChartConfig {
 
 export function generateDonutChartSVG(
   allocation: AssetAllocation,
-  _stockNames: {stockA: string; stockB: string},
   stockTickers: {stockA: string; stockB: string},
 ): string {
   const config = calculateDonutChartConfig();
   const circumference = 2 * Math.PI * config.radius;
 
   // Calculate segment lengths
-  const stockALength = (allocation.stockAPercentage / 100) * circumference;
-  const stockBLength = (allocation.stockBPercentage / 100) * circumference;
+  const stockALength = (allocation.stockA.percentage / 100) * circumference;
+  const stockBLength = (allocation.stockB.percentage / 100) * circumference;
 
   // Calculate label positions (adjusted for 90 degree rotation)
   const stockAAngleRadians =
-    Math.PI / 2 + (allocation.stockAPercentage / 200) * 2 * Math.PI;
+    Math.PI / 2 + (allocation.stockA.percentage / 200) * 2 * Math.PI;
   const stockAEndAngle =
-    Math.PI / 2 + (allocation.stockAPercentage / 100) * 2 * Math.PI;
+    Math.PI / 2 + (allocation.stockA.percentage / 100) * 2 * Math.PI;
   const stockBAngleRadians =
-    stockAEndAngle + (allocation.stockBPercentage / 200) * 2 * Math.PI;
+    stockAEndAngle + (allocation.stockB.percentage / 200) * 2 * Math.PI;
 
   const stockAX =
     config.centerX + config.labelRadius * Math.cos(stockAAngleRadians);
@@ -126,7 +121,7 @@ export function generateDonutChartSVG(
         font-size="${config.fontSize}"
         font-weight="600"
       >
-        ${stockTickers.stockA}: ${allocation.stockAPercentage}%
+        ${stockTickers.stockA}: ${allocation.stockA.percentage}%
       </text>
       
       <!-- Stock B label -->
@@ -139,7 +134,7 @@ export function generateDonutChartSVG(
         font-size="${config.fontSize}"
         font-weight="600"
       >
-        ${stockTickers.stockB}: ${allocation.stockBPercentage}%
+        ${stockTickers.stockB}: ${allocation.stockB.percentage}%
       </text>
     </svg>
   `;
@@ -158,32 +153,4 @@ export function getStockTicker(stockName: string): string {
 
   // If no ticker found, return the full name
   return stockName;
-}
-
-export function getStockNames(
-  assetAllocationStage: AssetAllocationStageConfig,
-  stockInfoStage: StockInfoStageConfig | null,
-): {stockA: string; stockB: string} {
-  if (stockInfoStage && stockInfoStage.stocks.length >= 2) {
-    return {
-      stockA: stockInfoStage.stocks[0].title,
-      stockB: stockInfoStage.stocks[1].title,
-    };
-  }
-
-  return {
-    stockA: assetAllocationStage.simpleStockConfig!.stockA.name,
-    stockB: assetAllocationStage.simpleStockConfig!.stockB.name,
-  };
-}
-
-export function getStockTickers(
-  assetAllocationStage: AssetAllocationStageConfig,
-  stockInfoStage: StockInfoStageConfig | null,
-): {stockA: string; stockB: string} {
-  const names = getStockNames(assetAllocationStage, stockInfoStage);
-  return {
-    stockA: getStockTicker(names.stockA),
-    stockB: getStockTicker(names.stockB),
-  };
 }
