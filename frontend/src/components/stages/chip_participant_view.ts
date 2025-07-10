@@ -212,11 +212,12 @@ export class ChipView extends MobxLitElement {
 
       // Step 1: search delegate assistance
       const history = this.answer?.assistanceHistory ?? [];
-      console.log( this.answer?.assistanceHistory)
+
       const delegateMove = history.find(
         (move) =>
           move.selectedMode === ChipAssistanceMode.DELEGATE &&
           move.type === ChipAssistanceType.OFFER &&
+          move.round=== currentRound &&
           move.turn === participantId
       );
 
