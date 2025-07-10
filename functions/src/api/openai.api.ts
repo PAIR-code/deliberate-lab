@@ -103,6 +103,7 @@ export async function callOpenAIChatCompletion(
   } catch (error: Error) {
     return {
       status: ModelResponseStatus.INTERNAL_ERROR,
+      generationConfig,
       errorMessage: error.message,
     };
   }
@@ -152,6 +153,7 @@ export async function callOpenAIChatCompletion(
       }
       return {
         status: status,
+        generationConfig,
         errorMessage: `${error.name}: ${error.message}`,
       };
     } else {
@@ -162,6 +164,7 @@ export async function callOpenAIChatCompletion(
   if (!response || !response.choices) {
     return {
       status: ModelResponseStatus.UNKNOWN_ERROR,
+      generationConfig,
       rawResponse: JSON.stringify(response ?? {}),
       errorMessage: `Model provider returned an unexpected response: ${response}`,
     };
@@ -171,6 +174,7 @@ export async function callOpenAIChatCompletion(
   if (finishReason === MAX_TOKENS_FINISH_REASON) {
     return {
       status: ModelResponseStatus.LENGTH_ERROR,
+      generationConfig,
       rawResponse: JSON.stringify(response),
       text: response.choices[0].message.content,
       errorMessage: `Token limit (${generationConfig.maxOutputTokens}) exceeded`,
@@ -181,12 +185,14 @@ export async function callOpenAIChatCompletion(
   ) {
     return {
       status: ModelResponseStatus.REFUSAL_ERROR,
+      generationConfig,
       rawResponse: JSON.stringify(response),
       errorMessage: `Refusal from provider: ${response.choices[0].message.refusal}`,
     };
   } else if (finishReason !== SUCCESS_FINISH_REASON) {
     return {
       status: ModelResponseStatus.UNKNOWN_ERROR,
+      generationConfig,
       rawResponse: JSON.stringify(response),
       text: response.choices[0].message.content,
       errorMessage: `Provider sent unrecognized finish_reason: ${finishReason}`,
@@ -195,6 +201,7 @@ export async function callOpenAIChatCompletion(
 
   const modelResponse = {
     status: ModelResponseStatus.OK,
+    generationConfig,
     rawResponse: JSON.stringify(response),
     text: response.choices[0].message.content,
   };
@@ -245,6 +252,7 @@ export async function getOpenAIAPIChatCompletionResponse(
   } catch (error: any) {
     response = {
       status: ModelResponseStatus.UNKNOWN_ERROR,
+      generationConfig,
       errorMessage: error.message,
     };
   }

@@ -33,6 +33,8 @@ export enum ModelResponseStatus {
  */
 export interface ModelResponse {
   status: ModelResponseStatus;
+  // The model config passed to API
+  generationConfig?: object;
   // The model's raw response (no parsing or extracting)
   rawResponse?: string;
   // The model's response, in plaintext. Null if the provider didn't return a response.
