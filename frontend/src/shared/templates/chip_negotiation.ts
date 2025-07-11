@@ -831,14 +831,14 @@ export function createPayoutItems() {
     baseCurrencyAmount: 0,
   });
 
-  // Add the game 3 
+  // Add the game 3
   const game3 = createChipPayoutItem({
     randomSelectionId: RANDOM_SELECTION_ID,
     name: 'Payout from game 3 (one game was randomly selected)',
     stageId: 'chip_delegate',
     baseCurrencyAmount: 0,
   });
-  
+
   return [game1, game2, game3];
 }
 
@@ -904,14 +904,15 @@ const COACH_MODE_INSTRUCTION = createInfoStage({
     'In this game, an AI-based agent will act as your private coach. The agent sees everything you see.',
     '',
     '**• Your choice:** At each turn, you input your move. You can then either submit the move directly or ask the coach for feedback on your idea.',
-    '**• How the coach works:** First, input the action you plan to take, then click the “Coach” button if you\'d like feedback from the AI agent. The agent will provide a one-time analysis to help you strengthen your approach.',
+    "**• How the coach works:** First, input the action you plan to take, then click the “Coach” button if you'd like feedback from the AI agent. The agent will provide a one-time analysis to help you strengthen your approach.",
     '**• Next step:** After receiving feedback, you can revise your action before sending. You always have final control over what you send.',
     '',
-    '![Example of the coach giving feedback on the proposal](https://i.imgur.com/ImUM14D.png)',
-    '![Example of the coach giving feedback on responding to an offer](https://i.imgur.com/ImUM14D.png)',
+    'Here’s how the AI coach might help you with the proposal:',
+    '![Example of receiving an offer](https://i.imgur.com/YTluFKf.png)',
+    'Here’s how the AI coach might give feedback on the response:',
+    '![Example of receiving an offer](https://i.imgur.com/h6E2hco.png)',
   ],
 });
-
 
 const ADVISOR_MODE_INSTRUCTION = createInfoStage({
   id: 'advisor_instruction',
@@ -920,11 +921,13 @@ const ADVISOR_MODE_INSTRUCTION = createInfoStage({
     'In this game, an AI-based agent will act as your private advisor. If prompted, it will suggest a specific move for you to take and explain its reasoning. The agent sees everything you see.',
     '',
     '**• Your choice:** At each turn, you can either make your move directly or first ask the advisor for a recommendation.',
-    '**• How the advisor Works:** If you ask for advice, the advisor will suggest a move and provide the strategic rationale behind it.',
+    '**• How the advisor works:** If you ask for advice, the advisor will suggest a move and provide the strategic rationale behind it.',
     "**• Next step:** After seeing the recommendation, you can either accept the agent's move or ignore it and enter your own action.",
     '',
-    '![Example of the advisor giving recommendations for the proposal](https://i.imgur.com/ImUM14D.png)',
-    '![Example of the advisor giving recommendations for responding to an offer](https://i.imgur.com/ImUM14D.png)',
+    'Here’s how the AI advisor might give suggestions on the proposal:',
+    '![Example of receiving an offer](https://i.imgur.com/HyluDin.png)',
+    'Here’s how the AI advisor might give suggestions on the response:',
+    '![Example of receiving an offer](https://i.imgur.com/Q4tHXz2.png)',
   ],
 });
 
@@ -935,10 +938,12 @@ const DELEGATE_MODE_INSTRUCTION = createInfoStage({
     'In this game, you have the option of delegating game moves to an AI-based delegate. The agent will full control and negotiate on your behalf for a given turn. The agent sees everything you see.',
     '',
     '**• Your choice:** At each turn, you can either make the move yourself or delegate the entire turn to the agent.',
-    '**• How the delegate Works:** If you choose to delegate, the agent will decide and execute a move for you, and provide you with a reason.',
-    '',
-    '![Example of the delegate making an decision when proposing](https://i.imgur.com/ImUM14D.png)',
-    '![Example of the delegate making an decision when responding to an offer](https://i.imgur.com/ImUM14D.png)',
+    '**• How the delegate works:** If you choose to delegate, the agent will decide and execute a move for you, and provide you with a reason.',
+    'Here’s how you can delegate the proposal to the AI:',
+    '![Example of the AI delegate making an decision when proposing](https://i.imgur.com/Qbpwm1Z.png)',
+    'Remember it is the same underlying AI model, but you will only be shown the final decision, not the reasoning.',
+    'Here’s how you can delegate the response to the AI:',
+    '![Example of the AI delegate making an decision when responding to an offer](https://i.imgur.com/1Yev7H7.png)',
   ],
 });
 
@@ -955,7 +960,6 @@ const CHIP_PRE_SURVEY_STAGE1 = createSurveyStage({
       This section asks about your expectations about the different AI tools available to you in the game.\n \
       As a reminder, you’ll have access to three types of AI tools (a coach, delegate, and advisor) over three games, all powered by Google Gemini 2.5 (a large language model) and built on the same underlying capabilities.\n \
       Please indicate how much you agree or disagree with the following statements based on your expectations. ',
-      
   }),
   questions: [
     // Relevant skills section
