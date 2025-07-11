@@ -280,7 +280,7 @@ export class ChipView extends MobxLitElement {
         ? this.renderSelectManualOfferButton()
         : nothing}
       ${modes.includes(ChipAssistanceMode.DELEGATE)
-        ? this.renderDelegateResponseButton()
+        ? this.renderDelegateOfferButton()
         : nothing}
       ${modes.includes(ChipAssistanceMode.ADVISOR)
         ? this.renderAdvisorButton()
@@ -463,7 +463,7 @@ export class ChipView extends MobxLitElement {
       case ChipAssistanceMode.NONE:
         return this.renderManualResponse(acceptOffer, rejectOffer);
       case ChipAssistanceMode.DELEGATE:
-        return this.renderDelegateOfferButton(true);
+        return this.renderDelegateResponseButton(true);
       case ChipAssistanceMode.ADVISOR:
         return this.renderAdvisorResponse(true);
       case ChipAssistanceMode.COACH:
