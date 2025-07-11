@@ -89,6 +89,7 @@ export function getChipNegotiationStageConfigs(numChips = 3): StageConfig[] {
   stages.push(CHIP_INFO_STAGE_GAMEPLAY2);
   stages.push(CHIP_INFO_STAGE_GAMEPLAY4);
   stages.push(CHIP_INFO_STAGE_GAMEPLAY5);
+  stages.push(CHIP_INFO_STAGE_GAMEPLAY6);
 
   // Comprehension check
   stages.push(CHIP_COMPREHENSION_CHECK2);
@@ -537,6 +538,21 @@ const CHIP_INFO_STAGE_GAMEPLAY4 = createInfoStage({
 
 const CHIP_INFO_STAGE_GAMEPLAY5 = createInfoStage({
   id: 'info_gameplay5',
+  name: 'Gameplay: AI assistance',
+  infoLines: [
+    `Today, you will play three versions of the negotiation game. In each game, you will have access to one of the following AI assistance modes, which will be described in further detail later:`,
+    `* AI delegate: In delegation mode, you can delegate your trading decisions to an AI assistant. The AI will take actions on your behalf.`,
+    `* AI advisor: In advisor mode, you can ask an AI assistant to give recommendations on which action to take. The AI will provide suggestions, but you must make the final decision.`,
+    `* AI coach: In coach mode, you can ask an AI assistant for feedback on your actions. The AI will provide coaching, but you must make the final decision.`,
+    `\nAt each turn, you will have the option of opting into AI assistance or not. You will always have the option to ignore the AI assistance and take actions yourself.`,
+  ],
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
+});
+
+const CHIP_INFO_STAGE_GAMEPLAY6 = createInfoStage({
+  id: 'info_gameplay6',
   name: 'Gameplay: summary',
   infoLines: [
     `## Key points to remember`,
@@ -713,7 +729,7 @@ const CHIP_NEGOTIATION_STAGE2_ID = `negotiation2_${ALTERNATE_PROFILE_SET_ID}`;
 function getChipNegotiationCoach(numChips: number) {
   return createChipStage({
     id: 'chip_coach',
-    name: 'Chip negotiation with coaching option',
+    name: 'Game (with AI coach)',
     descriptions: createStageTextConfig({
       infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
       helpText: `If you see the "It's your turn" panel, that means others are waiting on you to make an offer! As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs.
@@ -730,7 +746,7 @@ function getChipNegotiationCoach(numChips: number) {
 function getChipNegotiationAdvisor(numChips: number) {
   return createChipStage({
     id: 'chip_advisor',
-    name: 'Chip negotiation with advisor option',
+    name: 'Game (with AI advisor)',
     descriptions: createStageTextConfig({
       infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
       helpText: `If you see the "It's your turn" panel, that means others are waiting on you to make an offer! As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs.
@@ -747,7 +763,7 @@ function getChipNegotiationAdvisor(numChips: number) {
 function getChipNegotiationDelegate(numChips: number) {
   return createChipStage({
     id: 'chip_delegate',
-    name: 'Chip negotiation with delegate option',
+    name: 'Game (with AI delegate)',
     descriptions: createStageTextConfig({
       infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
       helpText: `If you see the "It's your turn" panel, that means others are waiting on you to make an offer! As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs.
@@ -883,54 +899,46 @@ const CHIP_SURVEY_STAGE = createSurveyStage({
 
 const COACH_MODE_INSTRUCTION = createInfoStage({
   id: 'coach_instruction',
-  name: 'Instructions: AI Assistant as a coach',
+  name: 'Game instructions: AI coach',
   infoLines: [
-    'In this game, the AI agent acts as your private coach. The Agent sees everything you see.',
+    'In this game, an AI-based agent will act as your private coach. The agent sees everything you see.',
     '',
-    '**• Your Choice:** At each turn, you input your move. You can then either submit the move directly or ask the Coach for feedback on your idea.',
-    "**• How the Coach Works:** First, input the action you plan to take, then click the “Coach” button if you'd like feedback from the AI agent. The agent will provide a one-time analysis to help you strengthen your approach.",
-    '**• Next Step:** After receiving feedback, you can revise your action before sending. You always have final control over what you send.',
+    '**• Your choice:** At each turn, you input your move. You can then either submit the move directly or ask the coach for feedback on your idea.',
+    '**• How the coach works:** First, input the action you plan to take, then click the “Coach” button if you\'d like feedback from the AI agent. The agent will provide a one-time analysis to help you strengthen your approach.',
+    '**• Next step:** After receiving feedback, you can revise your action before sending. You always have final control over what you send.',
     '',
-    'Here’s how the AI coach might help you with the proposal:',
-    '![Example of receiving an offer](https://i.imgur.com/YTluFKf.png)',
-    'Here’s how the AI coach might give feedback on the response:',
-    '![Example of receiving an offer](https://i.imgur.com/h6E2hco.png)',
+    '![Example of the coach giving feedback on the proposal](https://i.imgur.com/ImUM14D.png)',
+    '![Example of the coach giving feedback on responding to an offer](https://i.imgur.com/ImUM14D.png)',
   ],
 });
 
+
 const ADVISOR_MODE_INSTRUCTION = createInfoStage({
   id: 'advisor_instruction',
-  name: 'Instructions: AI Assistant as an advisor',
+  name: 'Game instructions: AI advisor',
   infoLines: [
-    'In this game, the AI agent suggests a specific move and explains its reasoning. The Agent sees everything you see.',
+    'In this game, an AI-based agent will act as your private advisor. If prompted, it will suggest a specific move for you to take and explain its reasoning. The agent sees everything you see.',
     '',
-    '**• Your Choice:** At each turn, you can either make your move directly or first ask the Advisor for a recommendation.',
-    '**• How the Advisor Works:** If you ask for advice, the Advisor will suggest a move and provide the strategic rationale behind it.',
-    "**• Next Step:** After seeing the recommendation, you can either accept the agent's move or ignore it and enter your own action.",
+    '**• Your choice:** At each turn, you can either make your move directly or first ask the advisor for a recommendation.',
+    '**• How the advisor Works:** If you ask for advice, the advisor will suggest a move and provide the strategic rationale behind it.',
+    "**• Next step:** After seeing the recommendation, you can either accept the agent's move or ignore it and enter your own action.",
     '',
-    'Here’s how the AI advisor might give suggestions on the proposal:',
-    '![Example of receiving an offer](https://i.imgur.com/HyluDin.png)',
-    'Here’s how the AI coach might give suggestions on the response:',
-    '![Example of receiving an offer](https://i.imgur.com/Q4tHXz2.png)',
+    '![Example of the advisor giving recommendations for the proposal](https://i.imgur.com/ImUM14D.png)',
+    '![Example of the advisor giving recommendations for responding to an offer](https://i.imgur.com/ImUM14D.png)',
   ],
 });
 
 const DELEGATE_MODE_INSTRUCTION = createInfoStage({
   id: 'delegate_instruction',
-  name: 'Instructions: AI Assistant as a delegate',
+  name: 'Game instructions: AI delegate',
   infoLines: [
-    'In this game, the AI agent takes full control and negotiates on your behalf for the turn. The Agent sees everything you see.',
+    'In this game, you have the option of delegating game moves to an AI-based delegate. The agent will full control and negotiate on your behalf for a given turn. The agent sees everything you see.',
     '',
-    '**• Your Choice:** At each turn, you can either make the move yourself or delegate the entire turn to the agent.',
-    '**• How the Delegate Works:** If you choose to delegate, the agent will autonomously decide and execute a move for you, and provide you with a reason.',
-    "**• Next Step:** After seeing the recommendation, you can either accept the agent's move or ignore it and enter your own action.",
+    '**• Your choice:** At each turn, you can either make the move yourself or delegate the entire turn to the agent.',
+    '**• How the delegate Works:** If you choose to delegate, the agent will decide and execute a move for you, and provide you with a reason.',
     '',
-    'Here’s how you can delegate the proposal to the AI:',
-    '![Example of the AI Delegate making an decision when proposing](https://i.imgur.com/Qbpwm1Z.png)',
-    'Remember it is the same underlying AI model, but you will only be shown the final decision, not the reasoning',
-    // '![Example of the AI Delegate making an decision when proposing](https://i.imgur.com/VNNn3Vu.png)',
-    'Here’s how you can delegate the response to the AI:',
-    '![Example of the AI Delegate making an decision when responding to an offer](https://i.imgur.com/1Yev7H7.png)',
+    '![Example of the delegate making an decision when proposing](https://i.imgur.com/ImUM14D.png)',
+    '![Example of the delegate making an decision when responding to an offer](https://i.imgur.com/ImUM14D.png)',
   ],
 });
 
@@ -944,7 +952,8 @@ const CHIP_PRE_SURVEY_STAGE1 = createSurveyStage({
     primaryText:
       'Before you play the bargaining games, please complete this short survey so we can better understand your background and perspectives. \
       Completion of this survey is required to receive bonus payouts. \n \
-      This section asks about your expectations about the different AI tools available to you in the game. You’ll have access to three types of AI tools (a coach, delegate, and advisor) over three games, all powered by Google Gemini 2.5 (a large language model) and built on the same underlying capabilities.\n \
+      This section asks about your expectations about the different AI tools available to you in the game.\n \
+      As a reminder, you’ll have access to three types of AI tools (a coach, delegate, and advisor) over three games, all powered by Google Gemini 2.5 (a large language model) and built on the same underlying capabilities.\n \
       Please indicate how much you agree or disagree with the following statements based on your expectations. ',
       
   }),
@@ -1112,10 +1121,10 @@ const CHIP_POST_SURVEY_STAGE = createSurveyStage({
 
 const CHIP_COACH_FEEDBACK_STAGE = createSurveyStage({
   id: 'coach_feedback',
-  name: 'Coach Feedback Survey',
+  name: 'Coach feedback survey',
   descriptions: createStageTextConfig({
     primaryText:
-      'Please fill out this brief survey about the previous game, where you had access to an LLM-powered coach. Completion of this survey is required to receive bonus payouts. Indicate how much you agree or disagree with the following statements, where 1 = Strongly disagree, 2 = Disagree, 3 = Neutral, 4 = Agree, 5 = Strongly agree.',
+      'Please fill out this brief survey about the previous game, where you had access to an AI-powered coach. Completion of this survey is required to receive bonus payouts. Indicate how much you agree or disagree with the following statements, where 1 = Strongly disagree, 2 = Disagree, 3 = Neutral, 4 = Agree, 5 = Strongly agree.',
   }),
   questions: [
     createScaleSurveyQuestion({
@@ -1176,10 +1185,10 @@ const CHIP_COACH_FEEDBACK_STAGE = createSurveyStage({
 
 const CHIP_ADVISOR_FEEDBACK_STAGE = createSurveyStage({
   id: 'advisor_feedback',
-  name: 'Advisor Feedback Survey',
+  name: 'Advisor feedback survey',
   descriptions: createStageTextConfig({
     primaryText:
-      'Please fill out this brief survey about the previous game, where you had access to an LLM-powered advisor. Completion of this survey is required to receive bonus payouts. Indicate how much you agree or disagree with the following statements, where 1 = Strongly disagree, 2 = Disagree, 3 = Neutral, 4 = Agree, 5 = Strongly agree.',
+      'Please fill out this brief survey about the previous game, where you had access to an AI-powered advisor. Completion of this survey is required to receive bonus payouts. Indicate how much you agree or disagree with the following statements, where 1 = Strongly disagree, 2 = Disagree, 3 = Neutral, 4 = Agree, 5 = Strongly agree.',
   }),
   questions: [
     createScaleSurveyQuestion({
@@ -1240,10 +1249,10 @@ const CHIP_ADVISOR_FEEDBACK_STAGE = createSurveyStage({
 // ****************************************************************************
 const CHIP_DELEGATE_FEEDBACK_STAGE = createSurveyStage({
   id: 'delegate_feedback',
-  name: 'Delegation Feedback Survey',
+  name: 'Delegation feedback survey',
   descriptions: createStageTextConfig({
     primaryText:
-      'Please fill out this brief survey about the previous game, where you had access to an LLM-powered delegate. Completion of this survey is required to receive bonus payouts. Indicate how much you agree or disagree with the following statements, where 1 = Strongly disagree, 2 = Disagree, 3 = Neutral, 4 = Agree, 5 = Strongly agree.',
+      'Please fill out this brief survey about the previous game, where you had access to an AI-powered delegate. Completion of this survey is required to receive bonus payouts. Indicate how much you agree or disagree with the following statements, where 1 = Strongly disagree, 2 = Disagree, 3 = Neutral, 4 = Agree, 5 = Strongly agree.',
   }),
   questions: [
     createScaleSurveyQuestion({
