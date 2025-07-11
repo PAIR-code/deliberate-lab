@@ -522,44 +522,45 @@ export const selectChipAssistanceMode = onCall(async (request) => {
       }
       currentAssistance.proposedTime = Timestamp.now();
     }
+    else{
+      // Otherwise, assist with offer
+      const response = await getChipOfferAssistance(
+        data.experimentId,
+        stage,
+        publicData,
+        await getFirestoreCohortParticipants(data.experimentId, data.cohortId),
+        participant,
+        participantAnswer,
+        await getExperimenterDataFromExperiment(data.experimentId),
+        data.assistanceMode,
+        data.buyMap ?? {},
+        data.sellMap ?? {},
+      );
+      // If response is valid, add to current assistance
+      if (response.success) {
+        const buy: Record<string, number> = {};
+        buy[response.modelResponse['suggestedBuyType']] =
+          response.modelResponse['suggestedBuyQuantity'];
+        const sell: Record<string, number> = {};
+        sell[response.modelResponse['suggestedSellType']] =
+          response.modelResponse['suggestedSellQuantity'];
 
-    // Otherwise, assist with offer
-    const response = await getChipOfferAssistance(
-      data.experimentId,
-      stage,
-      publicData,
-      await getFirestoreCohortParticipants(data.experimentId, data.cohortId),
-      participant,
-      participantAnswer,
-      await getExperimenterDataFromExperiment(data.experimentId),
-      data.assistanceMode,
-      data.buyMap ?? {},
-      data.sellMap ?? {},
-    );
-    // If response is valid, add to current assistance
-    if (response.success) {
-      const buy: Record<string, number> = {};
-      buy[response.modelResponse['suggestedBuyType']] =
-        response.modelResponse['suggestedBuyQuantity'];
-      const sell: Record<string, number> = {};
-      sell[response.modelResponse['suggestedSellType']] =
-        response.modelResponse['suggestedSellQuantity'];
-
-      currentAssistance.proposedOffer = createChipOffer({
-        round,
-        senderId: participant.publicId,
-        buy,
-        sell,
-        timestamp: Timestamp.now(),
-      });
-      currentAssistance.message =
-        response.modelResponse['feedback'] ??
-        response.modelResponse['tradeExplanation'] ??
-        '';
-      currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
-      currentAssistance.modelResponse = response.modelResponse;
+        currentAssistance.proposedOffer = createChipOffer({
+          round,
+          senderId: participant.publicId,
+          buy,
+          sell,
+          timestamp: Timestamp.now(),
+        });
+        currentAssistance.message =
+          response.modelResponse['feedback'] ??
+          response.modelResponse['tradeExplanation'] ??
+          '';
+        currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
+        currentAssistance.modelResponse = response.modelResponse;
+      }
+      currentAssistance.proposedTime = Timestamp.now();
     }
-    currentAssistance.proposedTime = Timestamp.now();
   }
 
   // If delegate, assistance is over
