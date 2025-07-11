@@ -735,10 +735,9 @@ export class ChipView extends MobxLitElement {
           @click=${async () => {
             this.isAssistanceDelegateLoading = true;
             // null as third argument means: delegate decides to accept or reject
-            await this.participantService.requestChipAssistance(
+            await this.participantService.selectChipAssistanceMode(
               this.stage?.id ?? '',
               'delegate',
-              '', 0, '', 0, undefined
             );
             this.isAssistanceDelegateLoading = false;
           }}
