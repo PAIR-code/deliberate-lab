@@ -1129,9 +1129,9 @@ export class ChipOfferForm extends MobxLitElement {
     onInput: (value: number) => void,
   ) {
     const updateInput = (e: Event) => {
-      const value = Math.floor(
-        parseInt((e.target as HTMLInputElement).value, 10),
-      );
+      const input = (e.target as HTMLInputElement).value;
+      const parsed = parseInt(input, 10);
+      const value = Number.isNaN(parsed) ? 0 : Math.max(0, Math.floor(parsed));
 
       onInput(Math.max(0, value));
     };

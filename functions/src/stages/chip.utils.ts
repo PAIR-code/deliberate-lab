@@ -175,8 +175,13 @@ export async function updateParticipantChipQuantities(
   });
   // Add map items
   Object.keys(addMap).forEach((chipId) => {
-    const currentChips = answer.chipMap[chipId] ?? 0;
-    const addChips = addMap[chipId];
+    const currentChips = Number(answer.chipMap[chipId] ?? 0);
+    const addChips = Number(addMap[chipId]);
+    if (Number.isNaN(currentChips) || Number.isNaN(addChips)) {
+      console.error(`Invalid chip number for addition: ${chipId}`, { currentChips, addChips });
+      return false;
+    }
+
     answer.chipMap[chipId] = currentChips + addChips;
   });
 
