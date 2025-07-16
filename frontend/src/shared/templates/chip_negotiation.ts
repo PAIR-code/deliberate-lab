@@ -979,49 +979,6 @@ const CHIP_PRE_SURVEY_STAGE1 = createSurveyStage({
     }),
   ],
 });
-// const CHIP_PRE_SURVEY_STAGE2 = createSurveyStage({
-//   id: 'pre_survey_2',
-//   name: 'Pre-game survey 2',
-//   descriptions: createStageTextConfig({
-//     primaryText:
-//       'This section asks about your expectations about the different AI tools available to you in the game. As a reminder, you’ll have access to three types of AI tools (a coach, delegate, and advisor) over three games, all powered by Google Gemini 2.5 (a large language model) and built on the same underlying capabilities.\nPlease indicate how much you agree or disagree with the following statements based on your expectations.',
-//   }),
-//   questions: [
-//     // Perspectives on AI tooling
-//     createScaleSurveyQuestion({
-//       questionTitle:
-//         'I believe that having access to the AI tools will improve my performance in this game.',
-//       lowerText: 'Strongly disagree',
-//       lowerValue: 1,
-//       upperText: 'Strongly agree',
-//       upperValue: 5,
-//     }),
-//     createScaleSurveyQuestion({
-//       questionTitle:
-//         'I believe that the AI tools will provide information I can trust.',
-//       lowerText: 'Strongly disagree',
-//       lowerValue: 1,
-//       upperText: 'Strongly agree',
-//       upperValue: 5,
-//     }),
-//     createScaleSurveyQuestion({
-//       questionTitle:
-//         'I believe that the AI tools will help me see options or strategies I might otherwise miss.',
-//       lowerText: 'Strongly disagree',
-//       lowerValue: 1,
-//       upperText: 'Strongly agree',
-//       upperValue: 5,
-//     }),
-//     createScaleSurveyQuestion({
-//       questionTitle:
-//         'I believe that the AI tools will help lighten the mental workload of playing this game.',
-//       lowerText: 'Strongly disagree',
-//       lowerValue: 1,
-//       upperText: 'Strongly agree',
-//       upperValue: 5,
-//     }),
-//   ],
-// });
 
 // ****************************************************************************
 // Post-negotiation survey stage

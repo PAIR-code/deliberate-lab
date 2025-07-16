@@ -777,7 +777,7 @@ export class ChipView extends MobxLitElement {
     const assistance = this.answer?.currentAssistance;
     if (!assistance || !assistance.type) {
       // Assistance not yet available or malformed
-      return html` <div></div> `;
+      return nothing;
     }
 
     const message = this.answer?.currentAssistance?.message ?? '';
