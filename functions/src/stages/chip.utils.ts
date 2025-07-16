@@ -567,7 +567,6 @@ export async function getChipOfferAssistance(
         //  changing the chip IDs to uppercase, specific to the Chip Negotiation game
         const buyType = responseObj['suggestedBuyType']?.toUpperCase();
         const sellType = responseObj['suggestedSellType']?.toUpperCase();
-
         if (
           buyType &&
           typeof responseObj['suggestedBuyQuantity'] === 'number'
@@ -580,7 +579,6 @@ export async function getChipOfferAssistance(
         ) {
           sell[sellType] = responseObj['suggestedSellQuantity'];
         }
-        console.log(buy, sell);
         addChipOfferToPublicData(
           experimentId,
           participant.currentCohortId,
