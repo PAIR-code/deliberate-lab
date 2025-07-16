@@ -163,21 +163,54 @@ export async function updateParticipantChipQuantities(
 
   // Remove map items
   Object.keys(removeMap).forEach((chipId) => {
-    const currentChips = answer.chipMap[chipId] ?? 0;
-    const removeChips = removeMap[chipId];
+    const currentChips = Number(answer.chipMap[chipId] ?? 0);
+    const removeChips = Number(removeMap[chipId]);
 
-    if (removeChips <= currentChips) {
-      answer.chipMap[chipId] -= removeChips;
-    } else {
-      // TODO: Log failure
+    if (Number.isNaN(currentChips) || Number.isNaN(removeChips)) {
+      console.error(`Invalid chip number for removal: ${chipId}`, {
+        currentChips,
+        removeChips,
+      });
       return false;
     }
+
+    if (removeChips < 0) {
+      console.error(`Negative chip removal not allowed: ${chipId}`, {
+        removeChips,
+      });
+      return false;
+    }
+
+    if (removeChips > currentChips) {
+      console.error(`Attempting to remove more chips than available for ${chipId}`, {
+        currentChips,
+        removeChips,
+      });
+      return false;
+    }
+
+    answer.chipMap[chipId] = currentChips - removeChips;
   });
+
   // Add map items
   Object.keys(addMap).forEach((chipId) => {
-    const currentChips = answer.chipMap[chipId] ?? 0;
-    const addChips = addMap[chipId];
-    answer.chipMap[chipId] = currentChips + addChips;
+    const currentChips = Number(answer.chipMap[chipId] ?? 0);
+    const addChips = Number(addMap[chipId]);
+    if (Number.isNaN(currentChips) || Number.isNaN(addChips)) {
+      console.error(`Invalid chip number for addition: ${chipId}`, { currentChips, addChips });
+      return false;
+    }
+
+    const newTotal = currentChips + addChips;
+    const maxChipLimit = 30;
+
+    if (newTotal > maxChipLimit) {
+      console.error(`Chip count exceeds max limit for ${chipId}: ${newTotal} > ${maxChipLimit}`);
+      return false;
+    }
+
+    answer.chipMap[chipId] = newTotal;
+
   });
 
   // Update public stage data
@@ -521,10 +554,16 @@ export async function getChipOfferAssistance(
       if (sendOffer) {
         const buy: Record<string, number> = {};
         const sell: Record<string, number> = {};
-        buy[responseObj['suggestedBuyType']] =
-          responseObj['suggestedBuyQuantity'];
-        sell[responseObj['suggestedSellType']] =
-          responseObj['suggestedSellQuantity'];
+        //  changing the chip IDs to uppercase, specific to the Chip Negotiation game
+        const buyType = responseObj['suggestedBuyType']?.toUpperCase();
+        const sellType = responseObj['suggestedSellType']?.toUpperCase();
+
+        if (buyType && typeof responseObj['suggestedBuyQuantity'] === 'number') {
+          buy[buyType] = responseObj['suggestedBuyQuantity'];
+        }
+        if (sellType && typeof responseObj['suggestedSellQuantity'] === 'number') {
+          sell[sellType] = responseObj['suggestedSellQuantity'];
+        }
         console.log(buy, sell);
         addChipOfferToPublicData(
           experimentId,
