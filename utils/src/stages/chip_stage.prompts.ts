@@ -57,7 +57,8 @@ suggestedSellQuantity: 4,
 tradeExplanation: Both Player B and Player C avoid purple but seem eager for red. Testing whether they undervalue blue, I’ll offer 4 red for 6 blue. If accepted, I can gain a lot and shed medium-value chips.
 
 ## Bad Examples
-try to AVOID VERY CONSERVATIVE trade, e.g. 1 chip for 1 chip. Remember you only have 3 chance to propose.
+1. try to AVOID VERY CONSERVATIVE trade, e.g. 1 chip for 1 chip. Remember you only have 3 chance to propose.
+2. You CANNOT request more chips than a player currently has. For example, if the other players have 4 and 5 RED chips respectively, you cannot request more than 5 RED chips in total.
 
 Output a proposal response. Your response **must adhere strictly to the following format**. Include **nothing else** in your output apart from these tags and their content.
 ${printSchema(CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG.schema!)}
@@ -182,7 +183,8 @@ suggestedSellQuantity: 4,
 tradeExplanation: Both Player B and Player C avoid purple but seem eager for red. Testing whether they undervalue blue, I’ll offer 4 red for 6 blue. If accepted, I can gain a lot and shed medium-value chips.
 
 ## Bad Examples
-try to AVOID VERY CONSERVATIVE trade, e.g. 1 chip for 1 chip. Remember you only have 3 chance to propose.
+1. try to AVOID VERY CONSERVATIVE trade, e.g. 1 chip for 1 chip. Remember you only have 3 chance to propose.
+2. You CANNOT request more chips than a player currently has. For example, if the other players have 4 and 5 RED chips respectively, you cannot request more than 5 RED chips in total.
 
 Output a coaching response. Your response **must adhere strictly to the following format**. Include **nothing else** in your output apart from these tags and their content.
 In the <feedback> and <reasoning> tags, you will provide your coaching feedback and reasoning for providing that coaching feedback.
@@ -310,7 +312,8 @@ suggestedSellQuantity: 4,
 tradeExplanation: Both Player B and Player C avoid purple but seem eager for red. Testing whether they undervalue blue, I’ll offer 4 red for 6 blue. If accepted, I can gain a lot and shed medium-value chips.
 
 ## Bad Examples
-try to AVOID VERY CONSERVATIVE trade, e.g. 1 chip for 1 chip. Remember you only have 3 chance to propose.
+1. try to AVOID VERY CONSERVATIVE trade, e.g. 1 chip for 1 chip. Remember you only have 3 chance to propose.
+2. You CANNOT request more chips than a player currently has. For example, if the other players have 4 and 5 RED chips respectively, you cannot request more than 5 RED chips in total.
 
 Output a proposal response. Your response **must adhere strictly to the following format**. Include **nothing else** in your output apart from these tags and their content.
 
