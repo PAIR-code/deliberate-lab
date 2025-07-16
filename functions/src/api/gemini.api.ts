@@ -192,7 +192,6 @@ export async function getGeminiAPIResponse(
       field.value,
     ]),
   );
-
   let structuredOutputGenerationConfig;
   try {
     structuredOutputGenerationConfig = makeStructuredOutputGenerationConfig(
@@ -204,12 +203,10 @@ export async function getGeminiAPIResponse(
       errorMessage: error.message,
     };
   }
-
   const thinkingConfig = {
     thinkingBudget: generationConfig.reasoningBudget,
     includeThoughts: generationConfig.includeReasoning,
   };
-
   const geminiConfig: GenerationConfig = {
     stopSequences: generationConfig.stopSequences,
     maxOutputTokens: generationConfig.maxTokens,
@@ -218,70 +215,39 @@ export async function getGeminiAPIResponse(
     topK: 16,
     presencePenalty: generationConfig.presencePenalty,
     frequencyPenalty: generationConfig.frequencyPenalty,
-    thinkingConfig,
+    thinkingConfig: thinkingConfig,
     ...structuredOutputGenerationConfig,
     ...customFields,
   };
 
-  const isStructured = structuredOutputConfig?.enabled;
-  const MAX_RETRIES = 2;
-  let retryCount = 0;
-
-  let currentPrompt = promptText;
-  let lastModelResponse: ModelResponse | null = null;
-
-  while (retryCount <= MAX_RETRIES) {
-    try {
-      const modelResponse = await callGemini(
-        apiKey,
-        currentPrompt,
-        geminiConfig,
-        modelName,
-        false, 
-      );
-
-      lastModelResponse = modelResponse;
-
-      if (!isStructured) return modelResponse;
-
-      const parsed = await addParsedModelResponse(modelResponse);
-      if (parsed.status === ModelResponseStatus.OK && parsed.parsedResponse !== undefined) {
-        return parsed;
+  try {
+    return await callGemini(
+      apiKey,
+      promptText,
+      geminiConfig,
+      modelName,
+      structuredOutputConfig?.enabled,
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    // The GenerativeAI client doesn't return responses in a parseable format,
+    // so try to parse the output string looking for the HTTP status code.
+    let returnStatus = ModelResponseStatus.UNKNOWN_ERROR;
+    // Match a status code and message between brackets, e.g. "[403 Forbidden]".
+    const statusMatch = error.message.match(/\[(\d{3})[\s\w]*\]/);
+    if (statusMatch) {
+      const statusCode = parseInt(statusMatch[1]);
+      if (statusCode == AUTHENTICATION_FAILURE_ERROR_CODE) {
+        returnStatus = ModelResponseStatus.AUTHENTICATION_ERROR;
+      } else if (statusCode == QUOTA_ERROR_CODE) {
+        returnStatus = ModelResponseStatus.QUOTA_ERROR;
+      } else if (statusCode >= 500 && statusCode < 600) {
+        returnStatus = ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR;
       }
-
-      // if parsing failed, append the prompt the error message and try again
-      const previousText = modelResponse.text ?? '[No Text Returned]';
-      const parseErrorMessage = modelResponse.errorMessage ?? '[Unknown parse error]';
-      currentPrompt =
-        promptText +
-        `\n\nYour previous response is:\n${previousText}\n\nParse error: ${parseErrorMessage}\n\nPlease try again.`;
-
-      // if it still has error, add more retry
-      retryCount += 1;
-    } catch (error: any) {
-      let returnStatus = ModelResponseStatus.UNKNOWN_ERROR;
-      const statusMatch = error.message.match(/\[(\d{3})[\s\w]*\]/);
-      if (statusMatch) {
-        const statusCode = parseInt(statusMatch[1]);
-        if (statusCode === AUTHENTICATION_FAILURE_ERROR_CODE) {
-          returnStatus = ModelResponseStatus.AUTHENTICATION_ERROR;
-        } else if (statusCode === QUOTA_ERROR_CODE) {
-          returnStatus = ModelResponseStatus.QUOTA_ERROR;
-        } else if (statusCode >= 500 && statusCode < 600) {
-          returnStatus = ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR;
-        }
-      }
-      return {
-        status: returnStatus,
-        errorMessage: error.message,
-      };
     }
+    return {
+      status: returnStatus,
+      errorMessage: error.message,
+    };
   }
-
-  // Maximal retry reached
-  return {
-    status: ModelResponseStatus.STRUCTURED_OUTPUT_PARSE_ERROR,
-    errorMessage: `Something went wrong, already retied for ${MAX_RETRIES + 1} times.`,
-  };
 }
-
