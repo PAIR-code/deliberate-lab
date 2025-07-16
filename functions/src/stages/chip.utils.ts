@@ -163,16 +163,35 @@ export async function updateParticipantChipQuantities(
 
   // Remove map items
   Object.keys(removeMap).forEach((chipId) => {
-    const currentChips = answer.chipMap[chipId] ?? 0;
-    const removeChips = removeMap[chipId];
+    const currentChips = Number(answer.chipMap[chipId] ?? 0);
+    const removeChips = Number(removeMap[chipId]);
 
-    if (removeChips <= currentChips) {
-      answer.chipMap[chipId] -= removeChips;
-    } else {
-      // TODO: Log failure
+    if (Number.isNaN(currentChips) || Number.isNaN(removeChips)) {
+      console.error(`Invalid chip number for removal: ${chipId}`, {
+        currentChips,
+        removeChips,
+      });
       return false;
     }
+
+    if (removeChips < 0) {
+      console.error(`Negative chip removal not allowed: ${chipId}`, {
+        removeChips,
+      });
+      return false;
+    }
+
+    if (removeChips > currentChips) {
+      console.error(`Attempting to remove more chips than available for ${chipId}`, {
+        currentChips,
+        removeChips,
+      });
+      return false;
+    }
+
+    answer.chipMap[chipId] = currentChips - removeChips;
   });
+
   // Add map items
   Object.keys(addMap).forEach((chipId) => {
     const currentChips = Number(answer.chipMap[chipId] ?? 0);
@@ -182,7 +201,16 @@ export async function updateParticipantChipQuantities(
       return false;
     }
 
-    answer.chipMap[chipId] = currentChips + addChips;
+    const newTotal = currentChips + addChips;
+    const maxChipLimit = 30;
+
+    if (newTotal > maxChipLimit) {
+      console.error(`Chip count exceeds max limit for ${chipId}: ${newTotal} > ${maxChipLimit}`);
+      return false;
+    }
+
+    answer.chipMap[chipId] = newTotal;
+
   });
 
   // Update public stage data
