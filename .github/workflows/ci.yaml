@@ -37,14 +37,6 @@ jobs:
         npm install
         npm run build
 
-    - name: Build frontend
-      working-directory: ./frontend
-      run: |
-        echo
-        npm install
-        cp index.example.html index.html
-        npm run build
-
     - name: Test utils
       working-directory: ./utils
       run: |
