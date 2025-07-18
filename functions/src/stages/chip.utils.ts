@@ -592,7 +592,14 @@ export async function getChipOfferAssistance(
           `Suggested: Give ${responseObj['suggestedSellQuantity']} ${responseObj['suggestedSellType']} to get ${responseObj['suggestedBuyQuantity']} ${responseObj['suggestedBuyType']} (${responseObj['reasoning']})`,
         );
       }
-      return {success: true, modelResponse: responseObj || {}};
+      
+      // Check if responseObj is valid (not empty and has required fields)
+      if (responseObj && Object.keys(responseObj).length > 0) {
+        return {success: true, modelResponse: responseObj};
+      } else {
+        console.log('Response object is empty or invalid');
+        return {success: false, errorMessage: 'Empty or invalid response object'};
+      }
     } catch (errorMessage) {
       // Response is already logged in console during Gemini API call
       console.log('Could not parse JSON:', errorMessage);
@@ -716,7 +723,12 @@ export async function getChipOfferAssistance(
         CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
       );
       // Parse response before returning
-      return parseResponse(delegateResponse, true);
+      const parseResult = parseResponse(delegateResponse, true);
+      console.log('DELEGATE mode parse result:', parseResult);
+      if (!parseResult.success) {
+        console.log('DELEGATE mode failed - will set ERROR mode in endpoints');
+      }
+      return parseResult;
     default:
       return {success: false, errorMessage: 'Invalid assistance mode'};
   }
@@ -873,7 +885,14 @@ export async function getChipResponseAssistance(
           `${responseObject['response']} ${responseObject['feedback']}`,
         );
       }
-      return {success: true, modelResponse: responseObject || {}};
+      
+      // Check if responseObject is valid (not empty and has required fields)
+      if (responseObject && Object.keys(responseObject).length > 0) {
+        return {success: true, modelResponse: responseObject};
+      } else {
+        console.log('Response object is empty or invalid');
+        return {success: false, errorMessage: 'Empty or invalid response object'};
+      }
     } catch (errorMessage) {
       // Response is already logged in console during Gemini API call
       console.log('Could not parse JSON:', errorMessage);

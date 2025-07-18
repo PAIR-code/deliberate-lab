@@ -535,9 +535,11 @@ export const selectChipAssistanceMode = onCall(async (request) => {
         currentAssistance.message = response.modelResponse['feedback'] ?? '';
         currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
         currentAssistance.modelResponse = response.modelResponse;
+        console.log('DELEGATE response mode success - assistance updated');
       } else {
         // Set error mode if response failed
         currentAssistance.selectedMode = ChipAssistanceMode.ERROR;
+        console.log('DELEGATE response mode failed - setting ERROR mode:', response.errorMessage);
       }
       currentAssistance.proposedTime = Timestamp.now();
     }
@@ -577,9 +579,12 @@ export const selectChipAssistanceMode = onCall(async (request) => {
           '';
         currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
         currentAssistance.modelResponse = response.modelResponse;
+        console.log('DELEGATE mode success - assistance updated');
       } else {
         // Set error mode if response failed
         currentAssistance.selectedMode = ChipAssistanceMode.ERROR;
+        console.log('DELEGATE mode failed - setting ERROR mode:', response.errorMessage);
+        console.log(currentAssistance.selectedMode)
       }
       currentAssistance.proposedTime = Timestamp.now();
     }
@@ -596,6 +601,9 @@ export const selectChipAssistanceMode = onCall(async (request) => {
   } else {
     participantAnswer.currentAssistance = currentAssistance;
   }
+  
+  console.log('selectChipAssistanceMode - final currentAssistance.selectedMode:', currentAssistance.selectedMode);
+  
   await app.firestore().runTransaction(async (transaction) => {
     transaction.set(
       getFirestoreParticipantAnswerRef(
