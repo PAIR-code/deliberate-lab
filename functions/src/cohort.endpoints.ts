@@ -21,7 +21,7 @@ import {
   prettyPrintError,
   prettyPrintErrors,
 } from './utils/validation';
-import { createCohortInternal } from './cohort.utils';
+import {createCohortInternal} from './cohort.utils';
 
 /** Create/update and delete cohorts. */
 
@@ -52,11 +52,7 @@ export const createCohort = onCall(async (request) => {
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {
-    await createCohortInternal(
-      transaction,
-      data.experimentId,
-      cohortConfig,
-    );
+    await createCohortInternal(transaction, data.experimentId, cohortConfig);
   });
 
   return {id: cohortConfig.id};
