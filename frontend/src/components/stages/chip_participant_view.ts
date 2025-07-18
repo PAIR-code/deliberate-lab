@@ -805,7 +805,6 @@ export class ChipView extends MobxLitElement {
     const shouldShowError = assistance?.selectedMode === ChipAssistanceMode.DELEGATE && 
                            assistance.proposedTime && 
                            !this.isValidAssistantOffer();
-    
     return html`
       <div class="button-wrapper">
         <pr-button

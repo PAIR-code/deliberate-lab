@@ -352,6 +352,9 @@ export const requestChipAssistance = onCall(async (request) => {
             '';
           currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
           currentAssistance.modelResponse = response.modelResponse;
+        } else {
+          // Set error mode if response failed
+          currentAssistance.selectedMode = ChipAssistanceMode.ERROR;
         }
         
         participantAnswer.currentAssistance = currentAssistance;
@@ -412,6 +415,9 @@ export const requestChipAssistance = onCall(async (request) => {
           '';
         currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
         currentAssistance.modelResponse = response.modelResponse;
+      } else {
+        // Set error mode if response failed
+        currentAssistance.selectedMode = ChipAssistanceMode.ERROR;
       }
       
       participantAnswer.currentAssistance = currentAssistance;
@@ -529,6 +535,9 @@ export const selectChipAssistanceMode = onCall(async (request) => {
         currentAssistance.message = response.modelResponse['feedback'] ?? '';
         currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
         currentAssistance.modelResponse = response.modelResponse;
+      } else {
+        // Set error mode if response failed
+        currentAssistance.selectedMode = ChipAssistanceMode.ERROR;
       }
       currentAssistance.proposedTime = Timestamp.now();
     }
@@ -568,6 +577,9 @@ export const selectChipAssistanceMode = onCall(async (request) => {
           '';
         currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
         currentAssistance.modelResponse = response.modelResponse;
+      } else {
+        // Set error mode if response failed
+        currentAssistance.selectedMode = ChipAssistanceMode.ERROR;
       }
       currentAssistance.proposedTime = Timestamp.now();
     }
