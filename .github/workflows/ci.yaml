@@ -3,7 +3,9 @@ name: Check format and run tests
 on: [push, pull_request]
 
 jobs:
-  ci:
+  format_and_test:
+    name: Check format and run tests
+
     runs-on: ubuntu-latest
 
     strategy:
