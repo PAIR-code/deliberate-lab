@@ -40,6 +40,8 @@ import {
   displayChipOfferText,
   getChipLogs,
   getChipOfferChecks,
+  ChipOfferAssistanceMove,
+  ChipResponseAssistanceMove,
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
@@ -126,6 +128,90 @@ export class ChipView extends MobxLitElement {
       </div>
     `;
   }
+
+  // ✅ NEW Fallback to Manual for System Error
+  private renderErrorOffer() {
+    return html`
+      <div class="warning">
+        ⚠️ A System Error occurred. Please proceed manually.
+      </div>
+      ${this.renderManualOffer(this.sendOffer)}
+    `;
+  }
+
+  private renderErrorResponse() {
+    return html`
+      <div class="warning">
+        ⚠️ A System Error occurred. Please proceed manually.
+      </div>
+      ${this.renderManualResponse(this.acceptOffer, this.rejectOffer)}
+    `;
+  }
+
+  // ✅ NEW Check if Assistant Offer is Valid
+  private isValidAssistantOffer(): boolean {
+    const assistance = this.answer?.currentAssistance;
+    if (!assistance || assistance.type !== ChipAssistanceType.OFFER) {
+      return false;
+    }
+    
+    // For coach mode, check if user has submitted their proposal
+    if (assistance.selectedMode === ChipAssistanceMode.COACH) {
+      // If user hasn't submitted proposal yet, consider it valid (waiting for user input)
+      if (!assistance.proposedTime) {
+        return true;
+      }
+      // If user has submitted, check if LLM provided valid feedback
+      const offerAssistance = assistance as ChipOfferAssistanceMove;
+      const hasValidOffer = offerAssistance.proposedOffer != null &&
+             Object.keys(offerAssistance.proposedOffer.buy ?? {}).length > 0 &&
+             Object.keys(offerAssistance.proposedOffer.sell ?? {}).length > 0;
+      const hasValidMessage = assistance.message != null;
+      
+      return hasValidOffer && hasValidMessage;
+    }
+    
+    // For other modes (advisor, delegate), check if LLM query has completed
+    if (!assistance.proposedTime) {
+      return true; // Still waiting for LLM response
+    }
+    
+    const offerAssistance = assistance as ChipOfferAssistanceMove;
+    return offerAssistance.proposedOffer != null &&
+           Object.keys(offerAssistance.proposedOffer.buy ?? {}).length > 0 &&
+           Object.keys(offerAssistance.proposedOffer.sell ?? {}).length > 0;
+  }
+
+  // ✅ NEW Check if Assistant Response is Valid
+  private isValidAssistantResponse(): boolean {
+    const assistance = this.answer?.currentAssistance;
+    if (!assistance || assistance.type !== ChipAssistanceType.RESPONSE) {
+      return false;
+    }
+    
+    // For coach mode, check if user has submitted their proposal
+    if (assistance.selectedMode === ChipAssistanceMode.COACH) {
+      // If user hasn't submitted proposal yet, consider it valid (waiting for user input)
+      if (!assistance.proposedTime) {
+        return true;
+      }
+      // If user has submitted, check if LLM provided valid feedback
+      const responseAssistance = assistance as ChipResponseAssistanceMove;
+      const hasValidResponse = responseAssistance.proposedResponse !== null;
+      const hasValidMessage = assistance.message != null;
+      
+      return hasValidResponse && hasValidMessage;
+    }
+    
+    // For other modes (advisor, delegate), check if LLM query has completed
+    if (!assistance.proposedTime) {
+      return true; // Still waiting for LLM response
+    }
+    
+    const responseAssistance = assistance as ChipResponseAssistanceMove;
+    return responseAssistance.message != null;
+  }
+
 
   private isAssistanceLoading() {
     return (
@@ -267,9 +353,15 @@ export class ChipView extends MobxLitElement {
       case ChipAssistanceMode.DELEGATE:
         return this.renderDelegateOfferButton(true);
       case ChipAssistanceMode.ADVISOR:
-        return this.renderAdvisorOffer(true);
+        return this.isValidAssistantOffer()
+          ? this.renderAdvisorOffer(true)
+          : this.renderErrorOffer();
       case ChipAssistanceMode.COACH:
-        return this.renderCoachOffer();
+        return this.isValidAssistantOffer()
+          ? this.renderCoachOffer()
+          : this.renderErrorOffer();
+      case ChipAssistanceMode.ERROR:
+        return this.renderErrorOffer(); // ✅ NEW
       default:
         break;
     }
@@ -465,9 +557,15 @@ export class ChipView extends MobxLitElement {
       case ChipAssistanceMode.DELEGATE:
         return this.renderDelegateResponseButton(true);
       case ChipAssistanceMode.ADVISOR:
-        return this.renderAdvisorResponse(true);
+        return this.isValidAssistantResponse()
+          ? this.renderAdvisorResponse(true)
+          : this.renderErrorResponse();
       case ChipAssistanceMode.COACH:
-        return this.renderCoachResponse();
+        return this.isValidAssistantResponse()
+          ? this.renderCoachResponse()
+          : this.renderErrorResponse();
+      case ChipAssistanceMode.ERROR:
+        return this.renderErrorResponse(); // ✅ NEW
       default:
         break;
     }
@@ -701,6 +799,12 @@ export class ChipView extends MobxLitElement {
   }
 
   private renderDelegateOfferButton(disabled = false) {
+    const assistance = this.answer?.currentAssistance;
+    
+    // Only show error if user has selected delegate mode and LLM query has completed but failed
+    const shouldShowError = assistance?.selectedMode === ChipAssistanceMode.DELEGATE && 
+                           assistance.proposedTime && 
+                           !this.isValidAssistantOffer();
     return html`
       <div class="button-wrapper">
         <pr-button
@@ -720,11 +824,22 @@ export class ChipView extends MobxLitElement {
           Delegate decision to agent
         </pr-button>
       </div>
-      ${this.getDelegateMessage()}
+      ${shouldShowError ? html`
+        <div class="warning">
+          ⚠️ A System Error occurred. Please proceed manually.
+        </div>
+      ` : this.getDelegateMessage()}
     `;
   }
 
   private renderDelegateResponseButton(disabled = false) {
+    const assistance = this.answer?.currentAssistance;
+    
+    // Only show error if user has selected delegate mode and LLM query has completed but failed
+    const shouldShowError = assistance?.selectedMode === ChipAssistanceMode.DELEGATE && 
+                           assistance.proposedTime && 
+                           !this.isValidAssistantResponse();
+    
     return html`
       <div class="button-wrapper">
         <pr-button
@@ -745,7 +860,11 @@ export class ChipView extends MobxLitElement {
           Delegate decision to agent
         </pr-button>
       </div>
-      ${this.getDelegateMessage()}
+      ${shouldShowError ? html`
+        <div class="warning">
+          ⚠️ A System Error occurred. Please proceed manually.
+        </div>
+      ` : this.getDelegateMessage()}
     `;
   }
 
