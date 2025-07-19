@@ -1,11 +1,6 @@
 import {Timestamp} from 'firebase/firestore';
 import {generateId, UnifiedTimestamp} from '../shared';
 import {
-  ParticipantProfile,
-  getNameFromPublicId,
-  sortParticipantsByRandomProfile,
-} from '../participant';
-import {
   BaseStageConfig,
   BaseStageParticipantAnswer,
   BaseStagePublicData,
@@ -143,7 +138,7 @@ export enum ChipAssistanceMode {
   ADVISOR = 'advisor',
   COACH = 'coach',
   DELEGATE = 'delegate',
-  ERROR = 'error', // ✅ NEW
+  ERROR = 'error',
 }
 
 /** Chip assistance move. */
