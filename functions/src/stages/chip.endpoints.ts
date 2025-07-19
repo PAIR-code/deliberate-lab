@@ -591,7 +591,7 @@ export const selectChipAssistanceMode = onCall(async (request) => {
   }
 
   // If delegate, assistance is over
-  if (data.assistanceMode === ChipAssistanceMode.DELEGATE) {
+  if (currentAssistance.selectedMode === ChipAssistanceMode.DELEGATE) {
     currentAssistance.endTime = Timestamp.now();
   }
 

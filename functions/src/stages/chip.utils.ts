@@ -37,6 +37,7 @@ import {
   CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG,
   CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
   ModelResponse,
+  ModelResponseStatus,
 } from '@deliberation-lab/utils';
 
 import {processModelResponse} from '../agent.utils';
@@ -634,7 +635,7 @@ export async function getChipOfferAssistance(
           structuredOutputConfig,
         );
         
-        if (response.status === 'ok') {
+        if (response.status === ModelResponseStatus.OK) {
           return response;
         }
         
@@ -650,16 +651,15 @@ export async function getChipOfferAssistance(
             basePrompt +
             `\n\nYour previous response is:\n\`\`\`\n${previousText}\n\`\`\`\n\nParse error: ${parseErrorMessage}\n\nPlease try again.`;
           
-          // Wait before retrying (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+          await new Promise(resolve => setTimeout(resolve, attempt * 1000));
         }
       } catch (error) {
         lastError = error;
         console.log(`Attempt ${attempt} threw error:`, error);
         
         if (attempt < maxRetries) {
-          // Wait before retrying (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+          // Wait before retrying
+          await new Promise(resolve => setTimeout(resolve, attempt * 1000));
         }
       }
     }
@@ -834,7 +834,7 @@ export async function getChipResponseAssistance(
           structuredOutputConfig,
         );
         
-        if (response.status === 'ok') {
+        if (response.status === ModelResponseStatus.OK) {
           return response;
         }
         
@@ -850,16 +850,16 @@ export async function getChipResponseAssistance(
             basePrompt +
             `\n\nYour previous response is:\n\`\`\`\n${previousText}\n\`\`\`\n\nParse error: ${parseErrorMessage}\n\nPlease try again.`;
           
-          // Wait before retrying (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+          // Wait before retrying
+          await new Promise(resolve => setTimeout(resolve, attempt * 1000));
         }
       } catch (error) {
         lastError = error;
         console.log(`Attempt ${attempt} threw error:`, error);
         
         if (attempt < maxRetries) {
-          // Wait before retrying (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+          // Wait before retrying
+          await new Promise(resolve => setTimeout(resolve, attempt * 1000));
         }
       }
     }
