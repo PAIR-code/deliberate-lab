@@ -12,13 +12,15 @@ import {
   ParticipantProfile,
   ParticipantProfileExtended,
   ParticipantStatus,
+  ModelResponse,
+  ModelResponseStatus,
+  StructuredOutputConfig,
   convertChipLogToPromptFormat,
   createChipInfoLogEntry,
   createChipOfferLogEntry,
   createChipOfferDeclinedLogEntry,
   createChipRoundLogEntry,
   createChipTransaction,
-  createChipTurn,
   createChipTurnLogEntry,
   createModelGenerationConfig,
   generateId,
@@ -30,23 +32,16 @@ import {
   getChipResponseAssistanceCoachPrompt,
   getChipResponseAssistanceDelegatePrompt,
   sortParticipantsByRandomProfile,
-  CHIP_OFFER_ASSISTANCE_COACH_PROMPT,
-  CHIP_OFFER_ASSISTANCE_DELEGATE_PROMPT,
   CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
   CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG,
   CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG,
   CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG,
-  ModelResponse,
-  ModelResponseStatus,
 } from '@deliberation-lab/utils';
 
 import {processModelResponse} from '../agent.utils';
 import {getFirestoreStagePublicDataRef} from '../utils/firestore';
 
-import * as admin from 'firebase-admin';
 import {Timestamp} from 'firebase-admin/firestore';
-import * as functions from 'firebase-functions';
-import {onCall} from 'firebase-functions/v2/https';
 
 import {app} from '../app';
 
@@ -185,10 +180,13 @@ export async function updateParticipantChipQuantities(
     }
 
     if (removeChips > currentChips) {
-      console.error(`Attempting to remove more chips than available for ${chipId}`, {
-        currentChips,
-        removeChips,
-      });
+      console.error(
+        `Attempting to remove more chips than available for ${chipId}`,
+        {
+          currentChips,
+          removeChips,
+        },
+      );
       return false;
     }
 
@@ -200,7 +198,10 @@ export async function updateParticipantChipQuantities(
     const currentChips = Number(answer.chipMap[chipId] ?? 0);
     const addChips = Number(addMap[chipId]);
     if (Number.isNaN(currentChips) || Number.isNaN(addChips)) {
-      console.error(`Invalid chip number for addition: ${chipId}`, { currentChips, addChips });
+      console.error(`Invalid chip number for addition: ${chipId}`, {
+        currentChips,
+        addChips,
+      });
       return false;
     }
 
@@ -208,12 +209,13 @@ export async function updateParticipantChipQuantities(
     const maxChipLimit = 30;
 
     if (newTotal > maxChipLimit) {
-      console.error(`Chip count exceeds max limit for ${chipId}: ${newTotal} > ${maxChipLimit}`);
+      console.error(
+        `Chip count exceeds max limit for ${chipId}: ${newTotal} > ${maxChipLimit}`,
+      );
       return false;
     }
 
     answer.chipMap[chipId] = newTotal;
-
   });
 
   // Update public stage data
@@ -303,7 +305,6 @@ export async function updateChipTurn(
 
     // If all (non-offer) participants have responded to the offer,
     // execute chip transaction
-    const senderId = currentTurn;
     const recipientId =
       acceptedOffer.length > 0
         ? acceptedOffer[Math.floor(Math.random() * acceptedOffer.length)]
@@ -567,10 +568,16 @@ export async function getChipOfferAssistance(
         const buyType = responseObj['suggestedBuyType']?.toUpperCase();
         const sellType = responseObj['suggestedSellType']?.toUpperCase();
 
-        if (buyType && typeof responseObj['suggestedBuyQuantity'] === 'number') {
+        if (
+          buyType &&
+          typeof responseObj['suggestedBuyQuantity'] === 'number'
+        ) {
           buy[buyType] = responseObj['suggestedBuyQuantity'];
         }
-        if (sellType && typeof responseObj['suggestedSellQuantity'] === 'number') {
+        if (
+          sellType &&
+          typeof responseObj['suggestedSellQuantity'] === 'number'
+        ) {
           sell[sellType] = responseObj['suggestedSellQuantity'];
         }
         console.log(buy, sell);
@@ -593,13 +600,16 @@ export async function getChipOfferAssistance(
           `Suggested: Give ${responseObj['suggestedSellQuantity']} ${responseObj['suggestedSellType']} to get ${responseObj['suggestedBuyQuantity']} ${responseObj['suggestedBuyType']} (${responseObj['reasoning']})`,
         );
       }
-      
+
       // Check if responseObj is valid (not empty and has required fields)
       if (responseObj && Object.keys(responseObj).length > 0) {
         return {success: true, modelResponse: responseObj};
       } else {
         console.log('Response object is empty or invalid');
-        return {success: false, errorMessage: 'Empty or invalid response object'};
+        return {
+          success: false,
+          errorMessage: 'Empty or invalid response object',
+        };
       }
     } catch (errorMessage) {
       // Response is already logged in console during Gemini API call
@@ -609,14 +619,15 @@ export async function getChipOfferAssistance(
   };
 
   // Helper function to call model with retries
+  // TODO: Consolidate with identical function in getChipResponseAssistance
   const callModelWithRetries = async (
     prompt: string,
-    structuredOutputConfig: any,
+    structuredOutputConfig: StructuredOutputConfig,
     maxRetries = 2,
   ): Promise<ModelResponse> => {
-    let lastError: any;
+    let lastError: object;
     const basePrompt = prompt; // Store original prompt
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const response = await processModelResponse(
@@ -634,37 +645,45 @@ export async function getChipOfferAssistance(
           modelGenerationConfig,
           structuredOutputConfig,
         );
-        
+
         if (response.status === ModelResponseStatus.OK) {
           return response;
         }
-        
+
         lastError = response;
-        console.log(`Attempt ${attempt} failed with status: ${response.status}`);
-        
+        console.log(
+          `Attempt ${attempt} failed with status: ${response.status}`,
+        );
+
         // if fail append prompt, and retry
         if (attempt < maxRetries) {
           const previousText = response.text ?? '[No Text Returned]';
-          const parseErrorMessage = response.errorMessage ?? '[Unknown parse error]';
+          const parseErrorMessage =
+            response.errorMessage ?? '[Unknown parse error]';
 
           prompt =
             basePrompt +
             `\n\nYour previous response is:\n\`\`\`\n${previousText}\n\`\`\`\n\nParse error: ${parseErrorMessage}\n\nPlease try again.`;
-          
-          await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+
+          await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
         }
       } catch (error) {
         lastError = error;
         console.log(`Attempt ${attempt} threw error:`, error);
-        
+
         if (attempt < maxRetries) {
           // Wait before retrying
-          await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+          await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
         }
       }
     }
-    
-    return lastError || { status: 'unknown_error', errorMessage: 'All retry attempts failed' };
+
+    return (
+      lastError || {
+        status: 'unknown_error',
+        errorMessage: 'All retry attempts failed',
+      }
+    );
   };
 
   // Call different LLM API prompt based on assistance mode
@@ -808,14 +827,15 @@ export async function getChipResponseAssistance(
   });
 
   // Helper function to call model with retries
+  // TODO: Consolidate with identical function in getChipOfferAssistance
   const callModelWithRetries = async (
     prompt: string,
-    structuredOutputConfig: any,
+    structuredOutputConfig: StructuredOutputConfig,
     maxRetries = 2,
   ): Promise<ModelResponse> => {
-    let lastError: any;
+    let lastError: object;
     const basePrompt = prompt; // Store original prompt
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const response = await processModelResponse(
@@ -833,38 +853,46 @@ export async function getChipResponseAssistance(
           modelGenerationConfig,
           structuredOutputConfig,
         );
-        
+
         if (response.status === ModelResponseStatus.OK) {
           return response;
         }
-        
+
         lastError = response;
-        console.log(`Attempt ${attempt} failed with status: ${response.status}`);
-        
+        console.log(
+          `Attempt ${attempt} failed with status: ${response.status}`,
+        );
+
         // if fail append prompt, and retry
         if (attempt < maxRetries) {
           const previousText = response.text ?? '[No Text Returned]';
-          const parseErrorMessage = response.errorMessage ?? '[Unknown parse error]';
+          const parseErrorMessage =
+            response.errorMessage ?? '[Unknown parse error]';
 
           prompt =
             basePrompt +
             `\n\nYour previous response is:\n\`\`\`\n${previousText}\n\`\`\`\n\nParse error: ${parseErrorMessage}\n\nPlease try again.`;
-          
+
           // Wait before retrying
-          await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+          await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
         }
       } catch (error) {
         lastError = error;
         console.log(`Attempt ${attempt} threw error:`, error);
-        
+
         if (attempt < maxRetries) {
           // Wait before retrying
-          await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+          await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
         }
       }
     }
-    
-    return lastError || { status: 'unknown_error', errorMessage: 'All retry attempts failed' };
+
+    return (
+      lastError || {
+        status: 'unknown_error',
+        errorMessage: 'All retry attempts failed',
+      }
+    );
   };
 
   // Helper function to parse structured output response
@@ -885,13 +913,16 @@ export async function getChipResponseAssistance(
           `${responseObject['response']} ${responseObject['feedback']}`,
         );
       }
-      
+
       // Check if responseObject is valid (not empty and has required fields)
       if (responseObject && Object.keys(responseObject).length > 0) {
         return {success: true, modelResponse: responseObject};
       } else {
         console.log('Response object is empty or invalid');
-        return {success: false, errorMessage: 'Empty or invalid response object'};
+        return {
+          success: false,
+          errorMessage: 'Empty or invalid response object',
+        };
       }
     } catch (errorMessage) {
       // Response is already logged in console during Gemini API call

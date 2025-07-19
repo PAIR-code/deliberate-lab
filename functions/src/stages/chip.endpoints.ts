@@ -3,26 +3,18 @@ import {
   ChipAssistanceMode,
   ChipAssistanceMove,
   ChipAssistanceType,
-  ChipLogEntry,
-  ChipOfferStatus,
   ChipStageConfig,
   ChipStagePublicData,
   SendChipOfferData,
-  displayChipOfferText,
   SendChipResponseData,
   SetChipTurnData,
   StageKind,
   createChipOffer,
-  createChipOfferLogEntry,
   createChipRoundLogEntry,
   createChipTurnLogEntry,
-  createChipTransaction,
-  generateId,
 } from '@deliberation-lab/utils';
 
-import * as admin from 'firebase-admin';
 import {Timestamp} from 'firebase-admin/firestore';
-import * as functions from 'firebase-functions';
 import {onCall} from 'firebase-functions/v2/https';
 
 import {app} from '../app';
@@ -30,7 +22,6 @@ import {
   getExperimenterDataFromExperiment,
   getFirestoreCohortParticipants,
   getFirestoreParticipant,
-  getFirestoreParticipants,
   getFirestoreParticipantAnswer,
   getFirestoreParticipantAnswerRef,
   getFirestoreStage,
@@ -343,20 +334,21 @@ export const requestChipAssistance = onCall(async (request) => {
         const currentAssistance = participantAnswer.currentAssistance;
         currentAssistance.proposedResponse = data.offerResponse;
         currentAssistance.proposedTime = requestTime; // Set when user submits proposal
-        
+
         // Only update LLM-related fields if response was successful
         if (response.success) {
           currentAssistance.message =
             response.modelResponse['feedback'] ??
             response.modelResponse['tradeExplanation'] ??
             '';
-          currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
+          currentAssistance.reasoning =
+            response.modelResponse['reasoning'] ?? '';
           currentAssistance.modelResponse = response.modelResponse;
         } else {
           // Set error mode if response failed
           currentAssistance.selectedMode = ChipAssistanceMode.ERROR;
         }
-        
+
         participantAnswer.currentAssistance = currentAssistance;
 
         await app.firestore().runTransaction(async (transaction) => {
@@ -406,7 +398,7 @@ export const requestChipAssistance = onCall(async (request) => {
         timestamp: requestTime,
       });
       currentAssistance.proposedTime = requestTime; // Set when user submits proposal
-      
+
       // Only update LLM-related fields if response was successful
       if (response.success) {
         currentAssistance.message =
@@ -419,7 +411,7 @@ export const requestChipAssistance = onCall(async (request) => {
         // Set error mode if response failed
         currentAssistance.selectedMode = ChipAssistanceMode.ERROR;
       }
-      
+
       participantAnswer.currentAssistance = currentAssistance;
 
       await app.firestore().runTransaction(async (transaction) => {
@@ -535,15 +527,12 @@ export const selectChipAssistanceMode = onCall(async (request) => {
         currentAssistance.message = response.modelResponse['feedback'] ?? '';
         currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
         currentAssistance.modelResponse = response.modelResponse;
-        console.log('DELEGATE response mode success - assistance updated');
       } else {
         // Set error mode if response failed
         currentAssistance.selectedMode = ChipAssistanceMode.ERROR;
-        console.log('DELEGATE response mode failed - setting ERROR mode:', response.errorMessage);
       }
       currentAssistance.proposedTime = Timestamp.now();
-    }
-    else{
+    } else {
       // Otherwise, assist with offer
       const response = await getChipOfferAssistance(
         data.experimentId,
@@ -579,12 +568,9 @@ export const selectChipAssistanceMode = onCall(async (request) => {
           '';
         currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
         currentAssistance.modelResponse = response.modelResponse;
-        console.log('DELEGATE mode success - assistance updated');
       } else {
         // Set error mode if response failed
         currentAssistance.selectedMode = ChipAssistanceMode.ERROR;
-        console.log('DELEGATE mode failed - setting ERROR mode:', response.errorMessage);
-        console.log(currentAssistance.selectedMode)
       }
       currentAssistance.proposedTime = Timestamp.now();
     }
@@ -601,9 +587,7 @@ export const selectChipAssistanceMode = onCall(async (request) => {
   } else {
     participantAnswer.currentAssistance = currentAssistance;
   }
-  
-  console.log('selectChipAssistanceMode - final currentAssistance.selectedMode:', currentAssistance.selectedMode);
-  
+
   await app.firestore().runTransaction(async (transaction) => {
     transaction.set(
       getFirestoreParticipantAnswerRef(
