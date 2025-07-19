@@ -143,6 +143,7 @@ export enum ChipAssistanceMode {
   ADVISOR = 'advisor',
   COACH = 'coach',
   DELEGATE = 'delegate',
+  ERROR = 'error', // ✅ NEW
 }
 
 /** Chip assistance move. */

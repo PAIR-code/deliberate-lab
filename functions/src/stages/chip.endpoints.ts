@@ -333,7 +333,7 @@ export const requestChipAssistance = onCall(async (request) => {
 
     // If response is valid, add to current assistance
     // If in coach assistance mode, record the proposed response and model feedback
-    if (data.assistanceMode === ChipAssistanceMode.COACH && response.success) {
+    if (data.assistanceMode === ChipAssistanceMode.COACH) {
       const participantAnswer = await getFirestoreParticipantAnswer(
         data.experimentId,
         data.participantId,
@@ -342,13 +342,21 @@ export const requestChipAssistance = onCall(async (request) => {
       if (participantAnswer?.currentAssistance) {
         const currentAssistance = participantAnswer.currentAssistance;
         currentAssistance.proposedResponse = data.offerResponse;
-        currentAssistance.message =
-          response.modelResponse['feedback'] ??
-          response.modelResponse['tradeExplanation'] ??
-          '';
-        currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
-        currentAssistance.modelResponse = response.modelResponse;
-        currentAssistance.proposedTime = requestTime;
+        currentAssistance.proposedTime = requestTime; // Set when user submits proposal
+        
+        // Only update LLM-related fields if response was successful
+        if (response.success) {
+          currentAssistance.message =
+            response.modelResponse['feedback'] ??
+            response.modelResponse['tradeExplanation'] ??
+            '';
+          currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
+          currentAssistance.modelResponse = response.modelResponse;
+        } else {
+          // Set error mode if response failed
+          currentAssistance.selectedMode = ChipAssistanceMode.ERROR;
+        }
+        
         participantAnswer.currentAssistance = currentAssistance;
 
         await app.firestore().runTransaction(async (transaction) => {
@@ -382,7 +390,7 @@ export const requestChipAssistance = onCall(async (request) => {
   );
 
   // If in coach assistance mode, record the proposed offer and model feedback
-  if (data.assistanceMode === ChipAssistanceMode.COACH && response.success) {
+  if (data.assistanceMode === ChipAssistanceMode.COACH) {
     const participantAnswer = await getFirestoreParticipantAnswer(
       data.experimentId,
       data.participantId,
@@ -397,13 +405,21 @@ export const requestChipAssistance = onCall(async (request) => {
         sell: data.sellMap,
         timestamp: requestTime,
       });
-      currentAssistance.message =
-        response.modelResponse['feedback'] ??
-        response.modelResponse['tradeExplanation'] ??
-        '';
-      currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
-      currentAssistance.modelResponse = response.modelResponse;
-      currentAssistance.proposedTime = requestTime;
+      currentAssistance.proposedTime = requestTime; // Set when user submits proposal
+      
+      // Only update LLM-related fields if response was successful
+      if (response.success) {
+        currentAssistance.message =
+          response.modelResponse['feedback'] ??
+          response.modelResponse['tradeExplanation'] ??
+          '';
+        currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
+        currentAssistance.modelResponse = response.modelResponse;
+      } else {
+        // Set error mode if response failed
+        currentAssistance.selectedMode = ChipAssistanceMode.ERROR;
+      }
+      
       participantAnswer.currentAssistance = currentAssistance;
 
       await app.firestore().runTransaction(async (transaction) => {
@@ -519,6 +535,11 @@ export const selectChipAssistanceMode = onCall(async (request) => {
         currentAssistance.message = response.modelResponse['feedback'] ?? '';
         currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
         currentAssistance.modelResponse = response.modelResponse;
+        console.log('DELEGATE response mode success - assistance updated');
+      } else {
+        // Set error mode if response failed
+        currentAssistance.selectedMode = ChipAssistanceMode.ERROR;
+        console.log('DELEGATE response mode failed - setting ERROR mode:', response.errorMessage);
       }
       currentAssistance.proposedTime = Timestamp.now();
     }
@@ -558,13 +579,19 @@ export const selectChipAssistanceMode = onCall(async (request) => {
           '';
         currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
         currentAssistance.modelResponse = response.modelResponse;
+        console.log('DELEGATE mode success - assistance updated');
+      } else {
+        // Set error mode if response failed
+        currentAssistance.selectedMode = ChipAssistanceMode.ERROR;
+        console.log('DELEGATE mode failed - setting ERROR mode:', response.errorMessage);
+        console.log(currentAssistance.selectedMode)
       }
       currentAssistance.proposedTime = Timestamp.now();
     }
   }
 
   // If delegate, assistance is over
-  if (data.assistanceMode === ChipAssistanceMode.DELEGATE) {
+  if (currentAssistance.selectedMode === ChipAssistanceMode.DELEGATE) {
     currentAssistance.endTime = Timestamp.now();
   }
 
@@ -574,6 +601,9 @@ export const selectChipAssistanceMode = onCall(async (request) => {
   } else {
     participantAnswer.currentAssistance = currentAssistance;
   }
+  
+  console.log('selectChipAssistanceMode - final currentAssistance.selectedMode:', currentAssistance.selectedMode);
+  
   await app.firestore().runTransaction(async (transaction) => {
     transaction.set(
       getFirestoreParticipantAnswerRef(
