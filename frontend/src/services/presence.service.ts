@@ -23,7 +23,10 @@ export class PresenceService extends Service {
   }
 
   setupPresence(experimentId: string, participantPrivateId: string) {
-    const statusRef = ref(this.sp.firebaseService.rtdb, `/status/${experimentId}/${participantPrivateId}`);
+    const statusRef = ref(
+      this.sp.firebaseService.rtdb,
+      `/status/${experimentId}/${participantPrivateId}`,
+    );
 
     const isOffline = {
       connected: false,
@@ -35,17 +38,22 @@ export class PresenceService extends Service {
       last_changed: serverTimestamp(),
     };
 
-    onValue(ref(this.sp.firebaseService.rtdb, '.info/connected'), (snapshot) => {
-      const isConnected = snapshot.val();
-      if (!isConnected) {
-        return;
-      }
+    onValue(
+      ref(this.sp.firebaseService.rtdb, '.info/connected'),
+      (snapshot) => {
+        const isConnected = snapshot.val();
+        if (!isConnected) {
+          return;
+        }
 
-      // Set the user's status in rtdb. The callback will reset it to online
-      // if the user reconnects.
-      onDisconnect(statusRef).set(isOffline).then(() => {
-        set(statusRef, isOnline);
-      });
-    });
+        // Set the user's status in rtdb. The callback will reset it to online
+        // if the user reconnects.
+        onDisconnect(statusRef)
+          .set(isOffline)
+          .then(() => {
+            set(statusRef, isOnline);
+          });
+      },
+    );
   }
 }

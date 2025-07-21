@@ -295,7 +295,7 @@ export const updateParticipantToNextStage = onCall(async (request) => {
     .collection('participants')
     .doc(privateId);
 
-  let response: { currentStageId: string | null; endExperiment: boolean } = {
+  let response: {currentStageId: string | null; endExperiment: boolean} = {
     currentStageId: null,
     endExperiment: false,
   };
@@ -449,10 +449,10 @@ export const acceptParticipantTransfer = onCall(async (request) => {
     .collection('experiments')
     .doc(data.experimentId);
 
-    let response: { currentStageId: string | null; endExperiment: boolean } = {
-      currentStageId: null,
-      endExperiment: false,
-    };
+  let response: {currentStageId: string | null; endExperiment: boolean} = {
+    currentStageId: null,
+    endExperiment: false,
+  };
 
   // Run document write as transaction to ensure consistency
   await app.firestore().runTransaction(async (transaction) => {

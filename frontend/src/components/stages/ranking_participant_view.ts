@@ -386,7 +386,8 @@ export class RankingView extends MobxLitElement {
         <div class="zone-header">
           <div class="title">Rankings</div>
           <div class="subtitle">
-            Either drag and drop or click and use the arrows to rank the items, placing your most preferred at the top.
+            Either drag and drop or click and use the arrows to rank the items,
+            placing your most preferred at the top.
           </div>
         </div>
         ${rankingList.map((id: string, index: number) => {

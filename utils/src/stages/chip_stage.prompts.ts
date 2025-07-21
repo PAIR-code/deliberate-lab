@@ -330,14 +330,16 @@ export const CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG =
           name: 'feedback',
           schema: {
             type: StructuredOutputDataType.STRING,
-            description: 'Your feedback to show to the player, be concise, in 2-3 sentences',
+            description:
+              'Your feedback to show to the player, be concise, in 2-3 sentences',
           },
         },
         {
           name: 'reasoning',
           schema: {
             type: StructuredOutputDataType.STRING,
-            description: 'Your concise reasoning in a 2-3 sentences. Be concise.',
+            description:
+              'Your concise reasoning in a 2-3 sentences. Be concise.',
           },
         },
         {

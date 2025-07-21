@@ -5,7 +5,7 @@ import {DocumentData, QuerySnapshot} from 'firebase/firestore';
  */
 // tslint:disable-next-line:interface-over-type-literal
 export type Constructor<T> = {
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   new (...args: any[]): T;
 };
 
