@@ -153,7 +153,7 @@ export class ParticipantSummary extends MobxLitElement {
 
     const {connected} = this.participant;
 
-    if(!connected && !isParticipantEndedExperiment(this.participant)) {
+    if (!connected && !isParticipantEndedExperiment(this.participant)) {
       return html`<div class="chip error">disconnected</div>`;
     }
 
