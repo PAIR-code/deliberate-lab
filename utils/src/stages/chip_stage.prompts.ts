@@ -360,6 +360,13 @@ export const CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG =
       type: StructuredOutputDataType.OBJECT,
       properties: [
         {
+          name: 'feedback',
+          schema: {
+            type: StructuredOutputDataType.STRING,
+            description: 'Your feedback to show to the player, be concise, in 2-3 sentences',
+          },
+        },
+        {
           name: 'reasoning',
           schema: {
             type: StructuredOutputDataType.STRING,
