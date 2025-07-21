@@ -2,6 +2,7 @@ import {UnifiedTimestamp} from '../shared';
 import {
   StructuredOutputConfig,
   StructuredOutputDataType,
+  StructuredOutputType,
   createStructuredOutputConfig,
   printSchema,
 } from '../structured_output';
@@ -70,6 +71,7 @@ export const CHIP_OFFER_ASSISTANCE_DELEGATE_PROMPT =
 /** Chip offer assistance structured output. */
 export const CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG =
   createStructuredOutputConfig({
+    type: StructuredOutputType.JSON_SCHEMA,
     schema: {
       type: StructuredOutputDataType.OBJECT,
       properties: [
@@ -197,6 +199,7 @@ ${printSchema(CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG.schema!)}
 /** Chip offer assistance advisor structured output. */
 export const CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG =
   createStructuredOutputConfig({
+    type: StructuredOutputType.JSON_SCHEMA, 
     schema: {
       type: StructuredOutputDataType.OBJECT,
       properties: [
@@ -323,6 +326,7 @@ ${printSchema(CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG.schema!)}
 
 export const CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG =
   createStructuredOutputConfig({
+    type: StructuredOutputType.JSON_SCHEMA,
     schema: {
       type: StructuredOutputDataType.OBJECT,
       properties: [
@@ -356,6 +360,7 @@ export const CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG =
 /** Chip response assistance structured output. */
 export const CHIP_RESPONSE_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG =
   createStructuredOutputConfig({
+    type: StructuredOutputType.JSON_SCHEMA,
     schema: {
       type: StructuredOutputDataType.OBJECT,
       properties: [

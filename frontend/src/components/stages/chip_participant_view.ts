@@ -379,9 +379,9 @@ export class ChipView extends MobxLitElement {
         .sendOffer=${sendOffer}
         .isPending=${isLoading || isOfferPending}
         .buttonText=${buttonText}
-        selectedBuyChip=${selectedBuyChip.toUpperCase()}
+        selectedBuyChip=${selectedBuyChip}
         buyChipAmount=${buyChipAmount}
-        selectedSellChip=${selectedSellChip.toUpperCase()}
+        selectedSellChip=${selectedSellChip}
         sellChipAmount=${sellChipAmount}
       >
       </chip-offer-form>
