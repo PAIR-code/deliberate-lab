@@ -145,7 +145,7 @@ const CHIP_TOS_STAGE = createTOSStage({
     '\n**Compensation**',
     'You will be paid a base amount for playing the games and completing the survey. You may receive an additional bonus on your performance in the games.',
     '\n**IRB**',
-    'The results of this study will be used solely for research purposes. Our team will keep all your information from this study strictly confidential, as required by law. The IRB at the Massachusetts Institute of Technology is responsible for protecting the rights and welfare of research volunteers like you.',
+    'The results of this study will be used solely for research purposes. Our team will keep all your information from this study strictly confidential, as required by law. The IRB at the Google Inc. is responsible for protecting the rights and welfare of research volunteers like you.',
     '\n**Voluntary participation**',
     'Your participation is voluntary, which means you can choose whether or not to participate. You may choose not to participate by exiting the survey at any point. There are no known costs to you for participating in this research study except for your time.',
     '\n**Contact**',
