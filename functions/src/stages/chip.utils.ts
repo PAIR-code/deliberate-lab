@@ -564,7 +564,7 @@ export async function getChipOfferAssistance(
       if (sendOffer && responseObj) {
         const buy: Record<string, number> = {};
         const sell: Record<string, number> = {};
-        //  changing the chip IDs to uppercase, specific to the Chip Negotiation game
+        //  changing the chip IDs to lowercase, specific to the Chip Negotiation game
         const buyType = responseObj['suggestedBuyType']?.toLowerCase();
         const sellType = responseObj['suggestedSellType']?.toLowerCase();
 
