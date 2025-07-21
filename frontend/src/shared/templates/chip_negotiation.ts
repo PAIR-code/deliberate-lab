@@ -665,7 +665,7 @@ export const TRANSFER_STAGE = createTransferStage({
 // ****************************************************************************
 function getChips(numChips: number) {
   const redChip = {
-    id: 'RED',
+    id: 'red',
     name: 'red',
     avatar: '🔴',
     canBuy: true,
@@ -676,7 +676,7 @@ function getChips(numChips: number) {
   };
 
   const blueChip = {
-    id: 'BLUE',
+    id: 'blue',
     name: 'blue',
     avatar: '🔵',
     canBuy: true,
@@ -687,7 +687,7 @@ function getChips(numChips: number) {
   };
 
   const purpleChip = {
-    id: 'PURPLE',
+    id: 'purple',
     name: 'purple',
     avatar: '🟣',
     canBuy: true,
@@ -698,7 +698,7 @@ function getChips(numChips: number) {
   };
 
   const greenChip = {
-    id: 'GREEN',
+    id: 'green',
     name: 'green',
     avatar: '🟢',
     canBuy: true,
