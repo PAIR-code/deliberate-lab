@@ -16,6 +16,7 @@ export enum StructuredOutputDataType {
   BOOLEAN = 'BOOLEAN',
   ARRAY = 'ARRAY',
   OBJECT = 'OBJECT',
+  ENUM = 'ENUM',
 }
 
 export interface StructuredOutputSchema {
@@ -23,6 +24,7 @@ export interface StructuredOutputSchema {
   description?: string;
   properties?: {name: string; schema: StructuredOutputSchema}[];
   arrayItems?: StructuredOutputSchema;
+  enumItems?: string[];
 }
 
 // TODO: Add StageKind or new enum to differentiate different configs
@@ -123,6 +125,7 @@ function schemaToObject(schema: StructuredOutputSchema): object {
     type: schema.type.toLowerCase(),
     properties: properties ?? undefined,
     items: arrayItems ?? undefined,
+    enum: schema.enumItems ?? undefined,
     required: required,
   };
 }

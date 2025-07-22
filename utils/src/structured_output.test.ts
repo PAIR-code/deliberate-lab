@@ -23,6 +23,14 @@ describe('Structured outputs', () => {
             },
           },
         },
+        {
+          name: 'enumProperty',
+          schema: {
+            type: StructuredOutputDataType.ENUM,
+            description: 'An enum-valued property',
+            enumItems: ['FOO', 'BAR', 'BAZ'],
+          },
+        },
       ],
     };
 
@@ -43,8 +51,13 @@ describe('Structured outputs', () => {
             type: 'integer',
           },
         },
+        enumProperty: {
+          description: 'An enum-valued property',
+          type: 'enum',
+          enum: ['FOO', 'BAR', 'BAZ'],
+        },
       },
-      required: ['stringProperty', 'intArrayProperty'],
+      required: ['stringProperty', 'intArrayProperty', 'enumProperty'],
     };
     expect(parsedResult).toEqual(expectedResult);
   });
