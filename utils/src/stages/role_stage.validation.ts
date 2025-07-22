@@ -36,3 +36,15 @@ export const RoleStageConfigData = Type.Object(
   },
   strict,
 );
+
+/** setParticipantRoles endpoint data validation. */
+export const SetParticipantRolesData = Type.Object(
+  {
+    experimentId: Type.String({minLength: 1}),
+    cohortId: Type.String({minLength: 1}),
+    stageId: Type.String({minLength: 1}),
+  },
+  strict,
+);
+
+export type SetParticipantRolesData = Static<typeof SetParticipantRolesData>;
