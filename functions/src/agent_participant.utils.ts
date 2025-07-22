@@ -16,6 +16,7 @@ import {
 import {createAgentChatMessageFromPrompt} from './chat/chat.agent';
 import {completeProfile} from './stages/profile.utils';
 import {getAgentParticipantRankingStageResponse} from './stages/ranking.agent';
+import {assignRolesToParticipants} from './stages/role.utils';
 import {getAgentParticipantSurveyStageResponse} from './stages/survey.agent';
 import {
   getExperimenterData,
@@ -97,6 +98,15 @@ export async function completeStageAsAgentParticipant(
       break;
     case StageKind.PROFILE:
       await completeProfile(experimentId, participant, stage);
+      await completeStage();
+      participantDoc.set(participant);
+      break;
+    case StageKind.ROLE:
+      await assignRolesToParticipants(
+        experimentId,
+        participant.currentCohortId,
+        stage.id,
+      );
       await completeStage();
       participantDoc.set(participant);
       break;
