@@ -623,7 +623,7 @@ export async function getChipOfferAssistance(
   const callModelWithRetries = async (
     prompt: string,
     structuredOutputConfig: StructuredOutputConfig,
-    maxRetries = 2,
+    maxRetries = 3,
   ): Promise<ModelResponse> => {
     let lastError: object;
     const basePrompt = prompt; // Store original prompt
@@ -831,7 +831,7 @@ export async function getChipResponseAssistance(
   const callModelWithRetries = async (
     prompt: string,
     structuredOutputConfig: StructuredOutputConfig,
-    maxRetries = 2,
+    maxRetries = 3,
   ): Promise<ModelResponse> => {
     let lastError: object;
     const basePrompt = prompt; // Store original prompt
