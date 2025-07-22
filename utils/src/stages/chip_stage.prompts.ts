@@ -462,6 +462,10 @@ You have an offer: ${offer}
 Here is the player's initial proposal: ${responseIdea ? 'Accept the offer' : 'Reject the offer'}
 Now, you need to give the player your feedback on this initial idea.
 
+## Good Feedback Examples
+1. Your current offer is profitable. But Player XXX appears to value blue chips more than you do. You may want to consider trading blue chips for other colors.
+2. There is only 1 round left. You may want to consider increasing the quantity of chips you are offering.
+
 ${printSchema(CHIP_RESPONSE_ASSISTANCE_COACH_STRUCTURED_OUTPUT_CONFIG.schema!)}
 `;
 }
