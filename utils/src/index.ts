@@ -65,6 +65,8 @@ export * from './stages/flipcard_stage.validation';
 export * from './stages/ranking_stage';
 export * from './stages/ranking_stage.prompts';
 export * from './stages/ranking_stage.validation';
+export * from './stages/role_stage';
+export * from './stages/role_stage.validation';
 export * from './stages/info_stage';
 export * from './stages/info_stage.prompts';
 export * from './stages/info_stage.validation';

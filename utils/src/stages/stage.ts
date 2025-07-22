@@ -31,6 +31,7 @@ import {PayoutStageConfig, PayoutStageParticipantAnswer} from './payout_stage';
 import {PrivateChatStageConfig} from './private_chat_stage';
 import {ProfileStageConfig} from './profile_stage';
 import {RevealStageConfig} from './reveal_stage';
+import {RoleStageConfig} from './role_stage';
 import {
   SalespersonStageConfig,
   SalespersonStagePublicData,
@@ -80,6 +81,7 @@ export enum StageKind {
   SALESPERSON = 'salesperson', // co-op traveling salesperson game
   STOCKINFO = 'stockinfo',
   ASSET_ALLOCATION = 'assetAllocation', // asset allocation between stocks
+  ROLE = 'role', // info stage that assigns different roles to participants
   SURVEY = 'survey',
   SURVEY_PER_PARTICIPANT = 'surveyPerParticipant',
   TRANSFER = 'transfer',
@@ -125,6 +127,7 @@ export type StageConfig =
   | SalespersonStageConfig
   | StockInfoStageConfig
   | AssetAllocationStageConfig
+  | RoleStageConfig
   | SurveyStageConfig
   | SurveyPerParticipantStageConfig
   | TOSStageConfig
