@@ -150,7 +150,7 @@ const CHIP_TOS_STAGE = createTOSStage({
     'Your participation is voluntary, which means you can choose whether or not to participate. You may choose not to participate by exiting the survey at any point. There are no known costs to you for participating in this research study except for your time.',
     '\n**Contact**',
     'Please feel free to contact us through Prolific or your game administrator if you have any questions, concerns, or complaints about this study.',
-    '\nBy checking the box below and proceeding, you are acknowledging that you are over the age of 18 and that you consent to participate. Clicking the arrow will bring you to the beginning of the task.',
+    '\nBy checking the box below and proceeding, you are acknowledging that you are over the age of 18 and that you consent to participate. "NEXT STEP" will bring you to the beginning of the task.',
   ],
   progress: createStageProgressConfig({
     showParticipantProgress: false,
@@ -226,7 +226,7 @@ function createChipInfoStage1(numChips: number) {
 
 function createChipInfoStage2(numChips: number) {
   const infoLines = [
-    'You will play this trading game three times against different groups of participants. In each game, you and the other participants will start with:',
+    'You will play this trading game three times. In each game, you and the other participants will start with:',
   ];
 
   // Adjust the chips included based on numChips
@@ -286,10 +286,6 @@ function createChipInfoStage2(numChips: number) {
       'Similarly, you might trade 🔵 blue chips with another participant if they value them more than you do. The same goes for 🟣 purple chips, depending on your valuation of them compared to the other participants.',
     );
   }
-
-  infoLines.push(
-    "You know your own chip valuation and that everyone values 🟢 green chips the same, at $0.50 per chip. However, you do not know the other players' valuations for the other chips.",
-  );
 
   infoLines.push("**Parcipant Knowledge of Others' Valuations:**");
 
@@ -513,6 +509,9 @@ const CHIP_INFO_STAGE_GAMEPLAY2 = createInfoStage({
     `* Players cannot offer more chips than they currently hold. For example, if you only have 5 🔴 red chips, you cannot offer 6 🔴 red chips.`,
     `* Players cannot trade chips of the same color. For example, you cannot trade 🔴 red chips for 🔴 red chips.`,
     '![Example of offering a trade](https://i.imgur.com/Jzah8Ot.png)',
+
+    `\n## !Time limit`,
+    'As a reminder, please enter your offer within 1 minute! If you do not enter your offer within 1 minute, the experimenter will send you an attention check.🙂',
   ],
   progress: createStageProgressConfig({
     showParticipantProgress: false,
@@ -544,7 +543,9 @@ const CHIP_INFO_STAGE_GAMEPLAY5 = createInfoStage({
     `* AI delegate: In delegation mode, you can delegate your trading decisions to an AI assistant. The AI will take actions on your behalf.`,
     `* AI advisor: In advisor mode, you can ask an AI assistant to give recommendations on which action to take. The AI will provide suggestions, but you must make the final decision.`,
     `* AI coach: In coach mode, you can ask an AI assistant for feedback on your actions. The AI will provide coaching, but you must make the final decision.`,
-    `\nAt each turn, you will have the option of opting into AI assistance or not. You will always have the option to ignore the AI assistance and take actions yourself.`,
+    `\n At each turn, you will have the option of opting into AI assistance or not. And your choice of opting in will be effective ONLY FOR THAT TURN.`,
+    `\n You will always have the option to ignore the AI assistance and take actions yourself.`,
+    `\n NOTE: you will expect to get AI assistance within 30 seconds. And there are small chances that you received the messgae that THE SYSTEM WENT WRONG. If this happens, please just ignore the message and take actions yourself.`,
   ],
   progress: createStageProgressConfig({
     showParticipantProgress: false,
@@ -578,7 +579,7 @@ const CHIP_INFO_STAGE_PAYOUT = createInfoStage({
     'At the end of the study, we will *randomly* pick one of the three negotiation games you played and give you a bonus payment from that game',
     'There are two important features to remember about the bonus:',
     '  * The bonus will be equivalent to how much money you earn through trading *beyond* what you start with.',
-    '  * If you do not complete both games, you will not receive a bonus payment.',
+    '  * If you do not complete all three games, you will not receive a bonus payment.',
     'In short, you want to make as much money as you can through trading!',
   ],
   progress: createStageProgressConfig({
@@ -905,7 +906,8 @@ const COACH_MODE_INSTRUCTION = createInfoStage({
     '',
     '**• Your choice:** At each turn, you input your move. You can then either submit the move directly or ask the coach for feedback on your idea.',
     "**• How the coach works:** First, input the action you plan to take, then click the “Coach” button if you'd like feedback from the AI agent. The agent will provide a one-time analysis to help you strengthen your approach.",
-    '**• Next step:** After receiving feedback, you can revise your action before sending. You always have final control over what you send.',
+    '**• Next step:** After receiving feedback, you can revise your action before sending.',
+    '**• NOTE:** You need to make the final decision by clicking the "Send" button.',
     '',
     'Here’s how the AI coach might help you with the proposal:',
     '![Example of receiving an offer](https://i.imgur.com/YTluFKf.png)',
@@ -923,6 +925,7 @@ const ADVISOR_MODE_INSTRUCTION = createInfoStage({
     '**• Your choice:** At each turn, you can either make your move directly or first ask the advisor for a recommendation.',
     '**• How the advisor works:** If you ask for advice, the advisor will suggest a move and provide the strategic rationale behind it.',
     "**• Next step:** After seeing the recommendation, you can either accept the agent's move or ignore it and enter your own action.",
+    '**• NOTE:** You need to make the final decision by clicking the "Send" button.',
     '',
     'Here’s how the AI advisor might give suggestions on the proposal:',
     '![Example of receiving an offer](https://i.imgur.com/HyluDin.png)',
