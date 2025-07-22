@@ -98,6 +98,14 @@ describe('Gemini API', () => {
               description: 'An integer-valued property',
             },
           },
+          {
+            name: 'enumProperty',
+            schema: {
+              type: StructuredOutputDataType.ENUM,
+              description: 'An enum-valued property',
+              enumItems: ['FOO', 'BAR', 'BAZ'],
+            },
+          },
         ],
       },
     };
@@ -126,9 +134,14 @@ describe('Gemini API', () => {
               type: 'INTEGER',
               description: 'An integer-valued property',
             },
+            enumProperty: {
+              type: 'STRING',
+              description: 'An enum-valued property',
+              enum: ['FOO', 'BAR', 'BAZ'],
+            },
           },
-          propertyOrdering: ['stringProperty', 'integerProperty'],
-          required: ['stringProperty', 'integerProperty'],
+          propertyOrdering: ['stringProperty', 'integerProperty', 'enumProperty'],
+          required: ['stringProperty', 'integerProperty', 'enumProperty'],
         },
       },
     };
