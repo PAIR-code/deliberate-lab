@@ -24,6 +24,7 @@ import {
   createPrivateChatStage,
   createProfileStage,
   createRevealStage,
+  createRoleStage,
   createStockInfoStage,
   createSurveyPerParticipantStage,
   createSurveyStage,
@@ -175,8 +176,8 @@ export class StageBuilderDialog extends MobxLitElement {
           ${this.renderTransferCard()} ${this.renderSurveyCard()}
           ${this.renderSurveyPerParticipantCard()} ${this.renderFlipCardCard()}
           ${this.renderRankingCard()} ${this.renderRevealCard()}
-          ${this.renderPayoutCard()} ${this.renderStockInfoCard()}
-          ${this.renderAssetAllocationCard()}
+          ${this.renderPayoutCard()} ${this.renderRoleCard()}
+          ${this.renderStockInfoCard()} ${this.renderAssetAllocationCard()}
         </div>
       </div>
     `;
@@ -311,6 +312,22 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card ${isDisabled ? 'disabled' : ''}" @click=${addStage}>
         <div class="title">📜 Terms of Service</div>
         <div>Display Markdown-rendered terms of service.</div>
+      </div>
+    `;
+  }
+
+  private renderRoleCard() {
+    const addStage = () => {
+      this.addStage(createRoleStage());
+    };
+
+    return html`
+      <div class="card" @click=${addStage}>
+        <div class="title">Role assignment</div>
+        <div>
+          Randomly assign roles to participants and show different
+          Markdown-rendered info for each role
+        </div>
       </div>
     `;
   }
