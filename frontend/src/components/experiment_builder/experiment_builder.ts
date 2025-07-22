@@ -12,6 +12,7 @@ import '../stages/info_editor';
 import '../stages/payout_editor';
 import '../stages/profile_stage_editor';
 import '../stages/reveal_editor';
+import '../stages/role_editor';
 import '../stages/stockinfo_editor';
 import '../stages/survey_editor';
 import '../stages/survey_per_participant_editor';
@@ -461,6 +462,11 @@ export class ExperimentBuilder extends MobxLitElement {
         return html`
           <base-stage-editor .stage=${stage}></base-stage-editor>
           <reveal-editor .stage=${stage}></reveal-editor>
+        `;
+      case StageKind.ROLE:
+        return html`
+          <base-stage-editor .stage=${stage}></base-stage-editor>
+          <role-editor .stage=${stage}></role-editor>
         `;
       case StageKind.STOCKINFO:
         return html`

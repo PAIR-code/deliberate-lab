@@ -32,6 +32,11 @@ import {PrivateChatStageConfig} from './private_chat_stage';
 import {ProfileStageConfig} from './profile_stage';
 import {RevealStageConfig} from './reveal_stage';
 import {
+  RoleStageConfig,
+  RoleStagePublicData,
+  createRoleStagePublicData,
+} from './role_stage';
+import {
   SalespersonStageConfig,
   SalespersonStagePublicData,
   createSalespersonStagePublicData,
@@ -80,6 +85,7 @@ export enum StageKind {
   SALESPERSON = 'salesperson', // co-op traveling salesperson game
   STOCKINFO = 'stockinfo',
   ASSET_ALLOCATION = 'assetAllocation', // asset allocation between stocks
+  ROLE = 'role', // info stage that assigns different roles to participants
   SURVEY = 'survey',
   SURVEY_PER_PARTICIPANT = 'surveyPerParticipant',
   TRANSFER = 'transfer',
@@ -125,6 +131,7 @@ export type StageConfig =
   | SalespersonStageConfig
   | StockInfoStageConfig
   | AssetAllocationStageConfig
+  | RoleStageConfig
   | SurveyStageConfig
   | SurveyPerParticipantStageConfig
   | TOSStageConfig
@@ -172,6 +179,7 @@ export type StagePublicData =
   | ChipStagePublicData
   | FlipCardStagePublicData
   | RankingStagePublicData
+  | RoleStagePublicData
   | SalespersonStagePublicData
   | AssetAllocationStagePublicData
   | SurveyStagePublicData;
@@ -223,6 +231,9 @@ export function createPublicDataFromStageConfigs(stages: StageConfig[]) {
         break;
       case StageKind.RANKING:
         publicData.push(createRankingStagePublicData(stage.id));
+        break;
+      case StageKind.ROLE:
+        publicData.push(createRoleStagePublicData(stage));
         break;
       case StageKind.SALESPERSON:
         publicData.push(

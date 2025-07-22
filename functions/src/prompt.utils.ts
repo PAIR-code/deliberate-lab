@@ -18,7 +18,9 @@ import {
 import {
   getFirestoreAnswersForStage,
   getFirestoreExperiment,
+  getFirestoreParticipant,
   getFirestoreStage,
+  getFirestoreStagePublicData,
   getFirestorePublicStageChatMessages,
   getFirestorePrivateChatMessages,
 } from './utils/firestore';
@@ -176,6 +178,29 @@ export async function getStageDisplayForPrompt(
         stage.id,
       );
       return getChatPromptMessageHistory(privateMessages, stage);
+    case StageKind.ROLE:
+      const rolePublicData = await getFirestoreStagePublicData(
+        experimentId,
+        cohortId,
+        stage.id,
+      );
+      const getRoleDisplay = (roleId: string) => {
+        if (stage.kind !== StageKind.ROLE) return '';
+        return (
+          stage.roles.find((role) => role.id === roleId)?.displayLines ?? []
+        );
+      };
+      const roleInfo: string[] = [];
+      for (const participantId of participantIds) {
+        const participant = await getFirestoreParticipant(
+          experimentId,
+          participantId,
+        );
+        roleInfo.push(
+          `${participant.publicId}: ${getRoleDisplay(rolePublicData.participantMap[participant.publicId] ?? '').join('\n\n')}`,
+        );
+      }
+      return roleInfo.join('\n');
     case StageKind.STOCKINFO:
       return getStockInfoSummaryText(stage);
     case StageKind.ASSET_ALLOCATION:
