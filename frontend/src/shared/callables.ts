@@ -21,6 +21,7 @@ import {
   SendChipResponseData,
   SendParticipantCheckData,
   SetChipTurnData,
+  SetParticipantRolesData,
   SetSalespersonControllerData,
   SetSalespersonMoveData,
   SetSalespersonResponseData,
@@ -406,6 +407,18 @@ export const createChatMessageCallable = async (
   const {data} = await httpsCallable<CreateChatMessageData, CreationResponse>(
     functions,
     'createChatMessage',
+  )(config);
+  return data;
+};
+
+/** Generic endpoint for assigning participants to roles for role stage. */
+export const setParticipantRolesCallable = async (
+  functions: Functions,
+  config: SetParticipantRolesData,
+) => {
+  const {data} = await httpsCallable<SetParticipantRolesData, SuccessResponse>(
+    functions,
+    'setParticipantRoles',
   )(config);
   return data;
 };

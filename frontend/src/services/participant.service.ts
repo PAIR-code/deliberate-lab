@@ -9,6 +9,7 @@ import {
   ParticipantProfileBase,
   ParticipantProfileExtended,
   ParticipantStatus,
+  RoleStageConfig,
   StageKind,
   StageParticipantAnswer,
   SurveyAnswer,
@@ -52,6 +53,7 @@ import {
   sendChipOfferCallable,
   sendChipResponseCallable,
   setChipTurnCallable,
+  setParticipantRolesCallable,
   setSalespersonControllerCallable,
   setSalespersonMoveCallable,
   setSalespersonResponseCallable,
@@ -973,6 +975,21 @@ export class ParticipantService extends Service {
           stageId,
           participantId: this.profile.privateId,
           assistanceMode,
+        },
+      );
+    }
+    return output;
+  }
+
+  async setParticipantRoles(stageId: string) {
+    let output = {success: false};
+    if (this.experimentId && this.profile) {
+      output = await setParticipantRolesCallable(
+        this.sp.firebaseService.functions,
+        {
+          experimentId: this.experimentId,
+          cohortId: this.profile.currentCohortId,
+          stageId,
         },
       );
     }
