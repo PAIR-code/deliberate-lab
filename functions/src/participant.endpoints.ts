@@ -6,6 +6,7 @@ import {
   Experiment,
   ParticipantProfileExtended,
   ParticipantStatus,
+  RoleStagePublicData,
   StageKind,
   SurveyStagePublicData,
   createParticipantProfileExtended,
@@ -530,6 +531,13 @@ export const acceptParticipantTransfer = onCall(async (request) => {
           publicChipData.participantChipMap[publicId] = stage.chipMap;
           publicChipData.participantChipValueMap[publicId] = stage.chipValueMap;
           transaction.set(publicDocument, publicChipData);
+          break;
+        case StageKind.ROLE:
+          const publicRoleData = (
+            await publicDocument.get()
+          ).data() as RoleStagePublicData;
+          // TODO: Assign new role to participant (or move role over)
+          transaction.set(publicDocument, publicRoleData);
           break;
         default:
           break;

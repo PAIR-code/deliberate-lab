@@ -31,7 +31,11 @@ import {PayoutStageConfig, PayoutStageParticipantAnswer} from './payout_stage';
 import {PrivateChatStageConfig} from './private_chat_stage';
 import {ProfileStageConfig} from './profile_stage';
 import {RevealStageConfig} from './reveal_stage';
-import {RoleStageConfig} from './role_stage';
+import {
+  RoleStageConfig,
+  RoleStagePublicData,
+  createRoleStagePublicData,
+} from './role_stage';
 import {
   SalespersonStageConfig,
   SalespersonStagePublicData,
@@ -175,6 +179,7 @@ export type StagePublicData =
   | ChipStagePublicData
   | FlipCardStagePublicData
   | RankingStagePublicData
+  | RoleStagePublicData
   | SalespersonStagePublicData
   | AssetAllocationStagePublicData
   | SurveyStagePublicData;
@@ -226,6 +231,9 @@ export function createPublicDataFromStageConfigs(stages: StageConfig[]) {
         break;
       case StageKind.RANKING:
         publicData.push(createRankingStagePublicData(stage.id));
+        break;
+      case StageKind.ROLE:
+        publicData.push(createRoleStagePublicData(stage));
         break;
       case StageKind.SALESPERSON:
         publicData.push(
