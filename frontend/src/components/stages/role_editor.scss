@@ -1,0 +1,30 @@
+@use '../../sass/colors';
+@use '../../sass/common';
+@use '../../sass/typescale';
+
+:host {
+  @include common.flex-column;
+  gap: common.$spacing-xxl;
+}
+
+.role {
+  @include common.flex-column;
+  background: var(--md-sys-color-surface-variant);
+  gap: common.$spacing-large;
+  padding: common.$spacing-large;
+}
+
+.subtitle {
+  @include typescale.label-small;
+  color: var(--md-sys-color-outlline);
+}
+
+.checkbox-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+  overflow-wrap: break-word;
+
+  md-checkbox {
+    flex-shrink: 0;
+  }
+}
