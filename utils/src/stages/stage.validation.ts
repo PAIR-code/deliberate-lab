@@ -10,6 +10,7 @@ import {PayoutStageConfigData} from './payout_stage.validation';
 import {PrivateChatStageConfigData} from './private_chat_stage.validation';
 import {ProfileStageConfigData} from './profile_stage.validation';
 import {RevealStageConfigData} from './reveal_stage.validation';
+import {RoleStageConfigData} from './role_stage.validation';
 import {SalespersonStageConfigData} from './salesperson_stage.validation';
 import {StockInfoStageConfigData} from './stockinfo_stage.validation';
 import {
@@ -36,6 +37,7 @@ export const StageConfigData = Type.Union([
   ProfileStageConfigData,
   RankingStageConfigData,
   RevealStageConfigData,
+  RoleStageConfigData,
   SalespersonStageConfigData,
   StockInfoStageConfigData,
   SurveyPerParticipantStageConfigData,
