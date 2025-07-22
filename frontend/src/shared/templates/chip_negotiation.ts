@@ -137,7 +137,7 @@ const CHIP_TOS_STAGE = createTOSStage({
   id: 'tos',
   name: 'Terms of service',
   tosLines: [
-    'Thank you for your interest in this research. If you choose to participate, you will be asked to play negotiation games with other participants. In total, this will take up to 50 minutes, factoring in time you may spend waiting for others to join your live sessions. If the games take longer than expected, you will be compensated fairly for your additional time.',
+    'Thank you for your interest in this research. If you choose to participate, you will be asked to play negotiation games with other participants. In total, this will take up to 60 minutes, factoring in time you may spend waiting for others to join your live sessions.',
     '\n**Compensation**',
     'You will be paid a base amount for playing the games and completing the survey. You may receive an additional bonus based on your performance in the games, up to $10 USD.',
     '\n**IRB**',
