@@ -1,7 +1,7 @@
 import firebaseFunctionsTest from 'firebase-functions-test';
 
 // Mock './app' before importing function under test
-jest.mock('./app', () => {
+jest.mock('../app', () => {
   const setMock = jest.fn();
   const getMock = jest.fn().mockResolvedValue({exists: true});
   const docMock = jest.fn().mockReturnValue({get: getMock, set: setMock});
@@ -23,7 +23,7 @@ jest.mock('./app', () => {
 });
 
 import {mirrorPresenceToFirestore} from './presence.triggers';
-import {__mocks__} from './app';
+import {__mocks__} from '../app';
 
 const testEnv = firebaseFunctionsTest({projectId: 'deliberate-lab-test'});
 
