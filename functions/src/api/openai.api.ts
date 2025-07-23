@@ -22,6 +22,7 @@ function makeStructuredOutputSchema(schema: StructuredOutputSchema): object {
     [StructuredOutputDataType.BOOLEAN]: 'BOOLEAN',
     [StructuredOutputDataType.ARRAY]: 'ARRAY',
     [StructuredOutputDataType.OBJECT]: 'OBJECT',
+    [StructuredOutputDataType.ENUM]: 'STRING',
   };
   const type = typeMap[schema.type];
   if (!type) {
@@ -55,6 +56,7 @@ function makeStructuredOutputSchema(schema: StructuredOutputSchema): object {
     properties: properties,
     additionalProperties: additionalProperties,
     required: orderedPropertyNames,
+    enum: schema.enumItems,
     items: itemsSchema,
   };
 }
