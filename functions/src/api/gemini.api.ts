@@ -1,4 +1,5 @@
 import {
+  ApiError,
   GoogleGenAI,
   GenerationConfig,
   HarmCategory,
@@ -239,20 +240,20 @@ export async function getGeminiAPIResponse(
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    // The GenerativeAI client doesn't return responses in a parseable format,
-    // so try to parse the output string looking for the HTTP status code.
+    if (!(error instanceof ApiError)) {
+      return {
+        status: ModelResponseStatus.UNKNOWN_ERROR,
+        generationConfig: geminiConfig,
+        errorMessage: JSON.stringify(error),
+      };
+    }
     let returnStatus = ModelResponseStatus.UNKNOWN_ERROR;
-    // Match a status code and message between brackets, e.g. "[403 Forbidden]".
-    const statusMatch = error.message.match(/\[(\d{3})[\s\w]*\]/);
-    if (statusMatch) {
-      const statusCode = parseInt(statusMatch[1]);
-      if (statusCode == AUTHENTICATION_FAILURE_ERROR_CODE) {
-        returnStatus = ModelResponseStatus.AUTHENTICATION_ERROR;
-      } else if (statusCode == QUOTA_ERROR_CODE) {
-        returnStatus = ModelResponseStatus.QUOTA_ERROR;
-      } else if (statusCode >= 500 && statusCode < 600) {
-        returnStatus = ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR;
-      }
+    if (error.status == AUTHENTICATION_FAILURE_ERROR_CODE) {
+      returnStatus = ModelResponseStatus.AUTHENTICATION_ERROR;
+    } else if (error.status == QUOTA_ERROR_CODE) {
+      returnStatus = ModelResponseStatus.QUOTA_ERROR;
+    } else if (error.status >= 500 && error.status < 600) {
+      returnStatus = ModelResponseStatus.PROVIDER_UNAVAILABLE_ERROR;
     }
     return {
       status: returnStatus,
