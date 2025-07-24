@@ -1,9 +1,9 @@
 import {
-  GoogleGenerativeAI,
+  GoogleGenAI,
   GenerationConfig,
   HarmCategory,
   HarmBlockThreshold,
-} from '@google/generative-ai';
+} from '@google/genai';
 import {
   ModelGenerationConfig,
   StructuredOutputType,
@@ -117,15 +117,18 @@ export async function callGemini(
   modelName = GEMINI_DEFAULT_MODEL,
   parseResponse = false, // parse if structured output
 ) {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
+  const genAI = new GoogleGenAI({apiKey});
+
+  const response = await genAI.models.generateContent({
     model: modelName,
-    generationConfig,
-    safetySettings: SAFETY_SETTINGS,
+    contents: [{role: 'user', parts: [{text: prompt}]}],
+    config: {
+      ...generationConfig,
+      safetySettings: SAFETY_SETTINGS,
+    },
   });
 
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
+  console.log(`DEBUG: ${JSON.stringify(response)}`);
 
   if (response.promptFeedback) {
     return {
