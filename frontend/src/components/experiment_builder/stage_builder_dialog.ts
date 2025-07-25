@@ -150,6 +150,7 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()} ${this.renderLASCard(true)}
         ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
+        ${this.renderConsensusDebateCard()}
         ${this.renderSalespersonGameCard()} ${this.renderFlipCardTemplateCard()}
         ${this.renderFruitTestTemplateCard()} ${this.renderStockInfoGameCard()}
         ${this.renderAssetAllocationTemplateCard()}
@@ -526,11 +527,17 @@ export class StageBuilderDialog extends MobxLitElement {
 
 private renderConsensusDebateCard() {
   const loadTemplate = () => {
-    // Find the input element within the component's shadow DOM using its ID.
+    // Find the input element within the component's shadow DOM.
     const inputElement = this.shadowRoot?.querySelector('#consensus-topics-input') as any;
 
-    // Get the value, using the default if the input is not found or is empty.
-    const topicsCsv = inputElement?.value || 'Climate Change';
+    // Get the value and trim any leading/trailing whitespace.
+    const topicsCsv = (inputElement?.value || '').trim();
+
+    // Enforce that the input is not empty.
+    if (!topicsCsv) {
+      alert('Please enter at least one topic.');
+      return; // Stop execution if no topic is provided.
+    }
 
     // Pass the retrieved value to the existing template function.
     this.addTemplate(getConsensusTopicTemplate(topicsCsv));
@@ -541,11 +548,12 @@ private renderConsensusDebateCard() {
       <div class="title">${CONSENSUS_METADATA.name}</div>
       <div>${CONSENSUS_METADATA.description}</div>
       <div class="template-controls">
-        <pr-text-input
+        <pr-textarea
           id="consensus-topics-input"
           label="Topics (comma-separated)"
-          value="Climate Change"
-        ></pr-text-input>
+          placeholder="e.g., AI Safety, Climate Change"
+          style="--pr-textarea-background-color: #f0f0f0; border-radius: 4px;"
+        ></pr-textarea>
         <pr-button @click=${loadTemplate}>
           Load Template
         </pr-button>
@@ -553,7 +561,6 @@ private renderConsensusDebateCard() {
     </div>
   `;
 }
-
 
 
   private renderFlipCardTemplateCard() {

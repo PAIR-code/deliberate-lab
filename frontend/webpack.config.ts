@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import {Configuration} from 'webpack';
 import {GitRevisionPlugin} from 'git-revision-webpack-plugin';
@@ -82,6 +81,8 @@ export default (
       }),
       new webpack.ProvidePlugin({
         process: 'process/browser',
+        // --- ADD THIS LINE ---
+        Buffer: ['buffer', 'Buffer'],
       }),
     ],
     resolve: {
