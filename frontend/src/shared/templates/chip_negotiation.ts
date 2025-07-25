@@ -73,55 +73,49 @@ export function getChipNegotiationStageConfigs(numChips = 3): StageConfig[] {
   // Informed consent
   stages.push(CHIP_TOS_STAGE);
 
-  // Anonymized profiles
+  // Show anonymized profile 1
   stages.push(CHIP_PROFILE_STAGE);
 
-  // Overview stages
+  // Overview stages (introduce chip game)
   stages.push(createChipInfoStage1(numChips));
   stages.push(createChipInfoStage2(numChips));
 
   // Comprehension check
   stages.push(CHIP_COMPREHENSION_CHECK);
 
-  // Gameplay stage
-  stages.push(CHIP_INFO_STAGE_GAMEPLAY2);
-  stages.push(CHIP_INFO_STAGE_GAMEPLAY4);
+  // Information on proposing and accepting trades
+  stages.push(CHIP_INFO_STAGE_GAMEPLAY_PROPOSING);
+  stages.push(CHIP_INFO_STAGE_GAMEPLAY_RESPONDING);
 
   // Comprehension check
   stages.push(CHIP_COMPREHENSION_CHECK2);
 
-  stages.push(CHIP_INFO_STAGE_GAMEPLAY5);
+  // Information on AI assistance and payout
+  stages.push(CHIP_INFO_STAGE_GAMEPLAY_AI_ASSISTANCE);
   stages.push(createChipInfoPayout(numChips));
 
   // Pre-game survey stage
   stages.push(CHIP_PRE_SURVEY_STAGE1);
-  // stages.push(CHIP_PRE_SURVEY_STAGE2);
 
   // Transfer
   stages.push(TRANSFER_STAGE);
 
+  // Coach mode
   stages.push(COACH_MODE_INSTRUCTION);
   stages.push(getChipNegotiationCoach(numChips));
-  // Coach mode survey stage
   stages.push(CHIP_COACH_FEEDBACK_STAGE);
 
+  // Advisor mode
   stages.push(ADVISOR_MODE_INSTRUCTION);
   stages.push(getChipNegotiationAdvisor(numChips));
-  // Advisor mode survey stage
   stages.push(CHIP_ADVISOR_FEEDBACK_STAGE);
 
+  // Delegate mode
   stages.push(DELEGATE_MODE_INSTRUCTION);
   stages.push(getChipNegotiationDelegate(numChips));
-  // Delegate mode survey stage
   stages.push(CHIP_DELEGATE_FEEDBACK_STAGE);
 
-  // Round 1
-  // stages.push(getChipNegotiationStage1(numChips));
-
-  // Round 2
-  // stages.push(CHIP_INFO_PART2);
-  // stages.push(CHIP_ALTERNATE_PROFILE_STAGE);
-  // stages.push(getChipNegotiationStage2(numChips));
+  // Payout (averaged between three games)
   stages.push(CHIP_PAYOUT_STAGE);
 
   // Post-negotiation survey stage
@@ -470,7 +464,7 @@ export const CHIP_COMPREHENSION_CHECK2 = createComprehensionStage({
 // Gameplay instructions
 // ****************************************************************************
 
-const CHIP_INFO_STAGE_GAMEPLAY2 = createInfoStage({
+const CHIP_INFO_STAGE_GAMEPLAY_PROPOSING = createInfoStage({
   id: 'info_gameplay2',
   name: 'Gameplay: proposing a trade',
   infoLines: [
@@ -492,7 +486,7 @@ const CHIP_INFO_STAGE_GAMEPLAY2 = createInfoStage({
   }),
 });
 
-const CHIP_INFO_STAGE_GAMEPLAY4 = createInfoStage({
+const CHIP_INFO_STAGE_GAMEPLAY_RESPONDING = createInfoStage({
   id: 'info_gameplay4',
   name: 'Gameplay: completing a trade',
   infoLines: [
@@ -509,7 +503,7 @@ const CHIP_INFO_STAGE_GAMEPLAY4 = createInfoStage({
   }),
 });
 
-const CHIP_INFO_STAGE_GAMEPLAY5 = createInfoStage({
+const CHIP_INFO_STAGE_GAMEPLAY_AI_ASSISTANCE = createInfoStage({
   id: 'info_gameplay5',
   name: 'Gameplay: AI assistance',
   infoLines: [
