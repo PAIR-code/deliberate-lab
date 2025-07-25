@@ -94,7 +94,6 @@ article {
   align-items: center;
   display: flex;
   flex-shrink: 0;
-  font-family: 'Roboto Mono';
   font-size: 0.9em;
   font-weight: 500;
   height: 40px;
@@ -112,7 +111,6 @@ article {
 
 .nav-section-title {
   color: var(--md-sys-color-outline);
-  font-family: 'Roboto Mono';
   font-size: 0.7em;
   font-weight: 400;
   text-transform: uppercase;
@@ -138,7 +136,6 @@ header {
 }
 
 h1 {
-  font-family: 'Roboto Mono';
   font-size: 1.2em;
   font-weight: 500;
 }
@@ -148,12 +145,10 @@ h2 {
   border-bottom: 2px solid var(--md-sys-color-blue-light);
   margin-top: 2em;
   padding-bottom: 4px;
-  font-family: 'Roboto Mono';
 }
 
 h3 {
   color: var(--md-sys-color-outline);
-  font-family: 'Roboto Mono';
   font-size: 0.9em;
   font-weight: 500;
 }
