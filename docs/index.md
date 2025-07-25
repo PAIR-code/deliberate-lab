@@ -4,8 +4,12 @@ subtitle: Create and run human-LLM group experiments
 layout: default
 ---
 
-Deliberate Lab is a platform for running online research experiments on human +
-LLM group dynamics.
+<img
+  src="./assets/images/deliberate-lab-example-tv-debate.png"
+  alt="Screenshot of Deliberate Lab experiment dashboard"
+/>
+
+## Information
 
 > [Log into the Google-hosted platform](https://deliberate-lab.appspot.com/){:target="_blank"}
 (or [request access here](https://forms.gle/VCmYQxsZWEA3mbZN6){:target="_blank"})
