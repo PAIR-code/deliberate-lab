@@ -97,6 +97,16 @@
   .title {
     @include typescale.title-small;
   }
+  &.card--large {
+    // Calculate the width to span exactly 3 columns and the 2 gaps between them.
+    // This assumes `common.$spacing-large` is a variable your build process
+    // understands. If not, replace it with its actual value (e.g., 1rem, 16px).
+    width: calc((240px * 3) + (common.$spacing-large * 2));
+
+    // For better responsiveness on very small screens, you might also add:
+    max-width: 100%;
+  }
+
 }
 
 .gallery-section {

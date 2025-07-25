@@ -38,6 +38,11 @@ import {
   getAnonLASStageConfigs,
 } from '../../shared/templates/lost_at_sea';
 import {
+  PRISONERS_DILEMMA_METADATA,
+  //DEFAULT_PAYOUT_MATRIX,
+  getPrisonersDilemmaTemplate,
+} from '../../shared/templates/prisoners_dilemma';
+import {
   getChipMetadata,
   getChipNegotiationStageConfigs,
 } from '../../shared/templates/chip_negotiation';
@@ -150,10 +155,11 @@ export class StageBuilderDialog extends MobxLitElement {
       <div class="card-gallery-wrapper">
         ${this.renderLASCard()} ${this.renderLASCard(true)}
         ${this.renderRealityTVCard()} ${this.renderChipNegotiationCard()}
-        ${this.renderConsensusDebateCard()}
         ${this.renderSalespersonGameCard()} ${this.renderFlipCardTemplateCard()}
         ${this.renderFruitTestTemplateCard()} ${this.renderStockInfoGameCard()}
         ${this.renderAssetAllocationTemplateCard()}
+        ${this.renderConsensusDebateCard()}
+        ${this.renderPrisonersDilemmaCard()}
       </div>
     `;
   }
@@ -525,6 +531,165 @@ export class StageBuilderDialog extends MobxLitElement {
     `;
   }
 
+private renderPrisonersDilemmaCard() {
+  const loadTemplate = () => {
+    // Helper function to get and parse values from textareas.
+    const getFieldValue = (id: string): number => {
+      const element = this.shadowRoot?.querySelector(`#${id}`) as any;
+      if (!element) {
+        throw new Error(`Critical error: Could not find element with ID: ${id}`);
+      }
+      // The .value property correctly reads the content of a <pr-textarea>.
+      const value = parseFloat(element.value); 
+      if (isNaN(value)) {
+        throw new Error(`The value in the field with ID "${id}" is not a valid number.`);
+      }
+      return value;
+    };
+
+    try {
+      // 1. Get N Stages from its dedicated textarea.
+      const nStages = getFieldValue('prisoners-dilemma-n-stages');
+      if (nStages <= 0 || !Number.isInteger(nStages)) {
+        alert('Number of Stages must be a whole number greater than 0.');
+        return;
+      }
+
+      // 2. Get all payout values from their textareas.
+      const payoutMatrix = {
+        cooperate_cooperate: [getFieldValue('payout-cc-p1'), getFieldValue('payout-cc-p2')],
+        cooperate_defect:    [getFieldValue('payout-cd-p1'), getFieldValue('payout-cd-p2')],
+        defect_cooperate:    [getFieldValue('payout-dc-p1'), getFieldValue('payout-dc-p2')],
+        defect_defect:       [getFieldValue('payout-dd-p1'), getFieldValue('payout-dd-p2')],
+      };
+
+      // 3. Load the template with the collected data.
+      this.addTemplate(getPrisonersDilemmaTemplate(nStages, JSON.stringify(payoutMatrix)));
+    } catch (e: any) {
+      alert(`Error loading template: ${e.message}`);
+      return;
+    }
+  };
+
+  return html`
+    <style>
+      :host, :host * {
+        box-sizing: border-box;
+      }
+      .template-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      /* Styling for the textareas to make them small and usable as inputs */
+      pr-textarea {
+        width: 80px;
+        height: 40px; /* Default height for a single line */
+        text-align: center;
+        /* Some components need internal styling to be targeted this way */
+        --pr-textarea-padding: 0.5rem;
+        font-size: 1rem;
+      }
+      .matrix-container {
+        border-top: 1px solid #ddd;
+        padding-top: 1rem;
+      }
+      .matrix-layout {
+        display: table;
+        width: 100%;
+        border-spacing: 8px; /* Provides gap between cells */
+      }
+      .matrix-row {
+        display: table-row;
+      }
+      .matrix-cell {
+        display: table-cell;
+        text-align: center;
+        vertical-align: top;
+      }
+      .cell-label {
+        font-weight: bold;
+        padding-top: 1rem;
+      }
+      .payout-group {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        background-color: #f9f9f9;
+        padding: 1rem;
+        border-radius: 6px;
+      }
+      .payout-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+      }
+    </style>
+    <!-- Use 'card--large' to ensure enough space -->
+    <div class="card card--large">
+      <div class="title">${PRISONERS_DILEMMA_METADATA.name}</div>
+      <div>${PRISONERS_DILEMMA_METADATA.description}</div>
+      <div class="template-controls">
+        
+        <!-- N-Stages field using pr-textarea -->
+        <div>
+          <label for="prisoners-dilemma-n-stages">Number of Stages (N)</label>
+          <pr-textarea id="prisoners-dilemma-n-stages">1</pr-textarea>
+        </div>
+
+        <!-- Payout Matrix using pr-textarea -->
+        <div class="matrix-container">
+          <label>Payout Matrix</label>
+          <div class="matrix-layout">
+            <div class="matrix-row">
+              <div class="matrix-cell"></div> <!-- Empty top-left -->
+              <div class="matrix-cell cell-label">They Cooperate</div>
+              <div class="matrix-cell cell-label">They Defect</div>
+            </div>
+            <div class="matrix-row">
+              <div class="matrix-cell cell-label">You Cooperate</div>
+              <div class="matrix-cell">
+                <div class="payout-group">
+                  <div class="payout-row"><span>You:</span><pr-textarea id="payout-cc-p1">3</pr-textarea></div>
+                  <div class="payout-row"><span>Them:</span><pr-textarea id="payout-cc-p2">3</pr-textarea></div>
+                </div>
+              </div>
+              <div class="matrix-cell">
+                <div class="payout-group">
+                  <div class="payout-row"><span>You:</span><pr-textarea id="payout-cd-p1">0</pr-textarea></div>
+                  <div class="payout-row"><span>Them:</span><pr-textarea id="payout-cd-p2">5</pr-textarea></div>
+                </div>
+              </div>
+            </div>
+            <div class="matrix-row">
+              <div class="matrix-cell cell-label">You Defect</div>
+              <div class="matrix-cell">
+                <div class="payout-group">
+                  <div class="payout-row"><span>You:</span><pr-textarea id="payout-dc-p1">5</pr-textarea></div>
+                  <div class="payout-row"><span>Them:</span><pr-textarea id="payout-dc-p2">0</pr-textarea></div>
+                </div>
+              </div>
+              <div class="matrix-cell">
+                <div class="payout-group">
+                  <div class="payout-row"><span>You:</span><pr-textarea id="payout-dd-p1">1</pr-textarea></div>
+                  <div class="payout-row"><span>Them:</span><pr-textarea id="payout-dd-p2">1</pr-textarea></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <pr-button @click=${loadTemplate}>
+          Load Template
+        </pr-button>
+      </div>
+    </div>
+  `;
+}
+
+
+
 private renderConsensusDebateCard() {
   const loadTemplate = () => {
     // Find the input element within the component's shadow DOM.
@@ -544,7 +709,7 @@ private renderConsensusDebateCard() {
   };
 
   return html`
-    <div class="card">
+    <div class="card card--large">
       <div class="title">${CONSENSUS_METADATA.name}</div>
       <div>${CONSENSUS_METADATA.description}</div>
       <div class="template-controls">
