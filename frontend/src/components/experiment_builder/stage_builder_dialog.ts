@@ -44,6 +44,10 @@ import {
   getChipNegotiationStageConfigs,
 } from '../../shared/templates/chip_negotiation';
 import {
+  CONSENSUS_METADATA,
+  getConsensusTopicTemplate,
+} from '../../shared/templates/debate_topics';
+import {
   RTV_METADATA,
   getRealityTVExperimentTemplate,
 } from '../../shared/templates/reality_tv_chat';
@@ -651,6 +655,38 @@ export class StageBuilderDialog extends MobxLitElement {
       </div>
     `;
   }
+
+private renderConsensusDebateCard() {
+  const loadTemplate = () => {
+    // Find the input element within the component's shadow DOM using its ID.
+    const inputElement = this.shadowRoot?.querySelector('#consensus-topics-input') as any;
+
+    // Get the value, using the default if the input is not found or is empty.
+    const topicsCsv = inputElement?.value || 'Climate Change';
+
+    // Pass the retrieved value to the existing template function.
+    this.addTemplate(getConsensusTopicTemplate(topicsCsv));
+  };
+
+  return html`
+    <div class="card">
+      <div class="title">${CONSENSUS_METADATA.name}</div>
+      <div>${CONSENSUS_METADATA.description}</div>
+      <div class="template-controls">
+        <pr-text-input
+          id="consensus-topics-input"
+          label="Topics (comma-separated)"
+          value="Climate Change"
+        ></pr-text-input>
+        <pr-button @click=${loadTemplate}>
+          Load Template
+        </pr-button>
+      </div>
+    </div>
+  `;
+}
+
+
 
   private renderFlipCardTemplateCard() {
     const addTemplate = () => {
