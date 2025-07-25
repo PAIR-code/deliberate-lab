@@ -18,7 +18,7 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: Deliberate Lab Docs
+title: Deliberate Lab
 author: Google PAIR
 email: llm-mediation-core@google.com
 description: >- # this means to ignore newlines
@@ -33,7 +33,7 @@ keywords: >-
   research,
 baseurl: "/deliberate-lab" # the subpath of your site, e.g. /blog
 url: "https://pair-code.github.io" # the base hostname & protocol for your site
-github_username: pair-code
+github_username: PAIR-code
 collections:
     pages:
         order: # TODO: update

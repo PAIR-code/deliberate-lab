@@ -1,5 +1,6 @@
 ---
-title: Home
+title: Deliberate Lab
+subtitle: Create and run human-LLM group experiments
 layout: default
 ---
 
