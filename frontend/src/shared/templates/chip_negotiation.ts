@@ -666,13 +666,19 @@ function getChips(numChips: number) {
   return chips;
 }
 
-const CHIP_NEGOTIATION_STAGE1_ID = 'negotiation1';
-const CHIP_NEGOTIATION_STAGE2_ID = `negotiation2_${ALTERNATE_PROFILE_SET_ID}`;
+// ****************************************************************************
+// Stage IDs for chip games
+// ****************************************************************************
+const CHIP_NEGOTIATION_COACH_ID = `chip_coach`;
+const CHIP_NEGOTIATION_ADVISOR_ID = `chip_advisor`;
+const CHIP_NEGOTIATION_DELEGATE_ID = `chip_delegate`;
 
-// Begin temporary chip stages for testing assistance
+// ****************************************************************************
+// Chip negotiation games
+// ****************************************************************************
 function getChipNegotiationCoach(numChips: number) {
   return createChipStage({
-    id: 'chip_coach',
+    id: CHIP_NEGOTIATION_COACH_ID,
     name: 'Game (with AI coach)',
     progress: {
       minParticipants: 3,
@@ -694,7 +700,7 @@ function getChipNegotiationCoach(numChips: number) {
 
 function getChipNegotiationAdvisor(numChips: number) {
   return createChipStage({
-    id: 'chip_advisor',
+    id: CHIP_NEGOTIATION_ADVISOR_ID,
     name: 'Game (with AI advisor)',
     descriptions: createStageTextConfig({
       infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
@@ -716,7 +722,7 @@ function getChipNegotiationAdvisor(numChips: number) {
 
 function getChipNegotiationDelegate(numChips: number) {
   return createChipStage({
-    id: 'chip_delegate',
+    id: CHIP_NEGOTIATION_DELEGATE_ID,
     name: 'Game (with AI delegate)',
     descriptions: createStageTextConfig({
       infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
@@ -735,38 +741,6 @@ function getChipNegotiationDelegate(numChips: number) {
     },
   });
 }
-// End temporary chip stages
-
-function getChipNegotiationStage1(numChips: number) {
-  return createChipStage({
-    id: CHIP_NEGOTIATION_STAGE1_ID,
-    name: 'First negotiation game',
-    descriptions: createStageTextConfig({
-      infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
-      helpText: `If you see the "It's your turn" panel, that means others are waiting on you to make an offer! As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs.
-      `,
-    }),
-    chips: getChips(numChips),
-    progress: {
-      minParticipants: 3,
-      waitForAllParticipants: true,
-      showParticipantProgress: true,
-    },
-  });
-}
-
-function getChipNegotiationStage2(numChips: number) {
-  return createChipStage({
-    id: CHIP_NEGOTIATION_STAGE2_ID,
-    name: 'Second negotiation game',
-    descriptions: createStageTextConfig({
-      infoText: `As a reminder, there are three rounds in this game. You will have an opportunity to send an offer to the other participants, and response to their offers, in each round. The objective is to maximize your payout at the end of the game by trading chips to your advantage.\n\nFeel free to refer to the instructions in previous stages for more detail.`,
-      helpText: `If you see the "It's your turn" panel, that means others are waiting on you to make an offer! As a reminder, you can **always** make a beneficial offer as long as you have one chip left. For example, if you have one 🔴 red chip remaining, you can offer to **give** it and get 10 🟢 green chips in return for a profit. However, it is unlikely that someone will take you up on this offer. Please consider the tradeoffs.
-      `,
-    }),
-    chips: getChips(numChips),
-  });
-}
 
 // ****************************************************************************
 // Payout stage
@@ -779,14 +753,14 @@ export function createPayoutItems() {
   const game1 = createChipPayoutItem({
     randomSelectionId: RANDOM_SELECTION_ID,
     name: 'Payout from game 1 (one game was randomly selected)',
-    stageId: 'chip_coach',
+    stageId: CHIP_NEGOTIATION_COACH_ID,
     baseCurrencyAmount: 0,
   });
 
   const game2 = createChipPayoutItem({
     randomSelectionId: RANDOM_SELECTION_ID,
     name: 'Payout from game 2 (one game was randomly selected)',
-    stageId: 'chip_advisor',
+    stageId: CHIP_NEGOTIATION_ADVISOR_ID,
     baseCurrencyAmount: 0,
   });
 
@@ -794,7 +768,7 @@ export function createPayoutItems() {
   const game3 = createChipPayoutItem({
     randomSelectionId: RANDOM_SELECTION_ID,
     name: 'Payout from game 3 (one game was randomly selected)',
-    stageId: 'chip_delegate',
+    stageId: CHIP_NEGOTIATION_DELEGATE_ID,
     baseCurrencyAmount: 0,
   });
 
