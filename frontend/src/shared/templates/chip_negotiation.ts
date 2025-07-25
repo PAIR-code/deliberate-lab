@@ -1,5 +1,6 @@
 import {
-  ALTERNATE_PROFILE_SET_ID,
+  SECONDARY_PROFILE_SET_ID,
+  TERTIARY_PROFILE_SET_ID,
   ChipAssistanceMode,
   ChipItem,
   ProfileType,
@@ -107,11 +108,13 @@ export function getChipNegotiationStageConfigs(numChips = 3): StageConfig[] {
 
   // Advisor mode
   stages.push(ADVISOR_MODE_INSTRUCTION);
+  stages.push(CHIP_SECONDARY_PROFILE_STAGE); // Show anonymized profile 2
   stages.push(getChipNegotiationAdvisor(numChips));
   stages.push(CHIP_ADVISOR_FEEDBACK_STAGE);
 
   // Delegate mode
   stages.push(DELEGATE_MODE_INSTRUCTION);
+  stages.push(CHIP_TERTIARY_PROFILE_STAGE); // Show anonymized profile 3
   stages.push(getChipNegotiationDelegate(numChips));
   stages.push(CHIP_DELEGATE_FEEDBACK_STAGE);
 
@@ -163,12 +166,25 @@ const CHIP_PROFILE_STAGE = createProfileStage({
   }),
 });
 
-const CHIP_ALTERNATE_PROFILE_STAGE = createProfileStage({
-  id: `profile_${ALTERNATE_PROFILE_SET_ID}`,
-  name: 'View secondary randomly generated profile',
+const CHIP_SECONDARY_PROFILE_STAGE = createProfileStage({
+  id: `profile_${SECONDARY_PROFILE_SET_ID}`,
+  name: 'View randomly generated profile for second game',
   descriptions: createStageTextConfig({
     primaryText:
       'This identity is how other players will see you during the second game.',
+  }),
+  profileType: ProfileType.ANONYMOUS_ANIMAL,
+  progress: createStageProgressConfig({
+    showParticipantProgress: false,
+  }),
+});
+
+const CHIP_TERTIARY_PROFILE_STAGE = createProfileStage({
+  id: `profile_${TERTIARY_PROFILE_SET_ID}`,
+  name: 'View randomly generated profile for third game',
+  descriptions: createStageTextConfig({
+    primaryText:
+      'This identity is how other players will see you during the third game.',
   }),
   profileType: ProfileType.ANONYMOUS_ANIMAL,
   progress: createStageProgressConfig({
@@ -670,8 +686,8 @@ function getChips(numChips: number) {
 // Stage IDs for chip games
 // ****************************************************************************
 const CHIP_NEGOTIATION_COACH_ID = `chip_coach`;
-const CHIP_NEGOTIATION_ADVISOR_ID = `chip_advisor`;
-const CHIP_NEGOTIATION_DELEGATE_ID = `chip_delegate`;
+const CHIP_NEGOTIATION_ADVISOR_ID = `chip_advisor_${SECONDARY_PROFILE_SET_ID}`;
+const CHIP_NEGOTIATION_DELEGATE_ID = `chip_delegate_${TERTIARY_PROFILE_SET_ID}`;
 
 // ****************************************************************************
 // Chip negotiation games
@@ -712,10 +728,12 @@ function getChipNegotiationAdvisor(numChips: number) {
       offerModes: [ChipAssistanceMode.NONE, ChipAssistanceMode.ADVISOR],
       responseModes: [ChipAssistanceMode.NONE, ChipAssistanceMode.ADVISOR],
     },
+    // WARNING: Do not use waiting/progress stages for stages with alternate
+    // profiles (as waiting/progress will show the original profiles)
     progress: {
-      minParticipants: 3,
-      waitForAllParticipants: true,
-      showParticipantProgress: true,
+      minParticipants: 0, // Do not show waiting
+      waitForAllParticipants: false, // Do not show waiting
+      showParticipantProgress: false, // Do not show progress
     },
   });
 }
@@ -734,10 +752,12 @@ function getChipNegotiationDelegate(numChips: number) {
       offerModes: [ChipAssistanceMode.NONE, ChipAssistanceMode.DELEGATE],
       responseModes: [ChipAssistanceMode.NONE, ChipAssistanceMode.DELEGATE],
     },
+    // WARNING: Do not use waiting/progress stages for stages with alternate
+    // profiles (as waiting/progress will show the original profiles)
     progress: {
-      minParticipants: 3,
-      waitForAllParticipants: true,
-      showParticipantProgress: true,
+      minParticipants: 0, // Do not show waiting
+      waitForAllParticipants: false, // Do not show waiting
+      showParticipantProgress: false, // Do not show progress
     },
   });
 }
