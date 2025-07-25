@@ -85,6 +85,7 @@ export const PayoutStageConfigData = Type.Object(
     progress: StageProgressConfigSchema,
     currency: PayoutCurrencySchema,
     payoutItems: Type.Array(PayoutItemData),
+    averageAllPayoutItems: Type.Boolean(),
   },
   strict,
 );

@@ -50,7 +50,7 @@ export class PayoutEditor extends MobxLitElement {
     );
 
     return html`
-      ${this.renderPayoutCurrency()}
+      ${this.renderPayoutCurrency()} ${this.renderPayoutAverage()}
       <pr-menu
         name="Add stage payout"
         ?disabled=${!this.experimentEditor.canEditStages}
@@ -64,6 +64,31 @@ export class PayoutEditor extends MobxLitElement {
       ${this.stage.payoutItems.map((item, index) =>
         this.renderPayoutItem(item, index),
       )}
+    `;
+  }
+
+  renderPayoutAverage() {
+    if (!this.stage) return nothing;
+
+    const updateAverage = () => {
+      if (!this.stage) return;
+      this.experimentEditor.updateStage({
+        ...this.stage,
+        averageAllPayoutItems: !this.stage.averageAllPayoutItems,
+      });
+    };
+
+    return html`
+      <div class="checkbox-wrapper">
+        <md-checkbox
+          touch-target="wrapper"
+          ?checked=${this.stage.averageAllPayoutItems}
+          ?disabled=${!this.experimentEditor.canEditStages}
+          @click=${updateAverage}
+        >
+        </md-checkbox>
+        <div>Use the average of all stage payouts as the final payout</div>
+      </div>
     `;
   }
 

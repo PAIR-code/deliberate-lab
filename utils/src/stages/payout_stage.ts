@@ -26,6 +26,7 @@ export interface PayoutStageConfig extends BaseStageConfig {
   kind: StageKind.PAYOUT;
   currency: PayoutCurrency;
   payoutItems: PayoutItem[];
+  averageAllPayoutItems: boolean;
 }
 
 export enum PayoutCurrency {
@@ -93,6 +94,7 @@ export interface PayoutResultConfig {
   id: string; // stage ID of the original payout config
   currency: PayoutCurrency;
   results: PayoutItemResult[];
+  averageAllPayoutItems: boolean;
 }
 
 export type PayoutItemResult =
@@ -157,6 +159,7 @@ export function createPayoutStage(
     progress: config.progress ?? createStageProgressConfig(),
     currency: config.currency ?? PayoutCurrency.USD,
     payoutItems: config.payoutItems ?? [],
+    averageAllPayoutItems: config.averageAllPayoutItems ?? false,
   };
 }
 
@@ -292,6 +295,7 @@ export function calculatePayoutResult(
     id: payoutConfig.id,
     currency: payoutConfig.currency,
     results,
+    averageAllPayoutItems: payoutConfig.averageAllPayoutItems,
   };
   return resultConfig;
 }
@@ -316,6 +320,12 @@ export function calculatePayoutTotal(resultConfig: PayoutResultConfig) {
       total += Math.max(0, chipTotal - initialChipTotal);
     }
   });
+
+  // If average all items, divide total by number of results
+  if (resultConfig.averageAllPayoutItems) {
+    return Math.ceil((total / resultConfig.results.length) * 100) / 100;
+  }
+
   return Math.ceil(total * 100) / 100;
 }
 
