@@ -1,4 +1,8 @@
 import {
+  SECONDARY_PROFILE_SET_ID,
+  TERTIARY_PROFILE_SET_ID,
+  PROFILE_SET_ANIMALS_2_ID,
+  PROFILE_SET_NATURE_ID,
   AssetAllocationStageParticipantAnswer,
   BasePromptConfig,
   ProfileAgentConfig,
@@ -7,6 +11,7 @@ import {
   StageContextPromptItem,
   StageKind,
   UserProfile,
+  UserType,
   getChatPromptMessageHistory,
   getStockInfoSummaryText,
   makeStructuredOutputPrompt,
@@ -51,16 +56,28 @@ export async function getStructuredPrompt(
         break;
       case PromptItemType.PROFILE_INFO:
         const profileInfo: string[] = [];
-        if (userProfile.avatar) {
-          profileInfo.push(userProfile.avatar);
+        // TODO: If secondary/tertiary things in stage ID,
+        // use anonymous profiles to profile info
+        const getProfileSetId = () => {
+          if (stageId.includes(SECONDARY_PROFILE_SET_ID)) {
+            return PROFILE_SET_ANIMALS_2_ID;
+          } else if (stageId.includes(TERTIARY_PROFILE_SET_ID)) {
+            return PROFILE_SET_NATURE_ID;
+          }
+          return '';
+        };
+        if (userProfile.type === UserType.PARTICIPANT) {
+          items.push(
+            getNameFromPublicId(
+              [userProfile],
+              userProfile.publicId,
+              getProfileSetId(),
+            ),
+          );
+        } else {
+          // TODO: Adjust display for mediator profiles
+          items.push(`${userProfile.avatar} ${userProfile.name}`);
         }
-        if (userProfile.name) {
-          profileInfo.push(userProfile.name);
-        }
-        if (userProfile.pronouns) {
-          profileInfo.push(`(${userProfile.pronouns})`);
-        }
-        items.push(profileInfo.join(' '));
         break;
       case PromptItemType.STAGE_CONTEXT:
         items.push(

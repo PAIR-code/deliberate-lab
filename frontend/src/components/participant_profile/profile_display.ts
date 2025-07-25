@@ -7,8 +7,10 @@ import {customElement, property} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
 import {
-  ALTERNATE_PROFILE_SET_ID,
+  SECONDARY_PROFILE_SET_ID,
   PROFILE_SET_ANIMALS_2_ID,
+  PROFILE_SET_NATURE_ID,
+  TERTIARY_PROFILE_SET_ID,
   ParticipantProfile,
   ParticipantProfileBase,
 } from '@deliberation-lab/utils';
@@ -77,8 +79,17 @@ export class ParticipantProfileDisplay extends MobxLitElement {
 
     // If alternate profile ID in stage ID, use anonymous profile
     let baseProfile: ParticipantProfileBase = this.profile;
-    if (this.stageId?.includes(ALTERNATE_PROFILE_SET_ID)) {
+    if (this.stageId?.includes(SECONDARY_PROFILE_SET_ID)) {
       const anon = this.profile.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID];
+      if (anon) {
+        baseProfile = {
+          name: `${anon.name}`,
+          avatar: `${anon.avatar}`,
+          pronouns: null,
+        };
+      }
+    } else if (this.stageId?.includes(TERTIARY_PROFILE_SET_ID)) {
+      const anon = this.profile.anonymousProfiles[PROFILE_SET_NATURE_ID];
       if (anon) {
         baseProfile = {
           name: `${anon.name}`,
