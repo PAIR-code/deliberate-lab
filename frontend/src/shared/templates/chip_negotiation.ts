@@ -523,7 +523,7 @@ const CHIP_INFO_STAGE_GAMEPLAY_AI_ASSISTANCE = createInfoStage({
   id: 'info_gameplay5',
   name: 'Gameplay: AI assistance',
   infoLines: [
-    `Today, you will play three versions of the negotiation game. In each game, you will have access to one of the following AI assistance modes, which will be described in further detail later:`,
+    `Today, you will play three versions of the negotiation game against different players. In each game, you will have access to one of the following AI assistance modes, which will be described in further detail later:`,
     `* **AI delegate**: In delegation mode, you can delegate your trading decisions to an AI assistant. The AI will take actions on your behalf.`,
     `* **AI advisor**: In advisor mode, you can ask an AI assistant to give recommendations on which action to take. The AI will provide suggestions, but you must make the final decision.`,
     `* **AI coach**: In coach mode, you can ask an AI assistant for feedback on your actions. The AI will provide coaching, but you must make the final decision.`,
@@ -894,10 +894,11 @@ const DELEGATE_MODE_INSTRUCTION = createInfoStage({
     '',
     '**• Your choice:** At each turn, you can either make the move yourself or delegate the entire turn to the agent.',
     '**• How the delegate works:** If you choose to delegate, the agent will decide and execute a move for you, and provide you with a reason.',
-    'Remember that the delegate is built upon the same underlying AI model as the advisor and the coach, but you will only be shown its final decision, not its reasoning.',
+    'Remember that the delegate is built upon the same underlying AI model as the advisor and the coach, but you will only be shown its final decision and the reasoning only for the OFFER not the reject/accept decision.',
 
     'Here’s how you can delegate the proposal to the AI:',
     '![Example of the AI delegate making an decision when proposing](https://i.imgur.com/Qbpwm1Z.png)',
+    '![Example of the reasonings](https://i.imgur.com/rhRKCuT.png)',
     'Here’s how you can delegate the response to the AI:',
     '![Example of the AI delegate making an decision when responding to an offer](https://i.imgur.com/1Yev7H7.png)',
   ],
@@ -1220,7 +1221,7 @@ const CHIP_DELEGATE_FEEDBACK_STAGE = createSurveyStage({
     }),
     createTextSurveyQuestion({
       questionTitle:
-        'Please share any additional context on your answers. How did you decide to use (or not use) the coach? What did you think of the quality or usefulness of its suggestions?',
+        'Please share any additional context on your answers. How did you decide to use (or not use) the DELEGATE? What did you think of the quality or usefulness of its suggestions?',
     }),
   ],
 });

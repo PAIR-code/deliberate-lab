@@ -782,7 +782,7 @@ export class ChipView extends MobxLitElement {
 
     const message = this.answer?.currentAssistance?.message ?? '';
     const type = this.answer?.currentAssistance?.type;
-    let proposalLine = '<b>💡 Advisor says:</b>';
+    let proposalLine = '<b>💡 AI Assistant says:</b>';
     if (type === ChipAssistanceType.OFFER) {
       const proposedOffer = this.answer?.currentAssistance?.proposedOffer;
       if (proposedOffer) {
