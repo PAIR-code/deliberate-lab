@@ -541,7 +541,7 @@ const CHIP_INFO_STAGE_GAMEPLAY_AI_ASSISTANCE = createInfoStage({
 function createChipInfoPayout(numChips: number) {
   const infoLines = [
     '## Bonus payment',
-    'At the end of the study, we will *randomly* pick one of the three negotiation games you played and give you a bonus payment from that game, **up to $10 USD.**',
+    'At the end of the study, we will *average* the money you earned across the three negotiation games, **up to $10 USD.**',
     'There are two important features to remember about the bonus:',
     '  * The bonus will be equivalent to how much money you earn through trading *beyond* what you start with.',
     '  * If you do not complete all games, you will not receive a bonus payment.',
@@ -573,7 +573,7 @@ function createChipInfoPayout(numChips: number) {
     endingValue,
     `You would receive ${bonus} as a bonus for the first game.`,
     'If you did not increase the value of your chips, you would not receive a bonus.',
-    '\n**Your total bonus will be randomly selected from one of the games.**',
+    '\n**Your total bonus will be averaged from your bonus payout across the three games.**',
     '\nThe exact values will depend on your random chip valuations and your final holdings, so your payment may differ from this example.',
     '\nThis payment is in addition to the base payment for participating.',
   );
@@ -772,14 +772,14 @@ export function createPayoutItems() {
 
   const game1 = createChipPayoutItem({
     randomSelectionId: RANDOM_SELECTION_ID,
-    name: 'Payout from game 1 (one game was randomly selected)',
+    name: 'Payout from game 1',
     stageId: CHIP_NEGOTIATION_COACH_ID,
     baseCurrencyAmount: 0,
   });
 
   const game2 = createChipPayoutItem({
     randomSelectionId: RANDOM_SELECTION_ID,
-    name: 'Payout from game 2 (one game was randomly selected)',
+    name: 'Payout from game 2',
     stageId: CHIP_NEGOTIATION_ADVISOR_ID,
     baseCurrencyAmount: 0,
   });
@@ -787,7 +787,7 @@ export function createPayoutItems() {
   // Add the game 3
   const game3 = createChipPayoutItem({
     randomSelectionId: RANDOM_SELECTION_ID,
-    name: 'Payout from game 3 (one game was randomly selected)',
+    name: 'Payout from game 3',
     stageId: CHIP_NEGOTIATION_DELEGATE_ID,
     baseCurrencyAmount: 0,
   });
@@ -796,8 +796,9 @@ export function createPayoutItems() {
 }
 
 const CHIP_PAYOUT_STAGE = createPayoutStage({
-  id: 'random_payout',
+  id: 'average_payout',
   payoutItems: createPayoutItems(),
+  averageAllPayoutItems: true,
 });
 
 // ****************************************************************************
