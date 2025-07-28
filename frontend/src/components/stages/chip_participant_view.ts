@@ -777,7 +777,7 @@ export class ChipView extends MobxLitElement {
     const assistance = this.answer?.currentAssistance;
     if (!assistance || !assistance.type) {
       // Assistance not yet available or malformed
-      return html` <div></div> `;
+      return nothing;
     }
 
     const message = this.answer?.currentAssistance?.message ?? '';
@@ -889,7 +889,7 @@ export class ChipView extends MobxLitElement {
         ? html`<b>Initial Proposal:</b> to give
             ${this.describeChipMap(proposedOffer.sell)} to get
             ${this.describeChipMap(proposedOffer.buy)}`
-        : '';
+        : nothing;
 
       // TODO: Refactor into shared function
       // Quick hack to extract types as there is current only one type
