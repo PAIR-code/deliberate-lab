@@ -321,12 +321,10 @@ export const requestChipAssistance = onCall(async (request) => {
     // If participant cannot accept the offer and it's coach mode, return default response
     if (!canAcceptOffer() && data.assistanceMode === ChipAssistanceMode.COACH) {
       response = {
-        success: true,
-        modelResponse: {
-          feedback: "You do not have enough chips to accept this offer. So you need to reject.",
-          reasoning: "Insufficient chips to accept the offer",
-          response: false,
-        }
+        success: false,
+        modelResponse: {},
+        defaultMessage: "You do not have enough chips to accept this offer. So you need to reject.",
+        defaultReasoning: "Insufficient chips to accept the offer"
       };
     } else {
       response = await getChipResponseAssistance(
@@ -366,8 +364,14 @@ export const requestChipAssistance = onCall(async (request) => {
             response.modelResponse['reasoning'] ?? '';
           currentAssistance.modelResponse = response.modelResponse;
         } else {
-          // Set error mode if response failed
-          currentAssistance.selectedMode = ChipAssistanceMode.ERROR;
+          // Set error mode if response failed, or use default message if available
+          if (response.defaultMessage && response.defaultReasoning) {
+            currentAssistance.message = response.defaultMessage;
+            currentAssistance.reasoning = response.defaultReasoning;
+            currentAssistance.modelResponse = {};
+          } else {
+            currentAssistance.selectedMode = ChipAssistanceMode.ERROR;
+          }
         }
 
         participantAnswer.currentAssistance = currentAssistance;
