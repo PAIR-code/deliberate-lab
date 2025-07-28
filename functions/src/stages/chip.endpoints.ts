@@ -543,11 +543,6 @@ export const selectChipAssistanceMode = onCall(async (request) => {
         currentAssistance.proposedResponse = false; // auto-reject
         currentAssistance.message = "You do not have enough chips to accept this offer. So you need to reject.";
         currentAssistance.reasoning = "Insufficient chips to accept the offer";
-        currentAssistance.modelResponse = {
-          response: false,
-          feedback: "You do not have enough chips to accept this offer. So you need to reject.",
-          reasoning: "Insufficient chips to accept the offer"
-        };
         currentAssistance.proposedTime = Timestamp.now();
         
         // If delegate mode, mark as completed and actually send the reject response
