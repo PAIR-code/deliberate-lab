@@ -116,13 +116,13 @@ describe('OpenAI-compatible API', () => {
               },
             },
             {
-            name: 'enumProperty',
-            schema: {
-              type: StructuredOutputDataType.ENUM,
-              description: 'An enum-valued property',
-              enumItems: ['FOO', 'BAR', 'BAZ'],
+              name: 'enumProperty',
+              schema: {
+                type: StructuredOutputDataType.ENUM,
+                description: 'An enum-valued property',
+                enumItems: ['FOO', 'BAR', 'BAZ'],
+              },
             },
-          },
           ],
         },
       });
@@ -156,9 +156,9 @@ describe('OpenAI-compatible API', () => {
           description: 'An integer-valued property',
         },
         enumProperty: {
-              type: 'STRING',
-              description: 'An enum-valued property',
-              enum: ['FOO', 'BAR', 'BAZ'],
+          type: 'STRING',
+          description: 'An enum-valued property',
+          enum: ['FOO', 'BAR', 'BAZ'],
         },
       },
       additionalProperties: false,

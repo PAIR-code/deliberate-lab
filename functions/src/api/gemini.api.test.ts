@@ -140,7 +140,11 @@ describe('Gemini API', () => {
               enum: ['FOO', 'BAR', 'BAZ'],
             },
           },
-          propertyOrdering: ['stringProperty', 'integerProperty', 'enumProperty'],
+          propertyOrdering: [
+            'stringProperty',
+            'integerProperty',
+            'enumProperty',
+          ],
           required: ['stringProperty', 'integerProperty', 'enumProperty'],
         },
       },
