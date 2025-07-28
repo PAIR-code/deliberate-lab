@@ -41,7 +41,7 @@ Remember, your trade proposal must adhere to the following:
 Your goal is to make as much money as possible by making an advantageous proposal that is likely to be accepted. The trades, you choose to make to accomplish this, are up to you.
 Be rational - do not propose a trade in which thie user loses money. The value of a trade is the difference between the total value of chips received (buyQuantity x ${playerName} valuation of buyType) minus the total value of chips sold (sellQuantity x ${playerName} valuation). Only propose trades that give positive value.
 
-The trade explanation is shown to the user; it should be concise and directed towards the user from your first-person perspective as their trade delegate. 
+The trade explanation is shown to the user; it should be concise and directed towards the user from your perspective as their trade delegate. 
 
 ## Good Examples
 ### Example 1:
@@ -126,7 +126,7 @@ export const CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG =
           schema: {
             type: StructuredOutputDataType.STRING,
             description:
-              'In 2–3 concise sentences, explain why *you* believe this trade helps *the user* maximize *their* surplus. Stay consistent and avoid using third-person references like "the player" or "they."',
+              'In 2–3 concise sentences, explain why *you* believe this trade helps *the user* to maximize *their* surplus; for example, "I think that you should do this, because..". Stay consistent and avoid using third-person references like "the player" or "they."',
           },
         },
       ],
@@ -171,7 +171,7 @@ Remember, a trade proposal must adhere to the following:
 Your goal is to coach the player ${playerName} into making proposals that make as much money as possible. Do not encourage a trade in which they lose money. The value of a trade is the difference between the total value of chips received (quantity x the player's valuation) minus the total value of chips they give up (quantity x valuation). Only recommend trades that give positive value.
 
 
-The trade explanation is shown to the user; it should be concise and directed towards the user from your first-person perspective as their coach.
+The trade explanation is shown to the user; it should be concise and directed towards the user from your perspective as their coach.
 
 ## Good Examples
 ### Example 1:
@@ -266,7 +266,7 @@ export const CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG =
           schema: {
             type: StructuredOutputDataType.STRING,
             description:
-              'In 2–3 concise sentences, explain in **first person** why *you* believe this trade helps *the user* to maximize *their* surplus. Stay consistent and avoid using third-person references like "the player" or "they."',
+              'In 2–3 concise sentences, explain why *you* believe this trade helps *the user* to maximize *their* surplus; for example, "I think that you should do this, because..". Stay consistent and avoid using third-person references like "the player" or "they."',
           },
         },
       ],
