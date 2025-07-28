@@ -928,6 +928,15 @@ const CHIP_PRE_SURVEY_STAGE1 = createSurveyStage({
       upperText: 'Very confident',
       upperValue: 5,
     }),
+    // Relevant experience section
+    createScaleSurveyQuestion({
+      questionTitle:
+        'How much prior experience do you have with games or tasks similar to this one?',
+      lowerText: 'No experience',
+      lowerValue: 1,
+      upperText: 'Extensive experience',
+      upperValue: 5,
+    }),
     createTextSurveyQuestion({
       questionTitle:
         'Please describe any background, skills, or experiences that might help you in this game (e.g., negotiation, bargaining, math, logic, strategic thinking—even informal or everyday situations).',
