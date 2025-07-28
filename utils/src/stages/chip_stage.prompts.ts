@@ -122,7 +122,7 @@ export const CHIP_OFFER_ASSISTANCE_STRUCTURED_OUTPUT_CONFIG =
           schema: {
             type: StructuredOutputDataType.STRING,
             description:
-              '2-3 concise sentences explaining why this trade advances your surplus goal',
+              'In 2–3 concise sentences, explain in **first person** why *you* believe this trade helps you maximize your surplus. Stay consistent and avoid using third-person references like "the player" or "they."',
           },
         },
       ],
@@ -257,7 +257,7 @@ export const CHIP_OFFER_ASSISTANCE_ADVISOR_STRUCTURED_OUTPUT_CONFIG =
           schema: {
             type: StructuredOutputDataType.STRING,
             description:
-              '2-3 concise sentences explaining why this trade advances your surplus goal',
+              'In 2–3 concise sentences, explain in **first person** why *you* believe this trade helps you maximize your surplus. Stay consistent and avoid using third-person references like "the player" or "they."',
           },
         },
       ],
