@@ -491,8 +491,8 @@ export function getChipNegotiationTurnColumns(
         !turn
           ? `player ${index + 1} ${chip.id} before turn`
           : player == senderId
-            ? (turn.senderData.chipsBeforeTurn[chip.id]?.toString() ?? '')
-            : (turn.responseData[player]?.chipsBeforeTurn[
+            ? (turn.senderData.chipsBeforeTurn?.[chip.id]?.toString() ?? '')
+            : (turn.responseData[player]?.chipsBeforeTurn?.[
                 chip.id
               ]?.toString() ?? ''),
       );
@@ -500,8 +500,8 @@ export function getChipNegotiationTurnColumns(
         !turn
           ? `player ${index + 1} ${chip.id} after turn`
           : player == senderId
-            ? (turn.senderData.chipsAfterTurn[chip.id]?.toString() ?? '')
-            : (turn.responseData[player]?.chipsAfterTurn[chip.id]?.toString() ??
+            ? (turn.senderData.chipsAfterTurn?.[chip.id]?.toString() ?? '')
+            : (turn.responseData[player]?.chipsAfterTurn?.[chip.id]?.toString() ??
               ''),
       );
     });
@@ -510,8 +510,8 @@ export function getChipNegotiationTurnColumns(
         !turn
           ? `player ${index + 1} ${chip.id} value`
           : player == senderId
-            ? (turn.senderData.chipValues[chip.id]?.toString() ?? '')
-            : (turn.responseData[player]?.chipValues[chip.id]?.toString() ??
+            ? (turn.senderData.chipValues?.[chip.id]?.toString() ?? '')
+            : (turn.responseData[player]?.chipValues?.[chip.id]?.toString() ??
               ''),
       );
     });
@@ -805,7 +805,7 @@ function getChipPayout(
   chipValueMap: Record<string, number>,
 ): number {
   let payout = 0;
-  if (!currentChipMap) return 0;
+  if (!currentChipMap || !chipValueMap) return 0;
 
   Object.keys(currentChipMap).forEach((chipId) => {
     const value = chipValueMap[chipId] ?? 0;
@@ -850,7 +850,7 @@ function getChipNegotiationTurnData(
   const senderChipValueMap = playerMetadata.participantChipValueMap[senderId];
   const senderData: ChipNegotiationSenderData = {
     participantId: senderId,
-    chipValues: playerMetadata.participantChipValueMap[senderId],
+    chipValues: playerMetadata.participantChipValueMap[senderId] ?? {},
     chipsBeforeTurn: before[senderId] ?? {},
     chipsAfterTurn: after[senderId] ?? {},
     payoutBeforeTurn: getChipPayout(before[senderId], senderChipValueMap),
@@ -871,7 +871,7 @@ function getChipNegotiationTurnData(
       selectedAsRecipient: responderId === transaction.recipientId,
       offerResponse: offerResponse.response,
       offerResponseTimestamp: offerResponse.timestamp,
-      chipValues: playerMetadata.participantChipValueMap[responderId],
+      chipValues: playerMetadata.participantChipValueMap[responderId] ?? {},
       chipsBeforeTurn: before[responderId] ?? {},
       chipsAfterTurn: after[responderId] ?? {},
       payoutBeforeTurn: getChipPayout(
@@ -1226,7 +1226,7 @@ export function getSurveyStageCSVColumns(
   surveyStage.questions.forEach((question) => {
     const answer =
       stageAnswer?.kind === StageKind.SURVEY
-        ? stageAnswer?.answerMap[question.id]
+        ? (stageAnswer as any)?.answerMap[question.id]
         : null;
 
     switch (question.kind) {
