@@ -17,7 +17,6 @@ import {
 } from './stages/asset_allocation.utils';
 import {
   getFirestoreAnswersForStage,
-  getFirestoreExperiment,
   getFirestoreParticipant,
   getFirestoreStage,
   getFirestoreStagePublicData,
@@ -91,61 +90,47 @@ export async function getStageContextForPrompt(
   currentStageId: string,
   item: StageContextPromptItem,
 ) {
-  // Get experiment
-  const experiment = await getFirestoreExperiment(experimentId);
-  const getStageList = () => {
-    const index = experiment.stageIds.findIndex((id) => id === currentStageId);
-    return experiment.stageIds.slice(0, index + 1);
-  };
-
-  // If stage ID is null, use all stages up to current stage
-  const stageList = item.stageId ? [item.stageId] : getStageList();
-
-  // Function to get context for given stage ID
-  const getContextForStage = async (stageId) => {
-    const stage = await getFirestoreStage(experimentId, stageId);
-    const textItems: string[] = [];
-    if (item.includePrimaryText) {
-      textItems.push(`- Stage description: ${stage.descriptions.primaryText}`);
-    }
-    if (item.includeInfoText) {
-      textItems.push(`- Additional info: ${stage.descriptions.infoText}`);
-    }
-    if (item.includeHelpText) {
-      textItems.push(`- If you need help: ${stage.descriptions.helpText}`);
-    }
-
-    // Include stage display with answers embedded, or just answers
-    if (item.includeStageDisplay) {
-      textItems.push(
-        await getStageDisplayForPrompt(
-          experimentId,
-          cohortId,
-          participantIds,
-          stage,
-          item.includeParticipantAnswers,
-        ),
-      );
-    } else if (item.includeParticipantAnswers) {
-      textItems.push(
-        await getStageAnswersForPrompt(
-          experimentId,
-          cohortId,
-          participantIds,
-          stage,
-        ),
-      );
-    }
-
-    return textItems.join('\n');
-  };
-
-  // For each stage in list, add context
-  const items: string[] = [];
-  for (const id of stageList) {
-    items.push(await getContextForStage(id));
+  // Get the specific stage
+  const stage = await getFirestoreStage(experimentId, item.stageId);
+  if (!stage) {
+    return '';
   }
-  return items.join('\n');
+
+  const textItems: string[] = [];
+
+  if (item.includePrimaryText) {
+    textItems.push(`- Stage description: ${stage.descriptions.primaryText}`);
+  }
+  if (item.includeInfoText) {
+    textItems.push(`- Additional info: ${stage.descriptions.infoText}`);
+  }
+  if (item.includeHelpText) {
+    textItems.push(`- If you need help: ${stage.descriptions.helpText}`);
+  }
+
+  // Include stage display with answers embedded, or just answers
+  if (item.includeStageDisplay) {
+    textItems.push(
+      await getStageDisplayForPrompt(
+        experimentId,
+        cohortId,
+        participantIds,
+        stage,
+        item.includeParticipantAnswers,
+      ),
+    );
+  } else if (item.includeParticipantAnswers) {
+    textItems.push(
+      await getStageAnswersForPrompt(
+        experimentId,
+        cohortId,
+        participantIds,
+        stage,
+      ),
+    );
+  }
+
+  return textItems.join('\n');
 }
 
 export async function getStageDisplayForPrompt(

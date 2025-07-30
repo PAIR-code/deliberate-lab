@@ -28,7 +28,7 @@
   @include common.flex-column;
   background: var(--md-sys-color-surface-variant);
   gap: common.$spacing-small;
-  wrap: flex-wrap;
+  flex-wrap: wrap;
 }
 
 .chip {
@@ -88,4 +88,27 @@ pr-textarea {
 .menu-item {
   @include common.nav-item;
   border-radius: common.$spacing-small;
+}
+
+.stage-selector {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  padding-bottom: common.$spacing-medium;
+
+  label {
+    @include typescale.body-medium;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  select {
+    flex: 1;
+    max-width: 400px;
+    padding: common.$spacing-small;
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: common.$spacing-xs;
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    font-family: inherit;
+    font-size: inherit;
+  }
 }
