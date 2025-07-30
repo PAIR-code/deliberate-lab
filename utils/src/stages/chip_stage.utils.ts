@@ -248,8 +248,8 @@ export function calculateChipOfferPayout(
   // Calculate the total payout before the offer
   const currentTotalPayout = Object.keys(chipMap)
     .map((chipId) => {
-      const quantity = chipMap[chipId] ?? 0;
-      const value = chipValueMap[chipId] ?? 0;
+      const quantity = Number(chipMap[chipId]) || 0;
+      const value = Number(chipValueMap[chipId]) || 0;
       return quantity * value;
     })
     .reduce((total, value) => total + value, 0);
@@ -257,13 +257,17 @@ export function calculateChipOfferPayout(
   // Calculate the changes from the offer
   const addAmount = Object.keys(addChipMap)
     .map((chipId) => {
-      return (addChipMap[chipId] ?? 0) * (chipValueMap[chipId] ?? 0);
+      const quantity = Number(addChipMap[chipId]) || 0;
+      const value = Number(chipValueMap[chipId]) || 0;
+      return quantity * value;
     })
     .reduce((total, value) => total + value, 0);
 
   const removeAmount = Object.keys(removeChipMap)
     .map((chipId) => {
-      return (removeChipMap[chipId] ?? 0) * (chipValueMap[chipId] ?? 0);
+      const quantity = Number(removeChipMap[chipId]) || 0;
+      const value = Number(chipValueMap[chipId]) || 0;
+      return quantity * value;
     })
     .reduce((total, value) => total + value, 0);
 

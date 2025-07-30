@@ -786,15 +786,19 @@ function runChipTransaction(
   if (!currentChipMap) return {};
 
   Object.keys(currentChipMap).forEach((chipId) => {
-    newChipMap[chipId] = currentChipMap[chipId];
+    newChipMap[chipId] = Number(currentChipMap[chipId]) || 0;
   });
 
   Object.keys(addChipMap).forEach((chipId) => {
-    newChipMap[chipId] = (currentChipMap[chipId] ?? 0) + addChipMap[chipId];
+    const currentAmount = Number(newChipMap[chipId]) || 0;
+    const addAmount = Number(addChipMap[chipId]) || 0;
+    newChipMap[chipId] = currentAmount + addAmount;
   });
 
   Object.keys(removeChipMap).forEach((chipId) => {
-    newChipMap[chipId] = (currentChipMap[chipId] ?? 0) - removeChipMap[chipId];
+    const currentAmount = Number(newChipMap[chipId]) || 0;
+    const removeAmount = Number(removeChipMap[chipId]) || 0;
+    newChipMap[chipId] = currentAmount - removeAmount;
   });
 
   return newChipMap;
@@ -808,8 +812,9 @@ function getChipPayout(
   if (!currentChipMap || !chipValueMap) return 0;
 
   Object.keys(currentChipMap).forEach((chipId) => {
-    const value = chipValueMap[chipId] ?? 0;
-    payout += value * currentChipMap[chipId];
+    const value = Number(chipValueMap[chipId]) || 0;
+    const quantity = Number(currentChipMap[chipId]) || 0;
+    payout += value * quantity;
   });
 
   return Math.ceil(payout * 100) / 100; // round final payout
