@@ -63,20 +63,18 @@ export class EditorComponent extends MobxLitElement {
       stageConfig.kind !== StageKind.CHAT &&
       stageConfig.kind !== StageKind.PRIVATE_CHAT
     ) {
-      if (this.agent.type === AgentPersonaType.PARTICIPANT) {
-        return html`
-          <div class="section">
-            <div class="section-title">
-              ${this.stageNamePrefix}${stageConfig.name}
-            </div>
-            <div class="description">
-              No prompt customizations currently available for this stage.
-            </div>
+      return html`
+        <div class="section">
+          <div class="section-title">
+            ${this.stageNamePrefix}${stageConfig.name}
           </div>
-        `;
-      } else {
-        return nothing;
-      }
+          <div class="description">
+            ${this.agent.type === AgentPersonaType.PARTICIPANT
+              ? 'No prompt customizations currently available for this stage.'
+              : 'Agent mediators do not interact with this stage.'}
+          </div>
+        </div>
+      `;
     }
 
     const promptConfig = this.getPrompt();

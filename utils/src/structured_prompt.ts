@@ -76,8 +76,8 @@ export interface ProfileInfoPromptItem extends BasePromptItem {
 
 export interface StageContextPromptItem extends BasePromptItem {
   type: PromptItemType.STAGE_CONTEXT;
-  // ID of stage (or null if all stages up to present stage, inclusive)
-  stageId: string | null;
+  // ID of stage
+  stageId: string;
   includePrimaryText: boolean;
   includeInfoText: boolean;
   includeHelpText: boolean;
@@ -109,7 +109,7 @@ export function createChatPromptConfig(
 
 // Default stage context
 export function createDefaultStageContextPromptItem(
-  stageId: string | null,
+  stageId: string,
 ): StageContextPromptItem {
   return {
     type: PromptItemType.STAGE_CONTEXT,

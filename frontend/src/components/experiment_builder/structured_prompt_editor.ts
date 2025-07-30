@@ -4,20 +4,17 @@ import '../../pair-components/textarea';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property, state} from 'lit/decorators.js';
+import {customElement, property} from 'lit/decorators.js';
+
+import {core} from '../../core/core';
+import {ExperimentEditor} from '../../services/experiment.editor';
 
 import {
   PromptItem,
   PromptItemType,
-  StageConfig,
   StageContextPromptItem,
-  StageKind,
   StructuredOutputConfig,
-  StructuredOutputType,
-  StructuredOutputDataType,
-  StructuredOutputSchema,
   TextPromptItem,
-  createDefaultPromptFromText,
   createDefaultStageContextPromptItem,
   makeStructuredOutputPrompt,
   structuredOutputEnabled,
@@ -29,6 +26,8 @@ import {styles} from './structured_prompt_editor.scss';
 @customElement('structured-prompt-editor')
 export class EditorComponent extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
+
+  private readonly experimentEditor = core.getService(ExperimentEditor);
 
   @property() prompt: PromptItem[] = [];
   @property() stageId = '';
@@ -110,12 +109,8 @@ export class EditorComponent extends MobxLitElement {
       this.addPromptItem({type: PromptItemType.PROFILE_INFO});
     };
 
-    const addCurrentStageContext = () => {
+    const addStageContext = () => {
       this.addPromptItem(createDefaultStageContextPromptItem(this.stageId));
-    };
-
-    const addPastStageContext = () => {
-      this.addPromptItem(createDefaultStageContextPromptItem(null));
     };
 
     return html`
@@ -132,19 +127,8 @@ export class EditorComponent extends MobxLitElement {
               <div class="menu-item" role="button" @click=${addText}>
                 Freeform text
               </div>
-              <div
-                class="menu-item"
-                role="button"
-                @click=${addCurrentStageContext}
-              >
-                Context for current stage
-              </div>
-              <div
-                class="menu-item"
-                role="button"
-                @click=${addPastStageContext}
-              >
-                Context for all stages up to current stage (inclusive)
+              <div class="menu-item" role="button" @click=${addStageContext}>
+                Stage context
               </div>
               <div class="menu-item" role="button" @click=${addProfileContext}>
                 Custom agent context
@@ -250,6 +234,28 @@ export class EditorComponent extends MobxLitElement {
     item: StageContextPromptItem,
     index: number,
   ) {
+    // Get available stages up to and including current stage
+    const currentStageIndex = this.experimentEditor.stages.findIndex(
+      (stage) => stage.id === this.stageId,
+    );
+    const availableStages =
+      currentStageIndex >= 0
+        ? this.experimentEditor.stages.slice(0, currentStageIndex + 1)
+        : [];
+
+    // Create a map from stage ID to index for quick lookup
+    const stageIndexMap = new Map(
+      availableStages.map((stage, idx) => [stage.id, idx]),
+    );
+
+    const updatePromptItemSelectedStage = (e: Event) => {
+      const select = e.target as HTMLSelectElement;
+      this.updatePromptItem(index, {
+        ...item,
+        stageId: select.value,
+      });
+    };
+
     const updatePrimaryText = (e: InputEvent) => {
       this.updatePromptItem(index, {
         ...item,
@@ -286,19 +292,37 @@ export class EditorComponent extends MobxLitElement {
     };
 
     const getTitle = () => {
-      if (item.stageId === this.stageId) {
-        return 'Context for current stage';
-      } else if (!item.stageId) {
-        return 'Context for all stages up to current stage (inclusive)';
-      } else {
-        return `Context for stage "${item.stageId}"`;
+      const stageIndex = stageIndexMap.get(item.stageId);
+      if (stageIndex !== undefined) {
+        const stage = availableStages[stageIndex];
+        return `Stage context: ${stageIndex + 1}. ${stage.name}`;
       }
+      return 'Stage context';
     };
 
     return html`
       <details>
         <summary class="chip primary">${getTitle()}</summary>
         <div class="chip-collapsible secondary">
+          <div class="stage-selector">
+            <label for="stage-select-${index}">Select stage:</label>
+            <select
+              id="stage-select-${index}"
+              .value=${item.stageId}
+              @change=${updatePromptItemSelectedStage}
+            >
+              ${availableStages.map(
+                (stage, stageIndex) => html`
+                  <option
+                    value=${stage.id}
+                    ?selected=${stage.id === item.stageId}
+                  >
+                    ${stageIndex + 1}. ${stage.name}
+                  </option>
+                `,
+              )}
+            </select>
+          </div>
           <label class="checkbox-wrapper">
             <input
               type="checkbox"
