@@ -415,6 +415,13 @@ export function calculateChipPayoutItemResult(
   if (publicChipData?.kind !== StageKind.CHIP) return null;
 
   const chipResults: ChipPayoutValueItem[] = stage.chips.map((chip) => {
+    if (!publicChipData.participantChipMap[profile.publicId]) {
+      return {
+        chip,
+        quantity: 0,
+        value: 0,
+      };
+    }
     const quantity =
       publicChipData.participantChipMap[profile.publicId][chip.id] ?? 0;
     const value =
