@@ -422,10 +422,12 @@ export function calculateChipPayoutItemResult(
         value: 0,
       };
     }
-    const quantity =
-      publicChipData.participantChipMap[profile.publicId][chip.id] ?? 0;
-    const value =
-      publicChipData.participantChipValueMap[profile.publicId][chip.id] ?? 0;
+    const quantity = Number(
+      publicChipData.participantChipMap[profile.publicId][chip.id] ?? 0,
+    );
+    const value = Number(
+      publicChipData.participantChipValueMap[profile.publicId][chip.id] ?? 0,
+    );
     return {
       chip,
       quantity,

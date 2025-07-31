@@ -786,15 +786,17 @@ function runChipTransaction(
   if (!currentChipMap) return {};
 
   Object.keys(currentChipMap).forEach((chipId) => {
-    newChipMap[chipId] = currentChipMap[chipId];
+    newChipMap[chipId] = Number(currentChipMap[chipId] ?? 0);
   });
 
   Object.keys(addChipMap).forEach((chipId) => {
-    newChipMap[chipId] = (currentChipMap[chipId] ?? 0) + addChipMap[chipId];
+    newChipMap[chipId] =
+      Number(currentChipMap[chipId] ?? 0) + Number(addChipMap[chipId] ?? 0);
   });
 
   Object.keys(removeChipMap).forEach((chipId) => {
-    newChipMap[chipId] = (currentChipMap[chipId] ?? 0) - removeChipMap[chipId];
+    newChipMap[chipId] =
+      Number(currentChipMap[chipId] ?? 0) - Number(removeChipMap[chipId] ?? 0);
   });
 
   return newChipMap;
@@ -805,11 +807,11 @@ function getChipPayout(
   chipValueMap: Record<string, number>,
 ): number {
   let payout = 0;
-  if (!currentChipMap) return 0;
+  if (!currentChipMap || !chipValueMap) return 0;
 
   Object.keys(currentChipMap).forEach((chipId) => {
-    const value = chipValueMap[chipId] ?? 0;
-    payout += value * currentChipMap[chipId];
+    const value = Number(chipValueMap[chipId] ?? 0);
+    payout += value * Number(currentChipMap[chipId] ?? 0);
   });
 
   return Math.ceil(payout * 100) / 100; // round final payout
