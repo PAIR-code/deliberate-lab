@@ -2,6 +2,8 @@ import {
   AssetAllocationStageParticipantAnswer,
   BasePromptConfig,
   ProfileAgentConfig,
+  PromptItem,
+  PromptItemGroup,
   PromptItemType,
   StageConfig,
   StageContextPromptItem,
@@ -39,8 +41,36 @@ export async function getStructuredPrompt(
   agentConfig: ProfileAgentConfig,
   promptConfig: BasePromptConfig,
 ) {
+  const promptText = await processPromptItems(
+    promptConfig.prompt,
+    experimentId,
+    cohortId,
+    participantIds,
+    stageId,
+    userProfile,
+    agentConfig,
+  );
+
+  // Add structured output if relevant
+  const structuredOutput = makeStructuredOutputPrompt(
+    promptConfig.structuredOutputConfig,
+  );
+
+  return structuredOutput ? `${promptText}\n${structuredOutput}` : promptText;
+}
+
+/** Process prompt items recursively. */
+async function processPromptItems(
+  promptItems: PromptItem[],
+  experimentId: string,
+  cohortId: string,
+  participantIds: string[],
+  stageId: string,
+  userProfile: UserProfile,
+  agentConfig: ProfileAgentConfig,
+): Promise<string> {
   const items: string[] = [];
-  for (const promptItem of promptConfig.prompt) {
+  for (const promptItem of promptItems) {
     switch (promptItem.type) {
       case PromptItemType.TEXT:
         items.push(promptItem.text);
@@ -72,14 +102,23 @@ export async function getStructuredPrompt(
           ),
         );
         break;
+      case PromptItemType.GROUP:
+        const promptGroup = promptItem as PromptItemGroup;
+        const groupText = await processPromptItems(
+          promptGroup.items,
+          experimentId,
+          cohortId,
+          participantIds,
+          stageId,
+          userProfile,
+          agentConfig,
+        );
+        if (groupText) items.push(groupText);
+        break;
       default:
         break;
     }
   }
-
-  // Add structured output if relevant
-  items.push(makeStructuredOutputPrompt(promptConfig.structuredOutputConfig));
-
   return items.join('\n');
 }
 

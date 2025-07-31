@@ -43,7 +43,8 @@ export type PromptItem =
   | TextPromptItem
   | ProfileContextPromptItem
   | ProfileInfoPromptItem
-  | StageContextPromptItem;
+  | StageContextPromptItem
+  | PromptItemGroup;
 
 export interface BasePromptItem {
   type: PromptItemType;
@@ -57,6 +58,8 @@ export enum PromptItemType {
   PROFILE_CONTEXT = 'PROFILE_CONTEXT',
   // Context from specified stage (or all stages up to present if null)
   STAGE_CONTEXT = 'STAGE_CONTEXT',
+  // Group of prompt items
+  GROUP = 'GROUP',
 }
 
 export interface TextPromptItem extends BasePromptItem {
@@ -85,6 +88,13 @@ export interface StageContextPromptItem extends BasePromptItem {
   includeStageDisplay: boolean;
   // Include answers for current participant (or all participants if mediator)
   includeParticipantAnswers: boolean;
+}
+
+/** Group of prompt items. */
+export interface PromptItemGroup extends BasePromptItem {
+  type: PromptItemType.GROUP;
+  title: string;
+  items: PromptItem[];
 }
 
 // ****************************************************************************
