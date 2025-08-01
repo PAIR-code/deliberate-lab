@@ -114,10 +114,8 @@ export class EditorComponent extends MobxLitElement {
           >
           </pr-textarea>
         `;
-
       case PromptItemType.STAGE_CONTEXT:
         return this.renderStageContext(item as StageContextPromptItem);
-
       case PromptItemType.PROFILE_INFO:
         return html`
           <details>
@@ -127,7 +125,6 @@ export class EditorComponent extends MobxLitElement {
             </div>
           </details>
         `;
-
       case PromptItemType.PROFILE_CONTEXT:
         return html`
           <details>
@@ -138,7 +135,6 @@ export class EditorComponent extends MobxLitElement {
             </div>
           </details>
         `;
-
       case PromptItemType.GROUP:
         const group = item as PromptItemGroup;
         return html`
@@ -168,7 +164,6 @@ export class EditorComponent extends MobxLitElement {
             </div>
           </details>
         `;
-
       default:
         return nothing;
     }
