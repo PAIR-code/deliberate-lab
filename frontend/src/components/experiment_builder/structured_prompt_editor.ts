@@ -158,50 +158,6 @@ export class EditorComponent extends MobxLitElement {
     `;
   }
 
-  private renderPromptItems(items: PromptItem[], isNested = false) {
-    if (items.length === 0) {
-      return html`<div
-        class="${isNested ? 'empty-group' : 'prompt-item-wrapper'}"
-      >
-        ${isNested ? 'No items in group yet' : '⚠️ No items added yet'}
-      </div>`;
-    }
-
-    return items.map(
-      (item, index) => html`
-        <div class="prompt-item-wrapper ${isNested ? 'nested' : ''}">
-          <div class="prompt-item-editor">${this.renderItemEditor(item)}</div>
-          <div class="prompt-item-actions">
-            <pr-icon-button
-              icon="arrow_upward"
-              color="neutral"
-              variant="default"
-              size="small"
-              @click=${() => this.movePromptItem(items, index, -1)}
-            >
-            </pr-icon-button>
-            <pr-icon-button
-              icon="arrow_downward"
-              color="neutral"
-              variant="default"
-              size="small"
-              @click=${() => this.movePromptItem(items, index, 1)}
-            >
-            </pr-icon-button>
-            <pr-icon-button
-              icon="close"
-              color="neutral"
-              variant="default"
-              size="small"
-              @click=${() => this.deletePromptItem(items, index)}
-            >
-            </pr-icon-button>
-          </div>
-        </div>
-      `,
-    );
-  }
-
   private renderItemEditor(item: PromptItem): TemplateResult | typeof nothing {
     switch (item.type) {
       case PromptItemType.TEXT:
@@ -270,6 +226,50 @@ export class EditorComponent extends MobxLitElement {
       default:
         return nothing;
     }
+  }
+
+  private renderPromptItems(items: PromptItem[], isNested = false) {
+    if (items.length === 0) {
+      return html`<div
+        class="${isNested ? 'empty-group' : 'prompt-item-wrapper'}"
+      >
+        ${isNested ? 'No items in group yet' : '⚠️ No items added yet'}
+      </div>`;
+    }
+
+    return items.map(
+      (item, index) => html`
+        <div class="prompt-item-wrapper ${isNested ? 'nested' : ''}">
+          <div class="prompt-item-editor">${this.renderItemEditor(item)}</div>
+          <div class="prompt-item-actions">
+            <pr-icon-button
+              icon="arrow_upward"
+              color="neutral"
+              variant="default"
+              size="small"
+              @click=${() => this.movePromptItem(items, index, -1)}
+            >
+            </pr-icon-button>
+            <pr-icon-button
+              icon="arrow_downward"
+              color="neutral"
+              variant="default"
+              size="small"
+              @click=${() => this.movePromptItem(items, index, 1)}
+            >
+            </pr-icon-button>
+            <pr-icon-button
+              icon="close"
+              color="neutral"
+              variant="default"
+              size="small"
+              @click=${() => this.deletePromptItem(items, index)}
+            >
+            </pr-icon-button>
+          </div>
+        </div>
+      `,
+    );
   }
 
   private renderStageContextPromptItemEditor(item: StageContextPromptItem) {
