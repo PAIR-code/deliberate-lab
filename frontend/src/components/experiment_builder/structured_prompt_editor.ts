@@ -115,7 +115,9 @@ export class EditorComponent extends MobxLitElement {
           </pr-textarea>
         `;
       case PromptItemType.STAGE_CONTEXT:
-        return this.renderStageContext(item as StageContextPromptItem);
+        return this.renderStageContextPromptItemEditor(
+          item as StageContextPromptItem,
+        );
       case PromptItemType.PROFILE_INFO:
         return html`
           <details>
@@ -169,7 +171,8 @@ export class EditorComponent extends MobxLitElement {
     }
   }
 
-  private renderStageContext(item: StageContextPromptItem) {
+  private renderStageContextPromptItemEditor(item: StageContextPromptItem) {
+    // Get available stages up to and including current stage
     const currentStageIndex = this.experimentEditor.stages.findIndex(
       (stage) => stage.id === this.stageId,
     );
@@ -178,6 +181,7 @@ export class EditorComponent extends MobxLitElement {
         ? this.experimentEditor.stages.slice(0, currentStageIndex + 1)
         : [];
 
+    // Create a map from stage ID to index for quick lookup
     const stageIndexMap = new Map(
       availableStages.map((stage, idx) => [stage.id, idx]),
     );
