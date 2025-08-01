@@ -39,12 +39,13 @@ export class EditorComponent extends MobxLitElement {
   ) => {};
 
   override render() {
-    const structuredOutput =
-      this.structuredOutputConfig &&
-      structuredOutputEnabled(this.structuredOutputConfig) &&
-      this.structuredOutputConfig.schema
-        ? makeStructuredOutputPrompt(this.structuredOutputConfig)
-        : '';
+    const getStructuredOutput = () => {
+      const config = this.structuredOutputConfig;
+      if (config && structuredOutputEnabled(config) && config.schema) {
+        return makeStructuredOutputPrompt(config);
+      }
+      return '';
+    };
 
     return html`
       <div class="prompt-wrapper">
@@ -56,7 +57,7 @@ export class EditorComponent extends MobxLitElement {
           ${this.prompt.length === 0
             ? html`<div class="prompt-item-wrapper">⚠️ No items added yet</div>`
             : this.renderItems(this.prompt)}
-          ${structuredOutput}
+          ${getStructuredOutput()}
         </div>
       </div>
     `;
