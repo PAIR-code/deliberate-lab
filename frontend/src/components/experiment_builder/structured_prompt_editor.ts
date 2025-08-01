@@ -42,22 +42,25 @@ export class EditorComponent extends MobxLitElement {
     return this.renderPromptPreview();
   }
 
-  private updateItem = (item: PromptItem, updates: Partial<PromptItem>) => {
+  private updatePromptItem = (
+    item: PromptItem,
+    updates: Partial<PromptItem>,
+  ) => {
     Object.assign(item, updates);
     this.onUpdate(this.prompt);
   };
 
-  private addItem(targetArray: PromptItem[], item: PromptItem) {
+  private addPromptItem(targetArray: PromptItem[], item: PromptItem) {
     targetArray.push(item);
     this.onUpdate(this.prompt);
   }
 
-  private deleteItem(targetArray: PromptItem[], index: number) {
+  private deletePromptItem(targetArray: PromptItem[], index: number) {
     targetArray.splice(index, 1);
     this.onUpdate(this.prompt);
   }
 
-  private moveItem(
+  private movePromptItem(
     targetArray: PromptItem[],
     index: number,
     direction: number,
@@ -108,7 +111,10 @@ export class EditorComponent extends MobxLitElement {
             class="menu-item"
             role="button"
             @click=${() =>
-              this.addItem(targetArray, {type: PromptItemType.TEXT, text: ''})}
+              this.addPromptItem(targetArray, {
+                type: PromptItemType.TEXT,
+                text: '',
+              })}
           >
             Freeform text
           </div>
@@ -116,7 +122,7 @@ export class EditorComponent extends MobxLitElement {
             class="menu-item"
             role="button"
             @click=${() =>
-              this.addItem(
+              this.addPromptItem(
                 targetArray,
                 createDefaultStageContextPromptItem(this.stageId),
               )}
@@ -127,7 +133,9 @@ export class EditorComponent extends MobxLitElement {
             class="menu-item"
             role="button"
             @click=${() =>
-              this.addItem(targetArray, {type: PromptItemType.PROFILE_CONTEXT})}
+              this.addPromptItem(targetArray, {
+                type: PromptItemType.PROFILE_CONTEXT,
+              })}
           >
             Custom agent context
           </div>
@@ -135,7 +143,9 @@ export class EditorComponent extends MobxLitElement {
             class="menu-item"
             role="button"
             @click=${() =>
-              this.addItem(targetArray, {type: PromptItemType.PROFILE_INFO})}
+              this.addPromptItem(targetArray, {
+                type: PromptItemType.PROFILE_INFO,
+              })}
           >
             Profile info (avatar, name, pronouns)
           </div>
@@ -145,7 +155,7 @@ export class EditorComponent extends MobxLitElement {
                   class="menu-item"
                   role="button"
                   @click=${() =>
-                    this.addItem(targetArray, {
+                    this.addPromptItem(targetArray, {
                       type: PromptItemType.GROUP,
                       title: 'New Group',
                       items: [],
@@ -179,7 +189,7 @@ export class EditorComponent extends MobxLitElement {
               color="neutral"
               variant="default"
               size="small"
-              @click=${() => this.moveItem(items, index, -1)}
+              @click=${() => this.movePromptItem(items, index, -1)}
             >
             </pr-icon-button>
             <pr-icon-button
@@ -187,7 +197,7 @@ export class EditorComponent extends MobxLitElement {
               color="neutral"
               variant="default"
               size="small"
-              @click=${() => this.moveItem(items, index, 1)}
+              @click=${() => this.movePromptItem(items, index, 1)}
             >
             </pr-icon-button>
             <pr-icon-button
@@ -195,7 +205,7 @@ export class EditorComponent extends MobxLitElement {
               color="neutral"
               variant="default"
               size="small"
-              @click=${() => this.deleteItem(items, index)}
+              @click=${() => this.deletePromptItem(items, index)}
             >
             </pr-icon-button>
           </div>
@@ -213,7 +223,7 @@ export class EditorComponent extends MobxLitElement {
             placeholder="Add freeform text here"
             .value=${textItem.text}
             @input=${(e: Event) =>
-              this.updateItem(item, {
+              this.updatePromptItem(item, {
                 text: (e.target as HTMLTextAreaElement).value,
               })}
           >
@@ -253,7 +263,7 @@ export class EditorComponent extends MobxLitElement {
                 class="group-title-input"
                 .value=${group.title}
                 @input=${(e: Event) =>
-                  this.updateItem(item, {
+                  this.updatePromptItem(item, {
                     title: (e.target as HTMLInputElement).value,
                   })}
                 @click=${(e: Event) => e.stopPropagation()}
@@ -307,7 +317,7 @@ export class EditorComponent extends MobxLitElement {
             <select
               .value=${item.stageId}
               @change=${(e: Event) =>
-                this.updateItem(item, {
+                this.updatePromptItem(item, {
                   stageId: (e.target as HTMLSelectElement).value,
                 })}
             >
@@ -328,7 +338,7 @@ export class EditorComponent extends MobxLitElement {
               type="checkbox"
               .checked=${item.includePrimaryText}
               @change=${() =>
-                this.updateItem(item, {
+                this.updatePromptItem(item, {
                   includePrimaryText: !item.includePrimaryText,
                 })}
             />
@@ -339,7 +349,9 @@ export class EditorComponent extends MobxLitElement {
               type="checkbox"
               .checked=${item.includeInfoText}
               @change=${() =>
-                this.updateItem(item, {includeInfoText: !item.includeInfoText})}
+                this.updatePromptItem(item, {
+                  includeInfoText: !item.includeInfoText,
+                })}
             />
             <div>Include stage info popup</div>
           </label>
@@ -348,7 +360,9 @@ export class EditorComponent extends MobxLitElement {
               type="checkbox"
               .checked=${item.includeHelpText}
               @change=${() =>
-                this.updateItem(item, {includeHelpText: !item.includeHelpText})}
+                this.updatePromptItem(item, {
+                  includeHelpText: !item.includeHelpText,
+                })}
             />
             <div>Include stage help popup</div>
           </label>
@@ -357,7 +371,7 @@ export class EditorComponent extends MobxLitElement {
               type="checkbox"
               .checked=${item.includeStageDisplay}
               @change=${() =>
-                this.updateItem(item, {
+                this.updatePromptItem(item, {
                   includeStageDisplay: !item.includeStageDisplay,
                 })}
             />
@@ -370,7 +384,7 @@ export class EditorComponent extends MobxLitElement {
               type="checkbox"
               .checked=${item.includeParticipantAnswers}
               @change=${() =>
-                this.updateItem(item, {
+                this.updatePromptItem(item, {
                   includeParticipantAnswers: !item.includeParticipantAnswers,
                 })}
             />
