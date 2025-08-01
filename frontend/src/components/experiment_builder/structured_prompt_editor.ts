@@ -161,18 +161,7 @@ export class EditorComponent extends MobxLitElement {
   private renderItemEditor(item: PromptItem): TemplateResult | typeof nothing {
     switch (item.type) {
       case PromptItemType.TEXT:
-        const textItem = item as TextPromptItem;
-        return html`
-          <pr-textarea
-            placeholder="Add freeform text here"
-            .value=${textItem.text}
-            @input=${(e: Event) =>
-              this.updatePromptItem(item, {
-                text: (e.target as HTMLTextAreaElement).value,
-              })}
-          >
-          </pr-textarea>
-        `;
+        return this.renderTextPromptItemEditor(item as TextPromptItem);
       case PromptItemType.STAGE_CONTEXT:
         return this.renderStageContextPromptItemEditor(
           item as StageContextPromptItem,
@@ -270,6 +259,21 @@ export class EditorComponent extends MobxLitElement {
         </div>
       `,
     );
+  }
+
+  private renderTextPromptItemEditor(item: TextPromptItem) {
+    const onInput = (e: InputEvent) => {
+      const text = (e.target as HTMLTextAreaElement).value;
+      this.updatePromptItem(item, {text: text});
+    };
+    return html`
+      <pr-textarea
+        placeholder="Add freeform text here"
+        .value=${item.text}
+        @input=${onInput}
+      >
+      </pr-textarea>
+    `;
   }
 
   private renderStageContextPromptItemEditor(item: StageContextPromptItem) {
