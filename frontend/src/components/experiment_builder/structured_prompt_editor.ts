@@ -39,6 +39,40 @@ export class EditorComponent extends MobxLitElement {
   ) => {};
 
   override render() {
+    return this.renderPromptPreview();
+  }
+
+  private updateItem = (item: PromptItem, updates: Partial<PromptItem>) => {
+    Object.assign(item, updates);
+    this.onUpdate(this.prompt);
+  };
+
+  private addItem(targetArray: PromptItem[], item: PromptItem) {
+    targetArray.push(item);
+    this.onUpdate(this.prompt);
+  }
+
+  private deleteItem(targetArray: PromptItem[], index: number) {
+    targetArray.splice(index, 1);
+    this.onUpdate(this.prompt);
+  }
+
+  private moveItem(
+    targetArray: PromptItem[],
+    index: number,
+    direction: number,
+  ) {
+    const newIndex = index + direction;
+    if (newIndex >= 0 && newIndex < targetArray.length) {
+      [targetArray[index], targetArray[newIndex]] = [
+        targetArray[newIndex],
+        targetArray[index],
+      ];
+      this.onUpdate(this.prompt);
+    }
+  }
+
+  private renderPromptPreview() {
     const getStructuredOutput = () => {
       const config = this.structuredOutputConfig;
       if (config && structuredOutputEnabled(config) && config.schema) {
@@ -57,6 +91,72 @@ export class EditorComponent extends MobxLitElement {
           ${this.renderPromptItems(this.prompt)}${getStructuredOutput()}
         </div>
       </div>
+    `;
+  }
+
+  private renderAddMenu(targetArray: PromptItem[], isRoot: boolean) {
+    return html`
+      <pr-menu
+        name="Add item"
+        icon="add_circle"
+        color="neutral"
+        variant="default"
+        size=${isRoot ? 'medium' : 'small'}
+      >
+        <div class="menu-wrapper">
+          <div
+            class="menu-item"
+            role="button"
+            @click=${() =>
+              this.addItem(targetArray, {type: PromptItemType.TEXT, text: ''})}
+          >
+            Freeform text
+          </div>
+          <div
+            class="menu-item"
+            role="button"
+            @click=${() =>
+              this.addItem(
+                targetArray,
+                createDefaultStageContextPromptItem(this.stageId),
+              )}
+          >
+            Stage context
+          </div>
+          <div
+            class="menu-item"
+            role="button"
+            @click=${() =>
+              this.addItem(targetArray, {type: PromptItemType.PROFILE_CONTEXT})}
+          >
+            Custom agent context
+          </div>
+          <div
+            class="menu-item"
+            role="button"
+            @click=${() =>
+              this.addItem(targetArray, {type: PromptItemType.PROFILE_INFO})}
+          >
+            Profile info (avatar, name, pronouns)
+          </div>
+          ${isRoot
+            ? html`
+                <div
+                  class="menu-item"
+                  role="button"
+                  @click=${() =>
+                    this.addItem(targetArray, {
+                      type: PromptItemType.GROUP,
+                      title: 'New Group',
+                      items: [],
+                    })}
+                >
+                  Group of items
+                </div>
+              `
+            : nothing}
+        </div>
+      </pr-menu>
     `;
   }
 
@@ -279,102 +379,6 @@ export class EditorComponent extends MobxLitElement {
         </div>
       </details>
     `;
-  }
-
-  private renderAddMenu(targetArray: PromptItem[], isRoot: boolean) {
-    return html`
-      <pr-menu
-        name="Add item"
-        icon="add_circle"
-        color="neutral"
-        variant="default"
-        size=${isRoot ? 'medium' : 'small'}
-      >
-        <div class="menu-wrapper">
-          <div
-            class="menu-item"
-            role="button"
-            @click=${() =>
-              this.addItem(targetArray, {type: PromptItemType.TEXT, text: ''})}
-          >
-            Freeform text
-          </div>
-          <div
-            class="menu-item"
-            role="button"
-            @click=${() =>
-              this.addItem(
-                targetArray,
-                createDefaultStageContextPromptItem(this.stageId),
-              )}
-          >
-            Stage context
-          </div>
-          <div
-            class="menu-item"
-            role="button"
-            @click=${() =>
-              this.addItem(targetArray, {type: PromptItemType.PROFILE_CONTEXT})}
-          >
-            Custom agent context
-          </div>
-          <div
-            class="menu-item"
-            role="button"
-            @click=${() =>
-              this.addItem(targetArray, {type: PromptItemType.PROFILE_INFO})}
-          >
-            Profile info (avatar, name, pronouns)
-          </div>
-          ${isRoot
-            ? html`
-                <div
-                  class="menu-item"
-                  role="button"
-                  @click=${() =>
-                    this.addItem(targetArray, {
-                      type: PromptItemType.GROUP,
-                      title: 'New Group',
-                      items: [],
-                    })}
-                >
-                  Group of items
-                </div>
-              `
-            : nothing}
-        </div>
-      </pr-menu>
-    `;
-  }
-
-  private updateItem = (item: PromptItem, updates: Partial<PromptItem>) => {
-    Object.assign(item, updates);
-    this.onUpdate(this.prompt);
-  };
-
-  private addItem(targetArray: PromptItem[], item: PromptItem) {
-    targetArray.push(item);
-    this.onUpdate(this.prompt);
-  }
-
-  private deleteItem(targetArray: PromptItem[], index: number) {
-    targetArray.splice(index, 1);
-    this.onUpdate(this.prompt);
-  }
-
-  private moveItem(
-    targetArray: PromptItem[],
-    index: number,
-    direction: number,
-  ) {
-    const newIndex = index + direction;
-    if (newIndex >= 0 && newIndex < targetArray.length) {
-      [targetArray[index], targetArray[newIndex]] = [
-        targetArray[newIndex],
-        targetArray[index],
-      ];
-      this.onUpdate(this.prompt);
-    }
   }
 }
 
