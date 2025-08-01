@@ -54,13 +54,13 @@ export class EditorComponent extends MobxLitElement {
           ${this.renderAddMenu(this.prompt, true)}
         </div>
         <div class="prompt">
-          ${this.renderItems(this.prompt)}${getStructuredOutput()}
+          ${this.renderPromptItems(this.prompt)}${getStructuredOutput()}
         </div>
       </div>
     `;
   }
 
-  private renderItems(items: PromptItem[], isNested = false) {
+  private renderPromptItems(items: PromptItem[], isNested = false) {
     if (items.length === 0) {
       return html`<div
         class="${isNested ? 'empty-group' : 'prompt-item-wrapper'}"
@@ -164,7 +164,7 @@ export class EditorComponent extends MobxLitElement {
                 ${this.renderAddMenu(group.items, false)}
               </div>
               <div class="group-items">
-                ${this.renderItems(group.items, true)}
+                ${this.renderPromptItems(group.items, true)}
               </div>
             </div>
           </details>
