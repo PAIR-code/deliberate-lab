@@ -34,6 +34,9 @@ export class EditorComponent extends MobxLitElement {
   @property() stageId = '';
   @property() structuredOutputConfig: StructuredOutputConfig | undefined =
     undefined;
+  @property() onUpdate: (prompt: PromptItem[]) => void = (
+    prompt: PromptItem[],
+  ) => {};
 
   override render() {
     const structuredOutput =
@@ -98,15 +101,15 @@ export class EditorComponent extends MobxLitElement {
   private renderItemEditor(item: PromptItem): TemplateResult | typeof nothing {
     switch (item.type) {
       case PromptItemType.TEXT:
+        const textItem = item as TextPromptItem;
         return html`
           <pr-textarea
             placeholder="Add freeform text here"
-            .value=${(item as TextPromptItem).text}
-            @input=${(e: Event) => {
-              (item as TextPromptItem).text = (
-                e.target as HTMLTextAreaElement
-              ).value;
-            }}
+            .value=${textItem.text}
+            @input=${(e: Event) =>
+              this.updateItem(item, {
+                text: (e.target as HTMLTextAreaElement).value,
+              })}
           >
           </pr-textarea>
         `;
@@ -145,9 +148,10 @@ export class EditorComponent extends MobxLitElement {
                 type="text"
                 class="group-title-input"
                 .value=${group.title}
-                @input=${(e: Event) => {
-                  group.title = (e.target as HTMLInputElement).value;
-                }}
+                @input=${(e: Event) =>
+                  this.updateItem(item, {
+                    title: (e.target as HTMLInputElement).value,
+                  })}
                 @click=${(e: Event) => e.stopPropagation()}
               />
             </summary>
@@ -199,9 +203,10 @@ export class EditorComponent extends MobxLitElement {
             <label>Select stage:</label>
             <select
               .value=${item.stageId}
-              @change=${(e: Event) => {
-                item.stageId = (e.target as HTMLSelectElement).value;
-              }}
+              @change=${(e: Event) =>
+                this.updateItem(item, {
+                  stageId: (e.target as HTMLSelectElement).value,
+                })}
             >
               ${availableStages.map(
                 (stage, stageIndex) => html`
@@ -219,9 +224,10 @@ export class EditorComponent extends MobxLitElement {
             <input
               type="checkbox"
               .checked=${item.includePrimaryText}
-              @change=${() => {
-                item.includePrimaryText = !item.includePrimaryText;
-              }}
+              @change=${() =>
+                this.updateItem(item, {
+                  includePrimaryText: !item.includePrimaryText,
+                })}
             />
             <div>Include stage description</div>
           </label>
@@ -229,9 +235,8 @@ export class EditorComponent extends MobxLitElement {
             <input
               type="checkbox"
               .checked=${item.includeInfoText}
-              @change=${() => {
-                item.includeInfoText = !item.includeInfoText;
-              }}
+              @change=${() =>
+                this.updateItem(item, {includeInfoText: !item.includeInfoText})}
             />
             <div>Include stage info popup</div>
           </label>
@@ -239,9 +244,8 @@ export class EditorComponent extends MobxLitElement {
             <input
               type="checkbox"
               .checked=${item.includeHelpText}
-              @change=${() => {
-                item.includeHelpText = !item.includeHelpText;
-              }}
+              @change=${() =>
+                this.updateItem(item, {includeHelpText: !item.includeHelpText})}
             />
             <div>Include stage help popup</div>
           </label>
@@ -249,9 +253,10 @@ export class EditorComponent extends MobxLitElement {
             <input
               type="checkbox"
               .checked=${item.includeStageDisplay}
-              @change=${() => {
-                item.includeStageDisplay = !item.includeStageDisplay;
-              }}
+              @change=${() =>
+                this.updateItem(item, {
+                  includeStageDisplay: !item.includeStageDisplay,
+                })}
             />
             <div>
               Include stage content (e.g., chat history, survey questions)
@@ -261,10 +266,10 @@ export class EditorComponent extends MobxLitElement {
             <input
               type="checkbox"
               .checked=${item.includeParticipantAnswers}
-              @change=${() => {
-                item.includeParticipantAnswers =
-                  !item.includeParticipantAnswers;
-              }}
+              @change=${() =>
+                this.updateItem(item, {
+                  includeParticipantAnswers: !item.includeParticipantAnswers,
+                })}
             />
             <div>Include participant stage answers</div>
           </label>
@@ -339,12 +344,19 @@ export class EditorComponent extends MobxLitElement {
     `;
   }
 
+  private updateItem = (item: PromptItem, updates: Partial<PromptItem>) => {
+    Object.assign(item, updates);
+    this.onUpdate(this.prompt);
+  };
+
   private addItem(targetArray: PromptItem[], item: PromptItem) {
     targetArray.push(item);
+    this.onUpdate(this.prompt);
   }
 
   private deleteItem(targetArray: PromptItem[], index: number) {
     targetArray.splice(index, 1);
+    this.onUpdate(this.prompt);
   }
 
   private moveItem(
@@ -358,6 +370,7 @@ export class EditorComponent extends MobxLitElement {
         targetArray[newIndex],
         targetArray[index],
       ];
+      this.onUpdate(this.prompt);
     }
   }
 }
