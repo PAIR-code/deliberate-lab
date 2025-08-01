@@ -146,13 +146,9 @@ export class EditorComponent extends MobxLitElement {
           <div class="menu-item" role="button" @click=${addProfileInfo}>
             Profile info (avatar, name, pronouns)
           </div>
-          ${isRoot
-            ? html`
-                <div class="menu-item" role="button" @click=${addGroup}>
-                  Group of items
-                </div>
-              `
-            : nothing}
+          <div class="menu-item" role="button" @click=${addGroup}>
+            Group of items
+          </div>
         </div>
       </pr-menu>
     `;
