@@ -98,6 +98,40 @@ export class EditorComponent extends MobxLitElement {
   }
 
   private renderAddMenu(targetArray: PromptItem[], isRoot: boolean) {
+    const addText = () => {
+      this.addPromptItem(targetArray, {
+        type: PromptItemType.TEXT,
+        text: '',
+      });
+    };
+
+    const addStageContext = () => {
+      this.addPromptItem(
+        targetArray,
+        createDefaultStageContextPromptItem(this.stageId),
+      );
+    };
+
+    const addProfileContext = () => {
+      this.addPromptItem(targetArray, {
+        type: PromptItemType.PROFILE_CONTEXT,
+      });
+    };
+
+    const addProfileInfo = () => {
+      this.addPromptItem(targetArray, {
+        type: PromptItemType.PROFILE_INFO,
+      });
+    };
+
+    const addGroup = () => {
+      this.addPromptItem(targetArray, {
+        type: PromptItemType.GROUP,
+        title: 'New Group',
+        items: [],
+      });
+    };
+
     return html`
       <pr-menu
         name="Add item"
@@ -107,60 +141,21 @@ export class EditorComponent extends MobxLitElement {
         size=${isRoot ? 'medium' : 'small'}
       >
         <div class="menu-wrapper">
-          <div
-            class="menu-item"
-            role="button"
-            @click=${() =>
-              this.addPromptItem(targetArray, {
-                type: PromptItemType.TEXT,
-                text: '',
-              })}
-          >
+          <div class="menu-item" role="button" @click=${addText}>
             Freeform text
           </div>
-          <div
-            class="menu-item"
-            role="button"
-            @click=${() =>
-              this.addPromptItem(
-                targetArray,
-                createDefaultStageContextPromptItem(this.stageId),
-              )}
-          >
+          <div class="menu-item" role="button" @click=${addStageContext}>
             Stage context
           </div>
-          <div
-            class="menu-item"
-            role="button"
-            @click=${() =>
-              this.addPromptItem(targetArray, {
-                type: PromptItemType.PROFILE_CONTEXT,
-              })}
-          >
+          <div class="menu-item" role="button" @click=${addProfileContext}>
             Custom agent context
           </div>
-          <div
-            class="menu-item"
-            role="button"
-            @click=${() =>
-              this.addPromptItem(targetArray, {
-                type: PromptItemType.PROFILE_INFO,
-              })}
-          >
+          <div class="menu-item" role="button" @click=${addProfileInfo}>
             Profile info (avatar, name, pronouns)
           </div>
           ${isRoot
             ? html`
-                <div
-                  class="menu-item"
-                  role="button"
-                  @click=${() =>
-                    this.addPromptItem(targetArray, {
-                      type: PromptItemType.GROUP,
-                      title: 'New Group',
-                      items: [],
-                    })}
-                >
+                <div class="menu-item" role="button" @click=${addGroup}>
                   Group of items
                 </div>
               `
