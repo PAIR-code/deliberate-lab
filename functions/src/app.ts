@@ -17,3 +17,4 @@ import * as admin from 'firebase-admin';
 export const app = admin.initializeApp({
   databaseURL: `https://${process.env.GCLOUD_PROJECT}-default-rtdb.firebaseio.com`,
 });
+app.firestore().settings({ ignoreUndefinedProperties: true });
