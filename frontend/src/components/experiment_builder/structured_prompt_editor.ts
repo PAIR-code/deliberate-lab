@@ -54,16 +54,21 @@ export class EditorComponent extends MobxLitElement {
           ${this.renderAddMenu(this.prompt, true)}
         </div>
         <div class="prompt">
-          ${this.prompt.length === 0
-            ? html`<div class="prompt-item-wrapper">⚠️ No items added yet</div>`
-            : this.renderItems(this.prompt)}
-          ${getStructuredOutput()}
+          ${this.renderItems(this.prompt)}${getStructuredOutput()}
         </div>
       </div>
     `;
   }
 
   private renderItems(items: PromptItem[], isNested = false) {
+    if (items.length === 0) {
+      return html`<div
+        class="${isNested ? 'empty-group' : 'prompt-item-wrapper'}"
+      >
+        ${isNested ? 'No items in group yet' : '⚠️ No items added yet'}
+      </div>`;
+    }
+
     return items.map(
       (item, index) => html`
         <div class="prompt-item-wrapper ${isNested ? 'nested' : ''}">
@@ -159,9 +164,7 @@ export class EditorComponent extends MobxLitElement {
                 ${this.renderAddMenu(group.items, false)}
               </div>
               <div class="group-items">
-                ${group.items.length === 0
-                  ? html`<div class="empty-group">No items in group yet</div>`
-                  : this.renderItems(group.items, true)}
+                ${this.renderItems(group.items, true)}
               </div>
             </div>
           </details>
