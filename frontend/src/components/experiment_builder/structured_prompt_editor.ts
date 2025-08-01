@@ -186,32 +186,7 @@ export class EditorComponent extends MobxLitElement {
           </details>
         `;
       case PromptItemType.GROUP:
-        const group = item as PromptItemGroup;
-        return html`
-          <details open>
-            <summary class="chip secondary">
-              Group:
-              <input
-                type="text"
-                class="group-title-input"
-                .value=${group.title}
-                @input=${(e: Event) =>
-                  this.updatePromptItem(item, {
-                    title: (e.target as HTMLInputElement).value,
-                  })}
-                @click=${(e: Event) => e.stopPropagation()}
-              />
-            </summary>
-            <div class="chip-collapsible group-content">
-              <div class="group-header">
-                ${this.renderAddMenu(group.items, false)}
-              </div>
-              <div class="group-items">
-                ${this.renderPromptItems(group.items, true)}
-              </div>
-            </div>
-          </details>
-        `;
+        return this.renderPromptItemGroupEditor(item as PromptItemGroup);
       default:
         return nothing;
     }
@@ -382,6 +357,34 @@ export class EditorComponent extends MobxLitElement {
             />
             <div>Include participant stage answers</div>
           </label>
+        </div>
+      </details>
+    `;
+  }
+
+  private renderPromptItemGroupEditor(group: PromptItemGroup) {
+    return html`
+      <details open>
+        <summary class="chip secondary">
+          Group:
+          <input
+            type="text"
+            class="group-title-input"
+            .value=${group.title}
+            @input=${(e: Event) =>
+              this.updatePromptItem(group, {
+                title: (e.target as HTMLInputElement).value,
+              })}
+            @click=${(e: Event) => e.stopPropagation()}
+          />
+        </summary>
+        <div class="chip-collapsible group-content">
+          <div class="group-header">
+            ${this.renderAddMenu(group.items, false)}
+          </div>
+          <div class="group-items">
+            ${this.renderPromptItems(group.items, true)}
+          </div>
         </div>
       </details>
     `;
