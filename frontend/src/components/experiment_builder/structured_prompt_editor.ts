@@ -99,10 +99,15 @@ export class EditorComponent extends MobxLitElement {
 
   private renderAddMenu(targetArray: PromptItem[], isRoot: boolean) {
     const addText = () => {
-      this.addPromptItem(targetArray, {
-        type: PromptItemType.TEXT,
-        text: '',
-      });
+      this.addPromptItem(targetArray, {type: PromptItemType.TEXT, text: ''});
+    };
+
+    const addProfileContext = () => {
+      this.addPromptItem(targetArray, {type: PromptItemType.PROFILE_CONTEXT});
+    };
+
+    const addProfileInfo = () => {
+      this.addPromptItem(targetArray, {type: PromptItemType.PROFILE_INFO});
     };
 
     const addStageContext = () => {
@@ -110,18 +115,6 @@ export class EditorComponent extends MobxLitElement {
         targetArray,
         createDefaultStageContextPromptItem(this.stageId),
       );
-    };
-
-    const addProfileContext = () => {
-      this.addPromptItem(targetArray, {
-        type: PromptItemType.PROFILE_CONTEXT,
-      });
-    };
-
-    const addProfileInfo = () => {
-      this.addPromptItem(targetArray, {
-        type: PromptItemType.PROFILE_INFO,
-      });
     };
 
     const addGroup = () => {
