@@ -14,11 +14,8 @@ import {
   PromptItemType,
   PromptItemGroup,
   StageContextPromptItem,
-  StructuredOutputConfig,
   TextPromptItem,
   createDefaultStageContextPromptItem,
-  makeStructuredOutputPrompt,
-  structuredOutputEnabled,
 } from '@deliberation-lab/utils';
 
 import {styles} from './structured_prompt_editor.scss';
@@ -32,8 +29,6 @@ export class EditorComponent extends MobxLitElement {
 
   @property() prompt: PromptItem[] = [];
   @property() stageId = '';
-  @property() structuredOutputConfig: StructuredOutputConfig | undefined =
-    undefined;
   @property() onUpdate: (prompt: PromptItem[]) => void = (
     prompt: PromptItem[],
   ) => {};
@@ -76,23 +71,13 @@ export class EditorComponent extends MobxLitElement {
   }
 
   private renderPromptPreview() {
-    const getStructuredOutput = () => {
-      const config = this.structuredOutputConfig;
-      if (config && structuredOutputEnabled(config) && config.schema) {
-        return makeStructuredOutputPrompt(config);
-      }
-      return '';
-    };
-
     return html`
       <div class="prompt-wrapper">
         <div class="header">
           <div class="title">Prompt editor</div>
           ${this.renderAddMenu(this.prompt, true)}
         </div>
-        <div class="prompt">
-          ${this.renderPromptItems(this.prompt)}${getStructuredOutput()}
-        </div>
+        <div class="prompt">${this.renderPromptItems(this.prompt)}</div>
       </div>
     `;
   }
