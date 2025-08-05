@@ -16,6 +16,7 @@ import {
   StageContextPromptItem,
   TextPromptItem,
   createDefaultStageContextPromptItem,
+  createDefaultPromptItemGroup,
 } from '@deliberation-lab/utils';
 
 import {styles} from './structured_prompt_editor.scss';
@@ -103,11 +104,7 @@ export class EditorComponent extends MobxLitElement {
     };
 
     const addGroup = () => {
-      this.addPromptItem(targetArray, {
-        type: PromptItemType.GROUP,
-        title: 'New Group',
-        items: [],
-      });
+      this.addPromptItem(targetArray, createDefaultPromptItemGroup());
     };
 
     return html`

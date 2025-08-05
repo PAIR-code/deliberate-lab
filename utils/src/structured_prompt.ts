@@ -132,6 +132,18 @@ export function createDefaultStageContextPromptItem(
   };
 }
 
+// Create prompt item group with defaults
+export function createDefaultPromptItemGroup(
+  title: string = 'New Group',
+  items: PromptItem[] = [],
+): PromptItemGroup {
+  return {
+    type: PromptItemType.GROUP,
+    title,
+    items,
+  };
+}
+
 // Default prompt includes current stage context
 export function createDefaultPromptFromText(
   text: string,
