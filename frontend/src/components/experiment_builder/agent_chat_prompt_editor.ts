@@ -5,6 +5,7 @@ import '../../pair-components/textarea';
 import '@material/web/checkbox/checkbox.js';
 
 import './structured_prompt_editor';
+import {renderShuffleIndicator} from './structured_prompt_editor';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -231,7 +232,7 @@ export class EditorComponent extends MobxLitElement {
         case PromptItemType.GROUP:
           const group = item as PromptItemGroup;
           // prettier-ignore
-          return html`<details class="prompt-group-preview" open><summary class="chip tertiary">GROUP: ${group.title}</summary><div class="chip-collapsible">${group.items.map((subItem) => renderPromptItem(subItem))}</div></details>`;
+          return html`<details class="prompt-group-preview" open><summary class="chip tertiary">GROUP: ${group.title} ${renderShuffleIndicator(group.shuffleConfig)}</summary><div class="chip-collapsible">${group.items.map((subItem) => renderPromptItem(subItem))}</div></details>`;
         default:
           return html`<div class="chip tertiary">${item.type}</div>`;
       }

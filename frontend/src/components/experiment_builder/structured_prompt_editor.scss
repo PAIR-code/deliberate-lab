@@ -160,3 +160,32 @@ pr-textarea {
   padding: common.$spacing-medium;
   text-align: center;
 }
+
+.shuffle-config {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+  background: var(--md-sys-color-surface);
+  border-radius: common.$spacing-small;
+  margin-bottom: common.$spacing-medium;
+  flex-wrap: wrap;
+
+  select,
+  input[type='text'] {
+    padding: common.$spacing-small;
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: common.$spacing-xs;
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    font-family: inherit;
+    font-size: inherit;
+  }
+
+  select {
+    width: fit-content;
+  }
+
+  input[type='text'] {
+    flex: 1;
+  }
+}

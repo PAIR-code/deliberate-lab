@@ -1,5 +1,12 @@
 /** Random utilities that support seeding. */
 
+/** Configuration for shuffling items with different seed strategies */
+export interface ShuffleConfig {
+  shuffle: boolean;
+  seed: 'experiment' | 'cohort' | 'participant' | 'custom';
+  customSeed: string; // Always set, but only used when seed is 'custom'
+}
+
 // ********************************************************************************************* //
 //                                             SEED                                              //
 // ********************************************************************************************* //
