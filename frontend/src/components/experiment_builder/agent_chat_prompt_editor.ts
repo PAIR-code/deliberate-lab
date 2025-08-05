@@ -512,7 +512,7 @@ export class EditorComponent extends MobxLitElement {
       const appendToPrompt = !config.appendToPrompt;
       updateConfig({appendToPrompt});
     };
-    const updateType = (e: InputEvent) => {
+    const updateType = (e: Event) => {
       const type = (e.target as HTMLSelectElement)
         .value as StructuredOutputType;
       updateConfig({type});
@@ -531,17 +531,26 @@ export class EditorComponent extends MobxLitElement {
           </div>
           <select
             id="structuredOutputType"
-            .selected=${config.type}
             @change=${updateType}
             ?disabled=${!this.experimentEditor.canEditStages}
           >
-            <option value="${StructuredOutputType.NONE}">
+            <option
+              value="${StructuredOutputType.NONE}"
+              ?selected=${!config.type ||
+              config.type === StructuredOutputType.NONE}
+            >
               No output forcing
             </option>
-            <option value="${StructuredOutputType.JSON_FORMAT}">
+            <option
+              value="${StructuredOutputType.JSON_FORMAT}"
+              ?selected=${config.type === StructuredOutputType.JSON_FORMAT}
+            >
               Force JSON output
             </option>
-            <option value="${StructuredOutputType.JSON_SCHEMA}">
+            <option
+              value="${StructuredOutputType.JSON_SCHEMA}"
+              ?selected=${config.type === StructuredOutputType.JSON_SCHEMA}
+            >
               Force JSON output with schema
             </option>
           </select>
