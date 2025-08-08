@@ -1,6 +1,8 @@
 import {
-  ALTERNATE_PROFILE_SET_ID,
+  SECONDARY_PROFILE_SET_ID,
+  TERTIARY_PROFILE_SET_ID,
   PROFILE_SET_ANIMALS_2_ID,
+  PROFILE_SET_NATURE_ID,
   ParticipantProfile,
   ParticipantStatus,
   ProfileType,
@@ -20,10 +22,16 @@ export function getParticipantInlineDisplay(
   stageId = '',
 ) {
   if (
-    stageId.includes(ALTERNATE_PROFILE_SET_ID) &&
+    stageId.includes(SECONDARY_PROFILE_SET_ID) &&
     participant.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID]
   ) {
     const anon = participant.anonymousProfiles[PROFILE_SET_ANIMALS_2_ID];
+    return `${anon.avatar} ${anon.name}${showIsSelf ? ' (you)' : ''}`;
+  } else if (
+    stageId.includes(TERTIARY_PROFILE_SET_ID) &&
+    participant.anonymousProfiles[PROFILE_SET_NATURE_ID]
+  ) {
+    const anon = participant.anonymousProfiles[PROFILE_SET_NATURE_ID];
     return `${anon.avatar} ${anon.name}${showIsSelf ? ' (you)' : ''}`;
   }
 

@@ -98,6 +98,12 @@ select {
   width: 100%;
 }
 
+.prompt-group-preview {
+  border: 2px solid var(--md-sys-color-outline-variant);
+  border-radius: common.$spacing-medium;
+  padding: common.$spacing-medium;
+}
+
 pre {
   background: var(--md-sys-color-surface-variant);
   margin: 0;

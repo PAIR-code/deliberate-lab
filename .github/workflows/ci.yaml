@@ -3,8 +3,30 @@ name: Check format and run tests
 on: [push, pull_request]
 
 jobs:
-  format_and_test:
-    name: Check format and run tests
+  format:
+    name: Check format
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Check format
+      run: |
+        npx prettier --check "**/*.ts"
+        npx eslint "**/*.ts"
+
+  test:
+    name: Run tests
 
     runs-on: ubuntu-latest
 
@@ -19,11 +41,6 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-
-    - name: Check format
-      run: |
-        npx prettier --check "**/*.ts"
-        npx eslint "**/*.ts"
 
     - name: Build utils
       working-directory: ./utils

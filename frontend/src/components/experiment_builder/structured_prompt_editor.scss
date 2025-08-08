@@ -48,6 +48,11 @@
   &.secondary {
     color: var(--md-sys-color-secondary);
   }
+
+  &.group-content {
+    background: var(--md-sys-color-surface-variant);
+    color: inherit;
+  }
 }
 
 .prompt-item-wrapper {
@@ -110,5 +115,77 @@ pr-textarea {
     color: var(--md-sys-color-on-surface);
     font-family: inherit;
     font-size: inherit;
+  }
+}
+
+.group-title-input {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  outline: none;
+  padding: 0;
+  width: 200px;
+
+  &:focus {
+    text-decoration: underline;
+  }
+}
+
+.group-content {
+  @include common.flex-column;
+  gap: common.$spacing-medium;
+}
+
+.group-header {
+  @include common.flex-row-align-center;
+  justify-content: flex-end;
+  padding-bottom: common.$spacing-small;
+}
+
+.group-items {
+  @include common.flex-column;
+  gap: common.$spacing-small;
+  padding-left: common.$spacing-large;
+}
+
+.prompt-item-wrapper.nested {
+  margin-left: common.$spacing-large;
+}
+
+.empty-group {
+  @include typescale.body-small;
+  color: var(--md-sys-color-outline);
+  font-style: italic;
+  padding: common.$spacing-medium;
+  text-align: center;
+}
+
+.shuffle-config {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-medium;
+  padding: common.$spacing-medium;
+  background: var(--md-sys-color-surface);
+  border-radius: common.$spacing-small;
+  margin-bottom: common.$spacing-medium;
+  flex-wrap: wrap;
+
+  select,
+  input[type='text'] {
+    padding: common.$spacing-small;
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: common.$spacing-xs;
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    font-family: inherit;
+    font-size: inherit;
+  }
+
+  select {
+    width: fit-content;
+  }
+
+  input[type='text'] {
+    flex: 1;
   }
 }

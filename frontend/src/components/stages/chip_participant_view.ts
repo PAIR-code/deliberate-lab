@@ -7,7 +7,7 @@ import './stage_footer';
 import '../../pair-components/tooltip';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
-import {CSSResultGroup, html, nothing} from 'lit';
+import {css, CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 
@@ -17,28 +17,21 @@ import {CohortService} from '../../services/cohort.service';
 import {ParticipantService} from '../../services/participant.service';
 import {ParticipantAnswerService} from '../../services/participant.answer';
 import {getParticipantInlineDisplay} from '../../shared/participant.utils';
+import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 import {
-  ChipAssistanceConfig,
   ChipAssistanceMode,
   ChipAssistanceType,
-  ChipItem,
-  ChipLogEntry,
-  ChipLogType,
   ChipOffer,
   ChipStagePublicData,
   ChipStageConfig,
   ChipStageParticipantAnswer,
-  ChipTransaction,
-  ChipTransactionStatus,
   SimpleChipLog,
   StageKind,
-  ParticipantProfile,
   calculateChipOfferPayout,
-  convertChipLogToPromptFormat,
   createChipOffer,
   displayChipOfferText,
   getChipLogs,
-  isChipOfferAcceptable,
+  getChipOfferChecks,
 } from '@deliberation-lab/utils';
 import {convertUnifiedTimestampToDate} from '../../shared/utils';
 
@@ -59,29 +52,15 @@ export class ChipView extends MobxLitElement {
   @property() stage: ChipStageConfig | null = null;
   @property() answer: ChipStageParticipantAnswer | null = null;
 
-  @state() isOfferLoading = false;
   @state() isAcceptOfferLoading = false;
   @state() isRejectOfferLoading = false;
   @state() isSetTurnLoading = false;
-
-  // Offer interface variables
-  @state() selectedBuyChip: string = '';
-  @state() selectedSellChip: string = '';
-  @state() buyChipAmount: number = 0;
-  @state() sellChipAmount: number = 0;
 
   // Loading states for assistance buttons
   @state() isAssistanceNoneLoading = false;
   @state() isAssistanceAdvisorLoading = false;
   @state() isAssistanceCoachLoading = false;
   @state() isAssistanceDelegateLoading = false;
-
-  resetChipValues() {
-    this.selectedBuyChip = '';
-    this.selectedSellChip = '';
-    this.buyChipAmount = 0;
-    this.sellChipAmount = 0;
-  }
 
   override render() {
     if (!this.stage) {
@@ -140,6 +119,25 @@ export class ChipView extends MobxLitElement {
     `;
   }
 
+  // Fallback to Manual for System Error
+  private renderErrorOffer() {
+    return html`
+      <div class="warning">
+        ⚠️ A System Error occurred. Please proceed manually.
+      </div>
+      ${this.renderManualOffer(this.sendOffer)}
+    `;
+  }
+
+  private renderErrorResponse() {
+    return html`
+      <div class="warning">
+        ⚠️ A System Error occurred. Please proceed manually.
+      </div>
+      ${this.renderManualResponse(this.acceptOffer, this.rejectOffer)}
+    `;
+  }
+
   private isAssistanceLoading() {
     return (
       this.isAssistanceNoneLoading ||
@@ -158,13 +156,15 @@ export class ChipView extends MobxLitElement {
     }
 
     if (
-      !publicData.isGameOver &&
-      this.participantService.completedStage(this.stage.id)
+      (!publicData.isGameOver &&
+        this.participantService.completedStage(this.stage.id)) ||
+      publicData.isGameOver
     ) {
       // If game was never started because participants transferred
       // from different stage
       // TODO: Show results from the cohort game that participant
       // was in
+      // OR if game is over
       return html`
         <div class="status-panel">
           <div class="offer-panel">
@@ -182,23 +182,13 @@ export class ChipView extends MobxLitElement {
       );
     };
 
-    const renderTopLeftPanel = () => {
-      if (publicData.isGameOver) {
-        return html`
-          <div class="offer-panel">
-            ‼️ This game has ended. Please continue to the next stage.
-          </div>
-        `;
-      }
-      if (isCurrentTurn()) {
-        return this.renderSenderView();
-      }
-      return this.renderRecipientView();
-    };
-
     return html`
       <div class="status-panel-wrapper">
-        <div class="status-panel">${renderTopLeftPanel()}</div>
+        <div class="status-panel">
+          ${isCurrentTurn()
+            ? this.renderSenderView()
+            : this.renderRecipientView()}
+        </div>
       </div>
     `;
   }
@@ -219,52 +209,42 @@ export class ChipView extends MobxLitElement {
     return offerMap[currentRound][currentTurn];
   }
 
-  private isOfferPending() {
-    return this.getCurrentTransaction()?.offer ?? false;
-  }
-
-  private isOfferIncomplete() {
-    return (
-      this.selectedBuyChip === '' ||
-      this.selectedSellChip === '' ||
-      this.buyChipAmount === 0 ||
-      this.sellChipAmount === 0
-    );
-  }
-
-  private isOfferEmpty() {
-    return this.buyChipAmount === 0 && this.sellChipAmount === 0;
-  }
-
-  private getAvailableSell() {
-    /* Returns how many chips of the current selected chip we can sell. */
-    const publicData =
-      this.cohortService.stagePublicDataMap[this.stage?.id ?? ''];
-    if (publicData?.kind !== StageKind.CHIP) return 0;
-
-    const publicId = this.participantService.profile?.publicId ?? '';
-    const participantChipMap = publicData.participantChipMap[publicId] ?? {};
-    const availableSell = participantChipMap[this.selectedSellChip] ?? 0;
-
-    return availableSell;
-  }
-
-  private isOfferValid() {
-    return (
-      // Ensure different chips are selected
-      this.selectedBuyChip !== this.selectedSellChip &&
-      this.selectedBuyChip !== '' &&
-      this.selectedSellChip !== '' &&
-      Number.isInteger(this.buyChipAmount) &&
-      Number.isInteger(this.sellChipAmount) &&
-      this.buyChipAmount > 0 &&
-      this.sellChipAmount > 0 &&
-      this.sellChipAmount <= this.getAvailableSell()
-    );
-  }
-
   private renderSenderView() {
-    if (this.isOfferPending()) {
+    const isOfferPending = this.getCurrentTransaction()?.offer;
+    if (isOfferPending) {
+      // TODO: Check the participant's answer for the last chip
+      // assistance. If it was a 'delegate' and corresponds with the
+      // current round / turn marked in public data, then extract
+      // the model's explanation for the delegated offer and display that
+      // instead.
+      const publicData = this.cohortService.stagePublicDataMap[
+        this.stage?.id ?? ''
+      ] as ChipStagePublicData;
+      const currentRound = publicData?.currentRound;
+      const participantId = this.participantService.profile?.publicId ?? '';
+
+      // Step 1: search delegate assistance
+      const history = this.answer?.assistanceHistory ?? [];
+
+      const delegateMove = history.find(
+        (move) =>
+          move.selectedMode === ChipAssistanceMode.DELEGATE &&
+          move.type === ChipAssistanceType.OFFER &&
+          move.round === currentRound &&
+          move.turn === participantId,
+      );
+
+      if (delegateMove?.message) {
+        return html`
+          <div class="offer-panel">
+            <b>💡 Reasons for making this offer:</b>
+            <div>${delegateMove.message}</div>
+            <div>--------------------------------------</div>
+            <div>Waiting for others to respond to your offer...</div>
+          </div>
+        `;
+      }
+
       return html`
         <div class="offer-panel">
           Waiting for others to respond to your offer...
@@ -292,207 +272,119 @@ export class ChipView extends MobxLitElement {
     modes: ChipAssistanceMode[],
     sendOffer: () => void,
   ) {
+    // If the user already selected an assistance mode, render
+    // that specific mode
     switch (this.answer?.currentAssistance?.selectedMode) {
       case ChipAssistanceMode.NONE:
         return this.renderManualOffer(sendOffer);
       case ChipAssistanceMode.DELEGATE:
-        return this.renderDelegateButton(true);
+        return this.renderDelegateOfferButton(true);
       case ChipAssistanceMode.ADVISOR:
         return this.renderAdvisorOffer(true);
       case ChipAssistanceMode.COACH:
         return this.renderCoachOffer();
+      case ChipAssistanceMode.ERROR:
+        return this.renderErrorOffer();
       default:
         break;
     }
 
-    const renderManual = () => {
-      return html`
-        <pr-button
-          color="secondary"
-          variant="tonal"
-          ?disabled=${this.isAssistanceLoading()}
-          ?loading=${this.isAssistanceNoneLoading}
-          @click=${async () => {
-            this.isAssistanceNoneLoading = true;
-            await this.participantService.selectChipAssistanceMode(
-              this.stage?.id ?? '',
-              'none',
-            );
-            this.isAssistanceNoneLoading = false;
-          }}
-        >
-          Manually submit my own offer
-        </pr-button>
-      `;
-    };
-
-    const renderCoach = () => {
-      return html`
-        <pr-button
-          color="secondary"
-          variant="tonal"
-          ?disabled=${this.isAssistanceLoading()}
-          ?loading=${this.isAssistanceCoachLoading}
-          @click=${async () => {
-            this.isAssistanceCoachLoading = true;
-            await this.participantService.selectChipAssistanceMode(
-              this.stage?.id ?? '',
-              'coach',
-            );
-            this.isAssistanceCoachLoading = false;
-          }}
-        >
-          Give me feedback on my proposed offer
-        </pr-button>
-      `;
-    };
-
+    // Otherwise, render buttons to select available assistance modes
     return html`
-      ${modes.includes(ChipAssistanceMode.NONE) ? renderManual() : nothing}
+      ${modes.includes(ChipAssistanceMode.NONE)
+        ? this.renderSelectManualOfferButton()
+        : nothing}
       ${modes.includes(ChipAssistanceMode.DELEGATE)
-        ? this.renderDelegateButton()
+        ? this.renderDelegateOfferButton()
         : nothing}
       ${modes.includes(ChipAssistanceMode.ADVISOR)
         ? this.renderAdvisorButton()
         : nothing}
-      ${modes.includes(ChipAssistanceMode.COACH) ? renderCoach() : nothing}
+      ${modes.includes(ChipAssistanceMode.COACH)
+        ? this.renderSelectCoachOfferButton()
+        : nothing}
+    `;
+  }
+
+  private renderSelectManualOfferButton() {
+    return html`
+      <pr-button
+        color="secondary"
+        variant="tonal"
+        ?disabled=${this.isAssistanceLoading()}
+        ?loading=${this.isAssistanceNoneLoading}
+        @click=${async () => {
+          this.isAssistanceNoneLoading = true;
+          await this.participantService.selectChipAssistanceMode(
+            this.stage?.id ?? '',
+            'none',
+          );
+          this.isAssistanceNoneLoading = false;
+        }}
+      >
+        Manually submit my own offer
+      </pr-button>
+    `;
+  }
+
+  private renderSelectCoachOfferButton() {
+    return html`
+      <pr-button
+        color="secondary"
+        variant="tonal"
+        ?disabled=${this.isAssistanceLoading()}
+        ?loading=${this.isAssistanceCoachLoading}
+        @click=${async () => {
+          this.isAssistanceCoachLoading = true;
+          await this.participantService.selectChipAssistanceMode(
+            this.stage?.id ?? '',
+            'coach',
+          );
+          this.isAssistanceCoachLoading = false;
+        }}
+      >
+        Give me feedback on my proposed offer
+      </pr-button>
     `;
   }
 
   private renderManualOffer(
-    sendOffer: () => void,
-    loading = this.isOfferLoading,
+    sendOffer: (
+      selectedBuyChip: string,
+      buyChipAmount: number,
+      selectedSellChip: string,
+      sellChipAmount: number,
+    ) => void,
+    selectedBuyChip = '', // default to pass to offer form
+    buyChipAmount = 0, // default to pass to offer form
+    selectedSellChip = '', // default to pass to offer form
+    sellChipAmount = 0, // default to pass to offer form
+    isLoading = false,
     buttonText = 'Submit offer',
   ) {
-    const renderOfferPayout = () => {
-      if (this.isOfferIncomplete() || !this.isOfferValid()) {
-        return nothing;
-      }
+    const publicData =
+      this.cohortService.stagePublicDataMap[this.stage?.id ?? ''];
+    if (publicData?.kind !== StageKind.CHIP) return nothing;
 
-      return this.renderDiffDisplay(
-        'If this offer is accepted, your updated payout will be ',
-        {[this.selectedBuyChip]: this.buyChipAmount},
-        {[this.selectedSellChip]: this.sellChipAmount},
-      );
-    };
+    const isOfferPending = this.getCurrentTransaction()?.offer;
 
-    const renderValidationMessages = () => {
-      if (this.isOfferIncomplete()) {
-        return nothing;
-      }
-
-      const errors: string[] = [];
-      // Check if the offer is unacceptable
-      const publicData =
-        this.cohortService.stagePublicDataMap[this.stage?.id ?? ''];
-      const isAcceptable =
-        publicData?.kind === StageKind.CHIP
-          ? isChipOfferAcceptable(
-              this.selectedBuyChip,
-              this.buyChipAmount,
-              publicData,
-              this.participantService.profile?.publicId ?? '',
-            )
-          : false;
-      if (!isAcceptable) {
-        errors.push(
-          `⚠️ No other players have enough chips to accept your offer.`,
-        );
-      }
-      if (
-        !this.isOfferValid() &&
-        this.getAvailableSell() < this.sellChipAmount
-      ) {
-        errors.push(`‼️ You cannot give more chips than you have.`);
-      }
-      if (this.selectedBuyChip === this.selectedSellChip) {
-        errors.push(`‼️ You cannot offer to buy and sell the same chip type.`);
-      }
-
-      // Return all collected errors
-      return html`
-        <div class="warnings-panel">
-          ${errors.map((error) => html`<div class="warning">${error}</div>`)}
-        </div>
-      `;
-    };
-
+    // WARNING: Temporary hack converts chip type IDs to uppercase because
+    // we expect that for the "chip negotiation template" and the model
+    // sometimes returns lowercase IDs in the proposal
     return html`
-      <div class="offer-form">
-        <div class="offer-config">
-          <label class="offer-config-label">You give:</label>
-          ${this.renderChipNumberInput(this.sellChipAmount, (value) => {
-            this.sellChipAmount = value;
-          })}
-          ${this.renderChipSelector(this.selectedSellChip, (value) => {
-            this.selectedSellChip = value;
-          })}
-        </div>
-        <div class="offer-config">
-          <label class="offer-config-label">You get:</label>
-          ${this.renderChipNumberInput(this.buyChipAmount, (value) => {
-            this.buyChipAmount = value;
-          })}
-          ${this.renderChipSelector(this.selectedBuyChip, (value) => {
-            this.selectedBuyChip = value;
-          })}
-        </div>
-      </div>
-      <div class="buttons">
-        <pr-button
-          ?loading=${loading}
-          ?disabled=${this.isOfferEmpty() ||
-          !this.isOfferValid() ||
-          this.isOfferPending()}
-          @click=${sendOffer}
-        >
-          ${this.isOfferPending() ? 'Offer sent and pending...' : buttonText}
-        </pr-button>
-        <div>${renderOfferPayout()} ${renderValidationMessages()}</div>
-      </div>
-    `;
-  }
-
-  private renderChipNumberInput(
-    value: number,
-    onInput: (value: number) => void,
-  ) {
-    const updateInput = (e: Event) => {
-      const value = Math.floor(
-        parseInt((e.target as HTMLInputElement).value, 10),
-      );
-
-      onInput(Math.max(1, value));
-    };
-
-    return html`
-      <div class="number-input">
-        <input
-          .disabled=${this.isOfferPending()}
-          type="number"
-          min="0"
-          .value=${value}
-          @input=${updateInput}
-        />
-      </div>
-    `;
-  }
-
-  private renderChipSelector(value: string, onInput: (value: string) => void) {
-    return html`
-      <select
-        .disabled=${this.isOfferPending()}
-        .value=${value}
-        @change=${(e: Event) => {
-          onInput((e.target as HTMLSelectElement).value);
-        }}
+      <chip-offer-form
+        .stage=${this.stage}
+        .publicData=${publicData}
+        .participantPublicId=${this.participantService.profile?.publicId ?? ''}
+        .sendOffer=${sendOffer}
+        .isPending=${isLoading || isOfferPending}
+        .buttonText=${buttonText}
+        selectedBuyChip=${selectedBuyChip}
+        buyChipAmount=${buyChipAmount}
+        selectedSellChip=${selectedSellChip}
+        sellChipAmount=${sellChipAmount}
       >
-        <option value=""></option>
-        ${this.stage?.chips.map(
-          (chip) =>
-            html`<option value=${chip.id}>${chip.avatar} ${chip.name}</option>`,
-        )}
-      </select>
+      </chip-offer-form>
     `;
   }
 
@@ -580,70 +472,79 @@ export class ChipView extends MobxLitElement {
     acceptOffer: () => void,
     rejectOffer: () => void,
   ) {
+    // If the user already selected an assistance mode, render
+    // that specific mode
     switch (this.answer?.currentAssistance?.selectedMode) {
       case ChipAssistanceMode.NONE:
         return this.renderManualResponse(acceptOffer, rejectOffer);
       case ChipAssistanceMode.DELEGATE:
-        return this.renderDelegateButton(true);
+        return this.renderDelegateResponseButton(true);
       case ChipAssistanceMode.ADVISOR:
         return this.renderAdvisorResponse(true);
       case ChipAssistanceMode.COACH:
         return this.renderCoachResponse();
+      case ChipAssistanceMode.ERROR:
+        return this.renderErrorResponse();
       default:
         break;
     }
 
-    const renderManual = () => {
-      return html`
-        <pr-button
-          color="secondary"
-          variant="tonal"
-          ?disabled=${this.isAssistanceLoading()}
-          ?loading=${this.isAssistanceNoneLoading}
-          @click=${async () => {
-            this.isAssistanceNoneLoading = true;
-            await this.participantService.selectChipAssistanceMode(
-              this.stage?.id ?? '',
-              'none',
-            );
-            this.isAssistanceNoneLoading = false;
-          }}
-        >
-          Manually submit my own response
-        </pr-button>
-      `;
-    };
-
-    const renderCoach = () => {
-      return html`
-        <pr-button
-          color="secondary"
-          variant="tonal"
-          ?disabled=${this.isAssistanceLoading()}
-          ?loading=${this.isAssistanceCoachLoading}
-          @click=${async () => {
-            this.isAssistanceCoachLoading = true;
-            await this.participantService.selectChipAssistanceMode(
-              this.stage?.id ?? '',
-              'coach',
-            );
-            this.isAssistanceCoachLoading = false;
-          }}
-        >
-          Give me feedback on my proposed response
-        </pr-button>
-      `;
-    };
-
+    // Otherwise, render buttons to select available assistance modes
     return html`
-      ${modes.includes(ChipAssistanceMode.NONE) ? renderManual() : nothing}
+      ${modes.includes(ChipAssistanceMode.NONE)
+        ? this.renderSelectManualResponseButton()
+        : nothing}
       ${modes.includes(ChipAssistanceMode.DELEGATE)
-        ? this.renderDelegateButton()
+        ? this.renderDelegateResponseButton()
         : nothing}
       ${modes.includes(ChipAssistanceMode.ADVISOR)
         ? this.renderAdvisorButton()
         : nothing}
-      ${modes.includes(ChipAssistanceMode.COACH) ? renderCoach() : nothing}
+      ${modes.includes(ChipAssistanceMode.COACH)
+        ? this.renderSelectCoachResponseButton()
+        : nothing}
+    `;
+  }
+
+  private renderSelectManualResponseButton() {
+    return html`
+      <pr-button
+        color="secondary"
+        variant="tonal"
+        ?disabled=${this.isAssistanceLoading()}
+        ?loading=${this.isAssistanceNoneLoading}
+        @click=${async () => {
+          this.isAssistanceNoneLoading = true;
+          await this.participantService.selectChipAssistanceMode(
+            this.stage?.id ?? '',
+            'none',
+          );
+          this.isAssistanceNoneLoading = false;
+        }}
+      >
+        Manually submit my own response
+      </pr-button>
+    `;
+  }
+
+  private renderSelectCoachResponseButton() {
+    return html`
+      <pr-button
+        color="secondary"
+        variant="tonal"
+        ?disabled=${this.isAssistanceLoading()}
+        ?loading=${this.isAssistanceCoachLoading}
+        @click=${async () => {
+          this.isAssistanceCoachLoading = true;
+          await this.participantService.selectChipAssistanceMode(
+            this.stage?.id ?? '',
+            'coach',
+          );
+          this.isAssistanceCoachLoading = false;
+        }}
+      >
+        Give me feedback on my proposed response
+      </pr-button>
     `;
   }
 
@@ -653,6 +554,11 @@ export class ChipView extends MobxLitElement {
   ) {
     const offer = this.getCurrentTransaction()?.offer ?? null;
     if (this.isResponsePending()) {
+      // TODO: Check the participant's answer for the last chip
+      // assistance. If it was a 'delegate' and corresponds with the
+      // current round / turn marked in public data, then extract
+      // the model's explanation for the delegated response and display that
+      // instead.
       return html`<div class="offer-panel">
         Waiting for others to respond...
       </div>`;
@@ -691,6 +597,7 @@ export class ChipView extends MobxLitElement {
     `;
   }
 
+  // TODO: Move to shared function
   private renderDiffDisplay(
     text: string,
     gainedChips: Record<string, number>,
@@ -746,9 +653,8 @@ export class ChipView extends MobxLitElement {
       <div class="log-panel">
         <div class="log-scroll-outer-wrapper">
           <div class="log-scroll-inner-wrapper">
-            ${logs.map((entry, index, array) => {
-              const isLastEntry = index === array.length - 1;
-              return this.renderLogEntry(entry, index === logs.length - 1);
+            ${logs.map((entry) => {
+              return this.renderLogEntry(entry);
             })}
           </div>
         </div>
@@ -756,23 +662,24 @@ export class ChipView extends MobxLitElement {
     `;
   }
 
-  private async sendOffer() {
+  private async sendOffer(
+    selectedBuyChip = '',
+    buyChipAmount = 0,
+    selectedSellChip = '',
+    sellChipAmount = 0,
+  ) {
     if (!this.stage) return;
-    this.isOfferLoading = true;
 
     const chipOffer: Partial<ChipOffer> = {
       senderId: this.participantService.profile?.publicId,
-      buy: {[this.selectedBuyChip]: this.buyChipAmount},
-      sell: {[this.selectedSellChip]: this.sellChipAmount},
+      buy: {[selectedBuyChip]: buyChipAmount},
+      sell: {[selectedSellChip]: sellChipAmount},
     };
 
     await this.participantService.sendParticipantChipOffer(
       this.stage.id,
       createChipOffer(chipOffer),
     );
-
-    this.isOfferLoading = false;
-    this.resetChipValues();
   }
 
   private canAcceptOffer(offer: ChipOffer) {
@@ -796,7 +703,6 @@ export class ChipView extends MobxLitElement {
       this.stage.id,
       true,
     );
-    this.resetChipValues(); // includes resetting assistance mode
     this.isAcceptOfferLoading = false;
   }
 
@@ -807,38 +713,92 @@ export class ChipView extends MobxLitElement {
       this.stage.id,
       false,
     );
-    this.resetChipValues(); // includes resetting assistance mode
     this.isRejectOfferLoading = false;
   }
 
-  private renderDelegateButton(disabled = false) {
+  private renderDelegateOfferButton(disabled = false) {
     return html`
       <div class="button-wrapper">
         <pr-button
           color="secondary"
           variant="tonal"
-          ?disabled=${this.isAssistanceLoading()}
+          ?disabled=${this.isAssistanceLoading() || disabled}
           ?loading=${this.isAssistanceDelegateLoading}
           @click=${async () => {
             this.isAssistanceDelegateLoading = true;
-            const response =
-              await this.participantService.selectChipAssistanceMode(
-                this.stage?.id ?? '',
-                'delegate',
-              );
+            await this.participantService.selectChipAssistanceMode(
+              this.stage?.id ?? '',
+              'delegate', // offer context
+            );
             this.isAssistanceDelegateLoading = false;
-            this.resetChipValues(); // includes resetting assistance mode
           }}
         >
           Delegate decision to agent
         </pr-button>
       </div>
-      ${this.getAssistanceMessage()}
+      ${this.getDelegateMessage()}
     `;
   }
 
-  private getAssistanceMessage() {
+  private renderDelegateResponseButton(disabled = false) {
+    return html`
+      <div class="button-wrapper">
+        <pr-button
+          color="secondary"
+          variant="tonal"
+          ?disabled=${this.isAssistanceLoading() || disabled}
+          ?loading=${this.isAssistanceDelegateLoading}
+          @click=${async () => {
+            this.isAssistanceDelegateLoading = true;
+            // null as third argument means: delegate decides to accept or reject
+            await this.participantService.selectChipAssistanceMode(
+              this.stage?.id ?? '',
+              'delegate',
+            );
+            this.isAssistanceDelegateLoading = false;
+          }}
+        >
+          Delegate decision to agent
+        </pr-button>
+      </div>
+      ${this.getDelegateMessage()}
+    `;
+  }
+
+  private getDelegateMessage() {
     return this.answer?.currentAssistance?.message ?? '';
+  }
+
+  private getCoachMessage() {
+    return this.answer?.currentAssistance?.message ?? '';
+  }
+
+  private getAssistanceMessage() {
+    const assistance = this.answer?.currentAssistance;
+    if (!assistance || !assistance.type) {
+      // Assistance not yet available or malformed
+      return nothing;
+    }
+
+    const message = this.answer?.currentAssistance?.message ?? '';
+    const type = this.answer?.currentAssistance?.type;
+    let proposalLine = '<b>💡 AI Assistant says:</b>';
+    if (type === ChipAssistanceType.OFFER) {
+      const proposedOffer = this.answer?.currentAssistance?.proposedOffer;
+      if (proposedOffer) {
+        proposalLine += ` give ${this.describeChipMap(proposedOffer.sell)} to get ${this.describeChipMap(proposedOffer.buy)}.`;
+      }
+    } else if (type === ChipAssistanceType.RESPONSE) {
+      const proposedResponse = this.answer?.currentAssistance?.proposedResponse;
+      if (proposedResponse !== undefined && proposedResponse !== null) {
+        const responseStr = proposedResponse ? 'Accept' : 'Reject';
+        proposalLine += ` ${responseStr} the offer.`;
+      }
+    }
+    return html`
+      <div>${unsafeHTML(proposalLine)}</div>
+      <div>${message}</div>
+    `;
   }
 
   private renderAdvisorButton(disabled = false) {
@@ -847,15 +807,14 @@ export class ChipView extends MobxLitElement {
         <pr-button
           color="secondary"
           variant="tonal"
-          ?disabled=${this.isAssistanceLoading()}
+          ?disabled=${this.isAssistanceLoading() || disabled}
           ?loading=${this.isAssistanceAdvisorLoading}
           @click=${async () => {
             this.isAssistanceAdvisorLoading = true;
-            const response =
-              await this.participantService.selectChipAssistanceMode(
-                this.stage?.id ?? '',
-                'advisor',
-              );
+            await this.participantService.selectChipAssistanceMode(
+              this.stage?.id ?? '',
+              'advisor',
+            );
             this.isAssistanceAdvisorLoading = false;
           }}
         >
@@ -866,11 +825,38 @@ export class ChipView extends MobxLitElement {
   }
 
   private renderAdvisorOffer(disabled = false) {
+    const renderOfferForm = () => {
+      const currentAssistance = this.answer?.currentAssistance;
+      if (
+        !currentAssistance?.proposedTime ||
+        currentAssistance.type !== ChipAssistanceType.OFFER
+      ) {
+        return nothing;
+      }
+
+      // Extract suggested values from current move
+      // TODO: Refactor into shared function
+      const offer = currentAssistance.proposedOffer;
+      if (!offer) return nothing;
+      // Quick hack to extract types as there is current only one type
+      // per offer
+      const suggestedBuyType = Object.keys(offer.buy).join('');
+      const suggestedSellType = Object.keys(offer.sell).join('');
+      const suggestedBuyAmount = offer.buy[suggestedBuyType];
+      const suggestedSellAmount = offer.sell[suggestedSellType];
+
+      return this.renderManualOffer(
+        this.sendOffer,
+        suggestedBuyType,
+        suggestedBuyAmount,
+        suggestedSellType,
+        suggestedSellAmount,
+      );
+    };
+
     return html`
       ${this.renderAdvisorButton(disabled)} ${this.getAssistanceMessage()}
-      ${this.answer?.currentAssistance?.proposedTime
-        ? this.renderManualOffer(this.sendOffer)
-        : nothing}
+      ${renderOfferForm()}
     `;
   }
 
@@ -883,32 +869,62 @@ export class ChipView extends MobxLitElement {
     `;
   }
 
+  private describeChipMap(chipMap: Record<string, number>): string {
+    return Object.entries(chipMap)
+      .map(
+        ([chip, quantity]) =>
+          `${quantity} ${chip} chip${quantity > 1 ? 's' : ''}`,
+      )
+      .join(', ');
+  }
+
   private renderCoachOffer() {
     if (this.answer?.currentAssistance?.proposedTime) {
       const proposedOffer =
         this.answer?.currentAssistance?.type === ChipAssistanceType.OFFER
           ? this.answer.currentAssistance.proposedOffer
           : null;
-      // TODO: Convert object into description
+      // Convert object into description
       const proposal = proposedOffer
-        ? `You proposed giving ${JSON.stringify(proposedOffer.sell)} to get ${JSON.stringify(proposedOffer.buy)}`
-        : '';
+        ? html`<b>Initial Proposal:</b> to give
+            ${this.describeChipMap(proposedOffer.sell)} to get
+            ${this.describeChipMap(proposedOffer.buy)}`
+        : nothing;
+
+      // TODO: Refactor into shared function
+      // Quick hack to extract types as there is current only one type
+      // per offer
+      const suggestedBuyType = Object.keys(proposedOffer?.buy ?? {}).join('');
+      const suggestedSellType = Object.keys(proposedOffer?.sell ?? {}).join('');
+      const suggestedBuyAmount = proposedOffer?.buy[suggestedBuyType] ?? 0;
+      const suggestedSellAmount = proposedOffer?.sell[suggestedSellType] ?? 0;
       return html`
         <div>${proposal}</div>
-        <div>${this.getAssistanceMessage()}</div>
-        ${this.renderManualOffer(this.sendOffer)}
+        <div><b>Feedback:</b> ${this.getCoachMessage()}</div>
+        ${this.renderManualOffer(
+          this.sendOffer,
+          suggestedBuyType,
+          suggestedBuyAmount,
+          suggestedSellType,
+          suggestedSellAmount,
+        )}
       `;
     }
 
-    const sendCoachProposal = async () => {
+    const sendCoachProposal = async (
+      selectedBuyChip = '',
+      buyChipAmount = 0,
+      selectedSellChip = '',
+      sellChipAmount = 0,
+    ) => {
       this.isAssistanceCoachLoading = true;
-      const response = await this.participantService.requestChipAssistance(
+      await this.participantService.requestChipAssistance(
         this.stage?.id ?? '',
         'coach',
-        this.selectedBuyChip,
-        this.buyChipAmount,
-        this.selectedSellChip,
-        this.sellChipAmount,
+        selectedBuyChip,
+        buyChipAmount,
+        selectedSellChip,
+        sellChipAmount,
       );
       this.isAssistanceCoachLoading = false;
     };
@@ -916,6 +932,10 @@ export class ChipView extends MobxLitElement {
       <div>Submit your proposal below and I'll give you feedback:</div>
       ${this.renderManualOffer(
         sendCoachProposal,
+        '',
+        0,
+        '',
+        0,
         this.isAssistanceCoachLoading,
         'Submit proposed offer',
       )}
@@ -930,13 +950,14 @@ export class ChipView extends MobxLitElement {
           : null;
       const proposal =
         proposedResponse !== null
-          ? proposedResponse
-            ? `You proposed accepting the offer`
-            : `You proposed rejecting the offer`
-          : '';
+          ? html`<b>Initial Response:</b> ${proposedResponse
+                ? 'Accept'
+                : 'Reject'}
+              the offer`
+          : nothing;
       return html`
         <div>${proposal}</div>
-        <div>${this.getAssistanceMessage()}</div>
+        <div><b>Feedback:</b> ${this.getAssistanceMessage()}</div>
         <div>Now, submit your final response to the offer:</div>
         ${this.renderManualResponse(this.acceptOffer, this.rejectOffer)}
       `;
@@ -945,13 +966,13 @@ export class ChipView extends MobxLitElement {
     const acceptProposal = async () => {
       this.isAcceptOfferLoading = true; // temporary
       this.isAssistanceCoachLoading = true;
-      const response = await this.participantService.requestChipAssistance(
+      await this.participantService.requestChipAssistance(
         this.stage?.id ?? '',
         'coach',
-        this.selectedBuyChip,
-        this.buyChipAmount,
-        this.selectedSellChip,
-        this.sellChipAmount,
+        '', // buy chip is N/A for response assistance
+        0, // buy amount is N/A for response assistance
+        '', // sell chip is N/A for response assistance
+        0, // buy amount is N/A for response assistance
         true,
       );
       this.isAssistanceCoachLoading = false;
@@ -961,13 +982,13 @@ export class ChipView extends MobxLitElement {
     const rejectProposal = async () => {
       this.isRejectOfferLoading = true; // temporary
       this.isAssistanceCoachLoading = true;
-      const response = await this.participantService.requestChipAssistance(
+      await this.participantService.requestChipAssistance(
         this.stage?.id ?? '',
         'coach',
-        this.selectedBuyChip,
-        this.buyChipAmount,
-        this.selectedSellChip,
-        this.sellChipAmount,
+        '', // buy chip is N/A for response assistance
+        0, // buy amount is N/A for response assistance
+        '', // sell chip is N/A for response assistance
+        0, // buy amount is N/A for response assistance
         false,
       );
       this.isAssistanceCoachLoading = false;
@@ -979,22 +1000,7 @@ export class ChipView extends MobxLitElement {
     `;
   }
 
-  private getParticipant(participantId: string) {
-    return this.cohortService
-      .getAllParticipants()
-      .find((p) => p.publicId === participantId);
-  }
-
-  private getParticipantDisplay(participant: ParticipantProfile | undefined) {
-    if (!participant) return '';
-    return getParticipantInlineDisplay(
-      participant,
-      false,
-      this.stage?.id ?? '',
-    );
-  }
-
-  private renderLogEntry(log: SimpleChipLog, isLatestEntry: boolean = false) {
+  private renderLogEntry(log: SimpleChipLog) {
     if (!this.stage) return nothing;
     const cssClasses = classMap({
       plain: !log.timestamp,
@@ -1011,8 +1017,214 @@ export class ChipView extends MobxLitElement {
   }
 }
 
+/** Chip offer submission form. */
+@customElement('chip-offer-form')
+export class ChipOfferForm extends MobxLitElement {
+  static override styles: CSSResultGroup = [
+    styles,
+    css`
+      :host {
+        height: max-content;
+      }
+    `,
+  ];
+
+  private readonly authService = core.getService(AuthService);
+  private readonly cohortService = core.getService(CohortService);
+  private readonly participantService = core.getService(ParticipantService);
+  private readonly participantAnswerService = core.getService(
+    ParticipantAnswerService,
+  );
+
+  @property() stage: ChipStageConfig | undefined = undefined;
+  @property() publicData: ChipStagePublicData | undefined = undefined;
+  @property() participantPublicId = '';
+  @property() buttonText = 'Submit offer';
+  @property() isPending = false; // Button is pending
+  @property() sendOffer: (
+    selectedBuyChip: string,
+    buyChipAmount: number,
+    selectedSellChip: string,
+    sellChipAmount: number,
+  ) => void = (
+    selectedBuyChip: string,
+    buyChipAmount: number,
+    selectedSellChip: string,
+    sellChipAmount: number,
+  ) => {};
+
+  @state() isLoading = false;
+
+  // Offer interface variables
+  // eslint-disable-next-line no-unused-vars
+  @property() selectedBuyChip: string = '';
+  // eslint-disable-next-line no-unused-vars
+  @property() selectedSellChip: string = '';
+  @property() buyChipAmount: number = 0;
+  @property() sellChipAmount: number = 0;
+
+  override render() {
+    if (!this.publicData) return nothing;
+
+    const checks = getChipOfferChecks(
+      this.publicData,
+      this.participantPublicId,
+      this.selectedBuyChip,
+      this.buyChipAmount,
+      this.selectedSellChip,
+      this.sellChipAmount,
+    );
+
+    const renderOfferPayout = () => {
+      if (!checks.isCompleteOffer || !checks.isValidOffer) {
+        return nothing;
+      }
+
+      return this.renderDiffDisplay(
+        'If this offer is accepted, your updated payout will be ',
+        {[this.selectedBuyChip]: this.buyChipAmount},
+        {[this.selectedSellChip]: this.sellChipAmount},
+      );
+    };
+
+    const sendOffer = async () => {
+      this.isLoading = true;
+      await this.sendOffer(
+        this.selectedBuyChip,
+        this.buyChipAmount,
+        this.selectedSellChip,
+        this.sellChipAmount,
+      );
+      this.isLoading = false;
+    };
+
+    const renderWarnings = () => {
+      if (!checks.isCompleteOffer) return nothing;
+      return html`
+        <div class="warnings-panel">
+          ${checks.errors.map(
+            (error) => html`<div class="warning">${error}</div>`,
+          )}
+        </div>
+      `;
+    };
+
+    return html`
+      <div class="offer-form">
+        <div class="offer-config">
+          <label class="offer-config-label">You give:</label>
+          ${this.renderChipNumberInput(this.sellChipAmount, (value) => {
+            this.sellChipAmount = value;
+          })}
+          ${this.renderChipSelector(this.selectedSellChip, (value) => {
+            this.selectedSellChip = value;
+          })}
+        </div>
+        <div class="offer-config">
+          <label class="offer-config-label">You get:</label>
+          ${this.renderChipNumberInput(this.buyChipAmount, (value) => {
+            this.buyChipAmount = value;
+          })}
+          ${this.renderChipSelector(this.selectedBuyChip, (value) => {
+            this.selectedBuyChip = value;
+          })}
+        </div>
+      </div>
+      <div class="buttons">
+        <pr-button
+          ?loading=${this.isLoading}
+          ?disabled=${!checks.isCompleteOffer ||
+          !checks.isValidOffer ||
+          this.isPending}
+          @click=${sendOffer}
+        >
+          ${this.isPending ? 'Pending...' : this.buttonText}
+        </pr-button>
+        <div>${renderOfferPayout()} ${renderWarnings()}</div>
+      </div>
+    `;
+  }
+
+  private renderChipNumberInput(
+    value: number,
+    onInput: (value: number) => void,
+  ) {
+    const updateInput = (e: Event) => {
+      const input = (e.target as HTMLInputElement).value;
+      const parsed = parseInt(input, 10);
+      const value = Number.isNaN(parsed) ? 0 : Math.max(0, Math.floor(parsed));
+
+      onInput(Math.max(0, value));
+    };
+
+    return html`
+      <div class="number-input">
+        <input
+          .disabled=${this.isPending}
+          type="number"
+          min="0"
+          .value=${value}
+          @input=${updateInput}
+        />
+      </div>
+    `;
+  }
+
+  private renderChipSelector(value: string, onInput: (value: string) => void) {
+    return html`
+      <select
+        .disabled=${this.isPending}
+        .value=${value}
+        @change=${(e: Event) => {
+          onInput((e.target as HTMLSelectElement).value);
+        }}
+      >
+        <option value=""></option>
+        ${this.stage?.chips.map(
+          (chip) =>
+            html`<option value=${chip.id} ?selected=${chip.id === value}>
+              ${chip.avatar} ${chip.name}
+            </option>`,
+        )}
+      </select>
+    `;
+  }
+
+  // TODO: Move to shared function
+  private renderDiffDisplay(
+    text: string,
+    gainedChips: Record<string, number>,
+    lostChips: Record<string, number>,
+  ) {
+    if (!this.stage || !this.participantService.profile) return nothing;
+    const publicData = this.cohortService.stagePublicDataMap[this.stage.id];
+    if (publicData?.kind !== StageKind.CHIP) return nothing;
+
+    const publicId = this.participantService.profile?.publicId ?? '';
+
+    const payouts = calculateChipOfferPayout(
+      publicData.participantChipMap[publicId] ?? {},
+      publicData.participantChipValueMap[publicId] ?? {},
+      gainedChips,
+      lostChips,
+    );
+
+    const diff = payouts.after - payouts.before;
+    return html`
+      <div class="subtitle">
+        ${text}
+        <b>$${payouts.after.toFixed(2)}</b>
+        <span class=${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}>
+          <b>(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</b> </span
+        >.
+      </div>
+    `;
+  }
+}
+
 declare global {
   interface HTMLElementTagNameMap {
     'chip-participant-view': ChipView;
+    'chip-offer-form': ChipOfferForm;
   }
 }

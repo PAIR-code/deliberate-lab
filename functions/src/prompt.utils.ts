@@ -1,15 +1,23 @@
 import {
+  SECONDARY_PROFILE_SET_ID,
+  TERTIARY_PROFILE_SET_ID,
+  PROFILE_SET_ANIMALS_2_ID,
+  PROFILE_SET_NATURE_ID,
   AssetAllocationStageParticipantAnswer,
   BasePromptConfig,
   ProfileAgentConfig,
+  PromptItem,
+  PromptItemGroup,
   PromptItemType,
   StageConfig,
   StageContextPromptItem,
   StageKind,
   UserProfile,
+  UserType,
   getChatPromptMessageHistory,
   getStockInfoSummaryText,
   makeStructuredOutputPrompt,
+  shuffleWithSeed,
 } from '@deliberation-lab/utils';
 import {
   getAssetAllocationAnswersText,
@@ -39,8 +47,36 @@ export async function getStructuredPrompt(
   agentConfig: ProfileAgentConfig,
   promptConfig: BasePromptConfig,
 ) {
+  const promptText = await processPromptItems(
+    promptConfig.prompt,
+    experimentId,
+    cohortId,
+    participantIds,
+    stageId,
+    userProfile,
+    agentConfig,
+  );
+
+  // Add structured output if relevant
+  const structuredOutput = makeStructuredOutputPrompt(
+    promptConfig.structuredOutputConfig,
+  );
+
+  return structuredOutput ? `${promptText}\n${structuredOutput}` : promptText;
+}
+
+/** Process prompt items recursively. */
+async function processPromptItems(
+  promptItems: PromptItem[],
+  experimentId: string,
+  cohortId: string,
+  participantIds: string[],
+  stageId: string,
+  userProfile: UserProfile,
+  agentConfig: ProfileAgentConfig,
+): Promise<string> {
   const items: string[] = [];
-  for (const promptItem of promptConfig.prompt) {
+  for (const promptItem of promptItems) {
     switch (promptItem.type) {
       case PromptItemType.TEXT:
         items.push(promptItem.text);
@@ -50,16 +86,28 @@ export async function getStructuredPrompt(
         break;
       case PromptItemType.PROFILE_INFO:
         const profileInfo: string[] = [];
-        if (userProfile.avatar) {
-          profileInfo.push(userProfile.avatar);
+        // TODO: If secondary/tertiary things in stage ID,
+        // use anonymous profiles to profile info
+        const getProfileSetId = () => {
+          if (stageId.includes(SECONDARY_PROFILE_SET_ID)) {
+            return PROFILE_SET_ANIMALS_2_ID;
+          } else if (stageId.includes(TERTIARY_PROFILE_SET_ID)) {
+            return PROFILE_SET_NATURE_ID;
+          }
+          return '';
+        };
+        if (userProfile.type === UserType.PARTICIPANT) {
+          items.push(
+            getNameFromPublicId(
+              [userProfile],
+              userProfile.publicId,
+              getProfileSetId(),
+            ),
+          );
+        } else {
+          // TODO: Adjust display for mediator profiles
+          items.push(`${userProfile.avatar} ${userProfile.name}`);
         }
-        if (userProfile.name) {
-          profileInfo.push(userProfile.name);
-        }
-        if (userProfile.pronouns) {
-          profileInfo.push(`(${userProfile.pronouns})`);
-        }
-        items.push(profileInfo.join(' '));
         break;
       case PromptItemType.STAGE_CONTEXT:
         items.push(
@@ -72,14 +120,47 @@ export async function getStructuredPrompt(
           ),
         );
         break;
+      case PromptItemType.GROUP:
+        const promptGroup = promptItem as PromptItemGroup;
+        let groupItems = promptGroup.items;
+
+        // Handle shuffling if configured
+        if (promptGroup.shuffleConfig?.shuffle) {
+          // Perform shuffle based on seed
+          let seedString = '';
+          switch (promptGroup.shuffleConfig.seed) {
+            case 'experiment':
+              seedString = experimentId;
+              break;
+            case 'cohort':
+              seedString = cohortId;
+              break;
+            case 'participant':
+              // Use participant's public ID for consistent per-participant shuffling
+              seedString = userProfile.publicId;
+              break;
+            case 'custom':
+              seedString = promptGroup.shuffleConfig.customSeed;
+              break;
+          }
+          groupItems = shuffleWithSeed(groupItems, seedString);
+        }
+
+        const groupText = await processPromptItems(
+          groupItems,
+          experimentId,
+          cohortId,
+          participantIds,
+          stageId,
+          userProfile,
+          agentConfig,
+        );
+        if (groupText) items.push(groupText);
+        break;
       default:
         break;
     }
   }
-
-  // Add structured output if relevant
-  items.push(makeStructuredOutputPrompt(promptConfig.structuredOutputConfig));
-
   return items.join('\n');
 }
 

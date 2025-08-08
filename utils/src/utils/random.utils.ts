@@ -1,5 +1,20 @@
 /** Random utilities that support seeding. */
 
+/** Enum for seed strategies */
+export enum SeedStrategy {
+  EXPERIMENT = 'experiment',
+  COHORT = 'cohort',
+  PARTICIPANT = 'participant',
+  CUSTOM = 'custom',
+}
+
+/** Configuration for shuffling items with different seed strategies */
+export interface ShuffleConfig {
+  shuffle: boolean;
+  seed: SeedStrategy;
+  customSeed: string; // Always set, but only used when seed is SeedStrategy.CUSTOM
+}
+
 // ********************************************************************************************* //
 //                                             SEED                                              //
 // ********************************************************************************************* //
@@ -60,7 +75,7 @@ export const choices = <T>(array: readonly T[], n: number): T[] => {
 /** Shuffles an array using a string seed for consistent results. */
 export const shuffleWithSeed = <T>(
   array: readonly T[],
-  seedString: string,
+  seedString: string = '',
 ): T[] => {
   // Convert string to numeric seed
   let seedValue = 0;

@@ -3,26 +3,18 @@ import {
   ChipAssistanceMode,
   ChipAssistanceMove,
   ChipAssistanceType,
-  ChipLogEntry,
-  ChipOfferStatus,
   ChipStageConfig,
   ChipStagePublicData,
   SendChipOfferData,
-  displayChipOfferText,
   SendChipResponseData,
   SetChipTurnData,
   StageKind,
   createChipOffer,
-  createChipOfferLogEntry,
   createChipRoundLogEntry,
   createChipTurnLogEntry,
-  createChipTransaction,
-  generateId,
 } from '@deliberation-lab/utils';
 
-import * as admin from 'firebase-admin';
 import {Timestamp} from 'firebase-admin/firestore';
-import * as functions from 'firebase-functions';
 import {onCall} from 'firebase-functions/v2/https';
 
 import {app} from '../app';
@@ -30,7 +22,6 @@ import {
   getExperimenterDataFromExperiment,
   getFirestoreCohortParticipants,
   getFirestoreParticipant,
-  getFirestoreParticipants,
   getFirestoreParticipantAnswer,
   getFirestoreParticipantAnswerRef,
   getFirestoreStage,
@@ -318,22 +309,41 @@ export const requestChipAssistance = onCall(async (request) => {
       return {data: null};
     }
 
-    const response = await getChipResponseAssistance(
-      data.experimentId,
-      stage,
-      publicData,
-      await getFirestoreCohortParticipants(data.experimentId, data.cohortId),
-      participant,
-      participantAnswer,
-      await getExperimenterDataFromExperiment(data.experimentId),
-      data.assistanceMode,
-      currentOffer,
-      data.offerResponse,
-    );
+    // Check if participant can accept the offer (for coach mode)
+    const canAcceptOffer = () => {
+      const buyChip = Object.keys(currentOffer.buy)[0];
+      const participantChipMap = publicData.participantChipMap[participant.publicId] ?? {};
+      const availableSell = participantChipMap[buyChip] ?? 0;
+      return availableSell >= currentOffer.buy[buyChip];
+    };
+
+    let response;
+    // If participant cannot accept the offer and it's coach mode, return default response
+    if (!canAcceptOffer() && data.assistanceMode === ChipAssistanceMode.COACH) {
+      response = {
+        success: false,
+        modelResponse: {},
+        defaultMessage: "You do not have enough chips to accept this offer. So you need to reject.",
+        defaultReasoning: "Insufficient chips to accept the offer"
+      };
+    } else {
+      response = await getChipResponseAssistance(
+        data.experimentId,
+        stage,
+        publicData,
+        await getFirestoreCohortParticipants(data.experimentId, data.cohortId),
+        participant,
+        participantAnswer,
+        await getExperimenterDataFromExperiment(data.experimentId),
+        data.assistanceMode,
+        currentOffer,
+        data.offerResponse,
+      );
+    }
 
     // If response is valid, add to current assistance
     // If in coach assistance mode, record the proposed response and model feedback
-    if (data.assistanceMode === ChipAssistanceMode.COACH && response.success) {
+    if (data.assistanceMode === ChipAssistanceMode.COACH) {
       const participantAnswer = await getFirestoreParticipantAnswer(
         data.experimentId,
         data.participantId,
@@ -342,13 +352,28 @@ export const requestChipAssistance = onCall(async (request) => {
       if (participantAnswer?.currentAssistance) {
         const currentAssistance = participantAnswer.currentAssistance;
         currentAssistance.proposedResponse = data.offerResponse;
-        currentAssistance.message =
-          response.modelResponse['feedback'] ??
-          response.modelResponse['tradeExplanation'] ??
-          '';
-        currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
-        currentAssistance.modelResponse = response.modelResponse;
-        currentAssistance.proposedTime = requestTime;
+        currentAssistance.proposedTime = requestTime; // Set when user submits proposal
+
+        // Only update LLM-related fields if response was successful
+        if (response.success) {
+          currentAssistance.message =
+            response.modelResponse['feedback'] ??
+            response.modelResponse['tradeExplanation'] ??
+            '';
+          currentAssistance.reasoning =
+            response.modelResponse['reasoning'] ?? '';
+          currentAssistance.modelResponse = response.modelResponse;
+        } else {
+          // Set error mode if response failed, or use default message if available
+          if (response.defaultMessage && response.defaultReasoning) {
+            currentAssistance.message = response.defaultMessage;
+            currentAssistance.reasoning = response.defaultReasoning;
+            currentAssistance.modelResponse = {};
+          } else {
+            currentAssistance.selectedMode = ChipAssistanceMode.ERROR;
+          }
+        }
+
         participantAnswer.currentAssistance = currentAssistance;
 
         await app.firestore().runTransaction(async (transaction) => {
@@ -382,7 +407,7 @@ export const requestChipAssistance = onCall(async (request) => {
   );
 
   // If in coach assistance mode, record the proposed offer and model feedback
-  if (data.assistanceMode === ChipAssistanceMode.COACH && response.success) {
+  if (data.assistanceMode === ChipAssistanceMode.COACH) {
     const participantAnswer = await getFirestoreParticipantAnswer(
       data.experimentId,
       data.participantId,
@@ -397,13 +422,21 @@ export const requestChipAssistance = onCall(async (request) => {
         sell: data.sellMap,
         timestamp: requestTime,
       });
-      currentAssistance.message =
-        response.modelResponse['feedback'] ??
-        response.modelResponse['tradeExplanation'] ??
-        '';
-      currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
-      currentAssistance.modelResponse = response.modelResponse;
-      currentAssistance.proposedTime = requestTime;
+      currentAssistance.proposedTime = requestTime; // Set when user submits proposal
+
+      // Only update LLM-related fields if response was successful
+      if (response.success) {
+        currentAssistance.message =
+          response.modelResponse['feedback'] ??
+          response.modelResponse['tradeExplanation'] ??
+          '';
+        currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
+        currentAssistance.modelResponse = response.modelResponse;
+      } else {
+        // Set error mode if response failed
+        currentAssistance.selectedMode = ChipAssistanceMode.ERROR;
+      }
+
       participantAnswer.currentAssistance = currentAssistance;
 
       await app.firestore().runTransaction(async (transaction) => {
@@ -501,7 +534,64 @@ export const selectChipAssistanceMode = onCall(async (request) => {
         return {data: null};
       }
 
-      const response = await getChipResponseAssistance(
+      // Check if participant can accept the offer
+      const canAcceptOffer = () => {
+        const buyChip = Object.keys(currentOffer.buy)[0];
+        const participantChipMap = publicData.participantChipMap[participant.publicId] ?? {};
+        const availableSell = participantChipMap[buyChip] ?? 0;
+        return availableSell >= currentOffer.buy[buyChip];
+      };
+
+      // If participant cannot accept the offer, set default response without calling LLM
+      if (!canAcceptOffer()) {
+        currentAssistance.proposedResponse = false; // auto-reject
+        currentAssistance.message = "You do not have enough chips to accept this offer. So you need to reject.";
+        currentAssistance.reasoning = "Insufficient chips to accept the offer";
+        currentAssistance.proposedTime = Timestamp.now();
+        
+        // If delegate mode, mark as completed and actually send the reject response
+        if (data.assistanceMode === ChipAssistanceMode.DELEGATE) {
+          currentAssistance.endTime = Timestamp.now();
+          currentAssistance.finalResponse = false;
+          
+          // Actually send the reject response to the game
+          await addChipResponseToPublicData(
+            data.experimentId,
+            data.cohortId,
+            data.stageId,
+            participant.publicId,
+            false, // reject the offer
+          );
+        }
+      } else {
+        // Normal flow - call LLM
+        const response = await getChipResponseAssistance(
+          data.experimentId,
+          stage,
+          publicData,
+          await getFirestoreCohortParticipants(data.experimentId, data.cohortId),
+          participant,
+          participantAnswer,
+          await getExperimenterDataFromExperiment(data.experimentId),
+          data.assistanceMode,
+          currentOffer,
+          data.offerResponse,
+        );
+        // If response is valid, add to current assistance
+        if (response.success) {
+          currentAssistance.proposedResponse = response.modelResponse['response'];
+          currentAssistance.message = response.modelResponse['feedback'] ?? '';
+          currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
+          currentAssistance.modelResponse = response.modelResponse;
+        } else {
+          // Set error mode if response failed
+          currentAssistance.selectedMode = ChipAssistanceMode.ERROR;
+        }
+        currentAssistance.proposedTime = Timestamp.now();
+      }
+    } else {
+      // Otherwise, assist with offer
+      const response = await getChipOfferAssistance(
         data.experimentId,
         stage,
         publicData,
@@ -510,60 +600,41 @@ export const selectChipAssistanceMode = onCall(async (request) => {
         participantAnswer,
         await getExperimenterDataFromExperiment(data.experimentId),
         data.assistanceMode,
-        currentOffer,
-        data.offerResponse,
+        data.buyMap ?? {},
+        data.sellMap ?? {},
       );
       // If response is valid, add to current assistance
       if (response.success) {
-        currentAssistance.proposedResponse = response.modelResponse['response'];
-        currentAssistance.message = response.modelResponse['feedback'] ?? '';
+        const buy: Record<string, number> = {};
+        buy[response.modelResponse['suggestedBuyType']] =
+          response.modelResponse['suggestedBuyQuantity'];
+        const sell: Record<string, number> = {};
+        sell[response.modelResponse['suggestedSellType']] =
+          response.modelResponse['suggestedSellQuantity'];
+
+        currentAssistance.proposedOffer = createChipOffer({
+          round,
+          senderId: participant.publicId,
+          buy,
+          sell,
+          timestamp: Timestamp.now(),
+        });
+        currentAssistance.message =
+          response.modelResponse['feedback'] ??
+          response.modelResponse['tradeExplanation'] ??
+          '';
         currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
         currentAssistance.modelResponse = response.modelResponse;
+      } else {
+        // Set error mode if response failed
+        currentAssistance.selectedMode = ChipAssistanceMode.ERROR;
       }
       currentAssistance.proposedTime = Timestamp.now();
     }
-
-    // Otherwise, assist with offer
-    const response = await getChipOfferAssistance(
-      data.experimentId,
-      stage,
-      publicData,
-      await getFirestoreCohortParticipants(data.experimentId, data.cohortId),
-      participant,
-      participantAnswer,
-      await getExperimenterDataFromExperiment(data.experimentId),
-      data.assistanceMode,
-      data.buyMap ?? {},
-      data.sellMap ?? {},
-    );
-    // If response is valid, add to current assistance
-    if (response.success) {
-      const buy: Record<string, number> = {};
-      buy[response.modelResponse['suggestedBuyType']] =
-        response.modelResponse['suggestedBuyQuantity'];
-      const sell: Record<string, number> = {};
-      sell[response.modelResponse['suggestedSellType']] =
-        response.modelResponse['suggestedSellQuantity'];
-
-      currentAssistance.proposedOffer = createChipOffer({
-        round,
-        senderId: participant.publicId,
-        buy,
-        sell,
-        timestamp: Timestamp.now(),
-      });
-      currentAssistance.message =
-        response.modelResponse['feedback'] ??
-        response.modelResponse['tradeExplanation'] ??
-        '';
-      currentAssistance.reasoning = response.modelResponse['reasoning'] ?? '';
-      currentAssistance.modelResponse = response.modelResponse;
-    }
-    currentAssistance.proposedTime = Timestamp.now();
   }
 
   // If delegate, assistance is over
-  if (data.assistanceMode === ChipAssistanceMode.DELEGATE) {
+  if (currentAssistance.selectedMode === ChipAssistanceMode.DELEGATE) {
     currentAssistance.endTime = Timestamp.now();
   }
 
@@ -573,6 +644,7 @@ export const selectChipAssistanceMode = onCall(async (request) => {
   } else {
     participantAnswer.currentAssistance = currentAssistance;
   }
+
   await app.firestore().runTransaction(async (transaction) => {
     transaction.set(
       getFirestoreParticipantAnswerRef(

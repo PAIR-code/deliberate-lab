@@ -5,6 +5,7 @@ import '../../pair-components/textarea';
 import '@material/web/checkbox/checkbox.js';
 
 import './structured_prompt_editor';
+import {renderShuffleIndicator} from './structured_prompt_editor';
 
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
@@ -21,6 +22,7 @@ import {
   ChatMediatorStructuredOutputConfig,
   ChatPromptConfig,
   PromptItem,
+  PromptItemGroup,
   PromptItemType,
   StageConfig,
   StageKind,
@@ -30,6 +32,7 @@ import {
   createDefaultPromptFromText,
   makeStructuredOutputPrompt,
   structuredOutputEnabled,
+  TextPromptItem,
 } from '@deliberation-lab/utils';
 import {LLM_AGENT_AVATARS} from '../../shared/constants';
 import {getHashBasedColor} from '../../shared/utils';
@@ -221,13 +224,24 @@ export class EditorComponent extends MobxLitElement {
   }
 
   private renderPromptPreview(agentPromptConfig: ChatPromptConfig) {
-    const getPromptItems = () => {
-      return agentPromptConfig.prompt.map((item) =>
-        item.type === PromptItemType.TEXT
-          ? html`<div>${item.text}</div>`
-          : html`<div class="chip tertiary">${item.type}</div>`,
-      );
+    const renderPromptItem = (item: PromptItem): unknown => {
+      switch (item.type) {
+        case PromptItemType.TEXT:
+          const textItem = item as TextPromptItem;
+          return html`<div>${textItem.text}</div>`;
+        case PromptItemType.GROUP:
+          const group = item as PromptItemGroup;
+          // prettier-ignore
+          return html`<details class="prompt-group-preview" open><summary class="chip tertiary">GROUP: ${group.title} ${renderShuffleIndicator(group.shuffleConfig)}</summary><div class="chip-collapsible">${group.items.map((subItem) => renderPromptItem(subItem))}</div></details>`;
+        default:
+          return html`<div class="chip tertiary">${item.type}</div>`;
+      }
     };
+
+    const getPromptItems = () => {
+      return agentPromptConfig.prompt.map((item) => renderPromptItem(item));
+    };
+
     const getStructuredOutput = () => {
       const config = agentPromptConfig.structuredOutputConfig;
       if (structuredOutputEnabled(config) && config.schema) {
@@ -512,7 +526,7 @@ export class EditorComponent extends MobxLitElement {
       const appendToPrompt = !config.appendToPrompt;
       updateConfig({appendToPrompt});
     };
-    const updateType = (e: InputEvent) => {
+    const updateType = (e: Event) => {
       const type = (e.target as HTMLSelectElement)
         .value as StructuredOutputType;
       updateConfig({type});
@@ -531,17 +545,25 @@ export class EditorComponent extends MobxLitElement {
           </div>
           <select
             id="structuredOutputType"
-            .selected=${config.type}
             @change=${updateType}
             ?disabled=${!this.experimentEditor.canEditStages}
           >
-            <option value="${StructuredOutputType.NONE}">
+            <option
+              value="${StructuredOutputType.NONE}"
+              ?selected=${config.type === StructuredOutputType.NONE}
+            >
               No output forcing
             </option>
-            <option value="${StructuredOutputType.JSON_FORMAT}">
+            <option
+              value="${StructuredOutputType.JSON_FORMAT}"
+              ?selected=${config.type === StructuredOutputType.JSON_FORMAT}
+            >
               Force JSON output
             </option>
-            <option value="${StructuredOutputType.JSON_SCHEMA}">
+            <option
+              value="${StructuredOutputType.JSON_SCHEMA}"
+              ?selected=${config.type === StructuredOutputType.JSON_SCHEMA}
+            >
               Force JSON output with schema
             </option>
           </select>
