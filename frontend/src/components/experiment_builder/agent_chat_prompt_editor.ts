@@ -536,8 +536,7 @@ export class EditorComponent extends MobxLitElement {
           >
             <option
               value="${StructuredOutputType.NONE}"
-              ?selected=${!config.type ||
-              config.type === StructuredOutputType.NONE}
+              ?selected=${config.type === StructuredOutputType.NONE}
             >
               No output forcing
             </option>
