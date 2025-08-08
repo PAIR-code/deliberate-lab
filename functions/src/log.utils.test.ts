@@ -1,5 +1,8 @@
-import * as admin from 'firebase-admin';
-import firebaseFunctionsTest from 'firebase-functions-test';
+import {
+  initializeTestEnvironment,
+  assertSucceeds,
+  RulesTestEnvironment,
+} from '@firebase/rules-unit-testing';
 import nock from 'nock';
 import {
   ModelGenerationConfig,
@@ -13,39 +16,48 @@ import { getGeminiAPIResponse } from './api/gemini.api';
 
 const MODEL_NAME = 'gemini-2.5-flash';
 
-const testEnv = firebaseFunctionsTest();
+const RULES = `
+rules_version = '2';
+service cloud.firestore {
+match /databases/{database}/documents {
+match /{document=**} {
+allow read, write: if true;
+}
+}
+}
+`;
+
+var mockFirestore;
 
 jest.mock('./app', () => ({
   app: {
-    firestore: () => {
-      const admin = require('firebase-admin');
-      return admin.firestore();
-    },
+    firestore: () => { return mockFirestore; },
   },
 }));
 
 describe('log.utils', () => {
-  let firestore: admin.firestore.Firestore;
+  let testEnv: rulesTestEnvironment;
 
-  beforeAll(() => {
-    if (admin.apps.length === 0) {
-      admin.initializeApp({
-        projectId: 'test-project',
-      });
-    }
-    firestore = admin.firestore();
-    firestore.settings({
-      host: 'localhost:8080',
-      ssl: false,
-      ignoreUndefinedProperties: true,
+  beforeAll(async () => {
+    testEnv = await initializeTestEnvironment({
+      projectId: 'deliberate-lab-test',
+      firestore: {
+        rules: RULES,
+        host: 'localhost',
+        port: 8080,
+      },
     });
+    mockFirestore = testEnv.unauthenticatedContext().firestore();
+    mockFirestore.settings({ ignoreUndefinedProperties: true, merge: true });
   });
 
   afterAll(async () => {
     nock.cleanAll();
-    await firestore.terminate();
-    await Promise.all(admin.apps.map(app => app?.delete()));
-    testEnv.cleanup();
+    await testEnv.cleanup();
+  });
+
+  beforeEach(async () => {
+    await testEnv.clearFirestore();
   });
 
   it('should write a model log entry from a json_schema API response to Firestore', async () => {
@@ -108,18 +120,21 @@ describe('log.utils', () => {
       id: logId,
       experimentId,
       response,
-      createdTimestamp: admin.firestore.Timestamp.now(),
+      // pass a Date() to work around firebase-functions-test timestamp
+      // incompatibility:
+      // https://github.com/firebase/firebase-js-sdk/issues/6077
+      createdTimestamp: new Date(),
     });
 
     await writeModelLogEntry(experimentId, logEntry);
 
-    const logDoc = await firestore
+    const logDocRef = await mockFirestore
       .collection('experiments')
       .doc(experimentId)
       .collection('logs')
-      .doc(logId)
-      .get();
+      .doc(logId);
 
+    const logDoc = await assertSucceeds(logDocRef.get());
     const data = logDoc.data();
     expect(data).toBeDefined();
     expect(data!.response.generationConfig).toBeDefined();
