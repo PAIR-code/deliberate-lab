@@ -17,6 +17,7 @@ import {
   getChatPromptMessageHistory,
   getStockInfoSummaryText,
   makeStructuredOutputPrompt,
+  shuffleWithSeed,
 } from '@deliberation-lab/utils';
 import {
   getAssetAllocationAnswersText,
@@ -121,8 +122,32 @@ async function processPromptItems(
         break;
       case PromptItemType.GROUP:
         const promptGroup = promptItem as PromptItemGroup;
+        let groupItems = promptGroup.items;
+
+        // Handle shuffling if configured
+        if (promptGroup.shuffleConfig?.shuffle) {
+          // Perform shuffle based on seed
+          let seedString = '';
+          switch (promptGroup.shuffleConfig.seed) {
+            case 'experiment':
+              seedString = experimentId;
+              break;
+            case 'cohort':
+              seedString = cohortId;
+              break;
+            case 'participant':
+              // Use participant's public ID for consistent per-participant shuffling
+              seedString = userProfile.publicId;
+              break;
+            case 'custom':
+              seedString = promptGroup.shuffleConfig.customSeed;
+              break;
+          }
+          groupItems = shuffleWithSeed(groupItems, seedString);
+        }
+
         const groupText = await processPromptItems(
-          promptGroup.items,
+          groupItems,
           experimentId,
           cohortId,
           participantIds,

@@ -17,6 +17,8 @@ import {
   TextPromptItem,
   createDefaultStageContextPromptItem,
   createDefaultPromptItemGroup,
+  ShuffleConfig,
+  SeedStrategy,
 } from '@deliberation-lab/utils';
 
 import {styles} from './structured_prompt_editor.scss';
@@ -355,8 +357,10 @@ export class EditorComponent extends MobxLitElement {
               })}
             @click=${(e: Event) => e.stopPropagation()}
           />
+          ${renderShuffleIndicator(group.shuffleConfig)}
         </summary>
         <div class="chip-collapsible group-content">
+          ${this.renderShuffleEditor(group)}
           <div class="group-header">
             ${this.renderAddMenu(group.items, false)}
           </div>
@@ -367,10 +371,109 @@ export class EditorComponent extends MobxLitElement {
       </details>
     `;
   }
+
+  private renderShuffleEditor(group: PromptItemGroup) {
+    if (!group.shuffleConfig) return nothing;
+    const shuffleConfig = group.shuffleConfig;
+
+    return html`
+      <div class="shuffle-config">
+        <label class="checkbox-wrapper">
+          <input
+            type="checkbox"
+            .checked=${shuffleConfig.shuffle}
+            @change=${() =>
+              this.updatePromptItem(group, {
+                shuffleConfig: {
+                  ...shuffleConfig,
+                  shuffle: !shuffleConfig.shuffle,
+                },
+              })}
+          />
+          <div>Shuffle items in this group</div>
+        </label>
+
+        ${shuffleConfig.shuffle
+          ? html`
+              <label>using seed:</label>
+              <select
+                .value=${shuffleConfig.seed}
+                @change=${(e: Event) =>
+                  this.updatePromptItem(group, {
+                    shuffleConfig: {
+                      ...shuffleConfig,
+                      seed: ((e.target as HTMLSelectElement).value ||
+                        '') as SeedStrategy,
+                    },
+                  })}
+              >
+                <option
+                  value=${SeedStrategy.EXPERIMENT}
+                  ?selected=${shuffleConfig.seed === SeedStrategy.EXPERIMENT}
+                >
+                  Experiment ID
+                </option>
+                <option
+                  value=${SeedStrategy.COHORT}
+                  ?selected=${shuffleConfig.seed === SeedStrategy.COHORT}
+                >
+                  Cohort ID
+                </option>
+                <option
+                  value=${SeedStrategy.PARTICIPANT}
+                  ?selected=${shuffleConfig.seed === SeedStrategy.PARTICIPANT}
+                >
+                  Participant ID
+                </option>
+                <option
+                  value=${SeedStrategy.CUSTOM}
+                  ?selected=${shuffleConfig.seed === SeedStrategy.CUSTOM}
+                >
+                  Custom seed
+                </option>
+              </select>
+
+              ${shuffleConfig.seed === SeedStrategy.CUSTOM
+                ? html`
+                    <input
+                      type="text"
+                      placeholder="Enter custom seed"
+                      .value=${shuffleConfig.customSeed}
+                      @input=${(e: Event) =>
+                        this.updatePromptItem(group, {
+                          shuffleConfig: {
+                            ...shuffleConfig,
+                            customSeed: (e.target as HTMLInputElement).value,
+                          },
+                        })}
+                    />
+                  `
+                : ''}
+            `
+          : ''}
+      </div>
+    `;
+  }
 }
 
 declare global {
   interface HTMLElementTagNameMap {
     'structured-prompt-editor': EditorComponent;
   }
+}
+
+/** Helper function to generate shuffle indicator template */
+export function renderShuffleIndicator(
+  shuffleConfig: ShuffleConfig | undefined,
+): TemplateResult | typeof nothing {
+  if (!shuffleConfig?.shuffle) return nothing;
+
+  return html`
+    <span title="Shuffle enabled">
+      🔀
+      ${shuffleConfig.seed}${shuffleConfig.seed === SeedStrategy.CUSTOM
+        ? `: ${shuffleConfig.customSeed}`
+        : ''}
+    </span>
+  `;
 }
