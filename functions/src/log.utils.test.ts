@@ -11,8 +11,8 @@ import {
   StructuredOutputType,
   createModelLogEntry,
 } from '@deliberation-lab/utils';
-import { writeModelLogEntry } from './log.utils';
-import { getGeminiAPIResponse } from './api/gemini.api';
+import {writeModelLogEntry} from './log.utils';
+import {getGeminiAPIResponse} from './api/gemini.api';
 
 const MODEL_NAME = 'gemini-2.5-flash';
 
@@ -31,7 +31,9 @@ var mockFirestore;
 
 jest.mock('./app', () => ({
   app: {
-    firestore: () => { return mockFirestore; },
+    firestore: () => {
+      return mockFirestore;
+    },
   },
 }));
 
@@ -48,7 +50,7 @@ describe('log.utils', () => {
       },
     });
     mockFirestore = testEnv.unauthenticatedContext().firestore();
-    mockFirestore.settings({ ignoreUndefinedProperties: true, merge: true });
+    mockFirestore.settings({ignoreUndefinedProperties: true, merge: true});
   });
 
   afterAll(async () => {
