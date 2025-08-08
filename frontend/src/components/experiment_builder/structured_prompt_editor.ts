@@ -18,6 +18,7 @@ import {
   createDefaultStageContextPromptItem,
   createDefaultPromptItemGroup,
   ShuffleConfig,
+  SeedStrategy,
 } from '@deliberation-lab/utils';
 
 import {styles} from './structured_prompt_editor.scss';
@@ -402,17 +403,37 @@ export class EditorComponent extends MobxLitElement {
                     shuffleConfig: {
                       ...shuffleConfig,
                       seed: (e.target as HTMLSelectElement)
-                        .value as ShuffleConfig['seed'],
+                        .value as SeedStrategy,
                     },
                   })}
               >
-                <option value="experiment">Experiment ID</option>
-                <option value="cohort">Cohort ID</option>
-                <option value="participant">Participant ID</option>
-                <option value="custom">Custom seed</option>
+                <option
+                  value=${SeedStrategy.EXPERIMENT}
+                  ?selected=${shuffleConfig.seed === SeedStrategy.EXPERIMENT}
+                >
+                  Experiment ID
+                </option>
+                <option
+                  value=${SeedStrategy.COHORT}
+                  ?selected=${shuffleConfig.seed === SeedStrategy.COHORT}
+                >
+                  Cohort ID
+                </option>
+                <option
+                  value=${SeedStrategy.PARTICIPANT}
+                  ?selected=${shuffleConfig.seed === SeedStrategy.PARTICIPANT}
+                >
+                  Participant ID
+                </option>
+                <option
+                  value=${SeedStrategy.CUSTOM}
+                  ?selected=${shuffleConfig.seed === SeedStrategy.CUSTOM}
+                >
+                  Custom seed
+                </option>
               </select>
 
-              ${shuffleConfig.seed === 'custom'
+              ${shuffleConfig.seed === SeedStrategy.CUSTOM
                 ? html`
                     <input
                       type="text"
@@ -450,7 +471,7 @@ export function renderShuffleIndicator(
   return html`
     <span title="Shuffle enabled">
       🔀
-      ${shuffleConfig.seed}${shuffleConfig.seed === 'custom'
+      ${shuffleConfig.seed}${shuffleConfig.seed === SeedStrategy.CUSTOM
         ? `: ${shuffleConfig.customSeed}`
         : ''}
     </span>

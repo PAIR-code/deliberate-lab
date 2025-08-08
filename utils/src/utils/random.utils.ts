@@ -1,10 +1,18 @@
 /** Random utilities that support seeding. */
 
+/** Enum for seed strategies */
+export enum SeedStrategy {
+  EXPERIMENT = 'experiment',
+  COHORT = 'cohort',
+  PARTICIPANT = 'participant',
+  CUSTOM = 'custom',
+}
+
 /** Configuration for shuffling items with different seed strategies */
 export interface ShuffleConfig {
   shuffle: boolean;
-  seed: 'experiment' | 'cohort' | 'participant' | 'custom';
-  customSeed: string; // Always set, but only used when seed is 'custom'
+  seed: SeedStrategy;
+  customSeed: string; // Always set, but only used when seed is SeedStrategy.CUSTOM
 }
 
 // ********************************************************************************************* //
