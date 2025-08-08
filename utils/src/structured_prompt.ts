@@ -146,7 +146,7 @@ export function createDefaultPromptItemGroup(
     shuffleConfig: {
       shuffle: false,
       seed: SeedStrategy.PARTICIPANT,
-      customSeed: 'default',
+      customSeed: '',
     },
   };
 }
