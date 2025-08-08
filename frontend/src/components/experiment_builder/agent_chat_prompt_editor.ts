@@ -21,6 +21,7 @@ import {
   ChatMediatorStructuredOutputConfig,
   ChatPromptConfig,
   PromptItem,
+  PromptItemGroup,
   PromptItemType,
   StageConfig,
   StageKind,
@@ -30,6 +31,7 @@ import {
   createDefaultPromptFromText,
   makeStructuredOutputPrompt,
   structuredOutputEnabled,
+  TextPromptItem,
 } from '@deliberation-lab/utils';
 import {LLM_AGENT_AVATARS} from '../../shared/constants';
 import {getHashBasedColor} from '../../shared/utils';
@@ -221,13 +223,24 @@ export class EditorComponent extends MobxLitElement {
   }
 
   private renderPromptPreview(agentPromptConfig: ChatPromptConfig) {
-    const getPromptItems = () => {
-      return agentPromptConfig.prompt.map((item) =>
-        item.type === PromptItemType.TEXT
-          ? html`<div>${item.text}</div>`
-          : html`<div class="chip tertiary">${item.type}</div>`,
-      );
+    const renderPromptItem = (item: PromptItem): unknown => {
+      switch (item.type) {
+        case PromptItemType.TEXT:
+          const textItem = item as TextPromptItem;
+          return html`<div>${textItem.text}</div>`;
+        case PromptItemType.GROUP:
+          const group = item as PromptItemGroup;
+          // prettier-ignore
+          return html`<details class="prompt-group-preview" open><summary class="chip tertiary">GROUP: ${group.title}</summary><div class="chip-collapsible">${group.items.map((subItem) => renderPromptItem(subItem))}</div></details>`;
+        default:
+          return html`<div class="chip tertiary">${item.type}</div>`;
+      }
     };
+
+    const getPromptItems = () => {
+      return agentPromptConfig.prompt.map((item) => renderPromptItem(item));
+    };
+
     const getStructuredOutput = () => {
       const config = agentPromptConfig.structuredOutputConfig;
       if (structuredOutputEnabled(config) && config.schema) {
