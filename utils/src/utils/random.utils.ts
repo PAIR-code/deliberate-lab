@@ -75,7 +75,7 @@ export const choices = <T>(array: readonly T[], n: number): T[] => {
 /** Shuffles an array using a string seed for consistent results. */
 export const shuffleWithSeed = <T>(
   array: readonly T[],
-  seedString: string,
+  seedString: string = '',
 ): T[] => {
   // Convert string to numeric seed
   let seedValue = 0;

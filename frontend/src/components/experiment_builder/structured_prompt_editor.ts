@@ -402,8 +402,8 @@ export class EditorComponent extends MobxLitElement {
                   this.updatePromptItem(group, {
                     shuffleConfig: {
                       ...shuffleConfig,
-                      seed: (e.target as HTMLSelectElement)
-                        .value as SeedStrategy,
+                      seed: ((e.target as HTMLSelectElement).value ||
+                        '') as SeedStrategy,
                     },
                   })}
               >
