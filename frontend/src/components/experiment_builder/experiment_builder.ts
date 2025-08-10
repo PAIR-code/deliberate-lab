@@ -41,6 +41,7 @@ import {styles} from './experiment_builder.scss';
 enum PanelView {
   AGENTS = 'agents',
   API_KEY = 'api_key',
+  COHORT = 'cohort',
   DEFAULT = 'default',
   PROLIFIC = 'prolific',
   STAGES = 'stages',
@@ -128,6 +129,17 @@ export class ExperimentBuilder extends MobxLitElement {
             >
               <div>Prolific integration</div>
               <div class="subtitle">Set up Prolific codes</div>
+            </div>
+            <div
+              class="general-item ${this.panelView === PanelView.COHORT
+                ? 'current'
+                : ''}"
+              @click=${() => {
+                this.panelView = PanelView.COHORT;
+              }}
+            >
+              <div>Cohort setup</div>
+              <div class="subtitle">Specify default cohort settings</div>
             </div>
             <div class="panel-view-header">
               <div class="header-title">Agent Mediators</div>
@@ -295,6 +307,12 @@ export class ExperimentBuilder extends MobxLitElement {
       return html`
         <div class="experiment-builder">
           <experiment-prolific-editor></experiment-prolific-editor>
+        </div>
+      `;
+    } else if (this.panelView === PanelView.COHORT) {
+      return html`
+        <div class="experiment-builder">
+          <experiment-cohort-editor></experiment-cohort-editor>
         </div>
       `;
     } else if (this.panelView === PanelView.AGENTS) {

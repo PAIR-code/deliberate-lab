@@ -30,7 +30,6 @@ export class ExperimentMetadataEditor extends MobxLitElement {
     return html`
       <div class="inner-wrapper">
         ${this.renderMetadata()} ${this.renderPermissions()}
-        ${this.renderCohortParticipantConfig()}
       </div>
     `;
   }
@@ -110,13 +109,23 @@ export class ExperimentMetadataEditor extends MobxLitElement {
       </div>
     `;
   }
+}
 
-  private renderCohortParticipantConfig() {
+/** Editor for adjusting experiment cohort default settings */
+@customElement('experiment-cohort-editor')
+export class ExperimentCohortEditor extends MobxLitElement {
+  static override styles: CSSResultGroup = [styles];
+
+  private readonly analyticsService = core.getService(AnalyticsService);
+  private readonly experimentEditor = core.getService(ExperimentEditor);
+  private readonly experimentManager = core.getService(ExperimentManager);
+
+  override render() {
     // TODO: Consolidate helper functions with the ones under
     // cohorts_settings_dialog.ts (as they're basically the same,
     // just updating experiment config vs. cohort config)
     return html`
-      <div class="section">
+      <div class="inner-wrapper">
         <div class="title">Default cohort settings</div>
         <div class="description">
           Note: Cohorts within your experiment will be automatically created
@@ -313,6 +322,7 @@ export class ExperimentProlificEditor extends MobxLitElement {
 declare global {
   interface HTMLElementTagNameMap {
     'experiment-metadata-editor': ExperimentMetadataEditor;
+    'experiment-cohort-editor': ExperimentCohortEditor;
     'experiment-prolific-editor': ExperimentProlificEditor;
   }
 }
