@@ -42,7 +42,7 @@ enum PanelView {
   AGENTS = 'agents',
   API_KEY = 'api_key',
   COHORT = 'cohort',
-  DEFAULT = 'default',
+  METADATA = 'metadata',
   PERMISSIONS = 'permissions',
   PROLIFIC = 'prolific',
   STAGES = 'stages',
@@ -58,7 +58,7 @@ export class ExperimentBuilder extends MobxLitElement {
   private readonly experimentManager = core.getService(ExperimentManager);
   private readonly routerService = core.getService(RouterService);
 
-  @state() panelView: PanelView = PanelView.DEFAULT;
+  @state() panelView: PanelView = PanelView.STAGES;
 
   override render() {
     return html`
@@ -86,11 +86,11 @@ export class ExperimentBuilder extends MobxLitElement {
               ${this.renderAddStageButton()}
             </div>
             <div
-              class="general-item ${this.panelView === PanelView.DEFAULT
+              class="general-item ${this.panelView === PanelView.METADATA
                 ? 'current'
                 : ''}"
               @click=${() => {
-                this.panelView = PanelView.DEFAULT;
+                this.panelView = PanelView.METADATA;
               }}
             >
               <div>Metadata</div>
@@ -307,7 +307,7 @@ export class ExperimentBuilder extends MobxLitElement {
   }
 
   private renderExperimentConfigBuilder() {
-    if (this.panelView === PanelView.DEFAULT) {
+    if (this.panelView === PanelView.METADATA) {
       return html`
         <div class="experiment-builder">
           <experiment-metadata-editor></experiment-metadata-editor>
