@@ -17,9 +17,9 @@ import {Visibility} from '@deliberation-lab/utils';
 
 import {styles} from './experiment_settings_editor.scss';
 
-/** Editor for adjusting experiment settings */
-@customElement('experiment-settings-editor')
-export class ExperimentSettingsEditor extends MobxLitElement {
+/** Editor for adjusting experiment metadata */
+@customElement('experiment-metadata-editor')
+export class ExperimentMetadataEditor extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
   private readonly analyticsService = core.getService(AnalyticsService);
@@ -30,7 +30,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
     return html`
       <div class="inner-wrapper">
         ${this.renderMetadata()} ${this.renderPermissions()}
-        ${this.renderCohortParticipantConfig()} ${this.renderProlificConfig()}
+        ${this.renderCohortParticipantConfig()}
       </div>
     `;
   }
@@ -225,8 +225,18 @@ export class ExperimentSettingsEditor extends MobxLitElement {
       </div>
     `;
   }
+}
 
-  private renderProlificConfig() {
+/** Editor for adjusting Prolific integration settings */
+@customElement('experiment-prolific-editor')
+export class ExperimentProlificEditor extends MobxLitElement {
+  static override styles: CSSResultGroup = [styles];
+
+  private readonly analyticsService = core.getService(AnalyticsService);
+  private readonly experimentEditor = core.getService(ExperimentEditor);
+  private readonly experimentManager = core.getService(ExperimentManager);
+
+  override render() {
     const config = this.experimentEditor.experiment.prolificConfig;
     const isProlific = config.enableProlificIntegration;
 
@@ -236,8 +246,7 @@ export class ExperimentSettingsEditor extends MobxLitElement {
     };
 
     return html`
-      <div class="section">
-        <div class="title">Prolific Integration</div>
+      <div class="inner-wrapper">
         <div class="checkbox-wrapper">
           <md-checkbox
             touch-target="wrapper"
@@ -248,12 +257,12 @@ export class ExperimentSettingsEditor extends MobxLitElement {
           </md-checkbox>
           <div>Enable integration with Prolific</div>
         </div>
-        ${isProlific ? this.renderProlificRedirectCodes() : nothing}
+        ${this.renderProlificRedirectCodes(isProlific)}
       </div>
     `;
   }
 
-  private renderProlificRedirectCodes() {
+  private renderProlificRedirectCodes(isEnabled: boolean) {
     const updateDefault = (e: InputEvent) => {
       const defaultRedirectCode = (e.target as HTMLTextAreaElement).value;
       this.experimentEditor.updateProlificConfig({defaultRedirectCode});
@@ -270,41 +279,40 @@ export class ExperimentSettingsEditor extends MobxLitElement {
     };
 
     return html`
-      <div class="inner-setting">
-        <md-filled-text-field
-          required
-          label="Default redirect code (e.g., when experiment ends)"
-          .value=${this.experimentEditor.experiment.prolificConfig
-            .defaultRedirectCode ?? ''}
-          .error=${!this.experimentEditor.experiment.prolificConfig
-            .defaultRedirectCode}
-          ?disabled=${!this.experimentManager.isCreator}
-          @input=${updateDefault}
-        >
-        </md-filled-text-field>
-        <md-filled-text-field
-          label="Attention redirect code (used when participants fail attention checks)"
-          .value=${this.experimentEditor.experiment.prolificConfig
-            .attentionFailRedirectCode ?? ''}
-          ?disabled=${!this.experimentManager.isCreator}
-          @input=${updateAttention}
-        >
-        </md-filled-text-field>
-        <md-filled-text-field
-          label="Booted redirect code (used when experimenters boot a participant from an experiment)"
-          .value=${this.experimentEditor.experiment.prolificConfig
-            .bootedRedirectCode ?? ''}
-          ?disabled=${!this.experimentManager.isCreator}
-          @input=${updateBooted}
-        >
-        </md-filled-text-field>
-      </div>
+      <md-filled-text-field
+        required
+        label="Default redirect code (e.g., when experiment ends)"
+        .value=${this.experimentEditor.experiment.prolificConfig
+          .defaultRedirectCode ?? ''}
+        .error=${!this.experimentEditor.experiment.prolificConfig
+          .defaultRedirectCode}
+        ?disabled=${!this.experimentManager.isCreator || !isEnabled}
+        @input=${updateDefault}
+      >
+      </md-filled-text-field>
+      <md-filled-text-field
+        label="Attention redirect code (used when participants fail attention checks)"
+        .value=${this.experimentEditor.experiment.prolificConfig
+          .attentionFailRedirectCode ?? ''}
+        ?disabled=${!this.experimentManager.isCreator || !isEnabled}
+        @input=${updateAttention}
+      >
+      </md-filled-text-field>
+      <md-filled-text-field
+        label="Booted redirect code (used when experimenters boot a participant from an experiment)"
+        .value=${this.experimentEditor.experiment.prolificConfig
+          .bootedRedirectCode ?? ''}
+        ?disabled=${!this.experimentManager.isCreator || !isEnabled}
+        @input=${updateBooted}
+      >
+      </md-filled-text-field>
     `;
   }
 }
 
 declare global {
   interface HTMLElementTagNameMap {
-    'experiment-settings-editor': ExperimentSettingsEditor;
+    'experiment-metadata-editor': ExperimentMetadataEditor;
+    'experiment-prolific-editor': ExperimentProlificEditor;
   }
 }

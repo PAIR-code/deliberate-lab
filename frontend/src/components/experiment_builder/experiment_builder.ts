@@ -42,6 +42,7 @@ enum PanelView {
   AGENTS = 'agents',
   API_KEY = 'api_key',
   DEFAULT = 'default',
+  PROLIFIC = 'prolific',
   STAGES = 'stages',
 }
 
@@ -92,7 +93,7 @@ export class ExperimentBuilder extends MobxLitElement {
             >
               <div>Metadata</div>
               <div class="subtitle">
-                Experiment name, visibility, Prolific integration
+                Experiment name, description, visibility
               </div>
             </div>
             <div
@@ -116,6 +117,17 @@ export class ExperimentBuilder extends MobxLitElement {
             >
               <div>API Key</div>
               <div class="subtitle">Configure API key</div>
+            </div>
+            <div
+              class="general-item ${this.panelView === PanelView.PROLIFIC
+                ? 'current'
+                : ''}"
+              @click=${() => {
+                this.panelView = PanelView.PROLIFIC;
+              }}
+            >
+              <div>Prolific integration</div>
+              <div class="subtitle">Set up Prolific codes</div>
             </div>
             <div class="panel-view-header">
               <div class="header-title">Agent Mediators</div>
@@ -276,7 +288,13 @@ export class ExperimentBuilder extends MobxLitElement {
     if (this.panelView === PanelView.DEFAULT) {
       return html`
         <div class="experiment-builder">
-          <experiment-settings-editor></experiment-settings-editor>
+          <experiment-metadata-editor></experiment-metadata-editor>
+        </div>
+      `;
+    } else if (this.panelView === PanelView.PROLIFIC) {
+      return html`
+        <div class="experiment-builder">
+          <experiment-prolific-editor></experiment-prolific-editor>
         </div>
       `;
     } else if (this.panelView === PanelView.AGENTS) {
