@@ -1,6 +1,6 @@
 import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement, property, state} from 'lit/decorators.js';
 
 import '@material/web/textfield/filled-text-field.js';
 import '@material/web/checkbox/checkbox.js';
@@ -20,6 +20,12 @@ import {
 import {styles} from './base_stage_editor.scss';
 import {mustWaitForAllParticipants} from '../../shared/experiment.utils';
 
+enum BaseStageTab {
+  STAGE = 'stage', // settings specific to stage
+  METADATA = 'metadata', // stage name, description, etc.
+  PROGRESS = 'progress', // progress settings
+}
+
 /** Editor for base StageConfig fields. */
 @customElement('base-stage-editor')
 export class BaseStageEditorComponent extends MobxLitElement {
@@ -29,28 +35,68 @@ export class BaseStageEditorComponent extends MobxLitElement {
 
   @property() stage: StageConfig | undefined = undefined;
 
+  @state() currentTab: BaseStageTab = BaseStageTab.STAGE;
+
   override render() {
     if (this.stage === undefined) {
       return nothing;
     }
 
     return html`
-      <details>
-        <summary>Metadata</summary>
-        <div class="inner-section">
-          ${this.renderName()} ${this.renderPrimaryText()}
-          ${this.renderInfoText()} ${this.renderHelpText()}
+      <div class="tabs">
+        <div
+          class="tab ${this.currentTab === BaseStageTab.METADATA
+            ? 'active'
+            : ''}"
+          @click=${() => {
+            this.currentTab = BaseStageTab.METADATA;
+          }}
+        >
+          Metadata
         </div>
-      </details>
-      <details>
-        <summary>Progress settings</summary>
-        <div class="inner-section">
-          ${this.renderWaitForAllParticipants()}
-          ${this.renderWaitForNumParticipants()}
-          ${this.renderShowParticipantProgress()}
+        <div
+          class="tab ${this.currentTab === BaseStageTab.PROGRESS
+            ? 'active'
+            : ''}"
+          @click=${() => {
+            this.currentTab = BaseStageTab.PROGRESS;
+          }}
+        >
+          Progress settings
         </div>
-      </details>
+        <div
+          class="tab ${this.currentTab === BaseStageTab.STAGE ? 'active' : ''}"
+          @click=${() => {
+            this.currentTab = BaseStageTab.STAGE;
+          }}
+        >
+          <slot name="title"></slot>
+        </div>
+      </div>
+      ${this.renderTab()}
     `;
+  }
+
+  private renderTab() {
+    switch (this.currentTab) {
+      case BaseStageTab.METADATA:
+        return html`
+          <div class="inner-section">
+            ${this.renderName()} ${this.renderPrimaryText()}
+            ${this.renderInfoText()} ${this.renderHelpText()}
+          </div>
+        `;
+      case BaseStageTab.PROGRESS:
+        return html`
+          <div class="inner-section">
+            ${this.renderWaitForAllParticipants()}
+            ${this.renderWaitForNumParticipants()}
+            ${this.renderShowParticipantProgress()}
+          </div>
+        `;
+      default:
+        return html`<div class="inner-section"><slot></slot></div>`;
+    }
   }
 
   private renderName() {

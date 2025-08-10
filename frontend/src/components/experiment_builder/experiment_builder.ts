@@ -501,76 +501,104 @@ export class ExperimentBuilder extends MobxLitElement {
     switch (stage.kind) {
       case StageKind.INFO:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <info-editor .stage=${stage}></info-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Info settings</div>
+            <info-editor .stage=${stage}></info-editor>
+          </base-stage-editor>
         `;
       case StageKind.PAYOUT:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <payout-editor .stage=${stage}></payout-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Payout settings</div>
+            <payout-editor .stage=${stage}></payout-editor>
+          </base-stage-editor>
         `;
       case StageKind.PROFILE:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <profile-stage-editor .stage=${stage}></profile-stage-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Profile settings</div>
+            <profile-stage-editor .stage=${stage}></profile-stage-editor>
+          </base-stage-editor>
         `;
       case StageKind.CHAT:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <group-chat-editor .stage=${stage}></group-chat-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Chat settings</div>
+            <group-chat-editor .stage=${stage}></group-chat-editor>
+          </base-stage-editor>
         `;
       case StageKind.PRIVATE_CHAT:
         return html` <base-stage-editor .stage=${stage}></base-stage-editor> `;
       case StageKind.FLIPCARD:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <flipcard-editor .stage=${stage}></flipcard-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Flipcard settings</div>
+            <flipcard-editor .stage=${stage}></flipcard-editor>
+          </base-stage-editor>
         `;
       case StageKind.RANKING:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <ranking-editor .stage=${stage}></ranking-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Ranking settings</div>
+            <ranking-editor .stage=${stage}></ranking-editor>
+          </base-stage-editor>
         `;
       case StageKind.REVEAL:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <reveal-editor .stage=${stage}></reveal-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Reveal stages</div>
+            <reveal-editor .stage=${stage}></reveal-editor>
+          </base-stage-editor>
         `;
       case StageKind.ROLE:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <role-editor .stage=${stage}></role-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Roles</div>
+            <role-editor .stage=${stage}></role-editor>
+          </base-stage-editor>
         `;
       case StageKind.STOCKINFO:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <stockinfo-editor .stage=${stage}></stockinfo-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Stock settings</div>
+            <stockinfo-editor .stage=${stage}></stockinfo-editor>
+          </base-stage-editor>
         `;
       case StageKind.ASSET_ALLOCATION:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <asset-allocation-editor .stage=${stage}></asset-allocation-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Asset allocation configuration</div>
+            <asset-allocation-editor .stage=${stage}></asset-allocation-editor>
+          </base-stage-editor>
         `;
       case StageKind.SURVEY:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <survey-editor .stage=${stage}></survey-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Survey questions</div>
+            <survey-editor .stage=${stage}></survey-editor>
+          </base-stage-editor>
         `;
       case StageKind.SURVEY_PER_PARTICIPANT:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <survey-per-participant-editor .stage=${stage}>
-          </survey-per-participant-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Survey questions</div>
+            <survey-per-participant-editor .stage=${stage}>
+            </survey-per-participant-editor>
+          </base-stage-editor>
         `;
       case StageKind.TOS:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <tos-editor .stage=${stage}></tos-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Terms of service</div>
+            <tos-editor .stage=${stage}></tos-editor>
+          </base-stage-editor>
         `;
       case StageKind.TRANSFER:
         return html`
-          <base-stage-editor .stage=${stage}></base-stage-editor>
-          <transfer-editor .stage=${stage}></transfer-editor>
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Transfer settings</div>
+            <transfer-editor .stage=${stage}></transfer-editor>
+          </base-stage-editor>
         `;
       default:
         return html` Stage editor not found. `;
