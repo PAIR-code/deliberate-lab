@@ -82,6 +82,9 @@ export class ExperimentBuilder extends MobxLitElement {
       <div class="panel-wrapper">
         <div class="panel-view">
           <div class="top">
+            <div class="panel-view-header">
+              <div class="header-title">General settings</div>
+            </div>
             <div
               class="general-item ${this.panelView === PanelView.METADATA
                 ? 'current'
@@ -116,17 +119,6 @@ export class ExperimentBuilder extends MobxLitElement {
               <div class="subtitle">Add and configure experiment stages</div>
             </div>
             <div
-              class="general-item ${this.panelView === PanelView.API_KEY
-                ? 'current'
-                : ''}"
-              @click=${() => {
-                this.panelView = PanelView.API_KEY;
-              }}
-            >
-              <div>API Key</div>
-              <div class="subtitle">Configure API key</div>
-            </div>
-            <div
               class="general-item ${this.panelView === PanelView.PROLIFIC
                 ? 'current'
                 : ''}"
@@ -148,6 +140,20 @@ export class ExperimentBuilder extends MobxLitElement {
               <div>Cohort setup</div>
               <div class="subtitle">Specify default cohort settings</div>
             </div>
+            <div class="panel-view-header">
+              <div class="header-title">LLM settings</div>
+            </div>
+            <div
+              class="general-item ${this.panelView === PanelView.API_KEY
+                ? 'current'
+                : ''}"
+              @click=${() => {
+                this.panelView = PanelView.API_KEY;
+              }}
+            >
+              <div>API Key</div>
+              <div class="subtitle">Configure API key used for agent calls</div>
+            </div>
             <div
               class="general-item ${this.panelView === PanelView.AGENT_MEDIATORS
                 ? 'current'
@@ -157,7 +163,7 @@ export class ExperimentBuilder extends MobxLitElement {
               }}
             >
               <div>Agent mediators</div>
-              <div class="subtitle">Define agent mediators</div>
+              <div class="subtitle">Add and configure agent mediators</div>
             </div>
             <div
               class="general-item ${this.panelView ===
@@ -169,7 +175,7 @@ export class ExperimentBuilder extends MobxLitElement {
               }}
             >
               <div>Agent participants</div>
-              <div class="subtitle">Define agent participants</div>
+              <div class="subtitle">Add and configure agent participants</div>
             </div>
           </div>
           <div class="bottom">${this.renderDeleteButton()}</div>
