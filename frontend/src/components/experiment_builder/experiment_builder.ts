@@ -39,7 +39,8 @@ import {StageConfig, StageKind, generateId} from '@deliberation-lab/utils';
 import {styles} from './experiment_builder.scss';
 
 enum PanelView {
-  AGENTS = 'agents',
+  AGENT_MEDIATORS = 'agent_mediators',
+  AGENT_PARTICIPANTS = 'agent_participants',
   API_KEY = 'api_key',
   COHORT = 'cohort',
   METADATA = 'metadata',
@@ -81,10 +82,6 @@ export class ExperimentBuilder extends MobxLitElement {
       <div class="panel-wrapper">
         <div class="panel-view">
           <div class="top">
-            <div class="panel-view-header">
-              <div class="header-title">General settings</div>
-              ${this.renderAddStageButton()}
-            </div>
             <div
               class="general-item ${this.panelView === PanelView.METADATA
                 ? 'current'
@@ -151,64 +148,29 @@ export class ExperimentBuilder extends MobxLitElement {
               <div>Cohort setup</div>
               <div class="subtitle">Specify default cohort settings</div>
             </div>
-            <div class="panel-view-header">
-              <div class="header-title">Agent Mediators</div>
-              ${this.renderAddMediatorButton()}
+            <div
+              class="general-item ${this.panelView === PanelView.AGENT_MEDIATORS
+                ? 'current'
+                : ''}"
+              @click=${() => {
+                this.panelView = PanelView.AGENT_MEDIATORS;
+              }}
+            >
+              <div>Agent mediators</div>
+              <div class="subtitle">Define agent mediators</div>
             </div>
-            ${this.experimentEditor.agentMediators.map(
-              (mediator) => html`
-                <div
-                  class="agent-item ${this.experimentEditor.currentAgentId ===
-                    mediator.persona.id && this.panelView === PanelView.AGENTS
-                    ? 'current'
-                    : ''}"
-                  @click=${() => {
-                    this.panelView = PanelView.AGENTS;
-                    this.experimentEditor.setCurrentAgentId(
-                      mediator.persona.id,
-                    );
-                  }}
-                >
-                  <div>
-                    ${mediator.persona.name.length > 0
-                      ? mediator.persona.name
-                      : mediator.persona.defaultProfile.name}
-                  </div>
-                  <div class="subtitle">
-                    ${mediator.persona.defaultModelSettings.modelName}
-                  </div>
-                  <div class="subtitle">${mediator.persona.id}</div>
-                </div>
-              `,
-            )}
-            <div class="panel-view-header">
-              <div class="header-title">Agent Participants</div>
-              ${this.renderAddParticipantButton()}
+            <div
+              class="general-item ${this.panelView ===
+              PanelView.AGENT_PARTICIPANTS
+                ? 'current'
+                : ''}"
+              @click=${() => {
+                this.panelView = PanelView.AGENT_PARTICIPANTS;
+              }}
+            >
+              <div>Agent participants</div>
+              <div class="subtitle">Define agent participants</div>
             </div>
-            ${this.experimentEditor.agentParticipants.map(
-              (agent) => html`
-                <div
-                  class="agent-item ${this.experimentEditor.currentAgentId ===
-                    agent.persona.id && this.panelView === PanelView.AGENTS
-                    ? 'current'
-                    : ''}"
-                  @click=${() => {
-                    this.panelView = PanelView.AGENTS;
-                    this.experimentEditor.setCurrentAgentId(agent.persona.id);
-                  }}
-                >
-                  <div>
-                    ${agent.persona.name.length > 0
-                      ? agent.persona.name
-                      : agent.persona.defaultProfile.name}
-                  </div>
-                  <div class="subtitle">
-                    ${agent.persona.defaultModelSettings.modelName}
-                  </div>
-                  <div class="subtitle">${agent.persona.id}</div>
-                </div>
-              `,
-            )}
           </div>
           <div class="bottom">${this.renderDeleteButton()}</div>
         </div>
@@ -218,35 +180,31 @@ export class ExperimentBuilder extends MobxLitElement {
 
   private renderAddMediatorButton() {
     return html`
-      <pr-tooltip text="Add agent mediator persona" position="BOTTOM_END">
-        <pr-icon-button
-          icon="person_add"
-          color="neutral"
-          variant="default"
-          @click=${() => {
-            this.panelView = PanelView.AGENTS;
-            this.experimentEditor.addAgentMediator();
-          }}
-        >
-        </pr-icon-button>
-      </pr-tootipt>
+      <pr-button
+        icon="person_add"
+        color="tertiary"
+        variant="tonal"
+        @click=${() => {
+          this.experimentEditor.addAgentMediator();
+        }}
+      >
+        + Add agent mediator persona
+      </pr-button>
     `;
   }
 
   private renderAddParticipantButton() {
     return html`
-      <pr-tooltip text="Add agent participant persona" position="BOTTOM_END">
-        <pr-icon-button
-          icon="person_add"
-          color="neutral"
-          variant="default"
-          @click=${() => {
-            this.panelView = PanelView.AGENTS;
-            this.experimentEditor.addAgentParticipant();
-          }}
-        >
-        </pr-icon-button>
-      </pr-tootipt>
+      <pr-button
+        icon="person_add"
+        color="tertiary"
+        variant="tonal"
+        @click=${() => {
+          this.experimentEditor.addAgentParticipant();
+        }}
+      >
+        + Add agent participant persona
+      </pr-button>
     `;
   }
 
@@ -331,10 +289,53 @@ export class ExperimentBuilder extends MobxLitElement {
           <experiment-cohort-editor></experiment-cohort-editor>
         </div>
       `;
-    } else if (this.panelView === PanelView.AGENTS) {
-      const agent = this.experimentEditor.currentAgent;
-      return html`
-        <div class="experiment-builder">
+    } else if (this.panelView === PanelView.AGENT_MEDIATORS) {
+      return this.renderAgentMediatorsBuilder();
+    } else if (this.panelView === PanelView.AGENT_PARTICIPANTS) {
+      return this.renderAgentParticipantsBuilder();
+    } else if (this.panelView === PanelView.STAGES) {
+      return this.renderStageBuilder();
+    }
+    return nothing;
+  }
+
+  private renderAgentParticipantsBuilder() {
+    const agent = this.experimentEditor.currentAgent;
+    const name = agent?.persona.name;
+    return html`
+      <div class="sidenav">
+        <div class="sidenav-header">${this.renderAddParticipantButton()}</div>
+        <div class="sidenav-items">
+          ${this.experimentEditor.agentParticipants.map(
+            (agent) => html`
+              <div
+                class="agent-item ${this.experimentEditor.currentAgentId ===
+                agent.persona.id
+                  ? 'current'
+                  : ''}"
+                @click=${() => {
+                  this.experimentEditor.setCurrentAgentId(agent.persona.id);
+                }}
+              >
+                <div>
+                  ${agent.persona.name.length > 0
+                    ? agent.persona.name
+                    : agent.persona.defaultProfile.name}
+                </div>
+                <div class="subtitle">
+                  ${agent.persona.defaultModelSettings.modelName}
+                </div>
+                <div class="subtitle">${agent.persona.id}</div>
+              </div>
+            `,
+          )}
+        </div>
+      </div>
+      <div class="experiment-builder">
+        <div class="header">
+          ${name !== '' ? name : `Agent ${agent?.persona.id}`}
+        </div>
+        <div class="content">
           <agent-persona-editor .agent=${agent?.persona}>
             ${this.experimentEditor.stages.map(
               (stage, index) => html`
@@ -348,11 +349,62 @@ export class ExperimentBuilder extends MobxLitElement {
             )}
           </agent-persona-editor>
         </div>
-      `;
-    } else if (this.panelView === PanelView.STAGES) {
-      return this.renderStageBuilder();
-    }
-    return nothing;
+      </div>
+    `;
+  }
+
+  private renderAgentMediatorsBuilder() {
+    const agent = this.experimentEditor.currentAgent;
+    const name = agent?.persona.name;
+    return html`
+      <div class="sidenav">
+        <div class="sidenav-header">${this.renderAddMediatorButton()}</div>
+        <div class="sidenav-items">
+          ${this.experimentEditor.agentMediators.map(
+            (mediator) => html`
+              <div
+                class="agent-item ${this.experimentEditor.currentAgentId ===
+                mediator.persona.id
+                  ? 'current'
+                  : ''}"
+                @click=${() => {
+                  this.experimentEditor.setCurrentAgentId(mediator.persona.id);
+                }}
+              >
+                <div>
+                  ${mediator.persona.name.length > 0
+                    ? mediator.persona.name
+                    : mediator.persona.defaultProfile.name}
+                </div>
+                <div class="subtitle">
+                  ${mediator.persona.defaultModelSettings.modelName}
+                </div>
+                <div class="subtitle">${mediator.persona.id}</div>
+              </div>
+            `,
+          )}
+        </div>
+      </div>
+      <div class="experiment-builder">
+        <div class="header">
+          ${name !== '' ? name : `Agent ${agent?.persona.id}`}
+        </div>
+        <div class="content">
+          <agent-persona-editor .agent=${agent?.persona}>
+            ${this.experimentEditor.stages.map(
+              (stage, index) => html`
+                <agent-chat-prompt-editor
+                  .agent=${agent?.persona}
+                  .stageId=${stage.id}
+                  .stageNamePrefix=${`${index + 1}. `}
+                >
+                </agent-chat-prompt-editor>
+              `,
+            )}
+          </agent-persona-editor>
+        </div>
+      </div>
+    `;
   }
 
   private renderStageBuilder() {
