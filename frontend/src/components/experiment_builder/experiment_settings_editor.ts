@@ -22,19 +22,10 @@ import {styles} from './experiment_settings_editor.scss';
 export class ExperimentMetadataEditor extends MobxLitElement {
   static override styles: CSSResultGroup = [styles];
 
-  private readonly analyticsService = core.getService(AnalyticsService);
   private readonly experimentEditor = core.getService(ExperimentEditor);
   private readonly experimentManager = core.getService(ExperimentManager);
 
   override render() {
-    return html`
-      <div class="inner-wrapper">
-        ${this.renderMetadata()} ${this.renderPermissions()}
-      </div>
-    `;
-  }
-
-  private renderMetadata() {
     const updateName = (e: InputEvent) => {
       const name = (e.target as HTMLTextAreaElement).value;
       this.experimentEditor.updateMetadata({name});
@@ -51,7 +42,7 @@ export class ExperimentMetadataEditor extends MobxLitElement {
     };
 
     return html`
-      <div class="section">
+      <div class="inner-wrapper">
         <md-filled-text-field
           label="Private experiment name (not visible to participants)"
           required
@@ -80,8 +71,15 @@ export class ExperimentMetadataEditor extends MobxLitElement {
       </div>
     `;
   }
+}
 
-  private renderPermissions() {
+/** Editor for adjusting experiment permissions */
+@customElement('experiment-permissions-editor')
+export class ExperimentPermissionsEditor extends MobxLitElement {
+  static override styles: CSSResultGroup = [styles];
+  private readonly experimentEditor = core.getService(ExperimentEditor);
+
+  override render() {
     const isPublic =
       this.experimentEditor.experiment.permissions.visibility ===
       Visibility.PUBLIC;
@@ -92,7 +90,7 @@ export class ExperimentMetadataEditor extends MobxLitElement {
     };
 
     return html`
-      <div class="section">
+      <div class="inner-wrapper">
         <div class="checkbox-wrapper">
           <md-checkbox
             touch-target="wrapper"
@@ -323,6 +321,7 @@ declare global {
   interface HTMLElementTagNameMap {
     'experiment-metadata-editor': ExperimentMetadataEditor;
     'experiment-cohort-editor': ExperimentCohortEditor;
+    'experiment-permissions-editor': ExperimentPermissionsEditor;
     'experiment-prolific-editor': ExperimentProlificEditor;
   }
 }

@@ -43,6 +43,7 @@ enum PanelView {
   API_KEY = 'api_key',
   COHORT = 'cohort',
   DEFAULT = 'default',
+  PERMISSIONS = 'permissions',
   PROLIFIC = 'prolific',
   STAGES = 'stages',
 }
@@ -93,9 +94,18 @@ export class ExperimentBuilder extends MobxLitElement {
               }}
             >
               <div>Metadata</div>
-              <div class="subtitle">
-                Experiment name, description, visibility
-              </div>
+              <div class="subtitle">Experiment name and description</div>
+            </div>
+            <div
+              class="general-item ${this.panelView === PanelView.PERMISSIONS
+                ? 'current'
+                : ''}"
+              @click=${() => {
+                this.panelView = PanelView.PERMISSIONS;
+              }}
+            >
+              <div>Permissions</div>
+              <div class="subtitle">Set visibility of experiment dashboard</div>
             </div>
             <div
               class="general-item ${this.panelView === PanelView.STAGES
@@ -301,6 +311,12 @@ export class ExperimentBuilder extends MobxLitElement {
       return html`
         <div class="experiment-builder">
           <experiment-metadata-editor></experiment-metadata-editor>
+        </div>
+      `;
+    } else if (this.panelView === PanelView.PERMISSIONS) {
+      return html`
+        <div class="experiment-builder">
+          <experiment-permissions-editor></experiment-permissions-editor>
         </div>
       `;
     } else if (this.panelView === PanelView.PROLIFIC) {
