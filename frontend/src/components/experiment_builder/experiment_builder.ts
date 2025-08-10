@@ -59,7 +59,7 @@ export class ExperimentBuilder extends MobxLitElement {
 
   override render() {
     return html`
-      ${this.renderNavPanel()} ${this.renderExperimentConfigBuilder()}
+      ${this.renderPanelView()} ${this.renderExperimentConfigBuilder()}
       ${this.renderExperimenterSettings()} ${this.renderStageBuilderDialog()}
     `;
   }
@@ -73,148 +73,111 @@ export class ExperimentBuilder extends MobxLitElement {
     return nothing;
   }
 
-  private renderNavPanel() {
-    const isSelected = (panelView: PanelView) => {
-      return this.panelView === panelView;
-    };
-
+  private renderPanelView() {
     return html`
       <div class="panel-wrapper">
-        <div class="sidebar">
-          <pr-tooltip text="Experiment settings" position="RIGHT_END">
-            <pr-icon-button
-              color="secondary"
-              icon="folder_managed"
-              size="medium"
-              variant=${!isSelected(PanelView.API_KEY) ? 'tonal' : 'default'}
+        <div class="panel-view">
+          <div class="top">
+            <div class="panel-view-header">
+              <div class="header-title">General settings</div>
+              ${this.renderAddStageButton()}
+            </div>
+            <div
+              class="general-item ${this.panelView === PanelView.DEFAULT
+                ? 'current'
+                : ''}"
               @click=${() => {
                 this.panelView = PanelView.DEFAULT;
               }}
             >
-            </pr-icon-button>
-          </pr-tooltip>
-          <pr-tooltip text="API key settings" position="RIGHT_END">
-            <pr-icon-button
-              color="secondary"
-              icon="key"
-              size="medium"
-              variant=${isSelected(PanelView.API_KEY) ? 'tonal' : 'default'}
+              <div>Metadata</div>
+              <div class="subtitle">
+                Experiment name, visibility, Prolific integration
+              </div>
+            </div>
+            <div
+              class="general-item ${this.panelView === PanelView.STAGES
+                ? 'current'
+                : ''}"
+              @click=${() => {
+                this.panelView = PanelView.STAGES;
+              }}
+            >
+              <div>Experiment stages</div>
+              <div class="subtitle">Add and configure experiment stages</div>
+            </div>
+            <div
+              class="general-item ${this.panelView === PanelView.API_KEY
+                ? 'current'
+                : ''}"
               @click=${() => {
                 this.panelView = PanelView.API_KEY;
               }}
             >
-            </pr-icon-button>
-          </pr-tooltip>
-        </div>
-        ${this.renderPanelView()}
-      </div>
-    `;
-  }
-
-  private renderPanelView() {
-    if (this.panelView === PanelView.API_KEY) {
-      return html`
-        <div class="panel-view">
-          <div class="top">
-            <div class="panel-view-header">Experimenter settings</div>
-            <div>
-              ⚠️ Note that experimenter API settings are shared across all
-              experiments!
+              <div>API Key</div>
+              <div class="subtitle">Configure API key</div>
             </div>
-          </div>
-        </div>
-      `;
-    }
-
-    return html`
-      <div class="panel-view">
-        <div class="top">
-          <div class="panel-view-header">
-            <div class="header-title">General settings</div>
-            ${this.renderAddStageButton()}
-          </div>
-          <div
-            class="general-item ${this.panelView === PanelView.DEFAULT
-              ? 'current'
-              : ''}"
-            @click=${() => {
-              this.panelView = PanelView.DEFAULT;
-            }}
-          >
-            <div>Metadata</div>
-            <div class="subtitle">
-              Experiment name, visibility, Prolific integration
+            <div class="panel-view-header">
+              <div class="header-title">Agent Mediators</div>
+              ${this.renderAddMediatorButton()}
             </div>
-          </div>
-          <div
-            class="general-item ${this.panelView === PanelView.STAGES
-              ? 'current'
-              : ''}"
-            @click=${() => {
-              this.panelView = PanelView.STAGES;
-            }}
-          >
-            <div>Stages</div>
-            <div class="subtitle">Add and configure experiment stages</div>
-          </div>
-          <div class="panel-view-header">
-            <div class="header-title">Agent Mediators</div>
-            ${this.renderAddMediatorButton()}
-          </div>
-          ${this.experimentEditor.agentMediators.map(
-            (mediator) => html`
-              <div
-                class="agent-item ${this.experimentEditor.currentAgentId ===
-                  mediator.persona.id && this.panelView === PanelView.AGENTS
-                  ? 'current'
-                  : ''}"
-                @click=${() => {
-                  this.panelView = PanelView.AGENTS;
-                  this.experimentEditor.setCurrentAgentId(mediator.persona.id);
-                }}
-              >
-                <div>
-                  ${mediator.persona.name.length > 0
-                    ? mediator.persona.name
-                    : mediator.persona.defaultProfile.name}
+            ${this.experimentEditor.agentMediators.map(
+              (mediator) => html`
+                <div
+                  class="agent-item ${this.experimentEditor.currentAgentId ===
+                    mediator.persona.id && this.panelView === PanelView.AGENTS
+                    ? 'current'
+                    : ''}"
+                  @click=${() => {
+                    this.panelView = PanelView.AGENTS;
+                    this.experimentEditor.setCurrentAgentId(
+                      mediator.persona.id,
+                    );
+                  }}
+                >
+                  <div>
+                    ${mediator.persona.name.length > 0
+                      ? mediator.persona.name
+                      : mediator.persona.defaultProfile.name}
+                  </div>
+                  <div class="subtitle">
+                    ${mediator.persona.defaultModelSettings.modelName}
+                  </div>
+                  <div class="subtitle">${mediator.persona.id}</div>
                 </div>
-                <div class="subtitle">
-                  ${mediator.persona.defaultModelSettings.modelName}
+              `,
+            )}
+            <div class="panel-view-header">
+              <div class="header-title">Agent Participants</div>
+              ${this.renderAddParticipantButton()}
+            </div>
+            ${this.experimentEditor.agentParticipants.map(
+              (agent) => html`
+                <div
+                  class="agent-item ${this.experimentEditor.currentAgentId ===
+                    agent.persona.id && this.panelView === PanelView.AGENTS
+                    ? 'current'
+                    : ''}"
+                  @click=${() => {
+                    this.panelView = PanelView.AGENTS;
+                    this.experimentEditor.setCurrentAgentId(agent.persona.id);
+                  }}
+                >
+                  <div>
+                    ${agent.persona.name.length > 0
+                      ? agent.persona.name
+                      : agent.persona.defaultProfile.name}
+                  </div>
+                  <div class="subtitle">
+                    ${agent.persona.defaultModelSettings.modelName}
+                  </div>
+                  <div class="subtitle">${agent.persona.id}</div>
                 </div>
-                <div class="subtitle">${mediator.persona.id}</div>
-              </div>
-            `,
-          )}
-          <div class="panel-view-header">
-            <div class="header-title">Agent Participants</div>
-            ${this.renderAddParticipantButton()}
+              `,
+            )}
           </div>
-          ${this.experimentEditor.agentParticipants.map(
-            (agent) => html`
-              <div
-                class="agent-item ${this.experimentEditor.currentAgentId ===
-                  agent.persona.id && this.panelView === PanelView.AGENTS
-                  ? 'current'
-                  : ''}"
-                @click=${() => {
-                  this.panelView = PanelView.AGENTS;
-                  this.experimentEditor.setCurrentAgentId(agent.persona.id);
-                }}
-              >
-                <div>
-                  ${agent.persona.name.length > 0
-                    ? agent.persona.name
-                    : agent.persona.defaultProfile.name}
-                </div>
-                <div class="subtitle">
-                  ${agent.persona.defaultModelSettings.modelName}
-                </div>
-                <div class="subtitle">${agent.persona.id}</div>
-              </div>
-            `,
-          )}
+          <div class="bottom">${this.renderDeleteButton()}</div>
         </div>
-        <div class="bottom">${this.renderDeleteButton()}</div>
       </div>
     `;
   }

@@ -40,6 +40,9 @@ export class ExperimenterDataEditor extends MobxLitElement {
 
   override render() {
     return html`
+      <div class="banner">
+        Note: API keys are shared across all experiments!
+      </div>
       ${this.renderGeminiKey()}
       <div class="divider"></div>
       ${this.renderOpenAISettings()}
