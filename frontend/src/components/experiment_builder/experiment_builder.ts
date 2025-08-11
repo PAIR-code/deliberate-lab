@@ -215,18 +215,35 @@ export class ExperimentBuilder extends MobxLitElement {
   }
 
   private renderAddMediatorButton() {
-    return html`
+    const disabled =
+      this.experimentEditor.getMediatorAllowedStages().length === 0;
+
+    const btn = html`
       <pr-button
         icon="person_add"
         color="tertiary"
         variant="tonal"
+        ?disabled=${disabled}
+        aria-disabled=${disabled ? 'true' : 'false'}
         @click=${() => {
+          if (disabled) return;
           this.experimentEditor.addAgentMediator();
         }}
       >
         + Add agent mediator persona
       </pr-button>
     `;
+
+    return disabled
+      ? html`
+          <pr-tooltip
+            text="No mediator-compatible stages have been added to this experiment. Add a mediator-compatible stage (like Chat) to enable this."
+            position="BOTTOM_END"
+          >
+            ${btn}
+          </pr-tooltip>
+        `
+      : btn;
   }
 
   private renderAddParticipantButton() {
@@ -398,6 +415,11 @@ export class ExperimentBuilder extends MobxLitElement {
         </div>
         <div class="content">
           <agent-persona-editor .agent=${agent?.persona}>
+          <br/>
+          <div class="divider main">
+          
+          ${this.experimentEditor.stages.length === 0 ? '' : html`<div class="header">Stage-specific prompts</div>`}
+
             ${this.experimentEditor.stages.map(
               (stage, index) => html`
                 <agent-chat-prompt-editor
@@ -452,6 +474,9 @@ export class ExperimentBuilder extends MobxLitElement {
         </div>
         <div class="content">
           <agent-persona-editor .agent=${agent?.persona}>
+            ${this.experimentEditor.stages.length === 0
+              ? ''
+              : html`<div class="header">Stage-specific prompts</div>`}
             ${this.experimentEditor.stages.map(
               (stage, index) => html`
                 <agent-chat-prompt-editor

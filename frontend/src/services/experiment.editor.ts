@@ -102,6 +102,13 @@ export class ExperimentEditor extends Service {
     return errors;
   }
 
+  getMediatorAllowedStages() {
+    return this.stages.filter(
+      (stage) =>
+        stage.kind === StageKind.CHAT || stage.kind === StageKind.PRIVATE_CHAT,
+    );
+  }
+
   @computed get canEditStages() {
     return this.sp.experimentManager.canEditExperimentStages;
   }
