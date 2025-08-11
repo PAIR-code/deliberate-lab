@@ -1,6 +1,7 @@
-// This test assumes that a Firebase emulator is running on port 8080. npm test
-// is configured to set up a temporary emulator to run the test. To do it
-// yourself, run e.g.:
+// This test assumes that a Firestore emulator is running, either at the port
+// specified by the FIRESTORE_EMULATOR_HOST environment variable, or at 8080 if
+// not specified. npm test is configured to set up a temporary emulator to run
+// the test. To do it yourself, run e.g.:
 //
 // firebase emulators:exec --only firestore "npx jest src/log.utils.test.ts"
 
@@ -19,8 +20,6 @@ import {
 } from '@deliberation-lab/utils';
 import {writeModelLogEntry} from './log.utils';
 import {getGeminiAPIResponse} from './api/gemini.api';
-
-const FIREBASE_PORT = 8080;
 
 const MODEL_NAME = 'gemini-2.5-flash';
 
@@ -53,8 +52,10 @@ describe('log.utils', () => {
       projectId: 'deliberate-lab-test',
       firestore: {
         rules: RULES,
-        host: 'localhost',
-        port: FIREBASE_PORT,
+          ...(!process.env.FIRESTORE_EMULATOR_HOST && {
+            host: 'localhost',
+            port: 8080,
+          }),
       },
     });
     mockFirestore = testEnv.unauthenticatedContext().firestore();

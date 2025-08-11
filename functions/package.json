@@ -10,7 +10,7 @@
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
     "test": "npm run test:unit && npm run test:firestore",
-    "test:firestore": "firebase emulators:exec --only firestore \"npx jest $npm_package_config_firestore_tests\"",
+    "test:firestore": "firebase -c firebase-test.json emulators:exec --only firestore \"npx jest $npm_package_config_firestore_tests\"",
     "test:unit": "npx jest --testPathIgnorePatterns=$npm_package_config_firestore_tests"
   },
   "engines": {
