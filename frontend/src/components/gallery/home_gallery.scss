@@ -109,17 +109,28 @@ h1 {
 
 .quick-start-card {
   @include common.flex-column-align-center;
-  border: 2px dashed var(--md-sys-color-outline);
+  background: var(--md-sys-color-secondary-container);
+  border: 2px solid transparent;
   border-radius: common.$spacing-medium;
+  color: var(--md-sys-color-on-secondary-container);
   cursor: pointer;
   gap: common.$spacing-medium;
   justify-content: center;
   min-height: 120px;
+  text-align: center;
   padding: common.$spacing-medium;
-  min-width: 200px;
+  width: 150px;
+
+  &.blank {
+    background: none;
+    border-color: var(--md-sys-color-outline);
+    border-style: dashed;
+  }
 
   &:focus,
-  &:hover {
+  &:hover,
+  &:focus.blank,
+  &:hover.blank {
     border-color: var(--md-sys-color-secondary);
   }
 }
