@@ -52,10 +52,10 @@ describe('log.utils', () => {
       projectId: 'deliberate-lab-test',
       firestore: {
         rules: RULES,
-          ...(!process.env.FIRESTORE_EMULATOR_HOST && {
-            host: 'localhost',
-            port: 8080,
-          }),
+        ...(!process.env.FIRESTORE_EMULATOR_HOST && {
+          host: 'localhost',
+          port: 8080,
+        }),
       },
     });
     mockFirestore = testEnv.unauthenticatedContext().firestore();
