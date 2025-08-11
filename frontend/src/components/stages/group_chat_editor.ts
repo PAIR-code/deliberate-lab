@@ -33,7 +33,7 @@ export class ChatEditor extends MobxLitElement {
       ${this.renderTimeLimit()}
       <div class="divider"></div>
       <div class="title">Agent settings</div>
-      <div>See agent tab to configure mediator agents!</div>
+      <div>Navigate to "Agent mediators" tab to add or edit mediators</div>
     `;
   }
 

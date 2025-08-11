@@ -495,7 +495,7 @@ export class ExperimentBuilder extends MobxLitElement {
     const stage = this.experimentEditor.currentStage;
 
     if (stage === undefined) {
-      return html` Select a stage to edit. `;
+      return html`<div class="content padding">Select a stage to edit.</div>`;
     }
 
     switch (stage.kind) {
@@ -528,7 +528,14 @@ export class ExperimentBuilder extends MobxLitElement {
           </base-stage-editor>
         `;
       case StageKind.PRIVATE_CHAT:
-        return html` <base-stage-editor .stage=${stage}></base-stage-editor> `;
+        return html`
+          <base-stage-editor .stage=${stage}>
+            <div slot="title">Mediator settings</div>
+            <div class="description">
+              Navigate to "Agent mediators" tab to add or edit mediators
+            </div>
+          </base-stage-editor>
+        `;
       case StageKind.FLIPCARD:
         return html`
           <base-stage-editor .stage=${stage}>
