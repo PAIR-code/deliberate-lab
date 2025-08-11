@@ -5,6 +5,8 @@ authors:
   given-names: "Vivian"
 - family-names: "Qian"
   given-names: "Crystal"
+- family-names: "Behr"
+  given-names: "Michael"
 - family-names: "Deliberate Lab community contributors"
 title: "Deliberate Lab: Open-Source Platform for LLM-Powered Social Science"
 version: 2025-03-24
