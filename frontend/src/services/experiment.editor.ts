@@ -102,6 +102,13 @@ export class ExperimentEditor extends Service {
     return errors;
   }
 
+  getMediatorAllowedStages() {
+    return this.stages.filter(
+      (stage) =>
+        stage.kind === StageKind.CHAT || stage.kind === StageKind.PRIVATE_CHAT,
+    );
+  }
+
   @computed get canEditStages() {
     return this.sp.experimentManager.canEditExperimentStages;
   }
@@ -272,6 +279,15 @@ export class ExperimentEditor extends Service {
 
   setCurrentAgentId(id: string) {
     this.currentAgentId = id;
+  }
+
+  setAgentIdToLatest(isMediator: boolean = true) {
+    const agents = isMediator ? this.agentMediators : this.agentParticipants;
+    if (agents.length === 0) {
+      this.setCurrentAgentId('');
+    } else {
+      this.setCurrentAgentId(agents[agents.length - 1].persona.id);
+    }
   }
 
   setAgentMediators(templates: AgentMediatorTemplate[]) {

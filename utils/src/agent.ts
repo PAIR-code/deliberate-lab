@@ -262,7 +262,7 @@ export function createAgentMediatorPersonaConfig(
   const type = AgentPersonaType.MEDIATOR;
   return {
     id: config.id ?? generateId(),
-    name: config.name ?? '',
+    name: config.name ?? 'Agent Mediator',
     description: config.description ?? '',
     type: AgentPersonaType.MEDIATOR,
     isDefaultAddToCohort: config.isDefaultAddToCohort ?? true,
@@ -270,7 +270,7 @@ export function createAgentMediatorPersonaConfig(
       config.defaultProfile ??
       createParticipantProfileBase({
         name: 'Mediator',
-        avatar: '🙋',
+        avatar: '🤖',
       }),
     defaultModelSettings:
       config.defaultModelSettings ?? createAgentModelSettings(),
@@ -289,8 +289,8 @@ export function createAgentParticipantPersonaConfig(
     defaultProfile:
       config.defaultProfile ??
       createParticipantProfileBase({
-        name: '',
-        avatar: '',
+        name: 'Participant',
+        avatar: '🙋',
       }),
     defaultModelSettings:
       config.defaultModelSettings ?? createAgentModelSettings(),

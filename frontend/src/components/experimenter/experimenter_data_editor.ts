@@ -194,7 +194,7 @@ export class ExperimenterDataEditor extends MobxLitElement {
       <div class="section">
         <h3>Open AI API settings</h3>
         <md-filled-text-field
-          label="API Key"
+          label="API key"
           placeholder="Add Open AI API key"
           .value=${data?.apiKeys.openAIApiKey?.apiKey ?? ''}
           @input=${(e: InputEvent) => updateOpenAISettings(e, 'apiKey')}
