@@ -73,23 +73,32 @@ export class ExperimentEditor extends Service {
   // EXPERIMENT LOADING
   // **************************************************************************
 
-  @computed get isValidExperimentConfig() {
-    // TODO: Add other validation checks here
-    if (this.experiment.metadata.name.length == 0) {
-      return false;
+  getExperimentConfigErrors() {
+    const errors: string[] = [];
+
+    if (this.experiment.metadata.name.length === 0) {
+      errors.push('Experiment does not have a name');
+    }
+
+    if (this.stages.length === 0) {
+      errors.push('You must add at least one stage to your experiment');
     }
 
     for (const stage of this.stages) {
       switch (stage.kind) {
         case StageKind.SURVEY:
           // Ensure all questions have a non-empty title
-          if (!stage.questions.every((q) => q.questionTitle !== '')) {
-            return false;
-          }
+          stage.questions.forEach((question, index) => {
+            if (question.questionTitle === '') {
+              errors.push(
+                `${stage.name} question ${index + 1} is missing a title`,
+              );
+            }
+          });
           break;
       }
     }
-    return true;
+    return errors;
   }
 
   @computed get canEditStages() {
