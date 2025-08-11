@@ -142,14 +142,7 @@
 }
 
 .alpha {
-  @include typescale.label-small;
-  border: 1px solid var(--md-sys-color-secondary);
-  border-radius: common.$spacing-small;
-  color: var(--md-sys-color-secondary);
-  margin-left: common.$spacing-medium;
-  padding: common.$spacing-xs;
-  text-transform: uppercase;
-  width: max-content;
+  @include common.mode-tag;
 }
 
 pr-button pr-icon {
