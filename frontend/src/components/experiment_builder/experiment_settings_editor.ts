@@ -43,6 +43,7 @@ export class ExperimentMetadataEditor extends MobxLitElement {
 
     return html`
       <div class="inner-wrapper">
+        <div class="title">Experiment metadata</div>
         <md-filled-text-field
           label="Private experiment name (not visible to participants)"
           required
@@ -91,6 +92,7 @@ export class ExperimentPermissionsEditor extends MobxLitElement {
 
     return html`
       <div class="inner-wrapper">
+        <div class="title">Permissions</div>
         <div class="checkbox-wrapper">
           <md-checkbox
             touch-target="wrapper"
@@ -254,6 +256,7 @@ export class ExperimentProlificEditor extends MobxLitElement {
 
     return html`
       <div class="inner-wrapper">
+        <div class="title">Prolific settings</div>
         <div class="checkbox-wrapper">
           <md-checkbox
             touch-target="wrapper"
