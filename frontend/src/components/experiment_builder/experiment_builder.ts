@@ -6,6 +6,7 @@ import '../experimenter/experimenter_data_editor';
 import '../stages/asset_allocation_editor';
 import '../stages/base_stage_editor';
 import '../stages/group_chat_editor';
+import '../stages/private_chat_editor';
 import '../stages/flipcard_editor';
 import '../stages/ranking_editor';
 import '../stages/info_editor';
@@ -531,9 +532,7 @@ export class ExperimentBuilder extends MobxLitElement {
         return html`
           <base-stage-editor .stage=${stage}>
             <div slot="title">Mediator settings</div>
-            <div class="description">
-              Navigate to "Agent mediators" tab to add or edit mediators
-            </div>
+            <private-chat-editor .stage=${stage}></private-chat-editor>
           </base-stage-editor>
         `;
       case StageKind.FLIPCARD:
