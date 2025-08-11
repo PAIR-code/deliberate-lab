@@ -70,7 +70,12 @@ export class TransferEditorComponent extends MobxLitElement {
       return nothing;
     }
 
-    return html` ${this.renderTimeout()} ${this.renderAutoTransfer()} `;
+    return html`
+      ${this.renderTimeout()}
+      ${this.experimentEditor.showAlphaFeatures
+        ? this.renderAutoTransfer()
+        : nothing}
+    `;
   }
 
   private renderTimeout() {

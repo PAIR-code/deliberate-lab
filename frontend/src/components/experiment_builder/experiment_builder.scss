@@ -47,7 +47,7 @@
 
 .panel-view {
   @include common.flex-column;
-  color: var(--md-sys-color-outline);
+  color: var(--md-sys-color-on-surface-container);
   flex-grow: 1;
   overflow: auto;
 
@@ -70,7 +70,7 @@
 .panel-view-header {
   @include common.flex-row-align-center;
   @include typescale.label-small;
-  color: var(--md-sys-color-outline);
+  color: var(--md-sys-color-secondary);
   flex-shrink: 0;
   flex-wrap: wrap;
   gap: common.$spacing-small;
@@ -192,6 +192,7 @@ pr-button pr-icon {
 
 .subtitle {
   @include typescale.label-small;
+  color: var(--md-sys-color-outline);
 
   &.warning {
     color: var(--md-sys-color-tertiary);
@@ -200,4 +201,22 @@ pr-button pr-icon {
 
 .title-field {
   flex-grow: 1;
+}
+
+.checkbox-wrapper {
+  @include common.flex-row-align-center;
+  gap: common.$spacing-small;
+  overflow-wrap: break-word;
+
+  md-checkbox {
+    flex-shrink: 0;
+  }
+}
+
+.inner-wrapper {
+  @include common.flex-column;
+  gap: common.$spacing-xxl;
+  max-width: common.$info-content-max-width;
+  padding: common.$main-content-padding;
+  padding-bottom: calc(common.$main-content-padding * 2);
 }

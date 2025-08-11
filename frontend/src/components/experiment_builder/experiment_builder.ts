@@ -29,6 +29,8 @@ import {MobxLitElement} from '@adobe/lit-mobx';
 import {CSSResultGroup, html, nothing} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
+import '@material/web/checkbox/checkbox.js';
+
 import {core} from '../../core/core';
 import {AnalyticsService, ButtonClick} from '../../services/analytics.service';
 import {ExperimentEditor} from '../../services/experiment.editor';
@@ -42,6 +44,7 @@ import {styles} from './experiment_builder.scss';
 enum PanelView {
   AGENT_MEDIATORS = 'agent_mediators',
   AGENT_PARTICIPANTS = 'agent_participants',
+  ALPHA = 'alpha',
   API_KEY = 'api_key',
   COHORT = 'cohort',
   METADATA = 'metadata',
@@ -166,20 +169,44 @@ export class ExperimentBuilder extends MobxLitElement {
               <div>Agent mediators</div>
               <div class="subtitle">Add and configure agent mediators</div>
             </div>
+            ${this.experimentEditor.showAlphaFeatures
+              ? html`
+                  <div
+                    class="general-item ${this.panelView ===
+                    PanelView.AGENT_PARTICIPANTS
+                      ? 'current'
+                      : ''}"
+                    @click=${() => {
+                      this.panelView = PanelView.AGENT_PARTICIPANTS;
+                    }}
+                  >
+                    <div>
+                      Agent participants<span class="alpha">alpha</span>
+                    </div>
+                    <div class="subtitle">
+                      Add and configure agent participants
+                    </div>
+                  </div>
+                `
+              : nothing}
+            <div class="panel-view-header">
+              <div class="header-title">Additional settings</div>
+            </div>
             <div
-              class="general-item ${this.panelView ===
-              PanelView.AGENT_PARTICIPANTS
+              class="general-item ${this.panelView === PanelView.ALPHA
                 ? 'current'
                 : ''}"
               @click=${() => {
-                this.panelView = PanelView.AGENT_PARTICIPANTS;
+                this.panelView = PanelView.ALPHA;
               }}
             >
-              <div>Agent participants<span class="alpha">alpha</span></div>
-              <div class="subtitle">Add and configure agent participants</div>
+              <div>
+                Alpha features
+                <div class="subtitle">Toggle alpha features in editor</div>
+              </div>
             </div>
+            <div class="bottom">${this.renderDeleteButton()}</div>
           </div>
-          <div class="bottom">${this.renderDeleteButton()}</div>
         </div>
       </div>
     `;
@@ -302,6 +329,28 @@ export class ExperimentBuilder extends MobxLitElement {
       return this.renderAgentParticipantsBuilder();
     } else if (this.panelView === PanelView.STAGES) {
       return this.renderStageBuilder();
+    } else if (this.panelView === PanelView.ALPHA) {
+      return html`
+        <div class="inner-wrapper">
+          <div class="title">Alpha mode</div>
+          <div class="checkbox-wrapper">
+            <md-checkbox
+              touch-target="wrapper"
+              ?checked=${this.experimentEditor.showAlphaFeatures}
+              @click=${() => {
+                this.experimentEditor.setShowAlphaFeatures(
+                  !this.experimentEditor.showAlphaFeatures,
+                );
+              }}
+            >
+            </md-checkbox>
+            <div>
+              Show "alpha mode" options when building experiment. Note that
+              alpha features are still in progress and may not work as intended.
+            </div>
+          </div>
+        </div>
+      `;
     }
     return nothing;
   }
