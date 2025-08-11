@@ -130,6 +130,8 @@ export interface BaseAgentPersonaConfig {
   id: string;
   // Viewable only to experimenters
   name: string;
+  // Viewable only to experimenters
+  description: string;
   // Agent persona type
   type: AgentPersonaType;
   // If true, add to cohort on cohort creation
@@ -260,14 +262,15 @@ export function createAgentMediatorPersonaConfig(
   const type = AgentPersonaType.MEDIATOR;
   return {
     id: config.id ?? generateId(),
-    name: config.name ?? '',
+    name: config.name ?? 'Agent Mediator',
+    description: config.description ?? '',
     type: AgentPersonaType.MEDIATOR,
     isDefaultAddToCohort: config.isDefaultAddToCohort ?? true,
     defaultProfile:
       config.defaultProfile ??
       createParticipantProfileBase({
         name: 'Mediator',
-        avatar: '🙋',
+        avatar: '🤖',
       }),
     defaultModelSettings:
       config.defaultModelSettings ?? createAgentModelSettings(),
@@ -280,13 +283,14 @@ export function createAgentParticipantPersonaConfig(
   return {
     id: config.id ?? generateId(),
     name: config.name ?? 'Agent Participant',
+    description: config.description ?? '',
     type: AgentPersonaType.PARTICIPANT,
     isDefaultAddToCohort: config.isDefaultAddToCohort ?? false,
     defaultProfile:
       config.defaultProfile ??
       createParticipantProfileBase({
-        name: '',
-        avatar: '',
+        name: 'Participant',
+        avatar: '🙋',
       }),
     defaultModelSettings:
       config.defaultModelSettings ?? createAgentModelSettings(),

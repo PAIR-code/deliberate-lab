@@ -96,6 +96,11 @@ h1 {
   color: var(--md-sys-color-outline);
 }
 
+.error {
+  @include typescale.label-small;
+  color: var(--md-sys-color-error);
+}
+
 pr-button {
   pr-icon {
     margin-right: common.$spacing-small;

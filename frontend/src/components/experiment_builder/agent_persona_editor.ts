@@ -50,6 +50,7 @@ export class AgentPersonaEditorComponent extends MobxLitElement {
     return html`
       <div class="agent-wrapper">
         ${this.renderAgentPrivateName(agentConfig)}
+        ${this.renderAgentPrivateDescription(agentConfig)}
         ${this.renderAgentName(agentConfig)} ${this.renderAvatars(agentConfig)}
         ${this.renderAgentApiType(agentConfig)}
         ${this.renderAgentModel(agentConfig)}
@@ -118,6 +119,24 @@ export class AgentPersonaEditorComponent extends MobxLitElement {
         class=${agent.name.length === 0 ? 'required' : ''}
         ?disabled=${!this.experimentEditor.canEditStages}
         @input=${updateName}
+      >
+      </md-filled-text-field>
+    `;
+  }
+
+  private renderAgentPrivateDescription(agent: AgentPersonaConfig) {
+    const updateDescription = (e: InputEvent) => {
+      const description = (e.target as HTMLTextAreaElement).value;
+      this.updatePersona({description});
+    };
+
+    return html`
+      <md-filled-text-field
+        type="textarea"
+        label="Description (viewable to experimenters only)"
+        .value=${agent.description}
+        ?disabled=${!this.experimentEditor.canEditStages}
+        @input=${updateDescription}
       >
       </md-filled-text-field>
     `;

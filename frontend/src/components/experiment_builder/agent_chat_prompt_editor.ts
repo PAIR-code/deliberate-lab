@@ -102,7 +102,9 @@ export class EditorComponent extends MobxLitElement {
 
   private renderAddButton() {
     return html`
-      <pr-button variant="tonal" @click=${this.addPrompt}>Add prompt</pr-button>
+      <pr-button color="error" variant="tonal" @click=${this.addPrompt}>
+        Add prompt
+      </pr-button>
     `;
   }
 
