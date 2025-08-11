@@ -155,7 +155,7 @@ export class ExperimentBuilder extends MobxLitElement {
                 this.panelView = PanelView.API_KEY;
               }}
             >
-              <div>API Key</div>
+              <div>API key</div>
               <div class="subtitle">Configure API key used for agent calls</div>
             </div>
             <div
