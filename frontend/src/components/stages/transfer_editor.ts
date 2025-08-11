@@ -27,7 +27,7 @@ export class TransferEditorComponent extends MobxLitElement {
 
   @property() stage: TransferStageConfig | undefined = undefined;
 
-  private renderSurveyToggle() {
+  private renderAutoTransfer() {
     if (!this.stage) return nothing;
     const isSurveyMatchingEnabled = this.stage.autoTransferConfig;
 
@@ -41,7 +41,10 @@ export class TransferEditorComponent extends MobxLitElement {
 
     return html`
       <div class="section">
-        <div class="title">Automatic transfer</div>
+        <div class="title">
+          Automatic transfer
+          <span class="alpha">alpha</span>
+        </div>
         <div class="description">
           If you would like to transfer participants based on rules rather than
           manually, specify the behavior here.
@@ -58,6 +61,7 @@ export class TransferEditorComponent extends MobxLitElement {
           <div>Automatically match participants based on survey answers</div>
         </div>
       </div>
+      ${this.stage.autoTransferConfig ? this.renderSurveyConfig() : nothing}
     `;
   }
 
@@ -66,11 +70,7 @@ export class TransferEditorComponent extends MobxLitElement {
       return nothing;
     }
 
-    return html`
-      ${this.renderSurveyToggle()}
-      ${this.stage.autoTransferConfig ? this.renderSurveyConfig() : nothing}
-      ${this.renderTimeout()}
-    `;
+    return html` ${this.renderTimeout()} ${this.renderAutoTransfer()} `;
   }
 
   private renderTimeout() {
