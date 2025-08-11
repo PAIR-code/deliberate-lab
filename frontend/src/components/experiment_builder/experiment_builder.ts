@@ -175,7 +175,7 @@ export class ExperimentBuilder extends MobxLitElement {
                 this.panelView = PanelView.AGENT_PARTICIPANTS;
               }}
             >
-              <div>Agent participants</div>
+              <div>Agent participants<span class="alpha">alpha</span></div>
               <div class="subtitle">Add and configure agent participants</div>
             </div>
           </div>
@@ -313,6 +313,9 @@ export class ExperimentBuilder extends MobxLitElement {
       <div class="sidenav">
         <div class="sidenav-header">${this.renderAddParticipantButton()}</div>
         <div class="sidenav-items">
+          <div class="subtitle warning">
+            ⚠️ Agent participant are in alpha mode and may not work as expected.
+          </div>
           ${this.experimentEditor.agentParticipants.map(
             (agent) => html`
               <div

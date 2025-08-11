@@ -141,6 +141,17 @@
   padding: common.$spacing-small common.$spacing-medium;
 }
 
+.alpha {
+  @include typescale.label-small;
+  border: 1px solid var(--md-sys-color-secondary);
+  border-radius: common.$spacing-small;
+  color: var(--md-sys-color-secondary);
+  margin-left: common.$spacing-medium;
+  padding: common.$spacing-xs;
+  text-transform: uppercase;
+  width: max-content;
+}
+
 pr-button pr-icon {
   margin-right: common.$spacing-medium;
 }
@@ -188,6 +199,10 @@ pr-button pr-icon {
 
 .subtitle {
   @include typescale.label-small;
+
+  &.warning {
+    color: var(--md-sys-color-tertiary);
+  }
 }
 
 .title-field {
