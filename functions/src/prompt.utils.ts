@@ -15,6 +15,7 @@ import {
   UserProfile,
   UserType,
   getChatPromptMessageHistory,
+  getNameFromPublicId,
   getStockInfoSummaryText,
   makeStructuredOutputPrompt,
   shuffleWithSeed,
