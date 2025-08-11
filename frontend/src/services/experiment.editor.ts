@@ -274,6 +274,15 @@ export class ExperimentEditor extends Service {
     this.currentAgentId = id;
   }
 
+  setAgentIdToLatest(isMediator: boolean = true) {
+    const agents = isMediator ? this.agentMediators : this.agentParticipants;
+    if (agents.length === 0) {
+      this.setCurrentAgentId('');
+    } else {
+      this.setCurrentAgentId(agents[agents.length - 1].persona.id);
+    }
+  }
+
   setAgentMediators(templates: AgentMediatorTemplate[]) {
     this.agentMediators = templates;
   }

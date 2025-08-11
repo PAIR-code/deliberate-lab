@@ -164,6 +164,7 @@ export class ExperimentBuilder extends MobxLitElement {
                 : ''}"
               @click=${() => {
                 this.panelView = PanelView.AGENT_MEDIATORS;
+                this.experimentEditor.setAgentIdToLatest(true);
               }}
             >
               <div>Agent mediators</div>
@@ -178,6 +179,7 @@ export class ExperimentBuilder extends MobxLitElement {
                       : ''}"
                     @click=${() => {
                       this.panelView = PanelView.AGENT_PARTICIPANTS;
+                      this.experimentEditor.setAgentIdToLatest(false);
                     }}
                   >
                     <div>
