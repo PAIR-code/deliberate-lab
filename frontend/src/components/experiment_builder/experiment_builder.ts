@@ -217,33 +217,28 @@ export class ExperimentBuilder extends MobxLitElement {
   private renderAddMediatorButton() {
     const disabled =
       this.experimentEditor.getMediatorAllowedStages().length === 0;
+    const tooltipText = disabled ? "No mediator-compatible stages have been added to this experiment. Add a mediator-compatible stage (e.g., chat) to enable this." : '';
 
-    const btn = html`
-      <pr-button
-        icon="person_add"
-        color="tertiary"
-        variant="tonal"
-        ?disabled=${disabled}
-        aria-disabled=${disabled ? 'true' : 'false'}
-        @click=${() => {
-          if (disabled) return;
-          this.experimentEditor.addAgentMediator();
-        }}
+    return html`
+      <pr-tooltip
+        text="No mediator-compatible stages have been added to this experiment. Add a mediator-compatible stage (like Chat) to enable this."
+        position="BOTTOM_END"
       >
-        + Add agent mediator persona
-      </pr-button>
+        <pr-button
+          icon="person_add"
+          color="tertiary"
+          variant="tonal"
+          ?disabled=${disabled}
+          aria-disabled=${disabled ? 'true' : 'false'}
+          @click=${() => {
+            if (disabled) return;
+              this.experimentEditor.addAgentMediator();
+            }}
+        >
+          + Add agent mediator persona
+        </pr-button>
+      </pr-tooltip>
     `;
-
-    return disabled
-      ? html`
-          <pr-tooltip
-            text="No mediator-compatible stages have been added to this experiment. Add a mediator-compatible stage (like Chat) to enable this."
-            position="BOTTOM_END"
-          >
-            ${btn}
-          </pr-tooltip>
-        `
-      : btn;
   }
 
   private renderAddParticipantButton() {
