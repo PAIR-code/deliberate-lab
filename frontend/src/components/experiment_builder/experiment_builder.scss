@@ -129,6 +129,10 @@
   gap: common.$spacing-xxl;
   max-width: common.$info-content-max-width;
   padding-bottom: calc(common.$main-content-padding * 2);
+
+  &.padding {
+    padding: common.$main-content-padding;
+  }
 }
 
 .chip {

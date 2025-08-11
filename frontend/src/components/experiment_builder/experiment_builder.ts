@@ -263,7 +263,7 @@ export class ExperimentBuilder extends MobxLitElement {
     }
     return html`
       <div class="experiment-builder">
-        <div class="content">
+        <div class="content padding">
           <experimenter-data-editor></experimenter-data-editor>
         </div>
       </div>
