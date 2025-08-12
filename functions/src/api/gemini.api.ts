@@ -129,8 +129,6 @@ export async function callGemini(
     },
   });
 
-  console.log(`DEBUG: ${JSON.stringify(response)}`);
-
   if (response.promptFeedback) {
     return {
       status: ModelResponseStatus.REFUSAL_ERROR,
