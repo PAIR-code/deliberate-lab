@@ -12,7 +12,7 @@ on human + LLM group dynamics.
 
 ```
 @software{Tsai_Deliberate_Lab_Open-Source_2025,
-author = {Tsai, Vivian and Qian, Crystal and Deliberate Lab community contributors},
+author = {Tsai, Vivian and Qian, Crystal and Behr, Michael and Deliberate Lab community contributors},
 month = mar,
 title = {{Deliberate Lab: Open-Source Platform for LLM-Powered Social Science}},
 url = {https://github.com/PAIR-code/deliberate-lab},
