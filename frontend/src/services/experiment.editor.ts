@@ -4,6 +4,7 @@ import {
   AgentParticipantPersonaConfig,
   AgentPersonaType,
   AgentParticipantTemplate,
+  ApiKeyType,
   CohortParticipantConfig,
   Experiment,
   ExperimentTemplate,
@@ -14,6 +15,7 @@ import {
   ProlificConfig,
   StageConfig,
   StageKind,
+  checkApiKeyExists,
   createAgentMediatorPersonaConfig,
   createAgentParticipantPersonaConfig,
   createChatPromptConfig,
@@ -84,6 +86,28 @@ export class ExperimentEditor extends Service {
     if (this.stages.length === 0) {
       errors.push('You must add at least one stage to your experiment');
     }
+
+    // Check if relevant API key is set up for agents
+    const hasAgentsWithApiType = (apiType: ApiKeyType) => {
+      const agents = [...this.agentMediators, ...this.agentParticipants].filter(
+        (agent) => agent.persona.defaultModelSettings.apiType === apiType,
+      );
+      return (
+        agents.length > 0 &&
+        !checkApiKeyExists(apiType, this.sp.authService.experimenterData)
+      );
+    };
+
+    const renderApiErrorMessage = (apiType: ApiKeyType) => {
+      if (hasAgentsWithApiType(apiType)) {
+        errors.push(
+          `Your experiment includes agents that use the ${apiType} API, but you have not set your API key yet`,
+        );
+      }
+    };
+    renderApiErrorMessage(ApiKeyType.GEMINI_API_KEY);
+    renderApiErrorMessage(ApiKeyType.OPENAI_API_KEY);
+    renderApiErrorMessage(ApiKeyType.OLLAMA_CUSTOM_URL);
 
     for (const stage of this.stages) {
       switch (stage.kind) {
